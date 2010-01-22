@@ -1,86 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:7600 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755589Ab0A1XPu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2010 18:15:50 -0500
-Date: Fri, 29 Jan 2010 00:15:47 +0100
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Till Kamppeter <till.kamppeter@gmail.com>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>
-Subject: Re: Linux wireless GSoC 2010 project ideas
-Message-ID: <20100128231545.GH18683@nowhere>
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:62418 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750985Ab0AVHpx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 02:45:53 -0500
+Date: Fri, 22 Jan 2010 08:43:01 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2.6.{32,31}] iwlwifi: power up all devices for EEPROM
+	read
+Message-ID: <20100122074300.GA2369@dhcp-lab-161.englab.brq.redhat.com>
+References: <1264076545-12223-1-git-send-email-sgruszka@redhat.com> <1264096944.21458.139.camel@rchatre-DESK>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
+In-Reply-To: <1264096944.21458.139.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 28, 2010 at 01:38:27PM -0800, Luis R. Rodriguez wrote:
-> Google has confirmed it will have a Google Summer of Code for 2010
-> [1]. Last year we had a few projects suggested (4) and accepted (3)
-> under the Linux Foundation sponsoring organization umbrella [2].
-> Unfortunately out of the three projects that were approved only one
-> completed successfully, that of the adding AP support to Network
-> Manger. I haven't seen specific updates to the progress of that but I
-> do know some patches were indeed submitted to help with this effort.
-> Perhaps the student can elaborate more.
+Hi
+
+On Thu, Jan 21, 2010 at 10:02:24AM -0800, reinette chatre wrote:
+> The 2.6.32 and 2.6.31 code you are changing here adds a device "power
+> up" call into iwl_eeprom_init. This is not necessary since as you can
+> see, in iwl3945_pci_probe this exact same call is made right before
+> iwl_eeprom_init is called.
+
+Sorry, missed that. I should wrote in the changelog that this is backport
+of more commits and remove power up stuff from pci proble as well.
+
+> > 
+> > On 2.6.31 and 2.6.32 iwl3945 crash during kdump, I discovered
+> > above upstream commit fix that.
 > 
-> The other projects that did not pass are up as suggestion for this
-> year again, but am hoping there are more. If you do have a project
-> idea please just go ahead and add your idea to the list of possible
-> projects [3]; you don't have to fill out a full page for it for now
-> but the more details you can add the better. If the Linux Foundation
-> does give us a few slots I recommend we be a little more strict about
-> acceptance criteria since our failure rate was pretty high (2/3) and
-> it would be better to see other projects get accepted if we do not
-> have the confidence our projects will be completed. One possibility to
-> help with the success rate of our projects might be to narrow the
-> scope down a little more. I think the testing and GeoClue project
-> might have been a little too ambitious and although we did have pretty
-> excited students we saw no progress at all.
-> 
-> If you have ideas for projects just feel free to add to the wiki. We
-> should strive to get all project ideas finalized by the middle of
-> February, latest the end of February. Hopefully towards the end of
-> February we can see who would be willing to mentor each project.
-> Google plans on starting to accept would-be-mentor organization
-> applications on  March 8th so we'll need our ideas finalized well
-> before that so we can send them as suggestions to the Linux Foundation
-> to see if we can get a few good project candidates accepted.
-> 
-> [1] http://groups.google.com/group/google-summer-of-code-discuss/browse_thread/thread/d839c0b02ac15b3f
-> [2] http://wireless.kernel.org/en/developers/GSoC/2009
-> [3] http://wireless.kernel.org/en/developers/GSoC/2010
+> This does not make sense. Was this testing done in the stable kernel
+> from linux-2.6-stable or perhaps a kernel that had those other power
+> saving patches backported?
 
+I tested backported patch on 2.6.32.4. It fix kdump, this issue is
+100% reproducible on my laptop with iwl3945.
 
+The functional change introduced in this patch is we disable device
+after EEPROM read. I think that make difference with kdump. Not sure
+if this right fix or just workaround.
 
-I'm sorry if I'm a bit off-topic. But as I see this announce,
-I'm wondering about the topics for the google summer of code
-in the wider scope of the entire kernel.
+Debugging kdump kernel is somehow limited, I have no netconsole or serial
+console option. I can only see last part of call trace where are iwlwifi
+functions. I'm going dig into kernel to make calltrace shorter and see
+where exact the oops is.
 
-I'm a student and there are fair chances I'll be free for this
-summer so I start to think about applying.
-
-Are there currently some plans concerning other kernel areas?
-That doesn't mean I wouldn't be interested in a wireless project :)
-but there are many other areas that could host a Gsoc project too
-and I don't want to miss the whole variety of proposals.
-
-I guess we also can, as applying students, propose subjects too.
-Provided we find a mentor for the given project, which makes the
-things harder in this direction I fear.
-
-Anyway, what would be the right place to submit such proposals? I
-have various ideas in mind, in topics such as tracing/profiling,
-realtime, among other things... (could be: "Do as much bkl bashing
-as you can in two months, have fun, be brave...").
-
-Thanks.
-
+Cheers
+Stanislaw 
