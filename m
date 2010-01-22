@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:57364 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315Ab0AGPpe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 10:45:34 -0500
-Received: by iwn32 with SMTP id 32so2406752iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2010 07:45:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100107140137.GA32125@mail.wantstofly.org>
-References: <1262710858.28653.5.camel@johannes.local> <20100107140137.GA32125@mail.wantstofly.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 7 Jan 2010 07:45:14 -0800
-Message-ID: <43e72e891001070745i334b7515kf78a95d12b981b95@mail.gmail.com>
-Subject: Re: mac80211: fix queue selection for packets injected via monitor
-	interface
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:41770 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754373Ab0AVVuu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 16:50:50 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1NYROv-0006Qm-A7
+	for linux-wireless@vger.kernel.org; Fri, 22 Jan 2010 22:50:45 +0100
+Received: from p4FF0DD95.dip.t-dialin.net ([79.240.221.149])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 22:50:45 +0100
+Received: from Markus_Baier by p4FF0DD95.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 22:50:45 +0100
+To: linux-wireless@vger.kernel.org
+From: Markus Baier <Markus_Baier@web.de>
+Subject: Re: Starting hostapd causes kernel panic
+Date: Fri, 22 Jan 2010 21:50:16 +0000 (UTC)
+Message-ID: <loom.20100122T224622-417@post.gmane.org>
+References: <loom.20100122T205326-794@post.gmane.org>  <1264193623.2593.17.camel@johannes.local> <1264196526.3040.3.camel@mj>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 7, 2010 at 6:01 AM, Lennert Buytenhek
-<buytenh@wantstofly.org> wrote:
-> Commit 'mac80211: fix skb buffering issue' added an ->ndo_select_queue()
-> for monitor interfaces which can end up dereferencing ieee802_1d_to_ac[]
-> beyond the end of the array for injected data packets (as skb->priority
-> isn't guaranteed to be zero or within [0:7]), which then triggers the
-> WARN_ON in net/core/dev.c:dev_cap_txqueue().  Fix this by always setting
-> the priority to zero on injected data frames.
->
-> Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Pavel Roskin <proski@...> writes:
 
-The other patches are for stable as well, so this should be for stable too?
+> I'm still getting a panic in ieee80211_tx_h_select_key():
 
-  The stable wireless whore, Luis
+Same here :-(
+
+I will compile again, now with CONFIG_MAC80211_NOINLINE
+and CONFIG_MAC80211_DEBUG_MENU enabled.
+
