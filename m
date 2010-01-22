@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:44926 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755963Ab0AFTlx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 14:41:53 -0500
-Received: by ewy19 with SMTP id 19so9978589ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 11:41:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201001062036.55758.mb@bu3sch.de>
-References: <op.u54a59c89lhzdc@linux-g0th.site>
-	 <201001061922.58203.mb@bu3sch.de>
-	 <b170af451001061129n59357edehc1f2328fb10846f6@mail.gmail.com>
-	 <201001062036.55758.mb@bu3sch.de>
-Date: Wed, 6 Jan 2010 20:41:52 +0100
-Message-ID: <b170af451001061141l171682aft1130489bd8b7edf5@mail.gmail.com>
-Subject: Re: [PATCH 2/5] b43: N-PHY: b43_nphy_get_tx_gains
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:59340 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754449Ab0AVVm1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 16:42:27 -0500
+Subject: Re: Starting hostapd causes kernel panic
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Markus Baier <Markus_Baier@web.de>, linux-wireless@vger.kernel.org,
+	kalle.valo@iki.fi
+In-Reply-To: <1264193623.2593.17.camel@johannes.local>
+References: <loom.20100122T205326-794@post.gmane.org>
+	 <1264193623.2593.17.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 22 Jan 2010 16:42:06 -0500
+Message-Id: <1264196526.3040.3.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 stycznia 2010 20:36 użytkownik Michael Buesch <mb@bu3sch.de> napisał:
-> On Wednesday 06 January 2010 20:29:36 Rafał Miłecki wrote:
->> > You may read Documentation/SubmittingPatches and format your future
->> > patches according to that.
->>
->> Well, that's really poor joke :| Manually creating .orig files, using
->> "diff -up" and so dropping local commits "strategy"...? Er, I don't
->> think I'll use this one.
->
-> Nobody said you need to fix your internal workflow. Why would anybody care
-> _how_ you generate your patches?
-> You could manually type them into your cellphone with T9. If that it results
-> in a properly formated patch in the end, nobody would complain.
+On Fri, 2010-01-22 at 21:53 +0100, Johannes Berg wrote:
 
-Good one! ;)
+> Try this please.
 
+I'm still getting a panic in ieee80211_tx_h_select_key():
 
-> So yes, reading other people's patches probably is a good idea to start with.
->
-> In general only put stuff into the mail that you want to show up in the commit
-> message. (If you want to have additional stuff that doesn't show up in the commit
-> message, you can use the "---" delimiter. But that's documented elsewhere so
-> I don't have to explain that here...)
+BUG: unable to handle kernel NULL pointer dereference at 00000000000001cf
+IP: [<ffffffffa0167e1a>] ieee80211_tx_h_select_key+0x26a/0x300 [mac80211]
+PGD 12a7f8067 PUD 126450067 PMD 0 
+Oops: 0000 [#1] SMP 
+last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:02:02.0/irq
+CPU 0 
+Pid: 19396, comm: hostapd Not tainted 2.6.33-rc4-wl #239 G31T-M/G31T-M
+RIP: 0010:[<ffffffffa0167e1a>]  [<ffffffffa0167e1a>] ieee80211_tx_h_select_key+0x26a/0x300 [mac80211]
 
-I started composing that mail before got real idea of patches. I was
-still thinking I need some magic headers "diff" tool generates. Hope I
-totally understand this now and won't cause more problems to you guys
-:)
+(gdb) l *(ieee80211_tx_h_select_key+0x26a)
+0x16e4a is in ieee80211_tx_h_select_key (/home/proski/src/linux-2.6/net/mac80211/tx.c:550).
+545                     case ALG_CCMP:
+546                             if (!ieee80211_is_data_present(hdr->frame_control) &&
+547                                 !ieee80211_use_mfp(hdr->frame_control, tx->sta,
+548                                                    tx->skb))
+549                                     tx->key = NULL;
+550                             skip_hw = (tx->key->conf.flags &
+551                                                     IEEE80211_KEY_FLAG_SW_MGMT) &&
+552                                        ieee80211_is_mgmt(hdr->frame_control);
+553                             break;
+554                     case ALG_AES_CMAC:
+
+I assume it's another case where tx->key should be checked for being
+NULL.  In fact, it's set to NULL on the preceding line!
 
 -- 
-Rafał
+Regards,
+Pavel Roskin
