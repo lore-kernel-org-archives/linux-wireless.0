@@ -1,49 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:54409 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab0ABOK6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2010 09:10:58 -0500
-Received: by fxm25 with SMTP id 25so7654862fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2010 06:10:57 -0800 (PST)
-Date: Sat, 2 Jan 2010 16:09:57 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, yi.zhu@intel.com
-Subject: re: iwmc3200wifi: fix array out-of-boundary access
-Message-ID: <20100102140957.GB5076@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:57076 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754969Ab0AVWXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 17:23:08 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Henry Zhangh <hongx.c.zhang@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 03/17] iwlwifi: Fix A band scanning when associated
+Date: Fri, 22 Jan 2010 14:22:44 -0800
+Message-Id: <1264198978-5915-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
+References: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It don't think 6c853da3f30c93 is right.  That's the patch 
-titled "iwmc3200wifi: fix array out-of-boundary access"
+From: Henry Zhangh <hongx.c.zhang@intel.com>
 
-	Allocate priv->rx_packets[IWM_RX_ID_HASH + 1] because the max array
-	index is IWM_RX_ID_HASH according to IWM_RX_ID_GET_HASH().
+This patch allows A band to be scanned when driver is associated to AP.
+Scan mechanism is that mac80211/cfg80211 requests driver to scan G band
+first and then immediately to scan A band. Original code require
+driver to wait for 2 seconds after any scan before another scan will be
+performed. This caused driver to service G band scan request from
+mac80211/cfg80211 but deny the A band scan request.
 
-In 2.6.33-rc2 IWM_RX_ID_GET_HASH() doesn't go as high as IWM_RX_ID_HASH 
-and I don't see any array out-of-bounds.
+Signed-off-by: Henry Zhangh <hongx.c.zhang@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   17 ++---------------
+ 2 files changed, 2 insertions(+), 16 deletions(-)
 
-#define IWM_RX_ID_GET_HASH(id) ((id) % IWM_RX_ID_HASH)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 502d7a6..42cf181 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1072,7 +1072,6 @@ struct iwl_priv {
+ 	struct iwl_calib_result calib_results[IWL_CALIB_MAX];
+ 
+ 	/* Scan related variables */
+-	unsigned long last_scan_jiffies;
+ 	unsigned long next_scan_jiffies;
+ 	unsigned long scan_start;
+ 	unsigned long scan_pass_start;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index fd6bafb..07fabbb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -192,18 +192,15 @@ static void iwl_rx_scan_results_notif(struct iwl_priv *priv,
+ 	IWL_DEBUG_SCAN(priv, "Scan ch.res: "
+ 		       "%d [802.11%s] "
+ 		       "(TSF: 0x%08X:%08X) - %d "
+-		       "elapsed=%lu usec (%dms since last)\n",
++		       "elapsed=%lu usec\n",
+ 		       notif->channel,
+ 		       notif->band ? "bg" : "a",
+ 		       le32_to_cpu(notif->tsf_high),
+ 		       le32_to_cpu(notif->tsf_low),
+ 		       le32_to_cpu(notif->statistics[0]),
+-		       le32_to_cpu(notif->tsf_low) - priv->scan_start_tsf,
+-		       jiffies_to_msecs(elapsed_jiffies
+-					(priv->last_scan_jiffies, jiffies)));
++		       le32_to_cpu(notif->tsf_low) - priv->scan_start_tsf);
+ #endif
+ 
+-	priv->last_scan_jiffies = jiffies;
+ 	priv->next_scan_jiffies = 0;
+ }
+ 
+@@ -250,7 +247,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 			goto reschedule;
+ 	}
+ 
+-	priv->last_scan_jiffies = jiffies;
+ 	priv->next_scan_jiffies = 0;
+ 	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+ 
+@@ -528,15 +524,6 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
+ 		goto out_unlock;
+ 	}
+ 
+-	/* if we just finished scan ask for delay */
+-	if (iwl_is_associated(priv) && priv->last_scan_jiffies &&
+-	    time_after(priv->last_scan_jiffies + IWL_DELAY_NEXT_SCAN, jiffies)) {
+-		IWL_DEBUG_SCAN(priv, "scan rejected: within previous scan period\n");
+-		queue_work(priv->workqueue, &priv->scan_completed);
+-		ret = 0;
+-		goto out_unlock;
+-	}
+-
+ 	priv->scan_bands = 0;
+ 	for (i = 0; i < req->n_channels; i++)
+ 		priv->scan_bands |= BIT(req->channels[i]->band);
+-- 
+1.6.3.3
 
-All the other code has the same assumptions.
-
-Cscope tag: IWM_RX_ID_HASH
-   #   line  filename / context / line
-   1    175  drivers/net/wireless/iwmc3200wifi/iwm.h <<GLOBAL>>
-             #define IWM_RX_ID_HASH 0xff
-   2    271  drivers/net/wireless/iwmc3200wifi/iwm.h <<GLOBAL>>
-             struct list_head rx_packets[IWM_RX_ID_HASH];
-   3    292  drivers/net/wireless/iwmc3200wifi/debugfs.c <<iwm_debugfs_rx_ticket_read>>
-             for (i = 0; i < IWM_RX_ID_HASH; i++) {
-   4    176  drivers/net/wireless/iwmc3200wifi/iwm.h <<IWM_RX_ID_GET_HASH>>
-             #define IWM_RX_ID_GET_HASH(id) ((id) % IWM_RX_ID_HASH)
-   5    279  drivers/net/wireless/iwmc3200wifi/main.c <<iwm_priv_init>>
-             for (i = 0; i < IWM_RX_ID_HASH; i++)
-   6    396  drivers/net/wireless/iwmc3200wifi/rx.c <<iwm_rx_free>>
-             for (i = 0; i < IWM_RX_ID_HASH; i++) {
-
-regards,
-dan carpenter
