@@ -1,197 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:50213 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753088Ab0ACVSJ (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:36864 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754645Ab0AVWdo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2010 16:18:09 -0500
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh04-2.mail.saunalahti.fi (Postfix) with SMTP id 5005013B7A0
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:32 +0200 (EET)
-Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
-	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id 302FB1C6390
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:31 +0200 (EET)
-Subject: [PATCH 1/9] mac80211: add functions to create PS Poll and Nullfunc
-	templates
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 03 Jan 2010 23:07:30 +0200
-Message-ID: <20100103210730.29287.78371.stgit@tikku>
-In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
-References: <20100103210552.29287.20384.stgit@tikku>
+	Fri, 22 Jan 2010 17:33:44 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
+Date: Fri, 22 Jan 2010 23:33:40 +0100
+Cc: linux-wireless@vger.kernel.org,
+	=?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1264121596-9616-1-git-send-email-zajec5@gmail.com> <b170af451001221247j1b380703w4c09b5fdd601466b@mail.gmail.com> <201001222259.28933.mb@bu3sch.de>
+In-Reply-To: <201001222259.28933.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Message-Id: <201001222333.42554.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Friday 22 January 2010 22:59:26 Michael Buesch wrote:
+> On Friday 22 January 2010 21:47:03 Rafał Miłecki wrote:
+> > As you can see I've used git send-email for submission this time! I've
+> > no idea what I did wrong that patch 1/5 was sent incorrectly. I just
+> > generated patches with
+> > git format-patch --cover-letter -o b43
+> > , then modified 0000-...patch (ONLY this one) and finally sent all
+> > patches from b43 directory.
+> 
+> The mails may be re-encoded on intermediate mailservers.
+> My server, for example, re-encodes all of your mails to base64.
+> (or it may be the list-mailserver re-encoding the mails, because by server
+> doesn't advertise the correct flags, I dunno...)
+> I don't know why it does this, however. I'm still pretty sure that it's related
+> to the characters in your name. Does anybody has an idea how to fix this? I'm using exim.
+> 
 
-Some hardware, for example wl1251 and wl1271, handle the transmission
-of power save related frames in hardware, but the driver is responsible
-for creating the templates. It's better to create the templates in mac80211,
-that way all drivers can benefit from this.
+Oh, I just realize that these patches received via vger.kernel.org list are just fine.
+It's just berlios' mailman which mangles the mails for me. Which is not surprising,
+because berlios is a really really broken platform and its mailservers are even worse than that.
 
-Add two new functions, ieee80211_pspoll_get() and ieee80211_nullfunc_get()
-which drivers need to call to get the frame. Drivers are also responsible
-for updating the templates after each association.
+So I guess everything is fine now.
 
-Also new struct ieee80211_hdr_3addr is added to ieee80211.h to make it
-easy to calculate length of the Nullfunc frame.
+So while we are at it, I'd really like to migrate away from the berlios list.
+It's really just annoying. Does somebody have a good reliable mailinglist service
+we could migrate to? Does vger offer lists to driver projects?
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- include/linux/ieee80211.h |    9 +++++
- include/net/mac80211.h    |   30 +++++++++++++++++
- net/mac80211/tx.c         |   78 +++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 117 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index aeea282..602c069 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -130,6 +130,15 @@ struct ieee80211_hdr {
- 	u8 addr4[6];
- } __attribute__ ((packed));
- 
-+struct ieee80211_hdr_3addr {
-+	__le16 frame_control;
-+	__le16 duration_id;
-+	u8 addr1[6];
-+	u8 addr2[6];
-+	u8 addr3[6];
-+	__le16 seq_ctrl;
-+} __attribute__ ((packed));
-+
- /**
-  * ieee80211_has_tods - check if IEEE80211_FCTL_TODS is set
-  * @fc: frame control bytes in little-endian byteorder
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f073a2a..eda45c3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1874,6 +1874,36 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
- }
- 
- /**
-+ * ieee80211_pspoll_get - retrieve a PS Poll template
-+ * @hw: pointer obtained from ieee80211_alloc_hw().
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ *
-+ * Creates a PS Poll a template which can, for example, uploaded to
-+ * hardware. The template must be updated after association so that correct
-+ * AID, BSSID and MAC address is used.
-+ *
-+ * Note: Caller (or hardware) is responsible for setting the
-+ * &IEEE80211_FCTL_PM bit.
-+ */
-+struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
-+				     struct ieee80211_vif *vif);
-+
-+/**
-+ * ieee80211_nullfunc_get - retrieve a nullfunc template
-+ * @hw: pointer obtained from ieee80211_alloc_hw().
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ *
-+ * Creates a Nullfunc template which can, for example, uploaded to
-+ * hardware. The template must be updated after association so that correct
-+ * BSSID and address is used.
-+ *
-+ * Note: Caller (or hardware) is responsible for setting the
-+ * &IEEE80211_FCTL_PM bit as well as Duration and Sequence Control fields.
-+ */
-+struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif);
-+
-+/**
-  * ieee80211_rts_get - RTS frame generation function
-  * @hw: pointer obtained from ieee80211_alloc_hw().
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7bba49d..bb8819d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2190,6 +2190,84 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_beacon_get_tim);
- 
-+struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
-+				     struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_if_managed *ifmgd;
-+	struct ieee80211_pspoll *pspoll;
-+	struct ieee80211_local *local;
-+	struct sk_buff *skb;
-+
-+	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
-+		return NULL;
-+
-+	sdata = vif_to_sdata(vif);
-+	ifmgd = &sdata->u.mgd;
-+	local = sdata->local;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*pspoll));
-+	if (!skb) {
-+		printk(KERN_DEBUG "%s: failed to allocate buffer for "
-+		       "pspoll template\n", sdata->name);
-+		return NULL;
-+	}
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	pspoll = (struct ieee80211_pspoll *) skb_put(skb, sizeof(*pspoll));
-+	memset(pspoll, 0, sizeof(*pspoll));
-+	pspoll->frame_control = cpu_to_le16(IEEE80211_FTYPE_CTL |
-+					    IEEE80211_STYPE_PSPOLL);
-+	pspoll->aid = cpu_to_le16(ifmgd->aid);
-+
-+	/* aid in PS-Poll has its two MSBs each set to 1 */
-+	pspoll->aid |= cpu_to_le16(1 << 15 | 1 << 14);
-+
-+	memcpy(pspoll->bssid, ifmgd->bssid, ETH_ALEN);
-+	memcpy(pspoll->ta, vif->addr, ETH_ALEN);
-+
-+	return skb;
-+}
-+EXPORT_SYMBOL(ieee80211_pspoll_get);
-+
-+struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_hdr_3addr *nullfunc;
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_if_managed *ifmgd;
-+	struct ieee80211_local *local;
-+	struct sk_buff *skb;
-+
-+	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
-+		return NULL;
-+
-+	sdata = vif_to_sdata(vif);
-+	ifmgd = &sdata->u.mgd;
-+	local = sdata->local;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*nullfunc));
-+	if (!skb) {
-+		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
-+		       "template\n", sdata->name);
-+		return NULL;
-+	}
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	nullfunc = (struct ieee80211_hdr_3addr *) skb_put(skb,
-+							  sizeof(*nullfunc));
-+	memset(nullfunc, 0, sizeof(*nullfunc));
-+	nullfunc->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+					      IEEE80211_STYPE_NULLFUNC |
-+					      IEEE80211_FCTL_TODS);
-+	memcpy(nullfunc->addr1, ifmgd->bssid, ETH_ALEN);
-+	memcpy(nullfunc->addr2, vif->addr, ETH_ALEN);
-+	memcpy(nullfunc->addr3, ifmgd->bssid, ETH_ALEN);
-+
-+	return skb;
-+}
-+EXPORT_SYMBOL(ieee80211_nullfunc_get);
-+
- void ieee80211_rts_get(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       const void *frame, size_t frame_len,
- 		       const struct ieee80211_tx_info *frame_txctl,
-
+-- 
+Greetings, Michael.
