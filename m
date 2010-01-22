@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54611 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876Ab0AGG5b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 01:57:31 -0500
-Subject: Re: [PATCH 2.6.33] mac80211: fix skb buffering issue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4B451A68.5020102@mandriva.org>
-References: <1262710858.28653.5.camel@johannes.local>
-	 <4B450004.9050601@mandriva.org> <1262814684.4437.0.camel@johannes.local>
-	 <4B4508A5.8050501@openwrt.org> <4B45110E.9010603@mandriva.org>
-	 <4B451A68.5020102@mandriva.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-eCxxlS2PG7Bp4w1VzkqV"
-Date: Thu, 07 Jan 2010 07:57:25 +0100
-Message-ID: <1262847445.3414.0.camel@johannes.local>
+Received: from lo.gmane.org ([80.91.229.12]:40215 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755472Ab0AVXRU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 18:17:20 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1NYSkf-0008OO-Ix
+	for linux-wireless@vger.kernel.org; Sat, 23 Jan 2010 00:17:17 +0100
+Received: from p4FF0DD95.dip.t-dialin.net ([79.240.221.149])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 00:17:17 +0100
+Received: from Markus_Baier by p4FF0DD95.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 00:17:17 +0100
+To: linux-wireless@vger.kernel.org
+From: Markus Baier <Markus_Baier@web.de>
+Subject: Re: Compat-wireless bleeding-edge daily builds broken since  2009-12-11
+Date: Fri, 22 Jan 2010 23:17:00 +0000 (UTC)
+Message-ID: <loom.20100123T001444-561@post.gmane.org>
+References: <Pine.LNX.4.64.0912261245080.5112@cheetah.psv.nu>	 <20091229020027.GE30201@bombadil.infradead.org>	 <4B59FC5E.1020802@redfish-solutions.com>	 <43e72e891001221153w5c4c4bc6g63883b5012d384b7@mail.gmail.com>	 <4B5A20C3.6020304@redfish-solutions.com> <1264198240.9056.4.camel@mj> <4B5A2FA2.5000603@redfish-solutions.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Philip A. Prindeville <philipp_subx@...> writes:
 
---=-eCxxlS2PG7Bp4w1VzkqV
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> "Fixed minutes ago"?  I thought that Markus's last message was stating it was
+still broken...
 
-On Thu, 2010-01-07 at 01:19 +0200, Thomas Backlund wrote:
+There is no patch until now.
+But I think Pavel posted the line in the code that causes the error :-)
 
-> >> net/mac80211/wme.c: I funktion "ieee80211_select_queue":
-> >> net/mac80211/wme.c:99: varning: skickar argument 1 till
-> "sta_info_get"
-> >> fr?n inkompatibel pekartyp
-> >> net/mac80211/sta_info.h:408: anm: "struct ieee80211_local *"
-> >> f?rv?ntades men argumentet har typ "struct ieee80211_sub_if_data *"
-> >
->=20
-> As I cant get it from any log, and dont have a camera available right=20
-> now, I just wrote some lines to paper wich confirms the breakage in
-> the=20
-> above build error...
->=20
-> The trace shows:
->=20
-> RIP: sta_info_get
-
-Well as the message tells you, sta_info_get needs a local argument in
-your tree, rather than 'sdata', so you can just do 'sdata->local'
-there ...... It doesn't need any particular fixups, just a bit of merge
-resolving ...
-
-johannes
-
---=-eCxxlS2PG7Bp4w1VzkqV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLRYXQAAoJEODzc/N7+QmaoqYQAIQ69jnQZsQPmf9F4vryPe8c
-Z62Z7rlCLHWK92y3kMJ44N/sYofTuwDSz4HHlDKNgIIKB1EmfFeILRiHKjgQZ9T1
-13ytyvm11bnxe8LZv3hVAcbh7dQM29uVPZWSsuX7VNn3Rfxu5/k/t/jRL7ZqIPwG
-93e1bzti2Wozc5IdS020cebZ+5Q/4RlV6FBUZ3FN2mG+h9wwUGobzCjhWW4Wl3Ne
-APMCZaT3RV8R2O4J3devy19jqqUl8jAP3PINKDzE34+/KHI/98Y7Nm68CEOGzQm9
-Qtzqd023sdvZ8nn3V93YXIbcUQXq9mOdZaDzsClTfkoZ7xl+c/1DU18Med/fkxeI
-tjzcDlm7qCnZqcyImT/TRo0rPYP+exUuUnxq1+paPP0kW/KJGP05+BhgcYmDyO4Z
-rfGqk0CEqGfSMWnTsADbnJUUa8QgncpPJc7POaNQsMvqZUZgoGBaljaY2YeRersq
-YaLhNYJW2O/rZEbLy0PCMlYrJ9Fsk0yElgLe9pSuQ/Os/amkBxqDebaDDFkWUDaG
-A1beC4UsmeSs+grrM8pt0R1/8P/mN5f2vnQlTZyXeWDGHcpnMEhrfTkcWmzzaOPY
-+KwUY0GElJJ19A95r0Fn+4UOXk/LuC/rsOfup+EFEdl/IiqXNLKek8kSZE9cqUfp
-HPEociRuqcVU8wRSmbuN
-=fRW5
------END PGP SIGNATURE-----
-
---=-eCxxlS2PG7Bp4w1VzkqV--
+                case ALG_CCMP:
+                        if (!ieee80211_is_data_present(hdr->frame_control) &&
+                            !ieee80211_use_mfp(hdr->frame_control, tx->sta,
+                                               tx->skb))
+                                tx->key = NULL;
+                        skip_hw = (tx->key->conf.flags &
+                                                IEEE80211_KEY_FLAG_SW_MGMT) &&
+                                   ieee80211_is_mgmt(hdr->frame_control);
+                        break;
 
