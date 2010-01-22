@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57076 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754979Ab0AVWXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 17:23:12 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 15/17] iwlwifi: check endianness annotations by default
-Date: Fri, 22 Jan 2010 14:22:56 -0800
-Message-Id: <1264198978-5915-16-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
-References: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-yw0-f176.google.com ([209.85.211.176]:49345 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753939Ab0AVPVY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 10:21:24 -0500
+Received: by ywh6 with SMTP id 6so1034680ywh.4
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2010 07:21:23 -0800 (PST)
+Message-ID: <4B59C271.7000701@lwfinger.net>
+Date: Fri, 22 Jan 2010 09:21:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
+References: <1264121596-9616-1-git-send-email-zajec5@gmail.com> <69e28c911001220701n7de4f943t60a9eda2b7791608@mail.gmail.com>
+In-Reply-To: <69e28c911001220701n7de4f943t60a9eda2b7791608@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On 01/22/2010 09:01 AM, Gábor Stefanik wrote:
+> 2010/1/22 Rafał Miłecki <zajec5@gmail.com>:
+>> John, I hope to have patch submission fixed, please let me know if there
+>> is anything wrong still.
+> 
+> Nope, it is still base64-encoded.
+> 
+> I personally use Thunderbird 2 for patch submission (had weird
+> problems with Thunderbird 3 beta - not sure about the final version).
 
-sparse won't check endianness annotations by
-default, but iwlwifi is and should be clean
-so we can make sparse check them on it.
+I am reading mail with Thunderbird 3.0beta4, and only patch 1/5 was
+base64-encoded. The other 4 were fine.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/Makefile |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+For the record, the final version of TBird 3 cannot read my profile. I battled
+with the devs for a while, but have now given up.
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index 7f82044..bdaa924 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -20,3 +20,5 @@ iwlagn-$(CONFIG_IWL5000) += iwl-1000.o
- # 3945
- obj-$(CONFIG_IWL3945)	+= iwl3945.o
- iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o iwl-3945-led.o
-+
-+ccflags-y += -D__CHECK_ENDIAN__
--- 
-1.6.3.3
+Larry
 
