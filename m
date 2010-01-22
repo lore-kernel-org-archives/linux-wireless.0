@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:44652 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307Ab0AXF6L (ORCPT
+Received: from lon1-post-2.mail.demon.net ([195.173.77.149]:40113 "EHLO
+	lon1-post-2.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753605Ab0AVXfg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2010 00:58:11 -0500
-Received: by pxi12 with SMTP id 12so1937604pxi.33
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 21:58:10 -0800 (PST)
-Message-ID: <4B5BE16E.7080901@lwfinger.net>
-Date: Sat, 23 Jan 2010 23:58:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Johannes Berg <johannes@sipsolutions.net>, kecsa@kutfo.hit.bme.hu,
-	linux-wireless@vger.kernel.org
-Subject: Re: hwtkip hangs on b43
-References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu> <201001232000.07229.mb@bu3sch.de> <4B5B4E9F.8040708@lwfinger.net> <201001232038.55204.mb@bu3sch.de>
-In-Reply-To: <201001232038.55204.mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 22 Jan 2010 18:35:36 -0500
+From: Darren Salt <linux@youmustbejoking.demon.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/6] Rearrange the help text for block & unblock.
+Date: Fri, 22 Jan 2010 23:35:26 +0000
+Message-Id: <1264203330-20785-2-git-send-email-linux@youmustbejoking.demon.co.uk>
+In-Reply-To: <1264203330-20785-1-git-send-email-linux@youmustbejoking.demon.co.uk>
+References: <1264203330-20785-1-git-send-email-linux@youmustbejoking.demon.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/2010 01:38 PM, Michael Buesch wrote:
-> On Saturday 23 January 2010 20:31:43 Larry Finger wrote:
->> On 01/23/2010 01:00 PM, Michael Buesch wrote:
->>> On Saturday 23 January 2010 19:53:48 Johannes Berg wrote:
->>>> Actually you can't, because you can't acquire the mutex here since we're
->>>> in an atomic section. So relying on it being already locked is probably
->>>> safer. However, you can't actually sleep anyway...
->>>
->>> I'm OK with removing the lock from the callback, if it is guaranteed that
->>> the callback is only called on behalf of a RX call.
->>>
->>> We can just remove the lock and add a comment explaining why it is not locked...
->>
->> That works for me.
->>
->
->
-> untested
->
-> ---
-
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
+ rfkill.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/rfkill.c b/rfkill.c
+index 7b44b5a..3cb2605 100644
+--- a/rfkill.c
++++ b/rfkill.c
+@@ -224,8 +224,6 @@ static enum rfkill_type rfkill_str_to_type(char *s)
+ 
+ static const char *argv0;
+ 
+-#define BLOCK_PARAMS "{<idx>,all,wifi,wlan,bluetooth,uwb,ultrawideband,wimax,wwan,gps}"
+-
+ static void usage(void)
+ {
+ 	fprintf(stderr, "Usage:\t%s [options] command\n", argv0);
+@@ -235,8 +233,10 @@ static void usage(void)
+ 	fprintf(stderr, "\thelp\n");
+ 	fprintf(stderr, "\tevent\n");
+ 	fprintf(stderr, "\tlist\n");
+-	fprintf(stderr, "\tblock "BLOCK_PARAMS"\n");
+-	fprintf(stderr, "\tunblock "BLOCK_PARAMS"\n");
++	fprintf(stderr, "\tblock IDENTIFIER\n");
++	fprintf(stderr, "\tunblock IDENTIFIER\n");
++	fprintf(stderr, "where IDENTIFIER is the index no. of an rfkill switch or one of:\n");
++	fprintf(stderr, "\t<idx> all wifi wlan bluetooth uwb ultrawideband wimax wwan gps\n");
+ }
+ 
+ static void version(void)
+-- 
+1.6.5
 
