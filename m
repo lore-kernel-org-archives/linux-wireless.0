@@ -1,57 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:36890 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932410Ab0AFWpv (ORCPT
+Received: from lon1-post-3.mail.demon.net ([195.173.77.150]:53916 "EHLO
+	lon1-post-3.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754262Ab0AVXfg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:45:51 -0500
-Received: by iwn32 with SMTP id 32so1931607iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:45:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e891001061440l38a4d45fp769f02f10bd628de@mail.gmail.com>
-References: <1262362872-10251-1-git-send-email-hauke@hauke-m.de>
-	<43e72e891001061427l70a6711dg6e96d93679ccc17e@mail.gmail.com>
-	<43e72e891001061438x750597d8h658ffd2925180e6b@mail.gmail.com>
-	<43e72e891001061440l38a4d45fp769f02f10bd628de@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 6 Jan 2010 14:45:30 -0800
-Message-ID: <43e72e891001061445i6b77e785h8348cd4702387d3@mail.gmail.com>
-Subject: Re: [PATCH 0/5] compat-wireless: Activate ssb and libertas, refresh
-	script
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 22 Jan 2010 18:35:36 -0500
+From: Darren Salt <linux@youmustbejoking.demon.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 6/6] Add filtering to "rfkill list".
+Date: Fri, 22 Jan 2010 23:35:30 +0000
+Message-Id: <1264203330-20785-6-git-send-email-linux@youmustbejoking.demon.co.uk>
+In-Reply-To: <1264203330-20785-5-git-send-email-linux@youmustbejoking.demon.co.uk>
+References: <1264203330-20785-1-git-send-email-linux@youmustbejoking.demon.co.uk>
+ <1264203330-20785-2-git-send-email-linux@youmustbejoking.demon.co.uk>
+ <1264203330-20785-3-git-send-email-linux@youmustbejoking.demon.co.uk>
+ <1264203330-20785-4-git-send-email-linux@youmustbejoking.demon.co.uk>
+ <1264203330-20785-5-git-send-email-linux@youmustbejoking.demon.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 6, 2010 at 2:40 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, Jan 6, 2010 at 2:38 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Wed, Jan 6, 2010 at 2:27 PM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->>> On Fri, Jan 1, 2010 at 8:21 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>>> The first two patches were already send some time ago, but not applied,
->>>> the second patch was applied partly. Patch 3 adds an refresh option to
->>>> admin-update.sh and it was used in patch 4. The last patch fixes some
->>>> small problems in admin-update.sh
->>>
->>> All applied. I really liked the quilt patch, thanks so much, I didn't
->>> know quilt could do that, that's awesome. It will certainly help with
->>> keeping compat-wireless up to date as that is the most frequent thing
->>> we have to do.
->>
->> Hm, that quilt trick didn't work for me. I get:
->>
->> Refresh backport patch: patches.orig/01-netdev.patch
->> Patch 01-netdev.patch is applied
->> File series fully applied, ends at patch 06-header-changes.patch
->> Refreshing patches.orig/01-netdev.patch failed, update it
->> use quilt edit [filename] to apply the failed part manually
->> use quilt refresh after the files are corrected and rerun this script
->
-> Oh I wonder if in this case it is because patch #1 touches iface.c and
-> then so does patch #17.
+---
+ rfkill.c |   34 +++++++++++++++++++++++++++++++---
+ 1 files changed, 31 insertions(+), 3 deletions(-)
 
-Nah, that wasn't it. Oh well. I'll do it the old way for now.
+diff --git a/rfkill.c b/rfkill.c
+index 998728e..8fa4c6a 100644
+--- a/rfkill.c
++++ b/rfkill.c
+@@ -172,13 +172,25 @@ static struct rfkill_id rfkill_id_to_type(const char *s)
+ 	return ret;
+ }
+ 
+-static int rfkill_list(void)
++static int rfkill_list(const char *param)
+ {
++	struct rfkill_id id = { .result = RFKILL_IS_INVALID };
+ 	struct rfkill_event event;
+ 	const char *name;
+ 	ssize_t len;
+ 	int fd;
+ 
++	if (param) {
++		id = rfkill_id_to_type(param);
++		if (id.result == RFKILL_IS_INVALID) {
++			fprintf(stderr, "Bogus %s argument '%s'.\n", "list", param);
++			return 2;
++		}
++		/* don't filter "all" */
++		if (id.result == RFKILL_IS_TYPE && id.type == RFKILL_TYPE_ALL)
++			id.result = RFKILL_IS_INVALID;
++	}
++
+ 	fd = open("/dev/rfkill", O_RDONLY);
+ 	if (fd < 0) {
+ 		perror("Can't open RFKILL control device");
+@@ -208,6 +220,20 @@ static int rfkill_list(void)
+ 		if (event.op != RFKILL_OP_ADD)
+ 			continue;
+ 
++		/* filter out unwanted results */
++		switch (id.result)
++		{
++		case RFKILL_IS_TYPE:
++			if (event.type != id.type)
++				continue;
++			break;
++		case RFKILL_IS_INDEX:
++			if (event.idx != id.index)
++				continue;
++			break;
++		case RFKILL_IS_INVALID:; /* must be last */
++		}
++
+ 		name = get_name(event.idx);
+ 
+ 		printf("%u: %s: %s\n", event.idx, name,
+@@ -271,7 +297,7 @@ static void usage(void)
+ 	fprintf(stderr, "Commands:\n");
+ 	fprintf(stderr, "\thelp\n");
+ 	fprintf(stderr, "\tevent\n");
+-	fprintf(stderr, "\tlist\n");
++	fprintf(stderr, "\tlist [IDENTIFIER]\n");
+ 	fprintf(stderr, "\tblock IDENTIFIER\n");
+ 	fprintf(stderr, "\tunblock IDENTIFIER\n");
+ 	fprintf(stderr, "where IDENTIFIER is the index no. of an rfkill switch or one of:\n");
+@@ -304,7 +330,9 @@ int main(int argc, char **argv)
+ 	if (strcmp(*argv, "event") == 0) {
+ 		rfkill_event();
+ 	} else if (strcmp(*argv, "list") == 0) {
+-		rfkill_list();
++		argc--;
++		argv++;
++		rfkill_list(*argv); /* NULL is acceptable */
+ 	} else if (strcmp(*argv, "block") == 0 && argc > 1) {
+ 		argc--;
+ 		argv++;
+-- 
+1.6.5
 
-  Luis
