@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:47494 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757976Ab0AOVly (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38296 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754210Ab0AVRpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 16:41:54 -0500
-Received: by pxi12 with SMTP id 12so1160826pxi.33
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 13:41:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <fd145f7d1001151338y53c9d9a5h63b05d4ebf94b242@mail.gmail.com>
-References: <fd145f7d1001151322y6e0b2a74hb4c9971db8fe435c@mail.gmail.com>
-	<fd145f7d1001151338y53c9d9a5h63b05d4ebf94b242@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 15 Jan 2010 13:41:34 -0800
-Message-ID: <43e72e891001151341j2702fdc3s4ddd13ff6128b2b7@mail.gmail.com>
-Subject: Re: compat-wireless 2010-01-13 fails to build
-To: Jeffrey Baker <jwbaker@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 22 Jan 2010 12:45:34 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: avoid NULL ptr deref when using WEP
+Date: Fri, 22 Jan 2010 12:39:49 -0500
+Message-Id: <1264181989-28483-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 15, 2010 at 1:38 PM, Jeffrey Baker <jwbaker@gmail.com> wrote:
-> On Fri, Jan 15, 2010 at 1:22 PM, Jeffrey Baker <jwbaker@gmail.com> wrote:
->> /root/compat-wireless-2010-01-13/net/wireless/nl80211.c:17:50: error:
->> missing ')' in expression
->
-> 2010-01-06, on the other hand, builds fine.
-> --
+"mac80211: move control.hw_key assignment" changed an if-else into two
+separate if statments, but the if-else is needed to prevent
+dereferencing a null info->control.hw_key.  This fixes avoids a lock-up
+during association on my machine when using WEP.
 
-Try today's release, I just kicked one out.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/wep.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index 0a4c641..5d745f2 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -310,9 +310,8 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 					  tx->key->conf.keylen,
+ 					  tx->key->conf.keyidx))
+ 			return -1;
+-	}
+-
+-	if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
++	} else if (info->control.hw_key->flags &
++			IEEE80211_KEY_FLAG_GENERATE_IV) {
+ 		if (!ieee80211_wep_add_iv(tx->local, skb,
+ 					  tx->key->conf.keylen,
+ 					  tx->key->conf.keyidx))
+-- 
+1.6.2.5
+
