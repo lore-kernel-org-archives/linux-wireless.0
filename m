@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48942 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752030Ab0AUQcs (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:57522 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752057Ab0AVTVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 11:32:48 -0500
-Subject: Re: [PATCH 1/1] mac80211: tell driver when dtim change detected
-From: Johannes Berg <johannes@sipsolutions.net>
-To: wey-yi.w.guy@intel.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1264089090-7014-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1264089090-7014-1-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-llljYdI/fJPWTxsc7Rg/"
-Date: Thu, 21 Jan 2010 17:32:44 +0100
-Message-ID: <1264091564.11396.58.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 22 Jan 2010 14:21:20 -0500
+Message-ID: <4B59FAAD.6060804@redfish-solutions.com>
+Date: Fri, 22 Jan 2010 11:21:17 -0800
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Building compat-wireless from 2.6.27
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I'm trying to build compat-wireless's snapshot from git on compat-wireless-2.6-mcgrof last night, on linux 2.6.27.42 and getting:
 
---=-llljYdI/fJPWTxsc7Rg/
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+...
+make -j5 -C /home/philipp/alix/build_i586/compat-wireless-2010-01-21 \
+		HOSTCC=gcc CC=/home/philipp/alix/build_i586/staging_dir/bin/i586-linux-uclibc-gcc ARCH=i386 \
+		KLIB_BUILD=/home/philipp/alix/build_i586/linux-2.6.27.42-astlinux \
+		MODPROBE='true' PWD=/home/philipp/alix/build_i586/compat-wireless-2010-01-21 \
+		CONFIG_IPW2100= CONFIG_IPW2200= CONFIG_LIBERTAS= CONFIG_B44= CONFIG_B43= CONFIG_B43LEGACY= \
+		modules
+make[1]: Entering directory `/home/philipp/alix/build_i586/compat-wireless-2010-01-21'
+./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+make[2]: warning: jobserver unavailable: using -j1.  Add `+' to parent make rule.
+make -C /home/philipp/alix/build_i586/linux-2.6.27.42-astlinux M=/home/philipp/alix/build_i586/compat-wireless-2010-01-21 modules
+make[2]: Entering directory `/home/philipp/alix/build_i586/linux-2.6.27.42-astlinux'
+scripts/Makefile.build:41: /home/philipp/alix/build_i586/compat-wireless-2010-01-21/compat/Makefile: No such file or directory
+make[4]: *** No rule to make target `/home/philipp/alix/build_i586/compat-wireless-2010-01-21/compat/Makefile'.  Stop.
+make[3]: *** [/home/philipp/alix/build_i586/compat-wireless-2010-01-21/compat] Error 2
+make[3]: *** Waiting for unfinished jobs....
+scripts/Makefile.build:41: /home/philipp/alix/build_i586/compat-wireless-2010-01-21/drivers/bluetooth/Makefile: No such file or directory
+make[4]: *** No rule to make target `/home/philipp/alix/build_i586/compat-wireless-2010-01-21/drivers/bluetooth/Makefile'.  Stop.
+make[3]: *** [/home/philipp/alix/build_i586/compat-wireless-2010-01-21/drivers/bluetooth] Error 2
+make[2]: *** [_module_/home/philipp/alix/build_i586/compat-wireless-2010-01-21] Error 2
+make[2]: Leaving directory `/home/philipp/alix/build_i586/linux-2.6.27.42-astlinux'
+make[1]: *** [modules] Error 2
+make[1]: Leaving directory `/home/philipp/alix/build_i586/compat-wireless-2010-01-21'
+make: *** [/home/philipp/alix/build_i586/compat-wireless-2010-01-21/net/wireless/lib80211.ko] Error 2
+% 
 
-On Thu, 2010-01-21 at 07:51 -0800, wey-yi.w.guy@intel.com wrote:
-> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
->=20
-> In current implementation, mac80211 send dtim_period update to driver dur=
-ing
-> association, but if no NetworkManager or similar application perform scan
-> operation, plus tim_ie is not part of probe response; mac80211 will not g=
-et
-> beacon with dtim information later, then  mac80211 will not pass the=20
-> information to driver for update.
+as a diagnostic, I've patched my makefile to $(info ...) out the following:
 
-Good catch.
+CONFIG_PCI=y
+CONFIG_USB=y
+CONFIG_PCMCIA=
+CONFIG_SSB=
+CONFIG_LIBERTAS=
+CONFIG_ATH5K=m
+CONFIG_ATH9K=m
+CONFIG_IPW2100=
+CONFIG_IPW2200=
+CONFIG_IWLWIFI=m
+CONFIG_B43=
+CONFIG_B43LEGACY=
+CONFIG_B44=
 
-> Call ieee80211_hw_config() with IEEE80211_CONF_CHANGE_PS flag set to
-> allow driver make correct dtim adjustment if dtim_period change detected.
 
-I don't think this is the right place or the right thing to do though,
-this seems like an implementation detail from iwlwifi -- it only (and
-maybe only it) uses the DTIM interval for power saving.
+How should I be building compat-wireless?  This worked until about early December.
 
-However, the internal power saving stuff from mac80211 should also be
-recalculated if this happens, and then we can probably call it a PS
-change?
+-Philip
 
-johannes
-
---=-llljYdI/fJPWTxsc7Rg/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLWIGnAAoJEODzc/N7+QmauoAP/0cSirkDgtZvkQh9NeJ8Eb32
-phgxvQzbcV9xJRiHQRHiBiP2fC3xQOLzH+/uou+K2PK92fE8RCds/rmVTzs8HSSl
-zWysLN2seh9FBM1kpA/kC6TFfTl4CIX3yBYzKyKgR3x4qy9qWtd/6CO4on2J12f4
-FfVCO6b1WSfznn6aIPlgrGWxrOwkSkMObITKvQ8htqL9XVwhcS+uvl41GlHF8mlD
-MpObpnbqSmez3aAQImuE6ob4ccQYSBc7knfigxSZemtRPJy7Rz9w2Qt5Zi3YRqlb
-eoBJHmwDZJJLeCkrPIflMHX3/zmzRUImcsN308Au+mgQF6CvOan9HX9GpKgWyhbw
-MchX2shlnGI3n8JaU/vGSZ8cRQk1M0IwhUKEWjGT16Wyy3UoXs93B82fIuuMjicP
-Xt4mAvrZGG3YVhzf4z88MMJaC67DibbSqowx/x6tB2R4TvxpGP3Nh2ngGvPe6kr9
-xade3OdW8fbeK9Rc6SUPvPTBchGSZYYuuS5qObUOgVIr23qxBxjF26DvFoFElFk6
-SSBw28Cmt2mDB/71fKCcnM07T3mWv195n3CjPDdjn+kn/FeYWQz+1+74fpAAuhOw
-otn0/HDcaopncRKgB/rwtXmNmNkYsOTaJgPWQ1u5JxNwC1N6BxGOzHnu6eOuVgJX
-PT8pBVYIkTf6RrIQF3vk
-=cMh+
------END PGP SIGNATURE-----
-
---=-llljYdI/fJPWTxsc7Rg/--
 
