@@ -1,47 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:52760 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125Ab0ADUx4 (ORCPT
+Received: from mail-qy0-f194.google.com ([209.85.221.194]:53002 "EHLO
+	mail-qy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755425Ab0AVXbi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2010 15:53:56 -0500
-Date: Mon, 4 Jan 2010 21:53:54 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 01/14] mwl8k: bail out if there is no AP firmware image support for this chip
-Message-ID: <20100104205354.GA1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 22 Jan 2010 18:31:38 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 22 Jan 2010 15:31:10 -0800
+Message-ID: <43e72e891001221531m7f14a09bsb78e82b16e844f64@mail.gmail.com>
+Subject: Dynamic power-save and pm-qos support on 802.11
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, mark gross <mgross@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+Kalle Valo had long ago implemented dynamic power save, and then
+Johannes Berg added pm-qos support to tune power save and dynamic
+power save based on this. In hopes to help userspace help tune dynamic
+power save or use pm-qos to further save power I've added some initial
+docs for both. Please help revise, and extend it:
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index cf0671f..d3a7916 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3363,10 +3363,17 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	mwl8k_release_firmware(priv);
- 
- 
--	if (priv->ap_fw)
-+	if (priv->ap_fw) {
- 		priv->rxd_ops = priv->device_info->ap_rxd_ops;
--	else
-+		if (priv->rxd_ops == NULL) {
-+			printk(KERN_ERR "%s: Driver does not have AP "
-+			       "firmware image support for this hardware\n",
-+			       wiphy_name(hw->wiphy));
-+			goto err_stop_firmware;
-+		}
-+	} else {
- 		priv->rxd_ops = &rxd_sta_ops;
-+	}
- 
- 	priv->sniffer_enabled = false;
- 	priv->wmm_enabled = false;
--- 
-1.5.6.4
+http://wireless.kernel.org/en/users/Documentation/dynamic-power-save
+http://wireless.kernel.org/en/developers/Documentation/pm-qos
+
+Its a wiki, so if you see something wrong please just update it.
+
+  Luis
