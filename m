@@ -1,108 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:51731 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab0ANDDk convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48398 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753727Ab0AVJ1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 22:03:40 -0500
-Received: by fxm25 with SMTP id 25so95109fxm.21
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 19:03:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B4DFCA8.6020006@pardus.org.tr>
-References: <4B4DFCA8.6020006@pardus.org.tr>
-Date: Thu, 14 Jan 2010 03:03:37 +0000
-Message-ID: <3ace41891001131903g38f4da27w6f469e6121eaf668@mail.gmail.com>
-Subject: Re: Some remarks about compat-wireless KBuild system
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 22 Jan 2010 04:27:47 -0500
+Subject: Re: [PATCH] mac80211: fix rx data handling for non-data frames on
+ multiple vifs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4B58E507.9000101@openwrt.org>
+References: <4B58E507.9000101@openwrt.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cEKtj54NCSq5/tu66s+e"
+Date: Fri, 22 Jan 2010 10:27:41 +0100
+Message-ID: <1264152461.11396.81.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 13, 2010 at 5:02 PM, Ozan Çağlayan <ozan@pardus.org.tr> wrote:
-> Hi,
->
-> Current compat-wireless build system has some inconveniences for distribution packaging:
->
->
-> - In Makefile, KLIB is set to /lib/modules/$(uname -r) which avoids compiling the stack
-> against a non-running kernel. In several other external kernel drivers this can be bypassed
-> by giving KERNELRELEASE=something to "make" but it's not working for compat-wireless.
 
-Did you not read README (or the instruction in the README not working
-any more)?
+--=-cEKtj54NCSq5/tu66s+e
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-compat-wireless can be used with a non-running kernel, and the
-instruction is in the top-level README. (I contributed part of it, the
-part on the non-running kernel which has just been distro-installed,
-e.g. to build and install compat-wireless during a routine upgrade
-which installs a new kernel but before a reboot to it).
+On Fri, 2010-01-22 at 00:36 +0100, Felix Fietkau wrote:
 
+> Fix this by restructuring the loop so that it prepares the rx data just
+> before making the skb copy and calling the rx handlers.
+>=20
+> Cc: stable@kernel.org
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -2348,22 +2348,6 @@ static void __ieee80211_rx_handle_packet
+>  			    sdata->vif.type =3D=3D NL80211_IFTYPE_AP_VLAN)
+>  				continue;
+> =20
+> -			rx.sta =3D sta_info_get(sdata, hdr->addr2);
+> -
+> -			rx.flags |=3D IEEE80211_RX_RA_MATCH;
+> -			prepares =3D prepare_for_handlers(sdata, &rx, hdr);
+> -
+> -			if (!prepares)
+> -				continue;
+> -
+> -			if (status->flag & RX_FLAG_MMIC_ERROR) {
+> -				rx.sdata =3D sdata;
+> -				if (rx.flags & IEEE80211_RX_RA_MATCH)
+> -					ieee80211_rx_michael_mic_report(hdr,
+> -									&rx);
+> -				continue;
+> -			}
+> -
+>  			/*
+>  			 * frame is destined for this interface, but if it's
+>  			 * not also for the previous one we handle that after
+> @@ -2375,6 +2359,22 @@ static void __ieee80211_rx_handle_packet
+>  				continue;
+>  			}
+> =20
+> +			rx.sta =3D sta_info_get(prev, hdr->addr2);
+> +
+> +			rx.flags |=3D IEEE80211_RX_RA_MATCH;
+> +			prepares =3D prepare_for_handlers(prev, &rx, hdr);
+> +
+> +			if (!prepares)
+> +				goto next;
+> +
+> +			if (status->flag & RX_FLAG_MMIC_ERROR) {
+> +				rx.sdata =3D prev;
+> +				if (rx.flags & IEEE80211_RX_RA_MATCH)
+> +					ieee80211_rx_michael_mic_report(hdr,
+> +									&rx);
+> +				goto next;
+> +			}
+> +
+>  			/*
+>  			 * frame was destined for the previous interface
+>  			 * so invoke RX handlers for it
+> @@ -2387,11 +2387,22 @@ static void __ieee80211_rx_handle_packet
+>  					       "multicast frame for %s\n",
+>  					       wiphy_name(local->hw.wiphy),
+>  					       prev->name);
+> -				continue;
+> +				goto next;
+>  			}
+>  			ieee80211_invoke_rx_handlers(prev, &rx, skb_new, rate);
+> +next:
+>  			prev =3D sdata;
+>  		}
+> +
+> +		if (prev) {
+> +			rx.sta =3D sta_info_get(prev, hdr->addr2);
+> +
+> +			rx.flags |=3D IEEE80211_RX_RA_MATCH;
+> +			prepares =3D prepare_for_handlers(prev, &rx, hdr);
+> +
+> +			if (!prepares)
+> +				prev =3D NULL;
+> +		}
+>  	}
+>  	if (prev)
+>  		ieee80211_invoke_rx_handlers(prev, &rx, skb, rate);
 
->
-> - In gen_compat_autoconf.sh and config.mk there are two calls to $(MAKE) for determining KERNEL_SUBLEVEL:
->
-> (gen_compat_autoconf.sh) -> SUBLEVEL=$(make -C $KLIB_BUILD kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
-> (config.mk) -> KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
->
-> The problem with that calls is that they're executing make in $KLIB_BUILD for version parsing which creates
-> temporary .tmp files in that directory causing sandboxed builds fail.
->
-> KERNELRELEASE=something should also allow bypassing those make calls with something like below:
->
-> if KERNELRELEASE is set
->  SUBLEVEL=$(echo "@KERNELRELEASE@" | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
->
->
-> - It's impossible to install the modules under a DESTDIR/BUILD_ROOT. KMODPATH_ARG in Makefile
-> can be used for this purpose but it's not set until the following condition is met:
->
-> ifneq ($(origin KLIB), undefined)
-> KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB)"
->
-> I couldn't figure out the evaluation of the expression and simplified it in the following way in my package:
->
-> Index: compat-wireless-2010-01-06/Makefile
-> ===================================================================
-> --- compat-wireless-2010-01-06.orig/Makefile
-> +++ compat-wireless-2010-01-06/Makefile
-> @@ -1,10 +1,6 @@
->  export KMODDIR?=       updates
->  KMODDIR_ARG:=   "INSTALL_MOD_DIR=$(KMODDIR)"
-> -ifneq ($(origin KLIB), undefined)
-> -KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(KLIB)"
-> -else
-> -export KLIB:=          /lib/modules/$(shell uname -r)
-> -endif
-> +export KLIB:=          /lib/modules/$(shell uname -r)
->  export KLIB_BUILD ?=   $(KLIB)/build
->  # Sometimes not available in the path
->  MODPROBE := /sbin/modprobe
-> @@ -12,6 +8,7 @@ MADWIFI=$(shell $(MODPROBE) -l ath_pci)
->  OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
->
->  DESTDIR?=
-> +KMODPATH_ARG:=  "INSTALL_MOD_PATH=$(DESTDIR)"
->
->  ifneq ($(KERNELRELEASE),)
->
->
-> This way calling
->
-> make DESTDIR=/path/to/buildroot install
->
-> works correctly.
->
->
-> I may be misusing the kbuild system but just wanted to share these in case there's anything to be done
-> in upstream,
->
-> Thanks!
-> Ozan Caglayan
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+That's kinda subtle, but looks correct at first and second glance,
+thanks.
+
+johannes
+
+--=-cEKtj54NCSq5/tu66s+e
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLWW+JAAoJEODzc/N7+QmaYTwQAJsHrwWJl2mP9Lcwo+4KY9z4
+ScgYbxF4zu9x3Cvgb4ew6TmJqVkE/bT0AaDrXfeaQiEDAB42675jd06zyzLrbFzk
+3VryeMTYnJc1guGOvamj/NGZt1kCTKkDkGXIPfVm2WUMJ8rBarVCGixkFcOaBsPL
+gpztdoJowz5bG1+VQrcVM3TaqptWp78lgkTkYQwZzlZoIvu2yrYo9/iCbPiuE9Ih
+Dhsdkle9PaKHQMiw8QYyyuWjxSswnplC4nVz3X4xLDULiwwczwrclOd9br0fh3kF
+iHDuHr3zZiiVOryTfSx3Dfzs7yK3Ul6ZIhxjbusaUxZE20YD/4v1jalWIsydbbQb
+GF1LmFK7iQdFrzk1gsmgKyzyZxxN22HMbedBX6Bc6Huzj7/Gz86wNTtIMzDKXOUM
+RNPjMELDM+hOaI3jeLovBMZbNlgF0ou2eTFtkk9a5UKQR21enH3/Q/sd+Akjkc+Z
+NIttoyYhF3TnrwoNaSpTgbFItcLOLeDDPnAcf/V3M6E9dBsPqIT98uGwNb678Kfd
+4EEzrOmJowoShtgXcbdQjlEnMxTKCu00OplM9dW1Z9ZgJ9ObZ7anqMygFH+TtEWi
+Jdodg+MXI94ZEa7kdBt1SwihG6SsCcoqrD/ZahmwojvuhCelMUdIkrAawLvyVNZv
+gXj51nsLVrtAjgjjpMI9
+=NWbM
+-----END PGP SIGNATURE-----
+
+--=-cEKtj54NCSq5/tu66s+e--
+
