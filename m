@@ -1,40 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:59892 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754518Ab0AUTpq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 14:45:46 -0500
-Received: by ewy19 with SMTP id 19so408243ewy.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 11:45:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <165941211001211143y45db17b7ob731a9d3a6e48957@mail.gmail.com>
-References: <165941211001211143y45db17b7ob731a9d3a6e48957@mail.gmail.com>
-Date: Thu, 21 Jan 2010 21:45:44 +0200
-Message-ID: <165941211001211145jb41fb6dy56e2d8ae908db97f@mail.gmail.com>
-Subject: ath9k AP mode + IGMP multicast
-From: Rytis Ilciukas <zibalas@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:45489 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755149Ab0AWA0V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 19:26:21 -0500
+Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>, Kalle Valo <kalle.valo@nokia.com>
+In-Reply-To: <43e72e891001221623v477b9fady32237c1a3aededda@mail.gmail.com>
+References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1264186981.2593.10.camel@johannes.local>
+	 <43e72e891001221120i79c6525bo4852cb5a6c7a37@mail.gmail.com>
+	 <1264189560.2593.14.camel@johannes.local>
+	 <43e72e891001221544j1b1bd67ao8dfcf4d0dd12dd81@mail.gmail.com>
+	 <1264205494.7208.7.camel@wwguy-ubuntu>
+	 <43e72e891001221623v477b9fady32237c1a3aededda@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 22 Jan 2010 16:22:50 -0800
+Message-Id: <1264206170.7208.8.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Fri, 2010-01-22 at 16:23 -0800, Luis R. Rodriguez wrote:
+> On Fri, Jan 22, 2010 at 4:11 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> > On Fri, 2010-01-22 at 15:44 -0800, Luis R. Rodriguez wrote:
+> >> On Fri, Jan 22, 2010 at 11:46 AM, Johannes Berg
+> >> <johannes@sipsolutions.net> wrote:
+> >> > On Fri, 2010-01-22 at 11:20 -0800, Luis R. Rodriguez wrote:
+> >> >
+> >> >> > Previously, we would switch the channel completely to the new operating
+> >> >> > channel before even probing the AP. That way, we would virtually always
+> >> >> > receive a beacon from the new AP between the time we started the
+> >> >> > association process (probe,auth,assoc) and configuring the driver.
+> >> >> >
+> >> >> > Now with the new changes that use the off-channel work, we may return to
+> >> >> > the old "operating" channel, which may be no particular channel, between
+> >> >> > all these steps. Thus, if there's no beacon between any of probe
+> >> >> > request/response, auth "request"/"response", assoc request/response, we
+> >> >> > never get one, and this situation happens.
+> >> >> >
+> >> >> > I see two solutions, apart from this special-case patch fixing
+> >> >> >
+> >> >> > First, we could go back to the original behaviour if we have just one
+> >> >> > virtual interface. But that still leaves us with the race, we might do
+> >> >> > all three frame exchanges within a beacon interval and still miss the
+> >> >> > beacon, we just tend to not do that and get a beacon.
+> >> >>
+> >> >> Curious, what symptoms were seen when the dtim was not propagated
+> >> >> prior to association, did the STA just not wake up for the right dtim
+> >> >> interval when in PS mode?
+> >> >
+> >> > Yes, I don't really know exactly what happens,
+> >>
+> >> OK -- Wey, can you elaborate a little as to how you found this and
+> >> what you were seeing? Does the device not go into PS mode at all?
+> >
+> > We are doing Power consumption test with different DTIM value, the test
+> > is based on test scripts, so we disable the NetworkManager to make sure
+> > we can control which AP we need to associated with. During the test, we
+> > notice when AP change it DTIM value, a lot time STA will used the old
+> > DTIM value in Power Save mode which cause problem.
+> 
+> Ah I see. What if there was no old dtim value before?
 
-I'm trying to setup a wireless linux router I have DWA-552 for
-wireless access. I'm using Alpine-Linux (2.6.30.10-grsec) with hostapd
-and igmpproxy. The problem is when i'm trying to watch IPTV on
-wireless connnecion wireless connection kind of dies (wired connection
-works fine). No ping to router and VLC shows a couple of messed up
-frames every 5 seconds or so. I've tried compat-wireless-2.6.30 and
-also compat-wireless-2.6.33-rc4 along with 2.6.32 kernel. Got same
-results. Tried connecting from my desktop with 802.11n and laptop
-802.11g same results.
+I am not sure, I believe the default is "1", but I might be wrong
 
-There's more info in my thread at
-http://www.linuxquestions.org/questions/linux-networking-3/wireless-iptv-with-atheros-ath9k-779521/
+> 
+> > We believe the correct fix is mac80211 should wait for both probe
+> > response and beacon arrived before start the association process.
+> >
+> > Hope this explain what we found.
+> 
+> Indeed, thanks a lot.
+> 
+>   Luis
 
-I would really appreciate any kind of help and I would be happy to
-provide any additional info needed.
-
-Regards,
-Rick
