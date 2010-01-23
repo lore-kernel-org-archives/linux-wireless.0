@@ -1,162 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:15660 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751400Ab0AaChg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 21:37:36 -0500
-Subject: [PATCH] ath9k: fix access to freed data on unload
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Sat, 30 Jan 2010 21:37:24 -0500
-Message-Id: <1264905444.10146.9.camel@mj>
+Received: from he.sipsolutions.net ([78.46.109.217]:54207 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011Ab0AWSxw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jan 2010 13:53:52 -0500
+Subject: Re: hwtkip hangs on b43
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, kecsa@kutfo.hit.bme.hu,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201001231919.32466.mb@bu3sch.de>
+References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu>
+	 <4B5B2FCF.2000005@lwfinger.net> <1264268862.23766.0.camel@johannes.local>
+	 <201001231919.32466.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-RHZofO1DUM0CdkN97JBn"
+Date: Sat, 23 Jan 2010 19:53:48 +0100
+Message-ID: <1264272828.23766.6.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calling ath_bus_cleanup() after ieee80211_free_hw() resulted in access
-to common->bus_ops, which is already freed as part of the device data.
 
-Remove the cleanup field in struct ath_bus_ops, as it was never used
-properly.  Remove ath_bus_cleanup().  Merge cleanup functions in place
-of the ath_bus_cleanup() calls.  Take care not to use any device data
-after ieee80211_free_hw().
+--=-RHZofO1DUM0CdkN97JBn
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+On Sat, 2010-01-23 at 19:19 +0100, Michael Buesch wrote:
 
-The bug was causing a hang on a kernel with most debugging options
-enabled.  I think the fix is important and simple enough for stable
-kernels.  I wish I could make the patch smaller, but I didn't want to
-leave unused and dangerous fields and functions.
+> > > -	mutex_lock(&wl->mutex);
+> > > +	if (!mutex_is_locked(&wl->mutex)) {
+> >=20
+> > I think this might be because update_tkip_key is called from within the
+> > RX path, so it's probably not even safe to use mutexes to start with?
+>=20
+> Well, if mac80211 does a callback into the driver on behalf of a driver c=
+all,
+> that is broken design. It would break for all locks, not just mutexes.
 
-ath9k was tested on the PCI bus.  ath9k on AHB was compile tested.
-ath5k and ar9170 use struct ath_bus_ops, but don't use the cleanup
-field, so they are not affected.
+Yes, but
 
- drivers/net/wireless/ath/ath.h         |    1 -
- drivers/net/wireless/ath/ath9k/ahb.c   |   12 ++----------
- drivers/net/wireless/ath/ath9k/ath9k.h |    5 -----
- drivers/net/wireless/ath/ath9k/pci.c   |   18 +++++-------------
- 4 files changed, 7 insertions(+), 29 deletions(-)
+> We should probably switch back to ieee80211_rx_irqsafe to workaround thes=
+e
+> circular locking problems.
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 9e05648..71fc960 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -74,7 +74,6 @@ struct ath_common;
- 
- struct ath_bus_ops {
- 	void		(*read_cachesize)(struct ath_common *common, int *csz);
--	void		(*cleanup)(struct ath_common *common);
- 	bool		(*eeprom_read)(struct ath_common *common, u32 off, u16 *data);
- 	void		(*bt_coex_prep)(struct ath_common *common);
- };
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 9e62a56..ca4994f 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -27,12 +27,6 @@ static void ath_ahb_read_cachesize(struct ath_common *common, int *csz)
- 	*csz = L1_CACHE_BYTES >> 2;
- }
- 
--static void ath_ahb_cleanup(struct ath_common *common)
--{
--	struct ath_softc *sc = (struct ath_softc *)common->priv;
--	iounmap(sc->mem);
--}
--
- static bool ath_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- {
- 	struct ath_softc *sc = (struct ath_softc *)common->priv;
-@@ -54,8 +48,6 @@ static bool ath_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- 
- static struct ath_bus_ops ath_ahb_bus_ops  = {
- 	.read_cachesize = ath_ahb_read_cachesize,
--	.cleanup = ath_ahb_cleanup,
--
- 	.eeprom_read = ath_ahb_eeprom_read,
- };
- 
-@@ -164,12 +156,12 @@ static int ath_ahb_remove(struct platform_device *pdev)
- 	if (hw) {
- 		struct ath_wiphy *aphy = hw->priv;
- 		struct ath_softc *sc = aphy->sc;
--		struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+		void __iomem *mem = sc->mem;
- 
- 		ath9k_deinit_device(sc);
- 		free_irq(sc->irq, sc);
- 		ieee80211_free_hw(sc->hw);
--		ath_bus_cleanup(common);
-+		iounmap(mem);
- 		platform_set_drvdata(pdev, NULL);
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 3f8a7e7..0ea340f 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -538,11 +538,6 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- 	common->bus_ops->read_cachesize(common, csz);
- }
- 
--static inline void ath_bus_cleanup(struct ath_common *common)
--{
--	common->bus_ops->cleanup(common);
--}
--
- extern struct ieee80211_ops ath9k_ops;
- extern int modparam_nohwcrypt;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 4ae7b5f..f2afcbe 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -49,16 +49,6 @@ static void ath_pci_read_cachesize(struct ath_common *common, int *csz)
- 		*csz = DEFAULT_CACHELINE >> 2;   /* Use the default size */
- }
- 
--static void ath_pci_cleanup(struct ath_common *common)
--{
--	struct ath_softc *sc = (struct ath_softc *) common->priv;
--	struct pci_dev *pdev = to_pci_dev(sc->dev);
--
--	pci_iounmap(pdev, sc->mem);
--	pci_disable_device(pdev);
--	pci_release_region(pdev, 0);
--}
--
- static bool ath_pci_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- {
- 	struct ath_hw *ah = (struct ath_hw *) common->ah;
-@@ -98,7 +88,6 @@ static void ath_pci_bt_coex_prep(struct ath_common *common)
- 
- static const struct ath_bus_ops ath_pci_bus_ops = {
- 	.read_cachesize = ath_pci_read_cachesize,
--	.cleanup = ath_pci_cleanup,
- 	.eeprom_read = ath_pci_eeprom_read,
- 	.bt_coex_prep = ath_pci_bt_coex_prep,
- };
-@@ -245,12 +234,15 @@ static void ath_pci_remove(struct pci_dev *pdev)
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	void __iomem *mem = sc->mem;
- 
- 	ath9k_deinit_device(sc);
- 	free_irq(sc->irq, sc);
- 	ieee80211_free_hw(sc->hw);
--	ath_bus_cleanup(common);
-+
-+	pci_iounmap(pdev, mem);
-+	pci_disable_device(pdev);
-+	pci_release_region(pdev, 0);
- }
- 
- #ifdef CONFIG_PM
+Actually you can't, because you can't acquire the mutex here since we're
+in an atomic section. So relying on it being already locked is probably
+safer. However, you can't actually sleep anyway...
 
--- 
-Regards,
-Pavel Roskin
+the proper fix would be to delay the call in mac80211 to a work.
+
+johannes
+
+
+--=-RHZofO1DUM0CdkN97JBn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLW0W4AAoJEODzc/N7+Qma9r4P/3u4ZH1S33UGi/Ox/tEGaV12
+cVnKyDmehZNYjDzv3pBQs0LqhVeI9LPE/EmF6GWRjbRG6LWLxsOvgbQJ464hiJ4g
+QGuBWDAEXJ4JNI1yfwx2Egy4l5spg0buzkaqhZrVMww4/yutFWyhqcQoc66HK1qn
+jKA9RWnwBxeiO9ZIYzcrUWklxItD+YoBcyIx0sjoGDZHR5qJDAYWA8ORye/TI0rV
+cQl+cQs0G0sjbw5dBaliPZYCfrDMuXKzwzrMg04QFbRI2GjewtH+WI9Q0j+GHNvP
+BLzU+EewLBW161ZuNYAsnx9gCmV0gGRNHfSA23k2J/LI6RS8j+HTU1OkARN+1xGq
+MozvUL9xK/RqzZQI0vXBqpCqiBNp++UV3VX95P3vuYrsK70eUe47kTInQsX6kOjk
+A9hE6o1tVZv7bUMn5AOMi8g4RiSIIZoGR/jUVK2k4f4dVC5zHhOP3vuezvWmXbWo
+LgMc51PgBCCvBOZCNtu5WQ7N+/5T//yeWotkaUwBnEfmyCbxjh0QAi4gh/iEDlpl
+ZO8aMsRo1LkNUg7f3VZIXcd6HikLyNSwT0U9MS9f3n112EEfcihjyz0lYugji1vR
+KUo23Wuk5bhtt6MnX/y+feQxV5cK4XxPLMV8uq5HHzpeQsQgEB3KGvf5lJWcZi8Y
+j9dMxZ352xBX0JirzcJ7
+=jvuK
+-----END PGP SIGNATURE-----
+
+--=-RHZofO1DUM0CdkN97JBn--
+
