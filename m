@@ -1,126 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:42628 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753292Ab0AHRLA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 12:11:00 -0500
-Message-ID: <4B476722.4040508@openwrt.org>
-Date: Fri, 08 Jan 2010 18:10:58 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48998 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab0AWBam (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 20:30:42 -0500
+Date: Fri, 22 Jan 2010 20:16:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	davem@davemloft.net, dwmw2@infradead.org
+Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
+Message-ID: <20100123011618.GA16135@tuxdriver.com>
+References: <1264121596-9616-1-git-send-email-zajec5@gmail.com> <b170af451001221247j1b380703w4c09b5fdd601466b@mail.gmail.com> <201001222259.28933.mb@bu3sch.de> <201001222333.42554.mb@bu3sch.de>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 2/3] mac80211: allow station updates on ap interfaces for
- vlan stations
-References: <4B476612.4090509@openwrt.org>
-In-Reply-To: <4B476612.4090509@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201001222333.42554.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the per-vif station changes, sta_info_get on the ap sdata no 
-longer returns entries for stations on ap vlans. This causes issues 
-with hostapd, which currently always passes the ap interface name to 
-nl80211 calls. This patch provides bug compatibility with the earlier 
-versions until hostapd is fixed.
+On Fri, Jan 22, 2010 at 11:33:40PM +0100, Michael Buesch wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -119,6 +119,27 @@ struct sta_info *sta_info_get(struct iee
- 	return sta;
- }
- 
-+/*
-+ * Get sta info either from the specified interface
-+ * or from one of its vlans
-+ */
-+struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
-+				  const u8 *addr)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+
-+	sta = rcu_dereference(local->sta_hash[STA_HASH(addr)]);
-+	while (sta) {
-+		if ((sta->sdata == sdata ||
-+		     sta->sdata->bss == sdata->bss) &&
-+		    memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
-+			break;
-+		sta = rcu_dereference(sta->hnext);
-+	}
-+	return sta;
-+}
-+
- struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
- 				     int idx)
- {
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -408,6 +408,9 @@ static inline u32 get_sta_flags(struct s
- struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr);
- 
-+struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
-+				  const u8 *addr);
-+
- static inline
- void for_each_sta_info_type_check(struct ieee80211_local *local,
- 				  const u8 *addr,
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -148,7 +148,7 @@ static int ieee80211_add_key(struct wiph
- 	rcu_read_lock();
- 
- 	if (mac_addr) {
--		sta = sta_info_get(sdata, mac_addr);
-+		sta = sta_info_get_bss(sdata, mac_addr);
- 		if (!sta) {
- 			ieee80211_key_free(key);
- 			err = -ENOENT;
-@@ -179,7 +179,7 @@ static int ieee80211_del_key(struct wiph
- 	if (mac_addr) {
- 		ret = -ENOENT;
- 
--		sta = sta_info_get(sdata, mac_addr);
-+		sta = sta_info_get_bss(sdata, mac_addr);
- 		if (!sta)
- 			goto out_unlock;
- 
-@@ -226,7 +226,7 @@ static int ieee80211_get_key(struct wiph
- 	rcu_read_lock();
- 
- 	if (mac_addr) {
--		sta = sta_info_get(sdata, mac_addr);
-+		sta = sta_info_get_bss(sdata, mac_addr);
- 		if (!sta)
- 			goto out;
- 
-@@ -419,7 +419,7 @@ static int ieee80211_get_station(struct 
- 
- 	rcu_read_lock();
- 
--	sta = sta_info_get(sdata, mac);
-+	sta = sta_info_get_bss(sdata, mac);
- 	if (sta) {
- 		ret = 0;
- 		sta_set_sinfo(sta, sinfo);
-@@ -775,7 +775,7 @@ static int ieee80211_del_station(struct 
- 	if (mac) {
- 		rcu_read_lock();
- 
--		sta = sta_info_get(sdata, mac);
-+		sta = sta_info_get_bss(sdata, mac);
- 		if (!sta) {
- 			rcu_read_unlock();
- 			return -ENOENT;
-@@ -803,7 +803,7 @@ static int ieee80211_change_station(stru
- 
- 	rcu_read_lock();
- 
--	sta = sta_info_get(sdata, mac);
-+	sta = sta_info_get_bss(sdata, mac);
- 	if (!sta) {
- 		rcu_read_unlock();
- 		return -ENOENT;
+> So while we are at it, I'd really like to migrate away from the berlios list.
+> It's really just annoying. Does somebody have a good reliable mailinglist service
+> we could migrate to? Does vger offer lists to driver projects?
+
+Probably -- I think davem is the person to ask?  Infradead is probably
+another option (dwmw2).
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
