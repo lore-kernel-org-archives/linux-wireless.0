@@ -1,65 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:56596 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754280Ab0A0HL4 (ORCPT
+Received: from mail-pz0-f190.google.com ([209.85.222.190]:43358 "EHLO
+	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028Ab0AWRUU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 02:11:56 -0500
-To: "Edgar E. Iglesias" <edgar.iglesias@gmail.com>
-Cc: Dunc <dunc@lemonia.org>, David Miller <davem@davemloft.net>,
-	kaber@trash.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-References: <877hr5nkx0.fsf@purkki.valot.fi>
-	<20100126.041610.226004766.davem@davemloft.net>
-	<87wrz5m3cd.fsf@purkki.valot.fi>
-	<20100126.050645.184040277.davem@davemloft.net>
-	<87my01m0zm.fsf@purkki.valot.fi> <4B5EF5DF.2070005@lemonia.org>
-	<87iqaplz5a.fsf@purkki.valot.fi>
-	<20100126215401.GA25095@laped.iglesias.mooo.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 27 Jan 2010 09:11:52 +0200
-In-Reply-To: <20100126215401.GA25095@laped.iglesias.mooo.com> (Edgar E. Iglesias's message of "Tue\, 26 Jan 2010 22\:54\:01 +0100")
-Message-ID: <87zl40konb.fsf@purkki.valot.fi>
+	Sat, 23 Jan 2010 12:20:20 -0500
+Received: by pzk28 with SMTP id 28so795922pzk.4
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 09:20:19 -0800 (PST)
+Message-ID: <4B5B2FCF.2000005@lwfinger.net>
+Date: Sat, 23 Jan 2010 11:20:15 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: kecsa@kutfo.hit.bme.hu
+CC: linux-wireless@vger.kernel.org
+Subject: Re: hwtkip hangs on b43
+References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu>
+In-Reply-To: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Edgar E. Iglesias" <edgar.iglesias@gmail.com> writes:
+On 01/23/2010 02:46 AM, kecsa@kutfo.hit.bme.hu wrote:
+> Hi,
+>
+> when I load b43 with hwtkip=1 system hangs after
+> ' b43-phy0 debug: Using hardware based encryption for keyidx: 0, mac:...'
+> throwing the below BUG.
+>
+> This is a non-SMP non-preemtive kernel.  It looks like we are entering
+> b43_op_update_tkip_key() already holding the wl->mutex. We lock mutex in
+> b43_interrupt_thread_handler().
+>
+> This problem is present in stable and also in compat-wireless-2010-01-22
+> shapshot if I haven't missed something. As a quick and dirty fix I have
+> removed wl->mutex lock/unlock from b43_op_update_tkip_key(). Box survived
+> one day (until now) and a ~3GB file transfer over WLAN using hwtkip in
+> this way.
 
-> IMO what apps should be doing is setting the DSCP to a user configurable
-> value (config file or cmd line switch etc). This way people can choose DSCP
-> to whatever makes sense in their particular network. The default value
-> is of less interest.
+Your analysis seem to be correct. I tested with the following patch, which tests 
+to see if the mutex is locked on entry. If not, it logs a message, locks the 
+mutex and sets a flag to indicate that the mutex should be unlocked on exit. 
+This patch is not SMP-safe, but is merely for testing. The printk statement has 
+not triggered after about 1 hour of testing. I'll give it a bit more testing 
+before a final patch is submitted.
 
-I have to disagree here. Most of the people are not that interested
-configuring their applications, they just want to use them. I see that
-having this configurable would be just an excuse for not having a good
-default value.
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -850,11 +850,16 @@ static void b43_op_update_tkip_key(struc
+  	struct b43_wl *wl = hw_to_b43_wl(hw);
+  	struct b43_wldev *dev;
+  	int index = keyconf->hw_key_idx;
++	bool locked_here = 0;
 
-Also it just doesn't scale if every user has to start configuring all
-network applications they use. IMHO this all should work "Out of Box".
+  	if (B43_WARN_ON(!modparam_hwtkip))
+  		return;
 
-> WRT L3 vs L2, I think apps should normally be tagging by setting the DSCP
-> field. The kernel should provide configurable mappings between DSCP and
-> what ever L2 QoS that is available on the egress interface. As the packet
-> jumps and gets routed, the DSCP value gets remapped two every links
-> particular L2 "QoS" that matches the DSCP. After all, apps shouldn't need to
-> know their hooked up to a 802.11, wired ethernet or what ever is on the
-> route to the peer...
+-	mutex_lock(&wl->mutex);
++	if (!mutex_is_locked(&wl->mutex)) {
++		printk(KERN_DEBUG "b43: mutex not locked in %s\n", __func__);
++		mutex_lock(&wl->mutex);
++		locked_here = 1;
++	}
 
-With this one I fully agree. I think this is the way we should do
-this.
+  	dev = wl->current_dev;
+  	if (!dev || b43_status(dev) < B43_STAT_INITIALIZED)
+@@ -866,7 +871,8 @@ static void b43_op_update_tkip_key(struc
+  	keymac_write(dev, index, addr);
 
-> AFAIK, Linux already makes all of this perfectly possible.
+  out_unlock:
+-	mutex_unlock(&wl->mutex);
++	if (locked_here)
++		mutex_unlock(&wl->mutex);
+  }
 
-Yes, it's possible but not widely used because people don't know about
-this. We need to provide documentation and then push applications to
-use this.
+  static void do_key_write(struct b43_wldev *dev,
 
-> My 2 cents..
+==================================================
 
-Thank you very much, much appreciated.
 
--- 
-Kalle Valo
+Larry
+
+
