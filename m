@@ -1,113 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:35395 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752395Ab0AESQ3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 13:16:29 -0500
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id B2FB2EBB2B
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Jan 2010 20:16:27 +0200 (EET)
-Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
-	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id 95228E51BD
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Jan 2010 20:16:26 +0200 (EET)
-Subject: [PATCH v2 2/9] mac80211: use PS Poll and Nullfunc templates when
-	sending such frames
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 05 Jan 2010 20:16:26 +0200
-Message-ID: <20100105181626.27418.85228.stgit@tikku>
-In-Reply-To: <20100105181522.27418.97100.stgit@tikku>
-References: <20100105181522.27418.97100.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga11.intel.com ([192.55.52.93]:55284 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753104Ab0AWAPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2010 19:15:05 -0500
+Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>, Kalle Valo <kalle.valo@nokia.com>
+In-Reply-To: <43e72e891001221544j1b1bd67ao8dfcf4d0dd12dd81@mail.gmail.com>
+References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1264186981.2593.10.camel@johannes.local>
+	 <43e72e891001221120i79c6525bo4852cb5a6c7a37@mail.gmail.com>
+	 <1264189560.2593.14.camel@johannes.local>
+	 <43e72e891001221544j1b1bd67ao8dfcf4d0dd12dd81@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 22 Jan 2010 16:11:34 -0800
+Message-Id: <1264205494.7208.7.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Fri, 2010-01-22 at 15:44 -0800, Luis R. Rodriguez wrote:
+> On Fri, Jan 22, 2010 at 11:46 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Fri, 2010-01-22 at 11:20 -0800, Luis R. Rodriguez wrote:
+> >
+> >> > Previously, we would switch the channel completely to the new operating
+> >> > channel before even probing the AP. That way, we would virtually always
+> >> > receive a beacon from the new AP between the time we started the
+> >> > association process (probe,auth,assoc) and configuring the driver.
+> >> >
+> >> > Now with the new changes that use the off-channel work, we may return to
+> >> > the old "operating" channel, which may be no particular channel, between
+> >> > all these steps. Thus, if there's no beacon between any of probe
+> >> > request/response, auth "request"/"response", assoc request/response, we
+> >> > never get one, and this situation happens.
+> >> >
+> >> > I see two solutions, apart from this special-case patch fixing
+> >> >
+> >> > First, we could go back to the original behaviour if we have just one
+> >> > virtual interface. But that still leaves us with the race, we might do
+> >> > all three frame exchanges within a beacon interval and still miss the
+> >> > beacon, we just tend to not do that and get a beacon.
+> >>
+> >> Curious, what symptoms were seen when the dtim was not propagated
+> >> prior to association, did the STA just not wake up for the right dtim
+> >> interval when in PS mode?
+> >
+> > Yes, I don't really know exactly what happens,
+> 
+> OK -- Wey, can you elaborate a little as to how you found this and
+> what you were seeing? Does the device not go into PS mode at all?
 
-To avoid duplicate code, use ieee80211_[pspoll|nullfunc]_get() to get
-templates for PS Poll and Nullfunc frames in mlme.c.
+We are doing Power consumption test with different DTIM value, the test
+is based on test scripts, so we disable the NetworkManager to make sure
+we can control which AP we need to associated with. During the test, we
+notice when AP change it DTIM value, a lot time STA will used the old
+DTIM value in Power Save mode which cause problem.
 
-Compile-tested only.
+We believe the correct fix is mac80211 should wait for both probe
+response and beacon arrived before start the association process.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- net/mac80211/mlme.c |   48 +++++++++---------------------------------------
- 1 files changed, 9 insertions(+), 39 deletions(-)
+Hope this explain what we found.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 72920ee..7f771c0 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -249,30 +249,15 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
- void ieee80211_send_pspoll(struct ieee80211_local *local,
- 			   struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_pspoll *pspoll;
- 	struct sk_buff *skb;
--	u16 fc;
- 
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*pspoll));
--	if (!skb) {
--		printk(KERN_DEBUG "%s: failed to allocate buffer for "
--		       "pspoll frame\n", sdata->name);
-+	skb = ieee80211_pspoll_get(&local->hw, &sdata->vif);
-+	if (!skb)
- 		return;
--	}
--	skb_reserve(skb, local->hw.extra_tx_headroom);
--
--	pspoll = (struct ieee80211_pspoll *) skb_put(skb, sizeof(*pspoll));
--	memset(pspoll, 0, sizeof(*pspoll));
--	fc = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL | IEEE80211_FCTL_PM;
--	pspoll->frame_control = cpu_to_le16(fc);
--	pspoll->aid = cpu_to_le16(ifmgd->aid);
- 
--	/* aid in PS-Poll has its two MSBs each set to 1 */
--	pspoll->aid |= cpu_to_le16(1 << 15 | 1 << 14);
--
--	memcpy(pspoll->bssid, ifmgd->bssid, ETH_ALEN);
--	memcpy(pspoll->ta, sdata->vif.addr, ETH_ALEN);
-+	pspoll = (struct ieee80211_pspoll *) skb->data;
-+	pspoll->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 	ieee80211_tx_skb(sdata, skb);
-@@ -283,30 +268,15 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 			     int powersave)
- {
- 	struct sk_buff *skb;
--	struct ieee80211_hdr *nullfunc;
--	__le16 fc;
-+	struct ieee80211_hdr_3addr *nullfunc;
- 
--	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
-+	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif);
-+	if (!skb)
- 		return;
- 
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 24);
--	if (!skb) {
--		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
--		       "frame\n", sdata->name);
--		return;
--	}
--	skb_reserve(skb, local->hw.extra_tx_headroom);
--
--	nullfunc = (struct ieee80211_hdr *) skb_put(skb, 24);
--	memset(nullfunc, 0, 24);
--	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
--			 IEEE80211_FCTL_TODS);
-+	nullfunc = (struct ieee80211_hdr_3addr *) skb->data;
- 	if (powersave)
--		fc |= cpu_to_le16(IEEE80211_FCTL_PM);
--	nullfunc->frame_control = fc;
--	memcpy(nullfunc->addr1, sdata->u.mgd.bssid, ETH_ALEN);
--	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
--	memcpy(nullfunc->addr3, sdata->u.mgd.bssid, ETH_ALEN);
-+		nullfunc->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 	ieee80211_tx_skb(sdata, skb);
+> 
+> >  but if you look at
+> > Wey-Yi's patch you'll see most of the problem was that we calculated the
+> > maximum powersaving interval wrong.
+> 
+> I see..
+> 
+> >> Wouldn't we get the dtim interval on
+> >> eventual beacons later or do we disregard all that information after
+> >> associated?
+> >
+> > As you can see from the patch, we currently disregard any "update" in
+> > that information -- this patch changes it.
+> 
+> Got it.
+> 
+> >> If so what if the AP changes the dtim interval?
+> >
+> > I believe the AP is not allowed to do that without turning off and back
+> > on completely.
+> 
+> OK. Still curious, if in practice would funky APs ever tune DTIM
+> dynamically and not kick you off, and if they do is it fair to ignore
+> that and blame the AP?
+> 
+> >> I take it this can easily be reproduced with a long beacon interval?
+> >
+> > Easier, yes. The easiest way to reproduce it is to associate using just
+> > "iw", no NM or wpa_supplicant -- make sure the scan list is empty before
+> > you associate -- and with a long beacon interval. We then scan, but that
+> > will only give us a probe response with high probability, and then we do
+> > all the switching as I explained and we don't ever get a beacon. If you
+> > use NM it may scan more often and increase the probability of us having
+> > a beacon at some point in time.
+> 
+> OK thanks.
+> 
+> >> > The other solution I see is that we add a new step before or after the
+> >> > direct probe step, which would just be "wait for a beacon". This would
+> >> > ensure we have both probe and beacon information always ready. It would
+> >> > also ensure we have both probe and beacon info for our new userspace
+> >> > reporting of that.
+> >>
+> >> This seems cleaner.
+> >
+> > I agree. And since we already keep track of this since 34a6eddb, we
+> > should be able to fairly easily determine whether we still need probe
+> > response or beacon, and only do either the direct probe or wait for
+> > beacon step.
+> 
+>   Luis
 
