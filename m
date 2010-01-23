@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:47338 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754064Ab0AJWil convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58266 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671Ab0AWMwq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2010 17:38:41 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH 3/6] b43: N-PHY: add RSSI calculation for PHY rev < 3
-Date: Sun, 10 Jan 2010 23:38:26 +0100
-Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <op.u6b70wtk9lhzdc@linux-g0th.site>
-In-Reply-To: <op.u6b70wtk9lhzdc@linux-g0th.site>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201001102338.28721.mb@bu3sch.de>
+	Sat, 23 Jan 2010 07:52:46 -0500
+Subject: Re: [PATCH 1/6] Add "wlan" and "ultrawideband" as aliases for
+ "wifi" and "uwb".
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Darren Salt <linux@youmustbejoking.demon.co.uk>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1264203330-20785-1-git-send-email-linux@youmustbejoking.demon.co.uk>
+References: <1264203330-20785-1-git-send-email-linux@youmustbejoking.demon.co.uk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-aWNSMmzj26T5plz3BIgf"
+Date: Sat, 23 Jan 2010 13:52:44 +0100
+Message-ID: <1264251164.2593.26.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 10 January 2010 23:13:34 Rafał Miłecki wrote:
-> +	s32 results_min[4];
-> +	u8 vcm_final[4];
-> +	s32 results[4][4];
-> +	s32 miniq[4][2];
-> +	memset(results_min, 0, sizeof(s32) * 4);
-> +	memset(vcm_final, 0, sizeof(u8) * 4);
-> +	memset(results, 0, sizeof(s32) * 4 * 4);
-> +	memset(miniq, 0, sizeof(s32) * 4 * 2);
 
-Just initialize the variables to zero instead of doing a memset:
+--=-aWNSMmzj26T5plz3BIgf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-+	s32 results_min[4] = { 0, };
-+	u8 vcm_final[4] = { 0, };
-+	s32 results[4][4] = { 0, };
-+	s32 miniq[4][2] = { 0, };
+All applied, thanks.
 
-> +	b43_radio_maskset(dev, B2055_C1_PD_RSSIMISC, 0xF8, 0);
-> +	b43_radio_maskset(dev, B2055_C2_PD_RSSIMISC, 0xF8, 0);
+johannes
 
-If you don't set anything, you can use
-b43_radio_mask();
+--=-aWNSMmzj26T5plz3BIgf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--- 
-Greetings, Michael.
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLWvEZAAoJEODzc/N7+Qma2HgQALfIzp+CGpPBWu5fY3m9xl4D
+CeJG5uIHR40wHqoYoDM7FftIFp8k1mbMPvN/ETcnbPF3PYEY2DKAuQiHjx0b7saJ
+sIeIfir4/Yd8f3wMUGW2bgpSdcX8D+LdglFSOm2XL3fHhqKzBYhj9tYp5P3XWaCU
+Zt3Gq3T6jUOCQT0S++IXmfv4DqJPzShuqtgc715oJqtbMUiI3+vmT/QBunnToBbY
+KEEuaORJ8dhoItvgYz/Mms/v2KS8zHKQsgvqCKXly0xPUA41t2fYalyy88C5jmbH
+J/oA7QtP7NyEOa3Zw+eJGMNs4gKd1q28aL44rJ1/G9TYayWXOthycaU1tzWfqEoB
+XjB4rx+MWRhPhXQn7HsSwzMhUGGAdUzlrikGMvYnS8Ng6QXQmqAbkxzIGCK8IXu5
+v9xtrvVkREpP+dtHV0rxelIsfdWmAM44V/HiNpW58K2rsWt5xnnxcU4lrLHGXKj8
+aqH3KmPBoVW0l04CaXe4zUZo+YWBTRHW3HvVjAIkb+eZ5r5/PKbJnuiTSYKtTu5s
+oW5yi1FaVy0/+a744CiewjK/5IuhdgXdJOMcm5AhELUyBRdBVK5OdGdez4agGVVm
+nZ6uDKDh7Q7OdwCnTWEVX5OnM8HoOulylUtIiugmnthUjJblFd426DvpWBn8QoA2
+UemLhMKorsOhGJFj2LB3
+=ra/k
+-----END PGP SIGNATURE-----
+
+--=-aWNSMmzj26T5plz3BIgf--
+
