@@ -1,78 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9861 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752075Ab0ASHFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 02:05:25 -0500
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 1/1] update rfkill.h from kernel 2.6.33
-Date: Tue, 19 Jan 2010 09:05:21 +0200
-Message-Id: <1263884721-11008-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from cp-out12.libero.it ([212.52.84.112]:59259 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755794Ab0AWPYf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jan 2010 10:24:35 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/5] mac80211: move control.hw_key assignment
+Date: Sat, 23 Jan 2010 16:22:03 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+References: <20100117004754.624627000@sipsolutions.net> <20100117004825.177097479@sipsolutions.net>
+In-Reply-To: <20100117004825.177097479@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201001231622.03394.rossi.f@inwind.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-1. add FM radio type
-2. update rfkill_type docs
+On Sunday 17 January 2010 01:47:58 Johannes Berg wrote:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- rfkill.c |    3 +++
- rfkill.h |    3 +++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+> When mac80211 asks a driver to encrypt a frame, it
+> must assign the control.hw_key pointer for it to
+> know which key to use etc. Currently, mac80211 does
+> this whenever it would software-encrypt a frame.
+> 
+> Change the logic of this code to assign the hw_key
+> pointer when selecting the key, and later check it
+> when deciding whether to encrypt the frame or let
+> it be encrypted by the hardware. This allows us to
+> later simply skip the encryption function since it
+> no longer modifies the TX control.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/rfkill.c b/rfkill.c
-index 216e6ac..3f71181 100644
---- a/rfkill.c
-+++ b/rfkill.c
-@@ -109,6 +109,8 @@ static const char *type2string(enum rfkill_type type)
- 		return "Wireless WAN";
- 	case RFKILL_TYPE_GPS:
- 		return "GPS";
-+	case RFKILL_TYPE_FM:
-+		return "FM";
- 	case NUM_RFKILL_TYPES:
- 		return NULL;
- 	}
-@@ -203,6 +205,7 @@ static struct rfkill_type_str rfkill_type_strings[] = {
- 	{	.type = RFKILL_TYPE_WIMAX,		.name = "wimax"	},
- 	{	.type = RFKILL_TYPE_WWAN,		.name = "wwan"	},
- 	{	.type = RFKILL_TYPE_GPS,		.name = "gps"	},
-+	{	.type = RFKILL_TYPE_FM,			.name = "fm"	},
- 	{	.name = NULL }
- };
- 
-diff --git a/rfkill.h b/rfkill.h
-index 3392c59..97059d0 100644
---- a/rfkill.h
-+++ b/rfkill.h
-@@ -35,6 +35,8 @@
-  * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
-  * @RFKILL_TYPE_WIMAX: switch is on a WiMAX device.
-  * @RFKILL_TYPE_WWAN: switch is on a wireless WAN device.
-+ * @RFKILL_TYPE_GPS: switch is on a GPS device.
-+ * @RFKILL_TYPE_FM: switch is on a FM radio device.
-  * @NUM_RFKILL_TYPES: number of defined rfkill types
-  */
- enum rfkill_type {
-@@ -45,6 +47,7 @@ enum rfkill_type {
- 	RFKILL_TYPE_WIMAX,
- 	RFKILL_TYPE_WWAN,
- 	RFKILL_TYPE_GPS,
-+	RFKILL_TYPE_FM,
- 	NUM_RFKILL_TYPES,
- };
- 
--- 
-1.6.0.6
+Hi Johannes,
+this patch breaks my wireless connection. I'm able to authenticate and 
+associate to my AP but I can't use the connection, a simple ping towards my AP 
+doesn't work. I bisected the problem and your patch is the bad commit.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+I have the latest wireless-testing.git (v2.6.33-rc5-47285-g96ada3c). After 
+having removed all the commits related to this patch, i.e.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+- commit f12553ebe045a8a40ab33fa500fb57d10706e226
+- commit e4fca007b06165900d0e44e8d5e251376819bf5d
+- commit 813d76694043d00b59475baa1fbfaf54a2eb7fad
 
+the connection is working again.
+
+Fabio
