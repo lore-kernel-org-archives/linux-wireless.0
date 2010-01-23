@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:36525 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165Ab0AOOgp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 09:36:45 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so156838qwe.37
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2010 06:36:44 -0800 (PST)
+Received: from nbd.name ([88.198.39.176]:41820 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751752Ab0AWTE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jan 2010 14:04:29 -0500
+Message-ID: <4B5B4832.2020800@openwrt.org>
+Date: Sat, 23 Jan 2010 20:04:18 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <87fx67qwmg.fsf@nokia.com>
-References: <1263563061-3825-1-git-send-email-tom.leiming@gmail.com>
-	 <87fx67qwmg.fsf@nokia.com>
-Date: Fri, 15 Jan 2010 22:36:44 +0800
-Message-ID: <d82e647a1001150636j67d08be6yec310750ccc73ded@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix memory leak in ieee80211_send_probe_req
-From: Ming Lei <tom.leiming@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>, jorge@dti2.net,
+	Pavel Roskin <proski@gnu.org>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: fix eeprom INI values override for 2GHz-only cards
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/15 Kalle Valo <kalle.valo@iki.fi>:
-> "ext tom.leiming@gmail.com" <tom.leiming@gmail.com> writes:
->
->> From: Ming Lei <tom.leiming@gmail.com>
->>
->> This patch fixes memory leak in ieee80211_send_probe_req, which
->> is introduced in 7c12ce8b854df346388ea56d684784e3484012cf:
->>
->>       mac80211: use Probe Request template when sending a direct scan
->
->
-> Sorry, I introduced this bug. Thank you finding this.
->
->> The patch is against the latest wireless-test tree.
->
-> You should add comments like this after the "---" line.
->
->> @@ -1028,6 +1028,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
->>
->>       IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
->>       ieee80211_tx_skb(sdata, skb);
->> +     kfree(buf);
->
-> Better to use dev_kfree_skb() here.
+Among other changes, this commit:
 
-Why is dev_kfree_skb better?
-It is 'buf' allocated in ieee80211_send_probe_req to be freed, not skb.
+   commit 06d0f0663e11cab4ec5f2c143a118d71a12fbbe9
+   Author: Sujith <Sujith.Manoharan@atheros.com>
+   Date:   Thu Feb 12 10:06:45 2009 +0530
 
->
-> Can you resend, please?
+   ath9k: Enable Fractional N mode
 
-OK.
+changed the hw attach code to fix up initialization values only for
+dual band devices, however the commit message did not give a reason as
+to why this would be useful or necessary.
 
--- 
-Lei Ming
+According to tests by Jorge Boncompte, this breaks at least some 
+2GHz-only cards, so the code should be changed back to the
+unconditional INI fixup.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reported-by: Jorge Boncompte <jorge@dti2.net>
+Cc: stable@kernel.org
+---
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -823,12 +823,11 @@ static void ath9k_hw_init_mode_gain_regs
+ 	}
+ }
+ 
+-static void ath9k_hw_init_11a_eeprom_fix(struct ath_hw *ah)
++static void ath9k_hw_init_eeprom_fix(struct ath_hw *ah)
+ {
+ 	u32 i, j;
+ 
+-	if ((ah->hw_version.devid == AR9280_DEVID_PCI) &&
+-	    test_bit(ATH9K_MODE_11A, ah->caps.wireless_modes)) {
++	if (ah->hw_version.devid == AR9280_DEVID_PCI) {
+ 
+ 		/* EEPROM Fixup */
+ 		for (i = 0; i < ah->iniModes.ia_rows; i++) {
+@@ -948,7 +947,7 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	if (r)
+ 		return r;
+ 
+-	ath9k_hw_init_11a_eeprom_fix(ah);
++	ath9k_hw_init_eeprom_fix(ah);
+ 
+ 	r = ath9k_hw_init_macaddr(ah);
+ 	if (r) {
