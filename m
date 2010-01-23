@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:51932 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754188Ab0AHXU5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 18:20:57 -0500
-Date: Sat, 9 Jan 2010 01:20:09 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4] cfg80211: fix 2 GHz subband calculation for
- country IEs
-Message-ID: <20100108232009.GA4840@jm.kir.nu>
-References: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
- <1262903097-2129-3-git-send-email-lrodriguez@atheros.com>
- <20100108131451.GA18758@jm.kir.nu>
- <43e72e891001081341j1c24b7c4i6f5bb636d8ccc81b@mail.gmail.com>
-MIME-Version: 1.0
+Received: from lo.gmane.org ([80.91.229.12]:52793 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752011Ab0AWJlN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jan 2010 04:41:13 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1NYcUP-0000VS-Mg
+	for linux-wireless@vger.kernel.org; Sat, 23 Jan 2010 10:41:09 +0100
+Received: from p4FF0DD95.dip.t-dialin.net ([79.240.221.149])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 10:41:09 +0100
+Received: from Markus_Baier by p4FF0DD95.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 10:41:09 +0100
+To: linux-wireless@vger.kernel.org
+From: Markus Baier <Markus_Baier@web.de>
+Subject: Re: NULL dereference on wireless-testing/head
+Date: Sat, 23 Jan 2010 09:40:46 +0000 (UTC)
+Message-ID: <loom.20100123T103349-999@post.gmane.org>
+References: <297c1a111001222341gad6b26eh8a410a73a2d9a3dc@mail.gmail.com> <87tyudp6bm.fsf@purkki.valot.fi>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e891001081341j1c24b7c4i6f5bb636d8ccc81b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 08, 2010 at 01:41:58PM -0800, Luis R. Rodriguez wrote:
-> On Fri, Jan 8, 2010 at 5:14 AM, Jouni Malinen <j@w1.fi> wrote:
-> > By the way, that looks completely bogus.. Channel number cannot be used
-> > to figure out whether this is 2.4 GHz or 5 GHz band (e.g., channel 8 is
-> > used in both). This really should be based on the band the frame with
-> > the Country IE was received.
-> 
-> This seems to me more like an issue with the spec. Doing it based on
-> the received band is obviously possible but what if the AP wants to
-> send out Country IE information for both channel 8 on 2 GHz and
-> channel 8 on 5 GHz?
-> 
+Kalle Valo <kalle.valo@...> writes:
 
-I don't think the original Country IE design from IEEE Std 802.11d-2001
-really supported such use, i.e., you can only describe the channels from
-your own band with that design. Have you really seen APs advertising
-channels from the other band in their Country IE?
+> There are patches from John and Johannes which should fix this. Latest
+> wireless-testing contains the patches.
 
-I would assume you could now use the Regulatory Extension mechanism to
-define another regulatory class and subband followed by channel triplets
-to do that. However, even in that case, the first triplets in the IE
-really needs to be for the band the frame is send on. Once the
-Regulatory Extension Identifier is used, further triplets should be
-interpreted differently. Anyway, I have no idea whether anyone really
-supports this extension (or can parse the standard to figure out how it
-would be used ;-)..
+No, this bug was not fixed in the latest wireless-testing version.
+Pauls Kernel 2.6.33-rc5-wl (g96ada3c) was compiled from master-2010-01-22
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
