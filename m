@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:58359 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783Ab0AHR2f (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:61562 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330Ab0AWIX0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 12:28:35 -0500
-Date: Fri, 8 Jan 2010 18:28:34 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 03/11] mwl8k: bump the transmit wait timeout to 5 seconds
-Message-ID: <20100108172830.GW1735@mail.wantstofly.org>
-Mime-Version: 1.0
+	Sat, 23 Jan 2010 03:23:26 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so490496eyd.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 00:23:25 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
+References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
+	<1264186981.2593.10.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 23 Jan 2010 10:23:22 +0200
+In-Reply-To: <1264186981.2593.10.camel@johannes.local> (Johannes Berg's message of "Fri\, 22 Jan 2010 20\:03\:01 +0100")
+Message-ID: <87y6jpp6v9.fsf@purkki.valot.fi>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While it is reasonable to expect that at least one transmit ring entry
-will be processed per second while we are waiting for the transmit
-rings to drain, the firmware can end up doing batching of transmit ring
-status writeback, which means that the transmit rings can appear stuck
-for more than a second at a time.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Bump the TX drain wait timeout up from 1 to 5 seconds to account for
-this.
+> However, I think it's indicative of a bigger problem. I gave it some
+> thought, and came to the conclusion that it previously didn't happen
+> because we always won the race. Let me explain.
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+One more reason why need to receive the beacon is synchronisation to
+the beacon for power save. For example wl1251 and wl1271 want to
+receive one beacon for synchronisation purposes before some of the
+commands are executed. It would be really nice if mac80211 would take
+care of that.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 3f5fdb6..8f5f7c9 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1173,7 +1173,7 @@ static void mwl8k_dump_tx_rings(struct ieee80211_hw *hw)
- /*
-  * Must be called with priv->fw_mutex held and tx queues stopped.
-  */
--#define MWL8K_TX_WAIT_TIMEOUT_MS	1000
-+#define MWL8K_TX_WAIT_TIMEOUT_MS	5000
- 
- static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
- {
+> First, we could go back to the original behaviour if we have just one
+> virtual interface. 
+
+I think this is good to have. Just to keep it simple for devices like
+wl1251 and wl1271.
+
+> But that still leaves us with the race, we might do all three frame
+> exchanges within a beacon interval and still miss the beacon, we
+> just tend to not do that and get a beacon.
+>
+> The other solution I see is that we add a new step before or after the
+> direct probe step, which would just be "wait for a beacon". This would
+> ensure we have both probe and beacon information always ready. It would
+> also ensure we have both probe and beacon info for our new userspace
+> reporting of that.
+
+I like this. If only the bssid would be provided to the driver before
+the association process, both wl1251 and wl1271 would not have to
+worry about firmware beacon synchronisation.
+
 -- 
-1.5.6.4
+Kalle Valo
