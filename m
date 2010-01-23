@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38162 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60151 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753385Ab0AYNlM (ORCPT
+	with ESMTP id S1755026Ab0AWM7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 08:41:12 -0500
-Subject: Re: [RFC] mac80211: wait for beacon before associating
+	Sat, 23 Jan 2010 07:59:43 -0500
+Subject: Re: Starting hostapd causes kernel panic
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4B5D9BDC.8030307@openwrt.org>
-References: <1264423044.23766.39.camel@johannes.local>
-	 <4B5D9BDC.8030307@openwrt.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AWf12UBOc7hB0PUl1iuj"
-Date: Mon, 25 Jan 2010 14:41:08 +0100
-Message-ID: <1264426868.23766.41.camel@johannes.local>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Markus Baier <markus_baier@web.de>, linux-wireless@vger.kernel.org,
+	kalle.valo@iki.fi
+In-Reply-To: <1264197963.9056.0.camel@mj>
+References: <loom.20100122T205326-794@post.gmane.org>
+	 <1264193623.2593.17.camel@johannes.local> <1264196526.3040.3.camel@mj>
+	 <3ef14e53bb12298507dbaec4bb0b98d3.squirrel@secure.sipsolutions.net>
+	 <1264197963.9056.0.camel@mj>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-f/Ai4cD4+2TACbGfIcCA"
+Date: Sat, 23 Jan 2010 13:59:36 +0100
+Message-ID: <1264251576.2593.30.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-AWf12UBOc7hB0PUl1iuj
+--=-f/Ai4cD4+2TACbGfIcCA
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2010-01-25 at 14:25 +0100, Felix Fietkau wrote:
+On Fri, 2010-01-22 at 17:06 -0500, Pavel Roskin wrote:
+> On Fri, 2010-01-22 at 22:53 +0100, Johannes Berg wrote:
+> > > I assume it's another case where tx->key should be checked for being
+> > > NULL.  In fact, it's set to NULL on the preceding line!
+> >=20
+> > or an else inserted.
+>=20
+> Whatever you prefer.  Either way, the panic is fixed now!
 
-> I think if this is required only for powersave,
-
-I don't think it necessarily is. The particular case where the problem
-surfaced now is power saving, but who knows what it may be used for.
-
-I kinda agree that 112.5% timeout is too small, but I don't think we
-should introduce too much variance into the process.
+Great, and sorry about that! I'll send a patch to insert the else too.
 
 johannes
 
---=-AWf12UBOc7hB0PUl1iuj
+--=-f/Ai4cD4+2TACbGfIcCA
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLXZ9xAAoJEODzc/N7+QmanNwP/3yfFt3Ntye9pQp8prtFqlai
-A8+NkcIraAs6e1puSCCsftgvIHirCNtYCA+/X+Y4Cfj6e3OZx8jtnMHeMrQ3g+Jn
-oacc+Bk/R6lxoDvQNYiq+6huk2n4Ybo8iMbnOoR/9Z+i3jPf565p6f9PGW92mIyD
-Zdu/kKCRHywURIMejaho9XIL2RG0hzqlNRXwjuKRo52lxIN7I9sRuKSJGsCga9ou
-Ex93on6CmADFSVoYF0LG5hxI9cM0gKPDm2s2EjkNEbOk4rxeuE8FrqG9V8B0q1d+
-MWfsSaCl0x27c2N2R+IS83cQ2PxSybZsqMB72H719PYFx9VZkdkbo3l/FdFQ2Glq
-bjk1F4Vwh7Vw0pEYtt+XGaF3yq7Ms6EivMS9iCwAS7LiIR7eMR0pweHedmMD+UzJ
-JbS8r41LXUBKDO0a9iFlNdZhYac+dllF6WY92m9oBhMLYjyqwOw5qJxu7/ZSNRjq
-aWkno8w++IhPswxlcRjsDE6PyjD6Sto+pn2CZXeUW6tKVHXR8hWytXK3hz8QFqiA
-CVrpl8kTGDcN9WxJmA5uTxUvCSSEY129oQFEhV33zZQkpEjdr/n78ZIk7RMMaYOo
-9y+aK62baDo+bqGUxwaZNWJzyoFMYwSKP5jGC7JBumeL/6IS9ByKmoETb52gDXqD
-f3GfYme2Amc7+YrtH1wo
-=ii3Y
+iQIcBAABAgAGBQJLWvK1AAoJEODzc/N7+QmauVcP/3OHHcuiPY7qA2lmgdayqGbH
+m/trmHsPmVS5/0XFxTr5qyWrdJjzzH9buJuf/v4X7TrUZLsk9zww8dUyhBEwgrCE
+WPR6x//rXhVUmakdHcgOCe4r3cv4bRzOkcnpWAWAiCIYevT2f/FrLBmue/cJE2Oi
+c/C4GljRIziz3VkfPDmKUyIFhhBHnyKkb3RUI7BImNM7v16a0ieyWcDWIedlgQn/
+XmzVDKv0hYQRhO/8fvU0RnASnVppdJm8Gh3KqIFszXOUc+yDqOTlGY3cWrcynHZ8
+UJzjxffGjz7LMKTPBJn5Upp8ZtBmg4fqANzArjRTHz75qT9lR3vc40GNObKuNd9w
+4k+8TJHctzpU0QRoQfDdkvXqgMDL/keN7x+RSaFZB0ymPLMvrg5W+ThjtrbSk951
+MJMAJaMNxm1VqDIjQyEhPZCfxkbDSQN/NkmCBkPQ+LAfbVpggVg0jk15nQrz6jbr
+R6h7Dfpbrphp5SyuB0qRMWf6AAFg5DYj1hEh4eFF/YjzMKvIaYsnwBI1IgZRozor
+odAroDx0T9LAYN+XaMjywZFTlJLI34hnFGo7+Rd/H3C47oJV8PDCQhmprEITO2Qy
++0R/S1zQNLjAileklGAm4npEQ8aX80Scx5xhqjoEzyk0irQBu6ROz93b6sBbgOci
+YWBPcHk6DRVN1O7eicOq
+=rxan
 -----END PGP SIGNATURE-----
 
---=-AWf12UBOc7hB0PUl1iuj--
+--=-f/Ai4cD4+2TACbGfIcCA--
 
