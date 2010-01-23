@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:50644 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752184Ab0ATWiM (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40710 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753334Ab0AWDhG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2010 17:38:12 -0500
-Received: by fxm20 with SMTP id 20so702287fxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 14:38:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e891001191002q10ee8359wfffa813b3db8a0d2@mail.gmail.com>
-References: <1263884721-11008-1-git-send-email-tomas.winkler@intel.com>
-	 <43e72e891001190953r122625d3pf805c318e9662340@mail.gmail.com>
-	 <1263923722.25138.2.camel@johannes.local>
-	 <43e72e891001190957u3ccc12ey955e6d15b33eba13@mail.gmail.com>
-	 <1263923968.28066.2.camel@johannes.local>
-	 <43e72e891001191002q10ee8359wfffa813b3db8a0d2@mail.gmail.com>
-Date: Thu, 21 Jan 2010 00:30:09 +0200
-Message-ID: <1ba2fa241001201430g6cc4e3b9h9b49e47e81e9e755@mail.gmail.com>
-Subject: Re: [PATCH 1/1] update rfkill.h from kernel 2.6.33
-From: Tomas Winkler <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 22 Jan 2010 22:37:06 -0500
+Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
+From: David Woodhouse <dwmw2@infradead.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	davem@davemloft.net
+In-Reply-To: <20100123011618.GA16135@tuxdriver.com>
+References: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
+	 <b170af451001221247j1b380703w4c09b5fdd601466b@mail.gmail.com>
+	 <201001222259.28933.mb@bu3sch.de> <201001222333.42554.mb@bu3sch.de>
+	 <20100123011618.GA16135@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 23 Jan 2010 16:36:50 +1300
+Message-ID: <1264217811.10468.46.camel@macbook.infradead.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 19, 2010 at 8:02 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, Jan 19, 2010 at 9:59 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Tue, 2010-01-19 at 09:57 -0800, Luis R. Rodriguez wrote:
->>> On Tue, Jan 19, 2010 at 9:55 AM, Johannes Berg
->>> <johannes@sipsolutions.net> wrote:
->>> > On Tue, 2010-01-19 at 09:53 -0800, Luis R. Rodriguez wrote:
->>> >> On Mon, Jan 18, 2010 at 11:05 PM, Tomas Winkler
->>> >> <tomas.winkler@intel.com> wrote:
->>> >> > 1. add FM radio type
->>> >> > 2. update rfkill_type docs
->>> >> >
->>> >> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->>> >>
->>> >> Why is this being pushed for 2.6.33 at this point?
->>> >
->>> > ??? Have you read the patch?
->>>
->>> So this is updating linux-next to get 2.6.33 rfkill stuff? How did
->>> that happen?
->>
->> You still haven't read it? :)
->>
->> It's for rfkill userspace.
->
-> Jeesh, sorry about that. Monday e-mail trigger happy.
+On Fri, 2010-01-22 at 20:16 -0500, John W. Linville wrote:
+> On Fri, Jan 22, 2010 at 11:33:40PM +0100, Michael Buesch wrote:
+> 
+> > So while we are at it, I'd really like to migrate away from the berlios list.
+> > It's really just annoying. Does somebody have a good reliable mailinglist service
+> > we could migrate to? Does vger offer lists to driver projects?
+> 
+> Probably -- I think davem is the person to ask?  Infradead is probably
+> another option (dwmw2).
 
-:)
+Yeah, pick one and either of us can set up a new list at the drop of a
+hat. Strictly speaking I suspect it should be postmaster@vger rather
+than just davem, but the effect is much the same most of the time.
 
-Is there any preferable patch prefix for rfkill  utility? Just to make
-mail sorting a bit easier ...
+Can you provide a list of existing subscribers?
 
-Tomas
+-- 
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
+
