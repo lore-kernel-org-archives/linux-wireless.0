@@ -1,49 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:45372 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756481Ab0AFWpI convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:8245 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671Ab0AWLy6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:45:08 -0500
-Received: by ewy19 with SMTP id 19so10165191ewy.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:45:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com>
-References: <op.u54a5ufy9lhzdc@linux-g0th.site>
-	 <201001061650.52062.mb@bu3sch.de>
-	 <b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com>
-	 <op.u54ppc2h9lhzdc@linux-g0th.site>
-	 <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com>
-Date: Wed, 6 Jan 2010 23:45:06 +0100
-Message-ID: <b170af451001061445k56872cd1hbae81a59e421da73@mail.gmail.com>
-Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_in_carrier_search
-	and it's calls (V2)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+	Sat, 23 Jan 2010 06:54:58 -0500
+Received: by fg-out-1718.google.com with SMTP id l26so395471fgb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 03:54:57 -0800 (PST)
+From: Paul Fertser <fercerpav@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, 536502@bugs.debian.org,
+	Paul Fertser <fercerpav@gmail.com>
+Subject: [PATCH] Implement runtime loading of RSA public keys
+Date: Sat, 23 Jan 2010 14:54:14 +0300
+Message-Id: <1264247654-21554-1-git-send-email-fercerpav@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 stycznia 2010 23:35 użytkownik Gábor Stefanik
-<netrolller.3d@gmail.com> napisał:
-> 2010/1/6 Rafał Miłecki <zajec5@gmail.com>:
->> V2: fix typo in deaf_count counting, improve b43_mac_[sr] calls,
->>    rename function. Thanks Michael!
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/phy_n.c |   58
->> ++++++++++++++++++++++++++++++++++++++
->>  drivers/net/wireless/b43/phy_n.h |    3 ++
->>  2 files changed, 61 insertions(+), 0 deletions(-)
->>
->> <snip>
->
-> Typo in title (it's vs. its)
+This patch allows crda to load and use additional keys from a
+pre-configured location for the database signature verification. This
+provides a convenient way for distro maintainers and card manufacturers to
+supply a custom regulatory database along with their public keys, without
+the need to recompile crda.
 
-My gramma is far from perfect, thanks.
+Implemented for USE_OPENSSL=1 case only because libgcrypt lacks PEM parser.
 
+Default location for public keys in PEM format is
+/etc/wireless-regdb/pubkeys and can be changed by specifying
+RUNTIME_PUBKEY_DIR at the make command line.
+
+Signed-off-by: Paul Fertser <fercerpav@gmail.com>
+---
+ Makefile |    3 ++-
+ reglib.c |   20 ++++++++++++++++++++
+ 2 files changed, 22 insertions(+), 1 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 3cc61c2..b8bc7d3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -21,6 +21,7 @@ UDEV_RULE_DIR?=/lib/udev/rules.d/
+ # keys are put when building. For example you can run
+ # with make PUBKEY_DIR=/usr/lib/crda/pubkeys
+ PUBKEY_DIR?=pubkeys
++RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
+ 
+ CFLAGS += -Wall -g
+ 
+@@ -29,7 +30,7 @@ all: all_noverify verify
+ all_noverify: crda intersect regdbdump
+ 
+ ifeq ($(USE_OPENSSL),1)
+-CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
++CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
+ LDLIBS += `pkg-config --libs openssl`
+ 
+ reglib.o: keys-ssl.c
+diff --git a/reglib.c b/reglib.c
+index 6aeadcb..d199e13 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -1,12 +1,15 @@
+ #include <errno.h>
+ #include <stdio.h>
+ #include <arpa/inet.h>
++#include <sys/types.h>
++#include <dirent.h>
+ #include "reglib.h"
+ 
+ #ifdef USE_OPENSSL
+ #include <openssl/objects.h>
+ #include <openssl/rsa.h>
+ #include <openssl/sha.h>
++#include <openssl/pem.h>
+ #endif
+ 
+ #ifdef USE_GCRYPT
+@@ -48,6 +51,9 @@ int crda_verify_db_signature(__u8 *db, int dblen, int siglen)
+ 	__u8 hash[SHA_DIGEST_LENGTH];
+ 	unsigned int i;
+ 	int ok = 0;
++	DIR *pubkey_dir;
++	struct dirent *nextfile;
++	FILE *keyfile;
+ 
+ 	if (SHA1(db, dblen, hash) != hash) {
+ 		fprintf(stderr, "Failed to calculate SHA1 sum.\n");
+@@ -71,6 +77,20 @@ int crda_verify_db_signature(__u8 *db, int dblen, int siglen)
+ 		rsa->n = NULL;
+ 		RSA_free(rsa);
+ 	}
++	if (!ok && (pubkey_dir = opendir(PUBKEY_DIR))) {
++		while (!ok && (nextfile = readdir(pubkey_dir))) {
++			if ((keyfile = fopen(nextfile->d_name, "rb"))) {
++				rsa = PEM_read_RSA_PUBKEY(keyfile,
++					NULL, NULL, NULL);
++				if (rsa) 
++					ok = RSA_verify(NID_sha1, hash, SHA_DIGEST_LENGTH,
++						db + dblen, siglen, rsa) == 1;
++				RSA_free(rsa);
++				fclose(keyfile);
++			}
++		}
++		closedir(pubkey_dir);
++	}
+ #endif
+ 
+ #ifdef USE_GCRYPT
 -- 
-Rafał
+1.6.4.4
+
