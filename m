@@ -1,139 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:63399 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280Ab0AGPns convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46135 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438Ab0AXLmb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 10:43:48 -0500
-Received: by iwn32 with SMTP id 32so2405488iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2010 07:43:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B458BBC.6040200@free.fr>
-References: <4B3DBB6B.4010107@free.fr> <43e72e891001011524r190950c8pdfc89e765afb205d@mail.gmail.com>
-	<4B3F1010.3070906@free.fr> <43e72e891001021004r2c9cf855p52b007a88123bba7@mail.gmail.com>
-	<43e72e891001061739t5ded13e7u6b16c73f1b26b246@mail.gmail.com>
-	<4B458BBC.6040200@free.fr>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 7 Jan 2010 07:43:26 -0800
-Message-ID: <43e72e891001070743q5f16a1e7y94e1c3b0c0bbcbb6@mail.gmail.com>
-Subject: Re: Issue connecting to an HT40 AP that sends a Country IE
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 24 Jan 2010 06:42:31 -0500
+Subject: Re: Starting hostapd causes kernel panic
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, Pavel Roskin <proski@gnu.org>,
+	Markus Baier <markus_baier@web.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4B5C0173.9080100@redfish-solutions.com>
+References: <loom.20100122T205326-794@post.gmane.org>
+	 <1264193623.2593.17.camel@johannes.local> <1264196526.3040.3.camel@mj>
+	 <3ef14e53bb12298507dbaec4bb0b98d3.squirrel@secure.sipsolutions.net>
+	 <1264197963.9056.0.camel@mj> <1264251576.2593.30.camel@johannes.local>
+	 <4B5B6FCA.2070900@redfish-solutions.com> <87aaw4oxh0.fsf@purkki.valot.fi>
+	 <4B5C0173.9080100@redfish-solutions.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dQvTioERUUn7ttNft0Lu"
+Date: Sun, 24 Jan 2010 12:42:21 +0100
+Message-ID: <1264333341.23766.25.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 6, 2010 at 11:22 PM, Benoit PAPILLAULT
-<benoit.papillault@free.fr> wrote:
-> Luis R. Rodriguez a écrit :
->>
->> On Sat, Jan 2, 2010 at 10:04 AM, Luis R. Rodriguez <mcgrof@gmail.com>
->> wrote:
->>
->>>
->>> The issue should  be that a frequency rule is being created for each
->>> channel and although 40 MHz is being specified as max bandwidth
->>> logistically only 20 MHz fits into that frequency rule. So what the
->>> intersection needs to learn is how to merge rules or at least
->>> understand them together. It may be easier to parse insaneIEs like the
->>> ones your AP generates and re-generate one with actual ranges with
->>> contiguity channels merged. And then use that one for the
->>> intersection.
->>>
->>
->> I have a patch in mind now for this, can you please apply this patch
->> on iw, scan and send me the output of the scan for your AP?
->>
->>  Luis
->>
->
-> Here is the result for the said AP :
->
-> BSS 00:15:6d:e8:88:84 (on wlan0)
->       TSF: 627428313658 usec (7d, 06:17:08)
->       freq: 5180
->       beacon interval: 100
->       capability: ESS Privacy ShortSlotTime (0x0411)
->       signal: -76.00 dBm
->       last seen: 7604 ms ago
->       SSID: BEN_nsm5
->       Supported rates: 6.0* 9.0 12.0* 18.0 24.0* 36.0 48.0 54.0
->       DS Parameter set: channel 36
->       Country: FR     Environment: Indoor only
->       Country IE triplets:
->               Channels [36 - 36]
->               Channels [40 - 40]
->               Channels [44 - 44]
->               Channels [48 - 48]
->               Channels [52 - 52]
->               Channels [56 - 56]
->               Channels [60 - 60]
->               Channels [64 - 64]
->               Channels [100 - 100]
->               Channels [104 - 104]
->               Channels [108 - 108]
->               Channels [112 - 112]
->               Channels [116 - 116]
->               Channels [120 - 120]
->               Channels [124 - 124]
->               Channels [128 - 128]
->               Channels [132 - 132]
->               Channels [136 - 136]
->               Channels [140 - 140]
->       Power constraint: 0 dB
->       RSN:     * Version: 1
->                * Group cipher: CCMP
->                * Pairwise ciphers: CCMP
->                * Authentication suites: PSK
->                * Capabilities: (0x0000)
->       WMM:     * Parameter version 1
->                * u-APSD
->                * BE: CW 15-1023, AIFSN 3
->                * BK: CW 15-1023, AIFSN 7
->                * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
->                * VO: acm CW 3-7, AIFSN 2, TXOP 1504 usec
->       HT capabilities:
->               Capabilities: 0x4e
->                       HT20/HT40
->                       SM Power Save disabled
->                       RX HT40 SGI
->                       No RX STBC
->                       Max AMSDU length: 7935 bytes
->                       No DSSS/CCK HT40
->               Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
->               Minimum RX AMPDU time spacing: 1/2 usec (0x02)
->               HT RX MCS rate indexes supported: 0-15
->               HT TX MCS rate indexes are undefined
->
-> iw version 0.9.18-11-g89ea706-dirty
->
-> As a quick patch, I have commented 2 lines "bw_flags =
-> IEEE80211_CHAN_NO_HT40" in net/wireless/reg.c
->
-> I'll try to do a patch for the kernel that does the following action :
-> - parse the max_power field
 
-I have this already in my queue
+--=-dQvTioERUUn7ttNft0Lu
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> - merge rules if the max_power field is the same for both rules
+On Sun, 2010-01-24 at 00:14 -0800, Philip A. Prindeville wrote:
+> On 01/23/2010 09:58 PM, Kalle Valo wrote:
+> > "Philip A. Prindeville" <philipp_subx@redfish-solutions.com> writes:
+> >=20
+> >>>> Whatever you prefer.  Either way, the panic is fixed now!
+> >>>>    =20
+> >>> Great, and sorry about that! I'll send a patch to insert the else too=
+.
+> >>>
+> >>> johannes
+> >>>  =20
+> >>
+> >> Did you send that patch? I'd like to apply it. Please copy me when
+> >> you send it out.
+> >=20
+> > Johannes was busy and I sent the patch instead. It's here:
+> >=20
+> > http://marc.info/?l=3Dlinux-wireless&m=3D126427124317427&w=3D2
+> >=20
+>=20
+> I just applied it to compat-wireless-2010-01-20 and ran it on an AR5413 b=
+ut it still panics:
+>=20
+>=20
+> BUG: unable to handle kernel NULL pointer dereference at 0000019f
+> IP: [<e0993e7f>] :mac80211:invoke_tx_handlers+0x5be/0xe6a
+> *pde =3D 00000000
+> Oops: 0000 [#1] PREEMPT
 
-I also have this but I wanted to test it against your AP's IE, which
-is why I asked for this output.
+> Pid: 1652, comm: hostapd Tainted: P          (2.6.27.42-astlinux #1)
+> EIP: 0060:[<e0993e7f>] EFLAGS: 00010246 CPU: 0
+> EIP is at invoke_tx_handlers+0x5be/0xe6a [mac80211]
 
-> - use max_bandwidth_khz as a capability feature (ie it could be larger than
->  end_freq - start_freq)
+Are you sure you reloaded the modules etc. correctly? Kinda looks like
+the same issue. Otherwise can you send me in private your mac80211.ko
+and hostapd config file?
 
-Not sure I get this.
+johannes
 
-> - when trying to enable HT40, we might obey 2 reg rules (if they have not
-> been merge). In this case, we should intersect rules again.
+--=-dQvTioERUUn7ttNft0Lu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-My patch merges contiguous country IE subbands. I guess I'll post as
-RFC for now.
+-----BEGIN PGP SIGNATURE-----
 
-> Does this logic is fine?
+iQIcBAABAgAGBQJLXDIZAAoJEODzc/N7+QmaerEP/RzF5jxUqU6PUOUFzKP2UDW8
++iHwjQnfN3Sr+6FI0aaZfbPN2aQ2eHZgOI/BaGcGH9gYTifmLTAvW0HKXbKZCM7W
+Hzm4HXWxhuurDyJ4wEpeGXa04TtmspmSYFMnA7g723Sme1oFayJYIny41IKNk8+w
+II9LVOc40365Jdm2Ca4uSIkm/bMrHLgxpkOovysZz1SCEmdURmDJMO98VdNwKAap
+O9zH3JCVeIdmKCC+AvCC9agT0AlB7dwP24nAyUqzirviFnufUHOtCtKj8/XwP88s
+3SmQY+dvJDWWsxxDKw1aiISwEQrYdKwnEmDPDhzebtLumgTEMw6qBr0XziperTwx
+kOxev3PsWuFRf9zkwDC6s9MNRmqih/GoaQtFGbIqfCVNKsp73cqQM3S0RW2YNBZw
+p5CcbEkKrAXbTtzcnhxZmQOz4/3RPI4pcQDgH0LzZDeiOvSEuPnvVDxZa15LdKX2
+/WxA5A1T5uQ6SuI0KvEmSN8lD+R20DjiGo77R76wwLlT7NapKAjUMB0LvrbpIHiz
+s2MbsYMoxV3fIZVRJ2fNyBbUfdLITzVDtKi4IL6Gh4qGW1AgU92NSjrQkemex2or
+B6vYNuyxb0jzG6Ab/cLeyCdVchggcohYAnbOPjZET4zsOxP4DMLT/ZW5aJ0a/h1A
+V0tpp6IeuxQRFge20FEs
+=xqxb
+-----END PGP SIGNATURE-----
 
-Yeah you certainly found an issue, unfortunately my patch for the
-subband fix is too big for it to be considered for stable and I cannot
-think of a smaller way to resolve it.
+--=-dQvTioERUUn7ttNft0Lu--
 
-  Luis
