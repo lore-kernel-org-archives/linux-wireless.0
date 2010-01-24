@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29219 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753300Ab0AHSEp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 13:04:45 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/4] iwlwifi: remove obsoleted host command
-Date: Fri,  8 Jan 2010 10:04:43 -0800
-Message-Id: <1262973884-2551-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
-References: <1262973884-2551-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:54597 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363Ab0AXI1N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jan 2010 03:27:13 -0500
+Received: by ewy26 with SMTP id 26so995042ewy.28
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2010 00:27:11 -0800 (PST)
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	Markus Baier <markus_baier@web.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Starting hostapd causes kernel panic
+References: <loom.20100122T205326-794@post.gmane.org>
+	<1264193623.2593.17.camel@johannes.local> <1264196526.3040.3.camel@mj>
+	<3ef14e53bb12298507dbaec4bb0b98d3.squirrel@secure.sipsolutions.net>
+	<1264197963.9056.0.camel@mj> <1264251576.2593.30.camel@johannes.local>
+	<4B5B6FCA.2070900@redfish-solutions.com>
+	<87aaw4oxh0.fsf@purkki.valot.fi>
+	<4B5C0173.9080100@redfish-solutions.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 24 Jan 2010 10:27:08 +0200
+In-Reply-To: <4B5C0173.9080100@redfish-solutions.com> (Philip A. Prindeville's message of "Sun\, 24 Jan 2010 00\:14\:43 -0800")
+Message-ID: <87636rq55v.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+"Philip A. Prindeville" <philipp_subx@redfish-solutions.com> writes:
 
-"RADAR_NOTIFICATION" host command is not used and not supported by uCode,
-remove it from driver code.
+>>> Did you send that patch? I'd like to apply it. Please copy me when
+>>> you send it out.
+>> 
+>> Johannes was busy and I sent the patch instead. It's here:
+>> 
+>> http://marc.info/?l=linux-wireless&m=126427124317427&w=2
+>> 
+>
+> I just applied it to compat-wireless-2010-01-20 and ran it on an
+> AR5413 but it still panics:
+>
+> BUG: unable to handle kernel NULL pointer dereference at 0000019f
+> IP: [<e0993e7f>] :mac80211:invoke_tx_handlers+0x5be/0xe6a
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    1 -
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+Is there any way you could test wireless-testing kernel? I'm not
+familiar with compat-wireless, so it's difficult for me to comment
+anything.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 6bfc63f..3320cce 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -120,7 +120,6 @@ enum {
- 	CALIBRATION_COMPLETE_NOTIFICATION = 0x67,
- 
- 	/* 802.11h related */
--	RADAR_NOTIFICATION = 0x70,	/* not used */
- 	REPLY_QUIET_CMD = 0x71,		/* not used */
- 	REPLY_CHANNEL_SWITCH = 0x72,
- 	CHANNEL_SWITCH_NOTIFICATION = 0x73,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-index 30e9ea6..87d684e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-@@ -58,7 +58,6 @@ const char *get_cmd_string(u8 cmd)
- 		IWL_CMD(COEX_PRIORITY_TABLE_CMD);
- 		IWL_CMD(COEX_MEDIUM_NOTIFICATION);
- 		IWL_CMD(COEX_EVENT_CMD);
--		IWL_CMD(RADAR_NOTIFICATION);
- 		IWL_CMD(REPLY_QUIET_CMD);
- 		IWL_CMD(REPLY_CHANNEL_SWITCH);
- 		IWL_CMD(CHANNEL_SWITCH_NOTIFICATION);
+But remember that there were multiple fixes related to this crash,
+make sure that you have all of them in your compat-wireless tree.
+
 -- 
-1.5.6.3
-
+Kalle Valo
