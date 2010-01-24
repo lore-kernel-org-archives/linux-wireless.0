@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:58484 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042Ab0AWLsS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753549Ab0AXLiT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 06:48:18 -0500
-Received: by ewy26 with SMTP id 26so228446ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 03:48:17 -0800 (PST)
-To: Markus Baier <Markus_Baier@web.de>
-Cc: linux-wireless@vger.kernel.org, Paul.Hampson@pobox.com
-Subject: Re: NULL dereference on wireless-testing/head
-References: <297c1a111001222341gad6b26eh8a410a73a2d9a3dc@mail.gmail.com>
-	<87tyudp6bm.fsf@purkki.valot.fi>
-	<loom.20100123T103349-999@post.gmane.org>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 23 Jan 2010 13:41:08 +0200
-In-Reply-To: <loom.20100123T103349-999@post.gmane.org> (Markus Baier's message of "Sat\, 23 Jan 2010 09\:40\:46 +0000 \(UTC\)")
-Message-ID: <87my05oxpn.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 24 Jan 2010 06:38:19 -0500
+Subject: Re: hwtkip hangs on b43
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, kecsa@kutfo.hit.bme.hu,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4B5BE16E.7080901@lwfinger.net>
+References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu>
+	 <201001232000.07229.mb@bu3sch.de> <4B5B4E9F.8040708@lwfinger.net>
+	 <201001232038.55204.mb@bu3sch.de>  <4B5BE16E.7080901@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BXLkoXYnchRiBy1H+UdW"
+Date: Sun, 24 Jan 2010 12:32:50 +0100
+Message-ID: <1264332771.23766.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Markus Baier <Markus_Baier@web.de> writes:
 
-> Kalle Valo <kalle.valo@...> writes:
->
->> There are patches from John and Johannes which should fix this. Latest
->> wireless-testing contains the patches.
->
-> No, this bug was not fixed in the latest wireless-testing version.
-> Pauls Kernel 2.6.33-rc5-wl (g96ada3c) was compiled from master-2010-01-22
+--=-BXLkoXYnchRiBy1H+UdW
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for pointing it out, I missed that.
+On Sat, 2010-01-23 at 23:58 -0600, Larry Finger wrote:
+> On 01/23/2010 01:38 PM, Michael Buesch wrote:
+> > On Saturday 23 January 2010 20:31:43 Larry Finger wrote:
+> >> On 01/23/2010 01:00 PM, Michael Buesch wrote:
+> >>> On Saturday 23 January 2010 19:53:48 Johannes Berg wrote:
+> >>>> Actually you can't, because you can't acquire the mutex here since w=
+e're
+> >>>> in an atomic section. So relying on it being already locked is proba=
+bly
+> >>>> safer. However, you can't actually sleep anyway...
+> >>>
+> >>> I'm OK with removing the lock from the callback, if it is guaranteed =
+that
+> >>> the callback is only called on behalf of a RX call.
+> >>>
+> >>> We can just remove the lock and add a comment explaining why it is no=
+t locked...
 
-I was really sure that the patch below would fix the problem, but
-g96ada3c contains it already.
+Mind you, it won't work on SDIO hardware since the callback cannot
+sleep, contrary to what Kalle documented :(
 
-commit 813d76694043d00b59475baa1fbfaf54a2eb7fad
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Sun Jan 17 01:47:58 2010 +0100
+Why is it not giving everybody warnings in might_sleep()?
 
-    mac80211: move control.hw_key assignment
+johannes
 
-Paul, can you double check that you are really running a version of
-mac80211 that contains the patch above? Just in case there was a
-problem with module installation, or something like that.
+--=-BXLkoXYnchRiBy1H+UdW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-After that, please enable CONFIG_MAC80211_NOINLINE and send the stack
-trace here.
+-----BEGIN PGP SIGNATURE-----
 
-More info here:
+iQIcBAABAgAGBQJLXC/aAAoJEODzc/N7+QmaPBAQAIZx199Yr43s5MmzWqDOL9x+
+GhGSUX6ebXq00yhrmuxWy8tXBmM+mmZXm2jLBBG4jVXVGB5g8YspGMk0AR2NLRvJ
+sOB4SXcyQw7d0+lEqDCGxjxa7HWBiz41BqvNK45cuQBrRyXAGCeUE4OQI+LrYAP9
+lIMc4XA4c86o6VR8TJ3mC0hpf2tyC69voScmhOjQGbcWm5M3EW2Ks3qLdllidSzE
+YtUizHpctcgXtsckJOQaOvV43jesJtTmbesByKDTGK0eHfxZ7HYFeWpmMrXcCRMx
+1j5L+D/gsETdyHiBz4o/+iBrVBcn+mb8+GaN4uZlzrhAwNMNUK/VVGWDjW4zXoiL
+huviT65LqpoWpB9jp3n0uGc+zboh9MdaXqCdpWEyDgKnwmx7MH0p4hcJ17MPzKvA
+h4V7mLqOukSJtUBRgh6ExIeA0QX7amrQbJK6y8srtO9pGinpaQPxFx4DS7Ytw5CM
+zaJZJsFnh90g0mTZ1OpdhB/acIFL5SEOoMmD/rNb8HAfZlp3lGNaMbR1frrQs/ZD
+qJyu5nC7KEq3Ke7vu8AuX9LSTR7D8RFqL0xQ5tizm9wkDD84tIbFe4qR1caxQykz
+cbgEAm1iwOM+rVzBqvAiL2Bd4M8Z6Y9J0iHazEq0vpmyhKCFfpPXUK8OqbTD2oCJ
+GKwK/gmTlysJATJlRu28
+=5OMS
+-----END PGP SIGNATURE-----
 
-http://www.spinics.net/lists/linux-wireless/msg45719.html
+--=-BXLkoXYnchRiBy1H+UdW--
 
-Including instructions how to debug with gdb.
-
--- 
-Kalle Valo
