@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:47711 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696Ab0AUQoS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 11:44:18 -0500
-Received: by yxe17 with SMTP id 17so158286yxe.33
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2010 08:44:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B562048.3080500@lwfinger.net>
-References: <933379711001180712v7e6c0a3fx923123af900d90c7@mail.gmail.com>
-	 <933379711001180815r284ff41au733cadb40a7606fe@mail.gmail.com>
-	 <c988e1dc1001180938m24365028p63f611e7e9446663@mail.gmail.com>
-	 <933379711001190404q1232d2f5i899e7b6347357f23@mail.gmail.com>
-	 <51058d551001190858k764926ddrafcd7e2c907b3266@mail.gmail.com>
-	 <933379711001190923o680f5010vcd799b65e314fbd2@mail.gmail.com>
-	 <51058d551001190949x115f7dc9p449be477b5c1e7d2@mail.gmail.com>
-	 <933379711001191242h3765dd5ao8ad37903a44d7c1a@mail.gmail.com>
-	 <51058d551001191254s3063202fg632f7bc714027e89@mail.gmail.com>
-	 <4B562048.3080500@lwfinger.net>
-Date: Thu, 21 Jan 2010 10:44:08 -0600
-Message-ID: <51058d551001210844j48792a86he35216e853da970d@mail.gmail.com>
-Subject: Re: Broadcom BCM4318 AirForceOne issue - Ubuntu 9.10 on Acer Aspire
-	5024wlmi
-From: Greg Oliver <oliver.greg@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Giuseppe Fontana <gfontana13@gmail.com>,
-	linux-wireless@vger.kernel.org, Shang Wu <shang@ubuntu.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:37544 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752837Ab0AXKcr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jan 2010 05:32:47 -0500
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1NYzls-0005oI-FY
+	for linux-wireless@vger.kernel.org; Sun, 24 Jan 2010 11:32:44 +0100
+Received: from rain.gmane.org ([80.91.229.7])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2010 11:32:44 +0100
+Received: from marcus by rain.gmane.org with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2010 11:32:44 +0100
+To: linux-wireless@vger.kernel.org
+From: Marcus Better <marcus@better.se>
+Subject: Re: mac80211: Breakage in software encryption (iwl3945)
+Date: Sun, 24 Jan 2010 11:32:19 +0100
+Message-ID: <hjh7jk$7nb$1@ger.gmane.org>
+References: <1264277460.13250.10.camel@maxim-laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 19, 2010 at 3:12 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 01/19/2010 02:54 PM, Greg Oliver wrote:
->> On Tue, Jan 19, 2010 at 2:42 PM, Giuseppe Fontana <gfontana13@gmail.com> wrote:
->>> Ok! Consider that to reduce complexity, I stopped the firewall agent
->>> in the WinXPPro laptop that hosts the wifi ad-hoc network. So we can
->>> exclude the firewall :)
->>> By the way, has Ubuntu got a default firewall active?
->>
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I forgot about this.  I just tried joining an adhoc network here, and
-it will not let me join at all Giuseppe.  wpa_supplicant just tells me
-"failed to set operating mode"..  I'm running wireless-compat though,
-so my ubuntu that is not completely using iw yet may just not work in
-this case..  Like I said, it is no big deal to me though.  Sorry I
-can't help further.
+Maxim Levitsky wrote:
+> I updated the kernel and lost connection to my WPA2
+> AP. Strangely the WPA handshake completes, but DHCP not.
 
--Greg
+I have observed this a few times with 2.6.32.4. I could work around it by 
+unloading and re-loading iwl3945.
+
+> Now, the commit a6bae9e7ab19876a157c91019852395539e4f20e breaks software
+> encryption, with behaviour like described above.
+
+I don't think 2.6.32.4 includes that commit though.
+
+Cheers,
+
+Marcus
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAktcIbMACgkQXjXn6TzcAQl0TQCg3IumaU/tB0N+yld2dg6weJG4
++IAAoO19+HFQuQRKBvm8wsKVl43tUET6
+=4lgK
+-----END PGP SIGNATURE-----
+
+
