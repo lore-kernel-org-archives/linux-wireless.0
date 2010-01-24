@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:45288 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755514Ab0AFWtp convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:20004 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446Ab0AXS0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:49:45 -0500
-Received: by fxm25 with SMTP id 25so11210276fxm.21
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:49:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b170af451001061445k56872cd1hbae81a59e421da73@mail.gmail.com>
-References: <op.u54a5ufy9lhzdc@linux-g0th.site> <201001061650.52062.mb@bu3sch.de>
-	<b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com>
-	<op.u54ppc2h9lhzdc@linux-g0th.site> <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com>
-	<b170af451001061445k56872cd1hbae81a59e421da73@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 6 Jan 2010 23:49:21 +0100
-Message-ID: <69e28c911001061449v3f58ce1vc4bfefcdbaf81fa2@mail.gmail.com>
-Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_in_carrier_search
-	and it's calls (V2)
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=ISO-8859-2
+	Sun, 24 Jan 2010 13:26:53 -0500
+Received: by fg-out-1718.google.com with SMTP id l26so748602fgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2010 10:26:52 -0800 (PST)
+Subject: Re: [PATCH 4/5] mac80211: move control.hw_key assignment
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Fabio Rossi <rossi.f@inwind.it>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <201001231622.03394.rossi.f@inwind.it>
+References: <20100117004754.624627000@sipsolutions.net>
+	 <20100117004825.177097479@sipsolutions.net>
+	 <201001231622.03394.rossi.f@inwind.it>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 24 Jan 2010 20:26:48 +0200
+Message-ID: <1264357608.4152.7.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/6 Rafa³ Mi³ecki <zajec5@gmail.com>:
-> W dniu 6 stycznia 2010 23:35 u¿ytkownik Gábor Stefanik
-> <netrolller.3d@gmail.com> napisa³:
->> 2010/1/6 Rafa³ Mi³ecki <zajec5@gmail.com>:
->>> V2: fix typo in deaf_count counting, improve b43_mac_[sr] calls,
->>>    rename function. Thanks Michael!
->>>
->>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
->>> ---
->>>  drivers/net/wireless/b43/phy_n.c |   58
->>> ++++++++++++++++++++++++++++++++++++++
->>>  drivers/net/wireless/b43/phy_n.h |    3 ++
->>>  2 files changed, 61 insertions(+), 0 deletions(-)
->>>
->>> <snip>
->>
->> Typo in title (it's vs. its)
->
-> My gramma is far from perfect, thanks.
+On Sat, 2010-01-23 at 16:22 +0100, Fabio Rossi wrote: 
+> On Sunday 17 January 2010 01:47:58 Johannes Berg wrote:
+> 
+> > When mac80211 asks a driver to encrypt a frame, it
+> > must assign the control.hw_key pointer for it to
+> > know which key to use etc. Currently, mac80211 does
+> > this whenever it would software-encrypt a frame.
+> > 
+> > Change the logic of this code to assign the hw_key
+> > pointer when selecting the key, and later check it
+> > when deciding whether to encrypt the frame or let
+> > it be encrypted by the hardware. This allows us to
+> > later simply skip the encryption function since it
+> > no longer modifies the TX control.
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> Hi Johannes,
+> this patch breaks my wireless connection. I'm able to authenticate and 
+> associate to my AP but I can't use the connection, a simple ping towards my AP 
+> doesn't work. I bisected the problem and your patch is the bad commit.
+> 
+> I have the latest wireless-testing.git (v2.6.33-rc5-47285-g96ada3c). After 
+> having removed all the commits related to this patch, i.e.
+> 
+> - commit f12553ebe045a8a40ab33fa500fb57d10706e226
+> - commit e4fca007b06165900d0e44e8d5e251376819bf5d
+> - commit 813d76694043d00b59475baa1fbfaf54a2eb7fad
+> 
+> the connection is working again.
 
-I've yet to see a perfect grandmother... :-)
+Exactly same problem, here with iwl3945.
+I am using software encryption (CCMP), and I noticed that it is the
+default in iwl3945. Also hardware encryption doesn't work (unrelated
+issue)
 
->
-> --
-> Rafa³
->
+Best regards,
+Maxim Levitsky
 
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
