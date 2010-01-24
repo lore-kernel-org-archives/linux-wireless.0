@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:32312 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750786Ab0AGUOD convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f182.google.com ([209.85.216.182]:44652 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307Ab0AXF6L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 15:14:03 -0500
+	Sun, 24 Jan 2010 00:58:11 -0500
+Received: by pxi12 with SMTP id 12so1937604pxi.33
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 21:58:10 -0800 (PST)
+Message-ID: <4B5BE16E.7080901@lwfinger.net>
+Date: Sat, 23 Jan 2010 23:58:06 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <8db1092f1001071136o20ac7e19nb102c7afde8c21e7@mail.gmail.com>
-References: <8db1092f1001071136o20ac7e19nb102c7afde8c21e7@mail.gmail.com>
-Date: Thu, 7 Jan 2010 21:14:01 +0100
-Message-ID: <2d0a357f1001071214m6780def8md80c056161d0aa79@mail.gmail.com>
-Subject: Re: [2.6.33-rc3] [WMI?] [RFKILL?] [WIRELESS?] hang: BUG: Unable to
-	handle kernel NULL pointer dereference at 00000008
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	carlos@strangeworlds.co.uk,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>, ilw@linux.intel.com,
-	len.brown@intel.com, Anisse Astier <anisse@astier.eu>
-Content-Type: text/plain; charset=UTF-8
+To: Michael Buesch <mb@bu3sch.de>
+CC: Johannes Berg <johannes@sipsolutions.net>, kecsa@kutfo.hit.bme.hu,
+	linux-wireless@vger.kernel.org
+Subject: Re: hwtkip hangs on b43
+References: <Pine.LNX.4.44.1001230942190.16120-100000@kutfo.hit.bme.hu> <201001232000.07229.mb@bu3sch.de> <4B5B4E9F.8040708@lwfinger.net> <201001232038.55204.mb@bu3sch.de>
+In-Reply-To: <201001232038.55204.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 01/23/2010 01:38 PM, Michael Buesch wrote:
+> On Saturday 23 January 2010 20:31:43 Larry Finger wrote:
+>> On 01/23/2010 01:00 PM, Michael Buesch wrote:
+>>> On Saturday 23 January 2010 19:53:48 Johannes Berg wrote:
+>>>> Actually you can't, because you can't acquire the mutex here since we're
+>>>> in an atomic section. So relying on it being already locked is probably
+>>>> safer. However, you can't actually sleep anyway...
+>>>
+>>> I'm OK with removing the lock from the callback, if it is guaranteed that
+>>> the callback is only called on behalf of a RX call.
+>>>
+>>> We can just remove the lock and add a comment explaining why it is not locked...
+>>
+>> That works for me.
+>>
+>
+>
+> untested
+>
+> ---
 
-seems like the ACPI/hp-wmi bug, nothing to do with linux-wireless.
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I have already reported this bug (again) [1] and unfortunately it has
-re-entered upstream.
-A single new patch was sent by Anisse [2].
-This patch is waiting in linux-acpi-2.6/test [3].
-
-Don't ask me why it has not been included in 2.6.33-rc3.
-For some HP-notebook users it is a CRITICAL bug.
-
-Kind Regards,
-- Sedat -
-
-[1] http://marc.info/?t=126227644600001&r=1&w=2
-[2] http://marc.info/?t=126215864800004&r=1&w=2
-[3] http://git.kernel.org/?p=linux/kernel/git/lenb/linux-acpi-2.6.git;a=commit;h=c9c041fcb1a4d69ed4791f00b57554eeb341d148
-
-On Thu, Jan 7, 2010 at 8:36 PM, Maciej Rutecki <maciej.rutecki@gmail.com> wrote:
-> Last known good: 2.6.33-rc2
-> Affected: 2.6.33-rc3
->
-> Description:
->
-> 1. When wireless button enabled system hangs on:
-> http://unixy.pl/maciek/download/kernel/2.6.33-rc3/DSC_0038.JPG
->
-> 2. When disable bluetooth and wireless button, I got a bug:
-> http://unixy.pl/maciek/download/kernel/2.6.33-rc3/DSC_0039.JPG
->
-> 3. When reboot I have message:
-> http://unixy.pl/maciek/download/kernel/2.6.33-rc3/DSC_0040.JPG
->
-> Config:
-> http://unixy.pl/maciek/download/kernel/2.6.33-rc3/config-2.6.33-rc3
->
-> Regards
->
-> --
-> Maciej Rutecki
-> http://www.maciek.unixy.pl
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
