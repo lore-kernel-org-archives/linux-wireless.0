@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:27148 "EHLO mga11.intel.com"
+Received: from nbd.name ([88.198.39.176]:33483 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753955Ab0AHVIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 16:08:45 -0500
-Subject: Re: [PATCH 0/2] iwlwifi fixes for 2.6.33
-From: reinette chatre <reinette.chatre@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1262973871-2483-1-git-send-email-reinette.chatre@intel.com>
-References: <1262973871-2483-1-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Fri, 08 Jan 2010 13:08:44 -0800
-Message-Id: <1262984924.11849.4782.camel@rc-desk>
-Mime-Version: 1.0
+	id S1752399Ab0AYNZw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2010 08:25:52 -0500
+Message-ID: <4B5D9BDC.8030307@openwrt.org>
+Date: Mon, 25 Jan 2010 14:25:48 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: wait for beacon before associating
+References: <1264423044.23766.39.camel@johannes.local>
+In-Reply-To: <1264423044.23766.39.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-01-08 at 10:04 -0800, Chatre, Reinette wrote:
-> I had some problems compiling wireless-2.6 as I ran into the problem
-> described in http://patchwork.kernel.org/patch/68463/ . I assume that the
-> "CONFIG_KPROBES=n" relies on patch "[PATCH] x86: compile insn.c and inat.c
-> only for KPROBES", which is not present in wireless-2.6. I am using
-> gawk. For testing I manually applied this patch and disabled kprobes to be
-> able to build.
+On 2010-01-25 1:37 PM, Johannes Berg wrote:
+> This patch makes mac80211 wait for a beacon
+> before associating to have proper information
+> from it, in particular the DTIM period. It
+> also makes it not probe the AP if it already
+> has a probe response, so that only one of
+> probing and waiting for beacon can be done,
+> one of them must have been received to know
+> about the BSS.
+> 
+> Note that I don't think this helps the
+> synchronisation issue Kalle pointed out since
+> we do not tell the driver about the bssid, in
+> fact in this patch I explicitly open up the
+> filters to receive the beacon.
+> 
+> The default timeout is 112.5% of the beacon
+> interval, so a single lost beacon could cause
+> the association to fail, I'm not sure if that
+> is desirable or if the default timeout should
+> be longer.
+I think if this is required only for powersave, it would be nice if it
+would only wait for the beacon if either powersave is actually enabled,
+or user space requests it.
+I'd like to avoid making the assoc process more unreliable for noisy
+environments in cases where it isn't necessary to do so.
 
-This problem went away after I upgraded gawk from 3.1.6 to 3.1.7.
-
-Reinette
-
-
+- Felix
