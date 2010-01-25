@@ -1,96 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:53135 "EHLO
-	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756494Ab0AFWw4 (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:39095 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab0AYSfa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:52:56 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Mon, 25 Jan 2010 13:35:30 -0500
+Received: by ewy19 with SMTP id 19so49054ewy.21
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 10:35:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201001251932.14633.mb@bu3sch.de>
+References: <1264442401-6364-1-git-send-email-zajec5@gmail.com>
+	 <1264442401-6364-3-git-send-email-zajec5@gmail.com>
+	 <201001251932.14633.mb@bu3sch.de>
+Date: Mon, 25 Jan 2010 19:35:28 +0100
+Message-ID: <b170af451001251035t23f3978cga52258722ea29770@mail.gmail.com>
+Subject: Re: [PATCH 2/4] b43: make cordic common (LP-PHY and N-PHY need it)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2.6.33 3/8] rt2x00: Further L2 padding fixes.
-Date: Wed,  6 Jan 2010 23:52:44 +0100
-Message-Id: <1262818369-16820-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
-References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a couple of more bugs in the L2 padding code:
-1. Compute the amount of L2 padding correctly (in 3 places).
-2. Trim the skb correctly when the L2 padding has been applied.
+2010/1/25 Michael Buesch <mb@bu3sch.de>:
+> On Monday 25 January 2010 18:59:59 Rafał Miłecki wrote:
+>> +/* Complex number using 2 32-bit signed integers */
+>> +typedef struct { s32 i, q; } b43_c32;
+>
+> No typedef. ever.
 
-Also introduce a central macro the compute the L2 padding size.
+Well, I just copied (Gabor's?) code here. But of course I can fix this
+by the way, no problem :)
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h      |    6 ++++++
- drivers/net/wireless/rt2x00/rt2x00queue.c |    8 +++++---
- 2 files changed, 11 insertions(+), 3 deletions(-)
+Just read about typedef in Linux Kernel Coding Style, didn't know
+about this earlier. Thanks for pointing.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index dcfc8c2..4c5a482 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -104,6 +104,12 @@
- #define GET_DURATION_RES(__size, __rate)(((__size) * 8 * 10) % (__rate))
- 
- /*
-+ * Determine the number of L2 padding bytes required between the header and
-+ * the payload.
-+ */
-+#define L2PAD_SIZE(__hdrlen)	(-(__hdrlen) & 3)
-+
-+/*
-  * Determine the alignment requirement,
-  * to make sure the 802.11 payload is padded to a 4-byte boundrary
-  * we must determine the address of the payload and calculate the
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 37a9d20..d648f76 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -181,7 +181,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 	unsigned int frame_length = skb->len;
- 	unsigned int header_align = ALIGN_SIZE(skb, 0);
- 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
--	unsigned int l2pad = 4 - (payload_align - header_align);
-+	unsigned int l2pad = L2PAD_SIZE(header_length);
- 
- 	if (header_align == payload_align) {
- 		/*
-@@ -216,6 +216,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- 		memmove(skb->data + header_length + l2pad,
- 			skb->data + header_length + l2pad + payload_align,
- 			frame_length - header_length);
-+		skb_trim(skb, frame_length + l2pad);
- 		skbdesc->flags |= SKBDESC_L2_PADDED;
- 	}
- }
-@@ -223,7 +224,7 @@ void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	unsigned int l2pad = 4 - (header_length & 3);
-+	unsigned int l2pad = L2PAD_SIZE(header_length);
- 
- 	if (!l2pad || (skbdesc->flags & SKBDESC_L2_PADDED))
- 		return;
-@@ -346,7 +347,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	 * Header and alignment information.
- 	 */
- 	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
--	txdesc->l2pad = ALIGN_SIZE(entry->skb, txdesc->header_length);
-+	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
-+		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
- 
- 	/*
- 	 * Check whether this frame is to be acked.
 -- 
-1.6.6
-
+Rafał
