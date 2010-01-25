@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.elliptictech.com ([209.217.122.41]:52743 "EHLO
-	emergent.ellipticsemi.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751292Ab0AKWRl (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:55421 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754126Ab0AYRpQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2010 17:17:41 -0500
-Date: Mon, 11 Jan 2010 16:47:10 -0500
-From: Nick Bowler <nbowler@elliptictech.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.33-rc3-git3: Reported regressions from 2.6.32
-Message-ID: <20100111214603.GA4335@emergent.ellipticsemi.com>
-References: <wnS54-l8PVO.A.TlF.oMlSLB@chimera>
+	Mon, 25 Jan 2010 12:45:16 -0500
+Received: by bwz27 with SMTP id 27so2868293bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 09:45:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <wnS54-l8PVO.A.TlF.oMlSLB@chimera>
+In-Reply-To: <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
+References: <4B5CD1FF.4090209@twilightblue.net> <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 25 Jan 2010 18:44:51 +0100
+Message-ID: <69e28c911001250944h2cbd5d6eia6d78b652d10f135@mail.gmail.com>
+Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Don Darling <darling.don@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23:27 Sun 10 Jan     , Rafael J. Wysocki wrote:
-> This message contains a list of some regressions from 2.6.32, for which there
-> are no fixes in the mainline I know of.  If any of them have been fixed already,
-> please let me know.
-> 
-> If you know of any other unresolved regressions from 2.6.32, please let me know
-> either and I'll add them to the list.  Also, please let me know if any of the
-> entries below are invalid.
+On Mon, Jan 25, 2010 at 6:39 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Sun, Jan 24, 2010 at 6:04 PM, Don Darling <darling.don@gmail.com> wrote:
+>> Hello folks,
+>>
+>> I recently tried upgrading to kernel version 2.6.32, but after this upgrade
+>> my wireless card became flaky when making connections. In cases where a
+>> connection can be established it is  stable, but there are problems when
+>> making wireless associations. Downgrading to kernel version 2.6.31 resolves
+>> this issue.  I'm not sure at the moment which versions of the ath5k driver
+>> maps to these kernel versions.
+>
+> The (vanilla) kernel version is sufficient to know which driver it is.
+>
+>> I'm assuming this issue is related to the ath5k driver itself -- the network
+>> I'm using is only WEP128, and doesn't need wpa_supplicant.
+>
+> Huh, I didn't think any mac80211 driver supported WEP 128.  Are you sure you
+> weren't using madwifi before?  Or maybe WEP 104?
+>
+> Are you using any modparams with ath5k?
+>
+>> In fact, I have
+>> fewer problems when I connect to WPA+TKIP networks with wpa_supplicant.
+>
+> This is somewhat more secure, so I'd recommend it, or better CCMP.
+>
+>> Reverting to 2.6.31 resolves this issue. It will connect the first time, and
+>> I can disconnect/re-connect several times without issue.
+>
+> I can't think of anything that changed in this time frame with ath5k
+> specifically
+> having to do with crypto.  If you were using nohwcrypt=1, it could be a problem
+> with mac80211.  Otherwise, bisecting might be the best route to pin it down.
 
-Here are two that I don't see in the list:
+One more important detail: wpa_supplicant can use both wext and
+nl80211, while iwconfig and networkmanager are wext-only.
 
- * LVDS downclocking breaks on G45/thinkpad T500
+Don: do you use -d wext or -d nl80211 with wpa_supplicant?
 
-     LKML: http://lkml.org/lkml/2009/12/26/40
-     FDO:  http://bugs.freedesktop.org/show_bug.cgi?id=25809
- 
- * Receive failure in et131x (Alan Cox sent me a patch for this but
-                              it's not in mainline yet)
+>
+> Also on the off-chance that it's not crypto related, you may try the suggestions
+> in the following to get a better picture of whwat is going on:
+>
+> http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-     LKML: http://lkml.org/lkml/2009/12/29/210
+
 
 -- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
