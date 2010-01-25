@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m-04.th.seeweb.it ([217.64.195.227]:34757 "EHLO
-	m-04.th.seeweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753617Ab0AWPJy (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:46309 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753434Ab0AYSxY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 10:09:54 -0500
-Date: Sat, 23 Jan 2010 16:09:12 +0100
-From: Stefano Brivio <stefano.brivio@polimi.it>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	davem@davemloft.net, Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH 0/5] b43: more N-PHY stuff
-Message-ID: <20100123160912.0e38a91c@vaiolo.stefanobrivio.net>
-In-Reply-To: <201001231233.02501.mb@bu3sch.de>
-References: <1264121596-9616-1-git-send-email-zajec5@gmail.com>
-	<20100123011618.GA16135@tuxdriver.com>
-	<1264217811.10468.46.camel@macbook.infradead.org>
-	<201001231233.02501.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 25 Jan 2010 13:53:24 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 2/4] b43: make cordic common (LP-PHY and N-PHY need it)
+Date: Mon, 25 Jan 2010 19:53:19 +0100
+Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <1264442401-6364-1-git-send-email-zajec5@gmail.com> <b170af451001251035t23f3978cga52258722ea29770@mail.gmail.com> <b170af451001251036m8b33f3er9f0a363a03ea21cb@mail.gmail.com>
+In-Reply-To: <b170af451001251036m8b33f3er9f0a363a03ea21cb@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001251953.21692.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 23 Jan 2010 12:33:00 +0100
-Michael Buesch <mb@bu3sch.de> wrote:
+On Monday 25 January 2010 19:36:27 Rafał Miłecki wrote:
+> W dniu 25 stycznia 2010 19:35 użytkownik Rafał Miłecki
+> <zajec5@gmail.com> napisał:
+> > 2010/1/25 Michael Buesch <mb@bu3sch.de>:
+> >> On Monday 25 January 2010 18:59:59 Rafał Miłecki wrote:
+> >>> +/* Complex number using 2 32-bit signed integers */
+> >>> +typedef struct { s32 i, q; } b43_c32;
+> >>
+> >> No typedef. ever.
+> >
+> > Well, I just copied (Gabor's?) code here. But of course I can fix this
+> > by the way, no problem :)
 
-> On Saturday 23 January 2010 04:36:50 David Woodhouse wrote:
-> > 
-> > Can you provide a list of existing subscribers?
+Yeah, I saw that. We can fix it while we're at it. ;)
+
+> > Just read about typedef in Linux Kernel Coding Style, didn't know
+> > about this earlier. Thanks for pointing.
 > 
-> I think Stefano has access to our berlios mailman.
+> Is this OK to fix this in separated patch? Or should I modify this set
+> of patches?
 
-Last time I tried, I couldn't get berlios mailman to export the list of
-subscribers properly. I'll try to get around this (probably, HTML
-parsing is my best bet).
+Well, as you touch any reference to the typedef anyway (you renamed it),
+you can just put the keyword "struct" in front of the references and no separate patch is needed.
+It won't even grow your current patch in the number of changed lines.
 
-
---
-Ciao
-Stefano
+-- 
+Greetings, Michael.
