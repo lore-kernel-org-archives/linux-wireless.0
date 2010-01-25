@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62939 "EHLO mga11.intel.com"
+Received: from mail0.scram.de ([78.47.204.202]:42878 "EHLO mail.scram.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758541Ab0AOVnv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 16:43:51 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/9] iwlwifi: software w/a for h/w bug cause Rx bit get clear
-Date: Fri, 15 Jan 2010 13:43:38 -0800
-Message-Id: <1263591821-14867-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
-References: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
+	id S1752214Ab0AYWQP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2010 17:16:15 -0500
+Message-ID: <4B5E1827.4040902@scram.de>
+Date: Mon, 25 Jan 2010 23:16:07 +0100
+From: Jochen Friedrich <jochen@scram.de>
+MIME-Version: 1.0
+To: Fabio Rossi <rossi.f@inwind.it>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	Maxim Levitsky <maximlevitsky@gmail.com>
+Subject: Re: [PATCH] mac80211: fix sw crypto
+References: <1264415776.23766.34.camel@johannes.local> <201001252309.48260.rossi.f@inwind.it>
+In-Reply-To: <201001252309.48260.rossi.f@inwind.it>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Fabio Rossi wrote:
+> On Monday 25 January 2010 11:36:16 Johannes Berg wrote:
+> 
+>> What a stupid mistake. In
+>>
+>>     commit 813d76694043d00b59475baa1fbfaf54a2eb7fad
+>>     Author: Johannes Berg <johannes@sipsolutions.net>
+>>     Date:   Sun Jan 17 01:47:58 2010 +0100
+>>
+>>         mac80211: move control.hw_key assignment
+>>
+>> I inserted code testing the wrong flags field,
+>> which means that the test is almost always true
+>> (it's really testing for the peer's WMM support)
+>> and thus the later parts of the stack assume hw
+>> crypto will be done even if that's not true.
+>>
+>> Obviously, that broke software crypto. Maxim
+>> said so specifically, and Jochen probably uses
+>> some cipher that iwl3945 doesn't support in
+>> hardware, which might also explain that Maxim
+>> reports that even hw crypto is broken.
+>>
+>> Fix this to test the right flags field.
+>>
+> 
+> Tested-by: Fabio Rossi <rossi.f@inwind.it>
 
-This is a w/a for a hardware bug. the h/w bug may cause the Rx bit
-(bit 15 before shifting it to 31) to clear when using interrupt coalescing.
+Tested-by: Jochen Friedrich <jochen@scram.de>
 
-This does not mean frames are lost - their processing is just delayed until
-next interrupt arrives.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index f94a323..2323073 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1803,6 +1803,16 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
- 	if (val == 0xffffffff)
- 		val = 0;
- 
-+	/*
-+	 * this is a w/a for a h/w bug. the h/w bug may cause the Rx bit
-+	 * (bit 15 before shifting it to 31) to clear when using interrupt
-+	 * coalescing. fortunately, bits 18 and 19 stay set when this happens
-+	 * so we use them to decide on the real state of the Rx bit.
-+	 * In order words, bit 15 is set if bit 18 or bit 19 are set.
-+	 */
-+	if (val & 0xC0000)
-+		val |= 0x8000;
-+
- 	inta = (0xff & val) | ((0xff00 & val) << 16);
- 	IWL_DEBUG_ISR(priv, "ISR inta 0x%08x, enabled 0x%08x ict 0x%08x\n",
- 			inta, inta_mask, val);
--- 
-1.6.3.3
-
+Thanks,
+Jochen
