@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:41835 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751648Ab0A3RFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 12:05:46 -0500
-Message-ID: <4B6466E9.90705@openwrt.org>
-Date: Sat, 30 Jan 2010 18:05:45 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:48125 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab0AYT6j convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2010 14:58:39 -0500
+Received: by pwi21 with SMTP id 21so2486103pwi.21
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 11:58:38 -0800 (PST)
 MIME-Version: 1.0
-To: Greg Oliver <oliver.greg@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Multiple SSID on same phy
-References: <20100129122718.73a6c877@nehalam>	 <1264866128.3546.185.camel@johannes.local>	 <51058d551001300751r4a509e90i521c946dfe9dec4@mail.gmail.com>	 <1264867217.3546.186.camel@johannes.local>	 <51058d551001300814y66d1d589uae15fa50086593b8@mail.gmail.com>	 <1264868231.3546.188.camel@johannes.local> <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
-In-Reply-To: <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
+In-Reply-To: <4B5DF06C.60000@bzz.no>
+References: <4B5CB7AB.7010105@bzz.no> <b6c5339f1001250951u548e6a16raf661464660ec577@mail.gmail.com>
+	<69e28c911001251030p79f00ea1j23f95b5e2f8571a3@mail.gmail.com>
+	<4B5DF06C.60000@bzz.no>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 25 Jan 2010 11:58:18 -0800
+Message-ID: <43e72e891001251158g308e69c1u424934823798f4ff@mail.gmail.com>
+Subject: Re: Bug: 2.6.32 ath5k, unable to connect to AP on channel 13
+To: "John S. Skogtvedt" <jss@bzz.no>
+Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-01-30 5:22 PM, Greg Oliver wrote:
-> On Sat, Jan 30, 2010 at 10:17 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Sat, 2010-01-30 at 10:14 -0600, Greg Oliver wrote:
->>> On Sat, Jan 30, 2010 at 10:00 AM, Johannes Berg
->>> <johannes@sipsolutions.net> wrote:
->>> > I suggest you go public with your reply so you can be flamed and taught
->>> > wrong appropriately.
+2010/1/25 John S. Skogtvedt <jss@bzz.no>:
+> Gábor Stefanik skrev:
+>> On Mon, Jan 25, 2010 at 6:51 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>>> On Sun, Jan 24, 2010 at 4:12 PM, John S. Skogtvedt <jss@bzz.no> wrote:
+>>>> Hello,
+>>>>
+>>>> As the subject says, using ath5k on 2.6.32 I am not able to connect to
+>>>> an AP on channel 13 (i.e. wpa_supplicant doesn't find the AP and thus
+>>>> fails to associate). I'm in Norway, and the card is bought in Norway.
+>>>> dmesg output:
+>>>> [    7.205952] cfg80211: Using static regulatory domain info
+>>>> [    7.205956] cfg80211: Regulatory domain: US
+>>>> [    7.206243] cfg80211: Calling CRDA for country: US
+>>> Well, there's your problem, AFAICT.  You have
+>>> CONFIG_WIRELESS_OLD_REGULATORY=y?  And ieee80211_regdom=EU doesn't work?
 >>>
->>> Sorry - this gmail inefficiency sometimes gets me...
->>>
->>> BUT, please enlighten me when any of the 3 use cases would be
->>> beneficial to anyone not trying to (or "inefficiently migrating") hack
->>> into a network would occur.
+>>>> [    7.887265] ath: EEPROM regdomain: 0x80d0
+>>>> [    7.887267] ath: EEPROM indicates we should expect a country code
+>>>> [    7.887270] ath: doing EEPROM country->regdmn map search
+>>>> [    7.887272] ath: country maps to regdmn code: 0x37
+>>>> [    7.887275] ath: Country alpha2 being used: DK
+>>>> [    7.887277] ath: Regpair used: 0x37
+>>>> [    8.288352] ath5k phy0: Atheros AR2414 chip found (MAC: 0x79, PHY: 0x45)
+>>>> [    8.288607] cfg80211: Calling CRDA for country: DK
+>>> Denmark, which should allow the channels in question.
 >>
->> I don't think I can parse that. In any case, a possible use case would
->> for instance be a protected company network, along with an unprotected,
->> internet-only guest network.
-> Hmmm, I would put the odds at that happening about 100,000:1 (if not more)
-> 
-> Yes, I know it is feasible, but HIGHLY unlikely.
-Actually, with non-mac80211 drivers people have been deploying setups
-like this for years. Now that this functionality is starting to
-stabilize in mac80211, people are starting to use it there as well.
+>> However, does the DK regdomain really get set? Is CRDA installed?
+>>
+>
+> Thank you, with CRDA installed it does work.
+> (Debian doesn't currently package it, but I found a source package in
+> the RFP bug report:
+> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=536502
+> )
+>
+> However, shouldn't it work without CRDA with
+> CONFIG_WIRELESS_OLD_REGULATORY=y and ieee80211_regdom=EU?
 
-What you call 'HIGHLY unlikely' is actually very common ;)
+No, Atheros cards by default abide by a custom strict world regulatory
+domain if CRDA is not present.
 
-- Felix
+  Luis
