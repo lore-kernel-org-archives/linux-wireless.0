@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:33320 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751641Ab0AOHXR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 02:23:17 -0500
-Received: by ewy1 with SMTP id 1so496615ewy.28
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 23:23:16 -0800 (PST)
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl1271: remove unused flags
-References: <1263338584-27132-1-git-send-email-lrodriguez@atheros.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 15 Jan 2010 09:23:12 +0200
-In-Reply-To: <1263338584-27132-1-git-send-email-lrodriguez@atheros.com> (Luis R. Rodriguez's message of "Tue\, 12 Jan 2010 18\:23\:04 -0500")
-Message-ID: <87r5prsufz.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:62471 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752327Ab0AYSPr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2010 13:15:47 -0500
+From: <wey-yi.w.guy@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/1] mac80211: only single mutex locked to prevent deadlock
+Date: Mon, 25 Jan 2010 10:12:16 -0800
+Message-Id: <1264443136-30865-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> These are unused and as with a previous patch 5ef5da for wl1251
-> this removes some other unused flags. the IRQ_MASK specifically
-> conflicts with include/pcmcia/cs.h when using compat-wireless.
+Both ifmgd->mtx and sdata->local->iflist_mtx are locked in
+ieee80211_mgd_probe_ap(), not sure it will cause deadlock condition. but
+it is better to only has one mutex at a time.
 
-Thanks, looks good to me.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ net/mac80211/mlme.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-> Cc: Kalle Valo <kalle.valo@nokia.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1e1d16c..e23df14 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -914,10 +914,13 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	if (already)
+ 		goto out;
+ 
++	mutex_unlock(&ifmgd->mtx);
++
+ 	mutex_lock(&sdata->local->iflist_mtx);
+ 	ieee80211_recalc_ps(sdata->local, -1);
+ 	mutex_unlock(&sdata->local->iflist_mtx);
+ 
++	mutex_lock(&ifmgd->mtx);
+ 	ifmgd->probe_send_count = 0;
+ 	ieee80211_mgd_probe_ap_send(sdata);
+  out:
 -- 
-Kalle Valo
+1.5.6.3
+
