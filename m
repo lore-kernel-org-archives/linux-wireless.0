@@ -1,135 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:49566 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751551Ab0AKVSR convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33360 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751572Ab0AYSfv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2010 16:18:17 -0500
-Received: by ewy1 with SMTP id 1so3724154ewy.28
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2010 13:18:15 -0800 (PST)
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-Cc: "bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 11 Jan 2010 22:18:13 +0100
-Subject: [PATCH 2/6 V2] b43: N-PHY: add RSSI functions: poll and set 2055 vcm
+	Mon, 25 Jan 2010 13:35:51 -0500
+Date: Mon, 25 Jan 2010 10:35:43 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
+Message-ID: <20100125183543.GB19528@jm.kir.nu>
+References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1264186981.2593.10.camel@johannes.local>
 MIME-Version: 1.0
-From: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <op.u6dz4mz09lhzdc@linux-g0th.site>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1264186981.2593.10.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-  drivers/net/wireless/b43/phy_n.c |   96 ++++++++++++++++++++++++++++++++++++++
-  1 files changed, 96 insertions(+), 0 deletions(-)
+On Fri, Jan 22, 2010 at 08:03:01PM +0100, Johannes Berg wrote:
+> The other solution I see is that we add a new step before or after the
+> direct probe step, which would just be "wait for a beacon". This would
+> ensure we have both probe and beacon information always ready. It would
+> also ensure we have both probe and beacon info for our new userspace
+> reporting of that.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index a44fca1..214cf54 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -711,6 +711,102 @@ static void b43_nphy_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
-  	}
-  }
+I'm somewhat concerned about this as an unconditional change for our
+association process due to the extra latency it adds. At minimum, I
+would like to see a driver flag that can be used to indicate that such
+behavior is really required and skip the extra wait if the driver does
+not need the Beacon frame before association.
 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SetRssi2055Vcm */
-+static void b43_nphy_set_rssi_2055_vcm(struct b43_wldev *dev, u8 type, u8 *buf)
-+{
-+	int i;
-+	for (i = 0; i < 2; i++) {
-+		if (type == 2) {
-+			if (i == 0) {
-+				b43_radio_maskset(dev, B2055_C1_B0NB_RSSIVCM,
-+						  0xFC, buf[0]);
-+				b43_radio_maskset(dev, B2055_C1_RX_BB_RSSICTL5,
-+						  0xFC, buf[1]);
-+			} else {
-+				b43_radio_maskset(dev, B2055_C2_B0NB_RSSIVCM,
-+						  0xFC, buf[2 * i]);
-+				b43_radio_maskset(dev, B2055_C2_RX_BB_RSSICTL5,
-+						  0xFC, buf[2 * i + 1]);
-+			}
-+		} else {
-+			if (i == 0)
-+				b43_radio_maskset(dev, B2055_C1_RX_BB_RSSICTL5,
-+						  0xF3, buf[0] << 2);
-+			else
-+				b43_radio_maskset(dev, B2055_C2_RX_BB_RSSICTL5,
-+						  0xF3, buf[2 * i + 1] << 2);
-+		}
-+	}
-+}
-+
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/PollRssi */
-+static int b43_nphy_poll_rssi(struct b43_wldev *dev, u8 type, s32 *buf,
-+				u8 nsamp)
-+{
-+	int i;
-+	int out;
-+	u16 save_regs_phy[9];
-+	u16 s[2];
-+
-+	if (dev->phy.rev >= 3) {
-+		save_regs_phy[0] = b43_phy_read(dev,
-+						B43_NPHY_RFCTL_LUT_TRSW_UP1);
-+		save_regs_phy[1] = b43_phy_read(dev,
-+						B43_NPHY_RFCTL_LUT_TRSW_UP2);
-+		save_regs_phy[2] = b43_phy_read(dev, B43_NPHY_AFECTL_C1);
-+		save_regs_phy[3] = b43_phy_read(dev, B43_NPHY_AFECTL_C2);
-+		save_regs_phy[4] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER1);
-+		save_regs_phy[5] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER);
-+		save_regs_phy[6] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B1S0);
-+		save_regs_phy[7] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B32S1);
-+	}
-+
-+	b43_nphy_rssi_select(dev, 5, type);
-+
-+	if (dev->phy.rev < 2) {
-+		save_regs_phy[8] = b43_phy_read(dev, B43_NPHY_GPIO_SEL);
-+		b43_phy_write(dev, B43_NPHY_GPIO_SEL, 5);
-+	}
-+
-+	for (i = 0; i < 4; i++)
-+		buf[i] = 0;
-+
-+	for (i = 0; i < nsamp; i++) {
-+		if (dev->phy.rev < 2) {
-+			s[0] = b43_phy_read(dev, B43_NPHY_GPIO_LOOUT);
-+			s[1] = b43_phy_read(dev, B43_NPHY_GPIO_HIOUT);
-+		} else {
-+			s[0] = b43_phy_read(dev, B43_NPHY_RSSI1);
-+			s[1] = b43_phy_read(dev, B43_NPHY_RSSI2);
-+		}
-+
-+		buf[0] += ((s8)((s[0] & 0x3F) << 2)) >> 2;
-+		buf[1] += ((s8)(((s[0] >> 8) & 0x3F) << 2)) >> 2;
-+		buf[2] += ((s8)((s[1] & 0x3F) << 2)) >> 2;
-+		buf[3] += ((s8)(((s[1] >> 8) & 0x3F) << 2)) >> 2;
-+	}
-+	out = (buf[0] & 0xFF) << 24 | (buf[1] & 0xFF) << 16 |
-+		(buf[2] & 0xFF) << 8 | (buf[3] & 0xFF);
-+
-+	if (dev->phy.rev < 2)
-+		b43_phy_write(dev, B43_NPHY_GPIO_SEL, save_regs_phy[8]);
-+
-+	if (dev->phy.rev >= 3) {
-+		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1,
-+				save_regs_phy[0]);
-+		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2,
-+				save_regs_phy[1]);
-+		b43_phy_write(dev, B43_NPHY_AFECTL_C1, save_regs_phy[2]);
-+		b43_phy_write(dev, B43_NPHY_AFECTL_C2, save_regs_phy[3]);
-+		b43_phy_write(dev, B43_NPHY_AFECTL_OVER1, save_regs_phy[4]);
-+		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, save_regs_phy[5]);
-+		b43_phy_write(dev, B43_NPHY_TXF_40CO_B1S0, save_regs_phy[6]);
-+		b43_phy_write(dev, B43_NPHY_TXF_40CO_B32S1, save_regs_phy[7]);
-+	}
-+
-+	return out;
-+}
-+
-  /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSICal */
-  static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
-  {
+For most cases, I would also assume it should be possible to update the
+PS settings after having received the first Beacon frame after
+association, but if that is not enough, allowing the driver to request
+mac80211 to wait with association sounds reasonable. I just don't want
+to see additional 50 msec or so (or much worse if the AP is configured
+with insanely long beacon interval) delay popping up with every
+association by default..
+
 -- 
-1.6.4.2
-
+Jouni Malinen                                            PGP id EFC895FA
