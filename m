@@ -1,54 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:59288 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753697Ab0AHTGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 14:06:21 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Martin Pitt <martin.pitt@ubuntu.com>
-Subject: Re: [PATCH] b43: Declare all possible firmware files.
-Date: Fri, 8 Jan 2010 20:05:59 +0100
-Cc: Tim Gardner <tim.gardner@canonical.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	stefano.brivio@polimi.it, linux-wireless@vger.kernel.org
-References: <20100107183517.A322FF88D8@sepang.rtg.net> <4B463953.1030806@canonical.com> <20100108173248.GB2546@piware.de>
-In-Reply-To: <20100108173248.GB2546@piware.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201001082006.02121.mb@bu3sch.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:53585 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822Ab0AYULq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2010 15:11:46 -0500
+Subject: Re: [PATCH v3 1/1] mac80211: tell driver when dtim change detected
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20100125183543.GB19528@jm.kir.nu>
+References: <1264109996-15995-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1264186981.2593.10.camel@johannes.local>
+	 <20100125183543.GB19528@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dhwgODusqc3xBJi8kyht"
+Date: Mon, 25 Jan 2010 21:11:41 +0100
+Message-ID: <1264450301.23766.65.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 08 January 2010 18:32:48 Martin Pitt wrote:
-> Tim Gardner [2010-01-07 12:43 -0700]:
-> > AFAIK Jockey only needs to be able to tell if _any_ of the firmware
-> > files have been installed and could therefore make an install decision
-> > based on just one firmware file name.
-> 
-> Correct.
-> 
-> > Martin - if thats the case, then we need only list one firmware file in
-> > the modinfo, correct?
-> 
-> Right. If that's not practical to fix on the kernel side for some
-> reason, we could also put in a quirk into the Broadcom handler in
-> update-notifier. (Right now it just listens for FIRMWARE subsystem
-> uevents and checksc if the value of it exists as a file).
-> 
-> This was originally introduced for the DVB-T driver firmware packages,
-> but if we could make it work for b43 as well, this would be nice.
 
-I think it would be OK to list all the ucodeX.fw files, but listing all
-these initvals files seems overkill to me.
-If you still need all initval filenames, you could theoretically ask b43-fwcutter.
-That would just need a new fwcutter commandline option, as far as I can see.
+--=-dhwgODusqc3xBJi8kyht
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-As you can see, we currently only export the b43 specific firmware ID in MODULE_FIRMWARE().
-That is a unique identifier for a whole set of firmware files. b43-fwcutter also
-knows about that firmware ID.
+On Mon, 2010-01-25 at 10:35 -0800, Jouni Malinen wrote:
+> On Fri, Jan 22, 2010 at 08:03:01PM +0100, Johannes Berg wrote:
+> > The other solution I see is that we add a new step before or after the
+> > direct probe step, which would just be "wait for a beacon". This would
+> > ensure we have both probe and beacon information always ready. It would
+> > also ensure we have both probe and beacon info for our new userspace
+> > reporting of that.
+>=20
+> I'm somewhat concerned about this as an unconditional change for our
+> association process due to the extra latency it adds. At minimum, I
+> would like to see a driver flag that can be used to indicate that such
+> behavior is really required and skip the extra wait if the driver does
+> not need the Beacon frame before association.
+>=20
+> For most cases, I would also assume it should be possible to update the
+> PS settings after having received the first Beacon frame after
+> association, but if that is not enough, allowing the driver to request
+> mac80211 to wait with association sounds reasonable. I just don't want
+> to see additional 50 msec or so (or much worse if the AP is configured
+> with insanely long beacon interval) delay popping up with every
+> association by default..
 
-(While we're at it, I think the FW-id that b43 announces should be updated. Because
-I think the firmware with the currently announced ID does not support all LP devices.)
+Yeah that's a good point, I wondered about that too. I'll look into this
+in more detail and see if we can tell the driver about the DTIM period
+only with CONF_PS and enable that only after a beacon.
 
--- 
-Greetings, Michael.
+johannes
+
+--=-dhwgODusqc3xBJi8kyht
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIbBAABAgAGBQJLXfr5AAoJEODzc/N7+QmaQE4P933KAz2bRD4loyeUBkOazbYy
+LGo8/Jc6TaP4MgVm2y9ovDjaCezLXcN03UkR4cWWGPq02unWBLekoZgpKyRpQYby
+q6pEyYeUzW65XN5l9XwirkL/jHtj10JAlsxAuoNybUcpmcQUENrjTd6parg5xfvS
+Eqcpj/m9rniglOO78virZ7RSjWFbknIr2FdaxlCpEBjaETOpMJc4qRMoHup07ZVV
+ltOxwC4SsqMgpYs2XvKUna9XRJ3k8AuQzAm+ZHFxoOYaA6XPkR/P2dSUo4gKfsOo
+Q03ceecUvQeIEIFc/0AP/8qVEDvssfQk7W9jiG7KAZdnET1dcTZ9Vj1bJW3dmFPA
+X40KM29Lsf23fDKKoIW/3BJIdJS7FkjV66sY910wLydSEIs+o4Wwuc/CTPb7XC/y
+fwfUUJqhMH5P/IHwmMPkPBXC0x8TNDLo8P+ciQujKmxHcF2zfxMghckzaChpoGuO
+AAWS8iaET6kK7SDlwrTEiDsllxFDuFGI06v+o0nJdMwIhXom0CUjvwG1q9cxN4Lj
+w9i/8d8VGWBIBAKLBx3y85gIQkGRjbewrExQCUFm/78hvRIFjfqzuWelHsscyIEl
+8+e0kAk9WqiKrh5x3UUiTJ8z5w9w6eYCmc9bU3PKTcsqY1P5wUJi/vB5MdEztZq9
+O7hhFJow0gWs2MGumks=
+=pmAu
+-----END PGP SIGNATURE-----
+
+--=-dhwgODusqc3xBJi8kyht--
+
