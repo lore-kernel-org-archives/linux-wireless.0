@@ -1,61 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41139 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:57753 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753939Ab0AYSX1 (ORCPT
+	with ESMTP id S1752370Ab0AYMgk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2010 13:23:27 -0500
-Subject: Re: [PATCH 1/1] mac80211: only single mutex locked to prevent
- deadlock
+	Mon, 25 Jan 2010 07:36:40 -0500
+Subject: [PATCH] mac80211: track work started through callbacks
 From: Johannes Berg <johannes@sipsolutions.net>
-To: wey-yi.w.guy@intel.com
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1264443136-30865-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1264443136-30865-1-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SArRobGuyag+AbCKyXpR"
-Date: Mon, 25 Jan 2010 19:23:23 +0100
-Message-ID: <1264443803.23766.48.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 25 Jan 2010 13:36:36 +0100
+Message-ID: <1264422996.23766.38.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, the remain_on_channel work callback needs
+to track in its own data structure whether the work
+was just started or not. By reordering some code this
+becomes unnecessary, the generic wk->started variable
+can still be 'false' on the first invocation and only
+be 'true' on actual timeout invocations, so that the
+extra variable can be removed.
 
---=-SArRobGuyag+AbCKyXpR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/work.c        |   17 ++++++++++-------
+ 2 files changed, 10 insertions(+), 8 deletions(-)
 
-On Mon, 2010-01-25 at 10:12 -0800, wey-yi.w.guy@intel.com wrote:
-> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
->=20
-> Both ifmgd->mtx and sdata->local->iflist_mtx are locked in
-> ieee80211_mgd_probe_ap(), not sure it will cause deadlock condition. but
-> it is better to only has one mutex at a time.
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-01-25 12:53:05.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-01-25 12:53:11.000000000 +0100
+@@ -299,7 +299,6 @@ struct ieee80211_work {
+ 		} assoc;
+ 		struct {
+ 			u32 duration;
+-			bool started;
+ 		} remain;
+ 	};
+ 
+--- wireless-testing.orig/net/mac80211/work.c	2010-01-25 12:53:15.000000000 +0100
++++ wireless-testing/net/mac80211/work.c	2010-01-25 12:56:46.000000000 +0100
+@@ -535,8 +535,7 @@ ieee80211_remain_on_channel_timeout(stru
+ 	 * First time we run, do nothing -- the generic code will
+ 	 * have switched to the right channel etc.
+ 	 */
+-	if (!wk->remain.started) {
+-		wk->remain.started = true;
++	if (!wk->started) {
+ 		wk->timeout = jiffies + msecs_to_jiffies(wk->remain.duration);
+ 
+ 		cfg80211_ready_on_channel(wk->sdata->dev, (unsigned long) wk,
+@@ -821,15 +820,17 @@ static void ieee80211_work_work(struct w
+ 	mutex_lock(&local->work_mtx);
+ 
+ 	list_for_each_entry_safe(wk, tmp, &local->work_list, list) {
++		bool started = wk->started;
++
+ 		/* mark work as started if it's on the current off-channel */
+-		if (!wk->started && local->tmp_channel &&
++		if (!started && local->tmp_channel &&
+ 		    wk->chan == local->tmp_channel &&
+ 		    wk->chan_type == local->tmp_channel_type) {
+-			wk->started = true;
++			started = true;
+ 			wk->timeout = jiffies;
+ 		}
+ 
+-		if (!wk->started && !local->tmp_channel) {
++		if (!started && !local->tmp_channel) {
+ 			/*
+ 			 * TODO: could optimize this by leaving the
+ 			 *	 station vifs in awake mode if they
+@@ -842,12 +843,12 @@ static void ieee80211_work_work(struct w
+ 			local->tmp_channel = wk->chan;
+ 			local->tmp_channel_type = wk->chan_type;
+ 			ieee80211_hw_config(local, 0);
+-			wk->started = true;
++			started = true;
+ 			wk->timeout = jiffies;
+ 		}
+ 
+ 		/* don't try to work with items that aren't started */
+-		if (!wk->started)
++		if (!started)
+ 			continue;
+ 
+ 		if (time_is_after_jiffies(wk->timeout)) {
+@@ -882,6 +883,8 @@ static void ieee80211_work_work(struct w
+ 			break;
+ 		}
+ 
++		wk->started = started;
++
+ 		switch (rma) {
+ 		case WORK_ACT_NONE:
+ 			/* might have changed the timeout */
 
-It shouldn't cause a deadlock, we do this all the time, e.g. in
-ieee80211_rx_mgmt_probe_resp(), so I don't think the extra locking makes
-a lot of sense.
-
-johannes
-
---=-SArRobGuyag+AbCKyXpR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLXeGYAAoJEODzc/N7+QmaKscP/218YjWAi0XcS7T1fp9PmCuI
-bHpQuTrhMVoGULAe+Pkgoh4TbwhKdKs2cOoQSBKw0chK/uTv8+efjwY3agmMO5HV
-VdXDca5EeC3CkZWyxowTtpsv9jlrRfDsu0Qkw8QS99FgvVaJHCV0xLrdROhB1MGG
-QJ6nHbRjoiTWFAADfzZth99gG9aaD5A+ioG2WsYT9K0oTNShY6dbpJqEBR07Il5Z
-hcsEFmmMZVCifQNr9cvuuoNe70Hh4K+OYl2mB/O7c64y3MWtKgsLnswC3YhpTUTz
-qLVkxsCraXpEor3ty5/bQreKcdJX+vs3F2zTfvGFWbrQKPuSIO6hFgCH74jjlPBh
-xv1zpyH4ZsRg33jUY4VCDMBM8HcZv3J11HkWaYzhis/EBcIXirOiinpljM69Q3I8
-4UbGGMuUt4rJlXTdF2dEP0XINHp/sqCVfBsTnGLbBYpargMY5BR/sgSpAkj6GOED
-+Xap/UBI+el7EyvD9dNDGSCr8FqvCiin6m2FvLN18xtAFV7yTBVavG55x3p8WU5T
-o7q4mfcnX4C2o1JppRyjN7g+AkCyastV1Y7Whe5ZOkglDT6TQ40M6CBsZV6/VU+1
-LNlXDi4SbaqXge0Jc3RnherkR7kk3lc0VlAAYAhIj9fLqvfiw1zQIzmWqZ+kAScE
-tGNMG6R82kE5UrpNsOsq
-=X09r
------END PGP SIGNATURE-----
-
---=-SArRobGuyag+AbCKyXpR--
 
