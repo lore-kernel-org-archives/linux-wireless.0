@@ -1,124 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:52806 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752751Ab0ADU4M (ORCPT
+Received: from smtp.getmail.no ([84.208.15.66]:43713 "EHLO
+	get-mta-out02.get.basefarm.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750893Ab0AYT0j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2010 15:56:12 -0500
-Date: Mon, 4 Jan 2010 21:56:07 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 09/14] mwl8k: fix changed flags handling in mwl8k_bss_info_changed()
-Message-ID: <20100104205607.GI1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 25 Jan 2010 14:26:39 -0500
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1
+Received: from smtp.getmail.no ([10.5.16.4]) by get-mta-out02.get.basefarm.net
+ (Sun Java(tm) System Messaging Server 7.0-0.04 64bit (built Jun 20 2008))
+ with ESMTP id <0KWT006HPI0ECHA0@get-mta-out02.get.basefarm.net> for
+ linux-wireless@vger.kernel.org; Mon, 25 Jan 2010 20:26:38 +0100 (MET)
+Received: from [192.168.1.10] ([84.208.235.192])
+ by get-mta-in02.get.basefarm.net
+ (Sun Java(tm) System Messaging Server 7.0-0.04 64bit (built Jun 20 2008))
+ with ESMTPA id <0KWT00MSZI0CQM30@get-mta-in02.get.basefarm.net> for
+ linux-wireless@vger.kernel.org; Mon, 25 Jan 2010 20:26:38 +0100 (MET)
+Message-id: <4B5DF06C.60000@bzz.no>
+Date: Mon, 25 Jan 2010 20:26:36 +0100
+From: "John S. Skogtvedt" <jss@bzz.no>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Bug: 2.6.32 ath5k, unable to connect to AP on channel 13
+References: <4B5CB7AB.7010105@bzz.no>
+ <b6c5339f1001250951u548e6a16raf661464660ec577@mail.gmail.com>
+ <69e28c911001251030p79f00ea1j23f95b5e2f8571a3@mail.gmail.com>
+In-reply-to: <69e28c911001251030p79f00ea1j23f95b5e2f8571a3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, mwl8k_bss_info_changed() would refuse to do anything if
-the 'changed' argument indicated that the association status hadn't
-changed.  Fix this up so that it will allow changing things like the
-preamble type, the slot time and the CTS-to-self protection method
-without having to reassociate.
+Gábor Stefanik skrev:
+> On Mon, Jan 25, 2010 at 6:51 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>> On Sun, Jan 24, 2010 at 4:12 PM, John S. Skogtvedt <jss@bzz.no> wrote:
+>>> Hello,
+>>>
+>>> As the subject says, using ath5k on 2.6.32 I am not able to connect to
+>>> an AP on channel 13 (i.e. wpa_supplicant doesn't find the AP and thus
+>>> fails to associate). I'm in Norway, and the card is bought in Norway.
+>>> dmesg output:
+>>> [    7.205952] cfg80211: Using static regulatory domain info
+>>> [    7.205956] cfg80211: Regulatory domain: US
+>>> [    7.206243] cfg80211: Calling CRDA for country: US
+>> Well, there's your problem, AFAICT.  You have
+>> CONFIG_WIRELESS_OLD_REGULATORY=y?  And ieee80211_regdom=EU doesn't work?
+>>
+>>> [    7.887265] ath: EEPROM regdomain: 0x80d0
+>>> [    7.887267] ath: EEPROM indicates we should expect a country code
+>>> [    7.887270] ath: doing EEPROM country->regdmn map search
+>>> [    7.887272] ath: country maps to regdmn code: 0x37
+>>> [    7.887275] ath: Country alpha2 being used: DK
+>>> [    7.887277] ath: Regpair used: 0x37
+>>> [    8.288352] ath5k phy0: Atheros AR2414 chip found (MAC: 0x79, PHY: 0x45)
+>>> [    8.288607] cfg80211: Calling CRDA for country: DK
+>> Denmark, which should allow the channels in question.
+> 
+> However, does the DK regdomain really get set? Is CRDA installed?
+> 
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   52 ++++++++++++++++++++++++++---------------
- 1 files changed, 33 insertions(+), 19 deletions(-)
+Thank you, with CRDA installed it does work.
+(Debian doesn't currently package it, but I found a source package in
+the RFP bug report:
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=536502
+)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ea5e3f7..fac8864 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2958,57 +2958,71 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
- 				   u32 changed)
- {
- 	struct mwl8k_priv *priv = hw->priv;
-+	u32 ap_legacy_rates;
- 	int rc;
- 
--	if ((changed & BSS_CHANGED_ASSOC) == 0)
-+	if (mwl8k_fw_lock(hw))
- 		return;
- 
--	priv->capture_beacon = false;
--
--	rc = mwl8k_fw_lock(hw);
--	if (rc)
--		return;
-+	/*
-+	 * No need to capture a beacon if we're no longer associated.
-+	 */
-+	if ((changed & BSS_CHANGED_ASSOC) && !vif->bss_conf.assoc)
-+		priv->capture_beacon = false;
- 
-+	/*
-+	 * Get the AP's legacy rates.
-+	 */
-+	ap_legacy_rates = 0;
- 	if (vif->bss_conf.assoc) {
- 		struct ieee80211_sta *ap;
--		u32 legacy_rate_mask;
- 
- 		rcu_read_lock();
--		ap = ieee80211_find_sta(vif, vif->bss_conf.bssid);
--		if (ap != NULL)
--			legacy_rate_mask = ap->supp_rates[IEEE80211_BAND_2GHZ];
--		rcu_read_unlock();
- 
--		if (ap == NULL)
-+		ap = ieee80211_find_sta(vif, vif->bss_conf.bssid);
-+		if (ap == NULL) {
-+			rcu_read_unlock();
- 			goto out;
-+		}
-+
-+		ap_legacy_rates = ap->supp_rates[IEEE80211_BAND_2GHZ];
-+
-+		rcu_read_unlock();
-+	}
- 
--		/* Install rates */
--		rc = mwl8k_cmd_set_rate(hw, vif, legacy_rate_mask);
-+	if ((changed & BSS_CHANGED_ASSOC) && vif->bss_conf.assoc) {
-+		rc = mwl8k_cmd_set_rate(hw, vif, ap_legacy_rates);
- 		if (rc)
- 			goto out;
- 
--		/* Turn on rate adaptation */
- 		rc = mwl8k_cmd_use_fixed_rate(hw, MWL8K_USE_AUTO_RATE,
- 			MWL8K_UCAST_RATE, NULL);
- 		if (rc)
- 			goto out;
-+	}
- 
--		/* Set radio preamble */
-+	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
- 		rc = mwl8k_set_radio_preamble(hw,
- 				vif->bss_conf.use_short_preamble);
- 		if (rc)
- 			goto out;
-+	}
- 
--		/* Set slot time */
-+	if (changed & BSS_CHANGED_ERP_SLOT) {
- 		rc = mwl8k_cmd_set_slot(hw, vif->bss_conf.use_short_slot);
- 		if (rc)
- 			goto out;
-+	}
- 
--		/* Set AID */
--		rc = mwl8k_cmd_set_aid(hw, vif, legacy_rate_mask);
-+	if (((changed & BSS_CHANGED_ASSOC) && vif->bss_conf.assoc) ||
-+	    (changed & (BSS_CHANGED_ERP_CTS_PROT | BSS_CHANGED_HT))) {
-+		rc = mwl8k_cmd_set_aid(hw, vif, ap_legacy_rates);
- 		if (rc)
- 			goto out;
-+	}
- 
-+	if (vif->bss_conf.assoc &&
-+	    (changed & (BSS_CHANGED_ASSOC | BSS_CHANGED_BEACON_INT))) {
- 		/*
- 		 * Finalize the join.  Tell rx handler to process
- 		 * next beacon from our BSSID.
--- 
-1.5.6.4
+However, shouldn't it work without CRDA with
+CONFIG_WIRELESS_OLD_REGULATORY=y and ieee80211_regdom=EU?
+
