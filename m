@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:35257 "EHLO c60.cesmail.net"
+Received: from mail0.scram.de ([78.47.204.202]:51664 "EHLO mail.scram.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932155Ab0AaAzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 19:55:23 -0500
-Subject: [PATCH 1/2] mac80211: reduce stack usage in sta_ht_capa_read()
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Sat, 30 Jan 2010 19:55:09 -0500
-Message-ID: <20100131005509.22303.74752.stgit@mj.roinet.com>
+	id S1751398Ab0AYAFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jan 2010 19:05:50 -0500
+Message-ID: <4B5CE054.9020306@scram.de>
+Date: Mon, 25 Jan 2010 01:05:40 +0100
+From: Jochen Friedrich <jochen@scram.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211: Breakage in software encryption (iwl3945)
+References: <1264277460.13250.10.camel@maxim-laptop>	 <1264330613.23766.17.camel@johannes.local> <1264357465.4152.4.camel@maxim-laptop> <4B5CD773.1010107@scram.de>
+In-Reply-To: <4B5CD773.1010107@scram.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The maximal size of the "ht_capa" file is 430 bytes.  In most cases,
-it's much shorter.  Use a 512 byte long buffer.  1024 bytes is too much
-and causes a warning with CONFIG_FRAME_WARN=1024.
+Jochen Friedrich wrote:
+> Hi Maxim,
+> 
+>>> On Sat, 2010-01-23 at 22:10 +0200, Maxim Levitsky wrote:
+>>>> I updated the kernel and lost connection to my WPA2
+>>>> AP. Strangely the WPA handshake completes, but DHCP not.
+>>> What did you upgrade to?
+>> latest -git of wireless-testing
+> 
+> I have the same problem since compat-wireless-2010-01-20 with 
+> iwl3945. compat-wireless-2010-01-15 works OK. However, as i don't 
+> use any module parameters, i guess i'm using hw encryption.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- net/mac80211/debugfs_sta.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I bisected this to commit 813d76694043d00b59475baa1fbfaf54a2eb7fad. 
+Reverting this patch makes compat-wireless-2010-01-20 and later run OK.
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 0d4a759..84865e7 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -165,7 +165,7 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
- 	if (_cond) \
- 			p += scnprintf(p, sizeof(buf)+buf-p, "\t" _str "\n"); \
- 	} while (0)
--	char buf[1024], *p = buf;
-+	char buf[512], *p = buf;
- 	int i;
- 	struct sta_info *sta = file->private_data;
- 	struct ieee80211_sta_ht_cap *htc = &sta->sta.ht_cap;
+Thanks,
+Jochen
