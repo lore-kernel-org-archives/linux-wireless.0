@@ -1,80 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f190.google.com ([209.85.222.190]:40677 "EHLO
-	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755966Ab0A0TNc (ORCPT
+Received: from smtp.getmail.no ([84.208.15.66]:40421 "EHLO
+	get-mta-out02.get.basefarm.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754282Ab0AYTWK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 14:13:32 -0500
-Received: by pzk28 with SMTP id 28so2179062pzk.4
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 11:13:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1264618781.8619.31.camel@wwguy-ubuntu>
-References: <1264511993.25642.9.camel@johannes.local> <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
-	<1264615477.8619.20.camel@wwguy-ubuntu> <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
-	<1264616062.8619.22.camel@wwguy-ubuntu> <43e72e891001271025s27bbe25cs3c999a885551a4e7@mail.gmail.com>
-	<1264618781.8619.31.camel@wwguy-ubuntu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 27 Jan 2010 11:13:11 -0800
-Message-ID: <43e72e891001271113k6dad9004v5a17c705ae51aa2f@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Lennert Buytenhek <buytenh@marvell.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"kalle.valo@iki.fi" <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>,
-	"buytenh@wantstofly.org" <buytenh@wantstofly.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 25 Jan 2010 14:22:10 -0500
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1
+Received: from smtp.getmail.no ([10.5.16.4]) by get-mta-out02.get.basefarm.net
+ (Sun Java(tm) System Messaging Server 7.0-0.04 64bit (built Jun 20 2008))
+ with ESMTP id <0KWT0069HHSVCHA0@get-mta-out02.get.basefarm.net> for
+ linux-wireless@vger.kernel.org; Mon, 25 Jan 2010 20:22:07 +0100 (MET)
+Received: from [192.168.1.10] ([84.208.235.192])
+ by get-mta-in01.get.basefarm.net
+ (Sun Java(tm) System Messaging Server 7.0-0.04 64bit (built Jun 20 2008))
+ with ESMTPA id <0KWT001T1HSU3L20@get-mta-in01.get.basefarm.net> for
+ linux-wireless@vger.kernel.org; Mon, 25 Jan 2010 20:22:07 +0100 (MET)
+Message-id: <4B5DEF5E.8050502@bzz.no>
+Date: Mon, 25 Jan 2010 20:22:06 +0100
+From: "John S. Skogtvedt" <jss@bzz.no>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Bug: 2.6.32 ath5k, unable to connect to AP on channel 13
+References: <4B5CB7AB.7010105@bzz.no>
+ <b6c5339f1001250951u548e6a16raf661464660ec577@mail.gmail.com>
+In-reply-to: <b6c5339f1001250951u548e6a16raf661464660ec577@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 27, 2010 at 10:59 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> On Wed, 2010-01-27 at 10:25 -0800, Luis R. Rodriguez wrote:
->> On Wed, Jan 27, 2010 at 10:14 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
->> > On Wed, 2010-01-27 at 10:14 -0800, Luis R. Rodriguez wrote:
->> >> On Wed, Jan 27, 2010 at 10:04 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
->> >> > On Wed, 2010-01-27 at 10:01 -0800, Luis R. Rodriguez wrote:
->> >> >> On Tue, Jan 26, 2010 at 5:19 AM, Johannes Berg
->> >> >> <johannes@sipsolutions.net> wrote:
->> >> >> > Because DTIM information is required for powersave
->> >> >> > but is only conveyed in beacons, wait for a beacon
->> >> >> > before enabling powersave, and change the way the
->> >> >> > information is conveyed to the driver accordingly.
->> >> >> >
->> >> >> > mwl8k doesn't currently seem to implement PS but
->> >> >> > requires the DTIM period in a different way; after
->> >> >> > talking to Lennert we agreed to just have mwl8k do
->> >> >> > the parsing itself in the finalize_join work.
->> >> >>
->> >> >> Not sure if this is merged yet. If not it might be good to add to the
->> >> >> commit log a brief about the impact of the fix for distribution
->> >> >> purposes looking to cherry pick some fixes that may cure some issues.
->> >> >>
->> >> >> The impact of this fix is that the DTIM settings of > 1 would now be
->> >> >> respected in the odd situation a beacon would not be received prior to
->> >> >> association. Ensuring we use a higher DTIM would mean saving more
->> >> >> power as it would mean we can sleep longer.
->> >> >>
->> >> >> This is not propagated to stable but if it turns out this can enhance
->> >> >> power save since DTIM might usually be > 1 and the race may be more
->> >> >> common than we expected we may need a respective stable solution.
->> >> >>
->> >> >
->> >> > It will be nice to see a respective solution for stable since this
->> >> > impact power save which is very important for certain platform.
->> >>
->> >> Well how about your patch for stable then?
->> >>
->> > if ok with you and Johannes, I will like to see it happen, the only
->> > issue is, my patch only address iwlwifi but not mwl8k.
+Bob Copeland skrev:
+> On Sun, Jan 24, 2010 at 4:12 PM, John S. Skogtvedt <jss@bzz.no> wrote:
+>> Hello,
 >>
->> Oh, what was the issue with your patch and mwl8k?
->>
-> the patch will call drv_config() and ieee80211_recal_ps()
-> mwl8k driver did not implement PS function, but do require dtim for
-> another reason
+>> As the subject says, using ath5k on 2.6.32 I am not able to connect to
+>> an AP on channel 13 (i.e. wpa_supplicant doesn't find the AP and thus
+>> fails to associate). I'm in Norway, and the card is bought in Norway.
+> 
+>> dmesg output:
+>> [    7.205952] cfg80211: Using static regulatory domain info
+>> [    7.205956] cfg80211: Regulatory domain: US
+>> [    7.206243] cfg80211: Calling CRDA for country: US
+> 
+> Well, there's your problem, AFAICT.  You have
+> CONFIG_WIRELESS_OLD_REGULATORY=y?  And ieee80211_regdom=EU doesn't work?
+> 
 
-Lennert, why does it need it if it does not implement the PS function?
-Firmware API? What would happen if its not passed?
-
-  Luis
+Yes, CONFIG_WIRELESS_OLD_REGULATORY=y. And neither ieee80211_regdom=EU
+or ieee80211_regdom=NO works.
