@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:56044 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755884Ab0ANLJ3 (ORCPT
+Received: from cp-out12.libero.it ([212.52.84.112]:58807 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751067Ab0AYWKK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 06:09:29 -0500
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o0EB9Qf5008708
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 05:09:27 -0600
-Received: from [127.0.1.1] (trdhcp21270.nmp.nokia.com [172.22.212.70])
-	by mgw-sa01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o0EB98JT022314
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 13:09:11 +0200
-Subject: [PATCH 0/2] mac80211: powersave documentation improvements
+	Mon, 25 Jan 2010 17:10:10 -0500
+From: Fabio Rossi <rossi.f@inwind.it>
 To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 14 Jan 2010 13:09:00 +0200
-Message-ID: <20100114110826.22608.23087.stgit@tikku>
+Subject: Re: [PATCH 4/5] mac80211: move control.hw_key assignment
+Date: Mon, 25 Jan 2010 23:07:58 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+References: <20100117004754.624627000@sipsolutions.net> <201001231622.03394.rossi.f@inwind.it> <1264332591.23766.21.camel@johannes.local>
+In-Reply-To: <1264332591.23766.21.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Message-Id: <201001252307.58884.rossi.f@inwind.it>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sunday 24 January 2010 12:29:51 Johannes Berg wrote:
 
-he are some improvements to the mac80211 powersave documentation. I
-wanted to fix few warnings at the same.
+> Hi,
+> 
+> On Sat, 2010-01-23 at 16:22 +0100, Fabio Rossi wrote:
+> > this patch breaks my wireless connection. I'm able to authenticate and
+> > associate to my AP but I can't use the connection, a simple ping towards
+> > my AP doesn't work. I bisected the problem and your patch is the bad
+> > commit.
+> >
+> > I have the latest wireless-testing.git (v2.6.33-rc5-47285-g96ada3c).
+> > After having removed all the commits related to this patch, i.e.
+> >
+> > - commit f12553ebe045a8a40ab33fa500fb57d10706e226
+> > - commit e4fca007b06165900d0e44e8d5e251376819bf5d
+> > - commit 813d76694043d00b59475baa1fbfaf54a2eb7fad
+> >
+> > the connection is working again.
+> 
+> Hmm. Are you using hw crypto?
 
----
+Yes, from what I have understood it should be the default using ath5k. 
+Anyway I added your last patch
 
-Kalle Valo (2):
-      mac80211: fix mac80211.h documentation warnings
-      mac80211: improve powersave documentation
+	[PATCH] mac80211: fix sw crypto
 
+fixing my problem.
 
- Documentation/DocBook/mac80211.tmpl |    2 -
- include/net/mac80211.h              |   82 ++++++++++++++++++++++++++---------
- 2 files changed, 61 insertions(+), 23 deletions(-)
-
+Thanks,
+Fabio
