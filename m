@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:21072 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751616Ab0ATBmn convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f176.google.com ([209.85.211.176]:55489 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932131Ab0AYVNq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 20:42:43 -0500
-From: "Zheng, Jeff" <jeff.zheng@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>
-Date: Wed, 20 Jan 2010 09:41:49 +0800
-Subject: RE: Sigma capable testing?
-Message-ID: <EAEEEBBE07F4F24C89FEF850CF8C774234F901EF@shzsmsx502.ccr.corp.intel.com>
-References: <43e72e891001191722t380b1789yd7c0b05add077a4e@mail.gmail.com>
-In-Reply-To: <43e72e891001191722t380b1789yd7c0b05add077a4e@mail.gmail.com>
-Content-Type: text/plain; charset="iso-2022-jp"
+	Mon, 25 Jan 2010 16:13:46 -0500
+Received: by ywh6 with SMTP id 6so3486584ywh.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 13:13:42 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <69e28c911001251121i61be9c0bhed43648a12db42f6@mail.gmail.com>
+References: <4B5CD1FF.4090209@twilightblue.net>
+	 <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
+	 <4B5DE859.6080409@lwfinger.net>
+	 <69e28c911001251121i61be9c0bhed43648a12db42f6@mail.gmail.com>
+Date: Mon, 25 Jan 2010 16:13:41 -0500
+Message-ID: <b6c5339f1001251313u369c571dq5cee9ffa65fcf457@mail.gmail.com>
+Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
+From: Bob Copeland <me@bobcopeland.com>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Don Darling <darling.don@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+2010/1/25 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Mon, Jan 25, 2010 at 7:52 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> For the record, WEP104 and WEP128 are the same thing. The smaller number
+>> makes it explicit that the 24-bit IV is transmitted in the open. The same
+>> thing applies to WEP40 and WEP64.
+>>
+>
+> Only one problem there is another, nonstandard WEP type where the
+> actual key is 128-bit, and this is also sometimes referred to as
+> WEP128 (with the same metric as WEP64, this one would be WEP152). Same
+> goes for "WEP228/WEP256/WEP280".
 
-What's sigma testing? 
+Yea, I think ath hw supports that too:
 
-This test script was written for testing wireless drivers. I will try
-to support more features and make it easier to use, but up to now I have
-no much time to do so.
+#define AR5K_KEYTABLE_TYPE_40		0x00000000
+#define AR5K_KEYTABLE_TYPE_104		0x00000001
+#define AR5K_KEYTABLE_TYPE_128		0x00000003
 
-Bests
-Jeff
- 
+at least that's what I assumed it meant.  But there's no way to set it
+from mac80211 (nor should there be).
 
->-----Original Message-----
->From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
->Sent: 2010$BG/(B1$B7n(B20$BF|(B 9:23
->To: Zheng, Jeff
->Cc: linux-wireless; wifi-test-devel@lists.sourceforge.net
->Subject: Sigma capable testing?
->
->I was curious if wifi-test code:
->
->http://wireless.kernel.org/en/developers/Testing/wifi-test
->
->is capable of sigma testing, being considered for WFA certification
->and/or there are plans for it.
->
->  Luis
->
+-- 
+Bob Copeland %% www.bobcopeland.com
