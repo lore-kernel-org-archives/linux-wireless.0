@@ -1,80 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f172.google.com ([209.85.222.172]:42304 "EHLO
-	mail-pz0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752653Ab0ATSYL convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f176.google.com ([209.85.211.176]:48290 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666Ab0AYRjl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2010 13:24:11 -0500
-Received: by pzk2 with SMTP id 2so2461237pzk.21
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2010 10:24:08 -0800 (PST)
+	Mon, 25 Jan 2010 12:39:41 -0500
+Received: by ywh6 with SMTP id 6so3299067ywh.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 09:39:41 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1264011628.5591.211.camel@localhost.localdomain>
-References: <1264009908-27195-1-git-send-email-lrodriguez@atheros.com>
-	<1264011628.5591.211.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 20 Jan 2010 10:23:48 -0800
-Message-ID: <43e72e891001201023x175e6abekecee0ffb7b33d933@mail.gmail.com>
-Subject: Re: [PATCH] iw: add country IE parsing
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4B5CD1FF.4090209@twilightblue.net>
+References: <4B5CD1FF.4090209@twilightblue.net>
+Date: Mon, 25 Jan 2010 12:39:40 -0500
+Message-ID: <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
+Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
+From: Bob Copeland <me@bobcopeland.com>
+To: Don Darling <darling.don@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 20, 2010 at 10:20 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Luis,
+On Sun, Jan 24, 2010 at 6:04 PM, Don Darling <darling.don@gmail.com> wrote:
+> Hello folks,
 >
->> I've considered showing only the channel set from the Country IE
->> but since cfg80211 now mangles contigious channel sets together
->> it seems more useful for iw to just display the individual triplets
->> separately so this patch is left intact. The triplet print is
->> kept since technically speaking this should also show the
->> regulatory extension stuff when one is found.
->
-> looks like this with my Apple Airport if anyone cares:
->
->        Country: CA     Environment: Indoor/Outdoor
->        Country IE triplets:
->                Channels [1 - 11]
+> I recently tried upgrading to kernel version 2.6.32, but after this upgrade
+> my wireless card became flaky when making connections. In cases where a
+> connection can be established it is �stable, but there are problems when
+> making wireless associations. Downgrading to kernel version 2.6.31 resolves
+> this issue. �I'm not sure at the moment which versions of the ath5k driver
+> maps to these kernel versions.
 
-And like this for stupid APs:
+The (vanilla) kernel version is sufficient to know which driver it is.
 
-        Country: US     Environment: Indoor/Outdoor
-        Country IE triplets:
-                Channels [36 - 36]
-                Channels [40 - 40]
-                Channels [44 - 44]
-                Channels [48 - 48]
-                Channels [52 - 52]
-                Channels [56 - 56]
-                Channels [60 - 60]
-                Channels [64 - 64]
-                Channels [100 - 100]
-                Channels [104 - 104]
-                Channels [108 - 108]
-                Channels [112 - 112]
-                Channels [116 - 116]
-                Channels [120 - 120]
-                Channels [124 - 124]
-                Channels [128 - 128]
-                Channels [132 - 132]
-                Channels [136 - 136]
-                Channels [140 - 140]
-                Channels [149 - 149]
-                Channels [153 - 153]
-                Channels [157 - 157]
-                Channels [161 - 161]
-                Channels [165 - 165]
+> I'm assuming this issue is related to the ath5k driver itself -- the network
+> I'm using is only WEP128, and doesn't need wpa_supplicant.
 
-I noted to Johannes maybe we should add a debug flag for scan and let
-the parsers have the option to either output some debug format (as the
-one above) or short form, for which the above would just show:
+Huh, I didn't think any mac80211 driver supported WEP 128.  Are you sure you
+weren't using madwifi before?  Or maybe WEP 104?
 
-                Channels [36 - 36]
-                Channels [100 - 165]
+Are you using any modparams with ath5k?
 
-Anyway I am posting this again just because I've already have had a
-use for this for a couple of users I help out when debugging country
-IE stuff. Figured its better merged than to keep referring to external
-patches.
+> In fact, I have
+> fewer problems when I connect to WPA+TKIP networks with wpa_supplicant.
 
-  Luis
+This is somewhat more secure, so I'd recommend it, or better CCMP.
+
+> Reverting to 2.6.31 resolves this issue. It will connect the first time, and
+> I can disconnect/re-connect several times without issue.
+
+I can't think of anything that changed in this time frame with ath5k
+specifically
+having to do with crypto.  If you were using nohwcrypt=1, it could be a problem
+with mac80211.  Otherwise, bisecting might be the best route to pin it down.
+
+Also on the off-chance that it's not crypto related, you may try the suggestions
+in the following to get a better picture of whwat is going on:
+
+http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
+
+-- 
+Bob Copeland %% www.bobcopeland.com
