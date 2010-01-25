@@ -1,73 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50120 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950Ab0AOKtv (ORCPT
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:43157 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753399Ab0AYSwQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 05:49:51 -0500
-Subject: Re: [PATCH] mac80211: check that ieee80211_set_power_mgmt only
- handles STA interfaces.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1263516497-17332-1-git-send-email-benoit.papillault@free.fr>
-References: <1263516497-17332-1-git-send-email-benoit.papillault@free.fr>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ea/8idZPNezVaDCgOVqg"
-Date: Fri, 15 Jan 2010 11:17:48 +0100
-Message-ID: <1263550668.18341.0.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 25 Jan 2010 13:52:16 -0500
+Received: by bwz27 with SMTP id 27so2942868bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 10:52:14 -0800 (PST)
+Message-ID: <4B5DE859.6080409@lwfinger.net>
+Date: Mon, 25 Jan 2010 12:52:09 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: Don Darling <darling.don@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
+References: <4B5CD1FF.4090209@twilightblue.net> <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
+In-Reply-To: <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/25/2010 11:39 AM, Bob Copeland wrote:
+> On Sun, Jan 24, 2010 at 6:04 PM, Don Darling<darling.don@gmail.com>  wrote:
+>> I'm assuming this issue is related to the ath5k driver itself -- the network
+>> I'm using is only WEP128, and doesn't need wpa_supplicant.
+>
+> Huh, I didn't think any mac80211 driver supported WEP 128.  Are you sure you
+> weren't using madwifi before?  Or maybe WEP 104?
 
---=-ea/8idZPNezVaDCgOVqg
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+For the record, WEP104 and WEP128 are the same thing. The smaller number makes 
+it explicit that the 24-bit IV is transmitted in the open. The same thing 
+applies to WEP40 and WEP64.
 
-On Fri, 2010-01-15 at 01:48 +0100, Benoit Papillault wrote:
-> ieee80211_set_power_mgmt is meant for STA interfaces only. Moreover,
-> since sdata->u.mgd.mtx is only initialized for STA interfaces, using
-> this code for any other type of interface (like IBSS) will result in a
-> oops.
-
-Odd that nobody else ever saw a problem, is everybody running cards that
-don't do power management?
-
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 8286df5..c9de4e3 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1382,6 +1382,9 @@ static int ieee80211_set_power_mgmt(struct wiphy
-> *wiphy, struct net_device *dev,
->  	struct ieee80211_local *local =3D wdev_priv(dev->ieee80211_ptr);
->  	struct ieee80211_conf *conf =3D &local->hw.conf;
-> =20
-> +	if (sdata->vif.type !=3D NL80211_IFTYPE_STATION)
-> +		return 0;
-
-You want -EOPNOTSUPP here, and cc stable.
-
-johannes
-
---=-ea/8idZPNezVaDCgOVqg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLUEDHAAoJEODzc/N7+Qma6MgP/0rJcRY5P9XYchomUgilsvFo
-i8mG8UZihmFdDUkMaOn7YgDDlEKidFOkqfSAR06FUA+ecsd0KwRsw3zP9QPwpyNs
-MFHq15AgsREGijt9jM13rpLCwaBWDnAH+br6/TwkKZoulR4q4yEln5DvOnRPvk9Z
-Nu8f9LNX1jzJUWJ5Ro0l4TyC1FxfnqwUclTykrgmxHbSNi/N9yR+Qs3XqFrn/f6l
-Km2PRLoj2fvddqDGgtwK9DsEAjngdmHDEEbyQ56wqWkSK9b0JapGZQ+OXTbpKB+q
-3OKhpU08hDYhaigg18E/Xw2R9Sq8p/msIWftaeBp6VESrHOIK0zTYZJ7AusmD84+
-VeouqICuRTJwXcstL/krE2PH/E/0O5aQKhTPLjbtSu6NWPJXPGh2SFlQvvb7JicB
-Hm/Dgwlzq8FS34zMH8XXIZXAWZJoNlCfU/OzShNYquIwfNXzVtznu1obviUnq1FF
-wFFsbzFRG3UQ6ZOIjJpTZ2oznvN1osOShGEUgZqKrrAZzNo5QTOr5b7mPucc84g6
-1uHEsykl69sMwKOpM3ySD4eiuPwsKjpkcFXr+Fd/TqJUsbw6JN9FTOpzmBi5D+fC
-qOueoFwdubp4DMs2ADCO7Hz3QzfGR6mrtmzrqkqmPe03CZ9Rx4DlX7C2Po4o+MLO
-Pg8TS+9A2xQuw0YCoTtg
-=8YMi
------END PGP SIGNATURE-----
-
---=-ea/8idZPNezVaDCgOVqg--
+Larry
 
