@@ -1,93 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42320 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751997Ab0AAQWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2010 11:22:30 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/5] compat-wireless: Add missing file
-Date: Fri,  1 Jan 2010 17:21:09 +0100
-Message-Id: <1262362872-10251-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1262362872-10251-1-git-send-email-hauke@hauke-m.de>
-References: <1262362872-10251-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-bw0-f227.google.com ([209.85.218.227]:45468 "EHLO
+	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753910Ab0AYTVb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2010 14:21:31 -0500
+Received: by bwz27 with SMTP id 27so2975061bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 11:21:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B5DE859.6080409@lwfinger.net>
+References: <4B5CD1FF.4090209@twilightblue.net> <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>
+	<4B5DE859.6080409@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 25 Jan 2010 20:21:09 +0100
+Message-ID: <69e28c911001251121i61be9c0bhed43648a12db42f6@mail.gmail.com>
+Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Don Darling <darling.don@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add file missing in commit 377a5538e1edf8bdf432cc95abe806754de9cda3
-	compat-wireless: activate usbnet for kernel > 2.6.28
+On Mon, Jan 25, 2010 at 7:52 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 01/25/2010 11:39 AM, Bob Copeland wrote:
+>>
+>> On Sun, Jan 24, 2010 at 6:04 PM, Don Darling<darling.don@gmail.com>
+>>  wrote:
+>>>
+>>> I'm assuming this issue is related to the ath5k driver itself -- the
+>>> network
+>>> I'm using is only WEP128, and doesn't need wpa_supplicant.
+>>
+>> Huh, I didn't think any mac80211 driver supported WEP 128.  Are you sure
+>> you
+>> weren't using madwifi before?  Or maybe WEP 104?
+>
+> For the record, WEP104 and WEP128 are the same thing. The smaller number
+> makes it explicit that the 24-bit IV is transmitted in the open. The same
+> thing applies to WEP40 and WEP64.
+>
+> Larry
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/18-rename-usb-net-symbols.patch |   58 +++++++++++++++++++++++++++++++
- 1 files changed, 58 insertions(+), 0 deletions(-)
- create mode 100644 patches/18-rename-usb-net-symbols.patch
+Only one problem there is another, nonstandard WEP type where the
+actual key is 128-bit, and this is also sometimes referred to as
+WEP128 (with the same metric as WEP64, this one would be WEP152). Same
+goes for "WEP228/WEP256/WEP280".
 
-diff --git a/patches/18-rename-usb-net-symbols.patch b/patches/18-rename-usb-net-symbols.patch
-new file mode 100644
-index 0000000..d8f6ca3
---- /dev/null
-+++ b/patches/18-rename-usb-net-symbols.patch
-@@ -0,0 +1,58 @@
-+Rename config names for usbnet to deactivate them also if activated in
-+the main kernel configuration. This is needed because
-+usb_autopm_put_interface_async and usb_autopm_get_interface_async are
-+not backported to kernel 2.6.28 and earlier.
-+Remove this patch if these symbols are backported.
-+
-+diff --git a/drivers/net/usb/Makefile b/drivers/net/usb/Makefile
-+index e17afb7..ddea3ae 100644
-+--- a/drivers/net/usb/Makefile
-++++ b/drivers/net/usb/Makefile
-+@@ -8,18 +8,18 @@ obj-$(CONFIG_USB_PEGASUS)	+= pegasus.o
-+ obj-$(CONFIG_USB_RTL8150)	+= rtl8150.o
-+ obj-$(CONFIG_USB_HSO)		+= hso.o
-+ obj-$(CONFIG_USB_NET_AX8817X)	+= asix.o
-+-obj-$(CONFIG_USB_NET_CDCETHER)	+= cdc_ether.o
-++obj-$(CONFIG_USB_NET_COMPAT_CDCETHER)	+= cdc_ether.o
-+ obj-$(CONFIG_USB_NET_CDC_EEM)	+= cdc_eem.o
-+ obj-$(CONFIG_USB_NET_DM9601)	+= dm9601.o
-+ obj-$(CONFIG_USB_NET_SMSC95XX)	+= smsc95xx.o
-+ obj-$(CONFIG_USB_NET_GL620A)	+= gl620a.o
-+ obj-$(CONFIG_USB_NET_NET1080)	+= net1080.o
-+ obj-$(CONFIG_USB_NET_PLUSB)	+= plusb.o
-+-obj-$(CONFIG_USB_NET_RNDIS_HOST)	+= rndis_host.o
-++obj-$(CONFIG_USB_NET_COMPAT_RNDIS_HOST)	+= rndis_host.o
-+ obj-$(CONFIG_USB_NET_CDC_SUBSET)	+= cdc_subset.o
-+ obj-$(CONFIG_USB_NET_ZAURUS)	+= zaurus.o
-+ obj-$(CONFIG_USB_NET_MCS7830)	+= mcs7830.o
-+-obj-$(CONFIG_USB_USBNET)	+= usbnet.o
-++obj-$(CONFIG_USB_COMPAT_USBNET)	+= usbnet.o
-+ obj-$(CONFIG_USB_NET_INT51X1)	+= int51x1.o
-+ obj-$(CONFIG_USB_CDC_PHONET)	+= cdc-phonet.o
-+ 
-+diff --git a/drivers/net/usb/cdc_ether.c b/drivers/net/usb/cdc_ether.c
-+index 21e183a..65c385f 100644
-+--- a/drivers/net/usb/cdc_ether.c
-++++ b/drivers/net/usb/cdc_ether.c
-+@@ -33,7 +33,7 @@
-+ #include <linux/usb/usbnet.h>
-+ 
-+ 
-+-#if defined(CONFIG_USB_NET_RNDIS_HOST) || defined(CONFIG_USB_NET_RNDIS_HOST_MODULE)
-++#if defined(CONFIG_USB_NET_COMPAT_RNDIS_HOST) || defined(CONFIG_USB_NET_COMPAT_RNDIS_HOST_MODULE)
-+ 
-+ static int is_rndis(struct usb_interface_descriptor *desc)
-+ {
-+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-+index 5d4ce4d..d4e48bd 100644
-+--- a/drivers/net/wireless/Makefile
-++++ b/drivers/net/wireless/Makefile
-+@@ -29,7 +29,7 @@ obj-$(CONFIG_RTL8187)		+= rtl818x/
-+ obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
-+ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
-+ 
-+-obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
-++obj-$(CONFIG_USB_NET_COMPAT_RNDIS_WLAN)	+= rndis_wlan.o
-+ 
-+ obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
-+ obj-$(CONFIG_LIBERTAS)		+= libertas/
 -- 
-1.6.3.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
