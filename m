@@ -1,96 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62939 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758510Ab0AOVnt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 16:43:49 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 4/9] iwlwifi: correct return code for log_event
-Date: Fri, 15 Jan 2010 13:43:36 -0800
-Message-Id: <1263591821-14867-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
-References: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
+Received: from lon1-post-3.mail.demon.net ([195.173.77.150]:35756 "EHLO
+	lon1-post-3.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751079Ab0AYXBO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2010 18:01:14 -0500
+Date: Mon, 25 Jan 2010 22:57:02 +0000
+From: Darren Salt <linux@youmustbejoking.demon.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] Tweak version handling to allow vendor-specific suffixes without patching.
+Message-ID: <50E4CCD2A8%linux@youmustbejoking.demon.co.uk>
+In-Reply-To: <50E4CB7318%linux@youmustbejoking.demon.co.uk>
+References: <1264458811-21411-1-git-send-email-linux@youmustbejoking.demon.co.uk>
+ <50E4CB7318%linux@youmustbejoking.demon.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This overrides the "git describe" suffix for when the packaging is in git.
 
-When dumping event log in debugfs, iwl_dump_nic_event_log()
-should return the correct error code instead of let the calling
-function makes it own assumption.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    5 +++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- 3 files changed, 7 insertions(+), 6 deletions(-)
+ Makefile   |    4 ++++
+ version.sh |   11 ++++++++++-
+ 2 files changed, 14 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c780633..eaa309d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1965,7 +1965,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 		IWL_ERR(priv,
- 			"Invalid event log pointer 0x%08X for %s uCode\n",
- 			base, (priv->ucode_type == UCODE_INIT) ? "Init" : "RT");
--		return pos;
-+		return -EINVAL;
- 	}
+diff --git a/Makefile b/Makefile
+index 2c5fd9e..8d6c700 100644
+--- a/Makefile
++++ b/Makefile
+@@ -29,7 +29,11 @@ VERSION_OBJS := $(filter-out version.o, $(OBJS))
+ version.c: version.sh $(patsubst %.o,%.c,$(VERSION_OBJS)) rfkill.h Makefile
+\
+ 		$(wildcard .git/index .git/refs/tags)
+ 	@$(NQ) ' GEN ' $@
++ifeq (,$(VERSION_SUFFIX))
+ 	$(Q)./version.sh $@
++else
++	$(Q)./version.sh --suffix "$(VERSION_SUFFIX)" $@
++endif
  
- 	/* event log header */
-@@ -2013,7 +2013,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 			bufsz = size * 48;
- 		*buf = kmalloc(bufsz, GFP_KERNEL);
- 		if (!*buf)
--			return pos;
-+			return -ENOMEM;
- 	}
- 	if ((iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS) || full_log) {
- 		/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 19c7fab..a7ca06d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -429,8 +429,9 @@ static ssize_t iwl_dbgfs_log_event_read(struct file *file,
- 	int pos = 0;
- 	ssize_t ret = -ENOMEM;
+ %.o: %.c rfkill.h
+ 	@$(NQ) ' CC  ' $@
+diff --git a/version.sh b/version.sh
+index 957684b..28b579a 100755
+--- a/version.sh
++++ b/version.sh
+@@ -1,9 +1,18 @@
+ #!/bin/sh
  
--	pos = priv->cfg->ops->lib->dump_nic_event_log(priv, true, &buf, true);
--	if (pos && buf) {
-+	ret = pos = priv->cfg->ops->lib->dump_nic_event_log(
-+					priv, true, &buf, true);
-+	if (buf) {
- 		ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- 		kfree(buf);
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 10b0aa8..8bbcc54 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1644,7 +1644,7 @@ int iwl3945_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 	base = le32_to_cpu(priv->card_alive.log_event_table_ptr);
- 	if (!iwl3945_hw_valid_rtc_data_addr(base)) {
- 		IWL_ERR(priv, "Invalid event log pointer 0x%08X\n", base);
--		return pos;
-+		return  -EINVAL;
- 	}
+ VERSION="0.3"
++
++SUFFIX=
++if test "x$1" = x--suffix; then
++	shift
++	SUFFIX="-$1"
++	shift
++fi
+ OUT="$1"
  
- 	/* event log header */
-@@ -1693,7 +1693,7 @@ int iwl3945_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 			bufsz = size * 48;
- 		*buf = kmalloc(bufsz, GFP_KERNEL);
- 		if (!*buf)
--			return pos;
-+			return -ENOMEM;
- 	}
- 	if ((iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS) || full_log) {
- 		/* if uCode has wrapped back to top of log,
+-if head=`git rev-parse --verify HEAD 2>/dev/null`; then
++if test "x$SUFFIX" != 'x'; then
++	v="$VERSION$SUFFIX"
++elif head=`git rev-parse --verify HEAD 2>/dev/null`; then
+ 	git update-index --refresh --unmerged > /dev/null
+ 	descr=$(git describe 2>/dev/null || echo "v$VERSION")
+ 
 -- 
-1.6.3.3
-
+1.6.5
