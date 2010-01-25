@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2901 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922Ab0APThj (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45575 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753659Ab0AYWai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jan 2010 14:37:39 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	stefano.brivio@polimi.it, mattias.nissler@gmx.de
-Subject: [PATCH 1/2] mac80211: fix sign error in pid controller
-Date: Sat, 16 Jan 2010 14:36:52 -0500
-Message-Id: <1263670613-10864-2-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1263670613-10864-1-git-send-email-me@bobcopeland.com>
-References: <1263670613-10864-1-git-send-email-me@bobcopeland.com>
+	Mon, 25 Jan 2010 17:30:38 -0500
+Date: Mon, 25 Jan 2010 17:19:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/4] b43: make cordic common (LP-PHY and N-PHY need it)
+Message-ID: <20100125221935.GC14699@tuxdriver.com>
+References: <1264442401-6364-1-git-send-email-zajec5@gmail.com> <b170af451001251035t23f3978cga52258722ea29770@mail.gmail.com> <b170af451001251036m8b33f3er9f0a363a03ea21cb@mail.gmail.com> <201001251953.21692.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201001251953.21692.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While testing the pid rate controller in mac80211_hwsim, I noticed
-that once the controller reached 54 Mbit rates, it would fail to
-lower the rate when necessary.  The debug log shows:
+On Mon, Jan 25, 2010 at 07:53:19PM +0100, Michael Buesch wrote:
+> On Monday 25 January 2010 19:36:27 Rafał Miłecki wrote:
+> > W dniu 25 stycznia 2010 19:35 użytkownik Rafał Miłecki
+> > <zajec5@gmail.com> napisał:
+> > > 2010/1/25 Michael Buesch <mb@bu3sch.de>:
+> > >> On Monday 25 January 2010 18:59:59 Rafał Miłecki wrote:
+> > >>> +/* Complex number using 2 32-bit signed integers */
+> > >>> +typedef struct { s32 i, q; } b43_c32;
+> > >>
+> > >> No typedef. ever.
+> > >
+> > > Well, I just copied (Gabor's?) code here. But of course I can fix this
+> > > by the way, no problem :)
+> 
+> Yeah, I saw that. We can fix it while we're at it. ;)
+> 
+> > > Just read about typedef in Linux Kernel Coding Style, didn't know
+> > > about this earlier. Thanks for pointing.
+> > 
+> > Is this OK to fix this in separated patch? Or should I modify this set
+> > of patches?
+> 
+> Well, as you touch any reference to the typedef anyway (you renamed it),
+> you can just put the keyword "struct" in front of the references and no separate patch is needed.
+> It won't even grow your current patch in the number of changed lines.
 
-1945 186786 pf_sample 50 3534 3577 50
+I took care of these modifications to the original patch...
 
-My interpretation is that the fixed point scaling of the target
-error value (pf) is incorrect: the error value of 50 compared to
-a target of 14 case should result in a scaling value of
-(14-50) = -36 * 256 or -9216, but instead it is (14 * 256)-50, or
-3534.
-
-Correct this by doing fixed point scaling after subtraction.
-
-Cc: stefano.brivio@polimi.it
-Cc: mattias.nissler@gmx.de
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
-
-Mattias / Stefano, please advise if I missed something.
-
- net/mac80211/rc80211_pid_algo.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
-index 699d3ed..29bc4c5 100644
---- a/net/mac80211/rc80211_pid_algo.c
-+++ b/net/mac80211/rc80211_pid_algo.c
-@@ -190,7 +190,7 @@ static void rate_control_pid_sample(struct rc_pid_info *pinfo,
- 	rate_control_pid_normalize(pinfo, sband->n_bitrates);
- 
- 	/* Compute the proportional, integral and derivative errors. */
--	err_prop = (pinfo->target << RC_PID_ARITH_SHIFT) - pf;
-+	err_prop = (pinfo->target - pf) << RC_PID_ARITH_SHIFT;
- 
- 	err_avg = spinfo->err_avg_sc >> pinfo->smoothing_shift;
- 	spinfo->err_avg_sc = spinfo->err_avg_sc - err_avg + err_prop;
+John
 -- 
-1.6.3.3
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
