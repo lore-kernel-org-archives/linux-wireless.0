@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tang.lemonia.org ([88.208.192.38]:56502 "EHLO tang.lemonia.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753982Ab0AZOWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 09:22:34 -0500
-Message-ID: <4B5EF5DF.2070005@lemonia.org>
-Date: Tue, 26 Jan 2010 14:02:07 +0000
-From: Dunc <dunc@lemonia.org>
+Received: from mx51.mymxserver.com ([85.199.173.110]:35512 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753668Ab0AZNUi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2010 08:20:38 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org, Samuel Ortiz <samuel@sortiz.org>
+Subject: Re: [PATCH 10/10] [RFC, v4] libertas: cfg80211 support
+Date: Tue, 26 Jan 2010 14:20:23 +0100
+Cc: Holger Schurig <holgerschurig@googlemail.com>,
+	John Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+References: <20091202142555.654873300@gmail.com> <20091202142955.107139811@gmail.com> <1264432854.2250.17.camel@caravaggio>
+In-Reply-To: <1264432854.2250.17.camel@caravaggio>
 MIME-Version: 1.0
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: David Miller <davem@davemloft.net>, kaber@trash.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <877hr5nkx0.fsf@purkki.valot.fi>	<20100126.041610.226004766.davem@davemloft.net>	<87wrz5m3cd.fsf@purkki.valot.fi>	<20100126.050645.184040277.davem@davemloft.net> <87my01m0zm.fsf@purkki.valot.fi>
-In-Reply-To: <87my01m0zm.fsf@purkki.valot.fi>
-Content-Type: text/plain; charset=ISO-8859-1
-Subject: Re: Network QoS support in applications
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201001261420.23936.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > +	/* stop network while we're away from our main channel */
+> > +	running = !netif_queue_stopped(priv->dev);
+> > +	carrier = netif_carrier_ok(priv->dev);
+> > +	if (running)
+> > +		netif_stop_queue(priv->dev);
+> > +	if (carrier)
+> > +		netif_carrier_off(priv->dev);
+> Stopping the tx queue is fine, but turning the carrier signal 
+off is
+> not.
 
-> And you are perfectly right, as always. My choise of using the word
-> "universal" was bad. With word "universal" I meant to use same network
-> QoS API with different network technologies: ethernet, wi-fi,
-> bluetooth etc.
-> 
-> But we don't need to solve everything in one go, instead we can make
-> small steps. The first step is to start pushing applications to
-> classify their streams. That's the enabler to get some sort of QoS
-> support, at least to inside kernel and to the next hop. With luck, in
-> future it might get more widely used.
-> 
-> I was hoping to base the classification on some standard, but there
-> doesn't really seem to be one which would specify a complete solution.
-> But that's ok, we can always create a de facto standard :)
-> 
-> I'm curious how other operation systems handle this? Or is it a
-> similar situation, nobody just doesn't use QoS for anything?
-> 
+The patch is a bit older, then the wext-libertas did the same 
+thing. In the meantime, the wext-libertas doesn't mangle the 
+carrier anymore, and thus cfg80211-libertas shouldn't do it 
+either.
 
-If applications set the QoS values, the who's to stop someone (for
-example) writing a bittorrent client that marks all packets for the
-highest priority as if they were VoIP or something? At this point all
-the good work done in the applications is useless and the network admin
-is going to have to not trust the QoS values and then attempt to
-classify traffic by themselves, so it was all a waste of time.
 
-It's probably better to just always leave it up to the network devices IMHO.
 
-Cheers,
 
-Dunc
+> A couple of questions here:
+> - What is this 50ms delay for ?
+
+Good question. A crude way to combine two "almost concurrent" 
+scan requests into one. However, if that was the intention, it 
+should have gotten a comment. You can try to delete the delay.
+
+
+> - Why dont you set the scan_request pointer prior to scheduling 
+>   the scanning work ?
+
+Hehe, because I can. After all, there's a delay in my patch :-)
+
+If you rewrite this: the idea was that priv->scan_req not only 
+contains the details for this scan (e.g. which channels, 
+active/passive), but also implicitly if currently a scan is 
+underway.
+
+BTW: thanks for this quick review.
+
+
+
+> Again, I think this should make it to wireless-testing soon so
+> that people can start using it.
+
+Currently, wext-libertas still supports more options than 
+cfg80211-libertas. That did hold me. However, feel free to grab 
+my RFC-patch and continue, that's the reason I added 
+a "Signed-off-by:"-line.
+
+
+
+
+Oh, and please. you the delete-line or delete-block function of 
+your e-mail client liberately. No reason to quote 2000 lines 
+when you just write 20 lines or so ...
+
+-- 
+http://www.holgerschurig.de
