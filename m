@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:26699 "HELO
-	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756744Ab0A2IK0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 03:10:26 -0500
-Message-ID: <256732.66854.qm@web51401.mail.re2.yahoo.com>
-Date: Fri, 29 Jan 2010 00:10:25 -0800 (PST)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: [ath9k-devel] Significiant performance differences between ath5k  and ath9k in 802.11a
-To: rootkit85@yahoo.it
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <40101cc31001280812v19e78ad7m3cf04a7ff1851ce0@mail.gmail.com>
+Received: from stinky.trash.net ([213.144.137.162]:32842 "EHLO
+	stinky.trash.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752180Ab0AZL7J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2010 06:59:09 -0500
+Message-ID: <4B5ED908.4030608@trash.net>
+Date: Tue, 26 Jan 2010 12:59:04 +0100
+From: Patrick McHardy <kaber@trash.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Network QoS support in applications
+References: <87k4v5nuej.fsf@purkki.valot.fi> <4B5ED254.7010104@trash.net> <877hr5nkx0.fsf@purkki.valot.fi>
+In-Reply-To: <877hr5nkx0.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- rootkit85@yahoo.it <rootkit85@yahoo.it> wrote:
-
+Kalle Valo wrote:
+> Patrick McHardy <kaber@trash.net> writes:
 > 
-> Can you try in AP-client mode? I think you'll get more
-> throughput so.
+>>> Solution 2: SO_PRIORITY with values 256-263
+>> You can actually encode any class handle in SO_PRIORITY, all classful
+>> qdiscs support classification based on this.
+> 
+> But what values should I use in an application? There seems to n+1
+> different ways to do it, but they all would be specific to my own
+> setup.
+
+In case of classful qdisc classification, the values need to
+match the class handles.
+
+> I'm after a universal solution, so that there is no need to modify
+> applications every time. I would assume that we have a set of rules
+> for this. If not, we definitely need one.
+
+Classful qdisc configuration is done by the administrator, so
+there is no universal solution.
+
+> Let's take a bittorrent client as an example. The traffic it generates
+> is not important and it doesn't matter if bittorrent packets have
+> lower priority compared to other streams. What SO_PRIORITY value
+> should all bittorrent clients to use to mark their packets as low
+> priority (for example background class from IEEE 802.1d Annex G).
+> 
+> Another example is a VoIP application. The packets need to have as low
+> delay as possible, so they need to be prioritised very high (for
+> example voice class from 802.1d). What value should such application
+> use?
+
+If the device is using the default pfifo_fast qdisc, you
+can use values 6 and 7 to map to band 0 (highest priority),
+0 and 8-15 to map to band 1 and 1-3 and 5 to map to band 2.
+
+For manually set up qdisc hierarchies you need to ask the
+user to specify a priority (or class handle) value.
+
+> Or should applications use something else than SO_PRIORITY?
+> 
+> Any help is greatly welcomed here :)
 > 
 
-No, IBSS is what I'm interested in. And the point is, that there is a 30% performance difference between ath5k (and Madwifi) and ath9k. Even if the
-performance in AP mode would be better, this does not change the problem
-in IBSS mode.
-
-Regards
-  Joerg
-
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
-http://mail.yahoo.com 
