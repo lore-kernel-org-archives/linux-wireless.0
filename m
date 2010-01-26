@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46381 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752106Ab0ATJt2 (ORCPT
+Received: from c60.cesmail.net ([216.154.195.49]:32782 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752168Ab0AZH2i convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2010 04:49:28 -0500
-Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the
- operating frequency and export it through nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201001200832.48698.holgerschurig@gmail.com>
-References: <4B536B05.6070301@openwrt.org> <4B537A94.9070807@openwrt.org>
-	 <1263762351.28067.21.camel@johannes.local>
-	 <201001200832.48698.holgerschurig@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-t/GswAemvzlPwvSA6eGz"
-Date: Wed, 20 Jan 2010 10:49:23 +0100
-Message-ID: <1263980963.9171.1.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 26 Jan 2010 02:28:38 -0500
+Message-ID: <20100126022837.t3t01o2w0gow8sow-cebfxv@webmail.spamcop.net>
+Date: Tue, 26 Jan 2010 02:28:37 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: PAN Sunny S K <sunnypan@ust.hk>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Building of compat-wireless-old in 2.6.25 BSP kernel for
+	PowerPC architecture
+References: In-Reply-To:
+	<51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
+In-Reply-To: <51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting PAN Sunny S K <sunnypan@ust.hk>:
 
---=-t/GswAemvzlPwvSA6eGz
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> Our application deployment on other device are
+> currently based on 802.11abg Atheros card with Madwifi driver. Starting
+> with this MPC8377EWLAN, we would like to trial with a new Atheros AR9160
+> 802.11bgn card. Since the chipset is not supported by Madwifi
 
-On Wed, 2010-01-20 at 08:32 +0100, Holger Schurig wrote:
-> > In any case I have a feeling you're trying to use the kernel as
-> > a database for something you already know, just don't have
-> > quite as readily available as you'd like.
->=20
-> I have a device where the current channel is shown to user-space,=20
-> e.g. the operator. We used that to find out on what channel the
-> current AP is. Or, when the channel is constantly changing, that=20
-> the system is still searching for a matching access-point.
->=20
-> I know that for both things there are other ways to query the=20
-> same information, but it's convenient nethertheless.
+Please check your facts.  MadWifi trunk supports AR9160 just fine,  
+albeit without 802.11n support.  If it doesn't work for you, please  
+report it to the MadWifi mailing list.
 
-I realise that. But all this is complicated with the planned move to
-allow different virtual interfaces to use different channels with
-time-multiplexing.
+> The MPC8377EWLAN is using a PowerPC architecture MPC8377 CPU and the
+> firmware is built by using Freescale's LTIB, the kernel came with the LTIB
+> is 2.6.25 which is slightly different from the mainstream 2.6.25 kernel.
+> However, when I try to integrate the compat-wireless-old source into the
+> LTIB's 2.6.25 kernel, error comes up in socket.c and many other networking
+> source.
 
-> But one thing for which is no other way is to see the actual=20
-> channel-changes due to the search for a new AP. If such a thing=20
-> would be important (it isn't for me), maybe a nl80211 broadcast=20
-> would be better than, thought.
+Reports about errors without exact error messages are useless most of  
+the time.  One error message should be enough.
 
-That's actually impossible with a lot of hardware, so I really don't see
-the point.
+> Therefore, I'd like to seek for some advice of whether the
+> compat-wireless-old could be compiled with linux kernels that is compiled
+> with BSP like LTIB. And how can I solve the building problem between the
+> compat-wireless-old and the 2.6.25 kernel?
 
-johannes
+You didn't describe the problem enough for somebody else to reproduce  
+it and identify it as being the same problem as the one you are  
+experiencing.
 
---=-t/GswAemvzlPwvSA6eGz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLVtGfAAoJEODzc/N7+Qma+cwQAK8AOVx0+Jx8s+r6miXycN0p
-svjCGjYeflSkm184esl72f10tTrnSMYU5mosSzwvMMvr4sPR6SFSu4Ci4e/xzFB2
-Jo5J3UmfU6HzpC636O9pypdp0O9ZA925AIZrahxTPins9lFAdBQ7ibbL5i18Yi0w
-YIDc/yRifFwWRwCwW5AETLpS3UQ/+Q2yIkojhmH+v0YBJtjELQ8Oi9d4FeLlEBbB
-lOAfwgdQasbSAPkND+2S0khBOXYKxpvVnk7FUWxfFa4NUG0tJw6tKfZv1zAIfGyU
-yathzlHwlIIe8651FVTWOgRzYpqAhfuTtqAR3mqEupxIlfKTyeL//ArOyI62WyNX
-SRpMjZ4sf1FdGaHbDtN4MHTKhSm7M8TIXcwb5mbaGaePA3TY6vrwC/QoWFPzX09b
-rRR/cIjYiigWIZDUzwBqy3z1rbLj7DfFkkomf8OVyoM1dycC25+NJgwA3Z2SFSQi
-aERYLX1eCCZKisXgwNVVClmWpmyxnaOvdkgztXmM+qurkpXWytb11aQCio7cw4Zf
-0dQRks29GuucKagOsriol3UMC159CtAzOJ0pNHzY62nz7gnPClzrj5ddIVlo8kzo
-hKdUDrx+OpaG5rLPTuNzxpZnPMVqWEcVoioOcT4ce/h0YXW+/qi0Xnvd1i9krNAj
-PWOSr6ceVU82BWgIytOO
-=PWvY
------END PGP SIGNATURE-----
-
---=-t/GswAemvzlPwvSA6eGz--
-
+-- 
+Regards,
+Pavel Roskin
