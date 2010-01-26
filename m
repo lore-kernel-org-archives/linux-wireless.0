@@ -1,115 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62939 "EHLO mga11.intel.com"
+Received: from mx3.ust.hk ([143.89.13.11]:64632 "EHLO mx3.ust.hk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932316Ab0AOVnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 16:43:53 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 8/9] iwlwifi: remove extra statistics request from debugfs
-Date: Fri, 15 Jan 2010 13:43:40 -0800
-Message-Id: <1263591821-14867-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
-References: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
+	id S1751323Ab0AZHAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2010 02:00:50 -0500
+Received: from sqmail.ust.hk (sqmail2.ust.hk [143.89.15.95])
+	by mx3.ust.hk (8.13.8/8.13.8) with ESMTP id o0Q6iXOB088085
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2010 14:44:34 +0800 (HKT)
+Message-ID: <51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
+Date: Tue, 26 Jan 2010 14:44:34 +0800 (HKT)
+Subject: Building of compat-wireless-old in 2.6.25 BSP kernel for PowerPC   
+        architecture
+From: "PAN Sunny S K" <sunnypan@ust.hk>
+To: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;charset=utf-8
+References: In-Reply-To: 
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Dear Sir,
 
-When reading current ucode statistics information from debugfs, in
-current implementation, it will always send a new "statistics request" to
-uCode. In normal operation, uCode should report the statistics per beacon
-interval. Remove this extra request to reduce the additional command exchanges
-between driver and uCode.
+My name is Sunny, I'm from the MTrec group in Hong Kong University of
+Science and Technology. We are currently developing a network device which
+will utilize the wireless technology. As part of the development, we are
+examining different reference design from various companies. Currently
+we've received a MPC8377EWLAN from Freescale which we will need to port
+our application onto. Our application deployment on other device are
+currently based on 802.11abg Atheros card with Madwifi driver. Starting
+with this MPC8377EWLAN, we would like to trial with a new Atheros AR9160
+802.11bgn card. Since the chipset is not supported by Madwifi, and the
+driver provided by Freescale is proprietary and has problem with
+wlanconfig list scan result, we try to build our own driver instead of
+relying on Freescale.
+The MPC8377EWLAN is using a PowerPC architecture MPC8377 CPU and the
+firmware is built by using Freescale's LTIB, the kernel came with the LTIB
+is 2.6.25 which is slightly different from the mainstream 2.6.25 kernel.
+However, when I try to integrate the compat-wireless-old source into the
+LTIB's 2.6.25 kernel, error comes up in socket.c and many other networking
+source.
+Therefore, I'd like to seek for some advice of whether the
+compat-wireless-old could be compiled with linux kernels that is compiled
+with BSP like LTIB. And how can I solve the building problem between the
+compat-wireless-old and the 2.6.25 kernel?
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   41 ----------------------------
- 1 files changed, 0 insertions(+), 41 deletions(-)
+Thanks in advance.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index a3d461f..38e2f9f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -1109,16 +1109,6 @@ static ssize_t iwl_dbgfs_ucode_rx_stats_read(struct file *file,
- 	if (!iwl_is_alive(priv))
- 		return -EAGAIN;
- 
--	/* make request to uCode to retrieve statistics information */
--	mutex_lock(&priv->mutex);
--	ret = iwl_send_statistics_request(priv, CMD_SYNC, false);
--	mutex_unlock(&priv->mutex);
--
--	if (ret) {
--		IWL_ERR(priv,
--			"Error sending statistics request: %zd\n", ret);
--		return -EAGAIN;
--	}
- 	buf = kzalloc(bufsz, GFP_KERNEL);
- 	if (!buf) {
- 		IWL_ERR(priv, "Can not allocate Buffer\n");
-@@ -1552,16 +1542,6 @@ static ssize_t iwl_dbgfs_ucode_tx_stats_read(struct file *file,
- 	if (!iwl_is_alive(priv))
- 		return -EAGAIN;
- 
--	/* make request to uCode to retrieve statistics information */
--	mutex_lock(&priv->mutex);
--	ret = iwl_send_statistics_request(priv, CMD_SYNC, false);
--	mutex_unlock(&priv->mutex);
--
--	if (ret) {
--		IWL_ERR(priv,
--			"Error sending statistics request: %zd\n", ret);
--		return -EAGAIN;
--	}
- 	buf = kzalloc(bufsz, GFP_KERNEL);
- 	if (!buf) {
- 		IWL_ERR(priv, "Can not allocate Buffer\n");
-@@ -1739,16 +1719,6 @@ static ssize_t iwl_dbgfs_ucode_general_stats_read(struct file *file,
- 	if (!iwl_is_alive(priv))
- 		return -EAGAIN;
- 
--	/* make request to uCode to retrieve statistics information */
--	mutex_lock(&priv->mutex);
--	ret = iwl_send_statistics_request(priv, CMD_SYNC, false);
--	mutex_unlock(&priv->mutex);
--
--	if (ret) {
--		IWL_ERR(priv,
--			"Error sending statistics request: %zd\n", ret);
--		return -EAGAIN;
--	}
- 	buf = kzalloc(bufsz, GFP_KERNEL);
- 	if (!buf) {
- 		IWL_ERR(priv, "Can not allocate Buffer\n");
-@@ -1986,23 +1956,12 @@ static ssize_t iwl_dbgfs_tx_power_read(struct file *file,
- 	struct iwl_priv *priv = file->private_data;
- 	char buf[128];
- 	int pos = 0;
--	ssize_t ret;
- 	const size_t bufsz = sizeof(buf);
- 	struct statistics_tx *tx;
- 
- 	if (!iwl_is_alive(priv))
- 		pos += scnprintf(buf + pos, bufsz - pos, "N/A\n");
- 	else {
--		/* make request to uCode to retrieve statistics information */
--		mutex_lock(&priv->mutex);
--		ret = iwl_send_statistics_request(priv, CMD_SYNC, false);
--		mutex_unlock(&priv->mutex);
--
--		if (ret) {
--			IWL_ERR(priv, "Error sending statistics request: %zd\n",
--				ret);
--			return -EAGAIN;
--		}
- 		tx = &priv->statistics.tx;
- 		if (tx->tx_power.ant_a ||
- 		    tx->tx_power.ant_b ||
--- 
-1.6.3.3
+Best regards,
+Sunny Pan
 
