@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:61952 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751611Ab0AXF6j (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:60369 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754679Ab0AZVyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2010 00:58:39 -0500
-Received: by ewy26 with SMTP id 26so936089ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 21:58:38 -0800 (PST)
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	Markus Baier <markus_baier@web.de>,
+	Tue, 26 Jan 2010 16:54:08 -0500
+Date: Tue, 26 Jan 2010 22:54:01 +0100
+From: "Edgar E. Iglesias" <edgar.iglesias@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Dunc <dunc@lemonia.org>, David Miller <davem@davemloft.net>,
+	kaber@trash.net, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: Re: Starting hostapd causes kernel panic
-References: <loom.20100122T205326-794@post.gmane.org>
-	<1264193623.2593.17.camel@johannes.local> <1264196526.3040.3.camel@mj>
-	<3ef14e53bb12298507dbaec4bb0b98d3.squirrel@secure.sipsolutions.net>
-	<1264197963.9056.0.camel@mj> <1264251576.2593.30.camel@johannes.local>
-	<4B5B6FCA.2070900@redfish-solutions.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 24 Jan 2010 07:58:35 +0200
-In-Reply-To: <4B5B6FCA.2070900@redfish-solutions.com> (Philip A. Prindeville's message of "Sat\, 23 Jan 2010 13\:53\:14 -0800")
-Message-ID: <87aaw4oxh0.fsf@purkki.valot.fi>
+Subject: Re: Network QoS support in applications
+Message-ID: <20100126215401.GA25095@laped.iglesias.mooo.com>
+References: <877hr5nkx0.fsf@purkki.valot.fi>
+ <20100126.041610.226004766.davem@davemloft.net>
+ <87wrz5m3cd.fsf@purkki.valot.fi>
+ <20100126.050645.184040277.davem@davemloft.net>
+ <87my01m0zm.fsf@purkki.valot.fi>
+ <4B5EF5DF.2070005@lemonia.org>
+ <87iqaplz5a.fsf@purkki.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87iqaplz5a.fsf@purkki.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Philip A. Prindeville" <philipp_subx@redfish-solutions.com> writes:
+On Tue, Jan 26, 2010 at 04:27:29PM +0200, Kalle Valo wrote:
+> Dunc <dunc@lemonia.org> writes:
+> 
+> > If applications set the QoS values, the who's to stop someone (for
+> > example) writing a bittorrent client that marks all packets for the
+> > highest priority as if they were VoIP or something?
+> 
+> Nobody. That would a bug in the application which should be fixed.
+> Badly behaving applications can disrupt the network, with or without
+> QoS support. So no need to blame QoS for this.
 
->>> Whatever you prefer.  Either way, the panic is fixed now!
->>>     
->> Great, and sorry about that! I'll send a patch to insert the else too.
->>
->> johannes
->>   
->
-> Did you send that patch? I'd like to apply it. Please copy me when
-> you send it out.
+Fixing the app is not always an alternative, the damage may already
+be done. You simply cannot always trust all the devices.
 
-Johannes was busy and I sent the patch instead. It's here:
+And, AFAIK you can setup "QoS" networks where a user's traffic won't
+disturb others.
 
-http://marc.info/?l=linux-wireless&m=126427124317427&w=2
 
--- 
-Kalle Valo
+> And if the network doesn't want to trust applications, it's free to do
+> so. Nothing prevents that. And based on the discussion so far, the
+> networks already ignore QoS classifations coming from other network
+> realms.
+
+>From my experience, you have a mix of devices you trust and devices you
+don't trust. For untrusted devices you want to classify and re-tag
+their traffic as it enters your cloud, regardless of whatever the dev
+tagged it with.
+
+For trusted devices, typically stuff that is under the net admins control,
+you let the device itself put the tags. This can be very useful for ex when
+even advanced matching won't be able to differentiate between different
+flows. For example, try to differentiate two ssl flows based on their
+contents. Only the source can.
+
+IMO what apps should be doing is setting the DSCP to a user configurable
+value (config file or cmd line switch etc). This way people can choose DSCP
+to whatever makes sense in their particular network. The default value
+is of less interest.
+
+WRT L3 vs L2, I think apps should normally be tagging by setting the DSCP
+field. The kernel should provide configurable mappings between DSCP and
+what ever L2 QoS that is available on the egress interface. As the packet
+jumps and gets routed, the DSCP value gets remapped two every links
+particular L2 "QoS" that matches the DSCP. After all, apps shouldn't need to
+know their hooked up to a 802.11, wired ethernet or what ever is on the
+route to the peer...
+
+AFAIK, Linux already makes all of this perfectly possible.
+
+My 2 cents..
+
+Cheers
