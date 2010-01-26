@@ -1,67 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:57522 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752057Ab0AVTVU (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:34319 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022Ab0AZM4y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 14:21:20 -0500
-Message-ID: <4B59FAAD.6060804@redfish-solutions.com>
-Date: Fri, 22 Jan 2010 11:21:17 -0800
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+	Tue, 26 Jan 2010 07:56:54 -0500
+To: David Miller <davem@davemloft.net>
+Cc: kaber@trash.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Network QoS support in applications
+References: <87k4v5nuej.fsf@purkki.valot.fi> <4B5ED254.7010104@trash.net>
+	<877hr5nkx0.fsf@purkki.valot.fi>
+	<20100126.041610.226004766.davem@davemloft.net>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 26 Jan 2010 14:56:50 +0200
+In-Reply-To: <20100126.041610.226004766.davem@davemloft.net> (David Miller's message of "Tue\, 26 Jan 2010 04\:16\:10 -0800 \(PST\)")
+Message-ID: <87wrz5m3cd.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Building compat-wireless from 2.6.27
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm trying to build compat-wireless's snapshot from git on compat-wireless-2.6-mcgrof last night, on linux 2.6.27.42 and getting:
+David Miller <davem@davemloft.net> writes:
 
-...
-make -j5 -C /home/philipp/alix/build_i586/compat-wireless-2010-01-21 \
-		HOSTCC=gcc CC=/home/philipp/alix/build_i586/staging_dir/bin/i586-linux-uclibc-gcc ARCH=i386 \
-		KLIB_BUILD=/home/philipp/alix/build_i586/linux-2.6.27.42-astlinux \
-		MODPROBE='true' PWD=/home/philipp/alix/build_i586/compat-wireless-2010-01-21 \
-		CONFIG_IPW2100= CONFIG_IPW2200= CONFIG_LIBERTAS= CONFIG_B44= CONFIG_B43= CONFIG_B43LEGACY= \
-		modules
-make[1]: Entering directory `/home/philipp/alix/build_i586/compat-wireless-2010-01-21'
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make[2]: warning: jobserver unavailable: using -j1.  Add `+' to parent make rule.
-make -C /home/philipp/alix/build_i586/linux-2.6.27.42-astlinux M=/home/philipp/alix/build_i586/compat-wireless-2010-01-21 modules
-make[2]: Entering directory `/home/philipp/alix/build_i586/linux-2.6.27.42-astlinux'
-scripts/Makefile.build:41: /home/philipp/alix/build_i586/compat-wireless-2010-01-21/compat/Makefile: No such file or directory
-make[4]: *** No rule to make target `/home/philipp/alix/build_i586/compat-wireless-2010-01-21/compat/Makefile'.  Stop.
-make[3]: *** [/home/philipp/alix/build_i586/compat-wireless-2010-01-21/compat] Error 2
-make[3]: *** Waiting for unfinished jobs....
-scripts/Makefile.build:41: /home/philipp/alix/build_i586/compat-wireless-2010-01-21/drivers/bluetooth/Makefile: No such file or directory
-make[4]: *** No rule to make target `/home/philipp/alix/build_i586/compat-wireless-2010-01-21/drivers/bluetooth/Makefile'.  Stop.
-make[3]: *** [/home/philipp/alix/build_i586/compat-wireless-2010-01-21/drivers/bluetooth] Error 2
-make[2]: *** [_module_/home/philipp/alix/build_i586/compat-wireless-2010-01-21] Error 2
-make[2]: Leaving directory `/home/philipp/alix/build_i586/linux-2.6.27.42-astlinux'
-make[1]: *** [modules] Error 2
-make[1]: Leaving directory `/home/philipp/alix/build_i586/compat-wireless-2010-01-21'
-make: *** [/home/philipp/alix/build_i586/compat-wireless-2010-01-21/net/wireless/lib80211.ko] Error 2
-% 
+> From: Kalle Valo <kalle.valo@iki.fi>
+> Date: Tue, 26 Jan 2010 13:51:55 +0200
+>
+>> Let's take a bittorrent client as an example. The traffic it generates
+>> is not important and it doesn't matter if bittorrent packets have
+>> lower priority compared to other streams. What SO_PRIORITY value
+>> should all bittorrent clients to use to mark their packets as low
+>> priority (for example background class from IEEE 802.1d Annex G).
+>
+> This is a local policy decision.
+>
+> There is no universal way of doing any of this, really.
 
-as a diagnostic, I've patched my makefile to $(info ...) out the following:
+In my opinion we already now need a universal solution for the user
+space applications to classify their streams. Having a local solution
+doesn't get us far, people don't want to configure their laptops or
+phones, they just want to use them :)
 
-CONFIG_PCI=y
-CONFIG_USB=y
-CONFIG_PCMCIA=
-CONFIG_SSB=
-CONFIG_LIBERTAS=
-CONFIG_ATH5K=m
-CONFIG_ATH9K=m
-CONFIG_IPW2100=
-CONFIG_IPW2200=
-CONFIG_IWLWIFI=m
-CONFIG_B43=
-CONFIG_B43LEGACY=
-CONFIG_B44=
+Having a well defined API for this makes it easier for everyone. Also
+proprietary applications, like skype, can make use of QoS.
 
+It doesn't matter how we map these internally in kernel, but the
+interface to user space needs to be documented and maintained. I'm
+willing to work on this, but we first need a concensus for the method.
 
-How should I be building compat-wireless?  This worked until about early December.
+I'm leaning towards using IPv4 DS/TOS and IPv6 Traffic Class fields
+using IEEE 802.1d values. That way, with luck, the class of the packet
+is visible even more than one hop. In fact cfg80211/mac80211 is
+already doing this for IPv4:
 
--Philip
+/* Given a data frame determine the 802.1p/1d tag to use. */
+unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+{
+        unsigned int dscp;
 
+        /* skb->priority values from 256->263 are magic values to
+         * directly indicate a specific 802.1d priority.  This is used
+         * to allow 802.1d priority to be passed directly in from VLAN
+         * tags, etc.
+          */
+          if (skb->priority >= 256 && skb->priority <= 263)
+             return skb->priority - 256;
 
+             switch (skb->protocol) {
+             case htons(ETH_P_IP):
+                  dscp = ip_hdr(skb)->tos & 0xfc;
+                       break;
+                       default:
+                        return 0;
+                        }
+
+                        return dscp >> 5;
+}
+
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=net/wireless/util.c;h=be2ab8c59e3a9806425b2b958d87dfe50d80111d;hb=HEAD#l598
+
+So the idea is that the three left most bits (Class Selector
+Codepoints from DiffServ RFC 2474) would contain these values from
+IEEE 802.1d-2004 Annex G:
+
+0 best effort
+1 background
+2 (spare)
+3 excellent effort
+4 controlled load
+5 video
+6 voice
+7 network control
+
+What do people think of this? 
+
+Feel free to flame, it was -20 C (-4 F) this morning. I would need
+some warmth here :)
+
+-- 
+Kalle Valo
