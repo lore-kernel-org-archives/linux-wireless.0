@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:60192 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484Ab0AIImZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jan 2010 03:42:25 -0500
-Received: by ewy6 with SMTP id 6so19724043ewy.29
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Jan 2010 00:42:23 -0800 (PST)
-Date: Sat, 9 Jan 2010 11:41:48 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [patch] iwlwifi: silence buffer overflow warning
-Message-ID: <20100109084147.GB7840@bicker>
+Received: from yop.chewa.net ([91.121.105.214]:46039 "EHLO yop.chewa.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753777Ab0AZOuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2010 09:50:10 -0500
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Network QoS support in applications
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Tue, 26 Jan 2010 15:43:01 +0100
+From: =?UTF-8?Q?R=C3=A9mi_Denis-Courmont?= <remi@remlab.net>
+In-Reply-To: <87my01m0zm.fsf@purkki.valot.fi>
+References: <877hr5nkx0.fsf@purkki.valot.fi> <20100126.041610.226004766.davem@davemloft.net> <87wrz5m3cd.fsf@purkki.valot.fi> <20100126.050645.184040277.davem@davemloft.net> <87my01m0zm.fsf@purkki.valot.fi>
+Message-ID: <39575e70388bb2ea58dd36b9061d5055@chewa.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch (and presumably other static checkers) complain that MAX_TID_COUNT is 
-past the end of the array.  In the resulting discussion, Zhu Yi pointed out
-that this value is not used in real life and the assignment was only there to
-silence a gcc warning.
 
-If there were a bug in the surrounding code and the value were used, the 
-WARN_ON(!qc) would print a warning before the crash.
+On Tue, 26 Jan 2010 15:47:41 +0200, Kalle Valo <kalle.valo@iki.fi> wrote:
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+> But that's just because of mistakes with DiffServ and other QoS
 
---- orig/drivers/net/wireless/iwlwifi/iwl-4965.c	2010-01-03 11:02:42.000000000 +0300
-+++ devel/drivers/net/wireless/iwlwifi/iwl-4965.c	2010-01-06 00:27:00.000000000 +0300
-@@ -1961,7 +1961,7 @@ static void iwl4965_rx_reply_tx(struct i
- 	struct ieee80211_tx_info *info;
- 	struct iwl4965_tx_resp *tx_resp = (void *)&pkt->u.raw[0];
- 	u32  status = le32_to_cpu(tx_resp->u.status);
--	int tid = MAX_TID_COUNT;
-+	int uninitialized_var(tid);
- 	int sta_id;
- 	int freed;
- 	u8 *qc = NULL;
+> "frameworks". They didn't bother to specify how applications should
+
+> use these. And what matters here IMHO.
+
+
+
+TOS lets the application specify whether they want low-delay (interactive
+
+low bandwidth traffic), high bandwidth (bulk traffic), high reliability or
+
+low cost. It's surely vague, but anything "uniform" solution is bound to be
+
+vague. Some applications *do* set those fields, or provide options to set
+
+them up. And contrary to SO_PRIORITY, it *can* be made to work for
+
+non-local queues, if the applications are trusted.
+
+
+
+I am afraid it's too late for anything more uniform at the socket API
+
+level. Even fewer developers would bother to support Linux>=2.6.3x-specific
+
+options, than TOS/TCLASS.
+
+
+
+-- 
+
+Rémi Denis-Courmont
+
+http://www.remlab.net
+
+http://fi.linkedin.com/in/remidenis
+
