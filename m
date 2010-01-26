@@ -1,70 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:44965 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753712Ab0ALIoG (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:39666 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299Ab0AZKUx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 03:44:06 -0500
-Subject: [PATCH PATCH v6 7/7] wl1251: add U-APSD support
-To: linville@tuxdriver.com
+	Tue, 26 Jan 2010 05:20:53 -0500
+Received: by ewy19 with SMTP id 19so788171ewy.21
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2010 02:20:52 -0800 (PST)
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: =?iso-8859-15?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John S. Skogtvedt" <jss@bzz.no>, linux-wireless@vger.kernel.org
+Subject: Re: Bug: 2.6.32 ath5k, unable to connect to AP on channel 13
+References: <4B5CB7AB.7010105@bzz.no>
+	<b6c5339f1001250951u548e6a16raf661464660ec577@mail.gmail.com>
+	<69e28c911001251030p79f00ea1j23f95b5e2f8571a3@mail.gmail.com>
+	<43e72e891001251120y568e480fje5cfc370c969c744@mail.gmail.com>
 From: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	a.young.jason@gmail.com
-Date: Tue, 12 Jan 2010 10:43:15 +0200
-Message-ID: <20100112084314.27492.54040.stgit@tikku>
-In-Reply-To: <20100112084059.27492.86738.stgit@tikku>
-References: <20100112084059.27492.86738.stgit@tikku>
+Date: Tue, 26 Jan 2010 12:20:48 +0200
+In-Reply-To: <43e72e891001251120y568e480fje5cfc370c969c744@mail.gmail.com> (Luis R. Rodriguez's message of "Mon\, 25 Jan 2010 11\:20\:42 -0800")
+Message-ID: <87bpghnp4v.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 
-wl1251 firmware supports U-APSD just with a simple queue configuration
-change so enable it.
+>> However, does the DK regdomain really get set? Is CRDA installed?
+>>
+>>> CCed Luis in case he has anything to add.
+>
+> Yea not sure if debian ships crda and wireless-regdb yet.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+I'm running debian unstable and haven't seen crda yet.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 4cf3545..6be50aa 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -1307,6 +1307,7 @@ static struct ieee80211_channel wl1251_channels[] = {
- static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 			     const struct ieee80211_tx_queue_params *params)
- {
-+	enum wl1251_acx_ps_scheme ps_scheme;
- 	struct wl1251 *wl = hw->priv;
- 	int ret;
- 
-@@ -1324,10 +1325,14 @@ static int wl1251_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	if (ret < 0)
- 		goto out_sleep;
- 
-+	if (params->uapsd)
-+		ps_scheme = WL1251_ACX_PS_SCHEME_UPSD_TRIGGER;
-+	else
-+		ps_scheme = WL1251_ACX_PS_SCHEME_LEGACY;
-+
- 	ret = wl1251_acx_tid_cfg(wl, wl1251_tx_get_queue(queue),
- 				 CHANNEL_TYPE_EDCF,
--				 wl1251_tx_get_queue(queue),
--				 WL1251_ACX_PS_SCHEME_LEGACY,
-+				 wl1251_tx_get_queue(queue), ps_scheme,
- 				 WL1251_ACX_ACK_POLICY_LEGACY);
- 	if (ret < 0)
- 		goto out_sleep;
-@@ -1401,7 +1406,8 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_NOISE_DBM |
- 		IEEE80211_HW_SUPPORTS_PS |
--		IEEE80211_HW_BEACON_FILTER;
-+		IEEE80211_HW_BEACON_FILTER |
-+		IEEE80211_HW_SUPPORTS_UAPSD;
- 
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 	wl->hw->wiphy->max_scan_ssids = 1;
-
+-- 
+Kalle Valo
