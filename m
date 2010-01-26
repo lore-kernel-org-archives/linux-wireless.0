@@ -1,45 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from llsa736-a03.servidoresdns.net ([82.223.190.27]:60924 "EHLO
-	llsa736-a03.servidoresdns.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757342Ab0ANRtk (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38771 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751299Ab0AZA3b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 12:49:40 -0500
-Received: from [192.168.0.195] (unknown [77.230.28.199])
-	by smtp-03.servidoresdns.net (Postfix) with ESMTP id C72C624E1C6
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Jan 2010 18:49:36 +0100 (CET)
-Subject: ath9k/AR9285 - incompatibility with bluetooth
-From: Alberto =?ISO-8859-1?Q?Jos=E9_Rodr=EDguez_?=
-	 =?ISO-8859-1?Q?Rodr=EDguez?= <ajrodriguez@blulabs.es>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Jan 2010 18:49:35 +0000
-Message-Id: <1263494975.4643.15.camel@eclipse>
+	Mon, 25 Jan 2010 19:29:31 -0500
+Date: Mon, 25 Jan 2010 16:28:35 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "John W. Linville" <linville@tuxdriver.com>, stable@kernel.org,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Krister Svanlund <krister.svanlund@gmail.com>,
+	bugzilla-daemon@bugzilla.kernel.org,
+	bugme-daemon@bugzilla.kernel.org
+Subject: Re: [Bugme-new] [Bug 15089] New: Fail to get ethernet IP-adress
+Message-Id: <20100125162835.6619e3f4.akpm@linux-foundation.org>
+In-Reply-To: <bug-15089-10286@http.bugzilla.kernel.org/>
+References: <bug-15089-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hellow,
-	I have a ZOTAC MAG ION and I'm having problems with wireless
-connections
 
-Distribution: Ubuntu 9.10
-Kernel version: 2.6.31-16
-Device: 04:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless Network Adapter (PCI-Express) (rev 01)
-Problem Description:
-    - Low signal strength
-    - Cannot connect to wireless networks
-Using linux-backports-modules-karmic:
-    - Low signal strength persists
-    - Can connect to WPA networks but signal strengh is low and unstable, also when using at the same time a Bluetooth USB dongle (continuously inquiring) the wireless connection is lost.
-    - Cannot connect to WEP networks, although the WEP key is set correctly and the device is associated to the AP
-Using latest linux-wireless snapshot (20100113):
-    - Can connect to WEP networks but when I use at the same time a Bluetooth USB dongle (continuously inquiring) the speed of the wireless connection becomes very slow.
-    - Can connect to WPA networks but when I use at the same time a Bluetooth USB dongle (continuously inquiring) the wireless connection is lost.
 
-If you need more info, please do not hesitate to inquire.
-Thanks in advance,
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
--- 
-Alberto José Rodríguez Rodríguez <ajrodriguez@blulabs.es>
-BluLabs, S.L.
+
+
+On Tue, 19 Jan 2010 14:35:03 GMT
+bugzilla-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=15089
+
+2.6.32.2 -> 2.6.32.3 regression.  Hence the regression is probably in
+2.6.33-rc.
+
+Looking through the changelog I'd be suspecting 
+
+
+: commit 3815270b3107d31c8b7bd69461f0bb3c350ee25c
+: Author: Gertjan van Wingerde <gwingerde@gmail.com>
+: Date:   Mon Dec 14 20:33:55 2009 +0100
+: 
+:     rt2x00: Disable powersaving for rt61pci and rt2800pci.
+:     
+:     commit 93b6bd26b74efe46b4579592560f9f1cb7b61994 upstream.
+
+Mainly because I didn't spot any other change to that driver.
+
+
+Krister, are you able to apply this reversion patch to 2.6.32.3 and see
+if it helps?
+
+Thanks.
+
+
+ drivers/net/wireless/rt2x00/rt2800lib.c |    6 ------
+ drivers/net/wireless/rt2x00/rt61pci.c   |    5 -----
+ 2 files changed, 11 deletions(-)
+
+diff -puN drivers/net/wireless/rt2x00/rt2800lib.c~revert-1 drivers/net/wireless/rt2x00/rt2800lib.c
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c~revert-1
++++ a/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2037,12 +2037,6 @@ int rt2800_probe_hw_mode(struct rt2x00_d
+ 	u16 eeprom;
+ 
+ 	/*
+-	 * Disable powersaving as default on PCI devices.
+-	 */
+-	if (rt2x00_intf_is_pci(rt2x00dev))
+-		rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+-
+-	/*
+ 	 * Initialize all hw fields.
+ 	 */
+ 	rt2x00dev->hw->flags =
+diff -puN drivers/net/wireless/rt2x00/rt61pci.c~revert-1 drivers/net/wireless/rt2x00/rt61pci.c
+--- a/drivers/net/wireless/rt2x00/rt61pci.c~revert-1
++++ a/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2535,11 +2535,6 @@ static int rt61pci_probe_hw_mode(struct 
+ 	unsigned int i;
+ 
+ 	/*
+-	 * Disable powersaving as default.
+-	 */
+-	rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+-
+-	/*
+ 	 * Initialize all hw fields.
+ 	 */
+ 	rt2x00dev->hw->flags =
+_
+
 
