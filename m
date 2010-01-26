@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 42.mail-out.ovh.net ([213.251.189.42]:50327 "HELO
-	42.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751799Ab0AGVIi (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:64940 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754842Ab0AZTAU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 16:08:38 -0500
-Message-ID: <4B464D50.9070501@free.fr>
-Date: Thu, 07 Jan 2010 22:08:32 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+	Tue, 26 Jan 2010 14:00:20 -0500
+Received: by pwi21 with SMTP id 21so3165972pwi.21
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2010 11:00:19 -0800 (PST)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Issue connecting to an HT40 AP that sends a Country IE
-References: <4B3DBB6B.4010107@free.fr> <43e72e891001011524r190950c8pdfc89e765afb205d@mail.gmail.com> 	<4B3F1010.3070906@free.fr> <43e72e891001021004r2c9cf855p52b007a88123bba7@mail.gmail.com> 	<43e72e891001061739t5ded13e7u6b16c73f1b26b246@mail.gmail.com> 	<4B458BBC.6040200@free.fr> <43e72e891001070743q5f16a1e7y94e1c3b0c0bbcbb6@mail.gmail.com>
-In-Reply-To: <43e72e891001070743q5f16a1e7y94e1c3b0c0bbcbb6@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <E1NZoGF-0008Cr-CL@sipsolutions.net>
+References: <E1NZoGF-0008Cr-CL@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 26 Jan 2010 10:59:04 -0800
+Message-ID: <43e72e891001261059t7a9d8fcdn1bdc7691d3e9d7be@mail.gmail.com>
+Subject: Re: [ANN] crda: v1.1.1
+To: linux-wireless@vger.kernel.org
+Cc: Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>,
+	Kel Modderman <kel@otaku42.de>,
+	Kel Modderman <kelmo@kanotixguide.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez a écrit :
+On Tue, Jan 26, 2010 at 8:27 AM,  <wireless@sipsolutions.net> wrote:
 >
-> Yeah you certainly found an issue, unfortunately my patch for the
-> subband fix is too big for it to be considered for stable and I cannot
-> think of a smaller way to resolve it.
+> A new release of crda (v1.1.1) is available at:
 >
->   Luis
+> http://wireless.kernel.org/download/crda/crda-1.1.1.tar.bz2
 >
->   
-OK. You could just send your current patchset to me so I could play with 
-it (test it, modify it, ...). I have already some ideas on the top of my 
-head, so it would be better if I start something based on your code.
+> SHA1 sum: 73643b3f49b34c4150df4abb793a36792cc68fb7
+>
+> Here is the short log of the changes included in this
+> release:
+>
+> Luis R. Rodriguez (1):
+>      Space fix
+>
+> Paul Fertser (1):
+>      Implement runtime loading of RSA public keys
 
-Regards,
-Benoit
+Thanks to Paul Ferster for this patch. Its worth elaborating a little
+more on this.
 
+Typically CRDA has only allowed adding of public keys at build time.
+Adding alternative public keys for CRDA allows for third party
+authored files to be redistributed and used. This is now documented
+here:
+
+http://wireless.kernel.org/en/developers/Regulatory#Custom_regulatory_information
+
+With the new patch by Paul you can read keys put in place on a
+preconfigured directory, by default /etc/wireless-regdb/pubkeys. This
+is currently only available with USE_OPENSSL=1 as gcrypt lacks a PEM
+parser.
+
+> Pavel Roskin (1):
+>      CRDA and cross-compilation
+>
+> Tim Gardner (1):
+>      crda: Cosmetic fix for udev path
+>
+
+  Luis
