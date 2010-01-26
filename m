@@ -1,351 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41161 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755782Ab0A3A66 (ORCPT
+Received: from mail-yw0-f176.google.com ([209.85.211.176]:51775 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753453Ab0AZCgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2010 19:58:58 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/2] cfg80211: add regulatory hint disconnect support
-Date: Fri, 29 Jan 2010 19:58:57 -0500
-Message-Id: <1264813137-4478-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1264813137-4478-1-git-send-email-lrodriguez@atheros.com>
-References: <1264813137-4478-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 25 Jan 2010 21:36:54 -0500
+Received: by ywh6 with SMTP id 6so3711588ywh.4
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2010 18:36:53 -0800 (PST)
+Message-ID: <4B5E5546.20105@twilightblue.net>
+Date: Mon, 25 Jan 2010 20:36:54 -0600
+From: Don Darling <darling.don@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Bug: 2.6.32 ath5k, associating with WEP128 AP is unreliable
+References: <4B5CD1FF.4090209@twilightblue.net>	 <b6c5339f1001250939r6d136927q51bba86f7102d826@mail.gmail.com>	 <4B5DE859.6080409@lwfinger.net>	 <69e28c911001251121i61be9c0bhed43648a12db42f6@mail.gmail.com> <b6c5339f1001251313u369c571dq5cee9ffa65fcf457@mail.gmail.com>
+In-Reply-To: <b6c5339f1001251313u369c571dq5cee9ffa65fcf457@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a new regulatory hint to be used when we know all
-devices have been disconnected and idle. This can happen
-when we suspend, for instance. When we disconnect we can
-no longer assume the same regulatory rules learned from
-a country IE or beacon hints are applicable so restore
-regulatory settings to an initial state.
+Hello folks,
 
-Since driver hints are cached on the wiphy that called
-the hint, those hints are not reproduced onto cfg80211
-as the wiphy will respect its own wiphy->regd regardless.
+Thanks for the suggestions -- here are a few questions I can answer from 
+earlier today:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/regulatory.h |    1 +
- net/wireless/reg.c       |  157 +++++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/reg.h       |   18 +++++
- net/wireless/sme.c       |   40 ++++++++++++
- 4 files changed, 213 insertions(+), 3 deletions(-)
+1)  I didn't realize there was a subtle difference between WEP104 and 
+WEP128.  What I can tell you is that the WEP AP is running Tomato 1.23, 
+and is set to WEP 128-bit.  However, the key I'm using is only 104 
+bits.  This probably means I'm actually using WEP104.
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 47995b8..f873ee3 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -39,6 +39,7 @@ enum environment_cap {
-  * 	00 - World regulatory domain
-  * 	99 - built by driver but a specific alpha2 cannot be determined
-  * 	98 - result of an intersection between two regulatory domains
-+ *	97 - regulatory domain has not yet been configured
-  * @intersect: indicates whether the wireless core should intersect
-  * 	the requested regulatory domain with the presently set regulatory
-  * 	domain.
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5dcda28..ed89c59 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -134,6 +134,7 @@ static const struct ieee80211_regdomain *cfg80211_world_regdom =
- 	&world_regdom;
- 
- static char *ieee80211_regdom = "00";
-+static char user_alpha2[2];
- 
- module_param(ieee80211_regdom, charp, 0444);
- MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
-@@ -252,6 +253,27 @@ static bool regdom_changes(const char *alpha2)
- 	return true;
- }
- 
-+/*
-+ * The NL80211_REGDOM_SET_BY_USER regdom alpha2 is cached, this lets
-+ * you know if a valid regulatory hint with NL80211_REGDOM_SET_BY_USER
-+ * has ever been issued.
-+ */
-+static bool is_user_regdom_saved(void)
-+{
-+	if (user_alpha2[0] == '9' && user_alpha2[1] == '7')
-+		return false;
-+
-+	/* This would indicate a mistake on the design */
-+	if (WARN((!is_world_regdom(user_alpha2) &&
-+		  !is_an_alpha2(user_alpha2)),
-+		 "Unexpected user alpha2: %c%c\n",
-+		 user_alpha2[0],
-+	         user_alpha2[1]))
-+		return false;
-+
-+	return true;
-+}
-+
- /**
-  * country_ie_integrity_changes - tells us if the country IE has changed
-  * @checksum: checksum of country IE of fields we are interested in
-@@ -1646,7 +1668,7 @@ static int ignore_request(struct wiphy *wiphy,
- 
- 	switch (pending_request->initiator) {
- 	case NL80211_REGDOM_SET_BY_CORE:
--		return -EINVAL;
-+		return 0;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 
- 		last_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
-@@ -1785,6 +1807,11 @@ new_request:
- 
- 	pending_request = NULL;
- 
-+	if (last_request->initiator == NL80211_REGDOM_SET_BY_USER) {
-+		user_alpha2[0] = last_request->alpha2[0];
-+		user_alpha2[1] = last_request->alpha2[1];
-+	}
-+
- 	/* When r == REG_INTERSECT we do need to call CRDA */
- 	if (r < 0) {
- 		/*
-@@ -1904,12 +1931,16 @@ static void queue_regulatory_request(struct regulatory_request *request)
- 	schedule_work(&reg_work);
- }
- 
--/* Core regulatory hint -- happens once during cfg80211_init() */
-+/*
-+ * Core regulatory hint -- happens during cfg80211_init()
-+ * and when we restore regulatory settings.
-+ */
- static int regulatory_hint_core(const char *alpha2)
- {
- 	struct regulatory_request *request;
- 
--	BUG_ON(last_request);
-+	kfree(last_request);
-+	last_request = NULL;
- 
- 	request = kzalloc(sizeof(struct regulatory_request),
- 			  GFP_KERNEL);
-@@ -2107,6 +2138,123 @@ out:
- 	mutex_unlock(&reg_mutex);
- }
- 
-+static void restore_alpha2(char *alpha2, bool reset_user)
-+{
-+	/* indicates there is no alpha2 to consider for restoration */
-+	alpha2[0] = '9';
-+	alpha2[1] = '7';
-+
-+	/* The user setting has precedence over the module parameter */
-+	if (is_user_regdom_saved()) {
-+		/* Unless we're asked to ignore it and reset it */
-+		if (reset_user) {
-+			REG_DBG_PRINT("cfg80211: Restoring regulatory settings "
-+			       "including user preference\n");
-+			user_alpha2[0] = '9';
-+			user_alpha2[1] = '7';
-+
-+			/*
-+			 * If we're ignoring user settings, we still need to
-+			 * check the module parameter to ensure we put things
-+			 * back as they were for a full restore.
-+			 */
-+			if (!is_world_regdom(ieee80211_regdom)) {
-+				REG_DBG_PRINT("cfg80211: Keeping preference on "
-+				       "module parameter ieee80211_regdom: %c%c\n",
-+				       ieee80211_regdom[0],
-+				       ieee80211_regdom[1]);
-+				alpha2[0] = ieee80211_regdom[0];
-+				alpha2[1] = ieee80211_regdom[1];
-+			}
-+		} else {
-+			REG_DBG_PRINT("cfg80211: Restoring regulatory settings "
-+			       "while preserving user preference for: %c%c\n",
-+			       user_alpha2[0],
-+			       user_alpha2[1]);
-+			alpha2[0] = user_alpha2[0];
-+			alpha2[1] = user_alpha2[1];
-+		}
-+	} else if (!is_world_regdom(ieee80211_regdom)) {
-+		REG_DBG_PRINT("cfg80211: Keeping preference on "
-+		       "module parameter ieee80211_regdom: %c%c\n",
-+		       ieee80211_regdom[0],
-+		       ieee80211_regdom[1]);
-+		alpha2[0] = ieee80211_regdom[0];
-+		alpha2[1] = ieee80211_regdom[1];
-+	} else
-+		REG_DBG_PRINT("cfg80211: Restoring regulatory settings\n");
-+}
-+
-+/*
-+ * Restoring regulatory settings involves ingoring any
-+ * possibly stale country IE information and user regulatory
-+ * settings if so desired, this includes any beacon hints
-+ * learned as we could have traveled outside to another country
-+ * after disconnection. To restore regulatory settings we do
-+ * exactly what we did at bootup:
-+ *
-+ *   - send a core regulatory hint
-+ *   - send a user regulatory hint if applicable
-+ *
-+ * Device drivers that send a regulatory hint for a specific country
-+ * keep their own regulatory domain on wiphy->regd so that does does
-+ * not need to be remembered.
-+ */
-+static void restore_regulatory_settings(bool reset_user)
-+{
-+	char alpha2[2];
-+	struct reg_beacon *reg_beacon, *btmp;
-+
-+	mutex_lock(&cfg80211_mutex);
-+	mutex_lock(&reg_mutex);
-+
-+	reset_regdomains();
-+	restore_alpha2(alpha2, reset_user);
-+
-+	/* Clear beacon hints */
-+	spin_lock_bh(&reg_pending_beacons_lock);
-+	if (!list_empty(&reg_pending_beacons)) {
-+		list_for_each_entry_safe(reg_beacon, btmp,
-+					 &reg_pending_beacons, list) {
-+			list_del(&reg_beacon->list);
-+			kfree(reg_beacon);
-+		}
-+	}
-+	spin_unlock_bh(&reg_pending_beacons_lock);
-+
-+	if (!list_empty(&reg_beacon_list)) {
-+		list_for_each_entry_safe(reg_beacon, btmp,
-+					 &reg_beacon_list, list) {
-+			list_del(&reg_beacon->list);
-+			kfree(reg_beacon);
-+		}
-+	}
-+
-+	/* First restore to the basic regulatory settings */
-+	cfg80211_regdomain = cfg80211_world_regdom;
-+
-+	mutex_unlock(&reg_mutex);
-+	mutex_unlock(&cfg80211_mutex);
-+
-+	regulatory_hint_core(cfg80211_regdomain->alpha2);
-+
-+	/*
-+	 * This restores the ieee80211_regdom module parameter
-+	 * preference or the last user requested regulatory
-+	 * settings, user regulatory settings takes precedence.
-+	 */
-+	if (is_an_alpha2(alpha2))
-+		regulatory_hint_user(user_alpha2);
-+}
-+
-+
-+void regulatory_hint_disconnect(void)
-+{
-+	REG_DBG_PRINT("cfg80211: All devices are disconnected, going to "
-+		      "restore regulatory settings\n");
-+	restore_regulatory_settings(false);
-+}
-+
- static bool freq_is_chan_12_13_14(u16 freq)
- {
- 	if (freq == ieee80211_channel_to_frequency(12) ||
-@@ -2496,6 +2644,9 @@ int regulatory_init(void)
- 
- 	cfg80211_regdomain = cfg80211_world_regdom;
- 
-+	user_alpha2[0] = '9';
-+	user_alpha2[1] = '7';
-+
- 	/* We always try to get an update for the static regdomain */
- 	err = regulatory_hint_core(cfg80211_regdomain->alpha2);
- 	if (err) {
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 3018508..b26224a 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -63,4 +63,22 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 			 u8 *country_ie,
- 			 u8 country_ie_len);
- 
-+/**
-+ * regulatory_hint_disconnect - informs all devices have been disconneted
-+ *
-+ * Regulotory rules can be enhanced further upon scanning and upon
-+ * connection to an AP. These rules become stale if we disconnect
-+ * and go to another country, whether or not we suspend and resume.
-+ * If we suspend, go to another country and resume we'll automatically
-+ * get disconnected shortly after resuming and things will be reset as well.
-+ * This routine is a helper to restore regulatory settings to how they were
-+ * prior to our first connect attempt. This includes ignoring country IE and
-+ * beacon regulatory hints. The ieee80211_regdom module parameter will always
-+ * be respected but if a user had set the regulatory domain that will take
-+ * precedence.
-+ *
-+ * Must be called from process context.
-+ */
-+void regulatory_hint_disconnect(void);
-+
- #endif  /* __NET_WIRELESS_REG_H */
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 51c3cdb..a017e9a 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -34,6 +34,44 @@ struct cfg80211_conn {
- 	bool auto_auth, prev_bssid_valid;
- };
- 
-+bool cfg80211_is_all_idle(void)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct wireless_dev *wdev;
-+	bool is_all_idle = true;
-+
-+	mutex_lock(&cfg80211_mutex);
-+
-+	/*
-+	 * All devices must be idle as otherwise if you are actively
-+	 * scanning some new beacon hints could be learned and would
-+	 * count as new regulatory hints.
-+	 */
-+	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-+		cfg80211_lock_rdev(rdev);
-+		list_for_each_entry(wdev, &rdev->netdev_list, list) {
-+			wdev_lock(wdev);
-+			if (wdev->sme_state != CFG80211_SME_IDLE)
-+				is_all_idle = false;
-+			wdev_unlock(wdev);
-+		}
-+		cfg80211_unlock_rdev(rdev);
-+	}
-+
-+	mutex_unlock(&cfg80211_mutex);
-+
-+	return is_all_idle;
-+}
-+
-+static void disconnect_work(struct work_struct *work)
-+{
-+	if (!cfg80211_is_all_idle())
-+		return;
-+
-+	regulatory_hint_disconnect();
-+}
-+
-+static DECLARE_WORK(cfg80211_disconnect_work, disconnect_work);
- 
- static int cfg80211_conn_scan(struct wireless_dev *wdev)
- {
-@@ -658,6 +696,8 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
- 	wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
- 	wdev->wext.connect.ssid_len = 0;
- #endif
-+
-+	schedule_work(&cfg80211_disconnect_work);
- }
- 
- void cfg80211_disconnected(struct net_device *dev, u16 reason,
--- 
-1.6.3.3
+2) I'm definitely not using madwifi in either case -- I've always used 
+the ath5k driver on this machine.
+
+3) As far as I can tell, there are no modparams being used with ath5k.  
+I checked both /etc/modprobe.d and /etc/sysctl.conf (I'm not sure if the 
+latter affects modules or not, actually - I think it might depend on the 
+module).
+
+4) I realize WPA+TKIP is more secure and I would use it if I could, but 
+I have some old devices that don't support WPA it so I'm limited to WEP.
+
+5) I use -Dwext with wpa_supplicant when I *do* use WPA+TKIP networks.
+
+Also, FWIW:
+
+# lsmod | grep ath
+ath5k                 127364  0
+mac80211              155788  1 ath5k
+ath                     7708  1 ath5k
+cfg80211               90364  3 ath5k,mac80211,ath
+led_class               4000  1 ath5k
+
+I'm not sure when I might have a chance to bisect, but will certainly 
+let you know if I do.
+
+Best regards,
+Don
+
+
+Bob Copeland wrote:
+> 2010/1/25 Gábor Stefanik <netrolller.3d@gmail.com>:
+>   
+>> On Mon, Jan 25, 2010 at 7:52 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>     
+>>> For the record, WEP104 and WEP128 are the same thing. The smaller number
+>>> makes it explicit that the 24-bit IV is transmitted in the open. The same
+>>> thing applies to WEP40 and WEP64.
+>>>
+>>>       
+>> Only one problem there is another, nonstandard WEP type where the
+>> actual key is 128-bit, and this is also sometimes referred to as
+>> WEP128 (with the same metric as WEP64, this one would be WEP152). Same
+>> goes for "WEP228/WEP256/WEP280".
+>>     
+>
+> Yea, I think ath hw supports that too:
+>
+> #define AR5K_KEYTABLE_TYPE_40		0x00000000
+> #define AR5K_KEYTABLE_TYPE_104		0x00000001
+> #define AR5K_KEYTABLE_TYPE_128		0x00000003
+>
+> at least that's what I assumed it meant.  But there's no way to set it
+> from mac80211 (nor should there be).
+>
+>   
 
