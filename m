@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:51241 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab0A1WPM convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:56596 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754280Ab0A0HL4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2010 17:15:12 -0500
+	Wed, 27 Jan 2010 02:11:56 -0500
+To: "Edgar E. Iglesias" <edgar.iglesias@gmail.com>
+Cc: Dunc <dunc@lemonia.org>, David Miller <davem@davemloft.net>,
+	kaber@trash.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Network QoS support in applications
+References: <877hr5nkx0.fsf@purkki.valot.fi>
+	<20100126.041610.226004766.davem@davemloft.net>
+	<87wrz5m3cd.fsf@purkki.valot.fi>
+	<20100126.050645.184040277.davem@davemloft.net>
+	<87my01m0zm.fsf@purkki.valot.fi> <4B5EF5DF.2070005@lemonia.org>
+	<87iqaplz5a.fsf@purkki.valot.fi>
+	<20100126215401.GA25095@laped.iglesias.mooo.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 27 Jan 2010 09:11:52 +0200
+In-Reply-To: <20100126215401.GA25095@laped.iglesias.mooo.com> (Edgar E. Iglesias's message of "Tue\, 26 Jan 2010 22\:54\:01 +0100")
+Message-ID: <87zl40konb.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <4B620A72.7050202@gmail.com>
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
-	<4B620A72.7050202@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 28 Jan 2010 14:14:49 -0800
-Message-ID: <43e72e891001281414q16ae3c3du318e3c62a0980975@mail.gmail.com>
-Subject: Re: Linux wireless GSoC 2010 project ideas
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 28, 2010 at 2:06 PM, Till Kamppeter
-<till.kamppeter@gmail.com> wrote:
-> Great to hear from you.
->
-> I will apply again for the LF entering as a mentoring organization and I
-> will add your projects to the list of proposed projects for the LF
-> application.
+"Edgar E. Iglesias" <edgar.iglesias@gmail.com> writes:
 
-Great thanks Till, the old projects are still with the old data so
-they have the old 2009 mentors. Hopefully the old mentors would still
-be up to mentor the same projects this year, we'll see. I at least can
-mentor the testing/GeoClue stuff but one thing is certain, the GeoClue
-stuff will *definitely* need a primary really active GNOME mentor. I'm
-not sure if we should just punt this off to GNOME completely or what.
+> IMO what apps should be doing is setting the DSCP to a user configurable
+> value (config file or cmd line switch etc). This way people can choose DSCP
+> to whatever makes sense in their particular network. The default value
+> is of less interest.
 
->   Till
->
-> P. S.: Do you know someone with knowledge in data compression? I will run a
-> project at OpenPrinting which is about data compression.
+I have to disagree here. Most of the people are not that interested
+configuring their applications, they just want to use them. I see that
+having this configurable would be just an excuse for not having a good
+default value.
 
-Nope sorry.
+Also it just doesn't scale if every user has to start configuring all
+network applications they use. IMHO this all should work "Out of Box".
 
- Luis
+> WRT L3 vs L2, I think apps should normally be tagging by setting the DSCP
+> field. The kernel should provide configurable mappings between DSCP and
+> what ever L2 QoS that is available on the egress interface. As the packet
+> jumps and gets routed, the DSCP value gets remapped two every links
+> particular L2 "QoS" that matches the DSCP. After all, apps shouldn't need to
+> know their hooked up to a 802.11, wired ethernet or what ever is on the
+> route to the peer...
+
+With this one I fully agree. I think this is the way we should do
+this.
+
+> AFAIK, Linux already makes all of this perfectly possible.
+
+Yes, it's possible but not widely used because people don't know about
+this. We need to provide documentation and then push applications to
+use this.
+
+> My 2 cents..
+
+Thank you very much, much appreciated.
+
+-- 
+Kalle Valo
