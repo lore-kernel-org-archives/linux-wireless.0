@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g21.free.fr ([212.27.42.1]:46321 "EHLO smtp1-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753891Ab0AOUqP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 15:46:15 -0500
-From: Benoit Papillault <benoit.papillault@free.fr>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>,
-	stable@kernel.org
-Subject: [PATCH] mac80211: check that ieee80211_set_power_mgmt only handles STA interfaces.
-Date: Fri, 15 Jan 2010 12:21:37 +0100
-Message-Id: <1263554497-17442-1-git-send-email-benoit.papillault@free.fr>
+Received: from mail-yx0-f187.google.com ([209.85.210.187]:45698 "EHLO
+	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752736Ab0A0A2F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2010 19:28:05 -0500
+Received: by yxe17 with SMTP id 17so4167205yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2010 16:28:04 -0800 (PST)
+Message-ID: <4B5F8891.4000204@lwfinger.net>
+Date: Tue, 26 Jan 2010 18:28:01 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: John W Linville <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Add callback for get_tsf
+References: <4b5f7e98.WueiIRrKwMIrtoob%Larry.Finger@lwfinger.net> <3ace41891001261617w54e8c08dm5d317f7c2b17cba4@mail.gmail.com>
+In-Reply-To: <3ace41891001261617w54e8c08dm5d317f7c2b17cba4@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_set_power_mgmt is meant for STA interfaces only. Moreover,
-since sdata->u.mgd.mtx is only initialized for STA interfaces, using
-this code for any other type of interface (like creating a monitor
-interface) will result in a oops.
+On 01/26/2010 06:17 PM, Hin-Tak Leung wrote:
+> On Tue, Jan 26, 2010 at 11:45 PM, Larry Finger
+> <Larry.Finger@lwfinger.net>  wrote:
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>
+> Acked-by: Hin-Tak Leung<htl10@users.sourceforge.net>
+>
+> Presumably this new api is needed and used by some userland tools (iw
+> or other QoS-related tool?).
 
-Cc: stable@kernel.org
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
----
- net/mac80211/cfg.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ From include/net/mac80211.h: "It is currently used for IBSS mode BSSID merging 
+and debugging". Implementation of this callback is voluntary.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 8286df5..2287d31 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1382,6 +1382,9 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_conf *conf = &local->hw.conf;
- 
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return -EOPNOTSUPP;
-+
- 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
- 		return -EOPNOTSUPP;
- 
--- 
-1.6.3.3
+Larry
 
