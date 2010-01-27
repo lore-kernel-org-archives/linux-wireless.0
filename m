@@ -1,93 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4355 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751984Ab0AGS4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 13:56:13 -0500
-To: mb@bu3sch.de, stefano.brivio@polimi.it
-Subject: [PATCH] b43: Declare all possible firmware files.
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39954 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752436Ab0A0CPe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2010 21:15:34 -0500
+Date: Tue, 26 Jan 2010 21:10:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Message-Id: <20100107183517.A322FF88D8@sepang.rtg.net>
-Date: Thu,  7 Jan 2010 11:35:17 -0700 (MST)
-From: timg@tpi.com (Tim Gardner)
+Subject: Re: [PATCH] rtl8180: implement get_tsf op for mac80211
+Message-ID: <20100127021040.GA15520@tuxdriver.com>
+References: <1264540940-30813-1-git-send-email-linville@tuxdriver.com> <69e28c911001261453r12a687eay3eac8669d3f0bfad@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c911001261453r12a687eay3eac8669d3f0bfad@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 2c1f1895ef2aa8f0e5497893eff71304aef332e1:
-  Linus Torvalds (1):
-        Merge branch 'drm-linus' of git://git.kernel.org/.../airlied/drm-2.6
+On Tue, Jan 26, 2010 at 11:53:38PM +0100, Gábor Stefanik wrote:
+> On Tue, Jan 26, 2010 at 10:22 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  drivers/net/wireless/rtl818x/rtl8180_dev.c |   15 +++++++++++++++
+> >  1 files changed, 15 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> > index 5a2b719..8dbb504 100644
+> > --- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> > +++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+> > @@ -761,6 +761,20 @@ static void rtl8180_configure_filter(struct ieee80211_hw *dev,
+> >        rtl818x_iowrite32(priv, &priv->map->RX_CONF, priv->rx_conf);
+> >  }
+> >
+> > +static u64 rtl8180_get_tsf(struct ieee80211_hw *dev)
+> > +{
+> > +       struct rtl8180_priv *priv = dev->priv;
+> > +       u32 tsftl;
+> > +       u64 tsft;
+> > +
+> > +       tsftl = rtl818x_ioread32(priv, &priv->map->TSFT[0]);
+> > +       tsft = rtl818x_ioread32(priv, &priv->map->TSFT[1]);
+> > +       tsft <<= 32;
+> > +       tsft |= tsftl;
+> > +
+> > +       return tsft;
+> > +}
+> 
+> Why not:
+> 
+> struct rtl8180_priv *priv = dev->priv;
+> u64 tsft;
+> 
+> tsft = rtl818x_ioread32(priv, &priv->map->TSFT[0]);
+> tfst |= rtl818x_ioread32(priv, &priv->map->TSFT[1]) << 32;
+> 
+> return tsft;
 
-are available in the git repository at:
+What difference does it make?
 
-  git://kernel.ubuntu.com/rtg/linux-2.6 b43
-
-Tim Gardner (1):
-      b43: Declare all possible firmware files.
-
- drivers/net/wireless/b43/main.c |   34 ++++++++++++++++++++++++++++++++--
- 1 files changed, 32 insertions(+), 2 deletions(-)
-
->From def1157eaeb397f0afab25b91db8bab3fcb8816c Mon Sep 17 00:00:00 2001
-From: Tim Gardner <tim.gardner@canonical.com>
-Date: Thu, 7 Jan 2010 11:10:38 -0700
-Subject: [PATCH] b43: Declare all possible firmware files.
-
-BugLink: http://bugs.launchpad.net/bugs/488636
-
-Enhances module information with the names of the firmware files
-that could be used by this driver. This helps tools like Jockey to
-correctly detect and/or install the firmware files relevant to
-this driver.
-
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
----
- drivers/net/wireless/b43/main.c |   34 ++++++++++++++++++++++++++++++++--
- 1 files changed, 32 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 4c41cfe..03e48c4 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -66,8 +66,38 @@ MODULE_AUTHOR("Michael Buesch");
- MODULE_AUTHOR("GÃ¡bor Stefanik");
- MODULE_LICENSE("GPL");
- 
--MODULE_FIRMWARE(B43_SUPPORTED_FIRMWARE_ID);
--
-+MODULE_FIRMWARE("b43/a0g0bsinitvals5.fw");
-+MODULE_FIRMWARE("b43/a0g0bsinitvals9.fw");
-+MODULE_FIRMWARE("b43/a0g0initvals5.fw");
-+MODULE_FIRMWARE("b43/a0g0initvals9.fw");
-+MODULE_FIRMWARE("b43/a0g1bsinitvals13.fw");
-+MODULE_FIRMWARE("b43/a0g1bsinitvals5.fw");
-+MODULE_FIRMWARE("b43/a0g1bsinitvals9.fw");
-+MODULE_FIRMWARE("b43/a0g1initvals13.fw");
-+MODULE_FIRMWARE("b43/a0g1initvals5.fw");
-+MODULE_FIRMWARE("b43/a0g1initvals9.fw");
-+MODULE_FIRMWARE("b43/b0g0bsinitvals13.fw");
-+MODULE_FIRMWARE("b43/b0g0bsinitvals5.fw");
-+MODULE_FIRMWARE("b43/b0g0bsinitvals9.fw");
-+MODULE_FIRMWARE("b43/b0g0initvals13.fw");
-+MODULE_FIRMWARE("b43/b0g0initvals5.fw");
-+MODULE_FIRMWARE("b43/b0g0initvals9.fw");
-+MODULE_FIRMWARE("b43/lp0bsinitvals13.fw");
-+MODULE_FIRMWARE("b43/lp0bsinitvals14.fw");
-+MODULE_FIRMWARE("b43/lp0bsinitvals15.fw");
-+MODULE_FIRMWARE("b43/lp0initvals13.fw");
-+MODULE_FIRMWARE("b43/lp0initvals14.fw");
-+MODULE_FIRMWARE("b43/lp0initvals15.fw");
-+MODULE_FIRMWARE("b43/n0absinitvals11.fw");
-+MODULE_FIRMWARE("b43/n0bsinitvals11.fw");
-+MODULE_FIRMWARE("b43/n0initvals11.fw");
-+MODULE_FIRMWARE("b43/pcm5.fw");
-+MODULE_FIRMWARE("b43/ucode11.fw");
-+MODULE_FIRMWARE("b43/ucode13.fw");
-+MODULE_FIRMWARE("b43/ucode14.fw");
-+MODULE_FIRMWARE("b43/ucode15.fw");
-+MODULE_FIRMWARE("b43/ucode5.fw");
-+MODULE_FIRMWARE("b43/ucode9.fw");
- 
- static int modparam_bad_frames_preempt;
- module_param_named(bad_frames_preempt, modparam_bad_frames_preempt, int, 0444);
+John
 -- 
-1.6.2.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
