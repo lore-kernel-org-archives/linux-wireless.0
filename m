@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33768
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753327Ab0AZNGd (ORCPT
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:48324 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091Ab0A0QSJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 08:06:33 -0500
-Date: Tue, 26 Jan 2010 05:06:45 -0800 (PST)
-Message-Id: <20100126.050645.184040277.davem@davemloft.net>
-To: kalle.valo@iki.fi
-Cc: kaber@trash.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
+	Wed, 27 Jan 2010 11:18:09 -0500
+MIME-Version: 1.0
+In-Reply-To: <87k4v5nuej.fsf@purkki.valot.fi>
+References: <87k4v5nuej.fsf@purkki.valot.fi>
+Date: Wed, 27 Jan 2010 17:18:05 +0100
+Message-ID: <b2cc26e41001270818hfa9a533le4aa45a5f2f62eb8@mail.gmail.com>
 Subject: Re: Network QoS support in applications
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87wrz5m3cd.fsf@purkki.valot.fi>
-References: <877hr5nkx0.fsf@purkki.valot.fi>
-	<20100126.041610.226004766.davem@davemloft.net>
-	<87wrz5m3cd.fsf@purkki.valot.fi>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+From: Olaf van der Spek <olafvdspek@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 26 Jan 2010 14:56:50 +0200
+On Tue, Jan 26, 2010 at 9:27 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> I would like to clear up all this by and I'm willing to write a
+> document for application developers about network QoS. But I need help
+> to understand what's the proper way to mark different QoS
+> prioritities.
 
-> In my opinion we already now need a universal solution for the user
-> space applications to classify their streams. Having a local solution
-> doesn't get us far, people don't want to configure their laptops or
-> phones, they just want to use them :)
+Maybe it shouldn't be done by applications, unless the streams of an
+app use different priorities.
+It might be useful to look at configuration of networked apps in a
+broader sense, including stuff like to what IP addresses and ports an
+app should bind. Maybe even to what Unix sockets or other transports.
+Being able to configure this in one central place is way easier then
+having to dive into the conf file of each individual application.
+In this central place the QoS stuff could be configured too.
 
-And similarly your organization's administartion doesn't want to
-prioritize bittorrent traffic a specific fixed way just because your
-application sets some bits in the TOS field of it's packets.
+As this doesn't require application support, it's probably easier to
+implement. It also provides more flexibility and maybe even more
+security.
 
-Prioritization policies have no meaning outside of your local realm,
-and that's just a fact of life.
-
-So what typically happens is that applications do nothing.
-
-And machines on the ingress to a network realm change the TOS based
-field upon classification decisions made by parsing the packet by the
-router/firewall/whatever.
-
-The packet gets QoS treatment within the realm, but completely
-determined by local policy within that realm.
-
-And then on egress from the realm the TOS field has absolutely
-no meaning at all to the next network segment.
+Olaf
