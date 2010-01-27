@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:44312 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753196Ab0ALMvj (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:40318 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752554Ab0A0Pjg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 07:51:39 -0500
-Date: Tue, 12 Jan 2010 13:51:38 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 17/17] mwl8k: update version number (to 0.12) and copyright
-Message-ID: <20100112125138.GG1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 27 Jan 2010 10:39:36 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 303235001C
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 16:39:35 +0100 (CET)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id fY24eECBdk8s for <linux-wireless@vger.kernel.org>;
+	Wed, 27 Jan 2010 16:39:35 +0100 (CET)
+Received: from lin01.mn-solutions.de (pD95F831C.dip0.t-ipconnect.de [217.95.131.28])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 8EFBB50017
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 16:39:33 +0100 (CET)
+Received: from schurig.mn-solutions.de (schurig.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 9BCF41E0036
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 16:39:32 +0100 (CET)
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: BUG: STATION_INFO_TX_BITRATE broken?
+Date: Wed, 27 Jan 2010 16:39:10 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201001271639.10941.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+I have code in my driver that does
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 06dc7a0..68546ca 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2,7 +2,7 @@
-  * drivers/net/wireless/mwl8k.c
-  * Driver for Marvell TOPDOG 802.11 Wireless cards
-  *
-- * Copyright (C) 2008-2009 Marvell Semiconductor Inc.
-+ * Copyright (C) 2008, 2009, 2010 Marvell Semiconductor Inc.
-  *
-  * This file is licensed under the terms of the GNU General Public
-  * License version 2.  This program is licensed "as is" without any
-@@ -26,7 +26,7 @@
- 
- #define MWL8K_DESC	"Marvell TOPDOG(R) 802.11 Wireless Network Driver"
- #define MWL8K_NAME	KBUILD_MODNAME
--#define MWL8K_VERSION	"0.11"
-+#define MWL8K_VERSION	"0.12"
- 
- /* Register definitions */
- #define MWL8K_HIU_GEN_PTR			0x00000c10
+	sinfo->txrate.legacy = lbs_rates[i].bitrate * 10;
+	sinfo->filled |= STATION_INFO_TX_BITRATE;
+
+
+But later, "iw wlan0 link" gives me:
+
+	# iw wlan0 link
+        Connected to 00:13:19:80:da:30 (on wlan0)
+        SSID: MNHS
+        freq: 2462
+        failed to parse nested attributes!
+
+Both iw and linux-wl are from git HEAD.
+
 -- 
-1.5.6.4
+http://www.holgerschurig.de
