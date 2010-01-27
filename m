@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:58357 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408Ab0AHR2P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2010 12:28:15 -0500
-Date: Fri, 8 Jan 2010 18:28:14 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 02/11] mwl8k: undo transmit queue 0/1 swapping in mwl8k_cmd_set_edca_params()
-Message-ID: <20100108172814.GV1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from n22.bullet.mail.ukl.yahoo.com ([87.248.110.139]:34850 "HELO
+	n22.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753619Ab0A0SjY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2010 13:39:24 -0500
+Message-ID: <17290.75428.qm@web24706.mail.ird.yahoo.com>
+Date: Wed, 27 Jan 2010 18:39:22 +0000 (GMT)
+From: John Murdoch <weejoker@yahoo.com>
+Subject: Re: wlan/eth bridge stops working after a while: how to diagnose?
+To: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com,
+	Alexey Yudichev <ayudichev@gmail.com>
+In-Reply-To: <4dd58f491001270218t4eaac711xcb42658f8fbf375c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The comment and code in mwl8k_cmd_set_edca_params() suggest that the
-mapping between SET_EDCA_PARAMS queue numbers and transmit rings isn't
-actually 1:1, while tests show that the mapping is in fact 1:1.  So,
-get rid of the transmit queue 0/1 swapping.
+--- On Wed, 27/1/10, Alexey Yudichev <ayudichev@gmail.com> wrote:
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+> I've got ubuntu 9.10 (hostapd 0.6.9)
+> + compat-wireless-2009-12-11 and
+> the box is acting as a basic wireless internet router.
+> Driver is ath9k
+> and server adapter is D-Link DWA-547. All is working fine
+> for 2-3 days
+> until all of a sudden wireless client (MacBook Pro) stops
+> pinging any
+> hosts on a local network. The wireless association remains
+> and hostapd
+> logs are not showing anything unusual. Restarting hostapd
+> or even
+> networking does not help (although I believe restarting
+> networking
+> does not work well on ubuntu anyway). Only rebooting the
+> server helps.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index cc16041..3f5fdb6 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2397,12 +2397,6 @@ mwl8k_cmd_set_edca_params(struct ieee80211_hw *hw, __u8 qnum,
- 	if (cmd == NULL)
- 		return -ENOMEM;
+I've been having the same problems for a long time with two different Mini-PCI cards (AR5416 & AR9160) on Debian 5.0 w/ kernel 2.6.32, with various hostapd and compat-wireless releases (latest combination being hostapd 0.7.1 / compat-wireless 2010-01-26). 
+
+Both cards have similar issues where hostapd permanently stops transmitting beacons from between 10mins to just over 24hrs. There's absolutely nothing in any logs to suggest issues. I can however restart hostapd and the problem is immediately resolved. 
  
--	/*
--	 * Queues 0 (BE) and 1 (BK) are swapped in hardware for
--	 * this call.
--	 */
--	qnum ^= !(qnum >> 1);
--
- 	cmd->header.code = cpu_to_le16(MWL8K_CMD_SET_EDCA_PARAMS);
- 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
- 	cmd->action = cpu_to_le16(MWL8K_SET_EDCA_ALL);
--- 
-1.5.6.4
+> What would you advise to check/debug or otherwise what
+> would be the
+> best approach to diagnose the problem? I don't see
+> anything
+> interesting in dmesg, messages or daemon.log at this
+> point.
+
+I'm more than willing to collect logs too if pointed in the right direction. 
+
+Regards,
+
+John
+
+
+
+      
+
