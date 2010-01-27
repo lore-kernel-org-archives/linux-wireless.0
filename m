@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:57537 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753473Ab0AMNbl (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:46537 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754612Ab0A0SMl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 08:31:41 -0500
-Received: by yxe17 with SMTP id 17so22526301yxe.33
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 05:31:41 -0800 (PST)
-Message-ID: <4B4DCB39.7030801@lwfinger.net>
-Date: Wed, 13 Jan 2010 07:31:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 27 Jan 2010 13:12:41 -0500
+Received: by pwi21 with SMTP id 21so3903950pwi.21
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 10:12:41 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH 3/3] b43: N-PHY: add RX IQ calculation for rev < 3
-References: <op.u6fp66hl9lhzdc@linux-g0th.site>
-In-Reply-To: <op.u6fp66hl9lhzdc@linux-g0th.site>
+In-Reply-To: <868377.1443.qm@web51406.mail.re2.yahoo.com>
+References: <868377.1443.qm@web51406.mail.re2.yahoo.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 27 Jan 2010 10:12:21 -0800
+Message-ID: <43e72e891001271012r60356d85k60fe55fbb027aa40@mail.gmail.com>
+Subject: Re: mac80211: Open bug in current wireless-testing
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/12/2010 01:38 PM, Rafał Miłecki wrote:
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> 
-> Uh, bigger one. This patch causes false warning:
-> drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_rev2_cal_rx_iq’:
-> drivers/net/wireless/b43/phy_n.c:627: warning: large integer implicitly truncated to unsigned type
-> 
-> That's for:
-> b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXDIS, ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
-> 
-> It's inside loop i=0,1. I tried casting i on (u8) but this didn't help. Can we leave this? Or can sb share some trick to avoid this warning?
+On Wed, Jan 27, 2010 at 6:17 AM, Joerg Pommnitz <pommnitz@yahoo.com> wrote:
+> Hello all,
+> some time ago I reported that it is currently impossible to change a manually selected data rate back to the automatic rate selection. This bug is still present and is easy to reproduce:
+>
+> iwconfig wlan0 rate 54M
+> iwconfig wlan0 rate auto
+>
+> I know that the wireless extensions are deprecated, but until iw supports manual rate selection, iwconfig is what I have to use.
 
-It is ~B43_NPHY_RFSEQCA_RXDIS, not i, that causes the warning. Change the
-statement to
+Review the patch:
 
-b43_phy_maskset(dev, B43_NPHY_RFSEQCA, (u16)(~B43_NPHY_RFSEQCA_RXDIS),
-               ((1 - i) << B43_NPHY_RFSEQCA_RXDIS_SHIFT));
+Author: Jouni Malinen <jouni.malinen@atheros.com>
+Date:   Tue Dec 29 12:59:45 2009 +0200
 
-Larry
+    nl80211: New command for setting TX rate mask for rate control
 
+    Add a new NL80211_CMD_SET_TX_BITRATE_MASK command and related
+    attributes to provide support for setting TX rate mask for rate
+    control. This uses the existing cfg80211 set_bitrate_mask operation
+    that was previously used only with WEXT compat code (SIOCSIWRATE). The
+    nl80211 command allows more generic configuration of allowed rates as
+    a mask instead of fixed/max rate.
 
+    Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+    Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+I think that addresses this, not sure if we ever got the iw equivalent
+patches to let userspace use this yet.
+
+There are however three wext things which we still do need implement to nl80211:
+
+iwconfig wlan0 txpower 17 # sets TX output power to 17 dBm
+iwconfig wlan0 power off # disables power save
+iwconfig wlan0 power 500m # enables dynamic power wave with 500ms idle
+timeout trigger
+
+I've stuffed this int our todo list [1], if you confirm that the above
+patch does not yet address what you wish please add it to the todo
+list.
+
+http://wireless.kernel.org/en/developers/todo-list
+
+  Luis
