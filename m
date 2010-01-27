@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:36160 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408Ab0ADQpG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2010 11:45:06 -0500
-Received: by iwn32 with SMTP id 32so168437iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jan 2010 08:45:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201001041737.06761.mb@bu3sch.de>
-References: <1262622502-27698-1-git-send-email-lrodriguez@atheros.com>
-	<201001041737.06761.mb@bu3sch.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 4 Jan 2010 08:38:54 -0800
-Message-ID: <43e72e891001040838w1cc38f06k1a5ea934b6435461@mail.gmail.com>
-Subject: Re: [RFC] cfg80211: add regulatory hint disconnect support
-To: Michael Buesch <mb@bu3sch.de>
+Received: from c60.cesmail.net ([216.154.195.49]:13626 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756129Ab0A0WCd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2010 17:02:33 -0500
+Subject: Re: Building of compat-wireless-old in 2.6.25 BSP kernel for      
+ PowerPC architecture
+From: Pavel Roskin <proski@gnu.org>
+To: PAN Sunny S K <sunnypan@ust.hk>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <47088.143.89.144.207.1264589300.squirrel@sqmail.ust.hk>
+References: <51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
+	 <43e72e891001260853s4811bc39s2399d138d0a7da83@mail.gmail.com>
+	 <47088.143.89.144.207.1264589300.squirrel@sqmail.ust.hk>
+Content-Type: text/plain
+Date: Wed, 27 Jan 2010 17:02:21 -0500
+Message-Id: <1264629741.19648.25.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 4, 2010 at 8:37 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> On Monday 04 January 2010 17:28:22 Luis R. Rodriguez wrote:
->
->> diff --git a/net/wireless/core.c b/net/wireless/core.c
->> index c2a2c56..ae58c6a 100644
->> --- a/net/wireless/core.c
->> +++ b/net/wireless/core.c
->> @@ -580,6 +580,7 @@ void wiphy_unregister(struct wiphy *wiphy)
->>
->>       flush_work(&rdev->scan_done_wk);
->>       cancel_work_sync(&rdev->conn_work);
->> +     cancel_work_sync(&rdev->conn_work);
->>       flush_work(&rdev->event_work);
->>  }
->
-> twice?
+On Wed, 2010-01-27 at 18:48 +0800, PAN Sunny S K wrote:
 
-Yeah sorry about that, I had added some other lines there but forgot
-to clear all the stuff I had added, thanks.
+> So what I did to build the driver is to provide the KLIB and KLIB_BUILD
+> with the path of 2.6.25 source and modified the CROSS_COMPILE variable in
+> the .config of the kernel to make sure it uses the MPC8377 toolchain to
+> compile the source. However, the following error occurred (With my latest
+> trial of the bleeding edge compat-wireless-2.6):
+> 
+> make -C /MyProject/ltib-mpc8377ewlan-20090922/rpm/BUILD/linux-2.6.25
+> M=/root/Desktop/compat-wireless-2009-12-11 modules
+> make[1]: Entering directory
+> `/MyProject/ltib-mpc8377ewlan-20090922/rpm/BUILD/linux-2.6.25'
+>   CC [M] 
+> /root/Desktop/compat-wireless-2009-12-11/drivers/misc/eeprom/eeprom_93cx6.o
+> cc1: error: unrecognized command line option "-mno-red-zone"
+> cc1: error: unrecognized command line option "-mcmodel=kernel"
+> cc1: error: unrecognized command line option "-maccumulate-outgoing-args"
+> /root/Desktop/compat-wireless-2009-12-11/drivers/misc/eeprom/eeprom_93cx6.c:1:
+> error: -m64 not supported in this configuration
 
-  Luis
+It looks like the compiler just cannot compile the kernel code.
+-maccumulate-outgoing-args is only used on the x86 architecture, so I
+assume the build system is picking up x86 makefiles while using a
+PowerPC compiler.
+
+I think ARCH should be specified on the make command line in addition to
+other arguments:
+
+make ARCH=powerpc
+
+-- 
+Regards,
+Pavel Roskin
