@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:34252 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752593Ab0AaU41 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2010 15:56:27 -0500
-Message-ID: <4B65EE79.5050000@openwrt.org>
-Date: Sun, 31 Jan 2010 21:56:25 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33468 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753709Ab0A0Tpi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2010 14:45:38 -0500
+Date: Wed, 27 Jan 2010 14:44:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, kalle.valo@iki.fi,
+	linux-wireless@vger.kernel.org, j@w1.fi, buytenh@wantstofly.org,
+	wey-yi.w.guy@intel.com
+Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
+Message-ID: <20100127194418.GJ2962@tuxdriver.com>
+References: <1264511993.25642.9.camel@johannes.local> <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: fix monitor mode tx radiotap header handling
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an injected frame gets buffered for a powersave STA or filtered
-and retransmitted, mac80211 attempts to parse the radiotap header
-again, which doesn't work because it's gone at that point.
-This patch adds a new flag for checking the availability of a radiotap
-header, so that it only attempts to parse it once, reusing the tx info
-on the next call to ieee80211_tx().
-This fixes severe issues with rekeying in AP mode.
+On Wed, Jan 27, 2010 at 10:01:00AM -0800, Luis R. Rodriguez wrote:
+> On Tue, Jan 26, 2010 at 5:19 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > Because DTIM information is required for powersave
+> > but is only conveyed in beacons, wait for a beacon
+> > before enabling powersave, and change the way the
+> > information is conveyed to the driver accordingly.
+> >
+> > mwl8k doesn't currently seem to implement PS but
+> > requires the DTIM period in a different way; after
+> > talking to Lennert we agreed to just have mwl8k do
+> > the parsing itself in the finalize_join work.
+> 
+> Not sure if this is merged yet. If not it might be good to add to the
+> commit log a brief about the impact of the fix for distribution
+> purposes looking to cherry pick some fixes that may cure some issues.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -274,6 +274,8 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_INTFL_RETRANSMISSION: This frame is being retransmitted
-  *	after TX status because the destination was asleep, it must not
-  *	be modified again (no seqno assignment, crypto, etc.)
-+ * @IEEE80211_TX_INTFL_HAS_RADIOTAP: This frame was injected and still
-+ *	has a radiotap header at skb->data.
-  */
- enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
-@@ -295,6 +297,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_PSPOLL_RESPONSE	= BIT(17),
- 	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(18),
- 	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(19),
-+	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
- };
- 
- /**
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1110,7 +1110,7 @@ ieee80211_tx_prepare(struct ieee80211_su
- 	tx->flags |= IEEE80211_TX_FRAGMENTED;
- 
- 	/* process and remove the injection radiotap header */
--	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED)) {
-+	if (unlikely(info->flags & IEEE80211_TX_INTFL_HAS_RADIOTAP)) {
- 		if (!__ieee80211_parse_tx_radiotap(tx, skb))
- 			return TX_DROP;
- 
-@@ -1119,6 +1119,7 @@ ieee80211_tx_prepare(struct ieee80211_su
- 		 * the radiotap header that was present and pre-filled
- 		 * 'tx' with tx control information.
- 		 */
-+		info->flags &= ~IEEE80211_TX_INTFL_HAS_RADIOTAP;
- 	}
- 
- 	/*
-@@ -1501,7 +1502,8 @@ static void ieee80211_xmit(struct ieee80
- 		int hdrlen;
- 		u16 len_rthdr;
- 
--		info->flags |= IEEE80211_TX_CTL_INJECTED;
-+		info->flags |= IEEE80211_TX_CTL_INJECTED |
-+			       IEEE80211_TX_INTFL_HAS_RADIOTAP;
- 
- 		len_rthdr = ieee80211_get_radiotap_len(skb->data);
- 		hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
+It's already merged...
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
