@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:21622 "HELO
-	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755417Ab0A0PvI convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2010 10:51:08 -0500
-Message-ID: <941694.35079.qm@web51401.mail.re2.yahoo.com>
-Date: Wed, 27 Jan 2010 07:51:06 -0800 (PST)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: [PATCH] cfg80211: fix wext-compat for setting rate to 'auto'
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
+Received: from mail-px0-f182.google.com ([209.85.216.182]:49907 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753982Ab0A0S0C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2010 13:26:02 -0500
+Received: by pxi12 with SMTP id 12so4599381pxi.33
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 10:26:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1264616062.8619.22.camel@wwguy-ubuntu>
+References: <1264511993.25642.9.camel@johannes.local> <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
+	<1264615477.8619.20.camel@wwguy-ubuntu> <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
+	<1264616062.8619.22.camel@wwguy-ubuntu>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 27 Jan 2010 10:25:42 -0800
+Message-ID: <43e72e891001271025s27bbe25cs3c999a885551a4e7@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"kalle.valo@iki.fi" <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>,
+	"buytenh@wantstofly.org" <buytenh@wantstofly.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
-thanks for the quick response. The patch works fine for me. Feel free to add a
+On Wed, Jan 27, 2010 at 10:14 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> On Wed, 2010-01-27 at 10:14 -0800, Luis R. Rodriguez wrote:
+>> On Wed, Jan 27, 2010 at 10:04 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+>> > On Wed, 2010-01-27 at 10:01 -0800, Luis R. Rodriguez wrote:
+>> >> On Tue, Jan 26, 2010 at 5:19 AM, Johannes Berg
+>> >> <johannes@sipsolutions.net> wrote:
+>> >> > Because DTIM information is required for powersave
+>> >> > but is only conveyed in beacons, wait for a beacon
+>> >> > before enabling powersave, and change the way the
+>> >> > information is conveyed to the driver accordingly.
+>> >> >
+>> >> > mwl8k doesn't currently seem to implement PS but
+>> >> > requires the DTIM period in a different way; after
+>> >> > talking to Lennert we agreed to just have mwl8k do
+>> >> > the parsing itself in the finalize_join work.
+>> >>
+>> >> Not sure if this is merged yet. If not it might be good to add to the
+>> >> commit log a brief about the impact of the fix for distribution
+>> >> purposes looking to cherry pick some fixes that may cure some issues.
+>> >>
+>> >> The impact of this fix is that the DTIM settings of > 1 would now be
+>> >> respected in the odd situation a beacon would not be received prior to
+>> >> association. Ensuring we use a higher DTIM would mean saving more
+>> >> power as it would mean we can sleep longer.
+>> >>
+>> >> This is not propagated to stable but if it turns out this can enhance
+>> >> power save since DTIM might usually be > 1 and the race may be more
+>> >> common than we expected we may need a respective stable solution.
+>> >>
+>> >
+>> > It will be nice to see a respective solution for stable since this
+>> > impact power save which is very important for certain platform.
+>>
+>> Well how about your patch for stable then?
+>>
+> if ok with you and Johannes, I will like to see it happen, the only
+> issue is, my patch only address iwlwifi but not mwl8k.
 
-Tested-by: "Joerg Pommnitz" <pommnitz@yahoo.com>
+Oh, what was the issue with your patch and mwl8k?
 
--- 
-Regards
-       Joerg
-
-
---- John W. Linville <linville@tuxdriver.com> schrieb am Mi, 27.1.2010:
-
-> Von: John W. Linville <linville@tuxdriver.com>
-> Betreff: [PATCH] cfg80211: fix wext-compat for setting rate to 'auto'
-> An: linux-wireless@vger.kernel.org
-> CC: "Joerg Pommnitz" <pommnitz@yahoo.com>, "John W. Linville" <linville@tuxdriver.com>
-> Datum: Mittwoch, 27. Januar 2010, 15:44
-> Signed-off-by: John W. Linville
-> <linville@tuxdriver.com>
-> ---
-> Haven't had a chance to test yet, but I suspect this fixes
-> the issue...?
-> 
->  net/wireless/wext-compat.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/wireless/wext-compat.c
-> b/net/wireless/wext-compat.c
-> index 966d2f0..b17eeae 100644
-> --- a/net/wireless/wext-compat.c
-> +++ b/net/wireless/wext-compat.c
-> @@ -1214,7 +1214,7 @@ int cfg80211_wext_siwrate(struct
-> net_device *dev,
->  
->      memset(&mask, 0, sizeof(mask));
->      fixed = 0;
-> -    maxrate = 0;
-> +    maxrate = (u32)-1;
->  
->      if (rate->value < 0) {
->          /* nothing */
-> -- 
-> 1.6.2.5
-> 
->
-
-
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
-http://mail.yahoo.com 
+  Luis
