@@ -1,127 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:51785 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756511Ab0AFWw5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:52:57 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2.6.33 5/8] rt2x00: Reorganize L2 padding inserting function.
-Date: Wed,  6 Jan 2010 23:52:46 +0100
-Message-Id: <1262818369-16820-6-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1262818369-16820-5-git-send-email-gwingerde@gmail.com>
-References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-4-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-5-git-send-email-gwingerde@gmail.com>
+Received: from gate1.ipvision.dk ([94.127.49.2]:59123 "EHLO gate1.ipvision.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754658Ab0A0Npd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2010 08:45:33 -0500
+From: Benny Amorsen <benny+usenet@amorsen.dk>
+To: Dunc <dunc@lemonia.org>
+Cc: Kalle Valo <kalle.valo@iki.fi>, David Miller <davem@davemloft.net>,
+	kaber@trash.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Network QoS support in applications
+References: <877hr5nkx0.fsf@purkki.valot.fi>
+	<20100126.041610.226004766.davem@davemloft.net>
+	<87wrz5m3cd.fsf@purkki.valot.fi>
+	<20100126.050645.184040277.davem@davemloft.net>
+	<87my01m0zm.fsf@purkki.valot.fi> <4B5EF5DF.2070005@lemonia.org>
+Date: Wed, 27 Jan 2010 14:24:28 +0100
+In-Reply-To: <4B5EF5DF.2070005@lemonia.org> (dunc@lemonia.org's message of
+	"Tue, 26 Jan 2010 14:02:07 +0000")
+Message-ID: <m3636nd6k3.fsf@ursa.amorsen.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify the rt2x00queue_insert_l2pad function by handling the alignment
-operations one by one. Do not special case special circumstances.
-Basically first perform header alignment, and then perform payload alignment
-(if any payload does exist). This results in a properly aligned skb.
+Dunc <dunc@lemonia.org> writes:
 
-The end result is better readable code, with better results, as now L2 padding
-is inserted only when a payload is actually present in the frame.
+> If applications set the QoS values, the who's to stop someone (for
+> example) writing a bittorrent client that marks all packets for the
+> highest priority as if they were VoIP or something?
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |   60 +++++++++++++----------------
- 1 files changed, 27 insertions(+), 33 deletions(-)
+Nothing, but nothing stops them from writing a bittorrent client which
+does "optimistic ACK" either. Yet noone seems to bother.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 6952ae2..8f6dc8b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -177,45 +177,38 @@ void rt2x00queue_align_payload(struct sk_buff *skb, unsigned int header_length)
- 
- void rt2x00queue_insert_l2pad(struct sk_buff *skb, unsigned int header_length)
- {
--	unsigned int frame_length = skb->len;
-+	unsigned int payload_length = skb->len - header_length;
- 	unsigned int header_align = ALIGN_SIZE(skb, 0);
- 	unsigned int payload_align = ALIGN_SIZE(skb, header_length);
- 	unsigned int l2pad = L2PAD_SIZE(header_length);
- 
--	if (header_align == payload_align) {
--		/*
--		 * Both header and payload must be moved the same
--		 * amount of bytes to align them properly. This means
--		 * we don't use the L2 padding but just move the entire
--		 * frame.
--		 */
--		rt2x00queue_align_frame(skb);
--	} else if (!payload_align) {
--		/*
--		 * Simple L2 padding, only the header needs to be moved,
--		 * the payload is already properly aligned.
--		 */
--		skb_push(skb, header_align);
--		memmove(skb->data, skb->data + header_align, header_length);
--	} else {
--		/*
--		 *
--		 * Complicated L2 padding, both header and payload need
--		 * to be moved. By default we only move to the start
--		 * of the buffer, so our header alignment needs to be
--		 * increased if there is not enough room for the header
--		 * to be moved.
--		 */
--		if (payload_align > header_align)
--			header_align += 4;
-+	/*
-+	 * Adjust the header alignment if the payload needs to be moved more
-+	 * than the header.
-+	 */
-+	if (payload_align > header_align)
-+		header_align += 4;
-+
-+	/* There is nothing to do if no alignment is needed */
-+	if (!header_align)
-+		return;
- 
--		skb_push(skb, header_align);
--		memmove(skb->data, skb->data + header_align, header_length);
-+	/* Reserve the amount of space needed in front of the frame */
-+	skb_push(skb, header_align);
-+
-+	/*
-+	 * Move the header.
-+	 */
-+	memmove(skb->data, skb->data + header_align, header_length);
-+
-+	/* Move the payload, if present and if required */
-+	if (payload_length && payload_align)
- 		memmove(skb->data + header_length + l2pad,
- 			skb->data + header_length + l2pad + payload_align,
--			frame_length - header_length);
--		skb_trim(skb, frame_length + l2pad);
--	}
-+			payload_length);
-+
-+	/* Trim the skb to the correct size */
-+	skb_trim(skb, header_length + l2pad + payload_length);
- }
- 
- void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
-@@ -343,7 +336,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	 * Header and alignment information.
- 	 */
- 	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
--	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
-+	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags) &&
-+	    (entry->skb->len > txdesc->header_length))
- 		txdesc->l2pad = L2PAD_SIZE(txdesc->header_length);
- 
- 	/*
--- 
-1.6.6
+Also, bittorrent marked as EF could easily get hit by a "don't queue
+voice packets, just drop instead" policy. Late voice packets are useless
+and might as well be dropped, but TCP streams like bittorrent react
+badly to packet loss.
+
+All in all there is little incentive for people to game the system.
+Should it happen anyway, network administrators have plentiful tools for
+fixing it, up to and including ip link set dev whatever down.
+
+
+/Benny
 
