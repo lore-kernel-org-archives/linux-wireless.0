@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34735 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751018Ab0AIIqJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jan 2010 03:46:09 -0500
-Date: Sat, 9 Jan 2010 10:45:21 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4] cfg80211: fix 2 GHz subband calculation for
- country IEs
-Message-ID: <20100109084521.GA6190@jm.kir.nu>
-References: <1262903097-2129-1-git-send-email-lrodriguez@atheros.com>
- <1262903097-2129-3-git-send-email-lrodriguez@atheros.com>
- <20100108131451.GA18758@jm.kir.nu>
- <43e72e891001081341j1c24b7c4i6f5bb636d8ccc81b@mail.gmail.com>
- <20100108232009.GA4840@jm.kir.nu>
- <43e72e891001081628s47474cadl5473432411162f0f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e891001081628s47474cadl5473432411162f0f@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:29271 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754142Ab0A0SRx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2010 13:17:53 -0500
+Subject: Re: [PATCH] mac80211: wait for beacon before enabling powersave
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"kalle.valo@iki.fi" <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>,
+	"buytenh@wantstofly.org" <buytenh@wantstofly.org>
+In-Reply-To: <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
+References: <1264511993.25642.9.camel@johannes.local>
+	 <43e72e891001271001r2cc39da4ka00a3eef06f6e139@mail.gmail.com>
+	 <1264615477.8619.20.camel@wwguy-ubuntu>
+	 <43e72e891001271014j667221bqa11d56f3a68f6099@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 27 Jan 2010 10:14:22 -0800
+Message-Id: <1264616062.8619.22.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 08, 2010 at 04:28:17PM -0800, Luis R. Rodriguez wrote:
+On Wed, 2010-01-27 at 10:14 -0800, Luis R. Rodriguez wrote:
+> On Wed, Jan 27, 2010 at 10:04 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> > On Wed, 2010-01-27 at 10:01 -0800, Luis R. Rodriguez wrote:
+> >> On Tue, Jan 26, 2010 at 5:19 AM, Johannes Berg
+> >> <johannes@sipsolutions.net> wrote:
+> >> > Because DTIM information is required for powersave
+> >> > but is only conveyed in beacons, wait for a beacon
+> >> > before enabling powersave, and change the way the
+> >> > information is conveyed to the driver accordingly.
+> >> >
+> >> > mwl8k doesn't currently seem to implement PS but
+> >> > requires the DTIM period in a different way; after
+> >> > talking to Lennert we agreed to just have mwl8k do
+> >> > the parsing itself in the finalize_join work.
+> >>
+> >> Not sure if this is merged yet. If not it might be good to add to the
+> >> commit log a brief about the impact of the fix for distribution
+> >> purposes looking to cherry pick some fixes that may cure some issues.
+> >>
+> >> The impact of this fix is that the DTIM settings of > 1 would now be
+> >> respected in the odd situation a beacon would not be received prior to
+> >> association. Ensuring we use a higher DTIM would mean saving more
+> >> power as it would mean we can sleep longer.
+> >>
+> >> This is not propagated to stable but if it turns out this can enhance
+> >> power save since DTIM might usually be > 1 and the race may be more
+> >> common than we expected we may need a respective stable solution.
+> >>
+> >
+> > It will be nice to see a respective solution for stable since this
+> > impact power save which is very important for certain platform.
+> 
+> Well how about your patch for stable then?
+> 
+if ok with you and Johannes, I will like to see it happen, the only
+issue is, my patch only address iwlwifi but not mwl8k.
 
-> Heh alright, I'll change this to match the rx'd band first but that
-> change is a bit big for stable so we'll have to deal with how we have
-> it now for stable. I'll submit the changes for wireless-testing. Now
-> last question -- although I haven't seen APs send country IEs for two
-> bands in case we do, how do you want to treat those channels?
 
-What exactly do you mean with sending two bands? By using the Regulatory
-Extension Identifier? I didn't think we support it.. In general, I would
-not bother doing anything special until someone can show that such an AP
-exist.
 
-> Does hostapd send just one band or two bands on the country IE?
-
-Only one; it does not support Regulatory Extension Identifier and I
-don't really see any point in advertising more than the current band.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
