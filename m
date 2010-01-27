@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:34086 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751947Ab0ASVmV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 16:42:21 -0500
-Message-ID: <4B562738.4050608@openwrt.org>
-Date: Tue, 19 Jan 2010 22:42:16 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33169 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754091Ab0A0Qae (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2010 11:30:34 -0500
+Date: Wed, 27 Jan 2010 11:17:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: fix wext-compat for setting rate to 'auto'
+Message-ID: <20100127161725.GC2962@tuxdriver.com>
+References: <941694.35079.qm@web51401.mail.re2.yahoo.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] ath9k: fix beacon slot/buffer leak
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <941694.35079.qm@web51401.mail.re2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cleaning up beacon buffers and slots, ath9k currently checks if
-sc->ah->opmode is set to a beacon related mode before cleaning up
-buffers.
-An unfortunate ordering of interface up/down commands can lead to
-sc->ah->opmode being set to monitor mode, while there are AP interfaces
-present on the same wiphy.
-Always cleaning up beacon buffers if present fixes this issue.
+On Wed, Jan 27, 2010 at 07:51:06AM -0800, Joerg Pommnitz wrote:
+> John,
+> thanks for the quick response. The patch works fine for me. Feel free to add a
+> 
+> Tested-by: "Joerg Pommnitz" <pommnitz@yahoo.com>
 
-Cc: stable@kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1471,10 +1471,10 @@ static void ath9k_remove_interface(struc
- 	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
- 		ath9k_ps_wakeup(sc);
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
--		ath_beacon_return(sc, avp);
- 		ath9k_ps_restore(sc);
- 	}
- 
-+	ath_beacon_return(sc, avp);
- 	sc->sc_flags &= ~SC_OP_BEACONS;
- 
- 	for (i = 0; i < ARRAY_SIZE(sc->beacon.bslot); i++) {
+Joerg,
 
+I still haven't had time for a reboot. :-(  I wonder if you tested
+to make sure that using "fixed" or just a rate by itself still works
+properly too?
+
+Thanks!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
