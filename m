@@ -1,111 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:8245 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671Ab0AWLy6 (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:60414 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751484Ab0A0UiA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2010 06:54:58 -0500
-Received: by fg-out-1718.google.com with SMTP id l26so395471fgb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2010 03:54:57 -0800 (PST)
-From: Paul Fertser <fercerpav@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org, 536502@bugs.debian.org,
-	Paul Fertser <fercerpav@gmail.com>
-Subject: [PATCH] Implement runtime loading of RSA public keys
-Date: Sat, 23 Jan 2010 14:54:14 +0300
-Message-Id: <1264247654-21554-1-git-send-email-fercerpav@gmail.com>
+	Wed, 27 Jan 2010 15:38:00 -0500
+Received: by bwz19 with SMTP id 19so5157898bwz.28
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 12:37:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <17290.75428.qm@web24706.mail.ird.yahoo.com>
+References: <4dd58f491001270218t4eaac711xcb42658f8fbf375c@mail.gmail.com>
+	 <17290.75428.qm@web24706.mail.ird.yahoo.com>
+Date: Wed, 27 Jan 2010 20:37:58 +0000
+Message-ID: <4dd58f491001271237o66bc7cd1p968a8894f324533d@mail.gmail.com>
+Subject: Re: wlan/eth bridge stops working after a while: how to diagnose?
+From: Alexey Yudichev <ayudichev@gmail.com>
+To: John Murdoch <weejoker@yahoo.com>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows crda to load and use additional keys from a
-pre-configured location for the database signature verification. This
-provides a convenient way for distro maintainers and card manufacturers to
-supply a custom regulatory database along with their public keys, without
-the need to recompile crda.
+Yes, I kept my symptoms simpler not to risk confusing more than one
+issue but indeed in many cases the client stops seeing the access
+point at all. Restarting hostapd fixes the network visibility but most
+likely does not fix the actual IP connectivity. Client keeps getting
+IP address correctly though so DHCP works.
 
-Implemented for USE_OPENSSL=1 case only because libgcrypt lacks PEM parser.
-
-Default location for public keys in PEM format is
-/etc/wireless-regdb/pubkeys and can be changed by specifying
-RUNTIME_PUBKEY_DIR at the make command line.
-
-Signed-off-by: Paul Fertser <fercerpav@gmail.com>
----
- Makefile |    3 ++-
- reglib.c |   20 ++++++++++++++++++++
- 2 files changed, 22 insertions(+), 1 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index 3cc61c2..b8bc7d3 100644
---- a/Makefile
-+++ b/Makefile
-@@ -21,6 +21,7 @@ UDEV_RULE_DIR?=/lib/udev/rules.d/
- # keys are put when building. For example you can run
- # with make PUBKEY_DIR=/usr/lib/crda/pubkeys
- PUBKEY_DIR?=pubkeys
-+RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
- 
- CFLAGS += -Wall -g
- 
-@@ -29,7 +30,7 @@ all: all_noverify verify
- all_noverify: crda intersect regdbdump
- 
- ifeq ($(USE_OPENSSL),1)
--CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
-+CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
- LDLIBS += `pkg-config --libs openssl`
- 
- reglib.o: keys-ssl.c
-diff --git a/reglib.c b/reglib.c
-index 6aeadcb..d199e13 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -1,12 +1,15 @@
- #include <errno.h>
- #include <stdio.h>
- #include <arpa/inet.h>
-+#include <sys/types.h>
-+#include <dirent.h>
- #include "reglib.h"
- 
- #ifdef USE_OPENSSL
- #include <openssl/objects.h>
- #include <openssl/rsa.h>
- #include <openssl/sha.h>
-+#include <openssl/pem.h>
- #endif
- 
- #ifdef USE_GCRYPT
-@@ -48,6 +51,9 @@ int crda_verify_db_signature(__u8 *db, int dblen, int siglen)
- 	__u8 hash[SHA_DIGEST_LENGTH];
- 	unsigned int i;
- 	int ok = 0;
-+	DIR *pubkey_dir;
-+	struct dirent *nextfile;
-+	FILE *keyfile;
- 
- 	if (SHA1(db, dblen, hash) != hash) {
- 		fprintf(stderr, "Failed to calculate SHA1 sum.\n");
-@@ -71,6 +77,20 @@ int crda_verify_db_signature(__u8 *db, int dblen, int siglen)
- 		rsa->n = NULL;
- 		RSA_free(rsa);
- 	}
-+	if (!ok && (pubkey_dir = opendir(PUBKEY_DIR))) {
-+		while (!ok && (nextfile = readdir(pubkey_dir))) {
-+			if ((keyfile = fopen(nextfile->d_name, "rb"))) {
-+				rsa = PEM_read_RSA_PUBKEY(keyfile,
-+					NULL, NULL, NULL);
-+				if (rsa) 
-+					ok = RSA_verify(NID_sha1, hash, SHA_DIGEST_LENGTH,
-+						db + dblen, siglen, rsa) == 1;
-+				RSA_free(rsa);
-+				fclose(keyfile);
-+			}
-+		}
-+		closedir(pubkey_dir);
-+	}
- #endif
- 
- #ifdef USE_GCRYPT
--- 
-1.6.4.4
-
+On Wed, Jan 27, 2010 at 6:39 PM, John Murdoch <weejoker@yahoo.com> wrote:
+> --- On Wed, 27/1/10, Alexey Yudichev <ayudichev@gmail.com> wrote:
+>
+>> I've got ubuntu 9.10 (hostapd 0.6.9)
+>> + compat-wireless-2009-12-11 and
+>> the box is acting as a basic wireless internet router.
+>> Driver is ath9k
+>> and server adapter is D-Link DWA-547. All is working fine
+>> for 2-3 days
+>> until all of a sudden wireless client (MacBook Pro) stops
+>> pinging any
+>> hosts on a local network. The wireless association remains
+>> and hostapd
+>> logs are not showing anything unusual. Restarting hostapd
+>> or even
+>> networking does not help (although I believe restarting
+>> networking
+>> does not work well on ubuntu anyway). Only rebooting the
+>> server helps.
+>
+> I've been having the same problems for a long time with two different Mini-PCI cards (AR5416 & AR9160) on Debian 5.0 w/ kernel 2.6.32, with various hostapd and compat-wireless releases (latest combination being hostapd 0.7.1 / compat-wireless 2010-01-26).
+>
+> Both cards have similar issues where hostapd permanently stops transmitting beacons from between 10mins to just over 24hrs. There's absolutely nothing in any logs to suggest issues. I can however restart hostapd and the problem is immediately resolved.
+>
+>> What would you advise to check/debug or otherwise what
+>> would be the
+>> best approach to diagnose the problem? I don't see
+>> anything
+>> interesting in dmesg, messages or daemon.log at this
+>> point.
+>
+> I'm more than willing to collect logs too if pointed in the right direction.
+>
+> Regards,
+>
+> John
+>
+>
+>
+>
+>
+>
