@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:55090 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525Ab0ASEoA (ORCPT
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:61993 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243Ab0A0ARl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2010 23:44:00 -0500
-Received: by yxe26 with SMTP id 26so2999361yxe.4
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2010 20:43:59 -0800 (PST)
-Subject: eapol_version=1 required for OS X clients?
-From: Eric Volker <evolker@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 18 Jan 2010 22:43:56 -0600
-Message-ID: <1263876237.2619.1.camel@fwdell4550>
-Mime-Version: 1.0
+	Tue, 26 Jan 2010 19:17:41 -0500
+Received: by fxm20 with SMTP id 20so1029907fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2010 16:17:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4b5f7e98.WueiIRrKwMIrtoob%Larry.Finger@lwfinger.net>
+References: <4b5f7e98.WueiIRrKwMIrtoob%Larry.Finger@lwfinger.net>
+Date: Wed, 27 Jan 2010 00:17:39 +0000
+Message-ID: <3ace41891001261617w54e8c08dm5d317f7c2b17cba4@mail.gmail.com>
+Subject: Re: [PATCH] rtl8187: Add callback for get_tsf
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am in the process of setting up a AP using Ubuntu 9.10, a Broadcom
-BCM4318 and hostapd. I've run into an issue getting OS X clients to
-associate with the access point. Once I had configured hostapd.conf
-correctly, Windows and Linux clients were able to associate with the AP
-and use it as a router. OS X clients, however, would not associate and
-I'd see messages in the log that said "Deassociated due to inactivity."
-After wrestling with that for a few days, I found a reference to someone
-setting the EAP version to 1 to allow his iBook to connect. Sure enough,
-setting eapol_version=1 in hostapd.conf resolved the issue and allowed
-all OS X clients to connect (including a Leopard laptop, a Snow Leopard
-iMac and an iPhone 3G.) However, this brings up several questions:
+On Tue, Jan 26, 2010 at 11:45 PM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Is EAP version 1 secure?
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-In light of this issue, why is version 2 default? Is there any way to
-negotiate the version level? Which version do off-the-shelf consumer
-routers use?
+Presumably this new api is needed and used by some userland tools (iw
+or other QoS-related tool?).
 
-Based on the comments in hostapd.conf, EAP only seems to be used for
-802.1X authentication. I'm using WPA/WPA2 (wpa=3) Personal
-authentication, so why does the EAP version matter?
-
-Why is an OS as recent as Snow Leopard (10.6) using a protocol version
-that the hostapd.conf comments imply is outdated?
-
-Thanks,
-
-Eric Volker
-
+> ---
+>
+> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -1265,6 +1265,14 @@ static int rtl8187_conf_tx(struct ieee80
+>        return 0;
+>  }
+>
+> +static u64 rtl8187_get_tsf(struct ieee80211_hw *dev)
+> +{
+> +       struct rtl8187_priv *priv = dev->priv;
+> +
+> +       return rtl818x_ioread32(priv, &priv->map->TSFT[0]) |
+> +              (u64)(rtl818x_ioread32(priv, &priv->map->TSFT[1])) << 32;
+> +}
+> +
+>  static const struct ieee80211_ops rtl8187_ops = {
+>        .tx                     = rtl8187_tx,
+>        .start                  = rtl8187_start,
+> @@ -1276,7 +1284,8 @@ static const struct ieee80211_ops rtl818
+>        .prepare_multicast      = rtl8187_prepare_multicast,
+>        .configure_filter       = rtl8187_configure_filter,
+>        .conf_tx                = rtl8187_conf_tx,
+> -       .rfkill_poll            = rtl8187_rfkill_poll
+> +       .rfkill_poll            = rtl8187_rfkill_poll,
+> +       .get_tsf                = rtl8187_get_tsf
+>  };
+>
+>  static void rtl8187_eeprom_register_read(struct eeprom_93cx6 *eeprom)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
