@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:50143 "EHLO smtp1.irobot.com"
+Received: from mga09.intel.com ([134.134.136.24]:18962 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755395Ab0AUVjj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 16:39:39 -0500
-Message-ID: <4B58C997.2060904@irobot.com>
-Date: Thu, 21 Jan 2010 13:39:35 -0800
-From: Adam Wozniak <awozniak@irobot.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Subject: Re: FYI - new compat-wireless based on 2.6.33-rc4
-References: <43e72e891001201213x6a2c203dl7121f2dde6d61fb9@mail.gmail.com> 	<4B5897C8.2080006@irobot.com> <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com> 	<4B58B432.5050200@irobot.com> <43e72e891001211217t17ffed80i2d5bc6f923b56210@mail.gmail.com> <4B58C622.2090004@irobot.com>
-In-Reply-To: <4B58C622.2090004@irobot.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1754445Ab0A0B5p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2010 20:57:45 -0500
+Subject: Re: Network QoS support in applications
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dunc <dunc@lemonia.org>
+Cc: Kalle Valo <kalle.valo@iki.fi>, David Miller <davem@davemloft.net>,
+	"kaber@trash.net" <kaber@trash.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4B5EF5DF.2070005@lemonia.org>
+References: <877hr5nkx0.fsf@purkki.valot.fi>
+	 <20100126.041610.226004766.davem@davemloft.net>
+	 <87wrz5m3cd.fsf@purkki.valot.fi>
+	 <20100126.050645.184040277.davem@davemloft.net>
+	 <87my01m0zm.fsf@purkki.valot.fi>  <4B5EF5DF.2070005@lemonia.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 27 Jan 2010 09:57:51 +0800
+Message-ID: <1264557471.5282.24.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok, I see what's going on now.  The openembedded recipe I'm working with 
-didn't copy the udev stuff.
+On Tue, 2010-01-26 at 22:02 +0800, Dunc wrote:
+> If applications set the QoS values, the who's to stop someone (for
+> example) writing a bittorrent client that marks all packets for the
+> highest priority as if they were VoIP or something? At this point all
+> the good work done in the applications is useless and the network
+> admin is going to have to not trust the QoS values and then attempt to
+> classify traffic by themselves, so it was all a waste of time.
 
-Adam Wozniak wrote:
-> Luis R. Rodriguez wrote:
->> BTW Haukes posted a fix for the compile build against ARM. Try that.
->> That patch applies to compat.git but you should be able to mangle it
->> to apply to compat-wireless easily too.
->>   
-> That worked, thank you.
->> OK so it failed here, you may want to try to debug udev stuff now
->> then, what distribution do you have? Where are your udev rules put?
->> Where is the original udev rule for firmware for your box?
->>
->> You can debug udev stuff by using 'udevadm monitor'
->>   
-> I'm using openembedded.  Rules are in /etc/udev/rules.d
-> It contains a file 50-udev-default.rules with a line:
->
-> SUBSYSTEM=="firmware", ACTION=="add", RUN+="firmware.sh"
->
-> If I copy & paste and change the SUBSYSTEM to "compat_firmware" things 
-> seem to load ok.
->
-> --Adam
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The QoS values an application sets can be viewed as "hints". It is still
+the network admin's choice to use it or not. For example, as a network
+admin for an Internet router, you don't want to trust any QoS values
+from ingress. But as a smart phone owner, you probably want to trust the
+applications running on it. For end users on noncritical devices,
+requiring them to do traffic mapping themselves is too much. IMO, having
+a way for the applications to specify the traffic priority they _wish_
+to have is useful.
+
+Thanks,
+-yi
 
