@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:60685 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755863Ab0ATBka (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2010 20:40:30 -0500
-Received: by yxe17 with SMTP id 17so5698861yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2010 17:40:30 -0800 (PST)
-Subject: b43 driver hang with bcm4318
-From: Eric Volker <evolker@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 19 Jan 2010 19:40:22 -0600
-Message-ID: <1263951622.3259.26.camel@fwdell4550>
-Mime-Version: 1.0
+Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:21622 "HELO
+	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755417Ab0A0PvI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2010 10:51:08 -0500
+Message-ID: <941694.35079.qm@web51401.mail.re2.yahoo.com>
+Date: Wed, 27 Jan 2010 07:51:06 -0800 (PST)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: AW: [PATCH] cfg80211: fix wext-compat for setting rate to 'auto'
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have set up an access point with Ubuntu 9.10 and a Broadcom BCM4318
-PCI card (manufacturer is Buffalo). After an undetermined period of
-time, the card stops beaconing and even previously connected clients are
-unable to ping the AP. After the driver hangs, trying to restart hostapd
-fails with a "Failed to create mon.wlan0". The following commands:
+John,
+thanks for the quick response. The patch works fine for me. Feel free to add a
 
-#rmmod b43
-#modprobe b43
-#/etc/init.d/hostapd restart
+Tested-by: "Joerg Pommnitz" <pommnitz@yahoo.com>
 
-will restart hostapd, and the AP will begin beaconing again. Clients can
-associate with it, but are unable to ping the AP. Further examination
-reveals that wlan0 on the AP has not been assigned an IP address. (My AP
-does not have a DHCP daemon running as of yet; I've been manually
-configuring the IP address of my clients.) Using ifconfig to assign the
-IP address appears to work, but clients are still unable to ping the AP.
-dmesg reveals no message from the b43 or other drivers about the hang;
-however, upon restarting hostapd the driver appears to create a new
-"phy".
-
-[71500.473241] b43-phy1: Broadcom 4318 WLAN found (core revision 9)
-[71500.540847] phy1: Selected rate control algorithm 'minstrel'
-[71500.542002] Broadcom 43xx driver loaded [ Features: PL, Firmware-ID:
-FW13 ]
-[71543.312030] b43 ssb0:0: firmware: requesting b43/ucode5.fw
-[71543.410639] b43 ssb0:0: firmware: requesting b43/pcm5.fw
-[71543.430040] b43 ssb0:0: firmware: requesting b43/b0g0initvals5.fw
-[71543.440062] b43 ssb0:0: firmware: requesting b43/b0g0bsinitvals5.fw
-[71543.564029] b43-phy1: Loading firmware version 410.2160 (2007-05-26
-15:32:10)
-[71543.604432] Registered led device: b43-phy1::tx
-[71543.604459] Registered led device: b43-phy1::rx
-[71543.604485] Registered led device: b43-phy1::radio
-[71554.360009] wlan0: no IPv6 routers present
-
-Further back in the log, it can be seen where b43-phy0 was created, but
-there is no record of the driver crashing or any other errors.
-daemon.log does have several entries like this:
-
-Jan 17 15:48:24 hostname avahi-daemon[759]: Invalid query packet.
-Jan 17 15:49:33 hostname avahi-daemon[759]: last message repeated 2
-times
-
-Rebooting fixes the problem completely, but only temporarily. Anyone
-seen this before, or have a suggested fix?
-
-Thanks,
-
-Eric Volker
+-- 
+Regards
+       Joerg
 
 
+--- John W. Linville <linville@tuxdriver.com> schrieb am Mi, 27.1.2010:
+
+> Von: John W. Linville <linville@tuxdriver.com>
+> Betreff: [PATCH] cfg80211: fix wext-compat for setting rate to 'auto'
+> An: linux-wireless@vger.kernel.org
+> CC: "Joerg Pommnitz" <pommnitz@yahoo.com>, "John W. Linville" <linville@tuxdriver.com>
+> Datum: Mittwoch, 27. Januar 2010, 15:44
+> Signed-off-by: John W. Linville
+> <linville@tuxdriver.com>
+> ---
+> Haven't had a chance to test yet, but I suspect this fixes
+> the issue...?
+> 
+>  net/wireless/wext-compat.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/wireless/wext-compat.c
+> b/net/wireless/wext-compat.c
+> index 966d2f0..b17eeae 100644
+> --- a/net/wireless/wext-compat.c
+> +++ b/net/wireless/wext-compat.c
+> @@ -1214,7 +1214,7 @@ int cfg80211_wext_siwrate(struct
+> net_device *dev,
+>  
+>      memset(&mask, 0, sizeof(mask));
+>      fixed = 0;
+> -    maxrate = 0;
+> +    maxrate = (u32)-1;
+>  
+>      if (rate->value < 0) {
+>          /* nothing */
+> -- 
+> 1.6.2.5
+> 
+>
+
+
+__________________________________________________
+Do You Yahoo!?
+Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
+http://mail.yahoo.com 
