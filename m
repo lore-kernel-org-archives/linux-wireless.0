@@ -1,35 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46835 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753674Ab0AFBAa (ORCPT
+Received: from mail-pz0-f190.google.com ([209.85.222.190]:64887 "EHLO
+	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754062Ab0A0Ri0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 20:00:30 -0500
-Date: Tue, 5 Jan 2010 19:58:12 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: rossi.f@inwind.it, linux-wireless@vger.kernel.org
-Subject: Re: problem with 2.6.33-rc2 tagging
-Message-ID: <20100106005812.GA6361@tuxdriver.com>
-References: <201001060021.41202.rossi.f@inwind.it> <20100105.155539.138677861.davem@davemloft.net>
+	Wed, 27 Jan 2010 12:38:26 -0500
+Received: by pzk28 with SMTP id 28so2112851pzk.4
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2010 09:38:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100105.155539.138677861.davem@davemloft.net>
+In-Reply-To: <4B5BAFC3.7000807@openwrt.org>
+References: <4B5BAFC3.7000807@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 27 Jan 2010 09:38:06 -0800
+Message-ID: <43e72e891001270938q4bba2a08wa02c8db858ee5954@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: improve max rate retry handling
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 05, 2010 at 03:55:39PM -0800, David Miller wrote:
-> From: Fabio Rossi <rossi.f@inwind.it>
-> Date: Wed, 6 Jan 2010 00:21:41 +0100
-> 
-> > it seems that the current wireless.git misses a tag for the 2.6.33-rc2 kernel.
-> 
-> This happens in my net-2.6 tree too, when we pull in upstream
-> we just pull in the origin's master branch and not all of the
-> tags.
+On Sat, Jan 23, 2010 at 6:26 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> ath9k currently forces hw->max_rate_tries to 4 to work around rate
+> control inefficiencies. This has some negative side effects, such as
+> rate_control_send_low also using a maximum of 4 tries, which could
+> negatively affect reliability of unicast management frames.
+> This patch pushes the retry limit to the rate control instead, and
+> allows it to use more tries on the last stage to prevent unnecessary
+> packet loss.
 
-He's probably talking about wireless-testing.  I just updated the tags -- thanks!
+If this is not merged yet and if its not too much trouble, would you
+mind splitting this into two separate patches, one which increases the
+MRR segment retry count, and the other which does what the current
+commit log says? Reason is increasing the MRR segment retry count
+might be useful as a cherry pick for older kernels.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
