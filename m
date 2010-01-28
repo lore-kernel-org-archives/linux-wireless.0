@@ -1,102 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38191 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755852Ab0AFOaI (ORCPT
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:48955 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754446Ab0A1Pha (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 09:30:08 -0500
-Subject: [PATCH] mac80211: fix netdev queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Jan 2010 15:30:01 +0100
-Message-ID: <1262788201.9268.112.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 28 Jan 2010 10:37:30 -0500
+Received: by pwi21 with SMTP id 21so550163pwi.21
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2010 07:37:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201001281528.37342.holgerschurig@gmail.com>
+References: <8bf247761001280439u59a9b6ch1128d42a83116594@mail.gmail.com>
+	 <8bf247761001280607i2b90f73j96e3afd02fb6da29@mail.gmail.com>
+	 <201001281528.37342.holgerschurig@gmail.com>
+Date: Thu, 28 Jan 2010 21:07:29 +0530
+Message-ID: <8bf247761001280737v135c8fbfj7a5e1b7eea881d5c@mail.gmail.com>
+Subject: Re: scan does not work
+From: Sriram V <vshrirama@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I forgot about commit 53623f1a09, which
-had changed all netif_tx_*_all_queues()
-instances to to netif_*_queue(), and now
-that netdevs have multiple queues that
-commit has to be essentially reverted.
+Hi,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/iface.c      |    4 ++--
- net/mac80211/mlme.c       |    4 ++--
- net/mac80211/offchannel.c |    6 +++---
- 3 files changed, 7 insertions(+), 7 deletions(-)
+How do i check if the communication between the host and libertas is proper?
 
---- wireless-testing.orig/net/mac80211/iface.c	2010-01-06 12:00:03.000000000 +0100
-+++ wireless-testing/net/mac80211/iface.c	2010-01-06 12:02:17.000000000 +0100
-@@ -328,7 +328,7 @@ static int ieee80211_open(struct net_dev
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 		ieee80211_queue_work(&local->hw, &sdata->u.mgd.work);
- 
--	netif_start_queue(dev);
-+	netif_tx_start_all_queues(dev);
- 
- 	return 0;
-  err_del_interface:
-@@ -356,7 +356,7 @@ static int ieee80211_stop(struct net_dev
- 	/*
- 	 * Stop TX on this interface first.
- 	 */
--	netif_stop_queue(dev);
-+	netif_tx_stop_all_queues(dev);
- 
- 	/*
- 	 * Purge work for this interface.
---- wireless-testing.orig/net/mac80211/mlme.c	2010-01-06 12:00:03.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2010-01-06 12:02:17.000000000 +0100
-@@ -731,7 +731,7 @@ static void ieee80211_set_associated(str
- 	ieee80211_recalc_smps(local, sdata);
- 	mutex_unlock(&local->iflist_mtx);
- 
--	netif_start_queue(sdata->dev);
-+	netif_tx_start_all_queues(sdata->dev);
- 	netif_carrier_on(sdata->dev);
- }
- 
-@@ -767,7 +767,7 @@ static void ieee80211_set_disassoc(struc
- 	 * time -- we don't want the scan code to enable queues.
- 	 */
- 
--	netif_stop_queue(sdata->dev);
-+	netif_tx_stop_all_queues(sdata->dev);
- 	netif_carrier_off(sdata->dev);
- 
- 	rcu_read_lock();
---- wireless-testing.orig/net/mac80211/offchannel.c	2010-01-06 12:02:37.000000000 +0100
-+++ wireless-testing/net/mac80211/offchannel.c	2010-01-06 12:03:02.000000000 +0100
-@@ -113,7 +113,7 @@ void ieee80211_offchannel_stop_beaconing
- 		 */
- 		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
- 		    sdata->vif.type != NL80211_IFTYPE_MONITOR)
--			netif_stop_queue(sdata->dev);
-+			netif_tx_stop_all_queues(sdata->dev);
- 	}
- 	mutex_unlock(&local->iflist_mtx);
- }
-@@ -131,7 +131,7 @@ void ieee80211_offchannel_stop_station(s
- 			continue;
- 
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--			netif_stop_queue(sdata->dev);
-+			netif_tx_stop_all_queues(sdata->dev);
- 			if (sdata->u.mgd.associated)
- 				ieee80211_offchannel_ps_enable(sdata);
- 		}
-@@ -153,7 +153,7 @@ void ieee80211_offchannel_return(struct 
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
- 			if (sdata->u.mgd.associated)
- 				ieee80211_offchannel_ps_disable(sdata);
--			netif_wake_queue(sdata->dev);
-+			netif_tx_wake_all_queues(sdata->dev);
- 		}
- 
- 		/* re-enable beaconing */
+Is there any way i can do it?
 
 
+Sometimes, i find that the loading of firmware fails with -110
+(timeout) return value. what i do is rmmod the driver and do a insmod
+again and it works!.
+
+Regards,
+sriram
+
+On Thu, Jan 28, 2010 at 7:58 PM, Holger Schurig <holgerschurig@gmail.com> wrote:
+>> libertas cmd: DNLD_CMD: command 0x0006, seq 9, size 63
+>
+> That is the scan command.
+>
+>> libertas cmd: CMD_RESP: response 0x8006, seq 9, size 11
+>
+> And that the scan response. As I can see from the size (11
+> bytes), it doesn't contain any results. The same happens with
+> the other scan-responses:
+>
+>> libertas cmd: CMD_RESP: response 0x8006, seq 10, size 11
+>> libertas cmd: CMD_RESP: response 0x8006, seq 11, size 11
+>> libertas cmd: CMD_RESP: response 0x8006, seq 12, size 11
+>> libertas cmd: CMD_RESP: response 0x8006, seq 13, size 11
+>> libertas cmd: CMD_RESP: response 0x8006, seq 14, size 11
+>
+> I'd suggest you check your antenna.
+>
+> --
+> http://www.holgerschurig.de
+>
