@@ -1,61 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35676 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754561Ab0AESFn (ORCPT
+Received: from mail-px0-f182.google.com ([209.85.216.182]:51988 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756267Ab0A1OHV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 13:05:43 -0500
-Date: Tue, 5 Jan 2010 19:45:12 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] mac80211: Select lowest rate based on basic rate
- set in AP mode
-Message-ID: <20100105174512.GA12811@jm.kir.nu>
-References: <20091229105919.GB18493@jm.kir.nu>
- <1262683770.20098.12.camel@johannes.local>
+	Thu, 28 Jan 2010 09:07:21 -0500
+Received: by pxi12 with SMTP id 12so566833pxi.33
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2010 06:07:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1262683770.20098.12.camel@johannes.local>
+In-Reply-To: <8bf247761001280439u59a9b6ch1128d42a83116594@mail.gmail.com>
+References: <8bf247761001280439u59a9b6ch1128d42a83116594@mail.gmail.com>
+Date: Thu, 28 Jan 2010 19:37:20 +0530
+Message-ID: <8bf247761001280607i2b90f73j96e3afd02fb6da29@mail.gmail.com>
+Subject: scan does not work
+From: Sriram V <vshrirama@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 05, 2010 at 10:29:30AM +0100, Johannes Berg wrote:
-> On Tue, 2009-12-29 at 12:59 +0200, Jouni Malinen wrote:
-> > +	if (basic_rates & (1 << *idx))
-> > +		return; /* selected rate is a basic rate */
-> > +
-> > +	for (i = *idx + 1; i <= max_rate_idx; i++) {
-> 
-> Starting at *idx+1 only works because it's always 0 or something?
+Hi,
 
-i = *idx case is covered above and this loop is just run if the selected
-rate was not a basic rate. And yes, we only pick the lowest rate
-currently.
+ Initially, i had posted this query on the libertas list - For some reason
+ the query went in for moderation. Hence i post it here again.
+ Sorry for the noise.
 
-> Wouldn't you want to go down from max_rate and find the highest basic
-> rate or so?
 
-That would change behavior in potentially harmful ways, i.e., we could
-end up picking up too high a rate and some of the associated STAs might
-not be close enough to receive the frames. This is really something that
-requires much more care and should be done by the rate control algorithm
-itself (e.g., check that all associated STAs are currently using a rate
-higher than whatever we could pick for multicast/broadcast).
+ I am using libertas 8686 sdio chip. I use linux kernel 2.6.29.
+ The firmware gets downloaded. i see the interface, When i scan, The
+scan always reports 0 APs.
 
-The goal of this new code is to just enforce the must-use-basic-rate
-policy for multicast/broadcast frames. Picking the lowest available
-options sounds like the safest bet here.
+ I have 3 working AP's on my network.
 
-> Other than that seems fine to me, except I'm not sure I like the
-> "txrc.ap" thing much, but it's probably a reasonable choice to make at
-> this point (but consider mesh, IBSS?)
+ This is the result of my libertas debug messages, I am not sure if
+this is a RF issue/sdio issue.
 
-Cannot really say that I would like it much either, but I did not even
-want to think about IBSS rules for basic rates, never mind mesh ;-).
-This can obviously be changed in the future once it is clear that we
-are configuring the basic_rates value properly for other modes.
+  Please advice.
+#ifconfig
+eth0      Link encap:Ethernet  HWaddr 00:21:E8:D3:2C:95
+        UP BROADCAST MULTICAST  MTU:1500  Metric:1
+        RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:1000
+        RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+lo        Link encap:Local Loopback
+        inet addr:127.0.0.1  Mask:255.0.0.0
+        UP LOOPBACK RUNNING  MTU:16436  Metric:1
+        RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:0
+        RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+# ./iwlist eth0 scan
+eth0      No scan results
+
+# ifconfig
+eth0      Link encap:Ethernet  HWaddr 00:21:E8:D3:2C:95
+        UP BROADCAST MULTICAST  MTU:1500  Metric:1
+        RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:1000
+        RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+lo        Link encap:Local Loopback
+        inet addr:127.0.0.1  Mask:255.0.0.0
+        UP LOOPBACK RUNNING  MTU:16436  Metric:1
+        RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+        TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+        collisions:0 txqueuelen:0
+        RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+
+libertas debug prints:
+
+libertas_sdio: Libertas SDIO driver
+libertas_sdio: Copyright Pierre Ossman
+libertas: 00:21:e8:d3:2c:95, fw 9.70.3p24, cap 0x00000303
+libertas: unidentified region code; using the default (USA)
+libertas main: region_cfp_table[i].region=16
+eth0 (libertas_sdio): not using net_device_ops yet
+libertas: PREP_CMD: command 0x00a3 failed: 2
+libertas: PREP_CMD: command 0x00a3 failed: 2
+libertas: eth0: Marvell WLAN 802.11 adapter
+libertas host: PREP_CMD: command 0x0010
+libertas host: QUEUE_CMD: inserted command 0x0010 into cmdpendingq
+libertas host: PREP_CMD: command 0x0028
+libertas host: QUEUE_CMD: inserted command 0x0028 into cmdpendingq
+libertas host: EXEC_NEXT_CMD: sending command 0x0010
+libertas cmd: DNLD_CMD: command 0x0010, seq 7, size 18
+libertas cmd: CMD_RESP: response 0x8010, seq 7, size 18
+libertas host: EXEC_NEXT_CMD: sending command 0x0028
+libertas cmd: DNLD_CMD: command 0x0028, seq 8, size 12
+libertas cmd: CMD_RESP: response 0x8028, seq 8, size 12
+libertas host: PREP_CMD: command 0x0006
+libertas host: QUEUE_CMD: inserted command 0x0006 into cmdpendingq
+libertas host: EXEC_NEXT_CMD: sending command 0x0006
+libertas cmd: DNLD_CMD: command 0x0006, seq 9, size 63
+libertas cmd: CMD_RESP: response 0x8006, seq 9, size 11
+libertas host: PREP_CMD: command 0x0006
+libertas host: QUEUE_CMD: inserted command 0x0006 into cmdpendingq
+libertas host: EXEC_NEXT_CMD: sending command 0x0006
+libertas cmd: DNLD_CMD: command 0x0006, seq 10, size 63
+libertas cmd: CMD_RESP: response 0x8006, seq 10, size 11
+libertas host: PREP_CMD: command 0x0006
+libertas host: QUEUE_CMD: inserted command 0x0006 into cmdpendingq
+libertas host: EXEC_NEXT_CMD: sending command 0x0006
+libertas cmd: DNLD_CMD: command 0x0006, seq 11, size 56
+libertas cmd: CMD_RESP: response 0x8006, seq 11, size 11
+libertas host: PREP_CMD: command 0x0006
+libertas host: QUEUE_CMD: inserted command 0x0006 into cmdpendingq
+libertas host: EXEC_NEXT_CMD: sending command 0x0006
+libertas cmd: DNLD_CMD: command 0x0006, seq 12, size 63
+libertas cmd: CMD_RESP: response 0x8006, seq 12, size 11
+libertas host: PREP_CMD: command 0x0006
+libertas host: QUEUE_CMD: inserted command 0x0006 into cmdpendingq
+libertas host: EXEC_NEXT_CMD: sending command 0x0006
+libertas cmd: DNLD_CMD: command 0x0006, seq 13, size 63
+libertas cmd: CMD_RESP: response 0x8006, seq 13, size 11
+libertas host: PREP_CMD: command 0x0006
+libertas host: QUEUE_CMD: inserted command 0x0006 into cmdpendingq
+libertas host: EXEC_NEXT_CMD: sending command 0x0006
+libertas cmd: DNLD_CMD: command 0x0006, seq 14, size 56
+libertas cmd: CMD_RESP: response 0x8006, seq 14, size 11
+
+
+
+
+
+Regards,
+sriram
