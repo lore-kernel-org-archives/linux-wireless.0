@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60397 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753803Ab0ALSEk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 13:04:40 -0500
-Date: Tue, 12 Jan 2010 13:04:38 -0500
-From: Christoph Hellwig <hch@infradead.org>
-To: Jaswinder Singh Rajput <jaswindermobile@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	alainswb <alainswb@free.fr>, dev@moblin.org,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [Moblin Dev] Wireless is keep on disconnecting
-Message-ID: <20100112180438.GA17003@infradead.org>
-References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com> <995709e41001120217r1b6b276ek70658a1142744142@mail.gmail.com> <4B4C8320.8060801@free.fr> <995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com> <43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com> <995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com> <995709e41001120915h1a156606m837717ffd584fa3e@mail.gmail.com>
+Received: from kroah.org ([198.145.64.141]:38794 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755546Ab0A1Xc6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2010 18:32:58 -0500
+Date: Thu, 28 Jan 2010 15:31:50 -0800
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Till Kamppeter <till.kamppeter@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	lsb-discuss@lists.linux-foundation.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>
+Subject: Re: Linux wireless GSoC 2010 project ideas
+Message-ID: <20100128233150.GB31884@kroah.com>
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
+ <20100128231545.GH18683@nowhere>
+ <43e72e891001281523s56707279x896ab059e6d4e530@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <995709e41001120915h1a156606m837717ffd584fa3e@mail.gmail.com>
+In-Reply-To: <43e72e891001281523s56707279x896ab059e6d4e530@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 12, 2010 at 10:45:29PM +0530, Jaswinder Singh Rajput wrote:
-> Sorry here is dmesg.
+On Thu, Jan 28, 2010 at 03:23:15PM -0800, Luis R. Rodriguez wrote:
+> On Thu, Jan 28, 2010 at 3:15 PM, Frederic Weisbecker <fweisbec@gmail.com> wrote:
+> > I'm sorry if I'm a bit off-topic. But as I see this announce,
+> > I'm wondering about the topics for the google summer of code
+> > in the wider scope of the entire kernel.
+> >
+> > I'm a student and there are fair chances I'll be free for this
+> > summer so I start to think about applying.
+> >
+> > Are there currently some plans concerning other kernel areas?
+> 
+> These would be under the Linux Foundation umbrella, the wireless stuff
+> I just posted is just for wireless. I do not believe we have a common
+> forum yet for general linux stuff. Till?
 
-FYI: since 2.6.32 I also see very frequent disconnects with the no probe
-response messages.  This is with an Intel 5100 card, and can be better
-or worse depending on the AP.  On my home one it makes the kernel
-completely unusable.
+Traditionally, PSU (Portland State University) handles a number of Linux
+kernel related projects for GSoC due to the Linux kernel developers who
+are mentors for them, and the faculty who are very clued into the kernel
+and x.org and general open source development.
 
+Also, the way that PSU handles the projects, is it relies on the
+students to propose the projects, not the other way around.  Due to
+that, the success rate is very high as people do not generally propose
+things that they do not have some kind of interest in :)
+
+So if you have a kernel related project you wish to do, feel free to
+submit it to the PSU group.
+
+thanks,
+
+greg k-h
+
+p.s. I've been a mentor for the PSU GSoC group for many years now.
