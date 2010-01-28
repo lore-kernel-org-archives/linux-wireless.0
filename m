@@ -1,57 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f173.google.com ([209.85.223.173]:49157 "EHLO
-	mail-iw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753339Ab0A3VV6 (ORCPT
+Received: from mail-pz0-f189.google.com ([209.85.222.189]:42340 "EHLO
+	mail-pz0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169Ab0A1WRK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 16:21:58 -0500
-Received: by iwn3 with SMTP id 3so3004129iwn.23
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 13:21:57 -0800 (PST)
-Message-ID: <4B64A2F2.6060608@lwfinger.net>
-Date: Sat, 30 Jan 2010 15:21:54 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 28 Jan 2010 17:17:10 -0500
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Regression in b43 with BCM4311/2
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4B620AD1.8010908@redfish-solutions.com>
+References: <43e72e891001221318p695f0923hea4f3573cedbd78d@mail.gmail.com>
+	<4B61E530.1060008@redfish-solutions.com> <43e72e891001281313g796316f9t4708f9fbc8853a10@mail.gmail.com>
+	<4B620AD1.8010908@redfish-solutions.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 28 Jan 2010 14:16:49 -0800
+Message-ID: <43e72e891001281416qf559ed0v83cdd6ae5fb8f630@mail.gmail.com>
+Subject: Re: Hacking documentation updated for compat-wireless
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+On Thu, Jan 28, 2010 at 2:08 PM, Philip A. Prindeville
+<philipp_subx@redfish-solutions.com> wrote:
+> On 01/28/2010 01:13 PM, Luis R. Rodriguez wrote:
+>> On Thu, Jan 28, 2010 at 11:27 AM, Philip A. Prindeville
+>> <philipp_subx@redfish-solutions.com> wrote:
+>>> On 01/22/2010 01:18 PM, Luis R. Rodriguez wrote:
+>>>> I've updated the hacking documentation for compat-wireless, please let
+>>>> me know if there are any questions:
+>>>>
+>>>> http://wireless.kernel.org/en/users/Download/hacking
+>>>>
+>>>>   Luis
+>>>
+>>> Hi Luis,
+>>>
+>>> Finally got around to reading this.  A couple of things weren't clear to me.
+>>>
+>>> On the page, if the $HOME is assumed to be /home/user, then:
+>>>
+>>> $HOME/wireless-testing is where the generated snapshot is left;
+>>>
+>>> the "git clone" of linux-next, compat, and compat-wireless-2.6 all happen directly in $HOME;
+>>>
+>>> Running this, however, doesn't work:
+>>>
+>>> [philipp@builder ~/cw]$ env | grep GIT
+>>> GIT_TREE=/home/philipp/cw/wireless-testing
+>>
+>> GIT_TREE should be your linux-next tree not wireless-testing tree.
+>>
+>>   Luis
+>
+> Ok, you might want to correct the Wiki then.
 
-I installed my BCM4311/2 card to see if I could reproduce the problems being
-reported in the list. It had been some time since I last used this model, and
-was quite surprised to discover that the maximum transmit rate was only 1 Mb/s.
-It had been much higher in the past. By booting old distributions/kernels, I
-found that 2.6.27 could transmit at rates nearly 20 Mb/s, thus the problem
-occurred in mainline during the 2.6.28 merge. Bisection found the problem to be
-with the following commit:
+Feel free do so yourself, it is a wiki after all, I'd appreciate any
+corrects made.
 
-commit c7ab5ef9bcd281135c21b4732c9be779585181be
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Wed Oct 29 20:02:12 2008 +0100
+> Also, in a cross-building environment, I'm not sure why admin-clean.sh mucks with the host's kernel sources:
+>
+> $ scripts/admin-clean.sh
+> cat: /home/philipp/cw/compat-wireless-2.6/compat-release: No such file or directory
+> cat: /home/philipp/cw/compat-wireless-2.6/compat-release: No such file or directory
+> make[1]: Entering directory `/usr/src/kernels/2.6.32.4-30.fc12.x86_64'
+> scripts/Makefile.clean:17: /home/philipp/cw/compat-wireless-2.6/drivers/bluetooth/Makefile: No such file or directory
+> make[3]: *** No rule to make target `/home/philipp/cw/compat-wireless-2.6/drivers/bluetooth/Makefile'.  Stop.
+> make[2]: *** [/home/philipp/cw/compat-wireless-2.6/drivers/bluetooth] Error 2
+> make[1]: *** [_clean_/home/philipp/cw/compat-wireless-2.6] Error 2
+> make[1]: Leaving directory `/usr/src/kernels/2.6.32.4-30.fc12.x86_64'
+> make: *** [clean] Error 2
+> Cleaned wireless-bt-compat-2.6
+> $
 
-    b43: implement short slot and basic rate handling
+You could read it you know, it runs make clean.
 
-    This implements proper short slot handling and adds code to
-    program the hardware for the correct response rates derived
-    from the basic rate set for the current BSS.
-
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-It seemed unlikely that the short slot handling was the cause, thus I have
-concentrated on the basic rate handling. I found that the returns from
-ieee80211_get_response_rate() were not what I expected. I'm not sure the routine
-is correct; however, the value for "brates" at entry to b43_update_basic_rates()
-is 0xF, thus only the CCK rates are enabled, but sband->n_bitrates is 12, which
-includes all the 802.11g rates.
-
-Is b43 missing something needed to set the basic_rates member of struct
-ieee80211_bxx_conf to a more reasonable value when b43_op_bss_info_changed() is
-entered? I think it should be 0xFFF, not 0xF. I have tested with the larger
-value and found that this change did not improve transmit rates.
-
-Thanks,
-
-Larry
+  Luis
