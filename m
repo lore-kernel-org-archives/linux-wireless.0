@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:49677 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752737Ab0AXKki convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:35471 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662Ab0A1P6o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2010 05:40:38 -0500
-Received: by ewy26 with SMTP id 26so1066361ewy.28
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2010 02:40:37 -0800 (PST)
+	Thu, 28 Jan 2010 10:58:44 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: scan does not work
+Date: Thu, 28 Jan 2010 16:58:09 +0100
+Cc: Sriram V <vshrirama@gmail.com>
+References: <8bf247761001280439u59a9b6ch1128d42a83116594@mail.gmail.com> <201001281528.37342.holgerschurig@gmail.com> <8bf247761001280737v135c8fbfj7a5e1b7eea881d5c@mail.gmail.com>
+In-Reply-To: <8bf247761001280737v135c8fbfj7a5e1b7eea881d5c@mail.gmail.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1264277460.13250.10.camel@maxim-laptop>
-References: <1264277460.13250.10.camel@maxim-laptop>
-Date: Sun, 24 Jan 2010 11:40:37 +0100
-Message-ID: <2d0a357f1001240240k6e8eaefdm3633d3c6e5e30597@mail.gmail.com>
-Subject: Re: mac80211: Breakage in software encryption (iwl3945)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201001281658.09944.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> How do i check if the communication between the host and
+> libertas is proper? 
 
-it is very helpful to give commit-id *and* commit-msg so that others
-can follow more easily.
-Which GIT repository (branch) is that?
+The communication between your device and the CPU on the libertas
+device seems to be correct, otherwise you'd have error messages
+in your dmesg.
 
-Kind Regards,
-- Sedat -
+You can also turn run "lbsdebug +enter +host +cmd +hex" to get
+even more info, but apparently the libertas device doesn't give
+you any scan results back.
 
-On Sat, Jan 23, 2010 at 9:10 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> I updated the kernel and lost connection to my WPA2
-> AP. Strangely the WPA handshake completes, but DHCP not.
->
-> I also unfortunately found that all that time I was using software
-> encryption (this is iwl3945 loaded with swcrypto=1).
-> Hardware encryption doesn't work ether and didn't work in the slightly
-> older kernel (but it did work once, I sure)
->
-> Now, the commit a6bae9e7ab19876a157c91019852395539e4f20e breaks software
-> encryption, with behaviour like described above.
->
-> Best regards,
-> Maxim Levitsky
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Please consider a broken antenna, antenna socket or otherwise
+some error in your RF setup. Or maybe you have 802.11a
+access-points on 5 GHz, while you card can only run 2.4 GHz.
+
+
+Here's for example a dmesg output of a successful scan:
+
+libertas cmd: DNLD_CMD: command 0x0010, seq 239, size 18
+libertas cmd: CMD_RESP: response 0x8010, seq 239, size 18
+libertas cmd: DNLD_CMD: command 0x0028, seq 240, size 12
+libertas cmd: CMD_RESP: response 0x8028, seq 240, size 12
+libertas cmd: DNLD_CMD: command 0x0006, seq 241, size 67
+libertas cmd: CMD_RESP: response 0x8006, seq 241, size 109
+libertas cmd: DNLD_CMD: command 0x0006, seq 242, size 67
+libertas cmd: CMD_RESP: response 0x8006, seq 242, size 11
+libertas cmd: DNLD_CMD: command 0x0006, seq 243, size 67
+libertas cmd: CMD_RESP: response 0x8006, seq 243, size 351
+libertas cmd: DNLD_CMD: command 0x0006, seq 244, size 53
+libertas cmd: CMD_RESP: response 0x8006, seq 244, size 11
+
+See how big the size-numbers for the scan-responses are. That's
+because my device find some APs and returns all the data back.
+
+In your case, with 11-bytes-only response, it doesn't find 
+anything. For example, when I deliberately scan only one 
+channel, where no AP is available, I'll get back the same 11 
+bytes as you. In the following example, I also turned 
+on "lbsdebug +hex". Then I get back:
+
+libertas cmd: CMD_RESP: response 0x8006, seq 246, size 11
+libertas CMD_RESP: 06 80 0b 00 f6 00 00 00 00 00 00
+
+And that is:
+
+   06 08    CMD_802_11_SCAN (actually a response, because the
+            high bit is set)
+   0b 00    size of response (== 11 bytes)
+   f6 00    sequence number
+   00 00    result of command exection (== success)
+   00 00    buffer size of scan response
+   00 00    number of APs in response set
+
+Best regards,
+Holger
+
+-- 
+http://www.holgerschurig.de
