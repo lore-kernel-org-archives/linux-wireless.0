@@ -1,68 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:58840 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753312Ab0ALMs5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 07:48:57 -0500
-Date: Tue, 12 Jan 2010 13:48:56 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 09/17] mwl8k: properly set receive status rate index on 5 GHz receive
-Message-ID: <20100112124856.GY1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from web51403.mail.re2.yahoo.com ([206.190.38.182]:33816 "HELO
+	web51403.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752925Ab0A1IV4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2010 03:21:56 -0500
+Message-ID: <470500.11306.qm@web51403.mail.re2.yahoo.com>
+Date: Thu, 28 Jan 2010 00:21:55 -0800 (PST)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: mac80211: Open bug in current wireless-testing
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
+In-Reply-To: <43e72e891001271012r60356d85k60fe55fbb027aa40@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mwl8k firmware uses indices into the 2.4 GHz band rate table for
-the receive descriptor channel field even if the packet was received
-on a 5 GHz channel, while mac80211 expects an index into the 5 GHz
-band rate table when packets are received on the 5 GHz band, which
-presents a mismatch as the 5 GHz band rate table lacks the five
-non-OFDM rates that the 2.4 GHz rate table starts with.
+Luis, Jouni,
+I found and read the patch in question. If I understand things correctly,
+this provides a way to set a mask that marks the data rates that are
+available for the RC algorithm to choose from. This could be translated 
+into an iw command like this:
 
-To handle this properly, we need to substract 5 from the rate index
-field if the packet was received on a 5 GHz channel (and was not
-received at an MCS rate).
+iw dev wlan0 rates 54M,11M
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   16 ++++++++++++++--
- 1 files changed, 14 insertions(+), 2 deletions(-)
+and then the current RC algorithm would be limited to choose either 54M or
+11M as TX data rate. Is this correct?
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 13dded4..cc2ce61 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -759,7 +759,13 @@ mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
- 		}
- 	}
- 
--	status->band = IEEE80211_BAND_2GHZ;
-+	if (rxd->channel > 14) {
-+		status->band = IEEE80211_BAND_5GHZ;
-+		if (!(status->flag & RX_FLAG_HT))
-+			status->rate_idx -= 5;
-+	} else {
-+		status->band = IEEE80211_BAND_2GHZ;
-+	}
- 	status->freq = ieee80211_channel_to_frequency(rxd->channel);
- 
- 	*qos = rxd->qos_control;
-@@ -850,7 +856,13 @@ mwl8k_rxd_sta_process(void *_rxd, struct ieee80211_rx_status *status,
- 	if (rate_info & MWL8K_STA_RATE_INFO_MCS_FORMAT)
- 		status->flag |= RX_FLAG_HT;
- 
--	status->band = IEEE80211_BAND_2GHZ;
-+	if (rxd->channel > 14) {
-+		status->band = IEEE80211_BAND_5GHZ;
-+		if (!(status->flag & RX_FLAG_HT))
-+			status->rate_idx -= 5;
-+	} else {
-+		status->band = IEEE80211_BAND_2GHZ;
-+	}
- 	status->freq = ieee80211_channel_to_frequency(rxd->channel);
- 
- 	*qos = rxd->qos_control;
+Selecting a single fixed data rate would mean to only mark one data rate 
+as available. I think this meats my requirements in this area. However,
+I still have another problem: We use Madwifi to multicast video streams.
+
+With Madwifi we have an iwpriv call that allows the selection of the multicast/broadcast data rate. We need something equivalent for mac80211
+before we can make the switch.
+
 -- 
-1.5.6.4
+Regards
+       Joerg
+
+
+--- Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+
+> Von: Luis R. Rodriguez <mcgrof@gmail.com>
+> Betreff: Re: mac80211: Open bug in current wireless-testing
+> An: "Joerg Pommnitz" <pommnitz@yahoo.com>
+> CC: linux-wireless@vger.kernel.org, "Jouni.Malinen" <Jouni.Malinen@atheros.com>
+> Datum: Mittwoch, 27. Januar 2010, 19:12
+> On Wed, Jan 27, 2010 at 6:17 AM,
+> Joerg Pommnitz <pommnitz@yahoo.com>
+> wrote:
+> > Hello all,
+> > some time ago I reported that it is currently
+> impossible to change a manually selected data rate back to
+> the automatic rate selection. This bug is still present and
+> is easy to reproduce:
+> >
+> > iwconfig wlan0 rate 54M
+> > iwconfig wlan0 rate auto
+> >
+> > I know that the wireless extensions are deprecated,
+> but until iw supports manual rate selection, iwconfig is
+> what I have to use.
+> 
+> Review the patch:
+> 
+> Author: Jouni Malinen <jouni.malinen@atheros.com>
+> Date:   Tue Dec 29 12:59:45 2009 +0200
+> 
+>     nl80211: New command for setting TX rate mask
+> for rate control
+> 
+>     Add a new NL80211_CMD_SET_TX_BITRATE_MASK
+> command and related
+>     attributes to provide support for setting TX
+> rate mask for rate
+>     control. This uses the existing cfg80211
+> set_bitrate_mask operation
+>     that was previously used only with WEXT
+> compat code (SIOCSIWRATE). The
+>     nl80211 command allows more generic
+> configuration of allowed rates as
+>     a mask instead of fixed/max rate.
+> 
+>     Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+>     Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> I think that addresses this, not sure if we ever got the iw
+> equivalent
+> patches to let userspace use this yet.
+> 
+> There are however three wext things which we still do need
+> implement to nl80211:
+> 
+> iwconfig wlan0 txpower 17 # sets TX output power to 17 dBm
+> iwconfig wlan0 power off # disables power save
+> iwconfig wlan0 power 500m # enables dynamic power wave with
+> 500ms idle
+> timeout trigger
+> 
+> I've stuffed this int our todo list [1], if you confirm
+> that the above
+> patch does not yet address what you wish please add it to
+> the todo
+> list.
+> 
+> http://wireless.kernel.org/en/developers/todo-list
+> 
+>   Luis
+> 
+
+__________________________________________________
+Do You Yahoo!?
+Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
+http://mail.yahoo.com 
