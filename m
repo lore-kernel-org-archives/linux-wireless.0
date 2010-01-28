@@ -1,113 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52458 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752750Ab0ACVQZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2010 16:16:25 -0500
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id 8B46DEB6BC
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:38 +0200 (EET)
-Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
-	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 7349727D8B
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Jan 2010 23:07:37 +0200 (EET)
-Subject: [PATCH 2/9] mac80211: use PS Poll and Nullfunc templates when sending
-	such frames
+Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:40426 "HELO
+	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751599Ab0A1PNb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2010 10:13:31 -0500
+Message-ID: <774870.89795.qm@web51401.mail.re2.yahoo.com>
+Date: Thu, 28 Jan 2010 07:13:30 -0800 (PST)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Significiant performance differences between ath5k and ath9k in 802.11a
 To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 03 Jan 2010 23:07:37 +0200
-Message-ID: <20100103210737.29287.86904.stgit@tikku>
-In-Reply-To: <20100103210552.29287.20384.stgit@tikku>
-References: <20100103210552.29287.20384.stgit@tikku>
+Cc: ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+Hello all,
+I have a strange performance problem with ath9k. I have two otherwise identical systems with an ath5k-supported card in system ATH5K and an ath9k supported card in system ATH9K.
+Doing an UDP iperf run were ATH5K is the client/sender and ATH9K is the server/receiver I easily get data rates of 31MBit/s (tx data rate on the sender is manually set to 54 MBit/s).
+Running the same test with ATH9K as client/sender and ATH5K as server/receiver gives maximum data rates of about 22MBit/s, about 30% less.
 
-To avoid duplicate code, use ieee80211_[pspoll|nullfunc]_get() to get
-templates for PS Poll and Nullfunc frames in mlme.c.
+Doing the test against another ath9k system (e.g. ATH9K ==> ATH9K2) gives
+the same max data rate of only 22 MBit/s, so the problem seems to be the
+ath9k driver or the hardware. Can anybody confirm these problems? Is this
+a known limitation? Any buttons to push to get things going faster?
 
-Compile-tested only.
+Details:
+the ath5k card is a AR2413 based design (Compex WLM54AG), the ath9k card
+is a AR9220 (Compex WLM200NX 6A). The systems are connected in IBSS mode 
+on channel 40 (5200MHz).
+The kernel version is wireless-testing as of January, 26. The kernel is
+slightly patched to enable IBSS in 802.11a (we are allowed to do this).
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
- net/mac80211/mlme.c |   48 +++++++++---------------------------------------
- 1 files changed, 9 insertions(+), 39 deletions(-)
+Can anybody shed some light on this strange issue? Luis?
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 72920ee..7f771c0 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -249,30 +249,15 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
- void ieee80211_send_pspoll(struct ieee80211_local *local,
- 			   struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_pspoll *pspoll;
- 	struct sk_buff *skb;
--	u16 fc;
- 
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*pspoll));
--	if (!skb) {
--		printk(KERN_DEBUG "%s: failed to allocate buffer for "
--		       "pspoll frame\n", sdata->name);
-+	skb = ieee80211_pspoll_get(&local->hw, &sdata->vif);
-+	if (!skb)
- 		return;
--	}
--	skb_reserve(skb, local->hw.extra_tx_headroom);
--
--	pspoll = (struct ieee80211_pspoll *) skb_put(skb, sizeof(*pspoll));
--	memset(pspoll, 0, sizeof(*pspoll));
--	fc = IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL | IEEE80211_FCTL_PM;
--	pspoll->frame_control = cpu_to_le16(fc);
--	pspoll->aid = cpu_to_le16(ifmgd->aid);
- 
--	/* aid in PS-Poll has its two MSBs each set to 1 */
--	pspoll->aid |= cpu_to_le16(1 << 15 | 1 << 14);
--
--	memcpy(pspoll->bssid, ifmgd->bssid, ETH_ALEN);
--	memcpy(pspoll->ta, sdata->vif.addr, ETH_ALEN);
-+	pspoll = (struct ieee80211_pspoll *) skb->data;
-+	pspoll->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 	ieee80211_tx_skb(sdata, skb);
-@@ -283,30 +268,15 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 			     int powersave)
- {
- 	struct sk_buff *skb;
--	struct ieee80211_hdr *nullfunc;
--	__le16 fc;
-+	struct ieee80211_hdr_3addr *nullfunc;
- 
--	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
-+	skb = ieee80211_nullfunc_get(&local->hw, &sdata->vif);
-+	if (!skb)
- 		return;
- 
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 24);
--	if (!skb) {
--		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
--		       "frame\n", sdata->name);
--		return;
--	}
--	skb_reserve(skb, local->hw.extra_tx_headroom);
--
--	nullfunc = (struct ieee80211_hdr *) skb_put(skb, 24);
--	memset(nullfunc, 0, 24);
--	fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_NULLFUNC |
--			 IEEE80211_FCTL_TODS);
-+	nullfunc = (struct ieee80211_hdr_3addr *) skb->data;
- 	if (powersave)
--		fc |= cpu_to_le16(IEEE80211_FCTL_PM);
--	nullfunc->frame_control = fc;
--	memcpy(nullfunc->addr1, sdata->u.mgd.bssid, ETH_ALEN);
--	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
--	memcpy(nullfunc->addr3, sdata->u.mgd.bssid, ETH_ALEN);
-+		nullfunc->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 	ieee80211_tx_skb(sdata, skb);
+-- 
+Regards
+       Joerg
 
+__________________________________________________
+Do You Yahoo!?
+Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
+http://mail.yahoo.com 
