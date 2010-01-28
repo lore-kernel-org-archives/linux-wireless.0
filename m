@@ -1,81 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51042 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756074Ab0AVSp3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 13:45:29 -0500
-Subject: Re: [PATCH] mac80211: avoid NULL ptr deref when using WEP
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from web51401.mail.re2.yahoo.com ([206.190.38.180]:27199 "HELO
+	web51401.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754422Ab0A1IfA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2010 03:35:00 -0500
+Message-ID: <451620.55807.qm@web51401.mail.re2.yahoo.com>
+Date: Thu, 28 Jan 2010 00:34:59 -0800 (PST)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [PATCH] cfg80211: fix wext-compat for setting rate to 'auto'
 To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1264181989-28483-1-git-send-email-linville@tuxdriver.com>
-References: <1264181989-28483-1-git-send-email-linville@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V8qfxz27lvf1tCc39TE/"
-Date: Fri, 22 Jan 2010 19:45:24 +0100
-Message-ID: <1264185924.2593.0.camel@johannes.local>
-Mime-Version: 1.0
+In-Reply-To: <20100127161725.GC2962@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John,
+I switched between a fixed data rate and automatic selection. Selecting a
+fixed data rate seems to work fine. I can't be 100% sure, because the
+RC algorithm might have decided to pick exactly this rate, but this would
+be very unlikely. Switching back to auto looks good, too.
 
---=-V8qfxz27lvf1tCc39TE/
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2010-01-22 at 12:39 -0500, John W. Linville wrote:
-> "mac80211: move control.hw_key assignment" changed an if-else into two
-> separate if statments, but the if-else is needed to prevent
-> dereferencing a null info->control.hw_key.  This fixes avoids a lock-up
-> during association on my machine when using WEP.
-
-Indeed, good catch, wonder how I arrived at that code.
-
-johannes
-
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  net/mac80211/wep.c |    5 ++---
->  1 files changed, 2 insertions(+), 3 deletions(-)
->=20
-> diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-> index 0a4c641..5d745f2 100644
-> --- a/net/mac80211/wep.c
-> +++ b/net/mac80211/wep.c
-> @@ -310,9 +310,8 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *=
-tx, struct sk_buff *skb)
->  					  tx->key->conf.keylen,
->  					  tx->key->conf.keyidx))
->  			return -1;
-> -	}
-> -
-> -	if (info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) {
-> +	} else if (info->control.hw_key->flags &
-> +			IEEE80211_KEY_FLAG_GENERATE_IV) {
->  		if (!ieee80211_wep_add_iv(tx->local, skb,
->  					  tx->key->conf.keylen,
->  					  tx->key->conf.keyidx))
+-- 
+Regards
+       Joerg
 
 
---=-V8qfxz27lvf1tCc39TE/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+--- John W. Linville <linville@tuxdriver.com> schrieb am Mi, 27.1.2010:
 
------BEGIN PGP SIGNATURE-----
+> Von: John W. Linville <linville@tuxdriver.com>
+> Betreff: Re: [PATCH] cfg80211: fix wext-compat for setting rate to 'auto'
+> An: "Joerg Pommnitz" <pommnitz@yahoo.com>
+> CC: linux-wireless@vger.kernel.org
+> Datum: Mittwoch, 27. Januar 2010, 17:17
+> On Wed, Jan 27, 2010 at 07:51:06AM
+> -0800, Joerg Pommnitz wrote:
+> > John,
+> > thanks for the quick response. The patch works fine
+> for me. Feel free to add a
+> > 
+> > Tested-by: "Joerg Pommnitz" <pommnitz@yahoo.com>
+> 
+> Joerg,
+> 
+> I still haven't had time for a reboot. :-(  I wonder
+> if you tested
+> to make sure that using "fixed" or just a rate by itself
+> still works
+> properly too?
+> 
+> Thanks!
+> 
+> John
+> -- 
+> John W. Linville       
+> Someday the world will need a hero, and you
+> linville@tuxdriver.com   
+>         might be all we
+> have.  Be ready.
+> 
 
-iQIcBAABAgAGBQJLWfJBAAoJEODzc/N7+QmaBvgP/jQJ43N4FpnilW8sEEEQmF6Z
-KkJzllevBDa+nrDzwY+0tfsoZrJWXf5yFAuhi9Z0eOWUlgv3TGvgT3iFIys7tZ6e
-vZrXw0yBQwd+rXt5MK7XKMNyBqJZLCLjeUfLeHIPoPv3iQKV5n4ciIgrQr84qeIM
-zlv/aI98p0uyz4Pfs71nDOB3G1d/cNDk5GzErrnvwhZTkO/d5BouvvHRxwM6qXPn
-5c1+JMCy5e1AI85X17TFqf+T0x/KmKBUv1KufoAcdj9rgPkTpehZyXsiyWaWPoKi
-ppGY92e1dWSq0ATzwrfGOukUHuTGiCARZcoR+5yuDdjHlNeWmS9Gs3C3Cx4+TfWA
-KZ4FTnSou7+K+Aixnm+/9vy6Un1fZhkHgJ3XlJ638MWXAbxFz3hf93Lx+4a5WaKV
-/zNlvER/F8+NwWBOW2nFbsISo1i0BcfwiFdnR/6WMRFbL4acXs2zWl+DUu2eh0o0
-ISkkKeMRUi/ALzRgiCTEHGUzYNec5R9MChPz6SqgJxYerQu20DeZP8YpQHSCtZSu
-oPE+oQizGrmhGyx3e/kDEnRhfpIJhGgF4HfRsWhmDMds1eTVIXYdAq2l/nQAQkbf
-FYiRoJst8yYqc1g7SmKS1eRJUEk7XW6fquiulLuujqC3mvwtur5N00mWcxg2U9ye
-fjYkZlAQi4N/Rb63nW7X
-=DVri
------END PGP SIGNATURE-----
-
---=-V8qfxz27lvf1tCc39TE/--
-
+__________________________________________________
+Do You Yahoo!?
+Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
+http://mail.yahoo.com 
