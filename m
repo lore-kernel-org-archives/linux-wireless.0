@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:36699 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754541Ab0AMXj6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 18:39:58 -0500
-Received: by ewy1 with SMTP id 1so231341ewy.28
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2010 15:39:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b170af451001121451p73941b5ema0fb9be8685335ae@mail.gmail.com>
-References: <op.u6fp5shd9lhzdc@linux-g0th.site>
-	 <201001122310.21654.mb@bu3sch.de>
-	 <b170af451001121451p73941b5ema0fb9be8685335ae@mail.gmail.com>
-Date: Thu, 14 Jan 2010 00:39:54 +0100
-Message-ID: <b170af451001131539p3974307fv8aad39a4ec71de9a@mail.gmail.com>
-Subject: Re: [PATCH 1/3] b43: N-PHY: add b43_nphy_rx_iq_est and
-	b43_nphy_tx_iq_workaround
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: bcm43xx-dev@lists.berlios.de,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:42917 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752485Ab0A2UcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 15:32:13 -0500
+From: <shanyu.zhao@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Shanyu Zhao <shanyu.zhao@intel.com>
+Subject: [PATCH 1/1] cfg80211: wext: fix cfg80211's SIOCSIWAP function
+Date: Fri, 29 Jan 2010 12:32:06 -0800
+Message-Id: <1264797126-6064-1-git-send-email-shanyu.zhao@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 12 stycznia 2010 23:51 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> 2010/1/12 Michael Buesch <mb@bu3sch.de>:
->> On Tuesday 12 January 2010 20:38:07 Rafał Miłecki wrote:
->>>   struct nphy_txgains { u16 txgm[2]; u16 pga[2]; u16 pad[2]; u16 ipa[2]; };
->>> +struct nphy_iq_est { s32 iq0_prod; u32 i0_pwr; u32 q0_pwr; s32 iq1_prod;
->>> +                     u32 i1_pwr; u32 q1_pwr; };
->>
->> So it seems I didn't notice this earlier, but this violates kernel coding style.
->> Please do a separate patch that converts all structs from
->> struct foo { a; b; c; };
->> to
->> struct foo {
->>        a;
->>        b;
->>        c;
->> };
->
-> OK, will do.
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-I'll use separated patch to correct old wrong-styled definitions. No
-reason to use wrong style when adding new struct with this patch.
+The cfg80211's SIOCSIWAP function is broken, the reason is we cannot
+get the correct bss with previously set ssid. Need to clear it by
+setting ssid_len to 0 in cfg80211_mgd_wext_siwap() and fix other
+places accordingly.
 
+Cc: stable@kernel.org
+
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+---
+v2: Adding Cc to stable@kernel.org
+---
+ net/wireless/sme.c      |    9 +++++++--
+ net/wireless/wext-sme.c |    3 ++-
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 745c37e..51c3cdb 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -779,10 +779,15 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 			wdev->conn->auto_auth = false;
+ 		}
+ 
+-		memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
++		/* make sure it can connect if only bssid is provided */
+ 		wdev->ssid_len = connect->ssid_len;
+-		wdev->conn->params.ssid = wdev->ssid;
+ 		wdev->conn->params.ssid_len = connect->ssid_len;
++		if (connect->ssid_len) {
++			memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
++			wdev->conn->params.ssid = wdev->ssid;
++		}
++		else
++			wdev->conn->params.ssid = NULL;
+ 
+ 		/* see if we have the bss already */
+ 		bss = cfg80211_get_conn_bss(wdev);
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 5615a88..eede356 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -34,7 +34,7 @@ int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
+ 			wdev->wext.connect.privacy = true;
+ 	}
+ 
+-	if (!wdev->wext.connect.ssid_len)
++	if (!wdev->wext.connect.ssid_len && !wdev->wext.connect.bssid)
+ 		return 0;
+ 
+ 	if (wdev->wext.keys) {
+@@ -280,6 +280,7 @@ int cfg80211_mgd_wext_siwap(struct net_device *dev,
+ 	if (bssid) {
+ 		memcpy(wdev->wext.bssid, bssid, ETH_ALEN);
+ 		wdev->wext.connect.bssid = wdev->wext.bssid;
++		wdev->wext.connect.ssid_len = 0;
+ 	} else
+ 		wdev->wext.connect.bssid = NULL;
+ 
 -- 
-Rafał
+1.6.0.4
+
