@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:12637 "EHLO smtp1.irobot.com"
+Received: from mga11.intel.com ([192.55.52.93]:35013 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754640Ab0AUUQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 15:16:46 -0500
-Message-ID: <4B58B62B.4060905@irobot.com>
-Date: Thu, 21 Jan 2010 12:16:43 -0800
-From: Adam Wozniak <awozniak@irobot.com>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, mcgrof@infradead.org
-Subject: Re: [PATCH] compat: fix build on arm
-References: <43e72e891001211012y4f4c8721t7eb9e0eea0221820@mail.gmail.com> <1264102368-8918-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1264102368-8918-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1754036Ab0A2TyL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 14:54:11 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/12] iwlwifi: remove unused work structs
+Date: Fri, 29 Jan 2010 11:54:00 -0800
+Message-Id: <1264794842-8046-11-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
+References: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Confirm; this fixes the compile issue for ARM
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hauke Mehrtens wrote:
-> ARM does not provided the include file asm/compat.h. Use linux/compat.h
-> instead, it includes asm/compat.h if needed.
-> This patch is from OpenWRT:
-> https://dev.openwrt.org/browser/trunk/package/mac80211/patches/020-fix_compat_h.patch?rev=19063
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  include/linux/compat-2.6.32.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
-> index c3e4dbe..11060d8 100644
-> --- a/include/linux/compat-2.6.32.h
-> +++ b/include/linux/compat-2.6.32.h
-> @@ -6,7 +6,7 @@
->  #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32))
->  
->  #include <linux/netdevice.h>
-> -#include <asm/compat.h>
-> +#include <linux/compat.h>
->  #include <net/iw_handler.h>
->  #include <linux/workqueue.h>
->  
->   
+auth_work, calibrated_work, update_link_led
+and report_work are never used, so remove them.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 1cd565a..55dc5a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1265,13 +1265,9 @@ struct iwl_priv {
+ 	struct workqueue_struct *workqueue;
+ 
+ 	struct work_struct restart;
+-	struct work_struct calibrated_work;
+ 	struct work_struct scan_completed;
+ 	struct work_struct rx_replenish;
+ 	struct work_struct abort_scan;
+-	struct work_struct update_link_led;
+-	struct work_struct auth_work;
+-	struct work_struct report_work;
+ 	struct work_struct request_scan;
+ 	struct work_struct beacon_update;
+ 	struct work_struct tt_work;
+-- 
+1.6.3.3
 
