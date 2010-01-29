@@ -1,34 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.223.194]:44984 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706Ab0AGW0t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2010 17:26:49 -0500
-Received: by iwn32 with SMTP id 32so2683024iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2010 14:26:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1262903089-1958-1-git-send-email-lrodriguez@atheros.com>
-References: <1262903089-1958-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 7 Jan 2010 14:26:29 -0800
-Message-ID: <43e72e891001071426l754d254jaf20a31a120b6d56@mail.gmail.com>
-Subject: Re: [PATCH] hostapd: add country IE debugging options
-To: linville@tuxdriver.com, johannes@sipsolutions.net
+Received: from mga11.intel.com ([192.55.52.93]:35013 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752029Ab0A2TyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 14:54:09 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 00/12] iwlwifi updates for 2.6.34
+Date: Fri, 29 Jan 2010 11:53:50 -0800
+Message-Id: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 7, 2010 at 2:24 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> If you want to debug parsing of country IEs on your
-> client you can enable the CONFIG_COUNTRY_DBG and then
-> select the desired triplet. We add four tests cases you
-> can use.
->
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+In this series we update the sensitivity calibration data for newer devices.
+The rest of the series consists of cleanup and fixes. We include an optimization
+where commands are not sent to device unnecessarily. The rest of the fixes
+and cleanup addresses various items that the subject line summarizes.
 
-Please ignore this one, I posted it to the wrong list.
+These patches are also available from wireless-next-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-  Luis
+Daniel Halperin (1):
+  iwlwifi: optimize power saving
+
+Johannes Berg (6):
+  iwlwifi: fix locking in iwl_mac_add_interface
+  iwlwifi: no need to test iw_mode in power saving
+  iwlagn: simplify ucode loading
+  iwlwifi: remove bg_up work
+  iwlwifi: remove unused work structs
+  iwlwifi: fix typo in IWL_CCK_RATES_MASK
+
+Reinette Chatre (1):
+  iwlwifi: iwl_power_update_mode always hold mutex
+
+Wey-Yi Guy (4):
+  iwlwifi: sysassert identifier change
+  iwlwifi: update sensitivity calibration data for 6x00 series
+  iwlwifi: update sensitivity calibration data for 5x00 series
+  iwlwifi: update sensitivity calibration data for 1000 series
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |   72 ++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   67 +++++++++----------------
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h   |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   25 ++++------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   15 +++---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    5 --
+ drivers/net/wireless/iwlwifi/iwl-power.c    |    5 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   21 +++-----
+ 10 files changed, 125 insertions(+), 91 deletions(-)
+
