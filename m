@@ -1,40 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:1055 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752589Ab0A1O3M (ORCPT
+Received: from mail-px0-f182.google.com ([209.85.216.182]:44546 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502Ab0A2RLN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2010 09:29:12 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: scan does not work
-Date: Thu, 28 Jan 2010 15:28:36 +0100
-Cc: Sriram V <vshrirama@gmail.com>
-References: <8bf247761001280439u59a9b6ch1128d42a83116594@mail.gmail.com> <8bf247761001280607i2b90f73j96e3afd02fb6da29@mail.gmail.com>
-In-Reply-To: <8bf247761001280607i2b90f73j96e3afd02fb6da29@mail.gmail.com>
+	Fri, 29 Jan 2010 12:11:13 -0500
+Received: by pxi12 with SMTP id 12so1723751pxi.33
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2010 09:11:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201001281528.37342.holgerschurig@gmail.com>
+In-Reply-To: <20100129112651.GA1862@user-laptop>
+References: <20100129112651.GA1862@user-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 29 Jan 2010 09:10:52 -0800
+Message-ID: <43e72e891001290910odd98f15l141209817dd7d0d6@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Handle full sleep in ps_restore.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> libertas cmd: DNLD_CMD: command 0x0006, seq 9, size 63
+On Fri, Jan 29, 2010 at 3:26 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+> IDLE PS (Full Sleep) doesn't work when ifconfig up
+> is done during Idle unassociated state.
+> Fix this by restoring FULL SLEEP in ps_restore if CONF_IDLE
+> is set.
 
-That is the scan command.
+Is this is stable fix too?
 
-> libertas cmd: CMD_RESP: response 0x8006, seq 9, size 11
-
-And that the scan response. As I can see from the size (11 
-bytes), it doesn't contain any results. The same happens with 
-the other scan-responses:
-
-> libertas cmd: CMD_RESP: response 0x8006, seq 10, size 11
-> libertas cmd: CMD_RESP: response 0x8006, seq 11, size 11
-> libertas cmd: CMD_RESP: response 0x8006, seq 12, size 11
-> libertas cmd: CMD_RESP: response 0x8006, seq 13, size 11
-> libertas cmd: CMD_RESP: response 0x8006, seq 14, size 11
-
-I'd suggest you check your antenna.
-
--- 
-http://www.holgerschurig.de
+  Luis
