@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:53848 "EHLO ds10.nbd.name"
+Received: from mga11.intel.com ([192.55.52.93]:35013 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751295Ab0A3RBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 12:01:44 -0500
-Message-ID: <4B6465F4.1080901@openwrt.org>
-Date: Sat, 30 Jan 2010 18:01:40 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Greg Oliver <oliver.greg@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Multiple SSID on same phy
-References: <20100129122718.73a6c877@nehalam>	 <1264866128.3546.185.camel@johannes.local>	 <51058d551001300751r4a509e90i521c946dfe9dec4@mail.gmail.com>	 <1264867217.3546.186.camel@johannes.local>	 <51058d551001300814y66d1d589uae15fa50086593b8@mail.gmail.com>	 <1264868231.3546.188.camel@johannes.local>	 <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com> <1264868803.3546.189.camel@johannes.local>
-In-Reply-To: <1264868803.3546.189.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+	id S1752029Ab0A2TyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 14:54:10 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/12] iwlwifi: update sensitivity calibration data for 5x00 series
+Date: Fri, 29 Jan 2010 11:53:55 -0800
+Message-Id: <1264794842-8046-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
+References: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-01-30 5:26 PM, Johannes Berg wrote:
-> On Sat, 2010-01-30 at 10:22 -0600, Greg Oliver wrote:
-> 
->> > I don't think I can parse that. In any case, a possible use case would
->> > for instance be a protected company network, along with an unprotected,
->> > internet-only guest network.
->> 
->> 
->> Hmmm, I would put the odds at that happening about 100,000:1 (if not more)
->> 
->> Yes, I know it is feasible, but HIGHLY unlikely.
-> 
-> It's not. openwrt for example has that as a default configuration. Even
-> fonera does.
-OpenWrt doesn't even bring up wifi in the default config. It has a one
-configured AP mode interface per PHY, which is disabled by default ;)
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-- Felix
+Update sensitivity range values for 5x00 series
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 6027e2a..6bb433a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -263,8 +263,8 @@ static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
+ 
+ 	.auto_corr_max_ofdm = 120,
+ 	.auto_corr_max_ofdm_mrc = 210,
+-	.auto_corr_max_ofdm_x1 = 155,
+-	.auto_corr_max_ofdm_mrc_x1 = 290,
++	.auto_corr_max_ofdm_x1 = 120,
++	.auto_corr_max_ofdm_mrc_x1 = 240,
+ 
+ 	.auto_corr_min_cck = 125,
+ 	.auto_corr_max_cck = 200,
+-- 
+1.6.3.3
+
