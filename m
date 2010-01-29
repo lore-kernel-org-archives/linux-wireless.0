@@ -1,52 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f187.google.com ([209.85.210.187]:42345 "EHLO
-	mail-yx0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101Ab0ABRk5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2010 12:40:57 -0500
-Received: by yxe17 with SMTP id 17so12758071yxe.33
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2010 09:40:57 -0800 (PST)
-Message-ID: <4B3F8527.3000306@lwfinger.net>
-Date: Sat, 02 Jan 2010 11:40:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Add new SSB's core id for BCM4328
-References: <op.u5wyi5dd9lhzdc@linux-g0th.site> <4B3F78ED.4090101@lwfinger.net> <b170af451001020855v3892909o134636ad1c8f5586@mail.gmail.com>
-In-Reply-To: <b170af451001020855v3892909o134636ad1c8f5586@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:4015 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754469Ab0A2TyK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 14:54:10 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/12] iwlagn: simplify ucode loading
+Date: Fri, 29 Jan 2010 11:53:58 -0800
+Message-Id: <1264794842-8046-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
+References: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/02/2010 10:55 AM, Rafał Miłecki wrote:
-> W dniu 2 stycznia 2010 17:48 użytkownik Larry Finger
-> <Larry.Finger@lwfinger.net> napisał:
->> Your tabs have been converted to spaces.
->>
->> Most of my patches are sent using the mail command; however, I can send them
->> with Thunderbird using the following steps:
-> 
-> Oh great :| I guess I'll just try mail command.
-> 
-> 
->> I'm not sure how far you have gotten with the code, but I have been working with
->> a new driver with version 5.10.56.46. There are a lot of changes from the
->> 4.174... that was previously reverse-engineered.
-> 
-> I don't have anything more than posted patches.
-> 
-> What do you suggest about writing next (real) parts? Is that worth
-> effort basing code on current RE docs? Maybe some parts only, that
-> didn't change? Or should I just wait for update (is anyone working on
-> it)?
+From: Johannes Berg <johannes.berg@intel.com>
 
-I have finished the initialization routine found in
-http://bcm-v4.sipsolutions.net/802.11/PHY/Init/N. I still have 6 or 8 of the
-routines called to prepare and some of the others to check, but you could at
-least code the main routine with dummy stubs for the called routines..
+Move the waiting into iwl5000_load_section instead
+of duplicating it in the caller.
 
-You should check with Gabor regarding PHY and radio register names.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   63 +++++++++++--------------------
+ 1 files changed, 22 insertions(+), 41 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 6bb433a..6d59889 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -412,12 +412,14 @@ static void iwl5000_rx_calib_complete(struct iwl_priv *priv,
+ /*
+  * ucode
+  */
+-static int iwl5000_load_section(struct iwl_priv *priv,
+-				struct fw_desc *image,
+-				u32 dst_addr)
++static int iwl5000_load_section(struct iwl_priv *priv, const char *name,
++				struct fw_desc *image, u32 dst_addr)
+ {
+ 	dma_addr_t phy_addr = image->p_addr;
+ 	u32 byte_cnt = image->len;
++	int ret;
++
++	priv->ucode_write_complete = 0;
+ 
+ 	iwl_write_direct32(priv,
+ 		FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
+@@ -447,57 +449,36 @@ static int iwl5000_load_section(struct iwl_priv *priv,
+ 		FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE	|
+ 		FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD);
+ 
+-	return 0;
+-}
+-
+-static int iwl5000_load_given_ucode(struct iwl_priv *priv,
+-		struct fw_desc *inst_image,
+-		struct fw_desc *data_image)
+-{
+-	int ret = 0;
+-
+-	ret = iwl5000_load_section(priv, inst_image,
+-				   IWL50_RTC_INST_LOWER_BOUND);
+-	if (ret)
+-		return ret;
+-
+-	IWL_DEBUG_INFO(priv, "INST uCode section being loaded...\n");
++	IWL_DEBUG_INFO(priv, "%s uCode section being loaded...\n", name);
+ 	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
+ 					priv->ucode_write_complete, 5 * HZ);
+ 	if (ret == -ERESTARTSYS) {
+-		IWL_ERR(priv, "Could not load the INST uCode section due "
+-			"to interrupt\n");
++		IWL_ERR(priv, "Could not load the %s uCode section due "
++			"to interrupt\n", name);
+ 		return ret;
+ 	}
+ 	if (!ret) {
+-		IWL_ERR(priv, "Could not load the INST uCode section\n");
++		IWL_ERR(priv, "Could not load the %s uCode section\n",
++			name);
+ 		return -ETIMEDOUT;
+ 	}
+ 
+-	priv->ucode_write_complete = 0;
+-
+-	ret = iwl5000_load_section(
+-		priv, data_image, IWL50_RTC_DATA_LOWER_BOUND);
+-	if (ret)
+-		return ret;
++	return 0;
++}
+ 
+-	IWL_DEBUG_INFO(priv, "DATA uCode section being loaded...\n");
++static int iwl5000_load_given_ucode(struct iwl_priv *priv,
++		struct fw_desc *inst_image,
++		struct fw_desc *data_image)
++{
++	int ret = 0;
+ 
+-	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
+-				priv->ucode_write_complete, 5 * HZ);
+-	if (ret == -ERESTARTSYS) {
+-		IWL_ERR(priv, "Could not load the INST uCode section due "
+-			"to interrupt\n");
++	ret = iwl5000_load_section(priv, "INST", inst_image,
++				   IWL50_RTC_INST_LOWER_BOUND);
++	if (ret)
+ 		return ret;
+-	} else if (!ret) {
+-		IWL_ERR(priv, "Could not load the DATA uCode section\n");
+-		return -ETIMEDOUT;
+-	} else
+-		ret = 0;
+-
+-	priv->ucode_write_complete = 0;
+ 
+-	return ret;
++	return iwl5000_load_section(priv, "DATA", data_image,
++				    IWL50_RTC_DATA_LOWER_BOUND);
+ }
+ 
+ int iwl5000_load_ucode(struct iwl_priv *priv)
+-- 
+1.6.3.3
+
