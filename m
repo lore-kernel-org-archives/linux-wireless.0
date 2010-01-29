@@ -1,501 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18558 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755078Ab0AVWXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2010 17:23:14 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 16/17] iwlwifi: cleanup spectrum measurement command support
-Date: Fri, 22 Jan 2010 14:22:57 -0800
-Message-Id: <1264198978-5915-17-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
-References: <1264198978-5915-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:33508 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026Ab0A2XMU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 18:12:20 -0500
+Received: by fxm20 with SMTP id 20so2434775fxm.21
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2010 15:12:19 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] b43: N-PHY: update general workarounds
+Date: Sat, 30 Jan 2010 00:12:19 +0100
+Message-Id: <1264806740-691-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
-
-In iwlagn the support for spectrum measurement command has been
-disabled since v2.6.29 without any requests for it. In addition to this
-when this command is indeed enabled it has been found to trigger firmware
-SYSASSERT on at least 4965 and 5100 hardware (see
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1952 ). Since then
-this code has been bitrotting and cannot just be enabled without porting.
-
-Remove support for spectrum measurement command from iwlagn. It can be
-added back if there is a future need and the firmware problem it triggers
-has been fixed. Support for the spectrim measurement notification remains
-as it has been enabled all the time.
-
-In addition to this remove the 3945 spectrum measurement command Kconfig
-option and make this command always supported. The code added by this
-enabling is minimal and only run when user triggers a spectrum measurement
-request via sysfs.
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/Kconfig        |   12 --
- drivers/net/wireless/iwlwifi/Makefile       |    1 -
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   11 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |   10 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    3 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   18 +++
- drivers/net/wireless/iwlwifi/iwl-spectrum.c |  198 ---------------------------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   27 ++---
- 8 files changed, 33 insertions(+), 247 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-spectrum.c
+ drivers/net/wireless/b43/phy_n.c |  215 ++++++++++++++++++++------------------
+ drivers/net/wireless/b43/phy_n.h |    4 +
+ 2 files changed, 115 insertions(+), 104 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index e44e572..dc8ed15 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -3,12 +3,6 @@ config IWLWIFI
- 	depends on PCI && MAC80211
- 	select FW_LOADER
- 
--config IWLWIFI_SPECTRUM_MEASUREMENT
--	bool "Enable Spectrum Measurement in iwlagn driver"
--	depends on IWLWIFI
--	---help---
--	  This option will enable spectrum measurement for the iwlagn driver.
--
- config IWLWIFI_DEBUG
- 	bool "Enable full debugging output in iwlagn and iwl3945 drivers"
- 	depends on IWLWIFI
-@@ -120,9 +114,3 @@ config IWL3945
- 	  inserted in and removed from the running kernel whenever you want),
- 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
- 	  module will be called iwl3945.
--
--config IWL3945_SPECTRUM_MEASUREMENT
--	bool "Enable Spectrum Measurement in iwl3945 driver"
--	depends on IWL3945
--	---help---
--	  This option will enable spectrum measurement for the iwl3945 driver.
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index bdaa924..4e378fa 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -3,7 +3,6 @@ iwlcore-objs 		:= iwl-core.o iwl-eeprom.o iwl-hcmd.o iwl-power.o
- iwlcore-objs 		+= iwl-rx.o iwl-tx.o iwl-sta.o iwl-calib.o
- iwlcore-objs 		+= iwl-scan.o iwl-led.o
- iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
--iwlcore-$(CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT) += iwl-spectrum.o
- iwlcore-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
- 
- CFLAGS_iwl-devtrace.o := -I$(src)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 5537369..d59192f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -73,13 +73,7 @@
- #define VD
- #endif
- 
--#ifdef CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT
--#define VS "s"
--#else
--#define VS
--#endif
--
--#define DRV_VERSION     IWLWIFI_VERSION VD VS
-+#define DRV_VERSION     IWLWIFI_VERSION VD
- 
- 
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
-@@ -889,6 +883,8 @@ static void iwl_setup_rx_handlers(struct iwl_priv *priv)
- 	priv->rx_handlers[REPLY_ALIVE] = iwl_rx_reply_alive;
- 	priv->rx_handlers[REPLY_ERROR] = iwl_rx_reply_error;
- 	priv->rx_handlers[CHANNEL_SWITCH_NOTIFICATION] = iwl_rx_csa;
-+	priv->rx_handlers[SPECTRUM_MEASURE_NOTIFICATION] =
-+			iwl_rx_spectrum_measure_notif;
- 	priv->rx_handlers[PM_SLEEP_NOTIFICATION] = iwl_rx_pm_sleep_notif;
- 	priv->rx_handlers[PM_DEBUG_STATISTIC_NOTIFIC] =
- 	    iwl_rx_pm_debug_statistics_notif;
-@@ -902,7 +898,6 @@ static void iwl_setup_rx_handlers(struct iwl_priv *priv)
- 	priv->rx_handlers[REPLY_STATISTICS_CMD] = iwl_reply_statistics;
- 	priv->rx_handlers[STATISTICS_NOTIFICATION] = iwl_rx_statistics;
- 
--	iwl_setup_spectrum_handlers(priv);
- 	iwl_setup_rx_scan_handlers(priv);
- 
- 	/* status change handler */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e14e329..ec1fe1d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -429,6 +429,8 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index);
- /* Handlers */
- void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
- 			       struct iwl_rx_mem_buffer *rxb);
-+void iwl_rx_spectrum_measure_notif(struct iwl_priv *priv,
-+					  struct iwl_rx_mem_buffer *rxb);
- void iwl_rx_statistics(struct iwl_priv *priv,
- 			      struct iwl_rx_mem_buffer *rxb);
- void iwl_reply_statistics(struct iwl_priv *priv,
-@@ -531,14 +533,6 @@ int iwl_send_calib_results(struct iwl_priv *priv);
- int iwl_calib_set(struct iwl_calib_result *res, const u8 *buf, int len);
- void iwl_calib_free_results(struct iwl_priv *priv);
- 
--/*******************************************************************************
-- * Spectrum Measureemtns in  iwl-spectrum.c
-- ******************************************************************************/
--#ifdef CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT
--void iwl_setup_spectrum_handlers(struct iwl_priv *priv);
--#else
--static inline void iwl_setup_spectrum_handlers(struct iwl_priv *priv) {}
--#endif
- /*****************************************************
-  *   S e n d i n g     H o s t     C o m m a n d s   *
-  *****************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index d9f325b..9b0a5cb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1055,11 +1055,10 @@ struct iwl_priv {
- 
- 	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
- 
--#if defined(CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT) || defined(CONFIG_IWL3945_SPECTRUM_MEASUREMENT)
- 	/* spectrum measurement report caching */
- 	struct iwl_spectrum_notification measure_report;
- 	u8 measurement_status;
--#endif
-+
- 	/* ucode beacon time */
- 	u32 ucode_beacon_time;
- 	int missed_beacon_threshold;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index ea309f4..5df6638 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -512,6 +512,24 @@ void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 8c39fb1..60e730a 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -246,110 +246,6 @@ static void b43_nphy_tables_init(struct b43_wldev *dev)
+ 		b43_nphy_rev3plus_tables_init(dev);
  }
- EXPORT_SYMBOL(iwl_rx_missed_beacon_notif);
  
-+void iwl_rx_spectrum_measure_notif(struct iwl_priv *priv,
-+					  struct iwl_rx_mem_buffer *rxb)
+-static void b43_nphy_workarounds(struct b43_wldev *dev)
+-{
+-	struct b43_phy *phy = &dev->phy;
+-	unsigned int i;
+-
+-	b43_phy_set(dev, B43_NPHY_IQFLIP,
+-		    B43_NPHY_IQFLIP_ADC1 | B43_NPHY_IQFLIP_ADC2);
+-	if (1 /* FIXME band is 2.4GHz */) {
+-		b43_phy_set(dev, B43_NPHY_CLASSCTL,
+-			    B43_NPHY_CLASSCTL_CCKEN);
+-	} else {
+-		b43_phy_mask(dev, B43_NPHY_CLASSCTL,
+-			     ~B43_NPHY_CLASSCTL_CCKEN);
+-	}
+-	b43_radio_set(dev, B2055_C1_TX_RF_SPARE, 0x8);
+-	b43_phy_write(dev, B43_NPHY_TXFRAMEDELAY, 8);
+-
+-	/* Fixup some tables */
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x00), 0xA);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x10), 0xA);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x02), 0xCDAA);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x12), 0xCDAA);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x08), 0);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x18), 0);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x07), 0x7AAB);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x17), 0x7AAB);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x06), 0x800);
+-	b43_ntab_write(dev, B43_NTAB16(8, 0x16), 0x800);
+-
+-	b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO1, 0x2D8);
+-	b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1, 0x301);
+-	b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO2, 0x2D8);
+-	b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2, 0x301);
+-
+-	//TODO set RF sequence
+-
+-	/* Set narrowband clip threshold */
+-	b43_phy_write(dev, B43_NPHY_C1_NBCLIPTHRES, 66);
+-	b43_phy_write(dev, B43_NPHY_C2_NBCLIPTHRES, 66);
+-
+-	/* Set wideband clip 2 threshold */
+-	b43_phy_maskset(dev, B43_NPHY_C1_CLIPWBTHRES,
+-			~B43_NPHY_C1_CLIPWBTHRES_CLIP2,
+-			21 << B43_NPHY_C1_CLIPWBTHRES_CLIP2_SHIFT);
+-	b43_phy_maskset(dev, B43_NPHY_C2_CLIPWBTHRES,
+-			~B43_NPHY_C2_CLIPWBTHRES_CLIP2,
+-			21 << B43_NPHY_C2_CLIPWBTHRES_CLIP2_SHIFT);
+-
+-	/* Set Clip 2 detect */
+-	b43_phy_set(dev, B43_NPHY_C1_CGAINI,
+-		    B43_NPHY_C1_CGAINI_CL2DETECT);
+-	b43_phy_set(dev, B43_NPHY_C2_CGAINI,
+-		    B43_NPHY_C2_CGAINI_CL2DETECT);
+-
+-	if (0 /*FIXME*/) {
+-		/* Set dwell lengths */
+-		b43_phy_write(dev, B43_NPHY_CLIP1_NBDWELL_LEN, 43);
+-		b43_phy_write(dev, B43_NPHY_CLIP2_NBDWELL_LEN, 43);
+-		b43_phy_write(dev, B43_NPHY_W1CLIP1_DWELL_LEN, 9);
+-		b43_phy_write(dev, B43_NPHY_W1CLIP2_DWELL_LEN, 9);
+-
+-		/* Set gain backoff */
+-		b43_phy_maskset(dev, B43_NPHY_C1_CGAINI,
+-				~B43_NPHY_C1_CGAINI_GAINBKOFF,
+-				1 << B43_NPHY_C1_CGAINI_GAINBKOFF_SHIFT);
+-		b43_phy_maskset(dev, B43_NPHY_C2_CGAINI,
+-				~B43_NPHY_C2_CGAINI_GAINBKOFF,
+-				1 << B43_NPHY_C2_CGAINI_GAINBKOFF_SHIFT);
+-
+-		/* Set HPVGA2 index */
+-		b43_phy_maskset(dev, B43_NPHY_C1_INITGAIN,
+-				~B43_NPHY_C1_INITGAIN_HPVGA2,
+-				6 << B43_NPHY_C1_INITGAIN_HPVGA2_SHIFT);
+-		b43_phy_maskset(dev, B43_NPHY_C2_INITGAIN,
+-				~B43_NPHY_C2_INITGAIN_HPVGA2,
+-				6 << B43_NPHY_C2_INITGAIN_HPVGA2_SHIFT);
+-
+-		//FIXME verify that the specs really mean to use autoinc here.
+-		for (i = 0; i < 3; i++)
+-			b43_ntab_write(dev, B43_NTAB16(7, 0x106) + i, 0x673);
+-	}
+-
+-	/* Set minimum gain value */
+-	b43_phy_maskset(dev, B43_NPHY_C1_MINMAX_GAIN,
+-			~B43_NPHY_C1_MINGAIN,
+-			23 << B43_NPHY_C1_MINGAIN_SHIFT);
+-	b43_phy_maskset(dev, B43_NPHY_C2_MINMAX_GAIN,
+-			~B43_NPHY_C2_MINGAIN,
+-			23 << B43_NPHY_C2_MINGAIN_SHIFT);
+-
+-	if (phy->rev < 2) {
+-		b43_phy_mask(dev, B43_NPHY_SCRAM_SIGCTL,
+-			     ~B43_NPHY_SCRAM_SIGCTL_SCM);
+-	}
+-
+-	/* Set phase track alpha and beta */
+-	b43_phy_write(dev, B43_NPHY_PHASETR_A0, 0x125);
+-	b43_phy_write(dev, B43_NPHY_PHASETR_A1, 0x1B3);
+-	b43_phy_write(dev, B43_NPHY_PHASETR_A2, 0x105);
+-	b43_phy_write(dev, B43_NPHY_PHASETR_B0, 0x16E);
+-	b43_phy_write(dev, B43_NPHY_PHASETR_B1, 0xCD);
+-	b43_phy_write(dev, B43_NPHY_PHASETR_B2, 0x20);
+-}
+-
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/PA%20override */
+ static void b43_nphy_pa_override(struct b43_wldev *dev, bool enable)
+ {
+@@ -816,6 +712,117 @@ static void b43_nphy_stop_playback(struct b43_wldev *dev)
+ 		b43_nphy_stay_in_carrier_search(dev, 0);
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/Workarounds */
++static void b43_nphy_workarounds(struct b43_wldev *dev)
 +{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_spectrum_notification *report = &(pkt->u.spectrum_notif);
++	struct ssb_bus *bus = dev->dev->bus;
++	struct b43_phy *phy = &dev->phy;
++	struct b43_phy_n *nphy = phy->n;
 +
-+	if (!report->state) {
-+		IWL_DEBUG_11H(priv,
-+			"Spectrum Measure Notification: Start\n");
-+		return;
++	u8 events1[7] = { 0x0, 0x1, 0x2, 0x8, 0x4, 0x5, 0x3 };
++	u8 delays1[7] = { 0x8, 0x6, 0x6, 0x2, 0x4, 0x3C, 0x1 };
++
++	u8 events2[7] = { 0x0, 0x3, 0x5, 0x4, 0x2, 0x1, 0x8 };
++	u8 delays2[7] = { 0x8, 0x6, 0x2, 0x4, 0x4, 0x6, 0x1 };
++
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
++		b43_nphy_classifier(dev, 1, 0);
++	else
++		b43_nphy_classifier(dev, 1, 1);
++
++	if (nphy->hang_avoid)
++		b43_nphy_stay_in_carrier_search(dev, 1);
++
++	b43_phy_set(dev, B43_NPHY_IQFLIP,
++		    B43_NPHY_IQFLIP_ADC1 | B43_NPHY_IQFLIP_ADC2);
++
++	if (dev->phy.rev >= 3) {
++		/* TODO */
++	} else {
++		if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ &&
++		    nphy->band5g_pwrgain) {
++			b43_radio_mask(dev, B2055_C1_TX_RF_SPARE, ~0x8);
++			b43_radio_mask(dev, B2055_C2_TX_RF_SPARE, ~0x8);
++		} else {
++			b43_radio_set(dev, B2055_C1_TX_RF_SPARE, 0x8);
++			b43_radio_set(dev, B2055_C2_TX_RF_SPARE, 0x8);
++		}
++
++		/* TODO: convert to b43_ntab_write? */
++		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2000);
++		b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x000A);
++		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2010);
++		b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x000A);
++		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2002);
++		b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0xCDAA);
++		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2012);
++		b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0xCDAA);
++
++		if (dev->phy.rev < 2) {
++			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2008);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x0000);
++			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2018);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x0000);
++			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2007);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x7AAB);
++			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2017);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x7AAB);
++			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2006);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x0800);
++			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x2016);
++			b43_phy_write(dev, B43_NPHY_TABLE_DATALO, 0x0800);
++		}
++
++		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO1, 0x2D8);
++		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1, 0x301);
++		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO2, 0x2D8);
++		b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2, 0x301);
++
++		if (bus->sprom.boardflags2_lo & 0x100 &&
++		    bus->boardinfo.type == 0x8B) {
++			delays1[0] = 0x1;
++			delays1[5] = 0x14;
++		}
++		/*TODO:b43_nphy_set_rf_sequence(dev, 0, events1, delays1, 7);*/
++		/*TODO:b43_nphy_set_rf_sequence(dev, 1, events2, delays2, 7);*/
++
++		/*TODO:b43_nphy_gain_crtl_workarounds(dev);*/
++
++		if (dev->phy.rev < 2) {
++			if (b43_phy_read(dev, B43_NPHY_RXCTL) & 0x2)
++				; /*TODO: b43_mhf(dev, 2, 0x0010, 0x0010, 3);*/
++		} else if (dev->phy.rev == 2) {
++			b43_phy_write(dev, B43_NPHY_CRSCHECK2, 0);
++			b43_phy_write(dev, B43_NPHY_CRSCHECK3, 0);
++		}
++
++		if (dev->phy.rev < 2)
++			b43_phy_mask(dev, B43_NPHY_SCRAM_SIGCTL,
++					~B43_NPHY_SCRAM_SIGCTL_SCM);
++
++		/* Set phase track alpha and beta */
++		b43_phy_write(dev, B43_NPHY_PHASETR_A0, 0x125);
++		b43_phy_write(dev, B43_NPHY_PHASETR_A1, 0x1B3);
++		b43_phy_write(dev, B43_NPHY_PHASETR_A2, 0x105);
++		b43_phy_write(dev, B43_NPHY_PHASETR_B0, 0x16E);
++		b43_phy_write(dev, B43_NPHY_PHASETR_B1, 0xCD);
++		b43_phy_write(dev, B43_NPHY_PHASETR_B2, 0x20);
++
++		b43_phy_mask(dev, B43_NPHY_PIL_DW1,
++				(u16)~B43_NPHY_PIL_DW_64QAM);
++		b43_phy_write(dev, B43_NPHY_TXF_20CO_S2B1, 0xB5);
++		b43_phy_write(dev, B43_NPHY_TXF_20CO_S2B2, 0xA4);
++		b43_phy_write(dev, B43_NPHY_TXF_20CO_S2B3, 0x00);
++
++		if (dev->phy.rev == 2)
++			b43_phy_set(dev, B43_NPHY_FINERX2_CGC,
++					B43_NPHY_FINERX2_CGC_DECGC);
 +	}
 +
-+	memcpy(&priv->measure_report, report, sizeof(*report));
-+	priv->measurement_status |= MEASUREMENT_READY;
++	if (nphy->hang_avoid)
++		b43_nphy_stay_in_carrier_search(dev, 0);
 +}
-+EXPORT_SYMBOL(iwl_rx_spectrum_measure_notif);
 +
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/GenLoadSamples */
+ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
+ 					bool test)
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index f5a2766..ae82f0f 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -976,6 +976,10 @@ struct b43_phy_n {
+ 	s32 preamble_override;
+ 	u32 bb_mult_save;
+ 
++	bool gain_boost;
++	bool elna_gain_config;
++	bool band5g_pwrgain;
 +
- 
- /* Calculate noise level, based on measurements during network silence just
-  *   before arriving beacon.  This measurement can be done only if we know
-diff --git a/drivers/net/wireless/iwlwifi/iwl-spectrum.c b/drivers/net/wireless/iwlwifi/iwl-spectrum.c
-deleted file mode 100644
-index da166d1..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-spectrum.c
-+++ /dev/null
-@@ -1,198 +0,0 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2003 - 2010 Intel Corporation. All rights reserved.
-- *
-- * Portions of this file are derived from the ipw3945 project, as well
-- * as portions of the ieee80211 subsystem header files.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *
-- *****************************************************************************/
--
--#include <linux/kernel.h>
--#include <linux/module.h>
--#include <linux/init.h>
--#include <linux/pci.h>
--#include <linux/delay.h>
--#include <linux/skbuff.h>
--#include <linux/netdevice.h>
--#include <linux/wireless.h>
--
--#include <net/mac80211.h>
--
--#include "iwl-eeprom.h"
--#include "iwl-dev.h"
--#include "iwl-core.h"
--#include "iwl-io.h"
--#include "iwl-spectrum.h"
--
--#define BEACON_TIME_MASK_LOW	0x00FFFFFF
--#define BEACON_TIME_MASK_HIGH	0xFF000000
--#define TIME_UNIT		1024
--
--/*
-- * extended beacon time format
-- * time in usec will be changed into a 32-bit value in 8:24 format
-- * the high 1 byte is the beacon counts
-- * the lower 3 bytes is the time in usec within one beacon interval
-- */
--
--/* TOOD: was used in sysfs debug interface need to add to mac */
--#if 0
--static u32 iwl_usecs_to_beacons(u32 usec, u32 beacon_interval)
--{
--	u32 quot;
--	u32 rem;
--	u32 interval = beacon_interval * 1024;
--
--	if (!interval || !usec)
--		return 0;
--
--	quot = (usec / interval) & (BEACON_TIME_MASK_HIGH >> 24);
--	rem = (usec % interval) & BEACON_TIME_MASK_LOW;
--
--	return (quot << 24) + rem;
--}
--
--/* base is usually what we get from ucode with each received frame,
-- * the same as HW timer counter counting down
-- */
--
--static __le32 iwl_add_beacon_time(u32 base, u32 addon, u32 beacon_interval)
--{
--	u32 base_low = base & BEACON_TIME_MASK_LOW;
--	u32 addon_low = addon & BEACON_TIME_MASK_LOW;
--	u32 interval = beacon_interval * TIME_UNIT;
--	u32 res = (base & BEACON_TIME_MASK_HIGH) +
--	    (addon & BEACON_TIME_MASK_HIGH);
--
--	if (base_low > addon_low)
--		res += base_low - addon_low;
--	else if (base_low < addon_low) {
--		res += interval + base_low - addon_low;
--		res += (1 << 24);
--	} else
--		res += (1 << 24);
--
--	return cpu_to_le32(res);
--}
--static int iwl_get_measurement(struct iwl_priv *priv,
--			       struct ieee80211_measurement_params *params,
--			       u8 type)
--{
--	struct iwl4965_spectrum_cmd spectrum;
--	struct iwl_rx_packet *res;
--	struct iwl_host_cmd cmd = {
--		.id = REPLY_SPECTRUM_MEASUREMENT_CMD,
--		.data = (void *)&spectrum,
--		.meta.flags = CMD_WANT_SKB,
--	};
--	u32 add_time = le64_to_cpu(params->start_time);
--	int rc;
--	int spectrum_resp_status;
--	int duration = le16_to_cpu(params->duration);
--
--	if (iwl_is_associated(priv))
--		add_time =
--		    iwl_usecs_to_beacons(
--			le64_to_cpu(params->start_time) - priv->last_tsf,
--			le16_to_cpu(priv->rxon_timing.beacon_interval));
--
--	memset(&spectrum, 0, sizeof(spectrum));
--
--	spectrum.channel_count = cpu_to_le16(1);
--	spectrum.flags =
--	    RXON_FLG_TSF2HOST_MSK | RXON_FLG_ANT_A_MSK | RXON_FLG_DIS_DIV_MSK;
--	spectrum.filter_flags = MEASUREMENT_FILTER_FLAG;
--	cmd.len = sizeof(spectrum);
--	spectrum.len = cpu_to_le16(cmd.len - sizeof(spectrum.len));
--
--	if (iwl_is_associated(priv))
--		spectrum.start_time =
--		    iwl_add_beacon_time(priv->last_beacon_time,
--				add_time,
--				le16_to_cpu(priv->rxon_timing.beacon_interval));
--	else
--		spectrum.start_time = 0;
--
--	spectrum.channels[0].duration = cpu_to_le32(duration * TIME_UNIT);
--	spectrum.channels[0].channel = params->channel;
--	spectrum.channels[0].type = type;
--	if (priv->active_rxon.flags & RXON_FLG_BAND_24G_MSK)
--		spectrum.flags |= RXON_FLG_BAND_24G_MSK |
--		    RXON_FLG_AUTO_DETECT_MSK | RXON_FLG_TGG_PROTECT_MSK;
--
--	rc = iwl_send_cmd_sync(priv, &cmd);
--	if (rc)
--		return rc;
--
--	res = (struct iwl_rx_packet *)cmd.meta.u.skb->data;
--	if (res->hdr.flags & IWL_CMD_FAILED_MSK) {
--		IWL_ERR(priv, "Bad return from REPLY_RX_ON_ASSOC command\n");
--		rc = -EIO;
--	}
--
--	spectrum_resp_status = le16_to_cpu(res->u.spectrum.status);
--	switch (spectrum_resp_status) {
--	case 0:		/* Command will be handled */
--		if (res->u.spectrum.id != 0xff) {
--			IWL_DEBUG_INFO(priv,
--				"Replaced existing measurement: %d\n",
--				res->u.spectrum.id);
--			priv->measurement_status &= ~MEASUREMENT_READY;
--		}
--		priv->measurement_status |= MEASUREMENT_ACTIVE;
--		rc = 0;
--		break;
--
--	case 1:		/* Command will not be handled */
--		rc = -EAGAIN;
--		break;
--	}
--
--	dev_kfree_skb_any(cmd.meta.u.skb);
--
--	return rc;
--}
--#endif
--
--static void iwl_rx_spectrum_measure_notif(struct iwl_priv *priv,
--					  struct iwl_rx_mem_buffer *rxb)
--{
--	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	struct iwl_spectrum_notification *report = &(pkt->u.spectrum_notif);
--
--	if (!report->state) {
--		IWL_DEBUG_11H(priv,
--			"Spectrum Measure Notification: Start\n");
--		return;
--	}
--
--	memcpy(&priv->measure_report, report, sizeof(*report));
--	priv->measurement_status |= MEASUREMENT_READY;
--}
--
--void iwl_setup_spectrum_handlers(struct iwl_priv *priv)
--{
--	priv->rx_handlers[SPECTRUM_MEASURE_NOTIFICATION] =
--			iwl_rx_spectrum_measure_notif;
--}
--EXPORT_SYMBOL(iwl_setup_spectrum_handlers);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 9c0b6eb..cd42b58 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -56,6 +56,7 @@
- #include "iwl-helpers.h"
- #include "iwl-core.h"
- #include "iwl-dev.h"
-+#include "iwl-spectrum.h"
- 
- /*
-  * module name, copyright, version, etc.
-@@ -70,13 +71,12 @@
- #define VD
- #endif
- 
--#ifdef CONFIG_IWL3945_SPECTRUM_MEASUREMENT
--#define VS "s"
--#else
--#define VS
--#endif
--
--#define DRV_VERSION  IWLWIFI_VERSION VD VS
-+/*
-+ * add "s" to indicate spectrum measurement included.
-+ * we add it here to be consistent with previous releases in which
-+ * this was configurable.
-+ */
-+#define DRV_VERSION  IWLWIFI_VERSION VD "s"
- #define DRV_COPYRIGHT	"Copyright(c) 2003-2010 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
- 
-@@ -689,10 +689,6 @@ drop:
- 	return -1;
- }
- 
--#ifdef CONFIG_IWL3945_SPECTRUM_MEASUREMENT
--
--#include "iwl-spectrum.h"
--
- #define BEACON_TIME_MASK_LOW	0x00FFFFFF
- #define BEACON_TIME_MASK_HIGH	0xFF000000
- #define TIME_UNIT		1024
-@@ -819,7 +815,6 @@ static int iwl3945_get_measurement(struct iwl_priv *priv,
- 
- 	return rc;
- }
--#endif
- 
- static void iwl3945_rx_reply_alive(struct iwl_priv *priv,
- 			       struct iwl_rx_mem_buffer *rxb)
-@@ -962,6 +957,8 @@ static void iwl3945_setup_rx_handlers(struct iwl_priv *priv)
- 	priv->rx_handlers[REPLY_ADD_STA] = iwl3945_rx_reply_add_sta;
- 	priv->rx_handlers[REPLY_ERROR] = iwl_rx_reply_error;
- 	priv->rx_handlers[CHANNEL_SWITCH_NOTIFICATION] = iwl_rx_csa;
-+	priv->rx_handlers[SPECTRUM_MEASURE_NOTIFICATION] =
-+			iwl_rx_spectrum_measure_notif;
- 	priv->rx_handlers[PM_SLEEP_NOTIFICATION] = iwl_rx_pm_sleep_notif;
- 	priv->rx_handlers[PM_DEBUG_STATISTIC_NOTIFIC] =
- 	    iwl_rx_pm_debug_statistics_notif;
-@@ -975,7 +972,6 @@ static void iwl3945_setup_rx_handlers(struct iwl_priv *priv)
- 	priv->rx_handlers[REPLY_STATISTICS_CMD] = iwl3945_hw_rx_statistics;
- 	priv->rx_handlers[STATISTICS_NOTIFICATION] = iwl3945_hw_rx_statistics;
- 
--	iwl_setup_spectrum_handlers(priv);
- 	iwl_setup_rx_scan_handlers(priv);
- 	priv->rx_handlers[CARD_STATE_NOTIFICATION] = iwl3945_rx_card_state_notif;
- 
-@@ -3569,8 +3565,6 @@ static ssize_t store_filter_flags(struct device *d,
- static DEVICE_ATTR(filter_flags, S_IWUSR | S_IRUGO, show_filter_flags,
- 		   store_filter_flags);
- 
--#ifdef CONFIG_IWL3945_SPECTRUM_MEASUREMENT
--
- static ssize_t show_measurement(struct device *d,
- 				struct device_attribute *attr, char *buf)
- {
-@@ -3640,7 +3634,6 @@ static ssize_t store_measurement(struct device *d,
- 
- static DEVICE_ATTR(measurement, S_IRUSR | S_IWUSR,
- 		   show_measurement, store_measurement);
--#endif /* CONFIG_IWL3945_SPECTRUM_MEASUREMENT */
- 
- static ssize_t store_retry_rate(struct device *d,
- 				struct device_attribute *attr,
-@@ -3823,9 +3816,7 @@ static struct attribute *iwl3945_sysfs_entries[] = {
- 	&dev_attr_dump_errors.attr,
- 	&dev_attr_flags.attr,
- 	&dev_attr_filter_flags.attr,
--#ifdef CONFIG_IWL3945_SPECTRUM_MEASUREMENT
- 	&dev_attr_measurement.attr,
--#endif
- 	&dev_attr_retry_rate.attr,
- 	&dev_attr_statistics.attr,
- 	&dev_attr_status.attr,
+ 	u8 mphase_cal_phase_id;
+ 	u16 mphase_txcal_cmdidx;
+ 	u16 mphase_txcal_numcmds;
 -- 
-1.6.3.3
+1.6.4.2
 
