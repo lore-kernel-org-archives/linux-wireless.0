@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:6207 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932388Ab0AFWhD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:37:03 -0500
-Received: by fg-out-1718.google.com with SMTP id 19so7280220fgg.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 14:37:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com>
-References: <op.u54a5ufy9lhzdc@linux-g0th.site> <201001061650.52062.mb@bu3sch.de>
-	<b170af451001061211y51b3ca6do11fb24fbb1193c51@mail.gmail.com>
-	<op.u54ppc2h9lhzdc@linux-g0th.site> <69e28c911001061435v4b840588p3ead478672ba311@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 6 Jan 2010 23:36:42 +0100
-Message-ID: <69e28c911001061436i7862beb4v720d033915d1543f@mail.gmail.com>
-Subject: Re: [PATCH 1/5] b43: N-PHY: implement b43_nphy_stay_in_carrier_search
-	and it's calls (V2)
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:4015 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754560Ab0A2TyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 14:54:12 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 11/12] iwlwifi: fix typo in IWL_CCK_RATES_MASK
+Date: Fri, 29 Jan 2010 11:54:01 -0800
+Message-Id: <1264794842-8046-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
+References: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/1/6 Gábor Stefanik <netrolller.3d@gmail.com>:
-> 2010/1/6 Rafał Miłecki <zajec5@gmail.com>:
->> V2: fix typo in deaf_count counting, improve b43_mac_[sr] calls,
->>    rename function. Thanks Michael!
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/phy_n.c |   58
->> ++++++++++++++++++++++++++++++++++++++
->>  drivers/net/wireless/b43/phy_n.h |    3 ++
->>  2 files changed, 61 insertions(+), 0 deletions(-)
->>
->> <snip>
->
-> Typo in title (it's vs. its)
+From: Johannes Berg <johannes.berg@intel.com>
 
-Note that you don't need to resubmit for this, I posted this so the
-committer (John AFAIK) will notice and fix it before committing.
+Due to a typo, the variable contains OFDM
+rates as well. The only user doesn't care,
+so this change doesn't really do anything
+but fix up my confusion.
 
---Gábor
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
->
->>
->> --
->> 1.6.4.2
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+index 2f0094a..e719239 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+@@ -191,7 +191,7 @@ enum {
+ 	IWL_RATE_2M_MASK)
+ 
+ #define IWL_CCK_RATES_MASK          \
+-       (IWL_BASIC_RATES_MASK      | \
++       (IWL_CCK_BASIC_RATES_MASK  | \
+ 	IWL_RATE_5M_MASK          | \
+ 	IWL_RATE_11M_MASK)
+ 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
