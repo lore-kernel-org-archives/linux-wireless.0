@@ -1,40 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50457 "EHLO ds10.nbd.name"
+Received: from mga11.intel.com ([192.55.52.93]:9013 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754591Ab0AQUMT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2010 15:12:19 -0500
-Message-ID: <4B536F21.1090509@openwrt.org>
-Date: Sun, 17 Jan 2010 21:12:17 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] cfg80211: add a callback for querying the operating
- frequency and export it through nl80211
-References: <4B536B05.6070301@openwrt.org>	 <1263758236.28067.11.camel@johannes.local> <1263758423.28067.12.camel@johannes.local>
-In-Reply-To: <1263758423.28067.12.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+	id S1752370Ab0A2Vrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 16:47:37 -0500
+From: <shanyu.zhao@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Shanyu Zhao <shanyu.zhao@intel.com>
+Subject: [PATCH 1/1 v3] cfg80211: wext: fix cfg80211's SIOCSIWAP function
+Date: Fri, 29 Jan 2010 13:47:29 -0800
+Message-Id: <1264801649-4985-1-git-send-email-shanyu.zhao@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-01-17 9:00 PM, Johannes Berg wrote:
-> On Sun, 2010-01-17 at 20:57 +0100, Johannes Berg wrote:
->> On Sun, 2010-01-17 at 20:54 +0100, Felix Fietkau wrote:
->> 
->> > +	int	(*get_channel)(struct wiphy *wiphy,
->> > +			       struct ieee80211_channel **chan,
->> > +			       enum nl80211_channel_type *channel_type);
->> 
->> Can you do that per netdev, please? We'll eventually get into having
->> to support different channels on different netdevs.
-> 
-> OTOH, where is this really needed?
-> 
-> If you have an IBSS or managed mode then you know from the BSS info what
-> channel you should be on... APs are completely userspace controlled
-> anyway, so are monitors.
-I was thinking about scanning, but then again, that's not handled by my
-patch series either. I'll simplify it and make it per-netdev.
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-- Felix
+The cfg80211's SIOCSIWAP function is broken, the reason is we cannot
+get the correct bss with previously set ssid. Need to clear it by
+setting ssid_len to 0 in cfg80211_mgd_wext_siwap() and fix other
+places accordingly.
+
+Cc: stable@kernel.org
+
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+---
+v2: Adding Cc to stable@kernel.org
+v3: set bssid to NULL in cfg80211_mgd_wext_siwessid, otherwise after
+    iwconfig wlanx ap <mac> the iwconfig wlanx essid won't work.
+---
+ net/wireless/sme.c      |    9 +++++++--
+ net/wireless/wext-sme.c |    4 +++-
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 745c37e..51c3cdb 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -779,10 +779,15 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 			wdev->conn->auto_auth = false;
+ 		}
+ 
+-		memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
++		/* make sure it can connect if only bssid is provided */
+ 		wdev->ssid_len = connect->ssid_len;
+-		wdev->conn->params.ssid = wdev->ssid;
+ 		wdev->conn->params.ssid_len = connect->ssid_len;
++		if (connect->ssid_len) {
++			memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
++			wdev->conn->params.ssid = wdev->ssid;
++		}
++		else
++			wdev->conn->params.ssid = NULL;
+ 
+ 		/* see if we have the bss already */
+ 		bss = cfg80211_get_conn_bss(wdev);
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 5615a88..5a67dd5 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -34,7 +34,7 @@ int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
+ 			wdev->wext.connect.privacy = true;
+ 	}
+ 
+-	if (!wdev->wext.connect.ssid_len)
++	if (!wdev->wext.connect.ssid_len && !wdev->wext.connect.bssid)
+ 		return 0;
+ 
+ 	if (wdev->wext.keys) {
+@@ -194,6 +194,7 @@ int cfg80211_mgd_wext_siwessid(struct net_device *dev,
+ 	wdev->wext.connect.ssid = wdev->wext.ssid;
+ 	memcpy(wdev->wext.ssid, ssid, len);
+ 	wdev->wext.connect.ssid_len = len;
++	wdev->wext.connect.bssid = NULL;
+ 
+ 	wdev->wext.connect.crypto.control_port = false;
+ 
+@@ -280,6 +281,7 @@ int cfg80211_mgd_wext_siwap(struct net_device *dev,
+ 	if (bssid) {
+ 		memcpy(wdev->wext.bssid, bssid, ETH_ALEN);
+ 		wdev->wext.connect.bssid = wdev->wext.bssid;
++		wdev->wext.connect.ssid_len = 0;
+ 	} else
+ 		wdev->wext.connect.bssid = NULL;
+ 
+-- 
+1.6.0.4
+
