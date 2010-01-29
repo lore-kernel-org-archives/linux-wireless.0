@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:42201 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757602Ab0AOOTU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 09:19:20 -0500
-From: Kalle Valo <kalle.valo@iki.fi>
-To: "tom.leiming\@gmail.com" <tom.leiming@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes\@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix memory leak in ieee80211_send_probe_req
-References: <1263563061-3825-1-git-send-email-tom.leiming@gmail.com>
-Date: Fri, 15 Jan 2010 16:19:03 +0200
-In-Reply-To: <1263563061-3825-1-git-send-email-tom.leiming@gmail.com> (ext
-	tom's message of "Fri, 15 Jan 2010 14:44:21 +0100")
-Message-ID: <87fx67qwmg.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:20654 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754342Ab0A2TyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 14:54:09 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/12] iwlwifi: sysassert identifier change
+Date: Fri, 29 Jan 2010 11:53:52 -0800
+Message-Id: <1264794842-8046-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
+References: <1264794842-8046-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"ext tom.leiming@gmail.com" <tom.leiming@gmail.com> writes:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> From: Ming Lei <tom.leiming@gmail.com>
->
-> This patch fixes memory leak in ieee80211_send_probe_req, which
-> is introduced in 7c12ce8b854df346388ea56d684784e3484012cf:
->
-> 	mac80211: use Probe Request template when sending a direct scan
+Change in uCode to include a unique identifier as part of sysassert,
+in order to tell the difference, add the "ADVANCED SYSASSERT" description
+when dump nic error to indicate the difference.
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Sorry, I introduced this bug. Thank you finding this.
-
-> The patch is against the latest wireless-test tree.
-
-You should add comments like this after the "---" line.
-
-> @@ -1028,6 +1028,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
->  
->  	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
->  	ieee80211_tx_skb(sdata, skb);
-> +	kfree(buf);
-
-Better to use dev_kfree_skb() here.
-
-Can you resend, please?
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 380d208..1c54425 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1757,7 +1757,7 @@ static const char *desc_lookup_text[] = {
+ 	"DEBUG_1",
+ 	"DEBUG_2",
+ 	"DEBUG_3",
+-	"UNKNOWN"
++	"ADVANCED SYSASSERT"
+ };
+ 
+ static const char *desc_lookup(int i)
 -- 
-Kalle Valo
+1.6.3.3
+
