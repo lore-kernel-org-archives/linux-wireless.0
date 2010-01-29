@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32306 "EHLO mga11.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:50620 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932139Ab0AOVnq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2010 16:43:46 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/9] iwlwifi: fix clear statistics counter command
-Date: Fri, 15 Jan 2010 13:43:33 -0800
-Message-Id: <1263591821-14867-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
-References: <1263591821-14867-1-git-send-email-reinette.chatre@intel.com>
+	id S1752389Ab0A2RgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2010 12:36:00 -0500
+Subject: Re: Building of compat-wireless-old in 2.6.25 BSP kernel for      
+ PowerPC architecture
+From: Pavel Roskin <proski@gnu.org>
+To: PAN Sunny S K <sunnypan@ust.hk>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <58444.143.89.144.207.1264747272.squirrel@sqmail.ust.hk>
+References: <51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
+	 <43e72e891001260853s4811bc39s2399d138d0a7da83@mail.gmail.com>
+	 <47088.143.89.144.207.1264589300.squirrel@sqmail.ust.hk>
+	 <43e72e891001271006l3422b6e2iccb89954feeaa34b@mail.gmail.com>
+	 <58444.143.89.144.207.1264747272.squirrel@sqmail.ust.hk>
+Content-Type: text/plain
+Date: Fri, 29 Jan 2010 12:35:46 -0500
+Message-Id: <1264786546.27755.9.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Fri, 2010-01-29 at 14:41 +0800, PAN Sunny S K wrote:
 
-When receive reply statistics command with "clear" mask, just reset the
-accumulated statistics counters, but not the current statistics counters,
-so the accumulated statistics counter can provide the correct
-information.
+> P.S. This is the message when loading the driver modules at bootup FYI
+> 
+> ath: Unknown symbol wiphy_apply_custom_regulatory
+> ath: Unknown symbol freq_reg_info
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-rx.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+modprobe should be able to resolve such dependencies.  If you have to
+use insmod, you'll need to load the required modules first.  It may be
+tricky to figure out.  You could just try loading all modules you have
+in a loop until they all load.  That way you'll find the dependencies.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 6f36b6e..10db973 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -638,8 +638,6 @@ void iwl_reply_statistics(struct iwl_priv *priv,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 
- 	if (le32_to_cpu(pkt->u.stats.flag) & UCODE_STATISTICS_CLEAR_MSK) {
--		memset(&priv->statistics, 0,
--			sizeof(struct iwl_notif_statistics));
- #ifdef CONFIG_IWLWIFI_DEBUG
- 		memset(&priv->accum_statistics, 0,
- 			sizeof(struct iwl_notif_statistics));
+> ath_pci: Unknown symbol ath_config_crypto_get
+
+ath_pci is a module from MadWifi.  Yet the only reference to
+ath_config_crypto_get Google can find is your message.
+
+My guess is that you have some proprietary Atheros driver on the system.
+It shouldn't be a big deal that it fails to load, but you may want to
+remove it to see error messages that really matter.
+
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
