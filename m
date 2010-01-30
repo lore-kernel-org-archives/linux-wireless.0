@@ -1,68 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44054 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:50459 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755188Ab0AMKTU (ORCPT
+	with ESMTP id S1752232Ab0A3V6V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 05:19:20 -0500
-Subject: Re: [PATCH] cfg80211/mac80211: Add TX/RX commands for Action frames
+	Sat, 30 Jan 2010 16:58:21 -0500
+Subject: Re: Regression in b43 with BCM4311/2
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni.malinen@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, j@w1.fi
-In-Reply-To: <20100113101126.GA12548@jm.kir.nu>
-References: <20100113101126.GA12548@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9QlFVBmnZ7KPeCG6HCzq"
-Date: Wed, 13 Jan 2010 11:19:11 +0100
-Message-ID: <1263377951.5093.326.camel@johannes.local>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4B64AAEB.9020806@lwfinger.net>
+References: <4B64A2F2.6060608@lwfinger.net>
+	 <1264887027.3546.207.camel@johannes.local>  <4B64AAEB.9020806@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xG4S9b80XZcqUnL0ihOC"
+Date: Sat, 30 Jan 2010 22:58:19 +0100
+Message-ID: <1264888699.3546.208.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-9QlFVBmnZ7KPeCG6HCzq
+--=-xG4S9b80XZcqUnL0ihOC
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2010-01-13 at 12:11 +0200, Jouni Malinen wrote:
-> The new commands can be used to implement user space -controlled
-> Action frame exchanges. These can be used either to exchange Action
-> frames on the current operational channel (e.g., with the AP with
-> which we are currently associated) or to exchange off-channel Public
-> Action frames with the remain-on-channel command.
->=20
-> This patch adds couple of to-do items to handle rejecting of unknown
-> Action frames. This is required by IEEE 802.11, but we do not
-> currently handle it in mac80211. To do this properly with optional
-> user space control of some Action frame subtypes, a new mechanism will
-> be needed to register user space handlers and to unregister these when
-> the netlink socket is closed.
+On Sat, 2010-01-30 at 15:55 -0600, Larry Finger wrote:
+> On 01/30/2010 03:30 PM, Johannes Berg wrote:
 
-I'm not sure we should be adding this before we at least add the API to
-register for this from userspace, if somebody starts using it now it'll
-be effectively broken when that fix comes along, no?
+> My AP returns the following in the scan output:
+>=20
+> Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
+>           24 Mb/s; 36 Mb/s; 54 Mb/s
+> Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 48 Mb/s
+>=20
+> I don't see any * markings.
+
+Check with iw, instead of iwlist, I think?
+
+> >> Is b43 missing something needed to set the basic_rates member of struc=
+t
+> >> ieee80211_bxx_conf to a more reasonable value when b43_op_bss_info_cha=
+nged() is
+> >> entered? I think it should be 0xFFF, not 0xF. I have tested with the l=
+arger
+> >> value and found that this change did not improve transmit rates.
+> >=20
+> > So you're saying it doesn't help anyway?
+>=20
+> Yes, it does not help. Since my previous message, I have also tested the =
+short
+> slot logic. Inverting the test made no difference.
+
+Strange. can the patch be reverted as a whole and then it's ok again?
 
 johannes
 
---=-9QlFVBmnZ7KPeCG6HCzq
+--=-xG4S9b80XZcqUnL0ihOC
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLTZ4bAAoJEODzc/N7+Qma0P8P/36XI8x1yIcXYf2IOgTnwprx
-OQOum7UObRTiR8g8/qan+FdTDqP85izfQv6ZLauWZTVMDie8+y9h9MaK/Z3xwX6d
-FqoSGGxTbEAeBPbE72BgbOL957OehIk/kH7CKCP2DdCGHImfETSD9ucpbQYoKs6r
-Vshim/tepH3SRSQTej4snD+gQgcrxI1Q+CzJXbvKN6X7+JHLKP4ogmDKwFwCyk0U
-NEK9ZBkcjSmT73JWy6yuqqnx3rkQJRht5udXz60PHwlsp8PkLq7U/iI4ZfkEvlMe
-KYhDxbI9/pnbF8UZUCtmM5FPZ+bVa3pSopdqEceM1pDj3qprYWQwwT0KdRpnqbkb
-VWKTMk7OdYQRNtBu07UiiKEPGeRibf18FDWWb/oaZE/dgUEmQf6YCv+kJWn73NDl
-KctionGGrb+WWEjFpFQs0r/hBckVMpRBCwpHiPZBRwqW6oqRP/q5Rv6X6aUnr8Ci
-+B78tVb3c3rLRyO7DEnVXss4vuOdjL1Crw9EpAfqS7tiuraESl6qDWFYOgbJO/Uh
-8A+lqcJMsrHdDhDmFix3ObnczkgweBvRKpuu4S7oT3s4duhgfc/qTmUN1NfWgQib
-+Rv7KntUgM+E97FFaluJeBToifutGFnL4ai6I6XY8u2OqRiSBoMe2pagqz9mgk9C
-Sspc343PDrnnRHR6nOUc
-=zZqO
+iQIcBAABAgAGBQJLZKt3AAoJEODzc/N7+QmaqmwP/jEaoWW8GlSnvpQTX5OxITHA
+qdHJiAZQ7nFyowAFVbcYP25k7gc5bHcRob+0depAb4sYUgH69Jn1rFJLrgVq6lha
+e5gmQwYHTKmO9DINGB/uUYf93d6RbXmHyf2dMxsOePsD0EJmhnGvYBf8B7eCiHh1
++KdBPIAFpYz3KWaex0kJ9fo8koZ3GM/Gnw8HwjHEN1Ic51MxaVRuk4xcNeCpWBxG
+quefCciMiwcQgD7pOAIXpmbiQpuBrsoz2yjyK52sRyU3vvHPAk+rAa2MhfkhW0qq
+anFtPPY3kP34+JfOs41AH2wJVRaXPMwDAAZo6yerWzD6ClF7nG86n2Q1iJfEJJnb
+TQmcKeFks323twTCKIUowg/7P4PVAmSjgvyHSTAaBAf6mS/y5Wa9h9BHPaqnJQw4
+f1huSDus8eCdvjbvaQLGhNINTZIi7vOocQaieu1+O8h4TQeTId+8YNXlOCCP/iFH
+UiPtgUqGw/ULnoGxNNjtBIn1MWR91Rt87CRp+BOnsuPJwXNSB4Ab1F0httFeuYjy
+U/csBJ1YyLLuDxdB2a220A47q0ZyTKmyxhDVl8OuLniSOioZ6DEmRb4ZhL8ij5I8
+VpXhxe/YACcZpBk92o2NFYBDNeiaILYffys3FZXwVOrmhJBX9o4ALkifRfzW8zO9
+aHSla6qo/9zKHTou4ny8
+=GI+B
 -----END PGP SIGNATURE-----
 
---=-9QlFVBmnZ7KPeCG6HCzq--
+--=-xG4S9b80XZcqUnL0ihOC--
 
