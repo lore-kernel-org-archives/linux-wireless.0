@@ -1,97 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:60633 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754347Ab0A3TS3 (ORCPT
+Received: from mail-iw0-f173.google.com ([209.85.223.173]:56151 "EHLO
+	mail-iw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462Ab0A3WjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2010 14:18:29 -0500
-Received: by mail-fx0-f220.google.com with SMTP id 20so2964636fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 11:18:29 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/5] b43: N-PHY: add TX radio setup for newer PHYs
-Date: Sat, 30 Jan 2010 20:18:06 +0100
-Message-Id: <1264879087-14326-4-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
-References: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
+	Sat, 30 Jan 2010 17:39:08 -0500
+Received: by iwn3 with SMTP id 3so3046832iwn.23
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 14:39:04 -0800 (PST)
+Message-ID: <4B64B506.2030902@lwfinger.net>
+Date: Sat, 30 Jan 2010 16:39:02 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Regression in b43 with BCM4311/2
+References: <4B64A2F2.6060608@lwfinger.net>	 <1264887027.3546.207.camel@johannes.local>  <4B64AAEB.9020806@lwfinger.net> <1264888699.3546.208.camel@johannes.local>
+In-Reply-To: <1264888699.3546.208.camel@johannes.local>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   53 +++++++++++++++++++++++++++++++++++++-
- 1 files changed, 52 insertions(+), 1 deletions(-)
+On 01/30/2010 03:58 PM, Johannes Berg wrote:
+> On Sat, 2010-01-30 at 15:55 -0600, Larry Finger wrote:
+>> On 01/30/2010 03:30 PM, Johannes Berg wrote:
+> 
+>> My AP returns the following in the scan output:
+>>
+>> Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 18 Mb/s
+>>           24 Mb/s; 36 Mb/s; 54 Mb/s
+>> Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 48 Mb/s
+>>
+>> I don't see any * markings.
+> 
+> Check with iw, instead of iwlist, I think?
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index cf107c5..c1fc3cc 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1803,9 +1803,60 @@ static void b43_nphy_tx_cal_radio_setup(struct b43_wldev *dev)
- {
- 	struct b43_phy_n *nphy = dev->phy.n;
- 	u16 *save = nphy->tx_rx_cal_radio_saveregs;
-+	u16 tmp;
-+	u8 offset, i;
- 
- 	if (dev->phy.rev >= 3) {
--		/* TODO */
-+	    for (i = 0; i < 2; i++) {
-+		tmp = (i == 0) ? 0x2000 : 0x3000;
-+		offset = i * 11;
-+
-+		save[offset + 0] = b43_radio_read16(dev, B2055_CAL_RVARCTL);
-+		save[offset + 1] = b43_radio_read16(dev, B2055_CAL_LPOCTL);
-+		save[offset + 2] = b43_radio_read16(dev, B2055_CAL_TS);
-+		save[offset + 3] = b43_radio_read16(dev, B2055_CAL_RCCALRTS);
-+		save[offset + 4] = b43_radio_read16(dev, B2055_CAL_RCALRTS);
-+		save[offset + 5] = b43_radio_read16(dev, B2055_PADDRV);
-+		save[offset + 6] = b43_radio_read16(dev, B2055_XOCTL1);
-+		save[offset + 7] = b43_radio_read16(dev, B2055_XOCTL2);
-+		save[offset + 8] = b43_radio_read16(dev, B2055_XOREGUL);
-+		save[offset + 9] = b43_radio_read16(dev, B2055_XOMISC);
-+		save[offset + 10] = b43_radio_read16(dev, B2055_PLL_LFC1);
-+
-+		if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) {
-+			b43_radio_write16(dev, tmp | B2055_CAL_RVARCTL, 0x0A);
-+			b43_radio_write16(dev, tmp | B2055_CAL_LPOCTL, 0x40);
-+			b43_radio_write16(dev, tmp | B2055_CAL_TS, 0x55);
-+			b43_radio_write16(dev, tmp | B2055_CAL_RCCALRTS, 0);
-+			b43_radio_write16(dev, tmp | B2055_CAL_RCALRTS, 0);
-+			if (nphy->ipa5g_on) {
-+				b43_radio_write16(dev, tmp | B2055_PADDRV, 4);
-+				b43_radio_write16(dev, tmp | B2055_XOCTL1, 1);
-+			} else {
-+				b43_radio_write16(dev, tmp | B2055_PADDRV, 0);
-+				b43_radio_write16(dev, tmp | B2055_XOCTL1, 0x2F);
-+			}
-+			b43_radio_write16(dev, tmp | B2055_XOCTL2, 0);
-+		} else {
-+			b43_radio_write16(dev, tmp | B2055_CAL_RVARCTL, 0x06);
-+			b43_radio_write16(dev, tmp | B2055_CAL_LPOCTL, 0x40);
-+			b43_radio_write16(dev, tmp | B2055_CAL_TS, 0x55);
-+			b43_radio_write16(dev, tmp | B2055_CAL_RCCALRTS, 0);
-+			b43_radio_write16(dev, tmp | B2055_CAL_RCALRTS, 0);
-+			b43_radio_write16(dev, tmp | B2055_XOCTL1, 0);
-+			if (nphy->ipa2g_on) {
-+				b43_radio_write16(dev, tmp | B2055_PADDRV, 6);
-+				b43_radio_write16(dev, tmp | B2055_XOCTL2,
-+					(dev->phy.rev < 5) ? 0x11 : 0x01);
-+			} else {
-+				b43_radio_write16(dev, tmp | B2055_PADDRV, 0);
-+				b43_radio_write16(dev, tmp | B2055_XOCTL2, 0);
-+			}
-+		}
-+		b43_radio_write16(dev, tmp | B2055_XOREGUL, 0);
-+		b43_radio_write16(dev, tmp | B2055_XOMISC, 0);
-+		b43_radio_write16(dev, tmp | B2055_PLL_LFC1, 0);
-+	    }
- 	} else {
- 		save[0] = b43_radio_read16(dev, B2055_C1_TX_RF_IQCAL1);
- 		b43_radio_write16(dev, B2055_C1_TX_RF_IQCAL1, 0x29);
--- 
-1.6.4.2
+        Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0 54.0
+        Extended supported rates: 6.0 9.0 12.0 48.0
 
+OK, only the CCK rates are the basic ones.
+
+> Strange. can the patch be reverted as a whole and then it's ok again?
+
+No the patch cannot be reverted, but I have disabled both parts of it separately
+without helping the situation. My bisection must have given a false result.
+
+When I use my 4315 device with an LP PHY, it is OK. The problem has to be in the
+G PHY-only code, which your patch didn't touch. I'll have to go back through the
+patches in the 2.6.28 merge.
+
+I'll let you know what I find.
+
+Larry
