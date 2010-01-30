@@ -1,179 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:59573 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757448Ab0ANTNt (ORCPT
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:34611 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753060Ab0A3QOe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 14:13:49 -0500
-Date: Thu, 14 Jan 2010 13:13:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] Staging: r8187se: Fix compile error from wireless-testing commit 7044cc56
-Message-ID: <4b4f6ceb.f1tJ5gXsVTLW6gWJ%Larry.Finger@lwfinger.net>
+	Sat, 30 Jan 2010 11:14:34 -0500
+Received: by fxm20 with SMTP id 20so2865048fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 08:14:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1264867217.3546.186.camel@johannes.local>
+References: <20100129122718.73a6c877@nehalam>
+	 <1264866128.3546.185.camel@johannes.local>
+	 <51058d551001300751r4a509e90i521c946dfe9dec4@mail.gmail.com>
+	 <1264867217.3546.186.camel@johannes.local>
+Date: Sat, 30 Jan 2010 10:14:32 -0600
+Message-ID: <51058d551001300814y66d1d589uae15fa50086593b8@mail.gmail.com>
+Subject: Re: Multiple SSID on same phy
+From: Greg Oliver <oliver.greg@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In wireless-testing, commit 7044cc56 added struct ieee80211_hdr_3addr
-to include/linux/ieee80211.h. This definition collides with one that is
-in the r8187se driver in staging.
+On Sat, Jan 30, 2010 at 10:00 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> I suggest you go public with your reply so you can be flamed and taught
+> wrong appropriately.
 
-The conflict is resolved by changing r8187se to use the definition from
-include/linuc/ieee80211.h.
+Sorry - this gmail inefficiency sometimes gets me...
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+BUT, please enlighten me when any of the 3 use cases would be
+beneficial to anyone not trying to (or "inefficiently migrating") hack
+into a network would occur.
 
-John,
+-Greg
 
-Although fixes for staging drivers normally go through GregKH, This problem
-does not exist in mainline, and will not until the above commit is pushed.
-As a result, I'm sending it to you.
-
-Larry
----
-
-Index: wireless-testing/drivers/staging/rtl8187se/ieee80211/ieee80211.h
-===================================================================
---- wireless-testing.orig/drivers/staging/rtl8187se/ieee80211/ieee80211.h
-+++ wireless-testing/drivers/staging/rtl8187se/ieee80211/ieee80211.h
-@@ -482,15 +482,6 @@ struct ieee80211_header_data {
- 	u16 seq_ctrl;
- };
- 
--struct ieee80211_hdr_3addr {
--	u16 frame_ctl;
--	u16 duration_id;
--	u8 addr1[ETH_ALEN];
--	u8 addr2[ETH_ALEN];
--	u8 addr3[ETH_ALEN];
--	u16 seq_ctl;
--} __attribute__ ((packed));
--
- struct ieee80211_hdr_4addr {
- 	u16 frame_ctl;
- 	u16 duration_id;
-Index: wireless-testing/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
-===================================================================
---- wireless-testing.orig/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
-+++ wireless-testing/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
-@@ -203,7 +203,7 @@ inline void softmac_mgmt_xmit(struct sk_
- 
- 			enqueue_mgmt(ieee,skb);
- 		}else{
--			header->seq_ctl = cpu_to_le16(ieee->seq_ctrl[0]<<4);
-+			header->seq_ctrl = cpu_to_le16(ieee->seq_ctrl[0]<<4);
- 
- 			if (ieee->seq_ctrl[0] == 0xFFF)
- 				ieee->seq_ctrl[0] = 0;
-@@ -220,7 +220,7 @@ inline void softmac_mgmt_xmit(struct sk_
- 		spin_unlock_irqrestore(&ieee->lock, flags);
- 		spin_lock_irqsave(&ieee->mgmt_tx_lock, flags);
- 
--		header->seq_ctl = cpu_to_le16(ieee->seq_ctrl[0] << 4);
-+		header->seq_ctrl = cpu_to_le16(ieee->seq_ctrl[0] << 4);
- 
- 		if (ieee->seq_ctrl[0] == 0xFFF)
- 			ieee->seq_ctrl[0] = 0;
-@@ -246,7 +246,7 @@ inline void softmac_ps_mgmt_xmit(struct
- 
- 	if(single){
- 
--		header->seq_ctl = cpu_to_le16(ieee->seq_ctrl[0] << 4);
-+		header->seq_ctrl = cpu_to_le16(ieee->seq_ctrl[0] << 4);
- 
- 		if (ieee->seq_ctrl[0] == 0xFFF)
- 			ieee->seq_ctrl[0] = 0;
-@@ -259,7 +259,7 @@ inline void softmac_ps_mgmt_xmit(struct
- 
- 	}else{
- 
--		header->seq_ctl = cpu_to_le16(ieee->seq_ctrl[0] << 4);
-+		header->seq_ctrl = cpu_to_le16(ieee->seq_ctrl[0] << 4);
- 
- 		if (ieee->seq_ctrl[0] == 0xFFF)
- 			ieee->seq_ctrl[0] = 0;
-@@ -287,7 +287,7 @@ inline struct sk_buff *ieee80211_disasso
- 		return NULL;
- 
- 	disass = (struct ieee80211_disassoc_frame *) skb_put(skb,sizeof(struct ieee80211_disassoc_frame));
--	disass->header.frame_ctl = cpu_to_le16(IEEE80211_STYPE_DISASSOC);
-+	disass->header.frame_control = cpu_to_le16(IEEE80211_STYPE_DISASSOC);
- 	disass->header.duration_id = 0;
- 
- 	memcpy(disass->header.addr1, beacon->bssid, ETH_ALEN);
-@@ -905,7 +905,7 @@ struct sk_buff* ieee80211_assoc_resp(str
- 	assoc = (struct ieee80211_assoc_response_frame *)
- 		skb_put(skb,sizeof(struct ieee80211_assoc_response_frame));
- 
--	assoc->header.frame_ctl = cpu_to_le16(IEEE80211_STYPE_ASSOC_RESP);
-+	assoc->header.frame_control = cpu_to_le16(IEEE80211_STYPE_ASSOC_RESP);
- 	memcpy(assoc->header.addr1, dest,ETH_ALEN);
- 	memcpy(assoc->header.addr3, ieee->dev->dev_addr, ETH_ALEN);
- 	memcpy(assoc->header.addr2, ieee->dev->dev_addr, ETH_ALEN);
-@@ -981,7 +981,7 @@ struct sk_buff* ieee80211_null_func(stru
- 	memcpy(hdr->addr2, ieee->dev->dev_addr, ETH_ALEN);
- 	memcpy(hdr->addr3, ieee->current_network.bssid, ETH_ALEN);
- 
--	hdr->frame_ctl = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
- 		IEEE80211_STYPE_NULLFUNC | IEEE80211_FCTL_TODS |
- 		(pwr ? IEEE80211_FCTL_PM:0));
- 
-@@ -1084,7 +1084,7 @@ inline struct sk_buff *ieee80211_associa
- 		skb_put(skb, sizeof(struct ieee80211_assoc_request_frame));
- 
- 
--	hdr->header.frame_ctl = IEEE80211_STYPE_ASSOC_REQ;
-+	hdr->header.frame_control = IEEE80211_STYPE_ASSOC_REQ;
- 	hdr->header.duration_id= 37; //FIXME
- 	memcpy(hdr->header.addr1, beacon->bssid, ETH_ALEN);
- 	memcpy(hdr->header.addr2, ieee->dev->dev_addr, ETH_ALEN);
-@@ -1786,11 +1786,11 @@ ieee80211_rx_frame_softmac(struct ieee80
- 
- 		tasklet_schedule(&ieee->ps_task);
- 
--	if(WLAN_FC_GET_STYPE(header->frame_ctl) != IEEE80211_STYPE_PROBE_RESP &&
--		WLAN_FC_GET_STYPE(header->frame_ctl) != IEEE80211_STYPE_BEACON)
-+	if (WLAN_FC_GET_STYPE(header->frame_control) != IEEE80211_STYPE_PROBE_RESP &&
-+		WLAN_FC_GET_STYPE(header->frame_control) != IEEE80211_STYPE_BEACON)
- 		ieee->last_rx_ps_time = jiffies;
- 
--	switch (WLAN_FC_GET_STYPE(header->frame_ctl)) {
-+	switch (WLAN_FC_GET_STYPE(header->frame_control)) {
- 
- 		case IEEE80211_STYPE_ASSOC_RESP:
- 		case IEEE80211_STYPE_REASSOC_RESP:
-@@ -2064,7 +2064,7 @@ void ieee80211_rtl_wake_queue(struct iee
- 
- 			header = (struct ieee80211_hdr_3addr  *) skb->data;
- 
--			header->seq_ctl = cpu_to_le16(ieee->seq_ctrl[0] << 4);
-+			header->seq_ctrl = cpu_to_le16(ieee->seq_ctrl[0] << 4);
- 
- 			if (ieee->seq_ctrl[0] == 0xFFF)
- 				ieee->seq_ctrl[0] = 0;
-Index: wireless-testing/drivers/staging/rtl8187se/r8180_core.c
-===================================================================
---- wireless-testing.orig/drivers/staging/rtl8187se/r8180_core.c
-+++ wireless-testing/drivers/staging/rtl8187se/r8180_core.c
-@@ -1890,7 +1890,7 @@ rate)
- 	struct r8180_priv *priv = (struct r8180_priv *)ieee80211_priv(dev);
- 	int mode;
- 	struct ieee80211_hdr_3addr  *h = (struct ieee80211_hdr_3addr  *) skb->data;
--	short morefrag = (h->frame_ctl) & IEEE80211_FCTL_MOREFRAGS;
-+	short morefrag = (h->frame_control) & IEEE80211_FCTL_MOREFRAGS;
- 	unsigned long flags;
- 	int priority;
- 
-@@ -2158,7 +2158,7 @@ short rtl8180_tx(struct net_device *dev,
- 				TxDescDuration = ThisFrameTime + aSifsTime + AckTime;
- 			}
- 
--			if(!(frag_hdr->frame_ctl & IEEE80211_FCTL_MOREFRAGS)) { //no more fragment
-+			if (!(frag_hdr->frame_control & IEEE80211_FCTL_MOREFRAGS)) {
- 				// ThisFrame-ACK.
- 				Duration = aSifsTime + AckTime;
- 			} else { // One or more fragments remained.
+> On Sat, 2010-01-30 at 09:51 -0600, Greg Oliver wrote:
+>> On Sat, Jan 30, 2010 at 9:42 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Fri, 2010-01-29 at 12:27 -0800, Stephen Hemminger wrote:
+>> >> What are the restrictions (on ath9k) for multiple SSID with hostap
+>> >> on same physical device. Should/will the following work:
+>> >>
+>> >> 1. Duplicate SSID's (different channels)
+>> >
+>> > Not really/well, wouldn't go there right now.
+>> >
+>> >> 2. Same channel but different SSID
+>> >
+>> > Yes.
+>> >
+>> >> 3. Duplicate SSID, same channel, but different encryption method
+>> >
+>> > "Duplicate SSID"? If you mean the same SSID and different encryption, I
+>> > don't think that's supported. If you just meant two SSIDs with different
+>> > encryption, that's doable by using two (B)SSIDs.
+>> >
+>>
+>> There's no really honest use case for any of the examples presented.
+>> "They" must want a head start on the next hackers conference..
+>>
+>
+>
+>
