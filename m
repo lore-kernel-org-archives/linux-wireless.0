@@ -1,245 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:51142 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932373Ab0AFWw7 (ORCPT
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:60633 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754347Ab0A3TS3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 17:52:59 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Benoit Papillault <benoit.papillault@free.fr>,
+	Sat, 30 Jan 2010 14:18:29 -0500
+Received: by mail-fx0-f220.google.com with SMTP id 20so2964636fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 11:18:29 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2.6.33 7/8] rt2x00: Fix rt2800usb RX frame format and as such L2PAD
-Date: Wed,  6 Jan 2010 23:52:48 +0100
-Message-Id: <1262818369-16820-8-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1262818369-16820-7-git-send-email-gwingerde@gmail.com>
-References: <1262818369-16820-1-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-2-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-3-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-4-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-5-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-6-git-send-email-gwingerde@gmail.com>
- <1262818369-16820-7-git-send-email-gwingerde@gmail.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 4/5] b43: N-PHY: add TX radio setup for newer PHYs
+Date: Sat, 30 Jan 2010 20:18:06 +0100
+Message-Id: <1264879087-14326-4-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
+References: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benoit Papillault <benoit.papillault@free.fr>
-
-According to Ralink source code, the RX frame format is RXINFO + RXWI +
-802.11 frame + RXD, including various padding. Before this patch, we
-were using RXD + RXWI + 802.11 frame, so RXD was not correct.
-
-Doing this, we fix the L2PAD bit which is now correctly set on received
-frames.
-
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-Acked-by: Ivo van Doorn <ivdoorn@gmail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.c |   38 +++++++++----
- drivers/net/wireless/rt2x00/rt2800usb.h |   90 ++++++++++++++++++++++++-------
- 2 files changed, 97 insertions(+), 31 deletions(-)
+ drivers/net/wireless/b43/phy_n.c |   53 +++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 52 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index c146c48..e41aa19 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -573,41 +573,57 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index cf107c5..c1fc3cc 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1803,9 +1803,60 @@ static void b43_nphy_tx_cal_radio_setup(struct b43_wldev *dev)
  {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
--	__le32 *rxd = (__le32 *)entry->skb->data;
-+	__le32 *rxi = (__le32 *)entry->skb->data;
- 	__le32 *rxwi;
--	u32 rxd0;
-+	__le32 *rxd;
-+	u32 rxi0;
- 	u32 rxwi0;
- 	u32 rxwi1;
- 	u32 rxwi2;
- 	u32 rxwi3;
-+	u32 rxd0;
-+	int rx_pkt_len;
+ 	struct b43_phy_n *nphy = dev->phy.n;
+ 	u16 *save = nphy->tx_rx_cal_radio_saveregs;
++	u16 tmp;
++	u8 offset, i;
+ 
+ 	if (dev->phy.rev >= 3) {
+-		/* TODO */
++	    for (i = 0; i < 2; i++) {
++		tmp = (i == 0) ? 0x2000 : 0x3000;
++		offset = i * 11;
 +
-+	/*
-+	 * RX frame format is :
-+	 * | RXINFO | RXWI | header | L2 pad | payload | pad | RXD | USB pad |
-+	 *          |<------------ rx_pkt_len -------------->|
-+	 */
-+	rt2x00_desc_read(rxi, 0, &rxi0);
-+	rx_pkt_len = rt2x00_get_field32(rxi0, RXINFO_W0_USB_DMA_RX_PKT_LEN);
++		save[offset + 0] = b43_radio_read16(dev, B2055_CAL_RVARCTL);
++		save[offset + 1] = b43_radio_read16(dev, B2055_CAL_LPOCTL);
++		save[offset + 2] = b43_radio_read16(dev, B2055_CAL_TS);
++		save[offset + 3] = b43_radio_read16(dev, B2055_CAL_RCCALRTS);
++		save[offset + 4] = b43_radio_read16(dev, B2055_CAL_RCALRTS);
++		save[offset + 5] = b43_radio_read16(dev, B2055_PADDRV);
++		save[offset + 6] = b43_radio_read16(dev, B2055_XOCTL1);
++		save[offset + 7] = b43_radio_read16(dev, B2055_XOCTL2);
++		save[offset + 8] = b43_radio_read16(dev, B2055_XOREGUL);
++		save[offset + 9] = b43_radio_read16(dev, B2055_XOMISC);
++		save[offset + 10] = b43_radio_read16(dev, B2055_PLL_LFC1);
 +
-+	rxwi = (__le32 *)(entry->skb->data + RXINFO_DESC_SIZE);
-+
-+	/*
-+	 * FIXME : we need to check for rx_pkt_len validity
-+	 */
-+	rxd = (__le32 *)(entry->skb->data + RXINFO_DESC_SIZE + rx_pkt_len);
- 
- 	/*
- 	 * Copy descriptor to the skbdesc->desc buffer, making it safe from
- 	 * moving of frame data in rt2x00usb.
- 	 */
--	memcpy(skbdesc->desc, rxd, skbdesc->desc_len);
--	rxd = (__le32 *)skbdesc->desc;
--	rxwi = &rxd[RXINFO_DESC_SIZE / sizeof(__le32)];
-+	memcpy(skbdesc->desc, rxi, skbdesc->desc_len);
- 
- 	/*
- 	 * It is now safe to read the descriptor on all architectures.
- 	 */
--	rt2x00_desc_read(rxd, 0, &rxd0);
- 	rt2x00_desc_read(rxwi, 0, &rxwi0);
- 	rt2x00_desc_read(rxwi, 1, &rxwi1);
- 	rt2x00_desc_read(rxwi, 2, &rxwi2);
- 	rt2x00_desc_read(rxwi, 3, &rxwi3);
-+	rt2x00_desc_read(rxd, 0, &rxd0);
- 
--	if (rt2x00_get_field32(rxd0, RXINFO_W0_CRC_ERROR))
-+	if (rt2x00_get_field32(rxd0, RXD_W0_CRC_ERROR))
- 		rxdesc->flags |= RX_FLAG_FAILED_FCS_CRC;
- 
- 	if (test_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags)) {
- 		rxdesc->cipher = rt2x00_get_field32(rxwi0, RXWI_W0_UDF);
- 		rxdesc->cipher_status =
--		    rt2x00_get_field32(rxd0, RXINFO_W0_CIPHER_ERROR);
-+		    rt2x00_get_field32(rxd0, RXD_W0_CIPHER_ERROR);
- 	}
- 
--	if (rt2x00_get_field32(rxd0, RXINFO_W0_DECRYPTED)) {
-+	if (rt2x00_get_field32(rxd0, RXD_W0_DECRYPTED)) {
- 		/*
- 		 * Hardware has stripped IV/EIV data from 802.11 frame during
- 		 * decryption. Unfortunately the descriptor doesn't contain
-@@ -622,10 +638,10 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
- 			rxdesc->flags |= RX_FLAG_MMIC_ERROR;
- 	}
- 
--	if (rt2x00_get_field32(rxd0, RXINFO_W0_MY_BSS))
-+	if (rt2x00_get_field32(rxd0, RXD_W0_MY_BSS))
- 		rxdesc->dev_flags |= RXDONE_MY_BSS;
- 
--	if (rt2x00_get_field32(rxd0, RXINFO_W0_L2PAD))
-+	if (rt2x00_get_field32(rxd0, RXD_W0_L2PAD))
- 		rxdesc->dev_flags |= RXDONE_L2PAD;
- 
- 	if (rt2x00_get_field32(rxwi1, RXWI_W1_SHORT_GI))
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.h b/drivers/net/wireless/rt2x00/rt2800usb.h
-index 1e4340a..d1d8ae9 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-@@ -79,6 +79,8 @@
-  */
- #define TXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
- #define RXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
-+#define RXWI_DESC_SIZE			( 4 * sizeof(__le32) )
-+#define RXD_DESC_SIZE			( 1 * sizeof(__le32) )
- 
- /*
-  * TX Info structure
-@@ -101,6 +103,54 @@
- #define TXINFO_W0_USB_DMA_TX_BURST	FIELD32(0x80000000)
- 
- /*
-+ * RX Info structure
-+ */
-+
-+/*
-+ * Word 0
-+ */
-+
-+#define RXINFO_W0_USB_DMA_RX_PKT_LEN	FIELD32(0x0000ffff)
-+
-+/*
-+ * RX WI structure
-+ */
-+
-+/*
-+ * Word0
-+ */
-+#define RXWI_W0_WIRELESS_CLI_ID		FIELD32(0x000000ff)
-+#define RXWI_W0_KEY_INDEX		FIELD32(0x00000300)
-+#define RXWI_W0_BSSID			FIELD32(0x00001c00)
-+#define RXWI_W0_UDF			FIELD32(0x0000e000)
-+#define RXWI_W0_MPDU_TOTAL_BYTE_COUNT	FIELD32(0x0fff0000)
-+#define RXWI_W0_TID			FIELD32(0xf0000000)
-+
-+/*
-+ * Word1
-+ */
-+#define RXWI_W1_FRAG			FIELD32(0x0000000f)
-+#define RXWI_W1_SEQUENCE		FIELD32(0x0000fff0)
-+#define RXWI_W1_MCS			FIELD32(0x007f0000)
-+#define RXWI_W1_BW			FIELD32(0x00800000)
-+#define RXWI_W1_SHORT_GI		FIELD32(0x01000000)
-+#define RXWI_W1_STBC			FIELD32(0x06000000)
-+#define RXWI_W1_PHYMODE			FIELD32(0xc0000000)
-+
-+/*
-+ * Word2
-+ */
-+#define RXWI_W2_RSSI0			FIELD32(0x000000ff)
-+#define RXWI_W2_RSSI1			FIELD32(0x0000ff00)
-+#define RXWI_W2_RSSI2			FIELD32(0x00ff0000)
-+
-+/*
-+ * Word3
-+ */
-+#define RXWI_W3_SNR0			FIELD32(0x000000ff)
-+#define RXWI_W3_SNR1			FIELD32(0x0000ff00)
-+
-+/*
-  * RX descriptor format for RX Ring.
-  */
- 
-@@ -115,25 +165,25 @@
-  * AMSDU: rx with 802.3 header, not 802.11 header.
-  */
- 
--#define RXINFO_W0_BA			FIELD32(0x00000001)
--#define RXINFO_W0_DATA			FIELD32(0x00000002)
--#define RXINFO_W0_NULLDATA		FIELD32(0x00000004)
--#define RXINFO_W0_FRAG			FIELD32(0x00000008)
--#define RXINFO_W0_UNICAST_TO_ME		FIELD32(0x00000010)
--#define RXINFO_W0_MULTICAST		FIELD32(0x00000020)
--#define RXINFO_W0_BROADCAST		FIELD32(0x00000040)
--#define RXINFO_W0_MY_BSS		FIELD32(0x00000080)
--#define RXINFO_W0_CRC_ERROR		FIELD32(0x00000100)
--#define RXINFO_W0_CIPHER_ERROR		FIELD32(0x00000600)
--#define RXINFO_W0_AMSDU			FIELD32(0x00000800)
--#define RXINFO_W0_HTC			FIELD32(0x00001000)
--#define RXINFO_W0_RSSI			FIELD32(0x00002000)
--#define RXINFO_W0_L2PAD			FIELD32(0x00004000)
--#define RXINFO_W0_AMPDU			FIELD32(0x00008000)
--#define RXINFO_W0_DECRYPTED		FIELD32(0x00010000)
--#define RXINFO_W0_PLCP_RSSI		FIELD32(0x00020000)
--#define RXINFO_W0_CIPHER_ALG		FIELD32(0x00040000)
--#define RXINFO_W0_LAST_AMSDU		FIELD32(0x00080000)
--#define RXINFO_W0_PLCP_SIGNAL		FIELD32(0xfff00000)
-+#define RXD_W0_BA			FIELD32(0x00000001)
-+#define RXD_W0_DATA			FIELD32(0x00000002)
-+#define RXD_W0_NULLDATA			FIELD32(0x00000004)
-+#define RXD_W0_FRAG			FIELD32(0x00000008)
-+#define RXD_W0_UNICAST_TO_ME		FIELD32(0x00000010)
-+#define RXD_W0_MULTICAST		FIELD32(0x00000020)
-+#define RXD_W0_BROADCAST		FIELD32(0x00000040)
-+#define RXD_W0_MY_BSS			FIELD32(0x00000080)
-+#define RXD_W0_CRC_ERROR		FIELD32(0x00000100)
-+#define RXD_W0_CIPHER_ERROR		FIELD32(0x00000600)
-+#define RXD_W0_AMSDU			FIELD32(0x00000800)
-+#define RXD_W0_HTC			FIELD32(0x00001000)
-+#define RXD_W0_RSSI			FIELD32(0x00002000)
-+#define RXD_W0_L2PAD			FIELD32(0x00004000)
-+#define RXD_W0_AMPDU			FIELD32(0x00008000)
-+#define RXD_W0_DECRYPTED		FIELD32(0x00010000)
-+#define RXD_W0_PLCP_RSSI		FIELD32(0x00020000)
-+#define RXD_W0_CIPHER_ALG		FIELD32(0x00040000)
-+#define RXD_W0_LAST_AMSDU		FIELD32(0x00080000)
-+#define RXD_W0_PLCP_SIGNAL		FIELD32(0xfff00000)
- 
- #endif /* RT2800USB_H */
++		if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) {
++			b43_radio_write16(dev, tmp | B2055_CAL_RVARCTL, 0x0A);
++			b43_radio_write16(dev, tmp | B2055_CAL_LPOCTL, 0x40);
++			b43_radio_write16(dev, tmp | B2055_CAL_TS, 0x55);
++			b43_radio_write16(dev, tmp | B2055_CAL_RCCALRTS, 0);
++			b43_radio_write16(dev, tmp | B2055_CAL_RCALRTS, 0);
++			if (nphy->ipa5g_on) {
++				b43_radio_write16(dev, tmp | B2055_PADDRV, 4);
++				b43_radio_write16(dev, tmp | B2055_XOCTL1, 1);
++			} else {
++				b43_radio_write16(dev, tmp | B2055_PADDRV, 0);
++				b43_radio_write16(dev, tmp | B2055_XOCTL1, 0x2F);
++			}
++			b43_radio_write16(dev, tmp | B2055_XOCTL2, 0);
++		} else {
++			b43_radio_write16(dev, tmp | B2055_CAL_RVARCTL, 0x06);
++			b43_radio_write16(dev, tmp | B2055_CAL_LPOCTL, 0x40);
++			b43_radio_write16(dev, tmp | B2055_CAL_TS, 0x55);
++			b43_radio_write16(dev, tmp | B2055_CAL_RCCALRTS, 0);
++			b43_radio_write16(dev, tmp | B2055_CAL_RCALRTS, 0);
++			b43_radio_write16(dev, tmp | B2055_XOCTL1, 0);
++			if (nphy->ipa2g_on) {
++				b43_radio_write16(dev, tmp | B2055_PADDRV, 6);
++				b43_radio_write16(dev, tmp | B2055_XOCTL2,
++					(dev->phy.rev < 5) ? 0x11 : 0x01);
++			} else {
++				b43_radio_write16(dev, tmp | B2055_PADDRV, 0);
++				b43_radio_write16(dev, tmp | B2055_XOCTL2, 0);
++			}
++		}
++		b43_radio_write16(dev, tmp | B2055_XOREGUL, 0);
++		b43_radio_write16(dev, tmp | B2055_XOMISC, 0);
++		b43_radio_write16(dev, tmp | B2055_PLL_LFC1, 0);
++	    }
+ 	} else {
+ 		save[0] = b43_radio_read16(dev, B2055_C1_TX_RF_IQCAL1);
+ 		b43_radio_write16(dev, B2055_C1_TX_RF_IQCAL1, 0x29);
 -- 
-1.6.6
+1.6.4.2
 
