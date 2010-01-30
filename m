@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45327 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752392Ab0ALShh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 13:37:37 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2010 10:37:37 -0800
-Date: Tue, 12 Jan 2010 10:37:36 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jaswinder Singh Rajput <jaswindermobile@gmail.com>,
-	alainswb <alainswb@free.fr>, "dev@moblin.org" <dev@moblin.org>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [Moblin Dev] Wireless is keep on disconnecting
-Message-ID: <20100112183735.GL17243@tux>
-References: <995709e41001091103t43738262ibb2c4e0c4beab26d@mail.gmail.com>
- <995709e41001120217r1b6b276ek70658a1142744142@mail.gmail.com>
- <4B4C8320.8060801@free.fr>
- <995709e41001120724j7a6627b1g5d90df8fb658ceaa@mail.gmail.com>
- <43e72e891001120846x453e4052oa93675b86fe4a86d@mail.gmail.com>
- <995709e41001120914n17cfdb56k664c2b42afe448f6@mail.gmail.com>
- <995709e41001120915h1a156606m837717ffd584fa3e@mail.gmail.com>
- <20100112180438.GA17003@infradead.org>
- <20100112183047.GI17243@tux>
- <20100112183202.GA21982@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20100112183202.GA21982@infradead.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:35903 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754112Ab0A3PmM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jan 2010 10:42:12 -0500
+Subject: Re: Multiple SSID on same phy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: "Luis R.Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100129122718.73a6c877@nehalam>
+References: <20100129122718.73a6c877@nehalam>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-IJPQfKFiAMB/fEUXq2jD"
+Date: Sat, 30 Jan 2010 16:42:07 +0100
+Message-ID: <1264866128.3546.185.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 12, 2010 at 10:32:02AM -0800, Christoph Hellwig wrote:
-> On Tue, Jan 12, 2010 at 10:30:47AM -0800, Luis R. Rodriguez wrote:
-> > > FYI: since 2.6.32 I also see very frequent disconnects with the no probe
-> > > response messages.  This is with an Intel 5100 card, and can be better
-> > > or worse depending on the AP.  On my home one it makes the kernel
-> > > completely unusable.
-> >
-> > Which exact 2.6.32 release?
-> 
-> There is only one.  And most rcs weren't bootable on my laptop, so I
-> couldn't bisect it.
 
-Well what I mean is have you tried, say 2.6.32.3 by any chance?
+--=-IJPQfKFiAMB/fEUXq2jD
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Fri, 2010-01-29 at 12:27 -0800, Stephen Hemminger wrote:
+> What are the restrictions (on ath9k) for multiple SSID with hostap
+> on same physical device. Should/will the following work:
+>=20
+> 1. Duplicate SSID's (different channels)=20
+
+Not really/well, wouldn't go there right now.
+
+> 2. Same channel but different SSID
+
+Yes.
+
+> 3. Duplicate SSID, same channel, but different encryption method
+
+"Duplicate SSID"? If you mean the same SSID and different encryption, I
+don't think that's supported. If you just meant two SSIDs with different
+encryption, that's doable by using two (B)SSIDs.
+
+johannes
+
+--=-IJPQfKFiAMB/fEUXq2jD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLZFNMAAoJEODzc/N7+QmahNwQAIQT8JXJDHVYYOtDC9NtaI34
+bTHlcLkBnQXWcCfWP6LmRv8htYnUOT2VdrMJPkAHCQ4Dr3CC1oFCIspqumQBWiYT
+M1RrE+G/NXEdsyzBObl2+fP+WxaNswPaR1+QHo7l+sujdvVkTm8xy+8sJSDqFrjg
+6bednsnacitALfaO+qaFPg87lYVp9nWILjbQYZAcnr/menHubhavO0O8B8zTberC
+t6mavMs1T0+8IhreE6sfj1ZjLv1zEb91hLvou/rNAVG0xDq/+pxNBGYHCv+R72SP
+RmN5tAyMAGpxGjtEdzbgC7CvNbETV/dsCavo6DtAZO34CHWzEAlh7m4VauXZYKu/
+vpTwqcMSN5FBoT2b3A3ZZ5I/ABeEn6WlMTlQZl9TJGZkXkltir/Cof2QEer/31pL
+YhXKolEh6dubjX7/A2NWEqG/HH1DLyrzoumDRjjPbPikaKltchdMRK/efYP6XfS+
+cVewRGcSEDkwBUHx1ky0HvA8UZjPmVt2DOLMBbvnGYtyNvyLcOQAFURfROrWYTYR
+JdoakXYgrYBny0V97Vq5byUeY02WvTxJBkqK9axbF1sAW7k87NkewZDu8HPpOk2z
+eZH7qTKHQinlC/2S3H49SPL45WHlb2aSTJsvm1LBb/eXdFn7oHGeC+WMSFgnGy+I
+UFTQCdh2CUzdpaE8vGrN
+=HU8C
+-----END PGP SIGNATURE-----
+
+--=-IJPQfKFiAMB/fEUXq2jD--
+
