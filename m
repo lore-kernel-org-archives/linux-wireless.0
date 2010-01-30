@@ -1,86 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49788 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752722Ab0AUSC0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2010 13:02:26 -0500
-Subject: Re: [PATCH 2.6.{32,31}] iwlwifi: power up all devices for EEPROM
- read
-From: reinette chatre <reinette.chatre@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:60633 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754263Ab0A3TSO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jan 2010 14:18:14 -0500
+Received: by mail-fx0-f220.google.com with SMTP id 20so2964636fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 11:18:14 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1264076545-12223-1-git-send-email-sgruszka@redhat.com>
-References: <1264076545-12223-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 21 Jan 2010 10:02:24 -0800
-Message-ID: <1264096944.21458.139.camel@rchatre-DESK>
-Mime-Version: 1.0
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/5] b43: N-PHY: add RSSI selection for newer PHYs
+Date: Sat, 30 Jan 2010 20:18:04 +0100
+Message-Id: <1264879087-14326-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
+References: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   84 +++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 83 insertions(+), 1 deletions(-)
 
-On Thu, 2010-01-21 at 04:22 -0800, Stanislaw Gruszka wrote:
-> commit f8701fe3aec24fcfb0dfa19aab47904611f96daf upstream
-
-This is strange. As the commit you refer to indicate, it fixes problems
-introduced by "iwlwifi: remove power-wasting calls to apm_ops.init()"
-and "iwlagn: power up device before initializing EEPROM" - these patches
-have only been introduced in 2.6.33, so targeting this patch for earlier
-kernels does not seem right.
-
-Note that what the abovementioned patches did was move the device "power
-up" routines from probe to be closer to where they are needed
-(iwl_eeprom_init) in an effort to optimize power usage. 
-
-In the code you are changing, the above patches are not present, so the
-original behavior of device power up during probe is still present.
-
-The 2.6.32 and 2.6.31 code you are changing here adds a device "power
-up" call into iwl_eeprom_init. This is not necessary since as you can
-see, in iwl3945_pci_probe this exact same call is made right before
-iwl_eeprom_init is called.
-
-> 
-> On 2.6.31 and 2.6.32 iwl3945 crash during kdump, I discovered
-> above upstream commit fix that.
-
-This does not make sense. Was this testing done in the stable kernel
-from linux-2.6-stable or perhaps a kernel that had those other power
-saving patches backported?
-
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> I tested patch on 2.6.32 with iwl3945 - it fix kdump, and on 2.6.31
-> with iwl5300 - no regression notice.
-> 
->  drivers/net/wireless/iwlwifi/iwl-eeprom.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-> index 18dc3a4..870c0db 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-> @@ -486,6 +486,7 @@ int iwl_eeprom_init(struct iwl_priv *priv)
->  	}
->  	e = (__le16 *)priv->eeprom;
->  
-> +	priv->cfg->ops->lib->apm_ops.init(priv);
->  	ret = priv->cfg->ops->lib->eeprom_ops.verify_signature(priv);
->  	if (ret < 0) {
->  		IWL_ERR(priv, "EEPROM not found, EEPROM_GP=0x%08x\n", gp);
-> @@ -556,6 +557,8 @@ done:
->  err:
->  	if (ret)
->  		iwl_eeprom_free(priv);
-> +	/* Reset chip to save power until we load uCode during "up". */
-> +	priv->cfg->ops->lib->apm_ops.stop(priv);
->  alloc_err:
->  	return ret;
->  }
-
-Reinette
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index c6a4dde..690aaad 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1367,7 +1367,89 @@ static void b43_nphy_rev2_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
+ 
+ static void b43_nphy_rev3_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
+ {
+-	/* TODO */
++	struct b43_phy_n *nphy = dev->phy.n;
++	u8 i;
++	u16 reg, val;
++
++	if (code == 0) {
++		b43_phy_mask(dev, B43_NPHY_AFECTL_OVER1, 0xFDFF);
++		b43_phy_mask(dev, B43_NPHY_AFECTL_OVER, 0xFDFF);
++		b43_phy_mask(dev, B43_NPHY_AFECTL_C1, 0xFCFF);
++		b43_phy_mask(dev, B43_NPHY_AFECTL_C2, 0xFCFF);
++		b43_phy_mask(dev, B43_NPHY_TXF_40CO_B1S0, 0xFFDF);
++		b43_phy_mask(dev, B43_NPHY_TXF_40CO_B32S1, 0xFFDF);
++		b43_phy_mask(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1, 0xFFC3);
++		b43_phy_mask(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2, 0xFFC3);
++	} else {
++		for (i = 0; i < 2; i++) {
++			if ((code == 1 && i == 1) || (code == 2 && !i))
++				continue;
++
++			reg = (i == 0) ?
++				B43_NPHY_AFECTL_OVER1 : B43_NPHY_AFECTL_OVER;
++			b43_phy_maskset(dev, reg, 0xFDFF, 0x0200);
++
++			if (type < 3) {
++				reg = (i == 0) ?
++					B43_NPHY_AFECTL_C1 :
++					B43_NPHY_AFECTL_C2;
++				b43_phy_maskset(dev, reg, 0xFCFF, 0);
++
++				reg = (i == 0) ?
++					B43_NPHY_RFCTL_LUT_TRSW_UP1 :
++					B43_NPHY_RFCTL_LUT_TRSW_UP2;
++				b43_phy_maskset(dev, reg, 0xFFC3, 0);
++
++				if (type == 0)
++					val = (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) ? 4 : 8;
++				else if (type == 1)
++					val = 16;
++				else
++					val = 32;
++				b43_phy_set(dev, reg, val);
++
++				reg = (i == 0) ?
++					B43_NPHY_TXF_40CO_B1S0 :
++					B43_NPHY_TXF_40CO_B32S1;
++				b43_phy_set(dev, reg, 0x0020);
++			} else {
++				if (type == 6)
++					val = 0x0100;
++				else if (type == 3)
++					val = 0x0200;
++				else
++					val = 0x0300;
++
++				reg = (i == 0) ?
++					B43_NPHY_AFECTL_C1 :
++					B43_NPHY_AFECTL_C2;
++
++				b43_phy_maskset(dev, reg, 0xFCFF, val);
++				b43_phy_maskset(dev, reg, 0xF3FF, val << 2);
++
++				if (type != 3 && type != 6) {
++					enum ieee80211_band band =
++						b43_current_band(dev->wl);
++
++					if ((nphy->ipa2g_on &&
++						band == IEEE80211_BAND_2GHZ) ||
++						(nphy->ipa5g_on &&
++						band == IEEE80211_BAND_5GHZ))
++						val = (band == IEEE80211_BAND_5GHZ) ? 0xC : 0xE;
++					else
++						val = 0x11;
++					reg = (i == 0) ? 0x2000 : 0x3000;
++					reg |= B2055_PADDRV;
++					b43_radio_write16(dev, reg, val);
++
++					reg = (i == 0) ?
++						B43_NPHY_AFECTL_OVER1 :
++						B43_NPHY_AFECTL_OVER;
++					b43_phy_set(dev, reg, 0x0200);
++				}
++			}
++		}
++	}
+ }
+ 
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSISel */
+-- 
+1.6.4.2
 
