@@ -1,43 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:60555 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932676Ab0AFVXh (ORCPT
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:60633 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295Ab0A3TSG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2010 16:23:37 -0500
-Received: by yxe26 with SMTP id 26so17060884yxe.4
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2010 13:23:37 -0800 (PST)
-Message-ID: <4B44FF56.6080204@lwfinger.net>
-Date: Wed, 06 Jan 2010 15:23:34 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 30 Jan 2010 14:18:06 -0500
+Received: by fxm20 with SMTP id 20so2964636fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 11:18:03 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/5] b43: N-PHY: split RSSI selection into two per-PHY-revision functions
+Date: Sat, 30 Jan 2010 20:18:03 +0100
+Message-Id: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH 2/5] b43: N-PHY: add b43_nphy_get_tx_gains (V2)
-References: <op.u54a59c89lhzdc@linux-g0th.site> <43e72e891001060926s320bf403ya2edf2601ced5125@mail.gmail.com> <b170af451001061018x6ff2404ajbdbb3cb96ceaf7f2@mail.gmail.com> <op.u54ptmwm9lhzdc@linux-g0th.site>
-In-Reply-To: <op.u54ptmwm9lhzdc@linux-g0th.site>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2010 02:57 PM, Rafał Miłecki wrote:
-> V2: adjust to renamed function, fill index array
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->  drivers/net/wireless/b43/phy_n.c |   81
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |  101 +++++++++++++++++++------------------
+ 1 files changed, 52 insertions(+), 49 deletions(-)
 
-Just a little nitpick to save John some work, and to keep the patches straight.
-
-When you submit a second (or later) version of a patch, indicate the version in
-the mail header as in [PATCH 2/5 V2] b43:.... The upstream software strips all
-of that out and the commit header will be clean.
-
-In addition, it is useful to state what is different below the --- marker. The
-software also strips that part of the patch - the permanent commit message
-should be devoid of the details of the review message. It is like making
-sausage! Better that the details are hidden.
-
-Larry
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index d738d76..c6a4dde 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1316,66 +1316,69 @@ static void b43_nphy_scale_offset_rssi(struct b43_wldev *dev, u16 scale,
+ 		b43_phy_write(dev, B43_NPHY_RSSIMC_1Q_TSSI, tmp);
+ }
+ 
+-/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSISel */
+-static void b43_nphy_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
++static void b43_nphy_rev2_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
+ {
+ 	u16 val;
+ 
+-	if (dev->phy.rev >= 3) {
+-		/* TODO */
+-	} else {
+-		if (type < 3)
+-			val = 0;
+-		else if (type == 6)
+-			val = 1;
+-		else if (type == 3)
+-			val = 2;
+-		else
+-			val = 3;
++	if (type < 3)
++		val = 0;
++	else if (type == 6)
++		val = 1;
++	else if (type == 3)
++		val = 2;
++	else
++		val = 3;
+ 
+-		val = (val << 12) | (val << 14);
+-		b43_phy_maskset(dev, B43_NPHY_AFECTL_C1, 0x0FFF, val);
+-		b43_phy_maskset(dev, B43_NPHY_AFECTL_C2, 0x0FFF, val);
++	val = (val << 12) | (val << 14);
++	b43_phy_maskset(dev, B43_NPHY_AFECTL_C1, 0x0FFF, val);
++	b43_phy_maskset(dev, B43_NPHY_AFECTL_C2, 0x0FFF, val);
+ 
++	if (type < 3) {
++		b43_phy_maskset(dev, B43_NPHY_RFCTL_RSSIO1, 0xFFCF,
++				(type + 1) << 4);
++		b43_phy_maskset(dev, B43_NPHY_RFCTL_RSSIO2, 0xFFCF,
++				(type + 1) << 4);
++	}
++
++	/* TODO use some definitions */
++	if (code == 0) {
++		b43_phy_maskset(dev, B43_NPHY_AFECTL_OVER, 0xCFFF, 0);
+ 		if (type < 3) {
+-			b43_phy_maskset(dev, B43_NPHY_RFCTL_RSSIO1, 0xFFCF,
+-					(type + 1) << 4);
+-			b43_phy_maskset(dev, B43_NPHY_RFCTL_RSSIO2, 0xFFCF,
+-					(type + 1) << 4);
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD, 0xFEC7, 0);
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER, 0xEFDC, 0);
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD, 0xFFFE, 0);
++			udelay(20);
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER, 0xFFFE, 0);
+ 		}
+-
+-		/* TODO use some definitions */
+-		if (code == 0) {
+-			b43_phy_maskset(dev, B43_NPHY_AFECTL_OVER, 0xCFFF, 0);
+-			if (type < 3) {
+-				b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD,
+-						0xFEC7, 0);
+-				b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
+-						0xEFDC, 0);
+-				b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD,
+-						0xFFFE, 0);
+-				udelay(20);
+-				b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
+-						0xFFFE, 0);
+-			}
+-		} else {
+-			b43_phy_maskset(dev, B43_NPHY_AFECTL_OVER, 0xCFFF,
+-					0x3000);
+-			if (type < 3) {
+-				b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD,
+-						0xFEC7, 0x0180);
+-				b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
+-						0xEFDC, (code << 1 | 0x1021));
+-				b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD,
+-						0xFFFE, 0x0001);
+-				udelay(20);
+-				b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
+-						0xFFFE, 0);
+-			}
++	} else {
++		b43_phy_maskset(dev, B43_NPHY_AFECTL_OVER, 0xCFFF,
++				0x3000);
++		if (type < 3) {
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD, 
++					0xFEC7, 0x0180);
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER,
++					0xEFDC, (code << 1 | 0x1021));
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_CMD, 0xFFFE, 0x1);
++			udelay(20);
++			b43_phy_maskset(dev, B43_NPHY_RFCTL_OVER, 0xFFFE, 0);
+ 		}
+ 	}
+ }
+ 
++static void b43_nphy_rev3_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
++{
++	/* TODO */
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RSSISel */
++static void b43_nphy_rssi_select(struct b43_wldev *dev, u8 code, u8 type)
++{
++	if (dev->phy.rev >= 3)
++		b43_nphy_rev3_rssi_select(dev, code, type);
++	else
++		b43_nphy_rev2_rssi_select(dev, code, type);
++}
++
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SetRssi2055Vcm */
+ static void b43_nphy_set_rssi_2055_vcm(struct b43_wldev *dev, u8 type, u8 *buf)
+ {
+-- 
+1.6.4.2
 
