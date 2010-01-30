@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:60369 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754679Ab0AZVyI (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:65124 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754277Ab0A3TSX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2010 16:54:08 -0500
-Date: Tue, 26 Jan 2010 22:54:01 +0100
-From: "Edgar E. Iglesias" <edgar.iglesias@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Dunc <dunc@lemonia.org>, David Miller <davem@davemloft.net>,
-	kaber@trash.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-Message-ID: <20100126215401.GA25095@laped.iglesias.mooo.com>
-References: <877hr5nkx0.fsf@purkki.valot.fi>
- <20100126.041610.226004766.davem@davemloft.net>
- <87wrz5m3cd.fsf@purkki.valot.fi>
- <20100126.050645.184040277.davem@davemloft.net>
- <87my01m0zm.fsf@purkki.valot.fi>
- <4B5EF5DF.2070005@lemonia.org>
- <87iqaplz5a.fsf@purkki.valot.fi>
+	Sat, 30 Jan 2010 14:18:23 -0500
+Received: by fg-out-1718.google.com with SMTP id l26so1263655fgb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2010 11:18:21 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/5] b43: N-PHY: fix Cal TX IQ LO for newer PHYs
+Date: Sat, 30 Jan 2010 20:18:05 +0100
+Message-Id: <1264879087-14326-3-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
+References: <1264879087-14326-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87iqaplz5a.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 26, 2010 at 04:27:29PM +0200, Kalle Valo wrote:
-> Dunc <dunc@lemonia.org> writes:
-> 
-> > If applications set the QoS values, the who's to stop someone (for
-> > example) writing a bittorrent client that marks all packets for the
-> > highest priority as if they were VoIP or something?
-> 
-> Nobody. That would a bug in the application which should be fixed.
-> Badly behaving applications can disrupt the network, with or without
-> QoS support. So no need to blame QoS for this.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-Fixing the app is not always an alternative, the damage may already
-be done. You simply cannot always trust all the devices.
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 690aaad..cf107c5 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -2229,7 +2229,17 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+ 		(dev->phy.rev == 5 && nphy->ipa2g_on &&
+ 		b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ);
+ 	if (phy6or5x) {
+-		/* TODO */
++		if (dev->phy.is_40mhz) {
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 0), 18,
++					tbl_tx_iqlo_cal_loft_ladder_40);
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 32), 18,
++					tbl_tx_iqlo_cal_iqimb_ladder_40);
++		} else {
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 0), 18,
++					tbl_tx_iqlo_cal_loft_ladder_20);
++			b43_ntab_write_bulk(dev, B43_NTAB16(15, 32), 18,
++					tbl_tx_iqlo_cal_iqimb_ladder_20);
++		}
+ 	}
+ 
+ 	b43_phy_write(dev, B43_NPHY_IQLOCAL_CMDGCTL, 0x8AA9);
+-- 
+1.6.4.2
 
-And, AFAIK you can setup "QoS" networks where a user's traffic won't
-disturb others.
-
-
-> And if the network doesn't want to trust applications, it's free to do
-> so. Nothing prevents that. And based on the discussion so far, the
-> networks already ignore QoS classifations coming from other network
-> realms.
-
->From my experience, you have a mix of devices you trust and devices you
-don't trust. For untrusted devices you want to classify and re-tag
-their traffic as it enters your cloud, regardless of whatever the dev
-tagged it with.
-
-For trusted devices, typically stuff that is under the net admins control,
-you let the device itself put the tags. This can be very useful for ex when
-even advanced matching won't be able to differentiate between different
-flows. For example, try to differentiate two ssl flows based on their
-contents. Only the source can.
-
-IMO what apps should be doing is setting the DSCP to a user configurable
-value (config file or cmd line switch etc). This way people can choose DSCP
-to whatever makes sense in their particular network. The default value
-is of less interest.
-
-WRT L3 vs L2, I think apps should normally be tagging by setting the DSCP
-field. The kernel should provide configurable mappings between DSCP and
-what ever L2 QoS that is available on the egress interface. As the packet
-jumps and gets routed, the DSCP value gets remapped two every links
-particular L2 "QoS" that matches the DSCP. After all, apps shouldn't need to
-know their hooked up to a 802.11, wired ethernet or what ever is on the
-route to the peer...
-
-AFAIK, Linux already makes all of this perfectly possible.
-
-My 2 cents..
-
-Cheers
