@@ -1,144 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44709 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754199Ab0AESRA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2010 13:17:00 -0500
-Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
-	by emh02-2.mail.saunalahti.fi (Postfix) with SMTP id 3603AEF55C
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Jan 2010 20:16:59 +0200 (EET)
-Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
-	by emh07.mail.saunalahti.fi (Postfix) with ESMTP id 0B6951C6391
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Jan 2010 20:16:58 +0200 (EET)
-Subject: [PATCH v2 7/9] wl1251: get probe request template from mac80211
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 05 Jan 2010 20:16:57 +0200
-Message-ID: <20100105181657.27418.46559.stgit@tikku>
-In-Reply-To: <20100105181522.27418.97100.stgit@tikku>
-References: <20100105181522.27418.97100.stgit@tikku>
+Received: from nbd.name ([88.198.39.176]:34252 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752593Ab0AaU41 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2010 15:56:27 -0500
+Message-ID: <4B65EE79.5050000@openwrt.org>
+Date: Sun, 31 Jan 2010 21:56:25 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: fix monitor mode tx radiotap header handling
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+When an injected frame gets buffered for a powersave STA or filtered
+and retransmitted, mac80211 attempts to parse the radiotap header
+again, which doesn't work because it's gone at that point.
+This patch adds a new flag for checking the availability of a radiotap
+header, so that it only attempts to parse it once, reusing the tx info
+on the next call to ieee80211_tx().
+This fixes severe issues with rekeying in AP mode.
 
-Instead of creating the template in driver, get it from mac80211 instead.
-Thanks to this, three functions can be now removed.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
 ---
- drivers/net/wireless/wl12xx/wl1251_main.c |   86 ++++-------------------------
- 1 files changed, 12 insertions(+), 74 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index e038707..1db9722 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -831,82 +831,11 @@ out:
- 	return ret;
- }
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -274,6 +274,8 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_INTFL_RETRANSMISSION: This frame is being retransmitted
+  *	after TX status because the destination was asleep, it must not
+  *	be modified again (no seqno assignment, crypto, etc.)
++ * @IEEE80211_TX_INTFL_HAS_RADIOTAP: This frame was injected and still
++ *	has a radiotap header at skb->data.
+  */
+ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+@@ -295,6 +297,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_PSPOLL_RESPONSE	= BIT(17),
+ 	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(18),
+ 	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(19),
++	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
+ };
  
--static int wl1251_build_basic_rates(char *rates)
--{
--	u8 index = 0;
--
--	rates[index++] = IEEE80211_BASIC_RATE_MASK | IEEE80211_CCK_RATE_1MB;
--	rates[index++] = IEEE80211_BASIC_RATE_MASK | IEEE80211_CCK_RATE_2MB;
--	rates[index++] = IEEE80211_BASIC_RATE_MASK | IEEE80211_CCK_RATE_5MB;
--	rates[index++] = IEEE80211_BASIC_RATE_MASK | IEEE80211_CCK_RATE_11MB;
--
--	return index;
--}
--
--static int wl1251_build_extended_rates(char *rates)
--{
--	u8 index = 0;
--
--	rates[index++] = IEEE80211_OFDM_RATE_6MB;
--	rates[index++] = IEEE80211_OFDM_RATE_9MB;
--	rates[index++] = IEEE80211_OFDM_RATE_12MB;
--	rates[index++] = IEEE80211_OFDM_RATE_18MB;
--	rates[index++] = IEEE80211_OFDM_RATE_24MB;
--	rates[index++] = IEEE80211_OFDM_RATE_36MB;
--	rates[index++] = IEEE80211_OFDM_RATE_48MB;
--	rates[index++] = IEEE80211_OFDM_RATE_54MB;
--
--	return index;
--}
--
--
--static int wl1251_build_probe_req(struct wl1251 *wl, u8 *ssid, size_t ssid_len)
--{
--	struct wl12xx_probe_req_template template;
--	struct wl12xx_ie_rates *rates;
--	char *ptr;
--	u16 size;
--
--	ptr = (char *)&template;
--	size = sizeof(struct ieee80211_header);
--
--	memset(template.header.da, 0xff, ETH_ALEN);
--	memset(template.header.bssid, 0xff, ETH_ALEN);
--	memcpy(template.header.sa, wl->mac_addr, ETH_ALEN);
--	template.header.frame_ctl = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
--
--	/* IEs */
--	/* SSID */
--	template.ssid.header.id = WLAN_EID_SSID;
--	template.ssid.header.len = ssid_len;
--	if (ssid_len && ssid)
--		memcpy(template.ssid.ssid, ssid, ssid_len);
--	size += sizeof(struct wl12xx_ie_header) + ssid_len;
--	ptr += size;
--
--	/* Basic Rates */
--	rates = (struct wl12xx_ie_rates *)ptr;
--	rates->header.id = WLAN_EID_SUPP_RATES;
--	rates->header.len = wl1251_build_basic_rates(rates->rates);
--	size += sizeof(struct wl12xx_ie_header) + rates->header.len;
--	ptr += sizeof(struct wl12xx_ie_header) + rates->header.len;
--
--	/* Extended rates */
--	rates = (struct wl12xx_ie_rates *)ptr;
--	rates->header.id = WLAN_EID_EXT_SUPP_RATES;
--	rates->header.len = wl1251_build_extended_rates(rates->rates);
--	size += sizeof(struct wl12xx_ie_header) + rates->header.len;
--
--	wl1251_dump(DEBUG_SCAN, "PROBE REQ: ", &template, size);
--
--	return wl1251_cmd_template_set(wl, CMD_PROBE_REQ, &template,
--				      size);
--}
--
- static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
- 			     struct cfg80211_scan_request *req)
- {
- 	struct wl1251 *wl = hw->priv;
-+	struct sk_buff *skb;
- 	size_t ssid_len = 0;
- 	u8 *ssid = NULL;
- 	int ret;
-@@ -930,9 +859,18 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out;
+ /**
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1110,7 +1110,7 @@ ieee80211_tx_prepare(struct ieee80211_su
+ 	tx->flags |= IEEE80211_TX_FRAGMENTED;
  
--	ret = wl1251_build_probe_req(wl, ssid, ssid_len);
-+	skb = ieee80211_probereq_get(wl->hw, wl->vif, ssid, ssid_len,
-+				     req->ie, req->ie_len);
-+	if (!skb) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	ret = wl1251_cmd_template_set(wl, CMD_PROBE_REQ, skb->data,
-+				      skb->len);
-+	dev_kfree_skb(skb);
- 	if (ret < 0)
--		wl1251_error("probe request template build failed");
-+		goto out_sleep;
+ 	/* process and remove the injection radiotap header */
+-	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED)) {
++	if (unlikely(info->flags & IEEE80211_TX_INTFL_HAS_RADIOTAP)) {
+ 		if (!__ieee80211_parse_tx_radiotap(tx, skb))
+ 			return TX_DROP;
  
- 	ret = wl1251_cmd_trigger_scan_to(wl, 0);
- 	if (ret < 0)
-
+@@ -1119,6 +1119,7 @@ ieee80211_tx_prepare(struct ieee80211_su
+ 		 * the radiotap header that was present and pre-filled
+ 		 * 'tx' with tx control information.
+ 		 */
++		info->flags &= ~IEEE80211_TX_INTFL_HAS_RADIOTAP;
+ 	}
+ 
+ 	/*
+@@ -1501,7 +1502,8 @@ static void ieee80211_xmit(struct ieee80
+ 		int hdrlen;
+ 		u16 len_rthdr;
+ 
+-		info->flags |= IEEE80211_TX_CTL_INJECTED;
++		info->flags |= IEEE80211_TX_CTL_INJECTED |
++			       IEEE80211_TX_INTFL_HAS_RADIOTAP;
+ 
+ 		len_rthdr = ieee80211_get_radiotap_len(skb->data);
+ 		hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
