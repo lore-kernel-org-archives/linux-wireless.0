@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:60896 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752518Ab0AMLbn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2010 06:31:43 -0500
-Date: Wed, 13 Jan 2010 13:30:00 +0200
-From: Jouni Malinen <j@w1.fi>
+Received: from mga11.intel.com ([192.55.52.93]:4892 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932079Ab0AaFYb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2010 00:24:31 -0500
+From: "Zhao, Shanyu" <shanyu.zhao@intel.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211/mac80211: Add TX/RX commands for Action frames
-Message-ID: <20100113113000.GA20835@jm.kir.nu>
-References: <20100113101126.GA12548@jm.kir.nu>
- <1263377951.5093.326.camel@johannes.local>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Sat, 30 Jan 2010 21:24:22 -0800
+Subject: RE: [PATCH 1/1 v3] cfg80211: wext: fix cfg80211's SIOCSIWAP function
+Message-ID: <380B2771CDD78E46856E6B788D9F199750162F62@orsmsx503.amr.corp.intel.com>
+References: <1264801649-4985-1-git-send-email-shanyu.zhao@intel.com>
+	 <1264840545.3546.179.camel@johannes.local>
+ <1264841037.3546.183.camel@johannes.local>
+In-Reply-To: <1264841037.3546.183.camel@johannes.local>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1263377951.5093.326.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 13, 2010 at 11:19:11AM +0100, Johannes Berg wrote:
-> On Wed, 2010-01-13 at 12:11 +0200, Jouni Malinen wrote:
-> > This patch adds couple of to-do items to handle rejecting of unknown
-> > Action frames. This is required by IEEE 802.11, but we do not
-> > currently handle it in mac80211. To do this properly with optional
-> > user space control of some Action frame subtypes, a new mechanism will
-> > be needed to register user space handlers and to unregister these when
-> > the netlink socket is closed.
-> 
-> I'm not sure we should be adding this before we at least add the API to
-> register for this from userspace, if somebody starts using it now it'll
-> be effectively broken when that fix comes along, no?
-
-Assuming the later change in mac80211 is to start rejecting Action
-frames for which there is no known internal handler or register user
-space handler, the applications using this without the new registration
-mechanism would indeed need to be updated.
-
-If we can be relatively confident on what exactly is needed for the
-registration to handle some Action frames, we could add the dummy
-nl80211 command for now and then implement mac80211 (and even cfg80211)
-parts of it separately. This would allow cleaner update with
-applications that actually followed the rules and used the
-registration command now even if we were not to enforce its use (and we
-probably should not enforce it anyway since it might be acceptable to
-transmit some Action frames without expecting to ever process incoming
-Action frames).
-
-One problem with the registration mechanism is that it may not be
-obvious at this point what exactly we want to export into user space in
-the future and what gets handled inside the kernel. One obvious place
-would be to do register to process all Action frames of a specific
-category, but that may not be enough since it is possible that some
-categories will be handled both in kernel and in applications.
-
-The mechanism for specifying which Action frames are handled will likely
-need to be quite extensible.. This would require at least one attribute
-for specifying the Category value. Then based on the Category value, we
-may need to be able to specify the Action Value as an option attribute.
-In addition, the vendor specific Action and Public Action fields would
-need to get OUI as another optional attribute. With vendor specific
-values, we may even need yet another optional attribute to specify the
-subtype of the vendor specific information since some protocols may be
-handled in kernel and some in applications (i.e., more than one
-application for the same vendor OUI).
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+WWVzLCB0aGF0J3MgZXhhY3RseSB3aGF0IEkgdHJpZWQgdG8gZG8uIEZyb20gd2hhdCBJIHJlYWQg
+ZnJvbSB0aGUgbWFuIHBhZ2Ugb2YgaXdjb25maWcsIEkgdGhvdWdodCBpd2NvbmZpZyB3bGFueCBh
+cCA8bWFjPiBzaG91bGQgYmUgZW5vdWdoIHRvIGNvbm5lY3QgdG8gYW4gYXAgd2l0aG91dCBzcGVj
+aWZ5aW5nIHRoZSBlc3NpZC4gTWF5YmUgSSBkaWRuJ3QgdW5kZXJzdGFuZCB0aGUgY29ycmVjdCB1
+c2FnZSBvZiBpd2NvbmZpZy4NCg0KSG93ZXZlciwgb25lIG9mIG91ciB0ZXN0IGNhc2VzIGZhaWxl
+ZCBiZWNhdXNlIG9mIHRoaXM6DQpTdGVwcyB0byBSZXByb2R1Y2U6IA0KMS4gc2V0IHVwIHRoZSBT
+U0lEIG5hbWUgd2l0aCBPcGVuL05vbmUgaW4gQVANCjIuIHJlbG9hZCB0aGUgZHJpdmVyDQozLiBp
+bnRlcmZhY2UgdXANCjQuIHNlbmQgdGhlIGNvbW1hbmQgJ2l3Y29uZmlnIHdsYW4wIGFwIDxNQUMg
+YWRkcmVzcyBvZiB0aGUgQVA+DQoNCkV4cGVjdGVkIFJlc3VsdHM6DQp0aGUgYXNzb2NpYXRpb24g
+aXMgZXN0YWJsaXNoZWQgc3VjY2Vzc2Z1bGx5Lg0KDQpUaGFua3MsDQpTaGFueXUNCg0KLS0tLS1P
+cmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5l
+c0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFNhdHVyZGF5LCBKYW51YXJ5IDMwLCAyMDEwIDEy
+OjQ0IEFNDQpUbzogWmhhbywgU2hhbnl1DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
+b3JnOyBsaW52aWxsZUB0dXhkcml2ZXIuY29tDQpTdWJqZWN0OiBSZTogW1BBVENIIDEvMSB2M10g
+Y2ZnODAyMTE6IHdleHQ6IGZpeCBjZmc4MDIxMSdzIFNJT0NTSVdBUCBmdW5jdGlvbg0KDQpPbiBT
+YXQsIDIwMTAtMDEtMzAgYXQgMDk6MzUgKzAxMDAsIEpvaGFubmVzIEJlcmcgd3JvdGU6DQoNCj4g
+PiAgCQl3ZGV2LT5jb25uLT5wYXJhbXMuc3NpZF9sZW4gPSBjb25uZWN0LT5zc2lkX2xlbjsNCj4g
+PiArCQlpZiAoY29ubmVjdC0+c3NpZF9sZW4pIHsNCj4gPiArCQkJbWVtY3B5KHdkZXYtPnNzaWQs
+IGNvbm5lY3QtPnNzaWQsIGNvbm5lY3QtPnNzaWRfbGVuKTsNCj4gPiArCQkJd2Rldi0+Y29ubi0+
+cGFyYW1zLnNzaWQgPSB3ZGV2LT5zc2lkOw0KPiA+ICsJCX0NCj4gPiArCQllbHNlDQo+ID4gKwkJ
+CXdkZXYtPmNvbm4tPnBhcmFtcy5zc2lkID0gTlVMTDsNCj4gDQo+IEkgZG9uJ3QgdGhpbmsgSSB1
+bmRlcnN0YW5kIHRoaXMuIFRoZSB3ZGV2LT5jb25uLT5wYXJhbXMgYXJlIGluaXRpYWxpc2VkDQo+
+IGZyb20gImNvbm5lY3QiLCBhbmQgbm93IHlvdSdyZSBjb3B5aW5nIHRoZSBkYXRhIGJhY2sgYWdh
+aW4/IFRoYXQncyBub3QNCj4gbWFraW5nIHNlbnNlIHRvIG1lLg0KDQpIbW0sIHNvIHNldHRpbmcg
+dGhlIHNzaWQgdG8gTlVMTCB3b3VsZCBtYWtlIGl0IGltcG9zc2libGUgdG8gY29ubmVjdCB0bw0K
+YW55IG5ldHdvcmssIG5vPw0KDQpJIGRvbid0IHRoaW5rIEkgdW5kZXJzdGFuZCB3aGF0IHlvdSB3
+YW50IHRvIGFjaGlldmUuIEFyZSB5b3UsIGJ5IGFueQ0KY2hhbmNlLCB0cnlpbmcgdG8gZ2V0IGl0
+IHRvIGNvbm5lY3QgdG8gYW4gQVAgd2l0aG91dCBldmVyIHNwZWNpZnlpbmcgYW4NClNTSUQ/IFRo
+YXQgY2FuJ3QgcmVhbGx5IGJlIHN1cHBvcnRlZCAobm9yIGV2ZXIgd2FzIGJ5IG1hYzgwMjExKS4N
+Cg0Kam9oYW5uZXMNCg==
