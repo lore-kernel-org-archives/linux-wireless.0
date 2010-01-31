@@ -1,258 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:37026 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750790Ab0AOBdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2010 20:33:42 -0500
-Message-ID: <4B4FC5F4.9090506@openwrt.org>
-Date: Fri, 15 Jan 2010 02:33:40 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/3] ath9k: cleanup slot time and ack/cts timeout handling
-References: <4B4FC46B.6000705@openwrt.org>
-In-Reply-To: <4B4FC46B.6000705@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:56954 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799Ab0AaTxR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2010 14:53:17 -0500
+Subject: Re: Regression in b43 with BCM4311/2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4B65D51F.1090903@lwfinger.net>
+References: <4B64A2F2.6060608@lwfinger.net>
+	 <1264887027.3546.207.camel@johannes.local> <4B64AAEB.9020806@lwfinger.net>
+	 <1264888699.3546.208.camel@johannes.local> <4B65D51F.1090903@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EFDHrPs9WcCzYWUG6gev"
+Date: Sun, 31 Jan 2010 20:53:14 +0100
+Message-ID: <1264967594.3597.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously ath9k left the initialization of slot timing and ACK/CTS
-timeout to the mode specific initvals. This does not handle short vs
-long slot in 2.4 GHz and uses a rather strange value for the 2.4 GHz
-ACK timeout (64 usec).
-This patch uses the proper ath9k_hw functions for setting slot time and
-timeouts and also implements the switch between short and long slot
-time in 2.4 GHz
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1790,6 +1790,7 @@ static void ath9k_bss_info_changed(struc
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
-+	int slottime;
- 	int error;
- 
- 	mutex_lock(&sc->mutex);
-@@ -1825,6 +1826,25 @@ static void ath9k_bss_info_changed(struc
- 			ath_beacon_config(sc, vif);
- 	}
- 
-+	if (changed & BSS_CHANGED_ERP_SLOT) {
-+		if (bss_conf->use_short_slot)
-+			slottime = 9;
-+		else
-+			slottime = 20;
-+		if (vif->type == NL80211_IFTYPE_AP) {
-+			/*
-+			 * Defer update, so that connected stations can adjust
-+			 * their settings at the same time.
-+			 * See beacon.c for more details
-+			 */
-+			sc->beacon.slottime = slottime;
-+			sc->beacon.updateslot = UPDATE;
-+		} else {
-+			ah->slottime = slottime;
-+			ath9k_hw_init_global_settings(ah);
-+		}
-+	}
-+
- 	/* Disable transmission of beacons */
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED) && !bss_conf->enable_beacon)
- 		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -55,28 +55,6 @@ module_exit(ath9k_exit);
- /* Helper Functions */
- /********************/
- 
--static u32 ath9k_hw_mac_usec(struct ath_hw *ah, u32 clks)
--{
--	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
--
--	if (!ah->curchan) /* should really check for CCK instead */
--		return clks / ATH9K_CLOCK_RATE_CCK;
--	if (conf->channel->band == IEEE80211_BAND_2GHZ)
--		return clks / ATH9K_CLOCK_RATE_2GHZ_OFDM;
--
--	return clks / ATH9K_CLOCK_RATE_5GHZ_OFDM;
--}
--
--static u32 ath9k_hw_mac_to_usec(struct ath_hw *ah, u32 clks)
--{
--	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
--
--	if (conf_is_ht40(conf))
--		return ath9k_hw_mac_usec(ah, clks) / 2;
--	else
--		return ath9k_hw_mac_usec(ah, clks);
--}
--
- static u32 ath9k_hw_mac_clks(struct ath_hw *ah, u32 usecs)
- {
- 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
-@@ -413,8 +391,6 @@ static void ath9k_hw_init_defaults(struc
- 	ah->beacon_interval = 100;
- 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
- 	ah->slottime = (u32) -1;
--	ah->acktimeout = (u32) -1;
--	ah->ctstimeout = (u32) -1;
- 	ah->globaltxtimeout = (u32) -1;
- 	ah->power_mode = ATH9K_PM_UNDEFINED;
- }
-@@ -1196,34 +1172,25 @@ static void ath9k_hw_init_interrupt_mask
- 	}
- }
- 
--static bool ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us)
-+static void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
- {
--	if (us > ath9k_hw_mac_to_usec(ah, MS(0xffffffff, AR_TIME_OUT_ACK))) {
--		ath_print(ath9k_hw_common(ah), ATH_DBG_RESET,
--			  "bad ack timeout %u\n", us);
--		ah->acktimeout = (u32) -1;
--		return false;
--	} else {
--		REG_RMW_FIELD(ah, AR_TIME_OUT,
--			      AR_TIME_OUT_ACK, ath9k_hw_mac_to_clks(ah, us));
--		ah->acktimeout = us;
--		return true;
--	}
-+	u32 val = ath9k_hw_mac_to_clks(ah, us);
-+	val = min(val, (u32) 0xFFFF);
-+	REG_WRITE(ah, AR_D_GBL_IFS_SLOT, val);
- }
- 
--static bool ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us)
-+static void ath9k_hw_set_ack_timeout(struct ath_hw *ah, u32 us)
- {
--	if (us > ath9k_hw_mac_to_usec(ah, MS(0xffffffff, AR_TIME_OUT_CTS))) {
--		ath_print(ath9k_hw_common(ah), ATH_DBG_RESET,
--			  "bad cts timeout %u\n", us);
--		ah->ctstimeout = (u32) -1;
--		return false;
--	} else {
--		REG_RMW_FIELD(ah, AR_TIME_OUT,
--			      AR_TIME_OUT_CTS, ath9k_hw_mac_to_clks(ah, us));
--		ah->ctstimeout = us;
--		return true;
--	}
-+	u32 val = ath9k_hw_mac_to_clks(ah, us);
-+	val = min(val, (u32) MS(0xFFFFFFFF, AR_TIME_OUT_ACK));
-+	REG_RMW_FIELD(ah, AR_TIME_OUT, AR_TIME_OUT_ACK, val);
-+}
-+
-+static void ath9k_hw_set_cts_timeout(struct ath_hw *ah, u32 us)
-+{
-+	u32 val = ath9k_hw_mac_to_clks(ah, us);
-+	val = min(val, (u32) MS(0xFFFFFFFF, AR_TIME_OUT_CTS));
-+	REG_RMW_FIELD(ah, AR_TIME_OUT, AR_TIME_OUT_CTS, val);
- }
- 
- static bool ath9k_hw_set_global_txtimeout(struct ath_hw *ah, u32 tu)
-@@ -1240,23 +1207,32 @@ static bool ath9k_hw_set_global_txtimeou
- 	}
- }
- 
--static void ath9k_hw_init_user_settings(struct ath_hw *ah)
-+void ath9k_hw_init_global_settings(struct ath_hw *ah)
- {
-+	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
-+	int acktimeout;
-+	int sifstime;
-+
- 	ath_print(ath9k_hw_common(ah), ATH_DBG_RESET, "ah->misc_mode 0x%x\n",
- 		  ah->misc_mode);
- 
- 	if (ah->misc_mode != 0)
- 		REG_WRITE(ah, AR_PCU_MISC,
- 			  REG_READ(ah, AR_PCU_MISC) | ah->misc_mode);
--	if (ah->slottime != (u32) -1)
--		ath9k_hw_setslottime(ah, ah->slottime);
--	if (ah->acktimeout != (u32) -1)
--		ath9k_hw_set_ack_timeout(ah, ah->acktimeout);
--	if (ah->ctstimeout != (u32) -1)
--		ath9k_hw_set_cts_timeout(ah, ah->ctstimeout);
-+
-+	if (conf->channel && conf->channel->band == IEEE80211_BAND_5GHZ)
-+		sifstime = 16;
-+	else
-+		sifstime = 10;
-+
-+	acktimeout = ah->slottime + sifstime;
-+	ath9k_hw_setslottime(ah, ah->slottime);
-+	ath9k_hw_set_ack_timeout(ah, acktimeout);
-+	ath9k_hw_set_cts_timeout(ah, acktimeout);
- 	if (ah->globaltxtimeout != (u32) -1)
- 		ath9k_hw_set_global_txtimeout(ah, ah->globaltxtimeout);
- }
-+EXPORT_SYMBOL(ath9k_hw_init_global_settings);
- 
- void ath9k_hw_deinit(struct ath_hw *ah)
- {
-@@ -2077,7 +2053,7 @@ int ath9k_hw_reset(struct ath_hw *ah, st
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
- 		ath9k_enable_rfkill(ah);
- 
--	ath9k_hw_init_user_settings(ah);
-+	ath9k_hw_init_global_settings(ah);
- 
- 	if (AR_SREV_9287_12_OR_LATER(ah)) {
- 		REG_WRITE(ah, AR_D_GBL_IFS_SIFS,
-@@ -3674,21 +3650,6 @@ u64 ath9k_hw_extend_tsf(struct ath_hw *a
- }
- EXPORT_SYMBOL(ath9k_hw_extend_tsf);
- 
--bool ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
--{
--	if (us < ATH9K_SLOT_TIME_9 || us > ath9k_hw_mac_to_usec(ah, 0xffff)) {
--		ath_print(ath9k_hw_common(ah), ATH_DBG_RESET,
--			  "bad slot time %u\n", us);
--		ah->slottime = (u32) -1;
--		return false;
--	} else {
--		REG_WRITE(ah, AR_D_GBL_IFS_SLOT, ath9k_hw_mac_to_clks(ah, us));
--		ah->slottime = us;
--		return true;
--	}
--}
--EXPORT_SYMBOL(ath9k_hw_setslottime);
--
- void ath9k_hw_set11nmac2040(struct ath_hw *ah)
- {
- 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -553,8 +553,6 @@ struct ath_hw {
- 	int16_t txpower_indexoffset;
- 	u32 beacon_interval;
- 	u32 slottime;
--	u32 acktimeout;
--	u32 ctstimeout;
- 	u32 globaltxtimeout;
- 
- 	/* ANI */
-@@ -668,7 +666,7 @@ void ath9k_hw_settsf64(struct ath_hw *ah
- void ath9k_hw_reset_tsf(struct ath_hw *ah);
- void ath9k_hw_set_tsfadjust(struct ath_hw *ah, u32 setting);
- u64 ath9k_hw_extend_tsf(struct ath_hw *ah, u32 rstamp);
--bool ath9k_hw_setslottime(struct ath_hw *ah, u32 us);
-+void ath9k_hw_init_global_settings(struct ath_hw *ah);
- void ath9k_hw_set11nmac2040(struct ath_hw *ah);
- void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
- void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -480,7 +480,8 @@ void ath_beacon_tasklet(unsigned long da
- 		sc->beacon.updateslot = COMMIT; /* commit next beacon */
- 		sc->beacon.slotupdate = slot;
- 	} else if (sc->beacon.updateslot == COMMIT && sc->beacon.slotupdate == slot) {
--		ath9k_hw_setslottime(sc->sc_ah, sc->beacon.slottime);
-+		ah->slottime = sc->beacon.slottime;
-+		ath9k_hw_init_global_settings(ah);
- 		sc->beacon.updateslot = OK;
- 	}
- 	if (bfaddr != 0) {
+--=-EFDHrPs9WcCzYWUG6gev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Larry,
+
+> I finally sorted this out. The patch in question (c7ab5ef) is the bad one=
+, but
+> not the basic response rate part.
+>=20
+> Going back to the code that worked, I discovered that the routines
+> b43_short_slot_timing_enable/disable() were never called. Once the new co=
+de
+> touched the shared memory location 0x0010, the transmit performance dropp=
+ed way
+> off. If I let the new code adjust the Interframe Slot time in MMIO space,=
+ but
+> not the shared memory location, the transmit rate in my BCM4311/2 went fr=
+om a
+> maximum of 18 to 22 Mb/s. This problem did not affect the 0x4315 device a=
+s the
+> memory was changed only for G PHYs. I think that should be for 2GHz, and =
+have
+> made that adjustment. I have not yet tested that with the LP PHY. Once I =
+do, I
+> will post a patch for comment and testing.
+
+Cool, thanks for looking into it and the detailed analysis!
+
+> Thanks for helping me understand the basic response rates.
+
+Any time.
+
+johannes
+
+--=-EFDHrPs9WcCzYWUG6gev
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLZd+nAAoJEODzc/N7+QmaJZ4QANLWKq11qVmQR2VqnRtmbone
+mDlYD6N+k56caSZrSASXEr0GfS4BA4umRcMeAxNLrUUQnkv1ZMwYmANSUo2YohIm
+RrcShKCaVdwk7rqF+UyF+TqU0NOqxZelVQnWhUQ9EcQrB6fphs8NO9/HAZGRwWm1
+02EzhtroGdCPFJG+50X/iuh6L/rb07rv9qr3xsiFWMEOOqy+MZu1rtABMjG4GwE6
+nWH6nwH1qz6xYEMC8YyGK9OJ7fXDn8CNKUmE2RYbP+z9JGQFb/BXwOm6OH7Krehc
+nNdEvWjp+2b/uOTyVx/3yfbBmVpqn4lqQCaLCNbtDxn4MISI85M58S16uMnjQa+G
+tWrAzk5aosX5dAp4c6C/Ta/+W/M5nSoZVPycx51ZjT+UJxm42PXj10M43qyk54JQ
+TEGKobZk/iuuffVgfqoK8Se4gDfeylwFQrcDcZ0IB+tFDCaiTxlZva9MtE1rxA6M
+GXnxqBtOvDGxjueBQFe60O/5aO6brJyxVEMzRylX+y9jBC3twOp1BFBZ+exPPTgc
+bnG7bfYdBm3mt9KBwWeu4lQX7QKZrWy+lCWTvw8aAG/pKOWBwMgqyFoWf65rVOuh
+F+DRZZcrpWaaBQC3566Fj5tWUR1Y7DjnImz/YmZJegchKyvmibNCyshgHtSUG8t6
+55TtXSNq2o5BA4nyXEB+
+=eQLF
+-----END PGP SIGNATURE-----
+
+--=-EFDHrPs9WcCzYWUG6gev--
+
