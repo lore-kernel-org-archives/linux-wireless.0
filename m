@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:23476 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586Ab0BLIFZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 03:05:25 -0500
-Subject: Re: [PATCH 1/1] mac80211: fix handling of null-rate control in
- rate_control_get_rate
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: "ext Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>
-In-Reply-To: <43e72e891002112357k4b261c38x5f4d0fdc598bff3a@mail.gmail.com>
-References: <1265961128-21301-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <43e72e891002112357k4b261c38x5f4d0fdc598bff3a@mail.gmail.com>
+Received: from mhub5.vim.at ([92.43.99.6]:57009 "EHLO mail.vim.at"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756140Ab0BAUcb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2010 15:32:31 -0500
+Subject: Re: ath9k/PCI 168C:002C
+From: Bernhard Reiter <ockham@raz.or.at>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20100201113620.52ahuc39ws8scow4-cebfxv@webmail.spamcop.net>
+References: <1265039522.3610.55.camel@razor>
+	 <20100201113620.52ahuc39ws8scow4-cebfxv@webmail.spamcop.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 12 Feb 2010 10:03:09 +0200
-Message-ID: <1265961789.3381.105.camel@wimaxnb.nmp.nokia.com>
+Date: Mon, 01 Feb 2010 21:32:27 +0100
+Message-ID: <1265056347.3610.100.camel@razor>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-02-12 at 08:57 +0100, ext Luis R. Rodriguez wrote:
-> On Thu, Feb 11, 2010 at 11:52 PM, Juuso Oikarinen
-> <juuso.oikarinen@nokia.com> wrote:
-> > For hardware with IEEE80211_HW_HAS_RATE_CONTROL the rate controller is not
-> > initialized. However, calling functions such as ieee80211_beacon_get result
-> > in the rate_control_get_rate function getting called, which is accessing
-> > (in this case uninitialized) rate control structures unconditionally.
-> >
-> > Fix by exiting the function before setting the rates for HW with
-> > IEEE80211_HW_HAS_RATE_CONTROL set. The initialization of the ieee80211_tx_info
-> > struct is intentionally still executed.
-> >
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+thanks for your hints! unfortunately, as you expected, simply adding the
+PCI id doesn't do the trick. seems like a couple of people tried it
+already:
+http://forum.ubuntuusers.de/topic/atheros-ar5b95-geht-unter-unr-9-10-nicht/
+(in German).
+
+i haven't tried madwifi yet, though.
+
+regards,
+bernhard
+
+Am Montag, den 01.02.2010, 11:36 -0500 schrieb Pavel Roskin:
+> Quoting Bernhard Reiter <ockham@raz.or.at>:
 > 
-> I meant adding it on the commit log, below the Reviewed-by line.
+> > hi,
+> >
+> > i'm currently setting up karmic (64bit) an asus eeepc 1005p, and i've
+> > found the following in the debian wiki:
+> > http://wiki.debian.org/DebianEeePC/Model/1005P
+> > i'm giving this laptop to another person on wednesday, but until then, i
+> > might try to compile the ath9k module with the suggested addition of
+> > that PCI id.
 > 
->   Luis
+> You can add the ID at the runtime:
+> 
+> echo "168c 002c" > /sys/bus/pci/drivers/ath9k/new_id
+> 
+> > unfortunately, i haven't really found anything on how to do this (in a
+> > least-invasive fashion). i've looked
+> > into /usr/src/linux-headers-2.6.31-17/drivers/net/wireless/ath/ath9k,
+> > but there's only a Kconfig and a Makefile, but no sources.
+> 
+> You should be able to compile compat-wireless on Ubuntu.  Then you can  
+> modify ath9k in the compat-wireless sources.  But I'm not optimistic.   
+> The wiki link suggests that further changes to the driver are needed.
+> 
+> You can also try MadWifi trunk to support the device.  It should  
+> compile out-of-box.  You can use the same trick to add the ID, just  
+> replace "ath9k" with "ath_pci".
+> 
 
-Sorry, I misunderstood. 
-
-I will resend it once again.
-
--Juuso
 
