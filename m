@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36151 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59876 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759441Ab0BYRAk (ORCPT
+	with ESMTP id S1756052Ab0BAUPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 12:00:40 -0500
+	Mon, 1 Feb 2010 15:15:37 -0500
+Date: Mon, 1 Feb 2010 15:12:47 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-kernel@vger-kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-Subject: [PATCH] netdevice.h: check for CONFIG_WLAN instead of CONFIG_WLAN_80211
-Date: Thu, 25 Feb 2010 11:49:49 -0500
-Message-Id: <1267116589-12199-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20100225150423.GA5101@faui49.informatik.uni-erlangen.de>
-References: <20100225150423.GA5101@faui49.informatik.uni-erlangen.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: shanyu.zhao@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1 v3] cfg80211: wext: fix cfg80211's SIOCSIWAP
+	function
+Message-ID: <20100201201246.GD4952@tuxdriver.com>
+References: <1264801649-4985-1-git-send-email-shanyu.zhao@intel.com> <1264840545.3546.179.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1264840545.3546.179.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In "wireless: remove WLAN_80211 and WLAN_PRE80211 from Kconfig" I
-inadvertantly missed a line in include/linux/netdevice.h.  I thereby
-effectively reverted "net: Set LL_MAX_HEADER properly for wireless." by
-accident. :-(  Now we should check there for CONFIG_WLAN instead.
+On Sat, Jan 30, 2010 at 09:35:45AM +0100, Johannes Berg wrote:
+> 
+> > @@ -779,10 +779,15 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+> >  			wdev->conn->auto_auth = false;
+> >  		}
+> >  
+> > -		memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
+> > +		/* make sure it can connect if only bssid is provided */
+> >  		wdev->ssid_len = connect->ssid_len;
+> > -		wdev->conn->params.ssid = wdev->ssid;
+> >  		wdev->conn->params.ssid_len = connect->ssid_len;
+> > +		if (connect->ssid_len) {
+> > +			memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
+> > +			wdev->conn->params.ssid = wdev->ssid;
+> > +		}
+> > +		else
+> > +			wdev->conn->params.ssid = NULL;
+> 
+> I don't think I understand this. The wdev->conn->params are initialised
+> from "connect", and now you're copying the data back again? That's not
+> making sense to me.
+> 
+> Also, please say what exactly are you trying to fix.
+> 
+> Also, cfg80211_mgd_wext_siwap() certainly is _not_ expected to clear the
+> SSID, since we want to connect to the previously set SSID. Same with
+> cfg80211_mgd_wext_siwessid(), it should _not_ clear the BSSID.
+> 
+> Right now, it looks to me that your patch makes it impossible to specify
+> both the SSID and the BSSID to connect to, which is definitely wrong.
+> 
+> John, you mentioned you had applied this, can you revert this patch for
+> now?
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Reported-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
-Cc: stable@kernel.org
----
-Unless there is objection, I'll push this up through my tree as normal.
+Yeah, it's coming out...  Clearly I didn't understand what it was doing.
 
- include/linux/netdevice.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index a3fccc8..99914e6 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -136,7 +136,7 @@ static inline bool dev_xmit_complete(int rc)
-  *	used.
-  */
- 
--#if defined(CONFIG_WLAN_80211) || defined(CONFIG_AX25) || defined(CONFIG_AX25_MODULE)
-+#if defined(CONFIG_WLAN) || defined(CONFIG_AX25) || defined(CONFIG_AX25_MODULE)
- # if defined(CONFIG_MAC80211_MESH)
- #  define LL_MAX_HEADER 128
- # else
+John
 -- 
-1.6.2.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
