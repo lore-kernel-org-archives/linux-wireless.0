@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f172.google.com ([209.85.222.172]:57062 "EHLO
-	mail-pz0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752965Ab0BHTdm convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51325 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754806Ab0BAVaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 14:33:42 -0500
-Received: by pzk2 with SMTP id 2so197065pzk.21
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 11:33:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1265620089.3783.2.camel@johannes.berg>
-References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
-	 <20100205165726.GA1496@holoscopio.com>
-	 <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com>
-	 <1265446793.4041.2.camel@johannes.local>
-	 <c1545bb51002071151wb2cefa3mb03501e0d6b3fb4b@mail.gmail.com>
-	 <1265620089.3783.2.camel@johannes.berg>
-Date: Mon, 8 Feb 2010 11:25:37 -0800
-Message-ID: <445f43ac1002081125i61bb53dap5b9df374b3116ba9@mail.gmail.com>
-Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh mode
-From: Javier Cardona <javier@cozybit.com>
+	Mon, 1 Feb 2010 16:30:35 -0500
+Date: Mon, 1 Feb 2010 16:29:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
-	linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <yurovsky@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: "Zhao, Shanyu" <shanyu.zhao@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/1] cfg80211: wext: set bssid to NULL in SIOCIWESSID
+Message-ID: <20100201212918.GF4952@tuxdriver.com>
+References: <1264808376-8003-1-git-send-email-shanyu.zhao@intel.com> <1264840626.3546.181.camel@johannes.local> <380B2771CDD78E46856E6B788D9F199750233886@orsmsx503.amr.corp.intel.com> <1265052460.29119.0.camel@johannes.local> <20100201194748.GC4952@tuxdriver.com> <1265059504.29119.1.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1265059504.29119.1.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thadeu, Johannes,
+On Mon, Feb 01, 2010 at 10:25:04PM +0100, Johannes Berg wrote:
+> On Mon, 2010-02-01 at 14:47 -0500, John W. Linville wrote:
+> 
+> > > > iwconfig wlan0 essid "foo"
+> > > > This will make the station associate with the first AP with essid
+> > > > "foo".
+> > > > 
+> > > > iwconfig wlan0 ap "00:...:ff"
+> > > > This will disassociate from the previous AP, and then associate with
+> > > > the first AP with MAC "00:...:ff".
+> > > > 
+> > > > Am I missing anything here?
+> > > 
+> > > No, I missed something. The problem will only occur when the SSID is
+> > > hidden as well, because the connect code will not have the SSID and not
+> > > know what to scan for, or which SSID to choose (there are Cisco APs that
+> > > use the same BSSID for multiple hidden SSIDs).
+> > 
+> > Well, in the confusion I deleted the original post.  Could you
+> > (i.e. Shanyu Zhao) resend it to me?
+> 
+> Sorry -- I wasn't clear. My mail missed something in describing the
+> problem, but that doesn't change the fact that the patch will break it.
 
-On Mon, Feb 8, 2010 at 1:08 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sun, 2010-02-07 at 11:51 -0800, Andrey Yurovsky wrote:
->> On Sat, Feb 6, 2010 at 12:59 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > I do wonder though, the commit (155cc9e4b1d60161ee53) I referenced was
->> > yours, and now you're asking the same question as I am -- "why even
->> > allow adding stations?"
->>
->> It was supported for automated testing and experimentation (you could
->> then force certain topologies).  I can't think of any other reason to
->> do it.  I suppose that the same thing goes for mpaths and the mesh
->> portal tables.
->
-> So would you prefer to fix it (however we would do that, I don't think
-> that the patch here is correct since it leaves the station struct with
-> no usable rates afaict), or just disallow it?
+OK, thanks for clarifying! :-)
 
-After reviewing our mesh test suite, I would vote for disallowing mesh
-point addition via iw.  We currently force topologies by 1. turning
-auto peering off, 2. waiting for neighbors to be discovered and 3.
-controlling peering with 'iw ... station set <MAC address>
-plink_action <open|block>'
-
-Thadeu, would this approach work for you?
-
-Javier
-
-
-
+John
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
