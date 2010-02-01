@@ -1,89 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53161 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756752Ab0BDIZH (ORCPT
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:64465 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756052Ab0BAUOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 03:25:07 -0500
-Subject: Re: [RFC PATCH 1/2] mac80211: Retry null data frame for power save.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1265266442-6273-1-git-send-email-vnatarajan@atheros.com>
-References: <1265266442-6273-1-git-send-email-vnatarajan@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1y3kTOQ6dxNlIuTViZej"
-Date: Thu, 04 Feb 2010 09:25:03 +0100
-Message-ID: <1265271903.29119.107.camel@johannes.local>
+	Mon, 1 Feb 2010 15:14:49 -0500
+Subject: Re: Linux wireless GSoC 2010 project ideas
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Till Kamppeter <till.kamppeter@gmail.com>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	lsb-discuss@lists.linux-foundation.org
+In-Reply-To: <43e72e891002011001l4e914094v33e73209a9da93e8@mail.gmail.com>
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
+	 <4B65F024.3080505@gmail.com> <1264972854.3597.17.camel@johannes.local>
+	 <43e72e891002011001l4e914094v33e73209a9da93e8@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 01 Feb 2010 22:14:44 +0200
+Message-ID: <1265055284.26421.16.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2010-02-01 at 10:01 -0800, Luis R. Rodriguez wrote: 
+> On Sun, Jan 31, 2010 at 1:20 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Sun, 2010-01-31 at 22:03 +0100, Witold Sowa wrote:
+> >
+> >> Some time ago johill asked me if I would be interested in hacking on
+> >> adding WPS support to NetworkManager. Well, I would but I don't know
+> >> when I'll find some time for that. I don't know how much of work would
+> >> it require, but it possibly could be a topic of one of GSoC 2010
+> >> projects. I have no idea know if anybody would be willing to be a mentor
+> >> for such a project.
+> >
+> > Sounds like a good project to me, but I don't think I'd be a good mentor
+> > for since I'm not familiar with the NM codebase at all. As for how much
+> > work it would require, I think the basic client-side functionality could
+> > possibly be "too simple" for you, WPS has a lot of additional
+> > functionality (e.g. WPS support for the AP side).
+> 
+> In case it helps, I believe all that would be required is the dbus
+> stuff, there are sample GUI examples of this already provided through
+> the wpa_supplicant wpa_gui.
 
---=-1y3kTOQ6dxNlIuTViZej
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Here are couple of ideas (I don't think I will enter the program
+though):
 
-On Thu, 2010-02-04 at 12:24 +0530, Vivek Natarajan wrote:
+1 - Make Ad-Hoc WPA networks work (with NM). This would involve changes
+in kernel, but I don't think will involve changes in hardware drivers.
 
-> @@ -275,6 +274,18 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, st=
-ruct sk_buff *skb)
->  			local->dot11FailedCount++;
->  	}
-> =20
-> +	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
-> +			(local->hw.conf.flags & IEEE80211_CONF_PS)) {
-> +		if (!(info->flags & IEEE80211_TX_STAT_ACK)) {
-> +			ieee80211_stop_queues_by_reason(&local->hw,
-> +					IEEE80211_QUEUE_STOP_REASON_PS);
-> +			ieee80211_queue_work(&local->hw,
-> +					&local->dynamic_ps_disable_work);
-> +			mod_timer(&local->dynamic_ps_timer, jiffies +
-> +					msecs_to_jiffies(10));
-> +		}
-> +	}
-> +
+2 - Allow a wireless card to associate to several APs at once (if they
+share the frequency). 
+Implement this at least for ath5/9k. Madwifi had that feature. Maybe
+ath9k has. If it has that feature, test it.
+Implement proper GUI support in NM for that.
 
-This will still lose packets in the time between frame tx and status
-report. And in fact, it'll also lose packets from lower-priority queues,
-since ath9k doesn't implement flushing yet. It really should :)
+3 - Create wardriving^Wwireless analysis tool.
+No, not for wardriving. I mean an application that shows and analyzes
+nicely the signal strength of nearby APs, and other features of it 
 
-On the other hand, there is hardware (even from Atheros/Zydas!) that
-will not provide status reports for every frame.
+airodump-ng does have some features, but it is focused too much on
+cracking that on analysis.
+For example it slows to an crawl, when I attempt to do iperf and monitor
+huge traffic that is sent.
 
-Also, I'm not entirely sure why the AP would lose the frame? It's a
-unicast frame that will be retransmitted quite a number of times. Is it
-really actually going out on the air or is there something else wrong?
-Maybe just the queue priority inversion issue since this frame goes out
-as higher priority as most data frames?
+It could see how many packets are dropped, how many resends were done,
+have proper ESSID filter, so it can be used in large scale networks
+(I once tried to understand locations of wifi access points in my uni,
+so I know where to get proper wifi connection.)
 
-If you really need to provide this functionality I think you should
-probably do it "properly" in the sense that you react to the "frame
-acked" by enabling PS, rather than the other way around. That requires a
-hardware flag though that enables mac80211 to know that all frames will
-get a status report unless something is seriously wrong, since otherwise
-we'd *never* go into PS.
+A lot more can be extracted from monitor mode.
 
-johannes
 
---=-1y3kTOQ6dxNlIuTViZej
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLaoRcAAoJEODzc/N7+QmatM8P/jRnqMIGDTbGW1cbrB3ek2PH
-xLlua0j7khj3zjz6ykPg75SzPw+U/vdqn5c7Mhh+t8NKfiKzrcgThG2v4BoYaFJ8
-EbJuTdXAF3gvtA+IcEDI7yILQ6LNxOv7TbcKuRLWLin+v2WaFypjIAxz1iLknsXg
-0K7RTAmSv4rml5xtVT/bySSuZqJma2KGH0oTn3l3HTeqQtZt95CERNZT+0dCXYgL
-siynzh/EKyG3/18wYM2BXs0j3N2nKsihgJ5mRbaWAAg3Km6FsEhr+Z8xxEofm08c
-C/6/vBPWkHS90OWTPmoeU958otW0uUZBIF0qQxxQWJUQLVuPAdwtkN3k9rW5Jv7c
-fccK0XJnraN3SnlWhknqBxH1ZKC3ANgKHRxMMCBayQY0uiPQavxLIWgpH2v99Xkn
-B+IUFT8sjMP6LdTTUnB/OcDHigmjWqLwR4wMobk5ruYKvZcuyy13fJJ8l2nI9wJZ
-DkULWMEjoO1MunNKk9C86zahGJY7MYh16KyuBK9zM9FR5dYzDasRro5c9mdmgySA
-d0Vu721hpUFmql1PMG7U1wIewVo0SsNQy3QB0mzSurNrWywqGfi18R81lGBbYtHH
-AfMNiG9fplyGIiRYvnPP4TLxg/KVhraGZiFhomPDSqgMdRcoHjLY1mDFP1RS8m6W
-Br4NdeB3G135+uURqVM5
-=aJLh
------END PGP SIGNATURE-----
-
---=-1y3kTOQ6dxNlIuTViZej--
+Best regards,
+Maxim Levitsky
 
