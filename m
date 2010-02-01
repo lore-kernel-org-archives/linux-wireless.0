@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:49924 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755661Ab0BCJhu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2010 04:37:50 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
+Received: from mhub5.vim.at ([92.43.99.6]:36679 "EHLO mail.vim.at"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755261Ab0BAP6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2010 10:58:44 -0500
+Subject: ath9k/PCI 168C:002C
+From: Bernhard Reiter <ockham@raz.or.at>
 To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211_hwsim: add fake hw scan handler
-Date: Wed, 3 Feb 2010 10:36:19 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com
-References: <1265188851.29119.84.camel@johannes.local>
-In-Reply-To: <1265188851.29119.84.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201002031036.19942.holgerschurig@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 01 Feb 2010 16:52:02 +0100
+Message-ID: <1265039522.3610.55.camel@razor>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +	for (i = 0; i < req->n_channels; i++)
-> +		printk(KERN_DEBUG "hwsim can chan %d\n",
-> +			req->channels[i]->center_freq);
+hi,
 
-Should that be
+i'm currently setting up karmic (64bit) an asus eeepc 1005p, and i've
+found the following in the debian wiki:
+http://wiki.debian.org/DebianEeePC/Model/1005P
+i'm giving this laptop to another person on wednesday, but until then, i
+might try to compile the ath9k module with the suggested addition of
+that PCI id.
 
-  printk(KERN_DEBUG "hwsim scan chan %d\n",
-                           ^
-  (missing s)
+unfortunately, i haven't really found anything on how to do this (in a
+least-invasive fashion). i've looked
+into /usr/src/linux-headers-2.6.31-17/drivers/net/wireless/ath/ath9k,
+but there's only a Kconfig and a Makefile, but no sources.
 
-???
+can you people help me modify, compile and test this module?
 
--- 
-http://www.holgerschurig.de
+bernhard reiter
+ps please cc, i'm not a list subscriber
+
