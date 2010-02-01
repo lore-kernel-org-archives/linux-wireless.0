@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:45323 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932708Ab0BDVpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 16:45:42 -0500
-Subject: Re: [PATCH] airo: fix setting zero length WEP key
-From: Dan Williams <dcbw@redhat.com>
-To: Chris Siebenmann <cks@cs.toronto.edu>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
-In-Reply-To: <20100203213109.B2D802B0054@apps0.cs.toronto.edu>
-References: <20100203213109.B2D802B0054@apps0.cs.toronto.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Feb 2010 13:44:55 -0800
-Message-ID: <1265319895.4290.4.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1754369Ab0BAS5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2010 13:57:16 -0500
+From: "Zhao, Shanyu" <shanyu.zhao@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 1 Feb 2010 10:57:13 -0800
+Subject: RE: [PATCH 1/1] cfg80211: wext: set bssid to NULL in SIOCIWESSID
+Message-ID: <380B2771CDD78E46856E6B788D9F199750233886@orsmsx503.amr.corp.intel.com>
+References: <1264808376-8003-1-git-send-email-shanyu.zhao@intel.com>
+ <1264840626.3546.181.camel@johannes.local>
+In-Reply-To: <1264840626.3546.181.camel@johannes.local>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-02-03 at 16:31 -0500, Chris Siebenmann wrote:
-> | > Patch prevents call set_wep_key() with zero key
-> | > length. That fix long standing regression since commit
-> | > c0380693520b1a1e4f756799a0edc379378b462a "airo: clean up WEP key
-> | > operations". [...]
-> |
-> | What problem/regression does this actually fix? [...]
-> 
->  That mentioned commit broke wireless on a Thinkpad T42 (running Fedora
-> 11); from that commit onwards, the wireless system appeared to see no
-> networks. The patch makes things work again.
-> 
->  More details are in the Fedora bugzilla:
-> 	https://bugzilla.redhat.com/show_bug.cgi?id=522530
-
-You mean with iwlist?  That's quite odd because setting WEP keys doesn't
-have anything to do with the scanning stuff, even in the firmware.  Note
-that Airo has always been somewhat tempermental for scans and you may or
-may not see any or all APs in any given scan.
-
-Dan
-
-
+DQpBY3R1YWxseSBJIGRvbid0IHRoaW5rIG15IHBhdGNoIGRpc2FibGVzIHRoYXQgZnVuY3Rpb25h
+bGl0eS4gSWYgdGhlcmUncmUgbXVsdGlwbGUgQVAgd2l0aCB0aGUgc2FtZSBlc3NpZCAiZm9vIiBh
+bmQgb25lIG9mIHRoZW0gaGFzIE1BQyAiMDA6Li4uOmZmIiwgdGhlbjoNCg0KaXdjb25maWcgd2xh
+bjAgZXNzaWQgImZvbyINClRoaXMgd2lsbCBtYWtlIHRoZSBzdGF0aW9uIGFzc29jaWF0ZSB3aXRo
+IHRoZSBmaXJzdCBBUCB3aXRoIGVzc2lkICJmb28iLg0KDQppd2NvbmZpZyB3bGFuMCBhcCAiMDA6
+Li4uOmZmIg0KVGhpcyB3aWxsIGRpc2Fzc29jaWF0ZSBmcm9tIHRoZSBwcmV2aW91cyBBUCwgYW5k
+IHRoZW4gYXNzb2NpYXRlIHdpdGggdGhlIGZpcnN0IEFQIHdpdGggTUFDICIwMDouLi46ZmYiLg0K
+DQpBbSBJIG1pc3NpbmcgYW55dGhpbmcgaGVyZT8NCg0KVGhhbmtzLA0KU2hhbnl1DQoNCi0tLS0t
+T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5u
+ZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBTYXR1cmRheSwgSmFudWFyeSAzMCwgMjAxMCAx
+MjozNyBBTQ0KVG86IFpoYW8sIFNoYW55dQ0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
+Lm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSCAxLzFdIGNmZzgwMjExOiB3ZXh0OiBzZXQgYnNzaWQg
+dG8gTlVMTCBpbiBTSU9DSVdFU1NJRA0KDQpPbiBGcmksIDIwMTAtMDEtMjkgYXQgMTU6MzkgLTA4
+MDAsIHNoYW55dS56aGFvQGludGVsLmNvbSB3cm90ZToNCj4gRnJvbTogU2hhbnl1IFpoYW8gPHNo
+YW55dS56aGFvQGludGVsLmNvbT4NCj4gDQo+IE5lZWQgdG8gc2V0IGJzc2lkIHRvIE5VTEwgaW4g
+Y2ZnODAyMTEncyBTSU9DSVdFU1NJRCBmdW5jdGlvbiwgb3RoZXJ3aXNlDQo+IGFmdGVyICJpd2Nv
+bmZpZyB3bGFueCBhcCA8bWFjPiIsIHRoZSAiaXdjb25maWcgd2xhbnggZXNzaWQiIHdvbid0IHdv
+cmsuDQo+IA0KPiBDYzogc3RhYmxlQGtlcm5lbC5vcmcNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFNo
+YW55dSBaaGFvIDxzaGFueXUuemhhb0BpbnRlbC5jb20+DQo+IC0tLQ0KPiAgbmV0L3dpcmVsZXNz
+L3dleHQtc21lLmMgfCAgICAxICsNCj4gIDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCsp
+LCAwIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL25ldC93aXJlbGVzcy93ZXh0LXNt
+ZS5jIGIvbmV0L3dpcmVsZXNzL3dleHQtc21lLmMNCj4gaW5kZXggZWVkZTM1Ni4uNWE2N2RkNSAx
+MDA2NDQNCj4gLS0tIGEvbmV0L3dpcmVsZXNzL3dleHQtc21lLmMNCj4gKysrIGIvbmV0L3dpcmVs
+ZXNzL3dleHQtc21lLmMNCj4gQEAgLTE5NCw2ICsxOTQsNyBAQCBpbnQgY2ZnODAyMTFfbWdkX3dl
+eHRfc2l3ZXNzaWQoc3RydWN0IG5ldF9kZXZpY2UgKmRldiwNCj4gIAl3ZGV2LT53ZXh0LmNvbm5l
+Y3Quc3NpZCA9IHdkZXYtPndleHQuc3NpZDsNCj4gIAltZW1jcHkod2Rldi0+d2V4dC5zc2lkLCBz
+c2lkLCBsZW4pOw0KPiAgCXdkZXYtPndleHQuY29ubmVjdC5zc2lkX2xlbiA9IGxlbjsNCj4gKwl3
+ZGV2LT53ZXh0LmNvbm5lY3QuYnNzaWQgPSBOVUxMOw0KDQpUaGlzIGlzIGluY29ycmVjdC4gSWYg
+eW91IHdhbnQgdG8gY29ubmVjdCB0byBhbiBBUCB3aXRoIHRoZSBTU0lEICJmb28iDQphbmQgdGhl
+IEJTU0lEICIwMDouLi46ZmYiIHlvdSBuZWVkIHRvIG1ha2UgdHdvIGNhbGxzLCBlLmcuDQoNCml3
+Y29uZmlnIHdsYW4wIGVzc2lkICJmb28iDQppd2NvbmZpZyB3bGFuMCBhcCAiMDA6Li4uOmZmIg0K
+DQpZb3VyIHBhdGNoIGRpc2FibGVzIHRoYXQgZnVuY3Rpb25hbGl0eS4NCg0Kam9oYW5uZXMNCg==
