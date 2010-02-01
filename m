@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:62367 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061Ab0BYFUB (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50823 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754733Ab0BAQPf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 00:20:01 -0500
+	Mon, 1 Feb 2010 11:15:35 -0500
+Date: Mon, 1 Feb 2010 11:04:31 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bernhard Reiter <ockham@raz.or.at>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath9k/PCI 168C:002C
+Message-ID: <20100201160430.GA4952@tuxdriver.com>
+References: <1265039522.3610.55.camel@razor>
 MIME-Version: 1.0
-In-Reply-To: <3f9a31f41002242053r169255d2hf2585aeb55174a92@mail.gmail.com>
-References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-	<3f9a31f41002242053r169255d2hf2585aeb55174a92@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 24 Feb 2010 21:19:41 -0800
-Message-ID: <43e72e891002242119u77fdfd30m2d17a1e48fe2e712@mail.gmail.com>
-Subject: Re: 802.11 development process - extended documentation
-To: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>
-Cc: Willy Tarreau <w@1wt.eu>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1265039522.3610.55.camel@razor>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 24, 2010 at 8:53 PM, Jaswinder Singh Rajput
-<jaswinderlinux@gmail.com> wrote:
-> Hello Luis,
->
-> On Thu, Feb 25, 2010 at 5:48 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> I've extended our 802.11 development process into a new section on our
->> 802.11 wiki. I often get asked how this works from different parts of
->> the company here at Atheros so figured it'd be easier to illustrate
->> this as best as possible and share it.
->>
->> http://wireless.kernel.org/en/developers/process
->>
->> Hope it does justice, John if you see any mistakes feel free to edit.
->> If the diagram seems fishy let me know what I can fix.
->>
->
-> Thanks for the beautiful documentation.
+On Mon, Feb 01, 2010 at 04:52:02PM +0100, Bernhard Reiter wrote:
+> hi,
+> 
+> i'm currently setting up karmic (64bit) an asus eeepc 1005p, and i've
+> found the following in the debian wiki:
+> http://wiki.debian.org/DebianEeePC/Model/1005P
+> i'm giving this laptop to another person on wednesday, but until then, i
+> might try to compile the ath9k module with the suggested addition of
+> that PCI id.
+> 
+> unfortunately, i haven't really found anything on how to do this (in a
+> least-invasive fashion). i've looked
+> into /usr/src/linux-headers-2.6.31-17/drivers/net/wireless/ath/ath9k,
+> but there's only a Kconfig and a Makefile, but no sources.
+> 
+> can you people help me modify, compile and test this module?
+> 
+> bernhard reiter
+> ps please cc, i'm not a list subscriber
 
-Thanks :)
+Seems more like a "how do I recompile my kernel on Ubuntu" question to me...
 
-> Is this also applicable for Linux 2.4
-
-Not at all.
-
-> What is the status of Wireless in Linux 2.4
-
-Heh, umm, I have no clue. Dead?
-
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
