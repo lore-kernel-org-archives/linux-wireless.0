@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49575
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935416Ab0BZH1c (ORCPT
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:55233 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871Ab0BAJJ4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 02:27:32 -0500
-Date: Thu, 25 Feb 2010 23:27:48 -0800 (PST)
-Message-Id: <20100225.232748.200313445.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-02-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100222185638.GC2988@tuxdriver.com>
-References: <20100222185638.GC2988@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 1 Feb 2010 04:09:56 -0500
+Received: by ewy19 with SMTP id 19so2087224ewy.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2010 01:09:55 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 1 Feb 2010 17:09:55 +0800
+Message-ID: <5135d20a1002010109s587d566bo5bd9c1aee7d081c5@mail.gmail.com>
+Subject: time-out for authentication
+From: fengzeheng <zehengfeng@gmail.com>
+To: bzhao@marvell.com, dcbw@redhat.com, linville@tuxdriver.com
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 22 Feb 2010 13:56:38 -0500
-
-> Here is one more big batch of wireless bits intended for 2.6.34.  Along
-> with the usual variety of driver fixes are some mac80211 bits from
-> Johannes, a number of iwlwifi updates from Intel, and a big batch of of
-> wl1271 bits from Nokia.
-> 
-> Please let me know if there are problems!
-
-Pulled, thanks a lot John.
-
-There were two conflicts I had to resolve (some declarations in in
-iwl-core.h and one of the rt* driver PCI ID tables).
-
-Please double-check my work when I push this out to net-next-2.6
-
-Thanks!
+hi, All
+    our project import marvell sd8686 chipset , and we meet some
+problems about authentication and connect to a D-Link AP.  first the
+marvell wireless card authentication(open auth) to D-Link AP, and if
+D-Link AP send authentication packet to marvell card after 1 seconds ,
+then marvell wireless card doesn't send any associate message to
+D-Link. and if D-Link AP response this authentication message very
+quickly in mini-seconds,  then marvell wireless card will send
+associate message and connect to AP. so how long  will marvell
+wireless card  wait for the AP's authentication response ?
+    thanks
+--
+Best Regards
+Feng zeheng
