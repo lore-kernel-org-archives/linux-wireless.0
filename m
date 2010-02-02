@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:53385 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756272Ab0BBQIV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2010 11:08:21 -0500
-Date: Tue, 02 Feb 2010 10:08:19 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Fix regression from commit c7ab5ef
-Message-ID: <4b684df3.V5ikfWDIHGqzoqeC%Larry.Finger@lwfinger.net>
+Received: from li59-9.members.linode.com ([97.107.129.9]:43819 "EHLO erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753566Ab0BBEZb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2010 23:25:31 -0500
+Message-ID: <4B67A937.70406@erley.org>
+Date: Mon, 01 Feb 2010 23:25:27 -0500
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Till Kamppeter <till.kamppeter@gmail.com>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	lsb-discuss@lists.linux-foundation.org
+Subject: Re: Linux wireless GSoC 2010 project ideas
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com> <4B65F024.3080505@gmail.com> <1264972854.3597.17.camel@johannes.local> <43e72e891002011001l4e914094v33e73209a9da93e8@mail.gmail.com> <1265055284.26421.16.camel@maxim-laptop> <20100201221252.GA30758@emergent.ellipticsemi.com>
+In-Reply-To: <20100201221252.GA30758@emergent.ellipticsemi.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit c7ab5ef9bcd281135c21b4732c9be779585181be entitled "b43: implement
-short slot and basic rate handling" reduced the transmit throughput for
-my BCM4311 device from 18 Mb/s to 0.7 Mb/s. The basic rate handling
-portion is OK, the problem is in the short slot handling.
+On 02/01/10 17:12, Nick Bowler wrote:
+> On 22:14 Mon 01 Feb     , Maxim Levitsky wrote:
+>> 2 - Allow a wireless card to associate to several APs at once (if they
+>> share the frequency). 
+>> Implement this at least for ath5/9k. Madwifi had that feature. Maybe
+>> ath9k has. If it has that feature, test it.
+> 
+> I haven't actually tried this particular case, but this is ostensibly
+> already supported by mac80211: iw allows you to create several wireless
+> interfaces that share a phy, which can then be configured into different
+> modes (I've used station + monitor successfully in the past).
+> 
+With ath9k I have used:
 
-Prior to this change, the short slot enable/disable routines were never
-called. Experimentation showed that the critical part was changing the
-value at offset 0x0010 in the shared memory. This is supposed to contain
-the 802.11 Slot Time in usec, but if it is changed from its initial value
-of zero, performance is destroyed. On the other hand, changing the value
-in the MMIO register corresponding to the Interframe Slot Time increased
-performance from 18 to 22 Mb/s. A BCM4306/3 also shows dramatic
-improvement of the transmit rate from 5.3 to 19.0 Mb/s.
+AP + MP
+AP + STA
+AP + AP (Open and WPA2)
 
-Other changes in the patch include removal of the magic number for the
-MMIO register, and allowing the slot time to be set for any PHY operating
-in the 2.4 GHz band. Previously, the routine was executed only for G PHYs.
+using both the debug interface to ath9k's internal multi-vif support 
+(never tested MP with ath9k multi-vif) and mac80211.  I know that 
+if you use the ath9k internal method, you can operate on multiple 
+channels at a sacrifice to throughput.  I have not tested if mac80211
+supports multiple channels.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org> [Any stable version back through 2.6.28]
----
+It's as easy as:
 
-John,
+AP+MP and AP+STA:
+Start Hostapd
+Create interface with iw
+use second interface.
 
-Although late in the cycle, this is 2.6.33 material, and should be applied
-to kernels back to and including 2.6.28.
+AP+AP
+Configure hostapd for multiple bss
+start hostapd
 
-Thanks,
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c
-+++ wireless-testing/drivers/net/wireless/b43/main.c
-@@ -637,10 +637,17 @@ static void b43_upload_card_macaddress(s
- static void b43_set_slot_time(struct b43_wldev *dev, u16 slot_time)
- {
- 	/* slot_time is in usec. */
--	if (dev->phy.type != B43_PHYTYPE_G)
-+	/* This test used to exit for all but a G PHY. */
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
- 		return;
--	b43_write16(dev, 0x684, 510 + slot_time);
--	b43_shm_write16(dev, B43_SHM_SHARED, 0x0010, slot_time);
-+	b43_write16(dev, B43_MMIO_IFSSLOT, 510 + slot_time);
-+	/* Shared memory location 0x0010 is the slot time and should be
-+	 * set to slot_time; however, this register is initially 0 and changing
-+	 * the value adversely affects the transmit rate for BCM4311
-+	 * devices. Until this behavior is unterstood, delete this step
-+	 *
-+	 * b43_shm_write16(dev, B43_SHM_SHARED, 0x0010, slot_time);
-+	 */
- }
- 
- static void b43_short_slot_timing_enable(struct b43_wldev *dev)
-Index: wireless-testing/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/b43.h
-+++ wireless-testing/drivers/net/wireless/b43/b43.h
-@@ -115,6 +115,7 @@
- #define B43_MMIO_TSF_2			0x636	/* core rev < 3 only */
- #define B43_MMIO_TSF_3			0x638	/* core rev < 3 only */
- #define B43_MMIO_RNG			0x65A
-+#define B43_MMIO_IFSSLOT		0x684	/* Interframe slot time */
- #define B43_MMIO_IFSCTL			0x688 /* Interframe space control */
- #define  B43_MMIO_IFSCTL_USE_EDCF	0x0004
- #define B43_MMIO_POWERUP_DELAY		0x6A8
+Pat Erley
