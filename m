@@ -1,68 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56712 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751867Ab0BWRxd (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:53385 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756272Ab0BBQIV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 12:53:33 -0500
-Subject: Re: [RFC] Improve software scan timing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>
-In-Reply-To: <201002231744.39133.helmut.schaa@googlemail.com>
-References: <201002231619.55189.helmut.schaa@googlemail.com>
-	 <201002231633.06394.helmut.schaa@googlemail.com>
-	 <1266939493.3934.8.camel@jlt3.sipsolutions.net>
-	 <201002231744.39133.helmut.schaa@googlemail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-T6a/nDV6Ovb+Bz0zezzU"
-Date: Tue, 23 Feb 2010 18:52:44 +0100
-Message-ID: <1266947564.14410.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 2 Feb 2010 11:08:21 -0500
+Date: Tue, 02 Feb 2010 10:08:19 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Fix regression from commit c7ab5ef
+Message-ID: <4b684df3.V5ikfWDIHGqzoqeC%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Commit c7ab5ef9bcd281135c21b4732c9be779585181be entitled "b43: implement
+short slot and basic rate handling" reduced the transmit throughput for
+my BCM4311 device from 18 Mb/s to 0.7 Mb/s. The basic rate handling
+portion is OK, the problem is in the short slot handling.
 
---=-T6a/nDV6Ovb+Bz0zezzU
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Prior to this change, the short slot enable/disable routines were never
+called. Experimentation showed that the critical part was changing the
+value at offset 0x0010 in the shared memory. This is supposed to contain
+the 802.11 Slot Time in usec, but if it is changed from its initial value
+of zero, performance is destroyed. On the other hand, changing the value
+in the MMIO register corresponding to the Interframe Slot Time increased
+performance from 18 to 22 Mb/s. A BCM4306/3 also shows dramatic
+improvement of the transmit rate from 5.3 to 19.0 Mb/s.
 
-On Tue, 2010-02-23 at 17:44 +0100, Helmut Schaa wrote:
+Other changes in the patch include removal of the magic number for the
+MMIO register, and allowing the slot time to be set for any PHY operating
+in the 2.4 GHz band. Previously, the routine was executed only for G PHYs.
 
-> Ok, I'll just update the listen_interval to default to 5 and make use
-> of it
-> in the scan implementation. That should allow us in most cases to
-> leave the
-> channel for around 500ms which is enough time to scan maybe 3-10
-> channels
-> depending on active/passive flags.
->=20
-> Would that be ok for you?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@kernel.org> [Any stable version back through 2.6.28]
+---
 
-Sure.
+John,
 
-(I blame evolution for the stupid formatting of the quote)
+Although late in the cycle, this is 2.6.33 material, and should be applied
+to kernels back to and including 2.6.28.
 
-johannes
+Thanks,
 
---=-T6a/nDV6Ovb+Bz0zezzU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Larry
+---
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLhBXpAAoJEODzc/N7+QmajPMP/1IHykxR9SKejW/vB7wQ51Zw
-iBBjUb2UhKC2RdbRzZxuZHvkso3Vy8rh7S1wNm+ruJkuv1qLzthB01zK3r4IougP
-WqBy4RVULCMbhXoRef1QIxVjch3lEOIq1qxrVSVIMzYrcxrsxA+Epev3HKBHHz29
-3mDdRAJPPdSUVhT7OjN498TJSptwjk8OqBjTKOBMYN/+zulbmyu7RTIHW0IiDWMx
-FCSpHwRJuVmRqCt19/TBgN8XopTK/xfDLx1mTGe25VH2FZ9MvAhFWVuaHkWT9vrW
-GGJxngo4PjrTVMLi1qvwQlfqWMDzg7CoBrenYBwswk2K5Uj+Bdb7Fx8VFrFn3wxn
-8r8Y6On8grSIvFUX3LBoAw7fEIjPSXr621WMg75Oi/WhvDnlp45i+GcxTEzcFM98
-Mn/sIrvq3mMIfKBSf05LCqfGHYWAP/dHRIQ+/lUJOt0Mk2ZU6+Vl15hQbFq3ngk1
-1cOrU9kM3JFs7PUmSNS0XD7BAoBG9d/cDgT1vPWoctr8eVDTDH1loeFWPxFa0ZRP
-dFhCsf1DbYCWghyLTOQvBTHK4l2N8hSzYFA1wGa84EKtgk4Kdzm2bi5ywWRSSnmm
-SbONYBX0/KC2/KpyD0uz1GBrD61liUx3uXkmnKxXYs/E+eyzYUSpfhm1B9EEt33N
-tLCpP8tTKOnkcgUoR98g
-=11xf
------END PGP SIGNATURE-----
-
---=-T6a/nDV6Ovb+Bz0zezzU--
-
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -637,10 +637,17 @@ static void b43_upload_card_macaddress(s
+ static void b43_set_slot_time(struct b43_wldev *dev, u16 slot_time)
+ {
+ 	/* slot_time is in usec. */
+-	if (dev->phy.type != B43_PHYTYPE_G)
++	/* This test used to exit for all but a G PHY. */
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
+ 		return;
+-	b43_write16(dev, 0x684, 510 + slot_time);
+-	b43_shm_write16(dev, B43_SHM_SHARED, 0x0010, slot_time);
++	b43_write16(dev, B43_MMIO_IFSSLOT, 510 + slot_time);
++	/* Shared memory location 0x0010 is the slot time and should be
++	 * set to slot_time; however, this register is initially 0 and changing
++	 * the value adversely affects the transmit rate for BCM4311
++	 * devices. Until this behavior is unterstood, delete this step
++	 *
++	 * b43_shm_write16(dev, B43_SHM_SHARED, 0x0010, slot_time);
++	 */
+ }
+ 
+ static void b43_short_slot_timing_enable(struct b43_wldev *dev)
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h
++++ wireless-testing/drivers/net/wireless/b43/b43.h
+@@ -115,6 +115,7 @@
+ #define B43_MMIO_TSF_2			0x636	/* core rev < 3 only */
+ #define B43_MMIO_TSF_3			0x638	/* core rev < 3 only */
+ #define B43_MMIO_RNG			0x65A
++#define B43_MMIO_IFSSLOT		0x684	/* Interframe slot time */
+ #define B43_MMIO_IFSCTL			0x688 /* Interframe space control */
+ #define  B43_MMIO_IFSCTL_USE_EDCF	0x0004
+ #define B43_MMIO_POWERUP_DELAY		0x6A8
