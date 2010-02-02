@@ -1,67 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:13812 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932089Ab0BNBgg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 20:36:36 -0500
-Subject: Re: [PATCH 2/3] rt2x00: Reorganize RT chipset setting for PCI/SOC
- devices.
-From: Pavel Roskin <proski@gnu.org>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+Received: from cliff.cs.toronto.edu ([128.100.3.120]:36271 "EHLO
+	cliff.cs.toronto.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756360Ab0BBS4b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2010 13:56:31 -0500
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: linux-wireless@vger.kernel.org, stable@kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-In-Reply-To: <201002140215.14535.IvDoorn@gmail.com>
-References: <1266090949-5468-1-git-send-email-gwingerde@gmail.com>
-	 <1266090949-5468-2-git-send-email-gwingerde@gmail.com>
-	 <1266090949-5468-3-git-send-email-gwingerde@gmail.com>
-	 <201002140215.14535.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Sat, 13 Feb 2010 20:36:15 -0500
-Message-Id: <1266111375.32423.12.camel@mj>
-Mime-Version: 1.0
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH] airo: fix setting zero length WEP key 
+In-reply-to: sgruszka's message of Tue, 02 Feb 2010 15:34:50 +0100.
+             <1265121290-2969-1-git-send-email-sgruszka@redhat.com>
+Date: Tue, 02 Feb 2010 13:32:41 -0500
+From: Chris Siebenmann <cks@cs.toronto.edu>
+Message-Id: <20100202183241.A529D2B0054@apps0.cs.toronto.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-02-14 at 02:15 +0100, Ivo van Doorn wrote:
-> Hi,
-> 
-> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > @@ -40,6 +40,9 @@
-> >  #if defined(CONFIG_RT2X00_LIB_USB) || defined(CONFIG_RT2X00_LIB_USB_MODULE)
-> >  #include "rt2x00usb.h"
-> >  #endif
-> > +#if defined(CONFIG_RT2X00_LIB_PCI) || defined(CONFIG_RT2X00_LIB_PCI_MODULE)
-> > +#include "rt2x00pci.h"
-> > +#endif
-> 
-> this is very ugly, but apparently it is unavoidable to make rt2800lib free from
-> PCI and USB specific code... :(
+| Patch prevents call set_wep_key() with zero key length. That fix long
+| standing regression since commit c0380693520b1a1e4f756799a0edc379378b462a
+| "airo: clean up WEP key operations". Additionally print call trace when
+| someone will try to use improper parameters, and remove key.len = 0
+| assignment, because it is in not possible code path.
+| 
+| Reported-and-bisected-by: Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+| Cc: Dan Williams <dcbw@redhat.com>
+| Cc: <stable@kernel.org>
+| Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-I was about to write about a related issue.  My kernel configuration
-only enables rt2800pci and rt73 drivers.  lsmod shows that rt2800lib
-depends on rt2x00usb:
+Tested-by: Chris Siebenmann <cks@cs.toronto.edu>
 
-# lsmod 
-Module                  Size  Used by
-rt2800pci               9767  0 
-rt2800lib              24194  1 rt2800pci
-rt2x00usb               9474  1 rt2800lib
-rt2x00pci               5993  1 rt2800pci
-crc_ccitt               1445  1 rt2800pci
-rt2x00lib              27776  4 rt2800pci,rt2800lib,rt2x00usb,rt2x00pci
-mac80211              215322  3 rt2x00usb,rt2x00pci,rt2x00lib
-cfg80211              144471  2 rt2x00lib,mac80211
-eeprom_93cx6            1520  1 rt2800pci
+(Tested on a Thinkpad T42, using current git tip + this patch; HEAD is
+ab658321f32770b903a4426e2a6fae0392757755. This is the same machine I
+bisected the problem on.)
 
-To be clear, the above dependency was not introduced by the patch.  It
-would be nice to straighten it eventually.  Maybe the rt2800lib code
-should look whether rt2800 (not the generic rt2x00) has USB or PCI
-enabled, both for function calls and for includes.
-
-But I'm happy that rt2800pci is working at all!  It was my first chance
-to test it.
-
--- 
-Regards,
-Pavel Roskin
+	- cks
