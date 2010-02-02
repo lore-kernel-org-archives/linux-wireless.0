@@ -1,55 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hogsmeade.leitwerk.net ([217.28.96.50]:59989 "EHLO
-	hogsmeade.leitwerk.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757252Ab0BETMi (ORCPT
+Received: from mx-del1-1.globallogic.com ([202.174.92.25]:59614 "EHLO
+	emailsecurity-del1-1.globallogic.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752251Ab0BBOeA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 14:12:38 -0500
-From: Simon Raffeiner <sturmflut@lieberbiber.de>
-To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh mode
-Date: Fri, 5 Feb 2010 20:04:06 +0100
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com> <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com> <20100205175556.GC1496@holoscopio.com>
-In-Reply-To: <20100205175556.GC1496@holoscopio.com>
+	Tue, 2 Feb 2010 09:34:00 -0500
+Received: from emailsecurity-del1-1.globallogic.com (127.0.0.1) by emailsecurity-del1-1.globallogic.com (MlfMTA v3.2r9) id hd0rns0171sn for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2010 20:02:28 +0530 (envelope-from <andrit@ukr.net>)
+Message-ID: <4B6837D1.6020503@ukr.net>
+Date: Tue, 02 Feb 2010 16:33:53 +0200
+From: Andriy Tkachuk <andrit@ukr.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201002052004.06220.sturmflut@lieberbiber.de>
+To: linux-wireless@vger.kernel.org
+CC: Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] lib80211: Introduce TKIP_HDR_LEN define for code clarity
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 5. Februar 2010 18:55:56 schrieb Thadeu Lima de Souza Cascardo:
+Introduce TKIP_HDR_LEN define for code clarity (in the same way as
+CCMP_HDR_LEN).
 
-> I did not get automatic plinks for a peer.
+Also odd len variable (not used) dropped from lib80211_tkip_hdr().
 
-The last time that happened I was using different checkouts of wireless-testing 
-on both nodes and somebody had changed the code to match a new draft version 
-in between.
+Signed-off-by: Andriy V. Tkachuk <andrit@ukr.net>
 
-And the one time before that there was a bug in the ath5k code, effectively 
-preventing the device from beaconing.
+---
 
+Found few more candidates for TKIP_HDR_LEN usage comparing to prev. patch.
 
-> I want automatic plinks to work. But since I've started to play with it,
-> why not make the command just work. It's there. If adding plinks
-> manually to mesh nodes is not permitted, I may just send another patch,
-> disallowing it entirely and making it explicit in code, comment and git
-> log.
+diff --git a/net/wireless/lib80211_crypt_tkip.c
+b/net/wireless/lib80211_crypt_tkip.c
+index c362873..8cbdb32 100644
+--- a/net/wireless/lib80211_crypt_tkip.c
++++ b/net/wireless/lib80211_crypt_tkip.c
+@@ -36,6 +36,8 @@ MODULE_AUTHOR("Jouni Malinen");
+ MODULE_DESCRIPTION("lib80211 crypt: TKIP");
+ MODULE_LICENSE("GPL");
 
-If I'm not mistaken the draft standard says that every node has to actively or 
-passively scan for neighbors and automatically select candidate peers. A 
-candidate peer has to announce a profile (Mesh Information Element) in its 
-beacons that matches the local profile.
++#define TKIP_HDR_LEN 8
++
+ struct lib80211_tkip_data {
+ #define TKIP_KEY_LEN 32
+ 	u8 key[TKIP_KEY_LEN];
+@@ -314,13 +316,12 @@ static int lib80211_tkip_hdr(struct sk_buff *skb,
+int hdr_len,
+ 			      u8 * rc4key, int keylen, void *priv)
+ {
+ 	struct lib80211_tkip_data *tkey = priv;
+-	int len;
+ 	u8 *pos;
+ 	struct ieee80211_hdr *hdr;
 
-If manual addition of plinks is allowed you could theoretically force your 
-node to peer with a neighbor running a different profile, e.g. using a different 
-path selection or authentication algorithm, or an implementation based on a 
-different draft version.
+ 	hdr = (struct ieee80211_hdr *)skb->data;
 
-I can't really think of an use for it.
+-	if (skb_headroom(skb) < 8 || skb->len < hdr_len)
++	if (skb_headroom(skb) < TKIP_HDR_LEN || skb->len < hdr_len)
+ 		return -1;
 
-Just my 0.01$.
+ 	if (rc4key == NULL || keylen < 16)
+@@ -333,9 +334,8 @@ static int lib80211_tkip_hdr(struct sk_buff *skb,
+int hdr_len,
+ 	}
+ 	tkip_mixing_phase2(rc4key, tkey->key, tkey->tx_ttak, tkey->tx_iv16);
 
-regards
-Simon Raffeiner
+-	len = skb->len - hdr_len;
+-	pos = skb_push(skb, 8);
+-	memmove(pos, pos + 8, hdr_len);
++	pos = skb_push(skb, TKIP_HDR_LEN);
++	memmove(pos, pos + TKIP_HDR_LEN, hdr_len);
+ 	pos += hdr_len;
+
+ 	*pos++ = *rc4key;
+@@ -353,7 +353,7 @@ static int lib80211_tkip_hdr(struct sk_buff *skb,
+int hdr_len,
+ 		tkey->tx_iv32++;
+ 	}
+
+-	return 8;
++	return TKIP_HDR_LEN;
+ }
+
+ static int lib80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void
+*priv)
+@@ -434,7 +433,7 @@ static int lib80211_tkip_decrypt(struct sk_buff
+*skb, int hdr_len, void *priv)
+ 		return -1;
+ 	}
+
+-	if (skb->len < hdr_len + 8 + 4)
++	if (skb->len < hdr_len + TKIP_HDR_LEN + 4)
+ 		return -1;
+
+ 	pos = skb->data + hdr_len;
+@@ -462,7 +461,7 @@ static int lib80211_tkip_decrypt(struct sk_buff
+*skb, int hdr_len, void *priv)
+ 	}
+ 	iv16 = (pos[0] << 8) | pos[2];
+ 	iv32 = pos[4] | (pos[5] << 8) | (pos[6] << 16) | (pos[7] << 24);
+-	pos += 8;
++	pos += TKIP_HDR_LEN;
+
+ 	if (tkip_replay_check(iv32, iv16, tkey->rx_iv32, tkey->rx_iv16)) {
+ #ifdef CONFIG_LIB80211_DEBUG
+@@ -523,8 +522,8 @@ static int lib80211_tkip_decrypt(struct sk_buff
+*skb, int hdr_len, void *priv)
+ 	tkey->rx_iv16_new = iv16;
+
+ 	/* Remove IV and ICV */
+-	memmove(skb->data + 8, skb->data, hdr_len);
+-	skb_pull(skb, 8);
++	memmove(skb->data + TKIP_HDR_LEN, skb->data, hdr_len);
++	skb_pull(skb, TKIP_HDR_LEN);
+ 	skb_trim(skb, skb->len - 4);
+
+ 	return keyidx;
