@@ -1,31 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f197.google.com ([209.85.211.197]:56662 "EHLO
-	mail-yw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654Ab0BQRPz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51464 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752773Ab0BBPAg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 12:15:55 -0500
-Received: by ywh35 with SMTP id 35so64096ywh.4
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 09:15:54 -0800 (PST)
-Message-ID: <4B7C2446.6030507@lwfinger.net>
-Date: Wed, 17 Feb 2010 11:15:50 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 2 Feb 2010 10:00:36 -0500
+Date: Tue, 2 Feb 2010 09:31:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andriy Tkachuk <andriy.tkachuk@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH] lib80211: Introduce TKIP_HDR_LEN define for code
+	clarity
+Message-ID: <20100202143140.GA15782@tuxdriver.com>
+References: <4B68084E.7080306@gmail.com>
 MIME-Version: 1.0
-To: okias <d.okias@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	herton@mandriva.com.br, htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl818x: small cleanup
-References: <c2673ca61002170905g788ce856uc82adc490c2328be@mail.gmail.com>
-In-Reply-To: <c2673ca61002170905g788ce856uc82adc490c2328be@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B68084E.7080306@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/2010 11:05 AM, okias wrote:
-> -2 lines...
+On Tue, Feb 02, 2010 at 01:11:10PM +0200, Andriy Tkachuk wrote:
+> Introduce TKIP_HDR_LEN define for code clarity (in the same way as
+> CCMP_HDR_LEN).
+> 
+> Also odd len variable (not used) dropped from lib80211_tkip_hdr().
+> 
+> Signed-off-by: Andriy V. Tkachuk <andrit@ukr.net>
+> 
+> ---
+>  net/wireless/lib80211_crypt_tkip.c |   12 ++++++------
+>  1 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/net/wireless/lib80211_crypt_tkip.c
+> b/net/wireless/lib80211_crypt_tkip.c
+> index c362873..c4fb4fb 100644
+> --- a/net/wireless/lib80211_crypt_tkip.c
+> +++ b/net/wireless/lib80211_crypt_tkip.c
+> @@ -36,6 +36,8 @@ MODULE_AUTHOR("Jouni Malinen");
+>  MODULE_DESCRIPTION("lib80211 crypt: TKIP");
+>  MODULE_LICENSE("GPL");
+> 
+> +#define TKIP_HDR_LEN 8
+> +
+>  struct lib80211_tkip_data {
+>  #define TKIP_KEY_LEN 32
+>  	u8 key[TKIP_KEY_LEN];
+> @@ -314,13 +316,12 @@ static int lib80211_tkip_hdr(struct sk_buff *skb,
+> int hdr_len,
 
-Your patch is fine, but there are problems in the presentation. For review
-purposes, it should be in-line, not as an attachment. The second problem is that
-the patch is for rtl8187, not for wireless/rtl818x. There are 2 drivers, soon to
-be more, in that particular directory.
+After a quick look, this and the other patch look fine.  But, the
+patches are whitespace-damaged.  I can fix these, but in the future
+please be sure to use a mailer that does not break lines.  I recommend
+mutt and/or 'git send-email'.
 
-Larry
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
