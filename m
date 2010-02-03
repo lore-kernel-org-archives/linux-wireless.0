@@ -1,40 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:40149 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755839Ab0BQUul (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50700 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754458Ab0BCIoI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 15:50:41 -0500
-Date: Wed, 17 Feb 2010 20:50:37 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"marcel@holtmann.org" <marcel@holtmann.org>
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20100217205037.GB26306@srcf.ucam.org>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com> <20100217052247.GD7160@core.coreip.homeip.net> <20100217180342.GA22522@srcf.ucam.org> <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com> <20100217191708.GA15554@core.coreip.homeip.net> <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com> <20100217195435.GA15742@core.coreip.homeip.net> <20100217200233.GA24976@srcf.ucam.org> <446821D4-8E9D-4701-9A50-04738C5733B6@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <446821D4-8E9D-4701-9A50-04738C5733B6@gmail.com>
+	Wed, 3 Feb 2010 03:44:08 -0500
+Subject: Re: [PATCH v2 1/1] mac80211: tear down all agg queues when
+ restart/reconfig hw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: wey-yi.w.guy@intel.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1265159851-20682-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1265159851-20682-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fWly0BcJ+pXQcHKvzY3H"
+Date: Wed, 03 Feb 2010 09:44:00 +0100
+Message-ID: <1265186640.29119.83.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 17, 2010 at 12:49:14PM -0800, Dmitry Torokhov wrote:
-> On Feb 17, 2010, at 12:02 PM, Matthew Garrett <mjg59@srcf.ucam.org>  
-> wrote:
->> KEY_BATTERY is heavily used in userspace. I think all the hardware  
->> that
->> generates it does so via i8042 rather than a platform driver, so it
->> wouldn't show up in the kernel.
->>
->
-> Ah, I see. I hope the keycode is not used to signal battery status  
-> change but to invoke battery/power manager applet...
 
-Correct. On Gnome, at least, it pops up a dialog with the current 
-battery state.
+--=-fWly0BcJ+pXQcHKvzY3H
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+On Tue, 2010-02-02 at 17:17 -0800, wey-yi.w.guy@intel.com wrote:
+> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+>=20
+> When there is a need to restart/reconfig hw, tear down all the
+> aggregation queues and let the mac80211 and driver get in-sync and have
+> the opportunity to re-establish the aggregation queues.
+>=20
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+> v2: add rcu_read_lock()
+> ---
+>  net/mac80211/util.c |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index ca170b4..27e8833 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -1188,6 +1188,16 @@ int ieee80211_reconfig(struct ieee80211_local *loc=
+al)
+>  	ieee80211_wake_queues_by_reason(hw,
+>  			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+> =20
+> +	rcu_read_lock();
+> +
+> +	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
+> +		list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> +			ieee80211_sta_tear_down_BA_sessions(sta);
+> +		}
+> +	}
+> +
+> +	rcu_read_unlock();
+> +
+
+I wonder if that shouldn't be _before_ waking up the queues again, since
+otherwise we'd enqueue all the frames that might have come in while
+reconfiguring as aggregation frames still?
+
+johannes
+
+--=-fWly0BcJ+pXQcHKvzY3H
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLaTdLAAoJEODzc/N7+Qma/x0QALKficBwr5n2/MpBoPFglX0v
+sCpq14T/bnl/ZLYsDMqJprECRtQFbtzNtMO4RNnIhosCcSYPS+pHrFtOEroMvhsF
+sN5tyTFAUK9fBfS9Ws+wjo/pVmibx2tZoHPnGsVYkWzjjgcmFj50g58agtJAkeIA
+2lSdiGgNrfoJ5KcHvqWbzNyH4sDa0pkgKE3DOXx30WcPsaoxatteTpQNipo51ABm
+0GYFpFdDfrGmN3Abj5fBAU3Wzs68R4e6qQG24wa28safpne48oZilLrIv8S8RQE8
+DJuNJGGlJzTR2zLl3Xr4Gm7v7NsR+iz9+yQlaocVNcBHKVbOs5HGll74+CHRGuqW
+8h9QW8pyA4qjQRWeWFQjIKI8Xj+jmTUbPH1HEFe5tR4tihPf4GwAnH2SY73YhzTL
+VJtCLnEhViVwhD40E9UCm3ymUHZVDzSru6IOPeu6Ly9kEeVMb/kHkVKom41I6Fgr
+d4cmk3FdoG5Txud1h9hSJTRwmX1tLe3CiS5c69x2qBcTQ7zI3sMjCXi+YH1q5kMn
+NglagTNa2X03tPLHxWYFc+swQD5wzddQUlNwaauEW22xNnaJ5YKCnivXMSOUabuU
+jKlUnAPmqXgJU9nNdCwdPVyv+eIITJVIM5lUJeZuIJ41kZpfjrMe1/r2f5aWaBoA
+xt0iLYgwoF+HMea4JWu1
+=471/
+-----END PGP SIGNATURE-----
+
+--=-fWly0BcJ+pXQcHKvzY3H--
+
