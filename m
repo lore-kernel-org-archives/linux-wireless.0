@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:57091 "EHLO ds10.nbd.name"
+Received: from mail.atheros.com ([12.36.123.2]:16711 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030676Ab0B0TJr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 14:09:47 -0500
-Message-ID: <4B896DF5.4050306@openwrt.org>
-Date: Sat, 27 Feb 2010 20:09:41 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S932622Ab0BCRUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2010 12:20:52 -0500
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 03 Feb 2010 09:20:52 -0800
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 1/3] ath9k: configure the beacon only if the STA is associated
+Date: Wed, 3 Feb 2010 22:50:18 +0530
+Message-ID: <1265217618-2018-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [RFC] ath9k: Make AR_SREV_5416() macro evaluate to true for
- AR9100
-References: <133e8d7e1002270926p64cfd2b5uc4017bf0187c53c2@mail.gmail.com>	 <4B895AAA.6070700@openwrt.org> <133e8d7e1002271054s71138b5csb10d5ea2f4488231@mail.gmail.com>
-In-Reply-To: <133e8d7e1002271054s71138b5csb10d5ea2f4488231@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-02-27 7:54 PM, Björn Smedman wrote:
-> Oops, I got those parenthesis mixed up. You are right. My bad.
-> 
-> But is AR9100 really not AR5416 based? For instance the devid define
-> is named AR5416_AR9100_DEVID and the original firmware reports the
-> chipset as
-> 
->   ath_hal: 0.9.17.1 (AR5416, DEBUG, REGOPS_FUNC, WRITE_EEPROM, 11D)
-> 
-> Confusing, but you are probably right.
-Let's say it's 'loosely' based on AR5416. There are three currently
-available chip generations of the 11n stuff: 5416, 9160, 9280.
-The WiSoC stuff (named 9100, but it's typically 913x) belongs to 9160.
+beacons configuration SHOULD be done only if the STA is associated.
 
-- Felix
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 422454f..d088ebf 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -577,6 +577,13 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
+ 	u64 tsf;
+ 	int num_beacons, offset, dtim_dec_count, cfp_dec_count;
+
++	/* No need to configure beacon if we are not associated */
++	if (!common->curaid) {
++		ath_print(common, ATH_DBG_BEACON,
++			 "STA is not yet associated..skipping beacon config\n");
++		return;
++	}
++
+ 	memset(&bs, 0, sizeof(bs));
+ 	intval = conf->beacon_interval & ATH9K_BEACON_PERIOD;
+
+@@ -739,7 +746,6 @@ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 	enum nl80211_iftype iftype;
+
+ 	/* Setup the beacon configuration parameters */
+-
+ 	if (vif) {
+ 		struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+
+--
+1.6.6.1
+
