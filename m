@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:41066 "EHLO c60.cesmail.net"
+Received: from mx1.redhat.com ([209.132.183.28]:11042 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750711Ab0BRFJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 00:09:42 -0500
-Subject: Re: compat-wireless + Linux 2.6.26.8 testing results
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e891002161651w4718431dqaf258151241f72fc@mail.gmail.com>
-References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
-	 <1266124222.13902.42.camel@mj>
-	 <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
-	 <1266358340.2659.37.camel@mj>
-	 <43e72e891002161459m4174654aj8d7985f32cb8678d@mail.gmail.com>
-	 <43e72e891002161645p627c123g9ac571e4802cd8bf@mail.gmail.com>
-	 <43e72e891002161651w4718431dqaf258151241f72fc@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 17 Feb 2010 23:23:37 -0500
-Message-Id: <1266467017.3065.62.camel@mj>
+	id S932791Ab0BCUqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2010 15:46:32 -0500
+Subject: Re: [PATCH] airo: fix setting zero length WEP key
+From: Dan Williams <dcbw@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+In-Reply-To: <1265121290-2969-1-git-send-email-sgruszka@redhat.com>
+References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 03 Feb 2010 12:43:44 -0800
+Message-ID: <1265229824.21707.10.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-02-16 at 16:51 -0800, Luis R. Rodriguez wrote:
+On Tue, 2010-02-02 at 15:34 +0100, Stanislaw Gruszka wrote:
+> Patch prevents call set_wep_key() with zero key length. That fix long
+> standing regression since commit c0380693520b1a1e4f756799a0edc379378b462a
+> "airo: clean up WEP key operations". Additionally print call trace when
+> someone will try to use improper parameters, and remove key.len = 0
+> assignment, because it is in not possible code path.
 
-> FWIW the two globals can be seen here:
-> 
-> simple_release_fs(&debugfs_mount, &debugfs_mount_count);
-> 
-> Not sure how to deal with that.
+What problem/regression does this actually fix?  set_wep_key() should
+never be called with zero-length key, so we should actually be returning
+from that function instead of using WARN_ON() which would allow a
+zero-length key to be set (which isn't really valid).
 
-I think the safest approach would be to reimplement
-debugfs_remove_recursive() using only debugfs_remove().  It would only
-use the debugfs internals to find the children.  I would even avoid
-looking for siblings.
+To disable a WEP key, the WEXT caller should be setting
+IW_ENCODE_DISABLED in the flags, and *not* sending WEP keys.  Or if they
+do for some reason send WEP keys, they need to use the key flag
+IW_ENCODE_NOKEY to ensure they key is marked as "invalid" and ignored by
+the driver.
 
-The idea is to descend the directory structure from the top (i.e. the
-directory to be removed) to look for a child that is a file or an empty
-directory and remove it.  Then start from the top and do the same until
-the top directory has no children.  Then remove the top directory.
+Dan
 
--- 
-Regards,
-Pavel Roskin
+
