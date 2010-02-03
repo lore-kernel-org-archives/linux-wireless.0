@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:22690 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752072Ab0BLHyv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 02:54:51 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: [PATCH 1/1] mac80211: fix handling of null-rate control in rate_control_get_rate
-Date: Fri, 12 Feb 2010 09:52:08 +0200
-Message-Id: <1265961128-21301-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mga01.intel.com ([192.55.52.88]:27371 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753211Ab0BCBPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2010 20:15:16 -0500
+Subject: Re: [PATCH 1/1] mac80211: tear down all agg queues when
+ restart/reconfig hw
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <201002030209.38862.chunkeey@googlemail.com>
+References: <1265158370-14797-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <201002030209.38862.chunkeey@googlemail.com>
+Content-Type: text/plain
+Date: Tue, 02 Feb 2010 17:11:47 -0800
+Message-Id: <1265159507.15427.0.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For hardware with IEEE80211_HW_HAS_RATE_CONTROL the rate controller is not
-initialized. However, calling functions such as ieee80211_beacon_get result
-in the rate_control_get_rate function getting called, which is accessing
-(in this case uninitialized) rate control structures unconditionally.
+Good point, thanks
 
-Fix by exiting the function before setting the rates for HW with
-IEEE80211_HW_HAS_RATE_CONTROL set. The initialization of the ieee80211_tx_info
-struct is intentionally still executed.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
----
- net/mac80211/rate.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index c74b7c8..7f366d8 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -303,6 +303,9 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 		info->control.rates[i].count = 1;
- 	}
- 
-+	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
-+		return;
-+
- 	ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
- 
- 	/*
--- 
-1.6.3.3
+On Tue, 2010-02-02 at 17:09 -0800, Christian Lamparter wrote:
+> On Wednesday 03 February 2010 01:52:50 wey-yi.w.guy@intel.com wrote:
+> > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > 
+> > When there is a need to restart/reconfig hw, tear down all the
+> > aggregation queues and let the mac80211 and driver get in-sync and have
+> > the opportunity to re-establish the aggregation queues.
+> > 
+> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > ---
+> >  net/mac80211/util.c |    5 +++++
+> >  1 files changed, 5 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> > index ca170b4..6116ad0 100644
+> > --- a/net/mac80211/util.c
+> > +++ b/net/mac80211/util.c
+> > @@ -1188,6 +1188,11 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+> >  	ieee80211_wake_queues_by_reason(hw,
+> >  			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+> >  
+> > +	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
+> > +		list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> > +			ieee80211_sta_tear_down_BA_sessions(sta);
+> > +		}
+> > +	}
+> hmm, I somehow miss the rcu_read_lock(); and rcu_read_unlock(); around
+> list_for_each_entry_rcu... Are you really sure that you don't need
+> them?
+> 
+> Regards,
+> 	Chr
 
