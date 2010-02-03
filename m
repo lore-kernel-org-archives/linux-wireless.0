@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56054 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933276Ab0BPXGG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 18:06:06 -0500
-Subject: Re: [PATCH 2/2] rfkill: Add support for KEY_RFKILL
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	linux-input@vger.kernel.org, dmitry.torokhov@gmail.com
-In-Reply-To: <1266356185-10324-2-git-send-email-mjg@redhat.com>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
-	 <1266356185-10324-2-git-send-email-mjg@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 16 Feb 2010 15:04:45 -0800
-Message-ID: <1266361485.8849.27.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:63289 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754808Ab0BCBVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2010 20:21:01 -0500
+From: <wey-yi.w.guy@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH v2 1/1] mac80211: tear down all agg queues when restart/reconfig hw
+Date: Tue,  2 Feb 2010 17:17:31 -0800
+Message-Id: <1265159851-20682-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Matthew,
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> Add support for handling KEY_RFKILL in the rfkill input module. This
-> simply toggles the state of all rfkill devices. The comment in rfkill.h
-> is also updated to reflect that RFKILL_TYPE_ALL may be used inside the
-> kernel.
-> 
-> Signed-off-by: Matthew Garrett <mjg@redhat.com>
+When there is a need to restart/reconfig hw, tear down all the
+aggregation queues and let the mac80211 and driver get in-sync and have
+the opportunity to re-establish the aggregation queues.
 
-looks good.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+v2: add rcu_read_lock()
+---
+ net/mac80211/util.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
-
-Regards
-
-Marcel
-
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index ca170b4..27e8833 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1188,6 +1188,16 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	ieee80211_wake_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 
++	rcu_read_lock();
++
++	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
++		list_for_each_entry_rcu(sta, &local->sta_list, list) {
++			ieee80211_sta_tear_down_BA_sessions(sta);
++		}
++	}
++
++	rcu_read_unlock();
++
+ 	/*
+ 	 * If this is for hw restart things are still running.
+ 	 * We may want to change that later, however.
+-- 
+1.5.6.3
 
