@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:40607 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753169Ab0BQTmr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 14:42:47 -0500
+Received: from li59-9.members.linode.com ([97.107.129.9]:56523 "EHLO erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754361Ab0BCOZD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2010 09:25:03 -0500
 MIME-Version: 1.0
-In-Reply-To: <20100217191708.GA15554@core.coreip.homeip.net>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
-	 <20100217052247.GD7160@core.coreip.homeip.net>
-	 <20100217180342.GA22522@srcf.ucam.org>
-	 <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
-	 <20100217191708.GA15554@core.coreip.homeip.net>
-Date: Wed, 17 Feb 2010 20:42:45 +0100
-Message-ID: <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, linux-input@vger.kernel.org,
-	marcel@holtmann.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+ charset=UTF-8
+Date: Wed, 03 Feb 2010 09:24:59 -0500
+From: <pat-lkml@erley.org>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Linux wireless GSoC 2010 project ideas
+In-Reply-To: <201002031025.04624.holgerschurig@gmail.com>
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com> <20100201221252.GA30758@emergent.ellipticsemi.com> <4B67A937.70406@erley.org> <201002031025.04624.holgerschurig@gmail.com>
+Message-ID: <9e52624fd81bc62bd917b1ad696b9535@127.0.0.1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 17, 2010 at 8:17 PM, Dmitry Torokhov
-<dmitry.torokhov@gmail.com> wrote:
-> On Wed, Feb 17, 2010 at 07:43:56PM +0100, Christian Lamparter wrote:
->> The reason: Some new devices come with a WPS "Push Button".
->> And there's no code for them yet.
->>
-> Yes, we can add a new key definition if you provide clear description of
-> what the intended use is and if we can't map such use to any existing
-> key definitions.
+On Wed, 3 Feb 2010 10:25:04 +0100, Holger Schurig
+<holgerschurig@gmail.com>
+wrote:
+>> With ath9k I have used:
+>> 
+>> AP + MP
+>> AP + STA
+>> AP + AP (Open and WPA2)
+> 
+> Would you document this on the wireless WIKI at 
+> wireless.kernel.org ?
+> 
+> Maybe as different articles, so that this can be a basis of 
+> several "HOWTO" articles.
 
-I found one http://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup (if you
-don't mind):
+Yeah, I will try to find the time soon.  Any hints as to what needs to be 
+documented?  It is, at least in my opinion, pretty trivial to pull off, so
+I'm not certain that anything more than an entry explaining how to create
+additional interfaces is necessary.  Feel free to throw some ideas as to
+what all you'd like to see in the documentation, and I'll write it (them?)
 
-There's the relevant part: (PBC stands for Push Button Control/Configuration?)
+up.
 
-"PBC Method, in which the user simply has to push a button, either an actual
-or virtual one, on both the AP (or a Registrar of the Network) and the new
-wireless client device (STA)
-.
-Support of this model is mandatory for APs and optional for STAs."
+Pat
 
-And there are already a few potential users:
-OpenWRT routers as well as some rt30xx, ar9170 and ar9271 devices.
+
+
