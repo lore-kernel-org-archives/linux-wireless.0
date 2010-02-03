@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:58070 "EHLO c60.cesmail.net"
+Received: from mga09.intel.com ([134.134.136.24]:7087 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750728Ab0BRGPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 01:15:46 -0500
-Subject: Re: compat-wireless + Linux 2.6.26.8 testing results
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1266467017.3065.62.camel@mj>
-References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
-	 <1266124222.13902.42.camel@mj>
-	 <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
-	 <1266358340.2659.37.camel@mj>
-	 <43e72e891002161459m4174654aj8d7985f32cb8678d@mail.gmail.com>
-	 <43e72e891002161645p627c123g9ac571e4802cd8bf@mail.gmail.com>
-	 <43e72e891002161651w4718431dqaf258151241f72fc@mail.gmail.com>
-	 <1266467017.3065.62.camel@mj>
-Content-Type: text/plain
-Date: Thu, 18 Feb 2010 01:15:34 -0500
-Message-Id: <1266473734.11805.5.camel@mj>
-Mime-Version: 1.0
+	id S1752235Ab0BCA4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2010 19:56:18 -0500
+From: <wey-yi.w.guy@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/1] mac80211: tear down all agg queues when restart/reconfig hw
+Date: Tue,  2 Feb 2010 16:52:50 -0800
+Message-Id: <1265158370-14797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-02-17 at 23:23 -0500, Pavel Roskin wrote:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> The idea is to descend the directory structure from the top (i.e. the
-> directory to be removed) to look for a child that is a file or an empty
-> directory and remove it.  Then start from the top and do the same until
-> the top directory has no children.  Then remove the top directory.
+When there is a need to restart/reconfig hw, tear down all the
+aggregation queues and let the mac80211 and driver get in-sync and have
+the opportunity to re-establish the aggregation queues.
 
-Here it is.  I tested it by actually replacing the original function in
-wireless-testing.  I checked unloading all wireless drivers.  I also
-tested error handling by keeping a file in debugfs open while removing
-the modules.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ net/mac80211/util.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-I could compile it against Linux 2.6.26, so it's portable enough for our
-purposes.
-
-
-void debugfs_remove_recursive(struct dentry *dentry)
-{
-	struct dentry *last = NULL;
-
-	/* Sanity checks */
-	if (!dentry || !dentry->d_parent || !dentry->d_parent->d_inode)
-		return;
-
-	while (dentry != last) {
-		struct dentry *child = dentry;
-
-		/* Find a child without children */
-		while (!list_empty(&child->d_subdirs))
-			child = list_entry(child->d_subdirs.next, struct dentry,
-					   d_u.d_child);
-
-		/* Bail out if we already tried to remove that entry */
-		if (child == last)
-			return;
-
-		last = child;
-		debugfs_remove(child);
-	}
-}
-
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index ca170b4..6116ad0 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1188,6 +1188,11 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	ieee80211_wake_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 
++	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
++		list_for_each_entry_rcu(sta, &local->sta_list, list) {
++			ieee80211_sta_tear_down_BA_sessions(sta);
++		}
++	}
+ 	/*
+ 	 * If this is for hw restart things are still running.
+ 	 * We may want to change that later, however.
 -- 
-Regards,
-Pavel Roskin
+1.5.6.3
+
