@@ -1,115 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:53593 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756545Ab0BTWIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Feb 2010 17:08:10 -0500
-From: florian@mickler.org
-To: linux-wireless@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@xenotime.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Florian Mickler <florian@mickler.org>
-Subject: [PATCH 2/2] enhance /sys/class/rfkill/<rfkill>/state interface
-Date: Sat, 20 Feb 2010 22:40:45 +0100
-Message-Id: <1266702045-6062-3-git-send-email-florian@mickler.org>
-In-Reply-To: <1266702045-6062-1-git-send-email-florian@mickler.org>
-References: <1266702045-6062-1-git-send-email-florian@mickler.org>
+Received: from mail-pz0-f189.google.com ([209.85.222.189]:51800 "EHLO
+	mail-pz0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756084Ab0BCStU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2010 13:49:20 -0500
+Received: by pzk27 with SMTP id 27so1750785pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Feb 2010 10:49:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <9e52624fd81bc62bd917b1ad696b9535@127.0.0.1>
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
+	<20100201221252.GA30758@emergent.ellipticsemi.com> <4B67A937.70406@erley.org>
+	<201002031025.04624.holgerschurig@gmail.com> <9e52624fd81bc62bd917b1ad696b9535@127.0.0.1>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 3 Feb 2010 10:48:59 -0800
+Message-ID: <43e72e891002031048l65f8ac0ewf1de6f48b8ac46ec@mail.gmail.com>
+Subject: Re: Linux wireless GSoC 2010 project ideas
+To: pat-lkml@erley.org
+Cc: Holger Schurig <holgerschurig@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce a new state-value RFKILL_STATE_SOFT_AND_HARD_BLOCKED
-which is returned only through the sysfs state file.
-The other interfaces are designed so that they don't need this extra
-state.
+On Wed, Feb 3, 2010 at 6:24 AM,  <pat-lkml@erley.org> wrote:
+> On Wed, 3 Feb 2010 10:25:04 +0100, Holger Schurig
+> <holgerschurig@gmail.com>
+> wrote:
+>>> With ath9k I have used:
+>>>
+>>> AP + MP
+>>> AP + STA
+>>> AP + AP (Open and WPA2)
+>>
+>> Would you document this on the wireless WIKI at
+>> wireless.kernel.org ?
+>>
+>> Maybe as different articles, so that this can be a basis of
+>> several "HOWTO" articles.
+>
+> Yeah, I will try to find the time soon.  Any hints as to what needs to be
+> documented?  It is, at least in my opinion, pretty trivial to pull off, so
+> I'm not certain that anything more than an entry explaining how to create
+> additional interfaces is necessary.  Feel free to throw some ideas as to
+> what all you'd like to see in the documentation, and I'll write it (them?)
 
-This allows the sysfs to represent all possible states an rfkill driver can
-have.
+The ath9k virtual wiphy stuff is private to ath9k so for that you can
+add it here:
 
-Signed-off-by: Florian Mickler <florian@mickler.org>
----
+http://wireless.kernel.org/en/users/Drivers/ath9k/debug#wiphy
 
-After stumbling over this arbitrary limitation of sys/class/rfkill/*/state I
-wondered what would hinder this patch?
+For things that are specific to mac80211 that do not require the ath9k
+virtual wiphy something on the root of this page might be better:
 
-Documentation/ABI/stable/sysfs-class-rfkill |    7 ++++---
- include/linux/rfkill.h                      |    3 +++
- net/rfkill/core.c                           |    9 ++++++++-
- 3 files changed, 15 insertions(+), 4 deletions(-)
+http://wireless.kernel.org/en/users/Documentation
 
-diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
-index 53a4287..0cda9b3 100644
---- a/Documentation/ABI/stable/sysfs-class-rfkill
-+++ b/Documentation/ABI/stable/sysfs-class-rfkill
-@@ -42,9 +42,7 @@ What:		/sys/class/rfkill/rfkill[0-9]+/state
- Date:		09-Jul-2007
- KernelVersion	v2.6.22
- Contact:	linux-wireless@vger.kernel.org
--Description: 	Current state of the transmitter. This file is deprecated
--		because it can only properly show three of the four possible
--		states, soft-and-hard-blocked is missing.
-+Description: 	Current state of the transmitter.
- Values: 	A numeric value.
- 		0: RFKILL_STATE_SOFT_BLOCKED
- 			transmitter is turned off by software
-@@ -53,6 +51,9 @@ Values: 	A numeric value.
- 		2: RFKILL_STATE_HARD_BLOCKED
- 			transmitter is forced off by something outside of
- 			the driver's control.
-+		3: RFKILL_STATE_SOFT_AND_HARD_BLOCKED
-+			transmitter is blocked by something outside of 
-+			the driver's control as well as turned off by software
- 
- 
- What:		/sys/class/rfkill/rfkill[0-9]+/claim
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 97059d0..b09a655 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -25,6 +25,8 @@
- #define RFKILL_STATE_SOFT_BLOCKED	0
- #define RFKILL_STATE_UNBLOCKED		1
- #define RFKILL_STATE_HARD_BLOCKED	2
-+/* only used for sysfs */
-+#define RFKILL_STATE_SOFT_AND_HARD_BLOCKED 3
- 
- /**
-  * enum rfkill_type - type of rfkill switch.
-@@ -109,6 +111,7 @@ enum rfkill_user_states {
- 	RFKILL_USER_STATE_SOFT_BLOCKED	= RFKILL_STATE_SOFT_BLOCKED,
- 	RFKILL_USER_STATE_UNBLOCKED	= RFKILL_STATE_UNBLOCKED,
- 	RFKILL_USER_STATE_HARD_BLOCKED	= RFKILL_STATE_HARD_BLOCKED,
-+	RFKILL_USER_STATE_SOFT_AND_HARD_BLOCKED = RFKILL_STATE_SOFT_AND_HARD_BLOCKED,
- };
- #undef RFKILL_STATE_SOFT_BLOCKED
- #undef RFKILL_STATE_UNBLOCKED
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index c218e07..6d40297 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -645,12 +645,19 @@ static ssize_t rfkill_state_show(struct device *dev,
- 	struct rfkill *rfkill = to_rfkill(dev);
- 	unsigned long flags;
- 	u32 state;
-+	int user_state;
- 
- 	spin_lock_irqsave(&rfkill->lock, flags);
- 	state = rfkill->state;
- 	spin_unlock_irqrestore(&rfkill->lock, flags);
- 
--	return sprintf(buf, "%d\n", user_state_from_blocked(state));
-+	if (( state & RFKILL_BLOCK_HW ) && ( state & RFKILL_BLOCK_SW ))
-+		user_state = RFKILL_USER_STATE_SOFT_AND_HARD_BLOCKED;
-+	else
-+		user_state = user_state_from_blocked(state);
-+
-+	return sprintf(buf, "%d\n", user_state);
-+
- }
- 
- static ssize_t rfkill_state_store(struct device *dev,
--- 
-1.6.6.1
+If ath9k virtual wiphy is quite useful today we would have to ensure
+any possible replacement would meet up to match its capabilities. I
+was unaware anyone was yet using it and testing it extensively. Have
+you been doing these tests on the virtual wiphy with a fairly recent
+snapshot?
 
+  Luis
