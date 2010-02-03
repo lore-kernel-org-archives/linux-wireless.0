@@ -1,82 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:34869 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753646Ab0BOA3J convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 19:29:09 -0500
-Received: by fxm27 with SMTP id 27so106322fxm.25
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Feb 2010 16:29:07 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1266190499-2387-1-git-send-email-benoit.papillault@free.fr>
-References: <1266190499-2387-1-git-send-email-benoit.papillault@free.fr>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 15 Feb 2010 01:28:47 +0100
-Message-ID: <69e28c911002141628w76dc0419r43c7d753c16962da@mail.gmail.com>
-Subject: Re: [PATCH 1/2] zd1211rw: Experimental change to add proper monitor
-	support
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: dsd@gentoo.org, kune@deine-taler.de,
-	linux-wireless@vger.kernel.org, zd1211-devs@lists.sourceforge.net
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:13285 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755952Ab0BCVtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2010 16:49:08 -0500
+Subject: Re: Fwd: Atheros AR5418 with Ath9k driver hangs during file
+ transfer
+From: Pavel Roskin <proski@gnu.org>
+To: Iordan Iordanov <iiordanov@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <43075fc61002030924ufae1375icadf66713bf1637c@mail.gmail.com>
+References: <43075fc61001272207y14e21782hb31efac08ff9f62f@mail.gmail.com>
+	 <43075fc61002030846k3218de12o6f0f77fd691499cb@mail.gmail.com>
+	 <1265217293.22737.11.camel@mj>
+	 <43075fc61002030924ufae1375icadf66713bf1637c@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 03 Feb 2010 16:48:58 -0500
+Message-Id: <1265233738.5583.22.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 15, 2010 at 12:34 AM, Benoit Papillault
-<benoit.papillault@free.fr> wrote:
-> Without this patch, monitor mode does not returns all frames. With this patch,
-> the performance are quite poor if we create a monitor interface. Note :
-> creating a monitor interface with the "cook" flag has no impact on performance.
->
-> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-> ---
->  drivers/net/wireless/zd1211rw/zd_mac.c |   20 +++++++++++++++++++-
->  1 files changed, 19 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-> index 2d555cc..9cb6cbc 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-> @@ -904,8 +904,26 @@ static int zd_op_config(struct ieee80211_hw *hw, u32 changed)
->  {
->        struct zd_mac *mac = zd_hw_mac(hw);
->        struct ieee80211_conf *conf = &hw->conf;
-> +       int ret;
->
-> -       return zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
-> +       if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
-> +               /*
-> +                * Warning : enabling this register kills RX & TX
-> +                * performance
-> +                */
-> +               u32 cr_sniffer = !!(conf->flags & IEEE80211_CONF_MONITOR);
-> +               ret = zd_iowrite32(&mac->chip, CR_SNIFFER_ON, cr_sniffer);
-> +               if (!ret)
-> +                       return ret;
+On Wed, 2010-02-03 at 12:24 -0500, Iordan Iordanov wrote:
 
-Your logic is the wrong way around. You should return if nonzero, not if zero.
+> This is a very strange issue indeed. I had 2GB of RAM on the laptop at
+> that moment (now they are 1.5GB) and was running nothing else. Hence,
+> a memory leak seems more than likely in this situation. I didn't think
+> to check the amount of free memory during the problems, but I'll
+> certainly give it a shot. I am not experiencing this problem with b43
+> or with the proprietary Broadcom driver and my bcm based adapter. The
+> only time I've seen it is with ath9k, both the karmic koala one and
+> the cutting edge one.
+> 
+> Can you please give me some hints as to tests I can do for you, or
+> debugging I can enable so I can give you more useful information? The
+> stall during large transfers is 100% reproducible. It would be
+> wonderful if I can show you more debug info and shed some light on the
+> situation.
 
-> +       }
-> +
-> +       if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-> +               ret = zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
-> +               if (!ret)
-> +                       return ret;
-> +       }
-> +
-> +       return 0;
->  }
->
->  static void zd_process_intr(struct work_struct *work)
-> --
-> 1.5.6.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Here's what you can try, in order of intrusiveness.
 
+Use slabtop to see the kernel memory in use.  You should be able to spot
+who is hogging memory.
 
+Try MadWifi trunk with your card.  It's easy to compile and should
+support AR5418 just fine.  That will show if ath9k is to blame.
+
+Try compat-wireless.  That's a bigger package that would replace all
+your wireless drivers, but you won't need to replace your kernel.  That
+would help if the memory leak was fixed in the current wireless branch
+of the kernel.
+
+Recompile the kernel with CONFIG_DEBUG_KMEMLEAK and follow the
+instructions in the kernel sources (Documentation/kmemleak.txt) how to
+discover the leaks.
+
+Ask in LKML (linux-kernel@vger.kernel.org), they may know better.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Regards,
+Pavel Roskin
