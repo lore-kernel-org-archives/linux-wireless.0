@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:22559 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754853Ab0BVGlc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:32 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 19/22] wl1271: Clean up firmware block allocation calculation
-Date: Mon, 22 Feb 2010 08:38:39 +0200
-Message-Id: <1266820722-20202-20-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mga11.intel.com ([192.55.52.93]:10751 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753719Ab0BCPEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2010 10:04:24 -0500
+Subject: Re: [PATCH v2 1/1] mac80211: tear down all agg queues when
+ restart/reconfig hw
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1265186640.29119.83.camel@johannes.local>
+References: <1265159851-20682-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1265186640.29119.83.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 03 Feb 2010 07:00:55 -0800
+Message-Id: <1265209255.12116.2.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch simplifies the required block count calculation. Though it
-introduces a division operator, it greatly simplifies the formula.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_tx.c |   10 +++-------
- drivers/net/wireless/wl12xx/wl1271_tx.h |    2 +-
- 2 files changed, 4 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index a32d301..d3ed63e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -46,7 +46,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
- {
- 	struct wl1271_tx_hw_descr *desc;
- 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
--	u32 total_blocks, excluded;
-+	u32 total_blocks;
- 	int id, ret = -EBUSY;
- 
- 	/* allocate free identifier for the packet */
-@@ -56,12 +56,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
- 
- 	/* approximate the number of blocks required for this packet
- 	   in the firmware */
--	/* FIXME: try to figure out what is done here and make it cleaner */
--	total_blocks = (total_len + 20) >> TX_HW_BLOCK_SHIFT_DIV;
--	excluded = (total_blocks << 2) + ((total_len + 20) & 0xff) + 34;
--	total_blocks += (excluded > 252) ? 2 : 1;
--	total_blocks += TX_HW_BLOCK_SPARE;
--
-+	total_blocks = total_len + TX_HW_BLOCK_SIZE - 1;
-+	total_blocks = total_blocks / TX_HW_BLOCK_SIZE + TX_HW_BLOCK_SPARE;
- 	if (total_blocks <= wl->tx_blocks_available) {
- 		desc = (struct wl1271_tx_hw_descr *)skb_push(
- 			skb, total_len - skb->len);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
-index ca92bd8..8b9f6b4 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
-@@ -26,7 +26,7 @@
- #define __WL1271_TX_H__
- 
- #define TX_HW_BLOCK_SPARE                2
--#define TX_HW_BLOCK_SHIFT_DIV            8
-+#define TX_HW_BLOCK_SIZE                 252
- 
- #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
- /* The chipset reference driver states, that the "aid" value 1
--- 
-1.6.3.3
+On Wed, 2010-02-03 at 00:44 -0800, Johannes Berg wrote:
+> On Tue, 2010-02-02 at 17:17 -0800, wey-yi.w.guy@intel.com wrote:
+> > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > 
+> > When there is a need to restart/reconfig hw, tear down all the
+> > aggregation queues and let the mac80211 and driver get in-sync and have
+> > the opportunity to re-establish the aggregation queues.
+> > 
+> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > ---
+> > v2: add rcu_read_lock()
+> > ---
+> >  net/mac80211/util.c |   10 ++++++++++
+> >  1 files changed, 10 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> > index ca170b4..27e8833 100644
+> > --- a/net/mac80211/util.c
+> > +++ b/net/mac80211/util.c
+> > @@ -1188,6 +1188,16 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+> >  	ieee80211_wake_queues_by_reason(hw,
+> >  			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+> >  
+> > +	rcu_read_lock();
+> > +
+> > +	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
+> > +		list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> > +			ieee80211_sta_tear_down_BA_sessions(sta);
+> > +		}
+> > +	}
+> > +
+> > +	rcu_read_unlock();
+> > +
+> 
+> I wonder if that shouldn't be _before_ waking up the queues again, since
+> otherwise we'd enqueue all the frames that might have come in while
+> reconfiguring as aggregation frames still?
+> 
+not sure, the current place works for my test
 
