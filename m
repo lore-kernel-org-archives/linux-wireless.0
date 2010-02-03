@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f200.google.com ([209.85.210.200]:56895 "EHLO
-	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752719Ab0BSNXX convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46491 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757235Ab0BCM5v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 08:23:23 -0500
-Received: by yxe38 with SMTP id 38so45701yxe.4
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 05:23:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100219012802.12460.42239.stgit@mj.roinet.com>
-References: <20100219012802.12460.42239.stgit@mj.roinet.com>
-Date: Fri, 19 Feb 2010 08:23:22 -0500
-Message-ID: <b6c5339f1002190523y4d7cb999y19b73128d259879e@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath5k: remove stale function declarations, make some
-	functions static
-From: Bob Copeland <me@bobcopeland.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 3 Feb 2010 07:57:51 -0500
+Subject: [PATCH] mac80211: don't probe if we have probe response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 03 Feb 2010 13:57:46 +0100
+Message-ID: <1265201866.29119.90.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 18, 2010 at 8:28 PM, Pavel Roskin <proski@gnu.org> wrote:
-> Remove all unnecessary function declarations from ath5k.h.  Comment out
-> unused functions.  Remove ath5k_hw_get_tsf32(), which is too trivial to
-> be commented out.  Make functions static if suggested by sparse.  Make
-> ath5k_pm_ops static.
+We can now easily determine whether we already
+have probe response information for the BSS we
+are asked to connect to, in which case there's
+little point in probing the BSS again.
 
-Thanks, Pavel.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mlme.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-(whole series)
-Acked-by: Bob Copeland <me@bobcopeland.com>
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-02-03 13:52:43.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2010-02-03 13:53:08.000000000 +0100
+@@ -27,10 +27,6 @@
+ #include "rate.h"
+ #include "led.h"
+ 
+-#define IEEE80211_AUTH_TIMEOUT (HZ / 5)
+-#define IEEE80211_AUTH_MAX_TRIES 3
+-#define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
+-#define IEEE80211_ASSOC_MAX_TRIES 3
+ #define IEEE80211_MAX_PROBE_TRIES 5
+ 
+ /*
+@@ -1844,7 +1840,11 @@ int ieee80211_mgd_auth(struct ieee80211_
+ 	wk->probe_auth.algorithm = auth_alg;
+ 	wk->probe_auth.privacy = req->bss->capability & WLAN_CAPABILITY_PRIVACY;
+ 
+-	wk->type = IEEE80211_WORK_DIRECT_PROBE;
++	/* if we already have a probe, don't probe again */
++	if (req->bss->proberesp_ies)
++		wk->type = IEEE80211_WORK_AUTH;
++	else
++		wk->type = IEEE80211_WORK_DIRECT_PROBE;
+ 	wk->chan = req->bss->channel;
+ 	wk->sdata = sdata;
+ 	wk->done = ieee80211_probe_auth_done;
 
--- 
-Bob Copeland %% www.bobcopeland.com
+
