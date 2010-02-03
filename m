@@ -1,80 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31405 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751691Ab0B0FsB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 00:48:01 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2010 21:48:01 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:58753 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756063Ab0BCJ0c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2010 04:26:32 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Linux wireless GSoC 2010 project ideas
+Date: Wed, 3 Feb 2010 10:25:04 +0100
+Cc: Pat Erley <pat-lkml@erley.org>,
+	Maxim Levitsky <maximlevitsky@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Till Kamppeter <till.kamppeter@gmail.com>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	lsb-discuss@lists.linux-foundation.org
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com> <20100201221252.GA30758@emergent.ellipticsemi.com> <4B67A937.70406@erley.org>
+In-Reply-To: <4B67A937.70406@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19336.46721.589379.479488@gargle.gargle.HOWL>
-Date: Sat, 27 Feb 2010 11:36:57 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath9k: Fix HW deinit
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201002031025.04624.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also, free ath_hw instance properly.
-ath9k_hw_deinit() shouldn't do it.
+> With ath9k I have used:
+> 
+> AP + MP
+> AP + STA
+> AP + AP (Open and WPA2)
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    1 -
- drivers/net/wireless/ath/ath9k/hw.c           |    4 +---
- drivers/net/wireless/ath/ath9k/init.c         |    3 +++
- 3 files changed, 4 insertions(+), 4 deletions(-)
+Would you document this on the wireless WIKI at 
+wireless.kernel.org ?
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 5378c6e..67a9dd2 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -491,7 +491,6 @@ err_queues:
- err_debug:
- 	ath9k_hw_deinit(ah);
- err_hw:
--
- 	kfree(ah);
- 	priv->ah = NULL;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index cc4242f..259d951 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1228,7 +1228,7 @@ void ath9k_hw_deinit(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
--	if (common->state <= ATH_HW_INITIALIZED)
-+	if (common->state < ATH_HW_INITIALIZED)
- 		goto free_hw;
- 
- 	if (!AR_SREV_9100(ah))
-@@ -1239,8 +1239,6 @@ void ath9k_hw_deinit(struct ath_hw *ah)
- free_hw:
- 	if (!AR_SREV_9280_10_OR_LATER(ah) && !AR_SREV_9271(ah))
- 		ath9k_hw_rf_free_ext_banks(ah);
--	kfree(ah);
--	ah = NULL;
- }
- EXPORT_SYMBOL(ath9k_hw_deinit);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 623c2f8..6063f54 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -758,6 +758,9 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
- 
- 	tasklet_kill(&sc->intr_tq);
- 	tasklet_kill(&sc->bcon_tasklet);
-+
-+	kfree(sc->sc_ah);
-+	sc->sc_ah = NULL;
- }
- 
- void ath9k_deinit_device(struct ath_softc *sc)
+Maybe as different articles, so that this can be a basis of 
+several "HOWTO" articles.
+
 -- 
-1.7.0
-
+http://www.holgerschurig.de
