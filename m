@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:55797 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753430Ab0BLIIZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 03:08:25 -0500
-Received: by fxm7 with SMTP id 7so2296349fxm.28
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2010 00:08:23 -0800 (PST)
-Message-ID: <4B750C6E.9000208@gmail.com>
-Date: Fri, 12 Feb 2010 09:08:14 +0100
-From: Daniel Golle <daniel.golle@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:55098 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932671Ab0BCTrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2010 14:47:47 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] b43/b43legacy: Wake queues in wireless_core_start
+Date: Wed, 3 Feb 2010 20:47:38 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <4b69cf98.XrygqPz8t8ULClLG%Larry.Finger@lwfinger.net>
+In-Reply-To: <4b69cf98.XrygqPz8t8ULClLG%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: some ideas about pseudo_adhoc (as rtl8187 cannot do beacon generation)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201002032047.40531.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi!
-i've got an rtl8187l and want to use it in Ad-Hoc mode (actually 
-pseudo_adhoc would actually even be enough!). i researched a little bit 
-and found out that ad-hoc-, master- and mesh-mode are unsupported due to 
-the lack of beacon generation support in the mac80211 version of the 
-rtl8187 driver.
-as the softmac card probably doesn't support generating beacons in 
-firmware, does that mean we need to setup a beacon generation fork 
-repeatedly calling
-ieee80211_beacon_get
-and then sending the beacon? (very roughly, i'm guessing after reading 
-any 802.11 code for 20 minutes)
-probably a timing-critical task which needs to bypass the usual buffers 
-and such i can imagine...
+On Wednesday 03 February 2010 20:33:44 Larry Finger wrote:
+> If b43 or b43legacy are deauthenticated or disconnected, there is a
+> possibility that a reconnection is tried with the queues stopped in
+> mac80211. To prevent this, start the queues before setting
+> STAT_INITIALIZED.
+> 
+> In b43, a similar change has been in place (twice) in the
+> wireless_core_init() routine. Remove the duplicate and add similar
+> code to b43legacy.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@kernel.org>   [2.6.32]
+> ---
+> 
+> John,
+> 
+> The b43 patch to wireless_core_start() seems to help a regression
+> between 2.6.31 and 2.6.32. Accordingly, these changes should be
+> applied to 2.6.33 with the automatic backport to 2.6.32.
+> 
+> Larry
+> ---
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/main.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
+> +++ wireless-testing/drivers/net/wireless/b43/main.c
+> @@ -3980,6 +3980,7 @@ static int b43_wireless_core_start(struc
+>  	}
+>  
+>  	/* We are ready to run. */
+> +	ieee80211_wake_queues(dev->wl->hw);
+>  	b43_set_status(dev, B43_STAT_STARTED);
+>  
+>  	/* Start data flow (TX/RX). */
+> @@ -4389,8 +4390,6 @@ static int b43_wireless_core_init(struct
+>  
+>  	ieee80211_wake_queues(dev->wl->hw);
+>  
+> -	ieee80211_wake_queues(dev->wl->hw);
+> -
+>  	b43_set_status(dev, B43_STAT_INITIALIZED);
 
-anyway. pseudo_adhoc (i.e. ad-hoc without beacons) is a nice thing and 
-works great for use with user-space mesh-routing solutions such as OLSR, 
-batman or babel. however, i guess as pseudo_adhoc is violating the 
-standards (though it is very usefull) it might never be supported by 
-anything else than proprietary drivers made by Atheros (afaik).
+Well, I wonder why it makes a difference.
+I think we only call core_start() right after core_init() calls.
 
-so. i want to use this hardware (RTL8187L) for this task (OLSR). any 
-ideas? where should i start wasting my brain-time?
+Anyway, I think wake_queues should both be removed from core_init()
+and queues should only be woken in core_start.
 
-ot: anyone ever tried compiling the FullMAC r8187 driver (aircrack) for 
-Atheros/MIPS systems?
-
-cheers
-
-daniel
+-- 
+Greetings, Michael.
