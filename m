@@ -1,76 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36760 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753911Ab0BFI76 (ORCPT
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:53853 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932656Ab0BCRYv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2010 03:59:58 -0500
-Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh
- mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com>
-References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
-	 <20100205165726.GA1496@holoscopio.com>
-	 <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-pA29LmRgTei6ZH4yX0Py"
-Date: Sat, 06 Feb 2010 09:59:52 +0100
-Message-ID: <1265446793.4041.2.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 3 Feb 2010 12:24:51 -0500
+Received: by ywh36 with SMTP id 36so1476717ywh.15
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Feb 2010 09:24:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1265217293.22737.11.camel@mj>
+References: <43075fc61001272207y14e21782hb31efac08ff9f62f@mail.gmail.com>
+	 <43075fc61002030846k3218de12o6f0f77fd691499cb@mail.gmail.com>
+	 <1265217293.22737.11.camel@mj>
+Date: Wed, 3 Feb 2010 12:24:49 -0500
+Message-ID: <43075fc61002030924ufae1375icadf66713bf1637c@mail.gmail.com>
+Subject: Re: Fwd: Atheros AR5418 with Ath9k driver hangs during file transfer
+From: Iordan Iordanov <iiordanov@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Pavel,
 
---=-pA29LmRgTei6ZH4yX0Py
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> The log seems to show that you are very short on memory.  The backtraces
+> come from "page allocation failure", not from any conditions in the
+> ath9k driver.  You have a lot of free swap, so I assume it's the
+> non-swappable memory.  This is also evidenced by lowmem_reserve:
+>
+> lowmem_reserve[]: 0 0 0 0
+>
+> I haven't heard of any major memory leaks in ath9k, so I would not blame
+> it on the driver unless you can show that you don't get that problem
+> with another driver.
 
-On Fri, 2010-02-05 at 09:47 -0800, Andrey Yurovsky wrote:
-> Hi,
->=20
-> On Fri, Feb 5, 2010 at 8:57 AM, Thadeu Lima de Souza Cascardo
-> <cascardo@holoscopio.com> wrote:
-> > After doing the "station new" command, I can do a "station dump" and ge=
-t
-> > my newly added station. So, I think this is ready for commit. And then,
-> > we need to sort out both the WARNING and the panic for the Minstrel in
-> > other patches too.
->=20
-> Just to be clear, what are you trying to do here?  Are you manually
-> populating the peer links (stations) list?  If so, why?  Thanks,
+This is a very strange issue indeed. I had 2GB of RAM on the laptop at
+that moment (now they are 1.5GB) and was running nothing else. Hence,
+a memory leak seems more than likely in this situation. I didn't think
+to check the amount of free memory during the problems, but I'll
+certainly give it a shot. I am not experiencing this problem with b43
+or with the proprietary Broadcom driver and my bcm based adapter. The
+only time I've seen it is with ath9k, both the karmic koala one and
+the cutting edge one.
 
-Andrey, thanks for chiming in!
+Can you please give me some hints as to tests I can do for you, or
+debugging I can enable so I can give you more useful information? The
+stall during large transfers is 100% reproducible. It would be
+wonderful if I can show you more debug info and shed some light on the
+situation.
 
-I do wonder though, the commit (155cc9e4b1d60161ee53) I referenced was
-yours, and now you're asking the same question as I am -- "why even
-allow adding stations?"
+>
+> In the future, please send kernel logs produced by the dmesg command.
+> This will avoid the timestamps from syslogd (especially since you
+> already have kernel timestamps) and it would ensure that no kernel
+> messages are skipped by syslogd because of their low urgency.
 
-Should we just refuse it (again)? Clearly it would be safer than the
-current code that's prone to crashes.
+I had already lost the dmesg output due to a reboot. But in the
+future, I'll make sure to grab the info before rebooting. I will
+follow up with more results.
 
-johannes
+Cheers,
+Iordan
 
---=-pA29LmRgTei6ZH4yX0Py
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLbS+FAAoJEODzc/N7+QmaQ9kP/22pTViOuwOCS/WlaxxMjxuJ
-GqkTJbQDszS4elxPhSE2nRFVXIDE+dnvzwHBOqblqIt5TjVk/0MSRih6HMKuTY2J
-7IgnyZA2YJFEnb66OirLTXTzLqI6wcbZOcPjCR40dpoisdqv+cd3YtrWs9nPKxha
-DwO0Ywh/oU+Oqjc5UywHBAWRv9AHoUhruM3w4k8sWERAO2OvFFhc+C0ajYClOaXf
-gGB9PM7adbBPZ11lGj/ILGYhu2gWVASYAvoDuoDXhKGj3EGhSDwr3N8st5S8i4Qm
-wtY86zyiarokewYkv6R8/As4xaofyXwMYl+sfv6LUT6NYJkBehAqw75+2Ey+8fvp
-TZqz5h+EK8hpVpQTmb5PjAvJFLbMGvrWceoQZm3LJ6Q+ykpo11XHfZs1qKEcgRoT
-LTn83FNQAK+cxu96IU/meHQTlhbU8fOtlUHuvGbUzosZWRfeZuXeUolQdDIHiwSB
-KPK54WqPhbvV/pNzSVmOEgqsa/MQYUIm3ArAVtvVHI1OPJQobR+LHAKXYkeVcywW
-fr8kHjuJoLqrU/gvOR5eBV6w4xAVnAVYkAX+IVq1L0a/CK+4/GM2+01eH6z23N0b
-EzG04/sFWUOCrudiF/tFNF2lTM94gM3SPKUP50hxibmKisN7RXuUds+FhyzDifFU
-DU7ZU2SnxUGHlCN+QiHe
-=2fn6
------END PGP SIGNATURE-----
-
---=-pA29LmRgTei6ZH4yX0Py--
-
+-- 
+The conscious mind has only one thread of execution.
