@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:62659 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443Ab0BQQ7e (ORCPT
+Received: from acsinet11.oracle.com ([141.146.126.233]:28944 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757881Ab0BCXdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 11:59:34 -0500
-Date: Wed, 17 Feb 2010 10:59:31 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: moinejf@free.fr, linux-wireless@vger.kernel.org
-Subject: [PATCH] p54usb: Add the USB ID for Belkin (Accton) FD7050E ver
- 1010ec
-Message-ID: <4b7c2073.h47OtAV0+/xBdqy0%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Wed, 3 Feb 2010 18:33:50 -0500
+Date: Wed, 3 Feb 2010 15:31:07 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	akpm <akpm@linux-foundation.org>, Dan Williams <dcbw@redhat.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Colin McCabe <colin@cozybit.com>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH -next] libertas/if_spi: needs linux/semaphore.h
+Message-Id: <20100203153107.28184ef0.randy.dunlap@oracle.com>
+In-Reply-To: <20100203172625.c9340392.sfr@canb.auug.org.au>
+References: <20100203172625.c9340392.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jean-François Moine <moinejf@free.fr>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Yet another USB ID.
+libertas/if_spi.c needs to #include linux/semaphore.h to fix build errors:
 
-Signed-off-by: Jean-François Moine <moinejf@free.fr>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>
+drivers/net/wireless/libertas/if_spi.c:59: error: field 'spi_ready' has incomplete type
+drivers/net/wireless/libertas/if_spi.c:60: error: field 'spi_thread_terminated' has incomplete type
+drivers/net/wireless/libertas/if_spi.c:785: error: implicit declaration of function 'down_interruptible'
+drivers/net/wireless/libertas/if_spi.c:787: error: implicit declaration of function 'up'
+drivers/net/wireless/libertas/if_spi.c:834: error: implicit declaration of function 'down'
+drivers/net/wireless/libertas/if_spi.c:943: error: implicit declaration of function 'sema_init'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
+ drivers/net/wireless/libertas/if_spi.c |    1 +
+ 1 file changed, 1 insertion(+)
 
---- linux-2.6.32.3/drivers/net/wireless/p54/p54usb.c.orig	2010-01-07 00:07:45.000000000 +0100
-+++ linux-2.6.32.3/drivers/net/wireless/p54/p54usb.c	2010-02-16 20:31:33.000000000 +0100
-@@ -60,6 +60,7 @@
- 	{USB_DEVICE(0x06b9, 0x0121)},	/* Thomson SpeedTouch 121g */
- 	{USB_DEVICE(0x0707, 0xee13)},   /* SMC 2862W-G version 2 */
- 	{USB_DEVICE(0x083a, 0x4521)},   /* Siemens Gigaset USB Adapter 54 version 2 */
-+	{USB_DEVICE(0x083a, 0xf503)},	/* Accton FD7050E ver 1010ec  */
- 	{USB_DEVICE(0x0846, 0x4240)},	/* Netgear WG111 (v2) */
- 	{USB_DEVICE(0x0915, 0x2000)},	/* Cohiba Proto board */
- 	{USB_DEVICE(0x0915, 0x2002)},	/* Cohiba Proto board */
+--- linux-next-20100203.orig/drivers/net/wireless/libertas/if_spi.c
++++ linux-next-20100203/drivers/net/wireless/libertas/if_spi.c
+@@ -23,6 +23,7 @@
+ #include <linux/kthread.h>
+ #include <linux/list.h>
+ #include <linux/netdevice.h>
++#include <linux/semaphore.h>
+ #include <linux/spi/libertas_spi.h>
+ #include <linux/spi/spi.h>
+ 
