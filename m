@@ -1,40 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f184.google.com ([209.85.216.184]:41838 "EHLO
-	mail-px0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000Ab0BLHr2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 02:47:28 -0500
-Received: by pxi14 with SMTP id 14so1451376pxi.20
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2010 23:47:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1265960129-11072-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1265960129-11072-1-git-send-email-juuso.oikarinen@nokia.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 11 Feb 2010 23:47:04 -0800
-Message-ID: <43e72e891002112347y5d1dc68al500d914dbdf11eb3@mail.gmail.com>
-Subject: Re: [PATCH 1/1] mac80211: fix handling of null-rate control in
-	rate_control_get_rate
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp1-g21.free.fr ([212.27.42.1]:52628 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933016Ab0BDVxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 16:53:31 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH] mac80211: Added a new debugfs file for reading channel_type
+Date: Thu,  4 Feb 2010 22:00:20 +0100
+Message-Id: <1265317220-13504-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 11, 2010 at 11:35 PM, Juuso Oikarinen
-<juuso.oikarinen@nokia.com> wrote:
-> For hardware with IEEE80211_HW_HAS_RATE_CONTROL the rate controller is not
-> initialized. However, calling functions such as ieee80211_beacon_get result
-> in the rate_control_get_rate function getting called, which is accessing
-> (in this case uninitialized) rate control structures unconditionally.
->
-> Fix by exiting the function before setting the rates for HW with
-> IEEE80211_HW_HAS_RATE_CONTROL set. The initialization of the ieee80211_tx_info
-> struct is intentionally still executed.
->
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+This file helps debugging HT channels since it displays if we are on
+ht20 or ht40+/ht40-
 
-I think this has been a bug for a while so can you resend with Cc:
-stable@kernel.org
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+---
+ net/mac80211/debugfs.c |   33 +++++++++++++++++++++++++++++++++
+ 1 files changed, 33 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index b3bc32b..637929b 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -250,6 +250,38 @@ static const struct file_operations uapsd_max_sp_len_ops = {
+ 	.open = mac80211_open_file_generic
+ };
+ 
++static ssize_t channel_type_read(struct file *file, char __user *user_buf,
++		       size_t count, loff_t *ppos)
++{
++	struct ieee80211_local *local = file->private_data;
++	const char *buf;
++
++	switch (local->hw.conf.channel_type) {
++	case NL80211_CHAN_NO_HT:
++		buf = "no ht\n";
++		break;
++	case NL80211_CHAN_HT20:
++		buf = "ht20\n";
++		break;
++	case NL80211_CHAN_HT40MINUS:
++		buf = "ht40-\n";
++		break;
++	case NL80211_CHAN_HT40PLUS:
++		buf = "ht40+\n";
++		break;
++	default:
++		buf = "???";
++		break;
++	}
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
++}
++
++static const struct file_operations channel_type_ops = {
++	.read = channel_type_read,
++	.open = mac80211_open_file_generic
++};
++
+ static ssize_t queues_read(struct file *file, char __user *user_buf,
+ 			   size_t count, loff_t *ppos)
+ {
+@@ -408,6 +440,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(noack);
+ 	DEBUGFS_ADD(uapsd_queues);
+ 	DEBUGFS_ADD(uapsd_max_sp_len);
++	DEBUGFS_ADD(channel_type);
+ 
+ 	statsd = debugfs_create_dir("statistics", phyd);
+ 
+-- 
+1.6.3.3
+
