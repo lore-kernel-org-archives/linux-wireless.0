@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49766 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754891Ab0BAUAj (ORCPT
+Received: from cliff.cs.toronto.edu ([128.100.3.120]:52149 "EHLO
+	cliff.cs.toronto.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932660Ab0BDXgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 15:00:39 -0500
-Date: Mon, 1 Feb 2010 14:47:48 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Zhao, Shanyu" <shanyu.zhao@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/1] cfg80211: wext: set bssid to NULL in SIOCIWESSID
-Message-ID: <20100201194748.GC4952@tuxdriver.com>
-References: <1264808376-8003-1-git-send-email-shanyu.zhao@intel.com> <1264840626.3546.181.camel@johannes.local> <380B2771CDD78E46856E6B788D9F199750233886@orsmsx503.amr.corp.intel.com> <1265052460.29119.0.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1265052460.29119.0.camel@johannes.local>
+	Thu, 4 Feb 2010 18:36:10 -0500
+To: Dan Williams <dcbw@redhat.com>
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+Subject: Re: [PATCH] airo: fix setting zero length WEP key 
+In-reply-to: dcbw's message of Thu, 04 Feb 2010 15:26:11 -0800.
+             <1265325971.4290.38.camel@localhost.localdomain>
+Date: Thu, 04 Feb 2010 18:36:08 -0500
+From: Chris Siebenmann <cks@cs.toronto.edu>
+Message-Id: <20100204233608.90E172B0054@apps0.cs.toronto.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 01, 2010 at 08:27:40PM +0100, Johannes Berg wrote:
-> On Mon, 2010-02-01 at 10:57 -0800, Zhao, Shanyu wrote:
-> > Actually I don't think my patch disables that functionality. If
-> > there're multiple AP with the same essid "foo" and one of them has MAC
-> > "00:...:ff", then:
-> > 
-> > iwconfig wlan0 essid "foo"
-> > This will make the station associate with the first AP with essid
-> > "foo".
-> > 
-> > iwconfig wlan0 ap "00:...:ff"
-> > This will disassociate from the previous AP, and then associate with
-> > the first AP with MAC "00:...:ff".
-> > 
-> > Am I missing anything here?
-> 
-> No, I missed something. The problem will only occur when the SSID is
-> hidden as well, because the connect code will not have the SSID and not
-> know what to scan for, or which SSID to choose (there are Cisco APs that
-> use the same BSSID for multiple hidden SSIDs).
+| >  In the GUI, no wireless networks show up/are listed in the usual
+| > dropdown menu; this means that I can't go as far as even trying to
+| > connect to anything.  From the command line, 'iwlist wifi0 scanning'
+| > lists nothing.
+|
+| Wait, wifi0?  You need to be using 'eth0' or 'eth1', whichever eth
+| device that 'iwconfig' reports. wifi0 is a historical airo anomaly
+| that's only used for packet capture and sniffing of the 802.11 frames.
+| It should not be used for anything other than Wireshark basically.
+|
+| Do you get the same behavior if you use the normal ethX interface of
+| the airo device?
 
-Well, in the confusion I deleted the original post.  Could you
-(i.e. Shanyu Zhao) resend it to me?
+ Yes; on a 'bad' kernel, 'iwlist eth1 scanning' lists nothing, and on a
+good kernel it lists the networks that I expect (with some variability;
+where I have the machine at the moment is on the edge of visibility for
+some networks, and they appear and disappear periodically).
 
-Thanks,
+| Note that just because wifi0 may return scan results doesn't mean it
+| should be used with iwconfig...
+|
+| But also, you're doing the iwlist scan as root, correct?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ Yes (on both the good and the bad kernels).
+
+ I haven't been trying to use iwconfig for anything; all of my actual
+use of the wireless networks has been done through the Fedora 11 GUI.
+
+	- cks
