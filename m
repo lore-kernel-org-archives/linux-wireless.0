@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:38360 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758809Ab0BYCh4 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48166 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757081Ab0BDLpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 21:37:56 -0500
-Date: Wed, 24 Feb 2010 18:37:44 -0800
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: 802.11 development process - extended documentation
-Message-ID: <20100224183744.52732c77@nehalam>
-In-Reply-To: <4B85E1B6.4000705@free.fr>
-References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-	<4B85C59C.3010602@free.fr>
-	<43e72e891002241643o3ba0b0bp5c7b90a6ae6680ec@mail.gmail.com>
-	<43e72e891002241705w4a8c7029le4d1118ee7a68bb9@mail.gmail.com>
-	<4B85E1B6.4000705@free.fr>
+	Thu, 4 Feb 2010 06:45:11 -0500
+Subject: Re: [PATCH 2/5] b43: N-PHY: load generated samples
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1265282592-25491-2-git-send-email-zajec5@gmail.com>
+References: <1265282592-25491-1-git-send-email-zajec5@gmail.com>
+	 <1265282592-25491-2-git-send-email-zajec5@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SCOpol1XVnRKGLVLHa5o"
+Date: Thu, 04 Feb 2010 12:45:06 +0100
+Message-ID: <1265283906.29119.108.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 25 Feb 2010 03:34:30 +0100
-Benoit PAPILLAULT <benoit.papillault@free.fr> wrote:
 
-> Luis R. Rodriguez a écrit :
-> > On Wed, Feb 24, 2010 at 4:43 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> >   
-> >> On Wed, Feb 24, 2010 at 4:34 PM, Benoit PAPILLAULT
-> >> <benoit.papillault@free.fr> wrote:
-> >>     
-> >>> Luis R. Rodriguez a écrit :
-> >>>       
-> >>>> I've extended our 802.11 development process into a new section on our
-> >>>> 802.11 wiki. I often get asked how this works from different parts of
-> >>>> the company here at Atheros so figured it'd be easier to illustrate
-> >>>> this as best as possible and share it.
-> >>>>
-> >>>> http://wireless.kernel.org/en/developers/process
-> >>>>
-> >>>> Hope it does justice, John if you see any mistakes feel free to edit.
-> >>>> If the diagram seems fishy let me know what I can fix.
-> >>>>
-> >>>>  Luis
+--=-SCOpol1XVnRKGLVLHa5o
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The part that is missing is the -stable kernel tree (Greg KH).
-As a distro maintainer, I find the stable kernel tree the most important of all!
-More important than the compat-wireless tree (sorry Luis).
+On Thu, 2010-02-04 at 12:23 +0100, Rafa=C5=82 Mi=C5=82ecki wrote:
+
+> +	u32 *data;
+> +
+> +	data =3D kzalloc(len * sizeof(u32), GFP_KERNEL);
+> +
+> +	if (nphy->hang_avoid)
+> +		b43_nphy_stay_in_carrier_search(dev, 1);
+> +
+> +	for (i =3D 0; i < len; i++) {
+> +		data[i] =3D (samples[i].i & 0x3FF << 10);
+
+Humm. Allocations can fail, you know :)
+
+johannes
+
+--=-SCOpol1XVnRKGLVLHa5o
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLarM+AAoJEODzc/N7+Qma8t4QALBpsfZL0NLQGWf6Q4StiA18
+Lp6oEjUonRtbjJZLi01ZJG70snu7r16YCZg9FNPHHM2X/U7WDPuswev5JUlasnSv
+wG+aJkbAxISWm4DHYK4stsw+PLxa5KEZzm/1Bk06ZFnfJvqjmVEKOsnXy3b0Lhp4
+v5XqKIFQi1paoqu3Fh+vK6ICQWQSG8jeO2hgJuvfAN7AKU0XXspdlOb857WGKr4X
+KoepJKod4Umxp8DxXdj9jMEJ6ZJH9Ut2/PSQjrxKCsqs+L/9UM4NOUgWn7IeCX0s
+ZBKc2MBDJsv8w2+1tfy9zf2D+Gzb7CkzmMhdmEgKwARRIFMi91WGTDYY7MnCzY9T
+DG30iD++fOAytqUJmwPFg1F4wxfKnZhLi5D180w93gjAi2m+x03y3fwr2uZk+JNk
+9TKvGbXyKZArnaD23U3buTc06K769rhqS+cZyb+AQ3Q6rZhJ0+Lz+alTpBer3jEZ
+zUYXl64Y7/0/lrfX2sUYrthmpK0eqPaXrvEdfqt9kQngg+DOAzaoAkUjp3XoPUGq
+QK7a+vf1BzzHIIi62ytDovUJnsaKH7HWJCwHAqR6Rd+TNRrME0igsszzXOdvcx6d
+ZtTRS2hEK0FKBaa/p72Nj4eJiBmGvhn4JdYtWbeaNaEFnyq9czC7mjxD1yRJmc1b
+2G/qpTi9n8kLCS9Ke5HK
+=wNOX
+-----END PGP SIGNATURE-----
+
+--=-SCOpol1XVnRKGLVLHa5o--
+
