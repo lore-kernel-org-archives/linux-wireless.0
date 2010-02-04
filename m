@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62543 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759440Ab0BYRCw (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:6410 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756272Ab0BDH3u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 12:02:52 -0500
-Received: by wya21 with SMTP id 21so1974917wya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2010 09:02:50 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 25 Feb 2010 11:02:50 -0600
-Message-ID: <ce50f2e21002250902o19c12921sbbca61d1da999163@mail.gmail.com>
-Subject: On power management of ath5k
-From: jun <luckyjs@gmail.com>
+	Thu, 4 Feb 2010 02:29:50 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH] libertas: cfg80211 support
+Date: Thu, 4 Feb 2010 08:28:14 +0100
+Cc: Dan Williams <dcbw@redhat.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+References: <20100202000934.GA19847@sortiz.org> <201002031632.10425.holgerschurig@gmail.com> <1265229000.21707.4.camel@localhost.localdomain>
+In-Reply-To: <1265229000.21707.4.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201002040828.14406.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+> > I had an application running that was pinging and showed the
+> > signal level. Then I moved out-of-reach of the AP.
+> > This happened:
+> 
+> The command timeout code is just screwed all around.  We've
+> already seen that some commands just take longer than we're
+> expecting them to.  I think we should just get rid of the
+> command retry stuff completely and return EBUSY when trying to
+> submit additional commands if the firmware hasn't replied yet.
 
-I encountered problems when I tried to enable power saving mode with
-PS-POLL (ath5k with last kernel from git 2.6.33).
-I saw from the linux wireless' website that this mode can be enabled
-by iwconfig,
-but the command (wireless-tools version 29 on my machine) always gives
-an error about invalid parameters.
+I think the same.
 
-So I traced ath5k's code and found ath5k_hw_enable_pspoll() is called
-only when aid is not 0. Is this the place where
-a STA can enable/disable PS-POLL based power saving? I thought that
-there should be some code to force outgoing
-packets to have power management bit set, but I couldn't locate the
-code. Any suggestions on how I can make this mode work?
+I think in my case --- which I haven't debugged completely 
+yet  --- user-space code was going wild. The firmware command 
+001f (get RSSI) failed. Which is to be expected, because the 
+firmware noticed that there's no longer a connection to an AP.
 
-Thank you for your time,
+However, user-space nl80211 code seems to have been buggy and 
+issued the same command in a loop. This flooded the the 
+command-execution logic in libertas, and it couldn't cope with 
+it.
 
-Jun
+AFAIK the error I had had nothing to do with the cfg80211-code 
+inside the libertas driver. Or maybe it is, I'll write a little 
+program that floods libertas via cfg80211 with commands in a 
+tight loop, let's see what happens. :-)
+
+
+Getting rid of the command-retry and returning an error instead 
+seems to be a sane thing.
+
+> I don't think I've *ever* seen recovery from this situation
+> unless the firmware finally sends the command reply back, which
+> has happened in some cases with SD8686.  IMHO the command retry
+> stuff causes more problems than it's worth, given that it never
+> actually fixes anything or recovers from the timeout.
+> 
+> If the firmware is hung, the only way to get the device back is
+> to power-cycle it or possibly do a USB reset.  Retrying a
+> command just doesn't work.
+
+In my case, I could do a "pccardctl eject" / "pccardctl insert" 
+sequence :-)   Not nice. Maybe we need a signal from 
+core-libertas to the libertas-drivers, so that they decide what 
+to do.
+
+-- 
+http://www.holgerschurig.de
