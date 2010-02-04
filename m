@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f173.google.com ([209.85.222.173]:49666 "EHLO
-	mail-pz0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701Ab0BEPtf convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37192 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576Ab0BDIOu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 10:49:35 -0500
-Received: by pzk3 with SMTP id 3so1036335pzk.5
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 07:49:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B6BA999.4030904@erley.org>
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
-	<20100201221252.GA30758@emergent.ellipticsemi.com> <4B67A937.70406@erley.org>
-	<201002031025.04624.holgerschurig@gmail.com> <9e52624fd81bc62bd917b1ad696b9535@127.0.0.1>
-	<43e72e891002031048l65f8ac0ewf1de6f48b8ac46ec@mail.gmail.com>
-	<4B6BA999.4030904@erley.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 5 Feb 2010 07:49:15 -0800
-Message-ID: <43e72e891002050749k65f36f24hcfa516cd5363a675@mail.gmail.com>
-Subject: Re: Linux wireless GSoC 2010 project ideas
-To: Pat Erley <pat-lkml@erley.org>
-Cc: Holger Schurig <holgerschurig@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 4 Feb 2010 03:14:50 -0500
+Subject: Re: [RFC PATCH 2/2] mac80211: Reset dynamic ps timer in Rx path.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@iki.fi
+In-Reply-To: <1265266442-6273-2-git-send-email-vnatarajan@atheros.com>
+References: <1265266442-6273-1-git-send-email-vnatarajan@atheros.com>
+	 <1265266442-6273-2-git-send-email-vnatarajan@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-D9bb6MbuC/RIdcz+8vCV"
+Date: Thu, 04 Feb 2010 09:14:46 +0100
+Message-ID: <1265271286.29119.96.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2010 at 9:16 PM, Pat Erley <pat-lkml@erley.org> wrote:
-> On 02/03/10 13:48, Luis R. Rodriguez wrote:
->> On Wed, Feb 3, 2010 at 6:24 AM,  <pat-lkml@erley.org> wrote:
->>> On Wed, 3 Feb 2010 10:25:04 +0100, Holger Schurig
->>> <holgerschurig@gmail.com>
->>> wrote:
->>>>> With ath9k I have used:
->>>>>
->>>>> AP + MP
->>>>> AP + STA
->>>>> AP + AP (Open and WPA2)
->>>>
->>>> Would you document this on the wireless WIKI at
->>>> wireless.kernel.org ?
->>>>
->>>> Maybe as different articles, so that this can be a basis of
->>>> several "HOWTO" articles.
->>>
->>> Yeah, I will try to find the time soon.  Any hints as to what needs to be
->>> documented?  It is, at least in my opinion, pretty trivial to pull off, so
->>> I'm not certain that anything more than an entry explaining how to create
->>> additional interfaces is necessary.  Feel free to throw some ideas as to
->>> what all you'd like to see in the documentation, and I'll write it (them?)
->>
->> The ath9k virtual wiphy stuff is private to ath9k so for that you can
->> add it here:
->>
->> http://wireless.kernel.org/en/users/Drivers/ath9k/debug#wiphy
->>
->> For things that are specific to mac80211 that do not require the ath9k
->> virtual wiphy something on the root of this page might be better:
->>
->> http://wireless.kernel.org/en/users/Documentation
->>
->> If ath9k virtual wiphy is quite useful today we would have to ensure
->> any possible replacement would meet up to match its capabilities. I
->> was unaware anyone was yet using it and testing it extensively. Have
->> you been doing these tests on the virtual wiphy with a fairly recent
->> snapshot?
->
-> I tinker with the mac80211 interface to it a lot (a project on my d-link dir-615).  I'm doing a pseudo wds setup or client/AP setup, whatever you'd call that - essentially, a range extender.  I have some other hardware that I tinker with multiple APs using hostapd, as well as MP+AP for fun.  All the systems are wired together, so it's not a big deal for me if I break things, hence all the tinkering.
->
-> As far as snapshots, I am using a lightly modded compat-wireless+compat from git that works with wireless-testing.  I update every 2-3 days.  Before mac80211 supported multiple vifs, I was testing with the ath9k interface exclusively.
->
-> Do you guys think the content would be better placed onto the iw page, or onto a separate one?
 
-iw command stuff should go on the iw page
-ath9k virtual wiphy stuff on the ath9k/debug page
+--=-D9bb6MbuC/RIdcz+8vCV
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-If there is something else you'd like to cover like AP + MP solution
-together perhaps adding a new page would be best.
+On Thu, 2010-02-04 at 12:24 +0530, Vivek Natarajan wrote:
+> If there is a continuous Rx UDP traffic with power save enabled,
+> there is some loss of packets with ath9k as Atheros chipsets
+> need to be awake to do Rx, unlike other vendor chipsets.
 
-  Luis
+That sentence doesn't make a whole lot of sense, all chips need to be
+awake to RX ;)
+
+IOW, I think the flag is probably useless?
+
+> +	if ((local->hw.flags & IEEE80211_HW_NEEDS_RX_PS_RESET) &&
+> +	    ieee80211_is_data(hdr->frame_control) &&
+> +	    !is_multicast_ether_addr(hdr->addr1)) {
+> +		if (local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
+
+Why nest two if statements instead of just using a single one?
+
+johannes
+
+
+--=-D9bb6MbuC/RIdcz+8vCV
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLaoHyAAoJEODzc/N7+QmaTxsP/Rbc0MxYkTDu/axouS7lx3uv
+plkeTpzrA/M1cu5XsK8Mjjsd7FSTs4eVI507L2kdsn2QusSVfZw6//JHXJ6lfOmh
+wrydB5DftTWheXvX15DgcjNfTPTTiP2qjV3/I/cEl5zPirF7ujzSWx1sr1ClQ612
+k0uqRZt369DRAbyJxWEn7qPZRhQIwQv4lOwUXbPjDK0OHyXYgdlD69f0S+/J4JTo
+jPI9btMDpNSFFLskYS8qNmjgYM/zasybFkZPTjYCZ0+i5V8QLNA/ucFjm8rfK938
+cYjFI3mpZo+gcJhlo12UM10O333UOvBM6nEUQGB/5I+Ug15Y+zyJWO307+g6X6fU
+66ADL8Y3RiuoSYT8VNZCmh6PQSDPYZL6k9GID/h6iRaNO8NGXjJSBndTOa7aLgbM
+mgHSLRkNW0QSi/CWF6yvQyTQsJrlygdX7IqLltXYDRAoIsgEATV4U0TO33+V84AG
+PMAIv+qSOrywJvzB38x+BaH4dgGFgz+20+H0zy+PyLWRVsj95rhvfhbwt91+KDUw
+UQOjSay08Mz8Nsy9WhPiXgzZQhNO+Do7W4oAmcyyxJ56WI3WMR90YTeEBVWQv1Dd
+QpgXIoRapTOUzgpeDLpHJcOGtOMy4EOnIvY3sshFbB7eJKfF54Be4xSIAuUuX6P4
+NbrUy2l3uNNJME6banpV
+=e+19
+-----END PGP SIGNATURE-----
+
+--=-D9bb6MbuC/RIdcz+8vCV--
+
