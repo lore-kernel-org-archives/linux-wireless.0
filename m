@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:63182 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698Ab0BFOi1 (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:43749 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757280Ab0BDJHH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2010 09:38:27 -0500
-Received: by pxi27 with SMTP id 27so2377806pxi.4
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 06:38:26 -0800 (PST)
-From: tom.leiming@gmail.com
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	stable@kernel.org, Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH] ath9k: fix keycache leak in split tkip case
-Date: Sat,  6 Feb 2010 22:38:23 +0800
-Message-Id: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
+	Thu, 4 Feb 2010 04:07:07 -0500
+Received: by ewy28 with SMTP id 28so2567037ewy.28
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 01:07:06 -0800 (PST)
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC PATCH 1/2] mac80211: Retry null data frame for power save.
+References: <1265266442-6273-1-git-send-email-vnatarajan@atheros.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 04 Feb 2010 11:00:42 +0200
+In-Reply-To: <1265266442-6273-1-git-send-email-vnatarajan@atheros.com> (Vivek Natarajan's message of "Thu\, 4 Feb 2010 12\:24\:01 +0530")
+Message-ID: <87ljf9jryd.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
+Vivek Natarajan <vnatarajan@atheros.com> writes:
 
-If split tkip key is used, ath_delete_key should delete
-rx key and rx mic key. This patch fixes the leak of hw
-keycache in the case.
+> Even if the null data frame is not acked by the AP, mac80211 goes
+> into power save. This might lead to loss of frames from the AP.
+> Prevent this by restarting dynamic_ps_timer when ack is not received
+> for null data frames.
 
----
-The patch is against the latest wireless test tree.
+Yes, this is definitely needed. I like the idea, but I will check the
+patch in detail later today.
 
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6796d5c..928402b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -809,6 +809,7 @@ static void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf
- 
- 	clear_bit(key->hw_key_idx + 64, common->keymap);
- 	if (common->splitmic) {
-+		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
- 		clear_bit(key->hw_key_idx + 32, common->keymap);
- 		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
- 	}
 -- 
-1.6.2.5
-
+Kalle Valo
