@@ -1,29 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f191.google.com ([209.85.216.191]:40893 "EHLO
-	mail-px0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933376Ab0BPVuB (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:10196 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755337Ab0BDJxj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 16:50:01 -0500
-Received: by pxi29 with SMTP id 29so2119158pxi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 13:50:00 -0800 (PST)
+	Thu, 4 Feb 2010 04:53:39 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: cfg80211 support
+Date: Thu, 4 Feb 2010 10:52:00 +0100
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+References: <20100202000934.GA19847@sortiz.org>
+In-Reply-To: <20100202000934.GA19847@sortiz.org>
 MIME-Version: 1.0
-In-Reply-To: <1266354181-5317-2-git-send-email-hauke@hauke-m.de>
-References: <1266354181-5317-1-git-send-email-hauke@hauke-m.de>
-	<1266354181-5317-2-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 16 Feb 2010 13:49:39 -0800
-Message-ID: <43e72e891002161349u6229ea51jb7a3649049b370e6@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat: backport some netdevice.h defs
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201002041052.00858.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 16, 2010 at 1:03 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>     + Slightly changed the scanning state machine: The scan
+>       worker is scheduled from the scan response handler, and
+>       we're checking for scan_channel to know if a scan is
+>       currently running. 
 
-Thanks, applied both.
+Can you tell my why you change the scanning state machine?  What 
+was broken with it, or why is it now better?
 
-  Luis
+
+Also, previously priv->scan_req was the marker that a scan was 
+going on. What did it "buy" to you to change this to 
+priv->scan_channel?
