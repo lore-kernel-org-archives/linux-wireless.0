@@ -1,55 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51177 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753211Ab0BIHwA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 02:52:00 -0500
-Subject: Re: [PATCH] ath9k: fix keycache leak in split tkip case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, stable@kernel.org
-In-Reply-To: <20100209093612.08d9ae17@tom-lei>
-References: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
-	 <43e72e891002081338q466d9747p10a61b5e1aca4c6d@mail.gmail.com>
-	 <20100209093612.08d9ae17@tom-lei>
+Received: from mx1.redhat.com ([209.132.183.28]:60312 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758268Ab0BDX5f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 18:57:35 -0500
+Subject: Re: [PATCH v2] airo: fix setting zero length WEP key
+From: Dan Williams <dcbw@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+In-Reply-To: <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com>
+References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com>
+	 <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 09 Feb 2010 08:51:48 +0100
-Message-ID: <1265701908.3783.13.camel@johannes.berg>
+Date: Thu, 04 Feb 2010 15:56:13 -0800
+Message-ID: <1265327773.4290.43.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-02-09 at 09:36 +0800, Ming Lei wrote:
-> From 67b0faf7e7a57c3e6a971ff43d1f03f8e939429b Mon Sep 17 00:00:00 2001
-> From: Ming Lei <tom.leiming@gmail.com>
-> Date: Sat, 6 Feb 2010 22:30:53 +0800
-> Subject: [PATCH] ath9k: fix keycache leak in split tkip case
+On Thu, 2010-02-04 at 13:07 +0100, Stanislaw Gruszka wrote:
+> Patch prevents call set_wep_key() with zero key length. That fix long
+> standing regression since commit c0380693520b1a1e4f756799a0edc379378b462a
+> "airo: clean up WEP key operations". Additionally print call trace when
+> someone will try to use improper parameters, and remove key.len = 0
+> assignment, because it is in not possible code path.
+
+Could you send the hunk that touches airo_set_encode() separately
+please?  That's obviously correct and an easy ack, but isn't really
+related to the other hunks here.
+
+Thanks,
+Dan
+
+> v1->v2
+> Return instantly from set_wep_key() when keylen == 0.
 > 
-> If split tkip key is used, ath_delete_key should delete
-> rx key and rx mic key. This patch fixes the leak of hw
-> keycache in the case.
-> 
+> Reported-and-bisected-by: Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+> Cc: Dan Williams <dcbw@redhat.com>
+> Cc: <stable@kernel.org>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 > ---
-> The patch is against the latest wireless test tree.
+>  drivers/net/wireless/airo.c |   33 ++++++++++++++++++---------------
+>  1 files changed, 18 insertions(+), 15 deletions(-)
 > 
-> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-> Cc: stable@kernel.org
+> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+> index 4331d67..01bffc2 100644
+> --- a/drivers/net/wireless/airo.c
+> +++ b/drivers/net/wireless/airo.c
+> @@ -5254,11 +5254,8 @@ static int set_wep_key(struct airo_info *ai, u16 index, const char *key,
+>  	WepKeyRid wkr;
+>  	int rc;
+>  
+> -	if (keylen == 0) {
+> -		airo_print_err(ai->dev->name, "%s: key length to set was zero",
+> -			       __func__);
+> +	if (WARN_ON(keylen == 0))
+>  		return -1;
+> -	}
+>  
+>  	memset(&wkr, 0, sizeof(wkr));
+>  	wkr.len = cpu_to_le16(sizeof(wkr));
+> @@ -6405,11 +6402,7 @@ static int airo_set_encode(struct net_device *dev,
+>  		if (dwrq->length > MIN_KEY_SIZE)
+>  			key.len = MAX_KEY_SIZE;
+>  		else
+> -			if (dwrq->length > 0)
+> -				key.len = MIN_KEY_SIZE;
+> -			else
+> -				/* Disable the key */
+> -				key.len = 0;
+> +			key.len = MIN_KEY_SIZE;
+>  		/* Check if the key is not marked as invalid */
+>  		if(!(dwrq->flags & IW_ENCODE_NOKEY)) {
+>  			/* Cleanup */
+> @@ -6590,12 +6583,22 @@ static int airo_set_encodeext(struct net_device *dev,
+>  		default:
+>  			return -EINVAL;
+>  		}
+> -		/* Send the key to the card */
+> -		rc = set_wep_key(local, idx, key.key, key.len, perm, 1);
+> -		if (rc < 0) {
+> -			airo_print_err(local->dev->name, "failed to set WEP key"
+> -			               " at index %d: %d.", idx, rc);
+> -			return rc;
+> +		if (key.len == 0) {
+> +			rc = set_wep_tx_idx(local, idx, perm, 1);
+> +			if (rc < 0) {
+> +				airo_print_err(local->dev->name,
+> +					       "failed to set WEP transmit index to %d: %d.",
+> +					       idx, rc);
+> +				return rc;
+> +			}
+> +		} else {
+> +			rc = set_wep_key(local, idx, key.key, key.len, perm, 1);
+> +			if (rc < 0) {
+> +				airo_print_err(local->dev->name,
+> +					       "failed to set WEP key at index %d: %d.",
+> +					       idx, rc);
+> +				return rc;
+> +			}
+>  		}
+>  	}
+>  
 
-This is ordered wrong, it needs to be
-
-----------
-From: foo
-
-If split ...
-
-Signed-off-by: ...
-Cc: stable...
----
-The patch is against...
-(everything after --- is removed from the commit log when committing)
-----------
-
-johannes
 
