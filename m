@@ -1,60 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50477 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756487Ab0BKSmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2010 13:42:12 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56605
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751126Ab0BDRAd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 12:00:33 -0500
+Date: Thu, 04 Feb 2010 09:00:45 -0800 (PST)
+Message-Id: <20100204.090045.154996331.davem@davemloft.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 01/12] iwlwifi: clear all tx queues when firmware ready
-Date: Thu, 11 Feb 2010 10:41:54 -0800
-Message-Id: <1265913725-4279-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
-References: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-02-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100203211900.GJ2882@tuxdriver.com>
+References: <20100203211900.GJ2882@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 3 Feb 2010 16:19:01 -0500
 
-Reset and clear all the tx queues when finished downloading runtime
-uCode and ready to go into operation mode.
+> Another huge batch of updates intended for 2.6.34, mostly the usual bits
+> by the usual suspects.  This batch does contain a number of mac80211
+> fixes that (presumably) originated in OpenWRT and a number of steps
+> toward N-phy support in b43, along with the usual driver updates from
+> Intel, Atheros, and many others.  And, of course, Johannes makes his
+> usual strong showing. :-)
+> 
+> Please let me know if there are problems!
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    2 ++
- drivers/net/wireless/iwlwifi/iwl-5000.c |    2 ++
- 2 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index aebe8c5..e479488 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -581,6 +581,8 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
- 
- 	iwl4965_set_wr_ptrs(priv, IWL_CMD_QUEUE_NUM, 0);
- 
-+	/* reset to 0 to enable all the queue first */
-+	priv->txq_ctx_active_msk = 0;
- 	/* Map each Tx/cmd queue to its corresponding fifo */
- 	for (i = 0; i < ARRAY_SIZE(default_queue_to_tx_fifo); i++) {
- 		int ac = default_queue_to_tx_fifo[i];
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index f3d662c..a7fa1ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -648,6 +648,8 @@ int iwl5000_alive_notify(struct iwl_priv *priv)
- 
- 	iwl5000_set_wr_ptrs(priv, IWL_CMD_QUEUE_NUM, 0);
- 
-+	/* reset to 0 to enable all the queue first */
-+	priv->txq_ctx_active_msk = 0;
- 	/* map qos queues to fifos one-to-one */
- 	for (i = 0; i < ARRAY_SIZE(iwl5000_default_queue_to_tx_fifo); i++) {
- 		int ac = iwl5000_default_queue_to_tx_fifo[i];
--- 
-1.6.3.3
-
+Pulled, thanks a lot John.
