@@ -1,119 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:45503 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932099Ab0BGIVq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2010 03:21:46 -0500
-Subject: [PATCH 07/10] iwlwifi: remove get_tx_stats() mac80211 op
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Date: Sun, 07 Feb 2010 10:21:37 +0200
-Message-ID: <20100207082137.31474.27007.stgit@tikku>
-In-Reply-To: <20100207082044.31474.48583.stgit@tikku>
-References: <20100207082044.31474.48583.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:58267 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757871Ab0BDWTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 17:19:11 -0500
+Subject: Re: [PATCH] airo: fix setting zero length WEP key
+From: Dan Williams <dcbw@redhat.com>
+To: Chris Siebenmann <cks@cs.toronto.edu>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+In-Reply-To: <20100204221049.717A72B0054@apps0.cs.toronto.edu>
+References: <20100204221049.717A72B0054@apps0.cs.toronto.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 04 Feb 2010 14:18:20 -0800
+Message-ID: <1265321900.4290.20.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-get_tx_stats() will be removed from mac80211.
+On Thu, 2010-02-04 at 17:10 -0500, Chris Siebenmann wrote:
+> | >  That mentioned commit broke wireless on a Thinkpad T42 (running Fedora
+> | > 11); from that commit onwards, the wireless system appeared to see no
+> | > networks. The patch makes things work again.
+> | > 
+> | >  More details are in the Fedora bugzilla:
+> | > 	https://bugzilla.redhat.com/show_bug.cgi?id=522530
+> | 
+> | You mean with iwlist?  That's quite odd because setting WEP keys
+> | doesn't have anything to do with the scanning stuff, even in the
+> | firmware.  Note that Airo has always been somewhat tempermental for
+> | scans and you may or may not see any or all APs in any given scan.
+> 
+>  All I know is that the failure is total; in all situations I've
+> tried where a good kernel sees one or more networks and APs, a bad
+> kernel sees none at all (and 'iwlist wifi0 scanning' reports 'No
+> scan results'). A good kernel sometimes reports different numbers of
+> networks and sometimes has quality problems, but a bad kernel never sees
+> anything.
+> 
+> (Well, has never seen anything within a relatively modest amount of
+> time.  I have not let it sit for, say, an hour in order to see if
+> something magically gets better; I have always rebooted into a kernel
+> with working wireless.)
 
-Compile-tested only.
+When are you attempting to scan?  Is anything like wpa_supplicant or
+NetworkManager running in the background when you do this?
 
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.c     |   36 ---------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 --
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 -
- 4 files changed, 0 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3b950ae..19e8a17 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3448,7 +3448,6 @@ static struct ieee80211_ops iwl_hw_ops = {
- 	.set_key = iwl_mac_set_key,
- 	.update_tkip_key = iwl_mac_update_tkip_key,
- 	.get_stats = iwl_mac_get_stats,
--	.get_tx_stats = iwl_mac_get_tx_stats,
- 	.conf_tx = iwl_mac_conf_tx,
- 	.reset_tsf = iwl_mac_reset_tsf,
- 	.bss_info_changed = iwl_bss_info_changed,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 02bf17e..6733ed0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2850,42 +2850,6 @@ out:
- }
- EXPORT_SYMBOL(iwl_mac_config);
- 
--int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
--			 struct ieee80211_tx_queue_stats *stats)
--{
--	struct iwl_priv *priv = hw->priv;
--	int i, avail;
--	struct iwl_tx_queue *txq;
--	struct iwl_queue *q;
--	unsigned long flags;
--
--	IWL_DEBUG_MAC80211(priv, "enter\n");
--
--	if (!iwl_is_ready_rf(priv)) {
--		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
--		return -EIO;
--	}
--
--	spin_lock_irqsave(&priv->lock, flags);
--
--	for (i = 0; i < AC_NUM; i++) {
--		txq = &priv->txq[i];
--		q = &txq->q;
--		avail = iwl_queue_space(q);
--
--		stats[i].len = q->n_window - avail;
--		stats[i].limit = q->n_window - q->high_mark;
--		stats[i].count = q->n_window;
--
--	}
--	spin_unlock_irqrestore(&priv->lock, flags);
--
--	IWL_DEBUG_MAC80211(priv, "leave\n");
--
--	return 0;
--}
--EXPORT_SYMBOL(iwl_mac_get_tx_stats);
--
- void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- {
- 	struct iwl_priv *priv = hw->priv;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index ec1fe1d..92d8060 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -341,8 +341,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif);
- int iwl_mac_config(struct ieee80211_hw *hw, u32 changed);
- void iwl_config_ap(struct iwl_priv *priv);
--int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
--			 struct ieee80211_tx_queue_stats *stats);
- void iwl_mac_reset_tsf(struct ieee80211_hw *hw);
- int iwl_alloc_txq_mem(struct iwl_priv *priv);
- void iwl_free_txq_mem(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 119da54..eac2b9a 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3835,7 +3835,6 @@ static struct ieee80211_ops iwl3945_hw_ops = {
- 	.config = iwl_mac_config,
- 	.configure_filter = iwl_configure_filter,
- 	.set_key = iwl3945_mac_set_key,
--	.get_tx_stats = iwl_mac_get_tx_stats,
- 	.conf_tx = iwl_mac_conf_tx,
- 	.reset_tsf = iwl_mac_reset_tsf,
- 	.bss_info_changed = iwl_bss_info_changed,
+Dan
 
