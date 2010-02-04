@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-11162.dedibox.fr ([88.191.70.230]:58457 "EHLO
-	sd-11162.dedibox.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423Ab0BNRpZ convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:5026 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932488Ab0BDU6I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 12:45:25 -0500
-Date: Sun, 14 Feb 2010 18:44:34 +0100
-From: Frederic Leroy <fredo@starox.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Chris Mayo <aklhfex@googlemail.com>,
-	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
-Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
-Message-ID: <20100214184434.119c8694@houba>
-In-Reply-To: <4B78312A.7060308@lwfinger.net>
-References: <4B38A298.7070103@googlemail.com>
-	<1262037590.16627.99.camel@localhost.localdomain>
-	<3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
-	<20100213234456.5ae49b67@houba>
-	<20100214004010.GB18815@tuxdriver.com>
-	<20100214131810.1a8b49ac@houba>
-	<4B78312A.7060308@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 4 Feb 2010 15:58:08 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so118675fga.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 12:58:05 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: =?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFC][PATCH] b43: LP-PHY: always adjust gain table on channel switch
+Date: Thu,  4 Feb 2010 21:57:45 +0100
+Message-Id: <1265317065-2922-2-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le Sun, 14 Feb 2010 11:21:46 -0600,
-Larry Finger <Larry.Finger@lwfinger.net> a écrit :
-> [...]
-> * Make certain the driver in staging works in its present form.
+---
+Gábor: I think you missed specs here. Could you check whole routine just for
+sure, please? I don't understand whole radio and chanspec magic yet.
+---
+ drivers/net/wireless/b43/phy_lp.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Currently, I use it currently and seems stable.
-
-> * Prepare a patch to eliminate the unused branches of if(0) and if(1)
-> [...]
-> After the staging driver is leaner and cleaner, then you can start on
-> the port. As the RTL8192SU is a USB device, you may want to start
-> with rtl8187 rather than rtl8180, which is a PCI device. Once you
-> reach the point of getting a driver that has minimal functionality,
-> you can use the USB capture routines to compare your version with the
-> one that works.
-> 
-> Writing a new driver is a very involved process as I have found with
-> the RTL8187SE. In fact, my first two attempts failed, in large part
-> because I did not do the steps above. The current attempt looks more
-> promising as it has successfully read the EEPROM and is about 1000
-> register read/write steps toward getting the device initialized.
-
-Thanks for your wise advice Larry.
-I will follow it.
-
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 185219e..61009ee 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -2655,8 +2655,8 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+ 		if (err)
+ 			return err;
+ 		lpphy_set_analog_filter(dev, new_channel);
+-		lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+ 	}
++	lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+ 
+ 	lpphy->channel = new_channel;
+ 	b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
 -- 
-Frédéric Leroy
+1.6.4.2
+
