@@ -1,57 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f200.google.com ([209.85.221.200]:63569 "EHLO
-	mail-qy0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753905Ab0BQTyn (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:4564 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750946Ab0BDNqS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 14:54:43 -0500
-Date: Wed, 17 Feb 2010 11:54:35 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, linux-input@vger.kernel.org,
-	marcel@holtmann.org
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20100217195435.GA15742@core.coreip.homeip.net>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
- <20100217052247.GD7160@core.coreip.homeip.net>
- <20100217180342.GA22522@srcf.ucam.org>
- <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
- <20100217191708.GA15554@core.coreip.homeip.net>
- <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
+	Thu, 4 Feb 2010 08:46:18 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] libertas+cfg80211: better disconnect support
+Date: Thu, 4 Feb 2010 14:44:36 +0100
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+	Dan Williams <dcbw@redhat.com>
+References: <20100202000934.GA19847@sortiz.org>
+In-Reply-To: <20100202000934.GA19847@sortiz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201002041444.36131.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 17, 2010 at 08:42:45PM +0100, Christian Lamparter wrote:
-> On Wed, Feb 17, 2010 at 8:17 PM, Dmitry Torokhov
-> <dmitry.torokhov@gmail.com> wrote:
-> > On Wed, Feb 17, 2010 at 07:43:56PM +0100, Christian Lamparter wrote:
-> >> The reason: Some new devices come with a WPS "Push Button".
-> >> And there's no code for them yet.
-> >>
-> > Yes, we can add a new key definition if you provide clear description of
-> > what the intended use is and if we can't map such use to any existing
-> > key definitions.
-> 
-> I found one http://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup (if you
-> don't mind):
-> 
-> There's the relevant part: (PBC stands for Push Button Control/Configuration?)
-> 
-> "PBC Method, in which the user simply has to push a button, either an actual
-> or virtual one, on both the AP (or a Registrar of the Network) and the new
-> wireless client device (STA)
-> .
-> Support of this model is mandatory for APs and optional for STAs."
-> 
-> And there are already a few potential users:
-> OpenWRT routers as well as some rt30xx, ar9170 and ar9271 devices.
+Hi Samuel !
 
-Is there anything currently in works that would make use of this button?
-I do not want to allocate keycode "for the future" which may never come.
-We did it with KEY_BATTERY but I do not think anyone actually uses it.
+This patch was necessary for me to make
+
+   while true; iw wlan0 link; sleep 0.1; done
+
+not hang in "iw" when moving out-of-reach of an AP.
+
+
+--------------------------
+
+An issue with "iw wlan0 link" hanging when moving out-of-reach of
+an AP was observed. The reason was that lbs_get_signal()
+returned "1" in case of an error from the firmware and that this
+value was given back to cfg80211.
+
+However a cfg80211-operation method should return standard -Exxx
+error codes, not posive values. The positive value ended up in
+iw, where a line like "while (ret > 0) ..." was looping endless.
+
+
+For error recovery, it also helped to report link loss much
+earlier to user-space. I actually have Cisco APs lying around, so
+I know that the one-second delay doesn't upset neither an Cisco
+1231/1241 nor wpa_supplicant 0.7.1 (at least not in -Dnl80211
+mode). This made wpa_supplicant scan one second earlier and
+re-connect therefore faster to another suitable AP.
+
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
+
+---
+ drivers/net/wireless/libertas/cfg.c     |   10 ++++++++--
+ drivers/net/wireless/libertas/cmdresp.c |    5 -----
+ 2 files changed, 8 insertions(+), 7 deletions(-)
+
+--- linux-wl.orig/drivers/net/wireless/libertas/cfg.c
++++ linux-wl/drivers/net/wireless/libertas/cfg.c
+@@ -1478,6 +1478,7 @@ struct cmd_rssi {
+ 	__le16 avg_nf;
+ } __attribute__ ((packed));
+ 
++
+ static int lbs_get_signal(struct lbs_private *priv, s8 *signal, 
+s8 *noise)
+ {
+ 	struct cmd_rssi cmd;
+@@ -1492,6 +1493,7 @@ static int lbs_get_signal(struct lbs_pri
+ 				le16_to_cpu(cmd.nf));
+ 		*noise  = CAL_NF(le16_to_cpu(cmd.nf));
+ 	}
++
+ 	return ret;
+ }
+ 
+@@ -1516,7 +1518,9 @@ static int lbs_cfg_get_station(struct wi
+ 
+ 	/* Get current RSSI */
+ 	ret = lbs_get_signal(priv, &signal, &noise);
+-	if (ret == 0) {
++	if (ret)
++		ret = -EBUSY;
++	else {
+ 		sinfo->signal = signal;
+ 		sinfo->filled |= STATION_INFO_SIGNAL;
+ 	}
+@@ -1564,7 +1568,9 @@ static int lbs_get_survey(struct wiphy *
+ 		ieee80211_channel_to_frequency(priv->channel));
+ 
+ 	ret = lbs_get_signal(priv, &signal, &noise);
+-	if (ret == 0) {
++	if (ret)
++		ret = -EBUSY;
++	else {
+ 		survey->filled = SURVEY_INFO_NOISE_DBM;
+ 		survey->noise = noise;
+ 	}
+--- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
++++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
+@@ -25,11 +25,6 @@ void lbs_mac_event_disconnected(struct l
+ 
+ 	lbs_deb_enter(LBS_DEB_ASSOC);
+ 
+-	/*
+-	 * Cisco AP sends EAP failure and de-auth in less than 0.5 ms.
+-	 * It causes problem in the Supplicant
+-	 */
+-	msleep_interruptible(1000);
+ 	lbs_send_disconnect_notification(priv);
+ 
+ 	/* report disconnect to upper layer */
+
 
 -- 
-Dmitry
+http://www.holgerschurig.de
