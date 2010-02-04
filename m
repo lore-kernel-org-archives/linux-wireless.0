@@ -1,64 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40002 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540Ab0BEPyV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 10:54:21 -0500
-Subject: Re: [PATCH] mac80211: fix bss_conf.dtim_period
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e891002050752w3dcb736ek4c5fd773ef402755@mail.gmail.com>
-References: <1265366706.3613.3.camel@johannes.local>
-	 <43e72e891002050752w3dcb736ek4c5fd773ef402755@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KQE0DJzP0pRjbFx66zB8"
-Date: Fri, 05 Feb 2010 16:54:15 +0100
-Message-ID: <1265385255.3613.17.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:58241 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753516Ab0BDGyL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 01:54:11 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 03 Feb 2010 22:54:11 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Vivek Natarajan <vnatarajan@atheros.com>
+Subject: [RFC PATCH 1/2] mac80211: Retry null data frame for power save.
+Date: Thu, 4 Feb 2010 12:24:01 +0530
+Message-ID: <1265266442-6273-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Even if the null data frame is not acked by the AP, mac80211
+goes into power save. This might lead to loss of frames
+from the AP.
+Prevent this by restarting dynamic_ps_timer when ack is not
+received for null data frames.
 
---=-KQE0DJzP0pRjbFx66zB8
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/status.c |   15 +++++++++++++--
+ 1 files changed, 13 insertions(+), 2 deletions(-)
 
-On Fri, 2010-02-05 at 07:52 -0800, Luis R. Rodriguez wrote:
-> On Fri, Feb 5, 2010 at 2:45 AM, Johannes Berg <johannes@sipsolutions.net>=
- wrote:
-> > In AP mode, the only mode where the parameter
-> > is supposed to be valid, we never assign it!
-> > Fix that to allow drivers to avoid parsing
-> > the TIM IE for the value.
-> >
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> Stable fix too?
-
-Seems no driver actually relies on it, so I guess not.
-
-johannes
-
---=-KQE0DJzP0pRjbFx66zB8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLbD8kAAoJEODzc/N7+Qma2DwQAMngmuy9gW0kbgmXs6EvJ59l
-5CJt/JjF37KcIrXdzxyGaIonyqELxujHa9p1rzTsAK7DtN9qI2o76Wdz695P8P1s
-PBMCKek6fV068iA8Nbp9jG6rZHWzrXxteUiAZ/0TfxLrQlHBXUg+jHfBfc0Su6sx
-ADh033TZiXoH9+/uv16U5J1g4M2yajttXONuTa/2zrKrLT8RZuM2xMkuIEQPmcm/
-a9ZFaD5f6S8CoWE2c0lEN6+r0B73LLArJ19Us3uXB9hw+a23W+NfO1iSGPzvQ6Oo
-v9IgnI4lg4pn1VxGWiGc8Le2AEgJeji0gD9HMssMEFFrCRstkxYJDi/4JEJG3IqD
-7IB4mRWUrrpJi+46OyiqJy3H4Dh8v3MGNXbAkxQpQjbN1FpGdPq+EZUgB4wY2kJH
-znxXZk739WArCpdFo2sL8rCPkY6vK7GVfSyzXa/OuJsNbj2flqXJdoQJ6tjAOFlQ
-qV14uONdCsK2XmL6lBGo+RX9d+xFfk7JboU+a/n1sx9d4RAojX/eRNp8zuKQbuim
-fGsqActiB13H6eBo4S3pRXsC8p99UNvV8llMbUprQGaoIEQBUSYDPQXrxo8NBiSG
-Is7BO2n6jDuXjcrLhpvVHKmGs9FxqwkikCenWiWq/dL4gycJKvzr1h8hsb2SBtCx
-ZvmTri7plAWIWIZSdubD
-=SG51
------END PGP SIGNATURE-----
-
---=-KQE0DJzP0pRjbFx66zB8--
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index e57ad6b..a0e18b4 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -188,6 +188,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	rcu_read_lock();
+ 
+ 	sband = local->hw.wiphy->bands[info->band];
++	fc = hdr->frame_control;
+ 
+ 	for_each_sta_info(local, hdr->addr1, sta, tmp) {
+ 		/* skip wrong virtual interface */
+@@ -205,8 +206,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			return;
+ 		}
+ 
+-		fc = hdr->frame_control;
+-
+ 		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
+ 		    (ieee80211_is_data_qos(fc))) {
+ 			u16 tid, ssn;
+@@ -275,6 +274,18 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			local->dot11FailedCount++;
+ 	}
+ 
++	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
++			(local->hw.conf.flags & IEEE80211_CONF_PS)) {
++		if (!(info->flags & IEEE80211_TX_STAT_ACK)) {
++			ieee80211_stop_queues_by_reason(&local->hw,
++					IEEE80211_QUEUE_STOP_REASON_PS);
++			ieee80211_queue_work(&local->hw,
++					&local->dynamic_ps_disable_work);
++			mod_timer(&local->dynamic_ps_timer, jiffies +
++					msecs_to_jiffies(10));
++		}
++	}
++
+ 	/* this was a transmitted frame, but now we want to reuse it */
+ 	skb_orphan(skb);
+ 
+-- 
+1.6.6.1
 
