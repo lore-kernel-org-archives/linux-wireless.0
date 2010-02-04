@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58786 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752201Ab0BWOpl (ORCPT
+Received: from mail-fx0-f211.google.com ([209.85.220.211]:53036 "EHLO
+	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756345Ab0BDLa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 09:45:41 -0500
-Date: Tue, 23 Feb 2010 09:45:03 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Fabrice Lamareille <fab128@sorengo.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: problem with WG511v1
-Message-ID: <20100223144502.GA2928@tuxdriver.com>
-References: <4B83B96A.6050605@sorengo.com>
+	Thu, 4 Feb 2010 06:30:56 -0500
+Received: by fxm3 with SMTP id 3so2448023fxm.39
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 03:30:55 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/5] b43: N-PHY: load generated samples
+Date: Thu,  4 Feb 2010 12:23:09 +0100
+Message-Id: <1265282592-25491-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1265282592-25491-1-git-send-email-zajec5@gmail.com>
+References: <1265282592-25491-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B83B96A.6050605@sorengo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 23, 2010 at 12:18:02PM +0100, Fabrice Lamareille wrote:
-> Hello
->
-> I have a NETGEAR WG511v1 wireless pcmcia card.
-> It was working perfectly on fedora 11 with the prism54 driver and the  
-> attached isl3890 firmware.
->
-> Since fedora 12, the p54pci driver is enabled by default, but it does  
-> not work with my card. I downloaded the right isl3886pci firmware on  
-> your website, but the card does not start...
-> With the old isl3890 renamed as isl3886pci, the kernel crashes.
-> With the attachd isl3886pci firmware, which I extracted from the windows  
-> driver with fwextract, it seems not to crash, but the card does not  
-> appear in NetworkManager nor starts automaticaly...
->
-> Thanks in advance for your help.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   26 +++++++++++++++++++++++++-
+ 1 files changed, 25 insertions(+), 1 deletions(-)
 
-I'm not sure what you mean by "firmware on your website", but the
-file you attached does not match what is linked here:
-
-http://wireless.kernel.org/en/users/Drivers/p54#firmware
-
-In the command-lines pasted below, 2.13.12.0.arm is the file downloaded
-through the link for "PCI / PCMCIA" for kernels 2.6.29 and above at
-the URL above and isl3886pci is the file you attached to your email
-by that same name.
-
-/tmp
-[linville-t400.local]:> ls -l isl3886pci 2.13.12.0.arm 
--rw-rw-r-- 1 linville linville 29036 2010-02-23 09:39 2.13.12.0.arm
--rw------- 1 linville linville 29040 2010-02-23 09:39 isl3886pci
-
-/tmp
-[linville-t400.local]:> cmp 2.13.12.0.arm isl3886pci 
-2.13.12.0.arm isl3886pci differ: byte 5, line 1
-
-If you use the specified firmware, does the device work for you?
-
-John
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 8992457..89e9d66 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -956,6 +956,30 @@ static void b43_nphy_workarounds(struct b43_wldev *dev)
+ 		b43_nphy_stay_in_carrier_search(dev, 0);
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/LoadSampleTable */
++static void b43_nphy_load_samples(struct b43_wldev *dev,
++					struct b43_c32 *samples, u16 len) {
++	struct b43_phy_n *nphy = dev->phy.n;
++	u16 i;
++	u32 *data;
++
++	data = kzalloc(len * sizeof(u32), GFP_KERNEL);
++
++	if (nphy->hang_avoid)
++		b43_nphy_stay_in_carrier_search(dev, 1);
++
++	for (i = 0; i < len; i++) {
++		data[i] = (samples[i].i & 0x3FF << 10);
++		data[i] |= samples[i].q & 0x3FF;
++	}
++	b43_ntab_write_bulk(dev, B43_NTAB32(17, 0), len, data);
++
++	kfree(data);
++
++	if (nphy->hang_avoid)
++		b43_nphy_stay_in_carrier_search(dev, 0);
++}
++
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/GenLoadSamples */
+ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
+ 					bool test)
+@@ -991,7 +1015,7 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
+ 		samples[i].i = CORDIC_CONVERT(samples[i].i * max);
+ 	}
+ 
+-	/* TODO: Call N PHY Load Sample Table with buffer, len as arguments */
++	b43_nphy_load_samples(dev, samples, len);
+ 	kfree(samples);
+ 	return len;
+ }
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.4.2
+
