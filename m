@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:59400 "EHLO ogre.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:42577 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750842Ab0BHSgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 13:36:24 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Miles Lane <miles.lane@gmail.com>
-Subject: Re: 2.6.33-rc7: Reported regressions 2.6.31 -> 2.6.32
-Date: Mon, 8 Feb 2010 19:36:55 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <2uzMDuY-7_O.A.M1G.7X1bLB@chimera> <43e72e891002081026x6757793atcb07cac1153e53c5@mail.gmail.com>
-In-Reply-To: <43e72e891002081026x6757793atcb07cac1153e53c5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201002081936.55931.rjw@sisk.pl>
+	id S1758553Ab0BDWkb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 17:40:31 -0500
+Subject: Re: [PATCH] airo: fix setting zero length WEP key
+From: Dan Williams <dcbw@redhat.com>
+To: Chris Siebenmann <cks@cs.toronto.edu>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+In-Reply-To: <20100204222618.DE5D52B0054@apps0.cs.toronto.edu>
+References: <20100204222618.DE5D52B0054@apps0.cs.toronto.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 04 Feb 2010 14:39:35 -0800
+Message-ID: <1265323175.4290.34.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 February 2010, Luis R. Rodriguez wrote:
-> On Sun, Feb 7, 2010 at 4:13 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+On Thu, 2010-02-04 at 17:26 -0500, Chris Siebenmann wrote:
+> | When are you attempting to scan?  Is anything like wpa_supplicant or
+> | NetworkManager running in the background when you do this?
 > 
-> Only one 802.11 regression listed:
-> 
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14624
-> > Subject         : ath9k: BUG kmalloc-8192: Poison overwritten
-> > Submitter       : Miles Lane <miles.lane@gmail.com>
-> > Date            : 2009-11-12 4:58 (88 days old)
-> > References      : http://marc.info/?l=linux-kernel&m=125800196520396&w=4
-> 
-> For which we still need a recipe to reproduce as we have been unable to yet.
+>  My primary results are from Fedora 11's GNOME GUI (boot machine, log
+> in, attempt to connect to one of our wireless networks in various
+> places); I believe that this uses NetworkManager. I tried with iwlist
+> now and got the same results, but it looks like wpa_supplicant and
+> NetworkManager were both running at the time based on pstree output.
 
-Miles?
+Ok, that should be fine since wpa_supplicant is the only thing hitting
+the airo up for scans and whatnot.  I'm grabbing a kernel now to do some
+testing with my 350 (PCMCIA).  I assume you have an internal minicard?
+
+Dan
+
+
