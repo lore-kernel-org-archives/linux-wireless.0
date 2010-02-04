@@ -1,102 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756040Ab0BCJUz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2010 04:20:55 -0500
-Subject: [PATCH] mac80211_hwsim: add fake hw scan handler
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 03 Feb 2010 10:20:50 +0100
-Message-ID: <1265188851.29119.84.camel@johannes.local>
-Mime-Version: 1.0
+Received: from smtp1-g21.free.fr ([212.27.42.1]:52852 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932927Ab0BDVxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 16:53:48 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH] ath9k: Fix rate table choice
+Date: Thu,  4 Feb 2010 22:06:06 +0100
+Message-Id: <1265317566-15372-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For debugging hardware scan trigger/complete
-functionality, it was useful to have code in
-hwsim that pretends to do a hardware scan.
+ath9k rate control choose the rate table based on the current channel
+(if it is ht40 or not). However, it happens that at this stage, the
+channel is still ht20 even if the peer sta capabilities would later
+allow ht40. So let's use peer sta capabilities directly.
 
-This code could be extended to actually do the
-scan, but for now it was sufficient for me to
-only pretend. Since hwsim was written to ease
-debugging, it only makes sense to add it to it
-permanently.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 ---
- drivers/net/wireless/mac80211_hwsim.c |   44 +++++++++++++++++++++++++++++++++-
- 1 file changed, 43 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2010-02-03 09:53:12.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2010-02-03 09:53:31.000000000 +0100
-@@ -32,6 +32,10 @@ static int radios = 2;
- module_param(radios, int, 0444);
- MODULE_PARM_DESC(radios, "Number of simulated radios");
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 1196884..5ce9da5 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1341,10 +1341,8 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+ 		if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
+ 			return;
  
-+static bool fake_hw_scan;
-+module_param(fake_hw_scan, bool, 0444);
-+MODULE_PARM_DESC(fake_hw_scan, "Install fake (no-op) hw-scan handler");
-+
- /**
-  * enum hwsim_regtest - the type of regulatory tests we offer
-  *
-@@ -909,8 +913,43 @@ static void mac80211_hwsim_flush(struct 
- 	 */
- }
+-		if (sc->hw->conf.channel_type == NL80211_CHAN_HT40MINUS ||
+-		    sc->hw->conf.channel_type == NL80211_CHAN_HT40PLUS)
+-			oper_cw40 = true;
+-
++		oper_cw40 = (sta->ht_cap.cap &
++			     IEEE80211_HT_CAP_SUP_WIDTH_20_40) ? true : false;
+ 		oper_sgi40 = (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40) ?
+ 			true : false;
  
-+struct hw_scan_done {
-+	struct delayed_work w;
-+	struct ieee80211_hw *hw;
-+};
- 
--static const struct ieee80211_ops mac80211_hwsim_ops =
-+static void hw_scan_done(struct work_struct *work)
-+{
-+	struct hw_scan_done *hsd =
-+		container_of(work, struct hw_scan_done, w.work);
-+
-+	ieee80211_scan_completed(hsd->hw, false);
-+	kfree(hsd);
-+}
-+
-+static int mac80211_hwsim_hw_scan(struct ieee80211_hw *hw,
-+				  struct cfg80211_scan_request *req)
-+{
-+	struct hw_scan_done *hsd = kzalloc(sizeof(*hsd), GFP_KERNEL);
-+	int i;
-+
-+	if (!hsd)
-+		return -ENOMEM;
-+
-+	hsd->hw = hw;
-+	INIT_DELAYED_WORK(&hsd->w, hw_scan_done);
-+
-+	printk(KERN_DEBUG "hwsim scan request\n");
-+	for (i = 0; i < req->n_channels; i++)
-+		printk(KERN_DEBUG "hwsim can chan %d\n",
-+			req->channels[i]->center_freq);
-+
-+	ieee80211_queue_delayed_work(hw, &hsd->w, 2 * HZ);
-+
-+	return 0;
-+}
-+
-+static struct ieee80211_ops mac80211_hwsim_ops =
- {
- 	.tx = mac80211_hwsim_tx,
- 	.start = mac80211_hwsim_start,
-@@ -1120,6 +1159,9 @@ static int __init init_mac80211_hwsim(vo
- 	if (radios < 1 || radios > 100)
- 		return -EINVAL;
- 
-+	if (fake_hw_scan)
-+		mac80211_hwsim_ops.hw_scan = mac80211_hwsim_hw_scan;
-+
- 	spin_lock_init(&hwsim_radio_lock);
- 	INIT_LIST_HEAD(&hwsim_radios);
- 
-
+-- 
+1.6.3.3
 
