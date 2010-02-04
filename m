@@ -1,102 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:40164 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751115Ab0BULWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2010 06:22:01 -0500
-Date: Sun, 21 Feb 2010 12:21:55 +0100
-From: Florian Mickler <florian@mickler.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: [PATCH 1/2] Document the rfkill sysfs ABI
-Message-ID: <20100221122155.7b163b55@schatten.dmk.lab>
-In-Reply-To: <1266746930.18491.1.camel@violet>
-References: <1266702045-6062-1-git-send-email-florian@mickler.org>
-	<1266702045-6062-2-git-send-email-florian@mickler.org>
-	<1266704345.32739.0.camel@jlt3.sipsolutions.net>
-	<1266746930.18491.1.camel@violet>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-fx0-f211.google.com ([209.85.220.211]:37681 "EHLO
+	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757821Ab0BDMLt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 07:11:49 -0500
+Received: by fxm3 with SMTP id 3so2496822fxm.39
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 04:11:48 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: handle allocation fail in samples generation
+Date: Thu,  4 Feb 2010 13:11:54 +0100
+Message-Id: <1265285514-28798-2-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 21 Feb 2010 11:08:50 +0100
-Marcel Holtmann <marcel@holtmann.org> wrote:
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-> Hi Johannes,
-> 
-> > > This moves sysfs ABI info from Documentation/rfkill.txt to the
-> > > ABI subfolder and reformats it.
-> > > 
-> > > Signed-off-by: Florian Mickler <florian@mickler.org>
-> > 
-> > This is fine with me.
-> 
-> we have to be careful here. Some of these sysfs details needs to be
-> deprecated and removed. Applications should use /dev/rfkill actually.
-> 
-> Regards
-> 
-> Marcel
-> 
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 074b34c..795bb1e 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1069,6 +1069,10 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
+ 	}
+ 
+ 	samples = kzalloc(len * sizeof(struct b43_c32), GFP_KERNEL);
++	if (!samples) {
++		b43err(dev->wl, "allocation for samples generation failed\n");
++		return 0;
++	}
+ 	rot = (((freq * 36) / bw) << 16) / 100;
+ 	angle = 0;
+ 
+-- 
+1.6.4.2
 
-There are three different categories: 
-Documentation/ABI/stable 
-Documentation/ABI/obsolete
-Documentation/ABI/testing
-
-Quoting from the ABI/README:
-> The different levels of stability are:
-> 
->   stable/
->         This directory documents the interfaces that the developer has
->         defined to be stable.  Userspace programs are free to use these
->         interfaces with no restrictions, and backward compatibility for
->         them will be guaranteed for at least 2 years.  Most interfaces
->         (like syscalls) are expected to never change and always be
->         available.
-> 
->   testing/
->         This directory documents interfaces that are felt to be stable,
->         as the main development of this interface has been completed.
->         The interface can be changed to add new features, but the
->         current interface will not break by doing this, unless grave
->         errors or security problems are found in them.  Userspace
->         programs can start to rely on these interfaces, but they must be
->         aware of changes that can occur before these interfaces move to
->         be marked stable.  Programs that use these interfaces are
->         strongly encouraged to add their name to the description of
->         these interfaces, so that the kernel developers can easily
->         notify them if any changes occur (see the description of the
->         layout of the files below for details on how to do this.)
-> 
->   obsolete/
->         This directory documents interfaces that are still remaining in
->         the kernel, but are marked to be removed at some later point in
->         time.  The description of the interface will document the reason
->         why it is obsolete and when it can be expected to be removed.
->         The file Documentation/feature-removal-schedule.txt may describe
->         some of these interfaces, giving a schedule for when they will
->         be removed.
-> 
->   removed/
->         This directory contains a list of the old interfaces that have
->         been removed from the kernel.
-> 
-
-
-So the question is: are the state and claim file deprecated or obsolete? 
-If they are considered obsolete I presume it would be ok, to put this
-part of the ABI description into the obsolete/ subfolder. 
-
-And should they be obsolete, should there be a new file ("blocked",
-"state2.0",whatever,...) which exposes all possible states? I assume it
-do be handy for scripted access to the rfkill device. 
-
-cheers,
-Flo
