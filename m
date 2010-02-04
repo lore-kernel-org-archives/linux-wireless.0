@@ -1,92 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50751 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753183Ab0BRL2U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:20 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 16/22] wl1271: Fix ad-hoc SSID update
-Date: Thu, 18 Feb 2010 13:25:51 +0200
-Message-Id: <1266492357-462-17-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from smtp1-g21.free.fr ([212.27.42.1]:52853 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933007Ab0BDVxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 16:53:48 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH] mac80211: Improved IBSS merges
+Date: Thu,  4 Feb 2010 22:46:30 +0100
+Message-Id: <1265319990-25583-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If re-configuring the SSID while ad-hoc was already enabled, the beacon
-template would be properly updated, but the SSID passed in the CMD_JOIN would
-not - hence filtering etc would not work properly.
+According to $11.1.4 from IEEE 802.11-2007, TSF is reset (drv_reset_tsf)
+on MLME-JOIN, ie only when a new IBSS is created or if an existing IBSS
+is joined, but not on IBSS merges.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+Next, we merge even if the BSSID from the received beacon is the same as
+our since merge can update more things that BSSID itself. This is
+specifically true for ath9k where the merge updates TBTT timers as a
+side effect and this is indeed needed if the TSF has been updated (if
+TSF is updated, we need to update TBTT timers as well).
+
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |   23 ++++++++++++++++-------
- 1 files changed, 16 insertions(+), 7 deletions(-)
+ net/mac80211/ibss.c |   10 +++-------
+ 1 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 459d9a0..fb1e6a8 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1,7 +1,7 @@
- /*
-  * This file is part of wl1271
-  *
-- * Copyright (C) 2008-2009 Nokia Corporation
-+ * Copyright (C) 2008-2010 Nokia Corporation
-  *
-  * Contact: Luciano Coelho <luciano.coelho@nokia.com>
-  *
-@@ -1604,6 +1604,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	enum wl1271_cmd_ps_mode mode;
- 	struct wl1271 *wl = hw->priv;
-+	bool do_join = false;
- 	int ret;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index e905c45..5f0c246 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -77,9 +77,6 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	u32 bss_change;
+ 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
  
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed");
-@@ -1646,6 +1647,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			dev_kfree_skb(beacon);
- 			if (ret < 0)
- 				goto out_sleep;
+-	/* Reset own TSF to allow time synchronization work. */
+-	drv_reset_tsf(local);
+-
+ 	skb = ifibss->skb;
+ 	rcu_assign_pointer(ifibss->presp, NULL);
+ 	synchronize_rcu();
+@@ -373,10 +370,6 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 				sdata->u.ibss.ssid_len))
+ 		goto put_bss;
+ 
+-	/* same BSSID */
+-	if (memcmp(cbss->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0)
+-		goto put_bss;
+-
+ 	if (rx_status->flag & RX_FLAG_TSFT) {
+ 		/*
+ 		 * For correct IBSS merging we need mactime; since mactime is
+@@ -575,6 +568,8 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 	else
+ 		sdata->drop_unencrypted = 0;
+ 
++	drv_reset_tsf(local);
 +
-+			/* Need to update the SSID (for filtering etc) */
-+			do_join = true;
- 		}
- 	}
+ 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+ 				  ifibss->channel, 3, /* first two are basic */
+ 				  capability, 0);
+@@ -630,6 +625,7 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 		       " based on configured SSID\n",
+ 		       sdata->name, cbss->bssid);
  
-@@ -1664,12 +1668,8 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 				goto out_sleep;
- 			}
- 
--			ret = wl1271_cmd_join(wl);
--			if (ret < 0) {
--				wl1271_warning("cmd join failed %d", ret);
--				goto out_sleep;
--			}
--			set_bit(WL1271_FLAG_JOINED, &wl->flags);
-+			/* Need to update the BSSID (for filtering etc) */
-+			do_join = true;
- 	}
- 
- 	if (changed & BSS_CHANGED_ASSOC) {
-@@ -1736,6 +1736,15 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	if (do_join) {
-+		ret = wl1271_cmd_join(wl);
-+		if (ret < 0) {
-+			wl1271_warning("cmd join failed %d", ret);
-+			goto out_sleep;
-+		}
-+		set_bit(WL1271_FLAG_JOINED, &wl->flags);
-+	}
-+
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
- 
++		drv_reset_tsf(local);
+ 		ieee80211_sta_join_ibss(sdata, bss);
+ 		ieee80211_rx_bss_put(local, bss);
+ 		return;
 -- 
 1.6.3.3
 
