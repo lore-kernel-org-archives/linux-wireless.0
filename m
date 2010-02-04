@@ -1,90 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:42996 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753230Ab0BIUEa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:04:30 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so1670038eyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:04:29 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 01/11] b43: N-PHY: add some registers and structs definitions
-Date: Tue,  9 Feb 2010 21:04:33 +0100
-Message-Id: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+Received: from web51406.mail.re2.yahoo.com ([206.190.38.185]:37420 "HELO
+	web51406.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754333Ab0BDIbT convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 03:31:19 -0500
+Message-ID: <700097.58871.qm@web51406.mail.re2.yahoo.com>
+Date: Thu, 4 Feb 2010 00:31:17 -0800 (PST)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [ath9k-devel] Significiant performance differences between ath5k  and ath9k in 802.11a
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <4B629AF5.40706@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: RafaÅ‚ MiÅ‚ecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/b43.h         |    1 +
- drivers/net/wireless/b43/phy_n.h       |    9 +++++++++
- drivers/net/wireless/b43/tables_nphy.h |    9 +++++++++
- 3 files changed, 19 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 6a6ab0f..bd7c505 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -104,6 +104,7 @@
- #define B43_MMIO_MACFILTER_CONTROL	0x420
- #define B43_MMIO_MACFILTER_DATA		0x422
- #define B43_MMIO_RCMTA_COUNT		0x43C
-+#define B43_MMIO_PSM_PHY_HDR		0x492	/* programmable state machine */
- #define B43_MMIO_RADIO_HWENABLED_LO	0x49A
- #define B43_MMIO_GPIO_CONTROL		0x49C
- #define B43_MMIO_GPIO_MASK		0x49E
-diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-index 403aad3..47d20dc 100644
---- a/drivers/net/wireless/b43/phy_n.h
-+++ b/drivers/net/wireless/b43/phy_n.h
-@@ -711,6 +711,8 @@
- #define B43_NPHY_PAPD_EN1			B43_PHY_N(0x29B) /* PAPD Enable1 TBD */
- #define B43_NPHY_EPS_TABLE_ADJ1			B43_PHY_N(0x29C) /* EPS Table Adj1 TBD */
- 
-+#define B43_PHY_B_BBCFG				B43_PHY_N_BMODE(0x001) /* BB config */
-+#define B43_PHY_B_TEST				B43_PHY_N_BMODE(0x00A)
- 
- 
- /* Broadcom 2055 radio registers */
-@@ -924,6 +926,13 @@
- 
- struct b43_wldev;
- 
-+struct b43_chanspec {
-+	u8 channel;
-+	u8 sideband;
-+	u8 b_width;
-+	u8 b_freq;
-+};
-+
- struct b43_phy_n_iq_comp {
- 	s16 a0;
- 	s16 b0;
-diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
-index 9c1c6ec..b23036f 100644
---- a/drivers/net/wireless/b43/tables_nphy.h
-+++ b/drivers/net/wireless/b43/tables_nphy.h
-@@ -4,6 +4,15 @@
- #include <linux/types.h>
- 
- 
-+struct b43_phy_n_sfo_cfg {
-+	u16 phy_bw1a;
-+	u16 phy_bw2;
-+	u16 phy_bw3;
-+	u16 phy_bw4;
-+	u16 phy_bw5;
-+	u16 phy_bw6;
-+};
-+
- struct b43_nphy_channeltab_entry {
- 	/* The channel number */
- 	u8 channel;
+Luis,
+with several people confirming the performance regression relative to AR5xxx/ath5k, can you tell us whether this will eventually be fixed? We are close to a purchase decision and would really like to upgrade to a recent chip set.
 -- 
-1.6.4.2
+Regards
+       Joerg
 
+
+--- Felix Fietkau <nbd@openwrt.org> schrieb am Fr, 29.1.2010:
+
+> Von: Felix Fietkau <nbd@openwrt.org>
+> Betreff: Re: [ath9k-devel] Significiant performance differences between ath5k  and ath9k in 802.11a
+> An: "Joerg Pommnitz" <pommnitz@yahoo.com>
+> CC: rootkit85@yahoo.it, linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org
+> Datum: Freitag, 29. Januar 2010, 9:23
+> On 2010-01-29 9:10 AM, Joerg Pommnitz
+> wrote:
+> > --- rootkit85@yahoo.it
+> <rootkit85@yahoo.it>
+> wrote:
+> > 
+> >> 
+> >> Can you try in AP-client mode? I think you'll get
+> more
+> >> throughput so.
+> >> 
+> > 
+> > No, IBSS is what I'm interested in. And the point is,
+> that there is
+> > a 30% performance difference between ath5k (and
+> Madwifi) and ath9k. Even
+> > if the performance in AP mode would be better, this
+> does not change the
+> > problem in IBSS mode.
+> I can confirm these numbers for AP/Client mode as well.
+> I've even tested
+> legacy communication between ath9k ap and sta, producing
+> the same
+> result. Additionally, I can rule out the rate control
+> algorithm, as
+> using minstrel instead of the ath9k RC produces a very
+> similar
+> throughput test result.
+> 
+> - Felix
+> 
+
+__________________________________________________
+Do You Yahoo!?
+Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
+http://mail.yahoo.com 
