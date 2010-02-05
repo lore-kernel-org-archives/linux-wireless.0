@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48166 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757081Ab0BDLpL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 06:45:11 -0500
-Subject: Re: [PATCH 2/5] b43: N-PHY: load generated samples
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1265282592-25491-2-git-send-email-zajec5@gmail.com>
-References: <1265282592-25491-1-git-send-email-zajec5@gmail.com>
-	 <1265282592-25491-2-git-send-email-zajec5@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SCOpol1XVnRKGLVLHa5o"
-Date: Thu, 04 Feb 2010 12:45:06 +0100
-Message-ID: <1265283906.29119.108.camel@johannes.local>
+Received: from mx1.redhat.com ([209.132.183.28]:14448 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751484Ab0BETVh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2010 14:21:37 -0500
+Subject: Re: [PATCH] airo: fix WEP key clearing after
+ c0380693520b1a1e4f756799a0edc379378b462a
+From: Dan Williams <dcbw@redhat.com>
+To: Chris Siebenmann <cks@cs.toronto.edu>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+In-Reply-To: <20100205162620.0B2632B0054@apps0.cs.toronto.edu>
+References: <20100205162620.0B2632B0054@apps0.cs.toronto.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 05 Feb 2010 11:20:49 -0800
+Message-ID: <1265397649.16621.48.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2010-02-05 at 11:26 -0500, Chris Siebenmann wrote:
+> | The firmware apparently needs the WEP key RID touched when turning
+> | WEP off, otherwise it gets angry and refuses to return scan results.
+> | The firmware doesn't handle zero-length WEP keys so quite the warning
+> | message that was inadvertently printed when disabling WEP, which
+> | wpa_supplicant could trigger repeatedly.
+> |
+> | Signed-off-by: Dan Williams <dcbw@redhat.com>
+> 
+>  This patch does *not* work for me; with it applied to the 2.6.33-rc6
+> from-git that I have been using as the testing basis, the resulting
+> kernel does not see any wireless networks. dmesg has multiple reports
 
---=-SCOpol1XVnRKGLVLHa5o
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Yes, I know it may have worked in earlier kernels.  And we should find
+out why that is, and hopefully fix the regression if any.  But
+understand that airo has always been problematic and has never worked as
+well as other fullmac cards like orinoco.
 
-On Thu, 2010-02-04 at 12:23 +0100, Rafa=C5=82 Mi=C5=82ecki wrote:
+I booted up RHEL5 today, which uses a 2.6.18 kernel and of course does
+not have the patch-in-question.  That behavior is:
 
-> +	u32 *data;
-> +
-> +	data =3D kzalloc(len * sizeof(u32), GFP_KERNEL);
-> +
-> +	if (nphy->hang_avoid)
-> +		b43_nphy_stay_in_carrier_search(dev, 1);
-> +
-> +	for (i =3D 0; i < len; i++) {
-> +		data[i] =3D (samples[i].i & 0x3FF << 10);
+1) stop NetworkManager and wpa_supplicant
+2) insert airo card
+3) iwlist scan returns many results
+4) connect to WEP-enabled AP
+5) iwlist scan returns *only* the connected ap
+6) iwconfig eth1 essid any key off
+7) iwlist scan returns no results
 
-Humm. Allocations can fail, you know :)
+remember, that's without any of the patches we're talking about, using a
+kernel from 2007.  Which is about the same behavior you get, correct?
 
-johannes
+> of:
+> 
+> 	airo(eth1): cmd:103 status:7f03 rsp0:0 rsp1:ff10 rsp2:c0f0
+> 	airo(eth1): cmd:103 status:7f03 rsp0:0 rsp1:ff10 rsp2:c0f0
 
---=-SCOpol1XVnRKGLVLHa5o
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+CMD 0x0103 is the LISTBSS command, which is sent to trigger a scan.
+What firmware version do you have?  It should get printed out in 'dmesg'
+when loading the driver.
 
------BEGIN PGP SIGNATURE-----
+Dan
 
-iQIcBAABAgAGBQJLarM+AAoJEODzc/N7+Qma8t4QALBpsfZL0NLQGWf6Q4StiA18
-Lp6oEjUonRtbjJZLi01ZJG70snu7r16YCZg9FNPHHM2X/U7WDPuswev5JUlasnSv
-wG+aJkbAxISWm4DHYK4stsw+PLxa5KEZzm/1Bk06ZFnfJvqjmVEKOsnXy3b0Lhp4
-v5XqKIFQi1paoqu3Fh+vK6ICQWQSG8jeO2hgJuvfAN7AKU0XXspdlOb857WGKr4X
-KoepJKod4Umxp8DxXdj9jMEJ6ZJH9Ut2/PSQjrxKCsqs+L/9UM4NOUgWn7IeCX0s
-ZBKc2MBDJsv8w2+1tfy9zf2D+Gzb7CkzmMhdmEgKwARRIFMi91WGTDYY7MnCzY9T
-DG30iD++fOAytqUJmwPFg1F4wxfKnZhLi5D180w93gjAi2m+x03y3fwr2uZk+JNk
-9TKvGbXyKZArnaD23U3buTc06K769rhqS+cZyb+AQ3Q6rZhJ0+Lz+alTpBer3jEZ
-zUYXl64Y7/0/lrfX2sUYrthmpK0eqPaXrvEdfqt9kQngg+DOAzaoAkUjp3XoPUGq
-QK7a+vf1BzzHIIi62ytDovUJnsaKH7HWJCwHAqR6Rd+TNRrME0igsszzXOdvcx6d
-ZtTRS2hEK0FKBaa/p72Nj4eJiBmGvhn4JdYtWbeaNaEFnyq9czC7mjxD1yRJmc1b
-2G/qpTi9n8kLCS9Ke5HK
-=wNOX
------END PGP SIGNATURE-----
-
---=-SCOpol1XVnRKGLVLHa5o--
 
