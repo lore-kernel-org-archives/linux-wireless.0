@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f227.google.com ([209.85.217.227]:58618 "EHLO
-	mail-gx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961Ab0BTTtM (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:46331 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343Ab0BEQvD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Feb 2010 14:49:12 -0500
-Received: by gxk27 with SMTP id 27so2166806gxk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Feb 2010 11:49:11 -0800 (PST)
-Date: Sat, 20 Feb 2010 13:49:09 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH V2] ssb: Add PCI ID 0x4322 to PMU handling
-Message-ID: <4b803cb5.tZQnvqGy2KfItgOq%Larry.Finger@lwfinger.net>
+	Fri, 5 Feb 2010 11:51:03 -0500
+Received: by fg-out-1718.google.com with SMTP id 22so14298fge.1
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 08:51:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B6B8F8B.6020908@lwfinger.net>
+References: <1265317065-2922-2-git-send-email-zajec5@gmail.com>
+	<4B6B8F8B.6020908@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 5 Feb 2010 17:41:00 +0100
+Message-ID: <69e28c911002050841x20053c6jbe768c19e983ef50@mail.gmail.com>
+Subject: Re: [RFC][PATCH] b43: LP-PHY: always adjust gain table on channel
+	switch
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of the N PHYs need a revision in the handling of the PMU.
+On Fri, Feb 5, 2010 at 4:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 02/04/2010 02:57 PM, Rafał Miłecki wrote:
+>> ---
+>> GÃ¡bor: I think you missed specs here. Could you check whole routine just for
+>> sure, please? I don't understand whole radio and chanspec magic yet.
+>> ---
+>>  drivers/net/wireless/b43/phy_lp.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+>> index 185219e..61009ee 100644
+>> --- a/drivers/net/wireless/b43/phy_lp.c
+>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>> @@ -2655,8 +2655,8 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+>>               if (err)
+>>                       return err;
+>>               lpphy_set_analog_filter(dev, new_channel);
+>> -             lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>       }
+>> +     lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>
+>>       lpphy->channel = new_channel;
+>>       b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
+>
+> Both the lpphy_set_analog_filter() and lpphy_adjust_gain_table() calls should be
+> outside the if statement. I changed the spec a little. It used to test "radio
+> enabled", but I have found that is always true for our driver.
+>
+> Larry
+>
+>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Isn't set_analog_filter() rev0/1-specific?
 
-John,
-
-This will be needed for some of the N PHY devices - 2.6.34 amterial.
-
-Larry
----
-
-V2 - Fix typo in subject line of commit message.
-
-Index: wireless-testing/drivers/ssb/driver_chipcommon_pmu.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_chipcommon_pmu.c
-+++ wireless-testing/drivers/ssb/driver_chipcommon_pmu.c
-@@ -332,6 +332,12 @@ static void ssb_pmu_pll_init(struct ssb_
- 	case 0x5354:
- 		ssb_pmu0_pllinit_r0(cc, crystalfreq);
- 		break;
-+	case 0x4322:
-+		if (cc->pmu.rev == 2) {
-+			chipco_write32(cc, SSB_CHIPCO_PLLCTL_ADDR, 0x0000000A);
-+			chipco_write32(cc, SSB_CHIPCO_PLLCTL_DATA, 0x380005C0);
-+		}
-+		break;
- 	default:
- 		ssb_printk(KERN_ERR PFX
- 			   "ERROR: PLL init unknown for device %04X\n",
-@@ -417,6 +423,7 @@ static void ssb_pmu_resources_init(struc
- 
- 	switch (bus->chip_id) {
- 	case 0x4312:
-+	case 0x4322:
- 		/* We keep the default settings:
- 		 * min_msk = 0xCBB
- 		 * max_msk = 0x7FFFF
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
