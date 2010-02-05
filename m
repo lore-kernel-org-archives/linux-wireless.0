@@ -1,53 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f176.google.com ([209.85.222.176]:57412 "EHLO
-	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755209Ab0BAVcm convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:47390 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755444Ab0BESKL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 16:32:42 -0500
-Received: by pzk6 with SMTP id 6so1014185pzk.23
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2010 13:32:42 -0800 (PST)
+	Fri, 5 Feb 2010 13:10:11 -0500
+Received: by bwz19 with SMTP id 19so32840bwz.28
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 10:10:00 -0800 (PST)
+Message-ID: <4B6C5EF3.5060006@lwfinger.net>
+Date: Fri, 05 Feb 2010 12:09:55 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20100201203637.GE4952@tuxdriver.com>
-References: <1264905444.10146.9.camel@mj> <43e72e891002011011h4714ecddrb9421a877832bffd@mail.gmail.com>
-	<20100201203637.GE4952@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 1 Feb 2010 13:32:22 -0800
-Message-ID: <43e72e891002011332g5ee05addp3f140ea23a45e09d@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: fix access to freed data on unload
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFC][PATCH] b43: LP-PHY: always adjust gain table on channel
+ 	switch
+References: <1265317065-2922-2-git-send-email-zajec5@gmail.com> 	<4B6B8F8B.6020908@lwfinger.net> <69e28c911002050841x20053c6jbe768c19e983ef50@mail.gmail.com>
+In-Reply-To: <69e28c911002050841x20053c6jbe768c19e983ef50@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 1, 2010 at 12:36 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, Feb 01, 2010 at 10:11:54AM -0800, Luis R. Rodriguez wrote:
->> On Sat, Jan 30, 2010 at 6:37 PM, Pavel Roskin <proski@gnu.org> wrote:
->> > Calling ath_bus_cleanup() after ieee80211_free_hw() resulted in access
->> > to common->bus_ops, which is already freed as part of the device data.
->> >
->> > Remove the cleanup field in struct ath_bus_ops, as it was never used
->> > properly.  Remove ath_bus_cleanup().  Merge cleanup functions in place
->> > of the ath_bus_cleanup() calls.  Take care not to use any device data
->> > after ieee80211_free_hw().
->> >
->> > Signed-off-by: Pavel Roskin <proski@gnu.org>
->> > ---
->> >
->> > The bug was causing a hang on a kernel with most debugging options
->> > enabled.  I think the fix is important and simple enough for stable
->> > kernels.  I wish I could make the patch smaller, but I didn't want to
->> > leave unused and dangerous fields and functions.
->> >
->> > ath9k was tested on the PCI bus.  ath9k on AHB was compile tested.
->> > ath5k and ar9170 use struct ath_bus_ops, but don't use the cleanup
->> > field, so they are not affected.
+On 02/05/2010 10:41 AM, Gábor Stefanik wrote:
+> On Fri, Feb 5, 2010 at 4:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 02/04/2010 02:57 PM, Rafał Miłecki wrote:
+>>> ---
+>>> GÃ¡bor: I think you missed specs here. Could you check whole routine just for
+>>> sure, please? I don't understand whole radio and chanspec magic yet.
+>>> ---
+>>>  drivers/net/wireless/b43/phy_lp.c |    2 +-
+>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+>>> index 185219e..61009ee 100644
+>>> --- a/drivers/net/wireless/b43/phy_lp.c
+>>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>>> @@ -2655,8 +2655,8 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+>>>               if (err)
+>>>                       return err;
+>>>               lpphy_set_analog_filter(dev, new_channel);
+>>> -             lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>>       }
+>>> +     lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>>
+>>>       lpphy->channel = new_channel;
+>>>       b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
 >>
->> Thanks, can you please resend with a Cc: stable@kernel.org on the commit log?
->
-> Doesn't look to me like the patch even applies to 2.6.33...?
+>> Both the lpphy_set_analog_filter() and lpphy_adjust_gain_table() calls should be
+>> outside the if statement. I changed the spec a little. It used to test "radio
+>> enabled", but I have found that is always true for our driver.
+>>
+>> Larry
+>>
+>>
+> 
+> Isn't set_analog_filter() rev0/1-specific?
 
-Sorry thought it would have by then.
+It was in the 4.174.64.19 driver that I RE'd when you wrote the LP PHY code.
+That as changed in 5.10.56.46, which I am now doing. It will take me a while to
+complete the new routine "LP PHY TX Filter Init" and a routine that it calls.
 
-  Luis
+Certainly, there is no hurry that these changes be made. Whenever you or Rafał
+have time. There is no guarantee that these changes will have any effect on the
+LP PHY operations. Hitting a moving target is not easy.
+
+Larry
+
+
+
+
+
