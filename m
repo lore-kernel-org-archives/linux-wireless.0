@@ -1,138 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f223.google.com ([209.85.218.223]:45030 "EHLO
-	mail-bw0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754252Ab0BIVQt convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58347 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756142Ab0BENlj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 16:16:49 -0500
-Received: by bwz23 with SMTP id 23so676435bwz.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 13:16:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B6B69AB42555546BF8AEBDA21196517C5E0F1@ihq-app01.keywcorp.com>
-References: <4B6B69AB42555546BF8AEBDA21196517C5E0F1@ihq-app01.keywcorp.com>
-Date: Tue, 9 Feb 2010 22:16:46 +0100
-Message-ID: <22ee4e771002091316x6812b57dg344384dcca07ad76@mail.gmail.com>
-Subject: Re: hostapd using carl9270 doesn't send beacons
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Greg Munroe <gmunroe@keywcorp.com>
+	Fri, 5 Feb 2010 08:41:39 -0500
+Subject: Re: [RFC PATCH 1/2 v2] mac80211: Retry null data frame for power
+ save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vnatarajan@atheros.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
+References: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lN7PMB1qw27AhJjBdVGt"
+Date: Fri, 05 Feb 2010 14:41:36 +0100
+Message-ID: <1265377296.3613.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 9, 2010 at 8:15 PM, Greg Munroe <gmunroe@keywcorp.com> wrote:
-> Hi,
 
-Hello,
+--=-lN7PMB1qw27AhJjBdVGt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Previously, I have used the AR9170 driver in AP mode. It works OK, but loses
-> data often (even with power savings off).
-Ermm, ar9170 never supported AP mode and carl9170 only
-allows the most basic implementation.
 
-> I heard about the new carl9170 driver and decided to give it a try. When I
-> started hostapd, the following debug messages appears:
->
-> Configuration file: /etc/hostapd.conf
->
-> Opening raw packet socket for ifindex 128682944
-> BSS count 1, BSSID mask ff:ff:ff:ff:ff:ff (0 bits)
-> SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
-> nl80211: Added 802.11b mode based on 802.11g information
+> @@ -275,6 +274,19 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, st=
+ruct sk_buff *skb)
+>  			local->dot11FailedCount++;
+>  	}
+> =20
+> +	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
+> +		(local->hw.flags & IEEE80211_HW_TX_STATUS) &&
+> +		(local->hw.conf.flags & IEEE80211_CONF_PS)) {
+> +		if (info->flags & IEEE80211_TX_STAT_ACK) {
+> +			local->ps_sdata->u.mgd.flags |=3D
+> +					IEEE80211_STA_NULLFUNC_ACKED;
+> +			ieee80211_queue_work(&local->hw,
+> +					 &local->dynamic_ps_enable_work);
+> +		} else
+> +			mod_timer(&local->dynamic_ps_timer, jiffies +
+> +					msecs_to_jiffies(10));
+> +	}
+> +
+>  	/* this was a transmitted frame, but now we want to reuse it */
+>  	skb_orphan(skb);
 
-WEXT?
-the README has a "SYSTEM REQUIREMENTS" section:
-" * hostapd 0.7.1+ fresh from git (only necessary for AP-Mode)"
+This code should be in ieee80211_frame_acked() where it doesn't need to
+check the ACK status.
 
-> Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=20 dBm
-> Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=20 dBm
-[...]
+And the mod_timer case is completely useless there anyway, at least the
+way you've done this now.
 
-> Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=20 dBm
-> Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=20 dBm
-[...]
+johannes
 
-> RATE[0] rate=10 flags=0x2
-> RATE[1] rate=20 flags=0x6
-> RATE[2] rate=55 flags=0x6
-> RATE[3] rate=110 flags=0x6
-> RATE[4] rate=60 flags=0x0
-> RATE[5] rate=90 flags=0x0
-> RATE[6] rate=120 flags=0x0
-[...]
-(OT: no 11g basic rates?)
+--=-lN7PMB1qw27AhJjBdVGt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-> Passive scanning not supported
-> Flushing old station entries
-> Deauthenticate all stations
-> Mode: IEEE 802.11g  Channel: 11  Frequency: 2462 MHz
-> Using interface wlan0 with hwaddr 00:1f:33:f0:d3:14 and ssid 'M1000'
-> SSID - hexdump_ascii(len=5):
-[...]
-> WPA: group state machine entering state GTK_INIT (VLAN-ID 0)
-> GMK - hexdump(len=32): [REMOVED]
-> GTK - hexdump(len=32): [REMOVED]
-> WPA: group state machine entering state SETKEYSDONE (VLAN-ID 0)
-> wlan0: Setup of interface done.
-> MGMT (TX callback) ACK
->
-> The beacons are never sent and I cannot see the AP from my laptop.
-> Any help will be appreciated!
-no word about carl9170 Version?
+-----BEGIN PGP SIGNATURE-----
 
-The latest carl9170 1.0.1.1 (together with hostap_0_7_1 and 2.6.33-rc6-wl)
-should produce something like:
+iQIcBAABAgAGBQJLbCALAAoJEODzc/N7+QmaDagP/RFmjj5dlOjBuKnRsXNP4yNh
+2/eWLIbB0L5ODQromVUQnF7TIIKPxwQEZg5712RFl65+3sdRtOFi5ctvSsTIUAII
+kzsaDGdlYH5CVBzhfzNXIAdX4D+FqefosUOeZtclHHqErCPHtB9GmgqXbbx5CYok
+Prb6M/KL0smsUjkO3+i3G/7CGVnPEJ0r8rmtsBNf2yPsiXV6Qdn+tFdiGEplU/K9
++yhbTY3o1I6/InS3e8woaSXkHogZfgeYiXqVMcTPpDb/b+uQlURQhUYYk8jG6+xz
+Wg9ZO9MVprCE4l4RQ78eg+T3gJXc5BB3Y/sZOR5bbj9nnLwoNQWUINbPul+0h/er
+FNukN22AHSjKP6jNGMiSACOLEcViOAMI5QqRhlHkm7lOeUeFEPBWzFpFxuu32Oo+
+BTk4W9k5Z7n8V3xkK/I1FG7pzqyAmfItx3FjaVYmlq60tvT7VAuqaWdUyDOBU9lE
+yPmN7ErtwEWGHsyGmVfs8+G7pi9g7fJQAa4V5m58R9py0fFIJvaBZZGtvPjzHrFH
+/36Z7Kbsv6sNqh7isvXUuuOBCLWZS0QF0Q+brgcUZhlpvDk55BSAZiMXDtTP9iZs
+Q8bIvIlFtfbKhA5+Y8ExFBTV5DntGYNpoFYSmxF1afMxD9MjVOJUAPqs196zNnd+
+dJD/6wf+oJqFgIfuRZ+z
+=RQnT
+-----END PGP SIGNATURE-----
 
-Configuration file: /etc/hostapd/hostapd-test-11g.conf
-ctrl_interface_group=0
-nl80211: Add own interface ifindex 52
-nl80211: New interface mon.wlan2_renam created: ifindex=54
-nl80211: Add own interface ifindex 54
-BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
-nl80211: Added 802.11b mode based on 802.11g information
-Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=27 dBm
-Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=27 dBm
-[...]
-RATE[0] rate=10 flags=0x1
-RATE[1] rate=20 flags=0x0
-RATE[2] rate=55 flags=0x0
-RATE[3] rate=110 flags=0x1
-RATE[4] rate=60 flags=0x1
-RATE[5] rate=90 flags=0x0
-RATE[6] rate=120 flags=0x1
-[...]
-Completing interface initialization
-Mode: IEEE 802.11g  Channel: 1  Frequency: 2412 MHz
-Flushing old station entries
-Deauthenticate all stations
-wpa_driver_nl80211_set_key: ifindex=52 alg=0 addr=(nil) key_idx=0
-set_tx=1 seq_len=0 key_len=0
-[...]
-Using interface wlan2_rename with hwaddr 00:1f:33:e8:ff:ff and ssid 'EINFACH-G'
-nl80211: Set beacon (beacon_set=0)
-wlan2_rename: Setup of interface done.
-Ignore event for foreign ifindex 54
-Ignore event for foreign ifindex 54
-Ignore event for foreign ifindex 54
-RTM_NEWLINK: operstate=0 ifi_flags=0x1002 ()
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan2_rename' added
-Unknown event 5
-RTM_NEWLINK: operstate=0 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan2_rename' added
-Unknown event 5
-STA 00:22:43:0a:b8:f7 sent probe request for broadcast SSID
-mgmt::proberesp cb
-STA 00:22:43:0a:b8:f7 sent probe request for broadcast SSID
-mgmt::proberesp cb
-[...] and so on [...]
+--=-lN7PMB1qw27AhJjBdVGt--
 
-BTW: Neither carl9170, nor ar9170 support the crypto engine when AP/IBSS
-is enabled. If you have a weak CPU (e.g.: ARM Atmel at91SAM9263 200mhz),
-you should run openssl's algo benchmark to determine if the system can
-actually handle WPA without dropping/delaying too many packages under
-pressure.
-
-Regards,
-    Chr
