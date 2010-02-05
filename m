@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f200.google.com ([209.85.221.200]:37780 "EHLO
-	mail-qy0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863Ab0BQSeE convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:41058 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754521Ab0BEQ1r convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 13:34:04 -0500
-Received: by qyk38 with SMTP id 38so2166714qyk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 10:34:01 -0800 (PST)
+	Fri, 5 Feb 2010 11:27:47 -0500
+Received: by bwz19 with SMTP id 19so1610803bwz.28
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 08:27:45 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4B7C35C9.30607@lwfinger.net>
-References: <c2673ca61002171015j375922c0y4c7f61c3d3322bab@mail.gmail.com>
-	 <4B7C35C9.30607@lwfinger.net>
-Date: Wed, 17 Feb 2010 19:34:00 +0100
-Message-ID: <c2673ca61002171034q18edf1c2o817ac4e1ff367177@mail.gmail.com>
-Subject: Re: [PATCH] v2: rtl8187: micro cleanup
-From: okias <d.okias@gmail.com>
+In-Reply-To: <4B6B8F8B.6020908@lwfinger.net>
+References: <1265317065-2922-2-git-send-email-zajec5@gmail.com>
+	<4B6B8F8B.6020908@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 5 Feb 2010 17:27:25 +0100
+Message-ID: <69e28c911002050827x63aa5d3cjda82d8c7a643fd82@mail.gmail.com>
+Subject: Re: [RFC][PATCH] b43: LP-PHY: always adjust gain table on channel
+	switch
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	herton@mandriva.com.br, htl10@users.sourceforge.net
+Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I did test on small C program, and "int a" is equal to int a = 0; so
-it should be fine, but maybe I'm wrong.
-
-David
-
-2010/2/17 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 02/17/2010 12:15 PM, okias wrote:
->>>From 3f02b3ec0c3e6d7fa0599de12af0b76150854b94 Mon Sep 17 00:00:00 2001
->> From: David Heidelberger <d.okias@gmail.com>
->> Date: Wed, 17 Feb 2010 19:13:46 +0100
->> Subject: [PATCH] rtl8187: micro cleanup
->>
+On Fri, Feb 5, 2010 at 4:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 02/04/2010 02:57 PM, Rafał Miłecki wrote:
 >> ---
->>  drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 --
->>  1 files changed, 0 insertions(+), 2 deletions(-)
+>> GÃ¡bor: I think you missed specs here. Could you check whole routine just for
+>> sure, please? I don't understand whole radio and chanspec magic yet.
+>> ---
+>>  drivers/net/wireless/b43/phy_lp.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
 >>
->> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c
->> b/drivers/net/wireless/rtl818x/rtl8187_dev.c
->> index 7ba3052..2fe0c84 100644
->> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
->> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
->> @@ -1175,8 +1175,6 @@ static void rtl8187_bss_info_changed(struct
->> ieee80211_hw *dev,
+>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+>> index 185219e..61009ee 100644
+>> --- a/drivers/net/wireless/b43/phy_lp.c
+>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>> @@ -2655,8 +2655,8 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+>>               if (err)
+>>                       return err;
+>>               lpphy_set_analog_filter(dev, new_channel);
+>> -             lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>       }
+>> +     lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
 >>
->>               if (priv->is_rtl8187b)
->>                       reg = RTL818X_MSR_ENEDCA;
->> -             else
->> -                     reg = 0;
->>
->>               if (is_valid_ether_addr(info->bssid)) {
->>                       reg |= RTL818X_MSR_INFRA;
+>>       lpphy->channel = new_channel;
+>>       b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
 >
-> Did you forget the initialization to 0 when you declare the variable? It was in
-> the first version. This change will cause the RTL8187L to fail.
+> Both the lpphy_set_analog_filter() and lpphy_adjust_gain_table() calls should be
+> outside the if statement. I changed the spec a little. It used to test "radio
+> enabled", but I have found that is always true for our driver.
 >
 > Larry
 >
+>
 
-
+Isn't set_analog_filter() rev0/1-specific?
 
 -- 
-Jabber/XMPP: okias@isgeek.info
-SIP VoIP: sip:17474537254@proxy01.sipphone.com
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
