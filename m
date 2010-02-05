@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:39924 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753030Ab0BTKfL (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:33757 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932589Ab0BEN7b convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Feb 2010 05:35:11 -0500
-Subject: Re: Firmware versioning best practices II
-From: David Woodhouse <dwmw2@infradead.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Vipin Mehta <Vipin.Mehta@atheros.com>
-In-Reply-To: <43e72e891002191823h3245bc0cn7a8745ae77409aa8@mail.gmail.com>
-References: <43e72e891002191823h3245bc0cn7a8745ae77409aa8@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 20 Feb 2010 10:35:06 +0000
-Message-ID: <1266662106.1820.4034.camel@macbook.infradead.org>
-Mime-Version: 1.0
+	Fri, 5 Feb 2010 08:59:31 -0500
+Received: by vws20 with SMTP id 20so1271420vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 05:59:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1265377296.3613.11.camel@johannes.local>
+References: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
+	 <1265377296.3613.11.camel@johannes.local>
+Date: Fri, 5 Feb 2010 19:29:30 +0530
+Message-ID: <8e92b4101002050559t2fa3132aiee9397dd4618f0fd@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/2 v2] mac80211: Retry null data frame for power
+	save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-02-19 at 18:23 -0800, Luis R. Rodriguez wrote:
-> Last year, with the help of the community we at Atheros opened up the
-> first (to my knowledge) firmware for a device driver used on the Linux
-> kernel. The community has been advancing the firmware and making
-> changes and even an alternative driver with more features is being
-> baked. We hadn't dealt with open firmware before and this itself
-> raises a few management questions about the firmware APIs, code
-> revision and general best practices which are likely not documented
-> anywhere. We reviewed this on linux-wireless last year [1] and Pavel
-> Roskin made a good suggestion for model to follow. I still have a few
-> more questions though and wanted a wider review on this.
-> 
-> I've documented a summary of what we have discussed and suggested so far here:
-> 
-> http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
-> 
-> We should still address how drivers should deprecate firmware. Can we
-> deprecate old firmware APIs from drivers on each kernel release? Any
-> other comments or feedback?
-> 
-> [1] http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
-> 
->   Luis
+On Fri, Feb 5, 2010 at 7:11 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>> @@ -275,6 +274,19 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+>>                       local->dot11FailedCount++;
+>>       }
+>>
+>> +     if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
+>> +             (local->hw.flags & IEEE80211_HW_TX_STATUS) &&
+>> +             (local->hw.conf.flags & IEEE80211_CONF_PS)) {
+>> +             if (info->flags & IEEE80211_TX_STAT_ACK) {
+>> +                     local->ps_sdata->u.mgd.flags |=
+>> +                                     IEEE80211_STA_NULLFUNC_ACKED;
+>> +                     ieee80211_queue_work(&local->hw,
+>> +                                      &local->dynamic_ps_enable_work);
+>> +             } else
+>> +                     mod_timer(&local->dynamic_ps_timer, jiffies +
+>> +                                     msecs_to_jiffies(10));
+>> +     }
+>> +
+>>       /* this was a transmitted frame, but now we want to reuse it */
+>>       skb_orphan(skb);
+> And the mod_timer case is completely useless there anyway, at least the
+> way you've done this now.
+Ah, right! Thanks for pointing it out.
 
-So far it looks like you've just rewritten a subset of the rules for
-handling shared library sonames.
-
-I wouldn't suggest that including the API version as a _separate_ field
-from the code version is best practice. Why not just bump the major # of
-the code version when you change the API, just as we do with shared
-libraries?
-
-That doesn't prevent some people from using foo-$APIVER-$CODEVER if they
-really have to, of course -- if they have firmware which can be
-conditionally compiled for both old and new APIs, for example. But I
-don't think it should be recommended.
-
--- 
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
-
+Vivek.
