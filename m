@@ -1,77 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f201.google.com ([209.85.223.201]:65328 "EHLO
-	mail-iw0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598Ab0BODzT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 22:55:19 -0500
-Message-ID: <4B78C5A4.1040608@lwfinger.net>
-Date: Sun, 14 Feb 2010 21:55:16 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@suse.de>
-CC: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH 1/3] staging: r8187se: Remove write_phy routine
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:34550 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932913Ab0BEHA3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2010 02:00:29 -0500
+Subject: Re: [PATCH v2] airo: fix setting zero length WEP key
+From: Dan Williams <dcbw@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+In-Reply-To: <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com>
+References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com>
+	 <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 04 Feb 2010 22:59:38 -0800
+Message-ID: <1265353178.11066.5.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove a routine that is not used.
+John, can we revert the patch you applied, and apply the following patch
+instead (in the next mail)?  I'd rather use the one I'm about to send
+because it makes it clearer *why* setting the TX key index is required,
+and it limits that case to only the time when it's necessary.  Pending
+the testing by Chris, I'd rather have the revised version committed
+instead.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Thanks,
+Dan
 
- r8180_core.c |   37 -------------------------------------
- 1 file changed, 37 deletions(-)
-
-
-Index: linux-2.6/drivers/staging/rtl8187se/r8180_core.c
-===================================================================
---- linux-2.6.orig/drivers/staging/rtl8187se/r8180_core.c
-+++ linux-2.6/drivers/staging/rtl8187se/r8180_core.c
-@@ -3207,43 +3207,6 @@ void write_phy_cck (struct net_device *d
- 	rtl8185_write_phy(dev, adr, data | 0x10000);
- }
-
--/* 70*3 = 210 ms
-- * I hope this is enougth
-- */
--#define MAX_PHY 70
--void write_phy(struct net_device *dev, u8 adr, u8 data)
--{
--	u32 phy;
--	int i;
--
--	phy = 0xff0000;
--	phy |= adr;
--	phy |= 0x80; /* this should enable writing */
--	phy |= (data<<8);
--
--	//PHY_ADR, PHY_R and PHY_W  are contig and treated as one dword
--	write_nic_dword(dev,PHY_ADR, phy);
--
--	phy= 0xffff00;
--	phy |= adr;
--
--	write_nic_dword(dev,PHY_ADR, phy);
--	for(i=0;i<MAX_PHY;i++){
--		phy=read_nic_dword(dev,PHY_ADR);
--		phy= phy & 0xff0000;
--		phy= phy >> 16;
--		if(phy == data){ //SUCCESS!
--			force_pci_posting(dev);
--			mdelay(3); //random value
--			return;
--		}else{
--			force_pci_posting(dev);
--			mdelay(3); //random value
--		}
--	}
--	DMESGW ("Phy writing %x %x failed!", adr,data);
--}
--
- void rtl8185_set_rate(struct net_device *dev)
- {
- 	int i;
 
