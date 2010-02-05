@@ -1,43 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:45730 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619Ab0BDKPI (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:40491 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736Ab0BETT6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 05:15:08 -0500
-Received: by vws20 with SMTP id 20so846924vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 02:15:07 -0800 (PST)
+	Fri, 5 Feb 2010 14:19:58 -0500
+Received: by bwz19 with SMTP id 19so93988bwz.28
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 11:19:55 -0800 (PST)
+Message-ID: <4B6C6F56.2060401@lwfinger.net>
+Date: Fri, 05 Feb 2010 13:19:50 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1265271286.29119.96.camel@johannes.local>
-References: <1265266442-6273-1-git-send-email-vnatarajan@atheros.com>
-	 <1265266442-6273-2-git-send-email-vnatarajan@atheros.com>
-	 <1265271286.29119.96.camel@johannes.local>
-Date: Thu, 4 Feb 2010 15:45:07 +0530
-Message-ID: <8e92b4101002040215ma7b5a85x9354bbb3ce675cbe@mail.gmail.com>
-Subject: Re: [RFC PATCH 2/2] mac80211: Reset dynamic ps timer in Rx path.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>,
-	linux-wireless@vger.kernel.org, kvalo@iki.fi
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFC][PATCH] b43: LP-PHY: always adjust gain table on channel
+ 	switch
+References: <1265317065-2922-2-git-send-email-zajec5@gmail.com> 	<4B6B8F8B.6020908@lwfinger.net> <69e28c911002050841x20053c6jbe768c19e983ef50@mail.gmail.com> 	<4B6C5EF3.5060006@lwfinger.net> <69e28c911002051046s64c69462k9a43bcb1db704476@mail.gmail.com>
+In-Reply-To: <69e28c911002051046s64c69462k9a43bcb1db704476@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2010 at 1:44 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2010-02-04 at 12:24 +0530, Vivek Natarajan wrote:
->> If there is a continuous Rx UDP traffic with power save enabled,
->> there is some loss of packets with ath9k as Atheros chipsets
->> need to be awake to do Rx, unlike other vendor chipsets.
->
-> That sentence doesn't make a whole lot of sense, all chips need to be
-> awake to RX ;)
->
-> IOW, I think the flag is probably useless?
+On 02/05/2010 12:46 PM, Gábor Stefanik wrote:
+> On Fri, Feb 5, 2010 at 7:09 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 02/05/2010 10:41 AM, Gábor Stefanik wrote:
+>>> On Fri, Feb 5, 2010 at 4:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>>> On 02/04/2010 02:57 PM, Rafał Miłecki wrote:
+>>>>> ---
+>>>>> GÃ¡bor: I think you missed specs here. Could you check whole routine just for
+>>>>> sure, please? I don't understand whole radio and chanspec magic yet.
+>>>>> ---
+>>>>>  drivers/net/wireless/b43/phy_lp.c |    2 +-
+>>>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+>>>>> index 185219e..61009ee 100644
+>>>>> --- a/drivers/net/wireless/b43/phy_lp.c
+>>>>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>>>>> @@ -2655,8 +2655,8 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+>>>>>               if (err)
+>>>>>                       return err;
+>>>>>               lpphy_set_analog_filter(dev, new_channel);
+>>>>> -             lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>>>>       }
+>>>>> +     lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>>>>
+>>>>>       lpphy->channel = new_channel;
+>>>>>       b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
+>>>>
+>>>> Both the lpphy_set_analog_filter() and lpphy_adjust_gain_table() calls should be
+>>>> outside the if statement. I changed the spec a little. It used to test "radio
+>>>> enabled", but I have found that is always true for our driver.
+>>>>
+>>>> Larry
+>>>>
+>>>>
+>>>
+>>> Isn't set_analog_filter() rev0/1-specific?
+>>
+>> It was in the 4.174.64.19 driver that I RE'd when you wrote the LP PHY code.
+>> That as changed in 5.10.56.46, which I am now doing. It will take me a while to
+>> complete the new routine "LP PHY TX Filter Init" and a routine that it calls.
+>>
+>> Certainly, there is no hurry that these changes be made. Whenever you or Rafał
+>> have time. There is no guarantee that these changes will have any effect on the
+>> LP PHY operations. Hitting a moving target is not easy.
+>>
+>> Larry
+>>
+> 
+> Just out of curiosity, is 5.10.56.46 available anywhere (for firmware reasons)?
 
-I believe, in wl12xx or p54 chipsets, Rx engine is always awake eventhough
-power save  might have been enabled. But with Atheros, it is completely
-shut off. Hence I had to use a flag in order to avoid disturbing the
-other drivers. Without the flag,it may end up in increasing the average power
-consumption for other drivers.
+I'm not sure what the driver version is, but a file with 508 ucode dated 6/26/09
+is found at:
 
-Thanks
-Vivek
+http://www.linksysbycisco.com/gpl/wrt610n_v2.00.00.05_us.tar.gz
+
+The binaries are in directory wrt610n_v2.00.00.05_us/release/src/wl/linux/. I
+used Daniel Lenski's script names b43_fwcutter.py can extract the firmware from
+wl_apsta.o. Included are ucode_2w20 - Rev 20 802.11 cores have an SSLPN PHY.
+
+I'm still looking for a file with 5XX firmware that is not a huge download. This
+file contains everything needed to build the firmware for a WRT610N AP and is
+356 MB. If anyone knows of a smaller file, please let me know.
+
+Larry
