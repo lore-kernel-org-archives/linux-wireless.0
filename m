@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55959 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932671Ab0BPHqO (ORCPT
+Received: from mail-pz0-f190.google.com ([209.85.222.190]:59373 "EHLO
+	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933493Ab0BEAPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 02:46:14 -0500
-Date: Tue, 16 Feb 2010 09:46:02 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: Ignore replay for IBSS interfaces
-Message-ID: <20100216074602.GA19876@jm.kir.nu>
-References: <1266190346-2247-1-git-send-email-benoit.papillault@free.fr>
- <1266225762.3758.1.camel@jlt3.sipsolutions.net>
- <4B79CD81.3090300@free.fr>
+	Thu, 4 Feb 2010 19:15:07 -0500
+Received: by pzk28 with SMTP id 28so3235584pzk.4
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 16:15:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B79CD81.3090300@free.fr>
+In-Reply-To: <1265317566-15372-1-git-send-email-benoit.papillault@free.fr>
+References: <1265317566-15372-1-git-send-email-benoit.papillault@free.fr>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 4 Feb 2010 16:14:46 -0800
+Message-ID: <43e72e891002041614o3736d56axd41054c295703a76@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Fix rate table choice
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 15, 2010 at 11:41:05PM +0100, Benoit PAPILLAULT wrote:
-> Right. This patch disable replay protection. RSN is indeed the
-> correct solution, but it's out of reach for me (no time, no skills).
-> As such, I thought that WPA-NONE could be useful in the interim.
+On Thu, Feb 4, 2010 at 1:06 PM, Benoit Papillault
+<benoit.papillault@free.fr> wrote:
+> ath9k rate control choose the rate table based on the current channel
+> (if it is ht40 or not). However, it happens that at this stage, the
+> channel is still ht20 even if the peer sta capabilities would later
+> allow ht40. So let's use peer sta capabilities directly.
 
-I do not think it is acceptable to introduce anything that disables
-replay protection.
+Can you clarify this commit log entry a little more, I don't think I
+get it yet. Also, is this a stable fix? If so, please Cc:
+stable@kernel.org on the commit log entry.
 
-> Jouni : I would appreciate your input here. What's the status of
-> IBSS RSN? How much time/skills would be required to implement it?
-
-The key management side (4-way handshakes) should all be in place now
-and the main missing part is in being able to configure all the GTKs
-(one per peer) and use the GTKs properly (i.e., match the key per addr2
-when addr1 is broadcast/multicast). A good initial step would be to
-hardcode mac80211 to use software encryption and extend that to support
-multiple GTKs. Once that is working, we can see whether some of the
-drivers would be able to do CCMP in hardware for such key configuration.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
