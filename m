@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:35860 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757890Ab0BNBPQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34593 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341Ab0BEQpf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 20:15:16 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so3034960ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Feb 2010 17:15:16 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 2/3] rt2x00: Reorganize RT chipset setting for PCI/SOC devices.
-Date: Sun, 14 Feb 2010 02:15:14 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1266090949-5468-1-git-send-email-gwingerde@gmail.com> <1266090949-5468-2-git-send-email-gwingerde@gmail.com> <1266090949-5468-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1266090949-5468-3-git-send-email-gwingerde@gmail.com>
+	Fri, 5 Feb 2010 11:45:35 -0500
+Date: Fri, 5 Feb 2010 11:31:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Call For Proposal: Linux Wireless Summit(s) 2010
+Message-ID: <20100205163140.GD2984@tuxdriver.com>
+References: <20100111135741.GB3223@tuxdriver.com> <1265286634.29119.114.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201002140215.14535.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1265286634.29119.114.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Feb 04, 2010 at 01:30:34PM +0100, Johannes Berg wrote:
+> On Mon, 2010-01-11 at 08:57 -0500, John W. Linville wrote: 
+> > OTOH, my last contact with the LinuxCon organizers
+> > suggested that we could have space with them in the Boston area in
+> > the Fall (September?).  So I will view that as our default option
+> > (especially for North America).
+> 
+> August 10-12:
+> http://events.linuxfoundation.org/events/linuxcon
+> 
+> Actually mini-summits are on August 9 according to the website.
 
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -40,6 +40,9 @@
->  #if defined(CONFIG_RT2X00_LIB_USB) || defined(CONFIG_RT2X00_LIB_USB_MODULE)
->  #include "rt2x00usb.h"
->  #endif
-> +#if defined(CONFIG_RT2X00_LIB_PCI) || defined(CONFIG_RT2X00_LIB_PCI_MODULE)
-> +#include "rt2x00pci.h"
-> +#endif
+We can have August 8 as well if we want it.  I asked for 2 days since
+that is what we have done in the past.  Or we can just use the 9th
+if we want to restrict ourselves to one day...?
 
-this is very ugly, but apparently it is unavoidable to make rt2800lib free from
-PCI and USB specific code... :(
+So anyway, as of now having a wireless mini-summit just prior to
+LinuxCon is the plan of record.  There is a requirement for attendees
+to also register for LinuxCon -- I hope that isn't a problem.
+I suspect that registration will be cheap/free for those accepted as
+LinuxCon presenters. :-)
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-Ivo
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
