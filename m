@@ -1,35 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54815
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750953Ab0BWJ3f (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:46115 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932268Ab0BEOGi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 04:29:35 -0500
-Date: Tue, 23 Feb 2010 01:29:52 -0800 (PST)
-Message-Id: <20100223.012952.234072545.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
-Subject: Re: pull request: wireless-2.6 2010-02-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100222182653.GB2988@tuxdriver.com>
-References: <20100222182653.GB2988@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 5 Feb 2010 09:06:38 -0500
+Received: by vws20 with SMTP id 20so1273557vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 06:06:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1265378538.3613.12.camel@johannes.local>
+References: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
+	 <1265377296.3613.11.camel@johannes.local>
+	 <8e92b4101002050559t2fa3132aiee9397dd4618f0fd@mail.gmail.com>
+	 <1265378538.3613.12.camel@johannes.local>
+Date: Fri, 5 Feb 2010 19:36:37 +0530
+Message-ID: <8e92b4101002050606y3474b104kef81429740355a4a@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/2 v2] mac80211: Retry null data frame for power
+	save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 22 Feb 2010 13:26:53 -0500
+On Fri, Feb 5, 2010 at 7:32 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2010-02-05 at 19:29 +0530, Vivek Natarajan wrote:
+>> On Fri, Feb 5, 2010 at 7:11 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> >
+>> >> @@ -275,6 +274,19 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+>> >>                       local->dot11FailedCount++;
+>> >>       }
+>> >>
+>> >> +     if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
+>> >> +             (local->hw.flags & IEEE80211_HW_TX_STATUS) &&
+>> >> +             (local->hw.conf.flags & IEEE80211_CONF_PS)) {
+>> >> +             if (info->flags & IEEE80211_TX_STAT_ACK) {
+>> >> +                     local->ps_sdata->u.mgd.flags |=
+>> >> +                                     IEEE80211_STA_NULLFUNC_ACKED;
+>> >> +                     ieee80211_queue_work(&local->hw,
+>> >> +                                      &local->dynamic_ps_enable_work);
+>> >> +             } else
+>> >> +                     mod_timer(&local->dynamic_ps_timer, jiffies +
+>> >> +                                     msecs_to_jiffies(10));
+>> >> +     }
+>> >> +
+>> >>       /* this was a transmitted frame, but now we want to reuse it */
+>> >>       skb_orphan(skb);
+>> > And the mod_timer case is completely useless there anyway, at least the
+>> > way you've done this now.
+>> Ah, right! Thanks for pointing it out.
+>
+> I htink you should only set CONF_PS after the frame is ACKed, otherwise
+> internal stuff might be confused too?
 
-> I have a handful of late-breakers for iwlwifi.  The one from Dan
-> Halperin moves a single line of code and is a fix for an 802.11n
-> regression introduced in the 2.6.33 cycle.  The other two combine
-> to address a problem that causes the wireless LAN connection to
-> die without any error message.  It has been developed and tested in
-> combination between the Intel wireless team and a contributor from
-> Red Hat.  I hope you will consider including these for 2.6.33 if at
-> all possible.
-> 
-> Please let me know if there are problems!
+I thought about that. But we may not be able to differentiate if the
+null frame is
+for power save or for fake_sleep during scannig.
 
-Pulled, thanks John.
+Vivek.
