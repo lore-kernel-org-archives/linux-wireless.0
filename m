@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:40363 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935284Ab0BZGQf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 01:16:35 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2] mac80211: fix direct probe loop on ieee80211_work_purge
-Date: Fri, 26 Feb 2010 08:13:41 +0200
-Message-Id: <1267164821-28303-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:62290 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750979Ab0BEEdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2010 23:33:46 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 20:33:46 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19307.41957.838154.472055@gargle.gargle.HOWL>
+Date: Fri, 5 Feb 2010 10:21:49 +0530
+To: Benoit Papillault <benoit.papillault@free.fr>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Fix rate table choice
+In-Reply-To: <1265317566-15372-1-git-send-email-benoit.papillault@free.fr>
+References: <1265317566-15372-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If authentication has already been performed when the WLAN interface is
-stopped, (sometimes) the ieee80211_work_purge would corrupt some
-ieee80211_work-structures. The outcome is this (cleaned up):
+Benoit Papillault wrote:
+> ath9k rate control choose the rate table based on the current channel
+> (if it is ht40 or not). However, it happens that at this stage, the
+> channel is still ht20 even if the peer sta capabilities would later
+> allow ht40. So let's use peer sta capabilities directly.
+> 
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> ---
+>  drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> index 1196884..5ce9da5 100644
+> --- a/drivers/net/wireless/ath/ath9k/rc.c
+> +++ b/drivers/net/wireless/ath/ath9k/rc.c
+> @@ -1341,10 +1341,8 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+>                 if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
+>                         return;
+> 
+> -               if (sc->hw->conf.channel_type == NL80211_CHAN_HT40MINUS ||
+> -                   sc->hw->conf.channel_type == NL80211_CHAN_HT40PLUS)
+> -                       oper_cw40 = true;
+> -
+> +               oper_cw40 = (sta->ht_cap.cap &
+> +                            IEEE80211_HT_CAP_SUP_WIDTH_20_40) ? true : false;
+>                 oper_sgi40 = (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40) ?
+>                         true : false;
+> 
 
-[ 2252.398681] WARNING: at net/mac80211/work.c:995 ieee80211_work_purge
-[ 2252.466430] Backtrace:
-[ 2252.529266] (ieee80211_work_purge+0x0/0xcc [mac80211])
-[ 2252.546875] (ieee80211_stop+0x0/0x4c0 [mac80211])
+This is wrong, the AP can certainly support HT40/HT20 and switch between them
+dynamically - this patch changes how ath9k reacts to channel switching.
 
-Additionally, one would get this, going on regarless of the WLAN interface
-state, going on forever:
+The AP can switch its operating channel to HT20 - but the HT40 supported bit
+will _still_ be set. Can you capture the association sequence and check the
+HT_INFO IE ( which is different from HT CAP) ?
 
-[ 2252.859985] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717525)
-[ 2253.055419] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717524)
-[ 2253.250610] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717523)
-[ 2253.446014] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717522)
-[ 2253.641357] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717521)
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/work.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 7e708d5..1e1ea30 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -869,6 +869,7 @@ static void ieee80211_work_work(struct work_struct *work)
- 			break;
- 		case IEEE80211_WORK_ABORT:
- 			rma = WORK_ACT_TIMEOUT;
-+			break;
- 		case IEEE80211_WORK_DIRECT_PROBE:
- 			rma = ieee80211_direct_probe(wk);
- 			break;
--- 
-1.6.3.3
-
+Sujith
