@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:60036 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754927Ab0BASBi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 13:01:38 -0500
+Received: from mail.atheros.com ([12.36.123.2]:14684 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932268Ab0BEM1n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2010 07:27:43 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 04:27:43 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2 v2] mac80211: Reset dynamic ps timer in Rx path.
+Date: Fri, 5 Feb 2010 17:57:32 +0530
+Message-ID: <1265372852-4692-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
+References: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1264972854.3597.17.camel@johannes.local>
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
-	<4B65F024.3080505@gmail.com> <1264972854.3597.17.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 1 Feb 2010 10:01:17 -0800
-Message-ID: <43e72e891002011001l4e914094v33e73209a9da93e8@mail.gmail.com>
-Subject: Re: Linux wireless GSoC 2010 project ideas
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Witold Sowa <witold.sowa@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Till Kamppeter <till.kamppeter@gmail.com>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 31, 2010 at 1:20 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2010-01-31 at 22:03 +0100, Witold Sowa wrote:
->
->> Some time ago johill asked me if I would be interested in hacking on
->> adding WPS support to NetworkManager. Well, I would but I don't know
->> when I'll find some time for that. I don't know how much of work would
->> it require, but it possibly could be a topic of one of GSoC 2010
->> projects. I have no idea know if anybody would be willing to be a mentor
->> for such a project.
->
-> Sounds like a good project to me, but I don't think I'd be a good mentor
-> for since I'm not familiar with the NM codebase at all. As for how much
-> work it would require, I think the basic client-side functionality could
-> possibly be "too simple" for you, WPS has a lot of additional
-> functionality (e.g. WPS support for the AP side).
+The current mac80211 implementation enables power save if there
+is no Tx traffic for a specific timeout. Hence, PS is triggered
+even if there is a continuous Rx only traffic(like UDP) going on.
+This makes the drivers to wait on the tim bit in the next beacon
+to awake which leads to redundant sleep-wake cycles.
+Fix this by restarting the dynamic ps timer on receiving every
+data packet.
 
-In case it helps, I believe all that would be required is the dbus
-stuff, there are sample GUI examples of this already provided through
-the wpa_supplicant wpa_gui.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ net/mac80211/rx.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5709307..657ed66 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1719,6 +1719,7 @@ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct ieee80211_local *local = rx->local;
+ 	struct net_device *dev = sdata->dev;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	__le16 fc = hdr->frame_control;
+@@ -1750,6 +1751,13 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 	dev->stats.rx_packets++;
+ 	dev->stats.rx_bytes += rx->skb->len;
+ 
++	if (ieee80211_is_data(hdr->frame_control) &&
++	    !is_multicast_ether_addr(hdr->addr1) &&
++	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
++			mod_timer(&local->dynamic_ps_timer, jiffies +
++			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
++	}
++
+ 	ieee80211_deliver_skb(rx);
+ 
+ 	return RX_QUEUED;
+-- 
+1.6.6.1
+
