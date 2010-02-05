@@ -1,55 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38840 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966477Ab0BZWrq (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:6115 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753772Ab0BEUbW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 17:47:46 -0500
-Date: Fri, 26 Feb 2010 14:46:57 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: =?ISO-8859-15?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal
- DMA  errors
-In-Reply-To: <69e28c911002261408j4f5fa5cdo6a69a43749d99f3f@mail.gmail.com>
-Message-ID: <alpine.LFD.2.00.1002261430430.4513@localhost.localdomain>
-References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain>  <4B881C70.9030004@lwfinger.net> <alpine.LFD.2.00.1002261112590.4513@localhost.localdomain>  <alpine.LFD.2.00.1002261205160.4513@localhost.localdomain>  <69e28c911002261209m2b10ca27j5a62c91350e3597c@mail.gmail.com>
-  <alpine.LFD.2.00.1002261246330.4513@localhost.localdomain>  <4B8836BF.7000403@lwfinger.net> <alpine.LFD.2.00.1002261337460.4513@localhost.localdomain>  <alpine.LFD.2.00.1002261345300.4513@localhost.localdomain>
- <69e28c911002261408j4f5fa5cdo6a69a43749d99f3f@mail.gmail.com>
+	Fri, 5 Feb 2010 15:31:22 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so939513eyd.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 12:31:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+In-Reply-To: <69e28c911002050934p1a2f587fo863b4896e553f2c3@mail.gmail.com>
+References: <1265285514-28798-2-git-send-email-zajec5@gmail.com>
+	 <69e28c911002050934p1a2f587fo863b4896e553f2c3@mail.gmail.com>
+Date: Fri, 5 Feb 2010 21:31:20 +0100
+Message-ID: <b170af451002051231xefa1c28p9549db5d4ce48204@mail.gmail.com>
+Subject: Re: [PATCH] b43: N-PHY: handle allocation fail in samples generation
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+W dniu 5 lutego 2010 18:34 użytkownik Gábor Stefanik
+<netrolller.3d@gmail.com> napisał:
+> 2010/2/4 Rafał Miłecki <zajec5@gmail.com>:
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>  drivers/net/wireless/b43/phy_n.c |    4 ++++
+>>  1 files changed, 4 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+>> index 074b34c..795bb1e 100644
+>> --- a/drivers/net/wireless/b43/phy_n.c
+>> +++ b/drivers/net/wireless/b43/phy_n.c
+>> @@ -1069,6 +1069,10 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
+>>        }
+>>
+>>        samples = kzalloc(len * sizeof(struct b43_c32), GFP_KERNEL);
+>> +       if (!samples) {
+>> +               b43err(dev->wl, "allocation for samples generation failed\n");
+>> +               return 0;
+>
+> return -ENOMEM;
+
+Function was somehow designed to return unsigned only. Returning 0
+means error (see place where we call b43_nphy_gen_load_samples, we
+check result for 0 there.
+
+Is that OK then?
+
+>> +       }
+>>        rot = (((freq * 36) / bw) << 16) / 100;
+>>        angle = 0;
+>>
+>> --
+>> 1.6.4.2
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+>
+>
+> --
+> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>
 
 
-On Fri, 26 Feb 2010, G�bor Stefanik wrote:
-> 
-> Well, we have a report from someone with an Intel T7250, which is
-> definitely neither a slow CPU nor a ULV. The machine has PhoenixBIOS
-> (in the same rebranded form as yours). My Intel T7100 + InsydeH2O
-> machine (almost the same CPU, but with Insyde EFI in BIOS emulation
-> mode instead of PhoenixBIOS, or maybe TrustedCore) didn't reproduce
-> the bug. The trigger still seems to be PhoenixBIOS.
 
-Well, I'd love to give you a register dump. It _looks_ like it should be 
-possible write some script to dump all the registers by accessing
-
-	/sys/kernel/debug/b43/phy0/[mmio,shm][16,32]read
-
-but that's a very odd interface and I don't know what the index ranges are 
-for them (and which registers need 16-bit vs 32-bit accesses).
-
-But if you give me a script to dump all the relevant registers, I could 
-just dump them after a cold-boot, and _before_ loading the b43 driver fir 
-the first time. Maybe you can compare it to your state with your BIOS, in 
-the same situation, and see if there is some obvious difference that 
-strikes you?
-
-Of course, maybe there is some hidden state that doesn't show up there 
-either?
-
-		Linus
+-- 
+Rafał
