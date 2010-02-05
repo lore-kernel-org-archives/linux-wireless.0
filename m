@@ -1,109 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39220 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:14682 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752172Ab0BSQnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 11:43:00 -0500
-Date: Fri, 19 Feb 2010 17:40:42 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, stable@kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: Re: [PATCH 2/3] iwlwifi: sanity check before counting number of
-	tfds can be free
-Message-ID: <20100219164041.GA3995@dhcp-lab-161.englab.brq.redhat.com>
-References: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com> <1266559301-19581-3-git-send-email-reinette.chatre@intel.com>
+	id S932268Ab0BEM1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2010 07:27:38 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 04:27:38 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [RFC PATCH 1/2 v2] mac80211: Retry null data frame for power save.
+Date: Fri, 5 Feb 2010 17:57:31 +0530
+Message-ID: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1266559301-19581-3-git-send-email-reinette.chatre@intel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Reinette 
-On Thu, Feb 18, 2010 at 10:01:40PM -0800, Reinette Chatre wrote:
-> This fix starts to address
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2160 . There are
-> more situations in which this problem (freed tfds below zero) can occur so
-> this bug is not closed yet.
+Even if the null data frame is not acked by the AP, mac80211
+goes into power save. This might lead to loss of frames
+from the AP.
+Prevent this by restarting dynamic_ps_timer when ack is not
+received for null data frames.
 
-Only starts ... ,hmm so these two patches does not fix any issue.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ include/net/mac80211.h     |    1 +
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   21 +++++++++++++++------
+ net/mac80211/status.c      |   16 ++++++++++++++--
+ 4 files changed, 31 insertions(+), 8 deletions(-)
 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> index 87ce2bd..9196d3f 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> @@ -1131,6 +1131,7 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
->  	struct iwl_queue *q = &txq->q;
->  	struct iwl_tx_info *tx_info;
->  	int nfreed = 0;
-> +	struct ieee80211_hdr *hdr;
->  
->  	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
->  		IWL_ERR(priv, "Read index for DMA queue txq id (%d), index %d, "
-> @@ -1145,13 +1146,19 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
->  
->  		tx_info = &txq->txb[txq->q.read_ptr];
->  		iwl_tx_status(priv, tx_info->skb[0]);
-> +
-> +		if (tx_info->skb[0]) {
-> +			hdr = (struct ieee80211_hdr *)
-> +				((struct sk_buff *)tx_info->skb[0])->data;
-
-Not needed cast.
-
-> +			if (hdr && ieee80211_is_data_qos(hdr->frame_control))
-> +				nfreed++;
-> +		}
-
-I think additional line is needed to make things work. Something like below
-should work, but I have no time to test it today.
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index de45f30..6b516c4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -1153,8 +1153,7 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
- 				   tx_resp->failure_frame);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 74ccf30..92a3caf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -978,6 +978,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_STATIC_SMPS		= 1<<15,
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
+ 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
++	IEEE80211_HW_TX_STATUS				= 1<<18,
+ };
  
- 		freed = iwl_tx_queue_reclaim(priv, txq_id, index);
--		if (ieee80211_is_data_qos(tx_resp->frame_ctrl))
--			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
-+		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
+ /**
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3067fbd..f50a17a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -316,6 +316,7 @@ enum ieee80211_sta_flags {
+ 	IEEE80211_STA_CSA_RECEIVED	= BIT(5),
+ 	IEEE80211_STA_MFP_ENABLED	= BIT(6),
+ 	IEEE80211_STA_UAPSD_ENABLED	= BIT(7),
++	IEEE80211_STA_NULLFUNC_ACKED	= BIT(8),
+ };
  
- 		if (priv->mac80211_registered &&
- 		    (iwl_queue_space(&txq->q) > txq->q.low_mark))
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 281d318..c051f9f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -1132,6 +1132,7 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 	struct iwl_queue *q = &txq->q;
- 	struct iwl_tx_info *tx_info;
- 	int nfreed = 0;
-+	struct ieee80211_hdr *hdr;
- 
- 	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
- 		IWL_ERR(priv, "Read index for DMA queue txq id (%d), index %d, "
-@@ -1146,13 +1147,18 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 
- 		tx_info = &txq->txb[txq->q.read_ptr];
- 		iwl_tx_status(priv, tx_info->skb[0]);
-+
-+		if (tx_info->skb[0]) {
-+			hdr = (struct ieee80211_hdr *) tx_info->skb[0]->data;
-+			if (hdr && ieee80211_is_data_qos(hdr->frame_control))
-+				nfreed++;
-+		}
- 		tx_info->skb[0] = NULL;
- 
- 		if (priv->cfg->ops->lib->txq_inval_byte_cnt_tbl)
- 			priv->cfg->ops->lib->txq_inval_byte_cnt_tbl(priv, txq);
- 
- 		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
--		nfreed++;
+ struct ieee80211_if_managed {
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 86c6ad1..c33956b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -439,7 +439,8 @@ static void ieee80211_enable_ps(struct ieee80211_local *local,
+ 		if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
+ 			ieee80211_send_nullfunc(local, sdata, 1);
+ 		conf->flags |= IEEE80211_CONF_PS;
+-		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++		if (!(local->hw.flags & IEEE80211_HW_TX_STATUS))
++			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
  	}
- 	return nfreed;
  }
+ 
+@@ -545,19 +546,23 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_local,
+ 			     dynamic_ps_enable_work);
+ 	struct ieee80211_sub_if_data *sdata = local->ps_sdata;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+ 	/* can only happen when PS was just disabled anyway */
+ 	if (!sdata)
+ 		return;
+ 
+-	if (local->hw.conf.flags & IEEE80211_CONF_PS)
+-		return;
+-
+-	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
++	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
++	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
+ 		ieee80211_send_nullfunc(local, sdata, 1);
+ 
+ 	local->hw.conf.flags |= IEEE80211_CONF_PS;
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++
++	if (!(local->hw.flags & IEEE80211_HW_TX_STATUS) ||
++	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
++		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
+ }
+ 
+ void ieee80211_dynamic_ps_timer(unsigned long data)
+@@ -567,6 +572,9 @@ void ieee80211_dynamic_ps_timer(unsigned long data)
+ 	if (local->quiescing || local->suspended)
+ 		return;
+ 
++	if (local->hw.conf.flags & IEEE80211_CONF_PS)
++		return;
++
+ 	ieee80211_queue_work(&local->hw, &local->dynamic_ps_enable_work);
+ }
+ 
+@@ -1904,6 +1912,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		return -ENOMEM;
+ 
+ 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
++	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+ 
+ 	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
+ 		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index e57ad6b..35fa2df 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -188,6 +188,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	rcu_read_lock();
+ 
+ 	sband = local->hw.wiphy->bands[info->band];
++	fc = hdr->frame_control;
+ 
+ 	for_each_sta_info(local, hdr->addr1, sta, tmp) {
+ 		/* skip wrong virtual interface */
+@@ -205,8 +206,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			return;
+ 		}
+ 
+-		fc = hdr->frame_control;
+-
+ 		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
+ 		    (ieee80211_is_data_qos(fc))) {
+ 			u16 tid, ssn;
+@@ -275,6 +274,19 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			local->dot11FailedCount++;
+ 	}
+ 
++	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
++		(local->hw.flags & IEEE80211_HW_TX_STATUS) &&
++		(local->hw.conf.flags & IEEE80211_CONF_PS)) {
++		if (info->flags & IEEE80211_TX_STAT_ACK) {
++			local->ps_sdata->u.mgd.flags |=
++					IEEE80211_STA_NULLFUNC_ACKED;
++			ieee80211_queue_work(&local->hw,
++					 &local->dynamic_ps_enable_work);
++		} else
++			mod_timer(&local->dynamic_ps_timer, jiffies +
++					msecs_to_jiffies(10));
++	}
++
+ 	/* this was a transmitted frame, but now we want to reuse it */
+ 	skb_orphan(skb);
+ 
+-- 
+1.6.6.1
 
-Cheers
-Stanislaw
