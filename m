@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:35134 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754851Ab0BVW71 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52502 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752042Ab0BEKdA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 17:59:27 -0500
-Received: by ewy28 with SMTP id 28so3375242ewy.28
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 14:59:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B816983.2050006@lwfinger.net>
-References: <4b803cb5.tZQnvqGy2KfItgOq%Larry.Finger@lwfinger.net>
-	 <b170af451002210249t5adfa274s6bee0003c1afa497@mail.gmail.com>
-	 <69e28c911002210253v8150259s718d2ba68372f9d1@mail.gmail.com>
-	 <1266749713.5468.2.camel@jlt3.sipsolutions.net>
-	 <4B816983.2050006@lwfinger.net>
-Date: Mon, 22 Feb 2010 23:59:24 +0100
-Message-ID: <b170af451002221459t1f957e90nf8016ca6ec0d4d53@mail.gmail.com>
-Subject: Re: [PATCH V2] ssb: Add PCI ID 0x4322 to PMU handling
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+	Fri, 5 Feb 2010 05:33:00 -0500
+Subject: Re: [PATCH] mac80211: Improved IBSS merges
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1265319990-25583-1-git-send-email-benoit.papillault@free.fr>
+References: <1265319990-25583-1-git-send-email-benoit.papillault@free.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Y9yYLXPcHTfdnMwUdODH"
+Date: Fri, 05 Feb 2010 11:32:57 +0100
+Message-ID: <1265365977.3613.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/2/21 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 02/21/2010 04:55 AM, Johannes Berg wrote:
->> On Sun, 2010-02-21 at 11:53 +0100, Gábor Stefanik wrote:
->>> 2010/2/21 Rafał Miłecki <zajec5@gmail.com>:
->>>> 2010/2/20 Larry Finger <Larry.Finger@lwfinger.net>:
->>>>> Some of the N PHYs need a revision in the handling of the PMU.
->>>>>
->>>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>>>> ---
->>>>>
->>>>> John,
->>>>>
->>>>> This will be needed for some of the N PHY devices - 2.6.34
->>> amterial.
->>>>>
->>>>> Larry
->>>>> ---
->>>>>
->>>>> V2 - Fix typo in subject line of commit message.
->>>>
->>>> amterial you say? ;)
->>>
->>> Taht's not prat of the cimmot megasse, it is olny a ntoe to Jhon.
->>> Deons't mtater eevn if it is cmolpelety jmulbed up.
->>
->> Geez. The patch is already in the tree anyway, with the original typo.
->
-> I may be getting old and decrepit, but it's OK if the boys just want to have fun
-> with me.
 
-And now when typo-ed patch gone git... everyone will see it for ever ;) :P
+--=-Y9yYLXPcHTfdnMwUdODH
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Rafał
+On Thu, 2010-02-04 at 22:46 +0100, Benoit Papillault wrote:
+
+> Next, we merge even if the BSSID from the received beacon is the same as
+> our since merge can update more things that BSSID itself. This is
+> specifically true for ath9k where the merge updates TBTT timers as a
+> side effect and this is indeed needed if the TSF has been updated (if
+> TSF is updated, we need to update TBTT timers as well).
+
+> @@ -373,10 +370,6 @@ static void ieee80211_rx_bss_info(struct ieee80211_s=
+ub_if_data *sdata,
+>  				sdata->u.ibss.ssid_len))
+>  		goto put_bss;
+> =20
+> -	/* same BSSID */
+> -	if (memcmp(cbss->bssid, sdata->u.ibss.bssid, ETH_ALEN) =3D=3D 0)
+> -		goto put_bss;
+> -
+>  	if (rx_status->flag & RX_FLAG_TSFT) {
+>  		/*
+>  		 * For correct IBSS merging we need mactime; since mactime is
+
+NACK. This will create merges and merges and merges and merges whenever
+you use hardware that doesn't have accurate timestamps all the time.
+
+johannes
+
+--=-Y9yYLXPcHTfdnMwUdODH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLa/PVAAoJEODzc/N7+QmaJa8QANLO/R8kLFjYug4m+xSQ2vFi
+ceGlvpoYlq1AL3qXMUNW/z8ovI8hrkrwnXoIREO+rhQcHgd5nkKkAEyIf3gR8zmR
+tdH5WsjA8HFZWQjXvWb1s5/E5rdBTVkq74sKNjNhUUsBo2MLCH5d1SR//24Jc7j/
+kZavfEGS5uIJjb7mZOZHGHnM51oIpdvTZ906M1ys7/uasL2FbWdFT0P67jeR4Rwc
+eUpNJNC+VS3K9G/ZPqASqXD8d6iAV8xjQzyHySSCWBoPtdPCbf8WGZBN0fuJmUNG
+19wxPDjyWEp9nWEQaqg4/0E4Zb3DBcLIo0O3thZ5YmgUMIMToVoe0fK3XvEVtxwZ
+NC3lYfma/BFn194CmdKhMhNLz+3JKrWoKzyx/x9kJEKuCaZHfdFWvYx3aE6U0Mjp
+XXKfT8153NO/8/slxTNK67IOrBiuSnTCGdKlAp/vvfJa+NS/iXLgoUS6wixzEFgv
+ToBvib+OEgiITMSQYhbv7d4O9V3L0b7vpncbsmuHC4bN3tkxw2EmuEMmqYEk3mAC
+jp3F2ZyCTQBLXCX3fJbAY0+rmIUVX0isoxhUkDpCpQaPDy2szrYh9S4xKVZ6LZ1r
+/9cE9C6X8Lty/ns/YgBEjRZJjaybt4YC+A7Vcp/EHUoAB/v8j99PKnwo3pFXXuMb
+Ng+sT8A4IjYK9BOGL1fU
+=jiFO
+-----END PGP SIGNATURE-----
+
+--=-Y9yYLXPcHTfdnMwUdODH--
+
