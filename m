@@ -1,151 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:33899 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866Ab0BNVxo convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f189.google.com ([209.85.223.189]:47768 "EHLO
+	mail-iw0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757666Ab0BEXQu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 16:53:44 -0500
+	Fri, 5 Feb 2010 18:16:50 -0500
+Received: by iwn27 with SMTP id 27so14480iwn.5
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 15:16:49 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4B784C68.8020402@mandriva.org>
-References: <4B77C819.9050602@mandriva.org> <4B782670.9080001@lwfinger.net>
-	<4B784498.8030509@mandriva.org> <69e28c911002141059y57fb2097x5613c25ad1c616da@mail.gmail.com>
-	<4B784C68.8020402@mandriva.org>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 14 Feb 2010 22:53:22 +0100
-Message-ID: <69e28c911002141353x7805033fl2e68ae56f3dabf40@mail.gmail.com>
-Subject: Re: linux-2..6.33-rc7 and b43
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+In-Reply-To: <201002052004.06220.sturmflut@lieberbiber.de>
+References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
+	 <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com>
+	 <20100205175556.GC1496@holoscopio.com>
+	 <201002052004.06220.sturmflut@lieberbiber.de>
+Date: Fri, 5 Feb 2010 15:16:49 -0800
+Message-ID: <c1545bb51002051516u15f25d75s88314534cbea569b@mail.gmail.com>
+Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh mode
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Simon Raffeiner <sturmflut@lieberbiber.de>
+Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/2/14 Thomas Backlund <tmb@mandriva.org>:
-> Gábor Stefanik skrev 14.2.2010 20:59:
->>
->> On Sun, Feb 14, 2010 at 7:44 PM, Thomas Backlund<tmb@mandriva.org>  wrote:
->>>
->>> Larry Finger skrev 14.2.2010 18:36:
->>>>
->>>> On 02/14/2010 03:53 AM, Thomas Backlund wrote:
->>>>>
->>>>> Hi,
->>>>> (please cc me on replies)
->>>>>
->>>>> We have a user that tried out b43, but got this in the logs:
->>>>>
->>>>> --- cut ---
->>>>> 65858:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
->>>>> support DMA on your system. Please use PIO instead. 65859:Feb  9
->>>>> 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO must
->>>>> be set in your kernel configuration.
->>>>> 65860:Feb  9 22:05:16 elmo kernel: b43-phy2 debug: Adding Interface
->>>>> type
->>>>> 2
->>>>> 65861:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: Fatal DMA error:
->>>>> 0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
->>>>>
->>>>> 65862:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
->>>>> support DMA on your system. Please use PIO instead.
->>>>> 65863:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO
->>>>> must be set in your kernel configuration.
->>>>> --- cut ---
->>>>>
->>>>>
->>>>>
->>>>> But reading the Kconfig help, it states:
->>>>> --- cut ---
->>>>> config B43_FORCE_PIO
->>>>>         bool "Force usage of PIO instead of DMA"
->>>>>         depends on B43&&    B43_DEBUG
->>>>>         ---help---
->>>>>           This will disable DMA and always enable PIO instead.
->>>>>
->>>>>           Say N!
->>>>>           This is only for debugging the PIO engine code. You do
->>>>>           _NOT_ want to enable this.
->>>>> --- cut ---
->>>>>
->>>>>
->>>>> So,
->>>>> wich one is it ?
->>>>>
->>>>> Do I belive the dmesg output, or the Kconfig ?
->>>>>
->>>>> Note,
->>>>> the b43 works for the user if he enable the CONFIG_B43_FORCE_PIO.
->>>>>
->>>>> But I'm thinking of this problem from a distro point of view.
->>>>> Will it break for others if I enable it ?
->>>>
->>>>>  From a distro point of view, you would not want to set FORCE_PIO as
->>>>> the
->>>>
->>>> performance penalty would be very large.
->>>>
->>>
->>> As I suspected.
->>> Thanks for confirming it.
->>>
->>>> You do not give the specific details on the problem system; however, it
->>>> is
->>>> probably a BCM4312 802.11 b/g device with PCI ID 14e4:4315 being used
->>>> with
->>>> an
->>>> Atom processor in a netbook. We have no fix.
->>>>
->>>
->>> Sorry about the missing info...
->>> I asked a few times from the user, and got no reponse until today a few
->>> hours after your response...
->>>
->>> It is indeed a BCM4312 802.11 b/g device with PCI ID 14e4:4315 on a Dell
->>> laptop with a Intel ICH9M series chipset and a Intel Core(TM)2 Duo CPU
->>> T7250
->>> @ 2.00GHz.
->>
->> Weird... that's not an Intel Atom, but a Core 2 Duo, standard-voltage.
->> Mind posting any more details on this system?
->>
+On Fri, Feb 5, 2010 at 11:04 AM, Simon Raffeiner
+<sturmflut@lieberbiber.de> wrote:
+> If manual addition of plinks is allowed you could theoretically force your
+> node to peer with a neighbor running a different profile, e.g. using a different
+> path selection or authentication algorithm, or an implementation based on a
+> different draft version.
 >
-> It's a Dell Latitude E5500, Bios A13.
->
-> It's a 64bit kernel/userspace.
->
-> The b43 firmware is: 478.104
->
-> lspci -vvvnnn states:
->  0c:00.0 Network controller [0280]: Broadcom Corporation BCM4312 802.11b/g
-> [14e4:4315] (rev 01)
->         Subsystem: Dell Wireless 1397 WLAN Mini-Card [1028:000c]
->         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-> Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Interrupt: pin A routed to IRQ 17
->         Region 0: Memory at f69fc000 (64-bit, non-prefetchable) [size=16K]
->         Capabilities: <access denied>
->         Kernel driver in use: b43-pci-bridge
->         Kernel modules: wl, ssb
->
->
-> Anything else you need ?
->
-> --
-> Thomas
->
+> I can't really think of an use for it.
 
-Looks like the trigger is not Intel Atom, but PhoenixBIOS after all -
-a quick analysis of bios v. A15 for this machine shows it to be a
-highly cloaked/rebranded PhoenixBIOS.
+Right, in your case please ensure that your devices are beaconing
+(that's the most common problem) before proceeding.  plinks are
+established automatically and as far as I know that's the only thing
+we need to support at this time.  If your device isn't beaconing, then
+that's a bug and it should be fixed.  That said, ath5k beaconed
+correctly last time I tried it.
 
-Core 2 T7250 is a regular Merom/Santa Rosa CPU, almost the same as my
-T7100 (only the clock multiplier is different), and is not a ULV CPU,
-the trigger we previously suspected.
-
-PhoenixBIOS (and its rebrands) appears to be the common trigger.
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+  -Andrey
