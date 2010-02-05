@@ -1,41 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:36297 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751083Ab0BQGQL (ORCPT
+Received: from mail-yx0-f193.google.com ([209.85.210.193]:34354 "EHLO
+	mail-yx0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933601Ab0BESqm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 01:16:11 -0500
-Date: Wed, 17 Feb 2010 08:15:23 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: Bob Copeland <me@bobcopeland.com>, jirislaby@gmail.com,
-	mickflemm@gmail.com, ath5k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Fix TX/RX padding for all frames
-Message-ID: <20100217061523.GA5147@jm.kir.nu>
-References: <1266190577-2423-1-git-send-email-benoit.papillault@free.fr>
- <b6c5339f1002151215y4c7d2f33yfd32916e0500b55c@mail.gmail.com>
- <4B79C565.1050701@free.fr>
- <20100216004717.GA6844@hash.localnet>
- <4B7B027D.70701@free.fr>
+	Fri, 5 Feb 2010 13:46:42 -0500
+Received: by yxe31 with SMTP id 31so3688242yxe.21
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 10:46:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B7B027D.70701@free.fr>
+In-Reply-To: <4B6C5EF3.5060006@lwfinger.net>
+References: <1265317065-2922-2-git-send-email-zajec5@gmail.com>
+	<4B6B8F8B.6020908@lwfinger.net> <69e28c911002050841x20053c6jbe768c19e983ef50@mail.gmail.com>
+	<4B6C5EF3.5060006@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 5 Feb 2010 19:46:17 +0100
+Message-ID: <69e28c911002051046s64c69462k9a43bcb1db704476@mail.gmail.com>
+Subject: Re: [RFC][PATCH] b43: LP-PHY: always adjust gain table on channel
+	switch
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 16, 2010 at 09:39:25PM +0100, Benoit PAPILLAULT wrote:
-> I don't have an ath5k based card at hand. I will try to grab one and
-> will give an example of said frame. Basically, I followed the same
-> strategy for ath9k already.
+On Fri, Feb 5, 2010 at 7:09 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 02/05/2010 10:41 AM, Gábor Stefanik wrote:
+>> On Fri, Feb 5, 2010 at 4:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>> On 02/04/2010 02:57 PM, Rafał Miłecki wrote:
+>>>> ---
+>>>> GÃ¡bor: I think you missed specs here. Could you check whole routine just for
+>>>> sure, please? I don't understand whole radio and chanspec magic yet.
+>>>> ---
+>>>>  drivers/net/wireless/b43/phy_lp.c |    2 +-
+>>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+>>>> index 185219e..61009ee 100644
+>>>> --- a/drivers/net/wireless/b43/phy_lp.c
+>>>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>>>> @@ -2655,8 +2655,8 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+>>>>               if (err)
+>>>>                       return err;
+>>>>               lpphy_set_analog_filter(dev, new_channel);
+>>>> -             lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>>>       }
+>>>> +     lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>>>
+>>>>       lpphy->channel = new_channel;
+>>>>       b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
+>>>
+>>> Both the lpphy_set_analog_filter() and lpphy_adjust_gain_table() calls should be
+>>> outside the if statement. I changed the spec a little. It used to test "radio
+>>> enabled", but I have found that is always true for our driver.
+>>>
+>>> Larry
+>>>
+>>>
+>>
+>> Isn't set_analog_filter() rev0/1-specific?
+>
+> It was in the 4.174.64.19 driver that I RE'd when you wrote the LP PHY code.
+> That as changed in 5.10.56.46, which I am now doing. It will take me a while to
+> complete the new routine "LP PHY TX Filter Init" and a routine that it calls.
+>
+> Certainly, there is no hurry that these changes be made. Whenever you or Rafał
+> have time. There is no guarantee that these changes will have any effect on the
+> LP PHY operations. Hitting a moving target is not easy.
+>
+> Larry
+>
 
-Are you saying that this patch has not actually been tested at all on
-ath5k and it was just based on the changes you did for ath9k? If that is
-the case, I would suggest running the tests before actually applying
-this. We should really not depend on undocumented hardware behavior to
-remain the same between different revisions. That's why I did not like
-the changes in ath9k and would not exactly like extending that to even
-more different chips taken into account that none of this is needed for
-normal use of the card.
- 
+Just out of curiosity, is 5.10.56.46 available anywhere (for firmware reasons)?
+
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
