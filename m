@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46491 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56310 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757235Ab0BCM5v (ORCPT
+	with ESMTP id S1752427Ab0BFOUR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2010 07:57:51 -0500
-Subject: [PATCH] mac80211: don't probe if we have probe response
+	Sat, 6 Feb 2010 09:20:17 -0500
+Subject: [PATCH v2] mac80211: fix deauth race
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1265465415.4041.25.camel@johannes.local>
+References: <1265465415.4041.25.camel@johannes.local>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 03 Feb 2010 13:57:46 +0100
-Message-ID: <1265201866.29119.90.camel@johannes.local>
+Date: Sat, 06 Feb 2010 15:20:13 +0100
+Message-ID: <1265466013.4041.26.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can now easily determine whether we already
-have probe response information for the BSS we
-are asked to connect to, in which case there's
-little point in probing the BSS again.
+When userspace requests a deauth while the
+authentication work is pending in the auth
+(not probe) state, we do not properly abort
+the work and then things get confused.
+
+Fix that and also improve the checks here
+to include the correct virtual interface,
+just in case two virtual interfaces would
+ever try to connect to the same BSS.
+
+Also fix a bug -- need to use list_del_rcu
+instead of just list_del to free a work
+item.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/mlme.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ net/mac80211/mlme.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2010-02-03 13:52:43.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2010-02-03 13:53:08.000000000 +0100
-@@ -27,10 +27,6 @@
- #include "rate.h"
- #include "led.h"
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-02-06 15:07:37.000000000 +0100
++++ wireless-testing/net/mac80211/mlme.c	2010-02-06 15:18:58.000000000 +0100
+@@ -2007,12 +2007,18 @@ int ieee80211_mgd_deauth(struct ieee8021
  
--#define IEEE80211_AUTH_TIMEOUT (HZ / 5)
--#define IEEE80211_AUTH_MAX_TRIES 3
--#define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
--#define IEEE80211_ASSOC_MAX_TRIES 3
- #define IEEE80211_MAX_PROBE_TRIES 5
- 
- /*
-@@ -1844,7 +1840,11 @@ int ieee80211_mgd_auth(struct ieee80211_
- 	wk->probe_auth.algorithm = auth_alg;
- 	wk->probe_auth.privacy = req->bss->capability & WLAN_CAPABILITY_PRIVACY;
- 
--	wk->type = IEEE80211_WORK_DIRECT_PROBE;
-+	/* if we already have a probe, don't probe again */
-+	if (req->bss->proberesp_ies)
-+		wk->type = IEEE80211_WORK_AUTH;
-+	else
-+		wk->type = IEEE80211_WORK_DIRECT_PROBE;
- 	wk->chan = req->bss->channel;
- 	wk->sdata = sdata;
- 	wk->done = ieee80211_probe_auth_done;
+ 		mutex_lock(&local->work_mtx);
+ 		list_for_each_entry(wk, &local->work_list, list) {
+-			if (wk->type != IEEE80211_WORK_DIRECT_PROBE)
++			if (wk->sdata != sdata)
+ 				continue;
++
++			if (wk->type != IEEE80211_WORK_DIRECT_PROBE &&
++			    wk->type != IEEE80211_WORK_AUTH)
++				continue;
++
+ 			if (memcmp(req->bss->bssid, wk->filter_ta, ETH_ALEN))
+ 				continue;
+-			not_auth_yet = true;
+-			list_del(&wk->list);
++
++			not_auth_yet = wk->type == IEEE80211_WORK_DIRECT_PROBE;
++			list_del_rcu(&wk->list);
+ 			free_work(wk);
+ 			break;
+ 		}
 
 
