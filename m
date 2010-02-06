@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f227.google.com ([209.85.217.227]:61736 "EHLO
-	mail-gx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754090Ab0BQTSL (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:61799 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932347Ab0BFRwl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 14:18:11 -0500
-Date: Wed, 17 Feb 2010 11:18:03 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	linux-input@vger.kernel.org, marcel@holtmann.org
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20100217191803.GB15554@core.coreip.homeip.net>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
- <20100217052247.GD7160@core.coreip.homeip.net>
- <20100217180342.GA22522@srcf.ucam.org>
+	Sat, 6 Feb 2010 12:52:41 -0500
+Received: by ewy28 with SMTP id 28so1118285ewy.28
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 09:52:39 -0800 (PST)
+Message-ID: <4B6DAC5B.6050701@gmail.com>
+Date: Sat, 06 Feb 2010 17:52:27 +0000
+From: Dave <kilroyd@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100217180342.GA22522@srcf.ucam.org>
+To: Holger Schurig <holgerschurig@googlemail.com>
+CC: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	dcbw@redhat.com
+Subject: Re: [RFC 0/2] cfg80211: Retrieve missing BSS info after connect
+References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com> <201002061827.48913.holgerschurig@gmail.com>
+In-Reply-To: <201002061827.48913.holgerschurig@gmail.com>
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 17, 2010 at 06:03:42PM +0000, Matthew Garrett wrote:
-> On Tue, Feb 16, 2010 at 09:22:47PM -0800, Dmitry Torokhov wrote:
+Holger Schurig wrote:
+>> It sounds like the libertas cfg80211 drivers have the same problem, so I'm
+>> posting them in case they're useful.
 > 
-> > I'd like some breathing room aroung KEY_NUMERIC? Any issues with making
-> > it 247 or 0x211?
+> I'm not sure about that.
 > 
-> None. Do you want to make that change, or should I resubmit?
+> One thing that I'm sure of is that for the Libertas case I need to scan 
+> *before* the connection takes place. The Libertas firmware doesn't roam by 
+> itself, so I don't tell her an SSID like you'll tell the orinoco firmware.
 > 
+> Instead the libertas firmware needs a BSSID where it should connect to. If 
+> you let do wpa_supplicant do the job (even for WEP), that's no problem, 
+> because wpa_supplicant always scans and then connects to a specific BSSID, 
+> which suits Libertas very well.
 
-I'll change to 247 then.
+Fair enough. If I find the time to finish orinoco cfg80211, then I'll
+try to keep this within the driver.
 
-Thanks.
 
--- 
-Dmitry
+Dave.
