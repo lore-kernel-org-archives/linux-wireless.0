@@ -1,205 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:64753 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169Ab0BSPts (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:53889 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755632Ab0BFNUq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 10:49:48 -0500
-Received: by bwz1 with SMTP id 1so174394bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 07:49:47 -0800 (PST)
-Message-ID: <4B7EB318.3010707@googlemail.com>
-Date: Fri, 19 Feb 2010 16:49:44 +0100
-From: Dennis Borgmann <dennis.borgmann@googlemail.com>
-MIME-Version: 1.0
-To: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
-Subject: ath9k+hostapd = "Could not set DTIM period for kernel driver"
-Content-Type: text/plain; charset=ISO-8859-15
+	Sat, 6 Feb 2010 08:20:46 -0500
+Received: by mail-ew0-f228.google.com with SMTP id 28so944897ewy.28
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 05:20:46 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: holgerschurig@gmail.com, sameo@linux.intel.com, dcbw@redhat.com,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC 2/2] cfg80211: scan for missing BSS on connect completion
+Date: Sat,  6 Feb 2010 13:20:16 +0000
+Message-Id: <1265462416-7547-3-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi hostapd-list!
-Hi linux-wireless-list!
+Some drivers don't notify cfg80211 of every beacon or probe response
+they get. In this case, cfg80211 won't have the BSS structure for the AP
+that we just connected with.
 
-I have successfully installed kernel 2.6.32.8 using a debian system on a
-flash card. In a small ALIX-board from PC-engines I am using
-MiniPCI-WLAN Cards Model Senao EMP-7605 - those are 802.11n-cards and I
-would like to test them regarding their speed. Therefore I compiled the
-new kernel with ath9k enabled.
+We address that issue by doing a scan after the driver indicates it has
+connected. Scan for the SSID that we are in. If we have the channel,
+specify that as well to reduce scanning time.
 
-Ok, now I get the card running, iw can access it (see below for output
-of iw list). I tried to make it become an accesspoint by using hostapd
-in version 0.6.10(self-compiled for this sole purpose). Therefore I just
-set up a very simple config for hostapd (seen below as well). The
-problem is, that after starting hostapd I get this message:
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ include/net/cfg80211.h |    3 +
+ net/wireless/scan.c    |    5 ++
+ net/wireless/sme.c     |  143 +++++++++++++++++++++++++++++++++++++++++------
+ 3 files changed, 132 insertions(+), 19 deletions(-)
 
-:~# hostapd /etc/hostapd/hostapd.conf -ddd
-Configuration file: /etc/hostapd/hostapd.conf
-ctrl_interface_group=0
-Opening raw packet socket for ifindex 158188640
-BSS count 1, BSSID mask ff:ff:ff:ff:ff:ff (0 bits)
-SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0xf
-nl80211: Added 802.11b mode based on 802.11g information
-Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=20 dBm
-Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=20 dBm
-Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=20 dBm
-RATE[0] rate=10 flags=0x2
-RATE[1] rate=20 flags=0x6
-RATE[2] rate=55 flags=0x4
-RATE[3] rate=110 flags=0x4
-Passive scanning not supported
-Mode: IEEE 802.11b  Channel: 11  Frequency: 2462 MHz
-Flushing old station entries
-Deauthenticate all stations
-Using interface wlan0 with hwaddr 00:0e:8e:24:52:2f and ssid 'hostapd_test'
-Could not set DTIM period for kernel driver
-wlan0: Unable to setup interface.
-rmdir[ctrl_interface]: No such file or directory
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a3f0a7e..67bb8f5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1420,6 +1420,7 @@ extern void wiphy_free(struct wiphy *wiphy);
+ struct cfg80211_conn;
+ struct cfg80211_internal_bss;
+ struct cfg80211_cached_keys;
++struct cfg80211_conn2;
+ 
+ #define MAX_AUTH_BSSES		4
+ 
+@@ -1471,6 +1472,8 @@ struct wireless_dev {
+ 	struct cfg80211_conn *conn;
+ 	struct cfg80211_cached_keys *connect_keys;
+ 
++	struct cfg80211_conn2 *conn2; /* TODO: Rename */
++
+ 	struct list_head event_list;
+ 	spinlock_t event_lock;
+ 
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index e3d0957..140da4c 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -39,6 +39,11 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ 	 * This must be before sending the other events!
+ 	 * Otherwise, wpa_supplicant gets completely confused with
+ 	 * wext events.
++	 *
++	 * At the moment this will either call cfg80211_sme_scan_done
++	 * or cfg80211_complete_connect. The former should only get
++	 * called if the device supports ops->auth & ops->assoc, the
++	 * latter if the device supports ops->connect.
+ 	 */
+ 	if (rdev->async_scan_cb) {
+ 		rdev->async_scan_cb(dev);
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 2ef83b7..6134332 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -34,6 +34,15 @@ struct cfg80211_conn {
+ 	bool auto_auth, prev_bssid_valid;
+ };
+ 
++/* TODO: This struct needs renaming */
++struct cfg80211_conn2 {
++	struct ieee80211_channel *channel;
++	u8 bssid[ETH_ALEN];
++};
++
++static void __cfg80211_complete_connect(struct net_device *dev,
++					struct cfg80211_bss *bss);
++
+ bool cfg80211_is_all_idle(void)
+ {
+ 	struct cfg80211_registered_device *rdev;
+@@ -385,6 +394,62 @@ void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
+ 	schedule_work(&rdev->conn_work);
+ }
+ 
++static void __cfg80211_complete_connect(struct net_device *dev,
++					struct cfg80211_bss *bss)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	u8 *country_ie;
++
++	cfg80211_hold_bss(bss_from_pub(bss));
++	wdev->current_bss = bss_from_pub(bss);
++
++	wdev->sme_state = CFG80211_SME_CONNECTED;
++	cfg80211_upload_connect_keys(wdev);
++
++	country_ie = (u8 *) ieee80211_bss_get_ie(bss, WLAN_EID_COUNTRY);
++
++	if (!country_ie)
++		return;
++
++	/*
++	 * ieee80211_bss_get_ie() ensures we can access:
++	 * - country_ie + 2, the start of the country ie data, and
++	 * - and country_ie[1] which is the IE length
++	 */
++	regulatory_hint_11d(wdev->wiphy,
++			    bss->channel->band,
++			    country_ie + 2,
++			    country_ie[1]);
++}
++
++void cfg80211_complete_connect(struct net_device *dev)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	mutex_lock(&wiphy_to_dev(wdev->wiphy)->devlist_mtx);
++	wdev_lock(wdev);
++
++	if (wdev->conn2) {
++		struct cfg80211_bss *bss;
++
++		bss = cfg80211_get_bss(wdev->wiphy, NULL, wdev->conn2->bssid,
++				       wdev->ssid, wdev->ssid_len,
++				       WLAN_CAPABILITY_ESS,
++				       WLAN_CAPABILITY_ESS);
++
++		if (WARN_ON(!bss))
++			wdev->sme_state = CFG80211_SME_IDLE;
++		else
++			__cfg80211_complete_connect(dev, bss);
++
++		kfree(wdev->conn2);
++		wdev->conn2 = NULL;
++	}
++
++	wdev_unlock(wdev);
++	mutex_unlock(&wiphy_to_dev(wdev->wiphy)->devlist_mtx);
++}
++
+ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 			       const u8 *req_ie, size_t req_ie_len,
+ 			       const u8 *resp_ie, size_t resp_ie_len,
+@@ -392,7 +457,6 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 			       struct cfg80211_bss *bss)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+-	u8 *country_ie;
+ #ifdef CONFIG_CFG80211_WEXT
+ 	union iwreq_data wrqu;
+ #endif
+@@ -462,29 +526,58 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 				       WLAN_CAPABILITY_ESS,
+ 				       WLAN_CAPABILITY_ESS);
+ 
+-	if (WARN_ON(!bss))
+-		return;
++	if (!bss) {
++		struct cfg80211_scan_request *request;
++		int err;
++
++		/* The driver hasn't reported any beacons or probe
++		 * responses for the BSS that we've connected
++		 * with. Trigger a scan to get it.
++		 *
++		 * Record the BSSID we connected with, so we know what
++		 * to look for later.
++		 *
++		 * Then do a scan on the channel (if specified),
++		 * specifying the SSID.
++		 */
++		memcpy(wdev->conn2->bssid, bssid, ETH_ALEN);
+ 
+-	cfg80211_hold_bss(bss_from_pub(bss));
+-	wdev->current_bss = bss_from_pub(bss);
++		request = kzalloc(sizeof(*request) + sizeof(request->ssids[0]) +
++				  sizeof(request->channels[0]),
++				  GFP_KERNEL);
++		if (!request)
++			return;
+ 
+-	wdev->sme_state = CFG80211_SME_CONNECTED;
+-	cfg80211_upload_connect_keys(wdev);
++		/* Would be better if we knew the channel of the AP we
++		 * connected to. Is it available in one of the IEs? */
++		if (wdev->conn2->channel) {
++			request->channels[0] = wdev->conn2->channel;
++			request->n_channels = 1;
++			request->ssids = (void *) &request->channels[1];
++		} else
++			request->ssids = (void *) &request->channels[0];
+ 
+-	country_ie = (u8 *) ieee80211_bss_get_ie(bss, WLAN_EID_COUNTRY);
++		request->n_ssids = 1;
+ 
+-	if (!country_ie)
+-		return;
++		memcpy(request->ssids[0].ssid, wdev->ssid, wdev->ssid_len);
++		request->ssids[0].ssid_len = wdev->ssid_len;
++
++		request->dev = dev;
++		request->wiphy = wdev->wiphy;
++
++		err = cfg80211_async_scan(wdev, request, false,
++					  cfg80211_complete_connect);
++		if (err) {
++			kfree(request);
++			wdev->sme_state = CFG80211_SME_IDLE;
++		}
++	} else {
++		kfree(wdev->conn2);
++		wdev->conn2 = NULL;
++
++		__cfg80211_complete_connect(dev, bss);
++	};
+ 
+-	/*
+-	 * ieee80211_bss_get_ie() ensures we can access:
+-	 * - country_ie + 2, the start of the country ie data, and
+-	 * - and country_ie[1] which is the IE length
+-	 */
+-	regulatory_hint_11d(wdev->wiphy,
+-			    bss->channel->band,
+-			    country_ie + 2,
+-			    country_ie[1]);
+ }
+ 
+ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+@@ -854,10 +947,22 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 
+ 		return err;
+ 	} else {
++
++		if (WARN_ON_ONCE(wdev->conn2))
++			return -EINPROGRESS;
++
++		wdev->conn2 = kzalloc(sizeof(*wdev->conn2), GFP_KERNEL);
++		if (!wdev->conn2)
++			return -ENOMEM;
++
++		wdev->conn2->channel = connect->channel;
++
+ 		wdev->sme_state = CFG80211_SME_CONNECTING;
+ 		wdev->connect_keys = connkeys;
+ 		err = rdev->ops->connect(&rdev->wiphy, dev, connect);
+ 		if (err) {
++			kfree(wdev->conn2);
++			wdev->conn2 = NULL;
+ 			wdev->connect_keys = NULL;
+ 			wdev->sme_state = CFG80211_SME_IDLE;
+ 			return err;
+-- 
+1.6.4.4
 
-What am I doing wrong? Could this be a bug? Any help would be appreciated.
-
-Kind regards from Germany,
-Dennis
-
-output of comands mentioned before:
-iw list:
-
-:~# iw list
-Wiphy phy0
-    Band 1:
-        Capabilities: 0x104e
-            HT20/HT40
-            SM Power Save disabled
-            RX HT40 SGI
-            No RX STBC
-            Max AMSDU length: 7935 bytes
-            DSSS/CCK HT40
-        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-        Minimum RX AMPDU time spacing: 8 usec (0x06)
-        HT TX/RX MCS rate indexes supported: 0-15
-        Frequencies:
-            * 2412 MHz [1] (20.0 dBm)
-            * 2417 MHz [2] (20.0 dBm)
-            * 2422 MHz [3] (20.0 dBm)
-            * 2427 MHz [4] (20.0 dBm)
-            * 2432 MHz [5] (20.0 dBm)
-            * 2437 MHz [6] (20.0 dBm)
-            * 2442 MHz [7] (20.0 dBm)
-            * 2447 MHz [8] (20.0 dBm)
-            * 2452 MHz [9] (20.0 dBm)
-            * 2457 MHz [10] (20.0 dBm)
-            * 2462 MHz [11] (20.0 dBm)
-            * 2467 MHz [12] (disabled)
-            * 2472 MHz [13] (disabled)
-            * 2484 MHz [14] (disabled)
-        Bitrates (non-HT):
-            * 1.0 Mbps
-            * 2.0 Mbps (short preamble supported)
-            * 5.5 Mbps (short preamble supported)
-            * 11.0 Mbps (short preamble supported)
-            * 6.0 Mbps
-            * 9.0 Mbps
-            * 12.0 Mbps
-            * 18.0 Mbps
-            * 24.0 Mbps
-            * 36.0 Mbps
-            * 48.0 Mbps
-            * 54.0 Mbps
-    Band 2:
-        Capabilities: 0x104e
-            HT20/HT40
-            SM Power Save disabled
-            RX HT40 SGI
-            No RX STBC
-            Max AMSDU length: 7935 bytes
-            DSSS/CCK HT40
-        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-        Minimum RX AMPDU time spacing: 8 usec (0x06)
-        HT TX/RX MCS rate indexes supported: 0-15
-        Frequencies:
-            * 5180 MHz [36] (20.0 dBm) (passive scanning, no IBSS)
-            * 5200 MHz [40] (20.0 dBm) (passive scanning, no IBSS)
-            * 5220 MHz [44] (20.0 dBm) (passive scanning, no IBSS)
-            * 5240 MHz [48] (20.0 dBm) (passive scanning, no IBSS)
-            * 5260 MHz [52] (disabled)
-            * 5280 MHz [56] (disabled)
-            * 5300 MHz [60] (disabled)
-            * 5320 MHz [64] (disabled)
-            * 5500 MHz [100] (disabled)
-            * 5520 MHz [104] (disabled)
-            * 5540 MHz [108] (disabled)
-            * 5560 MHz [112] (disabled)
-            * 5580 MHz [116] (disabled)
-            * 5600 MHz [120] (disabled)
-            * 5620 MHz [124] (disabled)
-            * 5640 MHz [128] (disabled)
-            * 5660 MHz [132] (disabled)
-            * 5680 MHz [136] (disabled)
-            * 5700 MHz [140] (disabled)
-            * 5745 MHz [149] (20.0 dBm) (passive scanning, no IBSS)
-            * 5765 MHz [153] (20.0 dBm) (passive scanning, no IBSS)
-            * 5785 MHz [157] (20.0 dBm) (passive scanning, no IBSS)
-            * 5805 MHz [161] (20.0 dBm) (passive scanning, no IBSS)
-            * 5825 MHz [165] (20.0 dBm) (passive scanning, no IBSS)
-        Bitrates (non-HT):
-            * 6.0 Mbps
-            * 9.0 Mbps
-            * 12.0 Mbps
-            * 18.0 Mbps
-            * 24.0 Mbps
-            * 36.0 Mbps
-            * 48.0 Mbps
-            * 54.0 Mbps
-    max # scan SSIDs: 4
-    Supported interface modes:
-         * IBSS
-         * managed
-         * AP
-         * AP/VLAN
-         * monitor
-         * mesh point
-    Supported commands:
-         * new_interface
-         * set_interface
-         * new_key
-         * new_beacon
-         * new_station
-         * new_mpath
-         * set_mesh_params
-         * set_bss
-         * authenticate
-         * associate
-         * deauthenticate
-         * disassociate
-         * join_ibss
-         * set_wiphy_netns
-         * connect
-         * disconnect
-
-
-hostapd.conf:
-:~# cat /etc/hostapd/hostapd.conf
-interface=wlan0
-driver=nl80211
-dump_file=/tmp/hostapd.dump
-ctrl_interface=/var/run/hostapd
-ctrl_interface_group=0
-ssid=hostapd_test
-channel=11
