@@ -1,35 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f224.google.com ([209.85.217.224]:44145 "EHLO
-	mail-gx0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756449Ab0BOUPQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35588 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755625Ab0BFNfz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2010 15:15:16 -0500
-Received: by gxk24 with SMTP id 24so5167770gxk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2010 12:15:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1266190577-2423-1-git-send-email-benoit.papillault@free.fr>
-References: <1266190577-2423-1-git-send-email-benoit.papillault@free.fr>
-Date: Mon, 15 Feb 2010 15:15:16 -0500
-Message-ID: <b6c5339f1002151215y4c7d2f33yfd32916e0500b55c@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: Fix TX/RX padding for all frames
-From: Bob Copeland <me@bobcopeland.com>
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: jirislaby@gmail.com, mickflemm@gmail.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 6 Feb 2010 08:35:55 -0500
+Subject: Re: [RFC 1/2] cfg80211: generic trigger scan and callback on
+ completion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com,
+	sameo@linux.intel.com, dcbw@redhat.com
+In-Reply-To: <1265462416-7547-2-git-send-email-kilroyd@googlemail.com>
+References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+	 <1265462416-7547-2-git-send-email-kilroyd@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-m1Fg3RyiLZGu+5w+ircE"
+Date: Sat, 06 Feb 2010 14:35:52 +0100
+Message-ID: <1265463352.4041.8.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 14, 2010 at 6:36 PM, Benoit Papillault
-<benoit.papillault@free.fr> wrote:
-> Instead of computing the padding size based on the IEEE 802.11 header length,
-> we directly compute the padding position first and then the padding size next.
-> We have changed some functions to pass them the padding size directly. It has
-> been tested using a monitor interface in TX and RX against a different chipset
-> (zd1211rw to name it)
 
-Can you tell what the functional difference is between the old code and new
-code?  E.g. a padding that would be incorrectly computed from before?
+--=-m1Fg3RyiLZGu+5w+ircE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Bob Copeland %% www.bobcopeland.com
+On Sat, 2010-02-06 at 13:20 +0000, David Kilroy wrote:
+
+> We could maintain a list of functions to call, but this isn't necessary
+> for the moment. Just maintain the single function pointer to be called
+> on scan completion.
+>=20
+> Note that we allow the caller to set the callback even when a scan is
+> already in progress. This allows cfg80211 SME to scan again
+> when the existing scan completes.
+
+I think the "callback even when busy" thing is somewhat confusing. I'd
+prefer if you used a standard notifier struct (probably raw since we
+have rdev locking; see include/linux/notifier.h) and the callees sorted
+out their state there. As it is, it's really complicated to make sure
+that one request doesn't clobber another -- the current use guarantees
+that but I'm not sure I want to rely on it going forward.
+
+johannes
+
+--=-m1Fg3RyiLZGu+5w+ircE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLbXA0AAoJEODzc/N7+QmaJUUP/RFSaxo+nI/qhHob0fkyKTmK
+O/ZtV+hwDuMfYEzklBmRjhNvC389y+fvvnB2HMGzx6jZQ6uZ1eygFBxz+l5+NFke
+odd3mSdWqC+lcdAzYpgqrSvYvBBNV/x6qS6g7s+CssBHhafhFEVPEntw0jNofsFy
+P+2dbY1Y+iJILFViO6/EoDdoDm+d/29ODEGjxi/S+I42Q69meQBYGacBdTUVBfHC
+cAohrf342PeNIFlIz+2hU7AVVBivj/g5iULxAymLDD4neLN9+JhXWXKRgv7NLu4m
+Jmv5VZKUngELy/ruVVDUoeiu4Gr25422IcB3FH/msdVUruLrCtccNrAcb4TaeuVG
+gD/n4N2yXEdpn5tH3OYfBaE2J+UE+kmy7jc+nGgbbQApVeFCm3u4joHlPMT+oUoc
+252PiPTaP+9DUvROGKhpudBgHubh8z3uDWHRTlMovBIYY3yY2wqZ08VJ7qNZfXXi
+WbOjKbfQStDevWESoaw2bwqmKE71pysD+WAX9wFIqVS4HdCvKSwpl48w1WcvHKNu
+O8QaoM/ytYKY6tSFihlGrkNQf0Pu/kXYQaLsvJOh3eMCPGayVWSYhhaVEslJIb/T
+DC415mBgQNmW8Y1+NHQoN1gYJ/e+Dq/3adPJTWsl3vFBCZ5eTZxKY4sMxUqiy5lt
+quwUx+R3c8jGC0n8wIek
+=CfSe
+-----END PGP SIGNATURE-----
+
+--=-m1Fg3RyiLZGu+5w+ircE--
+
