@@ -1,162 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:24788 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757288Ab0BRL2b (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40735 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755740Ab0BFNiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:31 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 22/22] wl1271: Added alloc and free hw functions
-Date: Thu, 18 Feb 2010 13:25:57 +0200
-Message-Id: <1266492357-462-23-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+	Sat, 6 Feb 2010 08:38:16 -0500
+Subject: Re: [RFC 2/2] cfg80211: scan for missing BSS on connect completion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com,
+	sameo@linux.intel.com, dcbw@redhat.com
+In-Reply-To: <1265462416-7547-3-git-send-email-kilroyd@googlemail.com>
+References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+	 <1265462416-7547-3-git-send-email-kilroyd@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KuV0kEzQMg/cevuhOIuE"
+Date: Sat, 06 Feb 2010 14:38:14 +0100
+Message-ID: <1265463494.4041.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 
-Moved allocation and freeing of context structure of the driver to
-separate functions from probe and remove functions.
+--=-KuV0kEzQMg/cevuhOIuE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   80 +++++++++++++++++++----------
- 1 files changed, 53 insertions(+), 27 deletions(-)
+On Sat, 2010-02-06 at 13:20 +0000, David Kilroy wrote:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 66fb9a0..2a864b2 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -2025,23 +2025,17 @@ static struct platform_device wl1271_device = {
- };
- 
- #define WL1271_DEFAULT_CHANNEL 0
--static int __devinit wl1271_probe(struct spi_device *spi)
-+
-+static struct ieee80211_hw *wl1271_alloc_hw(void)
- {
--	struct wl12xx_platform_data *pdata;
- 	struct ieee80211_hw *hw;
- 	struct wl1271 *wl;
--	int ret, i;
--
--	pdata = spi->dev.platform_data;
--	if (!pdata) {
--		wl1271_error("no platform data");
--		return -ENODEV;
--	}
-+	int i;
- 
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1271_ops);
- 	if (!hw) {
- 		wl1271_error("could not alloc ieee80211_hw");
--		return -ENOMEM;
-+		return ERR_PTR(-ENOMEM);
- 	}
- 
- 	wl = hw->priv;
-@@ -2050,8 +2044,6 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	INIT_LIST_HEAD(&wl->list);
- 
- 	wl->hw = hw;
--	dev_set_drvdata(&spi->dev, wl);
--	wl->spi = spi;
- 
- 	skb_queue_head_init(&wl->tx_queue);
- 
-@@ -2078,6 +2070,54 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl->state = WL1271_STATE_OFF;
- 	mutex_init(&wl->mutex);
- 
-+	/* Apply default driver configuration. */
-+	wl1271_conf_init(wl);
-+
-+	return hw;
-+}
-+
-+int wl1271_free_hw(struct wl1271 *wl)
-+{
-+	ieee80211_unregister_hw(wl->hw);
-+
-+	wl1271_debugfs_exit(wl);
-+
-+	kfree(wl->target_mem_map);
-+	vfree(wl->fw);
-+	wl->fw = NULL;
-+	kfree(wl->nvs);
-+	wl->nvs = NULL;
-+
-+	kfree(wl->fw_status);
-+	kfree(wl->tx_res_if);
-+
-+	ieee80211_free_hw(wl->hw);
-+
-+	return 0;
-+}
-+
-+static int __devinit wl1271_probe(struct spi_device *spi)
-+{
-+	struct wl12xx_platform_data *pdata;
-+	struct ieee80211_hw *hw;
-+	struct wl1271 *wl;
-+	int ret;
-+
-+	pdata = spi->dev.platform_data;
-+	if (!pdata) {
-+		wl1271_error("no platform data");
-+		return -ENODEV;
-+	}
-+
-+	hw = wl1271_alloc_hw();
-+	if (IS_ERR(hw))
-+		return PTR_ERR(hw);
-+
-+	wl = hw->priv;
-+
-+	dev_set_drvdata(&spi->dev, wl);
-+	wl->spi = spi;
-+
- 	/* This is the only SPI value that we need to set here, the rest
- 	 * comes from the board-peripherals file */
- 	spi->bits_per_word = 32;
-@@ -2119,9 +2159,6 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	}
- 	dev_set_drvdata(&wl1271_device.dev, wl);
- 
--	/* Apply default driver configuration. */
--	wl1271_conf_init(wl);
--
- 	ret = wl1271_init_ieee80211(wl);
- 	if (ret)
- 		goto out_platform;
-@@ -2152,21 +2189,10 @@ static int __devexit wl1271_remove(struct spi_device *spi)
- {
- 	struct wl1271 *wl = dev_get_drvdata(&spi->dev);
- 
--	ieee80211_unregister_hw(wl->hw);
--
--	wl1271_debugfs_exit(wl);
- 	platform_device_unregister(&wl1271_device);
- 	free_irq(wl->irq, wl);
--	kfree(wl->target_mem_map);
--	vfree(wl->fw);
--	wl->fw = NULL;
--	kfree(wl->nvs);
--	wl->nvs = NULL;
- 
--	kfree(wl->fw_status);
--	kfree(wl->tx_res_if);
--
--	ieee80211_free_hw(wl->hw);
-+	wl1271_free_hw(wl);
- 
- 	return 0;
- }
--- 
-1.6.3.3
+> +	if (wdev->conn2) {
+> +		struct cfg80211_bss *bss;
+> +
+> +		bss =3D cfg80211_get_bss(wdev->wiphy, NULL, wdev->conn2->bssid,
+> +				       wdev->ssid, wdev->ssid_len,
+> +				       WLAN_CAPABILITY_ESS,
+> +				       WLAN_CAPABILITY_ESS);
+> +
+> +		if (WARN_ON(!bss))
+> +			wdev->sme_state =3D CFG80211_SME_IDLE;
+
+Can that case happen "legitimately", say the AP crashes right after you
+connect, possibly due to the connection?
+
+Even if not, this will leave the driver in a different state than the
+state machine here, which we should clean up regardless I think.
+
+johannes
+
+--=-KuV0kEzQMg/cevuhOIuE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLbXDCAAoJEODzc/N7+QmaW4YQAMgQUrPDL4PsKPQ0t0QeEoo7
+xZtaM9HtrPoj7D2ZuhR4BgIORLCUdM8QBngras29IzS2LA4p5qPi4ElBs4SXzs9l
+FxpXaYQ9ZH+1LQ7d0vv/F6c+rcE0Mdj9hrHR2rSJWPu3mHOlCyGdF6zQuy8mps6V
+iQZj+BkZxBZpwmaFfyI9RRZJaPW6vFvKxmAowbho1Oy4BwxtxfKam6owYBxy5yF7
+DUGrGmJZRaZCN4CpGX70AR7eZwp5xnIEWkOzV38CkJCTEou52mKxkAqsoqwT4nn8
+5Q7tGC5Yec0HP1O87A0xodC72UPszAdViHwJxu6JygXjjPkwwxM5PfR/YV03hJnW
+L1B6t4XPZMo/c1nshUlG/YB5YBoLwxopM5f/3V6Z3bxH9EY7Q57hoyHxVCYlCHm5
+faUOvRIteROpADKLBWSZ9DZ0n2LyT9g8Vf8d2uSL2DLdNri6S6w1j2+CP0L2hKQk
+K+NSchOhUPS2cgUNJijmBZ3SqxJ7DzSUn2oxCYr7L99nl4v1sv73KP2UHHG2btRO
+v6kT8+/IAZrcbgk78yH4c3PBkeaKTXla7TLA4bTdc3Td6nhIZCJIAPnhM1R5Kfj8
+1GlIUKqp14JsEFFidr+kJ2VZ55nN/pnMVSxoNx3eOqQPpDnksjS/Gm83kdz9gq05
+mGFUP+ERAbzrXr7orp+2
+=40O9
+-----END PGP SIGNATURE-----
+
+--=-KuV0kEzQMg/cevuhOIuE--
 
