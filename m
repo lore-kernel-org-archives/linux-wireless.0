@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48025 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754365Ab0BVWff (ORCPT
+Received: from mail-px0-f189.google.com ([209.85.216.189]:63182 "EHLO
+	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698Ab0BFOi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 17:35:35 -0500
-Date: Mon, 22 Feb 2010 17:35:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Linux Wireless Summit -- Boston 2010
-Message-ID: <20100222223521.GA1972@tuxdriver.com>
-References: <20100111135741.GB3223@tuxdriver.com>
- <20100222212029.GD2988@tuxdriver.com>
- <1266875848.2594.42.camel@mj>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1266875848.2594.42.camel@mj>
+	Sat, 6 Feb 2010 09:38:27 -0500
+Received: by pxi27 with SMTP id 27so2377806pxi.4
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 06:38:26 -0800 (PST)
+From: tom.leiming@gmail.com
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net,
+	stable@kernel.org, Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH] ath9k: fix keycache leak in split tkip case
+Date: Sat,  6 Feb 2010 22:38:23 +0800
+Message-Id: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 22, 2010 at 04:57:28PM -0500, Pavel Roskin wrote:
-> On Mon, 2010-02-22 at 16:20 -0500, John W. Linville wrote:
-> 
-> > Attendees will be required to register for LinuxCon 2010.
-> 
-> Why is it required?  I could take one day off for the wireless summit,
-> but taking three or four days would be too much.
+From: Ming Lei <tom.leiming@gmail.com>
 
-Sorry, but they are the ones paying for the room.  If this is really
-a hardship and you are serious about coming then contact me privately
-and perhaps we can make some special arrangements.
+If split tkip key is used, ath_delete_key should delete
+rx key and rx mic key. This patch fixes the leak of hw
+keycache in the case.
 
-Thanks,
+---
+The patch is against the latest wireless test tree.
 
-John
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6796d5c..928402b 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -809,6 +809,7 @@ static void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf
+ 
+ 	clear_bit(key->hw_key_idx + 64, common->keymap);
+ 	if (common->splitmic) {
++		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
+ 		clear_bit(key->hw_key_idx + 32, common->keymap);
+ 		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
+ 	}
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+1.6.2.5
+
