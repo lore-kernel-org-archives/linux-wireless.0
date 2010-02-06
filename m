@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:40056 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933425Ab0BQAva convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40405 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135Ab0BFOig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 19:51:30 -0500
-Received: by pwj8 with SMTP id 8so1017288pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 16:51:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e891002161645p627c123g9ac571e4802cd8bf@mail.gmail.com>
-References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
-	<1266124222.13902.42.camel@mj> <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
-	<1266358340.2659.37.camel@mj> <43e72e891002161459m4174654aj8d7985f32cb8678d@mail.gmail.com>
-	<43e72e891002161645p627c123g9ac571e4802cd8bf@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 16 Feb 2010 16:51:09 -0800
-Message-ID: <43e72e891002161651w4718431dqaf258151241f72fc@mail.gmail.com>
-Subject: Re: compat-wireless + Linux 2.6.26.8 testing results
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 6 Feb 2010 09:38:36 -0500
+Received: from wireless by sipsolutions.net with local (Exim 4.71)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1Ndlnt-0005DG-V9
+	for linux-wireless@vger.kernel.org; Sat, 06 Feb 2010 15:38:34 +0100
+Date: Sat, 06 Feb 2010 15:38:33 +0100
+Message-Id: <E1Ndlnt-0005DG-V9@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] rfkill: v0.4
+Reply-to: linux-wireless@vger.kernel.org
+From: wireless@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 16, 2010 at 4:45 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-> Hey OK so I propagated MQ support into compat-wireless based on
-> linux-next. I just hit a snag I forgot about and explains more
-> logically why I hadn't moved MQ support to bleeding edge:
-> debugfs_remove_recursive() needs some backport work as well. Last I
-> looked at it, I determined we could not directly backport it as it
-> relied on two internal globals on fs/debugfs/inode.c. I did copy over
-> the code onto compat/compat-2.6.26.c but ifdef'd it out for now.
->
-> One option is to disable debugfs on compat-wireless for older kernels
-> or if you figure out a way to backport that call without using a
-> global even better. For now I just can't work on this but I do welcome
-> patches if someone manages to pull off backporting it.
->
->  CC [M]  /home/mcgrof/devel/compat-wireless-2.6/net/mac80211/rate.o
-> /home/mcgrof/devel/compat-wireless-2.6/net/mac80211/rate.c: In
-> function ‘rate_control_release’:
-> /home/mcgrof/devel/compat-wireless-2.6/net/mac80211/rate.c:190: error:
-> implicit declaration of function ‘debugfs_remove_recursive’
-> make[3]: *** [/home/mcgrof/devel/compat-wireless-2.6/net/mac80211/rate.o]
-> Error 1
-> make[2]: *** [/home/mcgrof/devel/compat-wireless-2.6/net/mac80211] Error 2
-> make[1]: *** [_module_/home/mcgrof/devel/compat-wireless-2.6] Error 2
-> make[1]: Leaving directory `/home/mcgrof/kernels/linux-2.6.26.8'
+A new release of rfkill (v0.4) is available at:
 
-FWIW the two globals can be seen here:
+http://wireless.kernel.org/download/rfkill/rfkill-0.4.tar.bz2
 
-simple_release_fs(&debugfs_mount, &debugfs_mount_count);
+SHA1 sum: fccabf5a272ac2891f24dc35449dc6f4c45ff44b
 
-Not sure how to deal with that.
+Here is the short log of the changes included in this 
+release:
 
-  Luis
+Darren Salt (10):
+      Move the man page to section 8
+      Add "wlan" and "ultrawideband" as aliases for "wifi" and "uwb".
+      Rearrange the help text for block & unblock.
+      Constification.
+      Return error codes instead of exiting.
+      Refactor rfkill index/type lookup: move it below rfkill_block.
+      Add filtering to "rfkill list".
+      Tweak version handling to allow vendor-specific suffixes without patching.
+      Help text: output rfkill type names from an array instead of a static string.
+      Add rfkill type "fm" to the man page.
+
+Johannes Berg (4):
+      flush output after events
+      print time instead of useless text
+      change manpage for new rfkill list behaviour
+      version 0.4
+
+John W. Linville (1):
+      default install to $(PREFIX)/sbin
+
+Tomas Winkler (1):
+      update rfkill.h from kernel 2.6.33
+
