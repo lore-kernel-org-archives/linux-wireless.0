@@ -1,73 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51287 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53062 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700Ab0BHNqQ (ORCPT
+	with ESMTP id S932441Ab0BFS7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 08:46:16 -0500
-Subject: Re: [PATCH 2/2] mac80211: give warning if building w/out rate ctrl
- algorithm
+	Sat, 6 Feb 2010 13:59:13 -0500
+Subject: Re: [RFC 0/2] cfg80211: Retrieve missing BSS info after connect
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andres Salomon <dilinger@collabora.co.uk>
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org
-In-Reply-To: <20100207214837.027dfd3d@mycelium.queued.net>
-References: <20100207214837.027dfd3d@mycelium.queued.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+yzTYpsfe5M/C4084IuV"
-Date: Mon, 08 Feb 2010 10:06:33 +0100
-Message-ID: <1265619993.3783.0.camel@johannes.berg>
+To: Dave <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com,
+	sameo@linux.intel.com, dcbw@redhat.com
+In-Reply-To: <4B6DB44E.7030201@gmail.com>
+References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+	 <1265464303.4041.24.camel@johannes.local>  <4B6DB44E.7030201@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-68g5l6v+PkIp7LArTubn"
+Date: Sat, 06 Feb 2010 19:59:03 +0100
+Message-ID: <1265482743.4041.37.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-+yzTYpsfe5M/C4084IuV
+--=-68g5l6v+PkIp7LArTubn
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, 2010-02-07 at 21:48 -0500, Andres Salomon wrote:
-> I discovered that if EMBEDDED=3Dy, one can accidentally build a mac80211 =
-stack
-> w/ no rate control algorithm.  When RC_MINISTREL and RC_PID are both disa=
-bled,
-> the RC_DEFAULT string (which rate.c uses as the fallback algorithm) will =
-be
-> "".  That'll cause the rate_control_alloc to fail, which will in turn cau=
-se
-> ieee80211_register_hw to fail.  IOW, no driver will load.
+On Sat, 2010-02-06 at 18:26 +0000, Dave wrote:
+
+> Thanks for the feedback. Like I said, the main point of posting was to
+> see if this logic helped libertas in any way.
+
+Right.
+
+> Sounds like it doesn't, so
+> I won't push this for now. When I get round to looking at orinoco again
+> I'll see if I can handle this within the driver. If not I'll address the
+> issues you've raised.
 >=20
-> This will tell kconfig to provide a warning if no rate control algorithms
-> have been selected.  That'll at least warn the user that they're about to
-> build a broken wireless stack.
+> I don't think orinoco can provide the BSS info without explicitly doing
+> the scan (whether internally or via cfg80211). Even if I could get it to
+> work for the firmware version I have, there's no guarantee that it'll
+> work for the other supported firmware types (that I don't have).
 
+Ok. Don't get me wrong -- I don't really mind doing it in cfg80211, just
+wanted to see why, but if it really _requires_ a scan then that's fine.
+Maybe in cfg80211 makes more sense, might simplify other drivers too, or
+allow us to convert some of the other drivers that might not have such
+functionality.
 
-> +comment "mac80211 will not work properly w/out rate control algorithm"
-> +	depends on MAC80211_HAS_RC=3Dn
-
-Except that isn't true for hardware that doesn't require an algorithm,
-or drivers that provide it themselves, like iwlagn or ath9k. I would
-prefer it to be worded accordingly.
+Since your patch creates a directed scan, it should be pretty quick just
+scanning one channel, and maybe the driver knows the channel?
 
 johannes
 
---=-+yzTYpsfe5M/C4084IuV
+--=-68g5l6v+PkIp7LArTubn
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLb9QUAAoJEODzc/N7+QmauKwQAMnqTVrTJp5xRrDOgq+duHVo
-OHZfWZUgvbEP3k9wxHqOwnO9Sx+vt8mOopWVh+Rw6MebEx5AIKbX8CE4hhH0/1c7
-LnbS+lTy/E75fFO6ZgFsuVJJIMcrmVLuSIgTVTefrK6rU+LKNpwvrygEA8+aX2sp
-av0qfgy6r4/oLdLZ+mQFDYL7gZ7BHS8F/upmoWOyR7L8/vPz4c+ylFAJ7O4vk/+a
-WsG/yzttVyRY4zc76/BGOASDucLBo0JpkkrfmAuC9H62UqaZ+1NL5gRZq70O4jEn
-0IA8NKGZznOlT/SohCwdFZg3cy1hylZ2medynFH+JP+bN3KNxg0DdsMVz9//AhpQ
-7dSD48ZsOUqQk8M+400QSOoty75oIQShlbyNubsqrpruH+8SK0CNxN+bV5CxjtW4
-TkHOhYBC4FbIAUQuIPzGEPpCcGfuKGcY+0Dw5iz2vvnhlyIm70SU+cXhGOmqN3HV
-HZW0IFnjkMWf4XlW/vAa+OlrD2glTD/EexbxIMUqwlGHo0kmxhVBpquDWm2Q9AY4
-laDLuVPF2MYyTWZ8hi7GxN6Skgcpk/MP2LRlKPxLQssSuGkD8dv3Lf0ce3O7Ygrj
-3Tz9yTfE4Qj+Cg3NFLE5+gzEr8R4loMlD/J/sUoWrgKk45ZYMDciPbSALhj+BntN
-24xxxXQ7KmYMkVU8Acx9
-=OgS2
+iQIcBAABAgAGBQJLbbvyAAoJEODzc/N7+QmaY70P/jWcoJb11rT5ZEV3qpvSngO3
+G7HSB/fiaExWA5A+DT477GyT6UZ53svbmAE8AjPC/em/+/vzmLCGuMYXY4CVhn5h
+S/SW9l6G7SMFrHocc5JkbnE+O6taAWI/wIO0sgC/dVoF9P/vP3c0d7UNxwsKMSrh
+zjagxFVa+vyMXaHx3XWMT3YyZpJnBceM/4t74PpGzx51TW0kon7+OHD77Kge9z2C
+eFgVuW7K0sjw+aNRzWn9PHlqo89MP3L06E71CJbWWRT1yqiotlRZF07cetVQ/UvL
+y6qZkkg7tW+5MNV0kEToR7GdEWIbsyCslsYZkXi9wJ3dlC0WfTwmEY3nm1Z656BA
+1uIIzAzNwAqRg0381PWuKx30uHptOm7AXAatqk+9zDY5hnBip+REimVBFIUHZW1g
+xo257A71RDR8H4gyhDlpl7OOtOHBomz9zRhTHG7teqo3qqTZnRw9dZdaSVH6e+sZ
+ot+ZFxyCpbytEoZxCOtwOoUeQmDHVT59o25CupdOxfHPUiDXRVTlfkAAoAcEX3Y6
+WSSfBbyk2/J51SsxNHpJXM8FoQiQiou6CWt7dlwi8gHoSA7jZJPsT4jXBV5vxeYL
+yeuiqZxSx8uNpQ8iqjRW651yPBKfS6gcU+XcnxifqJ2tqH/kWQA78tiBQkEQvaRE
+mlB7q/hx0o1l0gITRqHf
+=PaN5
 -----END PGP SIGNATURE-----
 
---=-+yzTYpsfe5M/C4084IuV--
+--=-68g5l6v+PkIp7LArTubn--
 
