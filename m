@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:8047 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751411Ab0BWURy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 15:17:54 -0500
-Subject: Re: [PATCH 1/3] ath5k: remove stale function declarations, make
- some  functions static
-From: Pavel Roskin <proski@gnu.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <b6c5339f1002200730t46298538k30930ed52255f06e@mail.gmail.com>
-References: <20100219012802.12460.42239.stgit@mj.roinet.com>
-	 <20100219134448.GA2844@tuxdriver.com> <1266621325.25707.14.camel@mj>
-	 <b6c5339f1002200730t46298538k30930ed52255f06e@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 23 Feb 2010 15:17:42 -0500
-Message-Id: <1266956262.16604.1.camel@mj>
-Mime-Version: 1.0
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:36616 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755617Ab0BFS0b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Feb 2010 13:26:31 -0500
+Received: by ewy28 with SMTP id 28so1140801ewy.28
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 10:26:29 -0800 (PST)
+Message-ID: <4B6DB44E.7030201@gmail.com>
+Date: Sat, 06 Feb 2010 18:26:22 +0000
+From: Dave <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, holgerschurig@gmail.com,
+	sameo@linux.intel.com, dcbw@redhat.com
+Subject: Re: [RFC 0/2] cfg80211: Retrieve missing BSS info after connect
+References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com> <1265464303.4041.24.camel@johannes.local>
+In-Reply-To: <1265464303.4041.24.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-02-20 at 10:30 -0500, Bob Copeland wrote:
-> On Fri, Feb 19, 2010 at 6:15 PM, Pavel Roskin <proski@gnu.org> wrote:
-> > On Fri, 2010-02-19 at 08:44 -0500, John W. Linville wrote:
-> >> On Thu, Feb 18, 2010 at 08:28:02PM -0500, Pavel Roskin wrote:
-> >> Any reason not to just remove those functions instead of commenting
-> >> them out?
-> >
-> > I'm fine either way.  I tend to clean up more aggressively if I know
-> > that nobody will miss that code.  I wasn't sure in this case.
+Johannes Berg wrote:
+> On Sat, 2010-02-06 at 13:20 +0000, David Kilroy wrote:
+>> This patchset attempts to address the issue where a driver that uses
+>> the cfg80211 connect operation connects to an AP before the scan result
+>> for the AP is available. This triggers a WARN_ON in sme.c, and the
+>> connection fails.
 > 
-> I don't think it will be a big deal if they disappear.  I think most of
-> them are just there because the original HAL had them.
+> With technical comments out of the way (see other emails) I guess I want
+> to know whether this really makes sense.
 > 
-> Maybe one or two functions are waiting on an API in the stack to be useful
-> (e.g. antenna stuff), but we can always get these routines back from git
-> history if need be.
+> Yes, we definitely need the right BSS struct when the driver signals
+> that it connected, but we also need the same information when it roamed
+> for example. Does it really make sense to scan after the fact, instead
+> of asking the driver to provide the information? This is a genuine
+> question -- I can see value in this if more than one driver needs it,
+> but if the devices can just provide BSS information right before the
+> connected call that would be a lot simpler here.
 
-I see you are doing that work already, so please just tell me if I need
-to resubmit my patches.
+Thanks for the feedback. Like I said, the main point of posting was to
+see if this logic helped libertas in any way. Sounds like it doesn't, so
+I won't push this for now. When I get round to looking at orinoco again
+I'll see if I can handle this within the driver. If not I'll address the
+issues you've raised.
 
--- 
-Regards,
-Pavel Roskin
+I don't think orinoco can provide the BSS info without explicitly doing
+the scan (whether internally or via cfg80211). Even if I could get it to
+work for the firmware version I have, there's no guarantee that it'll
+work for the other supported firmware types (that I don't have).
+
+
+
+Dave.
