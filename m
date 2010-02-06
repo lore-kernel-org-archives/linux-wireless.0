@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f182.google.com ([209.85.223.182]:56970 "EHLO
-	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030205Ab0B0R0L convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38237 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755762Ab0BFN7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 12:26:11 -0500
-Received: by iwn12 with SMTP id 12so1182009iwn.21
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 09:26:10 -0800 (PST)
-MIME-Version: 1.0
-Date: Sat, 27 Feb 2010 18:26:10 +0100
-Message-ID: <133e8d7e1002270926p64cfd2b5uc4017bf0187c53c2@mail.gmail.com>
-Subject: [RFC] ath9k: Make AR_SREV_5416() macro evaluate to true for AR9100
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 6 Feb 2010 08:59:09 -0500
+Subject: Re: [RFC 0/2] cfg80211: Retrieve missing BSS info after connect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com,
+	sameo@linux.intel.com, dcbw@redhat.com
+In-Reply-To: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lrP9IAwEENXRu9+VEeRS"
+Date: Sat, 06 Feb 2010 14:51:43 +0100
+Message-ID: <1265464303.4041.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR_SREV_5416() macro evaluates to false for AR9100 while the
-definitions for AR_SREV_5416_20_OR_LATER() and
-AR_SREV_5416_22_OR_LATER() seem to assume AR9100 based chips fall
-under this category. For example the last line of
 
-#define AR_SREV_5416_20_OR_LATER(_ah) \
-        (((AR_SREV_5416(_ah)) && \
-         ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)) || \
-         ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
+--=-lrP9IAwEENXRu9+VEeRS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-makes no sense if AR_SREV_5416(_ah) is false when
-(_ah)->hw_version.macVersion == AR_SREV_VERSION_9100.
+On Sat, 2010-02-06 at 13:20 +0000, David Kilroy wrote:
+> This patchset attempts to address the issue where a driver that uses
+> the cfg80211 connect operation connects to an AP before the scan result
+> for the AP is available. This triggers a WARN_ON in sme.c, and the
+> connection fails.
 
-The patch below changes AR_SREV_5416() to evaluate to true also for
-AR9100. I've tested on an AR9100 based router with this patch and
-haven't noticed any more problems than usual. Many code paths are
-affected though so please comment.
+With technical comments out of the way (see other emails) I guess I want
+to know whether this really makes sense.
 
-/Björn
----
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h
-b/drivers/net/wireless/ath/ath9k/reg.h
-index 72cfa8e..39f7d66 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -762,7 +762,8 @@
+Yes, we definitely need the right BSS struct when the driver signals
+that it connected, but we also need the same information when it roamed
+for example. Does it really make sense to scan after the fact, instead
+of asking the driver to provide the information? This is a genuine
+question -- I can see value in this if more than one driver needs it,
+but if the devices can just provide BSS information right before the
+connected call that would be a lot simpler here.
 
- #define AR_SREV_5416(_ah) \
-        (((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
--        ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE))
-+        ((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE) || \
-+        ((_ah)->hw_version.macVersion == AR_SREV_VERSION_9100))
- #define AR_SREV_5416_20_OR_LATER(_ah) \
-        (((AR_SREV_5416(_ah)) && \
-         ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)) || \
+johannes
+
+--=-lrP9IAwEENXRu9+VEeRS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLbXPsAAoJEODzc/N7+QmaPNwQAJHIWiNJh6V3g//W92F0lV/3
+DK0eJHlFLvtWd7i5kS9SPb5Ds2pcBqJJLWh7PXpiqYBfTDy4OXnnYM+Q8oPbtg5o
+n0DQg7Vp9R665NS307DXq3deoCkBH4Lc99RsJsKwP9ZhFI6EpJBRz63voMsATwC6
+8EImKTdzHX/XGfnMHB6sJIBLNSk7LkT3is/kR6j1I9xiq1rrYj00HkoA7zXIfx03
+NbrStBjV4Tm7oIPJKa4qBtSnKO3Dw/X6pSzhbZle3WUrWiuR7wbN8MWIBwpoJm5B
+FcZrB1hwFwuzuzZK7/YPBGFCi+uCyGrKzHlmiiF4896JbEi8vstbAl0Jh9nDF6F+
+J5lRwHntKMEGAQhMzgm/NugaufJ7vyw9eBCRIh4uOwzgad4xg7njFV92FatHGOgw
+65J43sHc2x97I2tJdG81aLOkiYHcNdeTkRUmYe3LEcKDYV8BJbAk8ua7UViDcgzs
+Uk3ANTWmj39vzcYiNl/dX0h24gMoS4C6sXt7GmYmwLXJKOJipcC/uiaZSUB7L6q+
+HTX1aqflEyxFAkiN/IQ/beDdrnaRfcdgLXKZDauQkaXTxkqXlGy+Ubj3bEYQYEcY
+pBn1YbTtYn3HeRGhcQvgXykKeN9RFCSggnphN3MYGEeU7Pf+MkkWQwf5T7tnhE2g
+Hoq8MMEtkIPH8eNNKi1F
+=F8UJ
+-----END PGP SIGNATURE-----
+
+--=-lrP9IAwEENXRu9+VEeRS--
+
