@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50748 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580Ab0BRL2U (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:58419 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755404Ab0BFNUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:20 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 15/22] wl1271: Fix WEP key handling
-Date: Thu, 18 Feb 2010 13:25:50 +0200
-Message-Id: <1266492357-462-16-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+	Sat, 6 Feb 2010 08:20:30 -0500
+Received: by vws20 with SMTP id 20so1584009vws.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 05:20:29 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: holgerschurig@gmail.com, sameo@linux.intel.com, dcbw@redhat.com,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC 0/2] cfg80211: Retrieve missing BSS info after connect
+Date: Sat,  6 Feb 2010 13:20:14 +0000
+Message-Id: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WEP key index handling was broken: the default key when using key 0 was never
-specified to the FW, and if using other default than 0, it would be set on the
-TX path for every single TX'd frame.
+This patchset attempts to address the issue where a driver that uses
+the cfg80211 connect operation connects to an AP before the scan result
+for the AP is available. This triggers a WARN_ON in sme.c, and the
+connection fails.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+This is only an issue for drivers that do not pass beacons/probes to
+cfg80211, except in response to an explicit scan. With typical
+userspace the issue will only manifest if using iwconfig to connect, or
+if using wpa_supplicant with ap_scan=2 (which you might do with a
+hidden SSID).
+
+The patches were originally written for the orinoco cfg80211 conversion
+(currently stalled due to lack of time). It sounds like the libertas
+cfg80211 drivers have the same problem, so I'm posting them in case
+they're useful. There's a bit of cleanup to do, and there may be issues
+with the setting of the channels to scan (orinoco can't scan by
+channel) so if someone wants to pick these up, please do.
+
+Testing
+ - a version of this has been running with my orinoco changes for the
+   last 3 or 4 months (in more or less daily use).
+ - Untested against drivers that don't use ->connect
+
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |    8 ++++++++
- drivers/net/wireless/wl12xx/wl1271_tx.c   |    1 +
- 2 files changed, 9 insertions(+), 0 deletions(-)
+David Kilroy (2):
+  cfg80211: generic trigger scan and callback on completion
+  cfg80211: scan for missing BSS on connect completion
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 4a0a15b..459d9a0 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1475,6 +1475,14 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 			wl1271_error("Could not add or replace key");
- 			goto out_sleep;
- 		}
-+
-+		/* the default WEP key needs to be configured at least once */
-+		if (key_type == KEY_WEP) {
-+			ret = wl1271_cmd_set_default_wep_key(wl,
-+							     wl->default_key);
-+			if (ret < 0)
-+				goto out_sleep;
-+		}
- 		break;
- 
- 	case DISABLE_KEY:
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index f6815a9..f9e0638 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -203,6 +203,7 @@ static int wl1271_tx_frame(struct wl1271 *wl, struct sk_buff *skb)
- 			ret = wl1271_cmd_set_default_wep_key(wl, idx);
- 			if (ret < 0)
- 				return ret;
-+			wl->default_key = idx;
- 		}
- 	}
- 
--- 
-1.6.3.3
+ include/net/cfg80211.h |    3 +
+ net/wireless/core.h    |    6 ++
+ net/wireless/scan.c    |   41 ++++++++++++-
+ net/wireless/sme.c     |  163 ++++++++++++++++++++++++++++++++++++++----------
+ 4 files changed, 178 insertions(+), 35 deletions(-)
 
