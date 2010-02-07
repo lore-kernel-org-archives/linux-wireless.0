@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:39832 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755278Ab0BTCg1 convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4004 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754500Ab0BGPFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 21:36:27 -0500
-Received: by pwj8 with SMTP id 8so751604pwj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 18:36:27 -0800 (PST)
+	Sun, 7 Feb 2010 10:05:01 -0500
+Date: Sun, 7 Feb 2010 10:04:15 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: [PATCH 04/10] ath5k: remove get_tx_stats() mac80211 op
+Message-ID: <20100207150415.GA9085@hash.localnet>
+References: <20100207082044.31474.48583.stgit@tikku> <20100207082107.31474.55453.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <1266628662.5699.15.camel@mj>
-References: <20100220000921.15525.55155.stgit@mj.roinet.com>
-	<1266626230.25707.60.camel@mj> <1266628662.5699.15.camel@mj>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 19 Feb 2010 18:36:07 -0800
-Message-ID: <43e72e891002191836w1088b744re09d67056614cc28@mail.gmail.com>
-Subject: Re: [PATCH v3] compat: move debugfs_remove_recursive() to
-	compat-2.6.27
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100207082107.31474.55453.stgit@tikku>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 19, 2010 at 5:17 PM, Pavel Roskin <proski@gnu.org> wrote:
-> debugfs_remove_recursive() appeared in Linux 2.6.27, so it should be in
-> compat-2.6.27, not in compat-2.6.26.  Don't compile it if
-> CONFIG_DEBUG_FS is disabled.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+On Sun, Feb 07, 2010 at 10:21:07AM +0200, Kalle Valo wrote:
+> get_tx_stats() will be removed from mac80211.
+> 
+> Compile-tested only.
 
-Thanks applied.
+The ath5k portion is equivalent to the rfc I posted a while ago
+(http://patchwork.kernel.org/patch/37537/ - didn't check the rest) so you
+happily have my:
 
-  Luis
+Acked-by: Bob Copeland <me@bobcopeland.com>
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
