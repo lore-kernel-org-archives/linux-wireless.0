@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:19739 "EHLO david.siemens.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751961Ab0BWLE5 convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:41697 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837Ab0BGNxt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 06:04:57 -0500
-From: "Porsch, Marco" <marco.porsch@siemens.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Date: Tue, 23 Feb 2010 11:35:56 +0100
-Subject: [PATCH] mac80211: fix PREQ processing and one small bug
-Message-ID: <7F2FE3504A6CB54497542A539E401A7B6AB18057@DEMCHP99E15MSX.ww902.siemens.net>
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 7 Feb 2010 08:53:49 -0500
+Received: by bwz19 with SMTP id 19so1133773bwz.28
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Feb 2010 05:53:47 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [PATCH 03/10] ar9170: remove get_tx_stats() mac80211 op
+Date: Sun, 7 Feb 2010 14:53:07 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@web.de>
+References: <20100207082044.31474.48583.stgit@tikku> <20100207082100.31474.30105.stgit@tikku>
+In-Reply-To: <20100207082100.31474.30105.stgit@tikku>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201002071453.07618.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-1st) a PREQ should only be processed, if it has the same SN and better metric (instead of better or equal).
-2nd) next_hop[ETH_ALEN] now actually used to buffer mpath->next_hop->sta.addr for use out of lock.
+On Sunday 07 February 2010 09:21:00 Kalle Valo wrote:
+> get_tx_stats() will be removed from mac80211.
+> 
+> Because ar9170 uses ieee80211_tx_queue_stats internally, create a new
+> identical struct ar9170_tx_queue_stats which the driver can use.
+> 
+> Cc: Christian Lamparter <chunkeey@web.de>
+> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+> ---
 
-Signed-off-by: Marco Porsch <marco.porsch@siemens.com>
-Acked-by: Javier Cardona <javier@cozybit.com>
-
----
- net/mac80211/mesh_hwmp.c |   4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff -upr a/net/mac80211/rx.c b/net/mac80211/rx.c
---- a/net/mac80211/mesh_hwmp.c        2010-02-18 14:44:47.000000000 +0100
-+++ b/net/mac80211/mesh_hwmp.c 2010-02-18 14:45:32.000000000 +0100
-@@ -391,7 +391,7 @@ static u32 hwmp_route_info_get(struct ie
-                                 if (SN_GT(mpath->sn, orig_sn) ||
-                                     (mpath->sn == orig_sn &&
-                                      action == MPATH_PREQ &&
--                                    new_metric > mpath->metric)) {
-+                                    new_metric >= mpath->metric)) {
-                                         process = false;
-                                         fresh_info = false;
-                                 }
-@@ -611,7 +611,7 @@ static void hwmp_prep_frame_process(stru
- 
-         mesh_path_sel_frame_tx(MPATH_PREP, flags, orig_addr,
-                 cpu_to_le32(orig_sn), 0, target_addr,
--               cpu_to_le32(target_sn), mpath->next_hop->sta.addr, hopcount,
-+               cpu_to_le32(target_sn), next_hop, hopcount,
-                 ttl, cpu_to_le32(lifetime), cpu_to_le32(metric),
-                 0, sdata);
-         rcu_read_unlock();
+Tested-by: Christian Lamparter <chunkeey@googlemail.com>
