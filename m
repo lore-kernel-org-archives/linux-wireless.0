@@ -1,80 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f189.google.com ([209.85.211.189]:45373 "EHLO
-	mail-yw0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751763Ab0BIBgR convert rfc822-to-8bit (ORCPT
+Received: from Cpsmtpm-eml106.kpnxchange.com ([195.121.3.10]:63332 "EHLO
+	CPSMTPM-EML106.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754843Ab0BGLwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 20:36:17 -0500
-Received: by ywh27 with SMTP id 27so6062826ywh.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 17:36:17 -0800 (PST)
-Date: Tue, 9 Feb 2010 09:36:12 +0800
-From: Ming Lei <tom.leiming@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	stable@kernel.org
-Subject: Re: [PATCH] ath9k: fix keycache leak in split tkip case
-Message-ID: <20100209093612.08d9ae17@tom-lei>
-In-Reply-To: <43e72e891002081338q466d9747p10a61b5e1aca4c6d@mail.gmail.com>
-References: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
-	<43e72e891002081338q466d9747p10a61b5e1aca4c6d@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sun, 7 Feb 2010 06:52:50 -0500
+Message-ID: <4B6EA990.30801@gmail.com>
+Date: Sun, 07 Feb 2010 12:52:48 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH 09/10] rt2x00: remove get_tx_stats() mac80211 op
+References: <20100207082044.31474.48583.stgit@tikku> <20100207082153.31474.76058.stgit@tikku>
+In-Reply-To: <20100207082153.31474.76058.stgit@tikku>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 67b0faf7e7a57c3e6a971ff43d1f03f8e939429b Mon Sep 17 00:00:00 2001
-From: Ming Lei <tom.leiming@gmail.com>
-Date: Sat, 6 Feb 2010 22:30:53 +0800
-Subject: [PATCH] ath9k: fix keycache leak in split tkip case
+On 02/07/10 09:21, Kalle Valo wrote:
+> get_tx_stats() will be removed from mac80211.
+> 
+> Compile-tested only.
+> 
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+> ---
 
-If split tkip key is used, ath_delete_key should delete
-rx key and rx mic key. This patch fixes the leak of hw
-keycache in the case.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+Although I seem to be missing the actual removal of the
+get_tx_stats from mac80211.
 
 ---
-The patch is against the latest wireless test tree.
+Gertjan.
 
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6796d5c..928402b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -809,6 +809,7 @@ static void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf
- 
- 	clear_bit(key->hw_key_idx + 64, common->keymap);
- 	if (common->splitmic) {
-+		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
- 		clear_bit(key->hw_key_idx + 32, common->keymap);
- 		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
- 	}
--- 
-1.6.2.5
-
-
-
-
-On Mon, 8 Feb 2010 13:38:02 -0800
-"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
-
-> On Sat, Feb 6, 2010 at 6:38 AM,  <tom.leiming@gmail.com> wrote:
-> > From: Ming Lei <tom.leiming@gmail.com>
-> >
-> > If split tkip key is used, ath_delete_key should delete
-> > rx key and rx mic key. This patch fixes the leak of hw
-> > keycache in the case.
+>  drivers/net/wireless/rt2x00/rt2400pci.c |    1 -
+>  drivers/net/wireless/rt2x00/rt2500pci.c |    1 -
+>  drivers/net/wireless/rt2x00/rt2500usb.c |    1 -
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    1 -
+>  drivers/net/wireless/rt2x00/rt2x00.h    |    2 --
+>  drivers/net/wireless/rt2x00/rt2x00mac.c |   16 ----------------
+>  drivers/net/wireless/rt2x00/rt61pci.c   |    1 -
+>  drivers/net/wireless/rt2x00/rt73usb.c   |    1 -
+>  8 files changed, 0 insertions(+), 24 deletions(-)
 > 
-> Can you please resend with Cc: stable@kernel.org on the commit log
-> entry?
+> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+> index d86d233..1843359 100644
+> --- a/drivers/net/wireless/rt2x00/rt2400pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+> @@ -1561,7 +1561,6 @@ static const struct ieee80211_ops rt2400pci_mac80211_ops = {
+>  	.get_stats		= rt2x00mac_get_stats,
+>  	.bss_info_changed	= rt2x00mac_bss_info_changed,
+>  	.conf_tx		= rt2400pci_conf_tx,
+> -	.get_tx_stats		= rt2x00mac_get_tx_stats,
+>  	.get_tsf		= rt2400pci_get_tsf,
+>  	.tx_last_beacon		= rt2400pci_tx_last_beacon,
+>  	.rfkill_poll		= rt2x00mac_rfkill_poll,
+> diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+> index 46cbc6e..7dfcffa 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+> @@ -1859,7 +1859,6 @@ static const struct ieee80211_ops rt2500pci_mac80211_ops = {
+>  	.get_stats		= rt2x00mac_get_stats,
+>  	.bss_info_changed	= rt2x00mac_bss_info_changed,
+>  	.conf_tx		= rt2x00mac_conf_tx,
+> -	.get_tx_stats		= rt2x00mac_get_tx_stats,
+>  	.get_tsf		= rt2500pci_get_tsf,
+>  	.tx_last_beacon		= rt2500pci_tx_last_beacon,
+>  	.rfkill_poll		= rt2x00mac_rfkill_poll,
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> index 9e6f865..81ca4ec 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> @@ -1761,7 +1761,6 @@ static const struct ieee80211_ops rt2500usb_mac80211_ops = {
+>  	.get_stats		= rt2x00mac_get_stats,
+>  	.bss_info_changed	= rt2x00mac_bss_info_changed,
+>  	.conf_tx		= rt2x00mac_conf_tx,
+> -	.get_tx_stats		= rt2x00mac_get_tx_stats,
+>  	.rfkill_poll		= rt2x00mac_rfkill_poll,
+>  };
+>  
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 529a373..a45e027 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2297,7 +2297,6 @@ const struct ieee80211_ops rt2800_mac80211_ops = {
+>  	.set_rts_threshold	= rt2800_set_rts_threshold,
+>  	.bss_info_changed	= rt2x00mac_bss_info_changed,
+>  	.conf_tx		= rt2800_conf_tx,
+> -	.get_tx_stats		= rt2x00mac_get_tx_stats,
+>  	.get_tsf		= rt2800_get_tsf,
+>  	.rfkill_poll		= rt2x00mac_rfkill_poll,
+>  };
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 096da85..43b70c6 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -1044,8 +1044,6 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+>  #endif /* CONFIG_RT2X00_LIB_CRYPTO */
+>  int rt2x00mac_get_stats(struct ieee80211_hw *hw,
+>  			struct ieee80211_low_level_stats *stats);
+> -int rt2x00mac_get_tx_stats(struct ieee80211_hw *hw,
+> -			   struct ieee80211_tx_queue_stats *stats);
+>  void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+>  				struct ieee80211_vif *vif,
+>  				struct ieee80211_bss_conf *bss_conf,
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> index 00f1f93..abbd857 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> @@ -555,22 +555,6 @@ int rt2x00mac_get_stats(struct ieee80211_hw *hw,
+>  }
+>  EXPORT_SYMBOL_GPL(rt2x00mac_get_stats);
+>  
+> -int rt2x00mac_get_tx_stats(struct ieee80211_hw *hw,
+> -			   struct ieee80211_tx_queue_stats *stats)
+> -{
+> -	struct rt2x00_dev *rt2x00dev = hw->priv;
+> -	unsigned int i;
+> -
+> -	for (i = 0; i < rt2x00dev->ops->tx_queues; i++) {
+> -		stats[i].len = rt2x00dev->tx[i].length;
+> -		stats[i].limit = rt2x00dev->tx[i].limit;
+> -		stats[i].count = rt2x00dev->tx[i].count;
+> -	}
+> -
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_GPL(rt2x00mac_get_tx_stats);
+> -
+>  void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+>  				struct ieee80211_vif *vif,
+>  				struct ieee80211_bss_conf *bss_conf,
+> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+> index c353b49..8813400 100644
+> --- a/drivers/net/wireless/rt2x00/rt61pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
+> @@ -2730,7 +2730,6 @@ static const struct ieee80211_ops rt61pci_mac80211_ops = {
+>  	.get_stats		= rt2x00mac_get_stats,
+>  	.bss_info_changed	= rt2x00mac_bss_info_changed,
+>  	.conf_tx		= rt61pci_conf_tx,
+> -	.get_tx_stats		= rt2x00mac_get_tx_stats,
+>  	.get_tsf		= rt61pci_get_tsf,
+>  	.rfkill_poll		= rt2x00mac_rfkill_poll,
+>  };
+> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+> index a026912..3781eb7 100644
+> --- a/drivers/net/wireless/rt2x00/rt73usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
+> @@ -2245,7 +2245,6 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
+>  	.get_stats		= rt2x00mac_get_stats,
+>  	.bss_info_changed	= rt2x00mac_bss_info_changed,
+>  	.conf_tx		= rt73usb_conf_tx,
+> -	.get_tx_stats		= rt2x00mac_get_tx_stats,
+>  	.get_tsf		= rt73usb_get_tsf,
+>  	.rfkill_poll		= rt2x00mac_rfkill_poll,
+>  };
 > 
-> > ---
-> > The patch is against the latest wireless test tree.
-> >
-> > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 > 
->   Luis
 
