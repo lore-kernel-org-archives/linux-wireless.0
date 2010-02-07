@@ -1,107 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox1.netikka.net ([213.250.81.202]:46990 "EHLO
-	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752401Ab0BNSon (ORCPT
+Received: from smtp-out108.alice.it ([85.37.17.108]:3451 "EHLO
+	smtp-out108.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932857Ab0BGToy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 13:44:43 -0500
-Message-ID: <4B784498.8030509@mandriva.org>
-Date: Sun, 14 Feb 2010 20:44:40 +0200
-From: Thomas Backlund <tmb@mandriva.org>
+	Sun, 7 Feb 2010 14:44:54 -0500
+Message-ID: <4B6F15D1.3050307@iperbole.bo.it>
+Date: Sun, 07 Feb 2010 20:34:41 +0100
+From: Lorenzo Raschi <ded1549@iperbole.bo.it>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: linux-2..6.33-rc7 and b43
-References: <4B77C819.9050602@mandriva.org> <4B782670.9080001@lwfinger.net>
-In-Reply-To: <4B782670.9080001@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: p54pci: "device does not respond!"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger skrev 14.2.2010 18:36:
-> On 02/14/2010 03:53 AM, Thomas Backlund wrote:
->> Hi,
->> (please cc me on replies)
->>
->> We have a user that tried out b43, but got this in the logs:
->>
->> --- cut ---
->> 65858:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
->> support DMA on your system. Please use PIO instead. 65859:Feb  9
->> 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO must
->> be set in your kernel configuration.
->> 65860:Feb  9 22:05:16 elmo kernel: b43-phy2 debug: Adding Interface type 2
->> 65861:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: Fatal DMA error:
->> 0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
->>
->> 65862:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
->> support DMA on your system. Please use PIO instead.
->> 65863:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO
->> must be set in your kernel configuration.
->> --- cut ---
->>
->>
->>
->> But reading the Kconfig help, it states:
->> --- cut ---
->> config B43_FORCE_PIO
->>          bool "Force usage of PIO instead of DMA"
->>          depends on B43&&  B43_DEBUG
->>          ---help---
->>            This will disable DMA and always enable PIO instead.
->>
->>            Say N!
->>            This is only for debugging the PIO engine code. You do
->>            _NOT_ want to enable this.
->> --- cut ---
->>
->>
->> So,
->> wich one is it ?
->>
->> Do I belive the dmesg output, or the Kconfig ?
->>
->> Note,
->> the b43 works for the user if he enable the CONFIG_B43_FORCE_PIO.
->>
->> But I'm thinking of this problem from a distro point of view.
->> Will it break for others if I enable it ?
->
->> From a distro point of view, you would not want to set FORCE_PIO as the
-> performance penalty would be very large.
->
+Hello,
 
-As I suspected.
-Thanks for confirming it.
+I've been using prism54 with fullmac firmware on my gentoo router since 
+one year.
+In AP mode prism54 works fine, although the fact that it works in open 
+mode only (no key support).
+Because I saw prism54 is deprecated now, I'm trying to switch to p54pci 
++ softmac driver. Unfortunately it doesn't work.
 
-> You do not give the specific details on the problem system; however, it is
-> probably a BCM4312 802.11 b/g device with PCI ID 14e4:4315 being used with an
-> Atom processor in a netbook. We have no fix.
->
+With kernel 2.6.31.6 dmesg tells me 9 times out of 10:
 
-Sorry about the missing info...
-I asked a few times from the user, and got no reponse until today a few 
-hours after your response...
+p54pci 0000:07:0e.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+p54pci 0000:07:0e.0: firmware: requesting isl3886pci
+phy22: p54 detected a LM86 firmware
+p54: rx_mtu reduced from 3240 to 2376
+phy22: FW rev 2.13.12.0 - Softmac protocol 5.9
+phy22: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy22: device does not respond!
+p54pci 0000:07:0e.0: PCI INT A disabled
+p54pci: probe of 0000:07:0e.0 failed with error -16
 
-It is indeed a BCM4312 802.11 b/g device with PCI ID 14e4:4315 on a Dell 
-laptop with a Intel ICH9M series chipset and a Intel Core(TM)2 Duo CPU 
-T7250 @ 2.00GHz.
+One time out of 10 it seems to works:
 
-> In the 2.6.34 code, b43 will be changed to allow the selection of PIO mode at
-> run time rather than compile time. For a distro, this method is clearly
-> superior. Those users that need PIO can select it without forcing the
-> performance penalty on everyone. The patch was too late for the 2.6.33 merge,
-> and too intrusive to be applied to 2.6.33-rcX. It has been present in the
-> wireless-testing code base for 2 months with no trouble reported, thus it should
-> be safe for inclusion in your kernels. The relevant patch is attached.
->
+p54pci 0000:07:0e.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+p54pci 0000:07:0e.0: firmware: requesting isl3886pci
+phy24: p54 detected a LM86 firmware
+p54: rx_mtu reduced from 3240 to 2376
+phy24: FW rev 2.13.12.0 - Softmac protocol 5.9
+phy24: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy24: hwaddr 00:60:b3:52:fb:66, MAC:isl3890 RF:Frisbee
+phy24: Selected rate control algorithm 'minstrel'
+Registered led device: p54-phy24::assoc
+Registered led device: p54-phy24::tx
+Registered led device: p54-phy24::rx
+Registered led device: p54-phy24::radio
+p54pci 0000:07:0e.0: is registered as 'phy24'
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
 
-Nice solution.
+I tried different firmwares without increasing the success ratio.
+When it seemed to work I tried using the wifi card with hostapd. My 
+laptop sees my wireless network, but as soon it try to register in, my 
+router hangs.
 
-What about making it autodetected ?
-Or is it only a "last resort" with the hopes of getting the issue fixed?
+I tried with kernel 2.6.33-rc6 also. With it the driver's module success 
+ratio seems decreased. Anyway, when it works, I tried hostapd. My router 
+hangs the same but, before it, dmesg tells me that:
 
-Anyway, thanks for the patch.
+------------[ cut here ]------------
+WARNING: at net/mac80211/rx.c:2513 ieee80211_rx+0xa1/0x840()
+Hardware name: OEM
+Modules linked in: p54pci p54common ipt_ipp2p [last unloaded: p54common]
+Pid: 0, comm: swapper Not tainted 2.6.33-rc6 #1
+Call Trace:
+  <IRQ>  [<ffffffff815b8191>] ? ieee80211_rx+0xa1/0x840
+  [<ffffffff8103e188>] warn_slowpath_common+0x78/0xd0
+  [<ffffffff8103e1ef>] warn_slowpath_null+0xf/0x20
+  [<ffffffff815b8191>] ieee80211_rx+0xa1/0x840
+  [<ffffffffa001fdbf>] ? p54p_check_rx_ring+0x15f/0x1d0 [p54pci]
+  [<ffffffff815a6161>] ieee80211_tasklet_handler+0xf1/0x120
+  [<ffffffff810433a9>] tasklet_action+0x69/0xf0
+  [<ffffffffa001fbc2>] ? p54p_interrupt+0x112/0x130 [p54pci]
+  [<ffffffff81043f06>] __do_softirq+0xa6/0x130
+  [<ffffffff8101dba5>] ? ack_apic_level+0x95/0x240
+  [<ffffffff810032cc>] call_softirq+0x1c/0x30
+  [<ffffffff81005435>] do_softirq+0x55/0x90
+  [<ffffffff81043be5>] irq_exit+0x75/0x90
+  [<ffffffff810049b3>] do_IRQ+0x73/0xf0
+  [<ffffffff815d8053>] ret_from_intr+0x0/0xa
+  <EOI>  [<ffffffff8100ad36>] ? mwait_idle+0x66/0x80
+  [<ffffffff81001640>] ? enter_idle+0x20/0x30
+  [<ffffffff810016fb>] cpu_idle+0xab/0x100
+  [<ffffffff815d1d1e>] start_secondary+0x174/0x1c6
+---[ end trace ec372cd178aae683 ]---
 
---
-Thomas
+please, don't hesitate to contact me (via email, I'm not registered into 
+this ml) to have more details.
+
+Best regards,
+
+Lorenzo Raschi
