@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53545 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754779Ab0BSSTZ (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:40947 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754494Ab0BGREc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 13:19:25 -0500
-Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs
- definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-In-Reply-To: <4B7ED405.4090501@lwfinger.net>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-	 <1266591292.15178.1.camel@jlt3.sipsolutions.net>
-	 <4B7EB31D.2000603@lwfinger.net>
-	 <1266596602.15178.2.camel@jlt3.sipsolutions.net>
-	 <4B7EBF0A.1060907@lwfinger.net>
-	 <1266598974.3754.0.camel@jlt3.sipsolutions.net>
-	 <4B7ED405.4090501@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EfPpQcucgTyqsK0PRvLW"
-Date: Fri, 19 Feb 2010 19:19:22 +0100
-Message-ID: <1266603562.10689.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 7 Feb 2010 12:04:32 -0500
+Received: by ewy28 with SMTP id 28so1693116ewy.28
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Feb 2010 09:04:31 -0800 (PST)
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH 09/10] rt2x00: remove get_tx_stats() mac80211 op
+References: <20100207082044.31474.48583.stgit@tikku>
+	<20100207082153.31474.76058.stgit@tikku> <4B6EA990.30801@gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 07 Feb 2010 19:04:28 +0200
+In-Reply-To: <4B6EA990.30801@gmail.com> (Gertjan van Wingerde's message of "Sun\, 07 Feb 2010 12\:52\:48 +0100")
+Message-ID: <878wb5ht9f.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Gertjan van Wingerde <gwingerde@gmail.com> writes:
 
---=-EfPpQcucgTyqsK0PRvLW
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> On 02/07/10 09:21, Kalle Valo wrote:
+>> get_tx_stats() will be removed from mac80211.
+>> 
+>> Compile-tested only.
+>> 
+>> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+>> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+>> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+>> ---
+>
+> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-On Fri, 2010-02-19 at 12:10 -0600, Larry Finger wrote:
+Thanks.
 
-> > [    5.900494] ssb: Found rev 2 PMU (capabilities 0x04583002)
-> > [    5.900500] ssb: ERROR: PLL init unknown for device 4322
-> > [    5.900844] ssb: ERROR: PMU resource config unknown for device 4322
+> Although I seem to be missing the actual removal of the
+> get_tx_stats from mac80211.
 
-> I just submitted a patch for the errors above that I've had here for a
-> long time.
+That's patch 10:
 
-I saw, thanks.
+http://marc.info/?l=linux-wireless&m=126553093501483&w=2
 
-johannes
-
---=-EfPpQcucgTyqsK0PRvLW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLftYnAAoJEODzc/N7+QmaPx4P/137dSnYdIpIPDVe2Y63X9SN
-ytEl/MYYJV5aZLfyk8a8MM4z/8KFWKoMjm1EMDD3QAx4tE5UYkWv3FVzHlu/2gJs
-QC4lhqW1fcNkuyGarzbs1leN9rDdMI7gb+/E0RellenHbGQu92MScCi0FCvv8mVK
-BDZDvFLmP/qid78+uASmjNKZ6FhxUru0a1d0846g59hP47AHnX06J3EOHc1iLL/L
-wAbtqxt5xzAMMBOs71Q6IJP3WxELJsqaZ5HV3BdvxnriZOi9LqJesRFcYjbG5tUy
-53MDlQiOZfmJf/uhgSv2p0PAc9BB+aUtgxyAHDQ729lZnKPgWScDHcicT4n8BxAn
-ZW49hKCvjCz5cOM+D4XBNfA7DvTVPeLVfpqJPns8iz8xeS5I7AfxD0t/RYHyXNUu
-rvlBaH/v2LPLrwwkzvApntMJ8vh1HGsHqz/WzP+S0H8TsqM/fFYZPOGiGbcrtTcJ
-6+octmVw6UUxJvYZ7qeJ0jkr56WPjj5Ck8L00a6qPs3Hdphq9zz4TZjyq/0qvFnQ
-xqwKBGUCEsIVVkBdMuFhW3l5N4REpRKdROwIj0zzzRM2jJ0KlskDTNz42C18ouAf
-tRvvx669kwN3UT/dd5x0FOvshU0uFdJ17quii5kJTV/Y+D21l64/cwh0Yf3bI+W+
-yhU9HOxpfFc4zJUTt/9/
-=unwS
------END PGP SIGNATURE-----
-
---=-EfPpQcucgTyqsK0PRvLW--
-
+-- 
+Kalle Valo
