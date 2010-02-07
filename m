@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20515 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754773Ab0BVGl2 (ORCPT
+Received: from mail-fx0-f211.google.com ([209.85.220.211]:63956 "EHLO
+	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753088Ab0BGPCA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:28 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 09/22] wl1271: Fixed unloading of the wl1271_sdio module
-Date: Mon, 22 Feb 2010 08:38:29 +0200
-Message-Id: <1266820722-20202-10-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Sun, 7 Feb 2010 10:02:00 -0500
+Received: by fxm3 with SMTP id 3so6377516fxm.39
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Feb 2010 07:01:57 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath: fix WARN_ON with Polish (Poland) Contry code
+Date: Sun, 7 Feb 2010 16:01:55 +0100
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201002071601.55787.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+This patch fixes a WARN_ON which is triggered
+by Poland's country code.
 
-Fixed two bugs causing problems when unloding wl1271 module. First was
-missing sdio_set_drvdata call from the probe function, second was order
-of function calls in the remove function.
+ath: EEPROM regdomain: 0x8268       
+ath: EEPROM indicates we should expect a country code
+ath: doing EEPROM country->regdmn map search
+ath: country maps to regdmn code: 0x37
+ath: Country alpha2 being used: PL
+ath: Regpair used: 0x37
+  -----------[ cut here ]------------
+WARNING: at drivers/net/wireless/ath/regd.c:155 ath_regd_init+0x30b
+Pid: 12661, comm: firmware/carl91 2.6.33-rc5-wl #18
+Call Trace:
+ [<>] ? warn_slowpath_common+0x76/0x8c
+ [<>] ? ar9170_reg_notifier+0x0/0x2d [carl9170usb]
+ [<>] ? ath_regd_init+0x30b/0x377 [ath]
+ [<>] ? ar9170_register+0x3b3/0x3ca [carl9170usb]
+[...]
+---[ end trace ]---
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Note: Poland is just an example. But it is very likely
+that more country codes are affected.
+
+Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index be5c149..7d7c850 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -219,6 +219,8 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 		goto out_irq;
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 039ac49..04abd1f 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -110,8 +110,9 @@ static const struct ieee80211_regdomain ath_world_regdom_67_68_6A = {
  
- 	sdio_claim_host(func);
-+	sdio_set_drvdata(func, wl);
-+
- 	ret = sdio_enable_func(func);
- 	if (ret)
- 		goto out_release;
-@@ -246,10 +248,11 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ static inline bool is_wwr_sku(u16 regd)
  {
- 	struct wl1271 *wl = sdio_get_drvdata(func);
+-	return ((regd & WORLD_SKU_MASK) == WORLD_SKU_PREFIX) ||
+-		(regd == WORLD);
++	return ((regd & COUNTRY_ERD_FLAG) != COUNTRY_ERD_FLAG) &&
++		(((regd & WORLD_SKU_MASK) == WORLD_SKU_PREFIX) ||
++		(regd == WORLD));
+ }
  
-+	ieee80211_unregister_hw(wl->hw);
-+
- 	sdio_claim_host(func);
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
--	ieee80211_unregister_hw(wl->hw);
- 
- 	free_irq(wl->irq, wl);
- 
--- 
-1.6.3.3
+ static u16 ath_regd_get_eepromRD(struct ath_regulatory *reg)
 
