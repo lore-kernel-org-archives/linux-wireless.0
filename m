@@ -1,38 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:55264 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754758Ab0BWXzE convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51290 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763Ab0BHNrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 18:55:04 -0500
-Received: by pwj8 with SMTP id 8so4321244pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 15:55:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100223231527.8028.84024.stgit@mj.roinet.com>
-References: <20100223231527.8028.84024.stgit@mj.roinet.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 23 Feb 2010 15:54:43 -0800
-Message-ID: <43e72e891002231554o7b1b8bc5g865381c1b0a9e019@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: never read from the AR_IMR_S2 register
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 8 Feb 2010 08:47:51 -0500
+Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh
+ mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+In-Reply-To: <c1545bb51002071151wb2cefa3mb03501e0d6b3fb4b@mail.gmail.com>
+References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
+	 <20100205165726.GA1496@holoscopio.com>
+	 <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com>
+	 <1265446793.4041.2.camel@johannes.local>
+	 <c1545bb51002071151wb2cefa3mb03501e0d6b3fb4b@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-qx8bIus4LTVc07RFFigE"
+Date: Mon, 08 Feb 2010 10:08:09 +0100
+Message-ID: <1265620089.3783.2.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 23, 2010 at 3:15 PM, Pavel Roskin <proski@gnu.org> wrote:
-> The AR_IMR_S2 register sometimes cannot be read correctly.  Instead of a
-> valid value, 0xdeadbeef is returned.  The driver has been observed
-> writing that value back to AR_IMR_S2 after changing a few bits.
->
-> Cache the register value in ah->imrs2_reg and always write chached value
-> to the register.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-What hardware was this seen with ? Can you enable PS debug to see if
-perhaps PS is left enabled when we try to configure hardware. When we
-touch some registers PS needs to be enabled, this could be a PS issue,
-unless of course you see this also when PS is disabled by default.
+--=-qx8bIus4LTVc07RFFigE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Sun, 2010-02-07 at 11:51 -0800, Andrey Yurovsky wrote:
+> On Sat, Feb 6, 2010 at 12:59 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > I do wonder though, the commit (155cc9e4b1d60161ee53) I referenced was
+> > yours, and now you're asking the same question as I am -- "why even
+> > allow adding stations?"
+>=20
+> It was supported for automated testing and experimentation (you could
+> then force certain topologies).  I can't think of any other reason to
+> do it.  I suppose that the same thing goes for mpaths and the mesh
+> portal tables.
+
+So would you prefer to fix it (however we would do that, I don't think
+that the patch here is correct since it leaves the station struct with
+no usable rates afaict), or just disallow it?
+
+johannes
+
+--=-qx8bIus4LTVc07RFFigE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLb9R1AAoJEODzc/N7+QmaGLQQAMCXtloOTf/dsfOtE/pn6FnX
+QS6mXh61WoRHYSE51gMXTloQKLOQr/0pXryfBTZHmYYE242F+qYM6NGp+oH9O364
+GRNqgvMMEsLB239w4xLqTl/yFd+cpgxmg+j5dJyXu73oBdvBhBbVmdNBHQA/kCky
+FglCVrspJwKe4QNAzYEqqThpYvNnhqNOrX9JiVGbqrqKLIjZwLo8BaJ9AiREJ23J
+ARRO4Kjkdx2kln0btfaJVXP8OzQMTbBW5b69PmqTWMQmz3D0dkYEoBecoZeeUjJZ
+lUPYX50kEoDcWxNcmmhM0OwQX6nhZsDtYhCm4pAYuXsG1/JpaGqWJHRR4DIAtVrK
+8ZovXNnIDFECr+ISNkm8g7tApFBrkNs1B9XO3ua45VuaipeQPO+68OZv27wkmqlD
+iu6cGF9Jt+XzMYx8Gpv8sYC9TCrS4ei1RwcclmE35QhoZWuU3XSgqiw7Jp7anPjr
+KFiKp/qB7tgdsgNMYPQJd/Kq0MWvwpDXx4vucjwkXADmMAwE105KS3CTTz9EkGeV
+tiUDojxybOGYz9drG5bKJHqO9R4E3ue0RgoJYe9QhBCMkzuZXE6cDw6Rcqsk7T/6
+sp1opHt6sJa9AtUr9neAcB5i/ul1Ta+KdJXBQH81CeaApN3gx1Z90oUZA2T+TW6i
+TGFu6aWimQMRYmoDkIQ4
+=LKRZ
+-----END PGP SIGNATURE-----
+
+--=-qx8bIus4LTVc07RFFigE--
+
