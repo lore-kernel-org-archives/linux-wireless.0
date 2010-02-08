@@ -1,28 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22867 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753326Ab0BYGMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 01:12:16 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 0/7] iwmc3200wifi driver 02/25 updates
-Date: Thu, 25 Feb 2010 14:15:24 +0800
-Message-Id: <1267078531-9817-1-git-send-email-yi.zhu@intel.com>
+Received: from fg-out-1718.google.com ([72.14.220.157]:30082 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755132Ab0BHUeE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 15:34:04 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so145229fga.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 12:34:03 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v3] mac80211: Retry null data frame for power save.
+Date: Mon, 8 Feb 2010 21:30:09 +0100
+Cc: Vivek Natarajan <vivek.natraj@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, IvDoorn@gmail.com,
+	gwingerde@gmail.com
+References: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com> <8e92b4101002080513n788ef64erb33baef2393b0d54@mail.gmail.com> <1265646279.3783.8.camel@johannes.berg>
+In-Reply-To: <1265646279.3783.8.camel@johannes.berg>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201002082130.10238.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Monday 08 February 2010 17:24:39 Johannes Berg wrote:
+> On Mon, 2010-02-08 at 18:43 +0530, Vivek Natarajan wrote:
+> 
+> > > On a related issue: What about _inverting_ the flag, so it will
+> > > be set for devices which can't give any accurate tx_status
+> > > information. This has the advantage that we don't have to touch
+> > > other drivers?
+> > 
+> > Shall I rename it as HW_NO_TX_ACK_REPORT?
+> > Looking at the other flags, they show some positively present
+> > feature in the hw. In those lines, HW_REPORTS_TX_ACK_STATUS
+> > might be better.
+> 
+> The positive feature flag has the advantage that we don't have to touch
+> any of the essentially unmaintained drivers, so I much prefer having it
+> that way so maintainers can enable the flag after testing etc.
 
-Here are some iwmc3200wifi driver updates for .34 kernel. Please apply.
+Alright. I count 2:1 votes. So "positive feature flag" it is.
 
-[PATCH 1/7] iwmc3200wifi: refuse to associate on unallowed channels
-[PATCH 2/7] iwmc3200wifi: remove "_safe" for some list_for_each_entry usage
-[PATCH 3/7] iwmc3200wifi: add ftrace event tracing support
-[PATCH 4/7] iwmc3200wifi: protect rx_tickets and rx_packets[] lists
-[PATCH 5/7] iwmc3200wifi: increase concatenated buffer
-[PATCH 6/7] iwmc3200wifi: mark some pmksa functions static
-[PATCH 7/7] iwmc3200wifi: typo fix and code cleanup
+BTW: I added rt2x00 project maintainers to the CC, because
+If I'm not totally wrong, this patch _reduces_ some PS
+features of rt2x00. This is because not all of rt2x00
+supported & PS-capable/enabled devices return a proper tx_status
+and therefore these devices will be the most affected AFAICT.
 
-Thanks,
--yi
+Any word from you guys? Or have you scrubbed the PS features already?
+
+Regards,
+	Chr
