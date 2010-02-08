@@ -1,107 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:34124 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359Ab0BIUFT (ORCPT
+Received: from az33egw02.freescale.net ([192.88.158.103]:49674 "EHLO
+	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752521Ab0BHJU0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:05:19 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so4264852ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:05:18 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 07/11] b43: N-PHY: adjust gain table
-Date: Tue,  9 Feb 2010 21:04:39 +0100
-Message-Id: <1265745883-3392-8-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+	Mon, 8 Feb 2010 04:20:26 -0500
+Received: from az33smr02.freescale.net (az33smr02.freescale.net [10.64.34.200])
+	by az33egw02.freescale.net (8.14.3/az33egw02) with ESMTP id o189KFkD007951
+	for <linux-wireless@vger.kernel.org>; Mon, 8 Feb 2010 02:20:15 -0700 (MST)
+Received: from zmy16exm21.fsl.freescale.net (zmy16exm21.ap.freescale.net [10.211.3.25])
+	by az33smr02.freescale.net (8.13.1/8.13.0) with ESMTP id o189KIvq002805
+	for <linux-wireless@vger.kernel.org>; Mon, 8 Feb 2010 03:20:19 -0600 (CST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="US-ASCII"
+Subject: RE: [ath9k-devel] can ath9k run on linux 2.6.25
+Date: Mon, 8 Feb 2010 17:20:09 +0800
+Message-ID: <25E8B46727291E4EB5A1CB88CBC4284E0100A711@zmy16exm21.fsl.freescale.net>
+In-Reply-To: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
+References: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
+From: "Zhang Yanfei-B21500" <B21500@freescale.com>
+To: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<ath9k-devel@venema.h4ckr.net>, <johannes@sipsolutions.net>,
+	<stable@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   58 +++++++++++++++++++++++++++++++++++++-
- 1 files changed, 57 insertions(+), 1 deletions(-)
+Hi All
+	Anyone have porting the ath9k to 2.6.25? Is it can work on
+2.6.25?
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 4ff09b8..835d0da 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -837,6 +837,62 @@ static void b43_nphy_spur_workaround(struct b43_wldev *dev)
- 		b43_nphy_stay_in_carrier_search(dev, 0);
- }
- 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/AdjustLnaGainTbl */
-+static void b43_nphy_adjust_lna_gain_table(struct b43_wldev *dev)
-+{
-+	struct b43_phy_n *nphy = dev->phy.n;
-+
-+	u8 i;
-+	s16 tmp;
-+	u16 data[4];
-+	s16 gain[2];
-+	u16 minmax[2];
-+	u16 lna_gain[4] = { -2, 10, 19, 25 };
-+
-+	if (nphy->hang_avoid)
-+		b43_nphy_stay_in_carrier_search(dev, 1);
-+
-+	if (nphy->gain_boost) {
-+		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+			gain[0] = 6;
-+			gain[1] = 6;
-+		} else {
-+			tmp = 40370 - 315 * nphy->radio_chanspec.channel;
-+			gain[0] = ((tmp >> 13) + ((tmp >> 12) & 1));
-+			tmp = 23242 - 224 * nphy->radio_chanspec.channel;
-+			gain[1] = ((tmp >> 13) + ((tmp >> 12) & 1));
-+		}
-+	} else {
-+		gain[0] = 0;
-+		gain[1] = 0;
-+	}
-+
-+	for (i = 0; i < 2; i++) {
-+		if (nphy->elna_gain_config) {
-+			data[0] = 19 + gain[i];
-+			data[1] = 25 + gain[i];
-+			data[2] = 25 + gain[i];
-+			data[3] = 25 + gain[i];
-+		} else {
-+			data[0] = lna_gain[0] + gain[i];
-+			data[1] = lna_gain[1] + gain[i];
-+			data[2] = lna_gain[2] + gain[i];
-+			data[3] = lna_gain[3] + gain[i];
-+		}
-+		b43_ntab_write_bulk(dev, B43_NTAB16(10, 8), 4, data);
-+
-+		minmax[i] = 23 + gain[i];
-+	}
-+
-+	b43_phy_maskset(dev, B43_NPHY_C1_MINMAX_GAIN, ~B43_NPHY_C1_MINGAIN,
-+				minmax[0] << B43_NPHY_C1_MINGAIN_SHIFT);
-+	b43_phy_maskset(dev, B43_NPHY_C2_MINMAX_GAIN, ~B43_NPHY_C2_MINGAIN,
-+				minmax[1] << B43_NPHY_C2_MINGAIN_SHIFT);
-+
-+	if (nphy->hang_avoid)
-+		b43_nphy_stay_in_carrier_search(dev, 0);
-+}
-+
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/WorkaroundsGainCtrl */
- static void b43_nphy_gain_crtl_workarounds(struct b43_wldev *dev)
- {
-@@ -921,7 +977,7 @@ static void b43_nphy_gain_crtl_workarounds(struct b43_wldev *dev)
- 		b43_phy_write(dev, B43_NPHY_TABLE_DATALO,
- 					(code << 8 | 0x7C));
- 
--		/* TODO: b43_nphy_adjust_lna_gain_table(dev); */
-+		b43_nphy_adjust_lna_gain_table(dev);
- 
- 		if (nphy->elna_gain_config) {
- 			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, 0x0808);
--- 
-1.6.4.2
 
+Regards,
+Yanfei Zhang
+ 
+
+> -----Original Message-----
+> From: ath9k-devel-bounces@venema.h4ckr.net 
+> [mailto:ath9k-devel-bounces@venema.h4ckr.net] On Behalf Of 
+> tom.leiming@gmail.com
+> Sent: Saturday, February 06, 2010 10:38 PM
+> To: lrodriguez@atheros.com
+> Cc: linux-wireless@vger.kernel.org; linville@tuxdriver.com; 
+> ath9k-devel@venema.h4ckr.net; johannes@sipsolutions.net; 
+> stable@kernel.org
+> Subject: [ath9k-devel] [PATCH] ath9k: fix keycache leak in 
+> split tkip case
+> 
+> From: Ming Lei <tom.leiming@gmail.com>
+> 
+> If split tkip key is used, ath_delete_key should delete rx 
+> key and rx mic key. This patch fixes the leak of hw keycache 
+> in the case.
+> 
+> ---
+> The patch is against the latest wireless test tree.
+> 
+> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/main.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c 
+> b/drivers/net/wireless/ath/ath9k/main.c
+> index 6796d5c..928402b 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -809,6 +809,7 @@ static void ath_key_delete(struct 
+> ath_common *common, struct ieee80211_key_conf
+>  
+>  	clear_bit(key->hw_key_idx + 64, common->keymap);
+>  	if (common->splitmic) {
+> +		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
+>  		clear_bit(key->hw_key_idx + 32, common->keymap);
+>  		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
+>  	}
+> --
+> 1.6.2.5
+> 
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+> 
+> 
