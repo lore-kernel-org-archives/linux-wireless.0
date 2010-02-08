@@ -1,134 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:38355 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934800Ab0BZBGF (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:9148 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962Ab0BHRdH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 20:06:05 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] libertas: add auto auth mode feature
-Date: Thu, 25 Feb 2010 17:16:36 -0800
-Message-Id: <1267146996-3725-1-git-send-email-bzhao@marvell.com>
+	Mon, 8 Feb 2010 12:33:07 -0500
+Received: by qw-out-2122.google.com with SMTP id 9so701464qwb.37
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 09:33:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201002081454.13561.sturmflut@lieberbiber.de>
+References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
+	 <1265446793.4041.2.camel@johannes.local>
+	 <c1545bb51002071151wb2cefa3mb03501e0d6b3fb4b@mail.gmail.com>
+	 <201002081454.13561.sturmflut@lieberbiber.de>
+Date: Mon, 8 Feb 2010 09:26:05 -0800
+Message-ID: <445f43ac1002080926y4912fa6n7d94ce3333e879f5@mail.gmail.com>
+Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh mode
+From: Javier Cardona <javier@cozybit.com>
+To: Simon Raffeiner <sturmflut@lieberbiber.de>
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Simon,
 
-Auto auth mode is enabled by default. If user doesn't specify the
-auth mode, while association driver will first try with open mode
-and then with shared key mode. If user specifies an auth mode,
-auto auth is disabled and driver will not try association with
-another auth mode.
+On Mon, Feb 8, 2010 at 5:54 AM, Simon Raffeiner
+<sturmflut@lieberbiber.de> wrote:
+> Am Sonntag 07 Februar 2010 08:51:03 pm schrieben Sie:
+>
+>> It was supported for automated testing and experimentation (you could
+>> then force certain topologies).
+>
+> Wouldn't one have to disable beaconing then, or at least automatic peering? IMO you can't force a topology if the nodes are still beaconing and establishing paths at the same time.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/libertas/assoc.c |   22 +++++++++++++++++++++-
- drivers/net/wireless/libertas/dev.h   |    1 +
- drivers/net/wireless/libertas/main.c  |    1 +
- drivers/net/wireless/libertas/wext.c  |    4 ++++
- 4 files changed, 27 insertions(+), 1 deletions(-)
+Automatic peering can be disabled via NL80211_MESHCONF_AUTO_OPEN_PLINKS.
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index f03d5e4..95d3d4c 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -31,6 +31,9 @@ u8 lbs_bg_rates[MAX_RATES] =
- 0x00, 0x00 };
- 
- 
-+static int assoc_helper_wep_keys(struct lbs_private *priv,
-+		struct assoc_request *assoc_req);
-+
- /**
-  *  @brief This function finds common rates between rates and card rates.
-  *
-@@ -610,7 +613,7 @@ static int lbs_assoc_post(struct lbs_private *priv,
- 
- 	if (status_code) {
- 		lbs_mac_event_disconnected(priv);
--		ret = -1;
-+		ret = status_code;
- 		goto done;
- 	}
- 
-@@ -813,7 +816,24 @@ static int lbs_try_associate(struct lbs_private *priv,
- 		goto out;
- 
- 	ret = lbs_associate(priv, assoc_req, CMD_802_11_ASSOCIATE);
-+	/* If the association fails with current auth mode, let's
-+	 * try by changing the auth mode
-+	 */
-+	if ((priv->authtype_auto) &&
-+			(ret == WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG) &&
-+			(assoc_req->secinfo.wep_enabled) &&
-+			(priv->connect_status != LBS_CONNECTED)) {
-+		if (priv->secinfo.auth_mode == IW_AUTH_ALG_OPEN_SYSTEM)
-+			priv->secinfo.auth_mode = IW_AUTH_ALG_SHARED_KEY;
-+		else
-+			priv->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
-+		if (!assoc_helper_wep_keys(priv, assoc_req))
-+			ret = lbs_associate(priv, assoc_req,
-+						CMD_802_11_ASSOCIATE);
-+	}
- 
-+	if (ret)
-+		ret = -1;
- out:
- 	lbs_deb_leave_args(LBS_DEB_ASSOC, "ret %d", ret);
- 	return ret;
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 6977ee8..058d172 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -133,6 +133,7 @@ struct lbs_private {
- 	u8 wpa_ie_len;
- 	u16 wep_tx_keyidx;
- 	struct enc_key wep_keys[4];
-+	u8 authtype_auto;
- 
- 	/* Wake On LAN */
- 	uint32_t wol_criteria;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index cd8ed7f..0e24c96 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -831,6 +831,7 @@ static int lbs_init_adapter(struct lbs_private *priv)
- 	priv->is_auto_deep_sleep_enabled = 0;
- 	priv->wakeup_dev_required = 0;
- 	init_waitqueue_head(&priv->ds_awake_q);
-+	priv->authtype_auto = 1;
- 
- 	mutex_init(&priv->lock);
- 
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 71f88a0..aad6263 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -1440,8 +1440,10 @@ static int lbs_set_encode(struct net_device *dev,
- 		set_bit(ASSOC_FLAG_WEP_TX_KEYIDX, &assoc_req->flags);
- 
- 	if (dwrq->flags & IW_ENCODE_RESTRICTED) {
-+		priv->authtype_auto = 0;
- 		assoc_req->secinfo.auth_mode = IW_AUTH_ALG_SHARED_KEY;
- 	} else if (dwrq->flags & IW_ENCODE_OPEN) {
-+		priv->authtype_auto = 0;
- 		assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
- 	}
- 
-@@ -1620,8 +1622,10 @@ static int lbs_set_encodeext(struct net_device *dev,
- 			goto out;
- 
- 		if (dwrq->flags & IW_ENCODE_RESTRICTED) {
-+			priv->authtype_auto = 0;
- 			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_SHARED_KEY;
- 		} else if (dwrq->flags & IW_ENCODE_OPEN) {
-+			priv->authtype_auto = 0;
- 			assoc_req->secinfo.auth_mode = IW_AUTH_ALG_OPEN_SYSTEM;
- 		}
- 
+Javier
+
+
 -- 
-1.5.3.6
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
