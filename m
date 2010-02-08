@@ -1,115 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34366 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753572Ab0BBQ6f (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48864 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543Ab0BHVAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2010 11:58:35 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH] ath9k: add support for 802.11n bonded out AR2427
-Date: Tue,  2 Feb 2010 11:58:33 -0500
-Message-Id: <1265129913-18476-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 8 Feb 2010 16:00:54 -0500
+Date: Mon, 8 Feb 2010 15:55:04 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+Subject: Re: [PATCH v2] airo: fix setting zero length WEP key
+Message-ID: <20100208205503.GB3852@tuxdriver.com>
+References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com> <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com> <1265353178.11066.5.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1265353178.11066.5.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some single chip family devices are sold in the market with
-802.11n bonded out, these have no hardware capability for
-802.11n but ath9k can still support them. These are called
-AR2427.
+On Thu, Feb 04, 2010 at 10:59:38PM -0800, Dan Williams wrote:
+> John, can we revert the patch you applied, and apply the following patch
+> instead (in the next mail)?  I'd rather use the one I'm about to send
+> because it makes it clearer *why* setting the TX key index is required,
+> and it limits that case to only the time when it's necessary.  Pending
+> the testing by Chris, I'd rather have the revised version committed
+> instead.
 
-Cc: stable@kernel.org
-Reported-by: Rolf Leggewie <bugzilla.kernel.org@rolf.leggewie.biz>
-Tested-by: Bernhard Reiter <ockham@raz.or.at>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+Do you still want this don, even after Chris's testing says your
+patch doesn't work?  I wasn't sure from your response.
 
-A properly tested backport will be submitted for 2.6.33 and 2.6.32.
-Not sure if this will apply to 2.6.33, it may, but it won't for
-2.6.32 for sure.
-
- drivers/net/wireless/ath/ath9k/hw.c   |    7 ++++++-
- drivers/net/wireless/ath/ath9k/hw.h   |    1 +
- drivers/net/wireless/ath/ath9k/init.c |    4 +++-
- drivers/net/wireless/ath/ath9k/pci.c  |    1 +
- 4 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1a27f39..f15fee7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -334,7 +334,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 	ah->config.pcie_clock_req = 0;
- 	ah->config.pcie_waen = 0;
- 	ah->config.analog_shiftreg = 1;
--	ah->config.ht_enable = 1;
- 	ah->config.ofdm_trig_low = 200;
- 	ah->config.ofdm_trig_high = 500;
- 	ah->config.cck_trig_high = 200;
-@@ -346,6 +345,11 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 		ah->config.spurchans[i][1] = AR_NO_SPUR;
- 	}
- 
-+	if (ah->hw_version.devid != AR2427_DEVID_PCIE)
-+		ah->config.ht_enable = 1;
-+	else
-+		ah->config.ht_enable = 0;
-+
- 	ah->config.rx_intr_mitigation = true;
- 
- 	/*
-@@ -542,6 +546,7 @@ static bool ath9k_hw_devid_supported(u16 devid)
- 	case AR5416_DEVID_AR9287_PCI:
- 	case AR5416_DEVID_AR9287_PCIE:
- 	case AR9271_USB:
-+	case AR2427_DEVID_PCIE:
- 		return true;
- 	default:
- 		break;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index ab1f198..dbbf7ca 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -40,6 +40,7 @@
- #define AR9280_DEVID_PCI	0x0029
- #define AR9280_DEVID_PCIE	0x002a
- #define AR9285_DEVID_PCIE	0x002b
-+#define AR2427_DEVID_PCIE	0x002c
- 
- #define AR5416_AR9100_DEVID	0x000b
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c3066b5..4b5e548 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -620,11 +620,13 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 		IEEE80211_HW_SIGNAL_DBM |
--		IEEE80211_HW_AMPDU_AGGREGATION |
- 		IEEE80211_HW_SUPPORTS_PS |
- 		IEEE80211_HW_PS_NULLFUNC_STACK |
- 		IEEE80211_HW_SPECTRUM_MGMT;
- 
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
-+		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
-+
- 	if (AR_SREV_9160_10_OR_LATER(sc->sc_ah) || modparam_nohwcrypt)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 4ae7b5f..3d97446 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -25,6 +25,7 @@ static struct pci_device_id ath_pci_id_table[] __devinitdata = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x002B) }, /* PCI-E */
-+	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
- 	{ 0 }
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
