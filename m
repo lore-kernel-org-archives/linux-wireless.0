@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:37278 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753383Ab0BUV7N convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2010 16:59:13 -0500
+Received: from mail.atheros.com ([12.36.123.2]:64713 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750854Ab0BHMRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 07:17:12 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 04:17:12 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<stable@kernel.org>
+Subject: [PATCH] mac80211: Reset dynamic ps timer in Rx path.
+Date: Mon, 8 Feb 2010 17:47:01 +0530
+Message-ID: <1265631421-2574-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com>
+References: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <b_eAfX__uZL.A.lvE.HcagLB@chimera>
-References: <b_eAfX__uZL.A.lvE.HcagLB@chimera>
-Date: Sun, 21 Feb 2010 22:59:10 +0100
-Message-ID: <b170af451002211359k7a2ae3c5o7af5e7b36d2c77b9@mail.gmail.com>
-Subject: Re: 2.6.33-rc8-git6: Reported regressions from 2.6.32
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/2/21 Rafael J. Wysocki <rjw@sisk.pl>:
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=15293
-> Subject         : Flash video laggy inside Firefox only with KMS
-> Submitter       : Michał Witkowski <neuro@o2.pl>
-> Date            : 2010-02-13 14:53 (9 days old)
+The current mac80211 implementation enables power save if there
+is no Tx traffic for a specific timeout. Hence, PS is triggered
+even if there is a continuous Rx only traffic(like UDP) going on.
+This makes the drivers to wait on the tim bit in the next beacon
+to awake which leads to redundant sleep-wake cycles.
+Fix this by restarting the dynamic ps timer on receiving every
+data packet.
 
-Not regression. Just KMS problem.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+CC: stable@kernel.org
+---
+ net/mac80211/rx.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 5709307..657ed66 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1719,6 +1719,7 @@ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
++	struct ieee80211_local *local = rx->local;
+ 	struct net_device *dev = sdata->dev;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	__le16 fc = hdr->frame_control;
+@@ -1750,6 +1751,13 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 	dev->stats.rx_packets++;
+ 	dev->stats.rx_bytes += rx->skb->len;
+ 
++	if (ieee80211_is_data(hdr->frame_control) &&
++	    !is_multicast_ether_addr(hdr->addr1) &&
++	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
++			mod_timer(&local->dynamic_ps_timer, jiffies +
++			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
++	}
++
+ 	ieee80211_deliver_skb(rx);
+ 
+ 	return RX_QUEUED;
 -- 
-Rafał
+1.6.6.1
+
