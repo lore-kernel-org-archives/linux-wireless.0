@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:24730 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757288Ab0BRL2U (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:8265 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253Ab0BHMm0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:20 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH 12/22] wl1271: wakeup chip in op_conf_tx()
-Date: Thu, 18 Feb 2010 13:25:47 +0200
-Message-Id: <1266492357-462-13-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 8 Feb 2010 07:42:26 -0500
+Received: by fg-out-1718.google.com with SMTP id 22so21545fge.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 04:42:24 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Subject: Re: [PATCH v3] mac80211: Retry null data frame for power save.
+Date: Mon, 8 Feb 2010 13:42:19 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+References: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201002081342.20062.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Monday 08 February 2010 13:17:00 Vivek Natarajan wrote:
+> Even if the null data frame is not acked by the AP, mac80211
+> goes into power save. This might lead to loss of frames
+> from the AP.
+> Prevent this by restarting dynamic_ps_timer when ack is not
+> received for null data frames.
+> 
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+>  include/net/mac80211.h     |    1 +
+>  net/mac80211/ieee80211_i.h |    1 +
+>  net/mac80211/mlme.c        |   20 +++++++++++++++-----
+>  net/mac80211/status.c      |   16 ++++++++++++++--
+>  4 files changed, 31 insertions(+), 7 deletions(-)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 74ccf30..92a3caf 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -978,6 +978,7 @@ enum ieee80211_hw_flags {
+>  	IEEE80211_HW_SUPPORTS_STATIC_SMPS		= 1<<15,
+>  	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
+>  	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+> +	IEEE80211_HW_TX_STATUS				= 1<<18,
+>  };
 
-elp_wakeup() was missing in op_conf_tx() which caused wakeup problems in
-power save. I forgot to add this part when porting the patch from wl1251.
+It might be a good idea to add some documentation for new flags.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+Otherwise this can easily lead to confusing (e.g.: Does
+HW_TX_STATUS mean that the HW reports not just ACKs, but also
+when if the frame was filtered by the HW, or if the HW reports
+the rate control information (retries & retry index) as well?)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index c7f5191..9de7df7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1738,11 +1738,15 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 conf tx %d", queue);
- 
-+	ret = wl1271_ps_elp_wakeup(wl, false);
-+	if (ret < 0)
-+		goto out;
-+
- 	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
- 				params->cw_min, params->cw_max,
- 				params->aifs, params->txop);
- 	if (ret < 0)
--		goto out;
-+		goto out_sleep;
- 
- 	ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
- 				 CONF_CHANNEL_TYPE_EDCF,
-@@ -1750,7 +1754,10 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 				 CONF_PS_SCHEME_LEGACY_PSPOLL,
- 				 CONF_ACK_POLICY_LEGACY, 0, 0);
- 	if (ret < 0)
--		goto out;
-+		goto out_sleep;
-+
-+out_sleep:
-+	wl1271_ps_elp_sleep(wl);
- 
- out:
- 	mutex_unlock(&wl->mutex);
--- 
-1.6.3.3
+On a related issue: What about _inverting_ the flag, so it will
+be set for devices which can't give any accurate tx_status
+information. This has the advantage that we don't have to touch
+other drivers?
+
+Regards,
+	Chr
 
