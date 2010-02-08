@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20495 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672Ab0BVGlX (ORCPT
+Received: from bhuna.collabora.co.uk ([93.93.128.226]:39611 "EHLO
+	bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753791Ab0BHRIE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:23 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 16/22] wl1271: Don't mask interrupts while handling interrupt
-Date: Mon, 22 Feb 2010 08:38:36 +0200
-Message-Id: <1266820722-20202-17-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 8 Feb 2010 12:08:04 -0500
+Date: Mon, 8 Feb 2010 12:07:35 -0500
+From: Andres Salomon <dilinger@collabora.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org
+Subject: Re: [PATCH 2/2] mac80211: give warning if building w/out rate ctrl
+  algorithm
+Message-ID: <20100208120735.4b41a4a6@mycelium.queued.net>
+In-Reply-To: <1265619993.3783.0.camel@johannes.berg>
+References: <20100207214837.027dfd3d@mycelium.queued.net>
+	<1265619993.3783.0.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/br4/23M.lAne+_vPTS65UOy"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't mask firmware interrupts while processing interrupts. This allows the
-interrupt handler looping to work efficiently thus reducing interrupt
-processing latency.
+--Sig_/br4/23M.lAne+_vPTS65UOy
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+On Mon, 08 Feb 2010 10:06:33 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 4d091eb..a46d323 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -424,8 +424,6 @@ static void wl1271_irq_work(struct work_struct *work)
- 	if (ret < 0)
- 		goto out;
- 
--	wl1271_write32(wl, ACX_REG_INTERRUPT_MASK, WL1271_ACX_INTR_ALL);
--
- 	wl1271_fw_status(wl, wl->fw_status);
- 	intr = le32_to_cpu(wl->fw_status->intr);
- 	if (!intr) {
-@@ -464,8 +462,6 @@ static void wl1271_irq_work(struct work_struct *work)
- 	}
- 
- out_sleep:
--	wl1271_write32(wl, ACX_REG_INTERRUPT_MASK,
--		       WL1271_ACX_INTR_ALL & ~(WL1271_INTR_MASK));
- 	wl1271_ps_elp_sleep(wl);
- 
- out:
--- 
-1.6.3.3
+> On Sun, 2010-02-07 at 21:48 -0500, Andres Salomon wrote:
+> > I discovered that if EMBEDDED=3Dy, one can accidentally build a
+> > mac80211 stack w/ no rate control algorithm.  When RC_MINISTREL and
+> > RC_PID are both disabled, the RC_DEFAULT string (which rate.c uses
+> > as the fallback algorithm) will be "".  That'll cause the
+> > rate_control_alloc to fail, which will in turn cause
+> > ieee80211_register_hw to fail.  IOW, no driver will load.
+> >=20
+> > This will tell kconfig to provide a warning if no rate control
+> > algorithms have been selected.  That'll at least warn the user that
+> > they're about to build a broken wireless stack.
+>=20
+>=20
+> > +comment "mac80211 will not work properly w/out rate control
+> > algorithm"
+> > +	depends on MAC80211_HAS_RC=3Dn
+>=20
+> Except that isn't true for hardware that doesn't require an algorithm,
+> or drivers that provide it themselves, like iwlagn or ath9k. I would
+> prefer it to be worded accordingly.
+>=20
 
+Noted.  I was wondering if there were any.
+
+How about having drivers that need them depend upon MAC80211_HAS_RC or
+some such, and having the text say something like "most drivers require
+rate control"?
+
+--Sig_/br4/23M.lAne+_vPTS65UOy
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAktwRNcACgkQOmXwGc/ULyatygCcC1X3mRDlcdnWWZt152cs2XSX
+5OgAnijjsUvF8xtpuLq3lO0Vmpc2G+ie
+=llR1
+-----END PGP SIGNATURE-----
+
+--Sig_/br4/23M.lAne+_vPTS65UOy--
