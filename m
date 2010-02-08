@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47047 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586Ab0BLIF0 (ORCPT
+Received: from smtp-out30.alice.it ([85.33.2.30]:4624 "EHLO
+	smtp-out30.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab0BHVHB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 03:05:26 -0500
-Received: by pwj8 with SMTP id 8so162697pwj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2010 00:05:26 -0800 (PST)
+	Mon, 8 Feb 2010 16:07:01 -0500
+Message-ID: <4B707A6E.2090500@iperbole.bo.it>
+Date: Mon, 08 Feb 2010 21:56:14 +0100
+From: Lorenzo Raschi <ded1549@iperbole.bo.it>
 MIME-Version: 1.0
-In-Reply-To: <1265961128-21301-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1265961128-21301-1-git-send-email-juuso.oikarinen@nokia.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 11 Feb 2010 23:57:00 -0800
-Message-ID: <43e72e891002112357k4b261c38x5f4d0fdc598bff3a@mail.gmail.com>
-Subject: Re: [PATCH 1/1] mac80211: fix handling of null-rate control in
-	rate_control_get_rate
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Jens Westemeier <Jens_Westemeier@web.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: p54pci: "device does not respond!"
+References: <4B6F15D1.3050307@iperbole.bo.it> <201002082004.20641.Jens_Westemeier@web.de>
+In-Reply-To: <201002082004.20641.Jens_Westemeier@web.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 11, 2010 at 11:52 PM, Juuso Oikarinen
-<juuso.oikarinen@nokia.com> wrote:
-> For hardware with IEEE80211_HW_HAS_RATE_CONTROL the rate controller is not
-> initialized. However, calling functions such as ieee80211_beacon_get result
-> in the rate_control_get_rate function getting called, which is accessing
-> (in this case uninitialized) rate control structures unconditionally.
->
-> Fix by exiting the function before setting the rates for HW with
-> IEEE80211_HW_HAS_RATE_CONTROL set. The initialization of the ieee80211_tx_info
-> struct is intentionally still executed.
->
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+Il 08/02/2010 20:04, Jens Westemeier ha scritto:
 
-I meant adding it on the commit log, below the Reviewed-by line.
+>> Because I saw prism54 is deprecated now, I'm trying to switch to p54pci
+>> + softmac driver. Unfortunately it doesn't work.
+> Same problem with my fullmac SMC 2802 card. /var/log/messages gives:
+> lspci gives:
+> Network controller: Intersil Corporation ISL3890 [Prism GT/Prism
+> Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
 
-  Luis
+Sorry, I forgot to write my lspci's output.
+Anyway, it's exactly the same as yours.
+
+07:0e.0 Network controller: Intersil Corporation ISL3890 [Prism GT/Prism 
+Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
+
+Best regards,
+
+Lorenzo Raschi
+
