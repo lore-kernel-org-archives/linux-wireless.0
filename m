@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:46115 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932268Ab0BEOGi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 09:06:38 -0500
-Received: by vws20 with SMTP id 20so1273557vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 06:06:38 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1265378538.3613.12.camel@johannes.local>
-References: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
-	 <1265377296.3613.11.camel@johannes.local>
-	 <8e92b4101002050559t2fa3132aiee9397dd4618f0fd@mail.gmail.com>
-	 <1265378538.3613.12.camel@johannes.local>
-Date: Fri, 5 Feb 2010 19:36:37 +0530
-Message-ID: <8e92b4101002050606y3474b104kef81429740355a4a@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2 v2] mac80211: Retry null data frame for power
-	save.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:14948 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752124Ab0BHXAk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 18:00:40 -0500
+Subject: Re: PROBLEM: iwlagn kernel 2.6.32.3 ooops
+From: reinette chatre <reinette.chatre@intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "lkml@Think-Future.de" <lkml@Think-Future.de>,
+	Linux Kernel-Liste <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100208143118.e8e5a1ee.akpm@linux-foundation.org>
+References: <20100206170348.GB9411@localhost>
+	 <20100208143118.e8e5a1ee.akpm@linux-foundation.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Feb 2010 15:00:39 -0800
+Message-ID: <1265670039.2551.1828.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 5, 2010 at 7:32 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2010-02-05 at 19:29 +0530, Vivek Natarajan wrote:
->> On Fri, Feb 5, 2010 at 7:11 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >
->> >> @@ -275,6 +274,19 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
->> >>                       local->dot11FailedCount++;
->> >>       }
->> >>
->> >> +     if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
->> >> +             (local->hw.flags & IEEE80211_HW_TX_STATUS) &&
->> >> +             (local->hw.conf.flags & IEEE80211_CONF_PS)) {
->> >> +             if (info->flags & IEEE80211_TX_STAT_ACK) {
->> >> +                     local->ps_sdata->u.mgd.flags |=
->> >> +                                     IEEE80211_STA_NULLFUNC_ACKED;
->> >> +                     ieee80211_queue_work(&local->hw,
->> >> +                                      &local->dynamic_ps_enable_work);
->> >> +             } else
->> >> +                     mod_timer(&local->dynamic_ps_timer, jiffies +
->> >> +                                     msecs_to_jiffies(10));
->> >> +     }
->> >> +
->> >>       /* this was a transmitted frame, but now we want to reuse it */
->> >>       skb_orphan(skb);
->> > And the mod_timer case is completely useless there anyway, at least the
->> > way you've done this now.
->> Ah, right! Thanks for pointing it out.
->
-> I htink you should only set CONF_PS after the frame is ACKed, otherwise
-> internal stuff might be confused too?
 
-I thought about that. But we may not be able to differentiate if the
-null frame is
-for power save or for fake_sleep during scannig.
 
-Vivek.
+On Mon, 2010-02-08 at 14:31 -0800, Andrew Morton wrote:
+> On Sat, 6 Feb 2010 18:03:50 +0100
+> lkml@Think-Future.de wrote:
+> > 
+> > 
+> > [250420.677157] ip: page allocation failure. order:3, mode:0x8020
+> 
+> This one isn't an "oops" - it's a warning that a memory allocation
+> attempt failed.  Which is hardly surprising: an order-3 GFP_ATOMIC
+> allocation is highly unreliable and the driver just shouldn't be
+> attempting it.
+
+This is the familiar http://bugzilla.kernel.org/show_bug.cgi?id=14141
+which is not specific to iwlwifi.
+
+Even so, from 2.6.33 iwlwifi will be doing paged RX which reduces the
+amount of atomic memory needed. 
+
+> > [252109.496953] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
+> > [252109.496961] iwlagn: Copyright(c) 2003-2009 Intel Corporation
+> > [252109.497071] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> > [252109.497094] iwlagn 0000:03:00.0: setting latency timer to 64
+> > [252109.497156] iwlagn 0000:03:00.0: Detected Intel Wireless WiFi Link 4965AGN REV=0x4
+> > [252109.547060] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 19 802.11a channels
+> > [252109.547202] iwlagn 0000:03:00.0: irq 29 for MSI/MSI-X
+> > [252109.548104] phy14: Selected rate control algorithm 'iwl-agn-rs'
+> > [252109.921801] udev: renamed network interface wlan0 to eth1
+> > [252110.693015] iwlagn 0000:03:00.0: firmware: requesting iwlwifi-4965-2.ucode
+> > [252110.810198] iwlagn 0000:03:00.0: loaded firmware version 228.61.2.24
+> > [252110.989598] ------------[ cut here ]------------
+> > [252110.989620] WARNING: at drivers/net/wireless/iwlwifi/iwl-tx.c:1151 iwl_tx_cmd_complete+0x2ed/0x330 [iwlcore]()
+> 
+> This one is a warning, not an oops.  It could be a consequence of the
+> memory allocation failure.
+
+Based on the preceding messages the driver was reloaded at this point so
+the previous memory allocations should have no effect.
+
+>   If so, the code should be changed to
+> prevent this warning from coming out.  Because a GFP_ATOMIC memory
+> allocation failure is common, and expected (especially when it's
+> order-3!).  The driver should handle it without blurting big warnings.
+
+The warning is not related to the memory allocation failure. This is a
+different problem. While I dig a bit into the trace, could you please
+share the steps to reproduce? Could you please activate some debugging
+to see what else is going on at the time? 
+
+Please compile driver with CONFIG_IWLWIFI_DEBUG and load module with
+"modprobe iwlagn debug=0x1043fff"
+
+Thank you
+
+Reinette
+
+
