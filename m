@@ -1,62 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 27.mail-out.ovh.net ([91.121.30.210]:46807 "HELO
-	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758625Ab0BXX4o (ORCPT
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:36538 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753139Ab0BHVCf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 18:56:44 -0500
-Message-ID: <4B85BCB8.1000006@free.fr>
-Date: Thu, 25 Feb 2010 00:56:40 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+	Mon, 8 Feb 2010 16:02:35 -0500
+Received: by fxm7 with SMTP id 7so286097fxm.28
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 13:02:33 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v3] mac80211: Retry null data frame for power save.
+Date: Mon, 8 Feb 2010 22:02:23 +0100
+Cc: Vivek Natarajan <vivek.natraj@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, IvDoorn@gmail.com,
+	gwingerde@gmail.com
+References: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com> <1265646279.3783.8.camel@johannes.berg> <201002082130.10238.chunkeey@googlemail.com>
+In-Reply-To: <201002082130.10238.chunkeey@googlemail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fix rates setup on IBSS merge
-References: <20100223095113.25360.75291.stgit@void> <43e72e891002231128w45c357a6v157dc4f7ddf3bbae@mail.gmail.com>
-In-Reply-To: <43e72e891002231128w45c357a6v157dc4f7ddf3bbae@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201002082202.24297.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez a écrit :
-> On Tue, Feb 23, 2010 at 1:51 AM, Bruno Randolf <br1@einfach.org> wrote:
->   
->> when an IBSS merge happened, the supported rates for the newly added station
->> were left empty, causing the rate control module to be initialized with only
->> the basic rates.
->>
->> also the section of the ibss code which deals with updating supported rates for
->> an already existing station fails to inform the rate control module about the
->> new rates. as i don't know how to fix this (minstrel does not have an update
->> function), i have just added a comment for now.
->>
->> Signed-off-by: Bruno Randolf <br1@einfach.org>
->>     
+On Monday 08 February 2010 21:30:09 Christian Lamparter wrote:
+> On Monday 08 February 2010 17:24:39 Johannes Berg wrote:
+> > On Mon, 2010-02-08 at 18:43 +0530, Vivek Natarajan wrote:
+> > 
+> > > > On a related issue: What about _inverting_ the flag, so it will
+> > > > be set for devices which can't give any accurate tx_status
+> > > > information. This has the advantage that we don't have to touch
+> > > > other drivers?
+> > > 
+> > > Shall I rename it as HW_NO_TX_ACK_REPORT?
+> > > Looking at the other flags, they show some positively present
+> > > feature in the hw. In those lines, HW_REPORTS_TX_ACK_STATUS
+> > > might be better.
+> > 
+> > The positive feature flag has the advantage that we don't have to touch
+> > any of the essentially unmaintained drivers, so I much prefer having it
+> > that way so maintainers can enable the flag after testing etc.
 >
-> This seems like a stable fix, if it applies can you please resend with a
+> BTW: I added rt2x00 project maintainers to the CC, because
+> If I'm not totally wrong, this patch _reduces_ some PS
+> features of rt2x00. This is because not all of rt2x00
+> supported & PS-capable/enabled devices return a proper tx_status
+> and therefore these devices will be the most affected AFAICT.
+> 
+> Any word from you guys? Or have you scrubbed the PS features already?
 >
-> Cc: stable@kernel.org
->
-> on the commit log entry right below your own SOB.
->
->   Luis
->   
-Hi Bruno,
 
-I think the root cause is that IBSS neighbor entries are added whenever 
-we received any packet from a neighbor. However, the supported rates are 
-only available in the beacon/probe responses. I think one fix is to only 
-add IBSS neighbors on beacon/probe response reception (and moreover, 
-beacon/probe responses contains the timestamp that is needed for IBSS 
-merge).
+Oops,
 
-Basically, I removed the call to ieee80211_ibss_add_sta in 
-net/mac80211/rx.c.
+Johannes pointed out that the patch does not break rt2x00.
+and indeed ... he IS right and I misread the check !HW_STATUS_CHECK
+in ieee80211_enable_ps.
 
-Can you try that and tell me about the result?
-
-In fact, I did this change to have HT rates in IBSS mode (but I'm still 
-missing some stuff).
-
-Regards,
-Benoit
+Sorry for all the noise!
