@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:44834 "EHLO mx01.d-labs.de"
+Received: from mx1.redhat.com ([209.132.183.28]:47562 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965288Ab0BZQck (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 11:32:40 -0500
-Date: Fri, 26 Feb 2010 17:32:30 +0100
-From: Florian Mickler <florian@mickler.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: [PATCH v2 2/2] enhance sysfs rfkill interface
-Message-ID: <20100226173230.0479bf94@schatten.dmk.lab>
-In-Reply-To: <1267189882.18491.63.camel@violet>
-References: <20100225233516.GD5218@khazad-dum.debian.net>
-	<1267182094-15469-1-git-send-email-florian@mickler.org>
-	<1267189882.18491.63.camel@violet>
+	id S1752983Ab0BHXpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 18:45:30 -0500
+Subject: Re: [PATCH v2] airo: fix setting zero length WEP key
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+In-Reply-To: <20100208205503.GB3852@tuxdriver.com>
+References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com>
+	 <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com>
+	 <1265353178.11066.5.camel@localhost.localdomain>
+	 <20100208205503.GB3852@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Feb 2010 15:44:47 -0800
+Message-ID: <1265672687.15235.41.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 26 Feb 2010 14:11:22 +0100
-Marcel Holtmann <marcel@holtmann.org> wrote:
+On Mon, 2010-02-08 at 15:55 -0500, John W. Linville wrote:
+> On Thu, Feb 04, 2010 at 10:59:38PM -0800, Dan Williams wrote:
+> > John, can we revert the patch you applied, and apply the following patch
+> > instead (in the next mail)?  I'd rather use the one I'm about to send
+> > because it makes it clearer *why* setting the TX key index is required,
+> > and it limits that case to only the time when it's necessary.  Pending
+> > the testing by Chris, I'd rather have the revised version committed
+> > instead.
+> 
+> Do you still want this don, even after Chris's testing says your
+> patch doesn't work?  I wasn't sure from your response.
 
-> Hi Florian,
-> > blocked_[hs]w -> 0/1 makes IMO kind of sense.
-> 
-> the kernel and /dev/rfkill just talks about "hard" and "soft" blocks.
-> 
-> Don't confuse this with hardware and software. It seems were are keeping
-> to make this stupid semantical error over and over again. So everything
-> that says hardware, software, hw or sw in the API is bluntly wrong.
-> 
-> Regards
-> 
-> Marcel
-> 
+Not yet, no.  I'd like to work out the issue first, if we can.
 
-Yes, ok. I agree that 'hardware block' for something 'out of
-the control of the driver' seems to be too narrow...
+Thanks,
+Dan
 
-Alright. How about blocked_soft and blocked_hard?
-
-cheers,
-Flo
 
