@@ -1,81 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([93.93.128.226]:35711 "EHLO
-	bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934672Ab0BZATT (ORCPT
+Received: from liberdade.minaslivre.org ([72.232.254.139]:44421 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755734Ab0BHUbv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 19:19:19 -0500
-Date: Thu, 25 Feb 2010 19:18:47 -0500
-From: Andres Salomon <dilinger@collabora.co.uk>
-To: linux-wireless@vger.kernel.org, akpm@linux-foundation.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH resend] mac80211: give warning if building w/out rate ctrl
- algorithm
-Message-ID: <20100225191847.38d07106@droptest.queued.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 8 Feb 2010 15:31:51 -0500
+Date: Mon, 8 Feb 2010 18:26:44 -0200
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Andrey Yurovsky <yurovsky@gmail.com>
+Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh
+ mode
+Message-ID: <20100208202643.GA1420@holoscopio.com>
+References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
+ <20100205165726.GA1496@holoscopio.com>
+ <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com>
+ <1265446793.4041.2.camel@johannes.local>
+ <c1545bb51002071151wb2cefa3mb03501e0d6b3fb4b@mail.gmail.com>
+ <1265620089.3783.2.camel@johannes.berg>
+ <445f43ac1002081125i61bb53dap5b9df374b3116ba9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="jRHKVT23PllUwdXP"
+In-Reply-To: <445f43ac1002081125i61bb53dap5b9df374b3116ba9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-I discovered that if EMBEDDED=y, one can accidentally build a mac80211 stack
-and drivers w/ no rate control algorithm.  For drivers like RTL8187 that don't
-supply their own RC algorithms, this will cause ieee80211_register_hw to
-fail (making the driver unusable).
+--jRHKVT23PllUwdXP
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This will tell kconfig to provide a warning if no rate control algorithms
-have been selected.  That'll at least warn the user; users that know that
-their drivers supply a rate control algorithm can safely ignore the
-warning, and those who don't know (or who expect to be using multiple
-drivers) can select a default RC algorithm.
+On Mon, Feb 08, 2010 at 11:25:37AM -0800, Javier Cardona wrote:
+> Thadeu, Johannes,
+>=20
+> On Mon, Feb 8, 2010 at 1:08 AM, Johannes Berg <johannes@sipsolutions.net>=
+ wrote:
+> > On Sun, 2010-02-07 at 11:51 -0800, Andrey Yurovsky wrote:
+> >> On Sat, Feb 6, 2010 at 12:59 AM, Johannes Berg
+> >> <johannes@sipsolutions.net> wrote:
+> >> > I do wonder though, the commit (155cc9e4b1d60161ee53) I referenced w=
+as
+> >> > yours, and now you're asking the same question as I am -- "why even
+> >> > allow adding stations?"
+> >>
+> >> It was supported for automated testing and experimentation (you could
+> >> then force certain topologies). =C2=A0I can't think of any other reaso=
+n to
+> >> do it. =C2=A0I suppose that the same thing goes for mpaths and the mesh
+> >> portal tables.
+> >
+> > So would you prefer to fix it (however we would do that, I don't think
+> > that the patch here is correct since it leaves the station struct with
+> > no usable rates afaict), or just disallow it?
+>=20
+> After reviewing our mesh test suite, I would vote for disallowing mesh
+> point addition via iw.  We currently force topologies by 1. turning
+> auto peering off, 2. waiting for neighbors to be discovered and 3.
+> controlling peering with 'iw ... station set <MAC address>
+> plink_action <open|block>'
+>=20
+> Thadeu, would this approach work for you?
+>=20
 
-Signed-off-by: Andres Salomon <dilinger@collabora.co.uk>
-Cc: stable@kernel.org
----
- net/mac80211/Kconfig |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+That's OK for me. Do you want a patch?
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index a10d508..2a51b0b 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -15,8 +15,12 @@ comment "CFG80211 needs to be enabled for MAC80211"
- 
- if MAC80211 != n
- 
-+config MAC80211_HAS_RC
-+	def_bool n
-+
- config MAC80211_RC_PID
- 	bool "PID controller based rate control algorithm" if EMBEDDED
-+	select MAC80211_HAS_RC
- 	---help---
- 	  This option enables a TX rate control algorithm for
- 	  mac80211 that uses a PID controller to select the TX
-@@ -24,12 +28,14 @@ config MAC80211_RC_PID
- 
- config MAC80211_RC_MINSTREL
- 	bool "Minstrel" if EMBEDDED
-+	select MAC80211_HAS_RC
- 	default y
- 	---help---
- 	  This option enables the 'minstrel' TX rate control algorithm
- 
- choice
- 	prompt "Default rate control algorithm"
-+	depends on MAC80211_HAS_RC
- 	default MAC80211_RC_DEFAULT_MINSTREL
- 	---help---
- 	  This option selects the default rate control algorithm
-@@ -62,6 +68,9 @@ config MAC80211_RC_DEFAULT
- 
- endif
- 
-+comment "some wireless drivers require a rate control algorithm"
-+	depends on MAC80211_HAS_RC=n
-+
- config MAC80211_MESH
- 	bool "Enable mac80211 mesh networking (pre-802.11s) support"
- 	depends on MAC80211 && EXPERIMENTAL
--- 
-1.5.6.5
+> Javier
+>=20
+>=20
+>=20
+> --=20
+> Javier Cardona
+> cozybit Inc.
+> http://www.cozybit.com
 
+--jRHKVT23PllUwdXP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAktwc4MACgkQyTpryRcqtS1rBACfcN5PnDShBUAz1m2W5x0T5GIH
+PCAAnisUqToENb3ITivqwNQaxtuY6/W6
+=wuGo
+-----END PGP SIGNATURE-----
+
+--jRHKVT23PllUwdXP--
