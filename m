@@ -1,100 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54048 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933560Ab0BYUAL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 15:00:11 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2010 12:00:11 -0800
-Date: Thu, 25 Feb 2010 12:00:09 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Schilling, Paul" <Paul.Schilling@ecolab.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Ath9k Call trace from 2.6.33-RC8 - Rate marked as an HT rate
- but passed status->rate_idx is not an MCS index [0-76]: 127 (0x7f)
-Message-ID: <20100225200009.GC5265@tux>
-References: <599F2DD3D277A34381AA3DA3337F13A102F54E2F@USEAGAN1509P.GLOBAL.ECOLAB.CORP>
- <20100225180634.GB5265@tux>
- <599F2DD3D277A34381AA3DA3337F13A102F54F94@USEAGAN1509P.GLOBAL.ECOLAB.CORP>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <599F2DD3D277A34381AA3DA3337F13A102F54F94@USEAGAN1509P.GLOBAL.ECOLAB.CORP>
+Received: from he.sipsolutions.net ([78.46.109.217]:59290 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753646Ab0BHQov (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 11:44:51 -0500
+Subject: Re: [PATCH v3] mac80211: Retry null data frame for power save.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <8e92b4101002080513n788ef64erb33baef2393b0d54@mail.gmail.com>
+References: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com>
+	 <201002081342.20062.chunkeey@googlemail.com>
+	 <8e92b4101002080513n788ef64erb33baef2393b0d54@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tkd2MYtTlc2/6JC6T58e"
+Date: Mon, 08 Feb 2010 17:24:39 +0100
+Message-ID: <1265646279.3783.8.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 25, 2010 at 11:54:52AM -0800, Schilling, Paul wrote:
-> I am currently doing some stability testing right now, so updating the
-> kernel to 2.6.33 will happen some time next week.  How recent of a
-> kernel would you like me to test against.  Would you like me to test
-> against linux-next or mainline.
 
-wireless-testing is great for developers as that is what we work
-with. We can only fix something in older stable kernels (2.6.33 is
-now old just as 2.6.34 will be in 2 weeks from now) if we first
-fix it on wireless-testing so if you use wireless-testing that can
-get us to reproduce that as well. That is of course unless this
-was a regression from 2.6.32 to 2.6.33 and we magicly fixed it
-on 2.6.34.
+--=-tkd2MYtTlc2/6JC6T58e
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Also here is the kernel log for the module.  
-> 
-> [   12.715169] cfg80211: Calling CRDA to update world regulatory domain
-> [   13.177053] cfg80211: World regulatory domain updated:
-> [   13.177087]     (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [   13.177117]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi,
-> 2000 mBm)
-> [   13.177142]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi,
-> 2000 mBm)
-> [   13.177168]     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi,
-> 2000 mBm)
-> [   13.177194]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi,
-> 2000 mBm)
-> [   13.177219]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi,
-> 2000 mBm)
-> [   20.381672] ath: EEPROM regdomain: 0x0
-> [   20.381700] ath: EEPROM indicates default country code should be used
-> [   20.381718] ath: doing EEPROM country->regdmn map search
-> [   20.381744] ath: country maps to regdmn code: 0x3a
-> [   20.381763] ath: Country alpha2 being used: US
-> [   20.381779] ath: Regpair used: 0x3a
-> [   20.507510] phy0: Selected rate control algorithm
-> 'ath9k_rate_control'
-> [   20.515860] cfg80211: Calling CRDA for country: US
-> [   20.518464] Registered led device: ath9k-phy0::radio
-> [   20.521167] Registered led device: ath9k-phy0::assoc
-> [   20.524295] Registered led device: ath9k-phy0::tx
-> [   20.524926] Registered led device: ath9k-phy0::rx
-> [   20.524988] phy0: Atheros AR9280 Rev:2 mem=0xe0be0000, irq=6
+On Mon, 2010-02-08 at 18:43 +0530, Vivek Natarajan wrote:
 
-OK this line was the one I wanted. Thanks.
+> > On a related issue: What about _inverting_ the flag, so it will
+> > be set for devices which can't give any accurate tx_status
+> > information. This has the advantage that we don't have to touch
+> > other drivers?
+>=20
+> Shall I rename it as HW_NO_TX_ACK_REPORT?
+> Looking at the other flags, they show some positively present
+> feature in the hw. In those lines, HW_REPORTS_TX_ACK_STATUS
+> might be better.
 
-> [   20.596504] cfg80211: Regulatory domain changed to country: US
-> [   20.596539]     (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [   20.596569]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi,
-> 2700 mBm)
-> [   20.596594]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi,
-> 1700 mBm)
-> [   20.596620]     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi,
-> 2000 mBm)
-> [   20.596646]     (5490000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi,
-> 2000 mBm)
-> [   20.596672]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi,
-> 3000 mBm)
+The positive feature flag has the advantage that we don't have to touch
+any of the essentially unmaintained drivers, so I much prefer having it
+that way so maintainers can enable the flag after testing etc.
 
-> CONFIDENTIALITY NOTICE: 
-> This e-mail communication and any attachments may contain proprietary and privileged information for the use of the designated recipients named above. 
-> Any unauthorized review, use, disclosure or distribution is prohibited. 
-> If you are not the intended recipient, please contact the sender by reply e-mail and destroy all copies of the original message.
+johannes
 
-This confidentiality notice is bogus as this is a public list.
+--=-tkd2MYtTlc2/6JC6T58e
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-  Luis
-> 
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLcDq/AAoJEODzc/N7+QmapRYP/AwszpS7YEOeqsmMtLgxxQcH
+mrO1N1eIe5CC0VW3KDjTI+FgbJqeP0iGao2FMfD/Bl+42fAAzUbBCrlRhSLC9JjD
+ivYUM23TtP8XaqXMeG0bUM/0BUvZiysRdJ3jEkuTAg9wrua2hbzHAmU1dhDn5VkX
+REiWt2Bj6P88szzq2dVaiN8icCH6DappqwPo4LTylrc0IeSP8/NpXCN3y0dt6LM1
+tZQXgDzQ2qcU5Gvo3eQIcR2EkIwsrL8FyGV2Px76pToGUnAq3rL2wQXccvJc+E1D
+IgFwrtwZ7KgLWjTWa3E/kshTklp93tGaHAsKh6an01R4IqvxhstfOCD3XYPTjLEw
+QT3cA6hDC0aoMLQn3NQdNgxLqOBy4D7rnWaZlted4OEt2/tHGQhEQtjvbpD0ekb2
+KZ0mSSXlS7MiNYVnDBm/lK/ckQa3icvFqZ9JkLSPyKMju2VoPfnawte27/ZJJb4P
+qfSRSyQSQlN8lvidKh/OThM1Os7LS0HWR9MfsW4T9ViIqfQJOb/BPiZnBpgIvZFB
+wthjMZmoho5YN9CCBE4lHaBQospp3RcszhMlQzdn32vdhaknRzb2OdO03Bc8YTlv
+CWiH9sNBmYdPAGPT+hPZ0BZNMxjRVZiXcUPHBiYxBFfnWM6WWZ9FFJP9rkQvp2xa
+lQGVZCqx2M7PRxvCQT9h
+=OCPK
+-----END PGP SIGNATURE-----
+
+--=-tkd2MYtTlc2/6JC6T58e--
+
