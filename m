@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37909
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751557Ab0BZFfx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 00:35:53 -0500
-Date: Thu, 25 Feb 2010 21:36:11 -0800 (PST)
-Message-Id: <20100225.213611.263531055.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-kernel@vger-kernel.org, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-Subject: Re: [PATCH] netdevice.h: check for CONFIG_WLAN instead of
- CONFIG_WLAN_80211
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1267116589-12199-1-git-send-email-linville@tuxdriver.com>
-References: <20100225150423.GA5101@faui49.informatik.uni-erlangen.de>
-	<1267116589-12199-1-git-send-email-linville@tuxdriver.com>
+Received: from mga03.intel.com ([143.182.124.21]:35270 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753977Ab0BHRJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 12:09:34 -0500
+Subject: Re: [PATCH 07/10] iwlwifi: remove get_tx_stats() mac80211 op
+From: reinette chatre <reinette.chatre@intel.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <20100207082137.31474.27007.stgit@tikku>
+References: <20100207082044.31474.48583.stgit@tikku>
+	 <20100207082137.31474.27007.stgit@tikku>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Feb 2010 09:09:33 -0800
+Message-ID: <1265648973.2551.1803.camel@rchatre-DESK>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 25 Feb 2010 11:49:49 -0500
-
-> In "wireless: remove WLAN_80211 and WLAN_PRE80211 from Kconfig" I
-> inadvertantly missed a line in include/linux/netdevice.h.  I thereby
-> effectively reverted "net: Set LL_MAX_HEADER properly for wireless." by
-> accident. :-(  Now we should check there for CONFIG_WLAN instead.
+On Sun, 2010-02-07 at 00:21 -0800, Kalle Valo wrote:
+> get_tx_stats() will be removed from mac80211.
 > 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> Reported-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
-> Cc: stable@kernel.org
+> Compile-tested only.
+> 
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Cc: Reinette Chatre <reinette.chatre@intel.com>
+> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
 > ---
-> Unless there is objection, I'll push this up through my tree as normal.
 
-Definitely no objections :-)
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+
+Thank you
+
+Reinette
+
+
