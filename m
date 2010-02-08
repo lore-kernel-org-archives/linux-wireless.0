@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53082 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751141Ab0BJGF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2010 01:05:56 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 22:05:56 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-px0-f202.google.com ([209.85.216.202]:35759 "EHLO
+	mail-px0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992Ab0BHSCN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 13:02:13 -0500
+Received: by pxi40 with SMTP id 40so6698653pxi.21
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 10:02:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19314.20748.546459.587377@gargle.gargle.HOWL>
-Date: Wed, 10 Feb 2010 11:54:12 +0530
-To: Ming Lei <tom.leiming@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT] mac80211: allow station add/remove to sleep
-In-Reply-To: <d82e647a1002092159n63d1c5e6l969a6507f7949abd@mail.gmail.com>
-References: <1265201998.29119.91.camel@johannes.local>
-	<19311.38774.617169.606262@gargle.gargle.HOWL>
-	<d82e647a1002092159n63d1c5e6l969a6507f7949abd@mail.gmail.com>
+In-Reply-To: <25E8B46727291E4EB5A1CB88CBC4284E0100A711@zmy16exm21.fsl.freescale.net>
+References: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
+	<25E8B46727291E4EB5A1CB88CBC4284E0100A711@zmy16exm21.fsl.freescale.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 8 Feb 2010 10:01:52 -0800
+Message-ID: <43e72e891002081001td19c48cjf193ab8503255ee3@mail.gmail.com>
+Subject: Re: [ath9k-devel] can ath9k run on linux 2.6.25
+To: Zhang Yanfei-B21500 <B21500@freescale.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ming Lei wrote:
-> Is there workable and open ath9k_htc?  If there is, could you share it
-> with me?
+On Mon, Feb 8, 2010 at 1:20 AM, Zhang Yanfei-B21500
+<B21500@freescale.com> wrote:
+> Hi All
+>        Anyone have porting the ath9k to 2.6.25? Is it can work on
+> 2.6.25?
+>
 
-The driver is still in a primitive stage, we would be making
-a submission soon.
+This tarball has 2.6.25 enabled:
 
-Sujith
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32.3.tar.bz2
+
+Newer stable kernels after this required multiqueue backported which I
+gave a try but haven't gotten reports from users on:
+
+http://bombadil.infradead.org/~mcgrof/tmp/compat-wireless-2.6.32.5-rc3.tar.bz2
+
+After untarring you will have to select to compile only ath9k:
+
+./scripts/driver-select ath9k
+
+  Luis
