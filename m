@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.211.176]:47480 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934026Ab0BQEYv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48866 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992Ab0BHVAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 23:24:51 -0500
-Received: by ywh6 with SMTP id 6so5251888ywh.4
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 20:24:50 -0800 (PST)
-Message-ID: <4B7B6F90.6020401@lwfinger.net>
-Date: Tue, 16 Feb 2010 22:24:48 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 8 Feb 2010 16:00:54 -0500
+Date: Mon, 8 Feb 2010 15:53:59 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH v2] airo: fix setting zero length WEP key
+Message-ID: <20100208205358.GA3852@tuxdriver.com>
+References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com> <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com>
 MIME-Version: 1.0
-To: Stefan Monnier <monnier@iro.umontreal.ca>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/5] rtl8187se: Modify Kconfig
-References: <4b7adc62.wTpAwUAB+btMnNY6%Larry.Finger@lwfinger.net> <jwv3a10k03u.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
-In-Reply-To: <jwv3a10k03u.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/16/2010 09:36 PM, Stefan Monnier wrote:
+On Thu, Feb 04, 2010 at 01:07:13PM +0100, Stanislaw Gruszka wrote:
+> Patch prevents call set_wep_key() with zero key length. That fix long
+> standing regression since commit c0380693520b1a1e4f756799a0edc379378b462a
+> "airo: clean up WEP key operations". Additionally print call trace when
+> someone will try to use improper parameters, and remove key.len = 0
+> assignment, because it is in not possible code path.
 > 
-> I'm really happy to see more activity around these cards.  You can add
-> in the above text that the card is used in the MSI Wind 100.
+> v1->v2
+> Return instantly from set_wep_key() when keylen == 0.
+> 
+> Reported-and-bisected-by: Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
+> Cc: Dan Williams <dcbw@redhat.com>
+> Cc: <stable@kernel.org>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-The list of make/models is usually restricted to places where the wireless chip
-is built into a card by am OEM, or where the chip is embedded in a USB device
-where it is not visible. I suspect the MSI Wind 100 uses a Realtek-built PCIe
-card, the same way that my HP laptop came with a Broadcom BCM4312.
+Stanislaw, your original patch was already committed in
+wireless-next-2.6.  Could you send a second patch with just your
+v1->v2 change?
 
-> Please let me know if/when you need testers for it (the staging version
-> of the driver suffers from stability issues for me, so I'm eager to see
-> it replaced).
-
-I certainly will let you know. When the driver is ready for testing, it will be
-in the source code of the wireless-testing git tree. In the next merge cycle
-(probably for 2.6.35), it will be in the -rcX cycles of mainline, and finally in
-the mainline kernel. You can test at any step of the way. When the mainline
-driver is merges, the staging driver will be removed.
-
-What are the details of your setup? What signal and noise levels are shown by
-iwconfig? What distance are you from the AP, and how much interference is on
-your channel? The reason I am asking is that I find the staging driver to be
-very stable. It never disconnects unless I bump the RF switch.
-
-Larry
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
