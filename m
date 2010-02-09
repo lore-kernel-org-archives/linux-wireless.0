@@ -1,93 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50703 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751594Ab0BRL2E (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49329 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404Ab0BIH6q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:04 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/22] wl1271: driver implementation patch blast (1/3)
-Date: Thu, 18 Feb 2010 13:25:35 +0200
-Message-Id: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+	Tue, 9 Feb 2010 02:58:46 -0500
+Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh
+ mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	linux-wireless@vger.kernel.org,
+	Andrey Yurovsky <yurovsky@gmail.com>
+In-Reply-To: <20100208202643.GA1420@holoscopio.com>
+References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
+	 <20100205165726.GA1496@holoscopio.com>
+	 <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com>
+	 <1265446793.4041.2.camel@johannes.local>
+	 <c1545bb51002071151wb2cefa3mb03501e0d6b3fb4b@mail.gmail.com>
+	 <1265620089.3783.2.camel@johannes.berg>
+	 <445f43ac1002081125i61bb53dap5b9df374b3116ba9@mail.gmail.com>
+	 <20100208202643.GA1420@holoscopio.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ElJ/JcpkBWisuxUo7r24"
+Date: Tue, 09 Feb 2010 08:58:42 +0100
+Message-ID: <1265702322.3783.18.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches progressively add implementation and fix bugs in the wl1271
-driver. This patch set is the first of three.
 
-First of all apologies for the huge number of patches - quite a few have
-accumulated since our last contribution. The good news in this is that these
-patches have now received relatively good verification against the
-wireless-testing mac80211/cfg80211 stack.
+--=-ElJ/JcpkBWisuxUo7r24
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-For those who wonder who I am: I am the co-maintainer of the wl1271 driver,
-submitting these patches now in place of Luciano Coelho, while he is enjoying
-the last moments of his well deserved vacation.
+On Mon, 2010-02-08 at 18:26 -0200, Thadeu Lima de Souza Cascardo wrote:
 
-Executive summary of the changes of this patch set:
- - Fixes to NVS/calibration handling
- - WMM implementation
- - Functional ad-hoc
- - Preparation for SDIO support
+> > After reviewing our mesh test suite, I would vote for disallowing mesh
+> > point addition via iw.  We currently force topologies by 1. turning
+> > auto peering off, 2. waiting for neighbors to be discovered and 3.
+> > controlling peering with 'iw ... station set <MAC address>
+> > plink_action <open|block>'
+> >=20
+> > Thadeu, would this approach work for you?
 
+Javier, thanks for taking a look.
 
-Juuso Oikarinen (11):
-  wl1271: Fix PSM entry
-  wl1271: Fix channel changing code
-  wl1271: Add SSID configuration for JOIN in ad-hoc
-  wl1271: Use NVS INI file configuration
-  wl1271: Retrieve device mac address from the nvs file
-  wl1271: Fix random MAC address setting
-  wl1271: Optimized RX path packet retrieval
-  wl1271: Fix key-remove error
-  wl1271: Fix WEP key handling
-  wl1271: Fix ad-hoc SSID update
-  wl1271: Fix beacon filter table configuration
+> That's OK for me. Do you want a patch?
 
-Kalle Valo (5):
-  wl1271: modify wl1271_acx_ac_cfg() to use function parameters
-  wl1271: modify wl1271_acx_tid_cfg() to use function parameters
-  wl1271: implement WMM
-  wl1271: wakeup chip in op_conf_tx()
-  wl1271: add testmode support
+Please. Just remove the relevant cases from net/wireless/nl80211.c.
 
-Luciano Coelho (2):
-  wl1271: add most of the normal initialization commands to PLT mode
-  wl1271: skip 3 unused bytes from the NVS
+johannes
 
-Teemu Paasikivi (4):
-  wl1271: Moved common IO functions from wl271_spi.c to wl1271_io.c
-  wl1271: Renamed IO functions
-  wl1271: Added IO reset and init functions
-  wl1271: Added alloc and free hw functions
+--=-ElJ/JcpkBWisuxUo7r24
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
- drivers/net/wireless/wl12xx/Makefile          |    4 +-
- drivers/net/wireless/wl12xx/wl1271.h          |   34 ++-
- drivers/net/wireless/wl12xx/wl1271_acx.c      |   62 ++--
- drivers/net/wireless/wl12xx/wl1271_acx.h      |   13 +-
- drivers/net/wireless/wl12xx/wl1271_boot.c     |  106 +++---
- drivers/net/wireless/wl12xx/wl1271_cmd.c      |  136 ++------
- drivers/net/wireless/wl12xx/wl1271_cmd.h      |   88 +----
- drivers/net/wireless/wl12xx/wl1271_conf.h     |  144 +--------
- drivers/net/wireless/wl12xx/wl1271_event.c    |   50 +++-
- drivers/net/wireless/wl12xx/wl1271_init.c     |   38 ++-
- drivers/net/wireless/wl12xx/wl1271_init.h     |    4 +
- drivers/net/wireless/wl12xx/wl1271_io.c       |  213 +++++++++++
- drivers/net/wireless/wl12xx/wl1271_io.h       |   68 ++++
- drivers/net/wireless/wl12xx/wl1271_main.c     |  481 ++++++++++++++++---------
- drivers/net/wireless/wl12xx/wl1271_ps.c       |   22 +-
- drivers/net/wireless/wl12xx/wl1271_ps.h       |    3 +-
- drivers/net/wireless/wl12xx/wl1271_rx.c       |   11 +-
- drivers/net/wireless/wl12xx/wl1271_spi.c      |  157 --------
- drivers/net/wireless/wl12xx/wl1271_spi.h      |   30 --
- drivers/net/wireless/wl12xx/wl1271_testmode.c |  283 +++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_testmode.h |   31 ++
- drivers/net/wireless/wl12xx/wl1271_tx.c       |   28 +-
- drivers/net/wireless/wl12xx/wl1271_tx.h       |   36 ++
- 23 files changed, 1196 insertions(+), 846 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_io.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_io.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_testmode.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_testmode.h
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLcRWuAAoJEODzc/N7+QmaYCMQAMLIIxL4/kfiagypOEIwp3QU
+/Q8Fc2oAH8bK3ZXYccWKi48cctjfw1GqZqowAC/6hB/sysuP8dmRCUxpjHrMuHem
+GIHF3nKK1/ItgL5zDLy/zWnHGJIAvjM4eOPqXrS8Lee2yX4eY2RXzoMMdqyn5CIB
+HBgVh+IHWmfVBClsaE5CDeRsCFfbsrirnyzn5pM3Ik9D6VxYzE9BltOi7nQUTAYb
+MTqqdmuuWnuBqE4CsbOvAT0QfljXwgXkdx/Sn1gX63UfqIEAkDmfC4YJJ8kj+cyq
+bGv0hyM17sqdZzzLBXDaEt64pgJZvtD8YWCHag0HC+DxQe0jnWQSQkFrApP5rbNW
+zAm6qcxrIXC7Hp6NxSl/eR9TxTp7VaLZyFttj7aiCloWsDnJvqZqA5fTxLVwkgpy
+rJsCdkyCuiPjaJE8fDqIPtUqA1yLXeD65DPVGHniTmd5ZVJOfEi3jyvILeSU5YJ6
+CtC9mCKDg5pYtQsmqyEyCVEKjZzaMtnd5zWCBd+P7jHHW5X9aKFMlrgaQdXCOP0V
+3zZJHrMIfLoTmPMB5RCkEX99DaXswkZ++m1ZcjN7SptYF1TX69BPUpiMwRG4lGor
+rrYMzPKa8RAHRutvX9/bniv3jXMfAOaHSvmaqi+BQy5eX6LoQxz8zReHHXD0E2jq
+JYoqngHlrTZfKjHRvbGh
+=sXBA
+-----END PGP SIGNATURE-----
+
+--=-ElJ/JcpkBWisuxUo7r24--
 
