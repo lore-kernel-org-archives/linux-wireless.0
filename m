@@ -1,224 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.ust.hk ([143.89.13.26]:63893 "EHLO mx4.ust.hk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754201Ab0BAEG1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2010 23:06:27 -0500
-Message-ID: <49849.143.89.144.207.1264997174.squirrel@sqmail.ust.hk>
-In-Reply-To: <1264786546.27755.9.camel@mj>
-References: <51523.143.89.144.207.1264488274.squirrel@sqmail.ust.hk>
-    <43e72e891001260853s4811bc39s2399d138d0a7da83@mail.gmail.com>
-    <47088.143.89.144.207.1264589300.squirrel@sqmail.ust.hk>
-    <43e72e891001271006l3422b6e2iccb89954feeaa34b@mail.gmail.com>
-    <58444.143.89.144.207.1264747272.squirrel@sqmail.ust.hk>
-    <1264786546.27755.9.camel@mj>
-Date: Mon, 1 Feb 2010 12:06:14 +0800 (HKT)
-Subject: Re: Building of compat-wireless-old in 2.6.25 BSP kernel for
-     PowerPC architecture
-From: "PAN Sunny S K" <sunnypan@ust.hk>
-To: "Pavel Roskin" <proski@gnu.org>
-Cc: "PAN Sunny S K" <sunnypan@ust.hk>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
+Received: from netsys.kaist.ac.kr ([143.248.239.50]:57551 "EHLO
+	netsys.kaist.ac.kr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253Ab0BIGQ5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 01:16:57 -0500
+From: "Jinsung Lee" <ljs@netsys.kaist.ac.kr>
+To: "'Luis R. Rodriguez'" <mcgrof@gmail.com>,
+	"'Zhang Yanfei-B21500'" <B21500@freescale.com>
+Cc: <ath9k-devel@venema.h4ckr.net>, <linux-wireless@vger.kernel.org>
+References: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com> 	<25E8B46727291E4EB5A1CB88CBC4284E0100A711@zmy16exm21.fsl.freescale.net> <43e72e891002081001td19c48cjf193ab8503255ee3@mail.gmail.com>
+In-Reply-To: <43e72e891002081001td19c48cjf193ab8503255ee3@mail.gmail.com>
+Subject: RE: [ath9k-devel] can ath9k run on linux 2.6.25
+Date: Tue, 9 Feb 2010 15:10:08 +0900
+Message-ID: <02a001caa94e$87b9bb80$972d3280$@kaist.ac.kr>
 MIME-Version: 1.0
-Content-Type: text/plain;charset=utf-8
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pavel,
+Dear Luis,
 
-It is unfortunate that the ath_pci is dependent on ath. Moreover, after
-some trial, found that the rfkill_backport and cfg80211 also have problem
-in loading which is possibly due to the lacking of other symbolic link in
-the current kernel or other modules.
-Since other issues (iw, libnl... etc) makes the difficulties in
-integrating ath9k into the current LTIB harder than using of OpenWrt with
-the latest kernel  (although still have some problem in building of
-OpenWrt for the platform). I've since moved the effort to building of
-OpenWrt.
-Anyhow, many thanks for the advice and below please find a snapshot of the
-error output from the ath9k with kernel 2.6.25 from LTIB for your future
-reference.
+Is this tarball also working on kernel 2.6.24?
 
-ath: Unknown symbol wiphy_apply_custom_regulatory
+I've been trying, but it may have some problem.
 
-ath: Unknown symbol freq_reg_info
+Thanks.
 
-ath_pci: Unknown symbol ath_config_crypto_get
 
-ath_pci: Unknown symbol ath_config_ioctl_getwscie
+-Jinsung
 
-ath_pci: Unknown symbol ath_config_ioctl_addmac
+-----Original Message-----
+From: ath9k-devel-bounces@lists.ath9k.org [mailto:ath9k-devel-bounces@lists.ath9k.org] On Behalf Of Luis R. Rodriguez
+Sent: Tuesday, February 09, 2010 3:02 AM
+To: Zhang Yanfei-B21500
+Cc: ath9k-devel@venema.h4ckr.net; linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] can ath9k run on linux 2.6.25
 
-ath_pci: Unknown symbol ath_config_ioctl_delkey
+On Mon, Feb 8, 2010 at 1:20 AM, Zhang Yanfei-B21500
+<B21500@freescale.com> wrote:
+> Hi All
+>        Anyone have porting the ath9k to 2.6.25? Is it can work on
+> 2.6.25?
+>
 
-ath_pci: Unknown symbol ath_config_set_txmode
+This tarball has 2.6.25 enabled:
 
-ath_pci: Unknown symbol ath_config_ioctl_getkey
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.32/compat-wireless-2.6.32.3.tar.bz2
 
-ath_pci: Unknown symbol ath_config_set_rate
+Newer stable kernels after this required multiqueue backported which I
+gave a try but haven't gotten reports from users on:
 
-ath_pci: Unknown symbol ath_config_getstastats
+http://bombadil.infradead.org/~mcgrof/tmp/compat-wireless-2.6.32.5-rc3.tar.bz2
 
-ath_pci: Unknown symbol ath_config_ioctl_getchaninfo
+After untarring you will have to select to compile only ath9k:
 
-ath_pci: Unknown symbol ath_config_set_phy_mode
+./scripts/driver-select ath9k
 
-ath_pci: Unknown symbol ath_config_setparam
-
-ath_pci: Unknown symbol ath_config_set_ap
-
-ath_pci: Unknown symbol ath_config_set_essid
-
-ath_pci: Unknown symbol ath_config_crypto_set
-
-ath_pci: Unknown symbol ath_config_set_nickn
-
-ath_pci: Unknown symbol ath_config_getwmmparams
-
-ath_pci: Unknown symbol ath_config_ioctl_sendaddba
-
-ath_pci: Unknown symbol ath_config_get_chanlist
-
-ath_pci: Unknown symbol ath_config_get_frag
-
-ath_pci: Unknown symbol ath_config_vdev_getstats
-
-ath_pci: Unknown symbol ath_config_getcounter
-
-ath_pci: Unknown symbol ath_config_get_nickn
-
-ath_pci: Unknown symbol ath_config_ioctl_setaddbaresponse
-
-ath_pci: Unknown symbol ath_config_set_power
-
-ath_pci: Unknown symbol ath_handler_register
-
-ath_pci: Unknown symbol ath_config_set_remote_acl_status
-
-ath_pci: Unknown symbol ath_config_set_chanlist
-
-ath_pci: Unknown symbol ath_config_ioctl_setkey
-
-ath_pci: Unknown symbol set_quality
-
-ath_pci: Unknown symbol ath_config_get_txpow
-
-ath_pci: Unknown symbol ath_config_getstainfo
-
-ath_pci: Unknown symbol ath_config_get_scan
-
-ath_pci: Unknown symbol ath_config_getstats
-
-ath_pci: Unknown symbol ath_config_ioctl_gethwdata
-
-ath_pci: Unknown symbol ath_config_ioctl_getaddbastatus
-
-ath_pci: Unknown symbol ath_config_ioctl_setoptie
-
-ath_pci: Unknown symbol ath_config_ismodesupported
-
-ath_pci: Unknown symbol ath_config_get_rate
-
-ath_pci: Unknown symbol ath_config_get_ap
-
-ath_pci: Unknown symbol ath_config_set_frag
-
-ath_pci: Unknown symbol ath_config_set_channel
-
-ath_pci: Unknown symbol ath_config_set_cwsize
-
-ath_pci: Unknown symbol ath_config_get_phy_mode
-
-ath_pci: Unknown symbol ath_newstate
-
-ath_pci: Unknown symbol ath_config_get_channel_list
-
-ath_pci: Unknown symbol ath_config_get_essid
-
-ath_pci: Unknown symbol ath_config_ioctl_chanswitch
-
-ath_pci: Unknown symbol ath_config_vdev_iw_getstats
-
-ath_pci: Unknown symbol ath_config_set_txpow
-
-ath_pci: Unknown symbol ath_config_ioctl_senddelba
-
-ath_pci: Unknown symbol ath_set_mac_address
-
-ath_pci: Unknown symbol ath_config_get_opmode
-
-ath_pci: Unknown symbol ath_config_get_rate_list
-
-ath_pci: Unknown symbol ath_config_set_scan
-
-ath_pci: Unknown symbol ath_config_get_rts
-
-ath_pci: Unknown symbol ath_config_ioctl_getwpaie
-
-ath_pci: Unknown symbol ath_config_set_rts
-
-ath_pci: Unknown symbol ath_handler_unregister
-
-ath_pci: Unknown symbol ath_config_get_power
-
-ath_pci: Unknown symbol ath_config_get_txmode
-
-ath_pci: Unknown symbol ath_config_ioctl_delmac
-
-ath_pci: Unknown symbol ath_config_getstrparam
-
-ath_pci: Unknown symbol ath_config_ioctl_setmlme
-
-ath_pci: Unknown symbol ath_config_getaddrparam
-
-ath_pci: Unknown symbol ath_config_setwmmparams
-
-ath_pci: Unknown symbol ath_config_get_wbuf
-
-ath_pci: Unknown symbol ath_config_get_channel
-
-ath_pci: Unknown symbol ath_iterate_vaps
-
-ath_pci: Unknown symbol ath_config_getparam
-
-rfkill_backport: Unknown symbol dev_set_name
-
-rfkill_backport: Unknown symbol input_register_handle
-
-rfkill_backport: Unknown symbol input_open_device
-
-rfkill_backport: Unknown symbol led_trigger_unregister
-
-rfkill_backport: Unknown symbol input_close_device
-
-rfkill_backport: Unknown symbol input_unregister_handler
-
-rfkill_backport: Unknown symbol input_register_handler
-
-rfkill_backport: Unknown symbol led_trigger_register
-
-rfkill_backport: Unknown symbol input_unregister_handle
-
-rfkill_backport: Unknown symbol led_trigger_event
-
-cfg80211: Unknown symbol backport_rfkill_blocked
-
-cfg80211: Unknown symbol backport_rfkill_register
-
-cfg80211: Unknown symbol backport_rfkill_destroy
-
-cfg80211: Unknown symbol backport_rfkill_unregister
-
-cfg80211: Unknown symbol backport_rfkill_resume_polling
-
-cfg80211: Unknown symbol backport_rfkill_set_sw_state
-
-cfg80211: Unknown symbol backport_rfkill_pause_polling
-
-cfg80211: Unknown symbol backport_rfkill_set_hw_state
-
-cfg80211: Unknown symbol backport_rfkill_alloc
-
-Best regards,
-Sunny
+  Luis
+_______________________________________________
+ath9k-devel mailing list
+ath9k-devel@lists.ath9k.org
+https://lists.ath9k.org/mailman/listinfo/ath9k-devel
 
