@@ -1,109 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36897 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752207Ab0BUOcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2010 09:32:25 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: backport some more of the netdev debug printk
-Date: Sun, 21 Feb 2010 15:32:18 +0100
-Message-Id: <1266762738-6516-1-git-send-email-hauke@hauke-m.de>
+Received: from mga03.intel.com ([143.182.124.21]:52851 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754206Ab0BIREy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 12:04:54 -0500
+Subject: Re: PROBLEM: iwlagn kernel 2.6.32.3 ooops
+From: reinette chatre <reinette.chatre@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"lkml@Think-Future.de" <lkml@Think-Future.de>,
+	Linux Kernel-Liste <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100209165247.GB2512@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100206170348.GB9411@localhost>
+	 <20100208143118.e8e5a1ee.akpm@linux-foundation.org>
+	 <20100209165247.GB2512@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Feb 2010 09:04:52 -0800
+Message-ID: <1265735092.2551.1835.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Stanislaw,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.34.h |   74 +++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 74 insertions(+), 0 deletions(-)
+On Tue, 2010-02-09 at 08:52 -0800, Stanislaw Gruszka wrote:
+>  
+> > > [250420.677168] Pid: 11584, comm: ip Not tainted 2.6.32.3 #5
+> > > [250420.677173] Call Trace:
+> > > [250420.677190]  [<c10a53f8>] ? __alloc_pages_nodemask+0x518/0x5f0
+> > > [250420.677204]  [<c1007c20>] ? dma_generic_alloc_coherent+0x0/0x100
+> > > [250420.677214]  [<c1007c92>] ? dma_generic_alloc_coherent+0x72/0x100
+> > > [250420.677224]  [<c1007c20>] ? dma_generic_alloc_coherent+0x0/0x100
+> > > [250420.677241]  [<fca1c9d5>] ? iwl_tx_queue_init+0x285/0x380 [iwlcore]
+> 
+> That is at initialization time. To avoid atomic allocation we can just
+> use dma_alloc_coherent instead of pci_alloc_consistent. I'm going to
+> prepare a patch.
 
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index 4229a22..b5d1903 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -63,6 +63,80 @@ do {								\
- 	0;							\
- })
- #endif
-+
-+#if defined(VERBOSE_DEBUG)
-+#define netdev_vdbg	netdev_dbg
-+#else
-+
-+#define netdev_vdbg(dev, format, args...)			\
-+({								\
-+	if (0)							\
-+		netdev_printk(KERN_DEBUG, dev, format, ##args);	\
-+	0;							\
-+})
-+#endif
-+
-+/*
-+ * netdev_WARN() acts like dev_printk(), but with the key difference
-+ * of using a WARN/WARN_ON to get the message out, including the
-+ * file/line information and a backtrace.
-+ */
-+#define netdev_WARN(dev, format, args...)			\
-+	WARN(1, "netdevice: %s\n" format, netdev_name(dev), ##args);
-+
-+/* netif printk helpers, similar to netdev_printk */
-+
-+#define netif_printk(priv, type, level, dev, fmt, args...)	\
-+do {					  			\
-+	if (netif_msg_##type(priv))				\
-+		netdev_printk(level, (dev), fmt, ##args);	\
-+} while (0)
-+
-+#define netif_emerg(priv, type, dev, fmt, args...)		\
-+	netif_printk(priv, type, KERN_EMERG, dev, fmt, ##args)
-+#define netif_alert(priv, type, dev, fmt, args...)		\
-+	netif_printk(priv, type, KERN_ALERT, dev, fmt, ##args)
-+#define netif_crit(priv, type, dev, fmt, args...)		\
-+	netif_printk(priv, type, KERN_CRIT, dev, fmt, ##args)
-+#define netif_err(priv, type, dev, fmt, args...)		\
-+	netif_printk(priv, type, KERN_ERR, dev, fmt, ##args)
-+#define netif_warn(priv, type, dev, fmt, args...)		\
-+	netif_printk(priv, type, KERN_WARNING, dev, fmt, ##args)
-+#define netif_notice(priv, type, dev, fmt, args...)		\
-+	netif_printk(priv, type, KERN_NOTICE, dev, fmt, ##args)
-+#define netif_info(priv, type, dev, fmt, args...)		\
-+	netif_printk(priv, type, KERN_INFO, (dev), fmt, ##args)
-+
-+#if defined(DEBUG)
-+#define netif_dbg(priv, type, dev, format, args...)		\
-+	netif_printk(priv, type, KERN_DEBUG, dev, format, ##args)
-+#elif defined(CONFIG_DYNAMIC_DEBUG)
-+#define netif_dbg(priv, type, netdev, format, args...)		\
-+do {								\
-+	if (netif_msg_##type(priv))				\
-+		dynamic_dev_dbg((netdev)->dev.parent,		\
-+				"%s: " format,			\
-+				netdev_name(netdev), ##args);	\
-+} while (0)
-+#else
-+#define netif_dbg(priv, type, dev, format, args...)			\
-+({									\
-+	if (0)								\
-+		netif_printk(priv, type, KERN_DEBUG, dev, format, ##args); \
-+	0;								\
-+})
-+#endif
-+
-+#if defined(VERBOSE_DEBUG)
-+#define netif_vdbg	netdev_dbg
-+#else
-+#define netif_vdbg(priv, type, dev, format, args...)		\
-+({								\
-+	if (0)							\
-+		netif_printk(KERN_DEBUG, dev, format, ##args);	\
-+	0;							\
-+})
-+#endif
- /* source: include/linux/netdevice.h */
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
--- 
-1.6.3.3
+I do not understand your goal here ... as seen in this trace
+pci_alloc_consistent itself already calls dma_alloc_coherent right away.
+
+Reinette
+
 
