@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.186]:64131 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592Ab0BQSn7 (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:58642 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752320Ab0BIXCO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 13:43:59 -0500
+	Tue, 9 Feb 2010 18:02:14 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs definitions
+Date: Wed, 10 Feb 2010 00:02:11 +0100
+Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20100217180342.GA22522@srcf.ucam.org>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
-	 <20100217052247.GD7160@core.coreip.homeip.net>
-	 <20100217180342.GA22522@srcf.ucam.org>
-Date: Wed, 17 Feb 2010 19:43:56 +0100
-Message-ID: <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	linux-input@vger.kernel.org, marcel@holtmann.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201002100002.11369.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 17, 2010 at 7:03 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> On Tue, Feb 16, 2010 at 09:22:47PM -0800, Dmitry Torokhov wrote:
->
->> I'd like some breathing room aroung KEY_NUMERIC? Any issues with making
->> it 247 or 0x211?
->
-> None. Do you want to make that change, or should I resubmit?
->
-Wait wait... do you can get another KEY_?
+On Tuesday 09 February 2010 21:04:33 Rafał Miłecki wrote:
+> +#define B43_MMIO_PSM_PHY_HDR		0x492	/* programmable state machine */
 
-The reason: Some new devices come with a WPS "Push Button".
-And there's no code for them yet.
+The comment doesn't make a lot of sense.
+In case you don't know, the PSM is the part of the hardware
+that executes the firmware.
 
-Regards, Chr.
+-- 
+Greetings, Michael.
