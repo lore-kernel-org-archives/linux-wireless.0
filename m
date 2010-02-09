@@ -1,104 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:58322 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752536Ab0BSXrt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 18:47:49 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, stable@kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH v2 2/2] iwlwifi: sanity check before counting number of tfds can be free
-Date: Fri, 19 Feb 2010 15:47:33 -0800
-Message-Id: <1266623253-31673-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1266623253-31673-1-git-send-email-reinette.chatre@intel.com>
-References: <1266623253-31673-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:34124 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359Ab0BIUFv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 15:05:51 -0500
+Received: by mail-ew0-f228.google.com with SMTP id 28so4264852ewy.28
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:05:50 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 11/11] b43: N-PHY: switch to chanspec ops
+Date: Tue,  9 Feb 2010 21:04:43 +0100
+Message-Id: <1265745883-3392-12-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-
-Check the frame control for ieee80211_is_data_qos() is true before
-counting the number of tfds can be free, the tfds_in_queue only
-increment when ieee80211_is_data_qos() is true before transmit; so it
-should only decrement if the type match.
-
-Remove ieee80211_is_data_qos check for frame_ctrl in tx_resp to avoid
-invalid information pass from uCode.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-CC: stable@kernel.org
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-v2: - update authorship to refect original contributer. This patch was
-      created from the original version submitted by Stanislaw to the bug
-      report self
-    - remove unnecessary casting and pointer checking
-    - remove "is_data_qos" which is now done in iwl_tx_queue_reclaim
-    - remove additional "is_data_qos" check that may use potentially
-      correct frame control data the following call iwl_txq_check_empty
-      will capture aggregations sessions correctly
+ drivers/net/wireless/b43/phy_n.c |   87 +++++++++++++++++++++++++++-----------
+ drivers/net/wireless/b43/phy_n.h |    1 +
+ 2 files changed, 63 insertions(+), 25 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-5000.c |    6 ++----
- drivers/net/wireless/iwlwifi/iwl-tx.c   |    6 +++++-
- 2 files changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index f27c514..cffaae7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -1153,16 +1153,14 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
- 				   tx_resp->failure_frame);
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 19d4f11..49256bf 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -72,6 +72,7 @@ static void b43_nphy_rf_control_override(struct b43_wldev *dev, u16 field,
+ 						u16 value, u8 core, bool off);
+ static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
+ 						u16 value, u8 core);
++static int nphy_channel_switch(struct b43_wldev *dev, unsigned int channel);
  
- 		freed = iwl_tx_queue_reclaim(priv, txq_id, index);
--		if (ieee80211_is_data_qos(tx_resp->frame_ctrl))
--			iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
-+		iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
- 
- 		if (priv->mac80211_registered &&
- 		    (iwl_queue_space(&txq->q) > txq->q.low_mark))
- 			iwl_wake_queue(priv, txq_id);
- 	}
- 
--	if (ieee80211_is_data_qos(tx_resp->frame_ctrl))
--		iwl_txq_check_empty(priv, sta_id, tid, txq_id);
-+	iwl_txq_check_empty(priv, sta_id, tid, txq_id);
- 
- 	if (iwl_check_bits(status, TX_ABORT_REQUIRED_MSK))
- 		IWL_ERR(priv, "TODO:  Implement Tx ABORT REQUIRED!!!\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 72136c8..8f40715 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -1145,6 +1145,7 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 	struct iwl_queue *q = &txq->q;
- 	struct iwl_tx_info *tx_info;
- 	int nfreed = 0;
-+	struct ieee80211_hdr *hdr;
- 
- 	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
- 		IWL_ERR(priv, "Read index for DMA queue txq id (%d), index %d, "
-@@ -1159,13 +1160,16 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
- 
- 		tx_info = &txq->txb[txq->q.read_ptr];
- 		iwl_tx_status(priv, tx_info->skb[0]);
-+
-+		hdr = (struct ieee80211_hdr *)tx_info->skb[0]->data;
-+		if (hdr && ieee80211_is_data_qos(hdr->frame_control))
-+			nfreed++;
- 		tx_info->skb[0] = NULL;
- 
- 		if (priv->cfg->ops->lib->txq_inval_byte_cnt_tbl)
- 			priv->cfg->ops->lib->txq_inval_byte_cnt_tbl(priv, txq);
- 
- 		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
--		nfreed++;
- 	}
- 	return nfreed;
+ static inline bool b43_empty_chanspec(struct b43_chanspec *chanspec)
+ {
+@@ -172,31 +173,6 @@ static void b43_radio_2055_setup(struct b43_wldev *dev,
+ 	udelay(300);
  }
+ 
+-/* Tune the hardware to a new channel. */
+-static int nphy_channel_switch(struct b43_wldev *dev, unsigned int channel)
+-{
+-	const struct b43_nphy_channeltab_entry *tabent;
+-
+-	tabent = b43_nphy_get_chantabent(dev, channel);
+-	if (!tabent)
+-		return -ESRCH;
+-
+-	//FIXME enable/disable band select upper20 in RXCTL
+-	if (0 /*FIXME 5Ghz*/)
+-		b43_radio_maskset(dev, B2055_MASTER1, 0xFF8F, 0x20);
+-	else
+-		b43_radio_maskset(dev, B2055_MASTER1, 0xFF8F, 0x50);
+-	b43_radio_2055_setup(dev, tabent);
+-	if (0 /*FIXME 5Ghz*/)
+-		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
+-	else
+-		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
+-	b43_chantab_phy_upload(dev, tabent);
+-	b43_nphy_tx_power_fix(dev);
+-
+-	return 0;
+-}
+-
+ static void b43_radio_init2055_pre(struct b43_wldev *dev)
+ {
+ 	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
+@@ -3345,6 +3321,67 @@ static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
+ 		b43_nphy_spur_workaround(dev);
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SetChanspec */
++static int b43_nphy_set_chanspec(struct b43_wldev *dev,
++					struct b43_chanspec chanspec)
++{
++	struct b43_phy_n *nphy = dev->phy.n;
++
++	const struct b43_nphy_channeltab_entry *tabent;
++
++	u8 tmp;
++	u8 channel = chanspec.channel;
++
++	if (dev->phy.rev >= 3) {
++		/* TODO */
++	}
++
++	nphy->radio_chanspec = chanspec;
++
++	if (chanspec.b_width != nphy->b_widht)
++		; /* TODO: BMAC BW Set (chanspec.b_width) */
++
++	/* TODO: use defines */
++	if (chanspec.b_width == 3) {
++		if (chanspec.sideband == 2)
++			b43_phy_set(dev, B43_NPHY_RXCTL,
++					B43_NPHY_RXCTL_BSELU20);
++		else
++			b43_phy_mask(dev, B43_NPHY_RXCTL,
++					~B43_NPHY_RXCTL_BSELU20);
++	}
++
++	if (dev->phy.rev >= 3) {
++		tmp = (chanspec.b_freq == 1) ? 4 : 0;
++		b43_radio_maskset(dev, 0x08, 0xFFFB, tmp);
++		/* TODO: PHY Radio2056 Setup (chan_info_ptr[i]) */
++		/* TODO: N PHY Chanspec Setup (chan_info_ptr[i]) */
++	} else {
++		tabent = b43_nphy_get_chantabent(dev, channel);
++		if (!tabent)
++			return -ESRCH;
++
++		tmp = (chanspec.b_freq == 1) ? 0x0020 : 0x0050;
++		b43_radio_maskset(dev, B2055_MASTER1, 0xFF8F, tmp);
++		b43_radio_2055_setup(dev, tabent);
++		b43_nphy_chanspec_setup(dev, tabent, chanspec);
++	}
++
++	return 0;
++}
++
++/* Tune the hardware to a new channel */
++static int nphy_channel_switch(struct b43_wldev *dev, unsigned int channel)
++{
++	struct b43_phy_n *nphy = dev->phy.n;
++
++	struct b43_chanspec chanspec;
++	chanspec = nphy->radio_chanspec;
++	chanspec.channel = channel;
++
++	return b43_nphy_set_chanspec(dev, chanspec);
++}
++
+ static int b43_nphy_op_allocate(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_n *nphy;
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index e7acae2..26d01fe 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -984,6 +984,7 @@ struct b43_phy_n {
+ 	u16 papd_epsilon_offset[2];
+ 	s32 preamble_override;
+ 	u32 bb_mult_save;
++	u8 b_widht;
+ 	struct b43_chanspec radio_chanspec;
+ 
+ 	bool gain_boost;
 -- 
-1.6.3.3
+1.6.4.2
 
