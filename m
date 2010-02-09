@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f187.google.com ([209.85.222.187]:63198 "EHLO
-	mail-pz0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169Ab0BITAO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 14:00:14 -0500
-Received: by pzk17 with SMTP id 17so214349pzk.4
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 11:00:14 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:34065 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752295Ab0BIEW2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 23:22:28 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 20:22:28 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4fb5db51002091056x54f0f81td3417afbcee29db@mail.gmail.com>
-References: <4fb5db51002091056x54f0f81td3417afbcee29db@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 9 Feb 2010 10:59:54 -0800
-Message-ID: <43e72e891002091059v6b772494s592af181a2347fb5@mail.gmail.com>
-Subject: Re: Regd Obexfs support in Linux
-To: Janakiram Sistla <janakiram.sistla@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19312.59210.947966.773343@gargle.gargle.HOWL>
+Date: Tue, 9 Feb 2010 10:10:42 +0530
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath9k: fix PAE frame handling
+In-Reply-To: <87d40ljov0.fsf@purkki.valot.fi>
+References: <4B65F735.1020509@openwrt.org>
+	<19302.24837.154697.822430@gargle.gargle.HOWL>
+	<87d40ljov0.fsf@purkki.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 9, 2010 at 10:56 AM, Janakiram Sistla
-<janakiram.sistla@gmail.com> wrote:
-> Hi all,
->
-> I am trying to use obexfs in Linux on a poky filesystem.I compiled the
-> package for ARM cross compiler.when i try to mount using obexfs i see
-> the following messages and i dont see any remote device filesystem
-> getting mounted.Can i get any inputs regarding the this.Am i missing
-> any packages.
+Kalle Valo wrote:
+> Any more information about the problem? For example, what APs are
+> broken?
+> 
+> I'm just wondering if we should see this with other hardware also.
 
-What does obexfs have anything to do with linux-wireless?
+Internal test cycles exposed this problem where certain APs didn't
+handle properly PAE frames being part of an aggregate.
 
-  Luis
+I'll see if I can dig up the APs from the test results.
+
+Sujith
