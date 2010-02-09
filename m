@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:58642 "EHLO vs166246.vserver.de"
+Received: from mail.atheros.com ([12.36.123.2]:36122 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752320Ab0BIXCO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 18:02:14 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs definitions
-Date: Wed, 10 Feb 2010 00:02:11 +0100
-Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+	id S1751780Ab0BIGFW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 01:05:22 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 22:05:22 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath9k: Enable IEEE80211_HW_REPORTS_TX_ACK_STATUS flag for ath9k.
+Date: Tue, 9 Feb 2010 11:34:50 +0530
+Message-ID: <1265695490-3004-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1265695490-3004-1-git-send-email-vnatarajan@atheros.com>
+References: <1265695490-3004-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201002100002.11369.mb@bu3sch.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 09 February 2010 21:04:33 Rafał Miłecki wrote:
-> +#define B43_MMIO_PSM_PHY_HDR		0x492	/* programmable state machine */
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-The comment doesn't make a lot of sense.
-In case you don't know, the PSM is the part of the hardware
-that executes the firmware.
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 4b5e548..623c2f8 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -622,7 +622,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		IEEE80211_HW_SIGNAL_DBM |
+ 		IEEE80211_HW_SUPPORTS_PS |
+ 		IEEE80211_HW_PS_NULLFUNC_STACK |
+-		IEEE80211_HW_SPECTRUM_MGMT;
++		IEEE80211_HW_SPECTRUM_MGMT |
++		IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+ 		 hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
 -- 
-Greetings, Michael.
+1.6.6.1
+
