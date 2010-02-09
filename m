@@ -1,78 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38950 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754822Ab0BSSlO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 13:41:14 -0500
-Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs
- definitions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <69e28c911002191033ye37355dm2b091b0c4ae83933@mail.gmail.com>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-	 <1266591292.15178.1.camel@jlt3.sipsolutions.net>
-	 <4B7EB31D.2000603@lwfinger.net>
-	 <1266596602.15178.2.camel@jlt3.sipsolutions.net>
-	 <4B7EBF0A.1060907@lwfinger.net>
-	 <1266598974.3754.0.camel@jlt3.sipsolutions.net>
-	 <69e28c911002190906n647d1a25o5f7268c585fa05c8@mail.gmail.com>
-	 <1266599361.3754.2.camel@jlt3.sipsolutions.net>
-	 <69e28c911002191021w1a1d9656oa762724e398da212@mail.gmail.com>
-	 <1266603853.29775.1.camel@jlt3.sipsolutions.net>
-	 <69e28c911002191033ye37355dm2b091b0c4ae83933@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-peV/KFNLOb5K48xHzqMg"
-Date: Fri, 19 Feb 2010 19:41:10 +0100
-Message-ID: <1266604870.30470.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from plexity.net ([206.123.115.38]:40577 "EHLO plexity.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751874Ab0BIUeP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 15:34:15 -0500
+Date: Tue, 9 Feb 2010 12:24:21 -0800
+From: Deepak Saxena <dsaxena@plexity.net>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: [BUG?] ieee80211_ops.remove_interface() being called twice
+Message-ID: <20100209202421.GA31240@plexity.net>
+Reply-To: dsaxena@plexity.net
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-peV/KFNLOb5K48xHzqMg
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I'm working on getting the libertas_tf driver on 2.6.31 working on an
+XO-1 laptopt with a USB connected device and running into the following
+situation during a suspend:
 
-On Fri, 2010-02-19 at 19:33 +0100, G=C3=A1bor Stefanik wrote:
+Upon initiating a suspend, lbtf_op_remove_interface() gets called via
+the wiphy_suspend() path:
 
-> > IMHO a manufacturer would have to be immensely stupid to build an
-> N-PHY
-> > design based (!) chip that doesn't at least support MCS rates 0
-> through
-> > 7, i.e. 1x1 11n operation.
->=20
-> Well, check Atheros and Ralink for an example. Usually, such chips
-> aren't "built" on purpose, rather, they have 802.11n support disabled
-> due to having been found defective (but usable in 802.11g mode) during
-> manufacturing.
+[  142.576332]  [<cf946376>] lbtf_op_remove_interface+0x17/0x7c [libertas_tf]   
+[  142.583333]  [<c06c260f>] __ieee80211_suspend+0x1c3/0x200                    
+[  142.588776]  [<c06bb9d6>] ieee80211_suspend+0x15/0x17                        
+[  142.593953]  [<c06a3807>] wiphy_suspend+0x38/0x48                            
+[  142.598695]  [<c0432371>] ? down+0x2b/0x2f                                   
+[  142.602932]  [<c05b693a>] dpm_suspend_start+0x214/0x32a                      
+[  142.608203]  [<c04403a1>] suspend_devices_and_enter+0x38/0x165               
+[  142.614153]  [<c0440596>] enter_state+0xc8/0x114                             
+[  142.618800]  [<c043fde4>] state_store+0x98/0xad                              
+[  142.623460]  [<c043fd4c>] ? state_store+0x0/0xad                             
+[  142.628111]  [<c056abd1>] kobj_attr_store+0x16/0x22                          
+[  142.633105]  [<c04c22d7>] sysfs_write_file+0xc0/0xeb                         
+[  142.638107]  [<c0485432>] vfs_write+0x8a/0x117                               
+[  142.642683]  [<c04c2217>] ? sysfs_write_file+0x0/0xeb                        
+[  142.647771]  [<c0485556>] sys_write+0x3b/0x60                                
+[  142.652397]  [<c04033d4>] sysenter_do_call+0x12/0x26    
 
-That ... doesn't really make sense either. But we can leave it at that,
-I don't care much :)
+Later on, the USB device is removed from the tree and 
+lbtf_op_remove_interface() gets called again and this causes
+an OOOPS:
 
-johannes
+[  143.209556]  [<cf946376>] lbtf_op_remove_interface+0x17/0x7c
+[libertas_tf]   
+[  143.216547]  [<c06b8a50>] ieee80211_stop+0x373/0x3db                         
+[  143.221547]  [<c06cb2b6>] ? _spin_unlock_bh+0x1a/0x1c                        
+[  143.226736]  [<c0626627>] dev_close+0x6c/0x88                                
+[  143.231128]  [<c06266bb>] rollback_registered+0x78/0x204                     
+[  143.236560]  [<c0626879>] unregister_netdevice+0x32/0x4d                     
+[  143.241901]  [<c06b832c>] ieee80211_remove_interfaces+0x68/0x77              
+[  143.247942]  [<c06ae5fa>] ieee80211_unregister_hw+0x38/0xc3                  
+[  143.253564]  [<cf9461a5>] lbtf_remove_card+0x31/0x3e [libertas_tf]           
+[  143.259891]  [<cf981966>] if_usb_disconnect+0x20/0x3e [libertas_tf_usb]      
+[  143.266701]  [<ce758b32>] usb_unbind_interface+0x4b/0xbe [usbcore]           
+[  143.272999]  [<c05b3ddf>] __device_release_driver+0x47/0x7f                  
+[  143.278601]  [<c05b3eb4>] device_release_driver+0x18/0x23                    
+[  143.284236]  [<ce758cf2>] usb_driver_release_interface+0x33/0x59 [usbcore]   
+[  143.291347]  [<ce758d83>] usb_forced_unbind_intf+0x13/0x1a [usbcore]         
+[  143.297827]  [<ce758dca>] do_unbind_rebind+0x40/0x5b [usbcore]               
+[  143.303890]  [<ce758e72>] usb_external_suspend_device+0x11/0x3e [usbcore]    
+[  143.310908]  [<ce758ed2>] usb_suspend+0x33/0x35 [usbcore]                    
+[  143.316427]  [<ce7500fb>] usb_dev_suspend+0xd/0xf [usbcore]                  
+[  143.322130]  [<c05b658a>] pm_op+0x21/0x5b                                    
+[  143.326173]  [<c05b6960>] dpm_suspend_start+0x23a/0x32a                      
+[  143.331534]  [<c04403a1>] suspend_devices_and_enter+0x38/0x165               
+[  143.337403]  [<c0440596>] enter_state+0xc8/0x114                             
+[  143.342148]  [<c043fde4>] state_store+0x98/0xad                              
+[  143.346710]  [<c043fd4c>] ? state_store+0x0/0xad                             
+[  143.351455]  [<c056abd1>] kobj_attr_store+0x16/0x22                          
+[  143.356365]  [<c04c22d7>] sysfs_write_file+0xc0/0xeb                         
+[  143.361467]  [<c0485432>] vfs_write+0x8a/0x117                               
+[  143.365938]  [<c04c2217>] ? sysfs_write_file+0x0/0xeb                        
+[  143.371107]  [<c0485556>] sys_write+0x3b/0x60                                
+[  143.375498]  [<c04033d4>] sysenter_do_call+0x12/0x26
 
---=-peV/KFNLOb5K48xHzqMg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Following is the code for lbtf_op_remove_interface().  Basically we set 
+priv->vif to NULL the first time around and then we crash on trying 
+to access priv->vif->type the second time around. Easy "fix" is a NULL 
+check in lbtf_op_remove_interface() to simply return to caller 
+if !priv->vif, but I don't think the remove_interface() function
+should be called twice. 
 
------BEGIN PGP SIGNATURE-----
+static void lbtf_op_remove_interface(struct ieee80211_hw *hw,
+                        struct ieee80211_if_init_conf *conf)
+{
+        struct lbtf_private *priv = hw->priv;
 
-iQIcBAABAgAGBQJLfttDAAoJEODzc/N7+Qmatc8QALM1OA/XZ+9BJQwe2PHBsP2+
-139gRtfT8v6LGmtmbllcqDoFJ0wLeuaeToql+7QjGOSzAP8+7uZRxQu6j+qldxci
-24L9hBp78XlLVQkC9g4qMiOFqr600ZBOr8FGWvCaWEMkjsuNGjCvcohQhN/wwE6G
-YVdHKQhptIwvZDQ4ZYMV914m5WS7FiG/p9DU7pUY+FYZVwziTBThi+Jq2IuPsL8D
-MunzvVBe/aP80fOCbqiVfHrKBJi1ohh4McYUGGcKRsS16+VIbsSbZ0mKGGelHWVO
-HNdDu2A7fZ0f4kFVhhj2h0HdefAH85JloogNJ2c/NpHcuEYrWnKeu87U+yzxRymG
-CJVotub7yvuqwfrU6Copor7nQ5ywOScaC+MuXQntF6KNduEZgrzaguSaeeMwTaNi
-WL5v4MCk8xeGTDy5TpXuP0ulH3ObMfaoEYeVYw9GA6M7NhtmYNU7W+rvzcTcSr2y
-iuF7dtHLqi+M1UrpgHVl8poTj+dImgKkLJF01vahQUeH9g8UYbgz7iZqvm6flkVY
-cJ7iC3gtvRoUF2URaySknNHAhQgKbMegp7f5X1bGqBDnvSK5zaRjl0o5VB+cx/5f
-lrVPoDJmCIhoySEht0l1L5UWMJL3+yPyxkxYEIs6UpoyySzxjafVgXUglQS9mYv4
-rOoigWemBt7wkmKNHjrZ
-=8U2K
------END PGP SIGNATURE-----
+        if (priv->vif->type == NL80211_IFTYPE_AP ||
+            priv->vif->type == NL80211_IFTYPE_MESH_POINT)
+                lbtf_beacon_ctrl(priv, 0, 0);
+        lbtf_set_mode(priv, LBTF_PASSIVE_MODE);
+        lbtf_set_bssid(priv, 0, NULL);
+        priv->vif = NULL;
+}
 
---=-peV/KFNLOb5K48xHzqMg--
+~Deepak
 
