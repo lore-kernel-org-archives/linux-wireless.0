@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42745 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933335Ab0BPVDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 16:03:09 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: backport genlmsg_unicast
-Date: Tue, 16 Feb 2010 22:03:00 +0100
-Message-Id: <1266354181-5317-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:42946 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755064Ab0BIQz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 11:55:26 -0500
+Date: Tue, 9 Feb 2010 17:52:48 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: lkml@Think-Future.de,
+	Linux Kernel-Liste <linux-kernel@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ilw@linux.intel.com, linux-wireless@vger.kernel.org
+Subject: Re: PROBLEM: iwlagn kernel 2.6.32.3 ooops
+Message-ID: <20100209165247.GB2512@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100206170348.GB9411@localhost> <20100208143118.e8e5a1ee.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100208143118.e8e5a1ee.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Feb 08, 2010 at 02:31:18PM -0800, Andrew Morton wrote:
+> On Sat, 6 Feb 2010 18:03:50 +0100
+> lkml@Think-Future.de wrote:
+> 
+> >   Hi, 
+> 
+> Suitable cc's added, more below...
+> 
+> > This ooops happens on kernel 2.6.32.3. On a .32.7 it didn't 
+> > happen yet. Maybe fixed, maybe not.
+> > 
+> > Keywords (i.e., modules, networking, kernel):
+> > iwlagn, kernel 2.6.32.3
+> > 
+> > 
+> > Below two msgs:
+> > The first is the ooops that occurred when using the box as usual (IRC: after 
+> > this crash no rmmod && modprobe have been possible).
+> > 
+> > The second - IRC - when the iwlagn module crashed, rebooted, crashed differently, 
+> > was then removed after the different ooops and re-modprobed.
+> > 
+> > 
+> > [250420.677157] ip: page allocation failure. order:3, mode:0x8020
+> 
+> This one isn't an "oops" - it's a warning that a memory allocation
+> attempt failed.  Which is hardly surprising: an order-3 GFP_ATOMIC
+> allocation is highly unreliable and the driver just shouldn't be
+> attempting it.
+> 
+> > [250420.677168] Pid: 11584, comm: ip Not tainted 2.6.32.3 #5
+> > [250420.677173] Call Trace:
+> > [250420.677190]  [<c10a53f8>] ? __alloc_pages_nodemask+0x518/0x5f0
+> > [250420.677204]  [<c1007c20>] ? dma_generic_alloc_coherent+0x0/0x100
+> > [250420.677214]  [<c1007c92>] ? dma_generic_alloc_coherent+0x72/0x100
+> > [250420.677224]  [<c1007c20>] ? dma_generic_alloc_coherent+0x0/0x100
+> > [250420.677241]  [<fca1c9d5>] ? iwl_tx_queue_init+0x285/0x380 [iwlcore]
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.32.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+That is at initialization time. To avoid atomic allocation we can just
+use dma_alloc_coherent instead of pci_alloc_consistent. I'm going to
+prepare a patch.
 
-diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
-index 11060d8..2f5013f 100644
---- a/include/linux/compat-2.6.32.h
-+++ b/include/linux/compat-2.6.32.h
-@@ -9,6 +9,7 @@
- #include <linux/compat.h>
- #include <net/iw_handler.h>
- #include <linux/workqueue.h>
-+#include <net/genetlink.h>
- 
- #define SDIO_VENDOR_ID_INTEL			0x0089
- #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
-@@ -47,6 +48,7 @@ static inline void flush_delayed_work(struct delayed_work *dwork)
- /* net namespace is lost */
- #define genlmsg_multicast_netns(a, b, c, d, e)	genlmsg_multicast(b, c, d, e)
- #define genlmsg_multicast_allns(a, b, c, d)	genlmsg_multicast(a, b, c, d)
-+#define genlmsg_unicast(net, skb, pid)	genlmsg_unicast(skb, pid)
- 
- #define dev_change_net_namespace(a, b, c) (-EOPNOTSUPP)
- 
--- 
-1.6.3.3
-
+Stanislaw
