@@ -1,110 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:40989 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756741Ab0BPXZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 18:25:09 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1NhWmu-0004i5-Ll
-	for linux-wireless@vger.kernel.org; Wed, 17 Feb 2010 00:25:04 +0100
-Received: from xdsl-87-79-183-208.netcologne.de ([87.79.183.208])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 00:25:04 +0100
-Received: from jm.mico by xdsl-87-79-183-208.netcologne.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 00:25:04 +0100
-To: linux-wireless@vger.kernel.org
-From: juanma <jm.mico@gmail.com>
-Subject: Re: ath9k/AR9285 - incompatibility with bluetooth
-Date: Tue, 16 Feb 2010 23:15:07 +0000 (UTC)
-Message-ID: <loom.20100217T000412-571@post.gmane.org>
-References: <1263494975.4643.15.camel@eclipse>  <1263492165.31774.13.camel@localhost.localdomain> <1263498975.4643.61.camel@eclipse>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from ey-out-2122.google.com ([74.125.78.27]:42996 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753230Ab0BIUEa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 15:04:30 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so1670038eyd.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:04:29 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 01/11] b43: N-PHY: add some registers and structs definitions
+Date: Tue,  9 Feb 2010 21:04:33 +0100
+Message-Id: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/b43.h         |    1 +
+ drivers/net/wireless/b43/phy_n.h       |    9 +++++++++
+ drivers/net/wireless/b43/tables_nphy.h |    9 +++++++++
+ 3 files changed, 19 insertions(+), 0 deletions(-)
 
-Alberto José Rodríguez Rodríguez <ajrodriguez@...> writes:
-
-> 
-> Thanks for your response. I made this question because
-> while this device loses the connection, on my laptop, with the same
-> bluetooth device, the connection is not affected.
-> 
->  03:00.0 Network controller: Intel Corporation Wireless WiFi Link 5100
-> 
-Hello Alberto,
-
-I do not think your wlan problem is (only) because of Bluetooth interfering with
-Wlan.
-
-I have a Zotac Mag (with an Ath9k, and looks like the current implementation of
-the drivers are pretty bad. I am having the same issues (very low signal, very
-low speed and iregular connections). I do not have any bluetooth dongle.
-
-After reading a lot, looks like kernel 6.2.32 improves it (comes with Ubuntu
-Lucid Linx in April), as well as backports.
-
-For me, backports have not improved it much, but the kernel 6.2.32 yes. Speed is
-still lower than expected, signal also, but the reliability of the connection is
-improved. 
-
-What I have done is use ndiswrapper with the drivers for XP which are to be
-found on the Zotac website.
-
-I hope this helped.
-
-Un saludo,
-
-Juanma.
-
-MY WLAN ADAPTER: 04:00.0 Network controller: Atheros Communications Inc. AR9285
-Wireless Network Adapter (PCI-Express) (rev 01)
-
-> El jue, 14-01-2010 a las 10:02 -0800, Dan Williams escribió:
-> > On Thu, 2010-01-14 at 18:49 +0000, Alberto José Rodríguez Rodríguez
-> > wrote:
-> > > Hellow,
-> > > 	I have a ZOTAC MAG ION and I'm having problems with wireless
-> > > connections
-> > > 
-> > > Distribution: Ubuntu 9.10
-> > > Kernel version: 2.6.31-16
-> > > Device: 04:00.0 Network controller: Atheros Communications Inc. AR9285
-Wireless Network Adapter
-> (PCI-Express) (rev 01)
-> > > Problem Description:
-> > >     - Low signal strength
-> > >     - Cannot connect to wireless networks
-> > > Using linux-backports-modules-karmic:
-> > >     - Low signal strength persists
-> > >     - Can connect to WPA networks but signal strengh is low and unstable,
-also when using at the same time a
-> Bluetooth USB dongle (continuously inquiring) the wireless connection is lost.
-> > >     - Cannot connect to WEP networks, although the WEP key is set
-correctly and the device is associated to the AP
-> > > Using latest linux-wireless snapshot (20100113):
-> > >     - Can connect to WEP networks but when I use at the same time a
-Bluetooth USB dongle (continuously
-> inquiring) the speed of the wireless connection becomes very slow.
-> > >     - Can connect to WPA networks but when I use at the same time a
-Bluetooth USB dongle (continuously
-> inquiring) the wireless connection is lost.
-> > 
-> > This isn't unexpected; Bluetooth and WiFi interfere with each other
-> > because they both use 2.4GHz.  So don't expect great performance out of
-> > either BT or WiFi when you're using both at the same time.  Many
-> > built-in chips have BT co-existence capability, but that only works if
-> > both the WiFi and BT chips are built into your computer and are wired up
-> > to talk to each other.  External USB BT or WiFi dongles almost certainly
-> > will not have working coexistence support.
-> > 
-> > Dan
-> > 
-> > 
-
-
-
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 6a6ab0f..bd7c505 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -104,6 +104,7 @@
+ #define B43_MMIO_MACFILTER_CONTROL	0x420
+ #define B43_MMIO_MACFILTER_DATA		0x422
+ #define B43_MMIO_RCMTA_COUNT		0x43C
++#define B43_MMIO_PSM_PHY_HDR		0x492	/* programmable state machine */
+ #define B43_MMIO_RADIO_HWENABLED_LO	0x49A
+ #define B43_MMIO_GPIO_CONTROL		0x49C
+ #define B43_MMIO_GPIO_MASK		0x49E
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index 403aad3..47d20dc 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -711,6 +711,8 @@
+ #define B43_NPHY_PAPD_EN1			B43_PHY_N(0x29B) /* PAPD Enable1 TBD */
+ #define B43_NPHY_EPS_TABLE_ADJ1			B43_PHY_N(0x29C) /* EPS Table Adj1 TBD */
+ 
++#define B43_PHY_B_BBCFG				B43_PHY_N_BMODE(0x001) /* BB config */
++#define B43_PHY_B_TEST				B43_PHY_N_BMODE(0x00A)
+ 
+ 
+ /* Broadcom 2055 radio registers */
+@@ -924,6 +926,13 @@
+ 
+ struct b43_wldev;
+ 
++struct b43_chanspec {
++	u8 channel;
++	u8 sideband;
++	u8 b_width;
++	u8 b_freq;
++};
++
+ struct b43_phy_n_iq_comp {
+ 	s16 a0;
+ 	s16 b0;
+diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
+index 9c1c6ec..b23036f 100644
+--- a/drivers/net/wireless/b43/tables_nphy.h
++++ b/drivers/net/wireless/b43/tables_nphy.h
+@@ -4,6 +4,15 @@
+ #include <linux/types.h>
+ 
+ 
++struct b43_phy_n_sfo_cfg {
++	u16 phy_bw1a;
++	u16 phy_bw2;
++	u16 phy_bw3;
++	u16 phy_bw4;
++	u16 phy_bw5;
++	u16 phy_bw6;
++};
++
+ struct b43_nphy_channeltab_entry {
+ 	/* The channel number */
+ 	u8 channel;
+-- 
+1.6.4.2
 
