@@ -1,97 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34294 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030474Ab0B0ScE (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:34124 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507Ab0BIUFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 13:32:04 -0500
-Date: Sat, 27 Feb 2010 10:31:11 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?ISO-8859-15?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal
- DMA  errors
-In-Reply-To: <201002271559.20531.mb@bu3sch.de>
-Message-ID: <alpine.LFD.2.00.1002271016330.4513@localhost.localdomain>
-References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain> <alpine.LFD.2.00.1002261337460.4513@localhost.localdomain> <alpine.LFD.2.00.1002261345300.4513@localhost.localdomain> <201002271559.20531.mb@bu3sch.de>
+	Tue, 9 Feb 2010 15:05:01 -0500
+Received: by mail-ew0-f228.google.com with SMTP id 28so4264852ewy.28
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:05:00 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 04/11] b43: N-PHY: update writing channel-specific radio registers
+Date: Tue,  9 Feb 2010 21:04:36 +0100
+Message-Id: <1265745883-3392-5-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   54 ++++++++++++++++++++++---------------
+ 1 files changed, 32 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index dd81e8a..ebb9632 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -90,28 +90,38 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
+ static void b43_chantab_radio_upload(struct b43_wldev *dev,
+ 				     const struct b43_nphy_channeltab_entry *e)
+ {
+-	b43_radio_write16(dev, B2055_PLL_REF, e->radio_pll_ref);
+-	b43_radio_write16(dev, B2055_RF_PLLMOD0, e->radio_rf_pllmod0);
+-	b43_radio_write16(dev, B2055_RF_PLLMOD1, e->radio_rf_pllmod1);
+-	b43_radio_write16(dev, B2055_VCO_CAPTAIL, e->radio_vco_captail);
+-	b43_radio_write16(dev, B2055_VCO_CAL1, e->radio_vco_cal1);
+-	b43_radio_write16(dev, B2055_VCO_CAL2, e->radio_vco_cal2);
+-	b43_radio_write16(dev, B2055_PLL_LFC1, e->radio_pll_lfc1);
+-	b43_radio_write16(dev, B2055_PLL_LFR1, e->radio_pll_lfr1);
+-	b43_radio_write16(dev, B2055_PLL_LFC2, e->radio_pll_lfc2);
+-	b43_radio_write16(dev, B2055_LGBUF_CENBUF, e->radio_lgbuf_cenbuf);
+-	b43_radio_write16(dev, B2055_LGEN_TUNE1, e->radio_lgen_tune1);
+-	b43_radio_write16(dev, B2055_LGEN_TUNE2, e->radio_lgen_tune2);
+-	b43_radio_write16(dev, B2055_C1_LGBUF_ATUNE, e->radio_c1_lgbuf_atune);
+-	b43_radio_write16(dev, B2055_C1_LGBUF_GTUNE, e->radio_c1_lgbuf_gtune);
+-	b43_radio_write16(dev, B2055_C1_RX_RFR1, e->radio_c1_rx_rfr1);
+-	b43_radio_write16(dev, B2055_C1_TX_PGAPADTN, e->radio_c1_tx_pgapadtn);
+-	b43_radio_write16(dev, B2055_C1_TX_MXBGTRIM, e->radio_c1_tx_mxbgtrim);
+-	b43_radio_write16(dev, B2055_C2_LGBUF_ATUNE, e->radio_c2_lgbuf_atune);
+-	b43_radio_write16(dev, B2055_C2_LGBUF_GTUNE, e->radio_c2_lgbuf_gtune);
+-	b43_radio_write16(dev, B2055_C2_RX_RFR1, e->radio_c2_rx_rfr1);
+-	b43_radio_write16(dev, B2055_C2_TX_PGAPADTN, e->radio_c2_tx_pgapadtn);
+-	b43_radio_write16(dev, B2055_C2_TX_MXBGTRIM, e->radio_c2_tx_mxbgtrim);
++	b43_radio_write(dev, B2055_PLL_REF, e->radio_pll_ref);
++	b43_radio_write(dev, B2055_RF_PLLMOD0, e->radio_rf_pllmod0);
++	b43_radio_write(dev, B2055_RF_PLLMOD1, e->radio_rf_pllmod1);
++	b43_radio_write(dev, B2055_VCO_CAPTAIL, e->radio_vco_captail);
++	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
++		b43_read32(dev, B43_MMIO_MACCTL);
++	b43_radio_write(dev, B2055_VCO_CAL1, e->radio_vco_cal1);
++	b43_radio_write(dev, B2055_VCO_CAL2, e->radio_vco_cal2);
++	b43_radio_write(dev, B2055_PLL_LFC1, e->radio_pll_lfc1);
++	b43_radio_write(dev, B2055_PLL_LFR1, e->radio_pll_lfr1);
++	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
++		b43_read32(dev, B43_MMIO_MACCTL);
++	b43_radio_write(dev, B2055_PLL_LFC2, e->radio_pll_lfc2);
++	b43_radio_write(dev, B2055_LGBUF_CENBUF, e->radio_lgbuf_cenbuf);
++	b43_radio_write(dev, B2055_LGEN_TUNE1, e->radio_lgen_tune1);
++	b43_radio_write(dev, B2055_LGEN_TUNE2, e->radio_lgen_tune2);
++	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
++		b43_read32(dev, B43_MMIO_MACCTL);
++	b43_radio_write(dev, B2055_C1_LGBUF_ATUNE, e->radio_c1_lgbuf_atune);
++	b43_radio_write(dev, B2055_C1_LGBUF_GTUNE, e->radio_c1_lgbuf_gtune);
++	b43_radio_write(dev, B2055_C1_RX_RFR1, e->radio_c1_rx_rfr1);
++	b43_radio_write(dev, B2055_C1_TX_PGAPADTN, e->radio_c1_tx_pgapadtn);
++	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
++		b43_read32(dev, B43_MMIO_MACCTL);
++	b43_radio_write(dev, B2055_C1_TX_MXBGTRIM, e->radio_c1_tx_mxbgtrim);
++	b43_radio_write(dev, B2055_C2_LGBUF_ATUNE, e->radio_c2_lgbuf_atune);
++	b43_radio_write(dev, B2055_C2_LGBUF_GTUNE, e->radio_c2_lgbuf_gtune);
++	b43_radio_write(dev, B2055_C2_RX_RFR1, e->radio_c2_rx_rfr1);
++	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
++		b43_read32(dev, B43_MMIO_MACCTL);
++	b43_radio_write(dev, B2055_C2_TX_PGAPADTN, e->radio_c2_tx_pgapadtn);
++	b43_radio_write(dev, B2055_C2_TX_MXBGTRIM, e->radio_c2_tx_mxbgtrim);
+ }
+ 
+ static void b43_chantab_phy_upload(struct b43_wldev *dev,
+-- 
+1.6.4.2
 
-On Sat, 27 Feb 2010, Michael Buesch wrote:
-> 
-> However, did you add the udelay to b43_write()? Please try to add it
-> further down in the callchain into the lowlevel SSB read and write functions.
-> drivers/ssb/pci.c
-
-Well, I don't know what that would help from a timing standpoint, since 
-the delay gets done either way, but looking at it, I do note that the 
-locking for the writes is very very wrong.
-
-For example, look at
-
-	static u32 ssb_pci_read32(struct ssb_device *dev, u16 offset)
-	{
-	        struct ssb_bus *bus = dev->bus;
-
-	        if (unlikely(ssb_pci_assert_buspower(bus)))
-	                return 0xFFFFFFFF;
-	        if (unlikely(bus->mapped_device != dev)) {
-**** race 1 ****
-	                if (unlikely(ssb_pci_switch_core(bus, dev)))
-	                        return 0xFFFFFFFF;
-	        }
-**** race 2 ****
-	        return ioread32(bus->mmio + offset);
-	}
-
-and notice how it's doing that 'mapped_device' read with no locks held. 
-The actual ssb_pci_switch_core() function will take a lock, but it's too 
-late by then: if you have these things happening in an interrupt, you 
-might have another access happening either before or after the 
-mapped_device has been read or written. So the mmio access could easily go 
-to the wrong core.
-
-That said, I assume that 'mapped_device' almost never actually changes in 
-practice, so the race presumably doesn't really matter. I don't know how 
-these "devices" even work - is there a separate "device" for different SSB 
-functions (ie power management vs DMA vs wireless radio), or is there 
-multiple devices only if you actually have multiple radio's?
-
-So for all I know, it's possible that in my case there is always just one 
-device, and the race really fundamentally cannot ever happen. Or maybe 
-there are multiple ones, but in practice you never have concurrent 
-accesses (perhaps due to locking at a higher level) so again the locking 
-bug is hidden.
-
-Anyway, quite frankly, from a design standpoint it looks like any user of 
-ssb_pci_switch_core() is fundamentally buggered. The lock should be taken 
-by the caller, ie the locking _should_ have been around the whole 
-mapped_device test _and_ the actual ioread32() too, something like
-
-	u32 retval = 0xffffffff;
-
-	spin_lock_irqsave(&dev->core_lock, flags);
-	if (bus->mapped_device == dev || !ssb_pci_switch_core(bus, dev))
-		retval = ioread32(bus->mmio + offset);
-	spin_lock_irqrestore(&dev->core_lock, flags);
-
-	return retval;
-
-and that assert_buspower thing should probably be done inside the core 
-switching (set "mapped_device" to NULL when powering it down, and either 
-refuse to switch cores or power it up dynamically).
-
-I can write a patch and test whether it matters, but I'd like to know if 
-my chip even _has_ multiple cores behind the ssb bridge. If people tell me 
-that there is only one core on that chip, and that the race can never 
-happen, then I won't bother.
-
-			Linus
