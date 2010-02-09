@@ -1,85 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.irobot.com ([206.83.81.187]:35141 "EHLO smtp1.irobot.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758546Ab0BXXny (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 18:43:54 -0500
-Message-ID: <4B85B88E.3050402@irobot.com>
-Date: Wed, 24 Feb 2010 15:38:54 -0800
-From: Adam Wozniak <awozniak@irobot.com>
-MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fix rates setup on IBSS merge
-References: <20100223095113.25360.75291.stgit@void>
-In-Reply-To: <20100223095113.25360.75291.stgit@void>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail-pz0-f187.google.com ([209.85.222.187]:46515 "EHLO
+	mail-pz0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361Ab0BIObB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 09:31:01 -0500
+Received: by pzk17 with SMTP id 17so437178pzk.4
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 06:30:59 -0800 (PST)
+Date: Tue, 9 Feb 2010 22:30:48 +0800
+From: Ming Lei <tom.leiming@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, stable@kernel.org
+Subject: Re: [PATCH] ath9k: fix keycache leak in split tkip case
+Message-ID: <20100209223048.0f51a774@tom-lei>
+In-Reply-To: <1265701908.3783.13.camel@johannes.berg>
+References: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
+	<43e72e891002081338q466d9747p10a61b5e1aca4c6d@mail.gmail.com>
+	<20100209093612.08d9ae17@tom-lei>
+	<1265701908.3783.13.camel@johannes.berg>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I noticed this a while back and tried (unsuccessfully) to get some 
-patches pushed through for it.  Your patch looks cleaner than mine (I 
-don't think I understood as much at the time as I do now).
 
-You can look through the linux-wireless archives for some of my old 
-posts.  Things to note:
+>From 67b0faf7e7a57c3e6a971ff43d1f03f8e939429b Mon Sep 17 00:00:00 2001
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Sat, 6 Feb 2010 22:30:53 +0800
+Subject: [PATCH] ath9k: fix keycache leak in split tkip case
 
-For minstrel, calling rate_control_init() is effectively an update.  A 
-workable solution may be to add a minstrel rate_control_update() that 
-simply calls init().  I don't *think* PID has an update either, and 
-don't forget about the cases where the rate control algorithm is handled 
-in the firmware for the device.
+If split tkip key is used, ath_delete_key should delete
+rx key and rx mic key. This patch fixes the leak of hw
+keycache in the case.
 
-Flow control in ieee80211_rx_bss_info() could use some cleanup.  It's 
-possible to reach the end and use uninitialized variables.
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+Cc: stable@kernel.org
+---
 
-To solve the problem for my devices, I used a patch to minstrel which 
-actually ignores the rates in the beacon, under the assumption that if 
-the other STA can't use them, they'll get 0% probability in the rate 
-table.  This seems to work well for me.
+The patch is against the latest wireless test tree.
+Thanks for the comments of Luis and johannes.
 
---Adam
+---
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Bruno Randolf wrote:
-> when an IBSS merge happened, the supported rates for the newly added station
-> were left empty, causing the rate control module to be initialized with only
-> the basic rates.
->
-> also the section of the ibss code which deals with updating supported rates for
-> an already existing station fails to inform the rate control module about the
-> new rates. as i don't know how to fix this (minstrel does not have an update
-> function), i have just added a comment for now.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6796d5c..928402b 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -809,6 +809,7 @@ static void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf
+ 
+ 	clear_bit(key->hw_key_idx + 64, common->keymap);
+ 	if (common->splitmic) {
++		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
+ 		clear_bit(key->hw_key_idx + 32, common->keymap);
+ 		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
+ 	}
+-- 
+1.6.2.5
+
+
+
+On Tue, 09 Feb 2010 08:51:48 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> On Tue, 2010-02-09 at 09:36 +0800, Ming Lei wrote:
+> > From 67b0faf7e7a57c3e6a971ff43d1f03f8e939429b Mon Sep 17 00:00:00
+> > 2001 From: Ming Lei <tom.leiming@gmail.com>
+> > Date: Sat, 6 Feb 2010 22:30:53 +0800
+> > Subject: [PATCH] ath9k: fix keycache leak in split tkip case
+> > 
+> > If split tkip key is used, ath_delete_key should delete
+> > rx key and rx mic key. This patch fixes the leak of hw
+> > keycache in the case.
+> > 
+> > ---
+> > The patch is against the latest wireless test tree.
+> > 
+> > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+> > Cc: stable@kernel.org
+> 
+> This is ordered wrong, it needs to be
+> 
+> ----------
+> From: foo
+> 
+> If split ...
+> 
+> Signed-off-by: ...
+> Cc: stable...
 > ---
->
->  net/mac80211/ibss.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index f3e9424..b840d90 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -276,6 +276,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->  				    (unsigned long long) sta->sta.supp_rates[band]);
->  #endif
->  			rcu_read_unlock();
-> +
-> +			/* FIXME: update rate control */
->  		} else {
->  			rcu_read_unlock();
->  			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
-> @@ -370,6 +372,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->  		       sdata->name, mgmt->bssid);
->  #endif
->  		ieee80211_sta_join_ibss(sdata, bss);
-> +		supp_rates = ieee80211_sta_get_rates(local, elems, band);
->  		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
->  				       supp_rates, GFP_KERNEL);
->  	}
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+> The patch is against...
+> (everything after --- is removed from the commit log when committing)
+> ----------
+> 
+> johannes
+> 
 
