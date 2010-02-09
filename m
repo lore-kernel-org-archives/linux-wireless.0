@@ -1,162 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42940 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754036Ab0BRCN3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 21:13:29 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, 8an@praha12.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] iw: add country IE parsing
-Date: Wed, 17 Feb 2010 21:13:28 -0500
-Message-Id: <1266459208-12408-1-git-send-email-lrodriguez@atheros.com>
+Received: from mx1.redhat.com ([209.132.183.28]:27349 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751241Ab0BIIaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 03:30:21 -0500
+Date: Tue, 9 Feb 2010 09:27:19 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] airo: return from set_wep_key() when key length is zero
+Message-ID: <20100209082718.GA2588@dhcp-lab-161.englab.brq.redhat.com>
+References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com> <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com> <20100208205358.GA3852@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100208205358.GA3852@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Spits out the channels as seen on the IE, useful when debugging
-issues with APs. When found the equivalent distance of the
-coverage class is printed out in meters.
+Even if keylen == 0 is a bug and should not really happen, better avoid
+possibility of passing bad value to firmware.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
+ drivers/net/wireless/airo.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Sorry, resending, I mistakenly sent to lkml instead of linux-wireless.
-
-OK so I removed the line that says we're printing IEs and also
-added a distance compuation based on Lukáš Turek's forumal.
-
-coverage = (distance + 449) / 450;
-coverage/450 = distance + 499
-(coverage/450) - 499 = distance 
-
-So in meters:
-
-distance = (coverage/450) - 499
-
- scan.c |   96 ++++++++++++++++++++++++++++++++++++++++++++++++++++-----------
- 1 files changed, 79 insertions(+), 17 deletions(-)
-
-diff --git a/scan.c b/scan.c
-index ec63e61..2d7f15e 100644
---- a/scan.c
-+++ b/scan.c
-@@ -36,6 +36,23 @@ struct scan_params {
- 	bool show_both_ie_sets;
- };
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 2a9f029..01bffc2 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -5254,7 +5254,8 @@ static int set_wep_key(struct airo_info *ai, u16 index, const char *key,
+ 	WepKeyRid wkr;
+ 	int rc;
  
-+#define IEEE80211_COUNTRY_EXTENSION_ID 201
-+
-+struct ieee80211_country_ie_triplet {
-+	union {
-+		struct {
-+			__u8 first_channel;
-+			__u8 num_channels;
-+			__s8 max_power;
-+		} __attribute__ ((packed)) chans;
-+		struct {
-+			__u8 reg_extension_id;
-+			__u8 reg_class;
-+			__u8 coverage_class;
-+		} __attribute__ ((packed)) ext;
-+	};
-+} __attribute__ ((packed));
-+
- static int handle_scan(struct nl80211_state *state,
- 		       struct nl_cb *cb,
- 		       struct nl_msg *msg,
-@@ -143,29 +160,74 @@ static void print_ds(const uint8_t type, uint8_t len, const uint8_t *data)
- 	printf(" channel %d\n", data[0]);
- }
+-	WARN_ON(keylen == 0);
++	if (WARN_ON(keylen == 0))
++		return -1;
  
--static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
-+static const char *country_env_str(char environment)
- {
--	int i;
--
--	printf(" %.*s", 2, data);
--	switch (data[2]) {
-+	switch (environment) {
- 	case 'I':
--		printf(" (indoor)");
--		break;
-+		return "Indoor only";
- 	case 'O':
--		printf(" (outdoor)");
--		break;
-+		return "Outdoor only";
- 	case ' ':
--		printf(" (in/outdoor)");
--		break;
-+		return "Indoor/Outdoor";
- 	default:
--		printf(" (invalid environment)");
--		break;
-+		return "bogus";
- 	}
--	printf(", data:");
--	for(i=0; i<len-3; i++)
--		printf(" %.02x", data[i + 3]);
--	printf("\n");
-+}
-+
-+/*
-+ * Using the inverse of the distance to coverage class
-+ * formula we get that in meters
-+ * distance = (coverage/450) - 499
-+ */
-+static int coverage_class_to_distance(__u8 coverage_class)
-+{
-+	return (coverage_class / 450) - 499;
-+}
-+
-+static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
-+{
-+	printf(" %.*s", 2, data);
-+
-+	printf("\tEnvironment: %s\n", country_env_str(data[2]));
-+
-+	data += 3;
-+	len -= 3;
-+
-+	if (len < 3) {
-+		printf("\t\tNo country IE triplets present\n");
-+		return;
-+	}
-+
-+	while (len >= 3) {
-+		int end_channel;
-+		struct ieee80211_country_ie_triplet *triplet =
-+			(struct ieee80211_country_ie_triplet *) data;
-+
-+		if (triplet->ext.reg_extension_id >= IEEE80211_COUNTRY_EXTENSION_ID) {
-+			printf("\t\tExtension ID: %d Regulatory Class: %d Coverage class: %d (Approx %d meters)\n",
-+			       triplet->ext.reg_extension_id,
-+			       triplet->ext.reg_class,
-+			       triplet->ext.coverage_class,
-+			       coverage_class_to_distance(triplet->ext.coverage_class));
-+
-+			data += 3;
-+			len -= 3;
-+			continue;
-+		}
-+
-+		/* 2 GHz */
-+		if (triplet->chans.first_channel <= 14)
-+			end_channel = triplet->chans.first_channel + (triplet->chans.num_channels - 1);
-+		else
-+			end_channel =  triplet->chans.first_channel + (4 * (triplet->chans.num_channels - 1));
-+
-+		printf("\t\tChannels [%d - %d]\n", triplet->chans.first_channel, end_channel);
-+
-+		data += 3;
-+		len -= 3;
-+	}
-+
-+	return;
- }
- 
- static void print_powerconstraint(const uint8_t type, uint8_t len, const uint8_t *data)
+ 	memset(&wkr, 0, sizeof(wkr));
+ 	wkr.len = cpu_to_le16(sizeof(wkr));
 -- 
-1.6.3.3
+1.6.2.5
 
