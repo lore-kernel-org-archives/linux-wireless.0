@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:42658 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757595Ab0BQWwN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 17:52:13 -0500
-Subject: Re: [PATCH v3] mac80211: deprecate RX status noise
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e891002171429j7f47c86bqd4374bf07b8979de@mail.gmail.com>
-References: <1266437114.23447.0.camel@jlt3.sipsolutions.net>
-	 <1266438137.23447.1.camel@jlt3.sipsolutions.net>
-	 <1266438446.23447.2.camel@jlt3.sipsolutions.net>  <4B7C561C.70702@free.fr>
-	 <43e72e891002171429j7f47c86bqd4374bf07b8979de@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 17 Feb 2010 17:51:58 -0500
-Message-Id: <1266447118.12365.21.camel@mj>
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:46904 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361Ab0BIMaX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 07:30:23 -0500
+Received: by vws12 with SMTP id 12so264959vws.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 04:30:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1265717634.3783.35.camel@johannes.berg>
+References: <1265707228-4813-1-git-send-email-vnatarajan@atheros.com>
+	 <1265717634.3783.35.camel@johannes.berg>
+Date: Tue, 9 Feb 2010 18:00:22 +0530
+Message-ID: <8e92b4101002090430m7cd18016qd0fcc310f179c7eb@mail.gmail.com>
+Subject: Re: [PATCH v6] mac80211: Retry null data frame for power save.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-02-17 at 14:29 -0800, Luis R. Rodriguez wrote:
+On Tue, Feb 9, 2010 at 5:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2010-02-09 at 14:50 +0530, Vivek Natarajan wrote:
+>> Even if the null data frame is not acked by the AP, mac80211
+>> goes into power save. This might lead to loss of frames
+>> from the AP.
+>> Prevent this by restarting dynamic_ps_timer when ack is not
+>> received for null data frames.
+>
+> Looks good to me, but I have a final question: what happens if the frame
+> is lost without a status report? It'll just stay out of PS for a while
+> longer, right?
 
-> > Being per packet or global, I'm not an RF engineer to say what's best, but
-> > even if it is global, "last_noise" would still be useful as "global noise
-> > when the last packets was received from this node".
-> 
-> If anything it should be per center freq.
+Yes, it will be awake and then retries once again after a while.
 
-The noise value will be missed.  It's useful to see the signal to noise
-ratio.  I have little trust to the absolute noise values, but I know
-that the connection is bad if signal is just 3 dBm above the noise
-measured by the same card with the same antenna on the same channel. 
-
-Maybe it would be better to remove per-packet noise only when the "next
-generation noise" is implemented?  It could be a batch of patches.
-
--- 
-Regards,
-Pavel Roskin
+Vivek.
