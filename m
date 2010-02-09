@@ -1,58 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30950 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750708Ab0B0FFP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 00:05:15 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2010 21:05:15 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19336.44155.838629.240683@gargle.gargle.HOWL>
-Date: Sat, 27 Feb 2010 10:54:11 +0530
-To: Pavel Roskin <proski@gnu.org>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [PATCH] ath9k_htc: Add ath9k_htc driver
-In-Reply-To: <1267209201.30426.8.camel@mj>
-References: <19335.43241.887933.207404@gargle.gargle.HOWL>
-	<1267209201.30426.8.camel@mj>
+Received: from mail-yw0-f189.google.com ([209.85.211.189]:45373 "EHLO
+	mail-yw0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763Ab0BIBgR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2010 20:36:17 -0500
+Received: by ywh27 with SMTP id 27so6062826ywh.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 17:36:17 -0800 (PST)
+Date: Tue, 9 Feb 2010 09:36:12 +0800
+From: Ming Lei <tom.leiming@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net,
+	stable@kernel.org
+Subject: Re: [PATCH] ath9k: fix keycache leak in split tkip case
+Message-ID: <20100209093612.08d9ae17@tom-lei>
+In-Reply-To: <43e72e891002081338q466d9747p10a61b5e1aca4c6d@mail.gmail.com>
+References: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
+	<43e72e891002081338q466d9747p10a61b5e1aca4c6d@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> > @@ -1240,7 +1228,7 @@ void ath9k_hw_deinit(struct ath_hw *ah)
-> >  {
-> >       struct ath_common *common = ath9k_hw_common(ah);
-> >
-> > -     if (common->state <= ATH_HW_INITIALIZED)
-> > +     if (common->state < ATH_HW_INITIALIZED)
-> >               goto free_hw;
-> >
-> >       if (!AR_SREV_9100(ah))
-> 
-> There are some non-trivial parts like this one that could be submitted
-> separately.
-> 
-> > @@ -1249,10 +1237,8 @@ void ath9k_hw_deinit(struct ath_hw *ah)
-> >       ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
-> >
-> >  free_hw:
-> > -     if (!AR_SREV_9280_10_OR_LATER(ah))
-> > +     if (!AR_SREV_9280_10_OR_LATER(ah) && !AR_SREV_9271(ah))
-> >               ath9k_hw_rf_free_ext_banks(ah);
-> > -     kfree(ah);
-> > -     ah = NULL;
-> 
-> Another one.  Actually, it is trivial, but not ath9k_htc related.
-> 
-> It would be really nice to fast track the ath9k_htc driver to 2.6.34,
-> but the changes affecting other devices should be separate, I believe.
+>From 67b0faf7e7a57c3e6a971ff43d1f03f8e939429b Mon Sep 17 00:00:00 2001
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Sat, 6 Feb 2010 22:30:53 +0800
+Subject: [PATCH] ath9k: fix keycache leak in split tkip case
 
-I'll submit this fix as a separate patch.
+If split tkip key is used, ath_delete_key should delete
+rx key and rx mic key. This patch fixes the leak of hw
+keycache in the case.
 
-Sujith
+---
+The patch is against the latest wireless test tree.
+
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+Cc: stable@kernel.org
+---
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6796d5c..928402b 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -809,6 +809,7 @@ static void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf
+ 
+ 	clear_bit(key->hw_key_idx + 64, common->keymap);
+ 	if (common->splitmic) {
++		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
+ 		clear_bit(key->hw_key_idx + 32, common->keymap);
+ 		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
+ 	}
+-- 
+1.6.2.5
+
+
+
+
+On Mon, 8 Feb 2010 13:38:02 -0800
+"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
+
+> On Sat, Feb 6, 2010 at 6:38 AM,  <tom.leiming@gmail.com> wrote:
+> > From: Ming Lei <tom.leiming@gmail.com>
+> >
+> > If split tkip key is used, ath_delete_key should delete
+> > rx key and rx mic key. This patch fixes the leak of hw
+> > keycache in the case.
+> 
+> Can you please resend with Cc: stable@kernel.org on the commit log
+> entry?
+> 
+> > ---
+> > The patch is against the latest wireless test tree.
+> >
+> > Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+> 
+>   Luis
+
