@@ -1,196 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22867 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754027Ab0BYGMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 01:12:17 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/7] iwmc3200wifi: remove "_safe" for some list_for_each_entry usage
-Date: Thu, 25 Feb 2010 14:15:26 +0800
-Message-Id: <1267078531-9817-3-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1267078531-9817-2-git-send-email-yi.zhu@intel.com>
-References: <1267078531-9817-1-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-2-git-send-email-yi.zhu@intel.com>
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:34124 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359Ab0BIUFN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2010 15:05:13 -0500
+Received: by mail-ew0-f228.google.com with SMTP id 28so4264852ewy.28
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:05:13 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 06/11] b43: N-PHY: switch to chanspec struct
+Date: Tue,  9 Feb 2010 21:04:38 +0100
+Message-Id: <1265745883-3392-7-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use list_for_each_entry instead of list_for_each_entry_safe in
-places iteration against list entry removal is not required.
-
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |    4 ++--
- drivers/net/wireless/iwmc3200wifi/debugfs.c  |    9 +++++----
- drivers/net/wireless/iwmc3200wifi/hal.c      |   12 ++++++------
- drivers/net/wireless/iwmc3200wifi/main.c     |    4 ++--
- drivers/net/wireless/iwmc3200wifi/rx.c       |   15 ++++++---------
- 5 files changed, 21 insertions(+), 23 deletions(-)
+ drivers/net/wireless/b43/phy_n.c |   45 +++++++++++++++++++++++++------------
+ drivers/net/wireless/b43/phy_n.h |   11 +++++----
+ 2 files changed, 36 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-index 7c4f44a..6778e58 100644
---- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-+++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-@@ -263,7 +263,7 @@ static int iwm_cfg80211_get_station(struct wiphy *wiphy,
- int iwm_cfg80211_inform_bss(struct iwm_priv *iwm)
- {
- 	struct wiphy *wiphy = iwm_to_wiphy(iwm);
--	struct iwm_bss_info *bss, *next;
-+	struct iwm_bss_info *bss;
- 	struct iwm_umac_notif_bss_info *umac_bss;
- 	struct ieee80211_mgmt *mgmt;
- 	struct ieee80211_channel *channel;
-@@ -271,7 +271,7 @@ int iwm_cfg80211_inform_bss(struct iwm_priv *iwm)
- 	s32 signal;
- 	int freq;
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 2f45817..4ff09b8 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -73,6 +73,21 @@ static void b43_nphy_rf_control_override(struct b43_wldev *dev, u16 field,
+ static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
+ 						u16 value, u8 core);
  
--	list_for_each_entry_safe(bss, next, &iwm->bss_list, node) {
-+	list_for_each_entry(bss, &iwm->bss_list, node) {
- 		umac_bss = bss->bss;
- 		mgmt = (struct ieee80211_mgmt *)(umac_bss->frame_buf);
- 
-diff --git a/drivers/net/wireless/iwmc3200wifi/debugfs.c b/drivers/net/wireless/iwmc3200wifi/debugfs.c
-index be992ca..6ac5c8d 100644
---- a/drivers/net/wireless/iwmc3200wifi/debugfs.c
-+++ b/drivers/net/wireless/iwmc3200wifi/debugfs.c
-@@ -265,7 +265,7 @@ static ssize_t iwm_debugfs_rx_ticket_read(struct file *filp,
- 					  size_t count, loff_t *ppos)
- {
- 	struct iwm_priv *iwm = filp->private_data;
--	struct iwm_rx_ticket_node *ticket, *next;
-+	struct iwm_rx_ticket_node *ticket;
- 	char *buf;
- 	int buf_len = 4096, i;
- 	size_t len = 0;
-@@ -280,7 +280,7 @@ static ssize_t iwm_debugfs_rx_ticket_read(struct file *filp,
- 	if (!buf)
- 		return -ENOMEM;
- 
--	list_for_each_entry_safe(ticket, next, &iwm->rx_tickets, node) {
-+	list_for_each_entry(ticket, &iwm->rx_tickets, node) {
- 		len += snprintf(buf + len, buf_len - len, "Ticket #%d\n",
- 				ticket->ticket->id);
- 		len += snprintf(buf + len, buf_len - len, "\taction: 0x%x\n",
-@@ -290,12 +290,13 @@ static ssize_t iwm_debugfs_rx_ticket_read(struct file *filp,
- 	}
- 
- 	for (i = 0; i < IWM_RX_ID_HASH; i++) {
--		struct iwm_rx_packet *packet, *nxt;
-+		struct iwm_rx_packet *packet;
- 		struct list_head *pkt_list = &iwm->rx_packets[i];
++static inline bool b43_empty_chanspec(struct b43_chanspec *chanspec)
++{
++	return !chanspec->channel && !chanspec->sideband &&
++		!chanspec->b_width && !chanspec->b_freq;
++}
 +
- 		if (!list_empty(pkt_list)) {
- 			len += snprintf(buf + len, buf_len - len,
- 					"Packet hash #%d\n", i);
--			list_for_each_entry_safe(packet, nxt, pkt_list, node) {
-+			list_for_each_entry(packet, pkt_list, node) {
- 				len += snprintf(buf + len, buf_len - len,
- 						"\tPacket id:     %d\n",
- 						packet->id);
-diff --git a/drivers/net/wireless/iwmc3200wifi/hal.c b/drivers/net/wireless/iwmc3200wifi/hal.c
-index d13c885..96caab4 100644
---- a/drivers/net/wireless/iwmc3200wifi/hal.c
-+++ b/drivers/net/wireless/iwmc3200wifi/hal.c
-@@ -206,9 +206,9 @@ void iwm_cmd_flush(struct iwm_priv *iwm)
- 
- struct iwm_wifi_cmd *iwm_get_pending_wifi_cmd(struct iwm_priv *iwm, u16 seq_num)
- {
--	struct iwm_wifi_cmd *cmd, *next;
-+	struct iwm_wifi_cmd *cmd;
- 
--	list_for_each_entry_safe(cmd, next, &iwm->wifi_pending_cmd, pending)
-+	list_for_each_entry(cmd, &iwm->wifi_pending_cmd, pending)
- 		if (cmd->seq_num == seq_num) {
- 			list_del(&cmd->pending);
- 			return cmd;
-@@ -217,12 +217,12 @@ struct iwm_wifi_cmd *iwm_get_pending_wifi_cmd(struct iwm_priv *iwm, u16 seq_num)
- 	return NULL;
++static inline bool b43_eq_chanspecs(struct b43_chanspec *chanspec1,
++					struct b43_chanspec *chanspec2)
++{
++	return (chanspec1->channel == chanspec2->channel &&
++		chanspec1->sideband == chanspec2->sideband &&
++		chanspec1->b_width == chanspec2->b_width &&
++		chanspec1->b_freq == chanspec2->b_freq);
++}
++
+ void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
+ {//TODO
  }
- 
--struct iwm_nonwifi_cmd *
--iwm_get_pending_nonwifi_cmd(struct iwm_priv *iwm, u8 seq_num, u8 cmd_opcode)
-+struct iwm_nonwifi_cmd *iwm_get_pending_nonwifi_cmd(struct iwm_priv *iwm,
-+						    u8 seq_num, u8 cmd_opcode)
+@@ -768,7 +783,7 @@ static void b43_nphy_spur_workaround(struct b43_wldev *dev)
  {
--	struct iwm_nonwifi_cmd *cmd, *next;
-+	struct iwm_nonwifi_cmd *cmd;
+ 	struct b43_phy_n *nphy = dev->phy.n;
  
--	list_for_each_entry_safe(cmd, next, &iwm->nonwifi_pending_cmd, pending)
-+	list_for_each_entry(cmd, &iwm->nonwifi_pending_cmd, pending)
- 		if ((cmd->seq_num == seq_num) &&
- 		    (cmd->udma_cmd.opcode == cmd_opcode) &&
- 		    (cmd->resp_received)) {
-diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
-index 7f34d6d..9051960 100644
---- a/drivers/net/wireless/iwmc3200wifi/main.c
-+++ b/drivers/net/wireless/iwmc3200wifi/main.c
-@@ -423,9 +423,9 @@ int iwm_notif_send(struct iwm_priv *iwm, struct iwm_wifi_cmd *cmd,
- static struct iwm_notif *iwm_notif_find(struct iwm_priv *iwm, u32 cmd,
- 					u8 source)
- {
--	struct iwm_notif *notif, *next;
-+	struct iwm_notif *notif;
+-	unsigned int channel;
++	u8 channel = nphy->radio_chanspec.channel;
+ 	int tone[2] = { 57, 58 };
+ 	u32 noise[2] = { 0x3FF, 0x3FF };
  
--	list_for_each_entry_safe(notif, next, &iwm->pending_notif, pending) {
-+	list_for_each_entry(notif, &iwm->pending_notif, pending) {
- 		if ((notif->cmd_id == cmd) && (notif->src == source)) {
- 			list_del(&notif->pending);
- 			return notif;
-diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-index 36b1580..cbaf8ae 100644
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -342,12 +342,9 @@ static void iwm_rx_ticket_node_free(struct iwm_rx_ticket_node *ticket_node)
- static struct iwm_rx_packet *iwm_rx_packet_get(struct iwm_priv *iwm, u16 id)
- {
- 	u8 id_hash = IWM_RX_ID_GET_HASH(id);
--	struct list_head *packet_list;
--	struct iwm_rx_packet *packet, *next;
+@@ -777,8 +792,6 @@ static void b43_nphy_spur_workaround(struct b43_wldev *dev)
+ 	if (nphy->hang_avoid)
+ 		b43_nphy_stay_in_carrier_search(dev, 1);
+ 
+-	/* FIXME: channel = radio_chanspec */
 -
--	packet_list = &iwm->rx_packets[id_hash];
-+	struct iwm_rx_packet *packet;
+ 	if (nphy->gband_spurwar_en) {
+ 		/* TODO: N PHY Adjust Analog Pfbw (7) */
+ 		if (channel == 11 && dev->phy.is_40mhz)
+@@ -2015,12 +2028,12 @@ static void b43_nphy_restore_rssi_cal(struct b43_wldev *dev)
+ 	u16 *rssical_phy_regs = NULL;
  
--	list_for_each_entry_safe(packet, next, packet_list, node)
-+	list_for_each_entry(packet, &iwm->rx_packets[id_hash], node)
- 		if (packet->id == id)
- 			return packet;
+ 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+-		if (!nphy->rssical_chanspec_2G)
++		if (b43_empty_chanspec(&nphy->rssical_chanspec_2G))
+ 			return;
+ 		rssical_radio_regs = nphy->rssical_cache.rssical_radio_regs_2G;
+ 		rssical_phy_regs = nphy->rssical_cache.rssical_phy_regs_2G;
+ 	} else {
+-		if (!nphy->rssical_chanspec_5G)
++		if (b43_empty_chanspec(&nphy->rssical_chanspec_5G))
+ 			return;
+ 		rssical_radio_regs = nphy->rssical_cache.rssical_radio_regs_5G;
+ 		rssical_phy_regs = nphy->rssical_cache.rssical_phy_regs_5G;
+@@ -2440,7 +2453,7 @@ static void b43_nphy_save_cal(struct b43_wldev *dev)
  
-@@ -771,7 +768,7 @@ static int iwm_mlme_update_bss_table(struct iwm_priv *iwm, u8 *buf,
- 			(struct iwm_umac_notif_bss_info *)buf;
- 	struct ieee80211_channel *channel;
- 	struct ieee80211_supported_band *band;
--	struct iwm_bss_info *bss, *next;
-+	struct iwm_bss_info *bss;
- 	s32 signal;
- 	int freq;
- 	u16 frame_len = le16_to_cpu(umac_bss->frame_len);
-@@ -790,7 +787,7 @@ static int iwm_mlme_update_bss_table(struct iwm_priv *iwm, u8 *buf,
- 	IWM_DBG_MLME(iwm, DBG, "\tRSSI: %d\n", umac_bss->rssi);
- 	IWM_DBG_MLME(iwm, DBG, "\tFrame Length: %d\n", frame_len);
+ 	struct b43_phy_n_iq_comp *rxcal_coeffs = NULL;
+ 	u16 *txcal_radio_regs = NULL;
+-	u8 *iqcal_chanspec;
++	struct b43_chanspec *iqcal_chanspec;
+ 	u16 *table = NULL;
  
--	list_for_each_entry_safe(bss, next, &iwm->bss_list, node)
-+	list_for_each_entry(bss, &iwm->bss_list, node)
- 		if (bss->bss->table_idx == umac_bss->table_idx)
- 			break;
+ 	if (nphy->hang_avoid)
+@@ -2496,12 +2509,12 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
+ 	struct b43_phy_n_iq_comp *rxcal_coeffs = NULL;
  
-@@ -1331,7 +1328,7 @@ static int iwm_rx_handle_nonwifi(struct iwm_priv *iwm, u8 *buf,
- {
- 	u8 seq_num;
- 	struct iwm_udma_in_hdr *hdr = (struct iwm_udma_in_hdr *)buf;
--	struct iwm_nonwifi_cmd *cmd, *next;
-+	struct iwm_nonwifi_cmd *cmd;
+ 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+-		if (nphy->iqcal_chanspec_2G == 0)
++		if (b43_empty_chanspec(&nphy->iqcal_chanspec_2G))
+ 			return;
+ 		table = nphy->cal_cache.txcal_coeffs_2G;
+ 		loft = &nphy->cal_cache.txcal_coeffs_2G[5];
+ 	} else {
+-		if (nphy->iqcal_chanspec_5G == 0)
++		if (b43_empty_chanspec(&nphy->iqcal_chanspec_5G))
+ 			return;
+ 		table = nphy->cal_cache.txcal_coeffs_5G;
+ 		loft = &nphy->cal_cache.txcal_coeffs_5G[5];
+@@ -2746,8 +2759,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+ 			b43_ntab_read_bulk(dev, B43_NTAB16(15, 96), length,
+ 						nphy->txiqlocal_bestc);
+ 			nphy->txiqlocal_coeffsvalid = true;
+-			/* TODO: Set nphy->txiqlocal_chanspec to
+-				the current channel */
++			nphy->txiqlocal_chanspec = nphy->radio_chanspec;
+ 		} else {
+ 			length = 11;
+ 			if (dev->phy.rev < 3)
+@@ -2782,7 +2794,8 @@ static void b43_nphy_reapply_tx_cal_coeffs(struct b43_wldev *dev)
+ 	u16 buffer[7];
+ 	bool equal = true;
  
- 	seq_num = GET_VAL32(hdr->cmd, UDMA_HDI_IN_CMD_NON_WIFI_HW_SEQ_NUM);
+-	if (!nphy->txiqlocal_coeffsvalid || 1 /* FIXME */)
++	if (!nphy->txiqlocal_coeffsvalid ||
++	    b43_eq_chanspecs(&nphy->txiqlocal_chanspec, &nphy->radio_chanspec))
+ 		return;
  
-@@ -1343,7 +1340,7 @@ static int iwm_rx_handle_nonwifi(struct iwm_priv *iwm, u8 *buf,
- 	 * That means we only support synchronised non wifi command response
- 	 * schemes.
- 	 */
--	list_for_each_entry_safe(cmd, next, &iwm->nonwifi_pending_cmd, pending)
-+	list_for_each_entry(cmd, &iwm->nonwifi_pending_cmd, pending)
- 		if (cmd->seq_num == seq_num) {
- 			cmd->resp_received = 1;
- 			cmd->buf.len = buf_size;
+ 	b43_ntab_read_bulk(dev, B43_NTAB16(15, 80), 7, buffer);
+@@ -3137,9 +3150,11 @@ int b43_phy_initn(struct b43_wldev *dev)
+ 	do_rssi_cal = false;
+ 	if (phy->rev >= 3) {
+ 		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+-			do_rssi_cal = (nphy->rssical_chanspec_2G == 0);
++			do_rssi_cal =
++				b43_empty_chanspec(&nphy->rssical_chanspec_2G);
+ 		else
+-			do_rssi_cal = (nphy->rssical_chanspec_5G == 0);
++			do_rssi_cal =
++				b43_empty_chanspec(&nphy->rssical_chanspec_5G);
+ 
+ 		if (do_rssi_cal)
+ 			b43_nphy_rssi_cal(dev);
+@@ -3151,9 +3166,9 @@ int b43_phy_initn(struct b43_wldev *dev)
+ 
+ 	if (!((nphy->measure_hold & 0x6) != 0)) {
+ 		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+-			do_cal = (nphy->iqcal_chanspec_2G == 0);
++			do_cal = b43_empty_chanspec(&nphy->iqcal_chanspec_2G);
+ 		else
+-			do_cal = (nphy->iqcal_chanspec_5G == 0);
++			do_cal = b43_empty_chanspec(&nphy->iqcal_chanspec_5G);
+ 
+ 		if (nphy->mute)
+ 			do_cal = false;
+diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
+index 47d20dc..e7acae2 100644
+--- a/drivers/net/wireless/b43/phy_n.h
++++ b/drivers/net/wireless/b43/phy_n.h
+@@ -984,7 +984,7 @@ struct b43_phy_n {
+ 	u16 papd_epsilon_offset[2];
+ 	s32 preamble_override;
+ 	u32 bb_mult_save;
+-	u16 radio_chanspec;
++	struct b43_chanspec radio_chanspec;
+ 
+ 	bool gain_boost;
+ 	bool elna_gain_config;
+@@ -1000,6 +1000,7 @@ struct b43_phy_n {
+ 	u16 txiqlocal_bestc[11];
+ 	bool txiqlocal_coeffsvalid;
+ 	struct b43_phy_n_txpwrindex txpwrindex[2];
++	struct b43_chanspec txiqlocal_chanspec;
+ 
+ 	u8 txrx_chain;
+ 	u16 tx_rx_cal_phy_saveregs[11];
+@@ -1015,12 +1016,12 @@ struct b43_phy_n {
+ 	bool gband_spurwar_en;
+ 
+ 	bool ipa2g_on;
+-	u8 iqcal_chanspec_2G;
+-	u8 rssical_chanspec_2G;
++	struct b43_chanspec iqcal_chanspec_2G;
++	struct b43_chanspec rssical_chanspec_2G;
+ 
+ 	bool ipa5g_on;
+-	u8 iqcal_chanspec_5G;
+-	u8 rssical_chanspec_5G;
++	struct b43_chanspec iqcal_chanspec_5G;
++	struct b43_chanspec rssical_chanspec_5G;
+ 
+ 	struct b43_phy_n_rssical_cache rssical_cache;
+ 	struct b43_phy_n_cal_cache cal_cache;
 -- 
-1.6.0.4
+1.6.4.2
 
