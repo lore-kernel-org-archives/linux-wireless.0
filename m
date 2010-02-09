@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f191.google.com ([209.85.216.191]:33956 "EHLO
-	mail-px0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753500Ab0BWT20 (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:42151 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753516Ab0BILzx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 14:28:26 -0500
-Received: by pxi29 with SMTP id 29so2225845pxi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 11:28:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100223095113.25360.75291.stgit@void>
-References: <20100223095113.25360.75291.stgit@void>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 23 Feb 2010 11:28:06 -0800
-Message-ID: <43e72e891002231128w45c357a6v157dc4f7ddf3bbae@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix rates setup on IBSS merge
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 9 Feb 2010 06:55:53 -0500
+Subject: Re: [PATCH] iwmc3200wifi: Test of wrong pointer after kzalloc in
+ iwm_mlme_update_bss_table()
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: Samuel Ortiz <samuel.ortiz@intel.com>, Zhu Yi <yi.zhu@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <4B7141FD.7050605@gmail.com>
+References: <4B7141FD.7050605@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Feb 2010 12:55:45 +0100
+Message-ID: <1265716545.2236.4.camel@caravaggio>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 23, 2010 at 1:51 AM, Bruno Randolf <br1@einfach.org> wrote:
-> when an IBSS merge happened, the supported rates for the newly added station
-> were left empty, causing the rate control module to be initialized with only
-> the basic rates.
->
-> also the section of the ibss code which deals with updating supported rates for
-> an already existing station fails to inform the rate control module about the
-> new rates. as i don't know how to fix this (minstrel does not have an update
-> function), i have just added a comment for now.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+On Tue, 2010-02-09 at 12:07 +0100, Roel Kluin wrote:
+> The wrong pointer was tested.
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
-This seems like a stable fix, if it applies can you please resend with a
 
-Cc: stable@kernel.org
+> ---
+>  drivers/net/wireless/iwmc3200wifi/rx.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+> index 6d6ed74..f727b4a 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/rx.c
+> +++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+> @@ -794,7 +794,7 @@ static int iwm_mlme_update_bss_table(struct iwm_priv *iwm, u8 *buf,
+>  	}
+>  
+>  	bss->bss = kzalloc(bss_len, GFP_KERNEL);
+> -	if (!bss) {
+> +	if (!bss->bss) {
+>  		kfree(bss);
+>  		IWM_ERR(iwm, "Couldn't allocate bss\n");
+>  		return -ENOMEM;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-on the commit log entry right below your own SOB.
 
-  Luis
