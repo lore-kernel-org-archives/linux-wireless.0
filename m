@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:58419 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755404Ab0BFNUa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2010 08:20:30 -0500
-Received: by vws20 with SMTP id 20so1584009vws.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 05:20:29 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: holgerschurig@gmail.com, sameo@linux.intel.com, dcbw@redhat.com,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC 0/2] cfg80211: Retrieve missing BSS info after connect
-Date: Sat,  6 Feb 2010 13:20:14 +0000
-Message-Id: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56449 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756368Ab0BJSqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Feb 2010 13:46:45 -0500
+Subject: Re: [PATCH] Add Station and AdHoc mode support to libertas_tf
+From: Dan Williams <dcbw@redhat.com>
+To: dsaxena@plexity.net
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <20100209213543.GA31890@plexity.net>
+References: <20100209213543.GA31890@plexity.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Feb 2010 10:46:36 -0800
+Message-ID: <1265827596.19692.36.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset attempts to address the issue where a driver that uses
-the cfg80211 connect operation connects to an AP before the scan result
-for the AP is available. This triggers a WARN_ON in sme.c, and the
-connection fails.
+On Tue, 2010-02-09 at 13:35 -0800, Deepak Saxena wrote:
+> Add support for using the libertas_tf driver on a managed 
+> or ad-hoc network.
 
-This is only an issue for drivers that do not pass beacons/probes to
-cfg80211, except in response to an explicit scan. With typical
-userspace the issue will only manifest if using iwconfig to connect, or
-if using wpa_supplicant with ap_scan=2 (which you might do with a
-hidden SSID).
+Most of the libertas-tf stuff should probably get sent to
+linux-wireless@ since there's a ton more people on that list that know
+about mac80211/cfg80211 specifics there, which I'm honestly not as good
+with.
 
-The patches were originally written for the orinoco cfg80211 conversion
-(currently stalled due to lack of time). It sounds like the libertas
-cfg80211 drivers have the same problem, so I'm posting them in case
-they're useful. There's a bit of cleanup to do, and there may be issues
-with the setting of the channels to scan (orinoco can't scan by
-channel) so if someone wants to pick these up, please do.
+Dan
 
-Testing
- - a version of this has been running with my orinoco changes for the
-   last 3 or 4 months (in more or less daily use).
- - Untested against drivers that don't use ->connect
+> Signed-off-by: Deepak Saxena <dsaxena@laptop.org>
+> 
+> ---
+> Ran basic network tests on an OLPC XO-1 laptop. Suspend/resume causes a 
+> crash but w/o this patch, the driver does not present a configureable 
+> interface.  (wmaster0 appears but is listed as having no "wireless 
+> extensions". Fixing this is on my queue).
+> 
+> diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
+> index 26a1abd..9123d86 100644
+> --- a/drivers/net/wireless/libertas_tf/main.c
+> +++ b/drivers/net/wireless/libertas_tf/main.c
+> @@ -555,6 +555,9 @@ struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev)
+>  	priv->band.n_channels = ARRAY_SIZE(lbtf_channels);
+>  	priv->band.channels = priv->channels;
+>  	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band;
+> +        hw->wiphy->interface_modes =
+> +                BIT(NL80211_IFTYPE_STATION) |
+> +                BIT(NL80211_IFTYPE_ADHOC);
+>  	skb_queue_head_init(&priv->bc_ps_buf);
+>  
+>  	SET_IEEE80211_DEV(hw, dmdev);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
-
----
-David Kilroy (2):
-  cfg80211: generic trigger scan and callback on completion
-  cfg80211: scan for missing BSS on connect completion
-
- include/net/cfg80211.h |    3 +
- net/wireless/core.h    |    6 ++
- net/wireless/scan.c    |   41 ++++++++++++-
- net/wireless/sme.c     |  163 ++++++++++++++++++++++++++++++++++++++----------
- 4 files changed, 178 insertions(+), 35 deletions(-)
 
