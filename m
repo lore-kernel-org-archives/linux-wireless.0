@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp6.freeserve.com ([193.252.22.191]:27242 "EHLO
-	smtp6.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032025Ab0B1Uax (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33206
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756471Ab0BJTHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2010 15:30:53 -0500
-Date: Sun, 28 Feb 2010 20:30:38 +0000
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-Message-ID: <20100228203038.456b9016@boulder.homenet>
-In-Reply-To: <201002281958.12607.mb@bu3sch.de>
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
-	<b170af451002281047s1cbb9168g61178c5bc06ad428@mail.gmail.com>
-	<69e28c911002281052p417fcd42n74552ad3ac0106a2@mail.gmail.com>
-	<201002281958.12607.mb@bu3sch.de>
+	Wed, 10 Feb 2010 14:07:44 -0500
+Date: Wed, 10 Feb 2010 11:07:56 -0800 (PST)
+Message-Id: <20100210.110756.201335073.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-02-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100210185816.GB3286@tuxdriver.com>
+References: <20100210185816.GB3286@tuxdriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 28 Feb 2010 19:58:11 +0100
-Michael Buesch <mb@bu3sch.de> wrote:
-> It says 8k for all of my devices there. So an MMIO write to 0x2000
-> and above writes to completely random memory.
-> 
-My BCM4312 device is 16K:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 10 Feb 2010 13:58:16 -0500
 
-  Region 0: Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
+> Please let me know if there are problems!
 
-Chris
+I see one:
 
+> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+> index 5681ebe..03dfd27 100644
+> --- a/drivers/ssb/main.c
+> +++ b/drivers/ssb/main.c
+> @@ -494,8 +494,7 @@ static int ssb_devices_register(struct ssb_bus *bus)
+>  #endif
+>  			break;
+>  		case SSB_BUSTYPE_SDIO:
+> -#ifdef CONFIG_SSB_SDIO
+> -			sdev->irq = bus->host_sdio->dev.irq;
+> +#ifdef CONFIG_SSB_SDIOHOST
+>  			dev->parent = &bus->host_sdio->dev;
+>  #endif
+>  			break;
 
+The commit message says "fix a typo" but it's also removing
+the assignment of sdev->irq
+
+All the bus types assign the sdev->irq, so it looks like
+this was removed unintentionally.
+
+If it was intentional, it needs to be explained in the
+commit message or a code comment.
