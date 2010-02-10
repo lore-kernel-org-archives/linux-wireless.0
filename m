@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:65133 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:27309 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752655Ab0BSGDL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 01:03:11 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/6] iwlwifi updates for 2.6.34
-Date: Thu, 18 Feb 2010 22:03:01 -0800
-Message-Id: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
+	id S1753977Ab0BJRrJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Feb 2010 12:47:09 -0500
+Subject: Re: [PATCH] iwlwifi: use dma_alloc_coherent
+From: reinette chatre <reinette.chatre@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"lkml@Think-Future.de" <lkml@Think-Future.de>,
+	Linux Kernel-Liste <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100210130744.GA3935@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100206170348.GB9411@localhost>
+	 <20100208143118.e8e5a1ee.akpm@linux-foundation.org>
+	 <20100209165247.GB2512@dhcp-lab-161.englab.brq.redhat.com>
+	 <1265735092.2551.1835.camel@rchatre-DESK>
+	 <20100210082137.GA2519@dhcp-lab-161.englab.brq.redhat.com>
+	 <20100210130744.GA3935@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Feb 2010 09:47:05 -0800
+Message-ID: <1265824025.2551.1875.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include more enabling for new 6050 series. The new "force reset" is
-strengthened with the addition of per component state so that a reset of
-one will not affect the reset of the other, this as well as more
-accounting can be monitored with debugfs. We also now allow
-serialization of synchronous commands. The rest is cleanup.
+Hi Stanislaw,
 
-These patches are also available from wireless-next-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+On Wed, 2010-02-10 at 05:07 -0800, Stanislaw Gruszka wrote:
+> Change pci_alloc_consistent() to dma_alloc_coherent() so we can use
+> GFP_KERNEL flag.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
 
-Abhijeet Kolekar (1):
-  iwlwifi: indicate calib version for 6050 series
+This looks good - thank you very much. I am going to include it in our
+testing for a bit and then I will send it upstream for you with our
+other pending patches. 
 
-Reinette Chatre (3):
-  iwl3945: remove STATUS macros from header
-  iwlwifi: enable iwl_send_static_wepkey_cmd to sleep
-  iwlwifi: enable serialization of synchronous commands
+Reinette
 
-Wey-Yi Guy (2):
-  iwlwifi: separated time check for different type of force reset
-  iwlwifi: add debugfs to monitor force reset parameters
-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |   18 ------
- drivers/net/wireless/iwlwifi/iwl-6000.c     |   79 ++++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 +++
- drivers/net/wireless/iwlwifi/iwl-core.c     |   25 +++++----
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   36 +++++++++++--
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   15 +++++-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |   14 +++---
- drivers/net/wireless/iwlwifi/iwl-sta.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    2 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 +-
- 13 files changed, 160 insertions(+), 48 deletions(-)
 
