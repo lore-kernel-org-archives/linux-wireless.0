@@ -1,145 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:52775 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933529Ab0BGIWJ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39835 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131Ab0BJTPo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2010 03:22:09 -0500
-Subject: [PATCH 10/10] mac80211: remove get_tx_stats() driver op
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Date: Sun, 07 Feb 2010 10:22:01 +0200
-Message-ID: <20100207082201.31474.98843.stgit@tikku>
-In-Reply-To: <20100207082044.31474.48583.stgit@tikku>
-References: <20100207082044.31474.48583.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 10 Feb 2010 14:15:44 -0500
+Subject: Re: pull request: wireless-2.6 2010-02-10
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20100210.110756.201335073.davem@davemloft.net>
+References: <20100210185816.GB3286@tuxdriver.com>
+	 <20100210.110756.201335073.davem@davemloft.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vLMSKYiJRxC2PtVe1Vmm"
+Date: Wed, 10 Feb 2010 20:15:37 +0100
+Message-ID: <1265829337.19075.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-get_tx_stats() driver operation is not currently used anywhere in mac80211
-and there are no plans to use it in the not-so-near future. So it can go
-without anyone missing it.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
----
- Documentation/DocBook/mac80211.tmpl |    1 -
- include/net/mac80211.h              |   22 ----------------------
- net/mac80211/driver-ops.h           |    8 --------
- net/mac80211/driver-trace.h         |   23 -----------------------
- 4 files changed, 0 insertions(+), 54 deletions(-)
+--=-vLMSKYiJRxC2PtVe1Vmm
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/Documentation/DocBook/mac80211.tmpl b/Documentation/DocBook/mac80211.tmpl
-index 971d1c0..affb15a 100644
---- a/Documentation/DocBook/mac80211.tmpl
-+++ b/Documentation/DocBook/mac80211.tmpl
-@@ -234,7 +234,6 @@ usage should require reading the full document.
-       <title>Multiple queues and QoS support</title>
-       <para>TBD</para>
- !Finclude/net/mac80211.h ieee80211_tx_queue_params
--!Finclude/net/mac80211.h ieee80211_tx_queue_stats
-     </chapter>
- 
-     <chapter id="AP">
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 74ccf30..b50d13e 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -117,19 +117,6 @@ struct ieee80211_tx_queue_params {
- 	bool uapsd;
- };
- 
--/**
-- * struct ieee80211_tx_queue_stats - transmit queue statistics
-- *
-- * @len: number of packets in queue
-- * @limit: queue length limit
-- * @count: number of frames sent
-- */
--struct ieee80211_tx_queue_stats {
--	unsigned int len;
--	unsigned int limit;
--	unsigned int count;
--};
--
- struct ieee80211_low_level_stats {
- 	unsigned int dot11ACKFailureCount;
- 	unsigned int dot11RTSFailureCount;
-@@ -1543,13 +1530,6 @@ enum ieee80211_ampdu_mlme_action {
-  *	Returns a negative error code on failure.
-  *	The callback can sleep.
-  *
-- * @get_tx_stats: Get statistics of the current TX queue status. This is used
-- *	to get number of currently queued packets (queue length), maximum queue
-- *	size (limit), and total number of packets sent using each TX queue
-- *	(count). The 'stats' pointer points to an array that has hw->queues
-- *	items.
-- *	The callback must be atomic.
-- *
-  * @get_tsf: Get the current TSF timer value from firmware/hardware. Currently,
-  *	this is only used for IBSS mode BSSID merging and debugging. Is not a
-  *	required function.
-@@ -1639,8 +1619,6 @@ struct ieee80211_ops {
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
- 	int (*conf_tx)(struct ieee80211_hw *hw, u16 queue,
- 		       const struct ieee80211_tx_queue_params *params);
--	int (*get_tx_stats)(struct ieee80211_hw *hw,
--			    struct ieee80211_tx_queue_stats *stats);
- 	u64 (*get_tsf)(struct ieee80211_hw *hw);
- 	void (*set_tsf)(struct ieee80211_hw *hw, u64 tsf);
- 	void (*reset_tsf)(struct ieee80211_hw *hw);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 6c31f38..c447228 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -256,14 +256,6 @@ static inline int drv_conf_tx(struct ieee80211_local *local, u16 queue,
- 	return ret;
- }
- 
--static inline int drv_get_tx_stats(struct ieee80211_local *local,
--				   struct ieee80211_tx_queue_stats *stats)
--{
--	int ret = local->ops->get_tx_stats(&local->hw, stats);
--	trace_drv_get_tx_stats(local, stats, ret);
--	return ret;
--}
--
- static inline u64 drv_get_tsf(struct ieee80211_local *local)
- {
- 	u64 ret = -1ULL;
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 502424b..70e8bc6 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -578,29 +578,6 @@ TRACE_EVENT(drv_conf_tx,
- 	)
- );
- 
--TRACE_EVENT(drv_get_tx_stats,
--	TP_PROTO(struct ieee80211_local *local,
--		 struct ieee80211_tx_queue_stats *stats,
--		 int ret),
--
--	TP_ARGS(local, stats, ret),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--		__field(int, ret)
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--		__entry->ret = ret;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT " ret:%d",
--		LOCAL_PR_ARG, __entry->ret
--	)
--);
--
- TRACE_EVENT(drv_get_tsf,
- 	TP_PROTO(struct ieee80211_local *local, u64 ret),
- 
+On Wed, 2010-02-10 at 11:07 -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 10 Feb 2010 13:58:16 -0500
+>=20
+> > Please let me know if there are problems!
+>=20
+> I see one:
+>=20
+> > diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+> > index 5681ebe..03dfd27 100644
+> > --- a/drivers/ssb/main.c
+> > +++ b/drivers/ssb/main.c
+> > @@ -494,8 +494,7 @@ static int ssb_devices_register(struct ssb_bus
+> *bus)
+> >  #endif
+> >  			break;
+> >  		case SSB_BUSTYPE_SDIO:
+> > -#ifdef CONFIG_SSB_SDIO
+> > -			sdev->irq =3D bus->host_sdio->dev.irq;
+> > +#ifdef CONFIG_SSB_SDIOHOST
+> >  			dev->parent =3D &bus->host_sdio->dev;
+> >  #endif
+> >  			break;
+>=20
+> The commit message says "fix a typo" but it's also removing
+> the assignment of sdev->irq
+>=20
+> All the bus types assign the sdev->irq, so it looks like
+> this was removed unintentionally.
+>=20
+> If it was intentional, it needs to be explained in the
+> commit message or a code comment.
+
+It was intentional -- that sdev doesn't even have an irq member, but
+nobody ever noticed because of the wrong ifdef.
+
+johannes
+
+--=-vLMSKYiJRxC2PtVe1Vmm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLcwXWAAoJEODzc/N7+QmafZkP/24lJ7YUTpZ91YLi4nRistUd
+DDKwfpScPBKO6EOHzWB1ms6fjS9XVSHJM7P4AwPyHFHOowjjoZkc5EBB6TW4EyB5
+KmK57mRsrcJGlBYD207KuwS3K+FOlA0kzJRX/ZwBPDV7/bxpVxObgwazVUWA4Soc
+B3/1AW+RVWQPMJHgXzyZ8jIUCmGMIwSn1ebHc3sUSKox4VjhPbyhcDryTHHaC0RP
+WQYJ3oQa3PjQQwT1WoVcf2CoQrKU2QxbmWrP9QGPMIek9DqiZvEKEbb203gG0iYe
+NuT84VZzEbZNo+1289XnktTQ6OFBumRhumBjOE1hmz+oIhl/3cTSnmU3WAHcGSe4
+hn6UDhWPzuEE7nLP0GRfIFutrAqGM+Fs9yQmpcWJwfq7XYyRDcCe+i5tsd0UUElq
+6095z+J3pDdmUz2JbEu3ahlziqPKUTCspPCyQe3rvy7UslIwB87yjpL4Mm3E+epa
+CFkWVfSVRkr2DELv29Y0OJz1pGincH6V3X3fzKcPkrWOmsRu2q10tCkZdrhHxjQ5
+eT48Jjwf9Qlv+dAbVmAKON+7K+n45Yr/52N6TneVxa958u4R+COS1Q/peOyyl3mG
+O2SE0OTJmdWRDLG6VGRGvmc6aOsj7xeJ31KtYWukdjc+oUHHQCqpknXrepD/WlU0
+HC5N5TOMVmfHxLKyJngW
+=MjwG
+-----END PGP SIGNATURE-----
+
+--=-vLMSKYiJRxC2PtVe1Vmm--
 
