@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:55972 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753707Ab0BVU53 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 15:57:29 -0500
-Subject: Re: 2.6.33-rc8-git6: Reported regressions 2.6.31 -> 2.6.32
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Miles Lane <miles.lane@gmail.com>
-In-Reply-To: <43e72e891002221009p2d6b14a1xfe04efaad8426033@mail.gmail.com>
-References: <4u4d-2M3yXH.A.XW.XqagLB@chimera>
-	 <43e72e891002221009p2d6b14a1xfe04efaad8426033@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 22 Feb 2010 15:57:16 -0500
-Message-Id: <1266872236.2594.38.camel@mj>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60831
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756173Ab0BJUes (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Feb 2010 15:34:48 -0500
+Date: Wed, 10 Feb 2010 12:35:03 -0800 (PST)
+Message-Id: <20100210.123503.129355851.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org, mb@bu3sch.de
+Subject: Re: pull request: wireless-2.6 2010-02-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100210203227.GD3286@tuxdriver.com>
+References: <20100210201953.GC3286@tuxdriver.com>
+	<20100210.122540.149553948.davem@davemloft.net>
+	<20100210203227.GD3286@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-02-22 at 10:09 -0800, Luis R. Rodriguez wrote:
-> Just one but no word yet on how to reproduce.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 10 Feb 2010 15:32:28 -0500
+
+> On Wed, Feb 10, 2010 at 12:25:40PM -0800, David Miller wrote:
+>> From: "John W. Linville" <linville@tuxdriver.com>
+>> Date: Wed, 10 Feb 2010 15:19:54 -0500
+>> 
+>> > On Wed, Feb 10, 2010 at 11:36:58AM -0800, David Miller wrote:
+>> >> From: Johannes Berg <johannes@sipsolutions.net>
+>> >> Date: Wed, 10 Feb 2010 20:15:37 +0100
+>> >> 
+>> >> > It was intentional -- that sdev doesn't even have an irq member, but
+>> >> > nobody ever noticed because of the wrong ifdef.
+>> >> 
+>> >> Ok, then this needs to be explained in the commit message.
+>> > 
+>> > OK...mind if I just revert the current version and ask Michael to
+>> > resubmit with an appropriate changelog entry?
+>> 
+>> Have you pulled this tree into others already?  Why not
+>> just pop out the commit and fix it's commit message, then
+>> reapply?
+>> 
+>> Having the revert commit in there is really stupid just for this.
 > 
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14624
-> > Subject         : ath9k: BUG kmalloc-8192: Poison overwritten
-> > Submitter       : Miles Lane <miles.lane@gmail.com>
-> > Date            : 2009-11-12 4:58 (102 days old)
-> > References      : http://marc.info/?l=linux-kernel&m=125800196520396&w=4
+> I have it pulled into wireless-next-2.6 to fix a merge conflict (from
+> a latter commit).  It is also pulled into wireless-testing but that
+> is obviously less of an issue.
 
-I could try a 32 bit kernel or that version with the kernel config as
-close as possible to the posted one.  But I need at least the minimal
-information on how to reproduce the bug.  What mode is used (station,
-AP, ad-hoc)?  What encryption is used?  Is there anything else that
-could help reproduce the bug?
+Ok, forget this, I'll just pull it in as-is.
 
-It would be a waste of time to set up a 32-bit OS and fail to find the
-bug just because I'm using a different encryption or something.
+But we have to have a better system to handle cases where I
+don't like a change you're asking me to pull in and I want
+changes made to it.
 
--- 
-Regards,
-Pavel Roskin
+If you want to push stuff into wireless-next-2.6, get it into
+my tree first.  That way we can tidy things up before it
+propagates.
+
+Thanks.
