@@ -1,96 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:22558 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754846Ab0BVGlc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37124 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755863Ab0BJUph (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:32 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 18/22] wl1271: Update TX packet life time handling with higher resolution time
-Date: Mon, 22 Feb 2010 08:38:38 +0200
-Message-Id: <1266820722-20202-19-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 10 Feb 2010 15:45:37 -0500
+Date: Wed, 10 Feb 2010 15:37:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org, mb@bu3sch.de
+Subject: Re: pull request: wireless-2.6 2010-02-10
+Message-ID: <20100210203734.GE3286@tuxdriver.com>
+References: <20100210201953.GC3286@tuxdriver.com> <20100210.122540.149553948.davem@davemloft.net> <20100210203227.GD3286@tuxdriver.com> <20100210.123503.129355851.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100210.123503.129355851.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses a higher precision timer to synchronize with the firmware
-clock. Improved precision is needed as on some platforms a jiffy may be up to
-tens of milliseconds, and the required precision is closer to TU's.
+On Wed, Feb 10, 2010 at 12:35:03PM -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 10 Feb 2010 15:32:28 -0500
+> 
+> > On Wed, Feb 10, 2010 at 12:25:40PM -0800, David Miller wrote:
+> >> From: "John W. Linville" <linville@tuxdriver.com>
+> >> Date: Wed, 10 Feb 2010 15:19:54 -0500
+> >> 
+> >> > On Wed, Feb 10, 2010 at 11:36:58AM -0800, David Miller wrote:
+> >> >> From: Johannes Berg <johannes@sipsolutions.net>
+> >> >> Date: Wed, 10 Feb 2010 20:15:37 +0100
+> >> >> 
+> >> >> > It was intentional -- that sdev doesn't even have an irq member, but
+> >> >> > nobody ever noticed because of the wrong ifdef.
+> >> >> 
+> >> >> Ok, then this needs to be explained in the commit message.
+> >> > 
+> >> > OK...mind if I just revert the current version and ask Michael to
+> >> > resubmit with an appropriate changelog entry?
+> >> 
+> >> Have you pulled this tree into others already?  Why not
+> >> just pop out the commit and fix it's commit message, then
+> >> reapply?
+> >> 
+> >> Having the revert commit in there is really stupid just for this.
+> > 
+> > I have it pulled into wireless-next-2.6 to fix a merge conflict (from
+> > a latter commit).  It is also pulled into wireless-testing but that
+> > is obviously less of an issue.
+> 
+> Ok, forget this, I'll just pull it in as-is.
+ 
+K, thx!
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 ++++--
- drivers/net/wireless/wl12xx/wl1271_tx.c   |    7 +++++--
- 3 files changed, 10 insertions(+), 5 deletions(-)
+> But we have to have a better system to handle cases where I
+> don't like a change you're asking me to pull in and I want
+> changes made to it.
+> 
+> If you want to push stuff into wireless-next-2.6, get it into
+> my tree first.  That way we can tidy things up before it
+> propagates.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 457ce72..41de47c 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -404,7 +404,7 @@ struct wl1271 {
- 	u32 tx_packets_count;
- 
- 	/* Time-offset between host and chipset clocks */
--	int time_offset;
-+	s64 time_offset;
- 
- 	/* Session counter for the chipset */
- 	int session_counter;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 9f74168..4c4d22a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -374,6 +374,7 @@ static void wl1271_power_on(struct wl1271 *wl)
- static void wl1271_fw_status(struct wl1271 *wl,
- 			     struct wl1271_fw_status *status)
- {
-+	struct timespec ts;
- 	u32 total = 0;
- 	int i;
- 
-@@ -402,8 +403,9 @@ static void wl1271_fw_status(struct wl1271 *wl,
- 		ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
- 	/* update the host-chipset time offset */
--	wl->time_offset = jiffies_to_usecs(jiffies) -
--		le32_to_cpu(status->fw_localtime);
-+	getnstimeofday(&ts);
-+	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
-+		(s64)le32_to_cpu(status->fw_localtime);
- }
- 
- #define WL1271_IRQ_MAX_LOOPS 10
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 7926471..a32d301 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -86,8 +86,10 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
- static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 			      u32 extra, struct ieee80211_tx_info *control)
- {
-+	struct timespec ts;
- 	struct wl1271_tx_hw_descr *desc;
- 	int pad, ac;
-+	s64 hosttime;
- 	u16 tx_attr;
- 
- 	desc = (struct wl1271_tx_hw_descr *) skb->data;
-@@ -101,8 +103,9 @@ static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 	}
- 
- 	/* configure packet life time */
--	desc->start_time = cpu_to_le32(jiffies_to_usecs(jiffies) -
--				       wl->time_offset);
-+	getnstimeofday(&ts);
-+	hosttime = (timespec_to_ns(&ts) >> 10);
-+	desc->start_time = cpu_to_le32(hosttime - wl->time_offset);
- 	desc->life_time = cpu_to_le16(TX_HW_MGMT_PKT_LIFETIME_TU);
- 
- 	/* configure the tx attributes */
+Yeah, I was trying to be proactive about the merge conflicts and
+avoid the emails about the conflicts in -next.  But I guess that
+isn't a huge deal anyway, so I'll be a bit more cautious in the future.
+
+Thanks!
+
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
