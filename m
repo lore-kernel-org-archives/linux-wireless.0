@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:52627 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755414Ab0BFR2A (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56644 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756037Ab0BJUdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2010 12:28:00 -0500
-Received: by bwz19 with SMTP id 19so702559bwz.28
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 09:27:58 -0800 (PST)
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: David Kilroy <kilroyd@googlemail.com>
-Subject: Re: [RFC 0/2] cfg80211: Retrieve missing BSS info after connect
-Date: Sat, 6 Feb 2010 18:27:48 +0100
-Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-	dcbw@redhat.com
-References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+	Wed, 10 Feb 2010 15:33:18 -0500
+Date: Wed, 10 Feb 2010 15:32:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org, mb@bu3sch.de
+Subject: Re: pull request: wireless-2.6 2010-02-10
+Message-ID: <20100210203227.GD3286@tuxdriver.com>
+References: <1265829337.19075.0.camel@jlt3.sipsolutions.net> <20100210.113658.137273026.davem@davemloft.net> <20100210201953.GC3286@tuxdriver.com> <20100210.122540.149553948.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201002061827.48913.holgerschurig@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100210.122540.149553948.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It sounds like the libertas cfg80211 drivers have the same problem, so I'm
-> posting them in case they're useful.
+On Wed, Feb 10, 2010 at 12:25:40PM -0800, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 10 Feb 2010 15:19:54 -0500
+> 
+> > On Wed, Feb 10, 2010 at 11:36:58AM -0800, David Miller wrote:
+> >> From: Johannes Berg <johannes@sipsolutions.net>
+> >> Date: Wed, 10 Feb 2010 20:15:37 +0100
+> >> 
+> >> > It was intentional -- that sdev doesn't even have an irq member, but
+> >> > nobody ever noticed because of the wrong ifdef.
+> >> 
+> >> Ok, then this needs to be explained in the commit message.
+> > 
+> > OK...mind if I just revert the current version and ask Michael to
+> > resubmit with an appropriate changelog entry?
+> 
+> Have you pulled this tree into others already?  Why not
+> just pop out the commit and fix it's commit message, then
+> reapply?
+> 
+> Having the revert commit in there is really stupid just for this.
 
-I'm not sure about that.
+I have it pulled into wireless-next-2.6 to fix a merge conflict (from
+a latter commit).  It is also pulled into wireless-testing but that
+is obviously less of an issue.
 
-One thing that I'm sure of is that for the Libertas case I need to scan 
-*before* the connection takes place. The Libertas firmware doesn't roam by 
-itself, so I don't tell her an SSID like you'll tell the orinoco firmware.
-
-Instead the libertas firmware needs a BSSID where it should connect to. If 
-you let do wpa_supplicant do the job (even for WEP), that's no problem, 
-because wpa_supplicant always scans and then connects to a specific BSSID, 
-which suits Libertas very well.
-
-As for sending back then cfg80211_connect_result() to cfg80211, I'm using 
-the IEs from the firmware CMD_802_11_ASSOCIATE command, which seems to work 
-quite nicely.
-
-
-
-The only thing where Libertas would need a scan during connect if someone 
-tries to connect to an AP without a previous scan using the "iw wlan0 
-connect" command. Not sure what Simon did here, but my previous v4 patch 
-simply failed.
-
+John
 -- 
-http://www.holgerschurig.de
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
