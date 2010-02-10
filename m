@@ -1,58 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:21284 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933541Ab0BQAo7 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50878 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752657Ab0BJJra (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 19:44:59 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so1633062eyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 16:44:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100214131810.1a8b49ac@houba>
-References: <4B38A298.7070103@googlemail.com>
-	 <1262037590.16627.99.camel@localhost.localdomain>
-	 <3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
-	 <20100213234456.5ae49b67@houba> <20100214004010.GB18815@tuxdriver.com>
-	 <20100214131810.1a8b49ac@houba>
-Date: Wed, 17 Feb 2010 00:44:56 +0000
-Message-ID: <3ace41891002161644g7d09c598td86381680c3f04f8@mail.gmail.com>
-Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Frederic Leroy <fredo@starox.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Chris Mayo <aklhfex@googlemail.com>,
-	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 10 Feb 2010 04:47:30 -0500
+Subject: Re: [PATCH] mac80211: Deny TX BA session requests during
+ disassociation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <19314.31437.647232.84860@gargle.gargle.HOWL>
+References: <19314.31437.647232.84860@gargle.gargle.HOWL>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wMuuXXjBkq5Xx/aGt8k+"
+Date: Wed, 10 Feb 2010 10:47:24 +0100
+Message-ID: <1265795244.4018.0.camel@johannes.berg>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 14, 2010 at 12:18 PM, Frederic Leroy <fredo@starox.org> wrote:
-> Le Sat, 13 Feb 2010 19:40:10 -0500,
-> "John W. Linville" <linville@tuxdriver.com> a écrit :
->
->> [...]
->> > Should I follow the TODO file from Greg in staging :
->> > ( which seems to merge : rtl8192e  rtl8192su  rtl8192u )
->> > [...]
->> This is a reasonable plan overall, although I might quibble with
->> the order.
->>
->> > Or use rtl818x tree to start a new device ?
->>
->> YMMV, but given the code I've seen for the Realtek drivers in staging
->> I might be inclined to start by forking rtl8180 and making the
->> necessary hardware changes from there.
->
-> It was my impression too, but as you say, YMMV. It will be my first
-> driver, although I already hacked the kernel, make netfilters modules
-> and read lwn ;).
->
-> For the process, it is still unclear for me. I copy rtl8180*[ch] to
-> rtl8192*[ch], and start to hack into to make clean git patches ?
->
-> On which tree should I base my work :
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git ?
 
-It is probably useful to pull from
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-as well - I think wireless-testing's log may be more granular
+--=-wMuuXXjBkq5Xx/aGt8k+
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2010-02-10 at 14:52 +0530, Sujith wrote:
+> In associated state, when bringing an interface down, existing
+> BA sessions are torn down. When this is in progress, nothing
+> prevents mac80211 from accepting another BA session start request.
+>=20
+> Use a new station flag to fix this.
+
+Good catch! Thanks.
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+johannes
+
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  net/mac80211/agg-tx.c   |    8 ++++++++
+>  net/mac80211/mlme.c     |    4 +++-
+>  net/mac80211/sta_info.h |    4 ++++
+>  3 files changed, 15 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+> index 718fbcf..5538e1b 100644
+> --- a/net/mac80211/agg-tx.c
+> +++ b/net/mac80211/agg-tx.c
+> @@ -237,6 +237,14 @@ int ieee80211_start_tx_ba_session(struct ieee80211_s=
+ta *pubsta, u16 tid)
+>  	    sdata->vif.type !=3D NL80211_IFTYPE_AP)
+>  		return -EINVAL;
+> =20
+> +	if (test_sta_flags(sta, WLAN_STA_DISASSOC)) {
+> +#ifdef CONFIG_MAC80211_HT_DEBUG
+> +		printk(KERN_DEBUG "Disassociation is in progress. "
+> +		       "Denying BA session request\n");
+> +#endif
+> +		return -EINVAL;
+> +	}
+> +
+>  	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
+>  #ifdef CONFIG_MAC80211_HT_DEBUG
+>  		printk(KERN_DEBUG "Suspend in progress. "
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index ee9443d..bfc4a50 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -797,8 +797,10 @@ static void ieee80211_set_disassoc(struct ieee80211_=
+sub_if_data *sdata)
+> =20
+>  	rcu_read_lock();
+>  	sta =3D sta_info_get(sdata, bssid);
+> -	if (sta)
+> +	if (sta) {
+> +		set_sta_flags(sta, WLAN_STA_DISASSOC);
+>  		ieee80211_sta_tear_down_BA_sessions(sta);
+> +	}
+>  	rcu_read_unlock();
+> =20
+>  	changed |=3D ieee80211_reset_erp_info(sdata);
+> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+> index 5ff611a..822d845 100644
+> --- a/net/mac80211/sta_info.h
+> +++ b/net/mac80211/sta_info.h
+> @@ -42,6 +42,9 @@
+>   *	be in the queues
+>   * @WLAN_STA_PSPOLL: Station sent PS-poll while driver was keeping
+>   *	station in power-save mode, reply when the driver unblocks.
+> + * @WLAN_STA_DISASSOC: Disassociation in progress.
+> + *	This is used to reject TX BA session requests when disassociation
+> + *	is in progress.
+>   */
+>  enum ieee80211_sta_info_flags {
+>  	WLAN_STA_AUTH		=3D 1<<0,
+> @@ -57,6 +60,7 @@ enum ieee80211_sta_info_flags {
+>  	WLAN_STA_SUSPEND	=3D 1<<11,
+>  	WLAN_STA_PS_DRIVER	=3D 1<<12,
+>  	WLAN_STA_PSPOLL		=3D 1<<13,
+> +	WLAN_STA_DISASSOC       =3D 1<<14,
+>  };
+> =20
+>  #define STA_TID_NUM 16
+
+
+--=-wMuuXXjBkq5Xx/aGt8k+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLcoCoAAoJEODzc/N7+Qma0mwP/07TMX3BGbYaLWHSKJxJ3qTT
+uUt8yIL2mCrfCWBpN9QLM+C0M9KQoSCaZ4eWsRDft0X4z9XTB2s4SOOWMAk8I3fm
+5DxE0UC1HWSLiGsTIUSfShEhE6CL6LO6VWJgPn/bPeCGY83SOxLyUEPJUNmzkTcW
+cfgnRYeO/7UkeYWpqNYtYnmjOYkE6K2RBgPE0cSc+TLKGlwfm4GKOH3CR3e8jt3m
+nrMTao6GPK2P+SM+J7RPivcUOeEMC7v/6h8o9c+x3k/rYLYe3Ncrad8g0Bl+yvrd
+lJd4Uu/TdZ/sJnqXRYk7fpGsG5TboKgjZUV/MHnpSz9vZgxq8bWibXTpO10fFrCa
++vrYwgkdMIinENLZQ3SAydgW9gziWZjb07H9mxYG5pFq7rky61Vi95ppHGw6BGhf
+qHOswaIqtKirbf3VME3hM6Aor1yexgQDs3mvWsLl8Iw1r2r0EKsnBfreaIiwnSmY
+h49BB9lPmnido2prW0BcxvjkLnV6YwVap0eSqiOngxvqBmJzl254su9Ze5gOzNvm
+6FiDcvhe+50EfhsiWlK5LIcQt5JThgEBVKCgS0NTm7IYLGDvocBkP048JbolGmPD
+/zX4o1AfvCPGDH9GjPtxTq/fr7nXyNWcxIBtoaPkMUsfCsSsAbSadGi7EjX/YpIZ
+0qnbPiEq/fxnJkU1HeY/
+=cljv
+-----END PGP SIGNATURE-----
+
+--=-wMuuXXjBkq5Xx/aGt8k+--
+
