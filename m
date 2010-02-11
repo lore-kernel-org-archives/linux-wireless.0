@@ -1,51 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55215 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:10247 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756100Ab0BSU7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 15:59:25 -0500
-Subject: Re: [PATCH 3/3] iwlwifi: error checking for number of tfds in queue
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <20100219203420.GO4950@tuxdriver.com>
-References: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
-	 <1266559301-19581-4-git-send-email-reinette.chatre@intel.com>
-	 <20100219203420.GO4950@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 19 Feb 2010 12:59:24 -0800
-Message-ID: <1266613164.2551.2811.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1756823Ab0BKSmP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Feb 2010 13:42:15 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/12] iwlwifi: reset card during probe
+Date: Thu, 11 Feb 2010 10:42:01 -0800
+Message-Id: <1265913725-4279-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
+References: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-02-19 at 12:34 -0800, John W. Linville wrote:
-> On Thu, Feb 18, 2010 at 10:01:41PM -0800, Reinette Chatre wrote:
-> > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > 
-> > When receive reply_tx and ready to decrement the count for number of
-> > tfds in queue, do error checking to prevent error condition and
-> > tfds_in_queue become negative number.
-> > 
-> > This fix starts to address
-> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2160 by preventing
-> > the bad situation from propagation when it does occur. This is needed while
-> > the cause of the decrement error is still traced.
-> > 
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-> > CC: stable@kernel.org
-> 
-> Since this apparently doesn't amount to a fix for the cited issue,
-> it doesn't seem worth pusing for 2.6.33 at the moment.  Should I take
-> it in wireless-next-2.6?  Or hold-out for a corrected version?
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-A version addressing Stanislaw's feedback is on its way. I apologize for
-the delay. This patch does fix one instance of the issue and we would
-like this fix to be included.
+To ensure that card is in a sane state during probe we add a reset call.
+This change was prompted by users of kdump who was not able to bring up the
+wireless driver in the kdump kernel. The problem here was that the primary
+kernel, which is not running at the time, left the wireless card up and
+running. When the kdump kernel starts it is thus possible to immediately
+receive interrupts from firmware after registering interrupt, but without
+being ready to deal with interrupts from firmware yet.
 
-Reinette
+Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    8 ++++++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 +++++++
+ 2 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c1eff4c..31b156d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3540,6 +3540,14 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	spin_lock_init(&priv->reg_lock);
+ 	spin_lock_init(&priv->lock);
++
++	/*
++	 * stop and reset the on-board processor just in case it is in a
++	 * strange state ... like being left stranded by a primary kernel
++	 * and this is now the kdump kernel trying to start up
++	 */
++	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
++
+ 	iwl_hw_detect(priv);
+ 	IWL_INFO(priv, "Detected Intel Wireless WiFi Link %s REV=0x%X\n",
+ 		priv->cfg->name, priv->hw_rev);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index f6e8f45..7af8ab8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -4039,6 +4039,13 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	spin_lock_init(&priv->reg_lock);
+ 	spin_lock_init(&priv->lock);
+ 
++	/*
++	 * stop and reset the on-board processor just in case it is in a
++	 * strange state ... like being left stranded by a primary kernel
++	 * and this is now the kdump kernel trying to start up
++	 */
++	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
++
+ 	/***********************
+ 	 * 4. Read EEPROM
+ 	 * ********************/
+-- 
+1.6.3.3
 
