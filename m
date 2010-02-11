@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53491 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757426Ab0BMRL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 12:11:28 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] ssb: fix typo in ifdef comment
-Date: Sat, 13 Feb 2010 18:10:54 +0100
-Message-Id: <1266081054-4910-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1266081054-4910-1-git-send-email-hauke@hauke-m.de>
-References: <1266081054-4910-1-git-send-email-hauke@hauke-m.de>
+Received: from mga12.intel.com ([143.182.124.36]:49272 "EHLO
+	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752942Ab0BKMAR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Feb 2010 07:00:17 -0500
+Date: Thu, 11 Feb 2010 13:01:34 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: cfg80211 support
+Message-ID: <20100211120133.GA3136@sortiz.org>
+References: <20100202000934.GA19847@sortiz.org>
+ <201002041052.00858.holgerschurig@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201002041052.00858.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Holger,
 
-Cc:	Michael Buesch <mb@bu3sch.de>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/ssb_private.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+On Thu, Feb 04, 2010 at 10:52:00AM +0100, Holger Schurig wrote:
+> >     + Slightly changed the scanning state machine: The scan
+> >       worker is scheduled from the scan response handler, and
+> >       we're checking for scan_channel to know if a scan is
+> >       currently running. 
+> 
+> Can you tell my why you change the scanning state machine?  What 
+> was broken with it, or why is it now better?
+Well, I wasnt happy with the delayed scan work your patch was using.
+First you were delaying the initial work and I dont think it's useful.
+Then we were scheduling a new scan work from the scan worker itself. Although
+it was also delayed by 300 ms, you still dont have any guarantees that the
+previous scan is done when the next scan worker starts.
+What I changed is triggerring the scan work whenever the last one is done,
+i.e. triggering it from lbs_ret_scan(). This way we have a fully synchronized
+scanning state machine.
 
-diff --git a/drivers/ssb/ssb_private.h b/drivers/ssb/ssb_private.h
-index 56054be..0331139 100644
---- a/drivers/ssb/ssb_private.h
-+++ b/drivers/ssb/ssb_private.h
-@@ -196,7 +196,7 @@ extern int ssb_devices_thaw(struct ssb_freeze_context *ctx);
- #ifdef CONFIG_SSB_B43_PCI_BRIDGE
- extern int __init b43_pci_ssb_bridge_init(void);
- extern void __exit b43_pci_ssb_bridge_exit(void);
--#else /* CONFIG_SSB_B43_PCI_BRIDGR */
-+#else /* CONFIG_SSB_B43_PCI_BRIDGE */
- static inline int b43_pci_ssb_bridge_init(void)
- {
- 	return 0;
-@@ -204,6 +204,6 @@ static inline int b43_pci_ssb_bridge_init(void)
- static inline void b43_pci_ssb_bridge_exit(void)
- {
- }
--#endif /* CONFIG_SSB_PCIHOST */
-+#endif /* CONFIG_SSB_B43_PCI_BRIDGE */
- 
- #endif /* LINUX_SSB_PRIVATE_H_ */
+
+> 
+> Also, previously priv->scan_req was the marker that a scan was 
+> going on. What did it "buy" to you to change this to 
+> priv->scan_channel?
+I guess I could still use scan_req for that purpose.
+My initial thought was that you could have 2 lbs_cfg_scan() running at the
+same time since you could potentially have a 2nd lbs_cfg_scan() call before
+scan_request is actually set. However I believe cfg80211 and nl80211 prevent
+that from happening anyway as they call the scan ops under the rtnl lock.
+So, as I said, I could probably keep using scan_request.
+
+Cheers,
+Samuel.
+
+
 -- 
-1.6.3.3
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
