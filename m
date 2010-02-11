@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:61608 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841Ab0BRBmG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 20:42:06 -0500
-Received: by pwj8 with SMTP id 8so1322970pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 17:42:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1261432252-1855-7-git-send-email-8an@praha12.net>
-References: <1261432252-1855-1-git-send-email-8an@praha12.net>
-	<1261432252-1855-7-git-send-email-8an@praha12.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 17 Feb 2010 17:41:41 -0800
-Message-ID: <43e72e891002171741w95a475ev3a81eac47c2d02e5@mail.gmail.com>
-Subject: Re: [PATCH v3] iw: Add support for NL80211_ATTR_WIPHY_COVERAGE_CLASS
-To: =?UTF-8?B?THVrw6HFoSBUdXJlaw==?= <8an@praha12.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:50477 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756487Ab0BKSmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Feb 2010 13:42:12 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 01/12] iwlwifi: clear all tx queues when firmware ready
+Date: Thu, 11 Feb 2010 10:41:54 -0800
+Message-Id: <1265913725-4279-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
+References: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 21, 2009 at 1:50 PM, Lukáš Turek <8an@praha12.net> wrote:
-> New nl80211 attribute NL80211_ATTR_WIPHY_COVERAGE_CLASS allows setting
-> IEEE 802.11 coverage class, which is then used by drivers to calculate
-> slot time and ACK timeout for long distance links.
->
-> Two iw parameters are added: 'coverage' sets the coverage class
-> directly, while 'distance' is more user-friendly, as it allows to set
-> just the link distance and let iw do the necessary calculation itself.
->
-> Signed-off-by: Lukas Turek <8an@praha12.net>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-This wasn't applied so going to resend rebasing with latest nl80211.h.
+Reset and clear all the tx queues when finished downloading runtime
+uCode and ready to go into operation mode.
 
-  Luis
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index aebe8c5..e479488 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -581,6 +581,8 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
+ 
+ 	iwl4965_set_wr_ptrs(priv, IWL_CMD_QUEUE_NUM, 0);
+ 
++	/* reset to 0 to enable all the queue first */
++	priv->txq_ctx_active_msk = 0;
+ 	/* Map each Tx/cmd queue to its corresponding fifo */
+ 	for (i = 0; i < ARRAY_SIZE(default_queue_to_tx_fifo); i++) {
+ 		int ac = default_queue_to_tx_fifo[i];
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index f3d662c..a7fa1ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -648,6 +648,8 @@ int iwl5000_alive_notify(struct iwl_priv *priv)
+ 
+ 	iwl5000_set_wr_ptrs(priv, IWL_CMD_QUEUE_NUM, 0);
+ 
++	/* reset to 0 to enable all the queue first */
++	priv->txq_ctx_active_msk = 0;
+ 	/* map qos queues to fifos one-to-one */
+ 	for (i = 0; i < ARRAY_SIZE(iwl5000_default_queue_to_tx_fifo); i++) {
+ 		int ac = iwl5000_default_queue_to_tx_fifo[i];
+-- 
+1.6.3.3
+
