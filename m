@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:44151 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933077Ab0BYReE (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:17639 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473Ab0BKM1n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 12:34:04 -0500
-Received: by gwj16 with SMTP id 16so1832030gwj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2010 09:34:03 -0800 (PST)
+	Thu, 11 Feb 2010 07:27:43 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: cfg80211 support
+Date: Thu, 11 Feb 2010 13:24:57 +0100
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+References: <20100202000934.GA19847@sortiz.org> <201002041052.00858.holgerschurig@gmail.com> <20100211120133.GA3136@sortiz.org>
+In-Reply-To: <20100211120133.GA3136@sortiz.org>
 MIME-Version: 1.0
-In-Reply-To: <1267099415.3796.4.camel@jlt3.sipsolutions.net>
-References: <1267099415.3796.4.camel@jlt3.sipsolutions.net>
-Date: Thu, 25 Feb 2010 09:33:59 -0800
-Message-ID: <445f43ac1002250933l52a2dc1eg43f1902165f1de07@mail.gmail.com>
-Subject: Re: libertas_tf maintenance status
-From: Javier Cardona <javier@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Deepak Saxena <dsaxena@laptop.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201002111324.57501.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+> What I changed is triggerring the scan work whenever the last
+> one is done, i.e. triggering it from lbs_ret_scan().
 
-On Thu, Feb 25, 2010 at 4:03 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> What's the maintenance status on libertas_tf?
+Ah, that makes sense.
 
-No one from cozybit is currently maintaining this driver.  Maybe
-Deepak (cc:), from OLPC?
+> My initial thought was that you could have 2 lbs_cfg_scan()
+> running at the same time since you could potentially have a 2nd
+> lbs_cfg_scan() call before scan_request is actually set.
 
-> Now that we have async firmware loading that is more capable, I would
-> love to see libertas_tf converted to load firmware before registering
-> with mac80211, like ar9170 and iwlwifi, and register with the right MAC
-> address so we can get rid of the code that was added by
->
-> commit bdbe819540f3365249095692118dbfeee308140d
-> Author: Luis Carlos Cobo <luisca@cozybit.com>
-> Date:   Thu Aug 14 10:40:48 2008 -0700
->
->   mac80211: allow no mac address until firmware load
+Hmm, even when cfg80211 would allow this, I wouldn't allow this 
+in the driver. All the hoops with the delayed-scan-work is 
+because the firmware can't send a I'm-on-powersafe-notification 
+to the current AP while being on other channels. So I have to 
+make sure to return from time to time to my AP, so that I won't 
+loose packets for me and won't be disconnected.
 
-Cheers,
+If now two scan_req and therefore two scan workers run, the time 
+we're away from our "home channel" increases, which also 
+increase the deauthentication problem.
 
-Javier
+
+Oh, and btw: we can later add an optimization that if we aren't 
+connected at all, we do all scans in one-go, without delays. We 
+still need to send several scan-commands to the firmware, to 
+reduce the possible that a huuuuuge scan response overflows some 
+firmware buffer limit.
+
+
+Thanks for your answers.
+
+Best regards,
+Holger
 
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+http://www.holgerschurig.de
