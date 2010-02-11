@@ -1,97 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35627 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:54526 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932913Ab0BEHHn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 02:07:43 -0500
-Subject: [PATCH] airo: fix WEP key clearing after
- c0380693520b1a1e4f756799a0edc379378b462a
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
-	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-In-Reply-To: <1265353178.11066.5.camel@localhost.localdomain>
-References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com>
-	 <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com>
-	 <1265353178.11066.5.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Feb 2010 23:06:54 -0800
-Message-ID: <1265353614.11066.11.camel@localhost.localdomain>
+	id S1756365Ab0BKU0J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Feb 2010 15:26:09 -0500
+Subject: RE: [ipw3945-devel] [PATCH 05/12] iwlwifi: remove unused op-code
+ in PHY	Calibration command
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "Cahill, Ben M" <ben.m.cahill@intel.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <02B3067C068D0549A8CCFCB17D4D318B626D0610@orsmsx502.amr.corp.intel.com>
+References: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
+	 <1265913725-4279-6-git-send-email-reinette.chatre@intel.com>
+	 <02B3067C068D0549A8CCFCB17D4D318B626D0610@orsmsx502.amr.corp.intel.com>
+Content-Type: text/plain
+Date: Thu, 11 Feb 2010 12:22:42 -0800
+Message-Id: <1265919762.3119.1.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware apparently needs the WEP key RID touched when turning WEP
-off, otherwise it gets angry and refuses to return scan results.  The
-firmware doesn't handle zero-length WEP keys so quite the warning
-message that was inadvertently printed when disabling WEP, which
-wpa_supplicant could trigger repeatedly.
+Hi Ben,
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+this is per Giora's request to remove unused calibration command. so we
+will not alarm external to play with those commands.
 
----
+we can add those back in if we are going to use it.
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 4331d67..38902c7 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -5254,11 +5254,8 @@ static int set_wep_key(struct airo_info *ai, u16 index, const char *key,
- 	WepKeyRid wkr;
- 	int rc;
- 
--	if (keylen == 0) {
--		airo_print_err(ai->dev->name, "%s: key length to set was zero",
--			       __func__);
-+	if (WARN_ON (keylen == 0))
- 		return -1;
--	}
- 
- 	memset(&wkr, 0, sizeof(wkr));
- 	wkr.len = cpu_to_le16(sizeof(wkr));
-@@ -6532,7 +6529,7 @@ static int airo_set_encodeext(struct net_device *dev,
- 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
- 	int perm = ( encoding->flags & IW_ENCODE_TEMP ? 0 : 1 );
- 	__le16 currentAuthType = local->config.authType;
--	int idx, key_len, alg = ext->alg, set_key = 1, rc;
-+	int idx, key_len, alg = ext->alg, rc;
- 	wep_key_t key;
- 
- 	if (!local->wep_capable)
-@@ -6566,10 +6563,9 @@ static int airo_set_encodeext(struct net_device *dev,
- 			               idx, rc);
- 			return rc;
- 		}
--		set_key = ext->key_len > 0 ? 1 : 0;
- 	}
- 
--	if (set_key) {
-+	if (ext->key_len > 0) {
- 		/* Set the requested key first */
- 		memset(key.key, 0, MAX_KEY_SIZE);
- 		switch (alg) {
-@@ -6600,12 +6596,20 @@ static int airo_set_encodeext(struct net_device *dev,
- 	}
- 
- 	/* Read the flags */
--	if(encoding->flags & IW_ENCODE_DISABLED)
-+	if (encoding->flags & IW_ENCODE_DISABLED) {
-+		/* The firmware seems to need the WEP key RID touched when
-+		 * setting WEP disabled; resetting the transmit key index to 0
-+		 * is good enough.  Otherwise it gets confused and stops
-+		 * delivering scan results (!).
-+		 */
-+		if (!(ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY))
-+			set_wep_tx_idx(local, 0, 0, 1);
- 		local->config.authType = AUTH_OPEN;	// disable encryption
--	if(encoding->flags & IW_ENCODE_RESTRICTED)
-+	} else if (encoding->flags & IW_ENCODE_RESTRICTED)
- 		local->config.authType = AUTH_SHAREDKEY;	// Only Both
--	if(encoding->flags & IW_ENCODE_OPEN)
-+	else if (encoding->flags & IW_ENCODE_OPEN)
- 		local->config.authType = AUTH_ENCRYPT;	// Only Wep
-+
- 	/* Commit the changes to flags if needed */
- 	if (local->config.authType != currentAuthType)
- 		set_bit (FLAG_COMMIT, &local->flags);
+Wey
 
+On Thu, 2010-02-11 at 12:17 -0800, Cahill, Ben M wrote:
+> NACK.  Keep them around; we may use in the future.
+> 
+> -- Ben -- 
+> 
+> >-----Original Message-----
+> >From: Reinette Chatre [mailto:reinette.chatre@intel.com] 
+> >Sent: Thursday, February 11, 2010 1:42 PM
+> >To: linville@tuxdriver.com
+> >Cc: Chatre, Reinette; linux-wireless@vger.kernel.org; 
+> >ipw3945-devel@lists.sourceforge.net
+> >Subject: [ipw3945-devel] [PATCH 05/12] iwlwifi: remove unused 
+> >op-code in PHY Calibration command
+> >
+> >From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> >
+> >Number of calibration op-code are not used by driver, remove those from
+> >iwl-commands.h
+> >
+> >Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> >Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> >---
+> > drivers/net/wireless/iwlwifi/iwl-commands.h |    4 ----
+> > 1 files changed, 0 insertions(+), 4 deletions(-)
+> >
+> >diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h 
+> >b/drivers/net/wireless/iwlwifi/iwl-commands.h
+> >index c2f31eb..ab3c77b 100644
+> >--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
+> >+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+> >@@ -3470,11 +3470,7 @@ enum {
+> > 	IWL_PHY_CALIBRATE_DIFF_GAIN_CMD		= 7,
+> > 	IWL_PHY_CALIBRATE_DC_CMD		= 8,
+> > 	IWL_PHY_CALIBRATE_LO_CMD		= 9,
+> >-	IWL_PHY_CALIBRATE_RX_BB_CMD		= 10,
+> > 	IWL_PHY_CALIBRATE_TX_IQ_CMD		= 11,
+> >-	IWL_PHY_CALIBRATE_RX_IQ_CMD		= 12,
+> >-	IWL_PHY_CALIBRATION_NOISE_CMD		= 13,
+> >-	IWL_PHY_CALIBRATE_AGC_TABLE_CMD		= 14,
+> > 	IWL_PHY_CALIBRATE_CRYSTAL_FRQ_CMD	= 15,
+> > 	IWL_PHY_CALIBRATE_BASE_BAND_CMD		= 16,
+> > 	IWL_PHY_CALIBRATE_TX_IQ_PERD_CMD	= 17,
+> >-- 
+> >1.6.3.3
+> >
+> >
+> >---------------------------------------------------------------
+> >---------------
+> >SOLARIS 10 is the OS for Data Centers - provides features such 
+> >as DTrace,
+> >Predictive Self Healing and Award Winning ZFS. Get Solaris 10 NOW
+> >http://p.sf.net/sfu/solaris-dev2dev
+> >_______________________________________________
+> >Ipw3945-devel mailing list
+> >Ipw3945-devel@lists.sourceforge.net
+> >https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+> >--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
