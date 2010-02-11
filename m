@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g21.free.fr ([212.27.42.1]:40322 "EHLO smtp1-g21.free.fr"
+Received: from mga09.intel.com ([134.134.136.24]:13615 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752882Ab0BNXeE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 18:34:04 -0500
-From: Benoit Papillault <benoit.papillault@free.fr>
-To: johannes@sipsolutions.net
+	id S1756858Ab0BKSm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Feb 2010 13:42:28 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-Subject: [PATCH 2/2] mac80211: Improved IBSS merges even if BSSID is the same
-Date: Mon, 15 Feb 2010 00:33:55 +0100
-Message-Id: <1266190435-2355-2-git-send-email-benoit.papillault@free.fr>
-In-Reply-To: <1266190435-2355-1-git-send-email-benoit.papillault@free.fr>
-References: <1266190435-2355-1-git-send-email-benoit.papillault@free.fr>
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH wireless-2.6] iwlwifi: fix AMSDU Rx after paged Rx patch
+Date: Thu, 11 Feb 2010 10:42:22 -0800
+Message-Id: <1265913742-4340-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to IEEE 802.11, we should merge even if the BSSID from the
-received beacon is the same as our since merge can update more things
-that BSSID itself.
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-This is specifically true for ath9k where the merge updates TBTT timers
-as a side effect and this is indeed needed if the TSF has been updated
-(if TSF is updated, we need to update TBTT timers as well).
+Previous patch "use paged Rx" broke AMSDU Rx functionality. If an AP
+sends out A-MSDU packets the station will crash.  Fix it by linearizing
+skbuff for AMSDU packet before handing it to mac80211 since mac80211
+doesn't support paged skbuff.
 
-However, it could cause continuous merges if the RX timestamp or
-drv_get_tsf() is not accurate or not implemented.
+This fixes http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2155
 
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+Reported-by: Norbert Preining <preining@logic.at>
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/ibss.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 9328395..5f343ed 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -372,10 +372,6 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 				sdata->u.ibss.ssid_len))
- 		goto put_bss;
- 
--	/* same BSSID */
--	if (memcmp(cbss->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0)
--		goto put_bss;
--
- 	if (rx_status->flag & RX_FLAG_TSFT) {
- 		/*
- 		 * For correct IBSS merging we need mactime; since mactime is
+This patchs is also available from wireless-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-rx.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 6f36b6e..2dbce85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -928,7 +928,10 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 	if (ieee80211_is_mgmt(fc) ||
+ 	    ieee80211_has_protected(fc) ||
+ 	    ieee80211_has_morefrags(fc) ||
+-	    le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)
++	    le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG ||
++	    (ieee80211_is_data_qos(fc) &&
++	     *ieee80211_get_qos_ctl(hdr) &
++	     IEEE80211_QOS_CONTROL_A_MSDU_PRESENT))
+ 		ret = skb_linearize(skb);
+ 	else
+ 		ret = __pskb_pull_tail(skb, min_t(u16, IWL_LINK_HDR_MAX, len)) ?
 -- 
-1.5.6.5
+1.6.3.3
 
