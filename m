@@ -1,53 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:49036 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932296Ab0BYNHx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 08:07:53 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Received: from mga09.intel.com ([134.134.136.24]:24445 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756827Ab0BKSmP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Feb 2010 13:42:15 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: fix direct probe loop on ieee80211_work_purge
-Date: Thu, 25 Feb 2010 15:05:38 +0200
-Message-Id: <1267103138-6353-1-git-send-email-juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Trieu 'Andrew' Nguyen <trieux.t.nguyen@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/12] iwlwifi: Monitor and recover the aggregation TX flow failure
+Date: Thu, 11 Feb 2010 10:42:05 -0800
+Message-Id: <1265913725-4279-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
+References: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If authentication has already been performed when the WLAN interface is
-stopped, (sometimes) the ieee80211_work_purge would corrupt some
-ieee80211_work-structures. The outcome is this (cleaned up):
+From: Trieu 'Andrew' Nguyen <trieux.t.nguyen@intel.com>
 
-[ 2252.398681] WARNING: at net/mac80211/work.c:995 ieee80211_work_purge
-[ 2252.466430] Backtrace:
-[ 2252.529266] (ieee80211_work_purge+0x0/0xcc [mac80211])
-[ 2252.546875] (ieee80211_stop+0x0/0x4c0 [mac80211])
+This change monitors the tx statistics to detect the drop in throughput.
+When the throughput drops, the ratio of the actual_ack_count and the expected_
+ack_count also drops.  At the same time, the aggregated ba_timeout (the number
+of ba timeout retries) also rises.  If the actual_ack_count/expected_ack_count
+ratio is 0 and the number of ba timeout retries rises to 16, no tx packets
+(tcp, udp, or ping - icmp) can be delivered.  The driver recovers from this
+situation by reseting the uCode firmware.  If the actual_ack_count/expected_
+ack_count ratio drops below 50% (but not 0) and the aggregated ba_timeout
+retries just exceed 5 (but not 16), then the driver can reset the radio to
+bring the throughput up.
 
-Additionally, one would get this, going on regarless of the WLAN interface
-state, going on forever:
-
-[ 2252.859985] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717525)
-[ 2253.055419] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717524)
-[ 2253.250610] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717523)
-[ 2253.446014] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717522)
-[ 2253.641357] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717521)
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Trieu 'Andrew' Nguyen <trieux.t.nguyen@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/work.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   14 +++++++++-
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    3 ++
+ drivers/net/wireless/iwlwifi/iwl-rx.c  |   46 ++++++++++++++++++++++++++++++++
+ 3 files changed, 62 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 7e708d5..1e1ea30 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -869,6 +869,7 @@ static void ieee80211_work_work(struct work_struct *work)
- 			break;
- 		case IEEE80211_WORK_ABORT:
- 			rma = WORK_ACT_TIMEOUT;
-+			break;
- 		case IEEE80211_WORK_DIRECT_PROBE:
- 			rma = ieee80211_direct_probe(wk);
- 			break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 31b156d..4157c6c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2941,10 +2941,21 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
+ 			return ret;
+ 	case IEEE80211_AMPDU_TX_START:
+ 		IWL_DEBUG_HT(priv, "start Tx\n");
+-		return iwl_tx_agg_start(priv, sta->addr, tid, ssn);
++		ret = iwl_tx_agg_start(priv, sta->addr, tid, ssn);
++		if (ret == 0) {
++			priv->agg_tids_count++;
++			IWL_DEBUG_HT(priv, "priv->agg_tids_count = %u\n",
++				priv->agg_tids_count);
++		}
++		return ret;
+ 	case IEEE80211_AMPDU_TX_STOP:
+ 		IWL_DEBUG_HT(priv, "stop Tx\n");
+ 		ret = iwl_tx_agg_stop(priv, sta->addr, tid);
++		if ((ret == 0) && (priv->agg_tids_count > 0)) {
++			priv->agg_tids_count--;
++			IWL_DEBUG_HT(priv, "priv->agg_tids_count = %u\n",
++				priv->agg_tids_count);
++		}
+ 		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 			return 0;
+ 		else
+@@ -3364,6 +3375,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->iw_mode = NL80211_IFTYPE_STATION;
+ 	priv->current_ht_config.smps = IEEE80211_SMPS_STATIC;
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
++	priv->agg_tids_count = 0;
+ 
+ 	/* Choose which receivers/antennas to use */
+ 	if (priv->cfg->ops->hcmd->set_rxon_chain)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 71cf155..f81317d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1072,6 +1072,9 @@ struct iwl_priv {
+ 	/* storing the jiffies when the plcp error rate is received */
+ 	unsigned long plcp_jiffies;
+ 
++	/* reporting the number of tids has AGG on. 0 means no AGGREGATION */
++	u8 agg_tids_count;
++
+ 	/* force reset */
+ 	unsigned long last_force_reset_jiffies;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index aba8f4c..fed554a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -616,6 +616,11 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+ 
+ #define REG_RECALIB_PERIOD (60)
+ 
++/* the threshold ratio of actual_ack_cnt to expected_ack_cnt in percent */
++#define ACK_CNT_RATIO (50)
++#define BA_TIMEOUT_CNT (5)
++#define BA_TIMEOUT_MAX (16)
++
+ #define PLCP_MSG "plcp_err exceeded %u, %u, %u, %u, %u, %d, %u mSecs\n"
+ void iwl_rx_statistics(struct iwl_priv *priv,
+ 			      struct iwl_rx_mem_buffer *rxb)
+@@ -625,6 +630,9 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 	int combined_plcp_delta;
+ 	unsigned int plcp_msec;
+ 	unsigned long plcp_received_jiffies;
++	int actual_ack_cnt_delta;
++	int expected_ack_cnt_delta;
++	int ba_timeout_delta;
+ 
+ 	IWL_DEBUG_RX(priv, "Statistics notification received (%d vs %d).\n",
+ 		     (int)sizeof(priv->statistics),
+@@ -639,6 +647,44 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	iwl_accumulative_statistics(priv, (__le32 *)&pkt->u.stats);
+ #endif
++	actual_ack_cnt_delta = le32_to_cpu(pkt->u.stats.tx.actual_ack_cnt) -
++		le32_to_cpu(priv->statistics.tx.actual_ack_cnt);
++	expected_ack_cnt_delta = le32_to_cpu(
++			pkt->u.stats.tx.expected_ack_cnt) -
++		le32_to_cpu(priv->statistics.tx.expected_ack_cnt);
++	ba_timeout_delta = le32_to_cpu(
++			pkt->u.stats.tx.agg.ba_timeout) -
++		le32_to_cpu(priv->statistics.tx.agg.ba_timeout);
++	if ((priv->agg_tids_count > 0) &&
++		(expected_ack_cnt_delta > 0) &&
++		(((actual_ack_cnt_delta * 100) / expected_ack_cnt_delta) <
++			ACK_CNT_RATIO) &&
++		(ba_timeout_delta > BA_TIMEOUT_CNT)) {
++		IWL_DEBUG_RADIO(priv,
++			"actual_ack_cnt delta = %d, expected_ack_cnt = %d\n",
++			actual_ack_cnt_delta, expected_ack_cnt_delta);
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++		IWL_DEBUG_RADIO(priv, "rx_detected_cnt delta = %d\n",
++			priv->delta_statistics.tx.rx_detected_cnt);
++		IWL_DEBUG_RADIO(priv,
++			"ack_or_ba_timeout_collision delta = %d\n",
++			priv->delta_statistics.tx.ack_or_ba_timeout_collision);
++#endif
++		IWL_DEBUG_RADIO(priv, "agg ba_timeout delta = %d\n",
++			ba_timeout_delta);
++		if ((actual_ack_cnt_delta == 0) &&
++			(ba_timeout_delta >=
++				BA_TIMEOUT_MAX)) {
++			IWL_DEBUG_RADIO(priv,
++				"call iwl_force_reset(IWL_FW_RESET)\n");
++			iwl_force_reset(priv, IWL_FW_RESET);
++		} else {
++			IWL_DEBUG_RADIO(priv,
++				"call iwl_force_reset(IWL_RF_RESET)\n");
++			iwl_force_reset(priv, IWL_RF_RESET);
++		}
++	}
+ 	/*
+ 	 * check for plcp_err and trigger radio reset if it exceeds
+ 	 * the plcp error threshold plcp_delta.
 -- 
 1.6.3.3
 
