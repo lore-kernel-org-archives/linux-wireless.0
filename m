@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web24715.mail.ird.yahoo.com ([212.82.104.188]:24776 "HELO
-	web24715.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753990Ab0BMT6A convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 14:58:00 -0500
-Message-ID: <137999.4336.qm@web24715.mail.ird.yahoo.com>
-Date: Sat, 13 Feb 2010 19:51:19 +0000 (GMT)
-From: John Murdoch <weejoker@yahoo.com>
-Subject: ath9k in AP mode - stuck beacon
-To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from he.sipsolutions.net ([78.46.109.217]:58616 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756175Ab0BLOD1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Feb 2010 09:03:27 -0500
+Subject: Re: [PATCH] nl80211: does not allow NEW_STATION and DEL_STATION
+ for mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Simon Raffeiner <sturmflut@lieberbiber.de>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>
+In-Reply-To: <20100212135535.GA1123@holoscopio.com>
+References: <1265978241-1601-1-git-send-email-cascardo@holoscopio.com>
+	 <1265978993.15701.0.camel@jlt3.sipsolutions.net>
+	 <20100212135535.GA1123@holoscopio.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yTlN8a5gyYBjmZyr+faU"
+Date: Fri, 12 Feb 2010 15:03:24 +0100
+Message-ID: <1265983404.18938.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
 
-After downloading compat-wireless 2010-02-12, my previously unexplained issues with hostapd failing to send out further beacons after a period of time is now starting to yield useful debug messages along the lines of:
+--=-yTlN8a5gyYBjmZyr+faU
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[ 9999.505740] ath: missed 35 consecutive beacons
-[ 9999.507501] ath: AR_INTR_SYNC_LOCAL_TIMEOUT
-...
-[ 9999.531153] ath: AR_INTR_SYNC_LOCAL_TIMEOUT
-[ 9999.531339] ath: beacon is officially stuck
-[ 9999.531352] ath: 0xf0010071 => 0x0
-[ 9999.531361] ath: disable IER
-[ 9999.531372] ath: new IMR 0x0
-[ 9999.535487] ath: ath9k_hw_stoptxdma: Num of pending TX Frames 1 on Q 9
-[ 9999.539691] ath: Failed to Failed to stop TX DMA in 10
-0 msec after killing last frame
-[ 9999.539759] ath: Disable MIB counters
-[ 9999.551236] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x40000020
+On Fri, 2010-02-12 at 11:55 -0200, Thadeu Lima de Souza Cascardo wrote:
 
-It looks like this is the "Stuck Beacon" issue I used to see with Madwifi a few years ago with my old Atheros wireless cards, as the local neighborhood is pretty noisy. Back then, I could could remedy this with a few iwpriv/iwconfig changes. 
+> Sorry. This code has obviously given me an oops. I did it in a hurry
+> and
+> thought that was a good optimization to get out as early as possible
+> in
+> the case the device was not in AP mode.
 
-Are there any plans to stabilize this on ath9k or are there any things I can try to negate this issue?
+Which device, at that point :)
 
-Regards,
-John
+> I have fixed it, but I would like to do a more thorough test now to
+> make
+> up for my mistake.
+>=20
+> So, is there any test tool around? I am playing with iw code to do
+> these tests. Any recommendations for the values of listen interval and
+> the acceptable values for supported rates and aid?
 
+I guess just using hostapd and connecting to it once would be a good
+test for that code path, but the rest _looked_ fine to me.
 
-      
+johannes
+
+--=-yTlN8a5gyYBjmZyr+faU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLdV+pAAoJEODzc/N7+QmarAkQAJTofwuvGcauTKEs1UD8xWvg
+v3boQBJAY4cnjAf9uSlf9aEn7YxjBxvJ7pbfadtC9Ai+K1mIVSpWV4LY5cM6f026
+YcId9Affd7zykS2/0JtZ2fV0KAG06y0HjfjkJElOADfTwirqK1lOpUhUrCGA/lgY
+8kimWnjGrSONLWwB6T5XmOEp9GqVKM0FnB9M1Koknia7BtpeNC1JajcLsUlY+WPw
+svEHZQIlrZPKuP0oRwRSd2rW3DOGF9k0JNe1V3XAYPpfsMGQpAvgAfHcud8H4XTG
+wfP2pA6Mxh4Tt6JGRyCxS2t3/o7oYFrrkpTQE5mgfTzMaG3ZNxNjEIU5dYr+cvOk
+wo+mPUcLcjgcQtjbycFimf9CGuNyoBh8+aEC4fqRdek4oMfTaO2/3XBvFCGr9i/k
+uOPq330wiLI2DE2iPtBbnZ/lefQz+8dX6SzgTORjAKm/KpBcZ5MSsN2yMiealutH
+E3dVmfg/cZc8Gt/3/kb3sQQ1Y7mNUpQ7GbbTd5CL8C2mreQ2Omz1DNV73yZ81qHk
+L2Pg6nnblem49YGXnFD0RTqDAmyEVcEJ9NBXvKRlVA8sdF3/qVOZFZ26Hxsx7Q6k
+qSsqFAIqbq3j0tj8TWxIB01lO4YQIizukgzp3Hn5GhUSt8S2L+8qlJhUKcIYznoP
+NwFpsY71A6/EMgQhdj0V
+=jwGV
+-----END PGP SIGNATURE-----
+
+--=-yTlN8a5gyYBjmZyr+faU--
+
