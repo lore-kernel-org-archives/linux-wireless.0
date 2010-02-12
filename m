@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dsl-67-204-24-19.acanac.net ([67.204.24.19]:40500 "EHLO
-	emergent.ellipticsemi.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752785Ab0BAWja (ORCPT
+Received: from 216-136-12-18.static.twtelecom.net ([216.136.12.18]:32039 "EHLO
+	mail.sdicorporation.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757520Ab0BLEMF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 17:39:30 -0500
-Date: Mon, 1 Feb 2010 17:12:52 -0500
-From: Nick Bowler <nbowler@elliptictech.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Witold Sowa <witold.sowa@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Till Kamppeter <till.kamppeter@gmail.com>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org
-Subject: Re: Linux wireless GSoC 2010 project ideas
-Message-ID: <20100201221252.GA30758@emergent.ellipticsemi.com>
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>
- <4B65F024.3080505@gmail.com>
- <1264972854.3597.17.camel@johannes.local>
- <43e72e891002011001l4e914094v33e73209a9da93e8@mail.gmail.com>
- <1265055284.26421.16.camel@maxim-laptop>
+	Thu, 11 Feb 2010 23:12:05 -0500
+Message-ID: <4B74D511.3080508@sdicorporation.com>
+Date: Thu, 11 Feb 2010 23:12:01 -0500
+From: Olivier Singla <osingla@sdicorporation.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1265055284.26421.16.camel@maxim-laptop>
+To: <linux-wireless@vger.kernel.org>
+Subject: ar9170 : firmware not loaded
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22:14 Mon 01 Feb     , Maxim Levitsky wrote:
-> 2 - Allow a wireless card to associate to several APs at once (if they
-> share the frequency). 
-> Implement this at least for ath5/9k. Madwifi had that feature. Maybe
-> ath9k has. If it has that feature, test it.
+Hi,
 
-I haven't actually tried this particular case, but this is ostensibly
-already supported by mac80211: iw allows you to create several wireless
-interfaces that share a phy, which can then be configured into different
-modes (I've used station + monitor successfully in the past).
+I am trying to use the ar9170 driver with the netgear wn111v2, on an 
+arm9 platform.
+I compiled the modules, and the driver loads fine:
 
--- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
+Module                  Size  Used by
+ar9170usb              51188  1
+mac80211              170216  1 ar9170usb
+ath                     7304  1 ar9170usb
+cfg80211              120852  3 ar9170usb,mac80211,ath
+rfkill_backport        15524  1 cfg80211
+compat                  2336  2 mac80211,cfg80211
+compat_firmware_class     7072  2 ar9170usb
+pegasus                18052  0
+ohci_hcd               18428  0
+g_file_storage         21212  0
+at91_udc               12696  1 g_file_storage
+
+My issue is about the firmware, ar9170.fw. It is not found.
+I tried w/o luck 2 options:
+1) loaded from user space under /lib/firmware
+2) build the kernel 2.6.29 with ar9170.fw.
+
+With option (1), the only thing I see under /sys/class/firmware is the 
+pseudo file timeout,
+no filename for 60" (like I think it should).
+
+Note that I have tried also an 802.11G adapter (iogear gwus23) with the 
+very same issue.
+But in this case, the 'old' kernel I am using for arm9 (2.6.29) has 
+support for this 802.11g adapter,
+and when I build it with 2.6.29 (therefore not using compat-wireless), I 
+have no issue regarding
+loading the firmware (from user-space).
+
+If anybody had any idea what I am doing wrong or missing, I would really 
+appreciate it!
+
+Regards,
+Olivier
+
