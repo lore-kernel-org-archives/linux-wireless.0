@@ -1,28 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:64048 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758589Ab0BYAUJ (ORCPT
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:55797 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753430Ab0BLIIZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 19:20:09 -0500
+	Fri, 12 Feb 2010 03:08:25 -0500
+Received: by fxm7 with SMTP id 7so2296349fxm.28
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2010 00:08:23 -0800 (PST)
+Message-ID: <4B750C6E.9000208@gmail.com>
+Date: Fri, 12 Feb 2010 09:08:14 +0100
+From: Daniel Golle <daniel.golle@gmail.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 24 Feb 2010 16:18:08 -0800
-Message-ID: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-Subject: 802.11 development process - extended documentation
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: some ideas about pseudo_adhoc (as rtl8187 cannot do beacon generation)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've extended our 802.11 development process into a new section on our
-802.11 wiki. I often get asked how this works from different parts of
-the company here at Atheros so figured it'd be easier to illustrate
-this as best as possible and share it.
+hi!
+i've got an rtl8187l and want to use it in Ad-Hoc mode (actually 
+pseudo_adhoc would actually even be enough!). i researched a little bit 
+and found out that ad-hoc-, master- and mesh-mode are unsupported due to 
+the lack of beacon generation support in the mac80211 version of the 
+rtl8187 driver.
+as the softmac card probably doesn't support generating beacons in 
+firmware, does that mean we need to setup a beacon generation fork 
+repeatedly calling
+ieee80211_beacon_get
+and then sending the beacon? (very roughly, i'm guessing after reading 
+any 802.11 code for 20 minutes)
+probably a timing-critical task which needs to bypass the usual buffers 
+and such i can imagine...
 
-http://wireless.kernel.org/en/developers/process
+anyway. pseudo_adhoc (i.e. ad-hoc without beacons) is a nice thing and 
+works great for use with user-space mesh-routing solutions such as OLSR, 
+batman or babel. however, i guess as pseudo_adhoc is violating the 
+standards (though it is very usefull) it might never be supported by 
+anything else than proprietary drivers made by Atheros (afaik).
 
-Hope it does justice, John if you see any mistakes feel free to edit.
-If the diagram seems fishy let me know what I can fix.
+so. i want to use this hardware (RTL8187L) for this task (OLSR). any 
+ideas? where should i start wasting my brain-time?
 
-  Luis
+ot: anyone ever tried compiling the FullMAC r8187 driver (aircrack) for 
+Atheros/MIPS systems?
+
+cheers
+
+daniel
