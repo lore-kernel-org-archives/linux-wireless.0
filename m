@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:38532 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751645Ab0BSRVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 12:21:50 -0500
-Message-ID: <4B7EC8A6.8010701@openwrt.org>
-Date: Fri, 19 Feb 2010 18:21:42 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: fix beacon timer restart after a card reset
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([192.100.105.134]:23854 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753336Ab0BLIH7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Feb 2010 03:07:59 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: [PATCH 1/1] mac80211: fix handling of null-rate control in rate_control_get_rate
+Date: Fri, 12 Feb 2010 10:05:45 +0200
+Message-Id: <1265961945-28351-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In AP mode, ath_beacon_config_ap only restarts the timer if a TSF
-restart is requested. Apparently this was added, because this function
-unconditionally sets the flag for TSF reset.
+For hardware with IEEE80211_HW_HAS_RATE_CONTROL the rate controller is not
+initialized. However, calling functions such as ieee80211_beacon_get result
+in the rate_control_get_rate function getting called, which is accessing
+(in this case uninitialized) rate control structures unconditionally.
 
-The problem with this is, that ath9k_hw_reset() clobbers the timer
-registers (specified in the initvals), thus effectively disabling the
-SWBA interrupt whenever a card reset without TSF reset is issued
-(happens in a few places in the code).
+Fix by exiting the function before setting the rates for HW with
+IEEE80211_HW_HAS_RATE_CONTROL set. The initialization of the ieee80211_tx_info
+struct is intentionally still executed.
 
-This patch fixes ath_beacon_config_ap to only issue the TSF reset flag
-when necessary, but reinitialize the timer unconditionally. Tests show,
-that this is enough to keep the SWBA interrupt going after a call to
-ath_reset()
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
 Cc: stable@kernel.org
 ---
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -526,16 +526,13 @@ static void ath_beacon_config_ap(struct 
- {
- 	u32 nexttbtt, intval;
+ net/mac80211/rate.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 99ab24c..0b299d2 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -303,6 +303,9 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 		info->control.rates[i].count = 1;
+ 	}
  
--	/* Configure the timers only when the TSF has to be reset */
--
--	if (!(sc->sc_flags & SC_OP_TSF_RESET))
--		return;
--
- 	/* NB: the beacon interval is kept internally in TU's */
- 	intval = conf->beacon_interval & ATH9K_BEACON_PERIOD;
- 	intval /= ATH_BCBUF;    /* for staggered beacons */
- 	nexttbtt = intval;
--	intval |= ATH9K_BEACON_RESET_TSF;
++	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
++		return;
 +
-+	if (sc->sc_flags & SC_OP_TSF_RESET)
-+		intval |= ATH9K_BEACON_RESET_TSF;
+ 	ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
  
  	/*
- 	 * In AP mode we enable the beacon timers and SWBA interrupts to
+-- 
+1.6.3.3
+
