@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40405 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43138 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135Ab0BFOig (ORCPT
+	with ESMTP id S1752031Ab0BLJpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2010 09:38:36 -0500
-Received: from wireless by sipsolutions.net with local (Exim 4.71)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1Ndlnt-0005DG-V9
-	for linux-wireless@vger.kernel.org; Sat, 06 Feb 2010 15:38:34 +0100
-Date: Sat, 06 Feb 2010 15:38:33 +0100
-Message-Id: <E1Ndlnt-0005DG-V9@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [ANN] rfkill: v0.4
-Reply-to: linux-wireless@vger.kernel.org
-From: wireless@sipsolutions.net
+	Fri, 12 Feb 2010 04:45:10 -0500
+Subject: [PATCH] mac80211: fix netdev rename
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Feb 2010 10:45:05 +0100
+Message-ID: <1265967905.4388.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Fix a copy bug introduced by
 
-A new release of rfkill (v0.4) is available at:
+    commit 47846c9b0c10808d9337d2e7d09361f3e0a0a71a
+    Author: Johannes Berg <johannes@sipsolutions.net>
+    Date:   Wed Nov 25 17:46:19 2009 +0100
 
-http://wireless.kernel.org/download/rfkill/rfkill-0.4.tar.bz2
+        mac80211: reduce reliance on netdev
 
-SHA1 sum: fccabf5a272ac2891f24dc35449dc6f4c45ff44b
+This manifested itself only in debug messages
+and in the debugfs rename failure that would
+always happen due to trying to rename the dir
+over itself.
 
-Here is the short log of the changes included in this 
-release:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: stable@kernel.org
+---
+ net/mac80211/iface.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Darren Salt (10):
-      Move the man page to section 8
-      Add "wlan" and "ultrawideband" as aliases for "wifi" and "uwb".
-      Rearrange the help text for block & unblock.
-      Constification.
-      Return error codes instead of exiting.
-      Refactor rfkill index/type lookup: move it below rfkill_block.
-      Add filtering to "rfkill list".
-      Tweak version handling to allow vendor-specific suffixes without patching.
-      Help text: output rfkill type names from an array instead of a static string.
-      Add rfkill type "fm" to the man page.
+--- wireless-testing.orig/net/mac80211/iface.c	2010-02-12 10:30:17.000000000 +0100
++++ wireless-testing/net/mac80211/iface.c	2010-02-12 10:30:21.000000000 +0100
+@@ -1031,7 +1031,7 @@ static int netdev_notify(struct notifier
+ 
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
+-	memcpy(sdata->name, sdata->name, IFNAMSIZ);
++	memcpy(sdata->name, dev->name, IFNAMSIZ);
+ 
+ 	ieee80211_debugfs_rename_netdev(sdata);
+ 	return 0;
 
-Johannes Berg (4):
-      flush output after events
-      print time instead of useless text
-      change manpage for new rfkill list behaviour
-      version 0.4
-
-John W. Linville (1):
-      default install to $(PREFIX)/sbin
-
-Tomas Winkler (1):
-      update rfkill.h from kernel 2.6.33
 
