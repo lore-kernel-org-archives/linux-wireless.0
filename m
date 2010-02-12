@@ -1,51 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f194.google.com ([209.85.216.194]:34831 "EHLO
-	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755894Ab0BKUKq (ORCPT
+Received: from liberdade.minaslivre.org ([72.232.254.139]:60004 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670Ab0BLMnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2010 15:10:46 -0500
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 11 Feb 2010 12:10:24 -0800
-Message-ID: <43e72e891002111210l55d6a802pc5a1384e3535c845@mail.gmail.com>
-Subject: Coordinating development for Bluetooth 3.0 between 802.11 and BT
-	trees
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Dan Tian <Dan.Tian@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 12 Feb 2010 07:43:11 -0500
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Simon Raffeiner <sturmflut@lieberbiber.de>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>
+Subject: [PATCH] nl80211: does not allow NEW_STATION and DEL_STATION for mesh
+Date: Fri, 12 Feb 2010 10:37:21 -0200
+Message-Id: <1265978241-1601-1-git-send-email-cascardo@holoscopio.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, Marcel,
+As discussed in linux-wireless mailint list, adding and removing
+stations for mesh topologies is not necessary. Since doing it triggers
+bugs, the sugestion was to simply disable it.
 
-we are reviewing possibilities of working on Bluetooth 3.0. With
-Bluetooth 3.0 you essentially will switch to transmitting large data
-over your 802.11 device instead of the BT device. One of the first
-questions we need to address first is how we would go about
-coordinating development between wireless-testing and
-bluetooth-testing. First I'll note that I know squat of bluetooth so
-bare with me if I'm not being 100% accurate here. From what I gather
-on the mac80211 side the biggest piece will be the PAL implementation
-which should translate HCI commands to respective 802.11 frames where
-needed. It seems this would likely be the first thing tackled. Prior
-to working on 802.11 though we realize that at some point we'll need
-to synchronize the 802.11 and Bluetooth trees though so work done on
-wireless-testing for a PAL is reasonable but then the
-bluetooth-testing won't have the respective updates.
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Raffeiner <sturmflut@lieberbiber.de>
+Cc: Andrey Yurovsky <andrey@cozybit.com>
+Cc: Javier Cardona <javier@cozybit.com>
+---
+ net/wireless/nl80211.c |   47 +++++++++++------------------------------------
+ 1 files changed, 11 insertions(+), 36 deletions(-)
 
-Using linux-next is one possibility but using linux-next proves a pain
-due to the fact that every single update on breaks updates, so the
-only way to update is:
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5b79ecf..176b8fe 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2001,6 +2001,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN)
++		return -EINVAL;
++
+ 	if (!info->attrs[NL80211_ATTR_MAC])
+ 		return -EINVAL;
+ 
+@@ -2010,6 +2014,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (!info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
+ 		return -EINVAL;
+ 
++	if (!info->attrs[NL80211_ATTR_STA_AID])
++		return -EINVAL;
++
+ 	mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+ 	params.supported_rates =
+ 		nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
+@@ -2018,11 +2025,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	params.listen_interval =
+ 		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+ 
+-	if (info->attrs[NL80211_ATTR_STA_AID]) {
+-		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
+-		if (!params.aid || params.aid > IEEE80211_MAX_AID)
+-			return -EINVAL;
+-	}
++	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
++	if (!params.aid || params.aid > IEEE80211_MAX_AID)
++		return -EINVAL;
+ 
+ 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
+ 		params.ht_capa =
+@@ -2044,35 +2049,6 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	/* validate settings */
+ 	err = 0;
+ 
+-	switch (dev->ieee80211_ptr->iftype) {
+-	case NL80211_IFTYPE_AP:
+-	case NL80211_IFTYPE_AP_VLAN:
+-		/* all ok but must have AID */
+-		if (!params.aid)
+-			err = -EINVAL;
+-		break;
+-	case NL80211_IFTYPE_MESH_POINT:
+-		/* disallow things mesh doesn't support */
+-		if (params.vlan)
+-			err = -EINVAL;
+-		if (params.aid)
+-			err = -EINVAL;
+-		if (params.ht_capa)
+-			err = -EINVAL;
+-		if (params.listen_interval >= 0)
+-			err = -EINVAL;
+-		if (params.supported_rates)
+-			err = -EINVAL;
+-		if (params.sta_flags_mask)
+-			err = -EINVAL;
+-		break;
+-	default:
+-		err = -EINVAL;
+-	}
+-
+-	if (err)
+-		goto out;
+-
+ 	if (!rdev->ops->add_station) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+@@ -2113,8 +2089,7 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
+ 		goto out_rtnl;
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT) {
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
+ 		err = -EINVAL;
+ 		goto out;
+ 	}
+-- 
+1.6.6.1
 
-git fetch
-git reset --hard origin
-
-Wanted to get your feedback on what you think would be the best
-approach to take for focus on development for Bluetooth 3.0 support.
-Hoping there is a better solution than using linux-next.
-
-  Luis
