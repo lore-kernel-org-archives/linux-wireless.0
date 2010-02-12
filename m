@@ -1,136 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:22567 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672Ab0BVGle (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:49842 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756121Ab0BLTRt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:34 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 13/22] wl1271: Fix queue stopping/waking for TX path
-Date: Mon, 22 Feb 2010 08:38:33 +0200
-Message-Id: <1266820722-20202-14-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Fri, 12 Feb 2010 14:17:49 -0500
+Subject: Re: Coordinating development for Bluetooth 3.0 between 802.11 and
+ BT trees
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	Dan Tian <Dan.Tian@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>
+In-Reply-To: <20100212183309.GB4983@tuxdriver.com>
+References: <43e72e891002111210l55d6a802pc5a1384e3535c845@mail.gmail.com>
+	 <20100212183309.GB4983@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Feb 2010 20:16:37 +0100
+Message-ID: <1266002197.21559.8.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The queue stopping/waking functionality was broken in a way that could
-cause huge latencies in TX transfers and even cause the TX to stall in the
-right circumstances. Correct these problems.
+Hi John,
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    3 ++-
- drivers/net/wireless/wl12xx/wl1271_main.c |   12 +++++-------
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   28 +++++++++++++++-------------
- 3 files changed, 22 insertions(+), 21 deletions(-)
+> In any case, I was under the impression that at least the initial
+> parts of the 802.11 AMP implementation could happen independently
+> from any bluetooth stack changes...?
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index cc974ea..7f03f89 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -491,7 +491,8 @@ int wl1271_plt_stop(struct wl1271 *wl);
- 
- #define WL1271_DEFAULT_POWER_LEVEL 0
- 
--#define WL1271_TX_QUEUE_MAX_LENGTH 20
-+#define WL1271_TX_QUEUE_LOW_WATERMARK  10
-+#define WL1271_TX_QUEUE_HIGH_WATERMARK 25
- 
- /* WL1271 needs a 200ms sleep after power on, and a 20ms sleep before power
-    on in case is has been shut down shortly before */
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 81fb02e..184264a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -791,15 +791,13 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * The workqueue is slow to process the tx_queue and we need stop
- 	 * the queue here, otherwise the queue will get too long.
- 	 */
--	if (skb_queue_len(&wl->tx_queue) >= WL1271_TX_QUEUE_MAX_LENGTH) {
--		ieee80211_stop_queues(wl->hw);
-+	if (skb_queue_len(&wl->tx_queue) >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
-+		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
- 
--		/*
--		 * FIXME: this is racy, the variable is not properly
--		 * protected. Maybe fix this by removing the stupid
--		 * variable altogether and checking the real queue state?
--		 */
-+		spin_lock_irqsave(&wl->wl_lock, flags);
-+		ieee80211_stop_queues(wl->hw);
- 		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
-+		spin_unlock_irqrestore(&wl->wl_lock, flags);
- 	}
- 
- 	return NETDEV_TX_OK;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 2e057b0..7926471 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -278,22 +278,12 @@ void wl1271_tx_work(struct work_struct *work)
- 
- 		ret = wl1271_tx_frame(wl, skb);
- 		if (ret == -EBUSY) {
--			/* firmware buffer is full, stop queues */
--			wl1271_debug(DEBUG_TX, "tx_work: fw buffer full, "
--				     "stop queues");
--			ieee80211_stop_queues(wl->hw);
--			set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
-+			/* firmware buffer is full, lets stop transmitting. */
- 			skb_queue_head(&wl->tx_queue, skb);
- 			goto out_ack;
- 		} else if (ret < 0) {
- 			dev_kfree_skb(skb);
- 			goto out_ack;
--		} else if (test_and_clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED,
--					      &wl->flags)) {
--			/* firmware buffer has space, restart queues */
--			wl1271_debug(DEBUG_TX,
--				     "complete_packet: waking queues");
--			ieee80211_wake_queues(wl->hw);
- 		}
- 	}
- 
-@@ -380,8 +370,6 @@ void wl1271_tx_complete(struct wl1271 *wl)
- 	u32 count, fw_counter;
- 	u32 i;
- 
--	wl1271_debug(DEBUG_TX, "tx_complete received, packets: %d", count);
--
- 	/* read the tx results from the chipset */
- 	wl1271_read(wl, le32_to_cpu(memmap->tx_result),
- 		    wl->tx_res_if, sizeof(*wl->tx_res_if), false);
-@@ -393,6 +381,7 @@ void wl1271_tx_complete(struct wl1271 *wl)
- 				tx_result_host_counter), fw_counter);
- 
- 	count = fw_counter - wl->tx_results_count;
-+	wl1271_debug(DEBUG_TX, "tx_complete received, packets: %d", count);
- 
- 	/* verify that the result buffer is not getting overrun */
- 	if (unlikely(count > TX_HW_RESULT_QUEUE_LEN))
-@@ -409,6 +398,19 @@ void wl1271_tx_complete(struct wl1271 *wl)
- 
- 		wl->tx_results_count++;
- 	}
-+
-+	if (test_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags) &&
-+	    skb_queue_len(&wl->tx_queue) <= WL1271_TX_QUEUE_LOW_WATERMARK) {
-+		unsigned long flags;
-+
-+		/* firmware buffer has space, restart queues */
-+		wl1271_debug(DEBUG_TX, "tx_complete: waking queues");
-+		spin_lock_irqsave(&wl->wl_lock, flags);
-+		ieee80211_wake_queues(wl->hw);
-+		clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
-+		spin_unlock_irqrestore(&wl->wl_lock, flags);
-+		ieee80211_queue_work(wl->hw, &wl->tx_work);
-+	}
- }
- 
- /* caller must hold wl->mutex */
--- 
-1.6.3.3
+yes, we should be able to test the AMP pieces without a Bluetooth stack
+implementing the AMP manager. Especially since there will be FullMAC
+WiFi devices that implement the AMP inside firmware.
+
+Regards
+
+Marcel
+
 
