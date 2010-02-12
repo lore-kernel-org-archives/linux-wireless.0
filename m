@@ -1,86 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:37415 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751504Ab0BIUEs (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37849 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757522Ab0BLVvK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:04:48 -0500
-Received: by ewy19 with SMTP id 19so7496383ewy.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:04:47 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 02/11] b43: N-PHY: initialize super switch
-Date: Tue,  9 Feb 2010 21:04:34 +0100
-Message-Id: <1265745883-3392-3-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+	Fri, 12 Feb 2010 16:51:10 -0500
+Date: Fri, 12 Feb 2010 16:45:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2010-02-12
+Message-ID: <20100212214550.GB16783@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Dave,
+
+Here are a couple of stragglers for 2.6.33.  One purports to fix a
+crash, the other avoids processing of uninitialized data when using
+devices with rate control in hardware.
+
+The latter patch will cause a merge issue in linux-next.  I'll be happy
+to resolve that in wireless-next-2.6 once this merge request is
+resolved.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/b43/phy_n.c |   37 ++++++++++++++++++++++++++++++++++++-
- 1 files changed, 36 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 795bb1e..2d8eda1 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -646,6 +646,41 @@ static void b43_nphy_read_clip_detection(struct b43_wldev *dev, u16 *clip_st)
- 	clip_st[1] = b43_phy_read(dev, B43_NPHY_C2_CLIP1THRES);
- }
+The following changes since commit 044c18c9f51a2b92b310e28bb121e55451b088dd:
+  David S. Miller (1):
+        Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
+
+are available in the git repository at:
+
+  ssh://master.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Juuso Oikarinen (1):
+      mac80211: fix handling of null-rate control in rate_control_get_rate
+
+Shanyu Zhao (1):
+      iwlwifi: fix AMSDU Rx after paged Rx patch
+
+ drivers/net/wireless/iwlwifi/iwl-rx.c |    5 ++++-
+ net/mac80211/rate.c                   |    3 +++
+ 2 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 6f36b6e..2dbce85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -928,7 +928,10 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 	if (ieee80211_is_mgmt(fc) ||
+ 	    ieee80211_has_protected(fc) ||
+ 	    ieee80211_has_morefrags(fc) ||
+-	    le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)
++	    le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG ||
++	    (ieee80211_is_data_qos(fc) &&
++	     *ieee80211_get_qos_ctl(hdr) &
++	     IEEE80211_QOS_CONTROL_A_MSDU_PRESENT))
+ 		ret = skb_linearize(skb);
+ 	else
+ 		ret = __pskb_pull_tail(skb, min_t(u16, IWL_LINK_HDR_MAX, len)) ?
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index b9007f8..12a2bff 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -245,6 +245,9 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 		info->control.rates[i].count = 1;
+ 	}
  
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SuperSwitchInit */
-+static void b43_nphy_superswitch_init(struct b43_wldev *dev, bool init)
-+{
-+	if (dev->phy.rev >= 3) {
-+		if (!init)
-+			return;
-+		if (0 /* FIXME */) {
-+			b43_ntab_write(dev, B43_NTAB16(9, 2), 0x211);
-+			b43_ntab_write(dev, B43_NTAB16(9, 3), 0x222);
-+			b43_ntab_write(dev, B43_NTAB16(9, 8), 0x144);
-+			b43_ntab_write(dev, B43_NTAB16(9, 12), 0x188);
-+		}
-+	} else {
-+		b43_phy_write(dev, B43_NPHY_GPIO_LOOEN, 0);
-+		b43_phy_write(dev, B43_NPHY_GPIO_HIOEN, 0);
++	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
++		return;
 +
-+		ssb_chipco_gpio_control(&dev->dev->bus->chipco, 0xFC00,
-+					0xFC00);
-+		b43_write32(dev, B43_MMIO_MACCTL,
-+			b43_read32(dev, B43_MMIO_MACCTL) &
-+			~B43_MACCTL_GPOUTSMSK);
-+		b43_write16(dev, B43_MMIO_GPIO_MASK,
-+			b43_read16(dev, B43_MMIO_GPIO_MASK) | 0xFC00);
-+		b43_write16(dev, B43_MMIO_GPIO_CONTROL,
-+			b43_read16(dev, B43_MMIO_GPIO_CONTROL) & ~0xFC00);
-+
-+		if (init) {
-+			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO1, 0x2D8);
-+			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1, 0x301);
-+			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO2, 0x2D8);
-+			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2, 0x301);
-+		}
-+	}
-+}
-+
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/classifier */
- static u16 b43_nphy_classifier(struct b43_wldev *dev, u16 mask, u16 val)
- {
-@@ -3116,7 +3151,7 @@ int b43_phy_initn(struct b43_wldev *dev)
- 			target = b43_nphy_get_tx_gains(dev);
- 
- 			if (nphy->antsel_type == 2)
--				;/*TODO NPHY Superswitch Init with argument 1*/
-+				b43_nphy_superswitch_init(dev, true);
- 			if (nphy->perical != 2) {
- 				b43_nphy_rssi_cal(dev);
- 				if (phy->rev >= 3) {
+ 	if (sta && sdata->force_unicast_rateidx > -1) {
+ 		info->control.rates[0].idx = sdata->force_unicast_rateidx;
+ 	} else {
 -- 
-1.6.4.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
