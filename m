@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f211.google.com ([209.85.220.211]:37681 "EHLO
-	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757821Ab0BDMLt (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:17466 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000Ab0BLHhR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 07:11:49 -0500
-Received: by fxm3 with SMTP id 3so2496822fxm.39
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 04:11:48 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: N-PHY: handle allocation fail in samples generation
-Date: Thu,  4 Feb 2010 13:11:54 +0100
-Message-Id: <1265285514-28798-2-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 12 Feb 2010 02:37:17 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/1] mac80211: fix handling of null-rate control in rate_control_get_rate
+Date: Fri, 12 Feb 2010 09:35:29 +0200
+Message-Id: <1265960129-11072-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+For hardware with IEEE80211_HW_HAS_RATE_CONTROL the rate controller is not
+initialized. However, calling functions such as ieee80211_beacon_get result
+in the rate_control_get_rate function getting called, which is accessing
+(in this case uninitialized) rate control structures unconditionally.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 074b34c..795bb1e 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1069,6 +1069,10 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
+Fix by exiting the function before setting the rates for HW with
+IEEE80211_HW_HAS_RATE_CONTROL set. The initialization of the ieee80211_tx_info
+struct is intentionally still executed.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ net/mac80211/rate.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index c74b7c8..7f366d8 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -303,6 +303,9 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 		info->control.rates[i].count = 1;
  	}
  
- 	samples = kzalloc(len * sizeof(struct b43_c32), GFP_KERNEL);
-+	if (!samples) {
-+		b43err(dev->wl, "allocation for samples generation failed\n");
-+		return 0;
-+	}
- 	rot = (((freq * 36) / bw) << 16) / 100;
- 	angle = 0;
++	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
++		return;
++
+ 	ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
  
+ 	/*
 -- 
-1.6.4.2
+1.6.3.3
 
