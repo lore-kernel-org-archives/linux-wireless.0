@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38226 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936021Ab0BZNGs (ORCPT
+Received: from rcsinet12.oracle.com ([148.87.113.124]:43229 "EHLO
+	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755607Ab0BLVCv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 08:06:48 -0500
-Subject: Re: [PATCH] libertas: add auto auth mode feature
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>
-In-Reply-To: <1267146996-3725-1-git-send-email-bzhao@marvell.com>
-References: <1267146996-3725-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 26 Feb 2010 14:08:30 +0100
-Message-ID: <1267189710.18491.60.camel@violet>
+	Fri, 12 Feb 2010 16:02:51 -0500
+Date: Fri, 12 Feb 2010 13:02:23 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>, linville@tuxdriver.com
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH -next] wireless: airo_cs build fixes
+Message-Id: <20100212130223.ac3ac46b.randy.dunlap@oracle.com>
+In-Reply-To: <20100212181304.a7bd9a63.sfr@canb.auug.org.au>
+References: <20100212181304.a7bd9a63.sfr@canb.auug.org.au>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-> Auto auth mode is enabled by default. If user doesn't specify the
-> auth mode, while association driver will first try with open mode
-> and then with shared key mode. If user specifies an auth mode,
-> auto auth is disabled and driver will not try association with
-> another auth mode.
+When WEXT_PRIV is not enabled, airo_cs has build errors.
+It needs to include net/iw_handler.h and it should select
+WEXT_PRIV, like the airo driver does.
 
-I agree with Holger that the conversion into being fully cfg80211
-compliant is basically the only way to go forward. Especially since
-Holger and Samuel are already have patches for it.
+drivers/net/wireless/airo.c:7655: error: unknown field 'num_private' specified in initializer
+drivers/net/wireless/airo.c:7655: warning: initialization makes pointer from integer without a cast
+drivers/net/wireless/airo.c:7656: error: unknown field 'num_private_args' specified in initializer
+drivers/net/wireless/airo.c:7656: warning: excess elements in struct initializer
+drivers/net/wireless/airo.c:7656: warning: (near initialization for 'airo_handler_def')
+drivers/net/wireless/airo.c:7658: error: unknown field 'private' specified in initializer
+drivers/net/wireless/airo.c:7658: warning: initialization makes integer from pointer without a cast
+drivers/net/wireless/airo.c:7658: error: initializer element is not computable at load time
+drivers/net/wireless/airo.c:7658: error: (near initialization for 'airo_handler_def.num_standard')
+drivers/net/wireless/airo.c:7659: error: unknown field 'private_args' specified in initializer
+drivers/net/wireless/airo.c:7659: warning: initialization from incompatible pointer type
 
-However from a different point, how can you try open mode first and
-detect a failure. Isn't this suppose to be the other way around, try
-shared first and then fall back to open?
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/net/wireless/Kconfig |    1 +
+ drivers/net/wireless/airo.c  |    1 +
+ 2 files changed, 2 insertions(+)
 
-Regards
-
-Marcel
-
-
+--- linux-next-20100212.orig/drivers/net/wireless/airo.c
++++ linux-next-20100212/drivers/net/wireless/airo.c
+@@ -51,6 +51,7 @@
+ #include <linux/freezer.h>
+ 
+ #include <linux/ieee80211.h>
++#include <net/iw_handler.h>
+ 
+ #include "airo.h"
+ 
+--- linux-next-20100212.orig/drivers/net/wireless/Kconfig
++++ linux-next-20100212/drivers/net/wireless/Kconfig
+@@ -112,6 +112,7 @@ config AIRO_CS
+ 	depends on PCMCIA && (BROKEN || !M32R)
+ 	select WIRELESS_EXT
+ 	select WEXT_SPY
++	select WEXT_PRIV
+ 	select CRYPTO
+ 	select CRYPTO_AES
+ 	---help---
