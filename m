@@ -1,103 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:41258 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033Ab0BVT0H (ORCPT
+Received: from smtp128.mail.ukl.yahoo.com ([77.238.184.59]:42316 "HELO
+	smtp128.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751005Ab0BMVlW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 14:26:07 -0500
-Subject: Re: Firmware versioning best practices II
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vipin Mehta <Vipin.Mehta@atheros.com>
-In-Reply-To: <43e72e891002221114w24304ab0x5aea7dfc81b4d9d6@mail.gmail.com>
-References: <43e72e891002191823h3245bc0cn7a8745ae77409aa8@mail.gmail.com>
-	 <1266662106.1820.4034.camel@macbook.infradead.org>
-	 <1266663639.10357.1.camel@jlt3.sipsolutions.net>
-	 <1266664166.1820.4165.camel@macbook.infradead.org>
-	 <1266664247.11514.0.camel@jlt3.sipsolutions.net>
-	 <1266665535.1820.4238.camel@macbook.infradead.org>
-	 <1266747222.18491.5.camel@violet>
-	 <43e72e891002221114w24304ab0x5aea7dfc81b4d9d6@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 22 Feb 2010 20:27:34 +0100
-Message-ID: <1266866854.18491.42.camel@violet>
-Mime-Version: 1.0
+	Sat, 13 Feb 2010 16:41:22 -0500
+Message-ID: <4B771AEF.1080705@yahoo.co.uk>
+Date: Sat, 13 Feb 2010 21:34:39 +0000
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Subject: Re: [PATCH 2/3] rtl8187: fix typo in ifdef comment
+References: <1266081054-4910-1-git-send-email-hauke@hauke-m.de> <1266081054-4910-2-git-send-email-hauke@hauke-m.de> <4B76E923.4020600@lwfinger.net>
+In-Reply-To: <4B76E923.4020600@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
-
-> >> > > > That doesn't make much sense anyway. If the firmware filename is
-> >> > > > foo-$APIVER-$CODEVER every code change would need a corresponding
-> >> > > driver
-> >> > > > change. If it is just foo-$APIVER then the $CODEVER can be embedded
-> >> > > in
-> >> > > > the firmware file and printed so you know which code you're using,
-> >> > > but
-> >> > > > if it doesn't influence the API I don't see why it should be part of
-> >> > > the
-> >> > > > filename?
-> >> > >
-> >> > > The idea is that just like with shared libraries, you have a symlink
-> >> > > from the 'soname' foo-3.fw to the actual file foo-3-1.4.1.fw.
-> >> >
-> >> > Ah ok. I indeed do that manually with iwlwifi firmware :)
-> >> >
-> >> > > For shared libraries, it's easy to create those symlinks automatically
-> >> > > using ldconfig. For firmware that doesn't really work though -- since
-> >> > > the soname isn't encoded in the file like it is in ELF libraries.
-> >> >
-> >> > Right. Though I guess we could come up with a unified firmware wrapper
-> >> > format that the firmware loader can unwrap.
-> >>
-> >> I suppose we could, but this seems like overkill to me.
-> >
-> > I have to agree. This looks like total overkill to me.
-> >
-> > Just use the $APIVER in the firmware filename.
+Larry Finger wrote:
+> On 02/13/2010 11:10 AM, Hauke Mehrtens wrote:
+>> Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+>> Cc: Hin-Tak Leung <htl10@users.sourceforge.net>
+>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  drivers/net/wireless/rtl818x/rtl8187_leds.c |    2 +-
+>>  drivers/net/wireless/rtl818x/rtl8187_leds.h |    2 +-
+>>  2 files changed, 2 insertions(+), 2 deletions(-)
+>>
 > 
-> OK -- so what goes into linux-firmware is just the latest
+> ACK
+
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+
+
 > 
-> foo-$(API)
+> Larry
 > 
-> > And if someone wants to
-> > keep track of more details then they can manually symlink them.
 > 
-> Well do we want the older foo-$(API)-$(VAR) files in linux-firmware
-> too for those companies/developers wishing to do this?
-
-personally I would say no, but for some projects it might make sense. I
-would just leave this up to the project/driver itself.
-
-> What about deprecating APIs of the firmware based on kernel releases.
-> I see it reasonable to deprecate a firmware API completely for a
-> future kernel release provided you maintain all features and
-> functionality in par. Does that sound reasonable?
-
-Realistically you have to deprecate firmware versions at some point
-anyway. So yes, that makes sense. However I would leave this again up to
-the driver itself and how far the maintainers wanna go in supported
-older API versions.
-
-> > Unless we have full control over the source code of every firmware used
-> > in the kernel, why bother. It is up to the companies providing them
-> > anyway to make sure everything works as expected and the community can't
-> > fix it.
-> 
-> Well that's exactly it -- we do have access to the code for ar9170 for
-> example, so these details will become more relevant in the future.
-
-That is one of the few exception. However even for ar9170 there has to
-be release engineering team that creates the binary and uploads it into
-linux-firmware.git since I don't see the majority of people compiling it
-from source. And at that point the release engineering needs to test the
-API compatibility.
-
-Regards
-
-Marcel
-
-
