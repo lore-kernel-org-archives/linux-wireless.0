@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22867 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754500Ab0BYGMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 01:12:18 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 5/7] iwmc3200wifi: increase concatenated buffer
-Date: Thu, 25 Feb 2010 14:15:29 +0800
-Message-Id: <1267078531-9817-6-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1267078531-9817-5-git-send-email-yi.zhu@intel.com>
-References: <1267078531-9817-1-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-2-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-3-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-4-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-5-git-send-email-yi.zhu@intel.com>
+Received: from sd-11162.dedibox.fr ([88.191.70.230]:60811 "EHLO
+	sd-11162.dedibox.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757796Ab0BMWxs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Feb 2010 17:53:48 -0500
+Date: Sat, 13 Feb 2010 23:44:56 +0100
+From: Frederic Leroy <fredo@starox.org>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Chris Mayo <aklhfex@googlemail.com>,
+	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
+Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
+Message-ID: <20100213234456.5ae49b67@houba>
+In-Reply-To: <3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
+References: <4B38A298.7070103@googlemail.com>
+	<1262037590.16627.99.camel@localhost.localdomain>
+	<3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Increase concatenated buffer from 8K to 32K to get better performance.
+Le Thu, 31 Dec 2009 14:38:35 +0000,
+Hin-Tak Leung <hintak.leung@gmail.com> a écrit :
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/hal.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> "nobody cares" is not entirely true - AFAIK, code in the staging area
+> is unreliable/unsuitable/"poor" code which serves the sole purpose of
+> being there for scavenging and references for re-write (because there
+> is no equivalent functionality, even alleged, in mainline); so people
+> looking at the staging code for ideas or references is welcomed. It is
+> just that there is no hints of any support or vague guarantee that any
+> of it works for any fitness of purpose. i.e. patches which fix
+> problems, or migrate functionality out of the staging area to
+> main-line, are welcomed, but questions and request for help on
+> understanding or making any of it work, are not.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/hal.h b/drivers/net/wireless/iwmc3200wifi/hal.h
-index e7bc416..c20936d 100644
---- a/drivers/net/wireless/iwmc3200wifi/hal.h
-+++ b/drivers/net/wireless/iwmc3200wifi/hal.h
-@@ -131,7 +131,7 @@ do {									  \
- #define IWM_MAX_WIFI_CMD_BUFF_SIZE	(IWM_SDIO_FW_MAX_CHUNK_SIZE - \
- 					 IWM_MAX_WIFI_HEADERS_SIZE)
- 
--#define IWM_HAL_CONCATENATE_BUF_SIZE	8192
-+#define IWM_HAL_CONCATENATE_BUF_SIZE	(32 * 1024)
- 
- struct iwm_wifi_cmd_buff {
- 	u16 len;
+I just bought an wireless usb key based on realtek 8192. If nobody is
+working on making a driver for it, I'd like to try.
+
+But I am wondering where/how to start.
+
+Should I follow the TODO file from Greg in staging :
+( which seems to merge : rtl8192e  rtl8192su  rtl8192u )
+
+TODO:
+- prepare private ieee80211 stack for merge with rtl8187se's version:
+  - remove rtl8192su's specific dead code
+  - cleanup ieee80211.h
+  - move rtl8192su's specific code out from ieee80211.h
+  - abstract rtl819su's specific code
+  - use list_for_each_safe() in ieee80211_crypto_deinit
+- switch to use shared "librtl" instead of private ieee80211 stack
+- switch to use LIB80211
+- switch to use MAC80211
+- switch to use EEPROM_93CX6
+- use kernel coding style
+- checkpatch.pl fixes
+- sparse fixes
+- integrate with drivers/net/wireless/rtl818x
+
+Or use rtl818x tree to start a new device ?
+
 -- 
-1.6.0.4
-
+Frédéric Leroy
