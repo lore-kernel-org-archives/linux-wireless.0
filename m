@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:40064 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752694Ab0BSOdd (ORCPT
+Received: from mail-iw0-f201.google.com ([209.85.223.201]:52569 "EHLO
+	mail-iw0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671Ab0BMSCO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 09:33:33 -0500
-Date: Fri, 19 Feb 2010 12:33:29 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	linux-input@vger.kernel.org, marcel@holtmann.org
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20100219143329.GD28522@khazad-dum.debian.net>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
- <20100217052247.GD7160@core.coreip.homeip.net>
- <20100217180342.GA22522@srcf.ucam.org>
- <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
- <20100217191708.GA15554@core.coreip.homeip.net>
- <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
- <20100217195435.GA15742@core.coreip.homeip.net>
+	Sat, 13 Feb 2010 13:02:14 -0500
+Received: by iwn39 with SMTP id 39so944999iwn.1
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Feb 2010 10:02:14 -0800 (PST)
+Message-ID: <4B76E923.4020600@lwfinger.net>
+Date: Sat, 13 Feb 2010 12:02:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100217195435.GA15742@core.coreip.homeip.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Subject: Re: [PATCH 2/3] rtl8187: fix typo in ifdef comment
+References: <1266081054-4910-1-git-send-email-hauke@hauke-m.de> <1266081054-4910-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1266081054-4910-2-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Feb 2010, Dmitry Torokhov wrote:
-> We did it with KEY_BATTERY but I do not think anyone actually uses it.
+On 02/13/2010 11:10 AM, Hauke Mehrtens wrote:
+> Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+> Cc: Hin-Tak Leung <htl10@users.sourceforge.net>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/net/wireless/rtl818x/rtl8187_leds.c |    2 +-
+>  drivers/net/wireless/rtl818x/rtl8187_leds.h |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
 
-thinkpad-acpi does (in-tree).
+ACK
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Larry
+
