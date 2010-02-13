@@ -1,266 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:53889 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755632Ab0BFNUq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2010 08:20:46 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so944897ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2010 05:20:46 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: holgerschurig@gmail.com, sameo@linux.intel.com, dcbw@redhat.com,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC 2/2] cfg80211: scan for missing BSS on connect completion
-Date: Sat,  6 Feb 2010 13:20:16 +0000
-Message-Id: <1265462416-7547-3-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
-References: <1265462416-7547-1-git-send-email-kilroyd@googlemail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54899 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757623Ab0BMR0g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Feb 2010 12:26:36 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: update config options
+Date: Sat, 13 Feb 2010 18:26:28 +0100
+Message-Id: <1266081988-16012-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1266081988-16012-1-git-send-email-hauke@hauke-m.de>
+References: <1266081988-16012-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers don't notify cfg80211 of every beacon or probe response
-they get. In this case, cfg80211 won't have the BSS structure for the AP
-that we just connected with.
+Removed some not reverenced config options.
+Doing grep for the removed options had no result.
 
-We address that issue by doing a scan after the driver indicates it has
-connected. Scan for the SSID that we are in. If we have the channel,
-specify that as well to reduce scanning time.
-
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- include/net/cfg80211.h |    3 +
- net/wireless/scan.c    |    5 ++
- net/wireless/sme.c     |  143 +++++++++++++++++++++++++++++++++++++++++------
- 3 files changed, 132 insertions(+), 19 deletions(-)
+ config.mk |   32 ++++++++------------------------
+ 1 files changed, 8 insertions(+), 24 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a3f0a7e..67bb8f5 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1420,6 +1420,7 @@ extern void wiphy_free(struct wiphy *wiphy);
- struct cfg80211_conn;
- struct cfg80211_internal_bss;
- struct cfg80211_cached_keys;
-+struct cfg80211_conn2;
+diff --git a/config.mk b/config.mk
+index 0cad764..5565e12 100644
+--- a/config.mk
++++ b/config.mk
+@@ -9,7 +9,6 @@ ifeq ($(wildcard $(KLIB_BUILD)/.config),)
+  CONFIG_PCI=y
+  CONFIG_USB=y
+  CONFIG_PCMCIA=y
+- CONFIG_SSB_POSSIBLE=y
+  CONFIG_SSB=m
+ else
+ include $(KLIB_BUILD)/.config
+@@ -112,7 +111,6 @@ CONFIG_MAC80211=m
  
- #define MAX_AUTH_BSSES		4
+ # CONFIG_MAC80211_DEBUGFS=y
+ # CONFIG_MAC80211_DEBUG_MENU=y
+-# CONFIG_MAC80211_DEBUG_PACKET_ALIGNMENT=y
+ # CONFIG_MAC80211_NOINLINE=y
+ # CONFIG_MAC80211_VERBOSE_DEBUG=y
+ # CONFIG_MAC80211_HT_DEBUG=y
+@@ -201,7 +199,6 @@ CONFIG_ATH9K_COMMON=m
  
-@@ -1471,6 +1472,8 @@ struct wireless_dev {
- 	struct cfg80211_conn *conn;
- 	struct cfg80211_cached_keys *connect_keys;
  
-+	struct cfg80211_conn2 *conn2; /* TODO: Rename */
-+
- 	struct list_head event_list;
- 	spinlock_t event_lock;
+ CONFIG_IWLWIFI=m
+-CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT=y
+ # CONFIG_IWLWIFI_DEBUG=y
+ # CONFIG_IWLWIFI_DEBUGFS=y
+ # CONFIG_IWLWIFI_DEVICE_TRACING=y
+@@ -209,33 +206,26 @@ CONFIG_IWLAGN=m
+ CONFIG_COMPAT_IWL4965=y
+ CONFIG_IWL5000=y
+ CONFIG_IWL3945=m
+-CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
  
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index e3d0957..140da4c 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -39,6 +39,11 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
- 	 * This must be before sending the other events!
- 	 * Otherwise, wpa_supplicant gets completely confused with
- 	 * wext events.
-+	 *
-+	 * At the moment this will either call cfg80211_sme_scan_done
-+	 * or cfg80211_complete_connect. The former should only get
-+	 * called if the device supports ops->auth & ops->assoc, the
-+	 * latter if the device supports ops->connect.
- 	 */
- 	if (rdev->async_scan_cb) {
- 		rdev->async_scan_cb(dev);
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 2ef83b7..6134332 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -34,6 +34,15 @@ struct cfg80211_conn {
- 	bool auto_auth, prev_bssid_valid;
- };
  
-+/* TODO: This struct needs renaming */
-+struct cfg80211_conn2 {
-+	struct ieee80211_channel *channel;
-+	u8 bssid[ETH_ALEN];
-+};
-+
-+static void __cfg80211_complete_connect(struct net_device *dev,
-+					struct cfg80211_bss *bss);
-+
- bool cfg80211_is_all_idle(void)
- {
- 	struct cfg80211_registered_device *rdev;
-@@ -385,6 +394,62 @@ void cfg80211_sme_failed_assoc(struct wireless_dev *wdev)
- 	schedule_work(&rdev->conn_work);
- }
+ CONFIG_B43=m
+ CONFIG_B43_HWRNG=y
+ CONFIG_B43_PCI_AUTOSELECT=y
+-CONFIG_B43_PCICORE_AUTOSELECT=y
+ ifneq ($(CONFIG_PCMCIA),)
+ CONFIG_B43_PCMCIA=y
+ endif
+-CONFIG_B43_PIO=y
+ CONFIG_B43_LEDS=y
+ CONFIG_B43_PHY_LP=y
++CONFIG_B43_NPHY=y
+ # CONFIG_B43_DEBUG=y
+-# CONFIG_B43_FORCE_PIO=y
  
-+static void __cfg80211_complete_connect(struct net_device *dev,
-+					struct cfg80211_bss *bss)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	u8 *country_ie;
-+
-+	cfg80211_hold_bss(bss_from_pub(bss));
-+	wdev->current_bss = bss_from_pub(bss);
-+
-+	wdev->sme_state = CFG80211_SME_CONNECTED;
-+	cfg80211_upload_connect_keys(wdev);
-+
-+	country_ie = (u8 *) ieee80211_bss_get_ie(bss, WLAN_EID_COUNTRY);
-+
-+	if (!country_ie)
-+		return;
-+
-+	/*
-+	 * ieee80211_bss_get_ie() ensures we can access:
-+	 * - country_ie + 2, the start of the country ie data, and
-+	 * - and country_ie[1] which is the IE length
-+	 */
-+	regulatory_hint_11d(wdev->wiphy,
-+			    bss->channel->band,
-+			    country_ie + 2,
-+			    country_ie[1]);
-+}
-+
-+void cfg80211_complete_connect(struct net_device *dev)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	mutex_lock(&wiphy_to_dev(wdev->wiphy)->devlist_mtx);
-+	wdev_lock(wdev);
-+
-+	if (wdev->conn2) {
-+		struct cfg80211_bss *bss;
-+
-+		bss = cfg80211_get_bss(wdev->wiphy, NULL, wdev->conn2->bssid,
-+				       wdev->ssid, wdev->ssid_len,
-+				       WLAN_CAPABILITY_ESS,
-+				       WLAN_CAPABILITY_ESS);
-+
-+		if (WARN_ON(!bss))
-+			wdev->sme_state = CFG80211_SME_IDLE;
-+		else
-+			__cfg80211_complete_connect(dev, bss);
-+
-+		kfree(wdev->conn2);
-+		wdev->conn2 = NULL;
-+	}
-+
-+	wdev_unlock(wdev);
-+	mutex_unlock(&wiphy_to_dev(wdev->wiphy)->devlist_mtx);
-+}
-+
- void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       const u8 *req_ie, size_t req_ie_len,
- 			       const u8 *resp_ie, size_t resp_ie_len,
-@@ -392,7 +457,6 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       struct cfg80211_bss *bss)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
--	u8 *country_ie;
- #ifdef CONFIG_CFG80211_WEXT
- 	union iwreq_data wrqu;
- #endif
-@@ -462,29 +526,58 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 				       WLAN_CAPABILITY_ESS,
- 				       WLAN_CAPABILITY_ESS);
+ CONFIG_B43LEGACY=m
+ CONFIG_B43LEGACY_HWRNG=y
+ CONFIG_B43LEGACY_PCI_AUTOSELECT=y
+-CONFIG_B43LEGACY_PCICORE_AUTOSELECT=y
+ CONFIG_B43LEGACY_LEDS=y
+ # CONFIG_B43LEGACY_DEBUG=y
+ CONFIG_B43LEGACY_DMA=y
+ CONFIG_B43LEGACY_PIO=y
+-CONFIG_B43LEGACY_DMA_AND_PIO_MODE=y
+-# CONFIG_B43LEGACY_DMA_MODE=y
+-# CONFIG_B43LEGACY_PIO_MODE=y
  
--	if (WARN_ON(!bss))
--		return;
-+	if (!bss) {
-+		struct cfg80211_scan_request *request;
-+		int err;
-+
-+		/* The driver hasn't reported any beacons or probe
-+		 * responses for the BSS that we've connected
-+		 * with. Trigger a scan to get it.
-+		 *
-+		 * Record the BSSID we connected with, so we know what
-+		 * to look for later.
-+		 *
-+		 * Then do a scan on the channel (if specified),
-+		 * specifying the SSID.
-+		 */
-+		memcpy(wdev->conn2->bssid, bssid, ETH_ALEN);
+ # The Intel ipws
+ CONFIG_LIBIPW=m
+@@ -270,31 +260,23 @@ CONFIG_SSB_SPROM=y
+ # CONFIG_SSB_DEBUG=y
  
--	cfg80211_hold_bss(bss_from_pub(bss));
--	wdev->current_bss = bss_from_pub(bss);
-+		request = kzalloc(sizeof(*request) + sizeof(request->ssids[0]) +
-+				  sizeof(request->channels[0]),
-+				  GFP_KERNEL);
-+		if (!request)
-+			return;
+ CONFIG_SSB_BLOCKIO=y
+-CONFIG_SSB_PCIHOST_POSSIBLE=y
+ CONFIG_SSB_PCIHOST=y
+ CONFIG_SSB_B43_PCI_BRIDGE=y
+ ifneq ($(CONFIG_PCMCIA),)
+-CONFIG_SSB_PCMCIAHOST_POSSIBLE=y
+ CONFIG_SSB_PCMCIAHOST=y
+ endif
+ # CONFIG_SSB_DEBUG=y
+-CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
+ CONFIG_SSB_DRIVER_PCICORE=y
+ endif
  
--	wdev->sme_state = CFG80211_SME_CONNECTED;
--	cfg80211_upload_connect_keys(wdev);
-+		/* Would be better if we knew the channel of the AP we
-+		 * connected to. Is it available in one of the IEs? */
-+		if (wdev->conn2->channel) {
-+			request->channels[0] = wdev->conn2->channel;
-+			request->n_channels = 1;
-+			request->ssids = (void *) &request->channels[1];
-+		} else
-+			request->ssids = (void *) &request->channels[0];
+ CONFIG_P54_PCI=m
  
--	country_ie = (u8 *) ieee80211_bss_get_ie(bss, WLAN_EID_COUNTRY);
-+		request->n_ssids = 1;
+ CONFIG_B44=m
+-CONFIG_B44_PCI_AUTOSELECT=y
+-CONFIG_B44_PCICORE_AUTOSELECT=y
+ CONFIG_B44_PCI=y
  
--	if (!country_ie)
--		return;
-+		memcpy(request->ssids[0].ssid, wdev->ssid, wdev->ssid_len);
-+		request->ssids[0].ssid_len = wdev->ssid_len;
-+
-+		request->dev = dev;
-+		request->wiphy = wdev->wiphy;
-+
-+		err = cfg80211_async_scan(wdev, request, false,
-+					  cfg80211_complete_connect);
-+		if (err) {
-+			kfree(request);
-+			wdev->sme_state = CFG80211_SME_IDLE;
-+		}
-+	} else {
-+		kfree(wdev->conn2);
-+		wdev->conn2 = NULL;
-+
-+		__cfg80211_complete_connect(dev, bss);
-+	};
+ CONFIG_RTL8180=m
  
--	/*
--	 * ieee80211_bss_get_ie() ensures we can access:
--	 * - country_ie + 2, the start of the country ie data, and
--	 * - and country_ie[1] which is the IE length
--	 */
--	regulatory_hint_11d(wdev->wiphy,
--			    bss->channel->band,
--			    country_ie + 2,
--			    country_ie[1]);
- }
+ CONFIG_ADM8211=m
+-ifneq ($(CONFIG_PCMCIA),)
+-CONFIG_PCMCIA_ATMEL=m
+-endif
  
- void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
-@@ -854,10 +947,22 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+ CONFIG_RT2X00_LIB_PCI=m
+ CONFIG_RT2400PCI=m
+@@ -311,9 +293,6 @@ CONFIG_RT61PCI=m
+ NEED_RT2X00_FIRMWARE=y
+ endif
  
- 		return err;
- 	} else {
+-CONFIG_ATMEL=m
+-CONFIG_PCI_ATMEL=m
+-
+ CONFIG_MWL8K=m
+ 
+ # Ethernet drivers go here
+@@ -403,6 +382,7 @@ endif # end of USB driver list
+ ifneq ($(CONFIG_SPI_MASTER),)
+ 
+ CONFIG_WL1251=m
++CONFIG_WL1251_SPI=m
+ CONFIG_P54_SPI=m
+ 
+ ifdef CONFIG_COMPAT_KERNEL_27
+@@ -417,6 +397,10 @@ endif # end of SPI driver list
+ 
+ ifneq ($(CONFIG_MMC),)
+ 
++CONFIG_SSB_SDIOHOST=y
++CONFIG_B43_SDIO=y
++CONFIG_WL1251_SDIO=m
 +
-+		if (WARN_ON_ONCE(wdev->conn2))
-+			return -EINPROGRESS;
-+
-+		wdev->conn2 = kzalloc(sizeof(*wdev->conn2), GFP_KERNEL);
-+		if (!wdev->conn2)
-+			return -ENOMEM;
-+
-+		wdev->conn2->channel = connect->channel;
-+
- 		wdev->sme_state = CFG80211_SME_CONNECTING;
- 		wdev->connect_keys = connkeys;
- 		err = rdev->ops->connect(&rdev->wiphy, dev, connect);
- 		if (err) {
-+			kfree(wdev->conn2);
-+			wdev->conn2 = NULL;
- 			wdev->connect_keys = NULL;
- 			wdev->sme_state = CFG80211_SME_IDLE;
- 			return err;
+ ifdef CONFIG_COMPAT_KERNEL_27
+ CONFIG_LIBERTAS_SDIO=n
+ NEED_LIBERTAS=n
+@@ -444,6 +428,7 @@ CONFIG_RT2X00_LIB_FIRMWARE=y
+ CONFIG_RT2X00_LIB_CRYPTO=y
+ CONFIG_RT2X00_LIB_LEDS=y
+ # CONFIG_RT2X00_DEBUG=y
++# CONFIG_RT2X00_LIB_DEBUGFS
+ endif
+ 
+ ifeq ($(NEED_RT2X00_FIRMWARE),y)
+@@ -460,8 +445,6 @@ CONFIG_ATH_COMMON=m
+ 
+ CONFIG_WL12XX=y
+ CONFIG_WL1251=m
+-CONFIG_WL1251_SPI=m
+-CONFIG_WL1251_SDIO=m
+ CONFIG_WL1271=m
+ 
+ ifdef CONFIG_COMPAT_KERNEL_27
+@@ -470,6 +453,7 @@ else
+ ifeq ($(NEED_LIBERTAS),y)
+ CONFIG_LIBERTAS_THINFIRM=m
+ CONFIG_LIBERTAS=m
++CONFIG_LIBERTAS_MESH=y
+ # CONFIG_LIBERTAS_DEBUG=y
+ endif
+ endif
 -- 
-1.6.4.4
+1.6.3.3
 
