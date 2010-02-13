@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cliff.cs.toronto.edu ([128.100.3.120]:46158 "EHLO
-	cliff.cs.toronto.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933352Ab0BEXMm (ORCPT
+Received: from 94.43.138.210.xn.2iij.net ([210.138.43.94]:46084 "EHLO
+	mail.st-paulia.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751228Ab0BMTYy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 18:12:42 -0500
-To: Dan Williams <dcbw@redhat.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org,
-	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH] airo: fix WEP key clearing after c0380693520b1a1e4f756799a0edc379378b462a 
-In-reply-to: dcbw's message of Fri, 05 Feb 2010 11:20:49 -0800.
-             <1265397649.16621.48.camel@localhost.localdomain>
-Date: Fri, 05 Feb 2010 18:12:39 -0500
-From: Chris Siebenmann <cks@cs.toronto.edu>
-Message-Id: <20100205231239.F1FDA2B0054@apps0.cs.toronto.edu>
+	Sat, 13 Feb 2010 14:24:54 -0500
+Message-ID: <4B76FA80.5070607@linux-ipv6.org>
+Date: Sun, 14 Feb 2010 04:16:16 +0900
+From: YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linville@tuxdriver.com, David Miller <davem@davemloft.net>
+CC: yoshfuji@linux-ipv6.org, hirofumi@flycat.org
+Subject: [PATCH] p54usb: Add usbid for Corega CG-WLUSB2GT.
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-| Yes, I know it may have worked in earlier kernels.  And we should find
-| out why that is, and hopefully fix the regression if any.  But
-| understand that airo has always been problematic and has never worked as
-| well as other fullmac cards like orinoco.
-| 
-| I booted up RHEL5 today, which uses a 2.6.18 kernel and of course does
-| not have the patch-in-question.  That behavior is:
-| 
-| 1) stop NetworkManager and wpa_supplicant
-| 2) insert airo card
-| 3) iwlist scan returns many results
-| 4) connect to WEP-enabled AP
-| 5) iwlist scan returns *only* the connected ap
-| 6) iwconfig eth1 essid any key off
-| 7) iwlist scan returns no results
-| 
-| remember, that's without any of the patches we're talking about, using a
-| kernel from 2007.  Which is about the same behavior you get, correct?
+From: Shimada Hirofumi <hirofumi@flycat.org>
 
- I don't get quite this behavior, although I'm not doing exactly these
-steps; instead, I do:
-	- boot machine
-	- use 'iwlist scan' and see multiple APs
-	- use NetworkManager to connect to our WEP-enabled AP
-	- 'iwlist scan' returns only the single AP
-	- turn things off with:
-		iwconfig eth1 essid ANY key off
-	- 'iwconfig eth1' and NetworkManager both show no connected AP
-	- 'iwlist scan' returns only the ex-connected AP
+p54usb: Add usbid for Corega CG-WLUSB2GT.
 
-(I do not know the right commands to connect to our WEP-enabled AP and
-verify that everything is working right without using NetworkManager,
-so I used it for the connection phase.)
+Signed-off-by: Shimada Hirofumi <hirofumi@flycat.org>
+Signed-off-by: YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+---
+ drivers/net/wireless/p54/p54usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-	- cks
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index 92af9b9..dcb484b 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -36,6 +36,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	/* Version 1 devices (pci chip + net2280) */
+ 	{USB_DEVICE(0x0506, 0x0a11)},	/* 3COM 3CRWE254G72 */
+ 	{USB_DEVICE(0x0707, 0xee06)},	/* SMC 2862W-G */
++	{USB_DEVICE(0x07aa, 0x001c)},	/* Corega CG-WLUSB2GT */
+ 	{USB_DEVICE(0x083a, 0x4501)},	/* Accton 802.11g WN4501 USB */
+ 	{USB_DEVICE(0x083a, 0x4502)},	/* Siemens Gigaset USB Adapter */
+ 	{USB_DEVICE(0x083a, 0x5501)},	/* Phillips CPWUA054 */
