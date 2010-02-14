@@ -1,287 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30695 "EHLO mx1.redhat.com"
+Received: from smtp1-g21.free.fr ([212.27.42.1]:55881 "EHLO smtp1-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752835Ab0BJNJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2010 08:09:55 -0500
-Date: Wed, 10 Feb 2010 14:07:45 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"lkml@Think-Future.de" <lkml@Think-Future.de>,
-	Linux Kernel-Liste <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iwlwifi: use dma_alloc_coherent
-Message-ID: <20100210130744.GA3935@dhcp-lab-161.englab.brq.redhat.com>
-References: <20100206170348.GB9411@localhost> <20100208143118.e8e5a1ee.akpm@linux-foundation.org> <20100209165247.GB2512@dhcp-lab-161.englab.brq.redhat.com> <1265735092.2551.1835.camel@rchatre-DESK> <20100210082137.GA2519@dhcp-lab-161.englab.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100210082137.GA2519@dhcp-lab-161.englab.brq.redhat.com>
+	id S1753144Ab0BNXhn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Feb 2010 18:37:43 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH 2/2] mac80211: Add HT IE to IBSS beacons and probe responses.
+Date: Mon, 15 Feb 2010 00:37:33 +0100
+Message-Id: <1266190653-2453-2-git-send-email-benoit.papillault@free.fr>
+In-Reply-To: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>
+References: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change pci_alloc_consistent() to dma_alloc_coherent() so we can use
-GFP_KERNEL flag.
+The same code is also used for probe request generation
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 ---
-Tested with 3945 and 5300
+ net/mac80211/ibss.c |   86 ++++++++++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/util.c |   23 +++++++------
+ 2 files changed, 93 insertions(+), 16 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    8 +++-----
- drivers/net/wireless/iwlwifi/iwl-core.c     |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-helpers.h  |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   21 +++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-tx.c       |   23 ++++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++++++--------
- 6 files changed, 44 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 234891d..e955515 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2474,11 +2474,9 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
- 	memset((void *)&priv->hw_params, 0,
- 	       sizeof(struct iwl_hw_params));
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index f3e9424..423befa 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -96,6 +96,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
  
--	priv->shared_virt =
--	    pci_alloc_consistent(priv->pci_dev,
--				 sizeof(struct iwl3945_shared),
--				 &priv->shared_phys);
--
-+	priv->shared_virt = dma_alloc_coherent(&priv->pci_dev->dev,
-+					       sizeof(struct iwl3945_shared),
-+					       &priv->shared_phys, GFP_KERNEL);
- 	if (!priv->shared_virt) {
- 		IWL_ERR(priv, "failed to allocate pci memory\n");
- 		mutex_unlock(&priv->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5461f10..f6a7866 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1658,9 +1658,9 @@ EXPORT_SYMBOL(iwl_set_tx_power);
- void iwl_free_isr_ict(struct iwl_priv *priv)
- {
- 	if (priv->ict_tbl_vir) {
--		pci_free_consistent(priv->pci_dev, (sizeof(u32) * ICT_COUNT) +
--					PAGE_SIZE, priv->ict_tbl_vir,
--					priv->ict_tbl_dma);
-+		dma_free_coherent(&priv->pci_dev->dev,
-+				  (sizeof(u32) * ICT_COUNT) + PAGE_SIZE,
-+				  priv->ict_tbl_vir, priv->ict_tbl_dma);
- 		priv->ict_tbl_vir = NULL;
+ 	local->oper_channel = chan;
++	/* FIXME : we can have HT channels here */
+ 	local->oper_channel_type = NL80211_CHAN_NO_HT;
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
+@@ -111,7 +112,10 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		*pos++ = basic | (u8) (rate / 5);
  	}
- }
-@@ -1676,9 +1676,9 @@ int iwl_alloc_isr_ict(struct iwl_priv *priv)
- 	if (priv->cfg->use_isr_legacy)
- 		return 0;
- 	/* allocate shrared data table */
--	priv->ict_tbl_vir = pci_alloc_consistent(priv->pci_dev, (sizeof(u32) *
--						  ICT_COUNT) + PAGE_SIZE,
--						  &priv->ict_tbl_dma);
-+	priv->ict_tbl_vir = dma_alloc_coherent(&priv->pci_dev->dev,
-+					(sizeof(u32) * ICT_COUNT) + PAGE_SIZE,
-+					&priv->ict_tbl_dma, GFP_KERNEL);
- 	if (!priv->ict_tbl_vir)
+ 
+-	/* Build IBSS probe response */
++	/* 
++	 * Build IBSS probe response template (also used for beacon template
++	 * in ieee80211_beacon_get_tim())
++	 */
+ 	mgmt = (void *) skb_put(skb, 24 + sizeof(mgmt->u.beacon));
+ 	memset(mgmt, 0, 24 + sizeof(mgmt->u.beacon));
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+@@ -158,6 +162,64 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(pos, &supp_rates[8], rates);
+ 	}
+ 
++	if (sband->ht_cap.ht_supported) {
++		u16 cap = sband->ht_cap.cap;
++		struct ieee80211_ht_cap ht_cap;
++		struct ieee80211_ht_info ht_info;
++
++		if (ieee80211_disable_40mhz_24ghz &&
++		    sband->band == IEEE80211_BAND_2GHZ) {
++			cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++			cap &= ~IEEE80211_HT_CAP_SGI_40;
++		}
++
++		ht_cap.cap_info = cpu_to_le16(cap);
++		ht_cap.ampdu_params_info = sband->ht_cap.ampdu_factor |
++			(sband->ht_cap.ampdu_density <<
++			 IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
++		ht_cap.mcs = sband->ht_cap.mcs;
++		ht_cap.extended_ht_cap_info = cpu_to_le16(0);
++		ht_cap.tx_BF_cap_info = cpu_to_le32(0);
++		ht_cap.antenna_selection_info = 0;
++
++		/* HT Capabilities element */
++		pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_cap));
++		*pos++ = WLAN_EID_HT_CAPABILITY;
++		*pos++ = sizeof(struct ieee80211_ht_cap);
++		memcpy(pos, &ht_cap, sizeof(struct ieee80211_ht_cap));
++
++		ht_info.control_chan = 
++			ieee80211_frequency_to_channel(chan->center_freq);
++		ht_info.ht_param = 0;
++		/* FIXME : local->oper_channel_type is set to a fixed value */
++		switch (local->oper_channel_type) {
++		case NL80211_CHAN_NO_HT:
++		case NL80211_CHAN_HT20:
++			ht_info.ht_param |= IEEE80211_HT_PARAM_CHA_SEC_NONE;
++			break;
++		case NL80211_CHAN_HT40MINUS:
++			ht_info.ht_param |= IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++			break;
++		case NL80211_CHAN_HT40PLUS:
++			ht_info.ht_param |= IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++			break;
++		}
++		if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
++			ht_info.ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
++		ht_info.operation_mode = cpu_to_le16(0);
++		ht_info.stbc_param = cpu_to_le16(0);
++		/* It seems that Basic MCS set and Supported MCS set
++		   are identical for the first 10 bytes */
++		memset(&ht_info.basic_set, 0, 16);
++		memcpy(&ht_info.basic_set, &ht_cap.mcs, 10);
++
++		/* HT Information element */
++		pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_info));
++		*pos++ = WLAN_EID_HT_INFORMATION;
++		*pos++ = sizeof(struct ieee80211_ht_info);
++		memcpy(pos, &ht_info, sizeof(struct ieee80211_ht_info));
++	}
++	  
+ 	if (ifibss->ie_len)
+ 		memcpy(skb_put(skb, ifibss->ie_len),
+ 		       ifibss->ie, ifibss->ie_len);
+@@ -903,11 +965,25 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 			sdata->u.ibss.ie_len = params->ie_len;
+ 	}
+ 
++	/*
++	 * Allocate IBSS probe response template (see
++	 * __ieee80211_sta_join_ibss for the needed size). According to IEEE
++	 * 802.11-2007 10.4.4.2, there is only 20 possibles values. We
++	 * support up IEEE80211_MAX_SUPP_RATES (currently 32) : so 8 for
++	 * Supported Rates and IEEE80211_MAX_SUPP_RATES-8 for Extended
++	 * Supported Rates
++	 */
++
+ 	skb = dev_alloc_skb(sdata->local->hw.extra_tx_headroom +
+-			    36 /* bitrates */ +
+-			    34 /* SSID */ +
+-			    3  /* DS params */ +
+-			    4  /* IBSS params */ +
++			    sizeof(struct ieee80211_hdr_3addr) + 
++			    12 /* struct ieee80211_mgmt.u.beacon */ +
++			    2 + IEEE80211_MAX_SSID_LEN /* max SSID */ +
++			    2 + 8 /* max Supported Rates */ +
++			    3 /* max DS params */ +
++			    4 /* IBSS params */ +
++			    2 + (IEEE80211_MAX_SUPP_RATES-8) /* max Ext Rates */ +
++			    2 + sizeof(struct ieee80211_ht_cap) +
++			    2 + sizeof(struct ieee80211_ht_info) +
+ 			    params->ie_len);
+ 	if (!skb)
  		return -ENOMEM;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index c453226..591cc71 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -958,7 +958,7 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-index bd0b12e..f8481e8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
-@@ -80,8 +80,8 @@ static inline void iwl_free_fw_desc(struct pci_dev *pci_dev,
- 				    struct fw_desc *desc)
- {
- 	if (desc->v_addr)
--		pci_free_consistent(pci_dev, desc->len,
--				    desc->v_addr, desc->p_addr);
-+		dma_free_coherent(&pci_dev->dev, desc->len,
-+				  desc->v_addr, desc->p_addr);
- 	desc->v_addr = NULL;
- 	desc->len = 0;
- }
-@@ -89,7 +89,8 @@ static inline void iwl_free_fw_desc(struct pci_dev *pci_dev,
- static inline int iwl_alloc_fw_desc(struct pci_dev *pci_dev,
- 				    struct fw_desc *desc)
- {
--	desc->v_addr = pci_alloc_consistent(pci_dev, desc->len, &desc->p_addr);
-+	desc->v_addr = dma_alloc_coherent(&pci_dev->dev, desc->len,
-+					  &desc->p_addr, GFP_KERNEL);
- 	return (desc->v_addr != NULL) ? 0 : -ENOMEM;
- }
+ 	if (sband->ht_cap.ht_supported) {
+ 		u16 cap = sband->ht_cap.cap;
+-		__le16 tmp;
++		struct ieee80211_ht_cap ht_cap;
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 6f36b6e..cfcb3c1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -350,10 +350,10 @@ void iwl_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+ 		if (ieee80211_disable_40mhz_24ghz &&
+ 		    sband->band == IEEE80211_BAND_2GHZ) {
+@@ -966,18 +966,19 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			cap &= ~IEEE80211_HT_CAP_SGI_40;
  		}
+ 
++		ht_cap.cap_info = cpu_to_le16(cap);
++		ht_cap.ampdu_params_info = sband->ht_cap.ampdu_factor |
++			(sband->ht_cap.ampdu_density <<
++			 IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
++		ht_cap.mcs = sband->ht_cap.mcs;
++		ht_cap.extended_ht_cap_info = cpu_to_le16(0);
++		ht_cap.tx_BF_cap_info = cpu_to_le32(0);
++		ht_cap.antenna_selection_info = 0;
++
+ 		*pos++ = WLAN_EID_HT_CAPABILITY;
+ 		*pos++ = sizeof(struct ieee80211_ht_cap);
+-		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
+-		tmp = cpu_to_le16(cap);
+-		memcpy(pos, &tmp, sizeof(u16));
+-		pos += sizeof(u16);
+-		*pos++ = sband->ht_cap.ampdu_factor |
+-			 (sband->ht_cap.ampdu_density <<
+-				IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+-		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
+-		pos += sizeof(sband->ht_cap.mcs);
+-		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
++		memcpy(pos, &ht_cap, sizeof(struct ieee80211_ht_cap));
++		pos += sizeof(struct ieee80211_ht_cap);
  	}
  
--	pci_free_consistent(priv->pci_dev, 4 * RX_QUEUE_SIZE, rxq->bd,
--			    rxq->dma_addr);
--	pci_free_consistent(priv->pci_dev, sizeof(struct iwl_rb_status),
--			    rxq->rb_stts, rxq->rb_stts_dma);
-+	dma_free_coherent(&priv->pci_dev->dev, 4 * RX_QUEUE_SIZE, rxq->bd,
-+			  rxq->dma_addr);
-+	dma_free_coherent(&priv->pci_dev->dev, sizeof(struct iwl_rb_status),
-+			  rxq->rb_stts, rxq->rb_stts_dma);
- 	rxq->bd = NULL;
- 	rxq->rb_stts  = NULL;
- }
-@@ -362,7 +362,7 @@ EXPORT_SYMBOL(iwl_rx_queue_free);
- int iwl_rx_queue_alloc(struct iwl_priv *priv)
- {
- 	struct iwl_rx_queue *rxq = &priv->rxq;
--	struct pci_dev *dev = priv->pci_dev;
-+	struct device *dev = &priv->pci_dev->dev;
- 	int i;
- 
- 	spin_lock_init(&rxq->lock);
-@@ -370,12 +370,13 @@ int iwl_rx_queue_alloc(struct iwl_priv *priv)
- 	INIT_LIST_HEAD(&rxq->rx_used);
- 
- 	/* Alloc the circular buffer of Read Buffer Descriptors (RBDs) */
--	rxq->bd = pci_alloc_consistent(dev, 4 * RX_QUEUE_SIZE, &rxq->dma_addr);
-+	rxq->bd = dma_alloc_coherent(dev, 4 * RX_QUEUE_SIZE, &rxq->dma_addr,
-+				     GFP_KERNEL);
- 	if (!rxq->bd)
- 		goto err_bd;
- 
--	rxq->rb_stts = pci_alloc_consistent(dev, sizeof(struct iwl_rb_status),
--					&rxq->rb_stts_dma);
-+	rxq->rb_stts = dma_alloc_coherent(dev, sizeof(struct iwl_rb_status),
-+					  &rxq->rb_stts_dma, GFP_KERNEL);
- 	if (!rxq->rb_stts)
- 		goto err_rb;
- 
-@@ -392,8 +393,8 @@ int iwl_rx_queue_alloc(struct iwl_priv *priv)
- 	return 0;
- 
- err_rb:
--	pci_free_consistent(priv->pci_dev, 4 * RX_QUEUE_SIZE, rxq->bd,
--			    rxq->dma_addr);
-+	dma_free_coherent(&priv->pci_dev->dev, 4 * RX_QUEUE_SIZE, rxq->bd,
-+			  rxq->dma_addr);
- err_bd:
- 	return -ENOMEM;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 87ce2bd..281d318 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -60,7 +60,8 @@ static const u16 default_tid_to_tx_fifo[] = {
- static inline int iwl_alloc_dma_ptr(struct iwl_priv *priv,
- 				    struct iwl_dma_ptr *ptr, size_t size)
- {
--	ptr->addr = pci_alloc_consistent(priv->pci_dev, size, &ptr->dma);
-+	ptr->addr = dma_alloc_coherent(&priv->pci_dev->dev, size, &ptr->dma,
-+				       GFP_KERNEL);
- 	if (!ptr->addr)
- 		return -ENOMEM;
- 	ptr->size = size;
-@@ -73,7 +74,7 @@ static inline void iwl_free_dma_ptr(struct iwl_priv *priv,
- 	if (unlikely(!ptr->addr))
- 		return;
- 
--	pci_free_consistent(priv->pci_dev, ptr->size, ptr->addr, ptr->dma);
-+	dma_free_coherent(&priv->pci_dev->dev, ptr->size, ptr->addr, ptr->dma);
- 	memset(ptr, 0, sizeof(*ptr));
- }
- 
-@@ -132,7 +133,7 @@ void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id)
- {
- 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
- 	struct iwl_queue *q = &txq->q;
--	struct pci_dev *dev = priv->pci_dev;
-+	struct device *dev = &priv->pci_dev->dev;
- 	int i;
- 
- 	if (q->n_bd == 0)
-@@ -149,8 +150,8 @@ void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id)
- 
- 	/* De-alloc circular buffer of TFDs */
- 	if (txq->q.n_bd)
--		pci_free_consistent(dev, priv->hw_params.tfd_size *
--				    txq->q.n_bd, txq->tfds, txq->q.dma_addr);
-+		dma_free_coherent(dev, priv->hw_params.tfd_size *
-+				  txq->q.n_bd, txq->tfds, txq->q.dma_addr);
- 
- 	/* De-alloc array of per-TFD driver data */
- 	kfree(txq->txb);
-@@ -179,7 +180,7 @@ void iwl_cmd_queue_free(struct iwl_priv *priv)
- {
- 	struct iwl_tx_queue *txq = &priv->txq[IWL_CMD_QUEUE_NUM];
- 	struct iwl_queue *q = &txq->q;
--	struct pci_dev *dev = priv->pci_dev;
-+	struct device *dev = &priv->pci_dev->dev;
- 	int i;
- 
- 	if (q->n_bd == 0)
-@@ -191,8 +192,8 @@ void iwl_cmd_queue_free(struct iwl_priv *priv)
- 
- 	/* De-alloc circular buffer of TFDs */
- 	if (txq->q.n_bd)
--		pci_free_consistent(dev, priv->hw_params.tfd_size *
--				    txq->q.n_bd, txq->tfds, txq->q.dma_addr);
-+		dma_free_coherent(dev, priv->hw_params.tfd_size * txq->q.n_bd,
-+				  txq->tfds, txq->q.dma_addr);
- 
- 	/* deallocate arrays */
- 	kfree(txq->cmd);
-@@ -283,7 +284,7 @@ static int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
- static int iwl_tx_queue_alloc(struct iwl_priv *priv,
- 			      struct iwl_tx_queue *txq, u32 id)
- {
--	struct pci_dev *dev = priv->pci_dev;
-+	struct device *dev = &priv->pci_dev->dev;
- 	size_t tfd_sz = priv->hw_params.tfd_size * TFD_QUEUE_SIZE_MAX;
- 
- 	/* Driver private data, only for Tx (not command) queues,
-@@ -302,8 +303,8 @@ static int iwl_tx_queue_alloc(struct iwl_priv *priv,
- 
- 	/* Circular buffer of transmit frame descriptors (TFDs),
- 	 * shared with device */
--	txq->tfds = pci_alloc_consistent(dev, tfd_sz, &txq->q.dma_addr);
--
-+	txq->tfds = dma_alloc_coherent(dev, tfd_sz, &txq->q.dma_addr,
-+				       GFP_KERNEL);
- 	if (!txq->tfds) {
- 		IWL_ERR(priv, "pci_alloc_consistent(%zd) failed\n", tfd_sz);
- 		goto error;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index f8e4e4b..f297865 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -352,10 +352,10 @@ static int iwl3945_send_beacon_cmd(struct iwl_priv *priv)
- static void iwl3945_unset_hw_params(struct iwl_priv *priv)
- {
- 	if (priv->shared_virt)
--		pci_free_consistent(priv->pci_dev,
--				    sizeof(struct iwl3945_shared),
--				    priv->shared_virt,
--				    priv->shared_phys);
-+		dma_free_coherent(&priv->pci_dev->dev,
-+				  sizeof(struct iwl3945_shared),
-+				  priv->shared_virt,
-+				  priv->shared_phys);
- }
- 
- static void iwl3945_build_tx_cmd_hwcrypto(struct iwl_priv *priv,
-@@ -1253,10 +1253,10 @@ static void iwl3945_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rx
- 		}
- 	}
- 
--	pci_free_consistent(priv->pci_dev, 4 * RX_QUEUE_SIZE, rxq->bd,
--			    rxq->dma_addr);
--	pci_free_consistent(priv->pci_dev, sizeof(struct iwl_rb_status),
--			    rxq->rb_stts, rxq->rb_stts_dma);
-+	dma_free_coherent(&priv->pci_dev->dev, 4 * RX_QUEUE_SIZE, rxq->bd,
-+			  rxq->dma_addr);
-+	dma_free_coherent(&priv->pci_dev->dev, sizeof(struct iwl_rb_status),
-+			  rxq->rb_stts, rxq->rb_stts_dma);
- 	rxq->bd = NULL;
- 	rxq->rb_stts  = NULL;
- }
+ 	/*
 -- 
-1.6.2.5
+1.5.6.5
 
