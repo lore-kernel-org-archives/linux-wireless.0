@@ -1,60 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51464 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752773Ab0BBPAg (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:37671 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752813Ab0BNTvI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2010 10:00:36 -0500
-Date: Tue, 2 Feb 2010 09:31:41 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andriy Tkachuk <andriy.tkachuk@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH] lib80211: Introduce TKIP_HDR_LEN define for code
-	clarity
-Message-ID: <20100202143140.GA15782@tuxdriver.com>
-References: <4B68084E.7080306@gmail.com>
+	Sun, 14 Feb 2010 14:51:08 -0500
+Received: by fxm27 with SMTP id 27so517076fxm.25
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Feb 2010 11:51:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B68084E.7080306@gmail.com>
+In-Reply-To: <20100214191126.GA13637@jm.kir.nu>
+References: <912ec82a1002140957p6959c030h2b33fd9646cfd67d@mail.gmail.com>
+	<69e28c911002141046r70d8bcf2g6a8db7afbbef837@mail.gmail.com>
+	<20100214191126.GA13637@jm.kir.nu>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 14 Feb 2010 20:50:44 +0100
+Message-ID: <69e28c911002141150t66d2c98dia3730deaac9a7cbc@mail.gmail.com>
+Subject: Re: good wlan: sniffer that does not need a windows machine ?
+To: Jouni Malinen <j@w1.fi>
+Cc: Neshama Parhoti <pneshama@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 02, 2010 at 01:11:10PM +0200, Andriy Tkachuk wrote:
-> Introduce TKIP_HDR_LEN define for code clarity (in the same way as
-> CCMP_HDR_LEN).
-> 
-> Also odd len variable (not used) dropped from lib80211_tkip_hdr().
-> 
-> Signed-off-by: Andriy V. Tkachuk <andrit@ukr.net>
-> 
-> ---
->  net/wireless/lib80211_crypt_tkip.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/net/wireless/lib80211_crypt_tkip.c
-> b/net/wireless/lib80211_crypt_tkip.c
-> index c362873..c4fb4fb 100644
-> --- a/net/wireless/lib80211_crypt_tkip.c
-> +++ b/net/wireless/lib80211_crypt_tkip.c
-> @@ -36,6 +36,8 @@ MODULE_AUTHOR("Jouni Malinen");
->  MODULE_DESCRIPTION("lib80211 crypt: TKIP");
->  MODULE_LICENSE("GPL");
-> 
-> +#define TKIP_HDR_LEN 8
-> +
->  struct lib80211_tkip_data {
->  #define TKIP_KEY_LEN 32
->  	u8 key[TKIP_KEY_LEN];
-> @@ -314,13 +316,12 @@ static int lib80211_tkip_hdr(struct sk_buff *skb,
-> int hdr_len,
+2010/2/14 Jouni Malinen <j@w1.fi>:
+> On Sun, Feb 14, 2010 at 07:46:04PM +0100, Gábor Stefanik wrote:
+>> Monitoring in general works in almost all linux drivers (the Alfa
+>> AWUS036H is perhaps the best for this purpose) - however, there is no
+>> known way to monitor 802.11n packets on Linux (due to problems with
+>> the mac80211 stack not passing 802.11n frames to monitor interfaces?).
+>
+> Known to whom? ;-) mac80211 passes 802.11n packet just fine to monitor
+> interfaces and as an example, I'm using ath9k as a wireless sniffer for
+> IEEE 802.11g/a/n. The radiotap headers may not show all parameters at
+> this point, but there is ongoing work to extend that
+>
+>> Currently, the only way to sniff 802.11n packets is the AirPcap NX on
+>> Windows.
+>
+> Yeah, right..
 
-After a quick look, this and the other patch look fine.  But, the
-patches are whitespace-damaged.  I can fix these, but in the future
-please be sure to use a mailer that does not break lines.  I recommend
-mutt and/or 'git send-email'.
+That was the last information I had - I didn't know someone has fixed
+passing 802.11n frames to monitor interfaces.
 
-Thanks,
+BTW are A-MPDU frames also reported on monitor interfaces now?
 
-John
+>
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+>
+
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
