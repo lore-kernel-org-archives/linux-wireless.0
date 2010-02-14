@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:54951 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933278Ab0BPUPN convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39578 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752824Ab0BNTLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 15:15:13 -0500
-Received: by pwj8 with SMTP id 8so950759pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 12:15:11 -0800 (PST)
+	Sun, 14 Feb 2010 14:11:32 -0500
+Date: Sun, 14 Feb 2010 21:11:26 +0200
+From: Jouni Malinen <j@w1.fi>
+To: =?utf-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>
+Cc: Neshama Parhoti <pneshama@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: good wlan: sniffer that does not need a windows machine ?
+Message-ID: <20100214191126.GA13637@jm.kir.nu>
+References: <912ec82a1002140957p6959c030h2b33fd9646cfd67d@mail.gmail.com>
+ <69e28c911002141046r70d8bcf2g6a8db7afbbef837@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <Z5cmiqDComP.A.gyF.OiIeLB@chimera>
-References: <Z5cmiqDComP.A.gyF.OiIeLB@chimera>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 16 Feb 2010 12:14:51 -0800
-Message-ID: <43e72e891002161214x7de9d9cp431378184e25b43f@mail.gmail.com>
-Subject: Re: 2.6.33-rc8: Reported regressions from 2.6.32
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <69e28c911002141046r70d8bcf2g6a8db7afbbef837@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 14, 2010 at 3:31 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> This message contains a list of some regressions from 2.6.32,
-> for which there are no fixes in the mainline known to the tracking team.
-> If any of them have been fixed already, please let us know.
->
-> If you know of any other unresolved regressions from 2.6.32, please let us
-> know either and we'll add them to the list.  Also, please let us know
-> if any of the entries below are invalid.
->
-> Each entry from the list will be sent additionally in an automatic reply
-> to this message with CCs to the people involved in reporting and handling
-> the issue.
+On Sun, Feb 14, 2010 at 07:46:04PM +0100, Gábor Stefanik wrote:
+> Monitoring in general works in almost all linux drivers (the Alfa
+> AWUS036H is perhaps the best for this purpose) - however, there is no
+> known way to monitor 802.11n packets on Linux (due to problems with
+> the mac80211 stack not passing 802.11n frames to monitor interfaces?).
 
-Yay us, 0 for wireless. Stable whoring seems to help.
+Known to whom? ;-) mac80211 passes 802.11n packet just fine to monitor
+interfaces and as an example, I'm using ath9k as a wireless sniffer for
+IEEE 802.11g/a/n. The radiotap headers may not show all parameters at
+this point, but there is ongoing work to extend that 
 
-  Luis
+> Currently, the only way to sniff 802.11n packets is the AirPcap NX on
+> Windows.
+
+Yeah, right..
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
