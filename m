@@ -1,38 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out30.alice.it ([85.33.2.30]:4624 "EHLO
-	smtp-out30.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517Ab0BHVHB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 16:07:01 -0500
-Message-ID: <4B707A6E.2090500@iperbole.bo.it>
-Date: Mon, 08 Feb 2010 21:56:14 +0100
-From: Lorenzo Raschi <ded1549@iperbole.bo.it>
-MIME-Version: 1.0
-To: Jens Westemeier <Jens_Westemeier@web.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: p54pci: "device does not respond!"
-References: <4B6F15D1.3050307@iperbole.bo.it> <201002082004.20641.Jens_Westemeier@web.de>
-In-Reply-To: <201002082004.20641.Jens_Westemeier@web.de>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:63608 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750824Ab0BNFKn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Feb 2010 00:10:43 -0500
+Subject: compat-wireless + Linux 2.6.26.8 testing results
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
+References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
+Content-Type: text/plain
+Date: Sun, 14 Feb 2010 00:10:22 -0500
+Message-Id: <1266124222.13902.42.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Il 08/02/2010 20:04, Jens Westemeier ha scritto:
+On Fri, 2010-02-12 at 18:10 -0800, Luis R. Rodriguez wrote:
+> The bleeding edge compat-wireless updates were stuck due to a
+> bluetooth hunk failing on net/bluetooth/hidp/core.c, that should be
+> fixed now, at least it compiles for me down to 2.6.27. I also hadn't
+> updated a 2.6.33-rcx releases in a while, as well as 2.6.32.y release.
+> This should all now be in synch with upstream. I never got reports
+> about MQ support on older kernels so I just threw in the code, issues
+> can be dealt with once actually found.
 
->> Because I saw prism54 is deprecated now, I'm trying to switch to p54pci
->> + softmac driver. Unfortunately it doesn't work.
-> Same problem with my fullmac SMC 2802 card. /var/log/messages gives:
-> lspci gives:
-> Network controller: Intersil Corporation ISL3890 [Prism GT/Prism
-> Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
+I've tried compiling all three tarballs against Linux 2.6.26.8.  It's a
+kernel with some hardware patches for arm architecture that are hard to
+port to newer kernels, so compat-wireless would be very helpful.
 
-Sorry, I forgot to write my lspci's output.
-Anyway, it's exactly the same as yours.
+compat-wireless-2.6.32.8 compiles just fine with ath5k selected.
 
-07:0e.0 Network controller: Intersil Corporation ISL3890 [Prism GT/Prism 
-Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
+compat-wireless-2.6.33-rc8 fails:
 
-Best regards,
+/home/proski/src/compat-wireless-2.6.33-rc8/net/mac80211/util.c: In
+function '__ieee80211_wake_queue':
+/home/proski/src/compat-wireless-2.6.33-rc8/net/mac80211/util.c:290:
+error: implicit declaration of function 'netif_tx_wake_queue'
+/home/proski/src/compat-wireless-2.6.33-rc8/net/mac80211/util.c:290:
+error: implicit declaration of function 'netdev_get_tx_queue'
+/home/proski/src/compat-wireless-2.6.33-rc8/net/mac80211/util.c: In
+function '__ieee80211_stop_queue':
+/home/proski/src/compat-wireless-2.6.33-rc8/net/mac80211/util.c:325:
+error: implicit declaration of function 'netif_tx_stop_queue'
 
-Lorenzo Raschi
+compat-wireless-2010-02-13 fails differently:
 
+/home/proski/src/compat-wireless-2010-02-13/net/mac80211/iface.c: In
+function 'ieee80211_if_setup':
+/home/proski/src/compat-wireless-2010-02-13/net/mac80211/iface.c:738:
+error: 'struct net_device' has no member named 'select_queue'
+/home/proski/src/compat-wireless-2010-02-13/net/mac80211/iface.c: In
+function 'ieee80211_setup_sdata':
+/home/proski/src/compat-wireless-2010-02-13/net/mac80211/iface.c:790:
+error: 'struct net_device' has no member named 'select_queue'
+
+I tried enabling CONFIG_NETDEVICES_MULTIQUEUE, but it made no
+difference.
+
+It looks like compat-wireless-2.6.33-rc8 and compat-wireless-2010-02-13
+don't have the patches to deal with the lack of netif_tx_wake_queue and
+select_queue in Linux 2.6.26.  compat-wireless-2.6.32.8 has such
+patches.
+
+If all drivers are selected, compat-wireless-2.6.32.8 fails:
+
+In file included
+from /home/proski/src/compat-wireless-2.6.32.8/drivers/net/b44.c:28:
+/home/proski/src/compat-wireless-2.6.32.8/include/linux/ssb/ssb.h: In
+function 'ssb_dma_sync_single_range_for_cpu':
+/home/proski/src/compat-wireless-2.6.32.8/include/linux/ssb/ssb.h:595:
+error: implicit declaration of function 'dma_sync_single_range_for_cpu'
+/home/proski/src/compat-wireless-2.6.32.8/include/linux/ssb/ssb.h: In
+function 'ssb_dma_sync_single_range_for_device':
+/home/proski/src/compat-wireless-2.6.32.8/include/linux/ssb/ssb.h:620:
+error: implicit declaration of function
+'dma_sync_single_range_for_device'
+
+That appears to be caused by the lack of
+dma_sync_single_range_for_device on the arm architecture.  Other
+architectures have it.  "make -k" doesn't find any other errors.  All
+other drivers compile fine.
+
+-- 
+Regards,
+Pavel Roskin
