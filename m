@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f189.google.com ([209.85.223.189]:47768 "EHLO
-	mail-iw0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757666Ab0BEXQu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 18:16:50 -0500
-Received: by iwn27 with SMTP id 27so14480iwn.5
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 15:16:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201002052004.06220.sturmflut@lieberbiber.de>
-References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
-	 <c1545bb51002050947q707bb5ebud5ec7b4680f49ac5@mail.gmail.com>
-	 <20100205175556.GC1496@holoscopio.com>
-	 <201002052004.06220.sturmflut@lieberbiber.de>
-Date: Fri, 5 Feb 2010 15:16:49 -0800
-Message-ID: <c1545bb51002051516u15f25d75s88314534cbea569b@mail.gmail.com>
-Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh mode
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Simon Raffeiner <sturmflut@lieberbiber.de>
-Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:52531 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753436Ab0BNDNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Feb 2010 22:13:25 -0500
+Subject: [PATCH] mwl8k: disable softirqs when accessing sta_notify_list
+From: Pavel Roskin <proski@gnu.org>
+To: Lennert Buytenhek <buytenh@marvell.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Sat, 13 Feb 2010 22:13:06 -0500
+Message-Id: <1266117186.13902.21.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 5, 2010 at 11:04 AM, Simon Raffeiner
-<sturmflut@lieberbiber.de> wrote:
-> If manual addition of plinks is allowed you could theoretically force your
-> node to peer with a neighbor running a different profile, e.g. using a different
-> path selection or authentication algorithm, or an implementation based on a
-> different draft version.
->
-> I can't really think of an use for it.
+Use spin_[un]lock_bh in mwl8k_sta_notify().  The sta_notify handler is
+required to be atomic, yet it can be called in process context, so make
+sure one call won't preempt another.
 
-Right, in your case please ensure that your devices are beaconing
-(that's the most common problem) before proceeding.  plinks are
-established automatically and as far as I know that's the only thing
-we need to support at this time.  If your device isn't beaconing, then
-that's a bug and it should be fixed.  That said, ath5k beaconed
-correctly last time I tried it.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+I found it by accident (sparse reported it, but presumably for a wrong
+reason) and I have no hardware to test the patch on, but I believe it's
+correct.
 
-  -Andrey
+ drivers/net/wireless/mwl8k.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 0cfdb9d..6497c84 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3784,9 +3784,9 @@ mwl8k_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		s->cmd = cmd;
+ 		s->sta = *sta;
+ 
+-		spin_lock(&priv->sta_notify_list_lock);
++		spin_lock_bh(&priv->sta_notify_list_lock);
+ 		list_add_tail(&s->list, &priv->sta_notify_list);
+-		spin_unlock(&priv->sta_notify_list_lock);
++		spin_unlock_bh(&priv->sta_notify_list_lock);
+ 
+ 		ieee80211_queue_work(hw, &priv->sta_notify_worker);
+ 	}
+-- 
+Regards,
+Pavel Roskin
