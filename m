@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50819 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:32988 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755822Ab0BFOKS (ORCPT
+	with ESMTP id S1752690Ab0BNTKu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2010 09:10:18 -0500
-Subject: [PATCH] mac80211: fix deauth race
+	Sun, 14 Feb 2010 14:10:50 -0500
+Subject: Re: good wlan: sniffer that does not need a windows machine ?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 06 Feb 2010 15:10:15 +0100
-Message-ID: <1265465415.4041.25.camel@johannes.local>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Neshama Parhoti <pneshama@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c911002141046r70d8bcf2g6a8db7afbbef837@mail.gmail.com>
+References: <912ec82a1002140957p6959c030h2b33fd9646cfd67d@mail.gmail.com>
+	 <69e28c911002141046r70d8bcf2g6a8db7afbbef837@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vBXUAXwaYhLTdL83qzK1"
+Date: Sun, 14 Feb 2010 20:10:42 +0100
+Message-ID: <1266174642.3936.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When userspace requests a deauth while the
-authentication work is pending in the auth
-(not probe) state, we do not properly abort
-the work and then things get confused.
 
-Fix that and also improve the checks here
-to include the correct virtual interface,
-just in case two virtual interfaces would
-ever try to connect to the same BSS.
+--=-vBXUAXwaYhLTdL83qzK1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mlme.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+On Sun, 2010-02-14 at 19:46 +0100, G=C3=A1bor Stefanik wrote:
 
---- wireless-testing.orig/net/mac80211/mlme.c	2010-02-06 15:07:37.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2010-02-06 15:07:43.000000000 +0100
-@@ -2007,11 +2007,17 @@ int ieee80211_mgd_deauth(struct ieee8021
- 
- 		mutex_lock(&local->work_mtx);
- 		list_for_each_entry(wk, &local->work_list, list) {
--			if (wk->type != IEEE80211_WORK_DIRECT_PROBE)
-+			if (wk->sdata != sdata)
- 				continue;
-+
-+			if (wk->type != IEEE80211_WORK_DIRECT_PROBE &&
-+			    wk->type != IEEE80211_WORK_AUTH)
-+				continue;
-+
- 			if (memcmp(req->bss->bssid, wk->filter_ta, ETH_ALEN))
- 				continue;
--			not_auth_yet = true;
-+
-+			not_auth_yet = wk->type == IEEE80211_WORK_DIRECT_PROBE;
- 			list_del(&wk->list);
- 			free_work(wk);
- 			break;
+> Johannes, Luis, etc: what is the exact reason for not having 802.11n
+> monitoring support?
 
+Mostly missing radiotap support, matteo was working on that.
+
+johannes
+
+--=-vBXUAXwaYhLTdL83qzK1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLeEqvAAoJEODzc/N7+QmaCy8P/iALlzte3hRasEvMPrWF7hi1
+svSepf28h1GkU2+D0IC4j7SPHNtyUIMD2r+8mYMyVC7ylbtuFZR705BzYwVlfYUs
+1cQwuRuTThylPkC1sWce6Hwb1AdgABwHjOgDJ2VGVa1JB5FA3+rrU9bRV3Sf+leY
+HZOD2LHDQtBa3haUhjK27ybmB+3WuFYnRoSsE0dNR38jMjBVzI9LKU0uKAUsmbsI
+Qk9NQFy0HGFDiPSMHdNoV/4zYG7ymrWYB8FoYKo6k4tT3A9tDcCB5TyImq+/lN45
+oowrTlPqEPjZy/Fwo5/hEM/4oXdMtJvwZwaWIfqjJ/It01fGxaOI362gczaBAHzL
+3V3l5f0ApuFBi6GC/QLVss1HpOvv1BjZSzJ59a2oSXVIWk0xptrwovSFe9wRgFfF
+WmzbplLm77IRoCCdNquRVZ6yFtU8Nt8rByYJt51FKu+cr+B7epGS4NH0yhdFyeZO
+qmBaDpso2uLDUiqjwrT3SmRFTybtYdU4uy0FIKTnYkqxIKmFV483rl99NsW2zYzT
+lLeuznEbH+FC/2SCAH2tHqMHintclSEfDYY4c/szjgI/NK5uaZWb9U8nZNkGoM7K
+I22poO2przKmOico5elQIVo96ncikUwMqFJxeIZtNzprZzywYB+K2+tJWsYRbYYm
+Va+CK5H1OuK993gKouLp
+=axnt
+-----END PGP SIGNATURE-----
+
+--=-vBXUAXwaYhLTdL83qzK1--
 
