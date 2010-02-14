@@ -1,37 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f201.google.com ([209.85.223.201]:62222 "EHLO
-	mail-iw0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382Ab0BNWig (ORCPT
+Received: from sd-11162.dedibox.fr ([88.191.70.230]:43773 "EHLO
+	sd-11162.dedibox.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758294Ab0BNMTA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 17:38:36 -0500
-Message-ID: <4B787B69.7040307@lwfinger.net>
-Date: Sun, 14 Feb 2010 16:38:33 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Thomas Backlund <tmb@mandriva.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: linux-2..6.33-rc7 and b43
-References: <4B77C819.9050602@mandriva.org> <4B782670.9080001@lwfinger.net> 	<4B784498.8030509@mandriva.org> <69e28c911002141059y57fb2097x5613c25ad1c616da@mail.gmail.com> 	<4B784C68.8020402@mandriva.org> <69e28c911002141353x7805033fl2e68ae56f3dabf40@mail.gmail.com>
-In-Reply-To: <69e28c911002141353x7805033fl2e68ae56f3dabf40@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 14 Feb 2010 07:19:00 -0500
+Date: Sun, 14 Feb 2010 13:18:10 +0100
+From: Frederic Leroy <fredo@starox.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Chris Mayo <aklhfex@googlemail.com>,
+	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
+Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
+Message-ID: <20100214131810.1a8b49ac@houba>
+In-Reply-To: <20100214004010.GB18815@tuxdriver.com>
+References: <4B38A298.7070103@googlemail.com>
+	<1262037590.16627.99.camel@localhost.localdomain>
+	<3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
+	<20100213234456.5ae49b67@houba>
+	<20100214004010.GB18815@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2010 03:53 PM, G�bor Stefanik wrote:
-> 
-> Looks like the trigger is not Intel Atom, but PhoenixBIOS after all -
-> a quick analysis of bios v. A15 for this machine shows it to be a
-> highly cloaked/rebranded PhoenixBIOS.
-> 
-> Core 2 T7250 is a regular Merom/Santa Rosa CPU, almost the same as my
-> T7100 (only the clock multiplier is different), and is not a ULV CPU,
-> the trigger we previously suspected.
-> 
-> PhoenixBIOS (and its rebrands) appears to be the common trigger.
+Le Sat, 13 Feb 2010 19:40:10 -0500,
+"John W. Linville" <linville@tuxdriver.com> a écrit :
 
-It also requires an Intel CPU. My AMD is fine with a Phoenix BIOS.
+> [...]
+> > Should I follow the TODO file from Greg in staging :
+> > ( which seems to merge : rtl8192e  rtl8192su  rtl8192u )
+> > [...] 
+> This is a reasonable plan overall, although I might quibble with
+> the order.
+>
+> > Or use rtl818x tree to start a new device ?
+> 
+> YMMV, but given the code I've seen for the Realtek drivers in staging
+> I might be inclined to start by forking rtl8180 and making the
+> necessary hardware changes from there.
+ 
+It was my impression too, but as you say, YMMV. It will be my first
+driver, although I already hacked the kernel, make netfilters modules
+and read lwn ;).
 
-Larry
+For the process, it is still unclear for me. I copy rtl8180*[ch] to
+rtl8192*[ch], and start to hack into to make clean git patches ?
 
+On which tree should I base my work : 
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git ?
+
+> hth!
+
+It helps :)
+
+-- 
+Frédéric Leroy
