@@ -1,82 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:61644 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753122Ab0BVTOg (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:50011 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149Ab0BNTAS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 14:14:36 -0500
+	Sun, 14 Feb 2010 14:00:18 -0500
 MIME-Version: 1.0
-In-Reply-To: <1266747222.18491.5.camel@violet>
-References: <43e72e891002191823h3245bc0cn7a8745ae77409aa8@mail.gmail.com>
-	<1266662106.1820.4034.camel@macbook.infradead.org> <1266663639.10357.1.camel@jlt3.sipsolutions.net>
-	<1266664166.1820.4165.camel@macbook.infradead.org> <1266664247.11514.0.camel@jlt3.sipsolutions.net>
-	<1266665535.1820.4238.camel@macbook.infradead.org> <1266747222.18491.5.camel@violet>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 22 Feb 2010 11:14:15 -0800
-Message-ID: <43e72e891002221114w24304ab0x5aea7dfc81b4d9d6@mail.gmail.com>
-Subject: Re: Firmware versioning best practices II
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vipin Mehta <Vipin.Mehta@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4B784498.8030509@mandriva.org>
+References: <4B77C819.9050602@mandriva.org> <4B782670.9080001@lwfinger.net>
+	<4B784498.8030509@mandriva.org>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 14 Feb 2010 19:59:54 +0100
+Message-ID: <69e28c911002141059y57fb2097x5613c25ad1c616da@mail.gmail.com>
+Subject: Re: linux-2..6.33-rc7 and b43
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 21, 2010 at 2:13 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi David,
->
->> > > > That doesn't make much sense anyway. If the firmware filename is
->> > > > foo-$APIVER-$CODEVER every code change would need a corresponding
->> > > driver
->> > > > change. If it is just foo-$APIVER then the $CODEVER can be embedded
->> > > in
->> > > > the firmware file and printed so you know which code you're using,
->> > > but
->> > > > if it doesn't influence the API I don't see why it should be part of
->> > > the
->> > > > filename?
->> > >
->> > > The idea is that just like with shared libraries, you have a symlink
->> > > from the 'soname' foo-3.fw to the actual file foo-3-1.4.1.fw.
->> >
->> > Ah ok. I indeed do that manually with iwlwifi firmware :)
->> >
->> > > For shared libraries, it's easy to create those symlinks automatically
->> > > using ldconfig. For firmware that doesn't really work though -- since
->> > > the soname isn't encoded in the file like it is in ELF libraries.
->> >
->> > Right. Though I guess we could come up with a unified firmware wrapper
->> > format that the firmware loader can unwrap.
+On Sun, Feb 14, 2010 at 7:44 PM, Thomas Backlund <tmb@mandriva.org> wrote:
+> Larry Finger skrev 14.2.2010 18:36:
 >>
->> I suppose we could, but this seems like overkill to me.
+>> On 02/14/2010 03:53 AM, Thomas Backlund wrote:
+>>>
+>>> Hi,
+>>> (please cc me on replies)
+>>>
+>>> We have a user that tried out b43, but got this in the logs:
+>>>
+>>> --- cut ---
+>>> 65858:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
+>>> support DMA on your system. Please use PIO instead. 65859:Feb  9
+>>> 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO must
+>>> be set in your kernel configuration.
+>>> 65860:Feb  9 22:05:16 elmo kernel: b43-phy2 debug: Adding Interface type
+>>> 2
+>>> 65861:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: Fatal DMA error:
+>>> 0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+>>>
+>>> 65862:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
+>>> support DMA on your system. Please use PIO instead.
+>>> 65863:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO
+>>> must be set in your kernel configuration.
+>>> --- cut ---
+>>>
+>>>
+>>>
+>>> But reading the Kconfig help, it states:
+>>> --- cut ---
+>>> config B43_FORCE_PIO
+>>>         bool "Force usage of PIO instead of DMA"
+>>>         depends on B43&&  B43_DEBUG
+>>>         ---help---
+>>>           This will disable DMA and always enable PIO instead.
+>>>
+>>>           Say N!
+>>>           This is only for debugging the PIO engine code. You do
+>>>           _NOT_ want to enable this.
+>>> --- cut ---
+>>>
+>>>
+>>> So,
+>>> wich one is it ?
+>>>
+>>> Do I belive the dmesg output, or the Kconfig ?
+>>>
+>>> Note,
+>>> the b43 works for the user if he enable the CONFIG_B43_FORCE_PIO.
+>>>
+>>> But I'm thinking of this problem from a distro point of view.
+>>> Will it break for others if I enable it ?
+>>
+>>> From a distro point of view, you would not want to set FORCE_PIO as the
+>>
+>> performance penalty would be very large.
+>>
 >
-> I have to agree. This looks like total overkill to me.
+> As I suspected.
+> Thanks for confirming it.
 >
-> Just use the $APIVER in the firmware filename.
+>> You do not give the specific details on the problem system; however, it is
+>> probably a BCM4312 802.11 b/g device with PCI ID 14e4:4315 being used with
+>> an
+>> Atom processor in a netbook. We have no fix.
+>>
+>
+> Sorry about the missing info...
+> I asked a few times from the user, and got no reponse until today a few
+> hours after your response...
+>
+> It is indeed a BCM4312 802.11 b/g device with PCI ID 14e4:4315 on a Dell
+> laptop with a Intel ICH9M series chipset and a Intel Core(TM)2 Duo CPU T7250
+> @ 2.00GHz.
 
-OK -- so what goes into linux-firmware is just the latest
+Weird... that's not an Intel Atom, but a Core 2 Duo, standard-voltage.
+Mind posting any more details on this system?
 
-foo-$(API)
+>
+>> In the 2.6.34 code, b43 will be changed to allow the selection of PIO mode
+>> at
+>> run time rather than compile time. For a distro, this method is clearly
+>> superior. Those users that need PIO can select it without forcing the
+>> performance penalty on everyone. The patch was too late for the 2.6.33
+>> merge,
+>> and too intrusive to be applied to 2.6.33-rcX. It has been present in the
+>> wireless-testing code base for 2 months with no trouble reported, thus it
+>> should
+>> be safe for inclusion in your kernels. The relevant patch is attached.
+>>
+>
+> Nice solution.
+>
+> What about making it autodetected ?
+> Or is it only a "last resort" with the hopes of getting the issue fixed?
+>
+> Anyway, thanks for the patch.
+>
+> --
+> Thomas
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> And if someone wants to
-> keep track of more details then they can manually symlink them.
 
-Well do we want the older foo-$(API)-$(VAR) files in linux-firmware
-too for those companies/developers wishing to do this?
 
-What about deprecating APIs of the firmware based on kernel releases.
-I see it reasonable to deprecate a firmware API completely for a
-future kernel release provided you maintain all features and
-functionality in par. Does that sound reasonable?
-
-> Unless we have full control over the source code of every firmware used
-> in the kernel, why bother. It is up to the companies providing them
-> anyway to make sure everything works as expected and the community can't
-> fix it.
-
-Well that's exactly it -- we do have access to the code for ar9170 for
-example, so these details will become more relevant in the future.
-
- Luis
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
