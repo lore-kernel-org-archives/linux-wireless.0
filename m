@@ -1,174 +1,320 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:38781 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752881Ab0BVS66 (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:60511 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752765Ab0BNXua convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 13:58:58 -0500
-Received: by ewy28 with SMTP id 28so3095089ewy.28
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 10:58:56 -0800 (PST)
-From: "Abdul Hakeem" <alhakeem@gmail.com>
-To: <hostap@lists.shmoo.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Custom Configurations 
-Date: Mon, 22 Feb 2010 18:59:05 -0000
-Message-ID: <00ad01cab3f1$1bbf69e0$533e3da0$@com>
+	Sun, 14 Feb 2010 18:50:30 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.33-rc8: Reported regressions from 2.6.32
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpmuinux-foundation.org@ogre.sisk.pl>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_00AE_01CAB3F1.1BBF69E0"
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <Z5cmiqDComP.A.gyF.OiIeLB@chimera>
+Date: Mon, 15 Feb 2010 00:31:51 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
+This message contains a list of some regressions from 2.6.32,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-------=_NextPart_000_00AE_01CAB3F1.1BBF69E0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+If you know of any other unresolved regressions from 2.6.32, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-Hello,
-Can anyone share some thoughts on custom configuration of an AP to allow for
-specifics such as:
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
 
-64K bandwidth limit per client
-UDP connection only.
 
-Best regards,
-AH
+Listed regressions statistics:
 
-------=_NextPart_000_00AE_01CAB3F1.1BBF69E0
-Content-Type: application/ms-tnef;
-	name="winmail.dat"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="winmail.dat"
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2010-02-15      112       34          31
+  2010-02-07       97       27          20
+  2010-02-01       85       26          21
+  2010-01-24       75       29          23
+  2010-01-10       55       33          21
+  2009-12-29       36       34          27
 
-eJ8+IgYSAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEIgAcAGAAAAElQTS5NaWNy
-b3NvZnQgTWFpbC5Ob3RlADEIAQOQBgDUGwAAMgAAAAsAAgABAAAAAwAmAAAAAAALACkAAAAAAB4A
-cAABAAAAFwAAAEN1c3RvbSBDb25maWd1cmF0aW9ucyAAAAIBcQABAAAAFgAAAAHKs/EZCxI4Bbo1
-EU22pO6noOet/YwAAAsAAQ4AAAAAAgEKDgEAAAAYAAAAAAAAAKU8ZfJ4xhNEj1obo+caIU8ihAAA
-AwAUDgEAAAAeACgOAQAAAC8AAAAwMDAwMDAwNAFhbGhha2VlbUBnbWFpbC5jb20BYWxoYWtlZW1A
-Z21haWwuY29tAAAeACkOAQAAAC8AAAAwMDAwMDAwNAFhbGhha2VlbUBnbWFpbC5jb20BYWxoYWtl
-ZW1AZ21haWwuY29tAAACAQkQAQAAAGQWAABgFgAAM10AAExaRnUDB5ShBwAGAQELYG5nMTAyZjUA
-ZAByY3AN0A4AMgUMYGMNRGYzMTUwQjcA9XN0c2gFcGJ0Y2gP0jYQhAkAEQtocw6wERpiaQ/XDaIB
-0DWJFBdmZRSjdGhlB4CfFGcV1xVgAUAV12NzAejzAqQTsGRpAzYCABEACsAIc2V0AtFwcnEypQAA
-Kgqhbm8aUCAN8JEboTYwMxSwMDQcITMB0BwQNH0HbQKDMzR/GR8aLxs4HFIcFBvyIPF93ENhBtAH
-IQXQYRXQHeT/EBAeZgPjHz8bCwEwHHIbsvMcUCHWbGkiYR3kD+EZD/8kbxsvHD8dTg/hAFAobyl/
-/yqPK58srw8gLd8u7yCPIZ/9J7czMz80Ty/vMP8yDztQ/zgvOT86TztfPG8UsD2fPq//P79Az0Hf
-EVEjf0QvJZ8mr38ntyNYQ59KH0W/Rs8CgzKMMjlNb050MjM4TuTiIAdtIENFUjRQYFK/z1PFPXJU
-f1WDeXJV5TMvuU5lMTYtsVgvA4JHCdF+a1XlOB9bJ1oRW+8DglTvCHBV5T2PWyY3I1FfzwOC2ChI
-ZSJgB9ApVeVC//9ix1RPZGYHEAGgDrBlRkhoXVq9OEhhZ58DgkIHQHR/DrBV5U1fWydd8WuvZJNW
-WQiQdG4iQAeQZWVENf42Uq9TvyI6VbYUwFZfV2//dDxZhRTAWh9bL3Q7XTgUwP9d/18PdDthFhTA
-ad9q73Q7+Wz5NTlyGEkMc5onY1W2/1BAdZiEzXcphmVZhVBAeSj/SQx6qoZkXThQQYqvff+GVf9h
-FlBASG+Bf4ZGbPkP0mdh/4CfU+9U/yfVch+Ib5bvWYX9D9ExLb+Lr1w/XUecMnkv/48PYB9hJZwy
-fN9iz2/vZOr/nDJhv2bfpn9o+pwyZc+ST/9r/5PrnfCsz27vb/9xDZwy75TPld+av5f3MZifma+3
-X/2byDKcf52Pnp+fqlKAvP9/oZ+ir7xIpF+lb7Lvp40y/6iPqZ/G76u9DgHJH63vrv/9lAkysM+x
-38sfs/+8sbU//7ZPIjaX6FKfug/XuJvID9D/2Q+LvyJFn5taD8HvdCejmf9lv84vdCeT3LbC42+2
-f7eP39vl2P/aD+jvm8g03F/db3u/D5+qNN/f4O/DD6OoNO/Ez8Xf01+njTTI/8oP+H+9q7004z/k
-T89Pk+s00T//0k/8r9Rv7kHmz+ff7L+X9/406p/rrwlfm8icUAsf75//8K+fubzADv/zn/SvDkj2
-X//3bwTvp43uUBbf+6/8v6vM/w7AGw//3wDvk/px8B8/A+//BP8GDw7ABz8ITw0vl/eEAP8nvwwv
-DT+b1xByK68QLxE//5/XFHIvjxQvFT8u1hbPF997JV+njTYa/xwPOV+rvTbvHy8gPyFPk+s2Iz8k
-Tz2P/yZvLyEnqITPhd8ux4QvLI/7iX6UgTcvWIs/jE+fuXkZ/46fj69OKD+Ykd+S75P6PPL/Q98o
-7yn/TlUrf0x/W1+byN44L19P3zF/n6o4M19TX3s1f6OoODc/OE9Fz6eNOO87bzx/au+rvTg/n1a/
-Qb9/k+tXMnFfRO9F/7QolEFjAG9sb3J0Ymw7qlyfoGSHUGefoW6HUFF5wHVlMHnvZc0QNf97Gnwx
-e+98+XsEfSJ7j39fr38dfp98z3sfZaBgOITq/4YBhb+GyXsEhvKFX4kviO33iG+Gn4pkOWTgjbSP
-EYczP48QhO99l4lPh5CUQSpcdGRlYeFwdaGYUldBc3XA0WxhsGdM4E6glJNmmYdgMDNowJU0bnCV
-kpIgkxZwYZOxcWx1oB9X4How4jB6ME9wZGN0WmyXMHKYMKvAcJNhYeJ1r/BcYXOXMJiQT+BRmZJu
-dW2cEGGZUHSCb5mQZGp1c3TiMHxnaJmA4jB6kVfgepFpCnSXQDCWoFxub3HDV2FvwG90ZSCgAJtQ
-1Hlsb0Bon7B0oACXj/+Yn5mvmr+bz5BQn5Bh8GHR9HMxdaBhk+NqYKSwlGL/V9CUsZWQzRCesaJw
-pCSjwfuT75T9Y4rwdXCns5ZAlOlDlkWdwG5leHSjwXO3nRB5kG/QdKrRV3BpeZB9nHB5q0Kd4FAA
-dXBIADn9O0E0b2CronnQkxOkYaPBd6IgdYDQcHadkJ3AtHBtPGlodXCTYG/wncB1br2v0WWiUHoQ
-q/mkgESgRDQgUE/wYYrwl0BoINBGb250kwR0pHBg4FuzkGGAd6lAonBms5BX8XVwdGhCaMCicJcw
-rvAubJWQbpC1JHK1mGZs17UGtHC3B2K3B3K1AXnAT5vgeiG5BJ3gcGW1AXPwY2VsbJ9RtNC0cblh
-/nOvQHmg0FGzgcgQtiC7xjpsu9Viu9Wf0LvkZGffvMa+QL3GpDC75HaXb5+P/6Cfoa+iv6PPpN+l
-76b/qA//qR+qL1AwxiGvj7CYq4atxP93QP3QngCuJ8exrujFnMVht8fqwhB5UGZqQKrRYsJQ/3oQ
-swCuos0vsJis5CtglaDyOf6gIEi58bywm+DfM92uYzbQv9HP0ts407/Uz//V39bisvC6gLQQehDX
-L9OS/9h/xg93MMffyObTcKtC24/33JasKtdBc7MAz5GdwHlgWG1wbwZw3b9Fb9BpfGxTneJqQHkT
-k0DxoHabebGdoFXXkJzwd27qBn+tEeqi68PWpevDrUXx8W25q8FoUMFw7gOy8jNs8DJt+aBrQpvi
-70VTdUpi77FzrfFsRv3AYx/vsXWAwmCx0WDgbWxNNU/wZ++TcvIXk2FKY/vx0cGSSblAeoBQMPpw
-77E5m+B0TG8g77EGMHJ51fTxMZMTePHwbsQA6rIH9hTGIMRQdHA6Ly+nulCeMG/Qcy7cYGNhgKvn
-QLRwLufBL/iQZv3wyGUvd3mQZC9M4JWgt/lz8fB5IFyXMbtwd4dw9jL0gfqzaGzC77HyIbWAv/Rz
-8iG2MPyW9FXyIWL0Y/Znw4CdgHKcAcQQBnDBID91oMDxtBDBILyxtHBuYs5qwkB6gK7wb2O0QfEQ
-/mudYK9A4bABNKuUInDHYR+TULMAnXHvQHoQc3lzp6uQ9EGQUWx5swB28fCnejADGJwhZ2Sr0GF6
-Mt5mAQHqgPQxuxF2V9EF0d+rEPHwYOCeILQQcMlgumD9B/BstMCrEpxgyzB5kNxRPnh6EHlgsxD0
-MXowc2H/r0Cb4AcT9iEKMQfx9iG7cG9hgFAAYOCc8HjJYPdQb+p5eoBcqxBwniB5oGHA35zwwhG8
-sMJgASBksxB5wPn2UGJkvUCc8MJhumCrkU/TQauSniDDwGVcB/ByvnoBAr5A/DKb4BDRaA8T83Kg
-BNFndhGpEGHEMJvg/8jBEiITJBLTB+IC8RJBFLMuag0BYbDK4HZG4Hdr/7kxcSAWErpQV9CVgftR
-/kD9v1Jlw8AXdauQnXCsAQRg/nTrQJvgEEAAYRkHxFBv0P/DgMJgnOH2QMRQw8F5sdMw/ybgImDk
-wPZAxyEOUrkxyVD/GRAXAcEgecC0IRkBebF5oP++8fZA71EPgRBAnPDvUcGQ/nAbcqrwl0DDkMqy
-m+C6Yv/HId7x+TC6cNyxA6C6cMGB3HBwsGDBIMJBaWGwHpf/OqB5sazSwhBPoJzwivC0EP/Dcvkw
-wjCwwQkx8JCd4KuR71fgxACc4bkxbu9Bs5ArEJ+6cB6BunDqgJzhY3jCYP+cgM/hnGC5QA3h3xAn
-YQzR+5zwxlBj9lEbcsZQJ1PDgLub4LzAaCjDGNL3YGfBUv0DMWMHEBqzebDvYCmCdcAHHVIr0gcQ
-dHhieFz/HrCWQFAAqwDCMBcA98EJsf5sHAF1oA2RPtDn0avSlXDLqzCTIncGMWZtLQDpcP3+4SD7
-MMjQnNKVcKvQNoC/UCANQJ1wwTCHYJxgbKuQ72/QFwAdEPZAdZyg4tLBUf+q0f9xsPH/NZwSqxB6
-MADR/7Bwu3AQQDTTweQz4J3AAGPPnaGTQMMA/2FsdgexwwH/+FDDMDhRnIB5oDjSuTH0Mf9SMPtR
-sHDJcZ2hwwAt0JyA/CAu6hQ4VmTgOPLi4Tlf/zpvO384sGjAwwCTYAEgPU/7Pl8/b2xs8MMA4VA9
-D0HffULlKTvMcSBAr0WfQsVi/2vQTkFGzziDV0BEb0k/Sk//S184oWpgTLI5P04fTy9HPf9ukEy/
-Uk9TX1RvOKFdAFFP/1bvV/9ZBfqhvBD6oMlgm+D/4sPBUsA/wU/CX8NvxH5d8v9mEdaI4S/Gn8ev
-yL/Jz8rf/5YYcLBln2agZ8zkYShRs/BD1nq6cW8sDQpd8iD+Q3ghdgAEcZ2QEAF6YHFQf3gAnZC0
-0A2gY0F3kLMAIP5jYvF4AHLAswD5MP6w8QCPArByofiQcOEgQVByAHZvcODe4iCrkXFQugBjPmn5
-MXeQsFAu4HDgczr3cEVwRa2AS5aibK9tv27P/iDkwLlAuqN3v3jPed/o8/8HMPgwq+B733zvff/W
-4tdBj3LABzD0MXBFVURQf6//gL+Bz9biczKrAGAgc+MZsa+EX4Vvhn/W4i52rEIBwCur4JIwZ14R
-c3A2QUj/iM+J34rv7OIu4GSw6IpwRd+WswxxBrKd42lQcwOgArDx/hB4MjZp0ZSQdQABcP/fIJcB
-nAGUkdxXYNEzMJSBP7BolwbO1ZXmrCZg0Tk5/+3glVerELpgH4BfUZZK2fL/l2qcZM7VZiGZaZxk
-lYTFYN+txZuPnJ+dr6xEOZ8rF+J5AsEgMaBToq+jv6THMnelb6Z/pHwzqH+pj6R8NHerj6yfpHw1
-rp+vr6R8Nn+xr7K/pHzp8LTPtd+kizj3t8+436R8OaBTu/bo8J8r/WKQY6VFvj+/SKhkwE+/SP+r
-dMJfv0iuhMRvv0ixlMZ//79ItKTIj79It7TKn79IusT/zK+/SL3Uuy/O82eyn1gXAP8fgHPhoF+h
-b9CfvAXlMp9J/lRkICdgzmueNJ928aFhAvwgUGSRBjBkQHZQ7tLTf//Uj9Wf1qbZLPBBArDYJtu/
-f9zP3d/oYGcA3yxjEAnQZ9/gf+GP4p/jpp8cRTAAYbD97TBz5W/mf5lpb2DXPCgSvCBHasHqc+a+
-n3ZQCDb9MZFUCMHqf+7v54/Yv5+0v9/gDyECwfGv8r+ZaTafHP5MYzLf4BAR9p/3r/i92Sz/+oT6
-gI1A+1/8b/jq5Cz6hL/ulwAPAR/5NWxgnzpNLwB+aWIg+talRQRvBX/5NTT/Bw8IGahkCS8KP/k1
-0iwH1e//cgi/Do/4zDYQjxGWDY//Ey/424/SFU/ukhIPF6/4zP44Ga8athavHE/427x8GnqvxAQg
-LyE/vBQ3nxxEZLDea/9vJS8mP9ksQy8wdVD+ZmEQ+t8pTypfJxHkLCx3/yh/Lk8mTgb8LHcD3zLf
-+K/3Aq/6x3RwY5swk/AbLzeP//1fOa8Rwzs/PE89XwJvA3j/QB9BL0I/Br8Hz0UPRh9HL/8LfwyP
-Sl9Lb0x/ED8RTE+s4+8v2ZVSZXbqUNNPUR//85/OmU3MEcPah1evWL9Zz+PjpiK8UXVvk9BdH14v
-918/zsafHEmT8JbgVhBhn/9ir1H/FP8WCU+vZ99o7xlf/xpsa+9s/24PHe8e/HEPch//cy8ifyOM
-di93P3hPJw8oGP97T3xffW8rXyxvgC+BP4JP/zAfMSyFf4aPh580rzW8ip//i6+Mvzk/Ok+P4x/P
-kU89z/8+34pplV+Wb0K/Q8+PiZpP/5tfR69530nPnz+gT0z/om//Tx+kj6WfUk+nv1Rsqd+q7/9p
-b60Pa4yu/7APbo+yL3Cs/7QftS9zr7dPdcy5P7pPeM//vG967L5fv299737/ma/D7//E/4M/hE+U
-v8jPyd+Ij4mf/80/zk/PX43fju/Sj9OfwD//ky+UPyRP2O+Xb9sPilrdD//eH5xvnX+PieH/4w+h
-X8GP/6N/5u/n/6av6h+oz+w/7U//q//vb1Rs8Y/yn7Ef9L9rjP/2r/e/tj/533Cs+8/837tf//7/
-dcwA7wH/wH8EH3rsBg//Bx/Fn8av4V8Lnwyvyu/L///cbxB/EY/QP9FPFO8V/xcPf9WP1p8aPxtP
-B+/a39vvIP40H68gv98/4E+KeCS/Jc//5B/lL4+JKa8qv+kPCT/rL/8uny+v7l8xz/B/M+80//Ov
-/zcfVGw5PzpP+M88b2uMPl//P2/970GPcKxDf0SPAw9Gr/91zEifSa8IL0vPeuxNv07P/w1PDl8p
-D1NPVF8SnxOvJB//WC9ZPxfvGP9cn12vXr8dPz8eT2HvYv9PnyKPI58gNf9nX2hvJu8n/4p4bG9t
-fyvP/yzfj4lxX3JvML9Q7zLfdk//d182D3l/OC97n3yvO19+z/+uHIDvgf9Af4QfszyGD4cf/0Wf
-iT+4XIsvjD9Kv45fvXz/kE+RX0/fk3/CnJVvln9U//9WD3C/mv+cD1pPW19rz5/f/6DvX59gr6RP
-pV+mb2TvZf+fqZ+qr5dPaj9rTyA2rw//sB9un2+v0ii0H7Uvc390j//XObkPuh94b5ifeo+9/78P
-/32/wS9/38NPxF+DD8Z/9cz/yJ/Jr4gvy8/67M2/zs+NT//Q7wAM0t/T75Jv1g8FLNf//9kPl4/b
-LwpM3R/eL5yvnb//uG/ir+O/of+jD7N/54/on/+nT6hf6//tD+4frJ+tr/FPE/Jf3vZxZvWAbWF0
-C+oEsVYx4AxTdWJ0QGxlIEVtcDLgc189gPa/98/437FlMuoMSX8fYB9Q81D7r/y//c/5XjOD6gz7
-RVJlZmVyH1D/H0ABzwLfA+8E9rv8AMYGz48H3wjvCf/0fEJvb1bQPlSxoPuADPME59XMQmlEYmyx
-cGdyYQFgeQ8M8w9PBSPgDFRPQyAESGUy8zt9fXtc2CpcZPlQAYB09YABIKAwMTA1MBkyMhkzJRjw
-OBmUNGT0YDc4EDZkNmMK8DJlNWAzNDE1OBuQGnA0+GM1MstwtvDGIMtw70D9GzAzHBAc4BmUHZ6x
-0BkxAbygY2YxMWUwYeQxYh8wYWUZAB//IOweMx9QIdEZMAyAZmYw/jkediNPGdEkHSP9InImkv8j
-diZ+Jvco/yoPKx8sLy0//y5PL18wbzF/Mo8znzSvNb//Ns833zjvOf87DzwfPS8+P/8/T0BfQW9C
-f0OPRJ9Fr0a//0fPSN9J70r/TA9NH04vTz//UE9RX1JvU39Uj1WfVq9Xv79Yz1nfWu9b/10PXfxk
-XfX/JoVf72D/Yg9jH2QvZT9mT/9nX2hvaX9qj2ufbK9tv27P/2/fcO9x/3MPdB91L3Y/d0//eF95
-b3p/e498n32vfr9/z/+A34Hvgv+ED4Ufhi+HP4hP/4lfim+Lf4yPjZ+Or4+/kM//kd+S75P/lQ+W
-H5cvmD+ZT/+aX5tvnH+djyaTHBAegSbhqZ8yNzQZZDQZITYiAf+fsu9An5EiwqF/oo+jn6Svv6W/
-GdEeohkhne9fFmPf8KhkOTipUGKpcDMb4VUboDkXgGYa8GQbgWLXH1An76tmYyJgYiKQGfDzHyCp
-oGNhGPAnf65/r4//sJ+xr7K/s8+037XvKI+37P+2b7n/uw+8H70vvj+/T8Bf/8Fvwn/Dj8Sfxa+2
-z8fPuO//ye/K/8wPzR/OL88/0E/RX//Sb9N/1I/Vn8a/17/I39nff9rv2//dDyU+GSTd9RfwAAHg
-IAMA3j+fTgAAAwDxPwkIAAADAAlZAwAAAAsAPoAIIAYAAAAAAMAAAAAAAABGAAAAAAOFAAAAAAAA
-AwBAgAggBgAAAAAAwAAAAAAAAEYAAAAAEIUAAAAAAAALAGWACCAGAAAAAADAAAAAAAAARgAAAAAG
-hQAAAAAAAAMAZoAIIAYAAAAAAMAAAAAAAABGAAAAAAGFAAAAAAAACwBrgAggBgAAAAAAwAAAAAAA
-AEYAAAAADoUAAAAAAAADAGyACCAGAAAAAADAAAAAAAAARgAAAAAYhQAAAAAAAAsApIAIIAYAAAAA
-AMAAAAAAAABGAAAAAIKFAAAAAAAACwCPgQMgBgAAAAAAwAAAAAAAAEYAAAAAJIEAAAAAAAALAJCB
-AyAGAAAAAADAAAAAAAAARgAAAAAsgQAAAAAAAAsAnYEDIAYAAAAAAMAAAAAAAABGAAAAAByBAAAA
-AAAAAwCegQMgBgAAAAAAwAAAAAAAAEYAAAAAAYEAAAAAAAAFAJ+BAyAGAAAAAADAAAAAAAAARgAA
-AAACgQAAAAAAAAAAAAADAKCBAyAGAAAAAADAAAAAAAAARgAAAAAQgQAAAAAAAAMAoYEDIAYAAAAA
-AMAAAAAAAABGAAAAABGBAAAAAAAAAwCigQMgBgAAAAAAwAAAAAAAAEYAAAAAKYEAAAAAAAADAKOB
-AyAGAAAAAADAAAAAAAAARgAAAAAqgQAAAAAAAB4ApIEDIAYAAAAAAMAAAAAAAABGAAAAACeBAAAB
-AAAAAQAAAAAAAAADAKWBAyAGAAAAAADAAAAAAAAARgAAAAASgQAAAQAAAAMApoEDIAYAAAAAAMAA
-AAAAAABGAAAAABOBAAABAAAAHgCngQMgBgAAAAAAwAAAAAAAAEYAAAAAIYEAAAEAAAABAAAAAAAA
-AAsAqYEDIAYAAAAAAMAAAAAAAABGAAAAAAOBAAAAAAAAAwCqgQMgBgAAAAAAwAAAAAAAAEYAAAAA
-I4EAAP///38LAKuBAyAGAAAAAADAAAAAAAAARgAAAAAmgQAAAAAAAAsAHw4BAAAAAgH4DwEAAAAQ
-AAAApTxl8njGE0SPWhuj5xohTwIB+g8BAAAAEAAAAKU8ZfJ4xhNEj1obo+caIU8DAP4PBQAAAAMA
-DTT9P6UGAwAPNP0/pQYCARQ0AQAAABAAAABOSVRB+b+4AQCqADfZbgAAAgF/AAEAAAAxAAAAMDAw
-MDAwMDBBNTNDNjVGMjc4QzYxMzQ0OEY1QTFCQTNFNzFBMjE0RjI0OTNBODAwAAAAAAMABhBE6r/O
-AwAHEI4AAAADABAQAAAAAAMAERAAAAAAHgAIEAEAAABlAAAASEVMTE8sQ0FOQU5ZT05FU0hBUkVT
-T01FVEhPVUdIVFNPTkNVU1RPTUNPTkZJR1VSQVRJT05PRkFOQVBUT0FMTE9XRk9SU1BFQ0lGSUNT
-U1VDSEFTOjY0S0JBTkRXSURUSExJTQAAAACABg==
 
-------=_NextPart_000_00AE_01CAB3F1.1BBF69E0--
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15308
+Subject		: 2.6.33-rc8 breaks UML with Restrict initial stack space expansion to rlimit
+Submitter	: Jouni Malinen <j@w1.fi>
+Date		: 2010-02-14 16:40 (1 days old)
+First-Bad-Commit: http://git.kernel.org/git/linus/803bf5ec259941936262d10ecc84511b76a20921
+Message-ID	: <20100214164023.GA2726@jm.kir.nu>
+References	: http://marc.info/?l=linux-kernel&m=126616751807902&w=4
+Handled-By	: Michael Neuling <mikey@neuling.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15307
+Subject		: irq11: nobody cared, during yenta registration
+Submitter	: Meelis Roos <mroos@ut.ee>
+Date		: 2010-02-14 15:32 (1 days old)
+Message-ID	: <alpine.SOC.1.00.1002141720120.679@math.ut.ee>
+References	: http://marc.info/?l=linux-kernel&m=126616327302771&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15306
+Subject		: Filesystem I/O is CPU-bound
+Submitter	: James Cloos <cloos@jhcloos.com>
+Date		: 2010-02-14 3:11 (1 days old)
+Message-ID	: <m3pr48bjfg.fsf@lugabout.jhcloos.org>
+References	: http://marc.info/?l=linux-kernel&m=126611738629349&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15305
+Subject		: Dell video dies when booting
+Submitter	: David Ronis <ronis@ronispc.chem.mcgill.ca>
+Date		: 2010-02-14 1:07 (1 days old)
+Message-ID	: <1266109622.11290.10.camel@montroll.chem.mcgill.ca>
+References	: http://marc.info/?l=linux-kernel&m=126611098225127&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15292
+Subject		: Laptop reboots instead of resume from suspend with any kernel after 2.6.31
+Submitter	: Dave Morgan <davemorgan353@btinternet.com>
+Date		: 2010-02-13 13:11 (2 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15289
+Subject		: Regression 2.6.32 -> 2.6.33, Kernel needs a helping key to boot :)
+Submitter	: Asbjørn Sannes <kernelbugzilla@sannes.org>
+Date		: 2010-02-12 19:47 (3 days old)
+First-Bad-Commit: http://git.kernel.org/git/linus/73472a46b5b28116b145fb5fc05242c1aa8e1461
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15287
+Subject		: RadeonKMS segfaults kdm on mobility radeon x700 pcie
+Submitter	: Jan Kreuzer <kontrollator@gmx.de>
+Date		: 2010-02-12 17:58 (3 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15278
+Subject		: lockdep warning for iscsi in 2.6.33-rc6
+Submitter	: Tao Ma <tao.ma@oracle.com>
+Date		: 2010-02-09 6:59 (6 days old)
+Message-ID	: <4B7107CF.3060703@oracle.com>
+References	: http://marc.info/?l=linux-kernel&m=126569884330200&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15277
+Subject		: 2.6.33-rc6 crashes on resume
+Submitter	: Bill Davidsen <davidsen@roadwarrior3.tmr.com>
+Date		: 2010-02-08 23:03 (7 days old)
+Message-ID	: <4B70982F.8090208@roadwarrior3.tmr.com>
+References	: http://marc.info/?l=linux-kernel&m=126567021801935&w=2
+Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15276
+Subject		: latest git kernel: general protection fault: 0000 [#1]
+Submitter	: Markus Trippelsdorf <markus@trippelsdorf.de>
+Date		: 2010-02-09 8:36 (6 days old)
+Message-ID	: <20100209083605.GA1766@arch.tripp.de>
+References	: http://marc.info/?l=linux-kernel&m=126570498804223&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15273
+Subject		: Regression in ptrace (Wine) starting with 2.6.33-rc1
+Submitter	: Michael Stefaniuc <mstefani@redhat.com>
+Date		: 2010-02-11 16:21 (4 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15259
+Subject		: Corruption with OpenGL since Intel's big DRM push on i945
+Submitter	: Alexandre <papouta@hotmail.com>
+Date		: 2010-02-08 13:19 (7 days old)
+First-Bad-Commit: http://git.kernel.org/git/linus/76446cac68568fc7f5168a27deaf803ed22a4360
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15246
+Subject		: BUG: Bad page state in process portageq
+Submitter	: Johannes Hirte <johannes.hirte@fem.tu-ilmenau.de>
+Date		: 2010-02-07 0:45 (8 days old)
+References	: http://marc.info/?l=linux-kernel&m=126550356515887&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15245
+Subject		: [2.6.33-rc6 Weird JCPU times?
+Submitter	: Shawn Starr <shawn.starr@rogers.com>
+Date		: 2010-02-06 7:24 (9 days old)
+References	: http://marc.info/?l=linux-kernel&m=126544107816889&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15244
+Subject		: PROBLEM: hda-intel divide by zero kernel crash in azx_position_ok()
+Submitter	: Jody Bruchon <jody@nctritech.com>
+Date		: 2010-02-06 0:32 (9 days old)
+References	: http://marc.info/?l=linux-kernel&m=126541276028173&w=2
+Handled-By	: Takashi Iwai <tiwai@suse.de>
+		  Jody Bruchon <jody@nctritech.com>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15207
+Subject		: Pineview - only cursor on black screen visible, "GPU hung" in dmesg
+Submitter	: Christian Friedemann <dawn2k@gmail.com>
+Date		: 2010-02-01 20:15 (14 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15202
+Subject		: lockdep warning during elevator_switch
+Submitter	: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+Date		: 2010-01-31 23:55 (15 days old)
+References	: http://marc.info/?l=linux-kernel&m=126498212613051&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15200
+Subject		: NFS problems in 2.6.33-rc6: Unknown error 526
+Submitter	: J.A. Magallón <jamagallon@ono.com>
+Date		: 2010-01-31 22:46 (15 days old)
+References	: http://marc.info/?l=linux-kernel&m=126497800408928&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15192
+Subject		: netperf ~50% regression with 2.6.33-rc1, bisect to 1b9508f
+Submitter	: Lin Ming <ming.m.lin@intel.com>
+Date		: 2010-01-25 10:03 (21 days old)
+First-Bad-Commit: http://git.kernel.org/git/linus/1b9508f6831e10d53256825de8904caa22d1ca2c
+References	: http://marc.info/?l=linux-kernel&m=126441481427331&w=4
+Handled-By	: Mike Galbraith <efault@gmx.de>
+		  Peter Zijlstra <peterz@infradead.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15177
+Subject		: Asynchronous writes up to 30% slower than in previous kernel versions
+Submitter	: Bart Van Assche <bart.vanassche@gmail.com>
+Date		: 2010-01-30 16:38 (16 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15142
+Subject		: sysfs-related lockdep warning in __blkdev_get
+Submitter	: Matti Aarnio <matti.aarnio--kernel-bugzilla@zmailer.org>
+Date		: 2010-01-25 13:38 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15139
+Subject		: e1000: transmit queue 0 timed out
+Submitter	: Alexander Beregalov <a.beregalov@gmail.com>
+Date		: 2010-01-23 15:37 (23 days old)
+References	: http://marc.info/?l=linux-netdev&m=126426149306083&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15114
+Subject		: X.org hang with [drm:i915_gem_do_execbuffer] *ERROR* in dmesg
+Submitter	: Matej Laitl <strohel@gmail.com>
+Date		: 2010-01-23 19:54 (23 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15076
+Subject		: System panic under load with clockevents_program_event
+Submitter	: okias <d.okias@gmail.com>
+Date		: 2010-01-17 13:03 (29 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15044
+Subject		: Much higher wakeups for "<kernel IPI> : Rescheduling interrupts" since 2.6.32.2
+Submitter	: Roman Mamedov <roman@rm.pp.ru>
+Date		: 2010-01-11 02:58 (35 days old)
+First-Bad-Commit: http://git.kernel.org/git/linus/a1f84a3ab8e002159498814eaa7e48c33752b04b
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15036
+Subject		: soft lockup in dmesg after suspend/resume
+Submitter	: ykzhao <yakui.zhao@intel.com>
+Date		: 2010-01-04 5:36 (42 days old)
+References	: http://marc.info/?l=linux-kernel&m=126258356202722&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15025
+Subject		: Oops in ext4 driver
+Submitter	: Steinar H. Gunderson <sgunderson@bigfoot.com>
+Date		: 2010-01-10 13:09 (36 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14999
+Subject		: possible circular locking dependency detected in rfkill at suspend
+Submitter	: Christian Casteyde <casteyde.christian@free.fr>
+Date		: 2010-01-06 21:52 (40 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14950
+Subject		: tbench regression with 2.6.33-rc1
+Submitter	: Lin Ming <ming.m.lin@intel.com>
+Date		: 2009-12-25 11:11 (52 days old)
+References	: http://marc.info/?l=linux-kernel&m=126174044213172&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14937
+Subject		: WARNING: at kernel/lockdep.c:2830
+Submitter	: Grant Wilson <grant.wilson@zen.co.uk>
+Date		: 2009-12-27 13:35 (50 days old)
+References	: http://marc.info/?l=linux-kernel&m=126192220404829&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14792
+Subject		: Misdetection of the TV output
+Submitter	: Santi <santi@agolina.net>
+Date		: 2009-12-12 13:28 (65 days old)
+First-Bad-Commit: http://git.kernel.org/git/linus/27dfaf4f5825a119305db1bc63bef30ed400e376
+Handled-By	: Zhao Yakui <yakui.zhao@intel.com>
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15248
+Subject		: KMS broken on Intel 855GM broken with 2.6.32/33
+Submitter	: Michal Nowak <mnowak@redhat.com>
+Date		: 2010-02-07 09:59 (8 days old)
+Handled-By	: Jesse Barnes <jbarnes@virtuousgeek.org>
+Patch		: http://patchwork.kernel.org/patch/78947/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15039
+Subject		: leds_alix2: can't allocate I/O for GPIO
+Submitter	: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+Date		: 2010-01-07 10:26 (39 days old)
+References	: http://marc.info/?l=linux-kernel&m=126286001106257&w=4
+Handled-By	: Daniel Mack <daniel@caiaq.de>
+Patch		: http://patchwork.kernel.org/patch/72006/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14949
+Subject		: drm_vm.c:drm_mmap: possible circular locking dependency detected
+Submitter	: Borislav Petkov <petkovbb@googlemail.com>
+Date		: 2009-12-26 9:45 (51 days old)
+References	: http://marc.info/?l=linux-kernel&m=126182073616279&w=4
+Handled-By	: Eric W. Biederman <ebiederm@aristanetworks.com>
+Patch		: http://patchwork.kernel.org/patch/70461/
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.32,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=14885
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
