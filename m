@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60942 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756536Ab0BEJ7H (ORCPT
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:35860 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758195Ab0BNBP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 04:59:07 -0500
-Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh
- mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrey Yurovsky <andrey@cozybit.com>
-In-Reply-To: <1265362748.3613.0.camel@johannes.local>
-References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
-	 <1265362748.3613.0.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 05 Feb 2010 10:59:02 +0100
-Message-ID: <1265363942.3613.1.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 13 Feb 2010 20:15:28 -0500
+Received: by mail-ew0-f228.google.com with SMTP id 28so3034960ewy.28
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Feb 2010 17:15:28 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 3/3] rt2x00: rework RT chipset and revision determination for PCI an SOC devices.
+Date: Sun, 14 Feb 2010 02:15:25 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1266090949-5468-1-git-send-email-gwingerde@gmail.com> <1266090949-5468-3-git-send-email-gwingerde@gmail.com> <1266090949-5468-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1266090949-5468-4-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <201002140215.26020.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-02-05 at 10:39 +0100, Johannes Berg wrote:
-> On Thu, 2010-02-04 at 23:00 -0200, Thadeu Lima de Souza Cascardo wrote:
-> > When trying to use the NEW_STATION command, it fails with -EINVAL,
-> > because there's no STA_SUPPORTED_RATES parameter. However, for mesh
-> > mode, this parameter should be NULL. Besides, it requires
-> > LISTEN_INTERVAL to be negative. We allow it to be ommited in the STA
-> > case too, in which it will be -1.
-> > 
-> > ---
-> > 
-> > Hello.
-> > 
-> > I was trying to use iw station set in mesh mode and found out I wanted
-> > to call NEW_STATION.
+On Saturday 13 February 2010, Gertjan van Wingerde wrote:
+> The recent rt2800 devices are no longer really identified by their PCI
+> ID's, but rather by the contents of their CSR0 register. Also for the
+> other chipsets is the contents of this CSR0 register important.
+> Change the chipset determination logic to be more aligned with the rt2800
+> model.
+> Preparation for the support of rt3070 / rt3090 based devices.
 > 
-> Hmm. Can you explain why you want to do that? Mesh usually discovers its
-> peers, and you can add paths, but peers doesn't make a whole lot of
-> sense to me?
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-So it's allowed due to commit 155cc9e4b1d60161ee53ffaf2c15b9411f086fa7,
-but I don't understand why. Andrey?
-
-johannes
-
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
