@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37124 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755863Ab0BJUph (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2010 15:45:37 -0500
-Date: Wed, 10 Feb 2010 15:37:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org, mb@bu3sch.de
-Subject: Re: pull request: wireless-2.6 2010-02-10
-Message-ID: <20100210203734.GE3286@tuxdriver.com>
-References: <20100210201953.GC3286@tuxdriver.com> <20100210.122540.149553948.davem@davemloft.net> <20100210203227.GD3286@tuxdriver.com> <20100210.123503.129355851.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100210.123503.129355851.davem@davemloft.net>
+Received: from smtp1-g21.free.fr ([212.27.42.1]:55364 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753510Ab0BNXfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Feb 2010 18:35:09 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: dsd@gentoo.org, kune@deine-taler.de
+Cc: linux-wireless@vger.kernel.org, zd1211-devs@lists.sourceforge.net,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH 1/2] zd1211rw: Experimental change to add proper monitor support
+Date: Mon, 15 Feb 2010 00:34:58 +0100
+Message-Id: <1266190499-2387-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 10, 2010 at 12:35:03PM -0800, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Wed, 10 Feb 2010 15:32:28 -0500
-> 
-> > On Wed, Feb 10, 2010 at 12:25:40PM -0800, David Miller wrote:
-> >> From: "John W. Linville" <linville@tuxdriver.com>
-> >> Date: Wed, 10 Feb 2010 15:19:54 -0500
-> >> 
-> >> > On Wed, Feb 10, 2010 at 11:36:58AM -0800, David Miller wrote:
-> >> >> From: Johannes Berg <johannes@sipsolutions.net>
-> >> >> Date: Wed, 10 Feb 2010 20:15:37 +0100
-> >> >> 
-> >> >> > It was intentional -- that sdev doesn't even have an irq member, but
-> >> >> > nobody ever noticed because of the wrong ifdef.
-> >> >> 
-> >> >> Ok, then this needs to be explained in the commit message.
-> >> > 
-> >> > OK...mind if I just revert the current version and ask Michael to
-> >> > resubmit with an appropriate changelog entry?
-> >> 
-> >> Have you pulled this tree into others already?  Why not
-> >> just pop out the commit and fix it's commit message, then
-> >> reapply?
-> >> 
-> >> Having the revert commit in there is really stupid just for this.
-> > 
-> > I have it pulled into wireless-next-2.6 to fix a merge conflict (from
-> > a latter commit).  It is also pulled into wireless-testing but that
-> > is obviously less of an issue.
-> 
-> Ok, forget this, I'll just pull it in as-is.
+Without this patch, monitor mode does not returns all frames. With this patch,
+the performance are quite poor if we create a monitor interface. Note :
+creating a monitor interface with the "cook" flag has no impact on performance.
+
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |   20 +++++++++++++++++++-
+ 1 files changed, 19 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 2d555cc..9cb6cbc 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -904,8 +904,26 @@ static int zd_op_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct zd_mac *mac = zd_hw_mac(hw);
+ 	struct ieee80211_conf *conf = &hw->conf;
++	int ret;
  
-K, thx!
-
-> But we have to have a better system to handle cases where I
-> don't like a change you're asking me to pull in and I want
-> changes made to it.
-> 
-> If you want to push stuff into wireless-next-2.6, get it into
-> my tree first.  That way we can tidy things up before it
-> propagates.
-
-Yeah, I was trying to be proactive about the merge conflicts and
-avoid the emails about the conflicts in -next.  But I guess that
-isn't a huge deal anyway, so I'll be a bit more cautious in the future.
-
-Thanks!
-
-John
+-	return zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
++	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
++		/*
++		 * Warning : enabling this register kills RX & TX
++		 * performance
++		 */
++		u32 cr_sniffer = !!(conf->flags & IEEE80211_CONF_MONITOR);
++		ret = zd_iowrite32(&mac->chip, CR_SNIFFER_ON, cr_sniffer);
++		if (!ret)
++			return ret;
++	}
++
++	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++		ret = zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
++		if (!ret)
++			return ret;
++	}
++
++	return 0;
+ }
+ 
+ static void zd_process_intr(struct work_struct *work)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.5.6.5
+
