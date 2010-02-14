@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51406.mail.re2.yahoo.com ([206.190.38.185]:37420 "HELO
-	web51406.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754333Ab0BDIbT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 03:31:19 -0500
-Message-ID: <700097.58871.qm@web51406.mail.re2.yahoo.com>
-Date: Thu, 4 Feb 2010 00:31:17 -0800 (PST)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: [ath9k-devel] Significiant performance differences between ath5k  and ath9k in 802.11a
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <4B629AF5.40706@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from sd-11162.dedibox.fr ([88.191.70.230]:58457 "EHLO
+	sd-11162.dedibox.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423Ab0BNRpZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Feb 2010 12:45:25 -0500
+Date: Sun, 14 Feb 2010 18:44:34 +0100
+From: Frederic Leroy <fredo@starox.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Chris Mayo <aklhfex@googlemail.com>,
+	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
+Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
+Message-ID: <20100214184434.119c8694@houba>
+In-Reply-To: <4B78312A.7060308@lwfinger.net>
+References: <4B38A298.7070103@googlemail.com>
+	<1262037590.16627.99.camel@localhost.localdomain>
+	<3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
+	<20100213234456.5ae49b67@houba>
+	<20100214004010.GB18815@tuxdriver.com>
+	<20100214131810.1a8b49ac@houba>
+	<4B78312A.7060308@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis,
-with several people confirming the performance regression relative to AR5xxx/ath5k, can you tell us whether this will eventually be fixed? We are close to a purchase decision and would really like to upgrade to a recent chip set.
+Le Sun, 14 Feb 2010 11:21:46 -0600,
+Larry Finger <Larry.Finger@lwfinger.net> a Ã©crit :
+> [...]
+> * Make certain the driver in staging works in its present form.
+
+Currently, I use it currently and seems stable.
+
+> * Prepare a patch to eliminate the unused branches of if(0) and if(1)
+> [...]
+> After the staging driver is leaner and cleaner, then you can start on
+> the port. As the RTL8192SU is a USB device, you may want to start
+> with rtl8187 rather than rtl8180, which is a PCI device. Once you
+> reach the point of getting a driver that has minimal functionality,
+> you can use the USB capture routines to compare your version with the
+> one that works.
+> 
+> Writing a new driver is a very involved process as I have found with
+> the RTL8187SE. In fact, my first two attempts failed, in large part
+> because I did not do the steps above. The current attempt looks more
+> promising as it has successfully read the EEPROM and is about 1000
+> register read/write steps toward getting the device initialized.
+
+Thanks for your wise advice Larry.
+I will follow it.
+
 -- 
-Regards
-       Joerg
-
-
---- Felix Fietkau <nbd@openwrt.org> schrieb am Fr, 29.1.2010:
-
-> Von: Felix Fietkau <nbd@openwrt.org>
-> Betreff: Re: [ath9k-devel] Significiant performance differences between ath5k  and ath9k in 802.11a
-> An: "Joerg Pommnitz" <pommnitz@yahoo.com>
-> CC: rootkit85@yahoo.it, linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org
-> Datum: Freitag, 29. Januar 2010, 9:23
-> On 2010-01-29 9:10 AM, Joerg Pommnitz
-> wrote:
-> > --- rootkit85@yahoo.it
-> <rootkit85@yahoo.it>
-> wrote:
-> > 
-> >> 
-> >> Can you try in AP-client mode? I think you'll get
-> more
-> >> throughput so.
-> >> 
-> > 
-> > No, IBSS is what I'm interested in. And the point is,
-> that there is
-> > a 30% performance difference between ath5k (and
-> Madwifi) and ath9k. Even
-> > if the performance in AP mode would be better, this
-> does not change the
-> > problem in IBSS mode.
-> I can confirm these numbers for AP/Client mode as well.
-> I've even tested
-> legacy communication between ath9k ap and sta, producing
-> the same
-> result. Additionally, I can rule out the rate control
-> algorithm, as
-> using minstrel instead of the ath9k RC produces a very
-> similar
-> throughput test result.
-> 
-> - Felix
-> 
-
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
-http://mail.yahoo.com 
+FrÃ©dÃ©ric Leroy
