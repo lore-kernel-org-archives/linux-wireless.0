@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f216.google.com ([209.85.218.216]:57331 "EHLO
-	mail-bw0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382Ab0BOIhh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2010 03:37:37 -0500
-Received: by bwz8 with SMTP id 8so2511251bwz.38
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2010 00:37:36 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <69e28c911002141150t66d2c98dia3730deaac9a7cbc@mail.gmail.com>
-References: <912ec82a1002140957p6959c030h2b33fd9646cfd67d@mail.gmail.com>
-	 <69e28c911002141046r70d8bcf2g6a8db7afbbef837@mail.gmail.com>
-	 <20100214191126.GA13637@jm.kir.nu>
-	 <69e28c911002141150t66d2c98dia3730deaac9a7cbc@mail.gmail.com>
-Date: Mon, 15 Feb 2010 10:37:35 +0200
-Message-ID: <912ec82a1002150037y2a187032h73e3d45188eabbc7@mail.gmail.com>
-Subject: Re: good wlan: sniffer that does not need a windows machine ?
-From: Neshama Parhoti <pneshama@gmail.com>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp1-g21.free.fr ([212.27.42.1]:39947 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752839Ab0BNXch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Feb 2010 18:32:37 -0500
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH 2/2] mac80211: Fix WPA-NONE for RX unicast frames
+Date: Mon, 15 Feb 2010 00:32:26 +0100
+Message-Id: <1266190346-2247-2-git-send-email-benoit.papillault@free.fr>
+In-Reply-To: <1266190346-2247-1-git-send-email-benoit.papillault@free.fr>
+References: <1266190346-2247-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> Monitoring in general works in almost all linux drivers
+This patch might have side effect which needs to be studied
 
-So I can just start monitoring with my thinkpad ?
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+---
+ net/mac80211/rx.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-And I will get to see stuff like transmission rate and power levels ?
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 22ae6ee..f73fe9b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -923,6 +923,13 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		rx->key = rcu_dereference(rx->sdata->keys[keyidx]);
+ 
+ 		/*
++		 * Using WPA-NONE in IBSS, all frames, be it unicast or
++		 * multicast (including broadcast) are encrypted with the
++		 * same group key. In this case, we should not reset the key
++		 * to NULL
++		 */
++#if 0
++		/*
+ 		 * RSNA-protected unicast frames should always be sent with
+ 		 * pairwise or station-to-station keys, but for WEP we allow
+ 		 * using a key index as well.
+@@ -930,6 +937,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		if (rx->key && rx->key->conf.alg != ALG_WEP &&
+ 		    !is_multicast_ether_addr(hdr->addr1))
+ 			rx->key = NULL;
++#endif
+ 	}
+ 
+ 	if (rx->key) {
+-- 
+1.5.6.5
 
-What software do I use for that ? Wireshark ?
-
-So really, no need to buy those (obnoxious)  USB dongle or PCMCIA
-cards that needs windows ?  That's great news!!
