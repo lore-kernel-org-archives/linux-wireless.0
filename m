@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([93.93.128.226]:40868 "EHLO
-	bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933264Ab0BPVuS (ORCPT
+Received: from mbox1.netikka.net ([213.250.81.202]:44413 "EHLO
+	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754097Ab0BNJxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 16:50:18 -0500
-Date: Tue, 16 Feb 2010 16:50:04 -0500
-From: Andres Salomon <dilinger@collabora.co.uk>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: give warning if building w/out rate ctrl
- algorithm
-Message-ID: <20100216165004.010d2c4b@droptest.queued.net>
-In-Reply-To: <1266355279.8849.24.camel@localhost.localdomain>
-References: <20100216161656.42079d77@droptest.queued.net>
-	<1266355279.8849.24.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sun, 14 Feb 2010 04:53:32 -0500
+Message-ID: <4B77C819.9050602@mandriva.org>
+Date: Sun, 14 Feb 2010 11:53:29 +0200
+From: Thomas Backlund <tmb@mandriva.org>
+MIME-Version: 1.0
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: linux-2..6.33-rc7 and b43
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 16 Feb 2010 13:21:19 -0800
-Marcel Holtmann <marcel@holtmann.org> wrote:
+Hi,
+(please cc me on replies)
 
-> Hi Andres,
-> 
-> > I discovered that if EMBEDDED=y, one can accidentally build a
-> > mac80211 stack and drivers w/ no rate control algorithm.  For
-> > drivers like RTL8187 that don't supply their own RC algorithms,
-> > this will cause ieee80211_register_hw to fail (making the driver
-> > unusable).
-> > 
-> > This will tell kconfig to provide a warning if no rate control
-> > algorithms have been selected.  That'll at least warn the user;
-> > users that know that their drivers supply a rate control algorithm
-> > can safely ignore the warning, and those who don't know (or who
-> > expect to be using multiple drivers) can select a default RC
-> > algorithm.
-> 
-> this is not an acceptable policy. You are generating false positives
-> now for drivers that have been fine before.
-> 
+We have a user that tried out b43, but got this in the logs:
 
-Unacceptable how?  It's a warning, not a requirement.  It's
-telling the user to double-check their config.
+--- cut ---
+65858:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
+support DMA on your system. Please use PIO instead. 65859:Feb  9 
+22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO must
+be set in your kernel configuration.
+65860:Feb  9 22:05:16 elmo kernel: b43-phy2 debug: Adding Interface type 2
+65861:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: Fatal DMA error:
+0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 
+ 
+
+65862:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
+support DMA on your system. Please use PIO instead.
+65863:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO 
+must be set in your kernel configuration.
+--- cut ---
+
+
+
+But reading the Kconfig help, it states:
+--- cut ---
+config B43_FORCE_PIO
+         bool "Force usage of PIO instead of DMA"
+         depends on B43 && B43_DEBUG
+         ---help---
+           This will disable DMA and always enable PIO instead.
+
+           Say N!
+           This is only for debugging the PIO engine code. You do
+           _NOT_ want to enable this.
+--- cut ---
+
+
+So,
+wich one is it ?
+
+Do I belive the dmesg output, or the Kconfig ?
+
+Note,
+the b43 works for the user if he enable the CONFIG_B43_FORCE_PIO.
+
+But I'm thinking of this problem from a distro point of view.
+Will it break for others if I enable it ?
+
+--
+Thomas
