@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34593 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44720 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341Ab0BEQpf (ORCPT
+	with ESMTP id S1752799Ab0BNBAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 11:45:35 -0500
-Date: Fri, 5 Feb 2010 11:31:40 -0500
+	Sat, 13 Feb 2010 20:00:42 -0500
+Date: Sat, 13 Feb 2010 19:40:10 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Call For Proposal: Linux Wireless Summit(s) 2010
-Message-ID: <20100205163140.GD2984@tuxdriver.com>
-References: <20100111135741.GB3223@tuxdriver.com> <1265286634.29119.114.camel@johannes.local>
+To: Frederic Leroy <fredo@starox.org>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Chris Mayo <aklhfex@googlemail.com>,
+	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
+Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
+Message-ID: <20100214004010.GB18815@tuxdriver.com>
+References: <4B38A298.7070103@googlemail.com> <1262037590.16627.99.camel@localhost.localdomain> <3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com> <20100213234456.5ae49b67@houba>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1265286634.29119.114.camel@johannes.local>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20100213234456.5ae49b67@houba>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 04, 2010 at 01:30:34PM +0100, Johannes Berg wrote:
-> On Mon, 2010-01-11 at 08:57 -0500, John W. Linville wrote: 
-> > OTOH, my last contact with the LinuxCon organizers
-> > suggested that we could have space with them in the Boston area in
-> > the Fall (September?).  So I will view that as our default option
-> > (especially for North America).
+On Sat, Feb 13, 2010 at 11:44:56PM +0100, Frederic Leroy wrote:
+> Le Thu, 31 Dec 2009 14:38:35 +0000,
+> Hin-Tak Leung <hintak.leung@gmail.com> a écrit :
 > 
-> August 10-12:
-> http://events.linuxfoundation.org/events/linuxcon
+> > "nobody cares" is not entirely true - AFAIK, code in the staging area
+> > is unreliable/unsuitable/"poor" code which serves the sole purpose of
+> > being there for scavenging and references for re-write (because there
+> > is no equivalent functionality, even alleged, in mainline); so people
+> > looking at the staging code for ideas or references is welcomed. It is
+> > just that there is no hints of any support or vague guarantee that any
+> > of it works for any fitness of purpose. i.e. patches which fix
+> > problems, or migrate functionality out of the staging area to
+> > main-line, are welcomed, but questions and request for help on
+> > understanding or making any of it work, are not.
 > 
-> Actually mini-summits are on August 9 according to the website.
+> I just bought an wireless usb key based on realtek 8192. If nobody is
+> working on making a driver for it, I'd like to try.
+> 
+> But I am wondering where/how to start.
+> 
+> Should I follow the TODO file from Greg in staging :
+> ( which seems to merge : rtl8192e  rtl8192su  rtl8192u )
+> 
+> TODO:
+> - prepare private ieee80211 stack for merge with rtl8187se's version:
+>   - remove rtl8192su's specific dead code
+>   - cleanup ieee80211.h
+>   - move rtl8192su's specific code out from ieee80211.h
+>   - abstract rtl819su's specific code
+>   - use list_for_each_safe() in ieee80211_crypto_deinit
+> - switch to use shared "librtl" instead of private ieee80211 stack
+> - switch to use LIB80211
+> - switch to use MAC80211
+> - switch to use EEPROM_93CX6
+> - use kernel coding style
+> - checkpatch.pl fixes
+> - sparse fixes
+> - integrate with drivers/net/wireless/rtl818x
 
-We can have August 8 as well if we want it.  I asked for 2 days since
-that is what we have done in the past.  Or we can just use the 9th
-if we want to restrict ourselves to one day...?
+This is a reasonable plan overall, although I might quibble with
+the order.
 
-So anyway, as of now having a wireless mini-summit just prior to
-LinuxCon is the plan of record.  There is a requirement for attendees
-to also register for LinuxCon -- I hope that isn't a problem.
-I suspect that registration will be cheap/free for those accepted as
-LinuxCon presenters. :-)
+> Or use rtl818x tree to start a new device ?
+
+YMMV, but given the code I've seen for the Realtek drivers in staging I
+might be inclined to start by forking rtl8180 and making the necessary
+hardware changes from there.
+
+Hth!
 
 John
 -- 
