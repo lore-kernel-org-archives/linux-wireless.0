@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:21177 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032075Ab0B1WTR convert rfc822-to-8bit (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:36471 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754258Ab0BOU6J convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2010 17:19:17 -0500
-Received: by qw-out-2122.google.com with SMTP id 8so379409qwh.37
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2010 14:19:16 -0800 (PST)
+	Mon, 15 Feb 2010 15:58:09 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: 2.6.33-rc8: Reported regressions from 2.6.32
+Date: Mon, 15 Feb 2010 21:59:03 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Andrew Morton <akpm@linux-foundation.org>
+References: <Z5cmiqDComP.A.gyF.OiIeLB@chimera> <b170af451002150152r43d7d916kd3d2013b8990627d@mail.gmail.com>
+In-Reply-To: <b170af451002150152r43d7d916kd3d2013b8990627d@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <69e28c911002280814v56f2f553x847c8bae94e6aaab@mail.gmail.com>
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
-	 <201002271620.31410.mb@bu3sch.de> <4B8942D5.5020502@lwfinger.net>
-	 <201002271708.29817.mb@bu3sch.de> <4B894A61.1070302@lwfinger.net>
-	 <69e28c911002271145s590df31en9d2f8b2c47932451@mail.gmail.com>
-	 <4B899DA3.4030100@lwfinger.net>
-	 <a221c0101002271703p3f344ec4t78d5c8b77c6d1290@mail.gmail.com>
-	 <a221c0101002271828ye265d72y774320c08a4a15da@mail.gmail.com>
-	 <69e28c911002280814v56f2f553x847c8bae94e6aaab@mail.gmail.com>
-Date: Sun, 28 Feb 2010 16:19:16 -0600
-Message-ID: <a221c0101002281419t5401a571rcd60e6f87edbb6c@mail.gmail.com>
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-From: Nathan Schulte <reklipz@gmail.com>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201002152159.03458.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/2/28 G�bor Stefanik <netrolller.3d@gmail.com>:
-> OK, this dump shows the 0x280a write happening with core 3, i.e. PCIE,
-> active. So, it is indeed probably the "PCIE misc configuration"
-> routine. Why it's 0x280a is still a mystery to me, it should be 0x100a
-> according to the specs.
-Unless I'm reading the logs wrong, isn't wl setting bit 0x8000 when
-core 1 is mapped (0 indexed cores, 0x18001000 mapped to space 0)?
-And b43 appears to do it when core 0 is mapped (0x18000000 mapped to
-space 0).  b43 also reads from 0x100a after writing to 0x280a, and it
-reads as 0x8000 not set (while the 0x280a check show it is set).
+On Monday 15 February 2010, Rafał Miłecki wrote:
+> 2010/2/15 Rafael J. Wysocki <rjw@sisk.pl>:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=15287
+> > Subject         : RadeonKMS segfaults kdm on mobility radeon x700 pcie
+> > Submitter       : Jan Kreuzer <kontrollator@gmx.de>
+> > Date            : 2010-02-12 17:58 (3 days old)
+> 
+> Can you reassign this according to last comments, please?
 
-This is when comparing the wl_cold and b43_cold logs.
+Reassigned to PCI.
 
--Nate
+Thanks,
+Rafael
