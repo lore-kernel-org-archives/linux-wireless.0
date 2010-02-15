@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f189.google.com ([209.85.222.189]:48687 "EHLO
-	mail-pz0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755372Ab0BAS0R convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:52847 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755675Ab0BOPLr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 13:26:17 -0500
-Received: by pzk27 with SMTP id 27so5096128pzk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2010 10:26:17 -0800 (PST)
+	Mon, 15 Feb 2010 10:11:47 -0500
+Date: Mon, 15 Feb 2010 09:11:45 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3 V2] staging: r8187se: Remove write_phy routine
+Message-ID: <4b796431.q2VeV+yAMJiEjqm7%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <UgwvXSBS_tM.A.alD.1EiZLB@chimera>
-References: <UgwvXSBS_tM.A.alD.1EiZLB@chimera>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 1 Feb 2010 10:25:57 -0800
-Message-ID: <43e72e891002011025p449e5169p1d4266b38be1c2c8@mail.gmail.com>
-Subject: Re: 2.6.33-rc6: Reported regressions 2.6.31 -> 2.6.32
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Miles Lane <miles.lane@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 31, 2010 at 4:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+Remove a routine that is not used.
 
-> Unresolved regressions
-> ----------------------
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Only one for 802.11:
+ r8180_core.c |   37 -------------------------------------
+ 1 file changed, 37 deletions(-)
 
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14624
-> Subject         : ath9k: BUG kmalloc-8192: Poison overwritten
-> Submitter       : Miles Lane <miles.lane@gmail.com>
-> Date            : 2009-11-12 4:58 (81 days old)
-> References      : http://marc.info/?l=linux-kernel&m=125800196520396&w=4
 
-Is this a regression though? Do we know for sure it was not happening
-on 2.6.31? Either way so far we have been unable to identify a way to
-reproduce this. It should be noted Miles has reported this is still
-present on 2.6.33 stuff. Miles, can you give further instructions as
-to how you arrive to this poison? How are you using your device, how
-often does it happen, when does it happen, etc.
-
-  Luis
+Index: linux-2.6/drivers/staging/rtl8187se/r8180_core.c
+===================================================================
+--- linux-2.6.orig/drivers/staging/rtl8187se/r8180_core.c
++++ linux-2.6/drivers/staging/rtl8187se/r8180_core.c
+@@ -3207,43 +3207,6 @@ void write_phy_cck (struct net_device *d
+ 	rtl8185_write_phy(dev, adr, data | 0x10000);
+ }
+ 
+-/* 70*3 = 210 ms
+- * I hope this is enougth
+- */
+-#define MAX_PHY 70
+-void write_phy(struct net_device *dev, u8 adr, u8 data)
+-{
+-	u32 phy;
+-	int i;
+-
+-	phy = 0xff0000;
+-	phy |= adr;
+-	phy |= 0x80; /* this should enable writing */
+-	phy |= (data<<8);
+-
+-	//PHY_ADR, PHY_R and PHY_W  are contig and treated as one dword
+-	write_nic_dword(dev,PHY_ADR, phy);
+-
+-	phy= 0xffff00;
+-	phy |= adr;
+-
+-	write_nic_dword(dev,PHY_ADR, phy);
+-	for(i=0;i<MAX_PHY;i++){
+-		phy=read_nic_dword(dev,PHY_ADR);
+-		phy= phy & 0xff0000;
+-		phy= phy >> 16;
+-		if(phy == data){ //SUCCESS!
+-			force_pci_posting(dev);
+-			mdelay(3); //random value
+-			return;
+-		}else{
+-			force_pci_posting(dev);
+-			mdelay(3); //random value
+-		}
+-	}
+-	DMESGW ("Phy writing %x %x failed!", adr,data);
+-}
+-
+ void rtl8185_set_rate(struct net_device *dev)
+ {
+ 	int i;
