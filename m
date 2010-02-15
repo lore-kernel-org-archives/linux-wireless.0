@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:45881 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933082Ab0BYRsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 12:48:23 -0500
-Subject: Re: [PATCH 1/2] rt2x00 : hw support txdone implementation.
- (without fallback change)
-From: Pavel Roskin <proski@gnu.org>
-To: prahal@yahoo.com
-Cc: John Linville <linville@tuxdriver.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <4B85FA66.2020503@yahoo.com>
-References: <4B85FA66.2020503@yahoo.com>
-Content-Type: text/plain
-Date: Thu, 25 Feb 2010 12:48:12 -0500
-Message-Id: <1267120092.25296.31.camel@mj>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60217 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753163Ab0BOTpk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2010 14:45:40 -0500
+Date: Mon, 15 Feb 2010 14:30:43 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs
+	definitions
+Message-ID: <20100215193042.GA10665@tuxdriver.com>
+References: <1265745883-3392-2-git-send-email-zajec5@gmail.com> <201002100002.11369.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201002100002.11369.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On Wed, Feb 10, 2010 at 12:02:11AM +0100, Michael Buesch wrote:
+> On Tuesday 09 February 2010 21:04:33 Rafał Miłecki wrote:
+> > +#define B43_MMIO_PSM_PHY_HDR		0x492	/* programmable state machine */
+> 
+> The comment doesn't make a lot of sense.
+> In case you don't know, the PSM is the part of the hardware
+> that executes the firmware.
 
-I have tested both patches on the real hardware, and I don't see any
-regressions.  Unfortunately, the issue with interrupts is still there,
-so ping stops after 11 packets, which limited my ability to test the
-change extensively.  That said, I was able to use wpa_supplicant and
-dhcp to get an IP address using the patched driver in the station mode.
+Rafał,
 
-wpa_supplicant worked most of the time.  I believe the occasional
-failures are due to a preexisting memory corruption issue (I reported
-earlier that addr3 can be corrupted in probe requests).
+Are you going to repost this series and/or respond to Michael's
+comments?  I tried to apply some of the ones Michael didn't comment
+upon, but they seem to depend on the ones in question.
 
-Unfortunately, the patches include corrupt whitespace, so they had to be
-applied by "patch -l".  Also, there are trailing tabs in two places.
-That's not a big deal, but it's better avoided.  Please consider using
-git or stgit to send patches.
+Thanks,
 
-> +	for (i=0; i<256; i++) {
-
-checkpatch.pl complains about spacing.  There should be spaces around
-"=" and "<"
-
-> +		txwi = (__le32 *)(entry->skb->data -
-> +				  rt2x00dev->hw->extra_tx_headroom);
-
-I really don't see any point in introducing wrong code in one patch and
-fixing it in another.  I would just join the patches.
-
-When bisecting for a problem, landing at a broken commit can lead to a
-lot of wasted time.
-
-> +		rt2x00_desc_read(txwi, 1, &word);
-> +		tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
-> +		tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
-> +		tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
-> +
-> +		if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid))
-> +			WARNING(rt2x00dev, "invalid TX_STA_FIFO content\n");
-
-Can we make this sanity check optional?
-
+John
 -- 
-Regards,
-Pavel Roskin
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
