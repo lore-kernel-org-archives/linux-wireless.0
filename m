@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:23244 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359Ab0BIUFe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44288 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752592Ab0BOJfj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:05:34 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so1670260eyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:05:32 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 09/11] b43: N-PHY: isloate 2055 radio setup
-Date: Tue,  9 Feb 2010 21:04:41 +0100
-Message-Id: <1265745883-3392-10-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 15 Feb 2010 04:35:39 -0500
+Subject: Re: [PATCH 2/2] mac80211: Add HT IE to IBSS beacons and probe
+ responses.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1266190653-2453-2-git-send-email-benoit.papillault@free.fr>
+References: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>
+	 <1266190653-2453-2-git-send-email-benoit.papillault@free.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-70RvIk+urd5s+ETJ4WXD"
+Date: Mon, 15 Feb 2010 10:35:37 +0100
+Message-ID: <1266226537.7084.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   24 ++++++++++++++++++------
- 1 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 835d0da..631e01f 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -155,6 +155,23 @@ static void b43_nphy_tx_power_fix(struct b43_wldev *dev)
- 	//TODO
- }
- 
-+
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/Radio/2055Setup */
-+static void b43_radio_2055_setup(struct b43_wldev *dev,
-+				const struct b43_nphy_channeltab_entry *e)
-+{
-+	B43_WARN_ON(dev->phy.rev >= 3);
-+
-+	b43_chantab_radio_upload(dev, e);
-+	udelay(50);
-+	b43_radio_write(dev, B2055_VCO_CAL10, 5);
-+	b43_radio_write(dev, B2055_VCO_CAL10, 45);
-+	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
-+		b43_read32(dev, B43_MMIO_MACCTL);
-+	b43_radio_write(dev, B2055_VCO_CAL10, 65);
-+	udelay(300);
-+}
-+
- /* Tune the hardware to a new channel. */
- static int nphy_channel_switch(struct b43_wldev *dev, unsigned int channel)
- {
-@@ -169,12 +186,7 @@ static int nphy_channel_switch(struct b43_wldev *dev, unsigned int channel)
- 		b43_radio_maskset(dev, B2055_MASTER1, 0xFF8F, 0x20);
- 	else
- 		b43_radio_maskset(dev, B2055_MASTER1, 0xFF8F, 0x50);
--	b43_chantab_radio_upload(dev, tabent);
--	udelay(50);
--	b43_radio_write16(dev, B2055_VCO_CAL10, 5);
--	b43_radio_write16(dev, B2055_VCO_CAL10, 45);
--	b43_radio_write16(dev, B2055_VCO_CAL10, 65);
--	udelay(300);
-+	b43_radio_2055_setup(dev, tabent);
- 	if (0 /*FIXME 5Ghz*/)
- 		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
- 	else
--- 
-1.6.4.2
+--=-70RvIk+urd5s+ETJ4WXD
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2010-02-15 at 00:37 +0100, Benoit Papillault wrote:
+> The same code is also used for probe request generation
+
+Still NACK. You really need to make this depend on channel
+configuration, which needs new nl80211 infrastructure.
+
+johannes
+
+--=-70RvIk+urd5s+ETJ4WXD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLeRVlAAoJEODzc/N7+QmaHf8P/ide8318iZ7re/cBnGv40RrU
+R7B4McpTEDxRuFpF0nNW783MzImMxrSJuXeRgPXqxcuMJs4zjXK65dGq9CXLynMv
+uSmBh94Z+pAhI6vH4jgbeMCmGB/hnSsyLhsjbvXx136qPXRlWQfYk18cut+JUf1b
+JJiv55QsQMGYE+kLVy6YefaP2nIPvp1cX4IdWE7knN8RyeIGhuoHeiNCAxSGXMM5
+6a2jv5d/GpFuv6rfiOYfX6ZeAoSoHag9B286+BTd8ZpOcc6M5UTZPBB+Gj3pbu+1
+BQ7r3Ab4MnWegPsTkxoHgpp+dYaOYv5BZKbPnJdRgr4IEPjZEdoyt0dRKICD07NB
+QXoXW9XRMcy5ZySwDiuAbJ/4mh4MRfrf/t83MvqNrJDGKoD+5lPFBb+KqQfd295T
+4xISkxKOJGmJqN7WDsPL8UD50AVn3z6l2yvzvHAzVLYfBUwBEulNQ8kFtaLUEbmv
+bz6c0NzU0xk4xwuYEXVh7+HyvMWW8FeYvT9PXNGzzRlsr7CQ/dDE/+51gIsVuS6S
+Ggu4tTEaXauBVGOHEdYWsAXfhzL8Bk/TezTWCd0Kgt8j3ewm76xFbra3tIOYL/+H
+wOzSWGcA4/ZCkZY03e5M0yZ7eaHqHhsYGd4JoWmJb8kO8JI7+FPvbubNJH1/2wKY
+lIrLXUd6MEqAG1SUZ6Bz
+=zuOm
+-----END PGP SIGNATURE-----
+
+--=-70RvIk+urd5s+ETJ4WXD--
 
