@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp102.plus.mail.re1.yahoo.com ([69.147.102.65]:46123 "HELO
-	smtp102.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S934800Ab0BZBV4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44285 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753614Ab0BOJeq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 20:21:56 -0500
-Message-ID: <4B872231.5020609@yahoo.com>
-Date: Fri, 26 Feb 2010 02:21:53 +0100
-From: Alban Browaeys <prahal@yahoo.com>
-Reply-To: prahal@yahoo.com
-MIME-Version: 1.0
-To: Josef Bacik <josef@redhat.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>, Pavel Roskin <proski@gnu.org>,
-	John Linville <linville@tuxdriver.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 1/2] rt2x00 : hw support txdone implementation.	(without
- fallback change)
-References: <4B85FA66.2020503@yahoo.com> <1267120092.25296.31.camel@mj> <4B86D0BD.3000803@yahoo.com> <201002252146.22846.IvDoorn@gmail.com> <20100225205342.GF10960@localhost.localdomain>
-In-Reply-To: <20100225205342.GF10960@localhost.localdomain>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 15 Feb 2010 04:34:46 -0500
+Subject: Re: [PATCH 1/2] mac80211: Drop protected data frames that have not
+ been decrypted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4B78FBA5.7090109@free.fr>
+References: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>
+	 <69e28c911002141610q737465b4s1d825d6dcd3aea26@mail.gmail.com>
+	 <4B78FBA5.7090109@free.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-70pZfPavh8MCKr+1IHS4"
+Date: Mon, 15 Feb 2010 10:34:43 +0100
+Message-ID: <1266226483.7084.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25/02/2010 21:53, Josef Bacik wrote:
-> On Thu, Feb 25, 2010 at 09:46:22PM +0100, Ivo van Doorn wrote:
->    
->> Hi,
->>
->> Overall this patch has great similarities to something which Josef (CC added)
->> has posted earlier. The patch in question was not merged due to some issues,
->> but he is working on an updated. You might want to synchronize your work
->> with him. :)
->>
->>      
-> I was just looking at this patch series, but I couldn't get it to apply at all.
-> Alban, does your patch series depend on other patches not in wireless-testing?
-> It may have just been the whitespaces or something, cause the context looked
-> right, it just wouldn't apply anything.  Anyway I'm happy to work together, or
-> I can just send you what I have and I'll be the guinea pig, since this really
-> isn't my area of expertise.  Thanks,
->
->    
 
+--=-70pZfPavh8MCKr+1IHS4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Well I cannot agree on the replacement from TX_STA_FIFO by DMA DONE 
-interrupts
-handlers. As the latter prevents from having any success/failure status.
-The txdone was borked and could not worked since WirelessCliId was read 
-as a queue entry index
-and written as an encryption key. What you noticed too though with the 
-weird values you got.
+On Mon, 2010-02-15 at 08:45 +0100, Benoit PAPILLAULT wrote:
 
-Could you try 
-http://article.gmane.org/gmane.linux.kernel.wireless.general/47183 
-probably and also "pull" from
-http://git.prahal.homelinux.net/?p=rt2x00.git;a=shortlog;h=refs/heads/rtt3070v2-next-debug.
-It is not a clean set of patches though I am doing my best to get it 
-ready at least for to be sent to the ML.
+> > I'm not familiar with this part of the code; but have you tested if
+> > this doesn't break monitor-while-operating mode (i.e. doesn't remove
+> > other-STA frames from monitor interfaces)?
+> >
+> >  =20
+> Yes, it has been tested in this case. In fact, this patch changes RX=20
+> path only in ieee80211_rx_h_data / ieee80211_rx_h_action and=20
+> ieee80211_rx_h_mgmt. In all 3 cases, it returns RX_DROP_MONITOR.
 
-The last commits adds a lot of printk (this is a debug branch) to try to 
-decipher a weird issue with long range issues.
+???
 
+        if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
+                return RX_DROP_UNUSABLE;
 
-Best regards
-Alban
+However. GUYS!!! Read the code! Real monitor mode bypasses _ALL_ the RX
+handlers, frames just short-circuit up right after they are received
+from the driver.
+
+johannes
+
+--=-70pZfPavh8MCKr+1IHS4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLeRUvAAoJEODzc/N7+Qmar5wQALoE+V43JES3x0HOVz4At+cR
+gnWIxiCGNa85xGuLmCH9blyJQZtT4F34BGGsR4BKky+ccdMP/NeTRQp9O63x/3bK
+hiqZKClRPLkueiKa14RGKd38+HpqW3jgPDT8Qf102EloDzq0kBk2N6NLLCOM/cOc
+9rrC5toL35z/Uve5LnZJl0G+ZTuBhX9fKisGOwuONW9o8y3kNSZAGpvCpNPkQLp+
+PkJ/8npewf8m7HQDv3Wc2TKy1mmNLsGf0HcxzUKvyWzpgE/Tow1WhDgjP2IXk68P
+8qaV6tMna5Lovn6TOpZB6WCOaopzNBwQkAvupfIOx4M5cwJk4RezHMMFmk+FRq/4
+2xdLSUeqnB6IuYcKSU46pDd/OKu0HgLjjDSQIWD8KnTJ4el3Ngyb6J8hk6tr+F9a
+W1oyoX/ma0zDsPNGLHxuqOBytuBY57E1cfmllfhlW5mGZA8O8C8ka7cyGZDuy/ZL
+cM5PmgZDsHTj1biwANm3jATXLV+yWUyY1+5M//Pfa4tDlmTRK8siNPgU9+AoOX7Z
+FZzlBQEtxz17htazBjRscESdelqDQs5RG1ZeAC8DdIuARZ+nTKQ0LNzRjEaEPNy9
+KzRVe5ezXp1S/w2X36vukWkWjmE71hd2oS6EkiUFPaXq/1DBKkU/WD6PQEcrzdlS
+x+YNzlg+cHIiw9Tyj21m
+=GGvc
+-----END PGP SIGNATURE-----
+
+--=-70pZfPavh8MCKr+1IHS4--
 
