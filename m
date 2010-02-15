@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:60805 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab0BWSaY (ORCPT
+Received: from 26.mail-out.ovh.net ([91.121.27.225]:45655 "HELO
+	26.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756437Ab0BOWYl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 13:30:24 -0500
-Received: from smtp08.web.de (fmsmtp08.dlan.cinetic.de [172.20.5.216])
-	by fmmailgate02.web.de (Postfix) with ESMTP id A523B14F873A4
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 19:30:22 +0100 (CET)
-Received: from [84.56.180.53] (helo=pinguin.localnet)
-	by smtp08.web.de with asmtp (TLSv1:AES256-SHA:256)
-	(WEB.DE 4.110 #314)
-	id 1NjzWT-0004bq-00
-	for linux-wireless@vger.kernel.org; Tue, 23 Feb 2010 19:30:17 +0100
-From: Jens Westemeier <Jens_Westemeier@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: problem with WG511v1
-Date: Tue, 23 Feb 2010 19:30:12 +0100
-References: <4B83B96A.6050605@sorengo.com> <201002231832.31015.Jens_Westemeier@web.de> <20100223175806.GD2928@tuxdriver.com>
-In-Reply-To: <20100223175806.GD2928@tuxdriver.com>
+	Mon, 15 Feb 2010 17:24:41 -0500
+Message-ID: <4B79C9A4.1060509@free.fr>
+Date: Mon, 15 Feb 2010 23:24:36 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201002231930.12759.Jens_Westemeier@web.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: Improved IBSS merges even if BSSID is the
+ same
+References: <1266190435-2355-1-git-send-email-benoit.papillault@free.fr>	 <1266190435-2355-2-git-send-email-benoit.papillault@free.fr> <1266226106.6052.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1266226106.6052.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 23. Februar 2010 18:58:07 schrieb John W. Linville:
-> 
-> I'm guessing this is the EBUSY return from p54_download_eeprom.
-> I'm not immediately familiar enough with the driver to know what that
-> means, but perhaps your device is showing its age?  Hopefully a P54
-> person can provide a more concrete suggestion.
-> 
-> John
+Johannes Berg a écrit :
+> On Mon, 2010-02-15 at 00:33 +0100, Benoit Papillault wrote:
+>   
+>> According to IEEE 802.11, we should merge even if the BSSID from the
+>> received beacon is the same as our since merge can update more things
+>> that BSSID itself.
+>>
+>> This is specifically true for ath9k where the merge updates TBTT
+>> timers
+>> as a side effect and this is indeed needed if the TSF has been updated
+>> (if TSF is updated, we need to update TBTT timers as well).
+>>
+>> However, it could cause continuous merges if the RX timestamp or
+>> drv_get_tsf() is not accurate or not implemented.
+>>     
+>
+> It can't actually. Please do your own research on things like that
+> before posting a patch :)
+>
+> johannes
+>   
+For Zydas chipset for instance, the TSF is not merged at the hardware 
+level (I sent another patch to fix that). As such, if we receive a 
+beacon with a higher TSF and did a merge at the software level, then on 
+the next beacon, our own TSF has moved by the same delta as the value in 
+the received beacon, so the beacon TSF is still higher than our own TSF, 
+thus merging again (since we now accept merge with the same BSSID).
 
-As sayed before, this device still works with prism54 as well as with Win XP 
-(dual boot). There are also other reports in this mailing list ("
-p54pci: "device does not respond!"", also this thread) showing the same 
-problem with other cards.
+For the not implemented case (ie local->ops->get_tsf is null), 
+drv_get_tsf() will returns -1 and then no merge could happen. You are 
+right. I put part of our discussion into the changelog, mostly to 
+acknowledge your toughts without checking myself. My bad!
 
-I hope someone can help, I posted this problem in January already, without 
-response.
+Regards,
+Benoit
 
-Greetings, Jens.
