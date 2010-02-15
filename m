@@ -1,30 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mhub5.vim.at ([92.43.99.6]:44508 "EHLO mail.vim.at"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752142Ab0BDAoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2010 19:44:13 -0500
-Subject: Re: ath9k/PCI 168C:002C
-From: Bernhard Reiter <ockham@raz.or.at>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1265059423.15528.21.camel@mj>
-References: <1265039522.3610.55.camel@razor>
-	 <20100201113620.52ahuc39ws8scow4-cebfxv@webmail.spamcop.net>
-	 <1265056347.3610.100.camel@razor>  <1265059423.15528.21.camel@mj>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Feb 2010 01:44:09 +0100
-Message-ID: <1265244249.2808.1.camel@razor>
-Mime-Version: 1.0
+Received: from 26.mail-out.ovh.net ([91.121.27.225]:49109 "HELO
+	26.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756527Ab0BOWcV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2010 17:32:21 -0500
+Message-ID: <4B79CB71.1000509@free.fr>
+Date: Mon, 15 Feb 2010 23:32:17 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: Add HT IE to IBSS beacons and probe responses.
+References: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>	 <1266190653-2453-2-git-send-email-benoit.papillault@free.fr> <1266226537.7084.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1266226537.7084.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, den 01.02.2010, 16:23 -0500 schrieb Pavel Roskin:
-> Please try the patch that was posted at
-> http://bugzilla.kernel.org/show_bug.cgi?id=15180
+Johannes Berg a écrit :
+> On Mon, 2010-02-15 at 00:37 +0100, Benoit Papillault wrote:
+>   
+>> The same code is also used for probe request generation
+>>     
+>
+> Still NACK. You really need to make this depend on channel
+> configuration, which needs new nl80211 infrastructure.
+>
+> johannes
+>   
+You are referring to "we need nl80211/cfg80211 changes" I guess. Could 
+you elaborate a bit on this? I'm still new to mac80211. Could you tell 
+me what needs to be changed and where I can start ? iw source code ? is 
+cfg80211 the source code under net/wireless ?
 
-now this works (as i can see from the comment i posted there)!
+Regards,
+Benoit
 
-thanks a lot!
-kind regards
-bernhard
 
