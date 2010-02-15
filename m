@@ -1,66 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:41037 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752673Ab0BSGBq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 01:01:46 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, stable@kernel.org,
-	Dan Halperin <dhalperi@cs.washington.edu>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/3] iwlwifi: set HT flags after channel in rxon
-Date: Thu, 18 Feb 2010 22:01:39 -0800
-Message-Id: <1266559301-19581-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
-References: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
+Received: from 27.mail-out.ovh.net ([91.121.30.210]:50541 "HELO
+	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754782Ab0BOHbe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2010 02:31:34 -0500
+Message-ID: <4B78F6C3.9030006@free.fr>
+Date: Mon, 15 Feb 2010 08:24:51 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: dsd@gentoo.org, linux-wireless@vger.kernel.org,
+	zd1211-devs@lists.sourceforge.net, kune@deine-taler.de
+Subject: Re: [zd1211-devs] [PATCH 1/2] zd1211rw: Experimental change to add
+ proper monitor support
+References: <1266190499-2387-1-git-send-email-benoit.papillault@free.fr> <69e28c911002141628w76dc0419r43c7d753c16962da@mail.gmail.com>
+In-Reply-To: <69e28c911002141628w76dc0419r43c7d753c16962da@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Halperin <dhalperi@cs.washington.edu>
+Gábor Stefanik a écrit :
+> On Mon, Feb 15, 2010 at 12:34 AM, Benoit Papillault
+> <benoit.papillault@free.fr> wrote:
+>   
+>> Without this patch, monitor mode does not returns all frames. With this patch,
+>> the performance are quite poor if we create a monitor interface. Note :
+>> creating a monitor interface with the "cook" flag has no impact on performance.
+>>
+>> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+>> ---
+>>  drivers/net/wireless/zd1211rw/zd_mac.c |   20 +++++++++++++++++++-
+>>  1 files changed, 19 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+>> index 2d555cc..9cb6cbc 100644
+>> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+>> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+>> @@ -904,8 +904,26 @@ static int zd_op_config(struct ieee80211_hw *hw, u32 changed)
+>>  {
+>>        struct zd_mac *mac = zd_hw_mac(hw);
+>>        struct ieee80211_conf *conf = &hw->conf;
+>> +       int ret;
+>>
+>> -       return zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
+>> +       if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
+>> +               /*
+>> +                * Warning : enabling this register kills RX & TX
+>> +                * performance
+>> +                */
+>> +               u32 cr_sniffer = !!(conf->flags & IEEE80211_CONF_MONITOR);
+>> +               ret = zd_iowrite32(&mac->chip, CR_SNIFFER_ON, cr_sniffer);
+>> +               if (!ret)
+>> +                       return ret;
+>>     
+>
+> Your logic is the wrong way around. You should return if nonzero, not if zero.
+>
+>   
+>> +       }
+>> +
+>> +       if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+>> +               ret = zd_chip_set_channel(&mac->chip, conf->channel->hw_value);
+>> +               if (!ret)
+>> +                       return ret;
+>> +       }
+>> +
+>> +       return 0;
+>>  }
+>>
+>>  static void zd_process_intr(struct work_struct *work)
+>> --
+>> 1.5.6.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>     
+>
+>
+>
+>   
+You are right. I will resend a patch.
 
-The HT extension channel settings require priv->staging_rxon.channel to be
-accurate. However, iwl_set_rxon_ht was being called before iwl_set_rxon_channel
-and thus HT40 could be broken unless another call to iwl_mac_config came in.
-
-This problem was recently introduced by "iwlwifi: Fix to set correct ht
-configuration"
-
-The particular setting in which I noticed this was monitor mode:
-
-	iwconfig wlan0 mode monitor
-	ifconfig wlan0 up
-	./iw wlan0 set channel 64 HT40-
-	#./iw wlan0 set channel 64 HT40-
-	tcpdump -i wlan0 -y IEEE802_11_RADIO
-
-would only catch HT40 packets if I issued the IW command twice.
-
->From visual inspection, iwl_set_rxon_channel does not depend on
-iwl_set_rxon_ht, so simply swapping them should be safe and fixes this problem.
-
-Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-CC: stable@kernel.org
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d10bea6..f36f804 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2744,8 +2744,8 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 		if ((le16_to_cpu(priv->staging_rxon.channel) != ch))
- 			priv->staging_rxon.flags = 0;
- 
--		iwl_set_rxon_ht(priv, ht_conf);
- 		iwl_set_rxon_channel(priv, conf->channel);
-+		iwl_set_rxon_ht(priv, ht_conf);
- 
- 		iwl_set_flags_for_band(priv, conf->channel->band);
- 		spin_unlock_irqrestore(&priv->lock, flags);
--- 
-1.6.3.3
+Regards,
+Benoit
 
