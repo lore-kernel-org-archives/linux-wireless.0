@@ -1,62 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33599 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755875Ab0BXJJf (ORCPT
+Received: from 27.mail-out.ovh.net ([91.121.30.210]:36009 "HELO
+	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754494Ab0BOHpo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 04:09:35 -0500
-Subject: Re: [PATCH] mac80211: fix PREQ processing and one small bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Porsch, Marco" <marco.porsch@siemens.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <7F2FE3504A6CB54497542A539E401A7B6AB18058@DEMCHP99E15MSX.ww902.siemens.net>
-References: <7F2FE3504A6CB54497542A539E401A7B6AB18057@DEMCHP99E15MSX.ww902.siemens.net>
-	 <7F2FE3504A6CB54497542A539E401A7B6AB18058@DEMCHP99E15MSX.ww902.siemens.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Feb 2010 10:09:25 +0100
-Message-ID: <1267002565.3903.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 15 Feb 2010 02:45:44 -0500
+Message-ID: <4B78FBA5.7090109@free.fr>
+Date: Mon, 15 Feb 2010 08:45:41 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: Drop protected data frames that have not
+ 	been decrypted
+References: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr> <69e28c911002141610q737465b4s1d825d6dcd3aea26@mail.gmail.com>
+In-Reply-To: <69e28c911002141610q737465b4s1d825d6dcd3aea26@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-02-24 at 09:53 +0100, Porsch, Marco wrote:
-> 1st) a PREQ should only be processed, if it has the same SN and better
-> metric (instead of better or equal).
-> 2nd) next_hop[ETH_ALEN] now actually used to buffer
-> mpath->next_hop->sta.addr for use out of lock.
-> 
-> Signed-off-by: Marco Porsch <marco.porsch@siemens.com>
-> Acked-by: Javier Cardona <javier@cozybit.com>
+Gábor Stefanik a écrit :
+> On Mon, Feb 15, 2010 at 12:37 AM, Benoit Papillault
+> <benoit.papillault@free.fr> wrote:
+>   
+>> Fix for the following issue : a STA connected to a WPA2 AP was showing
+>> frames from others STA in tcpdump on wlan0 (promiscuous mode). In fact,
+>> those frames are not decrypted and appears as 802.3 junk. This patch
+>> just drops any protected data frames that have not been decrypted.
+>>
+>> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+>> ---
+>>  net/mac80211/rx.c |    8 ++++++++
+>>  1 files changed, 8 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+>> index c9755f3..22ae6ee 100644
+>> --- a/net/mac80211/rx.c
+>> +++ b/net/mac80211/rx.c
+>> @@ -1397,6 +1397,14 @@ ieee80211_drop_unencrypted(struct ieee80211_rx_data *rx, __le16 fc)
+>>                     ieee80211_is_data(fc) &&
+>>                     (rx->key || rx->sdata->drop_unencrypted)))
+>>                return -EACCES;
+>> +       /*
+>> +        * Drop encrypted frames that have not been decrypted. This
+>> +        * happens for frames that are sent by an AP to another STA
+>> +        */
+>> +       if (ieee80211_has_protected(fc) &&
+>> +           !(status->flag & RX_FLAG_DECRYPTED)) {
+>> +               return -EACCES;
+>> +       }
+>>        if (rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP)) {
+>>                if (unlikely(ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
+>>                             rx->key))
+>> --
+>> 1.5.6.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>     
+>
+> I'm not familiar with this part of the code; but have you tested if
+> this doesn't break monitor-while-operating mode (i.e. doesn't remove
+> other-STA frames from monitor interfaces)?
+>
+>   
+Yes, it has been tested in this case. In fact, this patch changes RX 
+path only in ieee80211_rx_h_data / ieee80211_rx_h_action and 
+ieee80211_rx_h_mgmt. In all 3 cases, it returns RX_DROP_MONITOR.
 
-Cc stable works by putting it here, not into the actual email ...
-
-> ---
->  net/mac80211/mesh_hwmp.c |   4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff -upr a/net/mac80211/rx.c b/net/mac80211/rx.c
-> --- a/net/mac80211/mesh_hwmp.c        2010-02-18 14:44:47.000000000
-> +0100
-> +++ b/net/mac80211/mesh_hwmp.c 2010-02-18 14:45:32.000000000 +0100
-> @@ -391,7 +391,7 @@ static u32 hwmp_route_info_get(struct ie
->                                  if (SN_GT(mpath->sn, orig_sn) ||
->                                      (mpath->sn == orig_sn &&
->                                       action == MPATH_PREQ &&
-> -                                    new_metric > mpath->metric)) {
-> +                                    new_metric >= mpath->metric)) {
->                                          process = false;
->                                          fresh_info = false;
->                                  }
-> @@ -611,7 +611,7 @@ static void hwmp_prep_frame_process(stru
-> 
->          mesh_path_sel_frame_tx(MPATH_PREP, flags, orig_addr,
->                  cpu_to_le32(orig_sn), 0, target_addr,
-> -               cpu_to_le32(target_sn), mpath->next_hop->sta.addr,
-> hopcount,
-> +               cpu_to_le32(target_sn), next_hop, hopcount,
-
-Also please use proper indentation, not spaces.
-
-johannes
+Regards,
+Benoit
 
