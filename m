@@ -1,78 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f193.google.com ([209.85.210.193]:34354 "EHLO
-	mail-yx0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933601Ab0BESqm convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43008 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963Ab0BOJWp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 13:46:42 -0500
-Received: by yxe31 with SMTP id 31so3688242yxe.21
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 10:46:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B6C5EF3.5060006@lwfinger.net>
-References: <1265317065-2922-2-git-send-email-zajec5@gmail.com>
-	<4B6B8F8B.6020908@lwfinger.net> <69e28c911002050841x20053c6jbe768c19e983ef50@mail.gmail.com>
-	<4B6C5EF3.5060006@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 5 Feb 2010 19:46:17 +0100
-Message-ID: <69e28c911002051046s64c69462k9a43bcb1db704476@mail.gmail.com>
-Subject: Re: [RFC][PATCH] b43: LP-PHY: always adjust gain table on channel
-	switch
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+	Mon, 15 Feb 2010 04:22:45 -0500
+Subject: Re: [PATCH 1/2] mac80211: Ignore replay for IBSS interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1266190346-2247-1-git-send-email-benoit.papillault@free.fr>
+References: <1266190346-2247-1-git-send-email-benoit.papillault@free.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-i67MGpQtjAOVlOdwnZ5D"
+Date: Mon, 15 Feb 2010 10:22:42 +0100
+Message-ID: <1266225762.3758.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 5, 2010 at 7:09 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 02/05/2010 10:41 AM, Gábor Stefanik wrote:
->> On Fri, Feb 5, 2010 at 4:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>> On 02/04/2010 02:57 PM, Rafał Miłecki wrote:
->>>> ---
->>>> GÃ¡bor: I think you missed specs here. Could you check whole routine just for
->>>> sure, please? I don't understand whole radio and chanspec magic yet.
->>>> ---
->>>>  drivers/net/wireless/b43/phy_lp.c |    2 +-
->>>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
->>>> index 185219e..61009ee 100644
->>>> --- a/drivers/net/wireless/b43/phy_lp.c
->>>> +++ b/drivers/net/wireless/b43/phy_lp.c
->>>> @@ -2655,8 +2655,8 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
->>>>               if (err)
->>>>                       return err;
->>>>               lpphy_set_analog_filter(dev, new_channel);
->>>> -             lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
->>>>       }
->>>> +     lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
->>>>
->>>>       lpphy->channel = new_channel;
->>>>       b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
->>>
->>> Both the lpphy_set_analog_filter() and lpphy_adjust_gain_table() calls should be
->>> outside the if statement. I changed the spec a little. It used to test "radio
->>> enabled", but I have found that is always true for our driver.
->>>
->>> Larry
->>>
->>>
->>
->> Isn't set_analog_filter() rev0/1-specific?
->
-> It was in the 4.174.64.19 driver that I RE'd when you wrote the LP PHY code.
-> That as changed in 5.10.56.46, which I am now doing. It will take me a while to
-> complete the new routine "LP PHY TX Filter Init" and a routine that it calls.
->
-> Certainly, there is no hurry that these changes be made. Whenever you or Rafał
-> have time. There is no guarantee that these changes will have any effect on the
-> LP PHY operations. Hitting a moving target is not easy.
->
-> Larry
->
 
-Just out of curiosity, is 5.10.56.46 available anywhere (for firmware reasons)?
+--=-i67MGpQtjAOVlOdwnZ5D
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+On Mon, 2010-02-15 at 00:32 +0100, Benoit Papillault wrote:
+> Using WPA-NONE, the same key is used on multiple stations. As such,
+> with
+> at least 3 nodes, a node will receive frames from the other 2 nodes
+> and
+> frames from one of those nodes will be ignored since they are being
+> detected as replayed.
+>=20
+> Note: WPA-NONE is not specified in 802.11i. Instead WPA2 should be
+> used,
+> but it is not currently implemented.
+>=20
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> ---
+>  net/mac80211/tkip.c |    6 +++++-
+>  net/mac80211/wpa.c  |   10 +++++++---
+>  2 files changed, 12 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+> index 7ef491e..f7e0062 100644
+> --- a/net/mac80211/tkip.c
+> +++ b/net/mac80211/tkip.c
+> @@ -234,6 +234,7 @@ int ieee80211_tkip_decrypt_data(struct
+> crypto_blkcipher *tfm,
+>  	u8 rc4key[16], keyid, *pos =3D payload;
+>  	int res;
+>  	const u8 *tk =3D &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+> +	bool tkip_decrypt_replay =3D 0;
+> =20
+>  	if (payload_len < 12)
+>  		return -1;
+> @@ -271,7 +272,7 @@ int ieee80211_tkip_decrypt_data(struct
+> crypto_blkcipher *tfm,
+>  		       iv32, iv16, key->u.tkip.rx[queue].iv32,
+>  		       key->u.tkip.rx[queue].iv16);
+>  #endif
+> -		return TKIP_DECRYPT_REPLAY;
+> +		tkip_decrypt_replay =3D 1;
+>  	}
+> =20
+>  	if (only_iv) {
+> @@ -338,5 +339,8 @@ int ieee80211_tkip_decrypt_data(struct
+> crypto_blkcipher *tfm,
+>  		*out_iv16 =3D iv16;
+>  	}
+> =20
+> +	if (tkip_decrypt_replay)
+> +		return TKIP_DECRYPT_REPLAY;
+> +
+>  	return res;
+>  }
+> diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+> index f4971cd..da1186d 100644
+> --- a/net/mac80211/wpa.c
+> +++ b/net/mac80211/wpa.c
+> @@ -242,7 +242,9 @@ ieee80211_crypto_tkip_decrypt(struct
+> ieee80211_rx_data *rx)
+>  					  hdr->addr1, hwaccel, rx->queue,
+>  					  &rx->tkip_iv32,
+>  					  &rx->tkip_iv16);
+> -	if (res !=3D TKIP_DECRYPT_OK || wpa_test)
+> +	if ((res !=3D TKIP_DECRYPT_OK || wpa_test) &&
+> +	    !(res =3D=3D TKIP_DECRYPT_REPLAY &&
+> +	      rx->sdata->vif.type !=3D NL80211_IFTYPE_ADHOC))
+>  		return RX_DROP_UNUSABLE;
+
+NACK. This will clearly _break_ any proper RSN implementation. WPA-NONE
+is the non-standard thing here, so requiring that somebody wanting to
+implement proper RSN fix this doesn't seem right to me. And RSN
+shouldn't actually be hard to implement with the events that we have now
+-- it might just be a userspace thing.
+
+johannes
+
+--=-i67MGpQtjAOVlOdwnZ5D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLeRJeAAoJEODzc/N7+QmamYcQANH5E4wifk+Pmmz+0b9cNVbB
+2lACBuYJ8DQ7h+BZofIdb6gjTnr6QTfdoRI7+ikEX0stEFhrXY+lbN2Pi/ig11Ma
+HkQIy7kL3AFYKKhPT6HOttxsIhZNTGdFyzfeeOYefyTmQxvYHfvwnFt2G7Vgxhqp
+cwjBS3XccTzN6UVF/T4+EcCRZz7EShNC/DG0Nl/01ta0Cn2G9f14hlJdkGyTuuik
+MDbyfmFDtA0GkDRfYuq9BAgZJGs4u+riNKI40HBKa+66m7NFCyll5vuj7WWlKPVu
+ZKQ5BDmRHfsY621QtzsyGE4WZ5wdqn7mCzuNCYdjIFCzyCOSWE1IRl3GpjcnM4z1
+rYPN9Zq13uxw3ZjWdAkPNtAZOchGBL+JRCV+9O2MsMoZ5xUj7fC5QGb3thfVs+IF
+JKk2Fsmt90VNai3oxx2Kfe3C3N3uuHFuKgz2uMeP08X+Evw1os4KK6vhRWPHnlDD
+FhpEgQtq/ZOmbEJFjNzt2TBLzi9AW9cLQEfgiuZQN6DFRBxgxUl121kbxGPJV14c
+RVSs8QBOEXHsVwqHaA5deaW4fYxR1CzYDqFD78v6N3cgrAN3HV52Oj3ZKWCwAMch
+GwY7tp30i0mLLcP/EwxLR1UkizWy/QL/Eil4FJGmaY90i5VF9rn3qzS/wjuOPwdU
+qEorpd+J4Z4s2g3JWXuu
+=0EA7
+-----END PGP SIGNATURE-----
+
+--=-i67MGpQtjAOVlOdwnZ5D--
+
