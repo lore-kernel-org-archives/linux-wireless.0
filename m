@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:60226 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755994Ab0BXRTD (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38499
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751908Ab0BOBq6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 12:19:03 -0500
-Received: by pwj8 with SMTP id 8so4989665pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2010 09:19:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201002241633.47090.helmut.schaa@googlemail.com>
-References: <201002241633.47090.helmut.schaa@googlemail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 24 Feb 2010 09:18:40 -0800
-Message-ID: <43e72e891002240918i152253c9o8130dc507d2dc03@mail.gmail.com>
-Subject: Re: [PATCH] ath9k_htc: sync add_interface and remove_interface with
-	mac80211
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: devel@linuxdriverproject.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 14 Feb 2010 20:46:58 -0500
+Date: Sun, 14 Feb 2010 17:47:11 -0800 (PST)
+Message-Id: <20100214.174711.180120335.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-02-12
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100212214505.GA16783@tuxdriver.com>
+References: <20100212214505.GA16783@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 24, 2010 at 7:33 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> ath9k_htc does not build against current wireless-testing due to recent
-> changes in mac80211 ("mac80211: remove struct ieee80211_if_init_conf").
->
-> Fix this by updating the add_interface and remove_interface callbacks to
-> use ieee80211_vif instead of ieee80211_if_init_conf.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 12 Feb 2010 16:45:06 -0500
 
-Thanks! Applied and pushed out. I should note, since no one else has,
-that ath9k_htc has gotten a huge face lift by now. Unfortunately the
-entire new revamp was done through an internal private tree but from
-what I gather submission upstream should happen soon.
+> Here is this weeks dump of wireless bits intended for 2.6.34.  It is the
+> usual variety of driver updates and fixes to problems introduced by
+> updates earlier in the cycle.  Also, more progress on N-phy support in
+> b43 and the removal of the unused mac80211 op get_tx_stats.
+> 
+> Please let me know if there are problems!
 
-  Luis
+Pulled, thanks John.
+
+I'm going to pull net-2.6 into net-next-2.6 and try to sort out
+the wireless merge issues myself.
