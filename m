@@ -1,75 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f211.google.com ([209.85.220.211]:53036 "EHLO
-	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756345Ab0BDLa4 (ORCPT
+Received: from mail-iw0-f201.google.com ([209.85.223.201]:65328 "EHLO
+	mail-iw0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598Ab0BODzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 06:30:56 -0500
-Received: by fxm3 with SMTP id 3so2448023fxm.39
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 03:30:55 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/5] b43: N-PHY: load generated samples
-Date: Thu,  4 Feb 2010 12:23:09 +0100
-Message-Id: <1265282592-25491-2-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1265282592-25491-1-git-send-email-zajec5@gmail.com>
-References: <1265282592-25491-1-git-send-email-zajec5@gmail.com>
+	Sun, 14 Feb 2010 22:55:19 -0500
+Message-ID: <4B78C5A4.1040608@lwfinger.net>
+Date: Sun, 14 Feb 2010 21:55:16 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Greg Kroah-Hartman <gregkh@suse.de>
+CC: Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH 1/3] staging: r8187se: Remove write_phy routine
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   26 +++++++++++++++++++++++++-
- 1 files changed, 25 insertions(+), 1 deletions(-)
+Remove a routine that is not used.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 8992457..89e9d66 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -956,6 +956,30 @@ static void b43_nphy_workarounds(struct b43_wldev *dev)
- 		b43_nphy_stay_in_carrier_search(dev, 0);
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+ r8180_core.c |   37 -------------------------------------
+ 1 file changed, 37 deletions(-)
+
+
+Index: linux-2.6/drivers/staging/rtl8187se/r8180_core.c
+===================================================================
+--- linux-2.6.orig/drivers/staging/rtl8187se/r8180_core.c
++++ linux-2.6/drivers/staging/rtl8187se/r8180_core.c
+@@ -3207,43 +3207,6 @@ void write_phy_cck (struct net_device *d
+ 	rtl8185_write_phy(dev, adr, data | 0x10000);
  }
- 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/LoadSampleTable */
-+static void b43_nphy_load_samples(struct b43_wldev *dev,
-+					struct b43_c32 *samples, u16 len) {
-+	struct b43_phy_n *nphy = dev->phy.n;
-+	u16 i;
-+	u32 *data;
-+
-+	data = kzalloc(len * sizeof(u32), GFP_KERNEL);
-+
-+	if (nphy->hang_avoid)
-+		b43_nphy_stay_in_carrier_search(dev, 1);
-+
-+	for (i = 0; i < len; i++) {
-+		data[i] = (samples[i].i & 0x3FF << 10);
-+		data[i] |= samples[i].q & 0x3FF;
-+	}
-+	b43_ntab_write_bulk(dev, B43_NTAB32(17, 0), len, data);
-+
-+	kfree(data);
-+
-+	if (nphy->hang_avoid)
-+		b43_nphy_stay_in_carrier_search(dev, 0);
-+}
-+
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/GenLoadSamples */
- static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
- 					bool test)
-@@ -991,7 +1015,7 @@ static u16 b43_nphy_gen_load_samples(struct b43_wldev *dev, u32 freq, u16 max,
- 		samples[i].i = CORDIC_CONVERT(samples[i].i * max);
- 	}
- 
--	/* TODO: Call N PHY Load Sample Table with buffer, len as arguments */
-+	b43_nphy_load_samples(dev, samples, len);
- 	kfree(samples);
- 	return len;
- }
--- 
-1.6.4.2
+
+-/* 70*3 = 210 ms
+- * I hope this is enougth
+- */
+-#define MAX_PHY 70
+-void write_phy(struct net_device *dev, u8 adr, u8 data)
+-{
+-	u32 phy;
+-	int i;
+-
+-	phy = 0xff0000;
+-	phy |= adr;
+-	phy |= 0x80; /* this should enable writing */
+-	phy |= (data<<8);
+-
+-	//PHY_ADR, PHY_R and PHY_W  are contig and treated as one dword
+-	write_nic_dword(dev,PHY_ADR, phy);
+-
+-	phy= 0xffff00;
+-	phy |= adr;
+-
+-	write_nic_dword(dev,PHY_ADR, phy);
+-	for(i=0;i<MAX_PHY;i++){
+-		phy=read_nic_dword(dev,PHY_ADR);
+-		phy= phy & 0xff0000;
+-		phy= phy >> 16;
+-		if(phy == data){ //SUCCESS!
+-			force_pci_posting(dev);
+-			mdelay(3); //random value
+-			return;
+-		}else{
+-			force_pci_posting(dev);
+-			mdelay(3); //random value
+-		}
+-	}
+-	DMESGW ("Phy writing %x %x failed!", adr,data);
+-}
+-
+ void rtl8185_set_rate(struct net_device *dev)
+ {
+ 	int i;
 
