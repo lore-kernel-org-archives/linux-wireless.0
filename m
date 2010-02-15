@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53445 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755498Ab0BMRLG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 12:11:06 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: [PATCH 1/3] b43legacy: fix typo in ifdef comment
-Date: Sat, 13 Feb 2010 18:10:52 +0100
-Message-Id: <1266081054-4910-1-git-send-email-hauke@hauke-m.de>
+Received: from c60.cesmail.net ([216.154.195.49]:51618 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754070Ab0BOHRX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2010 02:17:23 -0500
+Subject: Re: [PATCH] mac80211: fix netdev rename
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1265967905.4388.0.camel@jlt3.sipsolutions.net>
+References: <1265967905.4388.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Mon, 15 Feb 2010 02:17:12 -0500
+Message-Id: <1266218232.28738.20.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2010-02-12 at 10:45 +0100, Johannes Berg wrote:
+> Fix a copy bug introduced by
+> 
+>     commit 47846c9b0c10808d9337d2e7d09361f3e0a0a71a
+>     Author: Johannes Berg <johannes@sipsolutions.net>
+>     Date:   Wed Nov 25 17:46:19 2009 +0100
+> 
+>         mac80211: reduce reliance on netdev
+> 
+> This manifested itself only in debug messages
+> and in the debugfs rename failure that would
+> always happen due to trying to rename the dir
+> over itself.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: stable@kernel.org
 
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/b43legacy/leds.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Tested-by: Pavel Roskin <proski@gnu.org>
 
-diff --git a/drivers/net/wireless/b43legacy/leds.h b/drivers/net/wireless/b43legacy/leds.h
-index 82167a9..9ff6750 100644
---- a/drivers/net/wireless/b43legacy/leds.h
-+++ b/drivers/net/wireless/b43legacy/leds.h
-@@ -45,7 +45,7 @@ enum b43legacy_led_behaviour {
- void b43legacy_leds_init(struct b43legacy_wldev *dev);
- void b43legacy_leds_exit(struct b43legacy_wldev *dev);
- 
--#else /* CONFIG_B43EGACY_LEDS */
-+#else /* CONFIG_B43LEGACY_LEDS */
- /* LED support disabled */
- 
- struct b43legacy_led {
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
