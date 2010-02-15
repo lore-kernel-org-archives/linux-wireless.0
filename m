@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2-g21.free.fr ([212.27.42.2]:55160 "EHLO smtp2-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968431Ab0B1OnG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2010 09:43:06 -0500
-Message-ID: <4B8A80EE.6000102@free.fr>
-Date: Sun, 28 Feb 2010 15:42:54 +0100
-From: matthieu castet <castet.matthieu@free.fr>
+Received: from 26.mail-out.ovh.net ([91.121.27.225]:56782 "HELO
+	26.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756147Ab0BOWga (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2010 17:36:30 -0500
+Message-ID: <4B79CC6B.5000905@free.fr>
+Date: Mon, 15 Feb 2010 23:36:27 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Dan Williams <dcbw@redhat.com>, Jose Alonso <joalonsof@gmail.com>
-Subject: [PATCH] airo : Print of firmware version
-Content-Type: multipart/mixed;
- boundary="------------040300010604020708080406"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: Drop protected data frames that have not
+ been decrypted
+References: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>	 <69e28c911002141610q737465b4s1d825d6dcd3aea26@mail.gmail.com>	 <4B78FBA5.7090109@free.fr> <1266226483.7084.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1266226483.7084.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040300010604020708080406
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Johannes Berg a Ã©crit :
+> On Mon, 2010-02-15 at 08:45 +0100, Benoit PAPILLAULT wrote:
+>
+>   
+>>> I'm not familiar with this part of the code; but have you tested if
+>>> this doesn't break monitor-while-operating mode (i.e. doesn't remove
+>>> other-STA frames from monitor interfaces)?
+>>>
+>>>   
+>>>       
+>> Yes, it has been tested in this case. In fact, this patch changes RX 
+>> path only in ieee80211_rx_h_data / ieee80211_rx_h_action and 
+>> ieee80211_rx_h_mgmt. In all 3 cases, it returns RX_DROP_MONITOR.
+>>     
+>
+> ???
+>
+>         if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
+>                 return RX_DROP_UNUSABLE;
+>   
+This code was not in wireless-testing/master yesterday when I sent the 
+patches.
+> However. GUYS!!! Read the code! Real monitor mode bypasses _ALL_ the RX
+> handlers, frames just short-circuit up right after they are received
+> from the driver.
+>   
+Just for my own understanding. It seems the implementation has 2 
+different code path :
+- "real" monitor mode which is handled right after ieee80211_rx() so it 
+is not affected
+- "cook" monitor mode which is handled as part of the RX handlers.
 
-For the firmware version 5.30.17 the log file shows:
-Firmware version 5.30.11
+BTW, why do we have 2 different code path? I'm sure I missed something 
+obvious here.
+> johannes
+>   
 
-The variable softSubVer is binary.
+Regards,
+Benoit
 
-
-Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
-Signed-off-by: Jose Alonso <joalonsof@gmail.com>
-
---------------040300010604020708080406
-Content-Type: text/x-diff;
- name="airo_firmware.diff"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: inline;
- filename="airo_firmware.diff"
-
-Index: airo.c
-===================================================================
---- 1/drivers/net/wireless/airo.c	(révision 47)
-+++ 2/drivers/net/wireless/airo.c	(révision 48)
-@@ -2993,7 +2993,7 @@
- 	ai->wep_capable = (cap_rid.softCap & cpu_to_le16(0x02)) ? 1 : 0;
- 	ai->max_wep_idx = (cap_rid.softCap & cpu_to_le16(0x80)) ? 3 : 0;
- 
--	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
-+	airo_print_info(dev->name, "Firmware version %x.%x.%02d",
- 	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
- 	                (le16_to_cpu(cap_rid.softVer) & 0xFF),
- 	                le16_to_cpu(cap_rid.softSubVer));
-
---------------040300010604020708080406--
