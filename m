@@ -1,157 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f190.google.com ([209.85.222.190]:33365 "EHLO
-	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030448Ab0B0Q4N (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39144 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805Ab0BPHR3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 11:56:13 -0500
-Received: by pzk28 with SMTP id 28so887749pzk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 08:56:13 -0800 (PST)
-From: tom.leiming@gmail.com
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	stable@kernel.org, Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH] ath9k: fix lockdep warning when unloading module
-Date: Sun, 28 Feb 2010 00:56:24 +0800
-Message-Id: <1267289784-6762-1-git-send-email-tom.leiming@gmail.com>
+	Tue, 16 Feb 2010 02:17:29 -0500
+Subject: Re: [PATCH 2/2] mac80211: Add HT IE to IBSS beacons and probe
+ responses.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4B79CB71.1000509@free.fr>
+References: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>
+	 <1266190653-2453-2-git-send-email-benoit.papillault@free.fr>
+	 <1266226537.7084.2.camel@jlt3.sipsolutions.net>  <4B79CB71.1000509@free.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oAY8KGZ/Zv9tKo6nS+lD"
+Date: Tue, 16 Feb 2010 08:17:24 +0100
+Message-ID: <1266304644.3771.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
 
-Since txq->axq_lock may be hold in softirq context, it must be
-acquired with spin_lock_bh() instead of spin_lock() if softieq is
-enabled.
+--=-oAY8KGZ/Zv9tKo6nS+lD
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The patch fixes the lockdep warning below when unloading ath9k modules.
+On Mon, 2010-02-15 at 23:32 +0100, Benoit PAPILLAULT wrote:
 
-=================================
-[ INFO: inconsistent lock state ]
-2.6.33-wl #12
----------------------------------
-inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
-rmmod/3642 [HC0[0]:SC0[0]:HE1:SE1] takes:
- (&(&txq->axq_lock)->rlock){+.?...}, at: [<ffffffffa03568c3>] ath_tx_node_cleanup+0x62/0x180 [ath9k]
-{IN-SOFTIRQ-W} state was registered at:
-  [<ffffffff8107577d>] __lock_acquire+0x2f6/0xd35
-  [<ffffffff81076289>] lock_acquire+0xcd/0xf1
-  [<ffffffff813a7486>] _raw_spin_lock_bh+0x3b/0x6e
-  [<ffffffffa0356b49>] spin_lock_bh+0xe/0x10 [ath9k]
-  [<ffffffffa0358ec7>] ath_tx_tasklet+0xcd/0x391 [ath9k]
-  [<ffffffffa0354f5f>] ath9k_tasklet+0x70/0xc8 [ath9k]
-  [<ffffffff8104e601>] tasklet_action+0x8c/0xf4
-  [<ffffffff8104f459>] __do_softirq+0xf8/0x1cd
-  [<ffffffff8100ab1c>] call_softirq+0x1c/0x30
-  [<ffffffff8100c2cf>] do_softirq+0x4b/0xa3
-  [<ffffffff8104f045>] irq_exit+0x4a/0x8c
-  [<ffffffff813acccc>] do_IRQ+0xac/0xc3
-  [<ffffffff813a7d53>] ret_from_intr+0x0/0x16
-  [<ffffffff81302d52>] cpuidle_idle_call+0x9e/0xf8
-  [<ffffffff81008be7>] cpu_idle+0x62/0x9d
-  [<ffffffff81391c1a>] rest_init+0x7e/0x80
-  [<ffffffff818bbd38>] start_kernel+0x3e8/0x3f3
-  [<ffffffff818bb2bc>] x86_64_start_reservations+0xa7/0xab
-  [<ffffffff818bb3b8>] x86_64_start_kernel+0xf8/0x107
-irq event stamp: 42037
-hardirqs last  enabled at (42037): [<ffffffff813a7b21>] _raw_spin_unlock_irqrestore+0x47/0x56
-hardirqs last disabled at (42036): [<ffffffff813a72f4>] _raw_spin_lock_irqsave+0x2b/0x88
-softirqs last  enabled at (42000): [<ffffffffa0353ea6>] spin_unlock_bh+0xe/0x10 [ath9k]
-softirqs last disabled at (41998): [<ffffffff813a7463>] _raw_spin_lock_bh+0x18/0x6e
+> You are referring to "we need nl80211/cfg80211 changes" I guess. Could
+>=20
+> you elaborate a bit on this? I'm still new to mac80211. Could you tell
+>=20
+> me what needs to be changed and where I can start ? iw source code ?
+> is=20
+> cfg80211 the source code under net/wireless ?
 
-other info that might help us debug this:
-4 locks held by rmmod/3642:
- #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff8132c10d>] rtnl_lock+0x17/0x19
- #1:  (&wdev->mtx){+.+.+.}, at: [<ffffffffa01e53f2>] cfg80211_netdev_notifier_call+0x28d/0x46d [cfg80211]
- #2:  (&ifmgd->mtx){+.+.+.}, at: [<ffffffffa0260834>] ieee80211_mgd_deauth+0x3f/0x17e [mac80211]
- #3:  (&local->sta_mtx){+.+.+.}, at: [<ffffffffa025a381>] sta_info_destroy_addr+0x2b/0x5e [mac80211]
+Yes cfg80211 is most of net/wireless/.
 
-stack backtrace:
-Pid: 3642, comm: rmmod Not tainted 2.6.33-wl #12
-Call Trace:
- [<ffffffff81074469>] valid_state+0x178/0x18b
- [<ffffffff81014f94>] ? save_stack_trace+0x2f/0x4c
- [<ffffffff81074e08>] ? check_usage_backwards+0x0/0x88
- [<ffffffff8107458f>] mark_lock+0x113/0x230
- [<ffffffff810757f1>] __lock_acquire+0x36a/0xd35
- [<ffffffff8101018d>] ? native_sched_clock+0x2d/0x5f
- [<ffffffffa03568c3>] ? ath_tx_node_cleanup+0x62/0x180 [ath9k]
- [<ffffffff81076289>] lock_acquire+0xcd/0xf1
- [<ffffffffa03568c3>] ? ath_tx_node_cleanup+0x62/0x180 [ath9k]
- [<ffffffff810732eb>] ? trace_hardirqs_off+0xd/0xf
- [<ffffffff813a7193>] _raw_spin_lock+0x36/0x69
- [<ffffffffa03568c3>] ? ath_tx_node_cleanup+0x62/0x180 [ath9k]
- [<ffffffffa03568c3>] ath_tx_node_cleanup+0x62/0x180 [ath9k]
- [<ffffffff810749ed>] ? trace_hardirqs_on+0xd/0xf
- [<ffffffffa0353950>] ath9k_sta_remove+0x22/0x26 [ath9k]
- [<ffffffffa025a08f>] __sta_info_destroy+0x1ad/0x38c [mac80211]
- [<ffffffffa025a394>] sta_info_destroy_addr+0x3e/0x5e [mac80211]
- [<ffffffffa02605d6>] ieee80211_set_disassoc+0x175/0x180 [mac80211]
- [<ffffffffa026084d>] ieee80211_mgd_deauth+0x58/0x17e [mac80211]
- [<ffffffff813a60c1>] ? __mutex_lock_common+0x37f/0x3a4
- [<ffffffffa01e53f2>] ? cfg80211_netdev_notifier_call+0x28d/0x46d [cfg80211]
- [<ffffffffa026786e>] ieee80211_deauth+0x1e/0x20 [mac80211]
- [<ffffffffa01f47f9>] __cfg80211_mlme_deauth+0x130/0x13f [cfg80211]
- [<ffffffffa01e53f2>] ? cfg80211_netdev_notifier_call+0x28d/0x46d [cfg80211]
- [<ffffffff810732eb>] ? trace_hardirqs_off+0xd/0xf
- [<ffffffffa01f7eee>] __cfg80211_disconnect+0x111/0x189 [cfg80211]
- [<ffffffffa01e5433>] cfg80211_netdev_notifier_call+0x2ce/0x46d [cfg80211]
- [<ffffffff813aa9ea>] notifier_call_chain+0x37/0x63
- [<ffffffff81068c98>] raw_notifier_call_chain+0x14/0x16
- [<ffffffff81322e97>] call_netdevice_notifiers+0x1b/0x1d
- [<ffffffff8132386d>] dev_close+0x6a/0xa6
- [<ffffffff8132395f>] rollback_registered_many+0xb6/0x2f4
- [<ffffffff81323bb8>] unregister_netdevice_many+0x1b/0x66
- [<ffffffffa026494f>] ieee80211_remove_interfaces+0xc5/0xd0 [mac80211]
- [<ffffffffa02580a2>] ieee80211_unregister_hw+0x47/0xe8 [mac80211]
- [<ffffffffa035290e>] ath9k_deinit_device+0x7a/0x9b [ath9k]
- [<ffffffffa035bc26>] ath_pci_remove+0x38/0x76 [ath9k]
- [<ffffffff8120940a>] pci_device_remove+0x2d/0x51
- [<ffffffff8129d797>] __device_release_driver+0x7b/0xd1
- [<ffffffff8129d885>] driver_detach+0x98/0xbe
- [<ffffffff8129ca7a>] bus_remove_driver+0x94/0xb7
- [<ffffffff8129ddd6>] driver_unregister+0x6c/0x74
- [<ffffffff812096d2>] pci_unregister_driver+0x46/0xad
- [<ffffffffa035bae1>] ath_pci_exit+0x15/0x17 [ath9k]
- [<ffffffffa035e1a2>] ath9k_exit+0xe/0x2f [ath9k]
- [<ffffffff8108050a>] sys_delete_module+0x1c7/0x236
- [<ffffffff813a7df5>] ? retint_swapgs+0x13/0x1b
- [<ffffffff810749b5>] ? trace_hardirqs_on_caller+0x119/0x144
- [<ffffffff8109b9f6>] ? audit_syscall_entry+0x11e/0x14a
- [<ffffffff81009bb2>] system_call_fastpath+0x16/0x1b
-wlan1: deauthenticating from 00:23:cd:e1:f9:b2 by local choice (reason=3)
-PM: Removing info for No Bus:wlan1
-cfg80211: Calling CRDA to update world regulatory domain
-PM: Removing info for No Bus:rfkill2
-PM: Removing info for No Bus:phy1
-ath9k 0000:16:00.0: PCI INT A disabled
+Is it not obvious to you that in order to use HT with IBSS you need to
+have a way to configure the IBSS to use HT?
 
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 47294f9..b2c8207 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2258,7 +2258,7 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- 		if (ATH_TXQ_SETUP(sc, i)) {
- 			txq = &sc->tx.txq[i];
- 
--			spin_lock(&txq->axq_lock);
-+			spin_lock_bh(&txq->axq_lock);
- 
- 			list_for_each_entry_safe(ac,
- 					ac_tmp, &txq->axq_acq, list) {
-@@ -2279,7 +2279,7 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- 				}
- 			}
- 
--			spin_unlock(&txq->axq_lock);
-+			spin_unlock_bh(&txq->axq_lock);
- 		}
- 	}
- }
--- 
-1.6.2.5
+--=-oAY8KGZ/Zv9tKo6nS+lD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLekaBAAoJEODzc/N7+Qmay/kP/0dz21t9SxaDHozEP2LyH86r
+MquJXmDLJoaaGj6d8yfINznrp9tJd1d/M7UIOp+/79Vch1fEjcrUyaqfJW2lIegQ
+APXXI041ywMnnGuwGzHGeeEYfI/uvR3LYh1woScUsO5SswOKBFREkOZeZScsFEJf
+EZ+Go6yJ3gJnRIMlLijOazZa9XC5QeNVcdZg+NC3baw2A4CTIHzOBMqW3VisqkO8
+SgORpPgRqby7Ux02HuEFkHe+1aXeOUCUT8MCzJNfakF8Y68/riru2IKMqy0Anb/1
+AYeygQke3GMMg+BOvkJXyRVND8ReUC9A0sLCSPIqZnNFTFup0heC42Q29IgGbLJF
+hZ74IxyYw13C30gXJ210X+aQQK6dNq8QIH4/zRqvAdBtqulGLx2vuPrq/p05SMnS
+bk3bqTQJO3bTZ4mSMX1v2iii1r3c1AvuZ8cfkzPv3FdvjDxi/40rmDQzwHOLM05K
+lkcbFiwmaRe4NCQpz8KwmYMlrSV3kwCWeww2eUvgLvVtfidWdaD4cIwU4DcdCDLG
+MPdyKV2Mvq1TLJ1M6JYrCSl8MbpqxVhGM7yiVNHDivneOZhS1MPzIGwheICb2PuU
+YMT6cEdlosMyt4ktiJBJmV9Hq1AH/F6xv8HNDIHCa49zXZ+iQbWVWS5mZEoPqJIy
+HWrjsbCDJc4/MmgPCNro
+=MKzi
+-----END PGP SIGNATURE-----
+
+--=-oAY8KGZ/Zv9tKo6nS+lD--
 
