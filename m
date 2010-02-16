@@ -1,134 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50715 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753751Ab0BRL2J (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52065 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756833Ab0BPJ6n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:09 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH 04/22] wl1271: modify wl1271_acx_ac_cfg() to use function parameters
-Date: Thu, 18 Feb 2010 13:25:39 +0200
-Message-Id: <1266492357-462-5-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+	Tue, 16 Feb 2010 04:58:43 -0500
+Subject: Re: [PATCH 1/2] mac80211: Drop protected data frames that have not
+ been decrypted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>
+References: <1266190653-2453-1-git-send-email-benoit.papillault@free.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-O54bClQb/LaOseSfGCU/"
+Date: Tue, 16 Feb 2010 10:58:41 +0100
+Message-ID: <1266314321.4543.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
 
-For WMM we need to configure each queue separately so modify
-wl1271_acx_ac_cfg() to take the configuration from function parameters
-instead.
+--=-O54bClQb/LaOseSfGCU/
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   31 +++++++++++++---------------
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    3 +-
- drivers/net/wireless/wl12xx/wl1271_init.c |   14 +++++++++---
- 3 files changed, 26 insertions(+), 22 deletions(-)
+On Mon, 2010-02-15 at 00:37 +0100, Benoit Papillault wrote:
+> Fix for the following issue : a STA connected to a WPA2 AP was showing
+> frames from others STA in tcpdump on wlan0 (promiscuous mode). In
+> fact,
+> those frames are not decrypted and appears as 802.3 junk. This patch
+> just drops any protected data frames that have not been decrypted.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index 0b34348..4b052ee 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -830,12 +830,14 @@ out:
- 	return ret;
- }
- 
--int wl1271_acx_ac_cfg(struct wl1271 *wl)
-+int wl1271_acx_ac_cfg(struct wl1271 *wl, u8 ac, u8 cw_min, u16 cw_max,
-+		      u8 aifsn, u16 txop)
- {
- 	struct acx_ac_cfg *acx;
--	int i, ret = 0;
-+	int ret = 0;
- 
--	wl1271_debug(DEBUG_ACX, "acx access category config");
-+	wl1271_debug(DEBUG_ACX, "acx ac cfg %d cw_ming %d cw_max %d "
-+		     "aifs %d txop %d", ac, cw_min, cw_max, aifsn, txop);
- 
- 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
- 
-@@ -844,21 +846,16 @@ int wl1271_acx_ac_cfg(struct wl1271 *wl)
- 		goto out;
- 	}
- 
--	for (i = 0; i < wl->conf.tx.ac_conf_count; i++) {
--		struct conf_tx_ac_category *c = &(wl->conf.tx.ac_conf[i]);
--		acx->ac = c->ac;
--		acx->cw_min = c->cw_min;
--		acx->cw_max = cpu_to_le16(c->cw_max);
--		acx->aifsn = c->aifsn;
--		acx->reserved = 0;
--		acx->tx_op_limit = cpu_to_le16(c->tx_op_limit);
-+	acx->ac = ac;
-+	acx->cw_min = cw_min;
-+	acx->cw_max = cpu_to_le16(cw_max);
-+	acx->aifsn = aifsn;
-+	acx->tx_op_limit = cpu_to_le16(txop);
- 
--		ret = wl1271_cmd_configure(wl, ACX_AC_CFG, acx, sizeof(*acx));
--		if (ret < 0) {
--			wl1271_warning("Setting of access category "
--				       "config: %d", ret);
--			goto out;
--		}
-+	ret = wl1271_cmd_configure(wl, ACX_AC_CFG, acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx ac cfg failed: %d", ret);
-+		goto out;
- 	}
- 
- out:
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index 1bb63af..e5f5cbd 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -1070,7 +1070,8 @@ int wl1271_acx_cts_protect(struct wl1271 *wl,
- 			   enum acx_ctsprotect_type ctsprotect);
- int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats);
- int wl1271_acx_rate_policies(struct wl1271 *wl);
--int wl1271_acx_ac_cfg(struct wl1271 *wl);
-+int wl1271_acx_ac_cfg(struct wl1271 *wl, u8 ac, u8 cw_min, u16 cw_max,
-+		      u8 aifsn, u16 txop);
- int wl1271_acx_tid_cfg(struct wl1271 *wl);
- int wl1271_acx_frag_threshold(struct wl1271 *wl);
- int wl1271_acx_tx_config_options(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index c9848ee..2b56a9e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -195,7 +195,8 @@ static int wl1271_init_beacon_broadcast(struct wl1271 *wl)
- 
- int wl1271_hw_init(struct wl1271 *wl)
- {
--	int ret;
-+	struct conf_tx_ac_category *conf_ac;
-+	int ret, i;
- 
- 	ret = wl1271_cmd_general_parms(wl);
- 	if (ret < 0)
-@@ -279,9 +280,14 @@ int wl1271_hw_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Default AC configuration */
--	ret = wl1271_acx_ac_cfg(wl);
--	if (ret < 0)
--		goto out_free_memmap;
-+	for (i = 0; i < wl->conf.tx.ac_conf_count; i++) {
-+		conf_ac = &wl->conf.tx.ac_conf[i];
-+		ret = wl1271_acx_ac_cfg(wl, conf_ac->ac, conf_ac->cw_min,
-+					conf_ac->cw_max, conf_ac->aifsn,
-+					conf_ac->tx_op_limit);
-+		if (ret < 0)
-+			goto out_free_memmap;
-+	}
- 
- 	/* Configure TX rate classes */
- 	ret = wl1271_acx_rate_policies(wl);
--- 
-1.6.3.3
+Those frames are only passed up when you set IFF_PROMISC on the
+interface, so that's not really a bug, in a sense you wanted to see
+them. Now, they may not actually be useful to you, and I'd argue that
+checking IFF_PROMISC has no place in mac80211, but it's not really a
+bug.
+
+johannes
+
+--=-O54bClQb/LaOseSfGCU/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLemxLAAoJEODzc/N7+QmaftYP/19gQF4ZLBaHlz5BBH/SgfGf
+TisAXTpcQiiNfkFZA+t0uFYN8sUM61sQwtMfa2/I91YcVPODSIGPLsEE6KOEZZda
+b4YwE4s4LGVJBHC5MoClUFToWc1oZe68oWjeKxkk+pDKtuqU+uC/EIQZF99vXO8J
+VGJ4Gi+HqdUvhVRUjZj3OO903KVtPqQ77MXU1pB+t1CKD5a+6z/aqN+LKelnyu2t
++4nVw/vpklQ/mzopi1H/iZzSk93RPbWn6hyT7t2wChyYEx0OnqMveBW2OFLYFV2F
+x7Umc4zqpSOhb/vdDoWzEXAGeAvn2zF+L7GYyu1nIBMhyGvnv2QqIwYAjEClUs2q
+mpe3jJzLHwU9rT4+/QDaxBMIOpReVvetxl1qoJTJyDTJPS1LpYBstsDJu9Ezjosg
+1WMn0hyVRbirl4R1oDaUW8ejOCW/W7nKBz6pTf6Io8iM2RGtW2f6AbLPRJniYrYw
+jP2bE4cq17GAcAAek+6qjGPjk/gvKyoCFgPFK3QsABzNlCDW4AbVFnLfKxvKKLdU
+HJBnvDnraeZylOL1jyie5/7qThd746Pac41C5TWadGT1ZXhSBX55W/MeD/KzjyFR
+G7rXLu1XzRR+aFn6mWd9ElyNeA8D5RHBMpmVo/oMPz2liueRtCBAzZ0deIwUAvPB
+G5NPc6vvqGqipicLDLyt
+=fAFx
+-----END PGP SIGNATURE-----
+
+--=-O54bClQb/LaOseSfGCU/--
 
