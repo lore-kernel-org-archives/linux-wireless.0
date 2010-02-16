@@ -1,59 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:58461 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756798Ab0BDJPB (ORCPT
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:38342 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757013Ab0BPTmu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 04:15:01 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so521887eyd.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 01:14:59 -0800 (PST)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 1/2] mac80211: Retry null data frame for power save.
-References: <1265266442-6273-1-git-send-email-vnatarajan@atheros.com>
-	<1265271903.29119.107.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 04 Feb 2010 11:14:56 +0200
-In-Reply-To: <1265271903.29119.107.camel@johannes.local> (Johannes Berg's message of "Thu\, 04 Feb 2010 09\:25\:03 +0100")
-Message-ID: <87hbpxjran.fsf@purkki.valot.fi>
+	Tue, 16 Feb 2010 14:42:50 -0500
+Received: by fxm7 with SMTP id 7so7633828fxm.28
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 11:42:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Andrew Lutomirski <luto@mit.edu>
+Date: Tue, 16 Feb 2010 14:42:28 -0500
+Message-ID: <cb0375e11002161142o48fc45c0r32dfd7538bae28f5@mail.gmail.com>
+Subject: "Monitor and recover the aggregation TX flow failure" goes a little
+	bit nuts
+To: trieux.t.nguyen@intel.com, ipw3945-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org,
+	reinette chatre <reinette.chatre@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+I'm running the changeset "iwlwifi: Monitor and recover the
+aggregation TX flow failure" on something resembling 2.6.33-rc7, and
+I'm getting lots of lag on my connections and stuff like this in
+dmesg:
 
-> On the other hand, there is hardware (even from Atheros/Zydas!) that
-> will not provide status reports for every frame.
+[128694.380917] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra =
+00:21:d8:49:d6:f2 tid = 0
+[128695.217054] call iwl_force_reset(IWL_RF_RESET)
+[128697.515296] call iwl_force_reset(IWL_RF_RESET)
+[128698.034922] call iwl_force_reset(IWL_RF_RESET)
+[128699.602022] call iwl_force_reset(IWL_FW_RESET)
+[128699.710573] iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting
+[128699.710586] iwlagn 0000:03:00.0: queue number out of range: 0,
+must be 10 to 19
+[128701.623101] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra =
+00:21:d8:49:d6:f2 tid = 0
+[128702.526568] call iwl_force_reset(IWL_RF_RESET)
+[128703.570138] call iwl_force_reset(IWL_RF_RESET)
+[128707.437103] call iwl_force_reset(IWL_RF_RESET)
+[128707.649877] call iwl_force_reset(IWL_RF_RESET)
+[128707.959510] call iwl_force_reset(IWL_RF_RESET)
+[128709.734898] call iwl_force_reset(IWL_RF_RESET)
+[128710.778607] call iwl_force_reset(IWL_RF_RESET)
+[128712.554917] call iwl_force_reset(IWL_RF_RESET)
+[128712.868074] call iwl_force_reset(IWL_FW_RESET)
+[128715.166000] call iwl_force_reset(IWL_RF_RESET)
+[128717.569235] call iwl_force_reset(IWL_RF_RESET)
+[128791.830914] call iwl_force_reset(IWL_RF_RESET)
+[128794.441324] call iwl_force_reset(IWL_RF_RESET)
+[128795.903410] call iwl_force_reset(IWL_RF_RESET)
+[128797.366627] call iwl_force_reset(IWL_RF_RESET)
+[128799.245967] call iwl_force_reset(IWL_RF_RESET)
+[128804.260292] call iwl_force_reset(IWL_RF_RESET)
+[128806.245023] call iwl_force_reset(IWL_RF_RESET)
+[128807.709088] call iwl_force_reset(IWL_RF_RESET)
+[128810.735958] call iwl_force_reset(IWL_RF_RESET)
+[128823.061684] call iwl_force_reset(IWL_RF_RESET)
 
-Also at76c50x-usb doesn't report status AFAIK. I think we need to have
-a new hw flag to indicate if driver reports frame status.
 
-> Also, I'm not entirely sure why the AP would lose the frame? It's a
-> unicast frame that will be retransmitted quite a number of times. Is it
-> really actually going out on the air or is there something else wrong?
-> Maybe just the queue priority inversion issue since this frame goes out
-> as higher priority as most data frames?
+This is with the following extra patch:
 
-I have received reports that in a busy office networks nullfunc frames
-get lost, I'm assuming due to collisions on the air. For example,
-wl1251 (in which firmware sends the nullfunc frame) sends an event to
-the host if nullfunc frame fails for some reason. I think we need to
-take into account in mac80211 the case when nullfunc frames get lost.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c
+b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 0d09f57..f39f693 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -678,10 +678,12 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 				BA_TIMEOUT_MAX)) {
+ 			IWL_DEBUG_RADIO(priv,
+ 				"call iwl_force_reset(IWL_FW_RESET)\n");
++			printk(KERN_ERR "call iwl_force_reset(IWL_FW_RESET)\n");
+ 			iwl_force_reset(priv, IWL_FW_RESET);
+ 		} else {
+ 			IWL_DEBUG_RADIO(priv,
+ 				"call iwl_force_reset(IWL_RF_RESET)\n");
++			printk(KERN_ERR "call iwl_force_reset(IWL_RF_RESET)\n");
+ 			iwl_force_reset(priv, IWL_RF_RESET);
+ 		}
+ 	}
 
-> If you really need to provide this functionality I think you should
-> probably do it "properly" in the sense that you react to the "frame
-> acked" by enabling PS, rather than the other way around.
 
-This is much better. Also I'm worried about the test for nullfunc
-frame being a racy. I would prefer to make it sure that the nullfunc
-frame really is for the powersave transition.
+Something's wrong here, I think.  This is probably related to bug
+#2120 (http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2120).
 
-> That requires a hardware flag though that enables mac80211 to know
-> that all frames will get a status report unless something is
-> seriously wrong, since otherwise we'd *never* go into PS.
-
-Agreed.
-
--- 
-Kalle Valo
+--Andy
