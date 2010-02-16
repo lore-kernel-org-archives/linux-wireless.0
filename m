@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39578 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752824Ab0BNTLc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 14:11:32 -0500
-Date: Sun, 14 Feb 2010 21:11:26 +0200
-From: Jouni Malinen <j@w1.fi>
-To: =?utf-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>
-Cc: Neshama Parhoti <pneshama@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: good wlan: sniffer that does not need a windows machine ?
-Message-ID: <20100214191126.GA13637@jm.kir.nu>
-References: <912ec82a1002140957p6959c030h2b33fd9646cfd67d@mail.gmail.com>
- <69e28c911002141046r70d8bcf2g6a8db7afbbef837@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:34398 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932909Ab0BPTDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2010 14:03:53 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 11:03:53 -0800
+Date: Tue, 16 Feb 2010 11:03:50 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mcgrof@infradead.org" <mcgrof@infradead.org>
+Subject: Re: [PATCH 1/3] compat-wireless-stable-2.6.33.y: Activate ssb
+Message-ID: <20100216190350.GL16606@tux>
+References: <1265063133-29682-1-git-send-email-y>
+ <4B786B9A.3050600@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <69e28c911002141046r70d8bcf2g6a8db7afbbef837@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4B786B9A.3050600@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 14, 2010 at 07:46:04PM +0100, Gábor Stefanik wrote:
-> Monitoring in general works in almost all linux drivers (the Alfa
-> AWUS036H is perhaps the best for this purpose) - however, there is no
-> known way to monitor 802.11n packets on Linux (due to problems with
-> the mac80211 stack not passing 802.11n frames to monitor interfaces?).
+On Sun, Feb 14, 2010 at 01:31:06PM -0800, Hauke Mehrtens wrote:
+> y@hauke-m.de wrote:
+> > From: Hauke Mehrtens <hauke@hauke-m.de>
+> > 
+> > This is a backport of compat-wireless commit 67228098e77852a0cf50c7c6c413fa601bd6f5b1
+> > 
+> > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> > ---
+> >  Makefile                          |    4 +---
+> >  patches/99-change-makefiles.patch |    6 +++---
+> >  scripts/admin-update.sh           |    2 +-
+> >  3 files changed, 5 insertions(+), 7 deletions(-)
+> > 
+> Hi Luis,
+> 
+> why haven't you appaied these patches to compat-wireless-stable?
 
-Known to whom? ;-) mac80211 passes 802.11n packet just fine to monitor
-interfaces and as an example, I'm using ath9k as a wireless sniffer for
-IEEE 802.11g/a/n. The radiotap headers may not show all parameters at
-this point, but there is ongoing work to extend that 
+I thought I did, sorry, will check again.
 
-> Currently, the only way to sniff 802.11n packets is the AirPcap NX on
-> Windows.
+> I did something wrong in "git send" so these mails are containing a
+> wrong From filed. Should I resend them?
 
-Yeah, right..
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Um, let me check I thought I had applied them, maybe I just had
+applied them to the bleeding edge and forgot to propagate to
+stable.
+
+  Luis
