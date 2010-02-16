@@ -1,85 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:44318 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750717Ab0BSAqn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 19:46:43 -0500
-Message-ID: <4B7DDF6C.2000302@openwrt.org>
-Date: Fri, 19 Feb 2010 01:46:36 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: fix rate control fallback rate selection
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from bhuna.collabora.co.uk ([93.93.128.226]:37237 "EHLO
+	bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933309Ab0BPVRQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2010 16:17:16 -0500
+Date: Tue, 16 Feb 2010 16:16:56 -0500
+From: Andres Salomon <dilinger@collabora.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: give warning if building w/out rate ctrl
+ algorithm
+Message-ID: <20100216161656.42079d77@droptest.queued.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When selecting the tx fallback rate, rc.c used a separate variable
-'nrix' for storing the next rate index, however it did not use that as
-reference for further rate index lowering. Because of that, it ended up
-reusing the same rate for multiple multi-rate retry stages, thus
-decreasing delivery probability under changing link conditions.
 
-This patch removes the separate (unnecessary) variable and fixes
-fallback the way it was intended to work.
-This should result in increased throughput and better link stability.
+I discovered that if EMBEDDED=y, one can accidentally build a mac80211 stack
+and drivers w/ no rate control algorithm.  For drivers like RTL8187 that don't
+supply their own RC algorithms, this will cause ieee80211_register_hw to
+fail (making the driver unusable).
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+This will tell kconfig to provide a warning if no rate control algorithms
+have been selected.  That'll at least warn the user; users that know that
+their drivers supply a rate control algorithm can safely ignore the
+warning, and those who don't know (or who expect to be using multiple
+drivers) can select a default RC algorithm.
+
+Signed-off-by: Andres Salomon <dilinger@collabora.co.uk>
 Cc: stable@kernel.org
 ---
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -668,7 +668,7 @@ static void ath_get_rate(void *priv, str
- 	struct ieee80211_tx_rate *rates = tx_info->control.rates;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	__le16 fc = hdr->frame_control;
--	u8 try_per_rate, i = 0, rix, nrix;
-+	u8 try_per_rate, i = 0, rix;
- 	int is_probe = 0;
+ net/mac80211/Kconfig |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index a10d508..2a51b0b 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -15,8 +15,12 @@ comment "CFG80211 needs to be enabled for MAC80211"
  
- 	if (rate_control_send_low(sta, priv_sta, txrc))
-@@ -688,26 +688,25 @@ static void ath_get_rate(void *priv, str
+ if MAC80211 != n
  
- 	rate_table = sc->cur_rate_table;
- 	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe);
--	nrix = rix;
++config MAC80211_HAS_RC
++	def_bool n
++
+ config MAC80211_RC_PID
+ 	bool "PID controller based rate control algorithm" if EMBEDDED
++	select MAC80211_HAS_RC
+ 	---help---
+ 	  This option enables a TX rate control algorithm for
+ 	  mac80211 that uses a PID controller to select the TX
+@@ -24,12 +28,14 @@ config MAC80211_RC_PID
  
- 	if (is_probe) {
- 		/* set one try for probe rates. For the
- 		 * probes don't enable rts */
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
--				       1, nrix, 0);
-+				       1, rix, 0);
+ config MAC80211_RC_MINSTREL
+ 	bool "Minstrel" if EMBEDDED
++	select MAC80211_HAS_RC
+ 	default y
+ 	---help---
+ 	  This option enables the 'minstrel' TX rate control algorithm
  
- 		/* Get the next tried/allowed rate. No RTS for the next series
- 		 * after the probe rate
- 		 */
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
--				       try_per_rate, nrix, 0);
-+				       try_per_rate, rix, 0);
+ choice
+ 	prompt "Default rate control algorithm"
++	depends on MAC80211_HAS_RC
+ 	default MAC80211_RC_DEFAULT_MINSTREL
+ 	---help---
+ 	  This option selects the default rate control algorithm
+@@ -62,6 +68,9 @@ config MAC80211_RC_DEFAULT
  
- 		tx_info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 	} else {
- 		/* Set the choosen rate. No RTS for first series entry. */
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
--				       try_per_rate, nrix, 0);
-+				       try_per_rate, rix, 0);
- 	}
+ endif
  
- 	/* Fill in the other rates for multirate retry */
-@@ -716,10 +715,10 @@ static void ath_get_rate(void *priv, str
- 		if (i + 1 == 4)
- 			try_per_rate = 8;
- 
--		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
--				       try_per_rate, nrix, 1);
-+				       try_per_rate, rix, 1);
- 	}
- 
- 	/*
++comment "some wireless drivers require a rate control algorithm"
++	depends on MAC80211_HAS_RC=n
++
+ config MAC80211_MESH
+ 	bool "Enable mac80211 mesh networking (pre-802.11s) support"
+ 	depends on MAC80211 && EXPERIMENTAL
+-- 
+1.5.6.5
+
