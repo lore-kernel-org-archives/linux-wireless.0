@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56310 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752427Ab0BFOUR (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55999 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756625Ab0BPP4Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2010 09:20:17 -0500
-Subject: [PATCH v2] mac80211: fix deauth race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
+	Tue, 16 Feb 2010 10:56:25 -0500
+Date: Tue, 16 Feb 2010 17:56:18 +0200
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1265465415.4041.25.camel@johannes.local>
-References: <1265465415.4041.25.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 06 Feb 2010 15:20:13 +0100
-Message-ID: <1265466013.4041.26.camel@johannes.local>
-Mime-Version: 1.0
+Subject: [PATCH] ath9k: Use the Beacon TX rate from mac80211
+Message-ID: <20100216155618.GA27640@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When userspace requests a deauth while the
-authentication work is pending in the auth
-(not probe) state, we do not properly abort
-the work and then things get confused.
+Instead of hardcoding the lowest rate for Beacon frames, use the rate
+index specified in the mac80211 TX info in AP mode.
 
-Fix that and also improve the checks here
-to include the correct virtual interface,
-just in case two virtual interfaces would
-ever try to connect to the same BSS.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-Also fix a bug -- need to use list_del_rcu
-instead of just list_del to free a work
-item.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/mlme.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/beacon.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2010-02-06 15:07:37.000000000 +0100
-+++ wireless-testing/net/mac80211/mlme.c	2010-02-06 15:18:58.000000000 +0100
-@@ -2007,12 +2007,18 @@ int ieee80211_mgd_deauth(struct ieee8021
+--- uml.orig/drivers/net/wireless/ath/ath9k/beacon.c	2010-02-16 17:52:01.000000000 +0200
++++ uml/drivers/net/wireless/ath/ath9k/beacon.c	2010-02-16 17:53:54.000000000 +0200
+@@ -62,7 +62,7 @@ int ath_beaconq_config(struct ath_softc 
+  *  Beacons are always sent out at the lowest rate, and are not retried.
+ */
+ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+-			     struct ath_buf *bf)
++			     struct ath_buf *bf, int rateidx)
+ {
+ 	struct sk_buff *skb = bf->bf_mpdu;
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -96,9 +96,9 @@ static void ath_beacon_setup(struct ath_
+ 	ds->ds_data = bf->bf_buf_addr;
  
- 		mutex_lock(&local->work_mtx);
- 		list_for_each_entry(wk, &local->work_list, list) {
--			if (wk->type != IEEE80211_WORK_DIRECT_PROBE)
-+			if (wk->sdata != sdata)
- 				continue;
-+
-+			if (wk->type != IEEE80211_WORK_DIRECT_PROBE &&
-+			    wk->type != IEEE80211_WORK_AUTH)
-+				continue;
-+
- 			if (memcmp(req->bss->bssid, wk->filter_ta, ETH_ALEN))
- 				continue;
--			not_auth_yet = true;
--			list_del(&wk->list);
-+
-+			not_auth_yet = wk->type == IEEE80211_WORK_DIRECT_PROBE;
-+			list_del_rcu(&wk->list);
- 			free_work(wk);
- 			break;
+ 	sband = &sc->sbands[common->hw->conf.channel->band];
+-	rate = sband->bitrates[0].hw_value;
++	rate = sband->bitrates[rateidx].hw_value;
+ 	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
+-		rate |= sband->bitrates[0].hw_value_short;
++		rate |= sband->bitrates[rateidx].hw_value_short;
+ 
+ 	ath9k_hw_set11n_txdesc(ah, ds, skb->len + FCS_LEN,
+ 			       ATH9K_PKT_TYPE_BEACON,
+@@ -206,7 +206,7 @@ static struct ath_buf *ath_beacon_genera
  		}
+ 	}
+ 
+-	ath_beacon_setup(sc, avp, bf);
++	ath_beacon_setup(sc, avp, bf, info->control.rates[0].idx);
+ 
+ 	while (skb) {
+ 		ath_tx_cabq(hw, skb);
+@@ -237,7 +237,7 @@ static void ath_beacon_start_adhoc(struc
+ 	bf = avp->av_bcbuf;
+ 	skb = bf->bf_mpdu;
+ 
+-	ath_beacon_setup(sc, avp, bf);
++	ath_beacon_setup(sc, avp, bf, 0);
+ 
+ 	/* NB: caller is known to have already stopped tx dma */
+ 	ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bf->bf_daddr);
 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
