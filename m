@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:63405 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636Ab0BGODz (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3162 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932395Ab0BPAsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2010 09:03:55 -0500
-Received: by ey-out-2122.google.com with SMTP id d26so1145556eyd.19
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Feb 2010 06:03:54 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH 09/10] rt2x00: remove get_tx_stats() mac80211 op
-Date: Sun, 7 Feb 2010 15:03:46 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <20100207082044.31474.48583.stgit@tikku> <20100207082153.31474.76058.stgit@tikku>
-In-Reply-To: <20100207082153.31474.76058.stgit@tikku>
+	Mon, 15 Feb 2010 19:48:10 -0500
+Date: Mon, 15 Feb 2010 19:47:17 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: jirislaby@gmail.com, mickflemm@gmail.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: Fix TX/RX padding for all frames
+Message-ID: <20100216004717.GA6844@hash.localnet>
+References: <1266190577-2423-1-git-send-email-benoit.papillault@free.fr> <b6c5339f1002151215y4c7d2f33yfd32916e0500b55c@mail.gmail.com> <4B79C565.1050701@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201002071503.46588.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B79C565.1050701@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 07 February 2010, Kalle Valo wrote:
-> get_tx_stats() will be removed from mac80211.
-> 
-> Compile-tested only.
-> 
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+On Mon, Feb 15, 2010 at 11:06:29PM +0100, Benoit PAPILLAULT wrote:
+>> Can you tell what the functional difference is between the old code and new
+>> code?  E.g. a padding that would be incorrectly computed from before?
+>>
+>>   
+> Correct. On some frames padding is incorrect. This patch is more for  
+> completeness since incorrect padding is only found by sending every kind  
+> of frames using a monitor interface. Moreover, since monitor interface  
+> are sometimes used to debug other issues, it's better not to have bugs 
+> here.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+I meant, can you give an example of such a frame?
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
