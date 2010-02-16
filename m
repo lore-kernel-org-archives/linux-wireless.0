@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox1.netikka.net ([213.250.81.202]:44413 "EHLO
-	mbox1.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754097Ab0BNJxc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 04:53:32 -0500
-Message-ID: <4B77C819.9050602@mandriva.org>
-Date: Sun, 14 Feb 2010 11:53:29 +0200
-From: Thomas Backlund <tmb@mandriva.org>
-MIME-Version: 1.0
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: linux-2..6.33-rc7 and b43
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-To: unlisted-recipients:; (no To-header on input)
+Received: from c60.cesmail.net ([216.154.195.49]:51796 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933433Ab0BPWMa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2010 17:12:30 -0500
+Subject: Re: compat-wireless + Linux 2.6.26.8 testing results
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
+References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
+	 <1266124222.13902.42.camel@mj>
+	 <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 16 Feb 2010 17:12:20 -0500
+Message-Id: <1266358340.2659.37.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-(please cc me on replies)
+On Tue, 2010-02-16 at 13:23 -0800, Luis R. Rodriguez wrote:
 
-We have a user that tried out b43, but got this in the logs:
+> > It looks like compat-wireless-2.6.33-rc8 and compat-wireless-2010-02-13
+> > don't have the patches to deal with the lack of netif_tx_wake_queue and
+> > select_queue in Linux 2.6.26.  compat-wireless-2.6.32.8 has such
+> > patches.
+> 
+> Oh right, so I was hoping to get some reports on results of MQ
+> backport on 2.6.32.y, I guess its OK enough to merge now and if its
+> borked we can remove older kernel support or something.
 
---- cut ---
-65858:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
-support DMA on your system. Please use PIO instead. 65859:Feb  9 
-22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO must
-be set in your kernel configuration.
-65860:Feb  9 22:05:16 elmo kernel: b43-phy2 debug: Adding Interface type 2
-65861:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: Fatal DMA error:
-0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 
- 
+I confirm that ath5k and ath9k actually work on that kernel, so the
+results are good.
 
-65862:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
-support DMA on your system. Please use PIO instead.
-65863:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO 
-must be set in your kernel configuration.
---- cut ---
+There are some funny messages from ath9k, but scanning still works, and
+I don't think it's related to compat-wireless:
 
+ath9k 0000:00:01.0: alloc_safe_buffer: could not alloc dma memory (size=3872)
+ath9k 0000:00:01.0: map_single: unable to map unsafe buffer c6ffe020!
+ath9k 0000:00:01.0: alloc_safe_buffer: could not alloc dma memory (size=3872)
+ath9k 0000:00:01.0: map_single: unable to map unsafe buffer c6800020!
 
+> > That appears to be caused by the lack of
+> > dma_sync_single_range_for_device on the arm architecture.
+> 
+> Interesting... well that would just mean we have to lift SSB off of
+> 2.6.28 kernels.
 
-But reading the Kconfig help, it states:
---- cut ---
-config B43_FORCE_PIO
-         bool "Force usage of PIO instead of DMA"
-         depends on B43 && B43_DEBUG
-         ---help---
-           This will disable DMA and always enable PIO instead.
+Perhaps you mean 2.6.26?  Anyway, I'd rather see
+dma_sync_single_range_for_device() for ARM backported.
 
-           Say N!
-           This is only for debugging the PIO engine code. You do
-           _NOT_ want to enable this.
---- cut ---
-
-
-So,
-wich one is it ?
-
-Do I belive the dmesg output, or the Kconfig ?
-
-Note,
-the b43 works for the user if he enable the CONFIG_B43_FORCE_PIO.
-
-But I'm thinking of this problem from a distro point of view.
-Will it break for others if I enable it ?
-
---
-Thomas
+-- 
+Regards,
+Pavel Roskin
