@@ -1,87 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30983 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750708Ab0B0FKn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 00:10:43 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2010 21:10:43 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:55959 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932671Ab0BPHqO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2010 02:46:14 -0500
+Date: Tue, 16 Feb 2010 09:46:02 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: Ignore replay for IBSS interfaces
+Message-ID: <20100216074602.GA19876@jm.kir.nu>
+References: <1266190346-2247-1-git-send-email-benoit.papillault@free.fr>
+ <1266225762.3758.1.camel@jlt3.sipsolutions.net>
+ <4B79CD81.3090300@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19336.44484.226966.463482@gargle.gargle.HOWL>
-Date: Sat, 27 Feb 2010 10:59:40 +0530
-To: Pavel Roskin <proski@gnu.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [PATCH] ath9k_htc: Add ath9k_htc driver
-In-Reply-To: <1267233595.2835.20.camel@mj>
-References: <19335.43241.887933.207404@gargle.gargle.HOWL>
-	<1267209201.30426.8.camel@mj>
-	<43e72e891002261042s587f9fb8g9f491b1bac363582@mail.gmail.com>
-	<1267233595.2835.20.camel@mj>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B79CD81.3090300@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin wrote:
-> This piece of code is almost certainly wrong (it addition to being
-> longer than 80 characters:
-> 
-> if (AR_SREV_9271(ah) && (ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE) == 1)) {
->         REG_WRITE_ARRAY(&ah->iniModes_high_power_tx_gain_9271,
->                         modesIndex, regWrites);
-> } else {
->         REG_WRITE_ARRAY(&ah->iniModes_normal_power_tx_gain_9271,
->                         modesIndex, regWrites);
-> }
-> 
-> I think the right code would be
-> 
-> if (AR_SREV_9271(ah)) {
->         if (ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE) == 1))
->                 REG_WRITE_ARRAY(&ah->iniModes_high_power_tx_gain_9271,
->                                 modesIndex, regWrites);
->         else
->                 REG_WRITE_ARRAY(&ah->iniModes_normal_power_tx_gain_9271,
->                                 modesIndex, regWrites);
-> }
-> 
-> Better yet, I would use a variable and refactor REG_WRITE_ARRAY.
+On Mon, Feb 15, 2010 at 11:41:05PM +0100, Benoit PAPILLAULT wrote:
+> Right. This patch disable replay protection. RSN is indeed the
+> correct solution, but it's out of reach for me (no time, no skills).
+> As such, I thought that WPA-NONE could be useful in the interim.
 
-Indeed. Good catch !
+I do not think it is acceptable to introduce anything that disables
+replay protection.
 
-> This code also looks wrong:
-> 
->                 val = REG_READ(ah, AR_PCU_MISC_MODE2) &
->                                (~AR_PCU_MISC_MODE2_HWWAR1);
-> 
->                 if (!AR_SREV_9271(ah))
->                         val &= ~AR_PCU_MISC_MODE2_HWWAR1;
-> 
-> I think it should be:
-> 
->                 val = REG_READ(ah, AR_PCU_MISC_MODE2);
-> 
->                 if (!AR_SREV_9271(ah))
->                         val &= ~AR_PCU_MISC_MODE2_HWWAR1;
+> Jouni : I would appreciate your input here. What's the status of
+> IBSS RSN? How much time/skills would be required to implement it?
 
-Again, great catch. ;)
+The key management side (4-way handshakes) should all be in place now
+and the main missing part is in being able to configure all the GTKs
+(one per peer) and use the GTKs properly (i.e., match the key per addr2
+when addr1 is broadcast/multicast). A good initial step would be to
+hardcode mac80211 to use software encryption and extend that to support
+multiple GTKs. Once that is working, we can see whether some of the
+drivers would be able to do CCMP in hardware for such key configuration.
 
-> The change involving ATH_HW_INITIALIZED appears to be a serious bugfix,
-> perhaps even suitable for stable kernels.
-
-Right, I'll do that.
-
-> The message "Running PA Calibration" would be more suitable in
-> ath9k_hw_init_cal().
-> 
-> The original patch should be run through checkpatch.pl.  In addition to
-> overly long lines, there are some other formatting issues.
-
-I thought that the default was 106 (or 132 ?) these days ..
-
-Sujith
+-- 
+Jouni Malinen                                            PGP id EFC895FA
