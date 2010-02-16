@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:51796 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933433Ab0BPWMa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 17:12:30 -0500
-Subject: Re: compat-wireless + Linux 2.6.26.8 testing results
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
-References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
-	 <1266124222.13902.42.camel@mj>
-	 <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 16 Feb 2010 17:12:20 -0500
-Message-Id: <1266358340.2659.37.camel@mj>
+Received: from senator.holtmann.net ([87.106.208.187]:56057 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933276Ab0BPXGj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2010 18:06:39 -0500
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linux-input@vger.kernel.org, dmitry.torokhov@gmail.com
+In-Reply-To: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Feb 2010 15:05:19 -0800
+Message-ID: <1266361519.8849.28.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-02-16 at 13:23 -0800, Luis R. Rodriguez wrote:
+Hi Matthew,
 
-> > It looks like compat-wireless-2.6.33-rc8 and compat-wireless-2010-02-13
-> > don't have the patches to deal with the lack of netif_tx_wake_queue and
-> > select_queue in Linux 2.6.26.  compat-wireless-2.6.32.8 has such
-> > patches.
+> Most laptops have keys that are intended to toggle all device state, not
+> just wifi. These are currently generally mapped to KEY_WLAN. As a result,
+> rfkill will only kill or enable wifi in response to the key press. This
+> confuses users and can make it difficult for them to enable bluetooth
+> and wwan devices.
 > 
-> Oh right, so I was hoping to get some reports on results of MQ
-> backport on 2.6.32.y, I guess its OK enough to merge now and if its
-> borked we can remove older kernel support or something.
-
-I confirm that ath5k and ath9k actually work on that kernel, so the
-results are good.
-
-There are some funny messages from ath9k, but scanning still works, and
-I don't think it's related to compat-wireless:
-
-ath9k 0000:00:01.0: alloc_safe_buffer: could not alloc dma memory (size=3872)
-ath9k 0000:00:01.0: map_single: unable to map unsafe buffer c6ffe020!
-ath9k 0000:00:01.0: alloc_safe_buffer: could not alloc dma memory (size=3872)
-ath9k 0000:00:01.0: map_single: unable to map unsafe buffer c6800020!
-
-> > That appears to be caused by the lack of
-> > dma_sync_single_range_for_device on the arm architecture.
+> This patch adds a new keycode, KEY_RFKILL. It indicates that the system
+> should toggle the state of all rfkillable devices.
 > 
-> Interesting... well that would just mean we have to lift SSB off of
-> 2.6.28 kernels.
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
 
-Perhaps you mean 2.6.26?  Anyway, I'd rather see
-dma_sync_single_range_for_device() for ARM backported.
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
 
--- 
-Regards,
-Pavel Roskin
+Regards
+
+Marcel
+
+
