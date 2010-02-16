@@ -1,24 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:38496 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503Ab0BVSSG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 13:18:06 -0500
-Received: by pwj8 with SMTP id 8so2941720pwj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 10:18:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <b_eAfX__uZL.A.lvE.HcagLB@chimera>
-References: <b_eAfX__uZL.A.lvE.HcagLB@chimera>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 22 Feb 2010 10:17:43 -0800
-Message-ID: <43e72e891002221017i5872aa2pbc79434d98823e6c@mail.gmail.com>
-Subject: Re: 2.6.33-rc8-git6: Reported regressions from 2.6.32
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:56640 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933295Ab0BPV2p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2010 16:28:45 -0500
+Subject: Re: [PATCH] mwl8k: disable softirqs when accessing sta_notify_list
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Lennert Buytenhek <buytenh@marvell.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e891002161203w4498ae09wc7d14d12dd75be09@mail.gmail.com>
+References: <1266117186.13902.21.camel@mj>
+	 <43e72e891002161203w4498ae09wc7d14d12dd75be09@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 16 Feb 2010 16:28:32 -0500
+Message-Id: <1266355712.2659.16.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yay nothing for 802.11
+On Tue, 2010-02-16 at 12:03 -0800, Luis R. Rodriguez wrote:
+> On Sat, Feb 13, 2010 at 7:13 PM, Pavel Roskin <proski@gnu.org> wrote:
+> > Use spin_[un]lock_bh in mwl8k_sta_notify().  The sta_notify handler is
+> > required to be atomic, yet it can be called in process context, so make
+> > sure one call won't preempt another.
+> 
+> Is this for stable as well?
 
-  Luis
+Since it wasn't tested on real hardware, I would say no, unless Lennert
+says otherwise.
+
+-- 
+Regards,
+Pavel Roskin
