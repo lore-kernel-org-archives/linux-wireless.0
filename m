@@ -1,82 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43012 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56980 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255Ab0BOJYT (ORCPT
+	with ESMTP id S932698Ab0BPKHH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2010 04:24:19 -0500
-Subject: Re: [PATCH 2/2] mac80211: Fix WPA-NONE for RX unicast frames
+	Tue, 16 Feb 2010 05:07:07 -0500
+Message-Id: <20100216100525.611007761@sipsolutions.net>
+Date: Tue, 16 Feb 2010 11:05:00 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1266190346-2247-2-git-send-email-benoit.papillault@free.fr>
-References: <1266190346-2247-1-git-send-email-benoit.papillault@free.fr>
-	 <1266190346-2247-2-git-send-email-benoit.papillault@free.fr>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AD1Sl/3Xzb1cUSqHaPac"
-Date: Mon, 15 Feb 2010 10:24:16 +0100
-Message-ID: <1266225856.5290.0.camel@jlt3.sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: split ieee80211_drop_unencrypted
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, ieee80211_drop_unencrypted is called
+from management and data frame context, and the
+different contexts pass different frames. This
+could lead to it processing an 802.3 frame as an
+802.11 frame when MFP is enabled.
 
---=-AD1Sl/3Xzb1cUSqHaPac
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Move the MFP part of ieee80211_drop_unencrypted
+into a new function that is only called for mgmt
+frames.
 
-On Mon, 2010-02-15 at 00:32 +0100, Benoit Papillault wrote:
-> This patch might have side effect which needs to be studied
->=20
-> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-> ---
->  net/mac80211/rx.c |    8 ++++++++
->  1 files changed, 8 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 22ae6ee..f73fe9b 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -923,6 +923,13 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data
-> *rx)
->  		rx->key =3D rcu_dereference(rx->sdata->keys[keyidx]);
-> =20
->  		/*
-> +		 * Using WPA-NONE in IBSS, all frames, be it unicast or
-> +		 * multicast (including broadcast) are encrypted with the
-> +		 * same group key. In this case, we should not reset the key
-> +		 * to NULL
-> +		 */
-> +#if 0
-> +		/*
->  		 * RSNA-protected unicast frames should always be sent with
->  		 * pairwise or station-to-station keys, but for WEP we allow
->  		 * using a key index as well.
+Cc: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c |   22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-#if 0 is never a good idea, and that code is certainly needed.
+--- wireless-testing.orig/net/mac80211/rx.c	2010-02-16 09:21:37.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2010-02-16 09:30:33.000000000 +0100
+@@ -1398,6 +1398,21 @@ ieee80211_drop_unencrypted(struct ieee80
+ 		     ieee80211_is_data(fc) &&
+ 		     (rx->key || rx->sdata->drop_unencrypted)))
+ 		return -EACCES;
++
++	return 0;
++}
++
++static int
++ieee80211_drop_unencrypted_mgmt(struct ieee80211_rx_data *rx)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
++	__le16 fc = hdr->frame_control;
++	int res;
++
++	res = ieee80211_drop_unencrypted(rx, fc);
++	if (unlikely(res))
++		return res;
++
+ 	if (rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP)) {
+ 		if (unlikely(ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
+ 			     rx->key))
+@@ -1884,7 +1899,7 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_DROP_UNUSABLE;
+ 
+-	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
++	if (ieee80211_drop_unencrypted_mgmt(rx))
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	switch (mgmt->u.action.category) {
+@@ -2025,14 +2040,13 @@ static ieee80211_rx_result debug_noinlin
+ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
+-	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
+ 	ieee80211_rx_result rxs;
+ 
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_DROP_MONITOR;
+ 
+-	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
+-		return RX_DROP_MONITOR;
++	if (ieee80211_drop_unencrypted_mgmt(rx))
++		return RX_DROP_UNUSABLE;
+ 
+ 	rxs = ieee80211_work_rx_mgmt(rx->sdata, rx->skb);
+ 	if (rxs != RX_CONTINUE)
 
-Don't send bad patches like this with [PATCH] tag please.
-
-johannes
-
---=-AD1Sl/3Xzb1cUSqHaPac
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLeRK8AAoJEODzc/N7+QmaqjoQAIkXVHbGBzbRPPqyIYB+Ihqh
-AeKwzNFDCWxG8Aw5YEn2oRvNqxtOpk5/Bfr+eIQ/ottG7Dob9O7JoAKGJizw0utL
-E8zlHqq2J3DM0ROsQ+WSeWMGo01vBYND11d92fRww4xH3fC38WwQ3byprPsZITCP
-WyEpnlVEkpOBmK7tVlKIcUUuQNfjNNBBbKO39BDPmz9//KVF6LBrclPUBJHdVPB6
-ZsGqSb/esAbPZhIoxg1suXv1eAyWrE2PVVTFwZTwR02pI9H6jn4gSEBXNNzRQ4+y
-a1EgarZ27w9IM8xx7UN1DWPFxJlm0qF2zQ8a5F4k7NIiZFWnXJnNQHgA91zGqvgO
-ur667eOdphsQ1Id6YCR9vzNKbNWxpN4z+BdCfn89Pccj2kdDcV8wYswET4D9lg4s
-+0Oc/Sn/2yDRh5JGGzwpfyElGFUWQNhuNjvFAkXPWN95yoLrRPRQDdLax0nr6cYc
-ZbPBVGxt9n3+2buwE3UBsp61phRsK6jviS4Is0ci7pkg7d4l+csmPfbL9fMNe5Oq
-as8jl+kcBxsEj9QK9W2iN69nvn2CESVls9MlG1MVT5htqyOmWu8HWb6NeRC2btyl
-MWXzUSR5jVT+5ctHt8hYpCmBgWJ71azg6hH6r399BCbMwsEhH54Ywqt1hOCJFHhm
-6DRLs/+fdNDIkQqh17cO
-=pP+V
------END PGP SIGNATURE-----
-
---=-AD1Sl/3Xzb1cUSqHaPac--
 
