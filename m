@@ -1,81 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:60407 "EHLO erley.org"
+Received: from c60.cesmail.net ([216.154.195.49]:42658 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756358Ab0BQVMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 16:12:12 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Date: Wed, 17 Feb 2010 16:12:08 -0500
-From: <pat-lkml@erley.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	<johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	<linux-input@vger.kernel.org>, <marcel@holtmann.org>
-Subject: Re: [PATCH 1/2] input: Add =?UTF-8?Q?KEY=5FRFKILL?=
-In-Reply-To: <069C4DAE-598D-45F1-99B5-DA5BAF718179@gmail.com>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
- <20100217052247.GD7160@core.coreip.homeip.net>
- <20100217180342.GA22522@srcf.ucam.org>
- <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
- <20100217191708.GA15554@core.coreip.homeip.net>
- <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
- <20100217195435.GA15742@core.coreip.homeip.net>
- <22ee4e771002171218t69cc4348ia0300a645ce9763d@mail.gmail.com>
- <069C4DAE-598D-45F1-99B5-DA5BAF718179@gmail.com>
-Message-ID: <f1e18b6637067d769e473052a945c37b@127.0.0.1>
+	id S1757595Ab0BQWwN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 17:52:13 -0500
+Subject: Re: [PATCH v3] mac80211: deprecate RX status noise
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e891002171429j7f47c86bqd4374bf07b8979de@mail.gmail.com>
+References: <1266437114.23447.0.camel@jlt3.sipsolutions.net>
+	 <1266438137.23447.1.camel@jlt3.sipsolutions.net>
+	 <1266438446.23447.2.camel@jlt3.sipsolutions.net>  <4B7C561C.70702@free.fr>
+	 <43e72e891002171429j7f47c86bqd4374bf07b8979de@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 17 Feb 2010 17:51:58 -0500
+Message-Id: <1266447118.12365.21.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Feb 2010 12:52:06 -0800, Dmitry Torokhov
-<dmitry.torokhov@gmail.com> wrote:
-> On Feb 17, 2010, at 12:18 PM, Christian Lamparter
-<chunkeey@googlemail.com 
->  > wrote:
+On Wed, 2010-02-17 at 14:29 -0800, Luis R. Rodriguez wrote:
+
+> > Being per packet or global, I'm not an RF engineer to say what's best, but
+> > even if it is global, "last_noise" would still be useful as "global noise
+> > when the last packets was received from this node".
 > 
->> On Wed, Feb 17, 2010 at 8:54 PM, Dmitry Torokhov
->> <dmitry.torokhov@gmail.com> wrote:
->>>
->>> Is there anything currently in works that would make use of this  
->>> button?
->>> I do not want to allocate keycode "for the future" which may never  
->>> come.
->>> We did it with KEY_BATTERY but I do not think anyone actually uses  
->>> it.
->>
->> Of course, there are lots of routers:
->>
->> Linksys: wrt160nl
->> Netgear: wnr2000, wndr3700
->> TP-Link: wr1043n, ... wr741nd
->> TrendNET: TEW-632BRP
->> Planex: MZK-W300NH,  MZK-W04NU
->> ...
->>
->> And a few new client adapters, I know about:
->> TP-Link: WN821 v2, WN721N, WN727N
->> Netgear: WNDA3100 v2
->> ...
->>
->> (Not to mention all the coming products).
-> 
-> Sorry, I was not clear enough. I meant something in works in Linux  
-> software stack, I was aware that certain router have these buttons  
-> already.
+> If anything it should be per center freq.
 
-I know that the hostapd config file has an entire WPS section, but
-have no experience using WPS, so can't speak as to how to configure
-or use it.  I don't know if it's planned to include support for a
-push button trigger.
+The noise value will be missed.  It's useful to see the signal to noise
+ratio.  I have little trust to the absolute noise values, but I know
+that the connection is bad if signal is just 3 dBm above the noise
+measured by the same card with the same antenna on the same channel. 
 
-from hostapd.conf in git:
+Maybe it would be better to remove per-packet noise only when the "next
+generation noise" is implemented?  It could be a batch of patches.
 
-# Config Methods
-# List of the supported configuration methods
-# Available methods: usba ethernet label display ext_nfc_token
-int_nfc_token
-#       nfc_interface push_button keypad
-#config_methods=label display push_button keypad
-
-Pat Erley
+-- 
+Regards,
+Pavel Roskin
