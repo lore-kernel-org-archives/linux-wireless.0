@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:34226 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752193Ab0BSSyo convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41560 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753355Ab0BQOoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 13:54:44 -0500
-Received: by pwj8 with SMTP id 8so389059pwj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 10:54:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201002182240.38016.8an@praha12.net>
-References: <1266459208-12408-1-git-send-email-lrodriguez@atheros.com>
-	<201002182240.38016.8an@praha12.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 19 Feb 2010 10:54:24 -0800
-Message-ID: <43e72e891002191054jb537041g45c407cae860adf8@mail.gmail.com>
-Subject: Re: [PATCH] iw: add country IE parsing
-To: 8an@praha12.net
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Feb 2010 09:44:12 -0500
+Subject: Re: [RFC PATCH] nl80211: add power save commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>
+In-Reply-To: <201002171456.31591.holgerschurig@gmail.com>
+References: <20100216201026.25148.40799.stgit@tikku>
+	 <1266413252.4524.8.camel@jlt3.sipsolutions.net>
+	 <1266413796.15836.4.camel@jlt3.sipsolutions.net>
+	 <201002171456.31591.holgerschurig@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-BZveS9YeUr+/tULY2+U4"
+Date: Wed, 17 Feb 2010 15:44:09 +0100
+Message-ID: <1266417849.15836.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 18, 2010 at 1:40 PM, Lukáš Turek <8an@praha12.net> wrote:
-> On 18.2.2010 03:13 Luis R. Rodriguez wrote:
->> coverage = (distance + 449) / 450;
->> coverage/450 = distance + 499
->> (coverage/450) - 499 = distance
->
-> Inverting the formula like this doesn't make much sense...
->
-> The addition of 449 is there to round the resulting number up, because the
-> coverage class limits maximum distance and if it was rounded down as normal
-> integer division does, the resulting ACK timeout would be too low.
->
-> However, if you subtract 449 in the inverted formula, you get something like a
-> minimum distance for the coverage class - which doesn't mean anything,
-> because higher ACK timeout and slot time works for smaller distances too.
-> Maximum distance is what's interesting to the user. So the correct
-> calculation is just multiplying the coverage class by 450 as I'm doing in
-> print_phy_handler():
->
-> printf("\tCoverage class: %d (up to %dm)\n", coverage, 450 * coverage);
 
-Thanks I'll fix and resend.
+--=-BZveS9YeUr+/tULY2+U4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Wed, 2010-02-17 at 14:56 +0100, Holger Schurig wrote:
+
+> Now that you told me so, I was even able to find a reference for this,
+> table 4-5 in
+>=20
+> http://books.google.com/books?id=3DTOuyW0bUoncC&pg=3DPA189
+
+Cool. I dug up some of it from the spec ;)
+
+But maybe we need to go back to your statement about range ...?
+
+johannes
+
+--=-BZveS9YeUr+/tULY2+U4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLfAC2AAoJEODzc/N7+QmaThEQALNxTL0jPMVGzhbWlMFqO3MG
+vHdI5q8aIJ6Ghz8trw6cdLGUHPF7/kALlwlNgh9mHItVWM4xSJcxv2zMils+hr7d
+jfEPP20+JSxjM8AwOtPOd8RDcpwaDgTnyIMv4/cRGcVzBj5nznEkdQU1yCL746ob
+hP5mvtEwhHqYOaMFk3BvDsw+5AtJtrj2HIwnc6uxE5h6PA2AdbFzjF+Bc63qog89
+66V3MmqWnRn46Ull9WEi1NLmz6WQCYLAwQ2dBRj8U1umYZ3MROlYDy3Ykzj+PsWj
+YYKngv3Q1hZnOIhcLRmC0qHagQYo7x/RQnLpdfFcimUN0EZb+habyy55j9Fu/WRU
+KygRfoyVeHopyZ3T4tB53L+nhJJFkynJJ27hgRbOC0abz0Ovq4hPFNo16MhEW680
+7FlYVerTVBD4Jrz+1Dm9jF1hqwRfXZaHKRmt5UxEUQ05Yxt3Xn48Lwr4JNpJ5+Fz
+ntKbhHsGF9XWsmKtEJuyDbPc0n/jFz3pg6knXGQ/R6/Q/uW9lT1ym91q+JP4uS7C
+L47pN2IYAL1DBfwkIUHJly1/2G2aKMzNl6tL9ntIFmVWHS0hADeqv3vPH6D0iW0n
+jPOIHE31nOWvhKZzk2dNlZXGPopmZJKn3fgU3MsaO+UOs6XvB7h6/AXLwiAJ5DHD
+Q3z0Wy58zevfNxKsrttq
+=jhex
+-----END PGP SIGNATURE-----
+
+--=-BZveS9YeUr+/tULY2+U4--
+
