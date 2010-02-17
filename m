@@ -1,200 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24445 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756758Ab0BKSmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2010 13:42:13 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/12] iwlwifi: multiple force reset mode
-Date: Thu, 11 Feb 2010 10:41:55 -0800
-Message-Id: <1265913725-4279-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
-References: <1265913725-4279-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-yw0-f197.google.com ([209.85.211.197]:61641 "EHLO
+	mail-yw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754873Ab0BQUz3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 15:55:29 -0500
+Received: by ywh35 with SMTP id 35so298652ywh.4
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 12:55:27 -0800 (PST)
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com> <20100217052247.GD7160@core.coreip.homeip.net> <20100217180342.GA22522@srcf.ucam.org> <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com> <20100217191708.GA15554@core.coreip.homeip.net> <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com> <20100217195435.GA15742@core.coreip.homeip.net> <20100217200233.GA24976@srcf.ucam.org>
+Message-Id: <446821D4-8E9D-4701-9A50-04738C5733B6@gmail.com>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+In-Reply-To: <20100217200233.GA24976@srcf.ucam.org>
+Content-Type: text/plain;
+	charset=us-ascii;
+	format=flowed;
+	delsp=yes
+Mime-Version: 1.0 (iPhone Mail 7C144)
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+Date: Wed, 17 Feb 2010 12:49:14 -0800
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"marcel@holtmann.org" <marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Feb 17, 2010, at 12:02 PM, Matthew Garrett <mjg59@srcf.ucam.org>  
+wrote:
 
-Provide the function to perform different type of uCode reset/reload operation.
-When uCode detect error and can not fix itself, this iwl_force_reset()
-function allow driver to perform the necessary reset/reload functions and help
-to bring uCode back to normal operation state.
+> On Wed, Feb 17, 2010 at 11:54:35AM -0800, Dmitry Torokhov wrote:
+>
+>> Is there anything currently in works that would make use of this  
+>> button?
+>> I do not want to allocate keycode "for the future" which may never  
+>> come.
+>> We did it with KEY_BATTERY but I do not think anyone actually uses  
+>> it.
+>
+> KEY_BATTERY is heavily used in userspace. I think all the hardware  
+> that
+> generates it does so via i8042 rather than a platform driver, so it
+> wouldn't show up in the kernel.
+>
 
-Currently only 2 type of force reset are available:
- - reset radio
- - reload firmware
+Ah, I see. I hope the keycode is not used to signal battery status  
+change but to invoke battery/power manager applet...
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   44 +++++++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    9 +++++-
- drivers/net/wireless/iwlwifi/iwl-rx.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c |   10 -------
- 5 files changed, 52 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d390eef..500ced4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -3334,7 +3334,7 @@ int iwl_dump_fh(struct iwl_priv *priv, char **buf, bool display)
- }
- EXPORT_SYMBOL(iwl_dump_fh);
- 
--void iwl_force_rf_reset(struct iwl_priv *priv)
-+static void iwl_force_rf_reset(struct iwl_priv *priv)
- {
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
-@@ -3356,7 +3356,47 @@ void iwl_force_rf_reset(struct iwl_priv *priv)
- 	iwl_internal_short_hw_scan(priv);
- 	return;
- }
--EXPORT_SYMBOL(iwl_force_rf_reset);
-+
-+#define IWL_DELAY_NEXT_FORCE_RESET (HZ*3)
-+
-+int iwl_force_reset(struct iwl_priv *priv, int mode)
-+{
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return -EINVAL;
-+
-+	if (priv->last_force_reset_jiffies &&
-+	    time_after(priv->last_force_reset_jiffies +
-+		       IWL_DELAY_NEXT_FORCE_RESET, jiffies)) {
-+		IWL_DEBUG_INFO(priv, "force reset rejected\n");
-+		return -EAGAIN;
-+	}
-+
-+	IWL_DEBUG_INFO(priv, "perform force reset (%d)\n", mode);
-+
-+	switch (mode) {
-+	case IWL_RF_RESET:
-+		iwl_force_rf_reset(priv);
-+		break;
-+	case IWL_FW_RESET:
-+		IWL_ERR(priv, "On demand firmware reload\n");
-+		/* Set the FW error flag -- cleared on iwl_down */
-+		set_bit(STATUS_FW_ERROR, &priv->status);
-+		wake_up_interruptible(&priv->wait_command_queue);
-+		/*
-+		 * Keep the restart process from trying to send host
-+		 * commands by clearing the INIT status bit
-+		 */
-+		clear_bit(STATUS_READY, &priv->status);
-+		queue_work(priv->workqueue, &priv->restart);
-+		break;
-+	default:
-+		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
-+		return -EINVAL;
-+	}
-+	priv->last_force_reset_jiffies = jiffies;
-+
-+	return 0;
-+}
- 
- #ifdef CONFIG_PM
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 8f0c564..df55879 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -501,7 +501,7 @@ int iwl_scan_cancel(struct iwl_priv *priv);
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
- int iwl_mac_hw_scan(struct ieee80211_hw *hw, struct cfg80211_scan_request *req);
- int iwl_internal_short_hw_scan(struct iwl_priv *priv);
--void iwl_force_rf_reset(struct iwl_priv *priv);
-+int iwl_force_reset(struct iwl_priv *priv, int mode);
- u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
- 		       const u8 *ie, int ie_len, int left);
- void iwl_setup_rx_scan_handlers(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 55dc5a8..9f1d302 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1035,6 +1035,11 @@ struct iwl_event_log {
- #define IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF	(100)
- #define IWL_MAX_PLCP_ERR_THRESHOLD_MAX	(255)
- 
-+enum iwl_reset {
-+	IWL_RF_RESET = 0,
-+	IWL_FW_RESET,
-+};
-+
- struct iwl_priv {
- 
- 	/* ieee device used by generic ieee processing code */
-@@ -1066,6 +1071,9 @@ struct iwl_priv {
- 	/* storing the jiffies when the plcp error rate is received */
- 	unsigned long plcp_jiffies;
- 
-+	/* force reset */
-+	unsigned long last_force_reset_jiffies;
-+
- 	/* we allocate array of iwl4965_channel_info for NIC's valid channels.
- 	 *    Access via channel # using indirect index array */
- 	struct iwl_channel_info *channel_info;	/* channel info array */
-@@ -1087,7 +1095,6 @@ struct iwl_priv {
- 	unsigned long scan_start;
- 	unsigned long scan_pass_start;
- 	unsigned long scan_start_tsf;
--	unsigned long last_internal_scan_jiffies;
- 	void *scan;
- 	int scan_bands;
- 	struct cfg80211_scan_request *scan_request;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 5df6638..909d9c9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -689,7 +689,7 @@ void iwl_rx_statistics(struct iwl_priv *priv,
- 			 * Reset the RF radio due to the high plcp
- 			 * error rate
- 			 */
--			iwl_force_rf_reset(priv);
-+			iwl_force_reset(priv, IWL_RF_RESET);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index f786a40..5014774 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -250,8 +250,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 
- 	if (!priv->is_internal_short_scan)
- 		priv->next_scan_jiffies = 0;
--	else
--		priv->last_internal_scan_jiffies = jiffies;
- 
- 	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
- 
-@@ -551,8 +549,6 @@ EXPORT_SYMBOL(iwl_mac_hw_scan);
-  * internal short scan, this function should only been called while associated.
-  * It will reset and tune the radio to prevent possible RF related problem
-  */
--#define IWL_DELAY_NEXT_INTERNAL_SCAN (HZ*1)
--
- int iwl_internal_short_hw_scan(struct iwl_priv *priv)
- {
- 	int ret = 0;
-@@ -572,12 +568,6 @@ int iwl_internal_short_hw_scan(struct iwl_priv *priv)
- 		ret = -EAGAIN;
- 		goto out;
- 	}
--	if (priv->last_internal_scan_jiffies &&
--	    time_after(priv->last_internal_scan_jiffies +
--		       IWL_DELAY_NEXT_INTERNAL_SCAN, jiffies)) {
--		IWL_DEBUG_SCAN(priv, "internal scan rejected\n");
--		goto out;
--	}
- 
- 	priv->scan_bands = 0;
- 	if (priv->band == IEEE80211_BAND_5GHZ)
 -- 
-1.6.3.3
+Dmitry
 
