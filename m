@@ -1,34 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:35860 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758195Ab0BNBP2 (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:37543 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753351Ab0BQSDr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 20:15:28 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so3034960ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Feb 2010 17:15:28 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 3/3] rt2x00: rework RT chipset and revision determination for PCI an SOC devices.
-Date: Sun, 14 Feb 2010 02:15:25 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1266090949-5468-1-git-send-email-gwingerde@gmail.com> <1266090949-5468-3-git-send-email-gwingerde@gmail.com> <1266090949-5468-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1266090949-5468-4-git-send-email-gwingerde@gmail.com>
+	Wed, 17 Feb 2010 13:03:47 -0500
+Date: Wed, 17 Feb 2010 18:03:42 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linux-input@vger.kernel.org, marcel@holtmann.org
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+Message-ID: <20100217180342.GA22522@srcf.ucam.org>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com> <20100217052247.GD7160@core.coreip.homeip.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201002140215.26020.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100217052247.GD7160@core.coreip.homeip.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 13 February 2010, Gertjan van Wingerde wrote:
-> The recent rt2800 devices are no longer really identified by their PCI
-> ID's, but rather by the contents of their CSR0 register. Also for the
-> other chipsets is the contents of this CSR0 register important.
-> Change the chipset determination logic to be more aligned with the rt2800
-> model.
-> Preparation for the support of rt3070 / rt3090 based devices.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Tue, Feb 16, 2010 at 09:22:47PM -0800, Dmitry Torokhov wrote:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> I'd like some breathing room aroung KEY_NUMERIC? Any issues with making
+> it 247 or 0x211?
+
+None. Do you want to make that change, or should I resubmit?
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
