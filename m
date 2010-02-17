@@ -1,67 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63121 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754482Ab0BYGMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 01:12:17 -0500
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 6/7] iwmc3200wifi: mark some pmksa functions static
-Date: Thu, 25 Feb 2010 14:15:30 +0800
-Message-Id: <1267078531-9817-7-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1267078531-9817-6-git-send-email-yi.zhu@intel.com>
-References: <1267078531-9817-1-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-2-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-3-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-4-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-5-git-send-email-yi.zhu@intel.com>
- <1267078531-9817-6-git-send-email-yi.zhu@intel.com>
+Received: from mail-yw0-f197.google.com ([209.85.211.197]:56662 "EHLO
+	mail-yw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751654Ab0BQRPz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 12:15:55 -0500
+Received: by ywh35 with SMTP id 35so64096ywh.4
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 09:15:54 -0800 (PST)
+Message-ID: <4B7C2446.6030507@lwfinger.net>
+Date: Wed, 17 Feb 2010 11:15:50 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: okias <d.okias@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	herton@mandriva.com.br, htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl818x: small cleanup
+References: <c2673ca61002170905g788ce856uc82adc490c2328be@mail.gmail.com>
+In-Reply-To: <c2673ca61002170905g788ce856uc82adc490c2328be@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the sparse warnings.
+On 02/17/2010 11:05 AM, okias wrote:
+> -2 lines...
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+Your patch is fine, but there are problems in the presentation. For review
+purposes, it should be in-line, not as an attachment. The second problem is that
+the patch is for rtl8187, not for wireless/rtl818x. There are 2 drivers, soon to
+be more, in that particular directory.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-index 6778e58..fc239a3 100644
---- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-+++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-@@ -725,23 +725,26 @@ static int iwm_cfg80211_set_power_mgmt(struct wiphy *wiphy,
- 				       CFG_POWER_INDEX, iwm->conf.power_index);
- }
- 
--int iwm_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
--			   struct cfg80211_pmksa *pmksa)
-+static int iwm_cfg80211_set_pmksa(struct wiphy *wiphy,
-+				  struct net_device *netdev,
-+				  struct cfg80211_pmksa *pmksa)
- {
- 	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
- 
- 	return iwm_send_pmkid_update(iwm, pmksa, IWM_CMD_PMKID_ADD);
- }
- 
--int iwm_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
--			   struct cfg80211_pmksa *pmksa)
-+static int iwm_cfg80211_del_pmksa(struct wiphy *wiphy,
-+				  struct net_device *netdev,
-+				  struct cfg80211_pmksa *pmksa)
- {
- 	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
- 
- 	return iwm_send_pmkid_update(iwm, pmksa, IWM_CMD_PMKID_DEL);
- }
- 
--int iwm_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
-+static int iwm_cfg80211_flush_pmksa(struct wiphy *wiphy,
-+				    struct net_device *netdev)
- {
- 	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
- 	struct cfg80211_pmksa pmksa;
--- 
-1.6.0.4
-
+Larry
