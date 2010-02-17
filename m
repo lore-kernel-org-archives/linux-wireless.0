@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:38652 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755115Ab0BAVXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 16:23:52 -0500
-Subject: Re: ath9k/PCI 168C:002C
-From: Pavel Roskin <proski@gnu.org>
-To: Bernhard Reiter <ockham@raz.or.at>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1265056347.3610.100.camel@razor>
-References: <1265039522.3610.55.camel@razor>
-	 <20100201113620.52ahuc39ws8scow4-cebfxv@webmail.spamcop.net>
-	 <1265056347.3610.100.camel@razor>
-Content-Type: text/plain
-Date: Mon, 01 Feb 2010 16:23:43 -0500
-Message-Id: <1265059423.15528.21.camel@mj>
-Mime-Version: 1.0
+Received: from mail-qy0-f200.google.com ([209.85.221.200]:63569 "EHLO
+	mail-qy0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753905Ab0BQTyn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 14:54:43 -0500
+Date: Wed, 17 Feb 2010 11:54:35 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, linux-input@vger.kernel.org,
+	marcel@holtmann.org
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+Message-ID: <20100217195435.GA15742@core.coreip.homeip.net>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+ <20100217052247.GD7160@core.coreip.homeip.net>
+ <20100217180342.GA22522@srcf.ucam.org>
+ <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
+ <20100217191708.GA15554@core.coreip.homeip.net>
+ <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-02-01 at 21:32 +0100, Bernhard Reiter wrote:
-> thanks for your hints! unfortunately, as you expected, simply adding the
-> PCI id doesn't do the trick. seems like a couple of people tried it
-> already:
-> http://forum.ubuntuusers.de/topic/atheros-ar5b95-geht-unter-unr-9-10-nicht/
-> (in German).
+On Wed, Feb 17, 2010 at 08:42:45PM +0100, Christian Lamparter wrote:
+> On Wed, Feb 17, 2010 at 8:17 PM, Dmitry Torokhov
+> <dmitry.torokhov@gmail.com> wrote:
+> > On Wed, Feb 17, 2010 at 07:43:56PM +0100, Christian Lamparter wrote:
+> >> The reason: Some new devices come with a WPS "Push Button".
+> >> And there's no code for them yet.
+> >>
+> > Yes, we can add a new key definition if you provide clear description of
+> > what the intended use is and if we can't map such use to any existing
+> > key definitions.
+> 
+> I found one http://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup (if you
+> don't mind):
+> 
+> There's the relevant part: (PBC stands for Push Button Control/Configuration?)
+> 
+> "PBC Method, in which the user simply has to push a button, either an actual
+> or virtual one, on both the AP (or a Registrar of the Network) and the new
+> wireless client device (STA)
+> .
+> Support of this model is mandatory for APs and optional for STAs."
+> 
+> And there are already a few potential users:
+> OpenWRT routers as well as some rt30xx, ar9170 and ar9271 devices.
 
-Please try the patch that was posted at
-http://bugzilla.kernel.org/show_bug.cgi?id=15180
-
-You can apply it to compat-wireless.
-
-> i haven't tried madwifi yet, though.
-
-I was wrong, it won't work as is.  The ID should be added to HAL as
-well.  Unfortunately, I don't know which initialization values are
-needed for the chip, and I cannot figure it out from the ath9k patch.
+Is there anything currently in works that would make use of this button?
+I do not want to allocate keycode "for the future" which may never come.
+We did it with KEY_BATTERY but I do not think anyone actually uses it.
 
 -- 
-Regards,
-Pavel Roskin
+Dmitry
