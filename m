@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:40666 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1031745Ab0B1KN4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2010 05:13:56 -0500
-Date: Sun, 28 Feb 2010 12:13:46 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix reassociation processing (within ESS roaming)
-Message-ID: <20100228101346.GA8962@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:52446 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753710Ab0BQSuB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 13:50:01 -0500
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+From: Bastien Nocera <hadess@hadess.net>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linux-input@vger.kernel.org, marcel@holtmann.org
+In-Reply-To: <20100217184502.GA23573@srcf.ucam.org>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+	 <20100217052247.GD7160@core.coreip.homeip.net>
+	 <20100217180342.GA22522@srcf.ucam.org>
+	 <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
+	 <20100217184502.GA23573@srcf.ucam.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Date: Wed, 17 Feb 2010 18:49:35 +0000
+Message-ID: <1266432575.678.980.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit e1dd33f60ced091114e4aacf141e0d03b88d3e13 changed cfg80211 to
-allow association commands while in associated state to enable support
-for roaming within an ESS. However, this was not enough to resolve all
-cases with mac80211 which needs some additional handling of the
-reassociation case to clear internal state with the BSS that was in use
-previously.
+On Wed, 2010-02-17 at 18:45 +0000, Matthew Garrett wrote:
+> On Wed, Feb 17, 2010 at 07:43:56PM +0100, Christian Lamparter wrote:
+> 
+> > Wait wait... do you can get another KEY_?
+> > 
+> > The reason: Some new devices come with a WPS "Push Button".
+> > And there's no code for them yet.
+> 
+> What's a WPS button? There's no fundamental issue with getting new KEY_ 
+> codes defined, but bear in mind that anything greater than 255 won't be 
+> seen by X at present.
 
-This patch makes ieee80211_mgd_assoc() accept a valid reassociation
-command and clean the association state with the previous BSS. This
-fixes roaming between BSSes in an ESS when using wpa_supplicant with
--Dnl80211.
+Won't be seen by most X applications. The server should definitely see
+it, so should applications that use XInput2-aware widget sets.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
-Cc: stable@kernel.org
+(Which obviously means not much at all right now).
 
----
- net/mac80211/mlme.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
 
---- uml.orig/net/mac80211/mlme.c	2010-02-28 11:22:00.000000000 +0200
-+++ uml/net/mac80211/mlme.c	2010-02-28 11:51:28.000000000 +0200
-@@ -1893,8 +1893,20 @@ int ieee80211_mgd_assoc(struct ieee80211
- 
- 	mutex_lock(&ifmgd->mtx);
- 	if (ifmgd->associated) {
--		mutex_unlock(&ifmgd->mtx);
--		return -EALREADY;
-+		if (!req->prev_bssid ||
-+		    memcmp(req->prev_bssid, ifmgd->associated->bssid,
-+			   ETH_ALEN)) {
-+			/*
-+			 * We are already associated and the request was not a
-+			 * reassociation request from the current BSS, so
-+			 * reject it.
-+			 */
-+			mutex_unlock(&ifmgd->mtx);
-+			return -EALREADY;
-+		}
-+
-+		/* Trying to reassociate - clear previous association state */
-+		ieee80211_set_disassoc(sdata);
- 	}
- 	mutex_unlock(&ifmgd->mtx);
- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
