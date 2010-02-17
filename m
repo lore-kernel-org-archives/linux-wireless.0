@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f200.google.com ([209.85.210.200]:56081 "EHLO
-	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758723Ab0BRRBm (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:42623 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932658Ab0BQNZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 12:01:42 -0500
-Message-ID: <4B7D7270.6030900@lwfinger.net>
-Date: Thu, 18 Feb 2010 11:01:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 17 Feb 2010 08:25:34 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] nl80211: add power save commands
+Date: Wed, 17 Feb 2010 14:21:52 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@iki.fi>
+References: <20100216201026.25148.40799.stgit@tikku> <201002170835.00109.holgerschurig@gmail.com> <1266395616.4006.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1266395616.4006.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Greg KH <greg@kroah.com>
-CC: Greg Kroah-Hartman <gregkh@suse.de>,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3 V2] staging: r8187se: Miscellaneous cleanups
-References: <4b7963d0.cocDj1pGMQ3LKF4a%Larry.Finger@lwfinger.net> <20100218160340.GH21785@kroah.com>
-In-Reply-To: <20100218160340.GH21785@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <201002171421.52329.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/18/2010 10:03 AM, Greg KH wrote:
-> On Mon, Feb 15, 2010 at 09:10:08AM -0600, Larry Finger wrote:
-> 
-> Ick, I just applied your first versions of these patches.  What was the
-> difference here?  Care to look at the next linux-next tree and see if I
-> missed anything?
-> 
-> sorry about that.
+> But if you wish you can emulate that with rate mask settings.
+> Not in cfg80211 though please.
 
-The only difference was that I fixed the line-wrap problem that you noted in
-your previous Emails. I had found them and resubmitted. There were no content
-changes in the patches and the tree appears to be OK.
+No, modulaton != rates.
 
-Thanks for the heads-up and sorry for the trouble, Those damned long lines from
-the Realtek driver are a pain.
+AFAIK you can run 1 MB/s with both CCK (802.11b) and with OFDM 
+(802.11g), but they generate different wave-forms.
 
-FYI, the rewritten driver has received a beacon, and the first few parts have
-been submitted to John Linville.
 
-Larry
+With madwifi cards I had circumstances where the absolute range 
+of CCK was higher than that of OFDM, even when limiting to 1, 2, 
+5.5, 11 MB/s. This didn't happen in every storage warehouse, but 
+it happens. I don't have a clue why, the theory --- as far as I 
+understand it, which isn't far --- tells me otherwise.
+
+-- 
+http://www.holgerschurig.de
