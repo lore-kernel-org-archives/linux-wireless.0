@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:56869 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754268Ab0BTLJa (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.24]:53765 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509Ab0BQWct (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Feb 2010 06:09:30 -0500
-Subject: Re: Firmware versioning best practices II
-From: David Woodhouse <dwmw2@infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Vipin Mehta <Vipin.Mehta@atheros.com>
-In-Reply-To: <1266663639.10357.1.camel@jlt3.sipsolutions.net>
-References: <43e72e891002191823h3245bc0cn7a8745ae77409aa8@mail.gmail.com>
-	 <1266662106.1820.4034.camel@macbook.infradead.org>
-	 <1266663639.10357.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 20 Feb 2010 11:09:26 +0000
-Message-ID: <1266664166.1820.4165.camel@macbook.infradead.org>
-Mime-Version: 1.0
+	Wed, 17 Feb 2010 17:32:49 -0500
+Received: by qw-out-2122.google.com with SMTP id 3so157444qwe.37
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 14:32:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20100217155810.4534.69338.stgit@tikku>
+References: <20100217155810.4534.69338.stgit@tikku>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 17 Feb 2010 14:32:28 -0800
+Message-ID: <43e72e891002171432u16bd9d5eo71d3856e52993065@mail.gmail.com>
+Subject: Re: [PATCH v2] nl80211: add power save commands
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-02-20 at 12:00 +0100, Johannes Berg wrote:
-> That doesn't make much sense anyway. If the firmware filename is
-> foo-$APIVER-$CODEVER every code change would need a corresponding driver
-> change. If it is just foo-$APIVER then the $CODEVER can be embedded in
-> the firmware file and printed so you know which code you're using, but
-> if it doesn't influence the API I don't see why it should be part of the
-> filename? 
-
-The idea is that just like with shared libraries, you have a symlink
-from the 'soname' foo-3.fw to the actual file foo-3-1.4.1.fw.
-
-For shared libraries, it's easy to create those symlinks automatically
-using ldconfig. For firmware that doesn't really work though -- since
-the soname isn't encoded in the file like it is in ELF libraries.
-
--- 
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
-
+T24gV2VkLCBGZWIgMTcsIDIwMTAgYXQgNzo1OCBBTSwgS2FsbGUgVmFsbyA8a2FsbGUudmFsb0Bp
+a2kuZmk+IHdyb3RlOgo+ICsgwqAgwqAgwqAgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLmNt
+ZCA9IE5MODAyMTFfQ01EX1NFVF9QT1dFUl9TQVZFLAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+LmRvaXQgPSBubDgwMjExX3NldF9wb3dlcl9zYXZlLAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+LnBvbGljeSA9IG5sODAyMTFfcG9saWN5LAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLmZsYWdz
+ID0gR0VOTF9BRE1JTl9QRVJNLAo+ICsgwqAgwqAgwqAgfSwKPiArIMKgIMKgIMKgIHsKPiArIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIC5jbWQgPSBOTDgwMjExX0NNRF9HRVRfUE9XRVJfU0FWRSwKPiAr
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIC5kb2l0ID0gbmw4MDIxMV9nZXRfcG93ZXJfc2F2ZSwKPiAr
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIC5wb2xpY3kgPSBubDgwMjExX3BvbGljeSwKPiArIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIC8qIGNhbiBiZSByZXRyaWV2ZWQgYnkgdW5wcml2aWxlZ2VkIHVzZXJz
+ICovCj4gKyDCoCDCoCDCoCB9LAoKQW55IHJlYXNvbiB0aGlzIGNhbid0IGJlIHN0dWZmZWQgaW50
+byB0aGUgc2V0L2dldCB3aXBoeSBjb21tYW5kPwoKICBMdWlzCg==
