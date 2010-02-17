@@ -1,49 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:56691 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757895Ab0BMT4G (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52538 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754994Ab0BQUWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 14:56:06 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 0/3] rt2x00: rt2800 detection improvements.
-Date: Sat, 13 Feb 2010 20:55:46 +0100
-Message-Id: <1266090949-5468-1-git-send-email-gwingerde@gmail.com>
+	Wed, 17 Feb 2010 15:22:20 -0500
+Subject: [PATCH v2] mac80211: deprecate RX status noise
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1266437114.23447.0.camel@jlt3.sipsolutions.net>
+References: <1266437114.23447.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Feb 2010 21:22:17 +0100
+Message-ID: <1266438137.23447.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some general rt2800 detection improvements. This make SOC a special
-interface, and thus simplifying SOC detection a bit, and unifies
-rt2800pci and rt2800usb further in detecting with what kind of 
-rt2800 device we are dealing with.
+The noise value as is won't be used, isn't
+filled by most drivers and doesn't really
+make a whole lot of sense on a per packet
+basis -- proper cfg80211 survey support in
+mac80211 will need to be different.
 
-Gertjan van Wingerde (3):
-  rt2x00: Introduce SoC interface type.
-  rt2x00: Reorganize RT chipset setting for PCI/SOC devices.
-  rt2x00: rework RT chipset and revision determination for PCI an SOC
-    devices.
+Mark the struct member as deprecated so it
+will be removed from drivers.
 
- drivers/net/wireless/rt2x00/rt2400pci.c   |    4 +-
- drivers/net/wireless/rt2x00/rt2400pci.h   |    1 +
- drivers/net/wireless/rt2x00/rt2500pci.c   |    4 +-
- drivers/net/wireless/rt2x00/rt2500pci.h   |    1 +
- drivers/net/wireless/rt2x00/rt2500usb.c   |    4 +-
- drivers/net/wireless/rt2x00/rt2800.h      |   14 ++--
- drivers/net/wireless/rt2x00/rt2800lib.c   |  115 +++++++++++++++++------------
- drivers/net/wireless/rt2x00/rt2800pci.c   |   29 +++-----
- drivers/net/wireless/rt2x00/rt2800usb.c   |   20 ++---
- drivers/net/wireless/rt2x00/rt2x00.h      |   66 +++++++----------
- drivers/net/wireless/rt2x00/rt2x00debug.c |    4 +-
- drivers/net/wireless/rt2x00/rt2x00pci.c   |    7 --
- drivers/net/wireless/rt2x00/rt2x00pci.h   |    1 +
- drivers/net/wireless/rt2x00/rt2x00soc.c   |   11 +--
- drivers/net/wireless/rt2x00/rt2x00soc.h   |   10 +--
- drivers/net/wireless/rt2x00/rt61pci.c     |   14 ++--
- drivers/net/wireless/rt2x00/rt61pci.h     |    9 ++
- drivers/net/wireless/rt2x00/rt73usb.c     |    7 +-
- drivers/net/wireless/rt2x00/rt73usb.h     |    2 +
- 19 files changed, 156 insertions(+), 167 deletions(-)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Currently creates the following warnings:
+
+drivers/net/wireless/mwl8k.c:756: warning: ‘noise’ is deprecated
+drivers/net/wireless/mwl8k.c:858: warning: ‘noise’ is deprecated
+drivers/net/wireless/ath/ar9170/main.c:928: warning: ‘noise’ is deprecated
+drivers/net/wireless/ath/ath9k/common.c:215: warning: ‘noise’ is deprecated
+drivers/net/wireless/ath/ath5k/base.c:1941: warning: ‘noise’ is deprecated
+drivers/net/wireless/ath/ath5k/base.c:1942: warning: ‘noise’ is deprecated
+drivers/net/wireless/b43/xmit.c:613: warning: ‘noise’ is deprecated
+drivers/net/wireless/b43legacy/xmit.c:551: warning: ‘noise’ is deprecated
+drivers/net/wireless/libertas_tf/main.c:497: warning: ‘noise’ is deprecated
+drivers/net/wireless/rt2x00/rt2x00dev.c:437: warning: ‘noise’ is deprecated
+drivers/net/wireless/p54/txrx.c:353: warning: ‘noise’ is deprecated
+drivers/net/wireless/wl12xx/wl1251_rx.c:80: warning: ‘noise’ is deprecated
+drivers/net/wireless/wl12xx/wl1271_rx.c:139: warning: ‘noise’ is deprecated
+drivers/net/wireless/iwlwifi/iwl-3945.c:682: warning: ‘noise’ is deprecated
+drivers/net/wireless/iwlwifi/iwl-3945.c:685: warning: ‘noise’ is deprecated
+drivers/net/wireless/iwlwifi/iwl-3945.c:689: warning: ‘noise’ is deprecated
+drivers/net/wireless/iwlwifi/iwl-3945.c:697: warning: ‘noise’ is deprecated
+drivers/net/wireless/iwlwifi/iwl-3945.c:711: warning: ‘noise’ is deprecated
+drivers/net/wireless/iwlwifi/iwl-rx.c:1191: warning: ‘noise’ is deprecated
+drivers/net/wireless/iwlwifi/iwl-rx.c:1193: warning: ‘noise’ is deprecated
+drivers/net/wireless/iwlwifi/iwl-rx.c:1206: warning: ‘noise’ is deprecated
+
+I'll make patches for drivers when it becomes
+clear that it won't clash with any work others
+have pending.
+
+ include/net/mac80211.h     |    4 ++--
+ net/mac80211/debugfs_sta.c |    2 --
+ net/mac80211/rx.c          |    1 -
+ net/mac80211/sta_info.h    |    2 --
+ 4 files changed, 2 insertions(+), 7 deletions(-)
+
+--- wireless-testing.orig/include/net/mac80211.h	2010-02-17 20:57:33.000000000 +0100
++++ wireless-testing/include/net/mac80211.h	2010-02-17 20:57:43.000000000 +0100
+@@ -543,7 +543,7 @@ enum mac80211_rx_flags {
+  * @signal: signal strength when receiving this frame, either in dBm, in dB or
+  *	unspecified depending on the hardware capabilities flags
+  *	@IEEE80211_HW_SIGNAL_*
+- * @noise: noise when receiving this frame, in dBm.
++ * @noise: noise when receiving this frame, in dBm (DEPRECATED).
+  * @antenna: antenna used
+  * @rate_idx: index of data rate into band's supported rates or MCS index if
+  *	HT rates are use (RX_FLAG_HT)
+@@ -554,7 +554,7 @@ struct ieee80211_rx_status {
+ 	enum ieee80211_band band;
+ 	int freq;
+ 	int signal;
+-	int noise;
++	int noise __deprecated;
+ 	int antenna;
+ 	int rate_idx;
+ 	int flag;
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-02-17 21:20:49.000000000 +0100
++++ wireless-testing/net/mac80211/debugfs_sta.c	2010-02-17 21:20:53.000000000 +0100
+@@ -57,7 +57,6 @@ STA_FILE(tx_filtered, tx_filtered_count,
+ STA_FILE(tx_retry_failed, tx_retry_failed, LU);
+ STA_FILE(tx_retry_count, tx_retry_count, LU);
+ STA_FILE(last_signal, last_signal, D);
+-STA_FILE(last_noise, last_noise, D);
+ STA_FILE(wep_weak_iv_count, wep_weak_iv_count, LU);
+ 
+ static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
+@@ -289,7 +288,6 @@ void ieee80211_sta_debugfs_add(struct st
+ 	DEBUGFS_ADD(tx_retry_failed);
+ 	DEBUGFS_ADD(tx_retry_count);
+ 	DEBUGFS_ADD(last_signal);
+-	DEBUGFS_ADD(last_noise);
+ 	DEBUGFS_ADD(wep_weak_iv_count);
+ 	DEBUGFS_ADD(ht_capa);
+ }
+--- wireless-testing.orig/net/mac80211/rx.c	2010-02-17 21:20:32.000000000 +0100
++++ wireless-testing/net/mac80211/rx.c	2010-02-17 21:20:34.000000000 +0100
+@@ -1078,7 +1078,6 @@ ieee80211_rx_h_sta_process(struct ieee80
+ 	sta->rx_fragments++;
+ 	sta->rx_bytes += rx->skb->len;
+ 	sta->last_signal = status->signal;
+-	sta->last_noise = status->noise;
+ 
+ 	/*
+ 	 * Change STA power saving mode only at the end of a frame
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-02-17 21:20:39.000000000 +0100
++++ wireless-testing/net/mac80211/sta_info.h	2010-02-17 21:20:44.000000000 +0100
+@@ -200,7 +200,6 @@ struct sta_ampdu_mlme {
+  * @rx_fragments: number of received MPDUs
+  * @rx_dropped: number of dropped MPDUs from this STA
+  * @last_signal: signal of last received frame from this STA
+- * @last_noise: noise of last received frame from this STA
+  * @last_seq_ctrl: last received seq/frag number from this STA (per RX queue)
+  * @tx_filtered_count: number of frames the hardware filtered for this STA
+  * @tx_retry_failed: number of frames that failed retry
+@@ -271,7 +270,6 @@ struct sta_info {
+ 	unsigned long rx_fragments;
+ 	unsigned long rx_dropped;
+ 	int last_signal;
+-	int last_noise;
+ 	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
+ 
+ 	/* Updated from TX status path only, no locking requirements */
+
 
