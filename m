@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f202.google.com ([209.85.216.202]:47166 "EHLO
-	mail-px0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753102Ab0BHSYf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 13:24:35 -0500
-Received: by pxi40 with SMTP id 40so6711727pxi.21
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 10:24:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4Ht3jFrT7uE.A.JI.-nzbLB@chimera>
-References: <4Ht3jFrT7uE.A.JI.-nzbLB@chimera>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 8 Feb 2010 10:24:15 -0800
-Message-ID: <43e72e891002081024id33b99ai61118370a6d81db9@mail.gmail.com>
-Subject: Re: 2.6.33-rc7: Reported regressions from 2.6.32
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:9984 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753624Ab0BQS7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 13:59:11 -0500
+Subject: Re: [PATCH] v2: rtl8187: micro cleanup
+From: Pavel Roskin <proski@gnu.org>
+To: okias <d.okias@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <c2673ca61002171038u14c7ab2fnf2d3ce2067bd1fd8@mail.gmail.com>
+References: <c2673ca61002171015j375922c0y4c7f61c3d3322bab@mail.gmail.com>
+	 <4B7C35C9.30607@lwfinger.net>
+	 <c2673ca61002171034q18edf1c2o817ac4e1ff367177@mail.gmail.com>
+	 <1266431764.15836.8.camel@jlt3.sipsolutions.net>
+	 <c2673ca61002171038u14c7ab2fnf2d3ce2067bd1fd8@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 17 Feb 2010 13:58:58 -0500
+Message-Id: <1266433138.9050.27.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 7, 2010 at 2:16 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> [ANNOUNCEMENT:
->  Maciej Rutecki has generously volunteered to work on the tracking of kernel
->  regressions with me, so now there are two people doing this and I'm going
->  to call us "the tracking team".  Please be friendly to Maciej, he's doing his
->  best to help.  If you have any information about kernel regressions you want
->  to share with us, please feel free to contact Maciej as well as me.]
->
-> This message contains a list of some regressions from 2.6.32,
-> for which there are no fixes in the mainline known to the tracking team.
-> If any of them have been fixed already, please let us know.
->
-> If you know of any other unresolved regressions from 2.6.32, please let us
-> know either and we'll add them to the list.  Also, please let us know
-> if any of the entries below are invalid.
->
-> Each entry from the list will be sent additionally in an automatic reply
-> to this message with CCs to the people involved in reporting and handling
-> the issue.
->
->
-> Listed regressions statistics:
+On Wed, 2010-02-17 at 19:38 +0100, okias wrote:
+> You have probably right, but when I use my testing program:
+> 
+> #include <stdio.h>
+> main() {
+> int a;
+> printf("%i\n", a);
+> a |= 22;
+> printf("%i\n", a);
+> }
+> 
+> Output is:
+> 0
+> 22
+> 
+> it look correct to me
 
-No wireless regressions :D
+That's what I get if compiling for x86_64.  If compiling for i386, I get
 
-  Luis
+1258024948
+1258024950
+
+It just happens that 0 is on the stack where the variable is allocated,
+perhaps as a leftover from another call that used that area on the
+stack.
+
+No C standard says that automatic variables are initialized.  And
+indeed, they are not!
+
+gcc will warn about it with -Wall
+
+Please let's stop this discussion now, as it doesn't belong to the
+linux-wireless mailing list.
+
+-- 
+Regards,
+Pavel Roskin
