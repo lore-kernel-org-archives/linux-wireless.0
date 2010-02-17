@@ -1,47 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li59-9.members.linode.com ([97.107.129.9]:56523 "EHLO erley.org"
+Received: from li59-9.members.linode.com ([97.107.129.9]:60407 "EHLO erley.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754361Ab0BCOZD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2010 09:25:03 -0500
+	id S1756358Ab0BQVMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 16:12:12 -0500
 MIME-Version: 1.0
 Content-Type: text/plain;
  charset=UTF-8
-Date: Wed, 03 Feb 2010 09:24:59 -0500
+Date: Wed, 17 Feb 2010 16:12:08 -0500
 From: <pat-lkml@erley.org>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Linux wireless GSoC 2010 project ideas
-In-Reply-To: <201002031025.04624.holgerschurig@gmail.com>
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com> <20100201221252.GA30758@emergent.ellipticsemi.com> <4B67A937.70406@erley.org> <201002031025.04624.holgerschurig@gmail.com>
-Message-ID: <9e52624fd81bc62bd917b1ad696b9535@127.0.0.1>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	<johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+	<linux-input@vger.kernel.org>, <marcel@holtmann.org>
+Subject: Re: [PATCH 1/2] input: Add =?UTF-8?Q?KEY=5FRFKILL?=
+In-Reply-To: <069C4DAE-598D-45F1-99B5-DA5BAF718179@gmail.com>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+ <20100217052247.GD7160@core.coreip.homeip.net>
+ <20100217180342.GA22522@srcf.ucam.org>
+ <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
+ <20100217191708.GA15554@core.coreip.homeip.net>
+ <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
+ <20100217195435.GA15742@core.coreip.homeip.net>
+ <22ee4e771002171218t69cc4348ia0300a645ce9763d@mail.gmail.com>
+ <069C4DAE-598D-45F1-99B5-DA5BAF718179@gmail.com>
+Message-ID: <f1e18b6637067d769e473052a945c37b@127.0.0.1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 3 Feb 2010 10:25:04 +0100, Holger Schurig
-<holgerschurig@gmail.com>
-wrote:
->> With ath9k I have used:
->> 
->> AP + MP
->> AP + STA
->> AP + AP (Open and WPA2)
+On Wed, 17 Feb 2010 12:52:06 -0800, Dmitry Torokhov
+<dmitry.torokhov@gmail.com> wrote:
+> On Feb 17, 2010, at 12:18 PM, Christian Lamparter
+<chunkeey@googlemail.com 
+>  > wrote:
 > 
-> Would you document this on the wireless WIKI at 
-> wireless.kernel.org ?
+>> On Wed, Feb 17, 2010 at 8:54 PM, Dmitry Torokhov
+>> <dmitry.torokhov@gmail.com> wrote:
+>>>
+>>> Is there anything currently in works that would make use of this  
+>>> button?
+>>> I do not want to allocate keycode "for the future" which may never  
+>>> come.
+>>> We did it with KEY_BATTERY but I do not think anyone actually uses  
+>>> it.
+>>
+>> Of course, there are lots of routers:
+>>
+>> Linksys: wrt160nl
+>> Netgear: wnr2000, wndr3700
+>> TP-Link: wr1043n, ... wr741nd
+>> TrendNET: TEW-632BRP
+>> Planex: MZK-W300NH,  MZK-W04NU
+>> ...
+>>
+>> And a few new client adapters, I know about:
+>> TP-Link: WN821 v2, WN721N, WN727N
+>> Netgear: WNDA3100 v2
+>> ...
+>>
+>> (Not to mention all the coming products).
 > 
-> Maybe as different articles, so that this can be a basis of 
-> several "HOWTO" articles.
+> Sorry, I was not clear enough. I meant something in works in Linux  
+> software stack, I was aware that certain router have these buttons  
+> already.
 
-Yeah, I will try to find the time soon.  Any hints as to what needs to be 
-documented?  It is, at least in my opinion, pretty trivial to pull off, so
-I'm not certain that anything more than an entry explaining how to create
-additional interfaces is necessary.  Feel free to throw some ideas as to
-what all you'd like to see in the documentation, and I'll write it (them?)
+I know that the hostapd config file has an entire WPS section, but
+have no experience using WPS, so can't speak as to how to configure
+or use it.  I don't know if it's planned to include support for a
+push button trigger.
 
-up.
+from hostapd.conf in git:
 
-Pat
+# Config Methods
+# List of the supported configuration methods
+# Available methods: usba ethernet label display ext_nfc_token
+int_nfc_token
+#       nfc_interface push_button keypad
+#config_methods=label display push_button keypad
 
-
-
+Pat Erley
