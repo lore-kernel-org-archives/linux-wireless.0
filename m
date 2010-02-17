@@ -1,54 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f184.google.com ([209.85.216.184]:57545 "EHLO
-	mail-px0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174Ab0BVSOk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 13:14:40 -0500
-Received: by pxi14 with SMTP id 14so1469284pxi.15
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 10:14:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4B828048.7020303@googlemail.com>
-References: <4B828048.7020303@googlemail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 22 Feb 2010 10:14:20 -0800
-Message-ID: <43e72e891002221014g7a513d9dybf868519ea54d86f@mail.gmail.com>
-Subject: Re: Main documentation on ath9k+802.11n
-To: Dennis Borgmann <dennis.borgmann@googlemail.com>
-Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:44643 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755508Ab0BQWo6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 17:44:58 -0500
+Subject: Re: [PATCH] v2: rtl8187: micro cleanup
+From: Pavel Roskin <proski@gnu.org>
+To: okias <d.okias@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <c2673ca61002171104xddb6275t6d9e69878a8c5f82@mail.gmail.com>
+References: <c2673ca61002171015j375922c0y4c7f61c3d3322bab@mail.gmail.com>
+	 <4B7C35C9.30607@lwfinger.net>
+	 <c2673ca61002171034q18edf1c2o817ac4e1ff367177@mail.gmail.com>
+	 <1266431764.15836.8.camel@jlt3.sipsolutions.net>
+	 <c2673ca61002171038u14c7ab2fnf2d3ce2067bd1fd8@mail.gmail.com>
+	 <1266433138.9050.27.camel@mj>
+	 <c2673ca61002171104xddb6275t6d9e69878a8c5f82@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 17 Feb 2010 17:44:45 -0500
+Message-Id: <1266446685.12365.14.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 22, 2010 at 5:02 AM, Dennis Borgmann
-<dennis.borgmann@googlemail.com> wrote:
-> Hi linux-wireless list,
-> hi hostap list!
->
-> I am trying to get a 802.11n-network as test running. I want to test the
-> highest throughput, that I can do with this setup to see, what could be
-> possible for me.
->
-> My setup is a Senao EMP-7605 card and ath9k with a 2.6.32.8-kernel.
-> Thanks to Jouni Malinen, I am now using the latest snapshot of
-> hostapd-0.6.10. If I start hostapd, my Lenovo Thinkpad(I think, there is
-> an Intel card running inside there) can find the network, that I
-> established with ath9k, but another Senao EMP-7905 with the same setup
-> as mentioned above won't find the wireless network at all, even during a
-> scan. If I do an iperf between the Lenovo and the board, that runs the
-> AP with hostapd, I get throughput rates of about 6 Mbit/s. iwconfig on
-> the Lenovo shows the bitrate set to "0" - meaning auto.
->
-> I cannot find valuable documentation about setting up a wireless-link
-> with ath9k using 802.11n-capabilities. Is there any hint, that someone
-> could give me or a webpage that I could be pointed to? I just want to do
-> some speed-tests, but even the "ht_kapab"-field of hostapd leaves me
-> without any knowledge, what to put in there...
->
-> Any help would be appreciated!
+On Wed, 2010-02-17 at 20:04 +0100, okias wrote:
+> ok, sorry I tested it on x86_64. Here is correct patch:
 
-Documentation is not supposed to be device specific, so for hostapd
-with 802.11n we currently have:
+I'm sorry, but it's not a cleanup.  Initializing reg outside the block
+gives a wrong impression that reg may be used outside the block.  Code
+is safer is it's more readable, and it's more readable if the logic is
+not spread around, but kept in one place.
 
-http://wireless.kernel.org/en/users/Documentation/hostapd
+Unnecessary initialization can prevent gcc from issuing warnings about
+using uninitialized variables when the code changes.  Such warnings may
+be useful to find real bugs.  I can give you a realistic example, but it
+would be off-topic here.
 
- Luis
+A real cleanup would be to give reg the block scope and to refactor the
+code where reg is written to the hardware:
+
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1163,9 +1163,10 @@ static void rtl8187_bss_info_changed(struct ieee80211_hw *dev,
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 	int i;
+-	u8 reg;
+ 
+ 	if (changed & BSS_CHANGED_BSSID) {
++		u8 reg;
++
+ 		mutex_lock(&priv->conf_mutex);
+ 		for (i = 0; i < ETH_ALEN; i++)
+ 			rtl818x_iowrite8(priv, &priv->map->BSSID[i],
+@@ -1176,13 +1177,12 @@ static void rtl8187_bss_info_changed(struct ieee80211_hw *dev,
+ 		else
+ 			reg = 0;
+ 
+-		if (is_valid_ether_addr(info->bssid)) {
++		if (is_valid_ether_addr(info->bssid))
+ 			reg |= RTL818X_MSR_INFRA;
+-			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+-		} else {
++		else
+ 			reg |= RTL818X_MSR_NO_LINK;
+-			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+-		}
++
++		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+ 
+ 		mutex_unlock(&priv->conf_mutex);
+ 	}
+
+But I would never bother with that simply because wireless developers
+have more important things to do.
+
+I respectfully suggest that you do your exercises in C programming
+elsewhere.
+
+-- 
+Regards,
+Pavel Roskin
