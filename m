@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:49270 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753348Ab0BAV7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 16:59:11 -0500
-Subject: Re: [PATCH] ath9k: fix access to freed data on unload
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e891002011332g5ee05addp3f140ea23a45e09d@mail.gmail.com>
-References: <1264905444.10146.9.camel@mj>
-	 <43e72e891002011011h4714ecddrb9421a877832bffd@mail.gmail.com>
-	 <20100201203637.GE4952@tuxdriver.com>
-	 <43e72e891002011332g5ee05addp3f140ea23a45e09d@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 01 Feb 2010 16:59:01 -0500
-Message-Id: <1265061541.17261.8.camel@mj>
-Mime-Version: 1.0
+Received: from web23106.mail.ird.yahoo.com ([217.146.189.46]:34741 "HELO
+	web23106.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756496Ab0BQVOx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 16:14:53 -0500
+Message-ID: <151167.60599.qm@web23106.mail.ird.yahoo.com>
+Date: Wed, 17 Feb 2010 21:14:52 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] v2: rtl8187: micro cleanup
+To: okias <d.okias@gmail.com>, sedat.dilek@gmail.com
+Cc: Pavel Roskin <proski@gnu.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	herton@mandriva.com.br
+In-Reply-To: <2d0a357f1002171113n7ceb8fbdr2f54c17699151949@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-02-01 at 13:32 -0800, Luis R. Rodriguez wrote:
+--- On Wed, 17/2/10, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
 
-> >> Thanks, can you please resend with a Cc: stable@kernel.org on the commit log?
-> >
-> > Doesn't look to me like the patch even applies to 2.6.33...?
-> 
-> Sorry thought it would have by then.
+> You could be more precise on the
+> commit-subject (not blaming you) next time.
+> Worth reading on this topic: "On Commit Messages" [1].
 
-The current mainline 2.6.33 uses the cleanup field, but in a different
-way.  ath_bus_cleanup() is called before ieee80211_free_hw(), so it's
-should not be affected by the bug.  I was wrong to assume that 2.6.33 is
-affected.
+Ditto. Here is the definitive recommended reading for submitting patches.
+BTW, you also missed a Signed-off line.
 
-As for wireless-testing, once ath_bus_cleanup() moved from main.c to
-ahb.c and pci.c, it became redundant (apart from the buggy part).
+http://linuxwireless.org/en/developers/Documentation/SubmittingPatches/sourcedoc
 
-If we ever want to factorize some cleanup code in the future, it will be
-different code anyway, so the current "cleanup" should go away.
+I think normally the v1/v2/v3 part goes into the front, e.g.
+[PATCH v1] ...
 
--- 
-Regards,
-Pavel Roskin
+Things like 'ok, sorry I tested...' should probably be in a reply to your own post, or preferably, not - you either put it in the commit message itself, or leave it out.
+That's because John accepts about 40 patches per day, and git provides the facility to automatically extract patches per e-mail (for all e-mails filed into a folder, for example) - anything that requires manual editing to remove is considered undesirable. Same with the ambiguous subject line, and v3, etc. About 600(?) patches goes into each kernel releases - if ever patch comes in as 'minor clean up', 'fix one bug', 'fix intermittent crash', 'tried n times now' for the patch summary, nobody would know what goes into the kernel. :-). 
+
+
+
+      
