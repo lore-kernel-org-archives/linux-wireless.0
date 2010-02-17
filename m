@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:11944 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752043Ab0BWJ54 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:53359 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814Ab0BQRFE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 04:57:56 -0500
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0834218674
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 18:51:15 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-Subject: [PATCH] mac80211: fix rates setup on IBSS merge
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 23 Feb 2010 18:51:13 +0900
-Message-ID: <20100223095113.25360.75291.stgit@void>
+	Wed, 17 Feb 2010 12:05:04 -0500
+Received: by vws8 with SMTP id 8so894105vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 09:05:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Date: Wed, 17 Feb 2010 18:05:01 +0100
+Message-ID: <c2673ca61002170905g788ce856uc82adc490c2328be@mail.gmail.com>
+Subject: [PATCH] rtl818x: small cleanup
+From: okias <d.okias@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, herton@mandriva.com.br,
+	htl10@users.sourceforge.net, Larry.Finger@lwfinger.net
+Content-Type: multipart/mixed; boundary=0016e65b6298d6d046047fced928
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-when an IBSS merge happened, the supported rates for the newly added station
-were left empty, causing the rate control module to be initialized with only
-the basic rates.
+--0016e65b6298d6d046047fced928
+Content-Type: text/plain; charset=UTF-8
 
-also the section of the ibss code which deals with updating supported rates for
-an already existing station fails to inform the rate control module about the
-new rates. as i don't know how to fix this (minstrel does not have an update
-function), i have just added a comment for now.
+-2 lines...
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
+-- 
+Jabber/XMPP: okias@isgeek.info
+SIP VoIP: sip:17474537254@proxy01.sipphone.com
 
- net/mac80211/ibss.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+--0016e65b6298d6d046047fced928
+Content-Type: application/octet-stream;
+	name="0001-wireless-rtl818x-small-cleanup.patch"
+Content-Disposition: attachment;
+	filename="0001-wireless-rtl818x-small-cleanup.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g5sd8nd50
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index f3e9424..b840d90 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -276,6 +276,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 				    (unsigned long long) sta->sta.supp_rates[band]);
- #endif
- 			rcu_read_unlock();
-+
-+			/* FIXME: update rate control */
- 		} else {
- 			rcu_read_unlock();
- 			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
-@@ -370,6 +372,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		       sdata->name, mgmt->bssid);
- #endif
- 		ieee80211_sta_join_ibss(sdata, bss);
-+		supp_rates = ieee80211_sta_get_rates(local, elems, band);
- 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
- 				       supp_rates, GFP_KERNEL);
- 	}
-
+RnJvbSBmYmJkNTExMjFlNjU1OGQxMDNmMWY4MzE2OWNkMDc4ZTcwOTcwYTFiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBEYXZpZCBIZWlkZWxiZXJnZXIgPGQub2tpYXNAZ21haWwuY29t
+PgpEYXRlOiBXZWQsIDE3IEZlYiAyMDEwIDE3OjA5OjAzICswMTAwClN1YmplY3Q6IFtQQVRDSF0g
+d2lyZWxlc3MvcnRsODE4eDogc21hbGwgY2xlYW51cAoKLS0tCiBkcml2ZXJzL25ldC93aXJlbGVz
+cy9ydGw4MTh4L3J0bDgxODdfZGV2LmMgfCAgICA0ICstLS0KIDEgZmlsZXMgY2hhbmdlZCwgMSBp
+bnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL3J0bDgxOHgvcnRsODE4N19kZXYuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bDgx
+OHgvcnRsODE4N19kZXYuYwppbmRleCA3YmEzMDUyLi4yY2M2ODgxIDEwMDY0NAotLS0gYS9kcml2
+ZXJzL25ldC93aXJlbGVzcy9ydGw4MTh4L3J0bDgxODdfZGV2LmMKKysrIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvcnRsODE4eC9ydGw4MTg3X2Rldi5jCkBAIC0xMTY1LDcgKzExNjUsNyBAQCBzdGF0
+aWMgdm9pZCBydGw4MTg3X2Jzc19pbmZvX2NoYW5nZWQoc3RydWN0IGllZWU4MDIxMV9odyAqZGV2
+LAogewogCXN0cnVjdCBydGw4MTg3X3ByaXYgKnByaXYgPSBkZXYtPnByaXY7CiAJaW50IGk7Ci0J
+dTggcmVnOworCXU4IHJlZyA9IDA7CiAKIAlpZiAoY2hhbmdlZCAmIEJTU19DSEFOR0VEX0JTU0lE
+KSB7CiAJCW11dGV4X2xvY2soJnByaXYtPmNvbmZfbXV0ZXgpOwpAQCAtMTE3NSw4ICsxMTc1LDYg
+QEAgc3RhdGljIHZvaWQgcnRsODE4N19ic3NfaW5mb19jaGFuZ2VkKHN0cnVjdCBpZWVlODAyMTFf
+aHcgKmRldiwKIAogCQlpZiAocHJpdi0+aXNfcnRsODE4N2IpCiAJCQlyZWcgPSBSVEw4MThYX01T
+Ul9FTkVEQ0E7Ci0JCWVsc2UKLQkJCXJlZyA9IDA7CiAKIAkJaWYgKGlzX3ZhbGlkX2V0aGVyX2Fk
+ZHIoaW5mby0+YnNzaWQpKSB7CiAJCQlyZWcgfD0gUlRMODE4WF9NU1JfSU5GUkE7Ci0tIAoxLjcu
+MAoK
+--0016e65b6298d6d046047fced928--
