@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:6410 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756272Ab0BDH3u (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:21284 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933541Ab0BQAo7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 02:29:50 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: cfg80211 support
-Date: Thu, 4 Feb 2010 08:28:14 +0100
-Cc: Dan Williams <dcbw@redhat.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-References: <20100202000934.GA19847@sortiz.org> <201002031632.10425.holgerschurig@gmail.com> <1265229000.21707.4.camel@localhost.localdomain>
-In-Reply-To: <1265229000.21707.4.camel@localhost.localdomain>
+	Tue, 16 Feb 2010 19:44:59 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so1633062eyd.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 16:44:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201002040828.14406.holgerschurig@gmail.com>
+In-Reply-To: <20100214131810.1a8b49ac@houba>
+References: <4B38A298.7070103@googlemail.com>
+	 <1262037590.16627.99.camel@localhost.localdomain>
+	 <3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
+	 <20100213234456.5ae49b67@houba> <20100214004010.GB18815@tuxdriver.com>
+	 <20100214131810.1a8b49ac@houba>
+Date: Wed, 17 Feb 2010 00:44:56 +0000
+Message-ID: <3ace41891002161644g7d09c598td86381680c3f04f8@mail.gmail.com>
+Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Frederic Leroy <fredo@starox.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Chris Mayo <aklhfex@googlemail.com>,
+	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > I had an application running that was pinging and showed the
-> > signal level. Then I moved out-of-reach of the AP.
-> > This happened:
-> 
-> The command timeout code is just screwed all around.  We've
-> already seen that some commands just take longer than we're
-> expecting them to.  I think we should just get rid of the
-> command retry stuff completely and return EBUSY when trying to
-> submit additional commands if the firmware hasn't replied yet.
+On Sun, Feb 14, 2010 at 12:18 PM, Frederic Leroy <fredo@starox.org> wrote:
+> Le Sat, 13 Feb 2010 19:40:10 -0500,
+> "John W. Linville" <linville@tuxdriver.com> a écrit :
+>
+>> [...]
+>> > Should I follow the TODO file from Greg in staging :
+>> > ( which seems to merge : rtl8192e  rtl8192su  rtl8192u )
+>> > [...]
+>> This is a reasonable plan overall, although I might quibble with
+>> the order.
+>>
+>> > Or use rtl818x tree to start a new device ?
+>>
+>> YMMV, but given the code I've seen for the Realtek drivers in staging
+>> I might be inclined to start by forking rtl8180 and making the
+>> necessary hardware changes from there.
+>
+> It was my impression too, but as you say, YMMV. It will be my first
+> driver, although I already hacked the kernel, make netfilters modules
+> and read lwn ;).
+>
+> For the process, it is still unclear for me. I copy rtl8180*[ch] to
+> rtl8192*[ch], and start to hack into to make clean git patches ?
+>
+> On which tree should I base my work :
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git ?
 
-I think the same.
-
-I think in my case --- which I haven't debugged completely 
-yet  --- user-space code was going wild. The firmware command 
-001f (get RSSI) failed. Which is to be expected, because the 
-firmware noticed that there's no longer a connection to an AP.
-
-However, user-space nl80211 code seems to have been buggy and 
-issued the same command in a loop. This flooded the the 
-command-execution logic in libertas, and it couldn't cope with 
-it.
-
-AFAIK the error I had had nothing to do with the cfg80211-code 
-inside the libertas driver. Or maybe it is, I'll write a little 
-program that floods libertas via cfg80211 with commands in a 
-tight loop, let's see what happens. :-)
-
-
-Getting rid of the command-retry and returning an error instead 
-seems to be a sane thing.
-
-> I don't think I've *ever* seen recovery from this situation
-> unless the firmware finally sends the command reply back, which
-> has happened in some cases with SD8686.  IMHO the command retry
-> stuff causes more problems than it's worth, given that it never
-> actually fixes anything or recovers from the timeout.
-> 
-> If the firmware is hung, the only way to get the device back is
-> to power-cycle it or possibly do a USB reset.  Retrying a
-> command just doesn't work.
-
-In my case, I could do a "pccardctl eject" / "pccardctl insert" 
-sequence :-)   Not nice. Maybe we need a signal from 
-core-libertas to the libertas-drivers, so that they decide what 
-to do.
-
--- 
-http://www.holgerschurig.de
+It is probably useful to pull from
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+as well - I think wireless-testing's log may be more granular
