@@ -1,38 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:42426 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935925Ab0BZMzX (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:49382 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933457Ab0BQOAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 07:55:23 -0500
-Received: by bwz1 with SMTP id 1so35511bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2010 04:55:21 -0800 (PST)
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: Bing Zhao <bzhao@marvell.com>
-Subject: Re: [PATCH] libertas: add auto auth mode feature
-Date: Fri, 26 Feb 2010 13:55:06 +0100
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>
-References: <1267146996-3725-1-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1267146996-3725-1-git-send-email-bzhao@marvell.com>
+	Wed, 17 Feb 2010 09:00:13 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] nl80211: add power save commands
+Date: Wed, 17 Feb 2010 14:56:31 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@iki.fi>
+References: <20100216201026.25148.40799.stgit@tikku> <1266413252.4524.8.camel@jlt3.sipsolutions.net> <1266413796.15836.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1266413796.15836.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
+Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <201002261355.06127.holgerschurig@gmail.com>
+Message-Id: <201002171456.31591.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Auto auth mode is enabled by default. If user doesn't specify the
-> auth mode, while association driver will first try with open mode
-> and then with shared key mode. If user specifies an auth mode,
-> auto auth is disabled and driver will not try association with
-> another auth mode.
+I stand corrected.
 
-I'd rather would like if you guys chime in into the cfg80211 port rather 
-than adding stuff to assoc.c and wext.c, which hopefully get's removed 
-really soon now.
+Now that you told me so, I was even able to find a reference for this, table 4-5 in
 
+http://books.google.com/books?id=TOuyW0bUoncC&pg=PA189
 
-As a side note: I'm now inclined to get rid of Libertas' proprietary mesh 
-support in the driver. I don't know no one except OLPC that uses it, and 
-even they don't seem work with upstream. For me, this mesh stuff is the last 
-obstacle for cfg80211 support in libertas.
+-- 
+http://www.holgerschurig.de
