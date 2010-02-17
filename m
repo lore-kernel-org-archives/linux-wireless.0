@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:35860 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964Ab0BNBPO (ORCPT
+Received: from sd-11162.dedibox.fr ([88.191.70.230]:33659 "EHLO
+	sd-11162.dedibox.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752497Ab0BQISf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 20:15:14 -0500
-Received: by ewy28 with SMTP id 28so3034960ewy.28
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Feb 2010 17:15:12 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 1/3] rt2x00: Introduce SoC interface type.
-Date: Sun, 14 Feb 2010 02:15:08 +0100
+	Wed, 17 Feb 2010 03:18:35 -0500
+Date: Wed, 17 Feb 2010 09:17:43 +0100
+From: Frederic Leroy <fredo@starox.org>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1266090949-5468-1-git-send-email-gwingerde@gmail.com> <1266090949-5468-2-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1266090949-5468-2-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201002140215.09109.IvDoorn@gmail.com>
+	Marcel Holtmann <marcel@holtmann.org>,
+	Chris Mayo <aklhfex@googlemail.com>,
+	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
+Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
+Message-ID: <20100217091743.3c763cf1@houba>
+In-Reply-To: <3ace41891002161644g7d09c598td86381680c3f04f8@mail.gmail.com>
+References: <4B38A298.7070103@googlemail.com>
+	<1262037590.16627.99.camel@localhost.localdomain>
+	<3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
+	<20100213234456.5ae49b67@houba>
+	<20100214004010.GB18815@tuxdriver.com>
+	<20100214131810.1a8b49ac@houba>
+	<3ace41891002161644g7d09c598td86381680c3f04f8@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 13 February 2010, Gertjan van Wingerde wrote:
-> Introduce the SoC interface type to detect SoC devices, instead of having
-> them mimic being PCI devices.
-> This allows for easier detection of SoC devices.
+Le Wed, 17 Feb 2010 00:44:56 +0000,
+Hin-Tak Leung <hintak.leung@gmail.com> a écrit :
+
+> On Sun, Feb 14, 2010 at 12:18 PM, Frederic Leroy <fredo@starox.org>
+> wrote:
+> > On which tree should I base my work :
+> > git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git ?
 > 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> It is probably useful to pull from
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+> as well - I think wireless-testing's log may be more granular
+ 
+I saw it. But I have a problem with this tree. The rtl8192su driver
+don't compile : 
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+  CC [M]  drivers/staging/rtl8192su/r8180_93cx6.o
+In file included from drivers/staging/rtl8192su/r8192U.h:43,
+                 from drivers/staging/rtl8192su/r8180_93cx6.h:16,
+                 from drivers/staging/rtl8192su/r8180_93cx6.c:21:
+drivers/staging/rtl8192su/ieee80211/ieee80211.h:612: erreur: redefinition of ‘struct ieee80211_hdr_3addr’
+make[3]: *** [drivers/staging/rtl8192su/r8180_93cx6.o] Erreur 1
 
+For the moment, I am working on linux-2.6-stable tree for
+removing dead code in staging and check that it breaks nothing.
+
+-- 
+Frédéric Leroy
