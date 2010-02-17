@@ -1,65 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38024 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933246Ab0BEG6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 01:58:09 -0500
-Subject: Re: [PATCH] airo: fix setting zero length WEP key
-From: Dan Williams <dcbw@redhat.com>
-To: Chris Siebenmann <cks@cs.toronto.edu>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
-In-Reply-To: <20100204233608.90E172B0054@apps0.cs.toronto.edu>
-References: <20100204233608.90E172B0054@apps0.cs.toronto.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Feb 2010 22:57:20 -0800
-Message-ID: <1265353040.11066.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from web23105.mail.ird.yahoo.com ([217.146.189.45]:43550 "HELO
+	web23105.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751654Ab0BQRXI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 12:23:08 -0500
+Message-ID: <756957.29855.qm@web23105.mail.ird.yahoo.com>
+Date: Wed, 17 Feb 2010 17:16:26 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl818x: small cleanup
+To: linville@tuxdriver.com, okias <d.okias@gmail.com>
+Cc: linux-wireless@vger.kernel.org, herton@mandriva.com.br,
+	Larry.Finger@lwfinger.net
+In-Reply-To: <c2673ca61002170905g788ce856uc82adc490c2328be@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-02-04 at 18:36 -0500, Chris Siebenmann wrote:
-> | >  In the GUI, no wireless networks show up/are listed in the usual
-> | > dropdown menu; this means that I can't go as far as even trying to
-> | > connect to anything.  From the command line, 'iwlist wifi0 scanning'
-> | > lists nothing.
-> |
-> | Wait, wifi0?  You need to be using 'eth0' or 'eth1', whichever eth
-> | device that 'iwconfig' reports. wifi0 is a historical airo anomaly
-> | that's only used for packet capture and sniffing of the 802.11 frames.
-> | It should not be used for anything other than Wireshark basically.
-> |
-> | Do you get the same behavior if you use the normal ethX interface of
-> | the airo device?
-> 
->  Yes; on a 'bad' kernel, 'iwlist eth1 scanning' lists nothing, and on a
-> good kernel it lists the networks that I expect (with some variability;
-> where I have the machine at the moment is on the edge of visibility for
-> some networks, and they appear and disappear periodically).
-> 
-> | Note that just because wifi0 may return scan results doesn't mean it
-> | should be used with iwconfig...
-> |
-> | But also, you're doing the iwlist scan as root, correct?
-> 
->  Yes (on both the good and the bad kernels).
-> 
->  I haven't been trying to use iwconfig for anything; all of my actual
-> use of the wireless networks has been done through the Fedora 11 GUI.
+--- On Wed, 17/2/10, okias <d.okias@gmail.com> wrote:
 
-I've been able to reproduce the issue with my 350.  Note that even with
-the original patch, the 350 will never return a scan result *other* than
-the associated AP.  If you turn off the AP, the airo will not return any
-scan results even though before it connected to the AP it would return a
-bunch.
+> -2 lines...
 
-Airo firmware is, well, old and crappy, and nobody ever got enough
-documentation out of Cisco to get the driver working extremely well.
+Acked,
 
-But oddly enough, the patch does fix the issue, though I have a slightly
-modified version that I'd rather be applied (see other mails).
-
-Dan
+The content is fine, but you know the kernel patch submission guide line explicitly states that patches should be in-line (use git-send-mail is easiest). 
 
 
+
+      
