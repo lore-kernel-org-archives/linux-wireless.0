@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2634 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752373Ab0BVNzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 08:55:04 -0500
-Date: Mon, 22 Feb 2010 14:52:58 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, stable@kernel.org
-Subject: Re: [PATCH v2 0/2] iwlwifi fixes for 2.6.33 and stable
-Message-ID: <20100222135256.GF2520@dhcp-lab-161.englab.brq.redhat.com>
-References: <1266623253-31673-1-git-send-email-reinette.chatre@intel.com>
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:56042 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756437Ab0BQVEX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 16:04:23 -0500
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id 905748C149
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 23:04:22 +0200 (EET)
+Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh01.mail.saunalahti.fi (Postfix) with ESMTP id 7B87D4033
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 23:04:21 +0200 (EET)
+Subject: [RFC PATCH 3/3] mac80211: add support connection monitor in hardware
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 17 Feb 2010 23:04:21 +0200
+Message-ID: <20100217210421.30634.29786.stgit@tikku>
+In-Reply-To: <20100217210202.30634.69236.stgit@tikku>
+References: <20100217210202.30634.69236.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1266623253-31673-1-git-send-email-reinette.chatre@intel.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 19, 2010 at 03:47:31PM -0800, Reinette Chatre wrote:
-> I am excluding "iwlwifi: set HT flags after channel in rxon" from this
-> resend since it has been merged into wireless-2.6 already.
-> 
-> We address
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2160 where it can be
-> seen that there are instances where the number of freed tfds are negative,
-> which is triggered by the receipt of a TX response with incorrect frame
-> control.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-For user perspective this make network dies (no possibility to send any
-data) without any error in dmesg.
+wl1271 has a feature so that it handles the connection monitor logic
+in hardware, basically sending periodically nullfunc frames and reporting
+to the host if AP is lost.
 
-> We include two patches to (1) prevent the problem from
-> occuring, and (2) prevent the problem from propagating when it does occur.
+Add support to mac80211 by adding a new flag IEEE80211_HW_CONNECTION_MONITOR
+which prevents conn_mon_timer from triggering during idle periods.
 
-I confirm patches fix the issue. Tested on 2.6.33-rc8 and 2.6.32.
-For .32 patch (2) does not apply, I had to change it. I'll send 
-modified patch in next email.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ include/net/mac80211.h |    1 +
+ net/mac80211/mlme.c    |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-Cheers
-Stanislaw
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 80eb7cc..1d28fcc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -975,6 +975,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
+ 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+ 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
++	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
+ };
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4b9596f..3fa8e6a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -850,6 +850,9 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ 	if (is_multicast_ether_addr(hdr->addr1))
+ 		return;
+ 
++	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
++		return;
++
+ 	mod_timer(&sdata->u.mgd.conn_mon_timer,
+ 		  round_jiffies_up(jiffies + IEEE80211_CONNECTION_IDLE_TIME));
+ }
+
