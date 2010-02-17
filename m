@@ -1,170 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:38271 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754227Ab0BIJUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 04:20:33 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 01:20:33 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v6] mac80211: Retry null data frame for power save.
-Date: Tue, 9 Feb 2010 14:50:28 +0530
-Message-ID: <1265707228-4813-1-git-send-email-vnatarajan@atheros.com>
+Received: from 27.mail-out.ovh.net ([91.121.30.210]:44666 "HELO
+	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751163Ab0BQHBQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 02:01:16 -0500
+Message-ID: <4B7B9438.9020601@free.fr>
+Date: Wed, 17 Feb 2010 08:01:12 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jouni Malinen <j@w1.fi>
+CC: Bob Copeland <me@bobcopeland.com>, jirislaby@gmail.com,
+	mickflemm@gmail.com, ath5k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath5k: Fix TX/RX padding for all frames
+References: <1266190577-2423-1-git-send-email-benoit.papillault@free.fr> <b6c5339f1002151215y4c7d2f33yfd32916e0500b55c@mail.gmail.com> <4B79C565.1050701@free.fr> <20100216004717.GA6844@hash.localnet> <4B7B027D.70701@free.fr> <20100217061523.GA5147@jm.kir.nu>
+In-Reply-To: <20100217061523.GA5147@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even if the null data frame is not acked by the AP, mac80211
-goes into power save. This might lead to loss of frames
-from the AP.
-Prevent this by restarting dynamic_ps_timer when ack is not
-received for null data frames.
+Jouni Malinen a écrit :
+> On Tue, Feb 16, 2010 at 09:39:25PM +0100, Benoit PAPILLAULT wrote:
+>   
+>> I don't have an ath5k based card at hand. I will try to grab one and
+>> will give an example of said frame. Basically, I followed the same
+>> strategy for ath9k already.
+>>     
+>
+> Are you saying that this patch has not actually been tested at all on
+> ath5k and it was just based on the changes you did for ath9k? If that is
+> the case, I would suggest running the tests before actually applying
+> this. We should really not depend on undocumented hardware behavior to
+> remain the same between different revisions. That's why I did not like
+> the changes in ath9k and would not exactly like extending that to even
+> more different chips taken into account that none of this is needed for
+> normal use of the card.
+>  
+>   
+No. It has been tested the same way I tested ath9k, ie using 2 cards in 
+monitor mode and reading/writing 802.11 frame and checking that they are 
+the same on the other side. I just need to swap my ath9k based card 
+(AR9280) with an ath5k based card (AR5212) in my laptop and redo the 
+test. I will do so in a couple of days.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- include/net/mac80211.h     |    6 ++++++
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   20 +++++++++++++++-----
- net/mac80211/status.c      |   17 +++++++++++++++--
- 4 files changed, 37 insertions(+), 7 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 414d774..314e981 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -945,6 +945,11 @@ enum ieee80211_tkip_key_type {
-  *	Hardware supports Unscheduled Automatic Power Save Delivery
-  *	(U-APSD) in managed mode. The mode is configured with
-  *	conf_tx() operation.
-+ *
-+ * @IEEE80211_HW_REPORTS_TX_ACK_STATUS:
-+ *	Hardware can provide ack status reports of Tx frames to
-+ *	the stack.
-+ *
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -965,6 +970,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_STATIC_SMPS		= 1<<15,
- 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
- 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
-+	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
- };
- 
- /**
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a591119..9dd98b6 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -316,6 +316,7 @@ enum ieee80211_sta_flags {
- 	IEEE80211_STA_CSA_RECEIVED	= BIT(5),
- 	IEEE80211_STA_MFP_ENABLED	= BIT(6),
- 	IEEE80211_STA_UAPSD_ENABLED	= BIT(7),
-+	IEEE80211_STA_NULLFUNC_ACKED	= BIT(8),
- };
- 
- struct ieee80211_if_managed {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7a79214..ee9443d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -434,8 +434,11 @@ static void ieee80211_enable_ps(struct ieee80211_local *local,
- 	} else {
- 		if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
- 			ieee80211_send_nullfunc(local, sdata, 1);
--		conf->flags |= IEEE80211_CONF_PS;
--		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+
-+		if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
-+			conf->flags |= IEEE80211_CONF_PS;
-+			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+		}
- 	}
- }
- 
-@@ -541,6 +544,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_local,
- 			     dynamic_ps_enable_work);
- 	struct ieee80211_sub_if_data *sdata = local->ps_sdata;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
- 	/* can only happen when PS was just disabled anyway */
- 	if (!sdata)
-@@ -549,11 +553,16 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS)
- 		return;
- 
--	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
-+	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
-+	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
- 		ieee80211_send_nullfunc(local, sdata, 1);
- 
--	local->hw.conf.flags |= IEEE80211_CONF_PS;
--	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) ||
-+	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
-+		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
-+		local->hw.conf.flags |= IEEE80211_CONF_PS;
-+		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
-+	}
- }
- 
- void ieee80211_dynamic_ps_timer(unsigned long data)
-@@ -1892,6 +1901,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		return -ENOMEM;
- 
- 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
-+	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
- 
- 	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
- 		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index e57ad6b..ded9873 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -188,6 +188,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	rcu_read_lock();
- 
- 	sband = local->hw.wiphy->bands[info->band];
-+	fc = hdr->frame_control;
- 
- 	for_each_sta_info(local, hdr->addr1, sta, tmp) {
- 		/* skip wrong virtual interface */
-@@ -205,8 +206,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			return;
- 		}
- 
--		fc = hdr->frame_control;
--
- 		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
- 		    (ieee80211_is_data_qos(fc))) {
- 			u16 tid, ssn;
-@@ -275,6 +274,20 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			local->dot11FailedCount++;
- 	}
- 
-+	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
-+	    (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
-+	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
-+	    local->ps_sdata && !(local->scanning)) {
-+		if (info->flags & IEEE80211_TX_STAT_ACK) {
-+			local->ps_sdata->u.mgd.flags |=
-+					IEEE80211_STA_NULLFUNC_ACKED;
-+			ieee80211_queue_work(&local->hw,
-+					&local->dynamic_ps_enable_work);
-+		} else
-+			mod_timer(&local->dynamic_ps_timer, jiffies +
-+					msecs_to_jiffies(10));
-+	}
-+
- 	/* this was a transmitted frame, but now we want to reuse it */
- 	skb_orphan(skb);
- 
--- 
-1.6.6.1
+Regards,
+Benoit
 
