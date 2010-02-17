@@ -1,27 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:58817 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751264Ab0ALMrI (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.186]:64131 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab0BQSn7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2010 07:47:08 -0500
-Date: Tue, 12 Jan 2010 13:47:07 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 00/17] more mwl8k updates
-Message-ID: <20100112124706.GP1735@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 17 Feb 2010 13:43:59 -0500
+MIME-Version: 1.0
+In-Reply-To: <20100217180342.GA22522@srcf.ucam.org>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+	 <20100217052247.GD7160@core.coreip.homeip.net>
+	 <20100217180342.GA22522@srcf.ucam.org>
+Date: Wed, 17 Feb 2010 19:43:56 +0100
+Message-ID: <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linux-input@vger.kernel.org, marcel@holtmann.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series, which goes on top of the set I sent earlier, adds
-support for (non-DFS) 5 GHz operation, adds multi-BSS AP support (for
-8366), and adds support for the 0x2a43 single-band (2.4 GHz only)
-88w8366 card.
+On Wed, Feb 17, 2010 at 7:03 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> On Tue, Feb 16, 2010 at 09:22:47PM -0800, Dmitry Torokhov wrote:
+>
+>> I'd like some breathing room aroung KEY_NUMERIC? Any issues with making
+>> it 247 or 0x211?
+>
+> None. Do you want to make that change, or should I resubmit?
+>
+Wait wait... do you can get another KEY_?
 
-To keep track of what's outstanding I have pushed a branch consisting
-of everything submitted so far (including the previous patch set that
-wasn't merged yet) to:
+The reason: Some new devices come with a WPS "Push Button".
+And there's no code for them yet.
 
-	http://git.marvell.com/?p=mwl8k.git;a=shortlog
-	git://git.marvell.com/mwl8k.git
+Regards, Chr.
