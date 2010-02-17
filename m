@@ -1,57 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20522 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754824Ab0BVGla (ORCPT
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:47352 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807Ab0BQWDK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:30 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 21/22] wl1271: Disable host TX rate control
-Date: Mon, 22 Feb 2010 08:38:41 +0200
-Message-Id: <1266820722-20202-22-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 17 Feb 2010 17:03:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <2C0E2BCD-7589-45DE-B7D4-DBEFBFAE879D@gmail.com>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+	 <20100217180342.GA22522@srcf.ucam.org>
+	 <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
+	 <20100217191708.GA15554@core.coreip.homeip.net>
+	 <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
+	 <20100217195435.GA15742@core.coreip.homeip.net>
+	 <22ee4e771002171218t69cc4348ia0300a645ce9763d@mail.gmail.com>
+	 <069C4DAE-598D-45F1-99B5-DA5BAF718179@gmail.com>
+	 <22ee4e771002171328w3c9cbb8n663c291e9d3634e5@mail.gmail.com>
+	 <2C0E2BCD-7589-45DE-B7D4-DBEFBFAE879D@gmail.com>
+Date: Wed, 17 Feb 2010 23:03:08 +0100
+Message-ID: <22ee4e771002171403o6f0b99e8qd683d78e74fe4522@mail.gmail.com>
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"marcel@holtmann.org" <marcel@holtmann.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disable host TX rate control. The wl1271 firmware is already managing rate
-control, so this eliminate unnecessary host processing.
+On Wed, Feb 17, 2010 at 10:40 PM, Dmitry Torokhov
+<dmitry.torokhov@gmail.com> wrote:
+> On Feb 17, 2010, at 1:28 PM, Christian Lamparter <chunkeey@googlemail.com>
+> wrote:
+>
+>> On Wed, Feb 17, 2010 at 9:52 PM, Dmitry Torokhov
+>> <dmitry.torokhov@gmail.com> wrote:
+>>>
+>>> Sorry, I was not clear enough. I meant something in works in Linux
+>>> software
+>>> stack, I was aware that certain router have these buttons already.
+>>>
+>>
+>> wpa_supplicant and hostapd's CLI have this wps_pbc command.
+>> It's more a question of: what application will get to receive the event.
+>
+> Right. So as soon as you have an idea about userspace consumer
+> for the event ping me and I'd be glad to add a key definition for the event.
+Idea? Be a bit more specific...
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- drivers/net/wireless/wl12xx/wl1271_tx.c   |    2 ++
- 2 files changed, 4 insertions(+), 1 deletions(-)
+As a matter of fact, there are a few potential consumer in the kernel:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index f10ba84..0a4ff7b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1973,7 +1973,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_NOISE_DBM |
- 		IEEE80211_HW_BEACON_FILTER |
--		IEEE80211_HW_SUPPORTS_PS;
-+		IEEE80211_HW_SUPPORTS_PS |
-+		IEEE80211_HW_HAS_RATE_CONTROL;
- 
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 1b11e2c..6d109df 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -350,6 +350,8 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 		     result->id, skb, result->ack_failures,
- 		     result->rate_class_index, result->status);
- 
-+	/* FIXME: do we need to tell the stack about the used rate? */
-+
- 	/* return the packet to the stack */
- 	ieee80211_tx_status(wl->hw, skb);
- 	wl->tx_frames[result->id] = NULL;
--- 
-1.6.3.3
+arm/mach-kirkwood/mv88f6281gtw_ge-setup.c:
+.code           = KEY_F1,
+.gpio           = 46,
+.desc           = "WPS Button(F1)",
+.active_low     = 1,
 
+arm/mach-orion5x/wrt350n-v2-setup.c:
+.code           = KEY_WLAN,
+.gpio           = 2,
+.desc           = "WPS Button",
+.active_low     = 1,
+
+
+
+
+and there's a lot more "out-off-tree":
+https://dev.openwrt.org/browser/trunk/target/linux/ar71xx/files/arch/mips/ar71xx
+
+mach-tew-632brp.c:
+.desc           = "wps",
+.type           = EV_KEY,
+.code           = BTN_1,
+.threshold      = 3,
+.gpio           = TEW_632BRP_GPIO_BTN_WPS,
+
+carl9170:
+input_set_capability(input, EV_KEY, BTN_0);
+
+
+as you can see, people are using BTN_1, BTN_0, F1, WLAN (rfkill?)
+as WPS Button substitute. Maybe it would be a good idea to get it right
+now!
