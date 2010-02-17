@@ -1,92 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:54823 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752657Ab0BJJEF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2010 04:04:05 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2010 01:04:05 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from smtp.nokia.com ([192.100.105.134]:35893 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600Ab0BQQGF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 11:06:05 -0500
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o1HG5xf9030857
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 10:06:02 -0600
+Received: from [127.0.1.1] (essapo-nirac253144.europe.nokia.com [10.162.253.144])
+	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o1HG5mIZ000879
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 18:05:48 +0200
+Subject: [PATCH v2 2/3] iw: update nl80211.h to include power save commands
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kalle.valo@nokia.com>
+Date: Wed, 17 Feb 2010 18:05:47 +0200
+Message-ID: <20100217160547.4598.91442.stgit@tikku>
+In-Reply-To: <20100217155810.4534.69338.stgit@tikku>
+References: <20100217155810.4534.69338.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19314.31437.647232.84860@gargle.gargle.HOWL>
-Date: Wed, 10 Feb 2010 14:52:21 +0530
-To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Deny TX BA session requests during disassociation
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In associated state, when bringing an interface down, existing
-BA sessions are torn down. When this is in progress, nothing
-prevents mac80211 from accepting another BA session start request.
 
-Use a new station flag to fix this.
-
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- net/mac80211/agg-tx.c   |    8 ++++++++
- net/mac80211/mlme.c     |    4 +++-
- net/mac80211/sta_info.h |    4 ++++
- 3 files changed, 15 insertions(+), 1 deletions(-)
+ nl80211.h |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 718fbcf..5538e1b 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -237,6 +237,14 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
- 	    sdata->vif.type != NL80211_IFTYPE_AP)
- 		return -EINVAL;
+diff --git a/nl80211.h b/nl80211.h
+index 8e6384f..28ba20f 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -416,6 +416,9 @@ enum nl80211_commands {
+ 	NL80211_CMD_ACTION,
+ 	NL80211_CMD_ACTION_TX_STATUS,
  
-+	if (test_sta_flags(sta, WLAN_STA_DISASSOC)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "Disassociation is in progress. "
-+		       "Denying BA session request\n");
-+#endif
-+		return -EINVAL;
-+	}
++	NL80211_CMD_SET_POWER_SAVE,
++	NL80211_CMD_GET_POWER_SAVE,
 +
- 	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "Suspend in progress. "
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ee9443d..bfc4a50 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -797,8 +797,10 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata)
+ 	/* add new commands above here */
  
- 	rcu_read_lock();
- 	sta = sta_info_get(sdata, bssid);
--	if (sta)
-+	if (sta) {
-+		set_sta_flags(sta, WLAN_STA_DISASSOC);
- 		ieee80211_sta_tear_down_BA_sessions(sta);
-+	}
- 	rcu_read_unlock();
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -837,6 +840,8 @@ enum nl80211_attrs {
  
- 	changed |= ieee80211_reset_erp_info(sdata);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 5ff611a..822d845 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -42,6 +42,9 @@
-  *	be in the queues
-  * @WLAN_STA_PSPOLL: Station sent PS-poll while driver was keeping
-  *	station in power-save mode, reply when the driver unblocks.
-+ * @WLAN_STA_DISASSOC: Disassociation in progress.
-+ *	This is used to reject TX BA session requests when disassociation
-+ *	is in progress.
-  */
- enum ieee80211_sta_info_flags {
- 	WLAN_STA_AUTH		= 1<<0,
-@@ -57,6 +60,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_SUSPEND	= 1<<11,
- 	WLAN_STA_PS_DRIVER	= 1<<12,
- 	WLAN_STA_PSPOLL		= 1<<13,
-+	WLAN_STA_DISASSOC       = 1<<14,
+ 	NL80211_ATTR_ACK,
+ 
++	NL80211_ATTR_PS_STATE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -1573,4 +1578,9 @@ enum nl80211_band {
+ 	NL80211_BAND_5GHZ,
  };
  
- #define STA_TID_NUM 16
--- 
-1.6.6.1
++enum nl80211_ps_state {
++	NL80211_PS_DISABLED,
++	NL80211_PS_ENABLED,
++};
++
+ #endif /* __LINUX_NL80211_H */
 
