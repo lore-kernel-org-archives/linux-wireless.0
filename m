@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49810 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49761 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754324Ab0BOJ3k (ORCPT
+	with ESMTP id S1757996Ab0BROsu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2010 04:29:40 -0500
-Subject: Re: [PATCH 2/2] mac80211: Improved IBSS merges even if BSSID is
- the same
+	Thu, 18 Feb 2010 09:48:50 -0500
+Subject: Re: [PATCH v3] mac80211: deprecate RX status noise
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1266190435-2355-2-git-send-email-benoit.papillault@free.fr>
-References: <1266190435-2355-1-git-send-email-benoit.papillault@free.fr>
-	 <1266190435-2355-2-git-send-email-benoit.papillault@free.fr>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SvN1DLum0bRAcR37hL5x"
-Date: Mon, 15 Feb 2010 10:29:38 +0100
-Message-ID: <1266226178.6450.0.camel@jlt3.sipsolutions.net>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <201002181541.45835.holgerschurig@gmail.com>
+References: <1266437114.23447.0.camel@jlt3.sipsolutions.net>
+	 <1266447118.12365.21.camel@mj>
+	 <1266494831.6261.1.camel@jlt3.sipsolutions.net>
+	 <201002181541.45835.holgerschurig@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LgxzbBFt7WsMrj5x289i"
+Date: Thu, 18 Feb 2010 15:48:47 +0100
+Message-ID: <1266504527.6261.2.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-SvN1DLum0bRAcR37hL5x
+--=-LgxzbBFt7WsMrj5x289i
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2010-02-15 at 00:33 +0100, Benoit Papillault wrote:
-> According to IEEE 802.11, we should merge even if the BSSID from the
-> received beacon is the same as our since merge can update more things
-> that BSSID itself.
+On Thu, 2010-02-18 at 15:41 +0100, Holger Schurig wrote:
+> > Various hardware reports various bogus values, like iwlwifi for
+> > example reporting the same noise value that it collected after
+> > a beacon over and over again, or just reporting 127 when it had
+> > no value.=20
 >=20
-> This is specifically true for ath9k where the merge updates TBTT
-> timers
-> as a side effect and this is indeed needed if the TSF has been updated
-> (if TSF is updated, we need to update TBTT timers as well).
->=20
-> However, it could cause continuous merges if the RX timestamp or
-> drv_get_tsf() is not accurate or not implemented.
+> I'm not saying that I understand this completely, but for me it=20
+> would make sense to disable iwlwifi's broken noise reporting=20
+> only. No reason to disable it for everyone if some of them are=20
+> broken.
 
-The latter (not implemented) case doesn't actually. I don't just want
-you to edit the changelog based on my thoughts, I would prefer if you
-actually looked at the code to get your changelog.
+Well it's kinda bound to be broken elsewhere too because we don't even
+know how various devices gather the values. With iwlwifi at least we
+know how it gets the value.
 
 johannes
 
---=-SvN1DLum0bRAcR37hL5x
+--=-LgxzbBFt7WsMrj5x289i
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJLeRP+AAoJEODzc/N7+Qma1Y8QALxbdnBu48EtmtLN55tM2IHZ
-sY2dastgPLU0TXphYH+CVJ65TsQHSY/jfA26apFGU8jKbz73hVmJQotT52Wxvi1i
-EZSM1RAlSAQu5ryutkes66mAwXDcUetWxpke3D68S/uJZas2Rcr9XUzCpdx7WfJU
-IsqnsZoMK8APpkgP4mhBOf2SV6qQrwZ2KahAdQhQN2icWShiO+xr1yCo2Ae+Qv9M
-V/nxEArIrZ4YdnJ5OX3oZmYNLxl3DhFgABii8kf/XH9VqB5ktslovrhfr0fY4wwW
-6MP3prQoanYTQeji//2bnAEuNPFO/t2/Nm6mq1k2f5LcqVvKjcdfFpslaL6myXMV
-AjhUvMUuaiqz48xwVeQZ/yzFaOeKFKLhnhxjb+c31RVuQMuAH+SSg90yeLzvnx6o
-w6w1HlawMjD1evqjJDgvMLc98ZmRn9PUTR5oS6IwwyK5bShMuOFZld/PM2RgObVK
-Ng2qmxqFDgT8gXmLTF/dfI/IElR34stW2ZJveNDm/4zKgdltRhPZsPcBErMWX8qZ
-axRMPBnQwl6T5D+Nwl/RKYkMWpSA76qqxG19G/8JPH8yE8PdexxIVIdGf3Xx25K/
-76NC5UCJD3HY8m/eMGe7/N+1mA6+ZBgEytCsY9kg/vC6Psa6VUQtRtki0Jg0gWmk
-TmxQPgSMFFpw/B+LRrmL
-=YUoN
+iQIcBAABAgAGBQJLfVNMAAoJEODzc/N7+QmakJgP/REs7ezihKknWitTWpy3aF3g
+q9tGHyk3kzFWUUxpgLFXbCukL5eIKVFM2ZzB9lmijenOQn9Zxb+nq/EFEnlDT2PL
+iHLigImOxHth4N+1vYcqtw7hE7PuVwDk5ZuK3QcBqITA1oZQHjgGPKEpZMQFIpyp
+Zd0x0ZUPzvRQ2Nxu0Evbtc0iBFpLRzPouQKxwkI8wVXewmvzDaGtbY4GrGdDvIJc
++mLm9wO/5L+2Lns33HqyCIsfflKqk601hrGsnw4b+J8kl+SkRvWEIjxs03OD+V0d
+z40sgDvz+54pMW+SV66R9gx2Gff/fIbxVJU0FWhNZWBkF7i99EFTSenP8ECFAJhg
+y5bys8MGCHdzpiMZJdJ1mFy8eOXouBr2zL5wqxmghESQ7DbX6JMJlS4eAodFxSf5
+R1HzLLjlE7JHDSfnVKcVSMdQzFogn42jO/JeHk8IIxXhI7n08+/e1pe27dpWlzFR
+CuAQYYeYt+fO9LyCetHs7feCTuOZ8Oyltqv+aQVa2PfGewFX4hQq0Sscx66ZBu4s
+pcu+UhN+LszQtoUo3U7Y/taOND89HfSItO8C220UjFGXesGU/+F75ccFlFy5D396
+C+TCgdyN8SfnPYrQ42Z8bGGumU4Ot+zlPzSX2tqN9t2eDGHdnLwpRGtnOjMtpd+g
+5FiVMHBRmB59H9v26X37
+=N3Su
 -----END PGP SIGNATURE-----
 
---=-SvN1DLum0bRAcR37hL5x--
+--=-LgxzbBFt7WsMrj5x289i--
 
