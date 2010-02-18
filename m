@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42534 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755323Ab0BJUUo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2010 15:20:44 -0500
-Date: Wed, 10 Feb 2010 15:19:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org, mb@bu3sch.de
-Subject: Re: pull request: wireless-2.6 2010-02-10
-Message-ID: <20100210201953.GC3286@tuxdriver.com>
-References: <20100210185816.GB3286@tuxdriver.com> <20100210.110756.201335073.davem@davemloft.net> <1265829337.19075.0.camel@jlt3.sipsolutions.net> <20100210.113658.137273026.davem@davemloft.net>
+Received: from kroah.org ([198.145.64.141]:60641 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758532Ab0BRQMe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2010 11:12:34 -0500
+Date: Thu, 18 Feb 2010 08:06:36 -0800
+From: Greg KH <greg@kroah.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Frederic Leroy <fredo@starox.org>, linux-wireless@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Subject: Re: [RFC PATCH] staging: rtl8192su: remove dead code
+Message-ID: <20100218160636.GK21785@kroah.com>
+References: <20100217091920.083a3dd3@houba>
+ <4B7C1E82.4030005@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100210.113658.137273026.davem@davemloft.net>
+In-Reply-To: <4B7C1E82.4030005@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 10, 2010 at 11:36:58AM -0800, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Wed, 10 Feb 2010 20:15:37 +0100
+On Wed, Feb 17, 2010 at 10:51:14AM -0600, Larry Finger wrote:
+> On 02/17/2010 02:19 AM, Frederic Leroy wrote:
+> > Hello,
+> > 
+> > This patch removes some dead code in rtl8192su driver in staging against linux-2.6-stable tree.
+> > Should I split it into smaller chunk ? 
+> > As it is in staging, should I post it to linux-kernel@vger.kernel.org ?
 > 
-> > It was intentional -- that sdev doesn't even have an irq member, but
-> > nobody ever noticed because of the wrong ifdef.
-> 
-> Ok, then this needs to be explained in the commit message.
+> At 1400+ lines, the patch is a little large. I would recommend that you separate
+> out the fixes for "ifdef RTL8190P" and "ifdef RTL8190U" into one patch, and the
+> changes for "ifdef TO_DO_LIST" into a couple of patches. That should get the
+> line count to below 500 in the individual patches.
 
-OK...mind if I just revert the current version and ask Michael to
-resubmit with an appropriate changelog entry?
+I agree, that would be a better way to do this.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+thanks,
+
+greg k-h
