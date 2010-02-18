@@ -1,87 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37849 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757522Ab0BLVvK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 16:51:10 -0500
-Date: Fri, 12 Feb 2010 16:45:50 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2010-02-12
-Message-ID: <20100212214550.GB16783@tuxdriver.com>
+Received: from kroah.org ([198.145.64.141]:60606 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757732Ab0BRQM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2010 11:12:26 -0500
+Date: Thu, 18 Feb 2010 07:52:24 -0800
+From: Greg KH <greg@kroah.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] Staging: r8187se: Remove dead code from
+ r8185b_init.c
+Message-ID: <20100218155224.GB21785@kroah.com>
+References: <4B78C89D.3040108@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B78C89D.3040108@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+On Sun, Feb 14, 2010 at 10:07:57PM -0600, Larry Finger wrote:
+> Remove dead code from r8185b_init.c.
 
-Here are a couple of stragglers for 2.6.33.  One purports to fix a
-crash, the other avoids processing of uninitialized data when using
-devices with rate control in hardware.
-
-The latter patch will cause a merge issue in linux-next.  I'll be happy
-to resolve that in wireless-next-2.6 once this merge request is
-resolved.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
----
-
-The following changes since commit 044c18c9f51a2b92b310e28bb121e55451b088dd:
-  David S. Miller (1):
-        Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
-
-are available in the git repository at:
-
-  ssh://master.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Juuso Oikarinen (1):
-      mac80211: fix handling of null-rate control in rate_control_get_rate
-
-Shanyu Zhao (1):
-      iwlwifi: fix AMSDU Rx after paged Rx patch
-
- drivers/net/wireless/iwlwifi/iwl-rx.c |    5 ++++-
- net/mac80211/rate.c                   |    3 +++
- 2 files changed, 7 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 6f36b6e..2dbce85 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -928,7 +928,10 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
- 	if (ieee80211_is_mgmt(fc) ||
- 	    ieee80211_has_protected(fc) ||
- 	    ieee80211_has_morefrags(fc) ||
--	    le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)
-+	    le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG ||
-+	    (ieee80211_is_data_qos(fc) &&
-+	     *ieee80211_get_qos_ctl(hdr) &
-+	     IEEE80211_QOS_CONTROL_A_MSDU_PRESENT))
- 		ret = skb_linearize(skb);
- 	else
- 		ret = __pskb_pull_tail(skb, min_t(u16, IWL_LINK_HDR_MAX, len)) ?
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index b9007f8..12a2bff 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -245,6 +245,9 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 		info->control.rates[i].count = 1;
- 	}
- 
-+	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
-+		return;
-+
- 	if (sta && sdata->force_unicast_rateidx > -1) {
- 		info->control.rates[0].idx = sdata->force_unicast_rateidx;
- 	} else {
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Same line-wrap problem :(
