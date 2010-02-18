@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38237 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936021Ab0BZNJl (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:50766 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757553Ab0BRL2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 08:09:41 -0500
-Subject: Re: [PATCH v2 2/2] enhance sysfs rfkill interface
-From: Marcel Holtmann <marcel@holtmann.org>
-To: florian@mickler.org
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>
-In-Reply-To: <1267182094-15469-1-git-send-email-florian@mickler.org>
-References: <20100225233516.GD5218@khazad-dum.debian.net>
-	 <1267182094-15469-1-git-send-email-florian@mickler.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 26 Feb 2010 14:11:22 +0100
-Message-ID: <1267189882.18491.63.camel@violet>
-Mime-Version: 1.0
+	Thu, 18 Feb 2010 06:28:23 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 17/22] wl1271: Fix beacon filter table configuration
+Date: Thu, 18 Feb 2010 13:25:52 +0200
+Message-Id: <1266492357-462-18-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Florian,
+The beacon filter table configuration ACX structure had certain elements
+reversed, resulting in firmware instability in regard of the feature. Fix
+the structure.
 
-> > > I am not shure about those names.  
-> > 
-> > I don't like them.  IMHO, you don't gain anything by being this terse, and
-> > it is difficult to understand what they mean at first glance.
-> >   
-> > > Other alternatives: 
-> > > [hs]w_block
-> > > block_[hs]w  
-> > 
-> 
-> I made that blocked_sw and blocked_hw, so that they are
-> lexicographically nearby and that they also give more information about
-> their content.
-> 
-> blocked_[hs]w -> 0/1 makes IMO kind of sense.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_acx.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-the kernel and /dev/rfkill just talks about "hard" and "soft" blocks.
-
-Don't confuse this with hardware and software. It seems were are keeping
-to make this stupid semantical error over and over again. So everything
-that says hardware, software, hw or sw in the API is bluntly wrong.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index ac94a13..aeccc98 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -2,7 +2,7 @@
+  * This file is part of wl1271
+  *
+  * Copyright (C) 1998-2009 Texas Instruments. All rights reserved.
+- * Copyright (C) 2008-2009 Nokia Corporation
++ * Copyright (C) 2008-2010 Nokia Corporation
+  *
+  * Contact: Luciano Coelho <luciano.coelho@nokia.com>
+  *
+@@ -348,7 +348,7 @@ struct acx_beacon_filter_option {
+  * ACXBeaconFilterEntry (not 221)
+  * Byte Offset     Size (Bytes)    Definition
+  * ===========     ============    ==========
+- * 0				1               IE identifier
++ * 0               1               IE identifier
+  * 1               1               Treatment bit mask
+  *
+  * ACXBeaconFilterEntry (221)
+@@ -381,8 +381,8 @@ struct acx_beacon_filter_ie_table {
+ 	struct acx_header header;
+ 
+ 	u8 num_ie;
+-	u8 table[BEACON_FILTER_TABLE_MAX_SIZE];
+ 	u8 pad[3];
++	u8 table[BEACON_FILTER_TABLE_MAX_SIZE];
+ } __attribute__ ((packed));
+ 
+ struct acx_conn_monit_params {
+-- 
+1.6.3.3
 
