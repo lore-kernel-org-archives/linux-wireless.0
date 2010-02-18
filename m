@@ -1,108 +1,407 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:57978 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966330Ab0B0MD7 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:24771 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757576Ab0BRL22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 07:03:59 -0500
-Received: by mail-fx0-f219.google.com with SMTP id 19so915402fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 04:03:59 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 03/10] b43: N-PHY: turn radio on/off (rfkill)
-Date: Sat, 27 Feb 2010 13:03:34 +0100
-Message-Id: <1267272221-1873-4-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1267272221-1873-1-git-send-email-zajec5@gmail.com>
-References: <1267272221-1873-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 18 Feb 2010 06:28:28 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH 18/22] wl1271: add testmode support
+Date: Thu, 18 Feb 2010 13:25:53 +0200
+Message-Id: <1266492357-462-19-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   50 ++++++++++++++++++++++++++++----------
- 1 files changed, 37 insertions(+), 13 deletions(-)
+From: Kalle Valo <kalle.valo@nokia.com>
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 2d8eda1..dd81e8a 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -218,7 +218,10 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
- 	b43_radio_write16(dev, B2055_C2_RX_BB_MIDACHP, 0x83);
- }
+Testmode will be used to send PLT (Production Line Testing) commands
+from user space.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/Makefile          |    1 +
+ drivers/net/wireless/wl12xx/wl1271.h          |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c     |    2 +
+ drivers/net/wireless/wl12xx/wl1271_testmode.c |  283 +++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_testmode.h |   31 +++
+ 5 files changed, 318 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/net/wireless/wl12xx/wl1271_testmode.c
+ create mode 100644 drivers/net/wireless/wl12xx/wl1271_testmode.h
+
+diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
+index 62e37ad..d089b5d 100644
+--- a/drivers/net/wireless/wl12xx/Makefile
++++ b/drivers/net/wireless/wl12xx/Makefile
+@@ -11,4 +11,5 @@ wl1271-objs		= wl1271_main.o  wl1271_spi.o wl1271_cmd.o  \
+ 			  wl1271_event.o wl1271_tx.o  wl1271_rx.o   \
+ 			  wl1271_ps.o    wl1271_acx.o wl1271_boot.o \
+ 			  wl1271_init.o  wl1271_debugfs.o
++wl1271-$(CONFIG_NL80211_TESTMODE)	+= wl1271_testmode.o
+ obj-$(CONFIG_WL1271)	+= wl1271.o
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index b3a3402..97ea509 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -43,7 +43,7 @@ enum {
+ 	DEBUG_SPI	= BIT(1),
+ 	DEBUG_BOOT	= BIT(2),
+ 	DEBUG_MAILBOX	= BIT(3),
+-	DEBUG_NETLINK	= BIT(4),
++	DEBUG_TESTMODE	= BIT(4),
+ 	DEBUG_EVENT	= BIT(5),
+ 	DEBUG_TX	= BIT(6),
+ 	DEBUG_RX	= BIT(7),
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index fb1e6a8..aa8f79c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -46,6 +46,7 @@
+ #include "wl1271_debugfs.h"
+ #include "wl1271_cmd.h"
+ #include "wl1271_boot.h"
++#include "wl1271_testmode.h"
  
--/* Initialize a Broadcom 2055 N-radio */
+ #define WL1271_BOOT_RETRIES 3
+ 
+@@ -1955,6 +1956,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.bss_info_changed = wl1271_op_bss_info_changed,
+ 	.set_rts_threshold = wl1271_op_set_rts_threshold,
+ 	.conf_tx = wl1271_op_conf_tx,
++	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+ };
+ 
+ static int wl1271_register_hw(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_testmode.c b/drivers/net/wireless/wl12xx/wl1271_testmode.c
+new file mode 100644
+index 0000000..3919102
+--- /dev/null
++++ b/drivers/net/wireless/wl12xx/wl1271_testmode.c
+@@ -0,0 +1,283 @@
 +/*
-+ * Initialize a Broadcom 2055 N-radio
-+ * http://bcm-v4.sipsolutions.net/802.11/Radio/2055/Init
++ * This file is part of wl1271
++ *
++ * Copyright (C) 2010 Nokia Corporation
++ *
++ * Contact: Luciano Coelho <luciano.coelho@nokia.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
 + */
- static void b43_radio_init2055(struct b43_wldev *dev)
- {
- 	b43_radio_init2055_pre(dev);
-@@ -229,17 +232,6 @@ static void b43_radio_init2055(struct b43_wldev *dev)
- 	b43_radio_init2055_post(dev);
- }
- 
--void b43_nphy_radio_turn_on(struct b43_wldev *dev)
--{
--	b43_radio_init2055(dev);
--}
--
--void b43_nphy_radio_turn_off(struct b43_wldev *dev)
--{
--	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
--		     ~B43_NPHY_RFCTL_CMD_EN);
--}
--
- /*
-  * Upload the N-PHY tables.
-  * http://bcm-v4.sipsolutions.net/802.11/PHY/N/InitTables
-@@ -3277,9 +3269,41 @@ static void b43_nphy_op_radio_write(struct b43_wldev *dev, u16 reg, u16 value)
- 	b43_write16(dev, B43_MMIO_RADIO_DATA_LOW, value);
- }
- 
-+/* http://bcm-v4.sipsolutions.net/802.11/Radio/Switch%20Radio */
- static void b43_nphy_op_software_rfkill(struct b43_wldev *dev,
- 					bool blocked)
--{//TODO
++#include "wl1271_testmode.h"
++
++#include <net/genetlink.h>
++
++#include "wl1271.h"
++#include "wl1271_spi.h"
++#include "wl1271_acx.h"
++
++#define WL1271_TM_MAX_DATA_LENGTH 1024
++
++enum wl1271_tm_commands {
++	WL1271_TM_CMD_UNSPEC,
++	WL1271_TM_CMD_TEST,
++	WL1271_TM_CMD_INTERROGATE,
++	WL1271_TM_CMD_CONFIGURE,
++	WL1271_TM_CMD_NVS_PUSH,
++	WL1271_TM_CMD_SET_PLT_MODE,
++
++	__WL1271_TM_CMD_AFTER_LAST
++};
++#define WL1271_TM_CMD_MAX (__WL1271_TM_CMD_AFTER_LAST - 1)
++
++enum wl1271_tm_attrs {
++	WL1271_TM_ATTR_UNSPEC,
++	WL1271_TM_ATTR_CMD_ID,
++	WL1271_TM_ATTR_ANSWER,
++	WL1271_TM_ATTR_DATA,
++	WL1271_TM_ATTR_IE_ID,
++	WL1271_TM_ATTR_PLT_MODE,
++
++	__WL1271_TM_ATTR_AFTER_LAST
++};
++#define WL1271_TM_ATTR_MAX (__WL1271_TM_ATTR_AFTER_LAST - 1)
++
++static struct nla_policy wl1271_tm_policy[WL1271_TM_ATTR_MAX + 1] = {
++	[WL1271_TM_ATTR_CMD_ID] =	{ .type = NLA_U32 },
++	[WL1271_TM_ATTR_ANSWER] =	{ .type = NLA_U8 },
++	[WL1271_TM_ATTR_DATA] =		{ .type = NLA_BINARY,
++					  .len = WL1271_TM_MAX_DATA_LENGTH },
++	[WL1271_TM_ATTR_IE_ID] =	{ .type = NLA_U32 },
++	[WL1271_TM_ATTR_PLT_MODE] =	{ .type = NLA_U32 },
++};
++
++
++static int wl1271_tm_cmd_test(struct wl1271 *wl, struct nlattr *tb[])
 +{
-+	if (b43_read32(dev, B43_MMIO_MACCTL) & B43_MACCTL_ENABLED)
-+		b43err(dev->wl, "MAC not suspended\n");
++	int buf_len, ret, len;
++	struct sk_buff *skb;
++	void *buf;
++	u8 answer = 0;
 +
-+	if (blocked) {
-+		b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
-+				~B43_NPHY_RFCTL_CMD_CHIP0PU);
-+		if (dev->phy.rev >= 3) {
-+			b43_radio_mask(dev, 0x09, ~0x2);
++	wl1271_debug(DEBUG_TESTMODE, "testmode cmd test");
 +
-+			b43_radio_write(dev, 0x204D, 0);
-+			b43_radio_write(dev, 0x2053, 0);
-+			b43_radio_write(dev, 0x2058, 0);
-+			b43_radio_write(dev, 0x205E, 0);
-+			b43_radio_mask(dev, 0x2062, ~0xF0);
-+			b43_radio_write(dev, 0x2064, 0);
++	if (!tb[WL1271_TM_ATTR_DATA])
++		return -EINVAL;
 +
-+			b43_radio_write(dev, 0x304D, 0);
-+			b43_radio_write(dev, 0x3053, 0);
-+			b43_radio_write(dev, 0x3058, 0);
-+			b43_radio_write(dev, 0x305E, 0);
-+			b43_radio_mask(dev, 0x3062, ~0xF0);
-+			b43_radio_write(dev, 0x3064, 0);
-+		}
-+	} else {
-+		if (dev->phy.rev >= 3) {
-+			/* TODO: b43_radio_init2056(dev); */
-+			/* TODO: PHY Set Channel Spec (dev, radio_chanspec) */
-+		} else {
-+			b43_radio_init2055(dev);
-+		}
++	buf = nla_data(tb[WL1271_TM_ATTR_DATA]);
++	buf_len = nla_len(tb[WL1271_TM_ATTR_DATA]);
++
++	if (tb[WL1271_TM_ATTR_ANSWER])
++		answer = nla_get_u8(tb[WL1271_TM_ATTR_ANSWER]);
++
++	if (buf_len > sizeof(struct wl1271_command))
++		return -EMSGSIZE;
++
++	mutex_lock(&wl->mutex);
++	ret = wl1271_cmd_test(wl, buf, buf_len, answer);
++	mutex_unlock(&wl->mutex);
++
++	if (ret < 0) {
++		wl1271_warning("testmode cmd test failed: %d", ret);
++		return ret;
 +	}
- }
- 
- static void b43_nphy_op_switch_analog(struct b43_wldev *dev, bool on)
++
++	if (answer) {
++		len = nla_total_size(buf_len);
++		skb = cfg80211_testmode_alloc_reply_skb(wl->hw->wiphy, len);
++		if (!skb)
++			return -ENOMEM;
++
++		NLA_PUT(skb, WL1271_TM_ATTR_DATA, buf_len, buf);
++		ret = cfg80211_testmode_reply(skb);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++
++nla_put_failure:
++	kfree_skb(skb);
++	return -EMSGSIZE;
++}
++
++static int wl1271_tm_cmd_interrogate(struct wl1271 *wl, struct nlattr *tb[])
++{
++	int ret;
++	struct wl1271_command *cmd;
++	struct sk_buff *skb;
++	u8 ie_id;
++
++	wl1271_debug(DEBUG_TESTMODE, "testmode cmd interrogate");
++
++	if (!tb[WL1271_TM_ATTR_IE_ID])
++		return -EINVAL;
++
++	ie_id = nla_get_u8(tb[WL1271_TM_ATTR_IE_ID]);
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
++
++	mutex_lock(&wl->mutex);
++	ret = wl1271_cmd_interrogate(wl, ie_id, cmd, sizeof(*cmd));
++	mutex_unlock(&wl->mutex);
++
++	if (ret < 0) {
++		wl1271_warning("testmode cmd interrogate failed: %d", ret);
++		return ret;
++	}
++
++	skb = cfg80211_testmode_alloc_reply_skb(wl->hw->wiphy, sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	NLA_PUT(skb, WL1271_TM_ATTR_DATA, sizeof(*cmd), cmd);
++
++	return 0;
++
++nla_put_failure:
++	kfree_skb(skb);
++	return -EMSGSIZE;
++}
++
++static int wl1271_tm_cmd_configure(struct wl1271 *wl, struct nlattr *tb[])
++{
++	int buf_len, ret;
++	void *buf;
++	u8 ie_id;
++
++	wl1271_debug(DEBUG_TESTMODE, "testmode cmd configure");
++
++	if (!tb[WL1271_TM_ATTR_DATA])
++		return -EINVAL;
++	if (!tb[WL1271_TM_ATTR_IE_ID])
++		return -EINVAL;
++
++	ie_id = nla_get_u8(tb[WL1271_TM_ATTR_IE_ID]);
++	buf = nla_data(tb[WL1271_TM_ATTR_DATA]);
++	buf_len = nla_len(tb[WL1271_TM_ATTR_DATA]);
++
++	if (buf_len > sizeof(struct wl1271_command))
++		return -EMSGSIZE;
++
++	mutex_lock(&wl->mutex);
++	ret = wl1271_cmd_configure(wl, ie_id, buf, buf_len);
++	mutex_unlock(&wl->mutex);
++
++	if (ret < 0) {
++		wl1271_warning("testmode cmd configure failed: %d", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int wl1271_tm_cmd_nvs_push(struct wl1271 *wl, struct nlattr *tb[])
++{
++	int ret = 0;
++	size_t len;
++	void *buf;
++
++	wl1271_debug(DEBUG_TESTMODE, "testmode cmd nvs push");
++
++	if (!tb[WL1271_TM_ATTR_DATA])
++		return -EINVAL;
++
++	buf = nla_data(tb[WL1271_TM_ATTR_DATA]);
++	len = nla_len(tb[WL1271_TM_ATTR_DATA]);
++
++	if (len != sizeof(struct wl1271_nvs_file)) {
++		wl1271_error("nvs size is not as expected: %zu != %zu",
++			     len, sizeof(struct wl1271_nvs_file));
++		return -EMSGSIZE;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	kfree(wl->nvs);
++
++	wl->nvs = kmalloc(sizeof(struct wl1271_nvs_file), GFP_KERNEL);
++	if (!wl->nvs) {
++		wl1271_error("could not allocate memory for the nvs file");
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	memcpy(wl->nvs, buf, len);
++
++	wl1271_debug(DEBUG_TESTMODE, "testmode pushed nvs");
++
++out:
++	mutex_unlock(&wl->mutex);
++
++	return ret;
++}
++
++static int wl1271_tm_cmd_set_plt_mode(struct wl1271 *wl, struct nlattr *tb[])
++{
++	u32 val;
++	int ret;
++
++	wl1271_debug(DEBUG_TESTMODE, "testmode cmd set plt mode");
++
++	if (!tb[WL1271_TM_ATTR_PLT_MODE])
++		return -EINVAL;
++
++	val = nla_get_u32(tb[WL1271_TM_ATTR_PLT_MODE]);
++
++	switch (val) {
++	case 0:
++		ret = wl1271_plt_stop(wl);
++		break;
++	case 1:
++		ret = wl1271_plt_start(wl);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
++int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len)
++{
++	struct wl1271 *wl = hw->priv;
++	struct nlattr *tb[WL1271_TM_ATTR_MAX + 1];
++	int err;
++
++	err = nla_parse(tb, WL1271_TM_ATTR_MAX, data, len, wl1271_tm_policy);
++	if (err)
++		return err;
++
++	if (!tb[WL1271_TM_ATTR_CMD_ID])
++		return -EINVAL;
++
++	switch (nla_get_u32(tb[WL1271_TM_ATTR_CMD_ID])) {
++	case WL1271_TM_CMD_TEST:
++		return wl1271_tm_cmd_test(wl, tb);
++	case WL1271_TM_CMD_INTERROGATE:
++		return wl1271_tm_cmd_interrogate(wl, tb);
++	case WL1271_TM_CMD_CONFIGURE:
++		return wl1271_tm_cmd_configure(wl, tb);
++	case WL1271_TM_CMD_NVS_PUSH:
++		return wl1271_tm_cmd_nvs_push(wl, tb);
++	case WL1271_TM_CMD_SET_PLT_MODE:
++		return wl1271_tm_cmd_set_plt_mode(wl, tb);
++	default:
++		return -EOPNOTSUPP;
++	}
++}
+diff --git a/drivers/net/wireless/wl12xx/wl1271_testmode.h b/drivers/net/wireless/wl12xx/wl1271_testmode.h
+new file mode 100644
+index 0000000..c196d28
+--- /dev/null
++++ b/drivers/net/wireless/wl12xx/wl1271_testmode.h
+@@ -0,0 +1,31 @@
++/*
++ * This file is part of wl1271
++ *
++ * Copyright (C) 2010 Nokia Corporation
++ *
++ * Contact: Luciano Coelho <luciano.coelho@nokia.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
++ */
++
++#ifndef __WL1271_TESTMODE_H__
++#define __WL1271_TESTMODE_H__
++
++#include <net/mac80211.h>
++
++int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len);
++
++#endif /* __WL1271_TESTMODE_H__ */
 -- 
-1.6.4.2
+1.6.3.3
 
