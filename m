@@ -1,158 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:49548 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756719Ab0BXLFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 06:05:55 -0500
-From: florian@mickler.org
-To: "Marcel Holtmann" <marcel@holtmann.org>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Randy Dunlap" <rdunlap@xenotime.net>,
-	"Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	Florian Mickler <florian@mickler.org>
-Subject: [PATCH v2 2/2] enhance sysfs rfkill interface
-Date: Wed, 24 Feb 2010 12:05:17 +0100
-Message-Id: <1267009517-5017-3-git-send-email-florian@mickler.org>
-In-Reply-To: <1266704345.32739.0.camel@jlt3.sipsolutions.net>
-References: <1266704345.32739.0.camel@jlt3.sipsolutions.net>
+Received: from smtp.nokia.com ([192.100.105.134]:50748 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753580Ab0BRL2U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2010 06:28:20 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 15/22] wl1271: Fix WEP key handling
+Date: Thu, 18 Feb 2010 13:25:50 +0200
+Message-Id: <1266492357-462-16-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit introduces two new sysfs knobs.
+WEP key index handling was broken: the default key when using key 0 was never
+specified to the FW, and if using other default than 0, it would be set on the
+TX path for every single TX'd frame.
 
-/sys/class/rfkill/rfkill[0-9]+/hw: (ro)
-	hardblock kill state
-/sys/class/rfkill/rfkill[0-9]+/sw: (rw)
-	softblock kill state
-
-Signed-off-by: Florian Mickler <florian@mickler.org>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
 ---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    8 ++++++++
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |    1 +
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-I am not shure about those names.
-Other alternatives: 
-[hs]w_block
-block_[hs]w
-block[sh]w
-soft/hard
-
-...
-
-
- Documentation/ABI/stable/sysfs-class-rfkill |   25 ++++++++++++
- net/rfkill/core.c                           |   57 +++++++++++++++++++++++++++
- 2 files changed, 82 insertions(+), 0 deletions(-)
-
-diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
-index 97d5064..ccbbba2 100644
---- a/Documentation/ABI/stable/sysfs-class-rfkill
-+++ b/Documentation/ABI/stable/sysfs-class-rfkill
-@@ -40,3 +40,28 @@ Description: 	Whether the soft blocked state is initialised from non-volatile
- Values: 	A numeric value.
- 		0: false
- 		1: true
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 4a0a15b..459d9a0 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1475,6 +1475,14 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			wl1271_error("Could not add or replace key");
+ 			goto out_sleep;
+ 		}
 +
-+
-+What:		/sys/class/rfkill/rfkill[0-9]+/hw
-+Date:		23-Feb-2010
-+KernelVersion	v2.6.34
-+Contact:	linux-wireless@vger.kernel.org
-+Description: 	Current hardblock state. This file is read only.
-+Values: 	A numeric value.
-+		0: inactive
-+			The transmitter is (potentially) active.
-+		1: active
-+			The transmitter is forced off by something outside of
-+			the driver's control.
-+
-+
-+What:		/sys/class/rfkill/rfkill[0-9]+/sw
-+Date:		23-Feb-2010
-+KernelVersion	v2.6.34
-+Contact:	linux-wireless@vger.kernel.org
-+Description:	Current softblock state. This file is read and write.
-+Values: 	A numeric value.
-+		0: inactive
-+			The transmitter is (potentially) active.
-+		1: active
-+			The transmitter is turned off by software.
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index c218e07..b91e192 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -628,6 +628,61 @@ static ssize_t rfkill_persistent_show(struct device *dev,
- 	return sprintf(buf, "%d\n", rfkill->persistent);
- }
++		/* the default WEP key needs to be configured at least once */
++		if (key_type == KEY_WEP) {
++			ret = wl1271_cmd_set_default_wep_key(wl,
++							     wl->default_key);
++			if (ret < 0)
++				goto out_sleep;
++		}
+ 		break;
  
-+static ssize_t rfkill_hw_show(struct device *dev,
-+				 struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
-+	unsigned long flags;
-+	u32 state;
-+
-+	spin_lock_irqsave(&rfkill->lock, flags);
-+	state = rfkill->state;
-+	spin_unlock_irqrestore(&rfkill->lock, flags);
-+
-+	return sprintf(buf, "%d\n", (state & RFKILL_BLOCK_HW) ? 1 : 0 );
-+}
-+
-+static ssize_t rfkill_sw_show(struct device *dev,
-+				 struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
-+	unsigned long flags;
-+	u32 state;
-+
-+	spin_lock_irqsave(&rfkill->lock, flags);
-+	state = rfkill->state;
-+	spin_unlock_irqrestore(&rfkill->lock, flags);
-+
-+	return sprintf(buf, "%d\n", (state & RFKILL_BLOCK_SW) ? 1 : 0 );
-+}
-+
-+static ssize_t rfkill_sw_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct rfkill *rfkill = to_rfkill(dev);
-+	unsigned long state;
-+	int err;
-+
-+	if (!capable(CAP_NET_ADMIN))
-+		return -EPERM;
-+
-+	err = strict_strtoul(buf, 0, &state);
-+	if (err)
-+		return err;
-+
-+	if (state > 1 )
-+		return -EINVAL;
-+
-+	mutex_lock(&rfkill_global_mutex);
-+	rfkill_set_block(rfkill, state);
-+	mutex_unlock(&rfkill_global_mutex);
-+
-+	return err ?: count;
-+}
-+
- static u8 user_state_from_blocked(unsigned long state)
- {
- 	if (state & RFKILL_BLOCK_HW)
-@@ -700,6 +755,8 @@ static struct device_attribute rfkill_dev_attrs[] = {
- 	__ATTR(persistent, S_IRUGO, rfkill_persistent_show, NULL),
- 	__ATTR(state, S_IRUGO|S_IWUSR, rfkill_state_show, rfkill_state_store),
- 	__ATTR(claim, S_IRUGO|S_IWUSR, rfkill_claim_show, rfkill_claim_store),
-+	__ATTR(sw, S_IRUGO|S_IWUSR, rfkill_sw_show, rfkill_sw_store),
-+	__ATTR(hw, S_IRUGO, rfkill_hw_show, NULL),
- 	__ATTR_NULL
- };
+ 	case DISABLE_KEY:
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index f6815a9..f9e0638 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -203,6 +203,7 @@ static int wl1271_tx_frame(struct wl1271 *wl, struct sk_buff *skb)
+ 			ret = wl1271_cmd_set_default_wep_key(wl, idx);
+ 			if (ret < 0)
+ 				return ret;
++			wl->default_key = idx;
+ 		}
+ 	}
  
 -- 
-1.6.6.1
+1.6.3.3
 
