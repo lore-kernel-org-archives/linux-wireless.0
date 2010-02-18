@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g21.free.fr ([212.27.42.1]:52852 "EHLO smtp1-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932927Ab0BDVxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 16:53:48 -0500
-From: Benoit Papillault <benoit.papillault@free.fr>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-Subject: [PATCH] ath9k: Fix rate table choice
-Date: Thu,  4 Feb 2010 22:06:06 +0100
-Message-Id: <1265317566-15372-1-git-send-email-benoit.papillault@free.fr>
+Received: from mail-fx0-f220.google.com ([209.85.220.220]:56854 "EHLO
+	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753656Ab0BRJpt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2010 04:45:49 -0500
+Date: Thu, 18 Feb 2010 12:45:29 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] iwlwifi: testing the wrong variable
+Message-ID: <20100218094529.GA1298@bicker>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k rate control choose the rate table based on the current channel
-(if it is ht40 or not). However, it happens that at this stage, the
-channel is still ht20 even if the peer sta capabilities would later
-allow ht40. So let's use peer sta capabilities directly.
+The first one fixes a smatch false positive and the second one fixes
+a potential bug.
 
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+drivers/net/wireless/iwlwifi/iwl-5000.c +786 iwl5000_txq_update_byte_cnt_tbl(37) error: buffer overflow 
+'(scd_bc_tbl+txq_id)->tfd_offset' 320 <= 512
+drivers/net/wireless/iwlwifi/iwl-5000.c +808 iwl5000_txq_inval_byte_cnt_tbl(19) error: buffer overflow 
+'(scd_bc_tbl+txq_id)->tfd_offset' 320 <= 512
+
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+Cc: stable@kernel.org
 ---
- drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+I don't have the hardware to test this change.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 1196884..5ce9da5 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1341,10 +1341,8 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
- 		if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
- 			return;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index de45f30..b45150d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -781,7 +781,7 @@ void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
  
--		if (sc->hw->conf.channel_type == NL80211_CHAN_HT40MINUS ||
--		    sc->hw->conf.channel_type == NL80211_CHAN_HT40PLUS)
--			oper_cw40 = true;
--
-+		oper_cw40 = (sta->ht_cap.cap &
-+			     IEEE80211_HT_CAP_SUP_WIDTH_20_40) ? true : false;
- 		oper_sgi40 = (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40) ?
- 			true : false;
+ 	scd_bc_tbl[txq_id].tfd_offset[write_ptr] = bc_ent;
  
--- 
-1.6.3.3
+-	if (txq->q.write_ptr < TFD_QUEUE_SIZE_BC_DUP)
++	if (write_ptr < TFD_QUEUE_SIZE_BC_DUP)
+ 		scd_bc_tbl[txq_id].
+ 			tfd_offset[TFD_QUEUE_SIZE_MAX + write_ptr] = bc_ent;
+ }
+@@ -803,7 +803,7 @@ void iwl5000_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
+ 	bc_ent =  cpu_to_le16(1 | (sta_id << 12));
+ 	scd_bc_tbl[txq_id].tfd_offset[read_ptr] = bc_ent;
+ 
+-	if (txq->q.write_ptr < TFD_QUEUE_SIZE_BC_DUP)
++	if (read_ptr < TFD_QUEUE_SIZE_BC_DUP)
+ 		scd_bc_tbl[txq_id].
+ 			tfd_offset[TFD_QUEUE_SIZE_MAX + read_ptr] =  bc_ent;
+ }
 
