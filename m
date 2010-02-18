@@ -1,115 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:59145 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758074Ab0BDNj0 (ORCPT
+Received: from mail-yx0-f180.google.com ([209.85.210.180]:61354 "EHLO
+	mail-yx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807Ab0BREQt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 08:39:26 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] libertas: don't retry commands
-Date: Thu, 4 Feb 2010 14:37:45 +0100
-Cc: Dan Williams <dcbw@redhat.com>
+	Wed, 17 Feb 2010 23:16:49 -0500
+Date: Wed, 17 Feb 2010 20:16:37 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Peter Hutterer <peter.hutterer@who-t.net>
+Cc: Bastien Nocera <hadess@hadess.net>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linux-input@vger.kernel.org, marcel@holtmann.org
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+Message-ID: <20100218041636.GA19037@core.coreip.homeip.net>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+ <20100217052247.GD7160@core.coreip.homeip.net>
+ <20100217180342.GA22522@srcf.ucam.org>
+ <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
+ <20100217184502.GA23573@srcf.ucam.org>
+ <1266432575.678.980.camel@localhost.localdomain>
+ <20100217223450.GC22561@barra.bne.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201002041437.45519.holgerschurig@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100217223450.GC22561@barra.bne.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Retrying commands seldomly works, most often the firmware is in a
-weird state anyway and needs the device to reset. So it's better
-to report the broken state back to user-space.
+On Thu, Feb 18, 2010 at 08:34:50AM +1000, Peter Hutterer wrote:
+> On Wed, Feb 17, 2010 at 06:49:35PM +0000, Bastien Nocera wrote:
+> > On Wed, 2010-02-17 at 18:45 +0000, Matthew Garrett wrote:
+> > > On Wed, Feb 17, 2010 at 07:43:56PM +0100, Christian Lamparter wrote:
+> > > 
+> > > > Wait wait... do you can get another KEY_?
+> > > > 
+> > > > The reason: Some new devices come with a WPS "Push Button".
+> > > > And there's no code for them yet.
+> > > 
+> > > What's a WPS button? There's no fundamental issue with getting new KEY_ 
+> > > codes defined, but bear in mind that anything greater than 255 won't be 
+> > > seen by X at present.
+> > 
+> > Won't be seen by most X applications. The server should definitely see
+> > it, so should applications that use XInput2-aware widget sets.
+> > 
+> > (Which obviously means not much at all right now).
+> 
+> Because XKB2 never happened we don't actually have any way of configuring
+> keysyms in the server for keys > 255 or getting this layout information to
+> the client. So XI2 applications that want to use higher keycodes are reliant
+> on the keycode itself which is strictly speaking random - at least the
+> protocol makes no guarantee that they remain fixed.
+> 
+> In practice that's not quite true and the keycodes are likely to remain
+> fixed but relying on that hurt us quite badly in the keyboard -> evdev
+> conversion.
+>
 
-Also rename command_timer_fn() into lbs_cmd_timeout_handler(),
-which better reflect it's usage.
+FWIW the event codes defines in linux/input.h form ABI and thus will not
+be changed (exception is adding aliases better describing intended key
+usage, such as KEY_COFFEE -> KEY_SCREENLOCK).
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
-
----
- drivers/net/wireless/libertas/cmdresp.c |    5 -----
- drivers/net/wireless/libertas/dev.h     |    1 -
- drivers/net/wireless/libertas/main.c    |   31 +++++++------------------------
- 3 files changed, 7 insertions(+), 30 deletions(-)
-
---- linux-wl.orig/drivers/net/wireless/libertas/cmdresp.c
-+++ linux-wl/drivers/net/wireless/libertas/cmdresp.c
-@@ -218,11 +218,6 @@ int lbs_process_command_response(struct 
- 	/* Now we got response from FW, cancel the command timer */
- 	del_timer(&priv->command_timer);
- 	priv->cmd_timed_out = 0;
--	if (priv->nr_retries) {
--		lbs_pr_info("Received result %x to command %x after %d retries\n",
--			    result, curcmd, priv->nr_retries);
--		priv->nr_retries = 0;
--	}
- 
- 	/* Store the response code to cur_cmd_retcode. */
- 	priv->cur_cmd_retcode = result;
---- linux-wl.orig/drivers/net/wireless/libertas/dev.h
-+++ linux-wl/drivers/net/wireless/libertas/dev.h
-@@ -107,7 +107,6 @@ struct lbs_private {
- 	struct list_head cmdpendingq; /* pending command buffers */
- 	wait_queue_head_t cmd_pending;
- 	struct timer_list command_timer;
--	int nr_retries;
- 	int cmd_timed_out;
- 
- 	/* Command responses sent from the hardware to the driver */
---- linux-wl.orig/drivers/net/wireless/libertas/main.c
-+++ linux-wl/drivers/net/wireless/libertas/main.c
-@@ -457,31 +457,14 @@ static int lbs_thread(void *data)
- 		if (priv->cmd_timed_out && priv->cur_cmd) {
- 			struct cmd_ctrl_node *cmdnode = priv->cur_cmd;
- 
--			if (++priv->nr_retries > 3) {
--				lbs_pr_info("Excessive timeouts submitting "
--					"command 0x%04x\n",
--					le16_to_cpu(cmdnode->cmdbuf->command));
--				lbs_complete_command(priv, cmdnode, -ETIMEDOUT);
--				priv->nr_retries = 0;
--				if (priv->reset_card)
--					priv->reset_card(priv);
--			} else {
--				priv->cur_cmd = NULL;
--				priv->dnld_sent = DNLD_RES_RECEIVED;
--				lbs_pr_info("requeueing command 0x%04x due "
--					"to timeout (#%d)\n",
--					le16_to_cpu(cmdnode->cmdbuf->command),
--					priv->nr_retries);
--
--				/* Stick it back at the _top_ of the pending queue
--				   for immediate resubmission */
--				list_add(&cmdnode->list, &priv->cmdpendingq);
--			}
-+			lbs_pr_info("Timeout submitting command 0x%04x\n",
-+				le16_to_cpu(cmdnode->cmdbuf->command));
-+			lbs_complete_command(priv, cmdnode, -ETIMEDOUT);
-+			if (priv->reset_card)
-+				priv->reset_card(priv);
- 		}
- 		priv->cmd_timed_out = 0;
- 
--
--
- 		if (!priv->fw_ready)
- 			continue;
- 
-@@ -653,7 +636,7 @@ done:
-  *  This function handles the timeout of command sending.
-  *  It will re-send the same command again.
-  */
--static void command_timer_fn(unsigned long data)
-+static void lbs_cmd_timeout_handler(unsigned long data)
- {
- 	struct lbs_private *priv = (struct lbs_private *)data;
- 	unsigned long flags;
-@@ -751,7 +734,7 @@ static int lbs_init_adapter(struct lbs_p
- 
- 	mutex_init(&priv->lock);
- 
--	setup_timer(&priv->command_timer, command_timer_fn,
-+	setup_timer(&priv->command_timer, lbs_cmd_timeout_handler,
- 		(unsigned long)priv);
- 	setup_timer(&priv->auto_deepsleep_timer, auto_deepsleep_timer_fn,
- 			(unsigned long)priv);
+-- 
+Dmitry
