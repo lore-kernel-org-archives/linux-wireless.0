@@ -1,1040 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38028 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752909Ab0BOIQt (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:24744 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754050Ab0BRL2W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2010 03:16:49 -0500
-Date: Mon, 15 Feb 2010 10:16:35 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT 0/2] userspace station-mode action frame handling
-Message-ID: <20100215081635.GA906@jm.kir.nu>
-References: <20100117144918.773071520@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100117144918.773071520@sipsolutions.net>
+	Thu, 18 Feb 2010 06:28:22 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH 06/22] wl1271: implement WMM
+Date: Thu, 18 Feb 2010 13:25:41 +0200
+Message-Id: <1266492357-462-7-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 17, 2010 at 03:49:18PM +0100, Johannes Berg wrote:
+From: Kalle Valo <kalle.valo@nokia.com>
 
-> These two patches now implement returning unknown
-> action frames and registering for certain action
-> frames from userspace, as well as sending as before.
+Now that necessary commands for WMM are implemented, implement queue handling
+for WMM. But WMM is not enabled yet, only one queue is used.
 
-These look good (after couple of small fixes to the latter). I tested
-these by registering three different Public Action frame types
-(including vendor-specific) worked fine and I think these patches (with
-the fix below) should be ready to be submitted into wireless-testing.git
-now.
+Based on a similar patch from wl1251.
 
-The fixes are for 006-cfg80211-mac80211-user-action-frame.patch:
-- must check rx->sta != NULL before rx_packets++ in
-  ieee80211_rx_h_action() (the earlier version would trigger kernel
-  panic on receiving Public Action frame from non-associated STA)
-- must store match_len in cfg80211_mlme_register_action()
-
-The updated patch with these fixes:
-
-Subject: cfg80211/mac80211: allow registering for and sending action frames
-
-From: Jouni Malinen <jouni.malinen@atheros.com>
-
-This implements a new command to register for action frames
-that userspace wants to handle instead of the in-kernel
-rejection. It is then responsible for rejecting ones that
-it decided not to handle. There is no unregistration, but
-the socket can be closed for that.
-
-Frames that are not registered for will not be forwarded
-to userspace and will be rejected by the kernel, the
-cfg80211 API helps implementing that.
-
-Additionally, this patch adds a new command that allows
-doing action frame transmission from userspace. It can be
-used either to exchange action frames on the current
-operational channel (e.g., with the AP with which we are
-currently associated) or to exchange off-channel Public
-Action frames with the remain-on-channel command.
-
-TODO: capability for mac80211 drivers -- seems not all
-      will necessarily support this?? Ask Sujith.
-
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- include/linux/nl80211.h    |   41 ++++++-
- include/net/cfg80211.h     |   47 +++++++-
- include/net/mac80211.h     |    6 -
- net/mac80211/cfg.c         |   12 +-
- net/mac80211/ieee80211_i.h |    6 -
- net/mac80211/mlme.c        |   35 ++++++
- net/mac80211/rx.c          |   42 +++++--
- net/mac80211/status.c      |    7 +
- net/wireless/core.c        |    4 
- net/wireless/core.h        |    9 +
- net/wireless/mlme.c        |  166 ++++++++++++++++++++++++++++
- net/wireless/nl80211.c     |  260 ++++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/nl80211.h     |    8 +
- 13 files changed, 625 insertions(+), 18 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_main.c |   31 +++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |   10 +++++---
+ drivers/net/wireless/wl12xx/wl1271_tx.h   |   36 +++++++++++++++++++++++++++++
+ 3 files changed, 73 insertions(+), 4 deletions(-)
 
---- uml.orig/net/mac80211/rx.c	2010-02-14 18:41:42.000000000 +0200
-+++ uml/net/mac80211/rx.c	2010-02-15 10:09:59.000000000 +0200
-@@ -1856,28 +1856,25 @@ ieee80211_rx_h_action(struct ieee80211_r
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) rx->skb->data;
- 	struct sk_buff *nskb;
-+	struct ieee80211_rx_status *status;
- 	int len = rx->skb->len;
- 
- 	if (!ieee80211_is_action(mgmt->frame_control))
- 		return RX_CONTINUE;
- 
--	if (!rx->sta)
-+	/* drop too small frames */
-+	if (len < IEEE80211_MIN_ACTION_SIZE)
- 		return RX_DROP_UNUSABLE;
- 
--	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
-+	if (!rx->sta && mgmt->u.action.category != WLAN_CATEGORY_PUBLIC)
- 		return RX_DROP_UNUSABLE;
- 
--	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
-+	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_DROP_UNUSABLE;
- 
--	/* drop too small frames */
--	if (len < IEEE80211_MIN_ACTION_SIZE)
-+	if (ieee80211_drop_unencrypted(rx, mgmt->frame_control))
- 		return RX_DROP_UNUSABLE;
- 
--	/* return action frames that have *only* category */
--	if (len < IEEE80211_MIN_ACTION_SIZE + 1)
--		goto return_frame;
--
- 	switch (mgmt->u.action.category) {
- 	case WLAN_CATEGORY_BACK:
- 		/*
-@@ -1891,6 +1888,10 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		    sdata->vif.type != NL80211_IFTYPE_AP)
- 			break;
- 
-+		/* verify action_code is present */
-+		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
-+			break;
-+
- 		switch (mgmt->u.action.u.addba_req.action_code) {
- 		case WLAN_ACTION_ADDBA_REQ:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
-@@ -1919,6 +1920,10 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 			break;
- 
-+		/* verify action_code is present */
-+		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
-+			break;
-+
- 		switch (mgmt->u.action.u.measurement.action_code) {
- 		case WLAN_ACTION_SPCT_MSR_REQ:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
-@@ -1954,7 +1959,7 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		}
- 		break;
- 	}
-- return_frame:
-+
- 	/*
- 	 * For AP mode, hostapd is responsible for handling any action
- 	 * frames that we didn't handle, including returning unknown
-@@ -1966,6 +1971,20 @@ ieee80211_rx_h_action(struct ieee80211_r
- 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 		return RX_DROP_MONITOR;
- 
-+	/*
-+	 * Getting here means the kernel doesn't know how to handle
-+	 * it, but maybe userspace does ... include returned frames
-+	 * so userspace can register for those to know whether ones
-+	 * it transmitted were processed or returned.
-+	 */
-+	status = IEEE80211_SKB_RXCB(rx->skb);
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    cfg80211_rx_action(rx->sdata->dev, status->freq,
-+			       rx->skb->data, rx->skb->len,
-+			       GFP_ATOMIC))
-+		goto handled;
-+
- 	/* do not return rejected action frames */
- 	if (mgmt->u.action.category & 0x80)
- 		return RX_DROP_UNUSABLE;
-@@ -1985,7 +2004,8 @@ ieee80211_rx_h_action(struct ieee80211_r
- 	}
- 
-  handled:
--	rx->sta->rx_packets++;
-+	if (rx->sta)
-+		rx->sta->rx_packets++;
- 	dev_kfree_skb(rx->skb);
- 	return RX_QUEUED;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index a3742c8..6f7a7d9 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1712,6 +1712,36 @@ out:
+ 	mutex_unlock(&wl->mutex);
  }
---- uml.orig/net/wireless/core.h	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/wireless/core.h	2010-02-14 18:41:42.000000000 +0200
-@@ -329,6 +329,15 @@ void __cfg80211_connect_result(struct ne
- 			       const u8 *resp_ie, size_t resp_ie_len,
- 			       u16 status, bool wextev,
- 			       struct cfg80211_bss *bss);
-+int cfg80211_mlme_register_action(struct wireless_dev *wdev, u32 snd_pid,
-+				  const u8 *match_data, int match_len);
-+void cfg80211_mlme_unregister_actions(struct wireless_dev *wdev, u32 nlpid);
-+void cfg80211_mlme_purge_actions(struct wireless_dev *wdev);
-+int cfg80211_mlme_action(struct cfg80211_registered_device *rdev,
-+			 struct net_device *dev,
-+			 struct ieee80211_channel *chan,
-+			 enum nl80211_channel_type channel_type,
-+			 const u8 *buf, size_t len, u64 *cookie);
  
- /* SME */
- int __cfg80211_connect(struct cfg80211_registered_device *rdev,
---- uml.orig/net/wireless/nl80211.c	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/wireless/nl80211.c	2010-02-14 18:41:42.000000000 +0200
-@@ -1,7 +1,7 @@
- /*
-  * This is the new netlink-based wireless configuration interface.
-  *
-- * Copyright 2006-2009	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  */
++static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
++			     const struct ieee80211_tx_queue_params *params)
++{
++	struct wl1271 *wl = hw->priv;
++	int ret;
++
++	mutex_lock(&wl->mutex);
++
++	wl1271_debug(DEBUG_MAC80211, "mac80211 conf tx %d", queue);
++
++	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
++				params->cw_min, params->cw_max,
++				params->aifs, params->txop);
++	if (ret < 0)
++		goto out;
++
++	ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
++				 CONF_CHANNEL_TYPE_EDCF,
++				 wl1271_tx_get_queue(queue),
++				 CONF_PS_SCHEME_LEGACY_PSPOLL,
++				 CONF_ACK_POLICY_LEGACY, 0, 0);
++	if (ret < 0)
++		goto out;
++
++out:
++	mutex_unlock(&wl->mutex);
++
++	return ret;
++}
++
  
- #include <linux/if.h>
-@@ -145,6 +145,9 @@ static struct nla_policy nl80211_policy[
- 	[NL80211_ATTR_DURATION] = { .type = NLA_U32 },
- 	[NL80211_ATTR_COOKIE] = { .type = NLA_U64 },
- 	[NL80211_ATTR_TX_RATES] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_FRAME] = { .type = NLA_BINARY,
-+				 .len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_ATTR_FRAME_MATCH] = { .type = NLA_BINARY, },
+ /* can't be const, mac80211 writes to this */
+ static struct ieee80211_rate wl1271_rates[] = {
+@@ -1877,6 +1907,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.hw_scan = wl1271_op_hw_scan,
+ 	.bss_info_changed = wl1271_op_bss_info_changed,
+ 	.set_rts_threshold = wl1271_op_set_rts_threshold,
++	.conf_tx = wl1271_op_conf_tx,
  };
  
- /* policy for the attributes */
-@@ -577,6 +580,7 @@ static int nl80211_send_wiphy(struct sk_
- 	CMD(flush_pmksa, FLUSH_PMKSA);
- 	CMD(remain_on_channel, REMAIN_ON_CHANNEL);
- 	CMD(set_bitrate_mask, SET_TX_BITRATE_MASK);
-+	CMD(action, ACTION);
- 	if (dev->wiphy.flags & WIPHY_FLAG_NETNS_OK) {
- 		i++;
- 		NLA_PUT_U32(msg, i, NL80211_CMD_SET_WIPHY_NETNS);
-@@ -4549,6 +4553,139 @@ static int nl80211_set_tx_bitrate_mask(s
- 	return err;
- }
- 
-+static int nl80211_register_action(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct net_device *dev;
-+	int err;
-+
-+	if (!info->attrs[NL80211_ATTR_FRAME_MATCH])
-+		return -EINVAL;
-+
-+	if (nla_len(info->attrs[NL80211_ATTR_FRAME_MATCH]) < 1)
-+		return -EINVAL;
-+
-+	rtnl_lock();
-+
-+	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
-+	if (err)
-+		goto unlock_rtnl;
-+
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	/* not much point in registering if we can't reply */
-+	if (!rdev->ops->action) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	err = cfg80211_mlme_register_action(dev->ieee80211_ptr, info->snd_pid,
-+			nla_data(info->attrs[NL80211_ATTR_FRAME_MATCH]),
-+			nla_len(info->attrs[NL80211_ATTR_FRAME_MATCH]));
-+ out:
-+	cfg80211_unlock_rdev(rdev);
-+	dev_put(dev);
-+ unlock_rtnl:
-+	rtnl_unlock();
-+	return err;
-+}
-+
-+static int nl80211_action(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct net_device *dev;
-+	struct ieee80211_channel *chan;
-+	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-+	u32 freq;
-+	int err;
-+	void *hdr;
-+	u64 cookie;
-+	struct sk_buff *msg;
-+
-+	if (!info->attrs[NL80211_ATTR_FRAME] ||
-+	    !info->attrs[NL80211_ATTR_WIPHY_FREQ])
-+		return -EINVAL;
-+
-+	rtnl_lock();
-+
-+	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
-+	if (err)
-+		goto unlock_rtnl;
-+
-+	if (!rdev->ops->action) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	if (!netif_running(dev)) {
-+		err = -ENETDOWN;
-+		goto out;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
-+		channel_type = nla_get_u32(
-+			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
-+		if (channel_type != NL80211_CHAN_NO_HT &&
-+		    channel_type != NL80211_CHAN_HT20 &&
-+		    channel_type != NL80211_CHAN_HT40PLUS &&
-+		    channel_type != NL80211_CHAN_HT40MINUS)
-+			err = -EINVAL;
-+			goto out;
-+	}
-+
-+	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-+	chan = rdev_freq_to_chan(rdev, freq, channel_type);
-+	if (chan == NULL) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
-+			     NL80211_CMD_ACTION);
-+
-+	if (IS_ERR(hdr)) {
-+		err = PTR_ERR(hdr);
-+		goto free_msg;
-+	}
-+	err = cfg80211_mlme_action(rdev, dev, chan, channel_type,
-+				   nla_data(info->attrs[NL80211_ATTR_FRAME]),
-+				   nla_len(info->attrs[NL80211_ATTR_FRAME]),
-+				   &cookie);
-+	if (err)
-+		goto free_msg;
-+
-+	NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
-+
-+	genlmsg_end(msg, hdr);
-+	err = genlmsg_reply(msg, info);
-+	goto out;
-+
-+ nla_put_failure:
-+	err = -ENOBUFS;
-+ free_msg:
-+	nlmsg_free(msg);
-+ out:
-+	cfg80211_unlock_rdev(rdev);
-+	dev_put(dev);
-+unlock_rtnl:
-+	rtnl_unlock();
-+	return err;
-+}
-+
- static struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_GET_WIPHY,
-@@ -4829,6 +4966,18 @@ static struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-+	{
-+		.cmd = NL80211_CMD_REGISTER_ACTION,
-+		.doit = nl80211_register_action,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
-+	{
-+		.cmd = NL80211_CMD_ACTION,
-+		.doit = nl80211_action,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
-@@ -5501,6 +5650,110 @@ void nl80211_send_sta_event(struct cfg80
- 				nl80211_mlme_mcgrp.id, gfp);
- }
- 
-+int nl80211_send_action(struct cfg80211_registered_device *rdev,
-+			struct net_device *netdev, u32 nlpid,
-+			int freq, const u8 *buf, size_t len, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+	int err;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_ACTION);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return -ENOMEM;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
-+	NLA_PUT(msg, NL80211_ATTR_FRAME, len, buf);
-+
-+	err = genlmsg_end(msg, hdr);
-+	if (err < 0) {
-+		nlmsg_free(msg);
-+		return err;
-+	}
-+
-+	err = genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlpid);
-+	if (err < 0)
-+		return err;
-+	return 0;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+	return -ENOBUFS;
-+}
-+
-+void nl80211_send_action_tx_status(struct cfg80211_registered_device *rdev,
-+				   struct net_device *netdev, u64 cookie,
-+				   const u8 *buf, size_t len, bool ack,
-+				   gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_ACTION_TX_STATUS);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-+	NLA_PUT(msg, NL80211_ATTR_FRAME, len, buf);
-+	NLA_PUT_U64(msg, NL80211_ATTR_COOKIE, cookie);
-+	if (ack)
-+		NLA_PUT_FLAG(msg, NL80211_ATTR_ACK);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast(msg, 0, nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
-+static int nl80211_netlink_notify(struct notifier_block * nb,
-+				  unsigned long state,
-+				  void *_notify)
-+{
-+	struct netlink_notify *notify = _notify;
-+	struct cfg80211_registered_device *rdev;
-+	struct wireless_dev *wdev;
-+
-+	if (state != NETLINK_URELEASE)
-+		return NOTIFY_DONE;
-+
-+	rcu_read_lock();
-+
-+	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list)
-+		list_for_each_entry_rcu(wdev, &rdev->netdev_list, list)
-+			cfg80211_mlme_unregister_actions(wdev, notify->pid);
-+
-+	rcu_read_unlock();
-+
-+	return NOTIFY_DONE;
-+}
-+
-+static struct notifier_block nl80211_netlink_notifier = {
-+	.notifier_call = nl80211_netlink_notify,
-+};
-+
- /* initialisation/exit functions */
- 
- int nl80211_init(void)
-@@ -5534,6 +5787,10 @@ int nl80211_init(void)
- 		goto err_out;
- #endif
- 
-+	err = netlink_register_notifier(&nl80211_netlink_notifier);
-+	if (err)
-+		goto err_out;
-+
- 	return 0;
-  err_out:
- 	genl_unregister_family(&nl80211_fam);
-@@ -5542,5 +5799,6 @@ int nl80211_init(void)
- 
- void nl80211_exit(void)
+ static int wl1271_register_hw(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index a288cc3..f6815a9 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -87,7 +87,7 @@ static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 			      u32 extra, struct ieee80211_tx_info *control)
  {
-+	netlink_unregister_notifier(&nl80211_netlink_notifier);
- 	genl_unregister_family(&nl80211_fam);
- }
---- uml.orig/net/wireless/nl80211.h	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/wireless/nl80211.h	2010-02-14 18:41:42.000000000 +0200
-@@ -74,4 +74,12 @@ void nl80211_send_sta_event(struct cfg80
- 			    struct net_device *dev, const u8 *mac_addr,
- 			    struct station_info *sinfo, gfp_t gfp);
+ 	struct wl1271_tx_hw_descr *desc;
+-	int pad;
++	int pad, ac;
+ 	u16 tx_attr;
  
-+int nl80211_send_action(struct cfg80211_registered_device *rdev,
-+			struct net_device *netdev, u32 nlpid, int freq,
-+			const u8 *buf, size_t len, gfp_t gfp);
-+void nl80211_send_action_tx_status(struct cfg80211_registered_device *rdev,
-+				   struct net_device *netdev, u64 cookie,
-+				   const u8 *buf, size_t len, bool ack,
-+				   gfp_t gfp);
+ 	desc = (struct wl1271_tx_hw_descr *) skb->data;
+@@ -107,9 +107,11 @@ static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 
+ 	/* configure the tx attributes */
+ 	tx_attr = wl->session_counter << TX_HW_ATTR_OFST_SESSION_COUNTER;
+-	/* FIXME: do we know the packet priority? can we identify mgmt
+-	   packets, and use max prio for them at least? */
+-	desc->tid = 0;
 +
- #endif /* __NET_WIRELESS_NL80211_H */
---- uml.orig/include/linux/nl80211.h	2010-02-14 18:19:27.000000000 +0200
-+++ uml/include/linux/nl80211.h	2010-02-14 18:41:42.000000000 +0200
-@@ -3,7 +3,7 @@
- /*
-  * 802.11 netlink interface public header
-  *
-- * Copyright 2006, 2007, 2008 Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2006-2010 Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
-  * Copyright 2008 Michael Buesch <mb@bu3sch.de>
-@@ -299,6 +299,31 @@
-  *	rate selection. %NL80211_ATTR_IFINDEX is used to specify the interface
-  *	and @NL80211_ATTR_TX_RATES the set of allowed rates.
-  *
-+ * @NL80211_CMD_REGISTER_ACTION: Register for receiving certain action frames
-+ *	(via @NL80211_CMD_ACTION) for processing in userspace. This command
-+ *	requires an interface index and a match attribute containing the first
-+ *	few bytes of the frame that should match, e.g. a single byte for only
-+ *	a category match or four bytes for vendor frames including the OUI.
-+ *	The registration cannot be dropped, but is removed automatically
-+ *	when the netlink socket is closed. Multiple registrations can be made.
-+ * @NL80211_CMD_ACTION: Action frame TX request and RX notification. This
-+ *	command is used both as a request to transmit an Action frame and as an
-+ *	event indicating reception of an Action frame that was not processed in
-+ *	kernel code, but is for us (i.e., which may need to be processed in a
-+ *	user space application). %NL80211_ATTR_FRAME is used to specify the
-+ *	frame contents (including header). %NL80211_ATTR_WIPHY_FREQ (and
-+ *	optionally %NL80211_ATTR_WIPHY_CHANNEL_TYPE) is used to indicate on
-+ *	which channel the frame is to be transmitted or was received. This
-+ *	channel has to be the current channel (remain-on-channel or the
-+ *	operational channel). When called, this operation returns a cookie
-+ *	(%NL80211_ATTR_COOKIE) that will be included with the TX status event
-+ *	pertaining to the TX request.
-+ * @NL80211_CMD_ACTION_TX_STATUS: Report TX status of an Action frame
-+ *	transmitted with %NL80211_CMD_ACTION. %NL80211_ATTR_COOKIE identifies
-+ *	the TX command and %NL80211_ATTR_FRAME includes the contents of the
-+ *	frame. %NL80211_ATTR_ACK flag is included if the recipient acknowledged
-+ *	the frame.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -387,6 +412,10 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_SET_TX_BITRATE_MASK,
- 
-+	NL80211_CMD_REGISTER_ACTION,
-+	NL80211_CMD_ACTION,
-+	NL80211_CMD_ACTION_TX_STATUS,
++	/* queue */
++	ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
++	desc->tid = wl1271_tx_ac_to_tid(ac);
 +
- 	/* add new commands above here */
+ 	desc->aid = TX_HW_DEFAULT_AID;
+ 	desc->reserved = 0;
  
- 	/* used to define NL80211_CMD_MAX below */
-@@ -653,6 +682,12 @@ enum nl80211_commands {
-  *	rates based on negotiated supported rates information. This attribute
-  *	is used with %NL80211_CMD_SET_TX_BITRATE_MASK.
-  *
-+ * @NL80211_ATTR_FRAME_MATCH: A binary attribute which typically must contain
-+ *	at least one byte, currently used with @NL80211_CMD_REGISTER_ACTION.
-+ *
-+ * @NL80211_ATTR_ACK: Flag attribute indicating that the frame was
-+ *	acknowledged by the recipient.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -798,6 +833,10 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
+index 416396c..17e405a 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
+@@ -123,6 +123,42 @@ struct wl1271_tx_hw_res_if {
+ 	struct wl1271_tx_hw_res_descr tx_results_queue[TX_HW_RESULT_QUEUE_LEN];
+ } __attribute__ ((packed));
  
- 	NL80211_ATTR_TX_RATES,
- 
-+	NL80211_ATTR_FRAME_MATCH,
-+
-+	NL80211_ATTR_ACK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- uml.orig/include/net/cfg80211.h	2010-02-14 18:19:27.000000000 +0200
-+++ uml/include/net/cfg80211.h	2010-02-14 18:41:42.000000000 +0200
-@@ -3,7 +3,7 @@
- /*
-  * 802.11 device and configuration interface
-  *
-- * Copyright 2006-2009	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -998,6 +998,7 @@ struct cfg80211_pmksa {
-  * @cancel_remain_on_channel: Cancel an on-going remain-on-channel operation.
-  *	This allows the operation to be terminated prior to timeout based on
-  *	the duration value.
-+ * @action: Transmit an action frame
-  *
-  * @testmode_cmd: run a test mode command
-  *
-@@ -1144,6 +1145,11 @@ struct cfg80211_ops {
- 					    struct net_device *dev,
- 					    u64 cookie);
- 
-+	int	(*action)(struct wiphy *wiphy, struct net_device *dev,
-+			  struct ieee80211_channel *chan,
-+			  enum nl80211_channel_type channel_type,
-+			  const u8 *buf, size_t len, u64 *cookie);
-+
- 	/* some temporary stuff to finish wext */
- 	int	(*set_power_mgmt)(struct wiphy *wiphy, struct net_device *dev,
- 				  bool enabled, int timeout);
-@@ -1445,6 +1451,8 @@ struct cfg80211_cached_keys;
-  *	set by driver (if supported) on add_interface BEFORE registering the
-  *	netdev and may otherwise be used by driver read-only, will be update
-  *	by cfg80211 on change_interface
-+ * @action_registrations: list of registrations for action frames
-+ * @action_registrations_lock: lock for the list
-  */
- struct wireless_dev {
- 	struct wiphy *wiphy;
-@@ -1454,6 +1462,9 @@ struct wireless_dev {
- 	struct list_head list;
- 	struct net_device *netdev;
- 
-+	struct list_head action_registrations;
-+	spinlock_t action_registrations_lock;
-+
- 	struct mutex mtx;
- 
- 	struct work_struct cleanup_work;
-@@ -2291,4 +2302,38 @@ void cfg80211_remain_on_channel_expired(
- void cfg80211_new_sta(struct net_device *dev, const u8 *mac_addr,
- 		      struct station_info *sinfo, gfp_t gfp);
- 
-+/**
-+ * cfg80211_rx_action - notification of received, unprocessed Action frame
-+ * @dev: network device
-+ * @freq: Frequency on which the frame was received in MHz
-+ * @buf: Action frame (header + body)
-+ * @len: length of the frame data
-+ * @gfp: context flags
-+ * Returns %true if a user space application is responsible for rejecting the
-+ *	unrecognized Action frame; %false if no such application is registered
-+ *	(i.e., the driver is responsible for rejecting the unrecognized Action
-+ *	frame)
-+ *
-+ * This function is called whenever an Action frame is received for a station
-+ * mode interface, but is not processed in kernel.
-+ */
-+bool cfg80211_rx_action(struct net_device *dev, int freq, const u8 *buf,
-+			size_t len, gfp_t gfp);
-+
-+/**
-+ * cfg80211_action_tx_status - notification of TX status for Action frame
-+ * @dev: network device
-+ * @cookie: Cookie returned by cfg80211_ops::action()
-+ * @buf: Action frame (header + body)
-+ * @len: length of the frame data
-+ * @ack: Whether frame was acknowledged
-+ * @gfp: context flags
-+ *
-+ * This function is called whenever an Action frame was requested to be
-+ * transmitted with cfg80211_ops::action() to report the TX status of the
-+ * transmission attempt.
-+ */
-+void cfg80211_action_tx_status(struct net_device *dev, u64 cookie,
-+			       const u8 *buf, size_t len, bool ack, gfp_t gfp);
-+
- #endif /* __NET_CFG80211_H */
---- uml.orig/net/mac80211/cfg.c	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/mac80211/cfg.c	2010-02-14 18:41:42.000000000 +0200
-@@ -1,7 +1,7 @@
- /*
-  * mac80211 configuration hooks for cfg80211
-  *
-- * Copyright 2006, 2007	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-  *
-  * This file is GPLv2 as found in COPYING.
-  */
-@@ -1448,6 +1448,15 @@ static int ieee80211_cancel_remain_on_ch
- 	return ieee80211_wk_cancel_remain_on_channel(sdata, cookie);
- }
- 
-+static int ieee80211_action(struct wiphy *wiphy, struct net_device *dev,
-+			    struct ieee80211_channel *chan,
-+			    enum nl80211_channel_type channel_type,
-+			    const u8 *buf, size_t len, u64 *cookie)
++static inline int wl1271_tx_get_queue(int queue)
 +{
-+	return ieee80211_mgd_action(IEEE80211_DEV_TO_SUB_IF(dev), chan,
-+				    channel_type, buf, len, cookie);
-+}
++	/* FIXME: use best effort until WMM is enabled */
++	return CONF_TX_AC_BE;
 +
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -1496,4 +1505,5 @@ struct cfg80211_ops mac80211_config_ops 
- 	.set_bitrate_mask = ieee80211_set_bitrate_mask,
- 	.remain_on_channel = ieee80211_remain_on_channel,
- 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
-+	.action = ieee80211_action,
- };
---- uml.orig/net/mac80211/ieee80211_i.h	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/mac80211/ieee80211_i.h	2010-02-15 10:09:30.000000000 +0200
-@@ -2,7 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-- * Copyright 2007-2008	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -966,6 +966,10 @@ int ieee80211_mgd_deauth(struct ieee8021
- int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- 			   struct cfg80211_disassoc_request *req,
- 			   void *cookie);
-+int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
-+			 struct ieee80211_channel *chan,
-+			 enum nl80211_channel_type channel_type,
-+			 const u8 *buf, size_t len, u64 *cookie);
- ieee80211_rx_result ieee80211_sta_rx_mgmt(struct ieee80211_sub_if_data *sdata,
- 					  struct sk_buff *skb);
- void ieee80211_send_pspoll(struct ieee80211_local *local,
---- uml.orig/net/mac80211/mlme.c	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/mac80211/mlme.c	2010-02-14 18:41:42.000000000 +0200
-@@ -2084,3 +2084,38 @@ int ieee80211_mgd_disassoc(struct ieee80
- 
- 	return 0;
- }
-+
-+int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
-+			 struct ieee80211_channel *chan,
-+			 enum nl80211_channel_type channel_type,
-+			 const u8 *buf, size_t len, u64 *cookie)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct sk_buff *skb;
-+
-+	/* Check that we are on the requested channel for transmission */
-+	if ((chan != local->tmp_channel ||
-+	     channel_type != local->tmp_channel_type) &&
-+	    (chan != local->oper_channel ||
-+	     channel_type != local->oper_channel_type))
-+		return -EBUSY;
-+
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + len);
-+	if (!skb)
-+		return -ENOMEM;
-+	skb_reserve(skb, local->hw.extra_tx_headroom);
-+
-+	memcpy(skb_put(skb, len), buf, len);
-+
-+	if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
-+		IEEE80211_SKB_CB(skb)->flags |=
-+			IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_NL80211_FRAME_TX |
-+		IEEE80211_TX_CTL_REQ_TX_STATUS;
-+	skb->dev = sdata->dev;
-+	ieee80211_tx_skb(sdata, skb);
-+
-+	*cookie = (unsigned long) skb;
-+	return 0;
-+}
---- uml.orig/net/wireless/mlme.c	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/wireless/mlme.c	2010-02-15 10:09:59.000000000 +0200
-@@ -728,3 +728,169 @@ void cfg80211_new_sta(struct net_device 
- 	nl80211_send_sta_event(rdev, dev, mac_addr, sinfo, gfp);
- }
- EXPORT_SYMBOL(cfg80211_new_sta);
-+
-+struct cfg80211_action_registration {
-+	struct list_head list;
-+
-+	u32 nlpid;
-+
-+	int match_len;
-+
-+	u8 match[];
-+};
-+
-+int cfg80211_mlme_register_action(struct wireless_dev *wdev, u32 snd_pid,
-+				  const u8 *match_data, int match_len)
-+{
-+	struct cfg80211_action_registration *reg, *nreg;
-+	int err = 0;
-+
-+	nreg = kzalloc(sizeof(*reg) + match_len, GFP_KERNEL);
-+	if (!nreg)
-+		return -ENOMEM;
-+
-+	spin_lock_bh(&wdev->action_registrations_lock);
-+
-+	list_for_each_entry(reg, &wdev->action_registrations, list) {
-+		int mlen = min(match_len, reg->match_len);
-+
-+		if (memcmp(reg->match, match_data, mlen) == 0) {
-+			err = -EALREADY;
-+			break;
-+		}
++	switch (queue) {
++	case 0:
++		return CONF_TX_AC_VO;
++	case 1:
++		return CONF_TX_AC_VI;
++	case 2:
++		return CONF_TX_AC_BE;
++	case 3:
++		return CONF_TX_AC_BK;
++	default:
++		return CONF_TX_AC_BE;
 +	}
-+
-+	if (err) {
-+		kfree(nreg);
-+		goto out;
-+	}
-+
-+	memcpy(nreg->match, match_data, match_len);
-+	nreg->match_len = match_len;
-+	nreg->nlpid = snd_pid;
-+	list_add(&nreg->list, &wdev->action_registrations);
-+
-+ out:
-+	spin_unlock_bh(&wdev->action_registrations_lock);
-+	return err;
 +}
 +
-+void cfg80211_mlme_unregister_actions(struct wireless_dev *wdev, u32 nlpid)
++/* wl1271 tx descriptor needs the tid and we need to convert it from ac */
++static inline int wl1271_tx_ac_to_tid(int ac)
 +{
-+	struct cfg80211_action_registration *reg, *tmp;
-+
-+	spin_lock_bh(&wdev->action_registrations_lock);
-+
-+	list_for_each_entry_safe(reg, tmp, &wdev->action_registrations, list) {
-+		if (reg->nlpid == nlpid) {
-+			list_del(&reg->list);
-+			kfree(reg);
-+		}
++	switch (ac) {
++	case 0:
++		return 0;
++	case 1:
++		return 2;
++	case 2:
++		return 4;
++	case 3:
++		return 6;
++	default:
++		return 0;
 +	}
-+
-+	spin_unlock_bh(&wdev->action_registrations_lock);
 +}
 +
-+void cfg80211_mlme_purge_actions(struct wireless_dev *wdev)
-+{
-+	struct cfg80211_action_registration *reg, *tmp;
-+
-+	spin_lock_bh(&wdev->action_registrations_lock);
-+
-+	list_for_each_entry_safe(reg, tmp, &wdev->action_registrations, list) {
-+		list_del(&reg->list);
-+		kfree(reg);
-+	}
-+
-+	spin_unlock_bh(&wdev->action_registrations_lock);
-+}
-+
-+int cfg80211_mlme_action(struct cfg80211_registered_device *rdev,
-+			 struct net_device *dev,
-+			 struct ieee80211_channel *chan,
-+			 enum nl80211_channel_type channel_type,
-+			 const u8 *buf, size_t len, u64 *cookie)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	const struct ieee80211_mgmt *mgmt;
-+
-+	if (rdev->ops->action == NULL)
-+		return -EOPNOTSUPP;
-+	if (len < 24 + 1)
-+		return -EINVAL;
-+
-+	mgmt = (const struct ieee80211_mgmt *) buf;
-+	if (!ieee80211_is_action(mgmt->frame_control))
-+		return -EINVAL;
-+	if (mgmt->u.action.category != WLAN_CATEGORY_PUBLIC) {
-+		/* Verify that we are associated with the destination AP */
-+		if (!wdev->current_bss ||
-+		    memcmp(wdev->current_bss->pub.bssid, mgmt->bssid,
-+			   ETH_ALEN) != 0 ||
-+		    memcmp(wdev->current_bss->pub.bssid, mgmt->da,
-+			   ETH_ALEN) != 0)
-+			return -ENOTCONN;
-+	}
-+
-+	if (memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0)
-+		return -EINVAL;
-+
-+	/* Transmit the Action frame as requested by user space */
-+	return rdev->ops->action(&rdev->wiphy, dev, chan, channel_type,
-+				 buf, len, cookie);
-+}
-+
-+bool cfg80211_rx_action(struct net_device *dev, int freq, const u8 *buf,
-+			size_t len, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+	struct cfg80211_action_registration *reg;
-+	const u8 *action_data;
-+	int action_data_len;
-+	bool result = false;
-+
-+	/* frame length - min size excluding category */
-+	action_data_len = len - (IEEE80211_MIN_ACTION_SIZE - 1);
-+
-+	/* action data starts with category */
-+	action_data = buf + IEEE80211_MIN_ACTION_SIZE - 1;
-+
-+	spin_lock_bh(&wdev->action_registrations_lock);
-+
-+	list_for_each_entry(reg, &wdev->action_registrations, list) {
-+		if (reg->match_len > action_data_len)
-+			continue;
-+
-+		if (memcmp(reg->match, action_data, reg->match_len))
-+			continue;
-+
-+		/* found match! */
-+
-+		/* Indicate the received Action frame to user space */
-+		if (nl80211_send_action(rdev, dev, reg->nlpid, freq,
-+					buf, len, gfp))
-+			continue;
-+
-+		result = true;
-+		break;
-+	}
-+
-+	spin_unlock_bh(&wdev->action_registrations_lock);
-+
-+	return result;
-+}
-+EXPORT_SYMBOL(cfg80211_rx_action);
-+
-+void cfg80211_action_tx_status(struct net_device *dev, u64 cookie,
-+			       const u8 *buf, size_t len, bool ack, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	/* Indicate TX status of the Action frame to user space */
-+	nl80211_send_action_tx_status(rdev, dev, cookie, buf, len, ack, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_action_tx_status);
---- uml.orig/include/net/mac80211.h	2010-02-14 18:19:27.000000000 +0200
-+++ uml/include/net/mac80211.h	2010-02-14 18:41:42.000000000 +0200
-@@ -3,7 +3,7 @@
-  *
-  * Copyright 2002-2005, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-- * Copyright 2007-2008	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -264,6 +264,9 @@ struct ieee80211_bss_conf {
-  *	be modified again (no seqno assignment, crypto, etc.)
-  * @IEEE80211_TX_INTFL_HAS_RADIOTAP: This frame was injected and still
-  *	has a radiotap header at skb->data.
-+ * @IEEE80211_TX_INTFL_NL80211_FRAME_TX: Frame was requested through nl80211
-+ *	MLME command (internal to mac80211 to figure out whether to send TX
-+ *	status to user space)
-  */
- enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
-@@ -286,6 +289,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(18),
- 	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(19),
- 	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
-+	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
- };
- 
- /**
---- uml.orig/net/mac80211/status.c	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/mac80211/status.c	2010-02-14 18:41:42.000000000 +0200
-@@ -2,7 +2,7 @@
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-- * Copyright 2008-2009	Johannes Berg <johannes@sipsolutions.net>
-+ * Copyright 2008-2010	Johannes Berg <johannes@sipsolutions.net>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -288,6 +288,11 @@ void ieee80211_tx_status(struct ieee8021
- 					msecs_to_jiffies(10));
- 	}
- 
-+	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX)
-+		cfg80211_action_tx_status(
-+			skb->dev, (unsigned long) skb, skb->data, skb->len,
-+			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
-+
- 	/* this was a transmitted frame, but now we want to reuse it */
- 	skb_orphan(skb);
- 
---- uml.orig/net/wireless/core.c	2010-02-14 18:19:27.000000000 +0200
-+++ uml/net/wireless/core.c	2010-02-14 18:41:42.000000000 +0200
-@@ -677,6 +677,9 @@ static int cfg80211_netdev_notifier_call
- 		INIT_WORK(&wdev->cleanup_work, wdev_cleanup_work);
- 		INIT_LIST_HEAD(&wdev->event_list);
- 		spin_lock_init(&wdev->event_lock);
-+		INIT_LIST_HEAD(&wdev->action_registrations);
-+		spin_lock_init(&wdev->action_registrations_lock);
-+
- 		mutex_lock(&rdev->devlist_mtx);
- 		list_add_rcu(&wdev->list, &rdev->netdev_list);
- 		rdev->devlist_generation++;
-@@ -792,6 +795,7 @@ static int cfg80211_netdev_notifier_call
- 			sysfs_remove_link(&dev->dev.kobj, "phy80211");
- 			list_del_rcu(&wdev->list);
- 			rdev->devlist_generation++;
-+			cfg80211_mlme_purge_actions(wdev);
- #ifdef CONFIG_CFG80211_WEXT
- 			kfree(wdev->wext.keys);
- #endif
-
+ void wl1271_tx_work(struct work_struct *work);
+ void wl1271_tx_complete(struct wl1271 *wl, u32 count);
+ void wl1271_tx_flush(struct wl1271 *wl);
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.3.3
+
