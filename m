@@ -1,96 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out108.alice.it ([85.37.17.108]:3451 "EHLO
-	smtp-out108.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932857Ab0BGToy (ORCPT
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:56161 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002Ab0BRTSu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2010 14:44:54 -0500
-Message-ID: <4B6F15D1.3050307@iperbole.bo.it>
-Date: Sun, 07 Feb 2010 20:34:41 +0100
-From: Lorenzo Raschi <ded1549@iperbole.bo.it>
+	Thu, 18 Feb 2010 14:18:50 -0500
+Received: by pzk32 with SMTP id 32so432396pzk.4
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Feb 2010 11:18:50 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: p54pci: "device does not respond!"
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <20100218182946.GF8069@bombadil.infradead.org>
+References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
+	<1266124222.13902.42.camel@mj> <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
+	<1266358340.2659.37.camel@mj> <43e72e891002161459m4174654aj8d7985f32cb8678d@mail.gmail.com>
+	<1266464675.3065.30.camel@mj> <20100218182946.GF8069@bombadil.infradead.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 18 Feb 2010 11:18:30 -0800
+Message-ID: <43e72e891002181118x609bd80egb96dd38a65fb4bcd@mail.gmail.com>
+Subject: Re: compat-wireless + Linux 2.6.26.8 testing results
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Cc: Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thu, Feb 18, 2010 at 10:29 AM, Luis R. Rodriguez
+<mcgrof@bombadil.infradead.org> wrote:
+> On Wed, Feb 17, 2010 at 10:44:35PM -0500, Pavel Roskin wrote:
+>> On Tue, 2010-02-16 at 14:59 -0800, Luis R. Rodriguez wrote:
+>>
+>> > > Anyway, I'd rather see
+>> > > dma_sync_single_range_for_device() for ARM backported.
+>> >
+>> > Patches are welcomed for it indeed.
+>>
+>> Here's the patch.  I'm not sure if include/net/compat-2.6.27.h or
+>> compat/compat-2.6.27.h is the real source file, as I was patching the
+>> downloaded tarball.
+>
+> For 2.6.32 compat.ko is not created and it is also not managed through
+> a separate git tree so compat/compat-2.6.27.h would have been the right
+> file for patching purposes.
+>
+> I tend to prefer to apply things first on bleeding edge and then trickle
+> things down just as with upstream. I started to package the general
+> kernel compatibility stuff into its own git tree for the 2.6.33 release,
+> so for future compat-wireless compat-*.[ch] files go there and patches
+> should be sent against:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
+>
+> In that tree I have branches for each stable release, just as with
+> the compat-wireless git tree. I apply on the master for bleedinge edge
+> and then trickle down the stable releases.
+>
+> Thanks for your patch I have sucked it in and applied it to all
+> the respective trees.
+>
+>> The missing functions are only used by b44.  The functions available in
+>> 2.6.26 don't have the offset argument, so I had to extend the range to
+>> start at zero.  This could affect the b44 throughput, but I would not
+>> worry too much about it.
+>>
+>> The is another problem.  For some reason, CONFIG_SSB_PCMCIAHOST is
+>> enabled in compat_autoconf.h, even though the target kernel lacks PCMCIA
+>> support.  However, CONFIG_SSB_PCMCIAHOST is not set in the makefiles, so
+>> ssb.ko is compiled with CONFIG_SSB_PCMCIAHOST, but pcmcia.o is not
+>> linked into it, which leads to unresolved symbols.  However, the build
+>> succeeds and there are no warnings about it.
+>
+> Ah, try this patch, or you can just git pull.
+>
+> From: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Date: Thu, 18 Feb 2010 10:17:52 -0800
+> Subject: [PATCH] compat-wireless: make CONFIG_SSB_PCMCIAHOST depend on CONFIG_PCMCIA
+>
+> The dependency was created but since we don't use our own mconf magic
+> thing we have to create our own build dep for our
+> include/linux/compat_autoconf.h file. We currently handle these sort
+> of dependencies on a case by case basis as compat-wireless was
+> relatively simple.
+>
+> Adding this case would generate this on the compat_autoconf.h file:
+>
+> ifdef CONFIG_PCMCIA
+> ifndef CONFIG_SSB_PCMCIAHOST
+> define CONFIG_SSB_PCMCIAHOST 1
+> endif /* CONFIG_SSB_PCMCIAHOST */
+> else
+>
+> Reported-by: Pavel Roskin <proski@gnu.org>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  scripts/gen-compat-autoconf.sh |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
+> index 6c7cae7..6184392 100755
+> --- a/scripts/gen-compat-autoconf.sh
+> +++ b/scripts/gen-compat-autoconf.sh
+> @@ -169,6 +169,10 @@ for i in $(grep '^CONFIG_' $COMPAT_CONFIG); do
+>                define_config_dep $VAR $VALUE CONFIG_USB_NET_CDCETHER
+>                continue
+>                ;;
+> +       CONFIG_SSB_PCMCIAHOST)
+> +               define_config_dep $VAR $VALUE CONFIG_PCMCIA
+> +               continue
+> +               ;;
+>        # ignore this, we have a special hanlder for this at the botttom
+>        # instead. We still need to keep this in config.mk to let Makefiles
+>        # know its enabled so just ignore it here.
 
-I've been using prism54 with fullmac firmware on my gentoo router since 
-one year.
-In AP mode prism54 works fine, although the fact that it works in open 
-mode only (no key support).
-Because I saw prism54 is deprecated now, I'm trying to switch to p54pci 
-+ softmac driver. Unfortunately it doesn't work.
+Sorry, I just noticed this would break CONFIG_B43_PCMCIA, and making
+that also depend on PCMCIA doesn't work on my end. Eh.
 
-With kernel 2.6.31.6 dmesg tells me 9 times out of 10:
-
-p54pci 0000:07:0e.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-p54pci 0000:07:0e.0: firmware: requesting isl3886pci
-phy22: p54 detected a LM86 firmware
-p54: rx_mtu reduced from 3240 to 2376
-phy22: FW rev 2.13.12.0 - Softmac protocol 5.9
-phy22: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-phy22: device does not respond!
-p54pci 0000:07:0e.0: PCI INT A disabled
-p54pci: probe of 0000:07:0e.0 failed with error -16
-
-One time out of 10 it seems to works:
-
-p54pci 0000:07:0e.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-p54pci 0000:07:0e.0: firmware: requesting isl3886pci
-phy24: p54 detected a LM86 firmware
-p54: rx_mtu reduced from 3240 to 2376
-phy24: FW rev 2.13.12.0 - Softmac protocol 5.9
-phy24: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-phy24: hwaddr 00:60:b3:52:fb:66, MAC:isl3890 RF:Frisbee
-phy24: Selected rate control algorithm 'minstrel'
-Registered led device: p54-phy24::assoc
-Registered led device: p54-phy24::tx
-Registered led device: p54-phy24::rx
-Registered led device: p54-phy24::radio
-p54pci 0000:07:0e.0: is registered as 'phy24'
-ADDRCONF(NETDEV_UP): wlan0: link is not ready
-
-I tried different firmwares without increasing the success ratio.
-When it seemed to work I tried using the wifi card with hostapd. My 
-laptop sees my wireless network, but as soon it try to register in, my 
-router hangs.
-
-I tried with kernel 2.6.33-rc6 also. With it the driver's module success 
-ratio seems decreased. Anyway, when it works, I tried hostapd. My router 
-hangs the same but, before it, dmesg tells me that:
-
-------------[ cut here ]------------
-WARNING: at net/mac80211/rx.c:2513 ieee80211_rx+0xa1/0x840()
-Hardware name: OEM
-Modules linked in: p54pci p54common ipt_ipp2p [last unloaded: p54common]
-Pid: 0, comm: swapper Not tainted 2.6.33-rc6 #1
-Call Trace:
-  <IRQ>  [<ffffffff815b8191>] ? ieee80211_rx+0xa1/0x840
-  [<ffffffff8103e188>] warn_slowpath_common+0x78/0xd0
-  [<ffffffff8103e1ef>] warn_slowpath_null+0xf/0x20
-  [<ffffffff815b8191>] ieee80211_rx+0xa1/0x840
-  [<ffffffffa001fdbf>] ? p54p_check_rx_ring+0x15f/0x1d0 [p54pci]
-  [<ffffffff815a6161>] ieee80211_tasklet_handler+0xf1/0x120
-  [<ffffffff810433a9>] tasklet_action+0x69/0xf0
-  [<ffffffffa001fbc2>] ? p54p_interrupt+0x112/0x130 [p54pci]
-  [<ffffffff81043f06>] __do_softirq+0xa6/0x130
-  [<ffffffff8101dba5>] ? ack_apic_level+0x95/0x240
-  [<ffffffff810032cc>] call_softirq+0x1c/0x30
-  [<ffffffff81005435>] do_softirq+0x55/0x90
-  [<ffffffff81043be5>] irq_exit+0x75/0x90
-  [<ffffffff810049b3>] do_IRQ+0x73/0xf0
-  [<ffffffff815d8053>] ret_from_intr+0x0/0xa
-  <EOI>  [<ffffffff8100ad36>] ? mwait_idle+0x66/0x80
-  [<ffffffff81001640>] ? enter_idle+0x20/0x30
-  [<ffffffff810016fb>] cpu_idle+0xab/0x100
-  [<ffffffff815d1d1e>] start_secondary+0x174/0x1c6
----[ end trace ec372cd178aae683 ]---
-
-please, don't hesitate to contact me (via email, I'm not registered into 
-this ml) to have more details.
-
-Best regards,
-
-Lorenzo Raschi
+  Luis
