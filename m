@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-11162.dedibox.fr ([88.191.70.230]:43773 "EHLO
-	sd-11162.dedibox.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758294Ab0BNMTA convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:50744 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374Ab0BRL2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 07:19:00 -0500
-Date: Sun, 14 Feb 2010 13:18:10 +0100
-From: Frederic Leroy <fredo@starox.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Chris Mayo <aklhfex@googlemail.com>,
-	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
-Subject: Re: staging: No option to select rtl8192su in linux-2.6.33-rc2
-Message-ID: <20100214131810.1a8b49ac@houba>
-In-Reply-To: <20100214004010.GB18815@tuxdriver.com>
-References: <4B38A298.7070103@googlemail.com>
-	<1262037590.16627.99.camel@localhost.localdomain>
-	<3ace41890912310638x4387f73bvc7ba5e00d096ead7@mail.gmail.com>
-	<20100213234456.5ae49b67@houba>
-	<20100214004010.GB18815@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 18 Feb 2010 06:28:18 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 11/22] wl1271: Fix random MAC address setting
+Date: Thu, 18 Feb 2010 13:25:46 +0200
+Message-Id: <1266492357-462-12-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le Sat, 13 Feb 2010 19:40:10 -0500,
-"John W. Linville" <linville@tuxdriver.com> a écrit :
+If reverting to a random MAC address, the driver would not update it to the
+NVS file, and hence the firmware frame filtering would not work properly.
 
-> [...]
-> > Should I follow the TODO file from Greg in staging :
-> > ( which seems to merge : rtl8192e  rtl8192su  rtl8192u )
-> > [...] 
-> This is a reasonable plan overall, although I might quibble with
-> the order.
->
-> > Or use rtl818x tree to start a new device ?
-> 
-> YMMV, but given the code I've seen for the Realtek drivers in staging
-> I might be inclined to start by forking rtl8180 and making the
-> necessary hardware changes from there.
+So update the randomized MAC address to the NVS image.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index e698dec..c7f5191 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -562,6 +562,14 @@ static int wl1271_update_mac_addr(struct wl1271 *wl)
+ 		static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
+ 		memcpy(wl->mac_addr, nokia_oui, 3);
+ 		get_random_bytes(wl->mac_addr + 3, 3);
++
++		/* update this address to the NVS */
++		nvs_ptr[11] = wl->mac_addr[0];
++		nvs_ptr[10] = wl->mac_addr[1];
++		nvs_ptr[6] = wl->mac_addr[2];
++		nvs_ptr[5] = wl->mac_addr[3];
++		nvs_ptr[4] = wl->mac_addr[4];
++		nvs_ptr[3] = wl->mac_addr[5];
+ 	}
  
-It was my impression too, but as you say, YMMV. It will be my first
-driver, although I already hacked the kernel, make netfilters modules
-and read lwn ;).
-
-For the process, it is still unclear for me. I copy rtl8180*[ch] to
-rtl8192*[ch], and start to hack into to make clean git patches ?
-
-On which tree should I base my work : 
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git ?
-
-> hth!
-
-It helps :)
-
+ 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
 -- 
-Frédéric Leroy
+1.6.3.3
+
