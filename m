@@ -1,80 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28731 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754907Ab0BETeQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 14:34:16 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/3] iwlwifi: Add chain_noise support for 6050
-Date: Fri,  5 Feb 2010 11:33:47 -0800
-Message-Id: <1265398428-8048-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1265398428-8048-1-git-send-email-reinette.chatre@intel.com>
-References: <1265398428-8048-1-git-send-email-reinette.chatre@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:42921 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754036Ab0BRCNY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2010 21:13:24 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, 8an@praha12.net
+Subject: [PATCH] iw: Add support for NL80211_ATTR_WIPHY_COVERAGE_CLASS
+Date: Wed, 17 Feb 2010 21:13:23 -0500
+Message-Id: <1266459203-11660-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+From: Lukáš Turek <8an@praha12.net>
 
-Existing iwl6050_ops->iwl6050_hcmd_utils structure had no pointers to chain
-noise functions (gain_computation and chain_noise_reset).  As it turns out,
-by adding chain_noise_scale (see related patch), there is no need for separate
-chain noise function, so simply use iwl6000_ops->iwl5000_hcmd_utils, and
-remove those for 6050.
+New nl80211 attribute NL80211_ATTR_WIPHY_COVERAGE_CLASS allows setting
+IEEE 802.11 coverage class, which is then used by drivers to calculate
+slot time and ACK timeout for long distance links.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Two iw parameters are added: 'coverage' sets the coverage class
+directly, while 'distance' is more user-friendly, as it allows to set
+just the link distance and let iw do the necessary calculation itself.
+
+Signed-off-by: Lukas Turek <8an@praha12.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |   19 ++-----------------
- 1 files changed, 2 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 1719825..782e23a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -277,21 +277,6 @@ static const struct iwl_ops iwl6000_ops = {
- 	.led = &iwlagn_led_ops,
- };
+Sorry, resending, I mistakenly sent to lkml instead of linux-wireless.
+
+ info.c    |    8 ++++++++
+ nl80211.h |   49 +++++++++++++++++++++++++++++++++++++++++++++++--
+ phy.c     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 113 insertions(+), 2 deletions(-)
+
+diff --git a/info.c b/info.c
+index 69af216..1a1b588 100644
+--- a/info.c
++++ b/info.c
+@@ -156,6 +156,14 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 			printf("\tRTS threshold: %d\n", rts);
+ 	}
  
--static struct iwl_hcmd_utils_ops iwl6050_hcmd_utils = {
--	.get_hcmd_size = iwl5000_get_hcmd_size,
--	.build_addsta_hcmd = iwl5000_build_addsta_hcmd,
--	.rts_tx_cmd_flag = iwl5000_rts_tx_cmd_flag,
--	.calc_rssi = iwl5000_calc_rssi,
--};
--
--static const struct iwl_ops iwl6050_ops = {
--	.ucode = &iwl5000_ucode,
--	.lib = &iwl6000_lib,
--	.hcmd = &iwl5000_hcmd,
--	.utils = &iwl6050_hcmd_utils,
--	.led = &iwlagn_led_ops,
--};
--
++	if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
++		unsigned char coverage;
++
++		coverage = nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]);
++		/* See handle_distance() for an explanation where the '450' comes from */
++		printf("\tCoverage class: %d (up to %dm)\n", coverage, 450 * coverage);
++	}
++
+ 	if (!tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES])
+ 		goto commands;
+ 
+diff --git a/nl80211.h b/nl80211.h
+index 127a730..43aee23 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -3,7 +3,7 @@
  /*
-  * "i": Internal configuration, use internal Power Amplifier
+  * 802.11 netlink interface public header
+  *
+- * Copyright 2006, 2007, 2008 Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2006-2010 Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2008 Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
+  * Copyright 2008 Michael Buesch <mb@bu3sch.de>
+@@ -51,7 +51,7 @@
+  *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ,
+  *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE, %NL80211_ATTR_WIPHY_RETRY_SHORT,
+  *	%NL80211_ATTR_WIPHY_RETRY_LONG, %NL80211_ATTR_WIPHY_FRAG_THRESHOLD,
+- *	and/or %NL80211_ATTR_WIPHY_RTS_THRESHOLD.
++ *	and/or %NL80211_ATTR_WIPHY_RTS_THRESHOLD, %NL80211_ATTR_WIPHY_TXPOWER.
+  * @NL80211_CMD_NEW_WIPHY: Newly created wiphy, response to get request
+  *	or rename notification. Has attributes %NL80211_ATTR_WIPHY and
+  *	%NL80211_ATTR_WIPHY_NAME.
+@@ -299,6 +299,31 @@
+  *	rate selection. %NL80211_ATTR_IFINDEX is used to specify the interface
+  *	and @NL80211_ATTR_TX_RATES the set of allowed rates.
+  *
++ * @NL80211_CMD_REGISTER_ACTION: Register for receiving certain action frames
++ *	(via @NL80211_CMD_ACTION) for processing in userspace. This command
++ *	requires an interface index and a match attribute containing the first
++ *	few bytes of the frame that should match, e.g. a single byte for only
++ *	a category match or four bytes for vendor frames including the OUI.
++ *	The registration cannot be dropped, but is removed automatically
++ *	when the netlink socket is closed. Multiple registrations can be made.
++ * @NL80211_CMD_ACTION: Action frame TX request and RX notification. This
++ *	command is used both as a request to transmit an Action frame and as an
++ *	event indicating reception of an Action frame that was not processed in
++ *	kernel code, but is for us (i.e., which may need to be processed in a
++ *	user space application). %NL80211_ATTR_FRAME is used to specify the
++ *	frame contents (including header). %NL80211_ATTR_WIPHY_FREQ (and
++ *	optionally %NL80211_ATTR_WIPHY_CHANNEL_TYPE) is used to indicate on
++ *	which channel the frame is to be transmitted or was received. This
++ *	channel has to be the current channel (remain-on-channel or the
++ *	operational channel). When called, this operation returns a cookie
++ *	(%NL80211_ATTR_COOKIE) that will be included with the TX status event
++ *	pertaining to the TX request.
++ * @NL80211_CMD_ACTION_TX_STATUS: Report TX status of an Action frame
++ *	transmitted with %NL80211_CMD_ACTION. %NL80211_ATTR_COOKIE identifies
++ *	the TX command and %NL80211_ATTR_FRAME includes the contents of the
++ *	frame. %NL80211_ATTR_ACK flag is included if the recipient acknowledged
++ *	the frame.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
   */
-@@ -395,7 +380,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.ucode_api_max = IWL6050_UCODE_API_MAX,
- 	.ucode_api_min = IWL6050_UCODE_API_MIN,
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
--	.ops = &iwl6050_ops,
-+	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-@@ -427,7 +412,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
- 	.ucode_api_max = IWL6050_UCODE_API_MAX,
- 	.ucode_api_min = IWL6050_UCODE_API_MIN,
- 	.sku = IWL_SKU_A|IWL_SKU_G,
--	.ops = &iwl6050_ops,
-+	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+@@ -387,6 +412,10 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_TX_BITRATE_MASK,
+ 
++	NL80211_CMD_REGISTER_ACTION,
++	NL80211_CMD_ACTION,
++	NL80211_CMD_ACTION_TX_STATUS,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -653,6 +682,15 @@ enum nl80211_commands {
+  *	rates based on negotiated supported rates information. This attribute
+  *	is used with %NL80211_CMD_SET_TX_BITRATE_MASK.
+  *
++ * @NL80211_ATTR_FRAME_MATCH: A binary attribute which typically must contain
++ *	at least one byte, currently used with @NL80211_CMD_REGISTER_ACTION.
++ *
++ * @NL80211_ATTR_ACK: Flag attribute indicating that the frame was
++ *	acknowledged by the recipient.
++ *
++ * @NL80211_ATTR_WIPHY_TXPOWER: Target output power, specified in mBm ((100 * dBm) as
++ *	some hardware allows finer granular power control than 1 dBm steps.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -798,6 +836,12 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TX_RATES,
+ 
++	NL80211_ATTR_FRAME_MATCH,
++
++	NL80211_ATTR_ACK,
++
++	NL80211_ATTR_WIPHY_TXPOWER,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -831,6 +875,7 @@ enum nl80211_attrs {
+ #define NL80211_ATTR_AKM_SUITES NL80211_ATTR_AKM_SUITES
+ #define NL80211_ATTR_KEY NL80211_ATTR_KEY
+ #define NL80211_ATTR_KEYS NL80211_ATTR_KEYS
++#define NL80211_ATTR_WIPHY_TXPOWER NL80211_ATTR_WIPHY_TXPOWER
+ 
+ #define NL80211_MAX_SUPP_RATES			32
+ #define NL80211_MAX_SUPP_REG_RULES		32
+diff --git a/phy.c b/phy.c
+index 8dd01aa..5a87024 100644
+--- a/phy.c
++++ b/phy.c
+@@ -164,3 +164,61 @@ static int handle_netns(struct nl80211_state *state,
+ COMMAND(set, netns, "<pid>",
+ 	NL80211_CMD_SET_WIPHY_NETNS, 0, CIB_PHY, handle_netns,
+ 	"Put this wireless device into a different network namespace");
++
++static int handle_coverage(struct nl80211_state *state,
++			struct nl_cb *cb,
++			struct nl_msg *msg,
++			int argc, char **argv)
++{
++	unsigned int coverage;
++
++	if (argc != 1)
++		return 1;
++
++	coverage = strtoul(argv[0], NULL, 10);
++	if (coverage > 255)
++		return 1;
++
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS, coverage);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, coverage, "<coverage class>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_coverage,
++	"Set coverage class (1 for every 3 usec of air propagation time).\n"
++	"Valid values: 0 - 255.");
++
++static int handle_distance(struct nl80211_state *state,
++			struct nl_cb *cb,
++			struct nl_msg *msg,
++			int argc, char **argv)
++{
++	unsigned int distance, coverage;
++
++	if (argc != 1)
++		return 1;
++
++	distance = strtoul(argv[0], NULL, 10);
++
++	/*
++	 * Divide double the distance by the speed of light in m/usec (300) to
++	 * get round-trip time in microseconds and then divide the result by
++	 * three to get coverage class as specified in IEEE 802.11-2007 table
++	 * 7-27. Values are rounded upwards.
++	 */
++	coverage = (distance + 449) / 450;
++	if (coverage > 255)
++		return 1;
++
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS, coverage);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, distance, "<distance>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_distance,
++	"Set appropriate coverage class for given link distance in meters.\n"
++	"Valid values: 0 - 114750");
 -- 
 1.6.3.3
 
