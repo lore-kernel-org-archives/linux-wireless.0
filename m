@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:19682 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045Ab0BRL2I (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:42862 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758478Ab0BRTry (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:08 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 02/22] wl1271: Fix channel changing code
-Date: Thu, 18 Feb 2010 13:25:37 +0200
-Message-Id: <1266492357-462-3-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+	Thu, 18 Feb 2010 14:47:54 -0500
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id 4B820EB8CE
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Feb 2010 21:47:53 +0200 (EET)
+Received: from tukki.valot.fi (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id E5106E51B3
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Feb 2010 21:47:51 +0200 (EET)
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH] MAINTAINERS: update Kalle's email address
+To: linux-wireless@vger.kernel.org
+Date: Thu, 18 Feb 2010 21:47:51 +0200
+Message-ID: <20100218194750.12397.14036.stgit@tukki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The channel changing code would a) change the BSSID to a dummy on upon
-channel change, breaking connectivity, and b) not update the channel number
-at all for ad-hoc, breaking adhoc.
+My nokia.com email address won't work anymore, use my private iki.fi address
+instead.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 6f026fe..8b46b70 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1234,8 +1234,16 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	}
+ MAINTAINERS |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 412eff6..c9ec198 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5955,7 +5955,7 @@ S:	Maintained
+ F:	drivers/input/misc/wistron_btns.c
  
- 	/* if the channel changes while joined, join again */
--	if (channel != wl->channel && test_bit(WL1271_FLAG_JOINED, &wl->flags))
--		wl1271_join_channel(wl, channel);
-+	if (channel != wl->channel &&
-+	    test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
-+		wl->channel = channel;
-+		/* FIXME: maybe use CMD_CHANNEL_SWITCH for this? */
-+		ret = wl1271_cmd_join(wl);
-+		if (ret < 0)
-+			wl1271_warning("cmd join to update channel failed %d",
-+				       ret);
-+	} else
-+		wl->channel = channel;
- 
- 	if (conf->flags & IEEE80211_CONF_PS &&
- 	    !test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags)) {
--- 
-1.6.3.3
+ WL1251 WIRELESS DRIVER
+-M:	Kalle Valo <kalle.valo@nokia.com>
++M:	Kalle Valo <kalle.valo@iki.fi>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
 
