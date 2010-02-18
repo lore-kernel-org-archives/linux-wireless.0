@@ -1,114 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:16728 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932622Ab0BCRVS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2010 12:21:18 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Feb 2010 09:21:18 -0800
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 2/3] ath9k: Enable TIM timer interrupt only when needed.
-Date: Wed, 3 Feb 2010 22:51:13 +0530
-Message-ID: <1265217673-2047-1-git-send-email-senthilkumar@atheros.com>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:61105 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758552Ab0BRT5h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2010 14:57:37 -0500
+Received: by ewy19 with SMTP id 19so7245292ewy.21
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Feb 2010 11:57:36 -0800 (PST)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Holger Schurig <holgerschurig@gmail.com>,
+	linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH v3] mac80211: deprecate RX status noise
+References: <1266437114.23447.0.camel@jlt3.sipsolutions.net>
+	<1266447118.12365.21.camel@mj>
+	<1266494831.6261.1.camel@jlt3.sipsolutions.net>
+	<201002181541.45835.holgerschurig@gmail.com>
+	<1266504527.6261.2.camel@jlt3.sipsolutions.net>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 18 Feb 2010 21:57:31 +0200
+In-Reply-To: <1266504527.6261.2.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Thu\, 18 Feb 2010 15\:48\:47 +0100")
+Message-ID: <878waqgvv8.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TIM timer interrupt is enabled even before the ACK of nullqos
-is received which is unnecessary.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Also clean up the CONF_PS part of config callback properly for
-better readability.
+>> I'm not saying that I understand this completely, but for me it 
+>> would make sense to disable iwlwifi's broken noise reporting 
+>> only. No reason to disable it for everyone if some of them are 
+>> broken.
+>
+> Well it's kinda bound to be broken elsewhere too because we don't even
+> know how various devices gather the values. With iwlwifi at least we
+> know how it gets the value.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |   24 ++++++++++++++----------
- drivers/net/wireless/ath/ath9k/xmit.c  |    7 +++----
- 3 files changed, 18 insertions(+), 14 deletions(-)
+Also wl1251 is more or less broken related to noise reporting. I even
+tried to find information how to use it properly but didn't get
+anything.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0ea340f..83c7ea4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -267,6 +267,7 @@ void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 		       u16 tid, u16 *ssn);
- void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
- void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
-+void ath9k_enable_ps(struct ath_softc *sc);
-
- /********/
- /* VIFs */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6796d5c..40da7a6 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1492,6 +1492,19 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	mutex_unlock(&sc->mutex);
- }
-
-+void ath9k_enable_ps(struct ath_softc *sc)
-+{
-+	sc->ps_enabled = true;
-+	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
-+		if ((sc->imask & ATH9K_INT_TIM_TIMER) == 0) {
-+			sc->imask |= ATH9K_INT_TIM_TIMER;
-+			ath9k_hw_set_interrupts(sc->sc_ah,
-+					sc->imask);
-+		}
-+	}
-+	ath9k_hw_setrxabort(sc->sc_ah, 1);
-+}
-+
- static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct ath_wiphy *aphy = hw->priv;
-@@ -1546,22 +1559,13 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
- 		if (conf->flags & IEEE80211_CONF_PS) {
- 			sc->ps_flags |= PS_ENABLED;
--			if (!(ah->caps.hw_caps &
--			      ATH9K_HW_CAP_AUTOSLEEP)) {
--				if ((sc->imask & ATH9K_INT_TIM_TIMER) == 0) {
--					sc->imask |= ATH9K_INT_TIM_TIMER;
--					ath9k_hw_set_interrupts(sc->sc_ah,
--							sc->imask);
--				}
--			}
- 			/*
- 			 * At this point we know hardware has received an ACK
- 			 * of a previously sent null data frame.
- 			 */
- 			if ((sc->ps_flags & PS_NULLFUNC_COMPLETED)) {
- 				sc->ps_flags &= ~PS_NULLFUNC_COMPLETED;
--				sc->ps_enabled = true;
--				ath9k_hw_setrxabort(sc->sc_ah, 1);
-+				ath9k_enable_ps(sc);
-                         }
- 		} else {
- 			sc->ps_enabled = false;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3c790a4..f5cbbcb 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2048,10 +2048,9 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		 */
- 		if (bf->bf_isnullfunc &&
- 		    (ds->ds_txstat.ts_status & ATH9K_TX_ACKED)) {
--			if ((sc->ps_flags & PS_ENABLED)) {
--				sc->ps_enabled = true;
--				ath9k_hw_setrxabort(sc->sc_ah, 1);
--			} else
-+			if ((sc->ps_flags & PS_ENABLED))
-+				ath9k_enable_ps(sc);
-+			else
- 				sc->ps_flags |= PS_NULLFUNC_COMPLETED;
- 		}
-
---
-1.6.6.1
-
+-- 
+Kalle Valo
