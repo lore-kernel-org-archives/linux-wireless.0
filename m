@@ -1,134 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp106.plus.mail.re1.yahoo.com ([69.147.102.69]:42649 "HELO
-	smtp106.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S966095Ab0BZWUE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 17:20:04 -0500
-Message-ID: <4B88490F.7030605@yahoo.com>
-Date: Fri, 26 Feb 2010 23:19:59 +0100
-From: Alban Browaeys <prahal@yahoo.com>
-Reply-To: prahal@yahoo.com
+Received: from mx1.redhat.com ([209.132.183.28]:39220 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752172Ab0BSQnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 11:43:00 -0500
+Date: Fri, 19 Feb 2010 17:40:42 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, stable@kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: Re: [PATCH 2/3] iwlwifi: sanity check before counting number of
+	tfds can be free
+Message-ID: <20100219164041.GA3995@dhcp-lab-161.englab.brq.redhat.com>
+References: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com> <1266559301-19581-3-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] rt2x00: txdone implementation supporting hw encryption.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1266559301-19581-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an implementation that support WCID being the encryption key.
-Wireless Cli Id was set to be the encryption key in rt2800pci_write_tx_desc
-and read (TX_STA_FIFO_WCID) as the current queue entry index.
+Hi Reinette 
+On Thu, Feb 18, 2010 at 10:01:40PM -0800, Reinette Chatre wrote:
+> This fix starts to address
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2160 . There are
+> more situations in which this problem (freed tfds below zero) can occur so
+> this bug is not closed yet.
 
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-Signed-off-by: Alban Browaeys <prahal@yahoo.com>
----
-  drivers/net/wireless/rt2x00/rt2800pci.c |   57 +++++++++++++-----------------
-  1 files changed, 25 insertions(+), 32 deletions(-)
+Only starts ... ,hmm so these two patches does not fix any issue.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 0e4c417..7049c74 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -907,14 +907,12 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
-  {
-  	struct data_queue *queue;
-  	struct queue_entry *entry;
--	struct queue_entry *entry_done;
--	struct queue_entry_priv_pci *entry_priv;
-+	__le32 *txwi;
-  	struct txdone_entry_desc txdesc;
-  	u32 word;
-  	u32 reg;
-  	u32 old_reg;
--	unsigned int type;
--	unsigned int index;
-+	int wcid, ack, pid, tx_wcid, tx_ack, tx_pid;
-  	u16 mcs, real_mcs;
-  
-  	/*
-@@ -936,47 +934,41 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
-  			break;
-  		old_reg = reg;
-  
-+		wcid    = rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
-+		ack     = rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
-+		pid     = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
-+
-  		/*
-  		 * Skip this entry when it contains an invalid
-  		 * queue identication number.
-  		 */
--		type = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE) - 1;
--		if (type >= QID_RX)
-+		if (pid <= 0 || pid > QID_RX)
-  			continue;
-  
--		queue = rt2x00queue_get_queue(rt2x00dev, type);
-+		queue = rt2x00queue_get_queue(rt2x00dev, pid - 1);
-  		if (unlikely(!queue))
-  			continue;
-  
-  		/*
--		 * Skip this entry when it contains an invalid
--		 * index number.
-+		 * Inside each queue, we process each entry in a chronological
-+		 * order. We first check that the queue is not empty.
-  		 */
--		index = rt2x00_get_field32(reg, TX_STA_FIFO_WCID) - 1;
--		if (unlikely(index >= queue->limit))
-+		if (rt2x00queue_empty(queue))
-  			continue;
-+		entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
-  
--		entry = &queue->entries[index];
--		entry_priv = entry->priv_data;
--		rt2x00_desc_read((__le32 *)entry->skb->data, 0, &word);
--
--		entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
--		while (entry != entry_done) {
--			/*
--			 * Catch up.
--			 * Just report any entries we missed as failed.
--			 */
--			WARNING(rt2x00dev,
--				"TX status report missed for entry %d\n",
--				entry_done->entry_idx);
--
--			txdesc.flags = 0;
--			__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
--			txdesc.retry = 0;
--
--			rt2x00lib_txdone(entry_done, &txdesc);
--			entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
--		}
-+		/* Check if we got a match by looking at WCID/ACK/PID
-+		 * fields */
-+		txwi = (__le32 *)(entry->skb->data -
-+				  rt2x00dev->ops->extra_tx_headroom);
-+
-+		rt2x00_desc_read(txwi, 1, &word);
-+		tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
-+		tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
-+		tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
-+
-+		if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid))
-+			WARNING(rt2x00dev, "invalid TX_STA_FIFO content\n");
-  
-  		/*
-  		 * Obtain the status about this packet.
-@@ -997,6 +989,7 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
-  		 * we have mcs = tx_mcs - 1. So the number of
-  		 * retry is (tx_mcs - mcs).
-  		 */
-+		rt2x00_desc_read(txwi, 0, &word);
-  		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
-  		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
-  		__set_bit(TXDONE_FALLBACK, &txdesc.flags);
--- 
-1.7.0
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> index 87ce2bd..9196d3f 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> @@ -1131,6 +1131,7 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+>  	struct iwl_queue *q = &txq->q;
+>  	struct iwl_tx_info *tx_info;
+>  	int nfreed = 0;
+> +	struct ieee80211_hdr *hdr;
+>  
+>  	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
+>  		IWL_ERR(priv, "Read index for DMA queue txq id (%d), index %d, "
+> @@ -1145,13 +1146,19 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+>  
+>  		tx_info = &txq->txb[txq->q.read_ptr];
+>  		iwl_tx_status(priv, tx_info->skb[0]);
+> +
+> +		if (tx_info->skb[0]) {
+> +			hdr = (struct ieee80211_hdr *)
+> +				((struct sk_buff *)tx_info->skb[0])->data;
 
+Not needed cast.
+
+> +			if (hdr && ieee80211_is_data_qos(hdr->frame_control))
+> +				nfreed++;
+> +		}
+
+I think additional line is needed to make things work. Something like below
+should work, but I have no time to test it today.
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index de45f30..6b516c4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1153,8 +1153,7 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
+ 				   tx_resp->failure_frame);
+ 
+ 		freed = iwl_tx_queue_reclaim(priv, txq_id, index);
+-		if (ieee80211_is_data_qos(tx_resp->frame_ctrl))
+-			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
++		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
+ 
+ 		if (priv->mac80211_registered &&
+ 		    (iwl_queue_space(&txq->q) > txq->q.low_mark))
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 281d318..c051f9f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -1132,6 +1132,7 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 	struct iwl_queue *q = &txq->q;
+ 	struct iwl_tx_info *tx_info;
+ 	int nfreed = 0;
++	struct ieee80211_hdr *hdr;
+ 
+ 	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
+ 		IWL_ERR(priv, "Read index for DMA queue txq id (%d), index %d, "
+@@ -1146,13 +1147,18 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 
+ 		tx_info = &txq->txb[txq->q.read_ptr];
+ 		iwl_tx_status(priv, tx_info->skb[0]);
++
++		if (tx_info->skb[0]) {
++			hdr = (struct ieee80211_hdr *) tx_info->skb[0]->data;
++			if (hdr && ieee80211_is_data_qos(hdr->frame_control))
++				nfreed++;
++		}
+ 		tx_info->skb[0] = NULL;
+ 
+ 		if (priv->cfg->ops->lib->txq_inval_byte_cnt_tbl)
+ 			priv->cfg->ops->lib->txq_inval_byte_cnt_tbl(priv, txq);
+ 
+ 		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
+-		nfreed++;
+ 	}
+ 	return nfreed;
+ }
+
+Cheers
+Stanislaw
