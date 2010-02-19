@@ -1,63 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:35893 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600Ab0BQQGF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35647 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755046Ab0BSSIW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 11:06:05 -0500
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o1HG5xf9030857
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 10:06:02 -0600
-Received: from [127.0.1.1] (essapo-nirac253144.europe.nokia.com [10.162.253.144])
-	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o1HG5mIZ000879
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 18:05:48 +0200
-Subject: [PATCH v2 2/3] iw: update nl80211.h to include power save commands
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@nokia.com>
-Date: Wed, 17 Feb 2010 18:05:47 +0200
-Message-ID: <20100217160547.4598.91442.stgit@tikku>
-In-Reply-To: <20100217155810.4534.69338.stgit@tikku>
-References: <20100217155810.4534.69338.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 19 Feb 2010 13:08:22 -0500
+Message-Id: <20100219180737.156138399@sipsolutions.net>
+Date: Fri, 19 Feb 2010 19:06:56 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] ath9k: convert to new station add/remove callbacks
+References: <20100219180652.409890561@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This converts ath9k to use the new station
+add/remove callbacks instead of using the
+old sta_notify callback.
 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- nl80211.h |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   35 +++++++++++++++++++---------------
+ 1 file changed, 20 insertions(+), 15 deletions(-)
 
-diff --git a/nl80211.h b/nl80211.h
-index 8e6384f..28ba20f 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -416,6 +416,9 @@ enum nl80211_commands {
- 	NL80211_CMD_ACTION,
- 	NL80211_CMD_ACTION_TX_STATUS,
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2010-02-19 18:58:12.000000000 +0100
++++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2010-02-19 18:59:53.000000000 +0100
+@@ -1684,24 +1684,28 @@ static void ath9k_configure_filter(struc
+ 		  "Set HW RX filter: 0x%x\n", rfilt);
+ }
  
-+	NL80211_CMD_SET_POWER_SAVE,
-+	NL80211_CMD_GET_POWER_SAVE,
+-static void ath9k_sta_notify(struct ieee80211_hw *hw,
+-			     struct ieee80211_vif *vif,
+-			     enum sta_notify_cmd cmd,
+-			     struct ieee80211_sta *sta)
++static int ath9k_sta_add(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 struct ieee80211_sta *sta)
+ {
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
+ 
+-	switch (cmd) {
+-	case STA_NOTIFY_ADD:
+-		ath_node_attach(sc, sta);
+-		break;
+-	case STA_NOTIFY_REMOVE:
+-		ath_node_detach(sc, sta);
+-		break;
+-	default:
+-		break;
+-	}
++	ath_node_attach(sc, sta);
 +
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -837,6 +840,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_ACK,
- 
-+	NL80211_ATTR_PS_STATE,
++	return 0;
++}
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1573,4 +1578,9 @@ enum nl80211_band {
- 	NL80211_BAND_5GHZ,
- };
- 
-+enum nl80211_ps_state {
-+	NL80211_PS_DISABLED,
-+	NL80211_PS_ENABLED,
-+};
++static int ath9k_sta_remove(struct ieee80211_hw *hw,
++			    struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta)
++{
++	struct ath_wiphy *aphy = hw->priv;
++	struct ath_softc *sc = aphy->sc;
 +
- #endif /* __LINUX_NL80211_H */
++	ath_node_detach(sc, sta);
++
++	return 0;
+ }
+ 
+ static int ath9k_conf_tx(struct ieee80211_hw *hw, u16 queue,
+@@ -2045,7 +2049,8 @@ struct ieee80211_ops ath9k_ops = {
+ 	.remove_interface   = ath9k_remove_interface,
+ 	.config 	    = ath9k_config,
+ 	.configure_filter   = ath9k_configure_filter,
+-	.sta_notify         = ath9k_sta_notify,
++	.sta_add	    = ath9k_sta_add,
++	.sta_remove	    = ath9k_sta_remove,
+ 	.conf_tx 	    = ath9k_conf_tx,
+ 	.bss_info_changed   = ath9k_bss_info_changed,
+ 	.set_key            = ath9k_set_key,
+
 
