@@ -1,57 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f200.google.com ([209.85.210.200]:46484 "EHLO
-	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959Ab0BQFaV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35644 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754989Ab0BSSIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 00:30:21 -0500
-Received: by yxe38 with SMTP id 38so4981928yxe.4
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 21:30:20 -0800 (PST)
-Date: Tue, 16 Feb 2010 21:22:47 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	linux-input@vger.kernel.org, marcel@holtmann.org
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20100217052247.GD7160@core.coreip.homeip.net>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+	Fri, 19 Feb 2010 13:08:20 -0500
+Message-Id: <20100219180736.990884119@sipsolutions.net>
+Date: Fri, 19 Feb 2010 19:06:55 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] mac80211_hwsim: convert to new station add/remove
+ callbacks
+References: <20100219180652.409890561@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HI Matthew,
+This converts mac80211_hwsim to use the new
+station add/remove callbacks instead of using
+the old sta_notify callback.
 
-On Tue, Feb 16, 2010 at 04:36:24PM -0500, Matthew Garrett wrote:
-> Most laptops have keys that are intended to toggle all device state, not
-> just wifi. These are currently generally mapped to KEY_WLAN. As a result,
-> rfkill will only kill or enable wifi in response to the key press. This
-> confuses users and can make it difficult for them to enable bluetooth
-> and wwan devices.
-> 
-> This patch adds a new keycode, KEY_RFKILL. It indicates that the system
-> should toggle the state of all rfkillable devices.
-> 
-> Signed-off-by: Matthew Garrett <mjg@redhat.com>
-> ---
->  include/linux/input.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/linux/input.h b/include/linux/input.h
-> index 735ceaf..3294a89 100644
-> --- a/include/linux/input.h
-> +++ b/include/linux/input.h
-> @@ -594,7 +594,7 @@ struct input_absinfo {
->  #define KEY_NUMERIC_9		0x209
->  #define KEY_NUMERIC_STAR	0x20a
->  #define KEY_NUMERIC_POUND	0x20b
-> -
-> +#define KEY_RFKILL		0x20c /* Key that controls all radios */
->  #define KEY_CAMERA_FOCUS	0x210
->  
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/mac80211_hwsim.c |   32 ++++++++++++++++++++++++++------
+ 1 file changed, 26 insertions(+), 6 deletions(-)
 
-I'd like some breathing room aroung KEY_NUMERIC? Any issues with making
-it 247 or 0x211?
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2010-02-19 18:55:53.000000000 +0100
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2010-02-19 18:57:57.000000000 +0100
+@@ -771,23 +771,41 @@ static void mac80211_hwsim_bss_info_chan
+ 	}
+ }
+ 
++static int mac80211_hwsim_sta_add(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  struct ieee80211_sta *sta)
++{
++	hwsim_check_magic(vif);
++	hwsim_set_sta_magic(sta);
++
++	return 0;
++}
++
++static int mac80211_hwsim_sta_remove(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_sta *sta)
++{
++	hwsim_check_magic(vif);
++	hwsim_clear_sta_magic(sta);
++
++	return 0;
++}
++
+ static void mac80211_hwsim_sta_notify(struct ieee80211_hw *hw,
+ 				      struct ieee80211_vif *vif,
+ 				      enum sta_notify_cmd cmd,
+ 				      struct ieee80211_sta *sta)
+ {
+ 	hwsim_check_magic(vif);
++
+ 	switch (cmd) {
+-	case STA_NOTIFY_ADD:
+-		hwsim_set_sta_magic(sta);
+-		break;
+-	case STA_NOTIFY_REMOVE:
+-		hwsim_clear_sta_magic(sta);
+-		break;
+ 	case STA_NOTIFY_SLEEP:
+ 	case STA_NOTIFY_AWAKE:
+ 		/* TODO: make good use of these flags */
+ 		break;
++	default:
++		WARN(1, "Invalid sta notify: %d\n", cmd);
++		break;
+ 	}
+ }
+ 
+@@ -958,6 +976,8 @@ static struct ieee80211_ops mac80211_hws
+ 	.config = mac80211_hwsim_config,
+ 	.configure_filter = mac80211_hwsim_configure_filter,
+ 	.bss_info_changed = mac80211_hwsim_bss_info_changed,
++	.sta_add = mac80211_hwsim_sta_add,
++	.sta_remove = mac80211_hwsim_sta_remove,
+ 	.sta_notify = mac80211_hwsim_sta_notify,
+ 	.set_tim = mac80211_hwsim_set_tim,
+ 	.conf_tx = mac80211_hwsim_conf_tx,
 
--- 
-Dmitry
+
