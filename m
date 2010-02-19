@@ -1,210 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:24694 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754050Ab0BRL2N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:13 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Received: from mga03.intel.com ([143.182.124.21]:65133 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752783Ab0BSGDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 01:03:13 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH 09/22] wl1271: add most of the normal initialization commands to PLT mode
-Date: Thu, 18 Feb 2010 13:25:44 +0200
-Message-Id: <1266492357-462-10-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/6] iwlwifi: separated time check for different type of force reset
+Date: Thu, 18 Feb 2010 22:03:06 -0800
+Message-Id: <1266559387-19637-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
+References: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@nokia.com>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-We need to configure PLT mode almost in the same way as normal mode.  Most of
-the configuration functions need to be called also when entering PLT, with
-the exception of a few RX and TX configuration (which cause mac80211 warnings
-if enable while runnning PLT tests).
+Use different timing duration check for different type of force reset,
+force reset request can come from different source and based on
+different reason; one type of reset request should not block other type of
+reset request.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Adding structure to keep track of different force reset request.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_init.c |    8 ++--
- drivers/net/wireless/wl12xx/wl1271_init.h |    4 ++
- drivers/net/wireless/wl12xx/wl1271_main.c |   85 ++++++++++++++++++++++++++---
- 3 files changed, 86 insertions(+), 11 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c |   25 ++++++++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |   14 +++++++++++++-
+ 3 files changed, 33 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 78403da..86c30a8 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -49,7 +49,7 @@ static int wl1271_init_hwenc_config(struct wl1271 *wl)
- 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 52b6beb..c5b724e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3378,6 +3378,12 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
+ 	priv->agg_tids_count = 0;
+ 
++	/* initialize force reset */
++	priv->force_reset[IWL_RF_RESET].reset_duration =
++		IWL_DELAY_NEXT_FORCE_RF_RESET;
++	priv->force_reset[IWL_FW_RESET].reset_duration =
++		IWL_DELAY_NEXT_FORCE_FW_RELOAD;
++
+ 	/* Choose which receivers/antennas to use */
+ 	if (priv->cfg->ops->hcmd->set_rxon_chain)
+ 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index bd56827..55252a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -3357,22 +3357,30 @@ static void iwl_force_rf_reset(struct iwl_priv *priv)
+ 	return;
  }
  
--static int wl1271_init_templates_config(struct wl1271 *wl)
-+int wl1271_init_templates_config(struct wl1271 *wl)
+-#define IWL_DELAY_NEXT_FORCE_RESET (HZ*3)
+ 
+ int iwl_force_reset(struct iwl_priv *priv, int mode)
  {
- 	int ret;
- 
-@@ -113,7 +113,7 @@ static int wl1271_init_rx_config(struct wl1271 *wl, u32 config, u32 filter)
- 	return 0;
- }
- 
--static int wl1271_init_phy_config(struct wl1271 *wl)
-+int wl1271_init_phy_config(struct wl1271 *wl)
- {
- 	int ret;
- 
-@@ -156,7 +156,7 @@ static int wl1271_init_beacon_filter(struct wl1271 *wl)
- 	return 0;
- }
- 
--static int wl1271_init_pta(struct wl1271 *wl)
-+int wl1271_init_pta(struct wl1271 *wl)
- {
- 	int ret;
- 
-@@ -171,7 +171,7 @@ static int wl1271_init_pta(struct wl1271 *wl)
- 	return 0;
- }
- 
--static int wl1271_init_energy_detection(struct wl1271 *wl)
-+int wl1271_init_energy_detection(struct wl1271 *wl)
- {
- 	int ret;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.h b/drivers/net/wireless/wl12xx/wl1271_init.h
-index 930677f..bc26f8c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.h
-@@ -27,6 +27,10 @@
- #include "wl1271.h"
- 
- int wl1271_hw_init_power_auth(struct wl1271 *wl);
-+int wl1271_init_templates_config(struct wl1271 *wl);
-+int wl1271_init_phy_config(struct wl1271 *wl);
-+int wl1271_init_pta(struct wl1271 *wl);
-+int wl1271_init_energy_detection(struct wl1271 *wl);
- int wl1271_hw_init(struct wl1271 *wl);
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index b5d53a3..e698dec 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -265,7 +265,9 @@ static void wl1271_conf_init(struct wl1271 *wl)
- 
- static int wl1271_plt_init(struct wl1271 *wl)
- {
--	int ret;
-+	struct conf_tx_ac_category *conf_ac;
-+	struct conf_tx_tid *conf_tid;
-+	int ret, i;
- 
- 	ret = wl1271_cmd_general_parms(wl);
- 	if (ret < 0)
-@@ -275,15 +277,89 @@ static int wl1271_plt_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
-+	ret = wl1271_init_templates_config(wl);
-+	if (ret < 0)
-+		return ret;
++	struct iwl_force_reset *force_reset;
 +
- 	ret = wl1271_acx_init_mem_config(wl);
- 	if (ret < 0)
- 		return ret;
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return -EINVAL;
  
-+	/* PHY layer config */
-+	ret = wl1271_init_phy_config(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
-+	ret = wl1271_acx_dco_itrim_params(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
-+	/* Initialize connection monitoring thresholds */
-+	ret = wl1271_acx_conn_monit_params(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
-+	/* Bluetooth WLAN coexistence */
-+	ret = wl1271_init_pta(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
-+	/* Energy detection */
-+	ret = wl1271_init_energy_detection(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
-+	/* Default fragmentation threshold */
-+	ret = wl1271_acx_frag_threshold(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
-+	/* Default TID configuration */
-+	for (i = 0; i < wl->conf.tx.tid_conf_count; i++) {
-+		conf_tid = &wl->conf.tx.tid_conf[i];
-+		ret = wl1271_acx_tid_cfg(wl, conf_tid->queue_id,
-+					 conf_tid->channel_type,
-+					 conf_tid->tsid,
-+					 conf_tid->ps_scheme,
-+					 conf_tid->ack_policy,
-+					 conf_tid->apsd_conf[0],
-+					 conf_tid->apsd_conf[1]);
-+		if (ret < 0)
-+			goto out_free_memmap;
+-	if (priv->last_force_reset_jiffies &&
+-	    time_after(priv->last_force_reset_jiffies +
+-		       IWL_DELAY_NEXT_FORCE_RESET, jiffies)) {
++	if (mode >= IWL_MAX_FORCE_RESET) {
++		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
++		return -EINVAL;
 +	}
-+
-+	/* Default AC configuration */
-+	for (i = 0; i < wl->conf.tx.ac_conf_count; i++) {
-+		conf_ac = &wl->conf.tx.ac_conf[i];
-+		ret = wl1271_acx_ac_cfg(wl, conf_ac->ac, conf_ac->cw_min,
-+					conf_ac->cw_max, conf_ac->aifsn,
-+					conf_ac->tx_op_limit);
-+		if (ret < 0)
-+			goto out_free_memmap;
-+	}
-+
-+	/* Enable data path */
- 	ret = wl1271_cmd_data_path(wl, 1);
- 	if (ret < 0)
--		return ret;
-+		goto out_free_memmap;
-+
-+	/* Configure for CAM power saving (ie. always active) */
-+	ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
-+	/* configure PM */
-+	ret = wl1271_acx_pm_config(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
- 
- 	return 0;
-+
-+ out_free_memmap:
-+	kfree(wl->target_mem_map);
-+	wl->target_mem_map = NULL;
-+
-+	return ret;
- }
- 
- static void wl1271_disable_interrupts(struct wl1271 *wl)
-@@ -653,11 +729,6 @@ int wl1271_plt_start(struct wl1271 *wl)
- 		if (ret < 0)
- 			goto irq_disable;
- 
--		/* Make sure power saving is disabled */
--		ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
--		if (ret < 0)
--			goto irq_disable;
++	force_reset = &priv->force_reset[mode];
++	force_reset->reset_request_count++;
++	if (force_reset->last_force_reset_jiffies &&
++	    time_after(force_reset->last_force_reset_jiffies +
++	    force_reset->reset_duration, jiffies)) {
+ 		IWL_DEBUG_INFO(priv, "force reset rejected\n");
++		force_reset->reset_reject_count++;
+ 		return -EAGAIN;
+ 	}
 -
- 		wl->state = WL1271_STATE_PLT;
- 		wl1271_notice("firmware booted in PLT mode (%s)",
- 			      wl->chip.fw_ver);
++	force_reset->reset_success_count++;
++	force_reset->last_force_reset_jiffies = jiffies;
+ 	IWL_DEBUG_INFO(priv, "perform force reset (%d)\n", mode);
+-
+ 	switch (mode) {
+ 	case IWL_RF_RESET:
+ 		iwl_force_rf_reset(priv);
+@@ -3389,12 +3397,7 @@ int iwl_force_reset(struct iwl_priv *priv, int mode)
+ 		clear_bit(STATUS_READY, &priv->status);
+ 		queue_work(priv->workqueue, &priv->restart);
+ 		break;
+-	default:
+-		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
+-		return -EINVAL;
+ 	}
+-	priv->last_force_reset_jiffies = jiffies;
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 021c686..7914d65 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1036,9 +1036,21 @@ struct iwl_event_log {
+ #define IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF	(200)
+ #define IWL_MAX_PLCP_ERR_THRESHOLD_MAX	(255)
+ 
++#define IWL_DELAY_NEXT_FORCE_RF_RESET  (HZ*3)
++#define IWL_DELAY_NEXT_FORCE_FW_RELOAD (HZ*5)
++
+ enum iwl_reset {
+ 	IWL_RF_RESET = 0,
+ 	IWL_FW_RESET,
++	IWL_MAX_FORCE_RESET,
++};
++
++struct iwl_force_reset {
++	int reset_request_count;
++	int reset_success_count;
++	int reset_reject_count;
++	unsigned long reset_duration;
++	unsigned long last_force_reset_jiffies;
+ };
+ 
+ struct iwl_priv {
+@@ -1076,7 +1088,7 @@ struct iwl_priv {
+ 	u8 agg_tids_count;
+ 
+ 	/* force reset */
+-	unsigned long last_force_reset_jiffies;
++	struct iwl_force_reset force_reset[IWL_MAX_FORCE_RESET];
+ 
+ 	/* we allocate array of iwl4965_channel_info for NIC's valid channels.
+ 	 *    Access via channel # using indirect index array */
 -- 
 1.6.3.3
 
