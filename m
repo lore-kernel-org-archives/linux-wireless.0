@@ -1,296 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20506 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754773Ab0BVGl0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:26 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Received: from mga03.intel.com ([143.182.124.21]:51502 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752655Ab0BSGDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 01:03:12 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 03/22] wl1271: Implemented abstraction of IO functions.
-Date: Mon, 22 Feb 2010 08:38:23 +0200
-Message-Id: <1266820722-20202-4-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/6] iwlwifi: indicate calib version for 6050 series
+Date: Thu, 18 Feb 2010 22:03:05 -0800
+Message-Id: <1266559387-19637-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
+References: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Changed the driver to use if_ops structure to abstract access to the IO
-layer (SPI or SDIO).
+Indicate calibration version to uCode
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/wl12xx/wl1271.h      |   16 +++++++++++-
- drivers/net/wireless/wl12xx/wl1271_io.c   |   21 ++++++++++------
- drivers/net/wireless/wl12xx/wl1271_io.h   |    2 +
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 ++--
- drivers/net/wireless/wl12xx/wl1271_spi.c  |   37 ++++++++++++++++++++++------
- 5 files changed, 62 insertions(+), 20 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   79 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 +
+ drivers/net/wireless/iwlwifi/iwl-csr.h  |    2 +-
+ 3 files changed, 79 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 97ea509..10135c9 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -334,11 +334,25 @@ struct wl1271_scan {
- 	u8 probe_requests;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 782e23a..c4844ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -70,6 +70,14 @@ static void iwl6000_set_ct_threshold(struct iwl_priv *priv)
+ 	priv->hw_params.ct_kill_exit_threshold = CT_KILL_EXIT_THRESHOLD;
+ }
+ 
++/* Indicate calibration version to uCode. */
++static void iwl6050_set_calib_version(struct iwl_priv *priv)
++{
++	if (priv->cfg->ops->lib->eeprom_ops.calib_version(priv) >= 6)
++		iwl_set_bit(priv, CSR_GP_DRIVER_REG,
++				CSR_GP_DRIVER_REG_BIT_CALIB_VERSION6);
++}
++
+ /* NIC configuration for 6000 series */
+ static void iwl6000_nic_config(struct iwl_priv *priv)
+ {
+@@ -96,6 +104,8 @@ static void iwl6000_nic_config(struct iwl_priv *priv)
+ 			     CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA);
+ 	}
+ 	/* else do nothing, uCode configured */
++	if (priv->cfg->ops->lib->temp_ops.set_calib_version)
++		priv->cfg->ops->lib->temp_ops.set_calib_version(priv);
+ }
+ 
+ static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
+@@ -277,6 +287,71 @@ static const struct iwl_ops iwl6000_ops = {
+ 	.led = &iwlagn_led_ops,
  };
  
-+struct wl1271_if_operations {
-+	void (*read)(struct wl1271 *wl, int addr, void *buf, size_t len,
-+		     bool fixed);
-+	void (*write)(struct wl1271 *wl, int addr, void *buf, size_t len,
-+		     bool fixed);
-+	void (*reset)(struct wl1271 *wl);
-+	void (*init)(struct wl1271 *wl);
-+	struct device* (*dev)(struct wl1271 *wl);
-+	void (*enable_irq)(struct wl1271 *wl);
-+	void (*disable_irq)(struct wl1271 *wl);
++static struct iwl_lib_ops iwl6050_lib = {
++	.set_hw_params = iwl6000_hw_set_hw_params,
++	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
++	.txq_inval_byte_cnt_tbl = iwl5000_txq_inval_byte_cnt_tbl,
++	.txq_set_sched = iwl5000_txq_set_sched,
++	.txq_agg_enable = iwl5000_txq_agg_enable,
++	.txq_agg_disable = iwl5000_txq_agg_disable,
++	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
++	.txq_free_tfd = iwl_hw_txq_free_tfd,
++	.txq_init = iwl_hw_tx_queue_init,
++	.rx_handler_setup = iwl5000_rx_handler_setup,
++	.setup_deferred_work = iwl5000_setup_deferred_work,
++	.is_valid_rtc_data_addr = iwl5000_hw_valid_rtc_data_addr,
++	.load_ucode = iwl5000_load_ucode,
++	.dump_nic_event_log = iwl_dump_nic_event_log,
++	.dump_nic_error_log = iwl_dump_nic_error_log,
++	.dump_csr = iwl_dump_csr,
++	.dump_fh = iwl_dump_fh,
++	.init_alive_start = iwl5000_init_alive_start,
++	.alive_notify = iwl5000_alive_notify,
++	.send_tx_power = iwl5000_send_tx_power,
++	.update_chain_flags = iwl_update_chain_flags,
++	.set_channel_switch = iwl6000_hw_channel_switch,
++	.apm_ops = {
++		.init = iwl_apm_init,
++		.stop = iwl_apm_stop,
++		.config = iwl6000_nic_config,
++		.set_pwr_src = iwl_set_pwr_src,
++	},
++	.eeprom_ops = {
++		.regulatory_bands = {
++			EEPROM_5000_REG_BAND_1_CHANNELS,
++			EEPROM_5000_REG_BAND_2_CHANNELS,
++			EEPROM_5000_REG_BAND_3_CHANNELS,
++			EEPROM_5000_REG_BAND_4_CHANNELS,
++			EEPROM_5000_REG_BAND_5_CHANNELS,
++			EEPROM_5000_REG_BAND_24_HT40_CHANNELS,
++			EEPROM_5000_REG_BAND_52_HT40_CHANNELS
++		},
++		.verify_signature  = iwlcore_eeprom_verify_signature,
++		.acquire_semaphore = iwlcore_eeprom_acquire_semaphore,
++		.release_semaphore = iwlcore_eeprom_release_semaphore,
++		.calib_version	= iwl5000_eeprom_calib_version,
++		.query_addr = iwl5000_eeprom_query_addr,
++		.update_enhanced_txpower = iwlcore_eeprom_enhanced_txpower,
++	},
++	.post_associate = iwl_post_associate,
++	.isr = iwl_isr_ict,
++	.config_ap = iwl_config_ap,
++	.temp_ops = {
++		.temperature = iwl5000_temperature,
++		.set_ct_kill = iwl6000_set_ct_threshold,
++		.set_calib_version = iwl6050_set_calib_version,
++	 },
++	.add_bcast_station = iwl_add_bcast_station,
 +};
 +
- struct wl1271 {
- 	struct ieee80211_hw *hw;
- 	bool mac80211_registered;
- 
--	struct spi_device *spi;
-+	void *if_priv;
++static const struct iwl_ops iwl6050_ops = {
++	.ucode = &iwl5000_ucode,
++	.lib = &iwl6050_lib,
++	.hcmd = &iwl5000_hcmd,
++	.utils = &iwl5000_hcmd_utils,
++	.led = &iwlagn_led_ops,
++};
 +
-+	struct wl1271_if_operations *if_ops;
- 
- 	void (*set_power)(bool enable);
- 	int irq;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_io.c b/drivers/net/wireless/wl12xx/wl1271_io.c
-index b825cfa..d00f7ed 100644
---- a/drivers/net/wireless/wl12xx/wl1271_io.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_io.c
-@@ -31,14 +31,19 @@
- #include "wl1271_spi.h"
- #include "wl1271_io.h"
- 
-+struct device *wl1271_wl_to_dev(struct wl1271 *wl)
-+{
-+	return wl->if_ops->dev(wl);
-+}
-+
- void wl1271_disable_interrupts(struct wl1271 *wl)
- {
--	wl1271_spi_disable_interrupts(wl);
-+	wl->if_ops->disable_irq(wl);
- }
- 
- void wl1271_enable_interrupts(struct wl1271 *wl)
- {
--	wl1271_spi_enable_interrupts(wl);
-+	wl->if_ops->enable_irq(wl);
- }
- 
- static int wl1271_translate_addr(struct wl1271 *wl, int addr)
-@@ -127,24 +132,24 @@ int wl1271_set_partition(struct wl1271 *wl,
- 
- void wl1271_io_reset(struct wl1271 *wl)
- {
--	wl1271_spi_reset(wl);
-+	wl->if_ops->reset(wl);
- }
- 
- void wl1271_io_init(struct wl1271 *wl)
- {
--	wl1271_spi_init(wl);
-+	wl->if_ops->init(wl);
- }
- 
- void wl1271_raw_write(struct wl1271 *wl, int addr, void *buf,
- 		      size_t len, bool fixed)
- {
--	wl1271_spi_raw_write(wl, addr, buf, len, fixed);
-+	wl->if_ops->write(wl, addr, buf, len, fixed);
- }
- 
- void wl1271_raw_read(struct wl1271 *wl, int addr, void *buf,
- 		     size_t len, bool fixed)
- {
--	wl1271_spi_raw_read(wl, addr, buf, len, fixed);
-+	wl->if_ops->read(wl, addr, buf, len, fixed);
- }
- 
- void wl1271_read(struct wl1271 *wl, int addr, void *buf, size_t len,
-@@ -154,7 +159,7 @@ void wl1271_read(struct wl1271 *wl, int addr, void *buf, size_t len,
- 
- 	physical = wl1271_translate_addr(wl, addr);
- 
--	wl1271_spi_raw_read(wl, physical, buf, len, fixed);
-+	wl1271_raw_read(wl, physical, buf, len, fixed);
- }
- 
- void wl1271_write(struct wl1271 *wl, int addr, void *buf, size_t len,
-@@ -164,7 +169,7 @@ void wl1271_write(struct wl1271 *wl, int addr, void *buf, size_t len,
- 
- 	physical = wl1271_translate_addr(wl, addr);
- 
--	wl1271_spi_raw_write(wl, physical, buf, len, fixed);
-+	wl1271_raw_write(wl, physical, buf, len, fixed);
- }
- 
- u32 wl1271_read32(struct wl1271 *wl, int addr)
-diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
-index c8b0971..f2b6325 100644
---- a/drivers/net/wireless/wl12xx/wl1271_io.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_io.h
-@@ -33,6 +33,8 @@ void wl1271_enable_interrupts(struct wl1271 *wl);
- void wl1271_io_reset(struct wl1271 *wl);
- void wl1271_io_init(struct wl1271 *wl);
- 
-+struct device *wl1271_wl_to_dev(struct wl1271 *wl);
-+
- /* Raw target IO, address is not translated */
- void wl1271_raw_write(struct wl1271 *wl, int addr, void *buf,
- 		      size_t len, bool fixed);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 18347c3..6b3fd00 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -480,7 +480,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
- 	const struct firmware *fw;
- 	int ret;
- 
--	ret = request_firmware(&fw, WL1271_FW_NAME, &wl->spi->dev);
-+	ret = request_firmware(&fw, WL1271_FW_NAME, wl1271_wl_to_dev(wl));
- 
- 	if (ret < 0) {
- 		wl1271_error("could not get firmware: %d", ret);
-@@ -552,7 +552,7 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
- 	const struct firmware *fw;
- 	int ret;
- 
--	ret = request_firmware(&fw, WL1271_NVS_NAME, &wl->spi->dev);
-+	ret = request_firmware(&fw, WL1271_NVS_NAME, wl1271_wl_to_dev(wl));
- 
- 	if (ret < 0) {
- 		wl1271_error("could not get nvs file: %d", ret);
-@@ -1973,7 +1973,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	if (wl1271_11a_enabled())
- 		wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
- 
--	SET_IEEE80211_DEV(wl->hw, &wl->spi->dev);
-+	SET_IEEE80211_DEV(wl->hw, wl1271_wl_to_dev(wl));
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index b422c9f..a0f4169 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -33,6 +33,15 @@
- #include "wl1271_spi.h"
- #include "wl1271_io.h"
- 
-+static struct spi_device *wl_to_spi(struct wl1271 *wl)
-+{
-+	return wl->if_priv;
-+}
-+
-+static struct device *wl1271_spi_wl_to_dev(struct wl1271 *wl)
-+{
-+	return &(wl_to_spi(wl)->dev);
-+}
- 
- void wl1271_spi_disable_interrupts(struct wl1271 *wl)
- {
-@@ -65,7 +74,7 @@ void wl1271_spi_reset(struct wl1271 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl->spi, &m);
-+	spi_sync(wl_to_spi(wl), &m);
- 
- 	wl1271_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
- }
-@@ -119,7 +128,7 @@ void wl1271_spi_init(struct wl1271 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl->spi, &m);
-+	spi_sync(wl_to_spi(wl), &m);
- 
- 	wl1271_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
- }
-@@ -151,7 +160,7 @@ static void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
- 			t[0].rx_buf = buf + (len - num_busy_bytes);
- 			t[0].len = num_busy_bytes;
- 			spi_message_add_tail(&t[0], &m);
--			spi_sync(wl->spi, &m);
-+			spi_sync(wl_to_spi(wl), &m);
- 			return;
- 		}
- 	}
-@@ -171,7 +180,7 @@ static void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
- 		t[0].rx_buf = busy_buf;
- 		t[0].len = sizeof(u32);
- 		spi_message_add_tail(&t[0], &m);
--		spi_sync(wl->spi, &m);
-+		spi_sync(wl_to_spi(wl), &m);
- 
- 		if (*busy_buf & 0x1) {
- 			spi_message_init(&m);
-@@ -179,7 +188,7 @@ static void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
- 			t[0].rx_buf = buf;
- 			t[0].len = len;
- 			spi_message_add_tail(&t[0], &m);
--			spi_sync(wl->spi, &m);
-+			spi_sync(wl_to_spi(wl), &m);
- 			return;
- 		}
- 	}
-@@ -225,7 +234,7 @@ void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- 	t[2].len = len;
- 	spi_message_add_tail(&t[2], &m);
- 
--	spi_sync(wl->spi, &m);
-+	spi_sync(wl_to_spi(wl), &m);
- 
- 	/* FIXME: Check busy words, removed due to SPI bug */
- 	/* if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1))
-@@ -263,7 +272,7 @@ void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
- 	t[1].len = len;
- 	spi_message_add_tail(&t[1], &m);
- 
--	spi_sync(wl->spi, &m);
-+	spi_sync(wl_to_spi(wl), &m);
- 
- 	wl1271_dump(DEBUG_SPI, "spi_write cmd -> ", cmd, sizeof(*cmd));
- 	wl1271_dump(DEBUG_SPI, "spi_write buf -> ", buf, len);
-@@ -306,6 +315,16 @@ static struct platform_device wl1271_device = {
- 	},
+ /*
+  * "i": Internal configuration, use internal Power Amplifier
+  */
+@@ -380,7 +455,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.ucode_api_max = IWL6050_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6050_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl6000_ops,
++	.ops = &iwl6050_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+ 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+@@ -412,7 +487,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.ucode_api_max = IWL6050_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6050_UCODE_API_MIN,
+ 	.sku = IWL_SKU_A|IWL_SKU_G,
+-	.ops = &iwl6000_ops,
++	.ops = &iwl6050_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+ 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 6347d4b..3df7933 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -117,6 +117,7 @@ struct iwl_apm_ops {
+ struct iwl_temp_ops {
+ 	void (*temperature)(struct iwl_priv *priv);
+ 	void (*set_ct_kill)(struct iwl_priv *priv);
++	void (*set_calib_version)(struct iwl_priv *priv);
  };
  
-+static struct wl1271_if_operations spi_ops = {
-+	.read		= wl1271_spi_raw_read,
-+	.write		= wl1271_spi_raw_write,
-+	.reset		= wl1271_spi_reset,
-+	.init		= wl1271_spi_init,
-+	.dev		= wl1271_spi_wl_to_dev,
-+	.enable_irq	= wl1271_spi_enable_interrupts,
-+	.disable_irq	= wl1271_spi_disable_interrupts
-+};
-+
- static int __devinit wl1271_probe(struct spi_device *spi)
- {
- 	struct wl12xx_platform_data *pdata;
-@@ -326,7 +345,9 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl = hw->priv;
+ struct iwl_ucode_ops {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 1e00720..808b714 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -369,7 +369,7 @@
+ #define CSR_GP_DRIVER_REG_BIT_RADIO_SKU_3x3_HYB	    (0x00000000)
+ #define CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_HYB	    (0x00000001)
+ #define CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA	    (0x00000002)
+-
++#define CSR_GP_DRIVER_REG_BIT_CALIB_VERSION6	(0x00000004)
  
- 	dev_set_drvdata(&spi->dev, wl);
--	wl->spi = spi;
-+	wl->if_priv = spi;
-+
-+	wl->if_ops = &spi_ops;
- 
- 	/* This is the only SPI value that we need to set here, the rest
- 	 * comes from the board-peripherals file */
+ /* GIO Chicken Bits (PCI Express bus link power management) */
+ #define CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX  (0x00800000)
 -- 
 1.6.3.3
 
