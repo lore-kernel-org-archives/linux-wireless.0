@@ -1,47 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54891 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757605Ab0BMR0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 12:26:35 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: update .gitignore
-Date: Sat, 13 Feb 2010 18:26:27 +0100
-Message-Id: <1266081988-16012-1-git-send-email-hauke@hauke-m.de>
+Received: from isilmar.linta.de ([213.133.102.198]:44405 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751526Ab0BSSIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 13:08:15 -0500
+Date: Fri, 19 Feb 2010 19:08:13 +0100
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Pavel Roskin <proski@gnu.org>, Ozzy <ozzymud@gmail.com>,
+	linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Introduce PCMCIA_DEVICE_PROD_ID3, use it in hostap_cs and orinoco_cs
+Message-ID: <20100219180812.GA25981@isilmar.linta.de>
+References: <1265928966.19980.6.camel@mj> <20100212183519.GC4983@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100212183519.GC4983@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+John,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- .gitignore |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+On Fri, Feb 12, 2010 at 01:35:19PM -0500, John W. Linville wrote:
+> I'm happy to take this through my tree unless someone objects.  OTOH,
+> I'm happy to let the hostap/orinoco bits go through an appropriate
+> tree for PCMCIA...?
 
-diff --git a/.gitignore b/.gitignore
-index b6a26d3..e5266e6 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -1,15 +1,13 @@
- drivers
- include
- net
-+compat
-+udev
- *~
- git-describe
- compat-release
- master-tag
--.compat_autoconf*
--.config.md5
--.config.mk_md5sum.txt
--.tmp_versions
- Module.symvers
- module.order
--patches
- .pc
-+
--- 
-1.6.3.3
+I'm fine either way -- just let me know :)
 
+Best,
+	Dominik
