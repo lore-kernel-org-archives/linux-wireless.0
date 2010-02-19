@@ -1,62 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14684 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932268Ab0BEM1n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 07:27:43 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 04:27:43 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2 v2] mac80211: Reset dynamic ps timer in Rx path.
-Date: Fri, 5 Feb 2010 17:57:32 +0530
-Message-ID: <1265372852-4692-2-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
-References: <1265372852-4692-1-git-send-email-vnatarajan@atheros.com>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:41477 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751521Ab0BSOQO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 09:16:14 -0500
+Received: by bwz1 with SMTP id 1so80383bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 06:16:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1266572413.3991.55.camel@jlt3.sipsolutions.net>
+References: <1266572413.3991.55.camel@jlt3.sipsolutions.net>
+Date: Fri, 19 Feb 2010 15:16:11 +0100
+Message-ID: <22ee4e771002190616h72949c58n72e2e6a49f7ae1d3@mail.gmail.com>
+Subject: Re: FYI: needlessly exported symbols
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current mac80211 implementation enables power save if there
-is no Tx traffic for a specific timeout. Hence, PS is triggered
-even if there is a continuous Rx only traffic(like UDP) going on.
-This makes the drivers to wait on the tim bit in the next beacon
-to awake which leads to redundant sleep-wake cycles.
-Fix this by restarting the dynamic ps timer on receiving every
-data packet.
+On Fri, Feb 19, 2010 at 10:40 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> According to a little analysis I did on wireless-testing, these symbols
+> need not be exported because they're not imported by any module:
+>
+> p54_parse_eeprom
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- net/mac80211/rx.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5709307..657ed66 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1719,6 +1719,7 @@ static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
-+	struct ieee80211_local *local = rx->local;
- 	struct net_device *dev = sdata->dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
- 	__le16 fc = hdr->frame_control;
-@@ -1750,6 +1751,13 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 	dev->stats.rx_packets++;
- 	dev->stats.rx_bytes += rx->skb->len;
- 
-+	if (ieee80211_is_data(hdr->frame_control) &&
-+	    !is_multicast_ether_addr(hdr->addr1) &&
-+	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
-+			mod_timer(&local->dynamic_ps_timer, jiffies +
-+			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
-+	}
-+
- 	ieee80211_deliver_skb(rx);
- 
- 	return RX_QUEUED;
--- 
-1.6.6.1
-
+p54spi(.ko) needs p54_parse_eeprom from p54common(.ko)
