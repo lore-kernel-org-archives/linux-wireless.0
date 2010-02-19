@@ -1,157 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36545 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53542 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753834Ab0BSNAK (ORCPT
+	with ESMTP id S1754779Ab0BSSSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 08:00:10 -0500
-Subject: Re: [PATCH 2/6] iwlwifi: enable iwl_send_static_wepkey_cmd to sleep
+	Fri, 19 Feb 2010 13:18:42 -0500
+Subject: [RFC/RFT] mwl8k: convert to new station add/remove callbacks
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1266570799.3991.52.camel@jlt3.sipsolutions.net>
-References: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
-	 <1266559387-19637-3-git-send-email-reinette.chatre@intel.com>
-	 <1266570799.3991.52.camel@jlt3.sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+In-Reply-To: <20100219180737.156138399@sipsolutions.net>
+References: <20100219180652.409890561@sipsolutions.net>
+	 <20100219180737.156138399@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 19 Feb 2010 13:59:59 +0100
-Message-ID: <1266584399.14781.1.camel@jlt3.sipsolutions.net>
+Date: Fri, 19 Feb 2010 19:18:37 +0100
+Message-ID: <1266603517.10689.1.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Or probably better would be this:
+This converts mwl8k to use the new station
+add/remove callbacks instead of using the
+old sta_notify callback.
 
-iwlwifi: change WEP key protection to use mutex
+The new callbacks can sleep, so a lot of
+code can be removed now.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+FWIW, I did the remove/add order in the file
+to make the patch easier to read .....
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 4a616c5..f46e7c6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2841,7 +2841,6 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ drivers/net/wireless/mwl8k.c |  106 ++++++++-----------------------------------
+ 1 file changed, 22 insertions(+), 84 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/mwl8k.c	2010-02-19 19:08:37.000000000 +0100
++++ wireless-testing/drivers/net/wireless/mwl8k.c	2010-02-19 19:14:47.000000000 +0100
+@@ -188,10 +188,6 @@ struct mwl8k_priv {
+ 	bool sniffer_enabled;
+ 	bool wmm_enabled;
  
- 	mutex_lock(&priv->mutex);
- 	iwl_scan_cancel_timeout(priv, 100);
--	mutex_unlock(&priv->mutex);
- 
- 	/* If we are getting WEP group key and we didn't receive any key mapping
- 	 * so far, we are in legacy wep mode (group key only), otherwise we are
-@@ -2877,6 +2876,7 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		ret = -EINVAL;
- 	}
- 
-+	mutex_unlock(&priv->mutex);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 
- 	return ret;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 6ac1199..f978037 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1227,7 +1227,7 @@ struct iwl_priv {
- 	spinlock_t sta_lock;
- 	int num_stations;
- 	struct iwl_station_entry stations[IWL_STATION_COUNT];
--	struct iwl_wep_key wep_keys[WEP_KEYS_MAX];
-+	struct iwl_wep_key wep_keys[WEP_KEYS_MAX]; /* protected by mutex */
- 	u8 default_wep_key;
- 	u8 key_mapping_key;
- 	unsigned long ucode_key_table;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index b5f4830..1159d88 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -807,6 +807,8 @@ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
- 		.flags = CMD_SYNC,
- 	};
- 
-+	might_sleep();
-+
- 	memset(wep_cmd, 0, cmd_size +
- 			(sizeof(struct iwl_wep_key) * WEP_KEYS_MAX));
- 
-@@ -842,9 +844,9 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 			       struct ieee80211_key_conf *keyconf)
- {
- 	int ret;
--	unsigned long flags;
- 
--	spin_lock_irqsave(&priv->sta_lock, flags);
-+	WARN_ON(!mutex_is_locked(&priv->mutex));
-+
- 	IWL_DEBUG_WEP(priv, "Removing default WEP key: idx=%d\n",
- 		      keyconf->keyidx);
- 
-@@ -856,13 +858,12 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
- 	if (iwl_is_rfkill(priv)) {
- 		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
--		spin_unlock_irqrestore(&priv->sta_lock, flags);
-+		/* but keys in device are clear anyway so return success */
- 		return 0;
- 	}
- 	ret = iwl_send_static_wepkey_cmd(priv, 1);
- 	IWL_DEBUG_WEP(priv, "Remove default WEP key: idx=%d ret=%d\n",
- 		      keyconf->keyidx, ret);
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
- 	return ret;
+-	struct work_struct sta_notify_worker;
+-	spinlock_t sta_notify_list_lock;
+-	struct list_head sta_notify_list;
+-
+ 	/* XXX need to convert this to handle multiple interfaces */
+ 	bool capture_beacon;
+ 	u8 capture_bssid[ETH_ALEN];
+@@ -3706,90 +3702,36 @@ static int mwl8k_set_rts_threshold(struc
+ 	return mwl8k_cmd_set_rts_threshold(hw, value);
  }
-@@ -872,7 +873,8 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
- 			    struct ieee80211_key_conf *keyconf)
+ 
+-struct mwl8k_sta_notify_item
+-{
+-	struct list_head list;
+-	struct ieee80211_vif *vif;
+-	enum sta_notify_cmd cmd;
+-	struct ieee80211_sta sta;
+-};
+-
+-static void
+-mwl8k_do_sta_notify(struct ieee80211_hw *hw, struct mwl8k_sta_notify_item *s)
++static int mwl8k_sta_remove(struct ieee80211_hw *hw,
++			    struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta)
  {
- 	int ret;
--	unsigned long flags;
-+
-+	WARN_ON(!mutex_is_locked(&priv->mutex));
+ 	struct mwl8k_priv *priv = hw->priv;
  
- 	if (keyconf->keylen != WEP_KEY_LEN_128 &&
- 	    keyconf->keylen != WEP_KEY_LEN_64) {
-@@ -884,12 +886,11 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
- 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
- 	priv->stations[IWL_AP_ID].keyinfo.alg = ALG_WEP;
- 
--	spin_lock_irqsave(&priv->sta_lock, flags);
- 	priv->default_wep_key++;
- 
- 	if (test_and_set_bit(keyconf->keyidx, &priv->ucode_key_table))
- 		IWL_ERR(priv, "index %d already used in uCode key table.\n",
--			keyconf->keyidx);
-+			  keyconf->keyidx);
- 
- 	priv->wep_keys[keyconf->keyidx].key_size = keyconf->keylen;
- 	memcpy(&priv->wep_keys[keyconf->keyidx].key, &keyconf->key,
-@@ -898,7 +899,6 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
- 	ret = iwl_send_static_wepkey_cmd(priv, 0);
- 	IWL_DEBUG_WEP(priv, "Set default WEP key: len=%d idx=%d ret=%d\n",
- 		keyconf->keylen, keyconf->keyidx, ret);
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
- 	return ret;
+-	/*
+-	 * STA firmware uses UPDATE_STADB, AP firmware uses SET_NEW_STN.
+-	 */
+-	if (!priv->ap_fw && s->cmd == STA_NOTIFY_ADD) {
+-		int rc;
+-
+-		rc = mwl8k_cmd_update_stadb_add(hw, s->vif, &s->sta);
+-		if (rc >= 0) {
+-			struct ieee80211_sta *sta;
+-
+-			rcu_read_lock();
+-			sta = ieee80211_find_sta(s->vif, s->sta.addr);
+-			if (sta != NULL)
+-				MWL8K_STA(sta)->peer_id = rc;
+-			rcu_read_unlock();
+-		}
+-	} else if (!priv->ap_fw && s->cmd == STA_NOTIFY_REMOVE) {
+-		mwl8k_cmd_update_stadb_del(hw, s->vif, s->sta.addr);
+-	} else if (priv->ap_fw && s->cmd == STA_NOTIFY_ADD) {
+-		mwl8k_cmd_set_new_stn_add(hw, s->vif, &s->sta);
+-	} else if (priv->ap_fw && s->cmd == STA_NOTIFY_REMOVE) {
+-		mwl8k_cmd_set_new_stn_del(hw, s->vif, s->sta.addr);
+-	}
+-}
+-
+-static void mwl8k_sta_notify_worker(struct work_struct *work)
+-{
+-	struct mwl8k_priv *priv =
+-		container_of(work, struct mwl8k_priv, sta_notify_worker);
+-	struct ieee80211_hw *hw = priv->hw;
+-
+-	spin_lock_bh(&priv->sta_notify_list_lock);
+-	while (!list_empty(&priv->sta_notify_list)) {
+-		struct mwl8k_sta_notify_item *s;
+-
+-		s = list_entry(priv->sta_notify_list.next,
+-			       struct mwl8k_sta_notify_item, list);
+-		list_del(&s->list);
+-
+-		spin_unlock_bh(&priv->sta_notify_list_lock);
+-
+-		mwl8k_do_sta_notify(hw, s);
+-		kfree(s);
+-
+-		spin_lock_bh(&priv->sta_notify_list_lock);
+-	}
+-	spin_unlock_bh(&priv->sta_notify_list_lock);
++	if (priv->ap_fw)
++		return mwl8k_cmd_set_new_stn_del(hw, vif, sta->addr);
++	else
++		return mwl8k_cmd_update_stadb_del(hw, vif, sta->addr);
  }
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 6665236..23f1ff2 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3342,7 +3342,6 @@ static int iwl3945_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
  
- 	mutex_lock(&priv->mutex);
- 	iwl_scan_cancel_timeout(priv, 100);
--	mutex_unlock(&priv->mutex);
+-static void
+-mwl8k_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-		 enum sta_notify_cmd cmd, struct ieee80211_sta *sta)
++static int mwl8k_sta_add(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 struct ieee80211_sta *sta)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+-	struct mwl8k_sta_notify_item *s;
+-
+-	if (cmd != STA_NOTIFY_ADD && cmd != STA_NOTIFY_REMOVE)
+-		return;
++	int ret;
  
- 	switch (cmd) {
- 	case SET_KEY:
-@@ -3363,6 +3362,7 @@ static int iwl3945_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		ret = -EINVAL;
+-	s = kmalloc(sizeof(*s), GFP_ATOMIC);
+-	if (s != NULL) {
+-		s->vif = vif;
+-		s->cmd = cmd;
+-		s->sta = *sta;
+-
+-		spin_lock_bh(&priv->sta_notify_list_lock);
+-		list_add_tail(&s->list, &priv->sta_notify_list);
+-		spin_unlock_bh(&priv->sta_notify_list_lock);
++	if (!priv->ap_fw) {
++		ret = mwl8k_cmd_update_stadb_add(hw, vif, sta);
++		if (ret >= 0) {
++			MWL8K_STA(sta)->peer_id = ret;
++			return 0;
++		}
+ 
+-		ieee80211_queue_work(hw, &priv->sta_notify_worker);
++		return ret;
  	}
++
++	return mwl8k_cmd_set_new_stn_add(hw, vif, sta);
+ }
  
-+	mutex_unlock(&priv->mutex);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ static int mwl8k_conf_tx(struct ieee80211_hw *hw, u16 queue,
+@@ -3849,7 +3791,8 @@ static const struct ieee80211_ops mwl8k_
+ 	.prepare_multicast	= mwl8k_prepare_multicast,
+ 	.configure_filter	= mwl8k_configure_filter,
+ 	.set_rts_threshold	= mwl8k_set_rts_threshold,
+-	.sta_notify		= mwl8k_sta_notify,
++	.sta_add		= mwl8k_sta_add,
++	.sta_remove		= mwl8k_sta_remove,
+ 	.conf_tx		= mwl8k_conf_tx,
+ 	.get_stats		= mwl8k_get_stats,
+ 	.ampdu_action		= mwl8k_ampdu_action,
+@@ -4051,11 +3994,6 @@ static int __devinit mwl8k_probe(struct
+ 	priv->radio_on = 0;
+ 	priv->radio_short_preamble = 0;
  
- 	return ret;
+-	/* Station database handling */
+-	INIT_WORK(&priv->sta_notify_worker, mwl8k_sta_notify_worker);
+-	spin_lock_init(&priv->sta_notify_list_lock);
+-	INIT_LIST_HEAD(&priv->sta_notify_list);
+-
+ 	/* Finalize join worker */
+ 	INIT_WORK(&priv->finalize_join_worker, mwl8k_finalize_join_worker);
+ 
 
 
