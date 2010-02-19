@@ -1,64 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:58783 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965569Ab0B0LJb convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38950 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754822Ab0BSSlO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 06:09:31 -0500
-Received: by ewy20 with SMTP id 20so498833ewy.21
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 03:09:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201002092359.24301.mb@bu3sch.de>
+	Fri, 19 Feb 2010 13:41:14 -0500
+Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs
+ definitions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c911002191033ye37355dm2b091b0c4ae83933@mail.gmail.com>
 References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-	 <1265745883-3392-9-git-send-email-zajec5@gmail.com>
-	 <201002092359.24301.mb@bu3sch.de>
-Date: Sat, 27 Feb 2010 12:09:30 +0100
-Message-ID: <b170af451002270309l1cbc880et100fc4e468386934@mail.gmail.com>
-Subject: Re: [PATCH 08/11] b43: implement writing to MMIO shared memory
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	 <1266591292.15178.1.camel@jlt3.sipsolutions.net>
+	 <4B7EB31D.2000603@lwfinger.net>
+	 <1266596602.15178.2.camel@jlt3.sipsolutions.net>
+	 <4B7EBF0A.1060907@lwfinger.net>
+	 <1266598974.3754.0.camel@jlt3.sipsolutions.net>
+	 <69e28c911002190906n647d1a25o5f7268c585fa05c8@mail.gmail.com>
+	 <1266599361.3754.2.camel@jlt3.sipsolutions.net>
+	 <69e28c911002191021w1a1d9656oa762724e398da212@mail.gmail.com>
+	 <1266603853.29775.1.camel@jlt3.sipsolutions.net>
+	 <69e28c911002191033ye37355dm2b091b0c4ae83933@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-peV/KFNLOb5K48xHzqMg"
+Date: Fri, 19 Feb 2010 19:41:10 +0100
+Message-ID: <1266604870.30470.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/2/9 Michael Buesch <mb@bu3sch.de>:
-> On Tuesday 09 February 2010 21:04:40 Rafał Miłecki wrote:
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/phy_common.c |   11 +++++++++++
->>  drivers/net/wireless/b43/phy_common.h |    2 ++
->>  2 files changed, 13 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
->> index 8f7d7ef..0b0f9df 100644
->> --- a/drivers/net/wireless/b43/phy_common.c
->> +++ b/drivers/net/wireless/b43/phy_common.c
->> @@ -466,3 +466,14 @@ struct b43_c32 b43_cordic(int theta)
->>
->>       return ret;
->>  }
->> +
->> +/* http://bcm-v4.sipsolutions.net/802.11/PHY/BmacWriteShm */
->> +void b43_bmac_write_shm(struct b43_wldev *dev, u32 offset, u16 value)
->> +{
->> +     b43_write32(dev, B43_MMIO_SHM_CONTROL, 0x00010000 | (offset >> 2));
->> +     b43_read32(dev, B43_MMIO_SHM_CONTROL);
->> +     if (offset & 2)
->> +             b43_write16(dev, 0x165, value);
->> +     else
->> +             b43_write16(dev, B43_MMIO_SHM_DATA, value);
->> +}
->
-> I'd like to put a biiiig questionmark on this.
-> We already have SHM access. Your function does exactly the same, except that it
-> accesses the bullshit register h165.
 
-Yeah, that 0x165 is really crappy. Let's hope it really should be
-0x166 (B43_MMIO_SHM_DATA_UNALIGNED).
+--=-peV/KFNLOb5K48xHzqMg
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Do you think we should add dummy-read to b43_shm_control_word as
-BmacWriteShm does? Currently we do not perform that.
+On Fri, 2010-02-19 at 19:33 +0100, G=C3=A1bor Stefanik wrote:
 
--- 
-Rafał
+> > IMHO a manufacturer would have to be immensely stupid to build an
+> N-PHY
+> > design based (!) chip that doesn't at least support MCS rates 0
+> through
+> > 7, i.e. 1x1 11n operation.
+>=20
+> Well, check Atheros and Ralink for an example. Usually, such chips
+> aren't "built" on purpose, rather, they have 802.11n support disabled
+> due to having been found defective (but usable in 802.11g mode) during
+> manufacturing.
+
+That ... doesn't really make sense either. But we can leave it at that,
+I don't care much :)
+
+johannes
+
+--=-peV/KFNLOb5K48xHzqMg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLfttDAAoJEODzc/N7+Qmatc8QALM1OA/XZ+9BJQwe2PHBsP2+
+139gRtfT8v6LGmtmbllcqDoFJ0wLeuaeToql+7QjGOSzAP8+7uZRxQu6j+qldxci
+24L9hBp78XlLVQkC9g4qMiOFqr600ZBOr8FGWvCaWEMkjsuNGjCvcohQhN/wwE6G
+YVdHKQhptIwvZDQ4ZYMV914m5WS7FiG/p9DU7pUY+FYZVwziTBThi+Jq2IuPsL8D
+MunzvVBe/aP80fOCbqiVfHrKBJi1ohh4McYUGGcKRsS16+VIbsSbZ0mKGGelHWVO
+HNdDu2A7fZ0f4kFVhhj2h0HdefAH85JloogNJ2c/NpHcuEYrWnKeu87U+yzxRymG
+CJVotub7yvuqwfrU6Copor7nQ5ywOScaC+MuXQntF6KNduEZgrzaguSaeeMwTaNi
+WL5v4MCk8xeGTDy5TpXuP0ulH3ObMfaoEYeVYw9GA6M7NhtmYNU7W+rvzcTcSr2y
+iuF7dtHLqi+M1UrpgHVl8poTj+dImgKkLJF01vahQUeH9g8UYbgz7iZqvm6flkVY
+cJ7iC3gtvRoUF2URaySknNHAhQgKbMegp7f5X1bGqBDnvSK5zaRjl0o5VB+cx/5f
+lrVPoDJmCIhoySEht0l1L5UWMJL3+yPyxkxYEIs6UpoyySzxjafVgXUglQS9mYv4
+rOoigWemBt7wkmKNHjrZ
+=8U2K
+-----END PGP SIGNATURE-----
+
+--=-peV/KFNLOb5K48xHzqMg--
+
