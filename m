@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.freeserve.com ([193.252.22.151]:58920 "EHLO
-	smtp6.freeserve.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1032041Ab0B1UzG (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60026 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775Ab0BSUPk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2010 15:55:06 -0500
-Date: Sun, 28 Feb 2010 20:54:58 +0000
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: William Bourque <william.bourque@polymtl.ca>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-Message-ID: <20100228205458.3e06dd35@boulder.homenet>
-In-Reply-To: <4B8AD742.9000201@polymtl.ca>
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
-	<b170af451002281047s1cbb9168g61178c5bc06ad428@mail.gmail.com>
-	<69e28c911002281052p417fcd42n74552ad3ac0106a2@mail.gmail.com>
-	<201002281958.12607.mb@bu3sch.de>
-	<20100228203038.456b9016@boulder.homenet>
-	<4B8AD742.9000201@polymtl.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 19 Feb 2010 15:15:40 -0500
+Date: Fri, 19 Feb 2010 15:13:29 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pavel Roskin <proski@gnu.org>, Ozzy <ozzymud@gmail.com>,
+	linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Introduce PCMCIA_DEVICE_PROD_ID3, use it in hostap_cs
+	and orinoco_cs
+Message-ID: <20100219201328.GM4950@tuxdriver.com>
+References: <1265928966.19980.6.camel@mj> <20100212183519.GC4983@tuxdriver.com> <20100219180812.GA25981@isilmar.linta.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100219180812.GA25981@isilmar.linta.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 28 Feb 2010 15:51:14 -0500
-William Bourque <william.bourque@polymtl.ca> wrote:
-> Chris Vine wrote:
-> > On Sun, 28 Feb 2010 19:58:11 +0100
-> > Michael Buesch <mb@bu3sch.de> wrote:
-> >> It says 8k for all of my devices there. So an MMIO write to 0x2000
-> >> and above writes to completely random memory.
-> >>
-> > My BCM4312 device is 16K:
-> > 
-> >   Region 0: Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
-> 
-> 
-> Now that you mention it, mine as well :
-> 
-> 01:00.0 Network controller: Broadcom Corporation BCM4312 802.11b/g
-> (rev 01) Subsystem: Hewlett-Packard Company Device 1507
->          Flags: bus master, fast devsel, latency 0, IRQ 16
->          Memory at feafc000 (64-bit, non-prefetchable) [size=16K]
-> 
-> Are all the failing devices have a 16k mem space?
+On Fri, Feb 19, 2010 at 07:08:13PM +0100, Dominik Brodowski wrote:
 
-And with 64-bit layout?  (Michael's was 32-bit.)
+> On Fri, Feb 12, 2010 at 01:35:19PM -0500, John W. Linville wrote:
+> > I'm happy to take this through my tree unless someone objects.  OTOH,
+> > I'm happy to let the hostap/orinoco bits go through an appropriate
+> > tree for PCMCIA...?
+> 
+> I'm fine either way -- just let me know :)
 
-Chris
+Alright, I'll take it.
 
+Thanks,
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
