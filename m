@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f197.google.com ([209.85.211.197]:61641 "EHLO
-	mail-yw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754873Ab0BQUz3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 15:55:29 -0500
-Received: by ywh35 with SMTP id 35so298652ywh.4
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 12:55:27 -0800 (PST)
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com> <20100217052247.GD7160@core.coreip.homeip.net> <20100217180342.GA22522@srcf.ucam.org> <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com> <20100217191708.GA15554@core.coreip.homeip.net> <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com> <20100217195435.GA15742@core.coreip.homeip.net> <20100217200233.GA24976@srcf.ucam.org>
-Message-Id: <446821D4-8E9D-4701-9A50-04738C5733B6@gmail.com>
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-In-Reply-To: <20100217200233.GA24976@srcf.ucam.org>
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7C144)
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Date: Wed, 17 Feb 2010 12:49:14 -0800
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"marcel@holtmann.org" <marcel@holtmann.org>
+Received: from mga02.intel.com ([134.134.136.20]:41037 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752673Ab0BSGBq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 01:01:46 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, stable@kernel.org,
+	Dan Halperin <dhalperi@cs.washington.edu>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/3] iwlwifi: set HT flags after channel in rxon
+Date: Thu, 18 Feb 2010 22:01:39 -0800
+Message-Id: <1266559301-19581-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
+References: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 17, 2010, at 12:02 PM, Matthew Garrett <mjg59@srcf.ucam.org>  
-wrote:
+From: Dan Halperin <dhalperi@cs.washington.edu>
 
-> On Wed, Feb 17, 2010 at 11:54:35AM -0800, Dmitry Torokhov wrote:
->
->> Is there anything currently in works that would make use of this  
->> button?
->> I do not want to allocate keycode "for the future" which may never  
->> come.
->> We did it with KEY_BATTERY but I do not think anyone actually uses  
->> it.
->
-> KEY_BATTERY is heavily used in userspace. I think all the hardware  
-> that
-> generates it does so via i8042 rather than a platform driver, so it
-> wouldn't show up in the kernel.
->
+The HT extension channel settings require priv->staging_rxon.channel to be
+accurate. However, iwl_set_rxon_ht was being called before iwl_set_rxon_channel
+and thus HT40 could be broken unless another call to iwl_mac_config came in.
 
-Ah, I see. I hope the keycode is not used to signal battery status  
-change but to invoke battery/power manager applet...
+This problem was recently introduced by "iwlwifi: Fix to set correct ht
+configuration"
 
+The particular setting in which I noticed this was monitor mode:
+
+	iwconfig wlan0 mode monitor
+	ifconfig wlan0 up
+	./iw wlan0 set channel 64 HT40-
+	#./iw wlan0 set channel 64 HT40-
+	tcpdump -i wlan0 -y IEEE802_11_RADIO
+
+would only catch HT40 packets if I issued the IW command twice.
+
+>From visual inspection, iwl_set_rxon_channel does not depend on
+iwl_set_rxon_ht, so simply swapping them should be safe and fixes this problem.
+
+Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+CC: stable@kernel.org
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index d10bea6..f36f804 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2744,8 +2744,8 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		if ((le16_to_cpu(priv->staging_rxon.channel) != ch))
+ 			priv->staging_rxon.flags = 0;
+ 
+-		iwl_set_rxon_ht(priv, ht_conf);
+ 		iwl_set_rxon_channel(priv, conf->channel);
++		iwl_set_rxon_ht(priv, ht_conf);
+ 
+ 		iwl_set_flags_for_band(priv, conf->channel->band);
+ 		spin_unlock_irqrestore(&priv->lock, flags);
 -- 
-Dmitry
+1.6.3.3
 
