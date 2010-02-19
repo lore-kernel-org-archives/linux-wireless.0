@@ -1,92 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56569 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:59917 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752508Ab0BIAkn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 19:40:43 -0500
-Subject: Re: [Ilw] Re: PROBLEM: iwlagn kernel 2.6.32.3 ooops
-From: reinette chatre <reinette.chatre@intel.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel-Liste <linux-kernel@vger.kernel.org>,
-	"lkml@Think-Future.de" <lkml@Think-Future.de>
-In-Reply-To: <1265670039.2551.1828.camel@rchatre-DESK>
-References: <20100206170348.GB9411@localhost>
-	 <20100208143118.e8e5a1ee.akpm@linux-foundation.org>
-	 <1265670039.2551.1828.camel@rchatre-DESK>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Feb 2010 16:40:34 -0800
-Message-ID: <1265676034.2551.1833.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1752645Ab0BSGBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 01:01:44 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, stable@kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/3] iwlwifi: error checking for number of tfds in queue
+Date: Thu, 18 Feb 2010 22:01:41 -0800
+Message-Id: <1266559301-19581-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
+References: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-02-08 at 15:00 -0800, Chatre, Reinette wrote:
-> 
-> On Mon, 2010-02-08 at 14:31 -0800, Andrew Morton wrote:
-> > On Sat, 6 Feb 2010 18:03:50 +0100
-> > lkml@Think-Future.de wrote:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> > > [252109.496953] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
-> > > [252109.496961] iwlagn: Copyright(c) 2003-2009 Intel Corporation
-> > > [252109.497071] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> > > [252109.497094] iwlagn 0000:03:00.0: setting latency timer to 64
-> > > [252109.497156] iwlagn 0000:03:00.0: Detected Intel Wireless WiFi Link 4965AGN REV=0x4
-> > > [252109.547060] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 19 802.11a channels
-> > > [252109.547202] iwlagn 0000:03:00.0: irq 29 for MSI/MSI-X
-> > > [252109.548104] phy14: Selected rate control algorithm 'iwl-agn-rs'
-> > > [252109.921801] udev: renamed network interface wlan0 to eth1
-> > > [252110.693015] iwlagn 0000:03:00.0: firmware: requesting iwlwifi-4965-2.ucode
-> > > [252110.810198] iwlagn 0000:03:00.0: loaded firmware version 228.61.2.24
-> > > [252110.989598] ------------[ cut here ]------------
-> > > [252110.989620] WARNING: at drivers/net/wireless/iwlwifi/iwl-tx.c:1151 iwl_tx_cmd_complete+0x2ed/0x330 [iwlcore]()
-> > 
+When receive reply_tx and ready to decrement the count for number of
+tfds in queue, do error checking to prevent error condition and
+tfds_in_queue become negative number.
 
-Could you please run with the patch below and check if the new error
-message appears?
+This fix starts to address
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2160 by preventing
+the bad situation from propagation when it does occur. This is needed while
+the cause of the decrement error is still traced.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 921dc4a..6911995 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -759,6 +759,8 @@ void iwl_rx_handle(struct iwl_priv *priv)
- 	u8 fill_rx = 0;
- 	u32 count = 8;
- 	int total_empty;
-+	bool valid;
-+	int len;
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+CC: stable@kernel.org
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-tx.c   |   16 +++++++++++++++-
+ 4 files changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 9b4b8b5..3146281 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2008,7 +2008,7 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 			IWL_DEBUG_TX_REPLY(priv, "Retry scheduler reclaim scd_ssn "
+ 					   "%d index %d\n", scd_ssn , index);
+ 			freed = iwl_tx_queue_reclaim(priv, txq_id, index);
+-			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
++			iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
  
- 	/* uCode's read index (stored in shared DRAM) indicates the last Rx
- 	 * buffer that the driver may process (last buffer filled by ucode). */
-@@ -791,6 +793,11 @@ void iwl_rx_handle(struct iwl_priv *priv)
- 				 priv->hw_params.rx_buf_size + 256,
- 				 PCI_DMA_FROMDEVICE);
- 		pkt = (struct iwl_rx_packet *)rxb->skb->data;
-+		len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
-+		valid = (len >= sizeof(__le32) + sizeof(struct iwl_cmd_header));
-+		/* Make sure we can at least parse the header */
-+		if (!valid)
-+			IWL_ERR(priv, "Invalid packet from device.\n");
+ 			if (priv->mac80211_registered &&
+ 			    (iwl_queue_space(&txq->q) > txq->q.low_mark) &&
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index de45f30..845a348 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1125,7 +1125,7 @@ static void iwl5000_rx_reply_tx(struct iwl_priv *priv,
+ 					scd_ssn , index, txq_id, txq->swq_id);
  
- 		/* Reclaim a command buffer only if this packet is a response
- 		 *   to a (driver-originated) command.
-@@ -809,7 +816,7 @@ void iwl_rx_handle(struct iwl_priv *priv)
- 		/* Based on type of command response or notification,
- 		 *   handle those that need handling via function in
- 		 *   rx_handlers table.  See iwl_setup_rx_handlers() */
--		if (priv->rx_handlers[pkt->hdr.cmd]) {
-+		if (valid && priv->rx_handlers[pkt->hdr.cmd]) {
- 			IWL_DEBUG_RX(priv, "r = %d, i = %d, %s, 0x%02x\n", r,
- 				i, get_cmd_string(pkt->hdr.cmd), pkt->hdr.cmd);
- 			priv->rx_handlers[pkt->hdr.cmd] (priv, rxb);
-@@ -822,7 +829,7 @@ void iwl_rx_handle(struct iwl_priv *priv)
- 				pkt->hdr.cmd);
- 		}
+ 			freed = iwl_tx_queue_reclaim(priv, txq_id, index);
+-			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
++			iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
  
--		if (reclaim) {
-+		if (valid && reclaim) {
- 			/* Invoke any callbacks, transfer the skb to caller, and
- 			 * fire off the (possibly) blocking iwl_send_cmd()
- 			 * as we reclaim the driver command queue */
-
+ 			if (priv->mac80211_registered &&
+ 			    (iwl_queue_space(&txq->q) > txq->q.low_mark) &&
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 675b7df..fe37d6a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -446,6 +446,8 @@ void iwl_hw_txq_ctx_free(struct iwl_priv *priv);
+ int iwl_hw_tx_queue_init(struct iwl_priv *priv,
+ 			 struct iwl_tx_queue *txq);
+ int iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq);
++void iwl_free_tfds_in_queue(struct iwl_priv *priv,
++			    int sta_id, int tid, int freed);
+ int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+ 		      int slots_num, u32 txq_id);
+ void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 9196d3f..036e662 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -120,6 +120,20 @@ int iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ EXPORT_SYMBOL(iwl_txq_update_write_ptr);
+ 
+ 
++void iwl_free_tfds_in_queue(struct iwl_priv *priv,
++			    int sta_id, int tid, int freed)
++{
++	if (priv->stations[sta_id].tid[tid].tfds_in_queue >= freed)
++		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
++	else {
++		IWL_ERR(priv, "free more than tfds_in_queue (%d:%d)\n",
++			priv->stations[sta_id].tid[tid].tfds_in_queue,
++			freed);
++		priv->stations[sta_id].tid[tid].tfds_in_queue = 0;
++	}
++}
++EXPORT_SYMBOL(iwl_free_tfds_in_queue);
++
+ /**
+  * iwl_tx_queue_free - Deallocate DMA queue.
+  * @txq: Transmit queue to deallocate.
+@@ -1566,7 +1580,7 @@ void iwl_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 	if (txq->q.read_ptr != (ba_resp_scd_ssn & 0xff)) {
+ 		/* calculate mac80211 ampdu sw queue to wake */
+ 		int freed = iwl_tx_queue_reclaim(priv, scd_flow, index);
+-		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
++		iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
+ 
+ 		if ((iwl_queue_space(&txq->q) > txq->q.low_mark) &&
+ 		    priv->mac80211_registered &&
+-- 
+1.6.3.3
 
