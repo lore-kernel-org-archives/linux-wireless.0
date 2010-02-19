@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f197.google.com ([209.85.211.197]:54573 "EHLO
-	mail-yw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756189Ab0BQU51 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 15:57:27 -0500
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com> <20100217052247.GD7160@core.coreip.homeip.net> <20100217180342.GA22522@srcf.ucam.org> <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com> <20100217191708.GA15554@core.coreip.homeip.net> <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com> <20100217195435.GA15742@core.coreip.homeip.net> <22ee4e771002171218t69cc4348ia0300a645ce9763d@mail.gmail.com>
-Message-Id: <069C4DAE-598D-45F1-99B5-DA5BAF718179@gmail.com>
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-In-Reply-To: <22ee4e771002171218t69cc4348ia0300a645ce9763d@mail.gmail.com>
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7C144)
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Date: Wed, 17 Feb 2010 12:52:06 -0800
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"marcel@holtmann.org" <marcel@holtmann.org>
+Received: from mga02.intel.com ([134.134.136.20]:55215 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756100Ab0BSU7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 15:59:25 -0500
+Subject: Re: [PATCH 3/3] iwlwifi: error checking for number of tfds in queue
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+In-Reply-To: <20100219203420.GO4950@tuxdriver.com>
+References: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
+	 <1266559301-19581-4-git-send-email-reinette.chatre@intel.com>
+	 <20100219203420.GO4950@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 19 Feb 2010 12:59:24 -0800
+Message-ID: <1266613164.2551.2811.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 17, 2010, at 12:18 PM, Christian Lamparter <chunkeey@googlemail.com 
- > wrote:
+On Fri, 2010-02-19 at 12:34 -0800, John W. Linville wrote:
+> On Thu, Feb 18, 2010 at 10:01:41PM -0800, Reinette Chatre wrote:
+> > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > 
+> > When receive reply_tx and ready to decrement the count for number of
+> > tfds in queue, do error checking to prevent error condition and
+> > tfds_in_queue become negative number.
+> > 
+> > This fix starts to address
+> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2160 by preventing
+> > the bad situation from propagation when it does occur. This is needed while
+> > the cause of the decrement error is still traced.
+> > 
+> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> > CC: stable@kernel.org
+> 
+> Since this apparently doesn't amount to a fix for the cited issue,
+> it doesn't seem worth pusing for 2.6.33 at the moment.  Should I take
+> it in wireless-next-2.6?  Or hold-out for a corrected version?
 
-> On Wed, Feb 17, 2010 at 8:54 PM, Dmitry Torokhov
-> <dmitry.torokhov@gmail.com> wrote:
->>
->> Is there anything currently in works that would make use of this  
->> button?
->> I do not want to allocate keycode "for the future" which may never  
->> come.
->> We did it with KEY_BATTERY but I do not think anyone actually uses  
->> it.
->
-> Of course, there are lots of routers:
->
-> Linksys: wrt160nl
-> Netgear: wnr2000, wndr3700
-> TP-Link: wr1043n, ... wr741nd
-> TrendNET: TEW-632BRP
-> Planex: MZK-W300NH,  MZK-W04NU
-> ...
->
-> And a few new client adapters, I know about:
-> TP-Link: WN821 v2, WN721N, WN727N
-> Netgear: WNDA3100 v2
-> ...
->
-> (Not to mention all the coming products).
+A version addressing Stanislaw's feedback is on its way. I apologize for
+the delay. This patch does fix one instance of the issue and we would
+like this fix to be included.
 
-Sorry, I was not clear enough. I meant something in works in Linux  
-software stack, I was aware that certain router have these buttons  
-already.
-
--- 
-Dmitry
+Reinette
 
