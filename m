@@ -1,62 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48212 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224Ab0BAUph (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 15:45:37 -0500
-Date: Mon, 1 Feb 2010 15:36:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: fix access to freed data on unload
-Message-ID: <20100201203637.GE4952@tuxdriver.com>
-References: <1264905444.10146.9.camel@mj> <43e72e891002011011h4714ecddrb9421a877832bffd@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e891002011011h4714ecddrb9421a877832bffd@mail.gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:49005 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752790Ab0BSGDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 01:03:13 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/6] iwlwifi: add debugfs to monitor force reset parameters
+Date: Thu, 18 Feb 2010 22:03:07 -0800
+Message-Id: <1266559387-19637-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
+References: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 01, 2010 at 10:11:54AM -0800, Luis R. Rodriguez wrote:
-> On Sat, Jan 30, 2010 at 6:37 PM, Pavel Roskin <proski@gnu.org> wrote:
-> > Calling ath_bus_cleanup() after ieee80211_free_hw() resulted in acc=
-ess
-> > to common->bus_ops, which is already freed as part of the device da=
-ta.
-> >
-> > Remove the cleanup field in struct ath_bus_ops, as it was never use=
-d
-> > properly. =A0Remove ath_bus_cleanup(). =A0Merge cleanup functions i=
-n place
-> > of the ath_bus_cleanup() calls. =A0Take care not to use any device =
-data
-> > after ieee80211_free_hw().
-> >
-> > Signed-off-by: Pavel Roskin <proski@gnu.org>
-> > ---
-> >
-> > The bug was causing a hang on a kernel with most debugging options
-> > enabled. =A0I think the fix is important and simple enough for stab=
-le
-> > kernels. =A0I wish I could make the patch smaller, but I didn't wan=
-t to
-> > leave unused and dangerous fields and functions.
-> >
-> > ath9k was tested on the PCI bus. =A0ath9k on AHB was compile tested=
-=2E
-> > ath5k and ar9170 use struct ath_bus_ops, but don't use the cleanup
-> > field, so they are not affected.
->=20
-> Thanks, can you please resend with a Cc: stable@kernel.org on the com=
-mit log?
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Doesn't look to me like the patch even applies to 2.6.33...?
+Adding debugfs file to monitor the counters and other
+information related to "force_reset" request.
 
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   34 ++++++++++++++++++++++++++-
+ 1 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 7241fda..7bf44f1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -2221,6 +2221,36 @@ static ssize_t iwl_dbgfs_plcp_delta_write(struct file *file,
+ 	return count;
+ }
+ 
++static ssize_t iwl_dbgfs_force_reset_read(struct file *file,
++					char __user *user_buf,
++					size_t count, loff_t *ppos) {
++
++	struct iwl_priv *priv = file->private_data;
++	int i, pos = 0;
++	char buf[300];
++	const size_t bufsz = sizeof(buf);
++	struct iwl_force_reset *force_reset;
++
++	for (i = 0; i < IWL_MAX_FORCE_RESET; i++) {
++		force_reset = &priv->force_reset[i];
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"Force reset method %d\n", i);
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"\tnumber of reset request: %d\n",
++				force_reset->reset_request_count);
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"\tnumber of reset request success: %d\n",
++				force_reset->reset_success_count);
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"\tnumber of reset request reject: %d\n",
++				force_reset->reset_reject_count);
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"\treset duration: %lu\n",
++				force_reset->reset_duration);
++	}
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++}
++
+ static ssize_t iwl_dbgfs_force_reset_write(struct file *file,
+ 					const char __user *user_buf,
+ 					size_t count, loff_t *ppos) {
+@@ -2267,7 +2297,7 @@ DEBUGFS_READ_FILE_OPS(fh_reg);
+ DEBUGFS_READ_WRITE_FILE_OPS(missed_beacon);
+ DEBUGFS_WRITE_FILE_OPS(internal_scan);
+ DEBUGFS_READ_WRITE_FILE_OPS(plcp_delta);
+-DEBUGFS_WRITE_FILE_OPS(force_reset);
++DEBUGFS_READ_WRITE_FILE_OPS(force_reset);
+ 
+ /*
+  * Create the debugfs files and directories
+@@ -2321,7 +2351,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(missed_beacon, dir_debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(internal_scan, dir_debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(plcp_delta, dir_debug, S_IWUSR | S_IRUSR);
+-	DEBUGFS_ADD_FILE(force_reset, dir_debug, S_IWUSR);
++	DEBUGFS_ADD_FILE(force_reset, dir_debug, S_IWUSR | S_IRUSR);
+ 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
+ 		DEBUGFS_ADD_FILE(ucode_rx_stats, dir_debug, S_IRUSR);
+ 		DEBUGFS_ADD_FILE(ucode_tx_stats, dir_debug, S_IRUSR);
+-- 
+1.6.3.3
+
