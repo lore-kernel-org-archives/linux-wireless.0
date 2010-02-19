@@ -1,85 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:1521 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932589Ab0BPEXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2010 23:23:53 -0500
-Received: from [192.168.0.22] (unknown [72.92.88.10])
-	by smtprelay2.cesmail.net (Postfix) with ESMTPSA id 4ED5434C6D
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2010 23:33:58 -0500 (EST)
-Subject: rt2800pci: corrupted addr3 in probe requests
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Mon, 15 Feb 2010 23:23:44 -0500
-Message-Id: <1266294224.2951.24.camel@mj>
-Mime-Version: 1.0
+Received: from mail-yx0-f200.google.com ([209.85.210.200]:59541 "EHLO
+	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879Ab0BSSKS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 13:10:18 -0500
+Received: by yxe38 with SMTP id 38so304108yxe.4
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 10:10:17 -0800 (PST)
+Message-ID: <4B7ED405.4090501@lwfinger.net>
+Date: Fri, 19 Feb 2010 12:10:13 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	=?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs definitions
+References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>	 <1266591292.15178.1.camel@jlt3.sipsolutions.net>	 <4B7EB31D.2000603@lwfinger.net>	 <1266596602.15178.2.camel@jlt3.sipsolutions.net>	 <4B7EBF0A.1060907@lwfinger.net> <1266598974.3754.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1266598974.3754.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On 02/19/2010 11:02 AM, Johannes Berg wrote:
+> On Fri, 2010-02-19 at 10:40 -0600, Larry Finger wrote:
+> 
+>> Rafał is taking exams now, but said in one of our last communications
+>> that he
+>> was finishing up some radio code. After that, he expected some signs
+>> of life.
+> 
+> Neat.
+> 
+>> What PHY revision do you have? Between 2 and 3 there were a lot of
+>> changes
+>> including a new radio version. Rafał has a 2, thus he has been
+>> concentrating on
+>> that one.
+>>
+>> Do you have any log messages on the SSB adjustments?
+> 
+> [    5.861375] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x17, vendor 0x4243)
+> [    5.861390] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x10, vendor 0x4243)
+> [    5.861402] ssb: Core 2 found: PCI-E (cc 0x820, rev 0x0B, vendor 0x4243)
+> [    5.861414] ssb: Core 3 found: PCI (cc 0x804, rev 0x0E, vendor 0x4243)
+> [    5.861427] ssb: Core 4 found: USB 2.0 Device (cc 0x81A, rev 0x05, vendor 0x4243)
+> [    5.861439] ssb: Core 5 found: UNKNOWN (cc 0x8FF, rev 0x00, vendor 0x4243)
+> [    5.861452] ssb: Core 6 found: Internal Memory (cc 0x80E, rev 0x03, vendor 0x4243)
+> [    5.900494] ssb: Found rev 2 PMU (capabilities 0x04583002)
+> [    5.900500] ssb: ERROR: PLL init unknown for device 4322
+> [    5.900844] ssb: ERROR: PMU resource config unknown for device 4322
+> [    5.909764] ssb: SPROM revision 8 detected.
+> ...
+> [    6.378717] b43-phy0: Broadcom 4322 WLAN found (core revision 16)
+> [    6.482611] b43-phy0 debug: Found PHY: Analog 8, Type 4, Revision 4
+> [    6.482638] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2056, Revision 3
 
-I'm trying to get rt2800pci work with my card.  It's Belkin N Wireless
-Notebook Card, part no F5D8013, ver 1011.  lspci identifies it as:
+I just submitted a patch for the errors above that I've had here for a long time.
 
-04:00.0 Network controller [0280]: RaLink RT2800 802.11n PCI [1814:0601]
-        Subsystem: Belkin Device [1799:8013]
+A Rev 8 SPROM has all the entities found in Rev 4 plus some additions. If R4 can
+support an mimo N PHY, R8 certainly can.
 
-wireless-testing was working with the card on Saturday (it must have
-been master-2010-02-13), and I tested the patches that are in
-wireless-testing now.  Everything was fine.
+Larry
 
-The testing consisted simply of running wpa_supplicant and seeing it
-associate to an AP.
-
-After upgrading to master-2010-02-15, I found that wpa_supplicant would
-fail to associate.  The output indicates that at least receiving works,
-as the AP is found:
-
-# wpa_supplicant -c /etc/wpa_supplicant/mike1.conf -D nl80211 -i wlan26
-CTRL-EVENT-SCAN-RESULTS 
-CTRL-EVENT-SCAN-RESULTS 
-CTRL-EVENT-SCAN-RESULTS 
-Trying to authenticate with 00:25:9c:28:15:62 (SSID='mike1' freq=2437 MHz)
-CTRL-EVENT-SCAN-RESULTS 
-
-But Wireshark running on another interface shows that there are probe
-requests sent by the card, but there are no replies.  And that's not
-surprising, because the BSSID is not exactly the broadcast address:
-
-    Destination address: Broadcast (ff:ff:ff:ff:ff:ff)
-    Source address: BelkinIn_07:c8:87 (00:1c:df:07:c8:87)
-    BSS Id: ff:ff:ff:ff:1d:56 (ff:ff:ff:ff:1d:56)
-    Fragment number: 3
-    Sequence number: 1886
-
-0000  00 00 1a 00 2f 48 00 00  02 ea 16 3d 00 00 00 00   ..../H.. ...=....
-0010  10 02 85 09 a0 00 d3 01  00 00 40 00 00 00 ff ff   ........ ..@.....
-0020  ff ff ff ff 00 1c df 07  c8 87 ff ff ff ff 1d 56   ........ .......V
-0030  e3 75                                              .u               
-
-I tried to bisect the problem, but the results are inconclusive.  First
-master-2010-02-13 worked, then it didn't.
-
-I also see error messages in the kernel log.  I don't know if they are
-related:
-
-[ 1024.210553] phy5 -> rt2x00pci_regbusy_read: Error - Indirect register
-access failed: offset=0x00007010, value=0x05100000
-[ 1024.211083] phy5 -> rt2x00pci_regbusy_read: Error - Indirect register
-access failed: offset=0x00007010, value=0x05100000
-[ 1024.211595] phy5 -> rt2x00pci_regbusy_read: Error - Indirect register
-access failed: offset=0x00007010, value=0x05100000
-[ 1024.231900] phy5 -> rt2800pci_mcu_status: Error - MCU request failed,
-no response from hardware
-
-Sometimes there are only two error messages:
-
-[  809.350455] phy5 -> rt2800pci_mcu_status: Error - MCU request failed,
-no response from hardware
-[  809.470046] phy5: device now idle
-[  809.510516] phy5 -> rt2800pci_mcu_status: Error - MCU request failed,
-no response from hardware
-
--- 
-Regards,
-Pavel Roskin
