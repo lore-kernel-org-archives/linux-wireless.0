@@ -1,60 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50237 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755131Ab0BBUpf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2010 15:45:35 -0500
-Date: Tue, 2 Feb 2010 15:36:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Holger Schurig <holgerschurig@googlemail.com>
-Subject: Re: [PATCH] libertas: cfg80211 support
-Message-ID: <20100202203643.GD2967@tuxdriver.com>
-References: <20100202000934.GA19847@sortiz.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100202000934.GA19847@sortiz.org>
+Received: from mga02.intel.com ([134.134.136.20]:59917 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752655Ab0BSGBq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 01:01:46 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, stable@kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/3] iwlwifi: sanity check before counting number of tfds can be free
+Date: Thu, 18 Feb 2010 22:01:40 -0800
+Message-Id: <1266559301-19581-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
+References: <1266559301-19581-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 02, 2010 at 01:09:46AM +0100, Samuel Ortiz wrote:
-> 
-> From: Holger Schurig <holgerschurig@googlemail.com>
-> 
-> We can get rid of the libertas wext, assoc and scan code.
-> The cfg80211 support is almost complete, the main missing feature being mesh
-> support. There are also a few cfg80211_ops handlers missing (tx_power,
-> bss_change for example).
-> Monitor and STA mode are supported  and the latter have been tested on open,
-> WEP, WPA and WPA2 links. At connection time, the cfg80211 bss list has to be
-> populated with the BSS we're trying to join.
-> Also, passive and active (broadcast and directed) scanning have been tested
-> (on a specific channel and on the whole band).
-> 
-> Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
-> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-> ---
-> v1: scanning
-> v2: + WEP, WPA, WPA2
-> v3: + disconnect & MIC events, 11D region hint to cfg80211, auth_type TLV
-> v4: + IBSS
->     + monitor mode
-> v5: + Search the cfg80211 bss list for the right BSSID when connecting.
->     + Removed carrier off toggling when scanning.
->     + Slightly changed the scanning state machine: The scan worker is
-> scheduled from the scan response handler, and we're checking for scan_channel
-> to know if a scan is currently running.
->     + Implemented RTS and fragmentation threshold.
->     + Use the recently exported cfg80211_find_ie() routine.
-> 
-> In my opinion, the only missing feature (besides some small wext settings) is
-> mesh, but I think this patch is ready for wireless-testing.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I'm happy to have libertas support cfg80211.  But doesn't this remove
-the mesh support that the OLPC guys still use?
+Check the frame control for ieee80211_is_data_qos() is true before
+counting the number of tfds can be free, the tfds_in_queue only
+increment when ieee80211_is_data_qos() is true before transmit; so it should
+only decrement if the type match.
 
-John
+This fix starts to address
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2160 . There are
+more situations in which this problem (freed tfds below zero) can occur so
+this bug is not closed yet.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+CC: stable@kernel.org
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 87ce2bd..9196d3f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -1131,6 +1131,7 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 	struct iwl_queue *q = &txq->q;
+ 	struct iwl_tx_info *tx_info;
+ 	int nfreed = 0;
++	struct ieee80211_hdr *hdr;
+ 
+ 	if ((index >= q->n_bd) || (iwl_queue_used(q, index) == 0)) {
+ 		IWL_ERR(priv, "Read index for DMA queue txq id (%d), index %d, "
+@@ -1145,13 +1146,19 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+ 
+ 		tx_info = &txq->txb[txq->q.read_ptr];
+ 		iwl_tx_status(priv, tx_info->skb[0]);
++
++		if (tx_info->skb[0]) {
++			hdr = (struct ieee80211_hdr *)
++				((struct sk_buff *)tx_info->skb[0])->data;
++			if (hdr && ieee80211_is_data_qos(hdr->frame_control))
++				nfreed++;
++		}
+ 		tx_info->skb[0] = NULL;
+ 
+ 		if (priv->cfg->ops->lib->txq_inval_byte_cnt_tbl)
+ 			priv->cfg->ops->lib->txq_inval_byte_cnt_tbl(priv, txq);
+ 
+ 		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
+-		nfreed++;
+ 	}
+ 	return nfreed;
+ }
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
