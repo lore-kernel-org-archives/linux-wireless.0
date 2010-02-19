@@ -1,98 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33651 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030620Ab0B0SxT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 13:53:19 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal DMA errors
-Date: Sat, 27 Feb 2010 18:36:03 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain> <201002262120.37438.mb@bu3sch.de> <alpine.LFD.2.00.1002261231320.4513@localhost.localdomain>
-In-Reply-To: <alpine.LFD.2.00.1002261231320.4513@localhost.localdomain>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:40064 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752694Ab0BSOdd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 09:33:33 -0500
+Date: Fri, 19 Feb 2010 12:33:29 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linux-input@vger.kernel.org, marcel@holtmann.org
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
+Message-ID: <20100219143329.GD28522@khazad-dum.debian.net>
+References: <1266356185-10324-1-git-send-email-mjg@redhat.com>
+ <20100217052247.GD7160@core.coreip.homeip.net>
+ <20100217180342.GA22522@srcf.ucam.org>
+ <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
+ <20100217191708.GA15554@core.coreip.homeip.net>
+ <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
+ <20100217195435.GA15742@core.coreip.homeip.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201002271836.04673.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100217195435.GA15742@core.coreip.homeip.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 February 2010 21:33:08 Linus Torvalds wrote:
-> So send me a patch. I'll try it.
+On Wed, 17 Feb 2010, Dmitry Torokhov wrote:
+> We did it with KEY_BATTERY but I do not think anyone actually uses it.
 
-Please check if the following patch makes any difference.
-Also please show me the result of the printks.
-
-
-Index: wireless-testing/drivers/ssb/driver_chipcommon_pmu.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_chipcommon_pmu.c	2010-02-27 17:16:38.000000000 +0100
-+++ wireless-testing/drivers/ssb/driver_chipcommon_pmu.c	2010-02-27 18:35:50.000000000 +0100
-@@ -428,6 +428,9 @@ static void ssb_pmu_resources_init(struc
- 		 * min_msk = 0xCBB
- 		 * max_msk = 0x7FFFF
- 		 */
-+printk("PMU res init 4312/4322\n");
-+min_msk = 0xFFFFFFFF;
-+max_msk = 0xFFFFFFFF;
- 		break;
- 	case 0x4325:
- 		/* Power OTP down later. */
-@@ -442,6 +445,9 @@ static void ssb_pmu_resources_init(struc
- 		updown_tab_size = ARRAY_SIZE(pmu_res_updown_tab_4325a0);
- 		depend_tab = pmu_res_depend_tab_4325a0;
- 		depend_tab_size = ARRAY_SIZE(pmu_res_depend_tab_4325a0);
-+printk("PMU res init 4325\n");
-+min_msk = 0xFFFFFFFF;
-+max_msk = 0xFFFFFFFF;
- 		break;
- 	case 0x4328:
- 		min_msk = (1 << SSB_PMURES_4328_EXT_SWITCHER_PWM) |
-@@ -453,10 +459,16 @@ static void ssb_pmu_resources_init(struc
- 		updown_tab_size = ARRAY_SIZE(pmu_res_updown_tab_4328a0);
- 		depend_tab = pmu_res_depend_tab_4328a0;
- 		depend_tab_size = ARRAY_SIZE(pmu_res_depend_tab_4328a0);
-+printk("PMU res init 4328\n");
-+min_msk = 0xFFFFFFFF;
-+max_msk = 0xFFFFFFFF;
- 		break;
- 	case 0x5354:
- 		/* The PLL may turn on, if it decides so. */
- 		max_msk = 0xFFFFF;
-+printk("PMU res init 5354\n");
-+min_msk = 0xFFFFFFFF;
-+max_msk = 0xFFFFFFFF;
- 		break;
- 	default:
- 		ssb_printk(KERN_ERR PFX
-@@ -538,6 +550,7 @@ void ssb_pmu_set_ldo_voltage(struct ssb_
- 	switch (bus->chip_id) {
- 	case 0x4328:
- 	case 0x5354:
-+printk("Set LDO 4328/5354\n");
- 		switch (id) {
- 		case LDO_VOLT1:
- 			addr = 2;
-@@ -565,6 +578,7 @@ void ssb_pmu_set_ldo_voltage(struct ssb_
- 		}
- 		break;
- 	case 0x4312:
-+printk("Set LDO 4312\n");
- 		if (SSB_WARN_ON(id != LDO_PAREF))
- 			return;
- 		addr = 0;
-@@ -584,6 +598,7 @@ void ssb_pmu_set_ldo_paref(struct ssb_ch
- 	struct ssb_bus *bus = cc->dev->bus;
- 	int ldo;
- 
-+printk("Set LDO paref\n");
- 	switch (bus->chip_id) {
- 	case 0x4312:
- 		ldo = SSB_PMURES_4312_PA_REF_LDO;
+thinkpad-acpi does (in-tree).
 
 -- 
-Greetings, Michael.
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
