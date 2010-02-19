@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:36140 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759168Ab0BYKyk (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:34226 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193Ab0BSSyo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 05:54:40 -0500
-Received: by bwz1 with SMTP id 1so2691961bwz.21
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2010 02:54:38 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] ath9k_htc: sync add_interface and remove_interface with mac80211
-Date: Thu, 25 Feb 2010 11:54:30 +0100
-Cc: devel@linuxdriverproject.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
-References: <201002241633.47090.helmut.schaa@googlemail.com> <43e72e891002240918i152253c9o8130dc507d2dc03@mail.gmail.com>
-In-Reply-To: <43e72e891002240918i152253c9o8130dc507d2dc03@mail.gmail.com>
+	Fri, 19 Feb 2010 13:54:44 -0500
+Received: by pwj8 with SMTP id 8so389059pwj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 10:54:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201002251154.30917.helmut.schaa@googlemail.com>
+In-Reply-To: <201002182240.38016.8an@praha12.net>
+References: <1266459208-12408-1-git-send-email-lrodriguez@atheros.com>
+	<201002182240.38016.8an@praha12.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 19 Feb 2010 10:54:24 -0800
+Message-ID: <43e72e891002191054jb537041g45c407cae860adf8@mail.gmail.com>
+Subject: Re: [PATCH] iw: add country IE parsing
+To: 8an@praha12.net
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch 24 Februar 2010 schrieb Luis R. Rodriguez:
-> Thanks! Applied and pushed out. I should note, since no one else has,
-> that ath9k_htc has gotten a huge face lift by now. Unfortunately the
-> entire new revamp was done through an internal private tree but from
-> what I gather submission upstream should happen soon.
+On Thu, Feb 18, 2010 at 1:40 PM, Lukáš Turek <8an@praha12.net> wrote:
+> On 18.2.2010 03:13 Luis R. Rodriguez wrote:
+>> coverage = (distance + 449) / 450;
+>> coverage/450 = distance + 499
+>> (coverage/450) - 499 = distance
+>
+> Inverting the formula like this doesn't make much sense...
+>
+> The addition of 449 is there to round the resulting number up, because the
+> coverage class limits maximum distance and if it was rounded down as normal
+> integer division does, the resulting ACK timeout would be too low.
+>
+> However, if you subtract 449 in the inverted formula, you get something like a
+> minimum distance for the coverage class - which doesn't mean anything,
+> because higher ACK timeout and slot time works for smaller distances too.
+> Maximum distance is what's interesting to the user. So the correct
+> calculation is just multiplying the coverage class by 450 as I'm doing in
+> print_phy_handler():
+>
+> printf("\tCoverage class: %d (up to %dm)\n", coverage, 450 * coverage);
 
-Does it make much sense then to hack on the driver right now?
-Should linux-wireless be CC'ed as well for ath9k_htc patches?
+Thanks I'll fix and resend.
 
-Thanks,
-Helmut
+  Luis
