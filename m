@@ -1,119 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f200.google.com ([209.85.210.200]:61760 "EHLO
-	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566Ab0BTJSy (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57533 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775Ab0BSUpl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Feb 2010 04:18:54 -0500
-Date: Sat, 20 Feb 2010 01:18:47 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Fri, 19 Feb 2010 15:45:41 -0500
+Date: Fri, 19 Feb 2010 15:30:39 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Dan Carpenter <error27@gmail.com>, "Zhu, Yi" <yi.zhu@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"marcel@holtmann.org" <marcel@holtmann.org>
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20100220091847.GB30739@core.coreip.homeip.net>
-References: <20100217180342.GA22522@srcf.ucam.org>
- <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com>
- <20100217191708.GA15554@core.coreip.homeip.net>
- <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com>
- <20100217195435.GA15742@core.coreip.homeip.net>
- <22ee4e771002171218t69cc4348ia0300a645ce9763d@mail.gmail.com>
- <069C4DAE-598D-45F1-99B5-DA5BAF718179@gmail.com>
- <22ee4e771002171328w3c9cbb8n663c291e9d3634e5@mail.gmail.com>
- <2C0E2BCD-7589-45DE-B7D4-DBEFBFAE879D@gmail.com>
- <22ee4e771002171403o6f0b99e8qd683d78e74fe4522@mail.gmail.com>
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [patch] iwlwifi: testing the wrong variable
+Message-ID: <20100219203039.GN4950@tuxdriver.com>
+References: <20100218094529.GA1298@bicker> <1266516282.2551.2604.camel@rchatre-DESK>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <22ee4e771002171403o6f0b99e8qd683d78e74fe4522@mail.gmail.com>
+In-Reply-To: <1266516282.2551.2604.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 17, 2010 at 11:03:08PM +0100, Christian Lamparter wrote:
-> On Wed, Feb 17, 2010 at 10:40 PM, Dmitry Torokhov
-> <dmitry.torokhov@gmail.com> wrote:
-> > On Feb 17, 2010, at 1:28 PM, Christian Lamparter <chunkeey@googlemail.com>
-> > wrote:
-> >
-> >> On Wed, Feb 17, 2010 at 9:52 PM, Dmitry Torokhov
-> >> <dmitry.torokhov@gmail.com> wrote:
-> >>>
-> >>> Sorry, I was not clear enough. I meant something in works in Linux
-> >>> software
-> >>> stack, I was aware that certain router have these buttons already.
-> >>>
-> >>
-> >> wpa_supplicant and hostapd's CLI have this wps_pbc command.
-> >> It's more a question of: what application will get to receive the event.
-> >
-> > Right. So as soon as you have an idea about userspace consumer
-> > for the event ping me and I'd be glad to add a key definition for the event.
-> Idea? Be a bit more specific...
+On Thu, Feb 18, 2010 at 10:04:42AM -0800, reinette chatre wrote:
+> On Thu, 2010-02-18 at 01:45 -0800, Dan Carpenter wrote:
+> > The first one fixes a smatch false positive and the second one fixes
+> > a potential bug.
+> > 
+> > drivers/net/wireless/iwlwifi/iwl-5000.c +786 iwl5000_txq_update_byte_cnt_tbl(37) error: buffer overflow 
+> > '(scd_bc_tbl+txq_id)->tfd_offset' 320 <= 512
+> > drivers/net/wireless/iwlwifi/iwl-5000.c +808 iwl5000_txq_inval_byte_cnt_tbl(19) error: buffer overflow 
+> > '(scd_bc_tbl+txq_id)->tfd_offset' 320 <= 512
+> > 
+> > Signed-off-by: Dan Carpenter <error27@gmail.com>
+> > Cc: stable@kernel.org
+> > ---
 > 
-> As a matter of fact, there are a few potential consumer in the kernel:
+> This has already been fixed by patch below (taken from
+> wireless-next-2.6). John and Greg, could you please pick this one up for
+> 2.6.33 and stable instead?
 > 
-> arm/mach-kirkwood/mv88f6281gtw_ge-setup.c:
-> .code           = KEY_F1,
-> .gpio           = 46,
-> .desc           = "WPS Button(F1)",
-> .active_low     = 1,
+> commit 8ce1ef4a914aef8b9b90a2a2c670494168a2cca9
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Date:   Fri Jan 8 10:04:44 2010 -0800
 > 
-> arm/mach-orion5x/wrt350n-v2-setup.c:
-> .code           = KEY_WLAN,
-> .gpio           = 2,
-> .desc           = "WPS Button",
-> .active_low     = 1,
-> 
-> 
-> 
-> 
-> and there's a lot more "out-off-tree":
-> https://dev.openwrt.org/browser/trunk/target/linux/ar71xx/files/arch/mips/ar71xx
-> 
-> mach-tew-632brp.c:
-> .desc           = "wps",
-> .type           = EV_KEY,
-> .code           = BTN_1,
-> .threshold      = 3,
-> .gpio           = TEW_632BRP_GPIO_BTN_WPS,
-> 
-> carl9170:
-> input_set_capability(input, EV_KEY, BTN_0);
-> 
-> 
-> as you can see, people are using BTN_1, BTN_0, F1, WLAN (rfkill?)
-> as WPS Button substitute. Maybe it would be a good idea to get it right
-> now!
+>     iwlwifi: fix bug in tx byte count table
+>     
+>     When setting invalid byte count in txq byte count table, read
+> pointer
+>     should be used instead of write pointer.
+>     
+>     Reported-by: Guo, Chaohong <chaohong.guo@intel.com>
+>     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+>     Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+>     Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-I see, then I will be queueing the patch below...
+So for the record, that patch is basically identical to Dan's patch
+but with some whitespace fixups in some nearby lines as well.
 
+How important is this patch?  Is there an actual bug report?  Is it
+a regression?
+
+It is very late in the 2.6.33 cycle and it isn't obvious to me that
+this is worth pushing for 2.6.33 at this point...?
+
+John
 -- 
-Dmitry
-
-Input: add KEY_WPS_BUTTON definition
-
-The new key definition is supposed to be used for buttons that initiate
-WiFi Protected Setup sequence:
-
-	http://en.wikipedia.org/wiki/Wi-Fi_Protected_Setup
-
-Signed-off-by: Dmitry Torokhov <dtor@mail.ru>
----
-
- include/linux/input.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-
-diff --git a/include/linux/input.h b/include/linux/input.h
-index 04416f6..6825308 100644
---- a/include/linux/input.h
-+++ b/include/linux/input.h
-@@ -597,6 +597,7 @@ struct input_absinfo {
- #define KEY_NUMERIC_POUND	0x20b
- 
- #define KEY_CAMERA_FOCUS	0x210
-+#define KEY_WPS_BUTTON		0x211	/* WiFi Protected Setup key */
- 
- /* We avoid low common keys in module aliases so they don't get huge. */
- #define KEY_MIN_INTERESTING	KEY_MUTE
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
