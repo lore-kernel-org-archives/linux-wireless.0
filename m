@@ -1,52 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f180.google.com ([209.85.210.180]:56464 "EHLO
-	mail-yx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082Ab0BQSaq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 13:30:46 -0500
-Received: by yxe10 with SMTP id 10so215485yxe.33
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 10:30:44 -0800 (PST)
-Message-ID: <4B7C35C9.30607@lwfinger.net>
-Date: Wed, 17 Feb 2010 12:30:33 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: okias <d.okias@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	herton@mandriva.com.br, htl10@users.sourceforge.net
-Subject: Re: [PATCH] v2: rtl8187: micro cleanup
-References: <c2673ca61002171015j375922c0y4c7f61c3d3322bab@mail.gmail.com>
-In-Reply-To: <c2673ca61002171015j375922c0y4c7f61c3d3322bab@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:34301 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753386Ab0BTBRv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2010 20:17:51 -0500
+Subject: Re: [PATCH v3] compat: move debugfs_remove_recursive() to
+ compat-2.6.27
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1266626230.25707.60.camel@mj>
+References: <20100220000921.15525.55155.stgit@mj.roinet.com>
+	 <1266626230.25707.60.camel@mj>
+Content-Type: text/plain
+Date: Fri, 19 Feb 2010 20:17:42 -0500
+Message-Id: <1266628662.5699.15.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/2010 12:15 PM, okias wrote:
->>From 3f02b3ec0c3e6d7fa0599de12af0b76150854b94 Mon Sep 17 00:00:00 2001
-> From: David Heidelberger <d.okias@gmail.com>
-> Date: Wed, 17 Feb 2010 19:13:46 +0100
-> Subject: [PATCH] rtl8187: micro cleanup
-> 
-> ---
->  drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> index 7ba3052..2fe0c84 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -1175,8 +1175,6 @@ static void rtl8187_bss_info_changed(struct
-> ieee80211_hw *dev,
-> 
->  		if (priv->is_rtl8187b)
->  			reg = RTL818X_MSR_ENEDCA;
-> -		else
-> -			reg = 0;
-> 
->  		if (is_valid_ether_addr(info->bssid)) {
->  			reg |= RTL818X_MSR_INFRA;
+debugfs_remove_recursive() appeared in Linux 2.6.27, so it should be in
+compat-2.6.27, not in compat-2.6.26.  Don't compile it if
+CONFIG_DEBUG_FS is disabled.
 
-Did you forget the initialization to 0 when you declare the variable? It was in
-the first version. This change will cause the RTL8187L to fail.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-Larry
+Sorry, I'm having a bad brain day.  Revision 2 wasn't formatted right.
+What's worse, it would cause massive warnings on Linux 2.6.27 and newer.
+It would also fail on Linux 2.6.26 and older with debugfs disabled.
+This patch was tested on versions from 2.6.25 to 2.6.28 with and without
+debugfs.
+
+ compat/compat-2.6.26.c        |   32 --------------------------------
+ compat/compat-2.6.27.c        |   33 +++++++++++++++++++++++++++++++++
+ include/linux/compat-2.6.26.h |    8 --------
+ include/linux/compat-2.6.27.h |    8 ++++++++
+ 4 files changed, 41 insertions(+), 40 deletions(-)
+
+diff --git a/compat/compat-2.6.26.c b/compat/compat-2.6.26.c
+index 82134c2..b9bf9e7 100644
+--- a/compat/compat-2.6.26.c
++++ b/compat/compat-2.6.26.c
+@@ -89,37 +89,5 @@ int dev_set_name(struct device *dev, const char *fmt, ...)
+ }
+ EXPORT_SYMBOL_GPL(dev_set_name);
+ 
+-/*
+- * Backport of debugfs_remove_recursive() without using the internals globals
+- * which are used by the kernel's version with:
+- * simple_release_fs(&debugfs_mount, &debugfs_mount_count);
+- */
+-void debugfs_remove_recursive(struct dentry *dentry)
+-{
+-	struct dentry *last = NULL;
+-
+-	/* Sanity checks */
+-	if (!dentry || !dentry->d_parent || !dentry->d_parent->d_inode)
+-		return;
+-
+-	while (dentry != last) {
+-		struct dentry *child = dentry;
+-
+-		/* Find a child without children */
+-		while (!list_empty(&child->d_subdirs))
+-			child = list_entry(child->d_subdirs.next,
+-					   struct dentry,
+-					   d_u.d_child);
+-
+-		/* Bail out if we already tried to remove that entry */
+-		if (child == last)
+-			return;
+-
+-		last = child;
+-		debugfs_remove(child);
+-	}
+-}
+-EXPORT_SYMBOL_GPL(debugfs_remove_recursive);
+-
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26) */
+ 
+diff --git a/compat/compat-2.6.27.c b/compat/compat-2.6.27.c
+index 4fef36a..b78d465 100644
+--- a/compat/compat-2.6.27.c
++++ b/compat/compat-2.6.27.c
+@@ -206,6 +206,39 @@ unsigned int sdio_align_size(struct sdio_func *func, unsigned int sz)
+ EXPORT_SYMBOL_GPL(sdio_align_size);
+ #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24) */
+ 
++#ifdef CONFIG_DEBUG_FS
++/*
++ * Backport of debugfs_remove_recursive() without using the internals globals
++ * which are used by the kernel's version with:
++ * simple_release_fs(&debugfs_mount, &debugfs_mount_count);
++ */
++void debugfs_remove_recursive(struct dentry *dentry)
++{
++	struct dentry *last = NULL;
++
++	/* Sanity checks */
++	if (!dentry || !dentry->d_parent || !dentry->d_parent->d_inode)
++		return;
++
++	while (dentry != last) {
++		struct dentry *child = dentry;
++
++		/* Find a child without children */
++		while (!list_empty(&child->d_subdirs))
++			child = list_entry(child->d_subdirs.next,
++					   struct dentry,
++					   d_u.d_child);
++
++		/* Bail out if we already tried to remove that entry */
++		if (child == last)
++			return;
++
++		last = child;
++		debugfs_remove(child);
++	}
++}
++EXPORT_SYMBOL_GPL(debugfs_remove_recursive);
++#endif /* CONFIG_DEBUG_FS */
+ 
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27) */
+ 
+diff --git a/include/linux/compat-2.6.26.h b/include/linux/compat-2.6.26.h
+index 498fe44..2bee30e 100644
+--- a/include/linux/compat-2.6.26.h
++++ b/include/linux/compat-2.6.26.h
+@@ -11,20 +11,12 @@
+ #include <linux/jiffies.h>
+ #include <net/sock.h>
+ #include <linux/fs.h>
+-#include <linux/debugfs.h>
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ #include <net/net_namespace.h>
+ #endif
+ #include <linux/fs.h>
+ #include <linux/types.h>
+ 
+-#if defined(CONFIG_DEBUG_FS)
+-void debugfs_remove_recursive(struct dentry *dentry);
+-#else
+-static inline void debugfs_remove_recursive(struct dentry *dentry)
+-{ }
+-#endif
+-
+ /* These jiffie helpers added as of 2.6.26 */
+ 
+ /*
+diff --git a/include/linux/compat-2.6.27.h b/include/linux/compat-2.6.27.h
+index e9de41e..a690e2c 100644
+--- a/include/linux/compat-2.6.27.h
++++ b/include/linux/compat-2.6.27.h
+@@ -5,6 +5,7 @@
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27))
+ 
++#include <linux/debugfs.h>
+ #include <linux/list.h>
+ #include <linux/pci.h>
+ #include <linux/dma-mapping.h>
+@@ -212,6 +213,13 @@ static inline void dma_sync_single_range_for_device(struct device *dev,
+ 
+ #endif /* arm */
+ 
++#if defined(CONFIG_DEBUG_FS)
++void debugfs_remove_recursive(struct dentry *dentry);
++#else
++static inline void debugfs_remove_recursive(struct dentry *dentry)
++{ }
++#endif
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)) */
+ 
+ #endif /* LINUX_26_27_COMPAT_H */
+
