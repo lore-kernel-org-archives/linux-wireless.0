@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20524 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754838Ab0BVGlb (ORCPT
+Received: from mail-gx0-f217.google.com ([209.85.217.217]:33694 "EHLO
+	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754572Ab0BTPa1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:31 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH 10/22] wl1271: don't get received frames from hardware in PLT mode
-Date: Mon, 22 Feb 2010 08:38:30 +0200
-Message-Id: <1266820722-20202-11-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Sat, 20 Feb 2010 10:30:27 -0500
+Received: by gxk9 with SMTP id 9so1298473gxk.8
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Feb 2010 07:30:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1266621325.25707.14.camel@mj>
+References: <20100219012802.12460.42239.stgit@mj.roinet.com>
+	 <20100219134448.GA2844@tuxdriver.com> <1266621325.25707.14.camel@mj>
+Date: Sat, 20 Feb 2010 10:30:22 -0500
+Message-ID: <b6c5339f1002200730t46298538k30930ed52255f06e@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath5k: remove stale function declarations, make some
+	functions static
+From: Bob Copeland <me@bobcopeland.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Fri, Feb 19, 2010 at 6:15 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Fri, 2010-02-19 at 08:44 -0500, John W. Linville wrote:
+>> On Thu, Feb 18, 2010 at 08:28:02PM -0500, Pavel Roskin wrote:
+>> Any reason not to just remove those functions instead of commenting
+>> them out?
+>
+> I'm fine either way.  I tend to clean up more aggressively if I know
+> that nobody will miss that code.  I wasn't sure in this case.
 
-Most probably patch "wl1271: add most of the normal initialization commands
-to PLT mode" enabled the RX path in firmware so that now driver received
-frames and passed them to mac80211, which warned about them.
+I don't think it will be a big deal if they disappear.  I think most of
+them are just there because the original HAL had them.
 
-Workaround this by not retrieving frames from the hardware, just ignore them.
+Maybe one or two functions are waiting on an API in the stack to be useful
+(e.g. antenna stuff), but we can always get these routines back from git
+history if need be.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_rx.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index b7a7c06..2df7852 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -159,6 +159,13 @@ static void wl1271_rx_handle_data(struct wl1271 *wl, u32 length)
- 	u8 *buf;
- 	u8 beacon = 0;
- 
-+	/*
-+	 * In PLT mode we seem to get frames and mac80211 warns about them,
-+	 * workaround this by not retrieving them at all.
-+	 */
-+	if (unlikely(wl->state == WL1271_STATE_PLT))
-+		return;
-+
- 	skb = __dev_alloc_skb(length, GFP_KERNEL);
- 	if (!skb) {
- 		wl1271_error("Couldn't allocate RX frame");
 -- 
-1.6.3.3
-
+Bob Copeland %% www.bobcopeland.com
