@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40161 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966031Ab0BZUd3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 15:33:29 -0500
-Date: Fri, 26 Feb 2010 12:33:08 -0800 (PST)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Michael Buesch <mb@bu3sch.de>
-cc: Larry Finger <Larry.Finger@lwfinger.net>,
+Received: from ist.d-labs.de ([213.239.218.44]:56824 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755087Ab0BTXHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Feb 2010 18:07:18 -0500
+Date: Sun, 21 Feb 2010 00:07:16 +0100
+From: Florian Mickler <florian@mickler.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	wireless <linux-wireless@vger.kernel.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal
- DMA errors
-In-Reply-To: <201002262120.37438.mb@bu3sch.de>
-Message-ID: <alpine.LFD.2.00.1002261231320.4513@localhost.localdomain>
-References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain> <201002262059.02383.mb@bu3sch.de> <alpine.LFD.2.00.1002261207020.4513@localhost.localdomain> <201002262120.37438.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Subject: Re: [PATCH 2/2] enhance /sys/class/rfkill/<rfkill>/state interface
+Message-ID: <20100221000716.29ad3e90@schatten.dmk.lab>
+In-Reply-To: <1266704090.10980.0.camel@jlt3.sipsolutions.net>
+References: <1266702045-6062-1-git-send-email-florian@mickler.org>
+	<1266702045-6062-3-git-send-email-florian@mickler.org>
+	<1266704090.10980.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 20 Feb 2010 23:14:48 +0100
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-
-On Fri, 26 Feb 2010, Michael Buesch wrote:
+> On Sat, 2010-02-20 at 22:40 +0100, florian@mickler.org wrote:
+> > Introduce a new state-value RFKILL_STATE_SOFT_AND_HARD_BLOCKED
+> > which is returned only through the sysfs state file.
+> > The other interfaces are designed so that they don't need this extra
+> > state.
+> > 
+> > This allows the sysfs to represent all possible states an rfkill
+> > driver can
+> > have.
+> > 
+> > Signed-off-by: Florian Mickler <florian@mickler.org>
+> > ---
+> > 
+> > After stumbling over this arbitrary limitation of
+> > sys/class/rfkill/*/state I
+> > wondered what would hinder this patch?
 > 
-> I'd rather appreciate that somebody who owns such a device and can reproduce the bug
-> would do some _real_ debugging on the issue instead.
+> This is not backward compatible, so can't be done.
+> 
+> johannes
 
-I have the hardware, I can reproduce the bug 100% of the time.
+hmm... ah, i see... if driver is in hard'n'soft-block state 
+an userspace program would expect to read hardblock instead of the
+new hard'n'softblock-state... 
+now that i think of it, it even becomes obvious :) 
 
-So send me a patch. I'll try it. But I have no hardware docs, nor any 
-information about how that SSB bridge is supposed to work, or why DMA 
-might be failing.
+cheers,
+Flo
 
-			Linus
+
