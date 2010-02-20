@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:45849 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753336Ab0BKRH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2010 12:07:29 -0500
-Message-ID: <4B743947.5070303@openwrt.org>
-Date: Thu, 11 Feb 2010 18:07:19 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>
-Subject: [PATCH] ath9k: add a workaround for ack timeout issues
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:47654 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753198Ab0BTLHQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Feb 2010 06:07:16 -0500
+Subject: Re: [PATCH v3] mac80211: deprecate RX status noise
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Leffler <sleffler@google.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <7f9d9abf1002181728q63c9f090je175681bc520f0ad@mail.gmail.com>
+References: <1266437114.23447.0.camel@jlt3.sipsolutions.net>
+	 <1266438137.23447.1.camel@jlt3.sipsolutions.net>
+	 <1266438446.23447.2.camel@jlt3.sipsolutions.net> <4B7C561C.70702@free.fr>
+	 <43e72e891002171429j7f47c86bqd4374bf07b8979de@mail.gmail.com>
+	 <1266447118.12365.21.camel@mj>
+	 <1266494831.6261.1.camel@jlt3.sipsolutions.net>
+	 <7f9d9abf1002181728q63c9f090je175681bc520f0ad@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 20 Feb 2010 12:06:11 +0100
+Message-ID: <1266663971.10741.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding support for setting the coverage class in some cases broke
-association and data transfer, as it overwrote the initial ACK timeout
-value from the initvals with a smaller value.
-I don't know why the new value works in 5 GHz (matches the initval
-there), but not in 2.4 GHz (initvals use 64us here), so until the
-problem is fully understood, the value should be increased again.
+On Thu, 2010-02-18 at 17:28 -0800, Sam Leffler wrote: 
+> Depends on your definition of channel.  For MIMO devices you can have
+> NF per RX chain.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1233,6 +1233,17 @@ void ath9k_hw_init_global_settings(struc
- 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
- 	slottime = ah->slottime + 3 * ah->coverage_class;
- 	acktimeout = slottime + sifstime;
-+
-+	/*
-+	 * Workaround for early ACK timeouts, add an offset to match the
-+	 * initval's 64us ack timeout value.
-+	 * This was initially only meant to work around an issue with delayed
-+	 * BA frames in some implementations, but it has been found to fix ACK
-+	 * timeout issues in other cases as well.
-+	 */
-+	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ)
-+		acktimeout += 64 - sifstime - ah->slottime;
-+
- 	ath9k_hw_setslottime(ah, slottime);
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
- 	ath9k_hw_set_cts_timeout(ah, acktimeout);
+Indeed.
+
+> NF is typically measured infrequently but the frequency is inherently
+> hw-specific.
+
+Right.
+
+> Given radiotap is inherently packet-oriented there was little choice
+> but to package noise in the way it is.  If you include it only when it
+> changes but then you lose the ability to interpret each record
+> independently.  Given this value is 8-bits I don't see the big deal.
+>  Fixing drivers to include useful data seems more important.
+
+Ah. No, this is not really what I'm debating. For radiotap, we can
+include the value in every packet, no matter when it was measured. But
+for actual measurement API etc. I think we need to take more care and
+not require the driver to fill the status per packet. We can handle
+that, for radiotap, in the stack; actually getting noise information out
+of the card into userspace _when requested_ should have more of an
+up-to-date guarantee (or just not give a value) though, I think. I'd be
+happy to make the stack fill radiotap with whatever value we have, but
+the way we report it now from the driver to the stack seems completely
+bogus.
+
+johannes 
+
+
