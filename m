@@ -1,136 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:19464 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754853Ab0BVGlm (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:58920 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753428Ab0BUWBt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:42 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 02/22] wl1271: Added functions to enable/disable interrupt handling
-Date: Mon, 22 Feb 2010 08:38:22 +0200
-Message-Id: <1266820722-20202-3-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Sun, 21 Feb 2010 17:01:49 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: 2.6.33-rc8-git6: Reported regressions from 2.6.32
+Date: Sun, 21 Feb 2010 23:02:08 +0100
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <b_eAfX__uZL.A.lvE.HcagLB@chimera> <b170af451002211359k7a2ae3c5o7af5e7b36d2c77b9@mail.gmail.com>
+In-Reply-To: <b170af451002211359k7a2ae3c5o7af5e7b36d2c77b9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201002212302.08368.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+On Sunday 21 February 2010, Rafał Miłecki wrote:
+> 2010/2/21 Rafael J. Wysocki <rjw@sisk.pl>:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=15293
+> > Subject         : Flash video laggy inside Firefox only with KMS
+> > Submitter       : Michał Witkowski <neuro@o2.pl>
+> > Date            : 2010-02-13 14:53 (9 days old)
+> 
+> Not regression. Just KMS problem.
 
-Added/moved enable and disable interrupt handling functions.
+OK, dropping from the list.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_boot.c |    2 +-
- drivers/net/wireless/wl12xx/wl1271_io.c   |   10 ++++++++++
- drivers/net/wireless/wl12xx/wl1271_io.h   |    3 +++
- drivers/net/wireless/wl12xx/wl1271_main.c |    5 -----
- drivers/net/wireless/wl12xx/wl1271_spi.c  |   10 ++++++++++
- drivers/net/wireless/wl12xx/wl1271_spi.h  |    3 +++
- 6 files changed, 27 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 2be76ee..7d6d2e6 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -299,7 +299,7 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 
- static void wl1271_boot_enable_interrupts(struct wl1271 *wl)
- {
--	enable_irq(wl->irq);
-+	wl1271_enable_interrupts(wl);
- 	wl1271_write32(wl, ACX_REG_INTERRUPT_MASK,
- 		       WL1271_ACX_INTR_ALL & ~(WL1271_INTR_MASK));
- 	wl1271_write32(wl, HI_CFG, HI_CFG_DEF_VAL);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_io.c b/drivers/net/wireless/wl12xx/wl1271_io.c
-index 5cd94d5..b825cfa 100644
---- a/drivers/net/wireless/wl12xx/wl1271_io.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_io.c
-@@ -31,6 +31,16 @@
- #include "wl1271_spi.h"
- #include "wl1271_io.h"
- 
-+void wl1271_disable_interrupts(struct wl1271 *wl)
-+{
-+	wl1271_spi_disable_interrupts(wl);
-+}
-+
-+void wl1271_enable_interrupts(struct wl1271 *wl)
-+{
-+	wl1271_spi_enable_interrupts(wl);
-+}
-+
- static int wl1271_translate_addr(struct wl1271 *wl, int addr)
- {
- 	/*
-diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
-index 38fce4c..c8b0971 100644
---- a/drivers/net/wireless/wl12xx/wl1271_io.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_io.h
-@@ -27,6 +27,9 @@
- 
- struct wl1271;
- 
-+void wl1271_disable_interrupts(struct wl1271 *wl);
-+void wl1271_enable_interrupts(struct wl1271 *wl);
-+
- void wl1271_io_reset(struct wl1271 *wl);
- void wl1271_io_init(struct wl1271 *wl);
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 66319aa..18347c3 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -360,11 +360,6 @@ static int wl1271_plt_init(struct wl1271 *wl)
- 	return ret;
- }
- 
--static void wl1271_disable_interrupts(struct wl1271 *wl)
--{
--	disable_irq(wl->irq);
--}
--
- static void wl1271_power_off(struct wl1271 *wl)
- {
- 	wl->set_power(false);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index c26726a..b422c9f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -34,6 +34,16 @@
- #include "wl1271_io.h"
- 
- 
-+void wl1271_spi_disable_interrupts(struct wl1271 *wl)
-+{
-+	disable_irq(wl->irq);
-+}
-+
-+void wl1271_spi_enable_interrupts(struct wl1271 *wl)
-+{
-+	enable_irq(wl->irq);
-+}
-+
- void wl1271_spi_reset(struct wl1271 *wl)
- {
- 	u8 *cmd;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.h b/drivers/net/wireless/wl12xx/wl1271_spi.h
-index a803596..86ff161 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.h
-@@ -84,6 +84,9 @@
- #define OCP_STATUS_REQ_FAILED 0x20000
- #define OCP_STATUS_RESP_ERROR 0x30000
- 
-+void wl1271_spi_disable_interrupts(struct wl1271 *wl);
-+void wl1271_spi_enable_interrupts(struct wl1271 *wl);
-+
- /* Raw target IO, address is not translated */
- void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
- 		      size_t len, bool fixed);
--- 
-1.6.3.3
-
+Rafael
