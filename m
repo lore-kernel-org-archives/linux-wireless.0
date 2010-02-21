@@ -1,66 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f191.google.com ([209.85.216.191]:39696 "EHLO
-	mail-px0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933772Ab0BQApr convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53305 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143Ab0BUKzY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 19:45:47 -0500
-Received: by pxi29 with SMTP id 29so2228368pxi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 16:45:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e891002161459m4174654aj8d7985f32cb8678d@mail.gmail.com>
-References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
-	<1266124222.13902.42.camel@mj> <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
-	<1266358340.2659.37.camel@mj> <43e72e891002161459m4174654aj8d7985f32cb8678d@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 16 Feb 2010 16:45:25 -0800
-Message-ID: <43e72e891002161645p627c123g9ac571e4802cd8bf@mail.gmail.com>
-Subject: Re: compat-wireless + Linux 2.6.26.8 testing results
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 21 Feb 2010 05:55:24 -0500
+Subject: Re: [PATCH V2] ssb: Add PCI ID 0x4322 to PMU handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	bcm43xx-dev@lists.berlios.de
+In-Reply-To: <69e28c911002210253v8150259s718d2ba68372f9d1@mail.gmail.com>
+References: <4b803cb5.tZQnvqGy2KfItgOq%Larry.Finger@lwfinger.net>
+	 <b170af451002210249t5adfa274s6bee0003c1afa497@mail.gmail.com>
+	 <69e28c911002210253v8150259s718d2ba68372f9d1@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+EIyjhEnUyy2friPthu2"
+Date: Sun, 21 Feb 2010 11:55:13 +0100
+Message-ID: <1266749713.5468.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 16, 2010 at 2:59 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, Feb 16, 2010 at 2:12 PM, Pavel Roskin <proski@gnu.org> wrote:
->> On Tue, 2010-02-16 at 13:23 -0800, Luis R. Rodriguez wrote:
->>
->>> > It looks like compat-wireless-2.6.33-rc8 and compat-wireless-2010-02-13
->>> > don't have the patches to deal with the lack of netif_tx_wake_queue and
->>> > select_queue in Linux 2.6.26.  compat-wireless-2.6.32.8 has such
->>> > patches.
->>>
->>> Oh right, so I was hoping to get some reports on results of MQ
->>> backport on 2.6.32.y, I guess its OK enough to merge now and if its
->>> borked we can remove older kernel support or something.
->>
->> I confirm that ath5k and ath9k actually work on that kernel, so the
->> results are good.
->
-> Sweet!
 
-Hey OK so I propagated MQ support into compat-wireless based on
-linux-next. I just hit a snag I forgot about and explains more
-logically why I hadn't moved MQ support to bleeding edge:
-debugfs_remove_recursive() needs some backport work as well. Last I
-looked at it, I determined we could not directly backport it as it
-relied on two internal globals on fs/debugfs/inode.c. I did copy over
-the code onto compat/compat-2.6.26.c but ifdef'd it out for now.
+--=-+EIyjhEnUyy2friPthu2
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-One option is to disable debugfs on compat-wireless for older kernels
-or if you figure out a way to backport that call without using a
-global even better. For now I just can't work on this but I do welcome
-patches if someone manages to pull off backporting it.
+On Sun, 2010-02-21 at 11:53 +0100, G=C3=A1bor Stefanik wrote:
+> 2010/2/21 Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>:
+> > 2010/2/20 Larry Finger <Larry.Finger@lwfinger.net>:
+> >> Some of the N PHYs need a revision in the handling of the PMU.
+> >>
+> >> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> >> ---
+> >>
+> >> John,
+> >>
+> >> This will be needed for some of the N PHY devices - 2.6.34
+> amterial.
+> >>
+> >> Larry
+> >> ---
+> >>
+> >> V2 - Fix typo in subject line of commit message.
+> >
+> > amterial you say? ;)
+>=20
+> Taht's not prat of the cimmot megasse, it is olny a ntoe to Jhon.
+> Deons't mtater eevn if it is cmolpelety jmulbed up.
 
-  CC [M]  /home/mcgrof/devel/compat-wireless-2.6/net/mac80211/rate.o
-/home/mcgrof/devel/compat-wireless-2.6/net/mac80211/rate.c: In
-function ‘rate_control_release’:
-/home/mcgrof/devel/compat-wireless-2.6/net/mac80211/rate.c:190: error:
-implicit declaration of function ‘debugfs_remove_recursive’
-make[3]: *** [/home/mcgrof/devel/compat-wireless-2.6/net/mac80211/rate.o]
-Error 1
-make[2]: *** [/home/mcgrof/devel/compat-wireless-2.6/net/mac80211] Error 2
-make[1]: *** [_module_/home/mcgrof/devel/compat-wireless-2.6] Error 2
-make[1]: Leaving directory `/home/mcgrof/kernels/linux-2.6.26.8'
+Geez. The patch is already in the tree anyway, with the original typo.
 
-  Luis
+johannes
+
+--=-+EIyjhEnUyy2friPthu2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLgREOAAoJEODzc/N7+QmaJuoP/085yPbvOMQVZ9C7cIQNf5bO
+Llliof7rYVugb2f0XUBLpFQYvVnRyckvQtws3RdVckYbvQur2KjAHo81bxt2SgPS
+UWgsmD2XoLXGm7s4BChm99Yy+ZYRAvEtXLRsUZ2bpSZHUIgfm9+lL7AQRcLvTbR9
+Q16h4apmHhOui2NfjX2Y5yfwpFdTtPaqCDIU7ftmj2MCdZaHl8hY4lxFQgmkY8ZX
+zBMq92WQScP6tZGktQZCmuZwYj3TXCW3SbbxBRXGlcMxUcVNbtavk40WfEjISQpL
+hSkNp+7UNVFvPHf48i+/1BfA5Vi5GRa8PfjCxhUbhCHMLTtkKAkupeObPH0Q3UNL
+YrJ6N0bLd315ytD7TVF0/KGs/oxhunm48zIsxe8gjfk5wpCcS9QNzTGuKQCo3rkv
+2fVjl3b7A8CrCNnzLGvdJcVQB2aPYsVeuxsB+vjBAJwLJIQZXkpNDfHVMYumPuaQ
+XwD1kO6w8cD/B6QVz8fRSuLJ0Znzty+4gufvNIOro5Ub6aqgs0gIGj4PqrbOMUpW
+jRbV05tPbtwlQ8HnJyx81NaSl3ifaVkUZv6cVkJvxEgITPsAckq1LfECtcxnRWEQ
+7kJs3c53SOywMrr4UCtTNwdWJhymsqipH+0M9cdJ1YOsAUvUAXA4MApllJHYJsrU
+DlL+C69grU/pof00MoNa
+=Q6o8
+-----END PGP SIGNATURE-----
+
+--=-+EIyjhEnUyy2friPthu2--
+
