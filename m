@@ -1,63 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52639 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754296Ab0BIPJQ (ORCPT
+Received: from mail-yx0-f193.google.com ([209.85.210.193]:33958 "EHLO
+	mail-yx0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098Ab0BURMl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 10:09:16 -0500
-Subject: Re: CFG80211 depends on RFKILL or not
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jaswinder Singh Rajput <jaswindernetwork@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <74ccb2ee1002090631i4a29d320u2756af13de05cb97@mail.gmail.com>
-References: <74ccb2ee1002090631i4a29d320u2756af13de05cb97@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4aNmUUIbEOVj/w2P7IXX"
-Date: Tue, 09 Feb 2010 16:09:12 +0100
-Message-ID: <1265728152.3783.37.camel@johannes.berg>
-Mime-Version: 1.0
+	Sun, 21 Feb 2010 12:12:41 -0500
+Received: by yxe31 with SMTP id 31so516230yxe.21
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Feb 2010 09:12:40 -0800 (PST)
+Message-ID: <4B816983.2050006@lwfinger.net>
+Date: Sun, 21 Feb 2010 11:12:35 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH V2] ssb: Add PCI ID 0x4322 to PMU handling
+References: <4b803cb5.tZQnvqGy2KfItgOq%Larry.Finger@lwfinger.net>	 <b170af451002210249t5adfa274s6bee0003c1afa497@mail.gmail.com>	 <69e28c911002210253v8150259s718d2ba68372f9d1@mail.gmail.com> <1266749713.5468.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1266749713.5468.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 02/21/2010 04:55 AM, Johannes Berg wrote:
+> On Sun, 2010-02-21 at 11:53 +0100, Gábor Stefanik wrote:
+>> 2010/2/21 Rafał Miłecki <zajec5@gmail.com>:
+>>> 2010/2/20 Larry Finger <Larry.Finger@lwfinger.net>:
+>>>> Some of the N PHYs need a revision in the handling of the PMU.
+>>>>
+>>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>>> ---
+>>>>
+>>>> John,
+>>>>
+>>>> This will be needed for some of the N PHY devices - 2.6.34
+>> amterial.
+>>>>
+>>>> Larry
+>>>> ---
+>>>>
+>>>> V2 - Fix typo in subject line of commit message.
+>>>
+>>> amterial you say? ;)
+>>
+>> Taht's not prat of the cimmot megasse, it is olny a ntoe to Jhon.
+>> Deons't mtater eevn if it is cmolpelety jmulbed up.
+> 
+> Geez. The patch is already in the tree anyway, with the original typo.
 
---=-4aNmUUIbEOVj/w2P7IXX
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I may be getting old and decrepit, but it's OK if the boys just want to have fun
+with me.
 
-On Tue, 2010-02-09 at 20:01 +0530, Jaswinder Singh Rajput wrote:
-
-> I am trying to understand what is the magic behind :
->=20
-> 19 config CFG80211
-> 20         tristate "cfg80211 - wireless configuration API"
-> 21         depends on RFKILL || !RFKILL
->=20
-> Do we really need RFKILL and !RFKILL
-
-Yes. You can not have RFKILL, or you can have CFG80211 depend on RFKILL,
-but you can NOT have CFG80211=3Dy and RFKILL=3Dm.
-
-johannes
-
---=-4aNmUUIbEOVj/w2P7IXX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLcXqVAAoJEODzc/N7+QmaUZMQAIXah261pTeGxRoGd2DDsqoK
-mZjaBlB9W/2KD36UBobwKOfL23tT0hOE4oM6joIV1zEqggR/TqaIrBlEctTqlAS8
-xUJxDI56ILthmqPb+D5zYBHJh+HhCnidMKha0uFb7pzhxIdaKS5lVWrRkqtyz76U
-S/R09isazVhdIgOFnwy715S9kzNKJp0UU54+doaiHRB/u//DvKGDebAL5xYfu+56
-UMa7OYfB9pUNIqc3O0Xycml1QbTwa8dIIuri3Zu1bQXDtDNr7HKSNLnnV++gop1E
-YvdbjPOjGVEkVszDAT/vFLCYrXjPtfpyVZVGNrcU4W5HKw36D98UIBxCFpjw/npp
-8jioFQKZP89s911k7zsG4ZLbec6VYonoM2EwDOk45WXHKZFiKuC9oDmg+/TehUQt
-6SN6m/2zwG8Fn5oUHJ2yxzyaGz9XiPUzsL3uQmD6KmtGLsnoh+OS6Qs7wc8WgPlb
-divuuD7u3sxcXfnTC45H/myO1VWLvJJnkPjVGnDIiaMjMsPHK4wBktC8kmyR2ZHG
-z5n/WuCXULJVS50H/kazTtTXwgHh9t69mNC80cJYr2ocWOzS93V/5oLWI9yE1uI+
-9T6tx7WUmQTmyt9RZyI/3R3TV9Fv2qnTr7O1Ko4DB6Vy+SgHi4qx3TfWVV3IMseG
-qkwBaCR0X/+t3oemu0Q3
-=9rGm
------END PGP SIGNATURE-----
-
---=-4aNmUUIbEOVj/w2P7IXX--
-
+Larry
