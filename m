@@ -1,96 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:34124 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507Ab0BIUFB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:05:01 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so4264852ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:05:00 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 04/11] b43: N-PHY: update writing channel-specific radio registers
-Date: Tue,  9 Feb 2010 21:04:36 +0100
-Message-Id: <1265745883-3392-5-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from ist.d-labs.de ([213.239.218.44]:40164 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751115Ab0BULWB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Feb 2010 06:22:01 -0500
+Date: Sun, 21 Feb 2010 12:21:55 +0100
+From: Florian Mickler <florian@mickler.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Subject: Re: [PATCH 1/2] Document the rfkill sysfs ABI
+Message-ID: <20100221122155.7b163b55@schatten.dmk.lab>
+In-Reply-To: <1266746930.18491.1.camel@violet>
+References: <1266702045-6062-1-git-send-email-florian@mickler.org>
+	<1266702045-6062-2-git-send-email-florian@mickler.org>
+	<1266704345.32739.0.camel@jlt3.sipsolutions.net>
+	<1266746930.18491.1.camel@violet>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   54 ++++++++++++++++++++++---------------
- 1 files changed, 32 insertions(+), 22 deletions(-)
+On Sun, 21 Feb 2010 11:08:50 +0100
+Marcel Holtmann <marcel@holtmann.org> wrote:
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index dd81e8a..ebb9632 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -90,28 +90,38 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
- static void b43_chantab_radio_upload(struct b43_wldev *dev,
- 				     const struct b43_nphy_channeltab_entry *e)
- {
--	b43_radio_write16(dev, B2055_PLL_REF, e->radio_pll_ref);
--	b43_radio_write16(dev, B2055_RF_PLLMOD0, e->radio_rf_pllmod0);
--	b43_radio_write16(dev, B2055_RF_PLLMOD1, e->radio_rf_pllmod1);
--	b43_radio_write16(dev, B2055_VCO_CAPTAIL, e->radio_vco_captail);
--	b43_radio_write16(dev, B2055_VCO_CAL1, e->radio_vco_cal1);
--	b43_radio_write16(dev, B2055_VCO_CAL2, e->radio_vco_cal2);
--	b43_radio_write16(dev, B2055_PLL_LFC1, e->radio_pll_lfc1);
--	b43_radio_write16(dev, B2055_PLL_LFR1, e->radio_pll_lfr1);
--	b43_radio_write16(dev, B2055_PLL_LFC2, e->radio_pll_lfc2);
--	b43_radio_write16(dev, B2055_LGBUF_CENBUF, e->radio_lgbuf_cenbuf);
--	b43_radio_write16(dev, B2055_LGEN_TUNE1, e->radio_lgen_tune1);
--	b43_radio_write16(dev, B2055_LGEN_TUNE2, e->radio_lgen_tune2);
--	b43_radio_write16(dev, B2055_C1_LGBUF_ATUNE, e->radio_c1_lgbuf_atune);
--	b43_radio_write16(dev, B2055_C1_LGBUF_GTUNE, e->radio_c1_lgbuf_gtune);
--	b43_radio_write16(dev, B2055_C1_RX_RFR1, e->radio_c1_rx_rfr1);
--	b43_radio_write16(dev, B2055_C1_TX_PGAPADTN, e->radio_c1_tx_pgapadtn);
--	b43_radio_write16(dev, B2055_C1_TX_MXBGTRIM, e->radio_c1_tx_mxbgtrim);
--	b43_radio_write16(dev, B2055_C2_LGBUF_ATUNE, e->radio_c2_lgbuf_atune);
--	b43_radio_write16(dev, B2055_C2_LGBUF_GTUNE, e->radio_c2_lgbuf_gtune);
--	b43_radio_write16(dev, B2055_C2_RX_RFR1, e->radio_c2_rx_rfr1);
--	b43_radio_write16(dev, B2055_C2_TX_PGAPADTN, e->radio_c2_tx_pgapadtn);
--	b43_radio_write16(dev, B2055_C2_TX_MXBGTRIM, e->radio_c2_tx_mxbgtrim);
-+	b43_radio_write(dev, B2055_PLL_REF, e->radio_pll_ref);
-+	b43_radio_write(dev, B2055_RF_PLLMOD0, e->radio_rf_pllmod0);
-+	b43_radio_write(dev, B2055_RF_PLLMOD1, e->radio_rf_pllmod1);
-+	b43_radio_write(dev, B2055_VCO_CAPTAIL, e->radio_vco_captail);
-+	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
-+		b43_read32(dev, B43_MMIO_MACCTL);
-+	b43_radio_write(dev, B2055_VCO_CAL1, e->radio_vco_cal1);
-+	b43_radio_write(dev, B2055_VCO_CAL2, e->radio_vco_cal2);
-+	b43_radio_write(dev, B2055_PLL_LFC1, e->radio_pll_lfc1);
-+	b43_radio_write(dev, B2055_PLL_LFR1, e->radio_pll_lfr1);
-+	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
-+		b43_read32(dev, B43_MMIO_MACCTL);
-+	b43_radio_write(dev, B2055_PLL_LFC2, e->radio_pll_lfc2);
-+	b43_radio_write(dev, B2055_LGBUF_CENBUF, e->radio_lgbuf_cenbuf);
-+	b43_radio_write(dev, B2055_LGEN_TUNE1, e->radio_lgen_tune1);
-+	b43_radio_write(dev, B2055_LGEN_TUNE2, e->radio_lgen_tune2);
-+	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
-+		b43_read32(dev, B43_MMIO_MACCTL);
-+	b43_radio_write(dev, B2055_C1_LGBUF_ATUNE, e->radio_c1_lgbuf_atune);
-+	b43_radio_write(dev, B2055_C1_LGBUF_GTUNE, e->radio_c1_lgbuf_gtune);
-+	b43_radio_write(dev, B2055_C1_RX_RFR1, e->radio_c1_rx_rfr1);
-+	b43_radio_write(dev, B2055_C1_TX_PGAPADTN, e->radio_c1_tx_pgapadtn);
-+	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
-+		b43_read32(dev, B43_MMIO_MACCTL);
-+	b43_radio_write(dev, B2055_C1_TX_MXBGTRIM, e->radio_c1_tx_mxbgtrim);
-+	b43_radio_write(dev, B2055_C2_LGBUF_ATUNE, e->radio_c2_lgbuf_atune);
-+	b43_radio_write(dev, B2055_C2_LGBUF_GTUNE, e->radio_c2_lgbuf_gtune);
-+	b43_radio_write(dev, B2055_C2_RX_RFR1, e->radio_c2_rx_rfr1);
-+	if (dev->dev->bus->bustype == SSB_BUSTYPE_PCI)
-+		b43_read32(dev, B43_MMIO_MACCTL);
-+	b43_radio_write(dev, B2055_C2_TX_PGAPADTN, e->radio_c2_tx_pgapadtn);
-+	b43_radio_write(dev, B2055_C2_TX_MXBGTRIM, e->radio_c2_tx_mxbgtrim);
- }
- 
- static void b43_chantab_phy_upload(struct b43_wldev *dev,
--- 
-1.6.4.2
+> Hi Johannes,
+> 
+> > > This moves sysfs ABI info from Documentation/rfkill.txt to the
+> > > ABI subfolder and reformats it.
+> > > 
+> > > Signed-off-by: Florian Mickler <florian@mickler.org>
+> > 
+> > This is fine with me.
+> 
+> we have to be careful here. Some of these sysfs details needs to be
+> deprecated and removed. Applications should use /dev/rfkill actually.
+> 
+> Regards
+> 
+> Marcel
+> 
 
+There are three different categories: 
+Documentation/ABI/stable 
+Documentation/ABI/obsolete
+Documentation/ABI/testing
+
+Quoting from the ABI/README:
+> The different levels of stability are:
+> 
+>   stable/
+>         This directory documents the interfaces that the developer has
+>         defined to be stable.  Userspace programs are free to use these
+>         interfaces with no restrictions, and backward compatibility for
+>         them will be guaranteed for at least 2 years.  Most interfaces
+>         (like syscalls) are expected to never change and always be
+>         available.
+> 
+>   testing/
+>         This directory documents interfaces that are felt to be stable,
+>         as the main development of this interface has been completed.
+>         The interface can be changed to add new features, but the
+>         current interface will not break by doing this, unless grave
+>         errors or security problems are found in them.  Userspace
+>         programs can start to rely on these interfaces, but they must be
+>         aware of changes that can occur before these interfaces move to
+>         be marked stable.  Programs that use these interfaces are
+>         strongly encouraged to add their name to the description of
+>         these interfaces, so that the kernel developers can easily
+>         notify them if any changes occur (see the description of the
+>         layout of the files below for details on how to do this.)
+> 
+>   obsolete/
+>         This directory documents interfaces that are still remaining in
+>         the kernel, but are marked to be removed at some later point in
+>         time.  The description of the interface will document the reason
+>         why it is obsolete and when it can be expected to be removed.
+>         The file Documentation/feature-removal-schedule.txt may describe
+>         some of these interfaces, giving a schedule for when they will
+>         be removed.
+> 
+>   removed/
+>         This directory contains a list of the old interfaces that have
+>         been removed from the kernel.
+> 
+
+
+So the question is: are the state and claim file deprecated or obsolete? 
+If they are considered obsolete I presume it would be ok, to put this
+part of the ABI description into the obsolete/ subfolder. 
+
+And should they be obsolete, should there be a new file ("blocked",
+"state2.0",whatever,...) which exposes all possible states? I assume it
+do be handy for scripted access to the rfkill device. 
+
+cheers,
+Flo
