@@ -1,36 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4004 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754500Ab0BGPFB (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:38496 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503Ab0BVSSG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2010 10:05:01 -0500
-Date: Sun, 7 Feb 2010 10:04:15 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: [PATCH 04/10] ath5k: remove get_tx_stats() mac80211 op
-Message-ID: <20100207150415.GA9085@hash.localnet>
-References: <20100207082044.31474.48583.stgit@tikku> <20100207082107.31474.55453.stgit@tikku>
+	Mon, 22 Feb 2010 13:18:06 -0500
+Received: by pwj8 with SMTP id 8so2941720pwj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 10:18:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100207082107.31474.55453.stgit@tikku>
+In-Reply-To: <b_eAfX__uZL.A.lvE.HcagLB@chimera>
+References: <b_eAfX__uZL.A.lvE.HcagLB@chimera>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Feb 2010 10:17:43 -0800
+Message-ID: <43e72e891002221017i5872aa2pbc79434d98823e6c@mail.gmail.com>
+Subject: Re: 2.6.33-rc8-git6: Reported regressions from 2.6.32
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 07, 2010 at 10:21:07AM +0200, Kalle Valo wrote:
-> get_tx_stats() will be removed from mac80211.
-> 
-> Compile-tested only.
+Yay nothing for 802.11
 
-The ath5k portion is equivalent to the rfc I posted a while ago
-(http://patchwork.kernel.org/patch/37537/ - didn't check the rest) so you
-happily have my:
-
-Acked-by: Bob Copeland <me@bobcopeland.com>
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
