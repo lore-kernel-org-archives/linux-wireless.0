@@ -1,33 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f190.google.com ([209.85.222.190]:59373 "EHLO
-	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933493Ab0BEAPH (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:22542 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754816Ab0BVGla (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 19:15:07 -0500
-Received: by pzk28 with SMTP id 28so3235584pzk.4
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2010 16:15:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1265317566-15372-1-git-send-email-benoit.papillault@free.fr>
-References: <1265317566-15372-1-git-send-email-benoit.papillault@free.fr>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 4 Feb 2010 16:14:46 -0800
-Message-ID: <43e72e891002041614o3736d56axd41054c295703a76@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: Fix rate table choice
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 22 Feb 2010 01:41:30 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/22] wl1271: Fix ad-hoc mode neighborhood detection
+Date: Mon, 22 Feb 2010 08:38:32 +0200
+Message-Id: <1266820722-20202-13-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2010 at 1:06 PM, Benoit Papillault
-<benoit.papillault@free.fr> wrote:
-> ath9k rate control choose the rate table based on the current channel
-> (if it is ht40 or not). However, it happens that at this stage, the
-> channel is still ht20 even if the peer sta capabilities would later
-> allow ht40. So let's use peer sta capabilities directly.
+This patch fixes a bug in ad-hoc mode preventing mac80211 from properly
+detecting other ad-hoc networks with the same SSID.
 
-Can you clarify this commit log entry a little more, I don't think I
-get it yet. Also, is this a stable fix? If so, please Cc:
-stable@kernel.org on the commit log entry.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.c  |    4 ++--
+ drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c |   15 +++++++--------
+ 3 files changed, 10 insertions(+), 11 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 6759aa1..e029bf0 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -247,7 +247,7 @@ int wl1271_cmd_radio_parms(struct wl1271 *wl)
+ 	return ret;
+ }
+ 
+-int wl1271_cmd_join(struct wl1271 *wl)
++int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
+ {
+ 	static bool do_cal = true;
+ 	struct wl1271_cmd_join *join;
+@@ -278,7 +278,7 @@ int wl1271_cmd_join(struct wl1271 *wl)
+ 
+ 	join->rx_config_options = cpu_to_le32(wl->rx_config);
+ 	join->rx_filter_options = cpu_to_le32(wl->rx_filter);
+-	join->bss_type = wl->bss_type;
++	join->bss_type = bss_type;
+ 
+ 	/*
+ 	 * FIXME: disable temporarily all filters because after commit
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+index 2dc06c7..4297205 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+@@ -33,7 +33,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 		    size_t res_len);
+ int wl1271_cmd_general_parms(struct wl1271 *wl);
+ int wl1271_cmd_radio_parms(struct wl1271 *wl);
+-int wl1271_cmd_join(struct wl1271 *wl);
++int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type);
+ int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
+ int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
+ int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 5cc778f..81fb02e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1093,7 +1093,7 @@ static int wl1271_op_config_interface(struct ieee80211_hw *hw,
+ 
+ 		memcpy(wl->bssid, conf->bssid, ETH_ALEN);
+ 
+-		ret = wl1271_cmd_join(wl);
++		ret = wl1271_cmd_join(wl, wl->bss_type);
+ 		if (ret < 0)
+ 			goto out_sleep;
+ 
+@@ -1142,17 +1142,16 @@ static int wl1271_join_channel(struct wl1271 *wl, int channel)
+ 	static const u8 dummy_bssid[ETH_ALEN] = { 0x0b, 0xad, 0xde,
+ 						  0xad, 0xbe, 0xef };
+ 
+-	/* the dummy join is not required for ad-hoc */
+-	if (wl->bss_type == BSS_TYPE_IBSS)
+-		goto out;
+-
+ 	/* disable mac filter, so we hear everything */
+ 	wl->rx_config &= ~CFG_BSSID_FILTER_EN;
+ 
+ 	wl->channel = channel;
+ 	memcpy(wl->bssid, dummy_bssid, ETH_ALEN);
+ 
+-	ret = wl1271_cmd_join(wl);
++	/* the dummy join is performed always with STATION BSS type to allow
++	   also ad-hoc mode to listen to the surroundings without sending any
++	   beacons yet. */
++	ret = wl1271_cmd_join(wl, BSS_TYPE_STA_BSS);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -1221,7 +1220,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	    test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
+ 		wl->channel = channel;
+ 		/* FIXME: maybe use CMD_CHANNEL_SWITCH for this? */
+-		ret = wl1271_cmd_join(wl);
++		ret = wl1271_cmd_join(wl, wl->bss_type);
+ 		if (ret < 0)
+ 			wl1271_warning("cmd join to update channel failed %d",
+ 				       ret);
+@@ -1704,7 +1703,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (do_join) {
+-		ret = wl1271_cmd_join(wl);
++		ret = wl1271_cmd_join(wl, wl->bss_type);
+ 		if (ret < 0) {
+ 			wl1271_warning("cmd join failed %d", ret);
+ 			goto out_sleep;
+-- 
+1.6.3.3
+
