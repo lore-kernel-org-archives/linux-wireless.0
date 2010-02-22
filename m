@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45323 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754369Ab0BAS5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 13:57:16 -0500
-From: "Zhao, Shanyu" <shanyu.zhao@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 1 Feb 2010 10:57:13 -0800
-Subject: RE: [PATCH 1/1] cfg80211: wext: set bssid to NULL in SIOCIWESSID
-Message-ID: <380B2771CDD78E46856E6B788D9F199750233886@orsmsx503.amr.corp.intel.com>
-References: <1264808376-8003-1-git-send-email-shanyu.zhao@intel.com>
- <1264840626.3546.181.camel@johannes.local>
-In-Reply-To: <1264840626.3546.181.camel@johannes.local>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:33066 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665Ab0BVKox (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2010 05:44:53 -0500
+Subject: Re: [PATCH 15/22] wl1271: Aggregate RX acknowledgements to FW
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1266834820.10120.163.camel@wimaxnb.nmp.nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1266820722-20202-16-git-send-email-juuso.oikarinen@nokia.com>
+	 <1266827747.5154.1.camel@jlt3.sipsolutions.net>
+	 <1266834820.10120.163.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 22 Feb 2010 11:44:47 +0100
+Message-ID: <1266835487.5609.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQpBY3R1YWxseSBJIGRvbid0IHRoaW5rIG15IHBhdGNoIGRpc2FibGVzIHRoYXQgZnVuY3Rpb25h
-bGl0eS4gSWYgdGhlcmUncmUgbXVsdGlwbGUgQVAgd2l0aCB0aGUgc2FtZSBlc3NpZCAiZm9vIiBh
-bmQgb25lIG9mIHRoZW0gaGFzIE1BQyAiMDA6Li4uOmZmIiwgdGhlbjoNCg0KaXdjb25maWcgd2xh
-bjAgZXNzaWQgImZvbyINClRoaXMgd2lsbCBtYWtlIHRoZSBzdGF0aW9uIGFzc29jaWF0ZSB3aXRo
-IHRoZSBmaXJzdCBBUCB3aXRoIGVzc2lkICJmb28iLg0KDQppd2NvbmZpZyB3bGFuMCBhcCAiMDA6
-Li4uOmZmIg0KVGhpcyB3aWxsIGRpc2Fzc29jaWF0ZSBmcm9tIHRoZSBwcmV2aW91cyBBUCwgYW5k
-IHRoZW4gYXNzb2NpYXRlIHdpdGggdGhlIGZpcnN0IEFQIHdpdGggTUFDICIwMDouLi46ZmYiLg0K
-DQpBbSBJIG1pc3NpbmcgYW55dGhpbmcgaGVyZT8NCg0KVGhhbmtzLA0KU2hhbnl1DQoNCi0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5u
-ZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBTYXR1cmRheSwgSmFudWFyeSAzMCwgMjAxMCAx
-MjozNyBBTQ0KVG86IFpoYW8sIFNoYW55dQ0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
-Lm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSCAxLzFdIGNmZzgwMjExOiB3ZXh0OiBzZXQgYnNzaWQg
-dG8gTlVMTCBpbiBTSU9DSVdFU1NJRA0KDQpPbiBGcmksIDIwMTAtMDEtMjkgYXQgMTU6MzkgLTA4
-MDAsIHNoYW55dS56aGFvQGludGVsLmNvbSB3cm90ZToNCj4gRnJvbTogU2hhbnl1IFpoYW8gPHNo
-YW55dS56aGFvQGludGVsLmNvbT4NCj4gDQo+IE5lZWQgdG8gc2V0IGJzc2lkIHRvIE5VTEwgaW4g
-Y2ZnODAyMTEncyBTSU9DSVdFU1NJRCBmdW5jdGlvbiwgb3RoZXJ3aXNlDQo+IGFmdGVyICJpd2Nv
-bmZpZyB3bGFueCBhcCA8bWFjPiIsIHRoZSAiaXdjb25maWcgd2xhbnggZXNzaWQiIHdvbid0IHdv
-cmsuDQo+IA0KPiBDYzogc3RhYmxlQGtlcm5lbC5vcmcNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFNo
-YW55dSBaaGFvIDxzaGFueXUuemhhb0BpbnRlbC5jb20+DQo+IC0tLQ0KPiAgbmV0L3dpcmVsZXNz
-L3dleHQtc21lLmMgfCAgICAxICsNCj4gIDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCsp
-LCAwIGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL25ldC93aXJlbGVzcy93ZXh0LXNt
-ZS5jIGIvbmV0L3dpcmVsZXNzL3dleHQtc21lLmMNCj4gaW5kZXggZWVkZTM1Ni4uNWE2N2RkNSAx
-MDA2NDQNCj4gLS0tIGEvbmV0L3dpcmVsZXNzL3dleHQtc21lLmMNCj4gKysrIGIvbmV0L3dpcmVs
-ZXNzL3dleHQtc21lLmMNCj4gQEAgLTE5NCw2ICsxOTQsNyBAQCBpbnQgY2ZnODAyMTFfbWdkX3dl
-eHRfc2l3ZXNzaWQoc3RydWN0IG5ldF9kZXZpY2UgKmRldiwNCj4gIAl3ZGV2LT53ZXh0LmNvbm5l
-Y3Quc3NpZCA9IHdkZXYtPndleHQuc3NpZDsNCj4gIAltZW1jcHkod2Rldi0+d2V4dC5zc2lkLCBz
-c2lkLCBsZW4pOw0KPiAgCXdkZXYtPndleHQuY29ubmVjdC5zc2lkX2xlbiA9IGxlbjsNCj4gKwl3
-ZGV2LT53ZXh0LmNvbm5lY3QuYnNzaWQgPSBOVUxMOw0KDQpUaGlzIGlzIGluY29ycmVjdC4gSWYg
-eW91IHdhbnQgdG8gY29ubmVjdCB0byBhbiBBUCB3aXRoIHRoZSBTU0lEICJmb28iDQphbmQgdGhl
-IEJTU0lEICIwMDouLi46ZmYiIHlvdSBuZWVkIHRvIG1ha2UgdHdvIGNhbGxzLCBlLmcuDQoNCml3
-Y29uZmlnIHdsYW4wIGVzc2lkICJmb28iDQppd2NvbmZpZyB3bGFuMCBhcCAiMDA6Li4uOmZmIg0K
-DQpZb3VyIHBhdGNoIGRpc2FibGVzIHRoYXQgZnVuY3Rpb25hbGl0eS4NCg0Kam9oYW5uZXMNCg==
+On Mon, 2010-02-22 at 12:33 +0200, Juuso Oikarinen wrote:
+
+> > > 		wl->rx_counter++;
+> > >  		drv_rx_counter = wl->rx_counter & NUM_RX_PKT_DESC_MOD_MASK;
+> > > -		wl1271_write32(wl, RX_DRIVER_COUNTER_ADDRESS, wl->rx_counter);
+> > >  	}
+> > > +
+> > > +	wl1271_write32(wl, RX_DRIVER_COUNTER_ADDRESS, wl->rx_counter);
+> > >  }
+> > 
+> > What if the counter overflows and you got the & to change it?
+> > 
+> > johannes
+> > 
+> 
+> The rx_counter itself is never changed with & - it's just incremented
+> for each frame. It's supposed to overflow when the u32 is full - it
+> will
+> then still behave sane when a delta is calculated inside the firmware
+> against its corresponding counter. That's a very common way to handle
+> counters for this particular chipset.
+
+Ok.
+
+> Did I miss the point?
+
+No ... I did. I thought the second quoted line was the same counter,
+didn't see it was a different variable because it looked so similar.
+That and I wasn't sure the firmware would really do the right thing when
+an overflow happened since it looked like before it wouldn't have to :)
+
+johannes
+
