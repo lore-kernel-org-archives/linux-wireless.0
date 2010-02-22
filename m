@@ -1,64 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:43229 "EHLO
-	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755607Ab0BLVCv (ORCPT
+Received: from mail-pz0-f174.google.com ([209.85.222.174]:47466 "EHLO
+	mail-pz0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753153Ab0BVVEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 16:02:51 -0500
-Date: Fri, 12 Feb 2010 13:02:23 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>, linville@tuxdriver.com
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH -next] wireless: airo_cs build fixes
-Message-Id: <20100212130223.ac3ac46b.randy.dunlap@oracle.com>
-In-Reply-To: <20100212181304.a7bd9a63.sfr@canb.auug.org.au>
-References: <20100212181304.a7bd9a63.sfr@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 22 Feb 2010 16:04:14 -0500
+MIME-Version: 1.0
+In-Reply-To: <1266866854.18491.42.camel@violet>
+References: <43e72e891002191823h3245bc0cn7a8745ae77409aa8@mail.gmail.com>
+	<1266662106.1820.4034.camel@macbook.infradead.org> <1266663639.10357.1.camel@jlt3.sipsolutions.net>
+	<1266664166.1820.4165.camel@macbook.infradead.org> <1266664247.11514.0.camel@jlt3.sipsolutions.net>
+	<1266665535.1820.4238.camel@macbook.infradead.org> <1266747222.18491.5.camel@violet>
+	<43e72e891002221114w24304ab0x5aea7dfc81b4d9d6@mail.gmail.com>
+	<1266866854.18491.42.camel@violet>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Feb 2010 13:03:52 -0800
+Message-ID: <43e72e891002221303ne571d07g9bb9cbeace40ce0c@mail.gmail.com>
+Subject: Re: Firmware versioning best practices II
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vipin Mehta <Vipin.Mehta@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Mon, Feb 22, 2010 at 11:27 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Luis,
+>
+>> >> > > > That doesn't make much sense anyway. If the firmware filename is
+>> >> > > > foo-$APIVER-$CODEVER every code change would need a corresponding
+>> >> > > driver
+>> >> > > > change. If it is just foo-$APIVER then the $CODEVER can be embedded
+>> >> > > in
+>> >> > > > the firmware file and printed so you know which code you're using,
+>> >> > > but
+>> >> > > > if it doesn't influence the API I don't see why it should be part of
+>> >> > > the
+>> >> > > > filename?
+>> >> > >
+>> >> > > The idea is that just like with shared libraries, you have a symlink
+>> >> > > from the 'soname' foo-3.fw to the actual file foo-3-1.4.1.fw.
+>> >> >
+>> >> > Ah ok. I indeed do that manually with iwlwifi firmware :)
+>> >> >
+>> >> > > For shared libraries, it's easy to create those symlinks automatically
+>> >> > > using ldconfig. For firmware that doesn't really work though -- since
+>> >> > > the soname isn't encoded in the file like it is in ELF libraries.
+>> >> >
+>> >> > Right. Though I guess we could come up with a unified firmware wrapper
+>> >> > format that the firmware loader can unwrap.
+>> >>
+>> >> I suppose we could, but this seems like overkill to me.
+>> >
+>> > I have to agree. This looks like total overkill to me.
+>> >
+>> > Just use the $APIVER in the firmware filename.
+>>
+>> OK -- so what goes into linux-firmware is just the latest
+>>
+>> foo-$(API)
+>>
+>> > And if someone wants to
+>> > keep track of more details then they can manually symlink them.
+>>
+>> Well do we want the older foo-$(API)-$(VAR) files in linux-firmware
+>> too for those companies/developers wishing to do this?
+>
+> personally I would say no, but for some projects it might make sense. I
+> would just leave this up to the project/driver itself.
 
-When WEXT_PRIV is not enabled, airo_cs has build errors.
-It needs to include net/iw_handler.h and it should select
-WEXT_PRIV, like the airo driver does.
+OK
 
-drivers/net/wireless/airo.c:7655: error: unknown field 'num_private' specified in initializer
-drivers/net/wireless/airo.c:7655: warning: initialization makes pointer from integer without a cast
-drivers/net/wireless/airo.c:7656: error: unknown field 'num_private_args' specified in initializer
-drivers/net/wireless/airo.c:7656: warning: excess elements in struct initializer
-drivers/net/wireless/airo.c:7656: warning: (near initialization for 'airo_handler_def')
-drivers/net/wireless/airo.c:7658: error: unknown field 'private' specified in initializer
-drivers/net/wireless/airo.c:7658: warning: initialization makes integer from pointer without a cast
-drivers/net/wireless/airo.c:7658: error: initializer element is not computable at load time
-drivers/net/wireless/airo.c:7658: error: (near initialization for 'airo_handler_def.num_standard')
-drivers/net/wireless/airo.c:7659: error: unknown field 'private_args' specified in initializer
-drivers/net/wireless/airo.c:7659: warning: initialization from incompatible pointer type
+>> What about deprecating APIs of the firmware based on kernel releases.
+>> I see it reasonable to deprecate a firmware API completely for a
+>> future kernel release provided you maintain all features and
+>> functionality in par. Does that sound reasonable?
+>
+> Realistically you have to deprecate firmware versions at some point
+> anyway. So yes, that makes sense.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/net/wireless/Kconfig |    1 +
- drivers/net/wireless/airo.c  |    1 +
- 2 files changed, 2 insertions(+)
+OK
 
---- linux-next-20100212.orig/drivers/net/wireless/airo.c
-+++ linux-next-20100212/drivers/net/wireless/airo.c
-@@ -51,6 +51,7 @@
- #include <linux/freezer.h>
- 
- #include <linux/ieee80211.h>
-+#include <net/iw_handler.h>
- 
- #include "airo.h"
- 
---- linux-next-20100212.orig/drivers/net/wireless/Kconfig
-+++ linux-next-20100212/drivers/net/wireless/Kconfig
-@@ -112,6 +112,7 @@ config AIRO_CS
- 	depends on PCMCIA && (BROKEN || !M32R)
- 	select WIRELESS_EXT
- 	select WEXT_SPY
-+	select WEXT_PRIV
- 	select CRYPTO
- 	select CRYPTO_AES
- 	---help---
+> However I would leave this again up to
+> the driver itself and how far the maintainers wanna go in supported
+> older API versions.
+
+I was looking for general rules and guidelines to document. That
+includes things to do and things to not do. It sounds we are flexible
+with what people can do with their firmware and their driver firmware
+API. The things to not do are not so clear though still. I am
+wondering specifically about deprecation of older firmware APIs, or
+are we flexible enough to allow any firmware API rewrite so long as
+its properly supported?
+
+>> > Unless we have full control over the source code of every firmware used
+>> > in the kernel, why bother. It is up to the companies providing them
+>> > anyway to make sure everything works as expected and the community can't
+>> > fix it.
+>>
+>> Well that's exactly it -- we do have access to the code for ar9170 for
+>> example, so these details will become more relevant in the future.
+>
+> That is one of the few exception. However even for ar9170 there has to
+> be release engineering team that creates the binary and uploads it into
+> linux-firmware.git
+
+Release engineering team? Hah.
+
+> since I don't see the majority of people compiling it
+> from source.
+
+I am curious how distributions will want to handle this. Distributions
+with sane people might just ship a gcc built open firmware binary but
+utopian distributions like Debian might require to build the whole
+thing for redistribution. I don't know.
+
+> And at that point the release engineering needs to test the
+> API compatibility.
+
+Release engineering.. heh...
+
+  Luis
