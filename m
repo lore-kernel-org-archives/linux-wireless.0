@@ -1,30 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vervifontaine.sonycom.com ([80.88.33.193]:60196 "EHLO
-	pophost.sonytel.be" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751300Ab0BBINi (ORCPT
+Received: from mail-pz0-f174.google.com ([209.85.222.174]:34436 "EHLO
+	mail-pz0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752995Ab0BVS5y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2010 03:13:38 -0500
-Message-ID: <4B67D99C.5070203@sonycom.com>
-Date: Tue, 02 Feb 2010 08:51:56 +0100
-From: Hamish Guthrie <hamish.guthrie@sonycom.com>
+	Mon, 22 Feb 2010 13:57:54 -0500
+Received: by pzk4 with SMTP id 4so213914pzk.21
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 10:57:54 -0800 (PST)
 MIME-Version: 1.0
-To: Geoff Levand <geoffrey.levand@am.sony.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"cbe-oss-dev@ozlabs.org" <cbe-oss-dev@ozlabs.org>
-Subject: Re: [PATCH] ps3_gelic_wireless: Remove superfluous debug info
-References: <1265042558-12904-1-git-send-email-hamish.guthrie@sonycom.com> <4B67066B.4000109@am.sony.com>
-In-Reply-To: <4B67066B.4000109@am.sony.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1266864150.507.1.camel@jlt3.sipsolutions.net>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	<1266820722-20202-7-git-send-email-juuso.oikarinen@nokia.com>
+	<43e72e891002221005q4840593bs8b937d6d82b44b3c@mail.gmail.com>
+	<1266864150.507.1.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Feb 2010 10:57:30 -0800
+Message-ID: <43e72e891002221057i334b07abq9c1d4ae3adfa4cf5@mail.gmail.com>
+Subject: Re: [PATCH 06/22] wl1271: Divided driver to two separate modules
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geoff Levand wrote:
-> On 02/01/2010 08:42 AM, Hamish Guthrie wrote:
->> ---
->>  drivers/net/ps3_gelic_wireless.c |    3 +--
->>  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> Acked-by: Geoff Levand <geoffrey.levand@am.sony.com>
-> 
-Signed-off-by: Hamish Guthrie <hamish.guthrie@sonycom.com>
+On Mon, Feb 22, 2010 at 10:42 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2010-02-22 at 10:05 -0800, Luis R. Rodriguez wrote:
+>> On Sun, Feb 21, 2010 at 10:38 PM, Juuso Oikarinen
+>> <juuso.oikarinen@nokia.com> wrote:
+>> > From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+>> >
+>> > Divided wl1271 driver to wl1271 "core" and wl1271_spi modules in
+>> preparation
+>> > of integration of the SDIO implementation.
+>> >
+>> > Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+>> > Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+>> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+>>
+>> Which one is it, Reviewed or SOB? If both then just use SOB.
+>
+> I disagree. I think we should allow for people just sending on patches
+> (say as part of a company hierarchy) w/o giving them the careful review
+> the reviewed-by tag should imply.
+
+Technically I think that's right then, since the "Developer's
+Certificate of Origin 1.1" does indeed not make mention to a technical
+anal review of the code, which for some reason I thought did.
+
+  Luis
