@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:49842 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756121Ab0BLTRt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 14:17:49 -0500
-Subject: Re: Coordinating development for Bluetooth 3.0 between 802.11 and
- BT trees
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+Received: from c60.cesmail.net ([216.154.195.49]:55972 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753707Ab0BVU53 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2010 15:57:29 -0500
+Subject: Re: 2.6.33-rc8-git6: Reported regressions 2.6.31 -> 2.6.32
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Dan Tian <Dan.Tian@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>
-In-Reply-To: <20100212183309.GB4983@tuxdriver.com>
-References: <43e72e891002111210l55d6a802pc5a1384e3535c845@mail.gmail.com>
-	 <20100212183309.GB4983@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 12 Feb 2010 20:16:37 +0100
-Message-ID: <1266002197.21559.8.camel@localhost.localdomain>
+	Miles Lane <miles.lane@gmail.com>
+In-Reply-To: <43e72e891002221009p2d6b14a1xfe04efaad8426033@mail.gmail.com>
+References: <4u4d-2M3yXH.A.XW.XqagLB@chimera>
+	 <43e72e891002221009p2d6b14a1xfe04efaad8426033@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 22 Feb 2010 15:57:16 -0500
+Message-Id: <1266872236.2594.38.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Mon, 2010-02-22 at 10:09 -0800, Luis R. Rodriguez wrote:
+> Just one but no word yet on how to reproduce.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14624
+> > Subject         : ath9k: BUG kmalloc-8192: Poison overwritten
+> > Submitter       : Miles Lane <miles.lane@gmail.com>
+> > Date            : 2009-11-12 4:58 (102 days old)
+> > References      : http://marc.info/?l=linux-kernel&m=125800196520396&w=4
 
-> In any case, I was under the impression that at least the initial
-> parts of the 802.11 AMP implementation could happen independently
-> from any bluetooth stack changes...?
+I could try a 32 bit kernel or that version with the kernel config as
+close as possible to the posted one.  But I need at least the minimal
+information on how to reproduce the bug.  What mode is used (station,
+AP, ad-hoc)?  What encryption is used?  Is there anything else that
+could help reproduce the bug?
 
-yes, we should be able to test the AMP pieces without a Bluetooth stack
-implementing the AMP manager. Especially since there will be FullMAC
-WiFi devices that implement the AMP inside firmware.
+It would be a waste of time to set up a 32-bit OS and fail to find the
+bug just because I'm using a different encryption or something.
 
-Regards
-
-Marcel
-
-
+-- 
+Regards,
+Pavel Roskin
