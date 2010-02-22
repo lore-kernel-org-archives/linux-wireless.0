@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33963 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753809Ab0B0HDM (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:60620 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754833Ab0BVWpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 02:03:12 -0500
-Subject: Re: Using asynchonous block cipher for CCMP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1267249474.6278.23.camel@mj>
-References: <1267249474.6278.23.camel@mj>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 27 Feb 2010 08:03:08 +0100
-Message-ID: <1267254188.3851.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 22 Feb 2010 17:45:14 -0500
+Received: by vws2 with SMTP id 2so216795vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 14:45:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <00ad01cab3f1$1bbf69e0$533e3da0$@com>
+References: <00ad01cab3f1$1bbf69e0$533e3da0$@com>
+From: Chris Martin <chris@martin.cc>
+Date: Tue, 23 Feb 2010 09:44:51 +1100
+Message-ID: <ad2a7a4a1002221444g50b3548cw823fa30bd36a239@mail.gmail.com>
+Subject: Re: Custom Configurations
+To: Abdul Hakeem <alhakeem@gmail.com>
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-02-27 at 00:44 -0500, Pavel Roskin wrote:
-> Hello!
-> 
-> I'm looking for ways to accelerate CCMP on Intel IXP425.
-> 
-> drivers/crypto/ixp4xx_crypto.c implements only asynchronous block
-> ciphers, and the reason appears to be that the crypto processor uses DMA
-> and interrupts to communicate with the CPU, which would make synchronous
-> encryption ineffective.
-> 
-> It turns out that mac80211 uses plain AES for CCMP.  However, it uses an
-> asynchronous block cipher "ecb(arc4)" for WEP and TKIP.
-> 
-> I'd like to make CCMP use an asynchronous block cipher.  Has anyone
-> attempted that?  Are there any issues I should be aware of?
+On Tue, Feb 23, 2010 at 5:59 AM, Abdul Hakeem <alhakeem@gmail.com> wrote:
+> Hello,
+> Can anyone share some thoughts on custom configuration of an AP to allow for
+> specifics such as:
+>
+> 64K bandwidth limit per client
+> UDP connection only.
+>
+> Best regards,
+> AH
+>
+> _______________________________________________
+> HostAP mailing list
+> HostAP@lists.shmoo.com
+> http://lists.shmoo.com/mailman/listinfo/hostap
+>
+>
 
-Well the issue is going to be having to interrupt the flow there and
-then pick it back up after crypto. Or you can stick it after the entire
-flow and treat it like hw crypto in the card.
+You can block TCP etc using ipTables, but for the throttling you will
+need a bit extra
+have a look at this project
+http://frottle.sourceforge.net/
 
-johannes
+Cheers
 
+----------------------------------------------------------
+Chris Martin
+m: 0419812371
+----------------------------------------------------------
