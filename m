@@ -1,58 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.freeserve.com ([193.252.22.159]:46426 "EHLO
-	smtp5.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031964Ab0B1UJO (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:22559 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754853Ab0BVGlc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2010 15:09:14 -0500
-Date: Sun, 28 Feb 2010 20:03:11 +0000
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: William Bourque <william.bourque@polymtl.ca>
-Cc: =?UTF-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-Message-ID: <20100228200311.4ca24d95@boulder.homenet>
-In-Reply-To: <4B8AC78C.80505@polymtl.ca>
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
-	<201002271708.29817.mb@bu3sch.de>
-	<4B894A61.1070302@lwfinger.net>
-	<69e28c911002271145s590df31en9d2f8b2c47932451@mail.gmail.com>
-	<4B899DA3.4030100@lwfinger.net>
-	<69e28c911002271534o8cab111vf7fcc1b93b6c4b47@mail.gmail.com>
-	<a221c0101002271542o5d928e56n8a22602860aeb761@mail.gmail.com>
-	<69e28c911002271544y62c93255k8a6dbb0adb2b5928@mail.gmail.com>
-	<20100228001655.4c9fd9ce@boulder.homenet>
-	<4B8AAF42.8000602@polymtl.ca>
-	<69e28c911002281042g15808a2cm81bd9528a30d2f85@mail.gmail.com>
-	<4B8AC78C.80505@polymtl.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 22 Feb 2010 01:41:32 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 19/22] wl1271: Clean up firmware block allocation calculation
+Date: Mon, 22 Feb 2010 08:38:39 +0200
+Message-Id: <1266820722-20202-20-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 28 Feb 2010 14:44:12 -0500
-William Bourque <william.bourque@polymtl.ca> wrote:
-> > New test patch attached.
-> > 
-> > Please CC linux-wireless@vger.kernel.org on further e-mails,
-> > bcm43xx-dev appears to be having problems.
-> > 
-> 
-> Hmm... I don't know if it is only coincidence, but this one seems to 
-> help somehow.
-> 
-> The driver raised the DMA error again, but instead of being as soon
-> as I brought up the interface, I had to stresstest (to transfert a
-> file at full speed from my LAN) to make it happens. Before that I was
-> able to DMA normally (loading web page ...).
+This patch simplifies the required block count calculation. Though it
+introduces a division operator, it greatly simplifies the formula.
 
-I also found that it stayed up marginally longer (ie about 2 seconds
-longer in my case) but I think this is probably co-incidence.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_tx.c |   10 +++-------
+ drivers/net/wireless/wl12xx/wl1271_tx.h |    2 +-
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-On commenting out the line setting the 0x280a memory location, and
-leaving the line setting the 0x80a memory location, it failed
-immediately; but these difference may just be random effects.
-
-Chris
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index a32d301..d3ed63e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -46,7 +46,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
+ {
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+-	u32 total_blocks, excluded;
++	u32 total_blocks;
+ 	int id, ret = -EBUSY;
+ 
+ 	/* allocate free identifier for the packet */
+@@ -56,12 +56,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
+ 
+ 	/* approximate the number of blocks required for this packet
+ 	   in the firmware */
+-	/* FIXME: try to figure out what is done here and make it cleaner */
+-	total_blocks = (total_len + 20) >> TX_HW_BLOCK_SHIFT_DIV;
+-	excluded = (total_blocks << 2) + ((total_len + 20) & 0xff) + 34;
+-	total_blocks += (excluded > 252) ? 2 : 1;
+-	total_blocks += TX_HW_BLOCK_SPARE;
+-
++	total_blocks = total_len + TX_HW_BLOCK_SIZE - 1;
++	total_blocks = total_blocks / TX_HW_BLOCK_SIZE + TX_HW_BLOCK_SPARE;
+ 	if (total_blocks <= wl->tx_blocks_available) {
+ 		desc = (struct wl1271_tx_hw_descr *)skb_push(
+ 			skb, total_len - skb->len);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
+index ca92bd8..8b9f6b4 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
+@@ -26,7 +26,7 @@
+ #define __WL1271_TX_H__
+ 
+ #define TX_HW_BLOCK_SPARE                2
+-#define TX_HW_BLOCK_SHIFT_DIV            8
++#define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
+ /* The chipset reference driver states, that the "aid" value 1
+-- 
+1.6.3.3
 
