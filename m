@@ -1,41 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57852 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752224Ab0BIUAo (ORCPT
+Received: from mail-px0-f184.google.com ([209.85.216.184]:33288 "EHLO
+	mail-px0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029Ab0BVS0H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:00:44 -0500
-Date: Tue, 9 Feb 2010 14:56:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Janakiram Sistla <janakiram.sistla@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Regd Obexfs support in Linux
-Message-ID: <20100209195638.GE4302@tuxdriver.com>
-References: <4fb5db51002091056x54f0f81td3417afbcee29db@mail.gmail.com> <43e72e891002091059v6b772494s592af181a2347fb5@mail.gmail.com>
+	Mon, 22 Feb 2010 13:26:07 -0500
+Received: by pxi14 with SMTP id 14so1473556pxi.15
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 10:26:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e891002091059v6b772494s592af181a2347fb5@mail.gmail.com>
+In-Reply-To: <1266762470-6275-1-git-send-email-hauke@hauke-m.de>
+References: <1266762470-6275-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 22 Feb 2010 10:25:45 -0800
+Message-ID: <43e72e891002221025y5ddfe352sb3c459d5ccc8155e@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: Fix refresh script if no patches are
+	available
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 09, 2010 at 10:59:54AM -0800, Luis R. Rodriguez wrote:
-> On Tue, Feb 9, 2010 at 10:56 AM, Janakiram Sistla
-> <janakiram.sistla@gmail.com> wrote:
-> > Hi all,
-> >
-> > I am trying to use obexfs in Linux on a poky filesystem.I compiled the
-> > package for ARM cross compiler.when i try to mount using obexfs i see
-> > the following messages and i dont see any remote device filesystem
-> > getting mounted.Can i get any inputs regarding the this.Am i missing
-> > any packages.
-> 
-> What does obexfs have anything to do with linux-wireless?
+On Sun, Feb 21, 2010 at 6:27 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-It is Bluetooth.  Is there a BlueZ list?  Surely there is...?
+Thanks applied.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
