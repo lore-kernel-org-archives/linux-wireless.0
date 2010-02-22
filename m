@@ -1,134 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35640 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754808Ab0BSSIS (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:20491 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754672Ab0BVGlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 13:08:18 -0500
-Message-Id: <20100219180736.677926079@sipsolutions.net>
-Date: Fri, 19 Feb 2010 19:06:53 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Mon, 22 Feb 2010 01:41:21 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] ar9170: convert to new station add/remove callbacks
-References: <20100219180652.409890561@sipsolutions.net>
-Mime-Version: 1.0
+Subject: [PATCH 17/22] wl1271: Implement looped IRQ handling
+Date: Mon, 22 Feb 2010 08:38:37 +0200
+Message-Id: <1266820722-20202-18-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This converts ar9170 to use the new station
-add/remove callbacks instead of using the
-old sta_notify callback.
+This patch implements looped IRQ handling. In essence, if a new interrupt is
+asserted by the FW while the host is processing the previous one, the host
+will directly proceed processing the new IRQ without leaving the handling
+function.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 ---
- drivers/net/wireless/ath/ar9170/main.c |   80 ++++++++++++++++-----------------
- 1 file changed, 41 insertions(+), 39 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |   76 ++++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    4 +-
+ 4 files changed, 55 insertions(+), 31 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/ath/ar9170/main.c	2010-02-19 18:50:40.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ar9170/main.c	2010-02-19 18:53:43.000000000 +0100
-@@ -2329,54 +2329,55 @@ out:
- 	return err;
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 7f03f89..457ce72 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -371,6 +371,8 @@ struct wl1271 {
+ #define WL1271_FLAG_IN_ELP             (6)
+ #define WL1271_FLAG_PSM                (7)
+ #define WL1271_FLAG_PSM_REQUESTED      (8)
++#define WL1271_FLAG_IRQ_PENDING        (9)
++#define WL1271_FLAG_IRQ_RUNNING       (10)
+ 	unsigned long flags;
+ 
+ 	struct wl1271_partition_set part;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index a46d323..9f74168 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -406,10 +406,14 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 		le32_to_cpu(status->fw_localtime);
  }
  
--static void ar9170_sta_notify(struct ieee80211_hw *hw,
--			      struct ieee80211_vif *vif,
--			      enum sta_notify_cmd cmd,
--			      struct ieee80211_sta *sta)
-+static int ar9170_sta_add(struct ieee80211_hw *hw,
-+			  struct ieee80211_vif *vif,
-+			  struct ieee80211_sta *sta)
++#define WL1271_IRQ_MAX_LOOPS 10
++
+ static void wl1271_irq_work(struct work_struct *work)
  {
- 	struct ar9170 *ar = hw->priv;
- 	struct ar9170_sta_info *sta_info = (void *) sta->drv_priv;
- 	unsigned int i;
+ 	int ret;
+ 	u32 intr;
++	int loopcount = WL1271_IRQ_MAX_LOOPS;
++	unsigned long flags;
+ 	struct wl1271 *wl =
+ 		container_of(work, struct wl1271, irq_work);
  
--	switch (cmd) {
--	case STA_NOTIFY_ADD:
--		memset(sta_info, 0, sizeof(*sta_info));
--
--		if (!sta->ht_cap.ht_supported)
--			break;
--
--		if (sta->ht_cap.ampdu_density > ar->global_ampdu_density)
--			ar->global_ampdu_density = sta->ht_cap.ampdu_density;
--
--		if (sta->ht_cap.ampdu_factor < ar->global_ampdu_factor)
--			ar->global_ampdu_factor = sta->ht_cap.ampdu_factor;
--
--		for (i = 0; i < AR9170_NUM_TID; i++) {
--			sta_info->agg[i].state = AR9170_TID_STATE_SHUTDOWN;
--			sta_info->agg[i].active = false;
--			sta_info->agg[i].ssn = 0;
--			sta_info->agg[i].tid = i;
--			INIT_LIST_HEAD(&sta_info->agg[i].list);
--			skb_queue_head_init(&sta_info->agg[i].queue);
--		}
-+	memset(sta_info, 0, sizeof(*sta_info));
+@@ -417,51 +421,65 @@ static void wl1271_irq_work(struct work_struct *work)
  
--		sta_info->ampdu_max_len = 1 << (3 + sta->ht_cap.ampdu_factor);
--		break;
-+	if (!sta->ht_cap.ht_supported)
-+		return 0;
+ 	wl1271_debug(DEBUG_IRQ, "IRQ work");
  
--	case STA_NOTIFY_REMOVE:
--		if (!sta->ht_cap.ht_supported)
--			break;
--
--		for (i = 0; i < AR9170_NUM_TID; i++) {
--			sta_info->agg[i].state = AR9170_TID_STATE_INVALID;
--			skb_queue_purge(&sta_info->agg[i].queue);
--		}
-+	if (sta->ht_cap.ampdu_density > ar->global_ampdu_density)
-+		ar->global_ampdu_density = sta->ht_cap.ampdu_density;
+-	if (wl->state == WL1271_STATE_OFF)
++	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
  
--		break;
-+	if (sta->ht_cap.ampdu_factor < ar->global_ampdu_factor)
-+		ar->global_ampdu_factor = sta->ht_cap.ampdu_factor;
-+
-+	for (i = 0; i < AR9170_NUM_TID; i++) {
-+		sta_info->agg[i].state = AR9170_TID_STATE_SHUTDOWN;
-+		sta_info->agg[i].active = false;
-+		sta_info->agg[i].ssn = 0;
-+		sta_info->agg[i].tid = i;
-+		INIT_LIST_HEAD(&sta_info->agg[i].list);
-+		skb_queue_head_init(&sta_info->agg[i].queue);
-+	}
+ 	ret = wl1271_ps_elp_wakeup(wl, true);
+ 	if (ret < 0)
+ 		goto out;
  
--	default:
--		break;
-+	sta_info->ampdu_max_len = 1 << (3 + sta->ht_cap.ampdu_factor);
+-	wl1271_fw_status(wl, wl->fw_status);
+-	intr = le32_to_cpu(wl->fw_status->intr);
+-	if (!intr) {
+-		wl1271_debug(DEBUG_IRQ, "Zero interrupt received.");
+-		goto out_sleep;
+-	}
++	spin_lock_irqsave(&wl->wl_lock, flags);
++	while (test_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags) && loopcount) {
++		clear_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
++		spin_unlock_irqrestore(&wl->wl_lock, flags);
++		loopcount--;
+ 
+-	intr &= WL1271_INTR_MASK;
++		wl1271_fw_status(wl, wl->fw_status);
++		intr = le32_to_cpu(wl->fw_status->intr);
++		if (!intr) {
++			wl1271_debug(DEBUG_IRQ, "Zero interrupt received.");
++			continue;
++		}
+ 
+-	if (intr & WL1271_ACX_INTR_EVENT_A) {
+-		wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_A");
+-		wl1271_event_handle(wl, 0);
+-	}
++		intr &= WL1271_INTR_MASK;
+ 
+-	if (intr & WL1271_ACX_INTR_EVENT_B) {
+-		wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_B");
+-		wl1271_event_handle(wl, 1);
+-	}
++		if (intr & WL1271_ACX_INTR_DATA) {
++			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_DATA");
+ 
+-	if (intr & WL1271_ACX_INTR_INIT_COMPLETE)
+-		wl1271_debug(DEBUG_IRQ,
+-			     "WL1271_ACX_INTR_INIT_COMPLETE");
++			/* check for tx results */
++			if (wl->fw_status->tx_results_counter !=
++			    (wl->tx_results_count & 0xff))
++				wl1271_tx_complete(wl);
+ 
+-	if (intr & WL1271_ACX_INTR_HW_AVAILABLE)
+-		wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_HW_AVAILABLE");
++			wl1271_rx(wl, wl->fw_status);
++		}
 +
-+	return 0;
-+}
++		if (intr & WL1271_ACX_INTR_EVENT_A) {
++			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_A");
++			wl1271_event_handle(wl, 0);
++		}
 +
-+static int ar9170_sta_remove(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *sta)
-+{
-+	struct ar9170_sta_info *sta_info = (void *) sta->drv_priv;
-+	unsigned int i;
-+
-+	if (!sta->ht_cap.ht_supported)
-+		return 0;
-+
-+	for (i = 0; i < AR9170_NUM_TID; i++) {
-+		sta_info->agg[i].state = AR9170_TID_STATE_INVALID;
-+		skb_queue_purge(&sta_info->agg[i].queue);
++		if (intr & WL1271_ACX_INTR_EVENT_B) {
++			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_EVENT_B");
++			wl1271_event_handle(wl, 1);
++		}
+ 
+-	if (intr & WL1271_ACX_INTR_DATA) {
+-		wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_DATA");
++		if (intr & WL1271_ACX_INTR_INIT_COMPLETE)
++			wl1271_debug(DEBUG_IRQ,
++				     "WL1271_ACX_INTR_INIT_COMPLETE");
+ 
+-		/* check for tx results */
+-		if (wl->fw_status->tx_results_counter !=
+-		    (wl->tx_results_count & 0xff))
+-			wl1271_tx_complete(wl);
++		if (intr & WL1271_ACX_INTR_HW_AVAILABLE)
++			wl1271_debug(DEBUG_IRQ, "WL1271_ACX_INTR_HW_AVAILABLE");
+ 
+-		wl1271_rx(wl, wl->fw_status);
++		spin_lock_irqsave(&wl->wl_lock, flags);
  	}
-+
-+	return 0;
- }
  
- static int ar9170_get_stats(struct ieee80211_hw *hw,
-@@ -2495,7 +2496,8 @@ static const struct ieee80211_ops ar9170
- 	.bss_info_changed	= ar9170_op_bss_info_changed,
- 	.get_tsf		= ar9170_op_get_tsf,
- 	.set_key		= ar9170_set_key,
--	.sta_notify		= ar9170_sta_notify,
-+	.sta_add		= ar9170_sta_add,
-+	.sta_remove		= ar9170_sta_remove,
- 	.get_stats		= ar9170_get_stats,
- 	.ampdu_action		= ar9170_ampdu_action,
- };
-
+-out_sleep:
++	if (test_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags))
++		ieee80211_queue_work(wl->hw, &wl->irq_work);
++	else
++		clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
++	spin_unlock_irqrestore(&wl->wl_lock, flags);
++
+ 	wl1271_ps_elp_sleep(wl);
+ 
+ out:
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index 7d7c850..1f204db 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -75,7 +75,9 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		wl->elp_compl = NULL;
+ 	}
+ 
+-	ieee80211_queue_work(wl->hw, &wl->irq_work);
++	if (!test_and_set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
++		ieee80211_queue_work(wl->hw, &wl->irq_work);
++	set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+ 	return IRQ_HANDLED;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index 51171d7..ed285fe 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -324,7 +324,9 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		wl->elp_compl = NULL;
+ 	}
+ 
+-	ieee80211_queue_work(wl->hw, &wl->irq_work);
++	if (!test_and_set_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags))
++		ieee80211_queue_work(wl->hw, &wl->irq_work);
++	set_bit(WL1271_FLAG_IRQ_PENDING, &wl->flags);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+ 	return IRQ_HANDLED;
+-- 
+1.6.3.3
 
