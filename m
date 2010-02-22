@@ -1,74 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:47390 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755444Ab0BESKL (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:22491 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754348Ab0BVGlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 13:10:11 -0500
-Received: by bwz19 with SMTP id 19so32840bwz.28
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2010 10:10:00 -0800 (PST)
-Message-ID: <4B6C5EF3.5060006@lwfinger.net>
-Date: Fri, 05 Feb 2010 12:09:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: [RFC][PATCH] b43: LP-PHY: always adjust gain table on channel
- 	switch
-References: <1265317065-2922-2-git-send-email-zajec5@gmail.com> 	<4B6B8F8B.6020908@lwfinger.net> <69e28c911002050841x20053c6jbe768c19e983ef50@mail.gmail.com>
-In-Reply-To: <69e28c911002050841x20053c6jbe768c19e983ef50@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 22 Feb 2010 01:41:21 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH 06/22] wl1271: Divided driver to two separate modules
+Date: Mon, 22 Feb 2010 08:38:26 +0200
+Message-Id: <1266820722-20202-7-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2010 10:41 AM, Gábor Stefanik wrote:
-> On Fri, Feb 5, 2010 at 4:24 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> On 02/04/2010 02:57 PM, Rafał Miłecki wrote:
->>> ---
->>> GÃ¡bor: I think you missed specs here. Could you check whole routine just for
->>> sure, please? I don't understand whole radio and chanspec magic yet.
->>> ---
->>>  drivers/net/wireless/b43/phy_lp.c |    2 +-
->>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
->>> index 185219e..61009ee 100644
->>> --- a/drivers/net/wireless/b43/phy_lp.c
->>> +++ b/drivers/net/wireless/b43/phy_lp.c
->>> @@ -2655,8 +2655,8 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
->>>               if (err)
->>>                       return err;
->>>               lpphy_set_analog_filter(dev, new_channel);
->>> -             lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
->>>       }
->>> +     lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
->>>
->>>       lpphy->channel = new_channel;
->>>       b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
->>
->> Both the lpphy_set_analog_filter() and lpphy_adjust_gain_table() calls should be
->> outside the if statement. I changed the spec a little. It used to test "radio
->> enabled", but I have found that is always true for our driver.
->>
->> Larry
->>
->>
-> 
-> Isn't set_analog_filter() rev0/1-specific?
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 
-It was in the 4.174.64.19 driver that I RE'd when you wrote the LP PHY code.
-That as changed in 5.10.56.46, which I am now doing. It will take me a while to
-complete the new routine "LP PHY TX Filter Init" and a routine that it calls.
+Divided wl1271 driver to wl1271 "core" and wl1271_spi modules in preparation
+of integration of the SDIO implementation.
 
-Certainly, there is no hurry that these changes be made. Whenever you or Rafał
-have time. There is no guarantee that these changes will have any effect on the
-LP PHY operations. Hitting a moving target is not easy.
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/Kconfig       |   12 ++++++++++++
+ drivers/net/wireless/wl12xx/Makefile      |    5 +++--
+ drivers/net/wireless/wl12xx/wl1271_main.c |    8 ++++++++
+ 3 files changed, 23 insertions(+), 2 deletions(-)
 
-Larry
-
-
-
-
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 785e024..9c6fdcc 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -51,3 +51,15 @@ config WL1271
+ 
+ 	  If you choose to build a module, it'll be called wl1271. Say N if
+ 	  unsure.
++
++config WL1271_SPI
++	tristate "TI wl1251 SPI support"
++	depends on WL1271 && SPI_MASTER
++	---help---
++	  This module adds support for the SPI interface of adapters using
++	  TI wl1271 chipset.  Select this if your platform is using
++	  the SPI bus.
++
++	  If you choose to build a module, it'll be called wl1251_spi.
++	  Say N if unsure.
++
+diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
+index f47ec94..473a1e2 100644
+--- a/drivers/net/wireless/wl12xx/Makefile
++++ b/drivers/net/wireless/wl12xx/Makefile
+@@ -7,10 +7,11 @@ obj-$(CONFIG_WL1251)	+= wl1251.o
+ obj-$(CONFIG_WL1251_SPI)	+= wl1251_spi.o
+ obj-$(CONFIG_WL1251_SDIO)	+= wl1251_sdio.o
+ 
+-wl1271-objs		= wl1271_main.o  wl1271_spi.o wl1271_cmd.o  \
++wl1271-objs		= wl1271_main.o  wl1271_cmd.o wl1271_io.o \
+ 			  wl1271_event.o wl1271_tx.o  wl1271_rx.o   \
+ 			  wl1271_ps.o    wl1271_acx.o wl1271_boot.o \
+-			  wl1271_init.o  wl1271_debugfs.o wl1271_io.o
++			  wl1271_init.o  wl1271_debugfs.o
+ 
+ wl1271-$(CONFIG_NL80211_TESTMODE)	+= wl1271_testmode.o
+ obj-$(CONFIG_WL1271)	+= wl1271.o
++obj-$(CONFIG_WL1271_SPI)	+= wl1271_spi.o
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 54bc1e9..ea49ced 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1948,6 +1948,7 @@ int wl1271_register_hw(struct wl1271 *wl)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(wl1271_register_hw);
+ 
+ int wl1271_init_ieee80211(struct wl1271 *wl)
+ {
+@@ -1976,6 +1977,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(wl1271_init_ieee80211);
+ 
+ #define WL1271_DEFAULT_CHANNEL 0
+ 
+@@ -2030,6 +2032,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 
+ 	return hw;
+ }
++EXPORT_SYMBOL_GPL(wl1271_alloc_hw);
+ 
+ int wl1271_free_hw(struct wl1271 *wl)
+ {
+@@ -2050,3 +2053,8 @@ int wl1271_free_hw(struct wl1271 *wl)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(wl1271_free_hw);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
++MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+-- 
+1.6.3.3
 
