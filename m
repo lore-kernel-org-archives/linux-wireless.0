@@ -1,33 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:47943 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754757Ab0BQUCg (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:22543 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754672Ab0BVGla (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 15:02:36 -0500
-Date: Wed, 17 Feb 2010 20:02:33 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	linux-input@vger.kernel.org, marcel@holtmann.org
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20100217200233.GA24976@srcf.ucam.org>
-References: <1266356185-10324-1-git-send-email-mjg@redhat.com> <20100217052247.GD7160@core.coreip.homeip.net> <20100217180342.GA22522@srcf.ucam.org> <22ee4e771002171043u2aaf97vd73c1090c2fce901@mail.gmail.com> <20100217191708.GA15554@core.coreip.homeip.net> <22ee4e771002171142q1496842ap4079026a5c0be8c6@mail.gmail.com> <20100217195435.GA15742@core.coreip.homeip.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100217195435.GA15742@core.coreip.homeip.net>
+	Mon, 22 Feb 2010 01:41:30 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 20/22] wl1271: Clean up TX security sequence number handling
+Date: Mon, 22 Feb 2010 08:38:40 +0200
+Message-Id: <1266820722-20202-21-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 17, 2010 at 11:54:35AM -0800, Dmitry Torokhov wrote:
+Instead of managing the TX security sequence number as two variables, use
+one 64 bit variable. This greatly simplifies the handling of the number.
 
-> Is there anything currently in works that would make use of this button?
-> I do not want to allocate keycode "for the future" which may never come.
-> We did it with KEY_BATTERY but I do not think anyone actually uses it.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    6 ++++--
+ drivers/net/wireless/wl12xx/wl1271_cmd.c  |    3 +--
+ drivers/net/wireless/wl12xx/wl1271_main.c |   11 +++++------
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |   10 ++--------
+ 4 files changed, 12 insertions(+), 18 deletions(-)
 
-KEY_BATTERY is heavily used in userspace. I think all the hardware that 
-generates it does so via i8042 rather than a platform driver, so it 
-wouldn't show up in the kernel.
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 41de47c..0deb4fd 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -110,6 +110,9 @@ enum {
+ #define WL1271_FW_NAME "wl1271-fw.bin"
+ #define WL1271_NVS_NAME "wl1271-nvs.bin"
+ 
++#define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
++#define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
++
+ /* NVS data structure */
+ #define WL1271_NVS_SECTION_SIZE                  468
+ 
+@@ -419,8 +422,7 @@ struct wl1271 {
+ 
+ 	/* Security sequence number counters */
+ 	u8 tx_security_last_seq;
+-	u16 tx_security_seq_16;
+-	u32 tx_security_seq_32;
++	s64 tx_security_seq;
+ 
+ 	/* FW Rx counter */
+ 	u32 rx_counter;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index e029bf0..d59b383 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -318,8 +318,7 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
+ 
+ 	/* reset TX security counters */
+ 	wl->tx_security_last_seq = 0;
+-	wl->tx_security_seq_16 = 0;
+-	wl->tx_security_seq_32 = 0;
++	wl->tx_security_seq = 0;
+ 
+ 	ret = wl1271_cmd_send(wl, CMD_START_JOIN, join, sizeof(*join), 0);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 4c4d22a..f10ba84 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1020,8 +1020,7 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ 	wl->tx_results_count = 0;
+ 	wl->tx_packets_count = 0;
+ 	wl->tx_security_last_seq = 0;
+-	wl->tx_security_seq_16 = 0;
+-	wl->tx_security_seq_32 = 0;
++	wl->tx_security_seq = 0;
+ 	wl->time_offset = 0;
+ 	wl->session_counter = 0;
+ 	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
+@@ -1428,15 +1427,15 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		key_type = KEY_TKIP;
+ 
+ 		key_conf->hw_key_idx = key_conf->keyidx;
+-		tx_seq_32 = wl->tx_security_seq_32;
+-		tx_seq_16 = wl->tx_security_seq_16;
++		tx_seq_32 = WL1271_TX_SECURITY_HI32(wl->tx_security_seq);
++		tx_seq_16 = WL1271_TX_SECURITY_LO16(wl->tx_security_seq);
+ 		break;
+ 	case ALG_CCMP:
+ 		key_type = KEY_AES;
+ 
+ 		key_conf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-		tx_seq_32 = wl->tx_security_seq_32;
+-		tx_seq_16 = wl->tx_security_seq_16;
++		tx_seq_32 = WL1271_TX_SECURITY_HI32(wl->tx_security_seq);
++		tx_seq_16 = WL1271_TX_SECURITY_LO16(wl->tx_security_seq);
+ 		break;
+ 	default:
+ 		wl1271_error("Unknown key algo 0x%x", key_conf->alg);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index d3ed63e..1b11e2c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -303,7 +303,6 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ {
+ 	struct ieee80211_tx_info *info;
+ 	struct sk_buff *skb;
+-	u16 seq;
+ 	int id = result->id;
+ 
+ 	/* check for id legality */
+@@ -331,15 +330,10 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 	wl->stats.retry_count += result->ack_failures;
+ 
+ 	/* update security sequence number */
+-	seq = wl->tx_security_seq_16 +
+-		(result->lsb_security_sequence_number -
+-		 wl->tx_security_last_seq);
++	wl->tx_security_seq += (result->lsb_security_sequence_number -
++				wl->tx_security_last_seq);
+ 	wl->tx_security_last_seq = result->lsb_security_sequence_number;
+ 
+-	if (seq < wl->tx_security_seq_16)
+-		wl->tx_security_seq_32++;
+-	wl->tx_security_seq_16 = seq;
+-
+ 	/* remove private header from packet */
+ 	skb_pull(skb, sizeof(struct wl1271_tx_hw_descr));
+ 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.6.3.3
+
