@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga12.intel.com ([143.182.124.36]:49272 "EHLO
-	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752942Ab0BKMAR (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:61644 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753122Ab0BVTOg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2010 07:00:17 -0500
-Date: Thu, 11 Feb 2010 13:01:34 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: cfg80211 support
-Message-ID: <20100211120133.GA3136@sortiz.org>
-References: <20100202000934.GA19847@sortiz.org>
- <201002041052.00858.holgerschurig@gmail.com>
+	Mon, 22 Feb 2010 14:14:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201002041052.00858.holgerschurig@gmail.com>
+In-Reply-To: <1266747222.18491.5.camel@violet>
+References: <43e72e891002191823h3245bc0cn7a8745ae77409aa8@mail.gmail.com>
+	<1266662106.1820.4034.camel@macbook.infradead.org> <1266663639.10357.1.camel@jlt3.sipsolutions.net>
+	<1266664166.1820.4165.camel@macbook.infradead.org> <1266664247.11514.0.camel@jlt3.sipsolutions.net>
+	<1266665535.1820.4238.camel@macbook.infradead.org> <1266747222.18491.5.camel@violet>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Feb 2010 11:14:15 -0800
+Message-ID: <43e72e891002221114w24304ab0x5aea7dfc81b4d9d6@mail.gmail.com>
+Subject: Re: Firmware versioning best practices II
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vipin Mehta <Vipin.Mehta@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Holger,
+On Sun, Feb 21, 2010 at 2:13 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi David,
+>
+>> > > > That doesn't make much sense anyway. If the firmware filename is
+>> > > > foo-$APIVER-$CODEVER every code change would need a corresponding
+>> > > driver
+>> > > > change. If it is just foo-$APIVER then the $CODEVER can be embedded
+>> > > in
+>> > > > the firmware file and printed so you know which code you're using,
+>> > > but
+>> > > > if it doesn't influence the API I don't see why it should be part of
+>> > > the
+>> > > > filename?
+>> > >
+>> > > The idea is that just like with shared libraries, you have a symlink
+>> > > from the 'soname' foo-3.fw to the actual file foo-3-1.4.1.fw.
+>> >
+>> > Ah ok. I indeed do that manually with iwlwifi firmware :)
+>> >
+>> > > For shared libraries, it's easy to create those symlinks automatically
+>> > > using ldconfig. For firmware that doesn't really work though -- since
+>> > > the soname isn't encoded in the file like it is in ELF libraries.
+>> >
+>> > Right. Though I guess we could come up with a unified firmware wrapper
+>> > format that the firmware loader can unwrap.
+>>
+>> I suppose we could, but this seems like overkill to me.
+>
+> I have to agree. This looks like total overkill to me.
+>
+> Just use the $APIVER in the firmware filename.
 
-On Thu, Feb 04, 2010 at 10:52:00AM +0100, Holger Schurig wrote:
-> >     + Slightly changed the scanning state machine: The scan
-> >       worker is scheduled from the scan response handler, and
-> >       we're checking for scan_channel to know if a scan is
-> >       currently running. 
-> 
-> Can you tell my why you change the scanning state machine?  What 
-> was broken with it, or why is it now better?
-Well, I wasnt happy with the delayed scan work your patch was using.
-First you were delaying the initial work and I dont think it's useful.
-Then we were scheduling a new scan work from the scan worker itself. Although
-it was also delayed by 300 ms, you still dont have any guarantees that the
-previous scan is done when the next scan worker starts.
-What I changed is triggerring the scan work whenever the last one is done,
-i.e. triggering it from lbs_ret_scan(). This way we have a fully synchronized
-scanning state machine.
+OK -- so what goes into linux-firmware is just the latest
 
+foo-$(API)
 
-> 
-> Also, previously priv->scan_req was the marker that a scan was 
-> going on. What did it "buy" to you to change this to 
-> priv->scan_channel?
-I guess I could still use scan_req for that purpose.
-My initial thought was that you could have 2 lbs_cfg_scan() running at the
-same time since you could potentially have a 2nd lbs_cfg_scan() call before
-scan_request is actually set. However I believe cfg80211 and nl80211 prevent
-that from happening anyway as they call the scan ops under the rtnl lock.
-So, as I said, I could probably keep using scan_request.
+> And if someone wants to
+> keep track of more details then they can manually symlink them.
 
-Cheers,
-Samuel.
+Well do we want the older foo-$(API)-$(VAR) files in linux-firmware
+too for those companies/developers wishing to do this?
 
+What about deprecating APIs of the firmware based on kernel releases.
+I see it reasonable to deprecate a firmware API completely for a
+future kernel release provided you maintain all features and
+functionality in par. Does that sound reasonable?
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+> Unless we have full control over the source code of every firmware used
+> in the kernel, why bother. It is up to the companies providing them
+> anyway to make sure everything works as expected and the community can't
+> fix it.
+
+Well that's exactly it -- we do have access to the code for ar9170 for
+example, so these details will become more relevant in the future.
+
+ Luis
