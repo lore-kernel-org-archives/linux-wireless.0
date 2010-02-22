@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:62393 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756041Ab0BROpi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49906 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751687Ab0BVIfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 09:45:38 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] mac80211: deprecate RX status noise
-Date: Thu, 18 Feb 2010 15:41:45 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	John Linville <linville@tuxdriver.com>
-References: <1266437114.23447.0.camel@jlt3.sipsolutions.net> <1266447118.12365.21.camel@mj> <1266494831.6261.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1266494831.6261.1.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201002181541.45835.holgerschurig@gmail.com>
+	Mon, 22 Feb 2010 03:35:53 -0500
+Subject: Re: [PATCH 15/22] wl1271: Aggregate RX acknowledgements to FW
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1266820722-20202-16-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1266820722-20202-16-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 22 Feb 2010 09:35:47 +0100
+Message-ID: <1266827747.5154.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Various hardware reports various bogus values, like iwlwifi for
-> example reporting the same noise value that it collected after
-> a beacon over and over again, or just reporting 127 when it had
-> no value. 
+On Mon, 2010-02-22 at 08:38 +0200, Juuso Oikarinen wrote:
 
-I'm not saying that I understand this completely, but for me it 
-would make sense to disable iwlwifi's broken noise reporting 
-only. No reason to disable it for everyone if some of them are 
-broken.
+> 		wl->rx_counter++;
+>  		drv_rx_counter = wl->rx_counter & NUM_RX_PKT_DESC_MOD_MASK;
+> -		wl1271_write32(wl, RX_DRIVER_COUNTER_ADDRESS, wl->rx_counter);
+>  	}
+> +
+> +	wl1271_write32(wl, RX_DRIVER_COUNTER_ADDRESS, wl->rx_counter);
+>  }
 
--- 
-http://www.holgerschurig.de
+What if the counter overflows and you got the & to change it?
+
+johannes
+
