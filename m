@@ -1,68 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39965 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756042Ab0BLSpg (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:19464 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754853Ab0BVGlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 13:45:36 -0500
-Date: Fri, 12 Feb 2010 13:33:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Dan Tian <Dan.Tian@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>
-Subject: Re: Coordinating development for Bluetooth 3.0 between 802.11 and
-	BT trees
-Message-ID: <20100212183309.GB4983@tuxdriver.com>
-References: <43e72e891002111210l55d6a802pc5a1384e3535c845@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e891002111210l55d6a802pc5a1384e3535c845@mail.gmail.com>
+	Mon, 22 Feb 2010 01:41:42 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH 02/22] wl1271: Added functions to enable/disable interrupt handling
+Date: Mon, 22 Feb 2010 08:38:22 +0200
+Message-Id: <1266820722-20202-3-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 11, 2010 at 12:10:24PM -0800, Luis R. Rodriguez wrote:
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 
-> we are reviewing possibilities of working on Bluetooth 3.0. With
-> Bluetooth 3.0 you essentially will switch to transmitting large data
-> over your 802.11 device instead of the BT device. One of the first
-> questions we need to address first is how we would go about
-> coordinating development between wireless-testing and
-> bluetooth-testing. First I'll note that I know squat of bluetooth so
-> bare with me if I'm not being 100% accurate here. From what I gather
-> on the mac80211 side the biggest piece will be the PAL implementation
-> which should translate HCI commands to respective 802.11 frames where
-> needed. It seems this would likely be the first thing tackled. Prior
-> to working on 802.11 though we realize that at some point we'll need
-> to synchronize the 802.11 and Bluetooth trees though so work done on
-> wireless-testing for a PAL is reasonable but then the
-> bluetooth-testing won't have the respective updates.
-> 
-> Using linux-next is one possibility but using linux-next proves a pain
-> due to the fact that every single update on breaks updates, so the
-> only way to update is:
-> 
-> git fetch
-> git reset --hard origin
-> 
-> Wanted to get your feedback on what you think would be the best
-> approach to take for focus on development for Bluetooth 3.0 support.
-> Hoping there is a better solution than using linux-next.
+Added/moved enable and disable interrupt handling functions.
 
-I'm sure Marcel and Johannes are way ahead of us on this. :-)
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_io.c   |   10 ++++++++++
+ drivers/net/wireless/wl12xx/wl1271_io.h   |    3 +++
+ drivers/net/wireless/wl12xx/wl1271_main.c |    5 -----
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |   10 ++++++++++
+ drivers/net/wireless/wl12xx/wl1271_spi.h  |    3 +++
+ 6 files changed, 27 insertions(+), 6 deletions(-)
 
-I think you covered the basics, but you did leave-out the possibility
-of using net-next-2.6 for bleeding-edge development of bluetooth 3.
-Since both Marcel and I feed Dave's tree and Dave endeavours to
-keep the history of that tree stable then this would seem like your
-best bet.
-
-In any case, I was under the impression that at least the initial
-parts of the 802.11 AMP implementation could happen independently
-from any bluetooth stack changes...?
-
-John
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index 2be76ee..7d6d2e6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -299,7 +299,7 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
+ 
+ static void wl1271_boot_enable_interrupts(struct wl1271 *wl)
+ {
+-	enable_irq(wl->irq);
++	wl1271_enable_interrupts(wl);
+ 	wl1271_write32(wl, ACX_REG_INTERRUPT_MASK,
+ 		       WL1271_ACX_INTR_ALL & ~(WL1271_INTR_MASK));
+ 	wl1271_write32(wl, HI_CFG, HI_CFG_DEF_VAL);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_io.c b/drivers/net/wireless/wl12xx/wl1271_io.c
+index 5cd94d5..b825cfa 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_io.c
++++ b/drivers/net/wireless/wl12xx/wl1271_io.c
+@@ -31,6 +31,16 @@
+ #include "wl1271_spi.h"
+ #include "wl1271_io.h"
+ 
++void wl1271_disable_interrupts(struct wl1271 *wl)
++{
++	wl1271_spi_disable_interrupts(wl);
++}
++
++void wl1271_enable_interrupts(struct wl1271 *wl)
++{
++	wl1271_spi_enable_interrupts(wl);
++}
++
+ static int wl1271_translate_addr(struct wl1271 *wl, int addr)
+ {
+ 	/*
+diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
+index 38fce4c..c8b0971 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_io.h
++++ b/drivers/net/wireless/wl12xx/wl1271_io.h
+@@ -27,6 +27,9 @@
+ 
+ struct wl1271;
+ 
++void wl1271_disable_interrupts(struct wl1271 *wl);
++void wl1271_enable_interrupts(struct wl1271 *wl);
++
+ void wl1271_io_reset(struct wl1271 *wl);
+ void wl1271_io_init(struct wl1271 *wl);
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 66319aa..18347c3 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -360,11 +360,6 @@ static int wl1271_plt_init(struct wl1271 *wl)
+ 	return ret;
+ }
+ 
+-static void wl1271_disable_interrupts(struct wl1271 *wl)
+-{
+-	disable_irq(wl->irq);
+-}
+-
+ static void wl1271_power_off(struct wl1271 *wl)
+ {
+ 	wl->set_power(false);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index c26726a..b422c9f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -34,6 +34,16 @@
+ #include "wl1271_io.h"
+ 
+ 
++void wl1271_spi_disable_interrupts(struct wl1271 *wl)
++{
++	disable_irq(wl->irq);
++}
++
++void wl1271_spi_enable_interrupts(struct wl1271 *wl)
++{
++	enable_irq(wl->irq);
++}
++
+ void wl1271_spi_reset(struct wl1271 *wl)
+ {
+ 	u8 *cmd;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.h b/drivers/net/wireless/wl12xx/wl1271_spi.h
+index a803596..86ff161 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.h
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.h
+@@ -84,6 +84,9 @@
+ #define OCP_STATUS_REQ_FAILED 0x20000
+ #define OCP_STATUS_RESP_ERROR 0x30000
+ 
++void wl1271_spi_disable_interrupts(struct wl1271 *wl);
++void wl1271_spi_enable_interrupts(struct wl1271 *wl);
++
+ /* Raw target IO, address is not translated */
+ void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 		      size_t len, bool fixed);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
