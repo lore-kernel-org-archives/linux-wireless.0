@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14997 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756094Ab0BSU5z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 15:57:55 -0500
-Subject: Re: [patch] iwlwifi: testing the wrong variable
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Carpenter <error27@gmail.com>, "Zhu, Yi" <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-In-Reply-To: <20100219203039.GN4950@tuxdriver.com>
-References: <20100218094529.GA1298@bicker>
-	 <1266516282.2551.2604.camel@rchatre-DESK>
-	 <20100219203039.GN4950@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 19 Feb 2010 12:57:54 -0800
-Message-ID: <1266613074.2551.2807.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:35134 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754851Ab0BVW71 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2010 17:59:27 -0500
+Received: by ewy28 with SMTP id 28so3375242ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2010 14:59:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B816983.2050006@lwfinger.net>
+References: <4b803cb5.tZQnvqGy2KfItgOq%Larry.Finger@lwfinger.net>
+	 <b170af451002210249t5adfa274s6bee0003c1afa497@mail.gmail.com>
+	 <69e28c911002210253v8150259s718d2ba68372f9d1@mail.gmail.com>
+	 <1266749713.5468.2.camel@jlt3.sipsolutions.net>
+	 <4B816983.2050006@lwfinger.net>
+Date: Mon, 22 Feb 2010 23:59:24 +0100
+Message-ID: <b170af451002221459t1f957e90nf8016ca6ec0d4d53@mail.gmail.com>
+Subject: Re: [PATCH V2] ssb: Add PCI ID 0x4322 to PMU handling
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
+	bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-02-19 at 12:30 -0800, John W. Linville wrote:
-> So for the record, that patch is basically identical to Dan's patch
-> but with some whitespace fixups in some nearby lines as well.
-> 
-> How important is this patch?  Is there an actual bug report?  Is it
-> a regression?
-> 
-> It is very late in the 2.6.33 cycle and it isn't obvious to me that
-> this is worth pushing for 2.6.33 at this point...?
+2010/2/21 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 02/21/2010 04:55 AM, Johannes Berg wrote:
+>> On Sun, 2010-02-21 at 11:53 +0100, Gábor Stefanik wrote:
+>>> 2010/2/21 Rafał Miłecki <zajec5@gmail.com>:
+>>>> 2010/2/20 Larry Finger <Larry.Finger@lwfinger.net>:
+>>>>> Some of the N PHYs need a revision in the handling of the PMU.
+>>>>>
+>>>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>>>> ---
+>>>>>
+>>>>> John,
+>>>>>
+>>>>> This will be needed for some of the N PHY devices - 2.6.34
+>>> amterial.
+>>>>>
+>>>>> Larry
+>>>>> ---
+>>>>>
+>>>>> V2 - Fix typo in subject line of commit message.
+>>>>
+>>>> amterial you say? ;)
+>>>
+>>> Taht's not prat of the cimmot megasse, it is olny a ntoe to Jhon.
+>>> Deons't mtater eevn if it is cmolpelety jmulbed up.
+>>
+>> Geez. The patch is already in the tree anyway, with the original typo.
+>
+> I may be getting old and decrepit, but it's OK if the boys just want to have fun
+> with me.
 
-This is exactly the reason why we did not post the patch to 2.6.33 or
-stable when we submitted it upstream since there was no regression or
-bug tied to it at that time. It surely is a problem that needs fixing,
-which we did in the current release. I just highlighted that if there is
-a request for this to be fixed in stable then we already have the patch
-available. I'm ok with this one only going into 2.6.34.
+And now when typo-ed patch gone git... everyone will see it for ever ;) :P
 
-Reinette
-
-
+-- 
+Rafał
