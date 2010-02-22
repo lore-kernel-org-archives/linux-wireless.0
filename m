@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34065 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752295Ab0BIEW2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 23:22:28 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 20:22:28 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19312.59210.947966.773343@gargle.gargle.HOWL>
-Date: Tue, 9 Feb 2010 10:10:42 +0530
-To: Kalle Valo <kalle.valo@iki.fi>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath9k: fix PAE frame handling
-In-Reply-To: <87d40ljov0.fsf@purkki.valot.fi>
-References: <4B65F735.1020509@openwrt.org>
-	<19302.24837.154697.822430@gargle.gargle.HOWL>
-	<87d40ljov0.fsf@purkki.valot.fi>
+Received: from smtp.nokia.com ([192.100.105.134]:20548 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754883Ab0BVGln (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2010 01:41:43 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 22/22] wl1271: Remove tx-power level workaround
+Date: Mon, 22 Feb 2010 08:38:42 +0200
+Message-Id: <1266820722-20202-23-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> Any more information about the problem? For example, what APs are
-> broken?
-> 
-> I'm just wondering if we should see this with other hardware also.
+This patch removes the workaround limiting chipset TX power to 12dB, instead
+using the value configured by the mac80211.
 
-Internal test cycles exposed this problem where certain APs didn't
-handle properly PAE frames being part of an aggregate.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_acx.c |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
 
-I'll see if I can dig up the APs from the test results.
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index f41f886..60e2087 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -135,12 +135,7 @@ int wl1271_acx_tx_power(struct wl1271 *wl, int power)
+ 		goto out;
+ 	}
+ 
+-	/*
+-	 * FIXME: This is a workaround needed while we don't the correct
+-	 * calibration, to avoid distortions
+-	 */
+-	/* acx->current_tx_power = power * 10; */
+-	acx->current_tx_power = 120;
++	acx->current_tx_power = power * 10;
+ 
+ 	ret = wl1271_cmd_configure(wl, DOT11_CUR_TX_PWR, acx, sizeof(*acx));
+ 	if (ret < 0) {
+-- 
+1.6.3.3
 
-Sujith
