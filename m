@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 64.mail-out.ovh.net ([91.121.185.65]:55074 "HELO
-	64.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932268Ab0BEOhd (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:20512 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754689Ab0BVGl2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 09:37:33 -0500
-Message-ID: <4B6C2D24.3020001@free.fr>
-Date: Fri, 05 Feb 2010 15:37:24 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Improved IBSS merges
-References: <1265319990-25583-1-git-send-email-benoit.papillault@free.fr> <1265365977.3613.2.camel@johannes.local>
-In-Reply-To: <1265365977.3613.2.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 22 Feb 2010 01:41:28 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH 08/22] wl1271: Changed access to fw status register to use raw read
+Date: Mon, 22 Feb 2010 08:38:28 +0200
+Message-Id: <1266820722-20202-9-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg a écrit :
-> On Thu, 2010-02-04 at 22:46 +0100, Benoit Papillault wrote:
->
->   
->> Next, we merge even if the BSSID from the received beacon is the same as
->> our since merge can update more things that BSSID itself. This is
->> specifically true for ath9k where the merge updates TBTT timers as a
->> side effect and this is indeed needed if the TSF has been updated (if
->> TSF is updated, we need to update TBTT timers as well).
->>     
->
->   
->> @@ -373,10 +370,6 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->>  				sdata->u.ibss.ssid_len))
->>  		goto put_bss;
->>  
->> -	/* same BSSID */
->> -	if (memcmp(cbss->bssid, sdata->u.ibss.bssid, ETH_ALEN) == 0)
->> -		goto put_bss;
->> -
->>  	if (rx_status->flag & RX_FLAG_TSFT) {
->>  		/*
->>  		 * For correct IBSS merging we need mactime; since mactime is
->>     
->
-> NACK. This will create merges and merges and merges and merges whenever
-> you use hardware that doesn't have accurate timestamps all the time.
->
-> johannes
->   
-Humm... could you give an example? For hardware that don't have RX 
-timestamp, we will use the drv_get_tsf() function, this function will 
-only return a timestamp that is later than the real time at which the 
-beacon is received, so we can only miss IBSS merges in fact. Did I miss 
-something?
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 
-I can resubmit a patch with the remaining and leave this one open for 
-discussion.
+Changed access to fw status register to use raw read instead of
+translated addressing. On SDIO access by translated addressing was not
+working and raw access is working also on SPI.
 
-Regards,
-Benoit
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index ea49ced..310f58c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -377,7 +377,7 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 	u32 total = 0;
+ 	int i;
+ 
+-	wl1271_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
++	wl1271_raw_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
+ 
+ 	wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
+ 		     "drv_rx_counter = %d, tx_results_counter = %d)",
+-- 
+1.6.3.3
 
