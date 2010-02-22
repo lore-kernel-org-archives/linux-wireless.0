@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:20026 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932126Ab0BNBhs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 20:37:48 -0500
-Subject: Re: [PATCH 0/3] rt2x00: rt2800 detection improvements.
-From: Pavel Roskin <proski@gnu.org>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-In-Reply-To: <1266090949-5468-1-git-send-email-gwingerde@gmail.com>
-References: <1266090949-5468-1-git-send-email-gwingerde@gmail.com>
-Content-Type: text/plain
-Date: Sat, 13 Feb 2010 20:37:31 -0500
-Message-Id: <1266111451.32423.14.camel@mj>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.105.134]:20526 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754829Ab0BVGlc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2010 01:41:32 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 14/22] wl1271: Remove annoying PSM entry/exit kernel traces
+Date: Mon, 22 Feb 2010 08:38:34 +0200
+Message-Id: <1266820722-20202-15-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-02-13 at 20:55 +0100, Gertjan van Wingerde wrote:
-> Some general rt2800 detection improvements. This make SOC a special
-> interface, and thus simplifying SOC detection a bit, and unifies
-> rt2800pci and rt2800usb further in detecting with what kind of 
-> rt2800 device we are dealing with.
-> 
-> Gertjan van Wingerde (3):
->   rt2x00: Introduce SoC interface type.
->   rt2x00: Reorganize RT chipset setting for PCI/SOC devices.
->   rt2x00: rework RT chipset and revision determination for PCI an SOC
->     devices.
+Remove the annoying and dmesg-flooding WLAN PSM entry/exit traces. Instead,
+only output them if PSM traces are enabled.
 
-Rested-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Tested with rt73usb and rt2800pci.  wpa_supplicant is working fine.  No
-new sparse warnings are introduced.
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 184264a..4d091eb 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1235,13 +1235,13 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		 * through the bss_info_changed() hook.
+ 		 */
+ 		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
+-			wl1271_info("psm enabled");
++			wl1271_debug(DEBUG_PSM, "psm enabled");
+ 			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
+ 						 true);
+ 		}
+ 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+ 		   test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags)) {
+-		wl1271_info("psm disabled");
++		wl1271_debug(DEBUG_PSM, "psm disabled");
+ 
+ 		clear_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags);
+ 
 -- 
-Regards,
-Pavel Roskin
+1.6.3.3
+
