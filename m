@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:65133 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752748Ab0BSGDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 01:03:12 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/6] iwl3945: remove STATUS macros from header
-Date: Thu, 18 Feb 2010 22:03:02 -0800
-Message-Id: <1266559387-19637-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
-References: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
+Received: from fmmailgate02.web.de ([217.72.192.227]:60805 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901Ab0BWSaY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2010 13:30:24 -0500
+Received: from smtp08.web.de (fmsmtp08.dlan.cinetic.de [172.20.5.216])
+	by fmmailgate02.web.de (Postfix) with ESMTP id A523B14F873A4
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 19:30:22 +0100 (CET)
+Received: from [84.56.180.53] (helo=pinguin.localnet)
+	by smtp08.web.de with asmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.110 #314)
+	id 1NjzWT-0004bq-00
+	for linux-wireless@vger.kernel.org; Tue, 23 Feb 2010 19:30:17 +0100
+From: Jens Westemeier <Jens_Westemeier@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: problem with WG511v1
+Date: Tue, 23 Feb 2010 19:30:12 +0100
+References: <4B83B96A.6050605@sorengo.com> <201002231832.31015.Jens_Westemeier@web.de> <20100223175806.GD2928@tuxdriver.com>
+In-Reply-To: <20100223175806.GD2928@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201002231930.12759.Jens_Westemeier@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+Am Dienstag, 23. Februar 2010 18:58:07 schrieb John W. Linville:
+> 
+> I'm guessing this is the EBUSY return from p54_download_eeprom.
+> I'm not immediately familiar enough with the driver to know what that
+> means, but perhaps your device is showing its age?  Hopefully a P54
+> person can provide a more concrete suggestion.
+> 
+> John
 
-iwl3945 includes iwl-core.h in which these STATUS flags are already
-defined. This also removes a potential confusing definition with iwlcore
-using STATUS_MODE_PENDING with value 18 and iwl3945 defining (but not
-using) STATUS_CONF_PENDING for value 18.
+As sayed before, this device still works with prism54 as well as with Win XP 
+(dual boot). There are also other reports in this mailing list ("
+p54pci: "device does not respond!"", also this thread) showing the same 
+problem with other cards.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |   18 ------------------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 3 files changed, 2 insertions(+), 20 deletions(-)
+I hope someone can help, I posted this problem in January already, without 
+response.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 5913418..521584b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -45,8 +45,8 @@
- #include "iwl-sta.h"
- #include "iwl-3945.h"
- #include "iwl-eeprom.h"
--#include "iwl-helpers.h"
- #include "iwl-core.h"
-+#include "iwl-helpers.h"
- #include "iwl-led.h"
- #include "iwl-3945-led.h"
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index db4137d..ae94bab 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -171,24 +171,6 @@ struct iwl3945_frame {
- 
- #define SCAN_INTERVAL 100
- 
--#define STATUS_HCMD_ACTIVE	0	/* host command in progress */
--#define STATUS_HCMD_SYNC_ACTIVE	1	/* sync host command in progress */
--#define STATUS_INT_ENABLED	2
--#define STATUS_RF_KILL_HW	3
--#define STATUS_INIT		5
--#define STATUS_ALIVE		6
--#define STATUS_READY		7
--#define STATUS_TEMPERATURE	8
--#define STATUS_GEO_CONFIGURED	9
--#define STATUS_EXIT_PENDING	10
--#define STATUS_STATISTICS	12
--#define STATUS_SCANNING		13
--#define STATUS_SCAN_ABORTING	14
--#define STATUS_SCAN_HW		15
--#define STATUS_POWER_PMI	16
--#define STATUS_FW_ERROR		17
--#define STATUS_CONF_PENDING	18
--
- #define MAX_TID_COUNT        9
- 
- #define IWL_INVALID_RATE     0xFF
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3df488a..0e5a1ca 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -53,8 +53,8 @@
- #include "iwl-commands.h"
- #include "iwl-sta.h"
- #include "iwl-3945.h"
--#include "iwl-helpers.h"
- #include "iwl-core.h"
-+#include "iwl-helpers.h"
- #include "iwl-dev.h"
- #include "iwl-spectrum.h"
- 
--- 
-1.6.3.3
-
+Greetings, Jens.
