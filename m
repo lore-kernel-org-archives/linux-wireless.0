@@ -1,120 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:57978 "EHLO
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:58773 "EHLO
 	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966330Ab0B0MEJ (ORCPT
+	with ESMTP id S1753130Ab0BWQot (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 07:04:09 -0500
-Received: by mail-fx0-f219.google.com with SMTP id 19so915402fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 04:04:08 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 05/10] b43: N-PHY: update post init of 2055 radio
-Date: Sat, 27 Feb 2010 13:03:36 +0100
-Message-Id: <1267272221-1873-6-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1267272221-1873-1-git-send-email-zajec5@gmail.com>
-References: <1267272221-1873-1-git-send-email-zajec5@gmail.com>
+	Tue, 23 Feb 2010 11:44:49 -0500
+Received: by fxm19 with SMTP id 19so4011960fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 08:44:48 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] Improve software scan timing
+Date: Tue, 23 Feb 2010 17:44:39 +0100
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>
+References: <201002231619.55189.helmut.schaa@googlemail.com> <201002231633.06394.helmut.schaa@googlemail.com> <1266939493.3934.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1266939493.3934.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201002231744.39133.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   61 +++++++++++++++++++++----------------
- 1 files changed, 35 insertions(+), 26 deletions(-)
+Am Dienstag 23 Februar 2010 schrieb Johannes Berg:
+> On Tue, 2010-02-23 at 16:33 +0100, Helmut Schaa wrote:
+> > > > Kalle, Johannes, how is the listen_interval handled in the
+> > > > powersave code?
+> > > > Are we only sleeping for one beacon interval or are we ignoring
+> > > > the listen_interval currently.
+> > >
+> > > I figured this listen interval stuff would come back to bite us at
+> > > some point. I don't think we should negotiate a listen interval of 1.
+> > > OTOH, I'm not convinced that all APs would reject it with a status code of
+> > > 51 if it's too large? Or is that tested anywhere like WFA?
+> >
+> > No idea. However for iwlwifi for example we always used a listen
+> > interval
+> > of 20 any I never saw any associations getting rejected because of
+> > this.
+> >
+> > So maybe we could just increase the default to something between 5 and
+> > 10 to be on the safe side?
+>
+> Yeah, maybe. Could it be useful for userspace to ask for a specific
+> value with assoc? Though I'm not really sure what it would use ...
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 2c592d2..6774897 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -183,49 +183,58 @@ static void b43_radio_init2055_pre(struct b43_wldev *dev)
- 
- static void b43_radio_init2055_post(struct b43_wldev *dev)
- {
-+	struct b43_phy_n *nphy = dev->phy.n;
- 	struct ssb_sprom *sprom = &(dev->dev->bus->sprom);
- 	struct ssb_boardinfo *binfo = &(dev->dev->bus->boardinfo);
- 	int i;
- 	u16 val;
-+	bool workaround = false;
-+
-+	if (sprom->revision < 4)
-+		workaround = (binfo->vendor != PCI_VENDOR_ID_BROADCOM ||
-+				binfo->type != 0x46D ||
-+				binfo->rev < 0x41);
-+	else
-+		workaround = ((sprom->boardflags_hi & B43_BFH_NOPA) == 0);
- 
- 	b43_radio_mask(dev, B2055_MASTER1, 0xFFF3);
--	msleep(1);
--	if ((sprom->revision != 4) ||
--	   !(sprom->boardflags_hi & B43_BFH_RSSIINV)) {
--		if ((binfo->vendor != PCI_VENDOR_ID_BROADCOM) ||
--		    (binfo->type != 0x46D) ||
--		    (binfo->rev < 0x41)) {
--			b43_radio_mask(dev, B2055_C1_RX_BB_REG, 0x7F);
--			b43_radio_mask(dev, B2055_C1_RX_BB_REG, 0x7F);
--			msleep(1);
--		}
-+	if (workaround) {
-+		b43_radio_mask(dev, B2055_C1_RX_BB_REG, 0x7F);
-+		b43_radio_mask(dev, B2055_C2_RX_BB_REG, 0x7F);
- 	}
--	b43_radio_maskset(dev, B2055_RRCCAL_NOPTSEL, 0x3F, 0x2C);
--	msleep(1);
--	b43_radio_write16(dev, B2055_CAL_MISC, 0x3C);
--	msleep(1);
-+	b43_radio_maskset(dev, B2055_RRCCAL_NOPTSEL, 0xFFC0, 0x2C);
-+	b43_radio_write(dev, B2055_CAL_MISC, 0x3C);
- 	b43_radio_mask(dev, B2055_CAL_MISC, 0xFFBE);
--	msleep(1);
- 	b43_radio_set(dev, B2055_CAL_LPOCTL, 0x80);
--	msleep(1);
- 	b43_radio_set(dev, B2055_CAL_MISC, 0x1);
- 	msleep(1);
- 	b43_radio_set(dev, B2055_CAL_MISC, 0x40);
--	msleep(1);
--	for (i = 0; i < 100; i++) {
--		val = b43_radio_read16(dev, B2055_CAL_COUT2);
--		if (val & 0x80)
-+	for (i = 0; i < 200; i++) {
-+		val = b43_radio_read(dev, B2055_CAL_COUT2);
-+		if (val & 0x80) {
-+			i = 0;
- 			break;
-+		}
- 		udelay(10);
- 	}
--	msleep(1);
-+	if (i)
-+		b43err(dev->wl, "radio post init timeout\n");
- 	b43_radio_mask(dev, B2055_CAL_LPOCTL, 0xFF7F);
--	msleep(1);
- 	nphy_channel_switch(dev, dev->phy.channel);
--	b43_radio_write16(dev, B2055_C1_RX_BB_LPF, 0x9);
--	b43_radio_write16(dev, B2055_C2_RX_BB_LPF, 0x9);
--	b43_radio_write16(dev, B2055_C1_RX_BB_MIDACHP, 0x83);
--	b43_radio_write16(dev, B2055_C2_RX_BB_MIDACHP, 0x83);
-+	b43_radio_write(dev, B2055_C1_RX_BB_LPF, 0x9);
-+	b43_radio_write(dev, B2055_C2_RX_BB_LPF, 0x9);
-+	b43_radio_write(dev, B2055_C1_RX_BB_MIDACHP, 0x83);
-+	b43_radio_write(dev, B2055_C2_RX_BB_MIDACHP, 0x83);
-+	b43_radio_maskset(dev, B2055_C1_LNA_GAINBST, 0xFFF8, 0x6);
-+	b43_radio_maskset(dev, B2055_C2_LNA_GAINBST, 0xFFF8, 0x6);
-+	if (!nphy->gain_boost) {
-+		b43_radio_set(dev, B2055_C1_RX_RFSPC1, 0x2);
-+		b43_radio_set(dev, B2055_C2_RX_RFSPC1, 0x2);
-+	} else {
-+		b43_radio_mask(dev, B2055_C1_RX_RFSPC1, 0xFFFD);
-+		b43_radio_mask(dev, B2055_C2_RX_RFSPC1, 0xFFFD);
-+	}
-+	udelay(2);
- }
- 
- /*
--- 
-1.6.4.2
+I don't think so. Basically user space only wants to set parameters like
+pm_qos and if the configured latency allows us to sleep for x ms we should
+make use of it to improve battery life.
 
+Ok, I'll just update the listen_interval to default to 5 and make use of it
+in the scan implementation. That should allow us in most cases to leave the
+channel for around 500ms which is enough time to scan maybe 3-10 channels
+depending on active/passive flags.
+
+Would that be ok for you?
+
+Helmut
