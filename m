@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:56824 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755087Ab0BTXHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Feb 2010 18:07:18 -0500
-Date: Sun, 21 Feb 2010 00:07:16 +0100
-From: Florian Mickler <florian@mickler.org>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:55264 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754758Ab0BWXzE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2010 18:55:04 -0500
+Received: by pwj8 with SMTP id 8so4321244pwj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 15:55:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20100223231527.8028.84024.stgit@mj.roinet.com>
+References: <20100223231527.8028.84024.stgit@mj.roinet.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 23 Feb 2010 15:54:43 -0800
+Message-ID: <43e72e891002231554o7b1b8bc5g865381c1b0a9e019@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: never read from the AR_IMR_S2 register
+To: Pavel Roskin <proski@gnu.org>
 Cc: linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: [PATCH 2/2] enhance /sys/class/rfkill/<rfkill>/state interface
-Message-ID: <20100221000716.29ad3e90@schatten.dmk.lab>
-In-Reply-To: <1266704090.10980.0.camel@jlt3.sipsolutions.net>
-References: <1266702045-6062-1-git-send-email-florian@mickler.org>
-	<1266702045-6062-3-git-send-email-florian@mickler.org>
-	<1266704090.10980.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 20 Feb 2010 23:14:48 +0100
-Johannes Berg <johannes@sipsolutions.net> wrote:
+On Tue, Feb 23, 2010 at 3:15 PM, Pavel Roskin <proski@gnu.org> wrote:
+> The AR_IMR_S2 register sometimes cannot be read correctly.  Instead of a
+> valid value, 0xdeadbeef is returned.  The driver has been observed
+> writing that value back to AR_IMR_S2 after changing a few bits.
+>
+> Cache the register value in ah->imrs2_reg and always write chached value
+> to the register.
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-> On Sat, 2010-02-20 at 22:40 +0100, florian@mickler.org wrote:
-> > Introduce a new state-value RFKILL_STATE_SOFT_AND_HARD_BLOCKED
-> > which is returned only through the sysfs state file.
-> > The other interfaces are designed so that they don't need this extra
-> > state.
-> > 
-> > This allows the sysfs to represent all possible states an rfkill
-> > driver can
-> > have.
-> > 
-> > Signed-off-by: Florian Mickler <florian@mickler.org>
-> > ---
-> > 
-> > After stumbling over this arbitrary limitation of
-> > sys/class/rfkill/*/state I
-> > wondered what would hinder this patch?
-> 
-> This is not backward compatible, so can't be done.
-> 
-> johannes
+What hardware was this seen with ? Can you enable PS debug to see if
+perhaps PS is left enabled when we try to configure hardware. When we
+touch some registers PS needs to be enabled, this could be a PS issue,
+unless of course you see this also when PS is disabled by default.
 
-hmm... ah, i see... if driver is in hard'n'soft-block state 
-an userspace program would expect to read hardblock instead of the
-new hard'n'softblock-state... 
-now that i think of it, it even becomes obvious :) 
-
-cheers,
-Flo
-
-
+  Luis
