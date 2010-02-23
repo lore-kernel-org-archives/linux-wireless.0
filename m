@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f193.google.com ([209.85.210.193]:33958 "EHLO
-	mail-yx0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098Ab0BURMl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58786 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201Ab0BWOpl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2010 12:12:41 -0500
-Received: by yxe31 with SMTP id 31so516230yxe.21
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Feb 2010 09:12:40 -0800 (PST)
-Message-ID: <4B816983.2050006@lwfinger.net>
-Date: Sun, 21 Feb 2010 11:12:35 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 23 Feb 2010 09:45:41 -0500
+Date: Tue, 23 Feb 2010 09:45:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Fabrice Lamareille <fab128@sorengo.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: problem with WG511v1
+Message-ID: <20100223144502.GA2928@tuxdriver.com>
+References: <4B83B96A.6050605@sorengo.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, Michael Buesch <mb@bu3sch.de>,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH V2] ssb: Add PCI ID 0x4322 to PMU handling
-References: <4b803cb5.tZQnvqGy2KfItgOq%Larry.Finger@lwfinger.net>	 <b170af451002210249t5adfa274s6bee0003c1afa497@mail.gmail.com>	 <69e28c911002210253v8150259s718d2ba68372f9d1@mail.gmail.com> <1266749713.5468.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1266749713.5468.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B83B96A.6050605@sorengo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/21/2010 04:55 AM, Johannes Berg wrote:
-> On Sun, 2010-02-21 at 11:53 +0100, Gábor Stefanik wrote:
->> 2010/2/21 Rafał Miłecki <zajec5@gmail.com>:
->>> 2010/2/20 Larry Finger <Larry.Finger@lwfinger.net>:
->>>> Some of the N PHYs need a revision in the handling of the PMU.
->>>>
->>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>>> ---
->>>>
->>>> John,
->>>>
->>>> This will be needed for some of the N PHY devices - 2.6.34
->> amterial.
->>>>
->>>> Larry
->>>> ---
->>>>
->>>> V2 - Fix typo in subject line of commit message.
->>>
->>> amterial you say? ;)
->>
->> Taht's not prat of the cimmot megasse, it is olny a ntoe to Jhon.
->> Deons't mtater eevn if it is cmolpelety jmulbed up.
-> 
-> Geez. The patch is already in the tree anyway, with the original typo.
+On Tue, Feb 23, 2010 at 12:18:02PM +0100, Fabrice Lamareille wrote:
+> Hello
+>
+> I have a NETGEAR WG511v1 wireless pcmcia card.
+> It was working perfectly on fedora 11 with the prism54 driver and the  
+> attached isl3890 firmware.
+>
+> Since fedora 12, the p54pci driver is enabled by default, but it does  
+> not work with my card. I downloaded the right isl3886pci firmware on  
+> your website, but the card does not start...
+> With the old isl3890 renamed as isl3886pci, the kernel crashes.
+> With the attachd isl3886pci firmware, which I extracted from the windows  
+> driver with fwextract, it seems not to crash, but the card does not  
+> appear in NetworkManager nor starts automaticaly...
+>
+> Thanks in advance for your help.
 
-I may be getting old and decrepit, but it's OK if the boys just want to have fun
-with me.
+I'm not sure what you mean by "firmware on your website", but the
+file you attached does not match what is linked here:
 
-Larry
+http://wireless.kernel.org/en/users/Drivers/p54#firmware
+
+In the command-lines pasted below, 2.13.12.0.arm is the file downloaded
+through the link for "PCI / PCMCIA" for kernels 2.6.29 and above at
+the URL above and isl3886pci is the file you attached to your email
+by that same name.
+
+/tmp
+[linville-t400.local]:> ls -l isl3886pci 2.13.12.0.arm 
+-rw-rw-r-- 1 linville linville 29036 2010-02-23 09:39 2.13.12.0.arm
+-rw------- 1 linville linville 29040 2010-02-23 09:39 isl3886pci
+
+/tmp
+[linville-t400.local]:> cmp 2.13.12.0.arm isl3886pci 
+2.13.12.0.arm isl3886pci differ: byte 5, line 1
+
+If you use the specified firmware, does the device work for you?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
