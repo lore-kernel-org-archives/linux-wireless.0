@@ -1,54 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:57350 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755174Ab0BMAK7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 19:10:59 -0500
-Subject: Re: Coordinating development for Bluetooth 3.0 between 802.11 and
- BT trees
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Dan Tian <Dan.Tian@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>
-In-Reply-To: <20100212183309.GB4983@tuxdriver.com>
-References: <43e72e891002111210l55d6a802pc5a1384e3535c845@mail.gmail.com>
-	 <20100212183309.GB4983@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 13 Feb 2010 01:09:45 +0100
-Message-ID: <1266019785.21559.28.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:16842 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754489Ab0BWXDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2010 18:03:46 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH wireless-2.6] iwlwifi: increase command buffer size
+Date: Tue, 23 Feb 2010 15:02:40 -0800
+Message-Id: <1266966160-1863-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-> > Wanted to get your feedback on what you think would be the best
-> > approach to take for focus on development for Bluetooth 3.0 support.
-> > Hoping there is a better solution than using linux-next.
-> 
-> I'm sure Marcel and Johannes are way ahead of us on this. :-)
-> 
-> I think you covered the basics, but you did leave-out the possibility
-> of using net-next-2.6 for bleeding-edge development of bluetooth 3.
-> Since both Marcel and I feed Dave's tree and Dave endeavours to
-> keep the history of that tree stable then this would seem like your
-> best bet.
+Increase the buffer size for commands with "huge"
+bit set. This has been recently observed for 6050 cards where
+for even with huge bit set few commands were not properly allocated
+memory with the command overwriting the buffer allocated for it.
+Also add a check to see if command size exceeds the
+maximum allowable size.
 
-if we reach the point where any kind of coordination is needed between
-your and my tree, I would just merge into wireless-next-2.6 tree instead
-of net-next-2.6. That should solve most issues around this anyway. And
-in case it doesn't we will always need manual interaction on one side.
-So I wouldn't try to overthink this right now.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+This patch is also available from wireless-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-The only tricky part I see is wireless-testing since bluetooth-testing
-is not immutable right now. And I don't have any intention to make it
-that way.
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    1 +
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |   11 +++++++----
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index e915075..cfd6c84 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2612,6 +2612,7 @@ struct iwl_ssid_ie {
+ #define TX_CMD_LIFE_TIME_INFINITE	cpu_to_le32(0xFFFFFFFF)
+ #define IWL_GOOD_CRC_TH			cpu_to_le16(1)
+ #define IWL_MAX_SCAN_SIZE 1024
++#define IWL_MAX_CMD_SIZE 4096
+ #define IWL_MAX_PROBE_REQUEST		200
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 8f40715..066491f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -366,7 +366,7 @@ int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+ 	for (i = 0; i < actual_slots; i++) {
+ 		/* only happens for cmd queue */
+ 		if (i == slots_num)
+-			len += IWL_MAX_SCAN_SIZE;
++			len = IWL_MAX_CMD_SIZE;
+ 
+ 		txq->cmd[i] = kmalloc(len, GFP_KERNEL);
+ 		if (!txq->cmd[i])
+@@ -1027,9 +1027,12 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 
+ 	/* If any of the command structures end up being larger than
+ 	 * the TFD_MAX_PAYLOAD_SIZE, and it sent as a 'small' command then
+-	 * we will need to increase the size of the TFD entries */
++	 * we will need to increase the size of the TFD entries
++	 * Also, check to see if command buffer should not exceed the size
++	 * of device_cmd and max_cmd_size. */
+ 	BUG_ON((fix_size > TFD_MAX_PAYLOAD_SIZE) &&
+ 	       !(cmd->flags & CMD_SIZE_HUGE));
++	BUG_ON(fix_size > IWL_MAX_CMD_SIZE);
+ 
+ 	if (iwl_is_rfkill(priv) || iwl_is_ctkill(priv)) {
+ 		IWL_WARN(priv, "Not sending command - %s KILL\n",
+@@ -1073,8 +1076,8 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	if (cmd->flags & CMD_SIZE_HUGE)
+ 		out_cmd->hdr.sequence |= SEQ_HUGE_FRAME;
+ 	len = sizeof(struct iwl_device_cmd);
+-	len += (idx == TFD_CMD_SLOTS) ?  IWL_MAX_SCAN_SIZE : 0;
+-
++	if (idx == TFD_CMD_SLOTS)
++		len = IWL_MAX_CMD_SIZE;
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	switch (out_cmd->hdr.cmd) {
+-- 
+1.6.3.3
 
