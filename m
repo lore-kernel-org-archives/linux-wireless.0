@@ -1,373 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20493 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab0BVGlW (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:40820 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731Ab0BWHEm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:22 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 07/22] wl1271: Initial SDIO implementation
-Date: Mon, 22 Feb 2010 08:38:27 +0200
-Message-Id: <1266820722-20202-8-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Tue, 23 Feb 2010 02:04:42 -0500
+Subject: Re: Firmware versioning best practices II
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vipin Mehta <Vipin.Mehta@atheros.com>
+In-Reply-To: <43e72e891002221303ne571d07g9bb9cbeace40ce0c@mail.gmail.com>
+References: <43e72e891002191823h3245bc0cn7a8745ae77409aa8@mail.gmail.com>
+	 <1266662106.1820.4034.camel@macbook.infradead.org>
+	 <1266663639.10357.1.camel@jlt3.sipsolutions.net>
+	 <1266664166.1820.4165.camel@macbook.infradead.org>
+	 <1266664247.11514.0.camel@jlt3.sipsolutions.net>
+	 <1266665535.1820.4238.camel@macbook.infradead.org>
+	 <1266747222.18491.5.camel@violet>
+	 <43e72e891002221114w24304ab0x5aea7dfc81b4d9d6@mail.gmail.com>
+	 <1266866854.18491.42.camel@violet>
+	 <43e72e891002221303ne571d07g9bb9cbeace40ce0c@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 23 Feb 2010 08:06:04 +0100
+Message-ID: <1266908764.18491.49.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Hi Luis,
 
-Added initial implementation of SDIO interfacte to the wl1271 driver.
-When selected, this adds new module called "wl1271_sdio".
+> >> >> > > > That doesn't make much sense anyway. If the firmware filename is
+> >> >> > > > foo-$APIVER-$CODEVER every code change would need a corresponding
+> >> >> > > driver
+> >> >> > > > change. If it is just foo-$APIVER then the $CODEVER can be embedded
+> >> >> > > in
+> >> >> > > > the firmware file and printed so you know which code you're using,
+> >> >> > > but
+> >> >> > > > if it doesn't influence the API I don't see why it should be part of
+> >> >> > > the
+> >> >> > > > filename?
+> >> >> > >
+> >> >> > > The idea is that just like with shared libraries, you have a symlink
+> >> >> > > from the 'soname' foo-3.fw to the actual file foo-3-1.4.1.fw.
+> >> >> >
+> >> >> > Ah ok. I indeed do that manually with iwlwifi firmware :)
+> >> >> >
+> >> >> > > For shared libraries, it's easy to create those symlinks automatically
+> >> >> > > using ldconfig. For firmware that doesn't really work though -- since
+> >> >> > > the soname isn't encoded in the file like it is in ELF libraries.
+> >> >> >
+> >> >> > Right. Though I guess we could come up with a unified firmware wrapper
+> >> >> > format that the firmware loader can unwrap.
+> >> >>
+> >> >> I suppose we could, but this seems like overkill to me.
+> >> >
+> >> > I have to agree. This looks like total overkill to me.
+> >> >
+> >> > Just use the $APIVER in the firmware filename.
+> >>
+> >> OK -- so what goes into linux-firmware is just the latest
+> >>
+> >> foo-$(API)
+> >>
+> >> > And if someone wants to
+> >> > keep track of more details then they can manually symlink them.
+> >>
+> >> Well do we want the older foo-$(API)-$(VAR) files in linux-firmware
+> >> too for those companies/developers wishing to do this?
+> >
+> > personally I would say no, but for some projects it might make sense. I
+> > would just leave this up to the project/driver itself.
+> 
+> OK
+> 
+> >> What about deprecating APIs of the firmware based on kernel releases.
+> >> I see it reasonable to deprecate a firmware API completely for a
+> >> future kernel release provided you maintain all features and
+> >> functionality in par. Does that sound reasonable?
+> >
+> > Realistically you have to deprecate firmware versions at some point
+> > anyway. So yes, that makes sense.
+> 
+> OK
+> 
+> > However I would leave this again up to
+> > the driver itself and how far the maintainers wanna go in supported
+> > older API versions.
+> 
+> I was looking for general rules and guidelines to document. That
+> includes things to do and things to not do. It sounds we are flexible
+> with what people can do with their firmware and their driver firmware
+> API. The things to not do are not so clear though still. I am
+> wondering specifically about deprecation of older firmware APIs, or
+> are we flexible enough to allow any firmware API rewrite so long as
+> its properly supported?
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/Kconfig       |   12 ++
- drivers/net/wireless/wl12xx/Makefile      |    1 +
- drivers/net/wireless/wl12xx/wl1271_sdio.c |  302 +++++++++++++++++++++++++++++
- 3 files changed, 315 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_sdio.c
+this is more a driver problem. If the firmware API changes, then the
+driver must support some of the older versions. Obviously supporting all
+API versions becomes a major pain at some point. And then you have to
+deprecate a firmware version.
 
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index 9c6fdcc..2f67335 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -63,3 +63,15 @@ config WL1271_SPI
- 	  If you choose to build a module, it'll be called wl1251_spi.
- 	  Say N if unsure.
- 
-+config WL1271_SDIO
-+	tristate "TI wl1271 SDIO support"
-+	depends on WL1271 && MMC
-+	---help---
-+	  This module adds support for the SDIO interface of adapters using
-+	  TI wl1271 chipset.  Select this if your platform is using
-+	  the SDIO bus.
-+
-+	  If you choose to build a module, it'll be called
-+	  wl1271_sdio. Say N if unsure.
-+
-+
-diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
-index 473a1e2..27ddd2b 100644
---- a/drivers/net/wireless/wl12xx/Makefile
-+++ b/drivers/net/wireless/wl12xx/Makefile
-@@ -15,3 +15,4 @@ wl1271-objs		= wl1271_main.o  wl1271_cmd.o wl1271_io.o \
- wl1271-$(CONFIG_NL80211_TESTMODE)	+= wl1271_testmode.o
- obj-$(CONFIG_WL1271)	+= wl1271.o
- obj-$(CONFIG_WL1271_SPI)	+= wl1271_spi.o
-+obj-$(CONFIG_WL1271_SDIO)	+= wl1271_sdio.o
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-new file mode 100644
-index 0000000..be5c149
---- /dev/null
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -0,0 +1,302 @@
-+/*
-+ * This file is part of wl1271
-+ *
-+ * Copyright (C) 2009-2010 Nokia Corporation
-+ *
-+ * Contact: Luciano Coelho <luciano.coelho@nokia.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
-+ */
-+
-+#include <linux/irq.h>
-+#include <linux/module.h>
-+#include <linux/crc7.h>
-+#include <linux/vmalloc.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/mmc/card.h>
-+#include <plat/gpio.h>
-+
-+#include "wl1271.h"
-+#include "wl12xx_80211.h"
-+#include "wl1271_io.h"
-+
-+
-+#define RX71_WL1271_IRQ_GPIO		42
-+
-+#ifndef SDIO_VENDOR_ID_TI
-+#define SDIO_VENDOR_ID_TI		0x0097
-+#endif
-+
-+#ifndef SDIO_DEVICE_ID_TI_WL1271
-+#define SDIO_DEVICE_ID_TI_WL1271	0x4076
-+#endif
-+
-+static const struct sdio_device_id wl1271_devices[] = {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1271) },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(sdio, wl1271_devices);
-+
-+static inline struct sdio_func *wl_to_func(struct wl1271 *wl)
-+{
-+	return wl->if_priv;
-+}
-+
-+static struct device *wl1271_sdio_wl_to_dev(struct wl1271 *wl)
-+{
-+	return &(wl_to_func(wl)->dev);
-+}
-+
-+static irqreturn_t wl1271_irq(int irq, void *cookie)
-+{
-+	struct wl1271 *wl = cookie;
-+	unsigned long flags;
-+
-+	wl1271_debug(DEBUG_IRQ, "IRQ");
-+
-+	/* complete the ELP completion */
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	if (wl->elp_compl) {
-+		complete(wl->elp_compl);
-+		wl->elp_compl = NULL;
-+	}
-+
-+	ieee80211_queue_work(wl->hw, &wl->irq_work);
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void wl1271_sdio_disable_interrupts(struct wl1271 *wl)
-+{
-+	disable_irq(wl->irq);
-+}
-+
-+static void wl1271_sdio_enable_interrupts(struct wl1271 *wl)
-+{
-+	enable_irq(wl->irq);
-+}
-+
-+static void wl1271_sdio_reset(struct wl1271 *wl)
-+{
-+}
-+
-+static void wl1271_sdio_init(struct wl1271 *wl)
-+{
-+}
-+
-+static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
-+			 size_t len, bool fixed)
-+{
-+	int ret;
-+	struct sdio_func *func = wl_to_func(wl);
-+
-+	sdio_claim_host(func);
-+	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
-+		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
-+		wl1271_debug(DEBUG_SPI, "sdio read 52 addr 0x%x, byte 0x%02x",
-+			     addr, ((u8 *)buf)[0]);
-+	} else {
-+		if (fixed)
-+			ret = sdio_readsb(func, buf, addr, len);
-+		else
-+			ret = sdio_memcpy_fromio(func, buf, addr, len);
-+
-+		wl1271_debug(DEBUG_SPI, "sdio read 53 addr 0x%x, %d bytes",
-+			     addr, len);
-+		wl1271_dump_ascii(DEBUG_SPI, "data: ", buf, len);
-+	}
-+
-+	if (ret)
-+		wl1271_error("sdio read failed (%d)", ret);
-+
-+	sdio_release_host(func);
-+}
-+
-+static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
-+			  size_t len, bool fixed)
-+{
-+	int ret;
-+	struct sdio_func *func = wl_to_func(wl);
-+
-+	sdio_claim_host(func);
-+	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG_ADDR)) {
-+		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
-+		wl1271_debug(DEBUG_SPI, "sdio write 52 addr 0x%x, byte 0x%02x",
-+			     addr, ((u8 *)buf)[0]);
-+	} else {
-+		wl1271_debug(DEBUG_SPI, "sdio write 53 addr 0x%x, %d bytes",
-+			     addr, len);
-+		wl1271_dump_ascii(DEBUG_SPI, "data: ", buf, len);
-+
-+		if (fixed)
-+			ret = sdio_writesb(func, addr, buf, len);
-+		else
-+			ret = sdio_memcpy_toio(func, addr, buf, len);
-+	}
-+	if (ret)
-+		wl1271_error("sdio write failed (%d)", ret);
-+
-+	sdio_release_host(func);
-+}
-+
-+static struct wl1271_if_operations sdio_ops = {
-+	.read		= wl1271_sdio_raw_read,
-+	.write		= wl1271_sdio_raw_write,
-+	.reset		= wl1271_sdio_reset,
-+	.init		= wl1271_sdio_init,
-+	.dev		= wl1271_sdio_wl_to_dev,
-+	.enable_irq	= wl1271_sdio_enable_interrupts,
-+	.disable_irq	= wl1271_sdio_disable_interrupts
-+};
-+
-+static void wl1271_sdio_set_power(bool enable)
-+{
-+}
-+
-+static int __devinit wl1271_probe(struct sdio_func *func,
-+				  const struct sdio_device_id *id)
-+{
-+	struct ieee80211_hw *hw;
-+	struct wl1271 *wl;
-+	int ret;
-+
-+	/* We are only able to handle the wlan function */
-+	if (func->num != 0x02)
-+		return -ENODEV;
-+
-+	hw = wl1271_alloc_hw();
-+	if (IS_ERR(hw))
-+		return PTR_ERR(hw);
-+
-+	wl = hw->priv;
-+
-+	wl->if_priv = func;
-+	wl->if_ops = &sdio_ops;
-+
-+	wl->set_power = wl1271_sdio_set_power;
-+
-+	/* Grab access to FN0 for ELP reg. */
-+	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-+
-+	wl->irq = gpio_to_irq(RX71_WL1271_IRQ_GPIO);
-+	if (wl->irq < 0) {
-+		ret = wl->irq;
-+		wl1271_error("could not get irq!");
-+		goto out_free;
-+	}
-+
-+	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
-+	if (ret < 0) {
-+		wl1271_error("request_irq() failed: %d", ret);
-+		goto out_free;
-+	}
-+
-+	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
-+
-+	disable_irq(wl->irq);
-+
-+	ret = wl1271_init_ieee80211(wl);
-+	if (ret)
-+		goto out_irq;
-+
-+	ret = wl1271_register_hw(wl);
-+	if (ret)
-+		goto out_irq;
-+
-+	sdio_claim_host(func);
-+	ret = sdio_enable_func(func);
-+	if (ret)
-+		goto out_release;
-+
-+	sdio_release_host(func);
-+
-+	wl1271_notice("initialized");
-+
-+	return 0;
-+
-+ out_release:
-+	sdio_release_host(func);
-+
-+ out_irq:
-+	free_irq(wl->irq, wl);
-+
-+
-+ out_free:
-+	ieee80211_free_hw(hw);
-+
-+	return ret;
-+}
-+
-+static void __devexit wl1271_remove(struct sdio_func *func)
-+{
-+	struct wl1271 *wl = sdio_get_drvdata(func);
-+
-+	sdio_claim_host(func);
-+	sdio_disable_func(func);
-+	sdio_release_host(func);
-+	ieee80211_unregister_hw(wl->hw);
-+
-+	free_irq(wl->irq, wl);
-+
-+	kfree(wl->target_mem_map);
-+	vfree(wl->fw);
-+	wl->fw = NULL;
-+	kfree(wl->nvs);
-+	wl->nvs = NULL;
-+
-+	kfree(wl->fw_status);
-+	kfree(wl->tx_res_if);
-+
-+	ieee80211_free_hw(wl->hw);
-+}
-+
-+static struct sdio_driver wl1271_sdio_driver = {
-+	.name		= "wl1271",
-+	.id_table	= wl1271_devices,
-+	.probe		= wl1271_probe,
-+	.remove		= __devexit_p(wl1271_remove),
-+};
-+
-+static int __init wl1271_init(void)
-+{
-+	int ret;
-+
-+	ret = sdio_register_driver(&wl1271_sdio_driver);
-+	if (ret < 0) {
-+		wl1271_error("failed to register sdio driver: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	return ret;
-+}
-+
-+static void __exit wl1271_exit(void)
-+{
-+	sdio_unregister_driver(&wl1271_sdio_driver);
-+
-+	wl1271_notice("unloaded");
-+}
-+
-+module_init(wl1271_init);
-+module_exit(wl1271_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-+MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
-+MODULE_FIRMWARE(WL1271_FW_NAME);
--- 
-1.6.3.3
+How many firmware API you support should be really up to the driver
+maintainer, but at minimum it should be the previous one. That is at
+least my take on this.
+
+> >> > Unless we have full control over the source code of every firmware used
+> >> > in the kernel, why bother. It is up to the companies providing them
+> >> > anyway to make sure everything works as expected and the community can't
+> >> > fix it.
+> >>
+> >> Well that's exactly it -- we do have access to the code for ar9170 for
+> >> example, so these details will become more relevant in the future.
+> >
+> > That is one of the few exception. However even for ar9170 there has to
+> > be release engineering team that creates the binary and uploads it into
+> > linux-firmware.git
+> 
+> Release engineering team? Hah.
+
+Let me translate this a bit. Whoever does create the source tarball
+release should also build a binary release. So both packages have proper
+version information, but inside the binary release, the filename is only
+firmware-$(API).
+
+> > since I don't see the majority of people compiling it
+> > from source.
+> 
+> I am curious how distributions will want to handle this. Distributions
+> with sane people might just ship a gcc built open firmware binary but
+> utopian distributions like Debian might require to build the whole
+> thing for redistribution. I don't know.
+
+I would welcome distros going that far and building the firmware if it
+is possible, but I am not sure if most people would bother.
+
+> > And at that point the release engineering needs to test the
+> > API compatibility.
+> 
+> Release engineering.. heh...
+
+As I said, whoever releases the source tarball should also do basic
+checks with the binary firmware that results from it. Someone has to do
+it. Otherwise there is no point here anyway.
+
+Regards
+
+Marcel
+
 
