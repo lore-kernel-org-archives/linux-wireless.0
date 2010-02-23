@@ -1,182 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39234 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:41174 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755866Ab0BOS7h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2010 13:59:37 -0500
-Date: Mon, 15 Feb 2010 13:59:34 -0500
-From: Josef Bacik <josef@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: ivdoorn@gmail.com
-Subject: [PATCH] rt2800pci: actually handle tx interrupts
-Message-ID: <20100215185933.GA12592@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754389Ab0BWWOK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2010 17:14:10 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] Revert "iwlwifi: Monitor and recover the aggregation TX flow failure"
+Date: Tue, 23 Feb 2010 14:13:00 -0800
+Message-Id: <1266963180-613-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-The rt2800pci driver has never actually worked for me, and it turns out it's
-because it doesn't handle the tx done interrupts properly.  The queue would get
-full after transmitting 24 packets and be done, so I would be able to get an AP
-list and then nothing else would work.  This comes down to 2 problems
+This reverts commit 1db5950f1d0b82e07371b211a48317b8972da063.
 
-1) We don't handle _any_ of the DMA_DONE interrupts, so we don't actually remove
-any of the entries when the card tells us we are done.  This is easy enough to
-fix.
+The goal of "iwlwifi: Monitor and recover the aggregation TX flow failure"
+is to first detect when data transmission stalls and then to recover from
+this situation with a reset of the radio or the firmware, depending on how
+bad the transmission failures are considered to be.
 
-2) Turns out we are depending on the TX_STA_FIFO register on the card to give us
-per-tx statistics, but it appears to only be a sort of global statistic thing
-that doesn't even work most of the time.  I seperated out all of the TX_STA_FIFO
-reading stuff and either TX_STA_FIFO_VALID would be 0,
-TX_STA_FIFO_TX_ACK_REQUIRED would be 0, or TX_STA_FIFO_WCID would be 254, which
-is way higher than the queue limit.  So basically it gives us crap statistics.
+Unfortunately we have found that this change causes excessive resets with
+its current detection algorithm. It also performs its recovery action when
+none is really needed, like when we are not associated.
 
-Looking through RaLinks driver it doesn't seem there is a way to get per-tx
-statistics, so you can't really tell if the tx failed or not.  So I've fixed
-rt2800pci_txdone to just say the tx succeeded and call rt2x00lib_txdone and be
-done with it.  I'm sure this is horribly wrong, but looking at the RaLink driver
-doesn't seem to indicate anyway to fail/retry a particular packet, so I'm not
-sure if there is anything else that can be done.
+Revert this change until the issues have been addressed.
 
-This patch makes it so this driver works for me finally (minus a couple of
-quirks).  Thanks,
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+We are reverting this change since there is not much time to get this fixed
+before 2.6.34 closes. This work will be resubmitted for 2.6.35.
 
-Signed-off-by: Josef Bacik <josef@redhat.com>
+This patch applies against wireless-next-2.6 and is also available from
+wireless-next-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index daea0b7..ccb0ac3 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -903,104 +903,19 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
- /*
-  * Interrupt functions.
-  */
--static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
-+static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev,
-+			     const enum data_queue_qid queue_idx)
- {
--	struct data_queue *queue;
-+	struct data_queue *queue = rt2x00queue_get_queue(rt2x00dev, queue_idx);
- 	struct queue_entry *entry;
--	struct queue_entry *entry_done;
--	struct queue_entry_priv_pci *entry_priv;
- 	struct txdone_entry_desc txdesc;
--	u32 word;
--	u32 reg;
--	u32 old_reg;
--	unsigned int type;
--	unsigned int index;
--	u16 mcs, real_mcs;
--
--	/*
--	 * During each loop we will compare the freshly read
--	 * TX_STA_FIFO register value with the value read from
--	 * the previous loop. If the 2 values are equal then
--	 * we should stop processing because the chance it
--	 * quite big that the device has been unplugged and
--	 * we risk going into an endless loop.
--	 */
--	old_reg = 0;
--
--	while (1) {
--		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &reg);
--		if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
--			break;
--
--		if (old_reg == reg)
--			break;
--		old_reg = reg;
--
--		/*
--		 * Skip this entry when it contains an invalid
--		 * queue identication number.
--		 */
--		type = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE) - 1;
--		if (type >= QID_RX)
--			continue;
- 
--		queue = rt2x00queue_get_queue(rt2x00dev, type);
--		if (unlikely(!queue))
--			continue;
-+	while (!rt2x00queue_empty(queue)) {
-+		entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
- 
--		/*
--		 * Skip this entry when it contains an invalid
--		 * index number.
--		 */
--		index = rt2x00_get_field32(reg, TX_STA_FIFO_WCID) - 1;
--		if (unlikely(index >= queue->limit))
--			continue;
--
--		entry = &queue->entries[index];
--		entry_priv = entry->priv_data;
--		rt2x00_desc_read((__le32 *)entry->skb->data, 0, &word);
--
--		entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
--		while (entry != entry_done) {
--			/*
--			 * Catch up.
--			 * Just report any entries we missed as failed.
--			 */
--			WARNING(rt2x00dev,
--				"TX status report missed for entry %d\n",
--				entry_done->entry_idx);
--
--			txdesc.flags = 0;
--			__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
--			txdesc.retry = 0;
--
--			rt2x00lib_txdone(entry_done, &txdesc);
--			entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   14 +---------
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    3 --
+ drivers/net/wireless/iwlwifi/iwl-rx.c  |   46 --------------------------------
+ 3 files changed, 1 insertions(+), 62 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c5b724e..1fac015 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2941,21 +2941,10 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
+ 			return ret;
+ 	case IEEE80211_AMPDU_TX_START:
+ 		IWL_DEBUG_HT(priv, "start Tx\n");
+-		ret = iwl_tx_agg_start(priv, sta->addr, tid, ssn);
+-		if (ret == 0) {
+-			priv->agg_tids_count++;
+-			IWL_DEBUG_HT(priv, "priv->agg_tids_count = %u\n",
+-				priv->agg_tids_count);
 -		}
+-		return ret;
++		return iwl_tx_agg_start(priv, sta->addr, tid, ssn);
+ 	case IEEE80211_AMPDU_TX_STOP:
+ 		IWL_DEBUG_HT(priv, "stop Tx\n");
+ 		ret = iwl_tx_agg_stop(priv, sta->addr, tid);
+-		if ((ret == 0) && (priv->agg_tids_count > 0)) {
+-			priv->agg_tids_count--;
+-			IWL_DEBUG_HT(priv, "priv->agg_tids_count = %u\n",
+-				priv->agg_tids_count);
+-		}
+ 		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 			return 0;
+ 		else
+@@ -3376,7 +3365,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->iw_mode = NL80211_IFTYPE_STATION;
+ 	priv->current_ht_config.smps = IEEE80211_SMPS_STATIC;
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
+-	priv->agg_tids_count = 0;
+ 
+ 	/* initialize force reset */
+ 	priv->force_reset[IWL_RF_RESET].reset_duration =
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 7914d65..ab891b9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1084,9 +1084,6 @@ struct iwl_priv {
+ 	/* storing the jiffies when the plcp error rate is received */
+ 	unsigned long plcp_jiffies;
+ 
+-	/* reporting the number of tids has AGG on. 0 means no AGGREGATION */
+-	u8 agg_tids_count;
 -
--		/*
--		 * Obtain the status about this packet.
--		 */
- 		txdesc.flags = 0;
--		if (rt2x00_get_field32(reg, TX_STA_FIFO_TX_SUCCESS))
--			__set_bit(TXDONE_SUCCESS, &txdesc.flags);
--		else
--			__set_bit(TXDONE_FAILURE, &txdesc.flags);
+ 	/* force reset */
+ 	struct iwl_force_reset force_reset[IWL_MAX_FORCE_RESET];
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index fed554a..aba8f4c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -616,11 +616,6 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+ 
+ #define REG_RECALIB_PERIOD (60)
+ 
+-/* the threshold ratio of actual_ack_cnt to expected_ack_cnt in percent */
+-#define ACK_CNT_RATIO (50)
+-#define BA_TIMEOUT_CNT (5)
+-#define BA_TIMEOUT_MAX (16)
 -
--		/*
--		 * Ralink has a retry mechanism using a global fallback
--		 * table. We setup this fallback table to try immediate
--		 * lower rate for all rates. In the TX_STA_FIFO,
--		 * the MCS field contains the MCS used for the successfull
--		 * transmission. If the first transmission succeed,
--		 * we have mcs == tx_mcs. On the second transmission,
--		 * we have mcs = tx_mcs - 1. So the number of
--		 * retry is (tx_mcs - mcs).
--		 */
--		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
--		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
--		__set_bit(TXDONE_FALLBACK, &txdesc.flags);
--		txdesc.retry = mcs - min(mcs, real_mcs);
-+		__set_bit(TXDONE_SUCCESS, &txdesc.flags);
-+		txdesc.retry = 0;
+ #define PLCP_MSG "plcp_err exceeded %u, %u, %u, %u, %u, %d, %u mSecs\n"
+ void iwl_rx_statistics(struct iwl_priv *priv,
+ 			      struct iwl_rx_mem_buffer *rxb)
+@@ -630,9 +625,6 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 	int combined_plcp_delta;
+ 	unsigned int plcp_msec;
+ 	unsigned long plcp_received_jiffies;
+-	int actual_ack_cnt_delta;
+-	int expected_ack_cnt_delta;
+-	int ba_timeout_delta;
  
- 		rt2x00lib_txdone(entry, &txdesc);
- 	}
-@@ -1027,8 +942,17 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_RX_DONE))
- 		rt2x00pci_rxdone(rt2x00dev);
- 
--	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS))
--		rt2800pci_txdone(rt2x00dev);
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AC0_DMA_DONE))
-+		rt2800pci_txdone(rt2x00dev, QID_AC_BE);
-+
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AC1_DMA_DONE))
-+		rt2800pci_txdone(rt2x00dev, QID_AC_BK);
-+
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AC2_DMA_DONE))
-+		rt2800pci_txdone(rt2x00dev, QID_AC_VI);
-+
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AC3_DMA_DONE))
-+		rt2800pci_txdone(rt2x00dev, QID_AC_VO);
- 
- 	return IRQ_HANDLED;
- }
+ 	IWL_DEBUG_RX(priv, "Statistics notification received (%d vs %d).\n",
+ 		     (int)sizeof(priv->statistics),
+@@ -647,44 +639,6 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	iwl_accumulative_statistics(priv, (__le32 *)&pkt->u.stats);
+ #endif
+-	actual_ack_cnt_delta = le32_to_cpu(pkt->u.stats.tx.actual_ack_cnt) -
+-		le32_to_cpu(priv->statistics.tx.actual_ack_cnt);
+-	expected_ack_cnt_delta = le32_to_cpu(
+-			pkt->u.stats.tx.expected_ack_cnt) -
+-		le32_to_cpu(priv->statistics.tx.expected_ack_cnt);
+-	ba_timeout_delta = le32_to_cpu(
+-			pkt->u.stats.tx.agg.ba_timeout) -
+-		le32_to_cpu(priv->statistics.tx.agg.ba_timeout);
+-	if ((priv->agg_tids_count > 0) &&
+-		(expected_ack_cnt_delta > 0) &&
+-		(((actual_ack_cnt_delta * 100) / expected_ack_cnt_delta) <
+-			ACK_CNT_RATIO) &&
+-		(ba_timeout_delta > BA_TIMEOUT_CNT)) {
+-		IWL_DEBUG_RADIO(priv,
+-			"actual_ack_cnt delta = %d, expected_ack_cnt = %d\n",
+-			actual_ack_cnt_delta, expected_ack_cnt_delta);
+-
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-		IWL_DEBUG_RADIO(priv, "rx_detected_cnt delta = %d\n",
+-			priv->delta_statistics.tx.rx_detected_cnt);
+-		IWL_DEBUG_RADIO(priv,
+-			"ack_or_ba_timeout_collision delta = %d\n",
+-			priv->delta_statistics.tx.ack_or_ba_timeout_collision);
+-#endif
+-		IWL_DEBUG_RADIO(priv, "agg ba_timeout delta = %d\n",
+-			ba_timeout_delta);
+-		if ((actual_ack_cnt_delta == 0) &&
+-			(ba_timeout_delta >=
+-				BA_TIMEOUT_MAX)) {
+-			IWL_DEBUG_RADIO(priv,
+-				"call iwl_force_reset(IWL_FW_RESET)\n");
+-			iwl_force_reset(priv, IWL_FW_RESET);
+-		} else {
+-			IWL_DEBUG_RADIO(priv,
+-				"call iwl_force_reset(IWL_RF_RESET)\n");
+-			iwl_force_reset(priv, IWL_RF_RESET);
+-		}
+-	}
+ 	/*
+ 	 * check for plcp_err and trigger radio reset if it exceeds
+ 	 * the plcp error threshold plcp_delta.
+-- 
+1.6.3.3
+
