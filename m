@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1980 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966718Ab0B0Ase (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42541 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752086Ab0BWSAk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 19:48:34 -0500
-Date: Fri, 26 Feb 2010 19:48:10 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Andrew Blaich <ablaich@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Ath5k and Retransmissions (Retries)
-Message-ID: <20100227004810.GB13107@hash.localnet>
-References: <6b5e31691002250640k154a1f22xa46bac547c69b250@mail.gmail.com> <b6c5339f1002250951q7ad35de6g2a15f7c77e454b9a@mail.gmail.com> <6b5e31691002250959o576e203ena04858c8c9a76486@mail.gmail.com>
+	Tue, 23 Feb 2010 13:00:40 -0500
+Date: Tue, 23 Feb 2010 12:58:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jens Westemeier <Jens_Westemeier@web.de>
+Cc: linux-wireless@vger.kernel.org, chunkeey@googlemail.com
+Subject: Re: problem with WG511v1
+Message-ID: <20100223175806.GD2928@tuxdriver.com>
+References: <4B83B96A.6050605@sorengo.com> <20100223144502.GA2928@tuxdriver.com> <201002231832.31015.Jens_Westemeier@web.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6b5e31691002250959o576e203ena04858c8c9a76486@mail.gmail.com>
+In-Reply-To: <201002231832.31015.Jens_Westemeier@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 25, 2010 at 12:59:50PM -0500, Andrew Blaich wrote:
-(top posting undone)
-> The main file I focused on was net/mac80211/rc80211minstrel.c, but I
-> have tried forcing retry values through the other portions of the
-> code.
+On Tue, Feb 23, 2010 at 06:32:30PM +0100, Jens Westemeier wrote:
+
+> modprobe p54pci gives (in /var/log/messages):
 > 
-> I have tried setting the counts in the MRR array (ar[i].count) in the
-> minstrel_get_rate function, but that hasn't appeared to work,
-> additionally I tried limiting the max retry count.  I have had luck in
-> altering the rate used by changing the index value fed into ar[i].idx.
->  Maybe my issue is with the MRR array.
+> p54pci 0000:05:01.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+> p54pci 0000:05:01.0: firmware: requesting isl3886pci
+> phy2: p54 detected a LM86 firmware
+> p54: rx_mtu reduced from 3240 to 2376
+> phy2: FW rev 2.17.2.0 - Softmac protocol 7.6
+> phy2: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+> phy2: device does not respond!
+> p54pci 0000:05:01.0: PCI INT A disabled
+> p54pci: probe of 0000:05:01.0 failed with error -16
 
-Well, this should work.  The ath5k side of this is ath5k_txbuf_setup:
+I'm guessing this is the EBUSY return from p54_download_eeprom.
+I'm not immediately familiar enough with the driver to know what that
+means, but perhaps your device is showing its age?  Hopefully a P54
+person can provide a more concrete suggestion.
 
-      ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
-            ieee80211_get_hdrlen_from_skb(skb),
-            get_hw_packet_type(skb),
-            (sc->power_level * 2),
-            hw_rate,
-            info->control.rates[0].count, keyidx, ah->ah_tx_ant, flags,
-            cts_rate, duration);
-
-info->control.rates[0] is the TX rate (which may be different
-for e.g. rts/cts frames than the one from the rate controller),
-and the mrr rates are set up just after that:
-
-       ah->ah_setup_mrr_tx_desc(ah, ds,
-                mrr_rate[0], mrr_tries[0],
-                mrr_rate[1], mrr_tries[1],
-                mrr_rate[2], mrr_tries[2]);
-
-
-The .count field in the mac80211 rate struct is the number of
-tries, not retries, to be precise.
-
-> next entry in the MRR array ar[1].idx=-1 so as to not try any rate,
-> and then the count to 0 does this disable the rest of the MRR array,
-> or is it possible the hardware is populating the array with other
-> values?
-
-That should be the case due to memset and get_alt_retry_rate semantics,
-but if you suspect a problem you can printk in the above spots.
-
-If the hardware doesn't respect those, there is some bug somewhere.
-
-(Also see hw->max_rate_tries in ath5k_pci_probe()).
-
+John
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
