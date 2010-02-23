@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f187.google.com ([209.85.222.187]:59227 "EHLO
-	mail-pz0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932665Ab0BPUUT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56918 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650Ab0BWPiP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 15:20:19 -0500
-Received: by pzk17 with SMTP id 17so5438740pzk.4
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2010 12:20:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100216201026.25148.40799.stgit@tikku>
-References: <20100216201026.25148.40799.stgit@tikku>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 16 Feb 2010 12:19:58 -0800
-Message-ID: <43e72e891002161219u2916f735l6325f7e7054fa5e2@mail.gmail.com>
-Subject: Re: [RFC PATCH] nl80211: add power save commands
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 23 Feb 2010 10:38:15 -0500
+Subject: Re: [RFC] Improve software scan timing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>
+In-Reply-To: <201002231633.06394.helmut.schaa@googlemail.com>
+References: <201002231619.55189.helmut.schaa@googlemail.com>
+	 <1266938710.3934.7.camel@jlt3.sipsolutions.net>
+	 <201002231633.06394.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 23 Feb 2010 16:38:13 +0100
+Message-ID: <1266939493.3934.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 16, 2010 at 12:10 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> From: Kalle Valo <kalle.valo@nokia.com>
->
-> The only missing command from nl80211, which Wireless Extensions had,
-> was support for power save mode.
+On Tue, 2010-02-23 at 16:33 +0100, Helmut Schaa wrote:
 
-BTW I actually found another which is missing to be complete to wext:
+> > > Kalle, Johannes, how is the listen_interval handled in the
+> powersave
+> > > code?
+> > > Are we only sleeping for one beacon interval or are we ignoring
+> the
+> > > listen_interval currently.
+> >
+> > I figured this listen interval stuff would come back to bite us at
+> some
+> > point. I don't think we should negotiate a listen interval of 1.
+> OTOH,
+> > I'm not convinced that all APs would reject it with a status code of
+> 51
+> > if it's too large? Or is that tested anywhere like WFA?
+> 
+> No idea. However for iwlwifi for example we always used a listen
+> interval
+> of 20 any I never saw any associations getting rejected because of
+> this.
+> 
+> So maybe we could just increase the default to something between 5 and
+> 10 to be on the safe side?
 
-iwconfig wlan0 txpower 17
+Yeah, maybe. Could it be useful for userspace to ask for a specific
+value with assoc? Though I'm not really sure what it would use ...
 
-I guess I should take care of that since I'm the regulatory dork.
+johannes
 
-> Add a simple command to make it possible
-> to enable and disable power save.
-
-Thanks a lot for this.
-
-  Luis
