@@ -1,37 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f216.google.com ([209.85.218.216]:40597 "EHLO
-	mail-bw0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175Ab0BNR5X (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56712 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751867Ab0BWRxd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 12:57:23 -0500
-Received: by bwz8 with SMTP id 8so2218063bwz.38
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Feb 2010 09:57:21 -0800 (PST)
-MIME-Version: 1.0
-Date: Sun, 14 Feb 2010 19:57:21 +0200
-Message-ID: <912ec82a1002140957p6959c030h2b33fd9646cfd67d@mail.gmail.com>
-Subject: good wlan: sniffer that does not need a windows machine ?
-From: Neshama Parhoti <pneshama@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 23 Feb 2010 12:53:33 -0500
+Subject: Re: [RFC] Improve software scan timing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>
+In-Reply-To: <201002231744.39133.helmut.schaa@googlemail.com>
+References: <201002231619.55189.helmut.schaa@googlemail.com>
+	 <201002231633.06394.helmut.schaa@googlemail.com>
+	 <1266939493.3934.8.camel@jlt3.sipsolutions.net>
+	 <201002231744.39133.helmut.schaa@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-T6a/nDV6Ovb+Bz0zezzU"
+Date: Tue, 23 Feb 2010 18:52:44 +0100
+Message-ID: <1266947564.14410.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
 
-When developing mac80211 stuff, one sometimes need a WLAN packet
-sniffer that have more details than a simple packet information (e.g.
-info about packet rates, power lvl, etc..) which might need a
-dedicated hw sniffer + software (idealy it should support at least 11g
-and 11n, but if a hw supporting all four 11a,b,g,n exists in a
-reasonable price then why not).
+--=-T6a/nDV6Ovb+Bz0zezzU
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-As far as I can see, most of these works only on windows (e.g. the one
-that is published on the wireshark site:
-http://www.cacetech.com/products/airpcap.html) they might be good, but
-that's not my taste.
+On Tue, 2010-02-23 at 17:44 +0100, Helmut Schaa wrote:
 
-So - do you know any good solution that runs on linux ? preferably
-with open source drivers..
+> Ok, I'll just update the listen_interval to default to 5 and make use
+> of it
+> in the scan implementation. That should allow us in most cases to
+> leave the
+> channel for around 500ms which is enough time to scan maybe 3-10
+> channels
+> depending on active/passive flags.
+>=20
+> Would that be ok for you?
 
-Thanks!
-Ohad.
+Sure.
+
+(I blame evolution for the stupid formatting of the quote)
+
+johannes
+
+--=-T6a/nDV6Ovb+Bz0zezzU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJLhBXpAAoJEODzc/N7+QmajPMP/1IHykxR9SKejW/vB7wQ51Zw
+iBBjUb2UhKC2RdbRzZxuZHvkso3Vy8rh7S1wNm+ruJkuv1qLzthB01zK3r4IougP
+WqBy4RVULCMbhXoRef1QIxVjch3lEOIq1qxrVSVIMzYrcxrsxA+Epev3HKBHHz29
+3mDdRAJPPdSUVhT7OjN498TJSptwjk8OqBjTKOBMYN/+zulbmyu7RTIHW0IiDWMx
+FCSpHwRJuVmRqCt19/TBgN8XopTK/xfDLx1mTGe25VH2FZ9MvAhFWVuaHkWT9vrW
+GGJxngo4PjrTVMLi1qvwQlfqWMDzg7CoBrenYBwswk2K5Uj+Bdb7Fx8VFrFn3wxn
+8r8Y6On8grSIvFUX3LBoAw7fEIjPSXr621WMg75Oi/WhvDnlp45i+GcxTEzcFM98
+Mn/sIrvq3mMIfKBSf05LCqfGHYWAP/dHRIQ+/lUJOt0Mk2ZU6+Vl15hQbFq3ngk1
+1cOrU9kM3JFs7PUmSNS0XD7BAoBG9d/cDgT1vPWoctr8eVDTDH1loeFWPxFa0ZRP
+dFhCsf1DbYCWghyLTOQvBTHK4l2N8hSzYFA1wGa84EKtgk4Kdzm2bi5ywWRSSnmm
+SbONYBX0/KC2/KpyD0uz1GBrD61liUx3uXkmnKxXYs/E+eyzYUSpfhm1B9EEt33N
+tLCpP8tTKOnkcgUoR98g
+=11xf
+-----END PGP SIGNATURE-----
+
+--=-T6a/nDV6Ovb+Bz0zezzU--
+
