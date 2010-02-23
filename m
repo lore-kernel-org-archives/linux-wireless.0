@@ -1,174 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:5084 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756262Ab0BTAhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 19:37:23 -0500
-Subject: [PATCH v2] compat: move debugfs_remove_recursive() to compat-2.6.27
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100220000921.15525.55155.stgit@mj.roinet.com>
-References: <20100220000921.15525.55155.stgit@mj.roinet.com>
-Content-Type: text/plain
-Date: Fri, 19 Feb 2010 19:37:10 -0500
-Message-Id: <1266626230.25707.60.camel@mj>
-Mime-Version: 1.0
+Received: from fmmailgate01.web.de ([217.72.192.221]:46025 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750958Ab0BWRch (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2010 12:32:37 -0500
+Received: from smtp07.web.de (fmsmtp07.dlan.cinetic.de [172.20.5.215])
+	by fmmailgate01.web.de (Postfix) with ESMTP id 11971148BC93F
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 18:32:36 +0100 (CET)
+Received: from [84.56.180.53] (helo=pinguin.localnet)
+	by smtp07.web.de with asmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.110 #314)
+	id 1Njycd-00054M-00
+	for linux-wireless@vger.kernel.org; Tue, 23 Feb 2010 18:32:36 +0100
+From: Jens Westemeier <Jens_Westemeier@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: problem with WG511v1
+Date: Tue, 23 Feb 2010 18:32:30 +0100
+References: <4B83B96A.6050605@sorengo.com> <20100223144502.GA2928@tuxdriver.com>
+In-Reply-To: <20100223144502.GA2928@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201002231832.31015.Jens_Westemeier@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-compat: move debugfs_remove_recursive() to compat-2.6.27
+Am Dienstag, 23. Februar 2010 15:45:03 schrieb John W. Linville:
+> On Tue, Feb 23, 2010 at 12:18:02PM +0100, Fabrice Lamareille wrote:
+> > Hello
+> > 
+> > I have a NETGEAR WG511v1 wireless pcmcia card.
+> > It was working perfectly on fedora 11 with the prism54 driver and the
+> > attached isl3890 firmware.
+> > 
+> > Since fedora 12, the p54pci driver is enabled by default, but it does
+> > not work with my card. I downloaded the right isl3886pci firmware on
+> > your website, but the card does not start...
+> > With the old isl3890 renamed as isl3886pci, the kernel crashes.
+> > With the attachd isl3886pci firmware, which I extracted from the windows
+> > driver with fwextract, it seems not to crash, but the card does not
+> > appear in NetworkManager nor starts automaticaly...
+> > 
+> > Thanks in advance for your help.
+> 
+> I'm not sure what you mean by "firmware on your website", but the
+> file you attached does not match what is linked here:
+> 
+> http://wireless.kernel.org/en/users/Drivers/p54#firmware
+> 
+> In the command-lines pasted below, 2.13.12.0.arm is the file downloaded
+> through the link for "PCI / PCMCIA" for kernels 2.6.29 and above at
+> the URL above and isl3886pci is the file you attached to your email
+> by that same name.
+> 
+> /tmp
+> [linville-t400.local]:> ls -l isl3886pci 2.13.12.0.arm
+> -rw-rw-r-- 1 linville linville 29036 2010-02-23 09:39 2.13.12.0.arm
+> -rw------- 1 linville linville 29040 2010-02-23 09:39 isl3886pci
+> 
+> /tmp
+> [linville-t400.local]:> cmp 2.13.12.0.arm isl3886pci
+> 2.13.12.0.arm isl3886pci differ: byte 5, line 1
+> 
+> If you use the specified firmware, does the device work for you?
+> 
+> John
 
-From: Pavel Roskin <proski@gnu.org>
+I have the same problem with my PrismGT based SMC 2802 FullMAC card. I use 
+kernel 2.6.31.8-0.1-desktop (OpenSuSE 11.2) and tried several versions of FW.
 
-debugfs_remove_recursive() appeared in Linux 2.6.27, so it should be in
-compat-2.6.27, not in compat-2.6.26.
+lspci gives:
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+Network controller: Intersil Corporation ISL3890 [Prism GT/Prism 
+Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
 
-This is revision 2, with Signed-off-by and with linux/debugfs.h moved
-from compat-2.6.26.h to compat-2.6.27.h.  I assume including Linux
-headers from compat headers is preferred over declaring the needed
-structures.
+The card is working with prism54 driver and on my dual boot Windows XP.
 
- compat/compat-2.6.26.c        |   32 --------------------------------
- compat/compat-2.6.27.c        |   32 ++++++++++++++++++++++++++++++++
- include/linux/compat-2.6.26.h |    8 --------
- include/linux/compat-2.6.27.h |    8 ++++++++
- 4 files changed, 40 insertions(+), 40 deletions(-)
+modprobe p54pci gives (in /var/log/messages):
 
-diff --git a/compat/compat-2.6.26.c b/compat/compat-2.6.26.c
-index 82134c2..b9bf9e7 100644
---- a/compat/compat-2.6.26.c
-+++ b/compat/compat-2.6.26.c
-@@ -89,37 +89,5 @@ int dev_set_name(struct device *dev, const char *fmt, ...)
- }
- EXPORT_SYMBOL_GPL(dev_set_name);
- 
--/*
-- * Backport of debugfs_remove_recursive() without using the internals globals
-- * which are used by the kernel's version with:
-- * simple_release_fs(&debugfs_mount, &debugfs_mount_count);
-- */
--void debugfs_remove_recursive(struct dentry *dentry)
--{
--	struct dentry *last = NULL;
--
--	/* Sanity checks */
--	if (!dentry || !dentry->d_parent || !dentry->d_parent->d_inode)
--		return;
--
--	while (dentry != last) {
--		struct dentry *child = dentry;
--
--		/* Find a child without children */
--		while (!list_empty(&child->d_subdirs))
--			child = list_entry(child->d_subdirs.next,
--					   struct dentry,
--					   d_u.d_child);
--
--		/* Bail out if we already tried to remove that entry */
--		if (child == last)
--			return;
--
--		last = child;
--		debugfs_remove(child);
--	}
--}
--EXPORT_SYMBOL_GPL(debugfs_remove_recursive);
--
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26) */
- 
-diff --git a/compat/compat-2.6.27.c b/compat/compat-2.6.27.c
-index 4fef36a..240f84f 100644
---- a/compat/compat-2.6.27.c
-+++ b/compat/compat-2.6.27.c
-@@ -206,6 +206,38 @@ unsigned int sdio_align_size(struct sdio_func *func, unsigned int sz)
- EXPORT_SYMBOL_GPL(sdio_align_size);
- #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24) */
- 
-+/*
-+ * Backport of debugfs_remove_recursive() without using the internals globals
-+ * which are used by the kernel's version with:
-+ * simple_release_fs(&debugfs_mount, &debugfs_mount_count);
-+ */
-+void debugfs_remove_recursive(struct dentry *dentry)
-+{
-+	struct dentry *last = NULL;
-+
-+	/* Sanity checks */
-+	if (!dentry || !dentry->d_parent || !dentry->d_parent->d_inode)
-+		return;
-+
-+	while (dentry != last) {
-+		struct dentry *child = dentry;
-+
-+		/* Find a child without children */
-+		while (!list_empty(&child->d_subdirs))
-+			child = list_entry(child->d_subdirs.next,
-+					   struct dentry,
-+					   d_u.d_child);
-+
-+		/* Bail out if we already tried to remove that entry */
-+		if (child == last)
-+			return;
-+
-+		last = child;
-+		debugfs_remove(child);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(debugfs_remove_recursive);
-+
- 
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27) */
- 
-diff --git a/include/linux/compat-2.6.26.h b/include/linux/compat-2.6.26.h
-index 498fe44..2bee30e 100644
---- a/include/linux/compat-2.6.26.h
-+++ b/include/linux/compat-2.6.26.h
-@@ -11,20 +11,12 @@
- #include <linux/jiffies.h>
- #include <net/sock.h>
- #include <linux/fs.h>
--#include <linux/debugfs.h>
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
- #include <net/net_namespace.h>
- #endif
- #include <linux/fs.h>
- #include <linux/types.h>
- 
--#if defined(CONFIG_DEBUG_FS)
--void debugfs_remove_recursive(struct dentry *dentry);
--#else
--static inline void debugfs_remove_recursive(struct dentry *dentry)
--{ }
--#endif
--
- /* These jiffie helpers added as of 2.6.26 */
- 
- /*
-diff --git a/include/linux/compat-2.6.27.h b/include/linux/compat-2.6.27.h
-index e9de41e..f4c77ce 100644
---- a/include/linux/compat-2.6.27.h
-+++ b/include/linux/compat-2.6.27.h
-@@ -5,6 +5,7 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27))
- 
-+#include <linux/debugfs.h>
- #include <linux/list.h>
- #include <linux/pci.h>
- #include <linux/dma-mapping.h>
-@@ -214,4 +215,11 @@ static inline void dma_sync_single_range_for_device(struct device *dev,
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)) */
- 
-+#if defined(CONFIG_DEBUG_FS)
-+void debugfs_remove_recursive(struct dentry *dentry);
-+#else
-+static inline void debugfs_remove_recursive(struct dentry *dentry)
-+{ }
-+#endif
-+
- #endif /* LINUX_26_27_COMPAT_H */
+p54pci 0000:05:01.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+p54pci 0000:05:01.0: firmware: requesting isl3886pci
+phy2: p54 detected a LM86 firmware
+p54: rx_mtu reduced from 3240 to 2376
+phy2: FW rev 2.17.2.0 - Softmac protocol 7.6
+phy2: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy2: device does not respond!
+p54pci 0000:05:01.0: PCI INT A disabled
+p54pci: probe of 0000:05:01.0 failed with error -16
 
+With every modprobe try phyx is incremented by 1.
+
+The driver seems to be loaded properly, lsmod | grep p54 gives:
+
+p54pci                 13128  0
+p54common              33420  1 p54pci
+mac80211              257024  3 p54pci,zd1211rw,p54common
+cfg80211              123264  3 zd1211rw,p54common,mac80211
+
+Any attempt to configure this card is failing.
+
+Greetings, Jens.
