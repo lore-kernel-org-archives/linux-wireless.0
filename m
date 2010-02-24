@@ -1,104 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:52213 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab0BIUFx (ORCPT
+Received: from 27.mail-out.ovh.net ([91.121.30.210]:46807 "HELO
+	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758625Ab0BXX4o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:05:53 -0500
-Received: by ewy28 with SMTP id 28so4265986ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:05:51 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 10/11] b43: N-PHY: implement chanspec setup
-Date: Tue,  9 Feb 2010 21:04:42 +0100
-Message-Id: <1265745883-3392-11-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
+	Wed, 24 Feb 2010 18:56:44 -0500
+Message-ID: <4B85BCB8.1000006@free.fr>
+Date: Thu, 25 Feb 2010 00:56:40 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix rates setup on IBSS merge
+References: <20100223095113.25360.75291.stgit@void> <43e72e891002231128w45c357a6v157dc4f7ddf3bbae@mail.gmail.com>
+In-Reply-To: <43e72e891002231128w45c357a6v157dc4f7ddf3bbae@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   62 ++++++++++++++++++++++++++++++++++++++
- 1 files changed, 62 insertions(+), 0 deletions(-)
+Luis R. Rodriguez a écrit :
+> On Tue, Feb 23, 2010 at 1:51 AM, Bruno Randolf <br1@einfach.org> wrote:
+>   
+>> when an IBSS merge happened, the supported rates for the newly added station
+>> were left empty, causing the rate control module to be initialized with only
+>> the basic rates.
+>>
+>> also the section of the ibss code which deals with updating supported rates for
+>> an already existing station fails to inform the rate control module about the
+>> new rates. as i don't know how to fix this (minstrel does not have an update
+>> function), i have just added a comment for now.
+>>
+>> Signed-off-by: Bruno Randolf <br1@einfach.org>
+>>     
+>
+> This seems like a stable fix, if it applies can you please resend with a
+>
+> Cc: stable@kernel.org
+>
+> on the commit log entry right below your own SOB.
+>
+>   Luis
+>   
+Hi Bruno,
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 631e01f..19d4f11 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3283,6 +3283,68 @@ int b43_phy_initn(struct b43_wldev *dev)
- 	return 0;
- }
- 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
-+static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
-+				const struct b43_nphy_channeltab_entry *e,
-+				struct b43_chanspec chanspec)
-+{
-+	struct b43_phy *phy = &dev->phy;
-+	struct b43_phy_n *nphy = dev->phy.n;
-+
-+	u16 tmp;
-+	u32 tmp32;
-+
-+	tmp = b43_phy_read(dev, B43_NPHY_BANDCTL) & B43_NPHY_BANDCTL_5GHZ;
-+	if (chanspec.b_freq == 1 && tmp == 0) {
-+		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
-+		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
-+		b43_phy_set(dev, B43_PHY_B_BBCFG, 0xC000);
-+		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
-+		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
-+	} else if (chanspec.b_freq == 1) {
-+		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
-+		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
-+		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
-+		b43_phy_mask(dev, B43_PHY_B_BBCFG, (u16)~0xC000);
-+		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
-+	}
-+
-+	b43_chantab_phy_upload(dev, e);
-+
-+	tmp = chanspec.channel;
-+	if (chanspec.b_freq == 1)
-+		tmp |= 0x0100;
-+	if (chanspec.b_width == 3)
-+		tmp |= 0x0200;
-+	b43_bmac_write_shm(dev, 0xA0, tmp);
-+
-+	if (nphy->radio_chanspec.channel == 14) {
-+		b43_nphy_classifier(dev, 2, 0);
-+		b43_phy_set(dev, B43_PHY_B_TEST, 0x0800);
-+	} else {
-+		b43_nphy_classifier(dev, 2, 2);
-+		if (chanspec.b_freq == 2)
-+			b43_phy_mask(dev, B43_PHY_B_TEST, ~0x840);
-+	}
-+
-+	if (nphy->txpwrctrl)
-+		b43_nphy_tx_power_fix(dev);
-+
-+	if (dev->phy.rev < 3)
-+		b43_nphy_adjust_lna_gain_table(dev);
-+
-+	b43_nphy_tx_lp_fbw(dev);
-+
-+	if (dev->phy.rev >= 3 && 0) {
-+		/* TODO */
-+	}
-+
-+	b43_phy_write(dev, B43_NPHY_NDATAT_DUP40, 0x3830);
-+
-+	if (phy->rev >= 3)
-+		b43_nphy_spur_workaround(dev);
-+}
-+
- static int b43_nphy_op_allocate(struct b43_wldev *dev)
- {
- 	struct b43_phy_n *nphy;
--- 
-1.6.4.2
+I think the root cause is that IBSS neighbor entries are added whenever 
+we received any packet from a neighbor. However, the supported rates are 
+only available in the beacon/probe responses. I think one fix is to only 
+add IBSS neighbors on beacon/probe response reception (and moreover, 
+beacon/probe responses contains the timestamp that is needed for IBSS 
+merge).
 
+Basically, I removed the call to ieee80211_ibss_add_sta in 
+net/mac80211/rx.c.
+
+Can you try that and tell me about the result?
+
+In fact, I did this change to have HT rates in IBSS mode (but I'm still 
+missing some stuff).
+
+Regards,
+Benoit
