@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f182.google.com ([209.85.216.182]:40778 "EHLO
-	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755205Ab0BASTA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 13:19:00 -0500
-Received: by pxi12 with SMTP id 12so4679314pxi.33
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2010 10:18:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <vZZJKzCUn4G.A.CPB.F7hZLB@chimera>
-References: <vZZJKzCUn4G.A.CPB.F7hZLB@chimera>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 1 Feb 2010 10:18:39 -0800
-Message-ID: <43e72e891002011018i671c5e05i9546f356cab43656@mail.gmail.com>
-Subject: Re: 2.6.33-rc6: Reported regressions from 2.6.32
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	reinette chatre <reinette.chatre@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from ist.d-labs.de ([213.239.218.44]:49532 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756637Ab0BXLFr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2010 06:05:47 -0500
+From: florian@mickler.org
+To: "Marcel Holtmann" <marcel@holtmann.org>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Randy Dunlap" <rdunlap@xenotime.net>,
+	"Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	Florian Mickler <florian@mickler.org>
+Subject: [PATCH v2 0/2] Document and enhance rfkill sysfs abi 
+Date: Wed, 24 Feb 2010 12:05:15 +0100
+Message-Id: <1267009517-5017-1-git-send-email-florian@mickler.org>
+In-Reply-To: <1266704345.32739.0.camel@jlt3.sipsolutions.net>
+References: <1266704345.32739.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 31, 2010 at 4:18 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Unresolved regressions
-> ----------------------
+Hi Marcel,
 
-Only one wireless regression:
+so this obsoletes the claim and state sysfs files and introduces two new files: 
+/sys/class/rfkill/*/sw and hw .. 
 
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=15119
-> Subject         : iwl_bg_scan_completed: WARN on scan complete
-> Submitter       : Alex Zhavnerchik <alex.vizor@gmail.com>
-> Date            : 2010-01-24 12:27 (8 days old)
+cheers,
+Flo
 
-And one rfkill lockdep complaint:
+p.s.: i even tested them...
 
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14999
-> Subject         : possible circular locking dependency detected in rfkill at suspend
-> Submitter       : Christian Casteyde <casteyde.christian@free.fr>
-> Date            : 2010-01-06 21:52 (26 days old)
+Florian Mickler (2):
+  Document the rfkill sysfs ABI
+  enhance sysfs rfkill interface
 
-  Luis
+ Documentation/ABI/obsolete/sysfs-class-rfkill |   29 +++++++++++
+ Documentation/ABI/stable/sysfs-class-rfkill   |   67 +++++++++++++++++++++++++
+ Documentation/feature-removal-schedule.txt    |   18 +++++++
+ Documentation/rfkill.txt                      |   44 +++++-----------
+ net/rfkill/core.c                             |   57 +++++++++++++++++++++
+ 5 files changed, 184 insertions(+), 31 deletions(-)
+ create mode 100644 Documentation/ABI/obsolete/sysfs-class-rfkill
+ create mode 100644 Documentation/ABI/stable/sysfs-class-rfkill
+
