@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:32058 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042Ab0BAHtI (ORCPT
+Received: from david.siemens.de ([192.35.17.14]:17435 "EHLO david.siemens.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755706Ab0BXI6K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2010 02:49:08 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Multiple SSID on same phy
-Date: Mon, 1 Feb 2010 08:47:58 +0100
-Cc: Greg Oliver <oliver.greg@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <20100129122718.73a6c877@nehalam> <1264868231.3546.188.camel@johannes.local> <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
-In-Reply-To: <51058d551001300822p7ab564e4jedd6faad380dabc@mail.gmail.com>
+	Wed, 24 Feb 2010 03:58:10 -0500
+From: "Porsch, Marco" <marco.porsch@siemens.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Date: Wed, 24 Feb 2010 09:53:13 +0100
+Subject: [PATCH] mac80211: fix PREQ processing and one small bug
+Message-ID: <7F2FE3504A6CB54497542A539E401A7B6AB18058@DEMCHP99E15MSX.ww902.siemens.net>
+References: <7F2FE3504A6CB54497542A539E401A7B6AB18057@DEMCHP99E15MSX.ww902.siemens.net>
+In-Reply-To: <7F2FE3504A6CB54497542A539E401A7B6AB18057@DEMCHP99E15MSX.ww902.siemens.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201002010847.58212.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hmmm, I would put the odds at that happening about 100,000:1
-> (if not more) 
+1st) a PREQ should only be processed, if it has the same SN and better metric (instead of better or equal).
+2nd) next_hop[ETH_ALEN] now actually used to buffer mpath->next_hop->sta.addr for use out of lock.
 
-That's described as a standard setup for Cisco APs, e.g. one with 
-WEP or even open on one VLAN, which gives you just an internet 
-connection. And another with WPA2-PSK or WPA-Enterprise to 
-connect to the company network.
+Signed-off-by: Marco Porsch <marco.porsch@siemens.com>
+Acked-by: Javier Cardona <javier@cozybit.com>
 
-And I've seen this setup in "real life" quite a few times.
+---
+ net/mac80211/mesh_hwmp.c |   4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
--- 
-http://www.holgerschurig.de
+diff -upr a/net/mac80211/rx.c b/net/mac80211/rx.c
+--- a/net/mac80211/mesh_hwmp.c        2010-02-18 14:44:47.000000000 +0100
++++ b/net/mac80211/mesh_hwmp.c 2010-02-18 14:45:32.000000000 +0100
+@@ -391,7 +391,7 @@ static u32 hwmp_route_info_get(struct ie
+                                 if (SN_GT(mpath->sn, orig_sn) ||
+                                     (mpath->sn == orig_sn &&
+                                      action == MPATH_PREQ &&
+-                                    new_metric > mpath->metric)) {
++                                    new_metric >= mpath->metric)) {
+                                         process = false;
+                                         fresh_info = false;
+                                 }
+@@ -611,7 +611,7 @@ static void hwmp_prep_frame_process(stru
+
+         mesh_path_sel_frame_tx(MPATH_PREP, flags, orig_addr,
+                 cpu_to_le32(orig_sn), 0, target_addr,
+-               cpu_to_le32(target_sn), mpath->next_hop->sta.addr, hopcount,
++               cpu_to_le32(target_sn), next_hop, hopcount,
+                 ttl, cpu_to_le32(lifetime), cpu_to_le32(metric),
+                 0, sdata);
+         rcu_read_unlock();
