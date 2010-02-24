@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51298 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751763Ab0BHNse (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:38751 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755308Ab0BXEzp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 08:48:34 -0500
-Subject: Re: [PATCH 10/10] mac80211: remove get_tx_stats() driver op
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100207082201.31474.98843.stgit@tikku>
-References: <20100207082044.31474.48583.stgit@tikku>
-	 <20100207082201.31474.98843.stgit@tikku>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EbaJpttZze5pRNVKwise"
-Date: Mon, 08 Feb 2010 10:25:13 +0100
-Message-ID: <1265621113.3783.5.camel@johannes.berg>
-Mime-Version: 1.0
+	Tue, 23 Feb 2010 23:55:45 -0500
+Received: by pvb32 with SMTP id 32so719787pvb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 20:55:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B84A049.1040904@openwrt.org>
+References: <4B84A049.1040904@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 23 Feb 2010 20:48:47 -0800
+Message-ID: <43e72e891002232048h14e26093lf2e98b508504686f@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: disable RIFS search for AR91xx based chips
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Feb 23, 2010 at 7:43 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> While ath9k does not support RIFS yet,
 
---=-EbaJpttZze5pRNVKwise
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Not 100% sure but I actually think we do have it enabled for
+single-chip solutions and I think it should work.
 
-On Sun, 2010-02-07 at 10:22 +0200, Kalle Valo wrote:
-> get_tx_stats() driver operation is not currently used anywhere in mac8021=
-1
-> and there are no plans to use it in the not-so-near future. So it can go
-> without anyone missing it.
->=20
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
-> ---
->  Documentation/DocBook/mac80211.tmpl |    1 -
->  include/net/mac80211.h              |   22 ----------------------
->  net/mac80211/driver-ops.h           |    8 --------
->  net/mac80211/driver-trace.h         |   23 -----------------------
->  4 files changed, 0 insertions(+), 54 deletions(-)
+> the ability to receive RIFS
+> frames is currently enabled for most chipsets in the initvals.
+> This is causing baseband related issues on AR9160 and AR9130 based
+> chipsets, which can lock up under certain conditions.
+>
+> This patch fixes these issues by overriding the initvals, effectively
+> disabling RIFS for all affected chipsets.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Cc: stable@kernel.org
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-johannes
-
-
---=-EbaJpttZze5pRNVKwise
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLb9h1AAoJEODzc/N7+QmaLc0QANAD+wP4tWDr9Fq6Dri7R3QZ
-kCI1BXgN7pUPsBQTR4kpjBUjEh2xxlYgcnbafSPku2o1eJD5NTVJbUcm4fYcRRmH
-ehlJTX+Zg8kvtt9vPqVynQtboA1ff4hUSfD9pKOYpDHAuC4Jmq6j4buCSuMNbs6J
-q3EG9vazgp77XuPY3yQ45AtuWrGPC/7FBr2nGNF25kJDUI7y67NXKXRBSucuZYof
-veB+6yc9A6FqsLvBzDQYx5XnhKHdKnrom2i3onur0ommmjUhWSOr8t1gNO+HQNxm
-Jt8sRYlN8hljfX29APJ1H3MOCR6uo2R9+m1PCij816ELUdBFR/W3UMm5AGB5pY3b
-7xRFN7nLw4ct8WOctGBPuLUf29u6WAoMUbeXObFqhyYoJoUzmV7pIF+5gh98rLyX
-J4HozPp1HKLHJrp8HdwXwhK/r3cQrc6t71y9thuiGJBSQxpVfBk+QZreJVGmaPST
-TBHEj+SaFHBe9stvEGmiDUcUViLLmO6inc2vasr0EFNE1tEOSXQ4JguDg4M/CyZE
-xftIu8Xon9T77lm4NccotlzKJ56QPMrkeuodlIh8jchveEN2n/F8ukuO7HoOcHem
-eEbF0wcmEbFHt64Gx62qvg0hXn0EkhlC1qnRtCi7jRaSKhHeQlQsMoLwYNuvuCeC
-INaiu+Hh4jb9T/7VL0sj
-=o5hc
------END PGP SIGNATURE-----
-
---=-EbaJpttZze5pRNVKwise--
-
+  Luis
