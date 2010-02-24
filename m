@@ -1,116 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60616 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756091Ab0BCJVz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2010 04:21:55 -0500
-Subject: [PATCH] mac80211: fix deferred hardware scan requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 03 Feb 2010 10:21:41 +0100
-Message-ID: <1265188901.29119.85.camel@johannes.local>
+Received: from c60.cesmail.net ([216.154.195.49]:58214 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755261Ab0BXHQM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2010 02:16:12 -0500
+Subject: Re: [PATCH] ath9k: never read from the AR_IMR_S2 register
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e891002231554o7b1b8bc5g865381c1b0a9e019@mail.gmail.com>
+References: <20100223231527.8028.84024.stgit@mj.roinet.com>
+	 <43e72e891002231554o7b1b8bc5g865381c1b0a9e019@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 24 Feb 2010 02:15:58 -0500
+Message-Id: <1266995758.12741.39.camel@ct>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reinette found the reason for the warnings that
-happened occasionally when a hw-offloaded scan
-finished; her description of the problem:
+On Tue, 2010-02-23 at 15:54 -0800, Luis R. Rodriguez wrote:
+> On Tue, Feb 23, 2010 at 3:15 PM, Pavel Roskin <proski@gnu.org> wrote:
+> > The AR_IMR_S2 register sometimes cannot be read correctly.  Instead of a
+> > valid value, 0xdeadbeef is returned.  The driver has been observed
+> > writing that value back to AR_IMR_S2 after changing a few bits.
+> >
+> > Cache the register value in ah->imrs2_reg and always write chached value
+> > to the register.
+> >
+> > Signed-off-by: Pavel Roskin <proski@gnu.org>
+> 
+> What hardware was this seen with ? Can you enable PS debug to see if
+> perhaps PS is left enabled when we try to configure hardware. When we
+> touch some registers PS needs to be enabled, this could be a PS issue,
+> unless of course you see this also when PS is disabled by default.
 
-  mac80211 will defer the handling of scan requests if it is
-  busy with management work at the time. The scan requests
-  are deferred and run after the work has completed. When
-  this occurs there are currently two problems.
+I saw reading 0xdeadbeef from AR_IMR_S2 on AR5416 (CardBus D-Link
+DWA-645) and on AR9220 (miniPCI Ubiquiti SR71-12).  I can confirm it on
+AR9285 (ExpressCard) now.
 
-  * The scan request for hardware scan is not fully populated
-    with the band and channels to scan not initialized.
+Power saving is disabled by default (and never enabled) on all systems
+where I checked for reading 0xdeadbeef.
 
-  * When the scan is queued the state is not correctly updated
-    to reflect that a scan is in progress. The problem here is
-    that when the driver completes the scan and calls
-    ieee80211_scan_completed() a warning will be triggered
-    since mac80211 was not aware that a scan was in progress.
+There are other cases where 0xdeadbeef is read from other registers.
+For instance, the "wiphy" file on debugfs is full of that stuff when the
+interface is in managed mode and not associated.
 
-The reason is that the queued scan work will start
-the hw scan right away when the hw_scan_req struct
-has already been allocated. However, in the first
-pass it will not have been filled, which happens
-at the same time as setting the bits. To fix this,
-simply move the allocation after the pending work
-test as well, so that the first iteration of the
-scan work will call __ieee80211_start_scan() even
-in the hardware scan case.
+cat /sys/kernel/debug/ath9k/phy3/wiphy 
+primary: phy3 (ACTIVE chan=0 ht=0)
+addr: ef:be:ad:de:ef:be
+addrmask: ef:be:ad:de:ef:be
 
-Also, fix a wrong locking comment that I noticed,
-a dependency between those two mutexes exists but
-others are potentially avoided (especially with
-driver locks).
+However, the problem with AR_IMR_S2 is that a derivative of 0xdeadbeef
+is written back to the register (0xdeadbc00 is written in my tests).  I
+don't know of any observable negative consequences of that fact, but I
+think it's better not to set bits we don't know about.
 
-Bug-identified-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/scan.c |   27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
-
---- wireless-testing.orig/net/mac80211/scan.c	2010-02-03 09:53:28.000000000 +0100
-+++ wireless-testing/net/mac80211/scan.c	2010-02-03 10:05:59.000000000 +0100
-@@ -345,6 +345,13 @@ static int __ieee80211_start_scan(struct
- 	if (local->scan_req)
- 		return -EBUSY;
- 
-+	if (!list_empty(&local->work_list)) {
-+		/* wait for the work to finish/time out */
-+		local->scan_req = req;
-+		local->scan_sdata = sdata;
-+		return 0;
-+	}
-+
- 	if (local->ops->hw_scan) {
- 		u8 *ies;
- 
-@@ -364,29 +371,33 @@ static int __ieee80211_start_scan(struct
- 		local->hw_scan_req->ie = ies;
- 
- 		local->hw_scan_band = 0;
-+
-+		/*
-+		 * After allocating local->hw_scan_req, we must
-+		 * go through until ieee80211_prep_hw_scan(), so
-+		 * anything that might be changed here and leave
-+		 * this function early must not go after this
-+		 * allocation.
-+		 */
- 	}
- 
- 	local->scan_req = req;
- 	local->scan_sdata = sdata;
- 
--	if (!list_empty(&local->work_list)) {
--		/* wait for the work to finish/time out */
--		return 0;
--	}
--
- 	if (local->ops->hw_scan)
- 		__set_bit(SCAN_HW_SCANNING, &local->scanning);
- 	else
- 		__set_bit(SCAN_SW_SCANNING, &local->scanning);
-+
- 	/*
- 	 * Kicking off the scan need not be protected,
- 	 * only the scan variable stuff, since now
- 	 * local->scan_req is assigned and other callers
- 	 * will abort their scan attempts.
- 	 *
--	 * This avoids getting a scan_mtx -> iflist_mtx
--	 * dependency, so that the scan completed calls
--	 * have more locking freedom.
-+	 * This avoids too many locking dependencies
-+	 * so that the scan completed calls have more
-+	 * locking freedom.
- 	 */
- 
- 	ieee80211_recalc_idle(local);
-
-
+-- 
+Regards,
+Pavel Roskin
