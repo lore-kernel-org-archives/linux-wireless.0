@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f220.google.com ([209.85.220.220]:56854 "EHLO
-	mail-fx0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753656Ab0BRJpt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33599 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755875Ab0BXJJf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 04:45:49 -0500
-Date: Thu, 18 Feb 2010 12:45:29 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] iwlwifi: testing the wrong variable
-Message-ID: <20100218094529.GA1298@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 24 Feb 2010 04:09:35 -0500
+Subject: Re: [PATCH] mac80211: fix PREQ processing and one small bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Porsch, Marco" <marco.porsch@siemens.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <7F2FE3504A6CB54497542A539E401A7B6AB18058@DEMCHP99E15MSX.ww902.siemens.net>
+References: <7F2FE3504A6CB54497542A539E401A7B6AB18057@DEMCHP99E15MSX.ww902.siemens.net>
+	 <7F2FE3504A6CB54497542A539E401A7B6AB18058@DEMCHP99E15MSX.ww902.siemens.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Feb 2010 10:09:25 +0100
+Message-ID: <1267002565.3903.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first one fixes a smatch false positive and the second one fixes
-a potential bug.
+On Wed, 2010-02-24 at 09:53 +0100, Porsch, Marco wrote:
+> 1st) a PREQ should only be processed, if it has the same SN and better
+> metric (instead of better or equal).
+> 2nd) next_hop[ETH_ALEN] now actually used to buffer
+> mpath->next_hop->sta.addr for use out of lock.
+> 
+> Signed-off-by: Marco Porsch <marco.porsch@siemens.com>
+> Acked-by: Javier Cardona <javier@cozybit.com>
 
-drivers/net/wireless/iwlwifi/iwl-5000.c +786 iwl5000_txq_update_byte_cnt_tbl(37) error: buffer overflow 
-'(scd_bc_tbl+txq_id)->tfd_offset' 320 <= 512
-drivers/net/wireless/iwlwifi/iwl-5000.c +808 iwl5000_txq_inval_byte_cnt_tbl(19) error: buffer overflow 
-'(scd_bc_tbl+txq_id)->tfd_offset' 320 <= 512
+Cc stable works by putting it here, not into the actual email ...
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-Cc: stable@kernel.org
----
-I don't have the hardware to test this change.
+> ---
+>  net/mac80211/mesh_hwmp.c |   4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff -upr a/net/mac80211/rx.c b/net/mac80211/rx.c
+> --- a/net/mac80211/mesh_hwmp.c        2010-02-18 14:44:47.000000000
+> +0100
+> +++ b/net/mac80211/mesh_hwmp.c 2010-02-18 14:45:32.000000000 +0100
+> @@ -391,7 +391,7 @@ static u32 hwmp_route_info_get(struct ie
+>                                  if (SN_GT(mpath->sn, orig_sn) ||
+>                                      (mpath->sn == orig_sn &&
+>                                       action == MPATH_PREQ &&
+> -                                    new_metric > mpath->metric)) {
+> +                                    new_metric >= mpath->metric)) {
+>                                          process = false;
+>                                          fresh_info = false;
+>                                  }
+> @@ -611,7 +611,7 @@ static void hwmp_prep_frame_process(stru
+> 
+>          mesh_path_sel_frame_tx(MPATH_PREP, flags, orig_addr,
+>                  cpu_to_le32(orig_sn), 0, target_addr,
+> -               cpu_to_le32(target_sn), mpath->next_hop->sta.addr,
+> hopcount,
+> +               cpu_to_le32(target_sn), next_hop, hopcount,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index de45f30..b45150d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -781,7 +781,7 @@ void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
- 
- 	scd_bc_tbl[txq_id].tfd_offset[write_ptr] = bc_ent;
- 
--	if (txq->q.write_ptr < TFD_QUEUE_SIZE_BC_DUP)
-+	if (write_ptr < TFD_QUEUE_SIZE_BC_DUP)
- 		scd_bc_tbl[txq_id].
- 			tfd_offset[TFD_QUEUE_SIZE_MAX + write_ptr] = bc_ent;
- }
-@@ -803,7 +803,7 @@ void iwl5000_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
- 	bc_ent =  cpu_to_le16(1 | (sta_id << 12));
- 	scd_bc_tbl[txq_id].tfd_offset[read_ptr] = bc_ent;
- 
--	if (txq->q.write_ptr < TFD_QUEUE_SIZE_BC_DUP)
-+	if (read_ptr < TFD_QUEUE_SIZE_BC_DUP)
- 		scd_bc_tbl[txq_id].
- 			tfd_offset[TFD_QUEUE_SIZE_MAX + read_ptr] =  bc_ent;
- }
+Also please use proper indentation, not spaces.
+
+johannes
 
