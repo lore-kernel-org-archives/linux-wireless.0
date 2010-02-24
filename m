@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:58620 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209Ab0BXHfx convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f216.google.com ([209.85.220.216]:53872 "EHLO
+	mail-fx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757046Ab0BXNZj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 02:35:53 -0500
-Received: by pwj8 with SMTP id 8so4642235pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2010 23:35:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1266995758.12741.39.camel@ct>
-References: <20100223231527.8028.84024.stgit@mj.roinet.com>
-	<43e72e891002231554o7b1b8bc5g865381c1b0a9e019@mail.gmail.com>
-	<1266995758.12741.39.camel@ct>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 23 Feb 2010 23:35:33 -0800
-Message-ID: <43e72e891002232335r52710d0bh59a5ef435b3fa19d@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: never read from the AR_IMR_S2 register
-To: Pavel Roskin <proski@gnu.org>
+	Wed, 24 Feb 2010 08:25:39 -0500
+Received: by fxm8 with SMTP id 8so2573805fxm.28
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2010 05:25:38 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: use listen interval 5 as default
+Date: Wed, 24 Feb 2010 14:19:37 +0100
 Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201002241419.38121.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 23, 2010 at 11:15 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Tue, 2010-02-23 at 15:54 -0800, Luis R. Rodriguez wrote:
->> On Tue, Feb 23, 2010 at 3:15 PM, Pavel Roskin <proski@gnu.org> wrote:
->> > The AR_IMR_S2 register sometimes cannot be read correctly.  Instead of a
->> > valid value, 0xdeadbeef is returned.  The driver has been observed
->> > writing that value back to AR_IMR_S2 after changing a few bits.
->> >
->> > Cache the register value in ah->imrs2_reg and always write chached value
->> > to the register.
->> >
->> > Signed-off-by: Pavel Roskin <proski@gnu.org>
->>
->> What hardware was this seen with ? Can you enable PS debug to see if
->> perhaps PS is left enabled when we try to configure hardware. When we
->> touch some registers PS needs to be enabled, this could be a PS issue,
->> unless of course you see this also when PS is disabled by default.
->
-> I saw reading 0xdeadbeef from AR_IMR_S2 on AR5416 (CardBus D-Link
-> DWA-645) and on AR9220 (miniPCI Ubiquiti SR71-12).  I can confirm it on
-> AR9285 (ExpressCard) now.
->
-> Power saving is disabled by default (and never enabled) on all systems
-> where I checked for reading 0xdeadbeef.
->
-> There are other cases where 0xdeadbeef is read from other registers.
-> For instance, the "wiphy" file on debugfs is full of that stuff when the
-> interface is in managed mode and not associated.
->
-> cat /sys/kernel/debug/ath9k/phy3/wiphy
-> primary: phy3 (ACTIVE chan=0 ht=0)
-> addr: ef:be:ad:de:ef:be
-> addrmask: ef:be:ad:de:ef:be
->
-> However, the problem with AR_IMR_S2 is that a derivative of 0xdeadbeef
-> is written back to the register (0xdeadbc00 is written in my tests).  I
-> don't know of any observable negative consequences of that fact, but I
-> think it's better not to set bits we don't know about.
+Currently if a driver does not set hw.max_listen_interval a listen
+interval of 1 is negotiated with the AP. Thus, the AP could drop
+buffered frames for us after just one beacon interval which can
+easily happen with the current powersave and scan implementation.
+To avoid this issue increase the default interval to 5 which should
+be a reasonable safe default.
 
-Thanks for the details, indeed this seems reasonable.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/main.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index ec8f767..06c33b6 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -558,8 +558,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	debugfs_hw_add(local);
+ 
++	/*
++	 * if the driver doesn't specify a max listen interval we
++	 * use 5 which should be a safe default
++	 */
+ 	if (local->hw.max_listen_interval == 0)
+-		local->hw.max_listen_interval = 1;
++		local->hw.max_listen_interval = 5;
+ 
+ 	local->hw.conf.listen_interval = local->hw.max_listen_interval;
+ 
+-- 
+1.6.0.2
+
