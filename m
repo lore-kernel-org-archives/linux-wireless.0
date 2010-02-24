@@ -1,120 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:28731 "EHLO mga09.intel.com"
+Received: from smtp1.irobot.com ([206.83.81.187]:35141 "EHLO smtp1.irobot.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753751Ab0BETeP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2010 14:34:15 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/3] iwlwifi: Send broadcast probe request only when asked to
-Date: Fri,  5 Feb 2010 11:33:48 -0800
-Message-Id: <1265398428-8048-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1265398428-8048-1-git-send-email-reinette.chatre@intel.com>
-References: <1265398428-8048-1-git-send-email-reinette.chatre@intel.com>
+	id S1758546Ab0BXXny (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2010 18:43:54 -0500
+Message-ID: <4B85B88E.3050402@irobot.com>
+Date: Wed, 24 Feb 2010 15:38:54 -0800
+From: Adam Wozniak <awozniak@irobot.com>
+MIME-Version: 1.0
+To: Bruno Randolf <br1@einfach.org>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix rates setup on IBSS merge
+References: <20100223095113.25360.75291.stgit@void>
+In-Reply-To: <20100223095113.25360.75291.stgit@void>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <sameo@linux.intel.com>
+I noticed this a while back and tried (unsuccessfully) to get some 
+patches pushed through for it.  Your patch looks cleaner than mine (I 
+don't think I understood as much at the time as I do now).
 
-When running directed active scans we currently end up sending both the SSID
-probe requests and an additional broadcast one.
-This is due to the fact that we always leave the probe request template SSID IE
-length to 0. Instead we should set it to the first SSID to scan, and fill the
-direct_scan array with the remaining SSIDs to scan for. This way we only send
-what we've been asked to: a broadcast probe request when no directed scan is
-requested, and directed probe requests otherwise.
+You can look through the linux-wireless archives for some of my old 
+posts.  Things to note:
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c |   49 +++++++++++++++++++++----------
- 2 files changed, 34 insertions(+), 17 deletions(-)
+For minstrel, calling rate_control_init() is effectively an update.  A 
+workable solution may be to add a minstrel rate_control_update() that 
+simply calls init().  I don't *think* PID has an update either, and 
+don't forget about the cases where the rate control algorithm is handled 
+in the firmware for the device.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b528a20..f51b8cd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2631,7 +2631,7 @@ static int iwl_mac_setup_register(struct iwl_priv *priv)
- 	 */
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
--	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
-+	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX + 1;
- 	/* we create the 802.11 header and a zero-length SSID element */
- 	hw->wiphy->max_scan_ie_len = IWL_MAX_PROBE_REQUEST - 24 - 2;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 08faafa..f786a40 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -651,9 +651,20 @@ u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
- 	if (left < 0)
- 		return 0;
- 	*pos++ = WLAN_EID_SSID;
--	*pos++ = 0;
--
--	len += 2;
-+	if (!priv->is_internal_short_scan &&
-+	    priv->scan_request->n_ssids) {
-+		struct cfg80211_ssid *ssid =
-+			priv->scan_request->ssids;
-+
-+		/* Broadcast if ssid_len is 0 */
-+		*pos++ = ssid->ssid_len;
-+		memcpy(pos, ssid->ssid, ssid->ssid_len);
-+		pos += ssid->ssid_len;
-+		len += 2 + ssid->ssid_len;
-+	} else {
-+		*pos++ = 0;
-+		len += 2;
-+	}
- 
- 	if (WARN_ON(left < ie_len))
- 		return len;
-@@ -782,20 +793,26 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 	if (priv->is_internal_short_scan) {
- 		IWL_DEBUG_SCAN(priv, "Start internal passive scan.\n");
- 	} else if (priv->scan_request->n_ssids) {
--		int i, p = 0;
- 		IWL_DEBUG_SCAN(priv, "Kicking off active scan\n");
--		for (i = 0; i < priv->scan_request->n_ssids; i++) {
--			/* always does wildcard anyway */
--			if (!priv->scan_request->ssids[i].ssid_len)
--				continue;
--			scan->direct_scan[p].id = WLAN_EID_SSID;
--			scan->direct_scan[p].len =
--				priv->scan_request->ssids[i].ssid_len;
--			memcpy(scan->direct_scan[p].ssid,
--			       priv->scan_request->ssids[i].ssid,
--			       priv->scan_request->ssids[i].ssid_len);
--			n_probes++;
--			p++;
-+		/*
-+		 * The first SSID to scan is stuffed into the probe request
-+		 * template and the remaining ones are handled through the
-+		 * direct_scan array.
-+		 */
-+		if (priv->scan_request->n_ssids > 1) {
-+			int i, p = 0;
-+			for (i = 1; i < priv->scan_request->n_ssids; i++) {
-+				if (!priv->scan_request->ssids[i].ssid_len)
-+					continue;
-+				scan->direct_scan[p].id = WLAN_EID_SSID;
-+				scan->direct_scan[p].len =
-+					priv->scan_request->ssids[i].ssid_len;
-+				memcpy(scan->direct_scan[p].ssid,
-+				       priv->scan_request->ssids[i].ssid,
-+				       priv->scan_request->ssids[i].ssid_len);
-+				n_probes++;
-+				p++;
-+			}
- 		}
- 		is_active = true;
- 	} else
--- 
-1.6.3.3
+Flow control in ieee80211_rx_bss_info() could use some cleanup.  It's 
+possible to reach the end and use uninitialized variables.
+
+To solve the problem for my devices, I used a patch to minstrel which 
+actually ignores the rates in the beacon, under the assumption that if 
+the other STA can't use them, they'll get 0% probability in the rate 
+table.  This seems to work well for me.
+
+--Adam
+
+Bruno Randolf wrote:
+> when an IBSS merge happened, the supported rates for the newly added station
+> were left empty, causing the rate control module to be initialized with only
+> the basic rates.
+>
+> also the section of the ibss code which deals with updating supported rates for
+> an already existing station fails to inform the rate control module about the
+> new rates. as i don't know how to fix this (minstrel does not have an update
+> function), i have just added a comment for now.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>
+>  net/mac80211/ibss.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index f3e9424..b840d90 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -276,6 +276,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+>  				    (unsigned long long) sta->sta.supp_rates[band]);
+>  #endif
+>  			rcu_read_unlock();
+> +
+> +			/* FIXME: update rate control */
+>  		} else {
+>  			rcu_read_unlock();
+>  			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+> @@ -370,6 +372,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+>  		       sdata->name, mgmt->bssid);
+>  #endif
+>  		ieee80211_sta_join_ibss(sdata, bss);
+> +		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+>  		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+>  				       supp_rates, GFP_KERNEL);
+>  	}
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
 
