@@ -1,64 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f200.google.com ([209.85.210.200]:59541 "EHLO
-	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879Ab0BSSKS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 13:10:18 -0500
-Received: by yxe38 with SMTP id 38so304108yxe.4
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 10:10:17 -0800 (PST)
-Message-ID: <4B7ED405.4090501@lwfinger.net>
-Date: Fri, 19 Feb 2010 12:10:13 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:34031 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756982Ab0BXNT2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2010 08:19:28 -0500
+From: Helmut Schaa <Helmut.Schaa@gmx.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: Improve software scan timing
+Date: Wed, 24 Feb 2010 14:19:21 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	=?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs definitions
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>	 <1266591292.15178.1.camel@jlt3.sipsolutions.net>	 <4B7EB31D.2000603@lwfinger.net>	 <1266596602.15178.2.camel@jlt3.sipsolutions.net>	 <4B7EBF0A.1060907@lwfinger.net> <1266598974.3754.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1266598974.3754.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201002241419.22109.Helmut.Schaa@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2010 11:02 AM, Johannes Berg wrote:
-> On Fri, 2010-02-19 at 10:40 -0600, Larry Finger wrote:
-> 
->> Rafał is taking exams now, but said in one of our last communications
->> that he
->> was finishing up some radio code. After that, he expected some signs
->> of life.
-> 
-> Neat.
-> 
->> What PHY revision do you have? Between 2 and 3 there were a lot of
->> changes
->> including a new radio version. Rafał has a 2, thus he has been
->> concentrating on
->> that one.
->>
->> Do you have any log messages on the SSB adjustments?
-> 
-> [    5.861375] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x17, vendor 0x4243)
-> [    5.861390] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x10, vendor 0x4243)
-> [    5.861402] ssb: Core 2 found: PCI-E (cc 0x820, rev 0x0B, vendor 0x4243)
-> [    5.861414] ssb: Core 3 found: PCI (cc 0x804, rev 0x0E, vendor 0x4243)
-> [    5.861427] ssb: Core 4 found: USB 2.0 Device (cc 0x81A, rev 0x05, vendor 0x4243)
-> [    5.861439] ssb: Core 5 found: UNKNOWN (cc 0x8FF, rev 0x00, vendor 0x4243)
-> [    5.861452] ssb: Core 6 found: Internal Memory (cc 0x80E, rev 0x03, vendor 0x4243)
-> [    5.900494] ssb: Found rev 2 PMU (capabilities 0x04583002)
-> [    5.900500] ssb: ERROR: PLL init unknown for device 4322
-> [    5.900844] ssb: ERROR: PMU resource config unknown for device 4322
-> [    5.909764] ssb: SPROM revision 8 detected.
-> ...
-> [    6.378717] b43-phy0: Broadcom 4322 WLAN found (core revision 16)
-> [    6.482611] b43-phy0 debug: Found PHY: Analog 8, Type 4, Revision 4
-> [    6.482638] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2056, Revision 3
+The current software scan implemenation in mac80211 returns to the operating
+channel after each scanned channel. However, in some situations (e.g. no
+traffic) it would be nicer to scan a few channels in a row to speed up
+the scan itself.
 
-I just submitted a patch for the errors above that I've had here for a long time.
+Hence, after scanning a channel, check if we have queued up any tx frames and
+return to the operating channel in that case.
 
-A Rev 8 SPROM has all the entities found in Rev 4 plus some additions. If R4 can
-support an mimo N PHY, R8 certainly can.
+Unfortunately we don't know if the AP has buffered any frames for us. Hence,
+scan only as many channels in a row as the pm_qos latency and the negotiated
+listen interval allows us to.
 
-Larry
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/scan.c        |   71 ++++++++++++++++++++++++++++++++++++++++----
+ 2 files changed, 66 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 241533e..b841264 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -745,6 +745,7 @@ struct ieee80211_local {
+ 	int scan_channel_idx;
+ 	int scan_ies_len;
+ 
++	unsigned long leave_oper_channel_time;
+ 	enum mac80211_scan_state next_scan_state;
+ 	struct delayed_work scan_work;
+ 	struct ieee80211_sub_if_data *scan_sdata;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index b822dce..75a8597 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -14,6 +14,8 @@
+ 
+ #include <linux/if_arp.h>
+ #include <linux/rtnetlink.h>
++#include <linux/pm_qos_params.h>
++#include <net/sch_generic.h>
+ #include <net/mac80211.h>
+ 
+ #include "ieee80211_i.h"
+@@ -321,6 +323,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 
+ 	ieee80211_offchannel_stop_beaconing(local);
+ 
++	local->leave_oper_channel_time = 0;
+ 	local->next_scan_state = SCAN_DECISION;
+ 	local->scan_channel_idx = 0;
+ 
+@@ -425,11 +428,28 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	return rc;
+ }
+ 
++static unsigned long
++ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
++{
++	/*
++	 * TODO: channel switching also consumes quite some time,
++	 * add that delay as well to get a better estimation
++	 */
++	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++		return IEEE80211_PASSIVE_CHANNEL_TIME;
++	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
++}
++
+ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 					 unsigned long *next_delay)
+ {
+ 	bool associated = false;
++	bool tx_empty = true;
++	bool bad_latency;
++	bool listen_int_exceeded;
++	unsigned long min_beacon_int = 0;
+ 	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_channel *next_chan;
+ 
+ 	/* if no more bands/channels left, complete scan and advance to the idle state */
+ 	if (local->scan_channel_idx >= local->scan_req->n_channels) {
+@@ -437,7 +457,11 @@ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 		return 1;
+ 	}
+ 
+-	/* check if at least one STA interface is associated */
++	/*
++	 * check if at least one STA interface is associated,
++	 * check if at least one STA interface has pending tx frames
++	 * and grab the lowest used beacon interval
++	 */
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (!ieee80211_sdata_running(sdata))
+@@ -446,7 +470,16 @@ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 			if (sdata->u.mgd.associated) {
+ 				associated = true;
+-				break;
++
++				if (sdata->vif.bss_conf.beacon_int <
++				    min_beacon_int || min_beacon_int == 0)
++					min_beacon_int =
++						sdata->vif.bss_conf.beacon_int;
++
++				if (!qdisc_all_tx_empty(sdata->dev)) {
++					tx_empty = false;
++					break;
++				}
+ 			}
+ 		}
+ 	}
+@@ -455,11 +488,34 @@ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	if (local->scan_channel) {
+ 		/*
+ 		 * we're currently scanning a different channel, let's
+-		 * switch back to the operating channel now if at least
+-		 * one interface is associated. Otherwise just scan the
+-		 * next channel
++		 * see if we can scan another channel without interfering
++		 * with the current traffic situation.
++		 *
++		 * Since we don't know if the AP has pending frames for us
++		 * we can only check for our tx queues and use the current
++		 * pm_qos requirements for rx. Hence, if no tx traffic occurs
++		 * at all we will scan as many channels in a row as the pm_qos
++		 * latency allows us to. Additionally we also check for the
++		 * currently negotiated listen interval to prevent losing
++		 * frames unnecessarily.
++		 *
++		 * Otherwise switch back to the operating channel.
+ 		 */
+-		if (associated)
++		next_chan = local->scan_req->channels[local->scan_channel_idx];
++
++		bad_latency = time_after(jiffies +
++				ieee80211_scan_get_channel_time(next_chan),
++				local->leave_oper_channel_time +
++				usecs_to_jiffies(pm_qos_requirement(PM_QOS_NETWORK_LATENCY)));
++
++		listen_int_exceeded = time_after(jiffies +
++				ieee80211_scan_get_channel_time(next_chan),
++				local->leave_oper_channel_time +
++				usecs_to_jiffies(min_beacon_int * 1024) *
++				local->hw.conf.listen_interval);
++
++		if (associated && ( !tx_empty || bad_latency ||
++		    listen_int_exceeded))
+ 			local->next_scan_state = SCAN_ENTER_OPER_CHANNEL;
+ 		else
+ 			local->next_scan_state = SCAN_SET_CHANNEL;
+@@ -491,6 +547,9 @@ static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *loca
+ 	else
+ 		*next_delay = HZ / 10;
+ 
++	/* remember when we left the operating channel */
++	local->leave_oper_channel_time = jiffies;
++
+ 	/* advance to the next channel to be scanned */
+ 	local->next_scan_state = SCAN_SET_CHANNEL;
+ }
+-- 
+1.6.0.2
 
