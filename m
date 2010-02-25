@@ -1,84 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx-del1-1.globallogic.com ([202.174.92.25]:39974 "EHLO
-	emailsecurity-del1-1.globallogic.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754626Ab0BBLcf (ORCPT
+Received: from smtp106.plus.mail.re1.yahoo.com ([69.147.102.69]:34172 "HELO
+	smtp106.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932390Ab0BYSyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2010 06:32:35 -0500
-Received: from emailsecurity-del1-1.globallogic.com (127.0.0.1) by emailsecurity-del1-1.globallogic.com (MlfMTA v3.2r9) id hd06fk0171sq for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2010 16:40:00 +0530 (envelope-from <andriy.tkachuk@gmail.com>)
-Message-ID: <4B68084E.7080306@gmail.com>
-Date: Tue, 02 Feb 2010 13:11:10 +0200
-From: Andriy Tkachuk <andriy.tkachuk@gmail.com>
+	Thu, 25 Feb 2010 13:54:41 -0500
+Message-ID: <4B86C76E.6010507@yahoo.com>
+Date: Thu, 25 Feb 2010 19:54:38 +0100
+From: Alban Browaeys <prahal@yahoo.com>
+Reply-To: prahal@yahoo.com
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] lib80211: Introduce TKIP_HDR_LEN define for code clarity
-Content-Type: text/plain; charset=ISO-8859-1
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 1/2] rt2x00 : hw support txdone implementation. (without
+ fallback change)
+References: <4B85FA66.2020503@yahoo.com> <4B86B1D8.6090802@gmail.com>
+In-Reply-To: <4B86B1D8.6090802@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce TKIP_HDR_LEN define for code clarity (in the same way as
-CCMP_HDR_LEN).
+On 25/02/2010 18:22, Gertjan van Wingerde wrote:
+> On 02/25/10 05:19, Alban Browaeys wrote:
+>    
+>> This is an implementation that support WCID being the key_index coming
+>> from benoit without the change in the meaning of the tx fallback flag.
+>>
+>> Ivo: in previous patch I forgot about your comment months ago against the
+>> fallback meaning change. This version thus avoid this change.
+>>
+>> Signed-off-by: Benoit Papillault<benoit.papillault@free.fr>
+>> Signed-off-by: Alban Browaeys<prahal@yahoo.com>
+>> ---
+>>      
+> Your commit message does not seem to explain what this change is for, and
+> why this change is being made (and the original patch submission doesn't
+> explain this as well)
+> What problem with the original code is being fixed with your patch?
+>
+> Please include a commit message that explains these things.
+>
+>    
+Doing? Sending it asap. The previous version was mine and relied on WCID 
+behing the entry idx.
+But it got broken by another commit that restore WCID behing the key idx.
+  Thus
 
-Also odd len variable (not used) dropped from lib80211_tkip_hdr().
+index = rt2x00_get_field32(reg, TX_STA_FIFO_WCID) - 1;
 
-Signed-off-by: Andriy V. Tkachuk <andrit@ukr.net>
+cannot work. As it will grab the key idx instead of the entry idx.
 
----
- net/wireless/lib80211_crypt_tkip.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+This implementation is Benoit Papillault one that support hw crypt and WCID behing key idx.
 
-diff --git a/net/wireless/lib80211_crypt_tkip.c
-b/net/wireless/lib80211_crypt_tkip.c
-index c362873..c4fb4fb 100644
---- a/net/wireless/lib80211_crypt_tkip.c
-+++ b/net/wireless/lib80211_crypt_tkip.c
-@@ -36,6 +36,8 @@ MODULE_AUTHOR("Jouni Malinen");
- MODULE_DESCRIPTION("lib80211 crypt: TKIP");
- MODULE_LICENSE("GPL");
 
-+#define TKIP_HDR_LEN 8
-+
- struct lib80211_tkip_data {
- #define TKIP_KEY_LEN 32
- 	u8 key[TKIP_KEY_LEN];
-@@ -314,13 +316,12 @@ static int lib80211_tkip_hdr(struct sk_buff *skb,
-int hdr_len,
- 			      u8 * rc4key, int keylen, void *priv)
- {
- 	struct lib80211_tkip_data *tkey = priv;
--	int len;
- 	u8 *pos;
- 	struct ieee80211_hdr *hdr;
 
- 	hdr = (struct ieee80211_hdr *)skb->data;
+>>   drivers/net/wireless/rt2x00/rt2800pci.c |   86
+>> +++++++++++++------------------
+>>   1 files changed, 36 insertions(+), 50 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c
+>> b/drivers/net/wireless/rt2x00/rt2800pci.c
+>> index 7899789..46b06af 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+>> @@ -920,76 +920,61 @@ static void rt2800pci_txdone(struct rt2x00_dev
+>> *rt2x00dev)
+>>   {
+>>       struct data_queue *queue;
+>>       struct queue_entry *entry;
+>> -    struct queue_entry *entry_done;
+>> -    struct queue_entry_priv_pci *entry_priv;
+>> +    __le32 *txwi;
+>>       struct txdone_entry_desc txdesc;
+>>       u32 word;
+>>       u32 reg;
+>> -    u32 old_reg;
+>> -    unsigned int type;
+>> -    unsigned int index;
+>> -    u16 mcs, real_mcs;
+>> -
+>> +    int i;
+>> +    int wcid, ack, pid, tx_wcid, tx_ack, tx_pid;
+>> +    u16 mcs, tx_mcs;
+>> +
+>>       /*
+>> -     * During each loop we will compare the freshly read
+>> -     * TX_STA_FIFO register value with the value read from
+>> -     * the previous loop. If the 2 values are equal then
+>> -     * we should stop processing because the chance it
+>> -     * quite big that the device has been unplugged and
+>> -     * we risk going into an endless loop.
+>> +     * To avoid an endlees loop, we only read the TX_STA_FIFO register up
+>> +     * to 256 times (this is enought to get all values from the FIFO). In
+>> +     * normal situation, the loop is terminated when we reach a value with
+>> +     * TX_STA_FIFO_VALID bit is 0.
+>>        */
+>> -    old_reg = 0;
+>> -
+>> -    while (1) {
+>> +
+>> +    for (i=0; i<256; i++) {
+>>      
+> Why this magical change to only try 256 times?
+>    
+see comment above "to 256 times (this is enought to get all values from 
+the FIFO)".
+I seems to make more sense that the previous infinite loop that relied 
+on the comparison
+of old_reg and reg to detect if we were to exit.
 
--	if (skb_headroom(skb) < 8 || skb->len < hdr_len)
-+	if (skb_headroom(skb) < TKIP_HDR_LEN || skb->len < hdr_len)
- 		return -1;
+>>           rt2800_register_read(rt2x00dev, TX_STA_FIFO,&reg);
+>>           if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
+>>               break;
+>>
+>> -        if (old_reg == reg)
+>> -            break;
+>> -        old_reg = reg;
+>> +        wcid    = rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
+>> +        ack     = rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
+>> +        pid     = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
+>>
+>>           /*
+>>            * Skip this entry when it contains an invalid
+>>            * queue identication number.
+>>            */
+>> -        type = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE) - 1;
+>> -        if (type>= QID_RX)
+>> +        if (pid<  1)
+>>               continue;
+>>
+>> -        queue = rt2x00queue_get_queue(rt2x00dev, type);
+>> +        queue = rt2x00queue_get_queue(rt2x00dev, pid - 1);
+>>           if (unlikely(!queue))
+>>               continue;
+>>
+>>           /*
+>> -         * Skip this entry when it contains an invalid
+>> -         * index number.
+>> +         * Inside each queue, we process each entry in a chronological
+>> +         * order. We first check that the queue is not empty.
+>>            */
+>> -        index = rt2x00_get_field32(reg, TX_STA_FIFO_WCID) - 1;
+>> -        if (unlikely(index>= queue->limit))
+>> +        if (queue->length == 0)
+>>               continue;
+>> +        entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+>>
+>> -        entry =&queue->entries[index];
+>> -        entry_priv = entry->priv_data;
+>> -        rt2x00_desc_read((__le32 *)entry->skb->data, 0,&word);
+>> -
+>> -        entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+>> -        while (entry != entry_done) {
+>> -            /*
+>> -             * Catch up.
+>> -             * Just report any entries we missed as failed.
+>> -             */
+>> -            WARNING(rt2x00dev,
+>> -                "TX status report missed for entry %d\n",
+>> -                entry_done->entry_idx);
+>> -
+>> -            txdesc.flags = 0;
+>> -            __set_bit(TXDONE_UNKNOWN,&txdesc.flags);
+>> -            txdesc.retry = 0;
+>> -
+>> -            rt2x00lib_txdone(entry_done,&txdesc);
+>> -            entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+>> -        }
+>> +        /* Check if we got a match by looking at WCID/ACK/PID
+>> +         * fields */
+>> +        txwi = (__le32 *)(entry->skb->data -
+>> +                  rt2x00dev->hw->extra_tx_headroom);
+>> +
+>> +        rt2x00_desc_read(txwi, 1,&word);
+>> +        tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
+>> +        tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
+>> +        tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
+>> +
+>> +        if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid))
+>> +            WARNING(rt2x00dev, "invalid TX_STA_FIFO content\n");
+>>
+>>      
+> You're patch seems to remove the protection we had to detect transmitted frames
+> for which we didn't get a TX status confirmation. This had been added in the
+> past for the other rt2x00 drivers to handle real issues with the rt2x00 devices.
+> Why is this being removed?
+>
+>    
+This protection relied on the fact that we could get the current entry 
+idx (which could only be shipped
+in WCID) to compare it to Q_INDEX_DONE and loop over the diff.
+This cannot work with WCID behing the key idx as thus we have to rely on 
+the fact that the current entry
+index is the current one (thus the diff is always void and looping over 
+this void diff is pointless).
 
- 	if (rc4key == NULL || keylen < 16)
-@@ -333,9 +334,8 @@ static int lib80211_tkip_hdr(struct sk_buff *skb,
-int hdr_len,
- 	}
- 	tkip_mixing_phase2(rc4key, tkey->key, tkey->tx_ttak, tkey->tx_iv16);
 
--	len = skb->len - hdr_len;
--	pos = skb_push(skb, 8);
--	memmove(pos, pos + 8, hdr_len);
-+	pos = skb_push(skb, TKIP_HDR_LEN);
-+	memmove(pos, pos + TKIP_HDR_LEN, hdr_len);
- 	pos += hdr_len;
-
- 	*pos++ = *rc4key;
-@@ -353,7 +353,7 @@ static int lib80211_tkip_hdr(struct sk_buff *skb,
-int hdr_len,
- 		tkey->tx_iv32++;
- 	}
-
--	return 8;
-+	return TKIP_HDR_LEN;
- }
-
- static int lib80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void
-*priv)
+Best regards and thanks for the comments.
+Alban
