@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:42151 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753516Ab0BILzx (ORCPT
+Received: from mail-yx0-f182.google.com ([209.85.210.182]:45889 "EHLO
+	mail-yx0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932290Ab0BYE71 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 06:55:53 -0500
-Subject: Re: [PATCH] iwmc3200wifi: Test of wrong pointer after kzalloc in
- iwm_mlme_update_bss_table()
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: Samuel Ortiz <samuel.ortiz@intel.com>, Zhu Yi <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <4B7141FD.7050605@gmail.com>
-References: <4B7141FD.7050605@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 09 Feb 2010 12:55:45 +0100
-Message-ID: <1265716545.2236.4.camel@caravaggio>
-Mime-Version: 1.0
+	Wed, 24 Feb 2010 23:59:27 -0500
+MIME-Version: 1.0
+In-Reply-To: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
+References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
+Date: Thu, 25 Feb 2010 10:23:52 +0530
+Message-ID: <3f9a31f41002242053r169255d2hf2585aeb55174a92@mail.gmail.com>
+Subject: Re: 802.11 development process - extended documentation
+From: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>, Willy Tarreau <w@1wt.eu>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-02-09 at 12:07 +0100, Roel Kluin wrote:
-> The wrong pointer was tested.
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+Hello Luis,
 
+On Thu, Feb 25, 2010 at 5:48 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> I've extended our 802.11 development process into a new section on our
+> 802.11 wiki. I often get asked how this works from different parts of
+> the company here at Atheros so figured it'd be easier to illustrate
+> this as best as possible and share it.
+>
+> http://wireless.kernel.org/en/developers/process
+>
+> Hope it does justice, John if you see any mistakes feel free to edit.
+> If the diagram seems fishy let me know what I can fix.
+>
 
-> ---
->  drivers/net/wireless/iwmc3200wifi/rx.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-> index 6d6ed74..f727b4a 100644
-> --- a/drivers/net/wireless/iwmc3200wifi/rx.c
-> +++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-> @@ -794,7 +794,7 @@ static int iwm_mlme_update_bss_table(struct iwm_priv *iwm, u8 *buf,
->  	}
->  
->  	bss->bss = kzalloc(bss_len, GFP_KERNEL);
-> -	if (!bss) {
-> +	if (!bss->bss) {
->  		kfree(bss);
->  		IWM_ERR(iwm, "Couldn't allocate bss\n");
->  		return -ENOMEM;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for the beautiful documentation.
 
+Is this also applicable for Linux 2.4
 
+What is the status of Wireless in Linux 2.4
+
+Thanks,
+--
+Jaswinder Singh.
