@@ -1,77 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g21.free.fr ([212.27.42.1]:52628 "EHLO smtp1-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933016Ab0BDVxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2010 16:53:31 -0500
-From: Benoit Papillault <benoit.papillault@free.fr>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-Subject: [PATCH] mac80211: Added a new debugfs file for reading channel_type
-Date: Thu,  4 Feb 2010 22:00:20 +0100
-Message-Id: <1265317220-13504-1-git-send-email-benoit.papillault@free.fr>
+Received: from smtp108.plus.mail.re1.yahoo.com ([69.147.102.71]:27415 "HELO
+	smtp108.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932576Ab0BYNw2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2010 08:52:28 -0500
+Message-ID: <4B868099.9000405@yahoo.com>
+Date: Thu, 25 Feb 2010 14:52:25 +0100
+From: Alban Browaeys <prahal@yahoo.com>
+Reply-To: prahal@yahoo.com
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [PATCH 2/2] rt2x00 : fix txdone implementation
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This file helps debugging HT channels since it displays if we are on
-ht20 or ht40+/ht40-
+Properly move to the headroom position in dma mapped skb. The hw extra
+headroom is now taken into account.
 
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+Signed-off-by: Alban Browaeys <prahal@yahoo.com>
 ---
- net/mac80211/debugfs.c |   33 +++++++++++++++++++++++++++++++++
- 1 files changed, 33 insertions(+), 0 deletions(-)
+  drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
+  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index b3bc32b..637929b 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -250,6 +250,38 @@ static const struct file_operations uapsd_max_sp_len_ops = {
- 	.open = mac80211_open_file_generic
- };
- 
-+static ssize_t channel_type_read(struct file *file, char __user *user_buf,
-+		       size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_local *local = file->private_data;
-+	const char *buf;
-+
-+	switch (local->hw.conf.channel_type) {
-+	case NL80211_CHAN_NO_HT:
-+		buf = "no ht\n";
-+		break;
-+	case NL80211_CHAN_HT20:
-+		buf = "ht20\n";
-+		break;
-+	case NL80211_CHAN_HT40MINUS:
-+		buf = "ht40-\n";
-+		break;
-+	case NL80211_CHAN_HT40PLUS:
-+		buf = "ht40+\n";
-+		break;
-+	default:
-+		buf = "???";
-+		break;
-+	}
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
-+}
-+
-+static const struct file_operations channel_type_ops = {
-+	.read = channel_type_read,
-+	.open = mac80211_open_file_generic
-+};
-+
- static ssize_t queues_read(struct file *file, char __user *user_buf,
- 			   size_t count, loff_t *ppos)
- {
-@@ -408,6 +440,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	DEBUGFS_ADD(noack);
- 	DEBUGFS_ADD(uapsd_queues);
- 	DEBUGFS_ADD(uapsd_max_sp_len);
-+	DEBUGFS_ADD(channel_type);
- 
- 	statsd = debugfs_create_dir("statistics", phyd);
- 
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 46b06af..fbeff5c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -966,7 +966,7 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+  		/* Check if we got a match by looking at WCID/ACK/PID
+  		 * fields */
+  		txwi = (__le32 *)(entry->skb->data -
+-				  rt2x00dev->hw->extra_tx_headroom);
++				  rt2x00dev->ops->extra_tx_headroom);
+  
+  		rt2x00_desc_read(txwi, 1, &word);
+  		tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
 -- 
-1.6.3.3
+1.7.0
 
