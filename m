@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47560 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753236Ab0BVPPq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 10:15:46 -0500
-Date: Mon, 22 Feb 2010 10:00:06 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, florian@mickler.org,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: [PATCH 1/2] Document the rfkill sysfs ABI
-Message-ID: <20100222150006.GA2988@tuxdriver.com>
-References: <1266702045-6062-1-git-send-email-florian@mickler.org> <1266702045-6062-2-git-send-email-florian@mickler.org> <1266704345.32739.0.camel@jlt3.sipsolutions.net> <1266746930.18491.1.camel@violet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1266746930.18491.1.camel@violet>
+Received: from mga11.intel.com ([192.55.52.93]:22867 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754500Ab0BYGMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2010 01:12:18 -0500
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 5/7] iwmc3200wifi: increase concatenated buffer
+Date: Thu, 25 Feb 2010 14:15:29 +0800
+Message-Id: <1267078531-9817-6-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1267078531-9817-5-git-send-email-yi.zhu@intel.com>
+References: <1267078531-9817-1-git-send-email-yi.zhu@intel.com>
+ <1267078531-9817-2-git-send-email-yi.zhu@intel.com>
+ <1267078531-9817-3-git-send-email-yi.zhu@intel.com>
+ <1267078531-9817-4-git-send-email-yi.zhu@intel.com>
+ <1267078531-9817-5-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 21, 2010 at 11:08:50AM +0100, Marcel Holtmann wrote:
-> Hi Johannes,
-> 
-> > > This moves sysfs ABI info from Documentation/rfkill.txt to the
-> > > ABI subfolder and reformats it.
-> > > 
-> > > Signed-off-by: Florian Mickler <florian@mickler.org>
-> > 
-> > This is fine with me.
-> 
-> we have to be careful here. Some of these sysfs details needs to be
-> deprecated and removed. Applications should use /dev/rfkill actually.
+Increase concatenated buffer from 8K to 32K to get better performance.
 
-Maybe all of it should be in "obsolete"?
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/hal.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/iwmc3200wifi/hal.h b/drivers/net/wireless/iwmc3200wifi/hal.h
+index e7bc416..c20936d 100644
+--- a/drivers/net/wireless/iwmc3200wifi/hal.h
++++ b/drivers/net/wireless/iwmc3200wifi/hal.h
+@@ -131,7 +131,7 @@ do {									  \
+ #define IWM_MAX_WIFI_CMD_BUFF_SIZE	(IWM_SDIO_FW_MAX_CHUNK_SIZE - \
+ 					 IWM_MAX_WIFI_HEADERS_SIZE)
+ 
+-#define IWM_HAL_CONCATENATE_BUF_SIZE	8192
++#define IWM_HAL_CONCATENATE_BUF_SIZE	(32 * 1024)
+ 
+ struct iwm_wifi_cmd_buff {
+ 	u16 len;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.0.4
+
