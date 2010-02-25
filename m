@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:17639 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473Ab0BKM1n (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:38362 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747Ab0BYFLo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2010 07:27:43 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: cfg80211 support
-Date: Thu, 11 Feb 2010 13:24:57 +0100
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-References: <20100202000934.GA19847@sortiz.org> <201002041052.00858.holgerschurig@gmail.com> <20100211120133.GA3136@sortiz.org>
-In-Reply-To: <20100211120133.GA3136@sortiz.org>
+	Thu, 25 Feb 2010 00:11:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201002111324.57501.holgerschurig@gmail.com>
+In-Reply-To: <20100224183744.52732c77@nehalam>
+References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
+	<4B85C59C.3010602@free.fr> <43e72e891002241643o3ba0b0bp5c7b90a6ae6680ec@mail.gmail.com>
+	<43e72e891002241705w4a8c7029le4d1118ee7a68bb9@mail.gmail.com>
+	<4B85E1B6.4000705@free.fr> <20100224183744.52732c77@nehalam>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 24 Feb 2010 21:11:23 -0800
+Message-ID: <43e72e891002242111x74f15f67y491ea7351d9c7b67@mail.gmail.com>
+Subject: Re: 802.11 development process - extended documentation
+To: Stephen Hemminger <shemminger@vyatta.com>,
+	Greg KH <greg@kroah.com>, "H. Peter Anvin" <hpa@kernel.org>
+Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> What I changed is triggerring the scan work whenever the last
-> one is done, i.e. triggering it from lbs_ret_scan().
+On Wed, Feb 24, 2010 at 6:37 PM, Stephen Hemminger
+<shemminger@vyatta.com> wrote:
+> On Thu, 25 Feb 2010 03:34:30 +0100
+> Benoit PAPILLAULT <benoit.papillault@free.fr> wrote:
+>
+>> Luis R. Rodriguez a écrit :
+>> > On Wed, Feb 24, 2010 at 4:43 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> >
+>> >> On Wed, Feb 24, 2010 at 4:34 PM, Benoit PAPILLAULT
+>> >> <benoit.papillault@free.fr> wrote:
+>> >>
+>> >>> Luis R. Rodriguez a écrit :
+>> >>>
+>> >>>> I've extended our 802.11 development process into a new section on our
+>> >>>> 802.11 wiki. I often get asked how this works from different parts of
+>> >>>> the company here at Atheros so figured it'd be easier to illustrate
+>> >>>> this as best as possible and share it.
+>> >>>>
+>> >>>> http://wireless.kernel.org/en/developers/process
+>> >>>>
+>> >>>> Hope it does justice, John if you see any mistakes feel free to edit.
+>> >>>> If the diagram seems fishy let me know what I can fix.
+>> >>>>
+>> >>>>  Luis
+>
+> The part that is missing is the -stable kernel tree (Greg KH).
 
-Ah, that makes sense.
+Indeed, so I was unsure how the the linux-2.6-allstable gets
+maintained yet, what that pulls from, and how linux-2.6-stable.git
+gets put together. If someone has time to explain how that to works to
+me I'd gladly add that.
 
-> My initial thought was that you could have 2 lbs_cfg_scan()
-> running at the same time since you could potentially have a 2nd
-> lbs_cfg_scan() call before scan_request is actually set.
+> As a distro maintainer, I find the stable kernel tree the most important of all!
 
-Hmm, even when cfg80211 would allow this, I wouldn't allow this 
-in the driver. All the hoops with the delayed-scan-work is 
-because the firmware can't send a I'm-on-powersafe-notification 
-to the current AP while being on other channels. So I have to 
-make sure to return from time to time to my AP, so that I won't 
-loose packets for me and won't be disconnected.
+Sure.
 
-If now two scan_req and therefore two scan workers run, the time 
-we're away from our "home channel" increases, which also 
-increase the deauthentication problem.
+> More important than the compat-wireless tree (sorry Luis).
 
+Heh, no offense taken, remember this is for 802.11, that's why I added
+that stuff. I often have to explain how that stuff works too.
 
-Oh, and btw: we can later add an optimization that if we aren't 
-connected at all, we do all scans in one-go, without delays. We 
-still need to send several scan-commands to the firmware, to 
-reduce the possible that a huuuuuge scan response overflows some 
-firmware buffer limit.
-
-
-Thanks for your answers.
-
-Best regards,
-Holger
-
--- 
-http://www.holgerschurig.de
+  Luis
