@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp102.plus.mail.re1.yahoo.com ([69.147.102.65]:20565 "HELO
-	smtp102.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S964881Ab0BZOic (ORCPT
+Received: from mail-iw0-f177.google.com ([209.85.223.177]:53423 "EHLO
+	mail-iw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933172Ab0BYSFb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2010 09:38:32 -0500
-Message-ID: <4B87DCE4.3090708@yahoo.com>
-Date: Fri, 26 Feb 2010 15:38:28 +0100
-From: Alban Browaeys <prahal@yahoo.com>
-Reply-To: prahal@yahoo.com
+	Thu, 25 Feb 2010 13:05:31 -0500
+Received: by iwn7 with SMTP id 7so5388580iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2010 10:05:30 -0800 (PST)
 MIME-Version: 1.0
-To: prahal@yahoo.com
-CC: John Linville <linville@tuxdriver.com>,
-	Josef Bacik <josef@redhat.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2x00: Fix TX status reporting for rt2800pci.
-References: <4B87D9FF.5080105@yahoo.com>
-In-Reply-To: <4B87D9FF.5080105@yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1267087684.3796.0.camel@jlt3.sipsolutions.net>
+References: <20100202000934.GA19847@sortiz.org>
+	 <201002151146.48156.holgerschurig@gmail.com>
+	 <cdd918981002240005o1fa50956yfb2a692716c06a55@mail.gmail.com>
+	 <1267054502.6162.9.camel@localhost.localdomain>
+	 <cdd918981002250042m16cdf34ap8305ed2fbfd7804d@mail.gmail.com>
+	 <1267087684.3796.0.camel@jlt3.sipsolutions.net>
+Date: Thu, 25 Feb 2010 10:05:30 -0800
+Message-ID: <c1545bb51002251005o396130e9g906e5efff024c78@mail.gmail.com>
+Subject: Re: [PATCH] libertas: cfg80211 support
+From: Andrey Yurovsky <yurovsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David MOUSSAUD <d.moussaud@gmail.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Holger Schurig <holgerschurig@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <holgerschurig@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26/02/2010 15:26, Alban Browaeys wrote:
-> After testing, we found that TX_STA_FIFO_MCS is the last MCS value
-> tried. If the transmission failed, 8 frames have been transmitted. If the
-> transmission succeed, we can easily compute the number of retry.  This 
-> patch fix
-> the way status is reported to mac80211 rate control. It has 2 bugs :
+On Thu, Feb 25, 2010 at 12:48 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2010-02-25 at 09:42 +0100, David MOUSSAUD wrote:
+>> Thanks for the explication.
+>> Do you know an other sdio chipset that would do the job ?
 >
-> 1. mcs can contain the short preamble flag and it will lead to wrong
-> computations.
->
-> 2. minstrel nearly always say that 54 Mbits is the best rate, even if 
-> we are
-> very far from the AP
->
-> TX_DONE_FALLBACK flag meaning has been changed : it means that a
-> fallback rate table is used by the hardware.
->
-> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> libertas_tf driver has AP iirc.
 
-This patch fixes the probe timeout after less than 2 minutes.
-I probably should have resend the two patches (tx done hw implementation 
-and this one). Just thought about it.
-As it applies above the tx done implementation. I did not make one that 
-applies above the software only implementation as it is broken since 
-entry index was replaced by key index in rt2800pci write tx desc (as 
-Wireless Cli Id).
+Yes but it only supports one variant with USB (88w8388) and special
+firmware, there's no SDIO equivalent.
 
+The only soft-MAC/mac80211 hardware/driver that I can think of that
+has an SDIO variant right now is the TI wl12xx stuff but I don't know
+anything about it or whether it can do enough to support AP via
+mac80211.
 
+  -Andrey
