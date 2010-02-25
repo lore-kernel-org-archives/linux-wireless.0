@@ -1,94 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:37451 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094Ab0BQVEL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42644 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932681Ab0BYRPk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 16:04:11 -0500
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh07-2.mail.saunalahti.fi (Postfix) with SMTP id CF19F18D48F
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 23:04:09 +0200 (EET)
-Received: from [127.0.1.1] (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
-	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id BE1F6E51A9
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 23:04:08 +0200 (EET)
-Subject: [RFC PATCH 1/3] mac80211: refactor nullfunc status handling to a
-	separate function
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 17 Feb 2010 23:04:08 +0200
-Message-ID: <20100217210408.30634.73615.stgit@tikku>
-In-Reply-To: <20100217210202.30634.69236.stgit@tikku>
-References: <20100217210202.30634.69236.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 25 Feb 2010 12:15:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+Subject: [PATCH] netdevice.h: check for CONFIG_WLAN instead of CONFIG_WLAN_80211
+Date: Thu, 25 Feb 2010 12:02:45 -0500
+Message-Id: <1267117365-16235-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20100225150423.GA5101@faui49.informatik.uni-erlangen.de>
+References: <20100225150423.GA5101@faui49.informatik.uni-erlangen.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+In "wireless: remove WLAN_80211 and WLAN_PRE80211 from Kconfig" I
+inadvertantly missed a line in include/linux/netdevice.h.  I thereby
+effectively reverted "net: Set LL_MAX_HEADER properly for wireless." by
+accident. :-(  Now we should check there for CONFIG_WLAN instead.
 
-Create a new function for handling nullfunc status and make it easier
-to add new functionality.
-
-No functional changes.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Reported-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+Cc: stable@kernel.org
 ---
- net/mac80211/status.c |   38 +++++++++++++++++++++++++-------------
- 1 files changed, 25 insertions(+), 13 deletions(-)
+Unless there is objection, I'll push this up through my tree as normal.
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 56d5b9a..8a17454 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -157,6 +157,29 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
- 	}
- }
+(Apologies for the second copy, I munged the LKML address in the first
+one...)
+
+ include/linux/netdevice.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index a3fccc8..99914e6 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -136,7 +136,7 @@ static inline bool dev_xmit_complete(int rc)
+  *	used.
+  */
  
-+static void ieee80211_nullfunc_status(struct ieee80211_local *local,
-+				      struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	__le16 fc = hdr->frame_control;
-+
-+	if (ieee80211_has_pm(fc) &&
-+	    (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
-+	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
-+	    local->ps_sdata && !(local->scanning)) {
-+		if (info->flags & IEEE80211_TX_STAT_ACK) {
-+			local->ps_sdata->u.mgd.flags |=
-+				IEEE80211_STA_NULLFUNC_ACKED;
-+			ieee80211_queue_work(&local->hw,
-+					     &local->dynamic_ps_enable_work);
-+		} else
-+			mod_timer(&local->dynamic_ps_timer, jiffies +
-+				  msecs_to_jiffies(10));
-+	}
-+}
-+
-+
- void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct sk_buff *skb2;
-@@ -274,19 +297,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			local->dot11FailedCount++;
- 	}
- 
--	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
--	    (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
--	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
--	    local->ps_sdata && !(local->scanning)) {
--		if (info->flags & IEEE80211_TX_STAT_ACK) {
--			local->ps_sdata->u.mgd.flags |=
--					IEEE80211_STA_NULLFUNC_ACKED;
--			ieee80211_queue_work(&local->hw,
--					&local->dynamic_ps_enable_work);
--		} else
--			mod_timer(&local->dynamic_ps_timer, jiffies +
--					msecs_to_jiffies(10));
--	}
-+	if (ieee80211_is_nullfunc(fc))
-+		ieee80211_nullfunc_status(local, skb);
- 
- 	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX)
- 		cfg80211_action_tx_status(
+-#if defined(CONFIG_WLAN_80211) || defined(CONFIG_AX25) || defined(CONFIG_AX25_MODULE)
++#if defined(CONFIG_WLAN) || defined(CONFIG_AX25) || defined(CONFIG_AX25_MODULE)
+ # if defined(CONFIG_MAC80211_MESH)
+ #  define LL_MAX_HEADER 128
+ # else
+-- 
+1.6.2.5
 
