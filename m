@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:52531 "EHLO c60.cesmail.net"
+Received: from mail.atheros.com ([12.36.123.2]:27339 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753436Ab0BNDNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 22:13:25 -0500
-Subject: [PATCH] mwl8k: disable softirqs when accessing sta_notify_list
-From: Pavel Roskin <proski@gnu.org>
-To: Lennert Buytenhek <buytenh@marvell.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Sat, 13 Feb 2010 22:13:06 -0500
-Message-Id: <1266117186.13902.21.camel@mj>
-Mime-Version: 1.0
+	id S1755126Ab0BYLHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2010 06:07:12 -0500
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2010 03:07:12 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19334.24140.564616.316014@gargle.gargle.HOWL>
+Date: Thu, 25 Feb 2010 16:56:04 +0530
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: [PATCH] ath9k_htc: sync add_interface and remove_interface with
+ mac80211
+In-Reply-To: <201002251154.30917.helmut.schaa@googlemail.com>
+References: <201002241633.47090.helmut.schaa@googlemail.com>
+	<43e72e891002240918i152253c9o8130dc507d2dc03@mail.gmail.com>
+	<201002251154.30917.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use spin_[un]lock_bh in mwl8k_sta_notify().  The sta_notify handler is
-required to be atomic, yet it can be called in process context, so make
-sure one call won't preempt another.
+Helmut Schaa wrote:
+> Am Mittwoch 24 Februar 2010 schrieb Luis R. Rodriguez:
+> > Thanks! Applied and pushed out. I should note, since no one else has,
+> > that ath9k_htc has gotten a huge face lift by now. Unfortunately the
+> > entire new revamp was done through an internal private tree but from
+> > what I gather submission upstream should happen soon.
+> 
+> Does it make much sense then to hack on the driver right now?
+> Should linux-wireless be CC'ed as well for ath9k_htc patches?
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
-I found it by accident (sparse reported it, but presumably for a wrong
-reason) and I have no hardware to test the patch on, but I believe it's
-correct.
+We would be making a submission soon, as soon as a few
+internal tests are run.
 
- drivers/net/wireless/mwl8k.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+I would think that holding off work on the public ath9k_htc tree would be good.
+Patches are always welcome for the driver after the submission. :)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 0cfdb9d..6497c84 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3784,9 +3784,9 @@ mwl8k_sta_notify(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		s->cmd = cmd;
- 		s->sta = *sta;
- 
--		spin_lock(&priv->sta_notify_list_lock);
-+		spin_lock_bh(&priv->sta_notify_list_lock);
- 		list_add_tail(&s->list, &priv->sta_notify_list);
--		spin_unlock(&priv->sta_notify_list_lock);
-+		spin_unlock_bh(&priv->sta_notify_list_lock);
- 
- 		ieee80211_queue_work(hw, &priv->sta_notify_worker);
- 	}
--- 
-Regards,
-Pavel Roskin
+Sujith
