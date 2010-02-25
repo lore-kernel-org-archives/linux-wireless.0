@@ -1,52 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:60567 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801Ab0BQSPd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 13:15:33 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so65668qwe.37
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2010 10:15:32 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 17 Feb 2010 19:15:31 +0100
-Message-ID: <c2673ca61002171015j375922c0y4c7f61c3d3322bab@mail.gmail.com>
-Subject: [PATCH] v2: rtl8187: micro cleanup
-From: okias <d.okias@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:22867 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753326Ab0BYGMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2010 01:12:16 -0500
+From: Zhu Yi <yi.zhu@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, herton@mandriva.com.br,
-	htl10@users.sourceforge.net, Larry.Finger@lwfinger.net
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 0/7] iwmc3200wifi driver 02/25 updates
+Date: Thu, 25 Feb 2010 14:15:24 +0800
+Message-Id: <1267078531-9817-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 3f02b3ec0c3e6d7fa0599de12af0b76150854b94 Mon Sep 17 00:00:00 2001
-From: David Heidelberger <d.okias@gmail.com>
-Date: Wed, 17 Feb 2010 19:13:46 +0100
-Subject: [PATCH] rtl8187: micro cleanup
+Hi John,
 
----
- drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Here are some iwmc3200wifi driver updates for .34 kernel. Please apply.
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 7ba3052..2fe0c84 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -1175,8 +1175,6 @@ static void rtl8187_bss_info_changed(struct
-ieee80211_hw *dev,
+[PATCH 1/7] iwmc3200wifi: refuse to associate on unallowed channels
+[PATCH 2/7] iwmc3200wifi: remove "_safe" for some list_for_each_entry usage
+[PATCH 3/7] iwmc3200wifi: add ftrace event tracing support
+[PATCH 4/7] iwmc3200wifi: protect rx_tickets and rx_packets[] lists
+[PATCH 5/7] iwmc3200wifi: increase concatenated buffer
+[PATCH 6/7] iwmc3200wifi: mark some pmksa functions static
+[PATCH 7/7] iwmc3200wifi: typo fix and code cleanup
 
- 		if (priv->is_rtl8187b)
- 			reg = RTL818X_MSR_ENEDCA;
--		else
--			reg = 0;
-
- 		if (is_valid_ether_addr(info->bssid)) {
- 			reg |= RTL818X_MSR_INFRA;
--- 
-1.7.0
-
-
-
--- 
-Jabber/XMPP: okias@isgeek.info
-SIP VoIP: sip:17474537254@proxy01.sipphone.com
+Thanks,
+-yi
