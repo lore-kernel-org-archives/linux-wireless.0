@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f200.google.com ([209.85.210.200]:65284 "EHLO
-	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751669Ab0BSPty (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 10:49:54 -0500
-Received: by yxe38 with SMTP id 38so169994yxe.4
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 07:49:53 -0800 (PST)
-Message-ID: <4B7EB31D.2000603@lwfinger.net>
-Date: Fri, 19 Feb 2010 09:49:49 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs definitions
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com> <1266591292.15178.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1266591292.15178.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from 1wt.eu ([62.212.114.60]:57642 "EHLO 1wt.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752662Ab0BYHLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2010 02:11:08 -0500
+Date: Thu, 25 Feb 2010 08:11:04 +0100
+From: Willy Tarreau <w@1wt.eu>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: 802.11 development process - extended documentation
+Message-ID: <20100225071104.GA20914@1wt.eu>
+References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com> <3f9a31f41002242053r169255d2hf2585aeb55174a92@mail.gmail.com> <43e72e891002242119u77fdfd30m2d17a1e48fe2e712@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e891002242119u77fdfd30m2d17a1e48fe2e712@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2010 08:54 AM, Johannes Berg wrote:
-> Out of curiosity, how far along is this stuff in general?
+On Wed, Feb 24, 2010 at 09:19:41PM -0800, Luis R. Rodriguez wrote:
+> > What is the status of Wireless in Linux 2.4
 > 
-> I have a rev 16 core, but right now I can't find the right firmware
-> (yes, I should be able to dig it out, but maybe you know off-hand?)
+> Heh, umm, I have no clue. Dead?
 
-I got my latest firmware (version 508.1107 (2009-06-26 19:16:02)) from:
+It could be considered like this given the pace at which Wireless
+evolves around. Basically, if you have a WiFi NIC which works in
+2.4, there is no reason for it to break tomorrow. However if yours
+is not supported, don't hope to see it added later. Some exotic
+drivers may sometimes be found in embedded distros such as OpenWrt
+though.
 
-http://www.linksysbycisco.com/gpl/wrt610n_v2.00.00.05_us.tar.gz
+Willy
 
-The binaries are in directory wrt610n_v2.00.00.05_us/release/src/wl/linux/. I
-used Daniel Lenski's script named b43_fwcutter.py to extract the firmware from
-wl_apsta.o. Included are ucode_2w20 - Rev 20 802.11 cores have an SSLPN PHY.
-
->From my firmware directory, I see ucode16 firmware for LP N and SSLPN PHYs. From
-your question to Rafał, yours must be an N PHY.
-
-Larry
