@@ -1,132 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:50011 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149Ab0BNTAS convert rfc822-to-8bit (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:44151 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933077Ab0BYReE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 14:00:18 -0500
+	Thu, 25 Feb 2010 12:34:04 -0500
+Received: by gwj16 with SMTP id 16so1832030gwj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2010 09:34:03 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4B784498.8030509@mandriva.org>
-References: <4B77C819.9050602@mandriva.org> <4B782670.9080001@lwfinger.net>
-	<4B784498.8030509@mandriva.org>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 14 Feb 2010 19:59:54 +0100
-Message-ID: <69e28c911002141059y57fb2097x5613c25ad1c616da@mail.gmail.com>
-Subject: Re: linux-2..6.33-rc7 and b43
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+In-Reply-To: <1267099415.3796.4.camel@jlt3.sipsolutions.net>
+References: <1267099415.3796.4.camel@jlt3.sipsolutions.net>
+Date: Thu, 25 Feb 2010 09:33:59 -0800
+Message-ID: <445f43ac1002250933l52a2dc1eg43f1902165f1de07@mail.gmail.com>
+Subject: Re: libertas_tf maintenance status
+From: Javier Cardona <javier@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Deepak Saxena <dsaxena@laptop.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 14, 2010 at 7:44 PM, Thomas Backlund <tmb@mandriva.org> wrote:
-> Larry Finger skrev 14.2.2010 18:36:
->>
->> On 02/14/2010 03:53 AM, Thomas Backlund wrote:
->>>
->>> Hi,
->>> (please cc me on replies)
->>>
->>> We have a user that tried out b43, but got this in the logs:
->>>
->>> --- cut ---
->>> 65858:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
->>> support DMA on your system. Please use PIO instead. 65859:Feb  9
->>> 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO must
->>> be set in your kernel configuration.
->>> 65860:Feb  9 22:05:16 elmo kernel: b43-phy2 debug: Adding Interface type
->>> 2
->>> 65861:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: Fatal DMA error:
->>> 0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
->>>
->>> 65862:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: This device does not
->>> support DMA on your system. Please use PIO instead.
->>> 65863:Feb  9 22:05:16 elmo kernel: b43-phy2 ERROR: CONFIG_B43_FORCE_PIO
->>> must be set in your kernel configuration.
->>> --- cut ---
->>>
->>>
->>>
->>> But reading the Kconfig help, it states:
->>> --- cut ---
->>> config B43_FORCE_PIO
->>>         bool "Force usage of PIO instead of DMA"
->>>         depends on B43&&  B43_DEBUG
->>>         ---help---
->>>           This will disable DMA and always enable PIO instead.
->>>
->>>           Say N!
->>>           This is only for debugging the PIO engine code. You do
->>>           _NOT_ want to enable this.
->>> --- cut ---
->>>
->>>
->>> So,
->>> wich one is it ?
->>>
->>> Do I belive the dmesg output, or the Kconfig ?
->>>
->>> Note,
->>> the b43 works for the user if he enable the CONFIG_B43_FORCE_PIO.
->>>
->>> But I'm thinking of this problem from a distro point of view.
->>> Will it break for others if I enable it ?
->>
->>> From a distro point of view, you would not want to set FORCE_PIO as the
->>
->> performance penalty would be very large.
->>
->
-> As I suspected.
-> Thanks for confirming it.
->
->> You do not give the specific details on the problem system; however, it is
->> probably a BCM4312 802.11 b/g device with PCI ID 14e4:4315 being used with
->> an
->> Atom processor in a netbook. We have no fix.
->>
->
-> Sorry about the missing info...
-> I asked a few times from the user, and got no reponse until today a few
-> hours after your response...
->
-> It is indeed a BCM4312 802.11 b/g device with PCI ID 14e4:4315 on a Dell
-> laptop with a Intel ICH9M series chipset and a Intel Core(TM)2 Duo CPU T7250
-> @ 2.00GHz.
+Johannes,
 
-Weird... that's not an Intel Atom, but a Core 2 Duo, standard-voltage.
-Mind posting any more details on this system?
+On Thu, Feb 25, 2010 at 4:03 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> What's the maintenance status on libertas_tf?
 
->
->> In the 2.6.34 code, b43 will be changed to allow the selection of PIO mode
->> at
->> run time rather than compile time. For a distro, this method is clearly
->> superior. Those users that need PIO can select it without forcing the
->> performance penalty on everyone. The patch was too late for the 2.6.33
->> merge,
->> and too intrusive to be applied to 2.6.33-rcX. It has been present in the
->> wireless-testing code base for 2 months with no trouble reported, thus it
->> should
->> be safe for inclusion in your kernels. The relevant patch is attached.
->>
->
-> Nice solution.
->
-> What about making it autodetected ?
-> Or is it only a "last resort" with the hopes of getting the issue fixed?
->
-> Anyway, thanks for the patch.
->
-> --
-> Thomas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+No one from cozybit is currently maintaining this driver.  Maybe
+Deepak (cc:), from OLPC?
 
+> Now that we have async firmware loading that is more capable, I would
+> love to see libertas_tf converted to load firmware before registering
+> with mac80211, like ar9170 and iwlwifi, and register with the right MAC
+> address so we can get rid of the code that was added by
+>
+> commit bdbe819540f3365249095692118dbfeee308140d
+> Author: Luis Carlos Cobo <luisca@cozybit.com>
+> Date:   Thu Aug 14 10:40:48 2008 -0700
+>
+>   mac80211: allow no mac address until firmware load
 
+Cheers,
+
+Javier
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
