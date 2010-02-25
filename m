@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:42372 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755491Ab0BPR4x (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:36140 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759168Ab0BYKyk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2010 12:56:53 -0500
-Date: Tue, 16 Feb 2010 11:56:50 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>
-Subject: [PATCH 5/5] rtl8187se: Modify rtl818x makefile
-Message-ID: <4b7adc62.8QA8+PaKuvWOxerG%Larry.Finger@lwfinger.net>
+	Thu, 25 Feb 2010 05:54:40 -0500
+Received: by bwz1 with SMTP id 1so2691961bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2010 02:54:38 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] ath9k_htc: sync add_interface and remove_interface with mac80211
+Date: Thu, 25 Feb 2010 11:54:30 +0100
+Cc: devel@linuxdriverproject.org,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
+References: <201002241633.47090.helmut.schaa@googlemail.com> <43e72e891002240918i152253c9o8130dc507d2dc03@mail.gmail.com>
+In-Reply-To: <43e72e891002240918i152253c9o8130dc507d2dc03@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201002251154.30917.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modify the wireless Makefile for RTL8187SE.
+Am Mittwoch 24 Februar 2010 schrieb Luis R. Rodriguez:
+> Thanks! Applied and pushed out. I should note, since no one else has,
+> that ath9k_htc has gotten a huge face lift by now. Unfortunately the
+> entire new revamp was done through an internal private tree but from
+> what I gather submission upstream should happen soon.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Does it make much sense then to hack on the driver right now?
+Should linux-wireless be CC'ed as well for ath9k_htc patches?
 
- Makefile         |    1 +
- rtl818x/Makefile |    2 ++
- 2 files changed, 3 insertions(+)
-
-Index: wireless-testing/drivers/net/wireless/Makefile
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/Makefile
-+++ wireless-testing/drivers/net/wireless/Makefile
-@@ -24,6 +24,7 @@ obj-$(CONFIG_B43LEGACY)		+= b43legacy/
- obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
- obj-$(CONFIG_RTL8180)		+= rtl818x/
- obj-$(CONFIG_RTL8187)		+= rtl818x/
-+obj-$(CONFIG_RTL8187SE)		+= rtl818x/
- 
- # 16-bit wireless PCMCIA client drivers
- obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
-Index: wireless-testing/drivers/net/wireless/rtl818x/Makefile
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/Makefile
-+++ wireless-testing/drivers/net/wireless/rtl818x/Makefile
-@@ -1,7 +1,9 @@
- rtl8180-objs		:= rtl8180_dev.o rtl8180_rtl8225.o rtl8180_sa2400.o rtl8180_max2820.o rtl8180_grf5101.o
- rtl8187-objs		:= rtl8187_dev.o rtl8187_rtl8225.o rtl8187_leds.o rtl8187_rfkill.o
-+rtl8187se-objs		:= rtl8187se_rfkill.o
- 
- obj-$(CONFIG_RTL8180)	+= rtl8180.o
- obj-$(CONFIG_RTL8187)	+= rtl8187.o
-+obj-$(CONFIG_RTL8187SE)	+= rtl8187se.o
- 
- 
+Thanks,
+Helmut
