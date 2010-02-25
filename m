@@ -1,36 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48864 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543Ab0BHVAy (ORCPT
+Received: from 64.mail-out.ovh.net ([91.121.185.65]:57367 "HELO
+	64.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758839Ab0BYCeg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 16:00:54 -0500
-Date: Mon, 8 Feb 2010 15:55:04 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org,
-	Chris Siebenmann <cks-rhbugzilla@cs.toronto.edu>
-Subject: Re: [PATCH v2] airo: fix setting zero length WEP key
-Message-ID: <20100208205503.GB3852@tuxdriver.com>
-References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com> <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com> <1265353178.11066.5.camel@localhost.localdomain>
+	Wed, 24 Feb 2010 21:34:36 -0500
+Message-ID: <4B85E1B6.4000705@free.fr>
+Date: Thu, 25 Feb 2010 03:34:30 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1265353178.11066.5.camel@localhost.localdomain>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: 802.11 development process - extended documentation
+References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com> 	<4B85C59C.3010602@free.fr> <43e72e891002241643o3ba0b0bp5c7b90a6ae6680ec@mail.gmail.com> <43e72e891002241705w4a8c7029le4d1118ee7a68bb9@mail.gmail.com>
+In-Reply-To: <43e72e891002241705w4a8c7029le4d1118ee7a68bb9@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 04, 2010 at 10:59:38PM -0800, Dan Williams wrote:
-> John, can we revert the patch you applied, and apply the following patch
-> instead (in the next mail)?  I'd rather use the one I'm about to send
-> because it makes it clearer *why* setting the TX key index is required,
-> and it limits that case to only the time when it's necessary.  Pending
-> the testing by Chris, I'd rather have the revised version committed
-> instead.
+Luis R. Rodriguez a écrit :
+> On Wed, Feb 24, 2010 at 4:43 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>   
+>> On Wed, Feb 24, 2010 at 4:34 PM, Benoit PAPILLAULT
+>> <benoit.papillault@free.fr> wrote:
+>>     
+>>> Luis R. Rodriguez a écrit :
+>>>       
+>>>> I've extended our 802.11 development process into a new section on our
+>>>> 802.11 wiki. I often get asked how this works from different parts of
+>>>> the company here at Atheros so figured it'd be easier to illustrate
+>>>> this as best as possible and share it.
+>>>>
+>>>> http://wireless.kernel.org/en/developers/process
+>>>>
+>>>> Hope it does justice, John if you see any mistakes feel free to edit.
+>>>> If the diagram seems fishy let me know what I can fix.
+>>>>
+>>>>  Luis
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>>>> in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>>
+>>>>         
+>>> Nice (especially the picture)! However, Johannes has its picture in the
+>>> text, but not in the diagram and the opposite for ... you I guess (picture
+>>> on the left hand).
+>>>       
+>> I figured I'd throw in the compat-wireless stuff while at it as I have
+>> to explain that as well often. I didn't yet get to add text for the
+>> compat stuff.
+>>     
+>
+> OK done. Anything else?
+>
+>   Luis
+>
+>   
+That's fine for me. Very good document.
 
-Do you still want this don, even after Chris's testing says your
-patch doesn't work?  I wasn't sure from your response.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Benoit
