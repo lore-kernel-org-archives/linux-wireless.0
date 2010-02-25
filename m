@@ -1,47 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20512 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754689Ab0BVGl2 (ORCPT
+Received: from smtp109.plus.mail.re1.yahoo.com ([69.147.102.72]:20442 "HELO
+	smtp109.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932155Ab0BYETx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2010 01:41:28 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 08/22] wl1271: Changed access to fw status register to use raw read
-Date: Mon, 22 Feb 2010 08:38:28 +0200
-Message-Id: <1266820722-20202-9-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 24 Feb 2010 23:19:53 -0500
+Message-ID: <4B85FA66.2020503@yahoo.com>
+Date: Thu, 25 Feb 2010 05:19:50 +0100
+From: Alban Browaeys <prahal@yahoo.com>
+Reply-To: prahal@yahoo.com
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: [PATCH 1/2] rt2x00 : hw support txdone implementation. (without fallback
+ change)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+This is an implementation that support WCID being the key_index coming
+from benoit without the change in the meaning of the tx fallback flag.
 
-Changed access to fw status register to use raw read instead of
-translated addressing. On SDIO access by translated addressing was not
-working and raw access is working also on SPI.
+Ivo: in previous patch I forgot about your comment months ago against the
+fallback meaning change. This version thus avoid this change.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+Signed-off-by: Alban Browaeys <prahal@yahoo.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+  drivers/net/wireless/rt2x00/rt2800pci.c |   86 +++++++++++++------------------
+  1 files changed, 36 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index ea49ced..310f58c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -377,7 +377,7 @@ static void wl1271_fw_status(struct wl1271 *wl,
- 	u32 total = 0;
- 	int i;
- 
--	wl1271_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
-+	wl1271_raw_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
- 
- 	wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
- 		     "drv_rx_counter = %d, tx_results_counter = %d)",
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 7899789..46b06af 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -920,76 +920,61 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+  {
+  	struct data_queue *queue;
+  	struct queue_entry *entry;
+-	struct queue_entry *entry_done;
+-	struct queue_entry_priv_pci *entry_priv;
++	__le32 *txwi;
+  	struct txdone_entry_desc txdesc;
+  	u32 word;
+  	u32 reg;
+-	u32 old_reg;
+-	unsigned int type;
+-	unsigned int index;
+-	u16 mcs, real_mcs;
+-
++	int i;
++	int wcid, ack, pid, tx_wcid, tx_ack, tx_pid;
++	u16 mcs, tx_mcs;
++	
+  	/*
+-	 * During each loop we will compare the freshly read
+-	 * TX_STA_FIFO register value with the value read from
+-	 * the previous loop. If the 2 values are equal then
+-	 * we should stop processing because the chance it
+-	 * quite big that the device has been unplugged and
+-	 * we risk going into an endless loop.
++	 * To avoid an endlees loop, we only read the TX_STA_FIFO register up
++	 * to 256 times (this is enought to get all values from the FIFO). In
++	 * normal situation, the loop is terminated when we reach a value with
++	 * TX_STA_FIFO_VALID bit is 0.
+  	 */
+-	old_reg = 0;
+-
+-	while (1) {
++	
++	for (i=0; i<256; i++) {
+  		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &reg);
+  		if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
+  			break;
+  
+-		if (old_reg == reg)
+-			break;
+-		old_reg = reg;
++		wcid    = rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
++		ack     = rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
++		pid     = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
+  
+  		/*
+  		 * Skip this entry when it contains an invalid
+  		 * queue identication number.
+  		 */
+-		type = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE) - 1;
+-		if (type >= QID_RX)
++		if (pid < 1)
+  			continue;
+  
+-		queue = rt2x00queue_get_queue(rt2x00dev, type);
++		queue = rt2x00queue_get_queue(rt2x00dev, pid - 1);
+  		if (unlikely(!queue))
+  			continue;
+  
+  		/*
+-		 * Skip this entry when it contains an invalid
+-		 * index number.
++		 * Inside each queue, we process each entry in a chronological
++		 * order. We first check that the queue is not empty.
+  		 */
+-		index = rt2x00_get_field32(reg, TX_STA_FIFO_WCID) - 1;
+-		if (unlikely(index >= queue->limit))
++		if (queue->length == 0)
+  			continue;
++		entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+  
+-		entry = &queue->entries[index];
+-		entry_priv = entry->priv_data;
+-		rt2x00_desc_read((__le32 *)entry->skb->data, 0, &word);
+-
+-		entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+-		while (entry != entry_done) {
+-			/*
+-			 * Catch up.
+-			 * Just report any entries we missed as failed.
+-			 */
+-			WARNING(rt2x00dev,
+-				"TX status report missed for entry %d\n",
+-				entry_done->entry_idx);
+-
+-			txdesc.flags = 0;
+-			__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
+-			txdesc.retry = 0;
+-
+-			rt2x00lib_txdone(entry_done, &txdesc);
+-			entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+-		}
++		/* Check if we got a match by looking at WCID/ACK/PID
++		 * fields */
++		txwi = (__le32 *)(entry->skb->data -
++				  rt2x00dev->hw->extra_tx_headroom);
++
++		rt2x00_desc_read(txwi, 1, &word);
++		tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
++		tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
++		tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
++
++		if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid))
++			WARNING(rt2x00dev, "invalid TX_STA_FIFO content\n");
+  
+  		/*
+  		 * Obtain the status about this packet.
+@@ -1010,10 +995,11 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+  		 * we have mcs = tx_mcs - 1. So the number of
+  		 * retry is (tx_mcs - mcs).
+  		 */
+-		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
+-		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
++		mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
++		rt2x00_desc_read(txwi, 0, &word);
++		tx_mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
+  		__set_bit(TXDONE_FALLBACK, &txdesc.flags);
+-		txdesc.retry = mcs - min(mcs, real_mcs);
++		txdesc.retry = tx_mcs - min(tx_mcs, mcs);
+  
+  		rt2x00lib_txdone(entry, &txdesc);
+  	}
 -- 
-1.6.3.3
+1.7.0
+
 
