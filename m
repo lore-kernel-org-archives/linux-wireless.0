@@ -1,56 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:34379 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758591Ab0BYBFv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 20:05:51 -0500
-MIME-Version: 1.0
-In-Reply-To: <43e72e891002241643o3ba0b0bp5c7b90a6ae6680ec@mail.gmail.com>
-References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-	<4B85C59C.3010602@free.fr> <43e72e891002241643o3ba0b0bp5c7b90a6ae6680ec@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 24 Feb 2010 17:05:31 -0800
-Message-ID: <43e72e891002241705w4a8c7029le4d1118ee7a68bb9@mail.gmail.com>
-Subject: Re: 802.11 development process - extended documentation
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from ist.d-labs.de ([213.239.218.44]:33364 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934028Ab0BZLBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2010 06:01:53 -0500
+From: florian@mickler.org
+To: "Henrique de Moraes Holschuh" <hmh@hmh.eng.br>
+Cc: "Marcel Holtmann" <marcel@holtmann.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Randy Dunlap" <rdunlap@xenotime.net>,
+	"Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	Florian Mickler <florian@mickler.org>
+Subject: [PATCH v3] enhance sysfs rfkill interface
+Date: Fri, 26 Feb 2010 12:01:34 +0100
+Message-Id: <1267182094-15469-2-git-send-email-florian@mickler.org>
+In-Reply-To: <1267182094-15469-1-git-send-email-florian@mickler.org>
+References: <20100225233516.GD5218@khazad-dum.debian.net>
+ <1267182094-15469-1-git-send-email-florian@mickler.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 24, 2010 at 4:43 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Feb 24, 2010 at 4:34 PM, Benoit PAPILLAULT
-> <benoit.papillault@free.fr> wrote:
->> Luis R. Rodriguez a écrit :
->>>
->>> I've extended our 802.11 development process into a new section on our
->>> 802.11 wiki. I often get asked how this works from different parts of
->>> the company here at Atheros so figured it'd be easier to illustrate
->>> this as best as possible and share it.
->>>
->>> http://wireless.kernel.org/en/developers/process
->>>
->>> Hope it does justice, John if you see any mistakes feel free to edit.
->>> If the diagram seems fishy let me know what I can fix.
->>>
->>>  Luis
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->>> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>>
->>
->> Nice (especially the picture)! However, Johannes has its picture in the
->> text, but not in the diagram and the opposite for ... you I guess (picture
->> on the left hand).
->
-> I figured I'd throw in the compat-wireless stuff while at it as I have
-> to explain that as well often. I didn't yet get to add text for the
-> compat stuff.
+This commit introduces two new sysfs knobs.
 
-OK done. Anything else?
+/sys/class/rfkill/rfkill[0-9]+/blocked_hw: (ro)
+	hardblock kill state
+/sys/class/rfkill/rfkill[0-9]+/blocked_sw: (rw)
+	softblock kill state
 
-  Luis
+Signed-off-by: Florian Mickler <florian@mickler.org>
+---
+ Documentation/ABI/stable/sysfs-class-rfkill |   25 +++++++++++
+ net/rfkill/core.c                           |   58 +++++++++++++++++++++++++++
+ 2 files changed, 83 insertions(+), 0 deletions(-)
+
+this depends on the first patch: "[PATCH v2 1/2] Document the rfkill sysfs ABI"
+
+diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
+index 97d5064..b91c3f3 100644
+--- a/Documentation/ABI/stable/sysfs-class-rfkill
++++ b/Documentation/ABI/stable/sysfs-class-rfkill
+@@ -40,3 +40,28 @@ Description: 	Whether the soft blocked state is initialised from non-volatile
+ Values: 	A numeric value.
+ 		0: false
+ 		1: true
++
++
++What:		/sys/class/rfkill/rfkill[0-9]+/blocked_hw
++Date:		23-Feb-2010
++KernelVersion	v2.6.34
++Contact:	linux-wireless@vger.kernel.org
++Description: 	Current hardblock state. This file is read only.
++Values: 	A numeric value.
++		0: inactive
++			The transmitter is (potentially) active.
++		1: active
++			The transmitter is forced off by something outside of
++			the driver's control.
++
++
++What:		/sys/class/rfkill/rfkill[0-9]+/blocked_sw
++Date:		23-Feb-2010
++KernelVersion	v2.6.34
++Contact:	linux-wireless@vger.kernel.org
++Description:	Current softblock state. This file is read and write.
++Values: 	A numeric value.
++		0: inactive
++			The transmitter is (potentially) active.
++		1: active
++			The transmitter is turned off by software.
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index c218e07..5f33151 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -628,6 +628,61 @@ static ssize_t rfkill_persistent_show(struct device *dev,
+ 	return sprintf(buf, "%d\n", rfkill->persistent);
+ }
+ 
++static ssize_t rfkill_blocked_hw_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct rfkill *rfkill = to_rfkill(dev);
++	unsigned long flags;
++	u32 state;
++
++	spin_lock_irqsave(&rfkill->lock, flags);
++	state = rfkill->state;
++	spin_unlock_irqrestore(&rfkill->lock, flags);
++
++	return sprintf(buf, "%d\n", (state & RFKILL_BLOCK_HW) ? 1 : 0 );
++}
++
++static ssize_t rfkill_blocked_sw_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct rfkill *rfkill = to_rfkill(dev);
++	unsigned long flags;
++	u32 state;
++
++	spin_lock_irqsave(&rfkill->lock, flags);
++	state = rfkill->state;
++	spin_unlock_irqrestore(&rfkill->lock, flags);
++
++	return sprintf(buf, "%d\n", (state & RFKILL_BLOCK_SW) ? 1 : 0 );
++}
++
++static ssize_t rfkill_blocked_sw_store(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct rfkill *rfkill = to_rfkill(dev);
++	unsigned long state;
++	int err;
++
++	if (!capable(CAP_NET_ADMIN))
++		return -EPERM;
++
++	err = strict_strtoul(buf, 0, &state);
++	if (err)
++		return err;
++
++	if (state > 1 )
++		return -EINVAL;
++
++	mutex_lock(&rfkill_global_mutex);
++	rfkill_set_block(rfkill, state);
++	mutex_unlock(&rfkill_global_mutex);
++
++	return err ?: count;
++}
++
+ static u8 user_state_from_blocked(unsigned long state)
+ {
+ 	if (state & RFKILL_BLOCK_HW)
+@@ -700,6 +755,9 @@ static struct device_attribute rfkill_dev_attrs[] = {
+ 	__ATTR(persistent, S_IRUGO, rfkill_persistent_show, NULL),
+ 	__ATTR(state, S_IRUGO|S_IWUSR, rfkill_state_show, rfkill_state_store),
+ 	__ATTR(claim, S_IRUGO|S_IWUSR, rfkill_claim_show, rfkill_claim_store),
++	__ATTR(sw, S_IRUGO|S_IWUSR, rfkill_blocked_sw_show,
++			rfkill_blocked_sw_store),
++	__ATTR(hw, S_IRUGO, rfkill_blocked_hw_show, NULL),
+ 	__ATTR_NULL
+ };
+ 
+-- 
+1.6.6.1
+
