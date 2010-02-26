@@ -1,100 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plexity.net ([206.123.115.38]:40577 "EHLO plexity.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751874Ab0BIUeP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:34:15 -0500
-Date: Tue, 9 Feb 2010 12:24:21 -0800
-From: Deepak Saxena <dsaxena@plexity.net>
-To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: [BUG?] ieee80211_ops.remove_interface() being called twice
-Message-ID: <20100209202421.GA31240@plexity.net>
-Reply-To: dsaxena@plexity.net
+Received: from smtp109.plus.mail.re1.yahoo.com ([69.147.102.72]:39134 "HELO
+	smtp109.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S934681Ab0BZAUo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2010 19:20:44 -0500
+Message-ID: <4B8713DA.1010908@yahoo.com>
+Date: Fri, 26 Feb 2010 01:20:42 +0100
+From: Alban Browaeys <prahal@yahoo.com>
+Reply-To: prahal@yahoo.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Pavel Roskin <proski@gnu.org>
+CC: John Linville <linville@tuxdriver.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00 : hw support txdone implementation.
+References: <4B86CCC3.80403@yahoo.com> <1267131600.16176.47.camel@mj>
+In-Reply-To: <1267131600.16176.47.camel@mj>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 25/02/2010 22:00, Pavel Roskin wrote:
+> On Thu, 2010-02-25 at 20:17 +0100, Alban Browaeys wrote:
+>    
+>> This is an implementation that support WCID being the key_index coming
+>> from benoit without the change in the meaning of the tx fallback flag.
+>>      
+> This text is hard to understand without context.  Please use a
+> description for the changes contained in the patch, not for the
+> circumstances around it.  The same applies to the subject.  A space
+> before ":" is unnecessary.
+>
+>    
+Fixing it.
 
-I'm working on getting the libertas_tf driver on 2.6.31 working on an
-XO-1 laptopt with a USB connected device and running into the following
-situation during a suspend:
+>> It replaces the software only implementation by an implementation
+>> supporting HW encryption.
+>>      
+> So, I guess rt2800pci_txdone() would not work correctly if hardware
+> encryption is used?  Perhaps that should be explained.
+>
+>    
+Explain that HW encryption is not working with current code ? Well it 
+cannot work at all . At least txdone
+read WCID (WIRLESS_CLI_ID as written in rt2800pci_write_tx_desc as the 
+key index:
+rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
+                            test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
+                            txdesc->key_idx : 0xff);
 
-Upon initiating a suspend, lbtf_op_remove_interface() gets called via
-the wiphy_suspend() path:
+then in rt2800pci_txdone we read it as the queue entry index:
+index = rt2x00_get_field32(reg, TX_STA_FIFO_WCID) - 1;
 
-[  142.576332]  [<cf946376>] lbtf_op_remove_interface+0x17/0x7c [libertas_tf]   
-[  142.583333]  [<c06c260f>] __ieee80211_suspend+0x1c3/0x200                    
-[  142.588776]  [<c06bb9d6>] ieee80211_suspend+0x15/0x17                        
-[  142.593953]  [<c06a3807>] wiphy_suspend+0x38/0x48                            
-[  142.598695]  [<c0432371>] ? down+0x2b/0x2f                                   
-[  142.602932]  [<c05b693a>] dpm_suspend_start+0x214/0x32a                      
-[  142.608203]  [<c04403a1>] suspend_devices_and_enter+0x38/0x165               
-[  142.614153]  [<c0440596>] enter_state+0xc8/0x114                             
-[  142.618800]  [<c043fde4>] state_store+0x98/0xad                              
-[  142.623460]  [<c043fd4c>] ? state_store+0x0/0xad                             
-[  142.628111]  [<c056abd1>] kobj_attr_store+0x16/0x22                          
-[  142.633105]  [<c04c22d7>] sysfs_write_file+0xc0/0xeb                         
-[  142.638107]  [<c0485432>] vfs_write+0x8a/0x117                               
-[  142.642683]  [<c04c2217>] ? sysfs_write_file+0x0/0xeb                        
-[  142.647771]  [<c0485556>] sys_write+0x3b/0x60                                
-[  142.652397]  [<c04033d4>] sysenter_do_call+0x12/0x26    
 
-Later on, the USB device is removed from the tree and 
-lbtf_op_remove_interface() gets called again and this causes
-an OOOPS:
+As Josef also found out this leads to a mess:
+"that doesn't even work most of the time.  I seperated out all of the 
+TX_STA_FIFO
+reading stuff and either TX_STA_FIFO_VALID would be 0,
+TX_STA_FIFO_TX_ACK_REQUIRED would be 0, or TX_STA_FIFO_WCID would be 
+254, which
+is way higher than the queue limit.  So basically it gives us crap 
+statistics."
+http://article.gmane.org/gmane.linux.kernel.wireless.general/46713
 
-[  143.209556]  [<cf946376>] lbtf_op_remove_interface+0x17/0x7c
-[libertas_tf]   
-[  143.216547]  [<c06b8a50>] ieee80211_stop+0x373/0x3db                         
-[  143.221547]  [<c06cb2b6>] ? _spin_unlock_bh+0x1a/0x1c                        
-[  143.226736]  [<c0626627>] dev_close+0x6c/0x88                                
-[  143.231128]  [<c06266bb>] rollback_registered+0x78/0x204                     
-[  143.236560]  [<c0626879>] unregister_netdevice+0x32/0x4d                     
-[  143.241901]  [<c06b832c>] ieee80211_remove_interfaces+0x68/0x77              
-[  143.247942]  [<c06ae5fa>] ieee80211_unregister_hw+0x38/0xc3                  
-[  143.253564]  [<cf9461a5>] lbtf_remove_card+0x31/0x3e [libertas_tf]           
-[  143.259891]  [<cf981966>] if_usb_disconnect+0x20/0x3e [libertas_tf_usb]      
-[  143.266701]  [<ce758b32>] usb_unbind_interface+0x4b/0xbe [usbcore]           
-[  143.272999]  [<c05b3ddf>] __device_release_driver+0x47/0x7f                  
-[  143.278601]  [<c05b3eb4>] device_release_driver+0x18/0x23                    
-[  143.284236]  [<ce758cf2>] usb_driver_release_interface+0x33/0x59 [usbcore]   
-[  143.291347]  [<ce758d83>] usb_forced_unbind_intf+0x13/0x1a [usbcore]         
-[  143.297827]  [<ce758dca>] do_unbind_rebind+0x40/0x5b [usbcore]               
-[  143.303890]  [<ce758e72>] usb_external_suspend_device+0x11/0x3e [usbcore]    
-[  143.310908]  [<ce758ed2>] usb_suspend+0x33/0x35 [usbcore]                    
-[  143.316427]  [<ce7500fb>] usb_dev_suspend+0xd/0xf [usbcore]                  
-[  143.322130]  [<c05b658a>] pm_op+0x21/0x5b                                    
-[  143.326173]  [<c05b6960>] dpm_suspend_start+0x23a/0x32a                      
-[  143.331534]  [<c04403a1>] suspend_devices_and_enter+0x38/0x165               
-[  143.337403]  [<c0440596>] enter_state+0xc8/0x114                             
-[  143.342148]  [<c043fde4>] state_store+0x98/0xad                              
-[  143.346710]  [<c043fd4c>] ? state_store+0x0/0xad                             
-[  143.351455]  [<c056abd1>] kobj_attr_store+0x16/0x22                          
-[  143.356365]  [<c04c22d7>] sysfs_write_file+0xc0/0xeb                         
-[  143.361467]  [<c0485432>] vfs_write+0x8a/0x117                               
-[  143.365938]  [<c04c2217>] ? sysfs_write_file+0x0/0xeb                        
-[  143.371107]  [<c0485556>] sys_write+0x3b/0x60                                
-[  143.375498]  [<c04033d4>] sysenter_do_call+0x12/0x26
+>> It fixes the mixes of usage of WCID behing set to the key_idx and
+>> then getting used as the entry index in the queue.
+>>      
+> Maybe WCID could be expanded at least once?  "behing" must be a typo.
+>
+>    
 
-Following is the code for lbtf_op_remove_interface().  Basically we set 
-priv->vif to NULL the first time around and then we crash on trying 
-to access priv->vif->type the second time around. Easy "fix" is a NULL 
-check in lbtf_op_remove_interface() to simply return to caller 
-if !priv->vif, but I don't think the remove_interface() function
-should be called twice. 
+WCID is TX_STA_FIFO_WCID in the code. Do you mean I should use 
+TX_STA_FIFO_WCID in the comment ?
+Or WIRELESS_CLI_ID as to what it means (and the constant used in 
+write_tx_desc). Both are the same
+one is used for writing it , the other for reading it. Out of knowing 
+which one to use in the comment I used WCID.
 
-static void lbtf_op_remove_interface(struct ieee80211_hw *hw,
-                        struct ieee80211_if_init_conf *conf)
-{
-        struct lbtf_private *priv = hw->priv;
 
-        if (priv->vif->type == NL80211_IFTYPE_AP ||
-            priv->vif->type == NL80211_IFTYPE_MESH_POINT)
-                lbtf_beacon_ctrl(priv, 0, 0);
-        lbtf_set_mode(priv, LBTF_PASSIVE_MODE);
-        lbtf_set_bssid(priv, 0, NULL);
-        priv->vif = NULL;
-}
+>>    	/*
+>> -	 * During each loop we will compare the freshly read
+>> -	 * TX_STA_FIFO register value with the value read from
+>> -	 * the previous loop. If the 2 values are equal then
+>> -	 * we should stop processing because the chance it
+>> -	 * quite big that the device has been unplugged and
+>> -	 * we risk going into an endless loop.
+>> +	 * To avoid an endlees loop, we only read the TX_STA_FIFO register up
+>> +	 * to 256 times (this is enought to get all values from the FIFO). In
+>> +	 * normal situation, the loop is terminated when we reach a value with
+>> +	 * TX_STA_FIFO_VALID bit is 0.
+>>      
+> Please spell check your comments.
+>
+> I think using a different way for terminating the loop is a completely
+> separate issue not related to the hardware crypto support.  It should be
+> explained why the old code needs to be changed.
+>
+>    
+>>    		/*
+>>    		 * Skip this entry when it contains an invalid
+>>    		 * queue identication number.
+>>    		 */
+>> -		type = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE) - 1;
+>> -		if (type>= QID_RX)
+>> +		if (pid<  1)
+>>    			continue;
+>>      
+> I'm concerned that you are killing a valid check here.  pid should be
+> between 1 and QID_RX (inclusively).
+>
+> It looks like you are replacing the existing code with your code instead
+> of improving it with a new check.  That alone could be a reason to
+> reject your patch.
+>
+>    
+Thank you I did not noticed that (the check was pid < 1 back when the 
+patch was made. This rewrite of the check is more
+of a merge artifact.
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2009-August/000210.html
 
-~Deepak
+>> -			/*
+>> -			 * Catch up.
+>> -			 * Just report any entries we missed as failed.
+>> -			 */
+>> -			WARNING(rt2x00dev,
+>> -				"TX status report missed for entry %d\n",
+>> -				entry_done->entry_idx);
+>>      
+> I'm concerned that you are removing this check.  Is this condition
+> impossible now or we just cannot detect it anymore?
+>
+>    
 
+Both.
+
+>> -		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
+>> -		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
+>> +		mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
+>> +		rt2x00_desc_read(txwi, 0,&word);
+>> +		tx_mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
+>>    		__set_bit(TXDONE_FALLBACK,&txdesc.flags);
+>> -		txdesc.retry = mcs - min(mcs, real_mcs);
+>> +		txdesc.retry = tx_mcs - min(tx_mcs, mcs);
+>>      
+> Maybe you could avoid renaming and redefining variables to make your
+> patch more readable?  Alternatively, you could do the renaming first in
+> a separate patch.  You can use interdiff to create a difference between
+> patches i.e. subtract the cleanups from the main patch.
+>
+>    
+
+Renaming will be removed.
