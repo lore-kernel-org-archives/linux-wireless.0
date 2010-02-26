@@ -1,94 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:57978 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966330Ab0B0MDv (ORCPT
+Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:63281 "EHLO
+	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966490Ab0BZW4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 07:03:51 -0500
-Received: by mail-fx0-f219.google.com with SMTP id 19so915402fxm.21
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 04:03:50 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 01/10] b43: N-PHY: add some registers and structs definitions
-Date: Sat, 27 Feb 2010 13:03:32 +0100
-Message-Id: <1267272221-1873-2-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1267272221-1873-1-git-send-email-zajec5@gmail.com>
-References: <1267272221-1873-1-git-send-email-zajec5@gmail.com>
+	Fri, 26 Feb 2010 17:56:52 -0500
+Message-ID: <4B8851B2.2000209@gmail.com>
+Date: Fri, 26 Feb 2010 23:56:50 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: prahal@yahoo.com
+CC: John Linville <linville@tuxdriver.com>,
+	Josef Bacik <josef@redhat.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rt2x00: Fix TX status reporting for rt2800pci.
+References: <4B87D9FF.5080105@yahoo.com>
+In-Reply-To: <4B87D9FF.5080105@yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: dropped obvious comment
----
- drivers/net/wireless/b43/b43.h         |    1 +
- drivers/net/wireless/b43/phy_n.h       |    9 +++++++++
- drivers/net/wireless/b43/tables_nphy.h |    9 +++++++++
- 3 files changed, 19 insertions(+), 0 deletions(-)
+On 02/26/10 15:26, Alban Browaeys wrote:
+> After testing, we found that TX_STA_FIFO_MCS is the last MCS value
+> tried. If the transmission failed, 8 frames have been transmitted. If the
+> transmission succeed, we can easily compute the number of retry.  This
+> patch fix
+> the way status is reported to mac80211 rate control. It has 2 bugs :
+> 
+> 1. mcs can contain the short preamble flag and it will lead to wrong
+> computations.
+> 
+> 2. minstrel nearly always say that 54 Mbits is the best rate, even if we
+> are
+> very far from the AP
+> 
+> TX_DONE_FALLBACK flag meaning has been changed : it means that a
+> fallback rate table is used by the hardware.
+> 
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> ---
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index b8807fb..3a003e6 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -104,6 +104,7 @@
- #define B43_MMIO_MACFILTER_CONTROL	0x420
- #define B43_MMIO_MACFILTER_DATA		0x422
- #define B43_MMIO_RCMTA_COUNT		0x43C
-+#define B43_MMIO_PSM_PHY_HDR		0x492
- #define B43_MMIO_RADIO_HWENABLED_LO	0x49A
- #define B43_MMIO_GPIO_CONTROL		0x49C
- #define B43_MMIO_GPIO_MASK		0x49E
-diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-index 403aad3..47d20dc 100644
---- a/drivers/net/wireless/b43/phy_n.h
-+++ b/drivers/net/wireless/b43/phy_n.h
-@@ -711,6 +711,8 @@
- #define B43_NPHY_PAPD_EN1			B43_PHY_N(0x29B) /* PAPD Enable1 TBD */
- #define B43_NPHY_EPS_TABLE_ADJ1			B43_PHY_N(0x29C) /* EPS Table Adj1 TBD */
- 
-+#define B43_PHY_B_BBCFG				B43_PHY_N_BMODE(0x001) /* BB config */
-+#define B43_PHY_B_TEST				B43_PHY_N_BMODE(0x00A)
- 
- 
- /* Broadcom 2055 radio registers */
-@@ -924,6 +926,13 @@
- 
- struct b43_wldev;
- 
-+struct b43_chanspec {
-+	u8 channel;
-+	u8 sideband;
-+	u8 b_width;
-+	u8 b_freq;
-+};
-+
- struct b43_phy_n_iq_comp {
- 	s16 a0;
- 	s16 b0;
-diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
-index 9c1c6ec..b23036f 100644
---- a/drivers/net/wireless/b43/tables_nphy.h
-+++ b/drivers/net/wireless/b43/tables_nphy.h
-@@ -4,6 +4,15 @@
- #include <linux/types.h>
- 
- 
-+struct b43_phy_n_sfo_cfg {
-+	u16 phy_bw1a;
-+	u16 phy_bw2;
-+	u16 phy_bw3;
-+	u16 phy_bw4;
-+	u16 phy_bw5;
-+	u16 phy_bw6;
-+};
-+
- struct b43_nphy_channeltab_entry {
- 	/* The channel number */
- 	u8 channel;
--- 
-1.6.4.2
+If you're submitting this patch, then please also add your Signed-off-by to this list.
+
+Also, if I'm not mistaken, this one is on top of the previous patch you sent. Please indicate this
+at patch submission time, so that John can apply patches in the correct order.
+You can place such comments underneath the '---' marker in the patch, so that the message won't be
+part of the upstream commit log.
+
+Otherwise, the patch looks good, so just resubmit with the correct Sob, and the dependency mentioned.
+
+>  drivers/net/wireless/rt2x00/rt2800pci.c   |   40 +++++++++++++--------
+>  drivers/net/wireless/rt2x00/rt2x00dev.c   |   53
+> ++++++++++++++++++++++++----
+>  drivers/net/wireless/rt2x00/rt2x00queue.h |    6 ++-
+>  3 files changed, 74 insertions(+), 25 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c
+> b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 841f973..587c25d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -974,26 +974,36 @@ static void rt2800pci_txdone(struct rt2x00_dev
+> *rt2x00dev)
+>           * Obtain the status about this packet.
+>           */
+>          txdesc.flags = 0;
+> -        if (rt2x00_get_field32(reg, TX_STA_FIFO_TX_SUCCESS))
+> -            __set_bit(TXDONE_SUCCESS, &txdesc.flags);
+> -        else
+> -            __set_bit(TXDONE_FAILURE, &txdesc.flags);
+> +        rt2x00_desc_read(txwi, 0, &word);
+> +        mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
+> +        real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
+>  
+>          /*
+>           * Ralink has a retry mechanism using a global fallback
+> -         * table. We setup this fallback table to try immediate
+> -         * lower rate for all rates. In the TX_STA_FIFO,
+> -         * the MCS field contains the MCS used for the successfull
+> -         * transmission. If the first transmission succeed,
+> -         * we have mcs == tx_mcs. On the second transmission,
+> -         * we have mcs = tx_mcs - 1. So the number of
+> -         * retry is (tx_mcs - mcs).
+> +         * table. We setup this fallback table to try the immediate
+> +         * lower rate for all rates. In the TX_STA_FIFO, the MCS field
+> +         * always contains the MCS used for the last transmission, be
+> +         * it successful or not.
+>           */
+> -        rt2x00_desc_read(txwi, 0, &word);
+> -        mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
+> -        real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
+> +        if (rt2x00_get_field32(reg, TX_STA_FIFO_TX_SUCCESS)) {
+> +            /*
+> +             * Transmission succeeded. The number of retries is
+> +             * mcs - real_mcs
+> +             */
+> +            __set_bit(TXDONE_SUCCESS, &txdesc.flags);
+> +            txdesc.retry = ((mcs > real_mcs) ? mcs - real_mcs : 0);
+> +        } else {
+> +            /*
+> +             * Transmission failed. The number of retries is
+> +             * always 7 in this case (for a total number of 8
+> +             * frames sent).
+> +             */
+> +            __set_bit(TXDONE_FAILURE, &txdesc.flags);
+> +            txdesc.retry = 7;
+> +        }
+> +
+>          __set_bit(TXDONE_FALLBACK, &txdesc.flags);
+> -        txdesc.retry = mcs - min(mcs, real_mcs);
+> +
+>  
+>          rt2x00lib_txdone(entry, &txdesc);
+>      }
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index b93731b..65259c6 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -251,8 +251,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+>  
+>      rate_idx = skbdesc->tx_rate_idx;
+>      rate_flags = skbdesc->tx_rate_flags;
+> -    retry_rates = test_bit(TXDONE_FALLBACK, &txdesc->flags) ?
+> -        (txdesc->retry + 1) : 1;
+> +    retry_rates = txdesc->retry + 1;
+>  
+>      /*
+>       * Initialize TX status
+> @@ -265,13 +264,51 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+>       * different rates to send out the frame, at each
+>       * retry it lowered the rate 1 step.
+>       */
+> -    for (i = 0; i < retry_rates && i < IEEE80211_TX_MAX_RATES; i++) {
+> -        tx_info->status.rates[i].idx = rate_idx - i;
+> -        tx_info->status.rates[i].flags = rate_flags;
+> -        tx_info->status.rates[i].count = 1;
+> +    if (test_bit(TXDONE_FALLBACK, &txdesc->flags)) {
+> +        /*
+> +         * Fill in a multiple rate entries, ie frame was sent once at
+> +         * each rates. We use rate_idx as an index into
+> +         * rt2x00_supported_rates array. Since we can have up to 8
+> +         * transmissions at different rates and since
+> +         * IEEE80211_TX_MAX_RATES is only 5, the array can be
+> +         * truncated.
+> +         */
+> +        for (i = 0; (i < retry_rates) &&
+> +                (i < IEEE80211_TX_MAX_RATES); i++) {
+> +            /*
+> +             * check if we reach the lowest rates for this
+> +             * modulation ie 1 Mbits for CCK and 6 Mbits for
+> +             * OFDM.
+> +             *
+> +             * FIXME : This code needs to be checked for MCS
+> +             */
+> +
+> +            int idx = rate_idx - i;
+> +            if ((idx == 0) /* 1 Mbits CCK rate index */ ||
+> +            (idx == 4) /* 6 Mbits OFDM rate index */) {
+> +                tx_info->status.rates[i].idx = idx;
+> +                tx_info->status.rates[i].flags = rate_flags;
+> +                tx_info->status.rates[i].count =
+> +                                retry_rates - i;
+> +                /* move to the next entry */
+> +                i++;
+> +                break;
+> +            } else {
+> +                tx_info->status.rates[i].idx = idx;
+> +                tx_info->status.rates[i].flags = rate_flags;
+> +                tx_info->status.rates[i].count = 1;
+> +            }
+> +        }
+> +        if (i < IEEE80211_TX_MAX_RATES)
+> +            tx_info->status.rates[i].idx = -1; /* terminate */
+> +    } else {
+> +        /* Fill in a single rate entry, ie frame was sent
+> +         * (txdesc->retry+1) times at the same rate */
+> +        tx_info->status.rates[0].idx = rate_idx;
+> +        tx_info->status.rates[0].flags = rate_flags;
+> +        tx_info->status.rates[0].count = retry_rates;
+> +        tx_info->status.rates[1].idx = -1; /* terminate */
+>      }
+> -    if (i < (IEEE80211_TX_MAX_RATES - 1))
+> -        tx_info->status.rates[i].idx = -1; /* terminate */
+>  
+>      if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+>          if (success)
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h
+> b/drivers/net/wireless/rt2x00/rt2x00queue.h
+> index c1e482b..4e801c3 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+> @@ -214,7 +214,7 @@ struct rxdone_entry_desc {
+>   *
+>   * @TXDONE_UNKNOWN: Hardware could not determine success of transmission.
+>   * @TXDONE_SUCCESS: Frame was successfully send
+> - * @TXDONE_FALLBACK: Frame was successfully send using a fallback rate.
+> + * @TXDONE_FALLBACK: Frame was sent using a fallback rate table.
+>   * @TXDONE_FAILURE: Frame was not successfully send
+>   * @TXDONE_EXCESSIVE_RETRY: In addition to &TXDONE_FAILURE, the
+>   *    frame transmission failed due to excessive retries.
+> @@ -234,7 +234,9 @@ enum txdone_entry_desc_flags {
+>   * after the device is done with transmission.
+>   *
+>   * @flags: TX done flags (See &enum txdone_entry_desc_flags).
+> - * @retry: Retry count.
+> + * @retry: Retry count. If TXDONE_FALLBACK is not set, the frame was sent
+> + * (retry+1) times at the same rate. If TXDONE_FALLBACK is set, the
+> frame was
+> + * sent once for each lower rates, up to (retry+1) times in total.
+>   */
+>  struct txdone_entry_desc {
+>      unsigned long flags;
 
