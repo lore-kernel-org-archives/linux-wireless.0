@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f202.google.com ([209.85.216.202]:47409 "EHLO
-	mail-px0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751259Ab0BHViX (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:40363 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935284Ab0BZGQf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 16:38:23 -0500
-Received: by pxi40 with SMTP id 40so6826113pxi.21
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 13:38:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
-References: <1265467103-11474-1-git-send-email-tom.leiming@gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 8 Feb 2010 13:38:02 -0800
-Message-ID: <43e72e891002081338q466d9747p10a61b5e1aca4c6d@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: fix keycache leak in split tkip case
-To: tom.leiming@gmail.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 26 Feb 2010 01:16:35 -0500
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2] mac80211: fix direct probe loop on ieee80211_work_purge
+Date: Fri, 26 Feb 2010 08:13:41 +0200
+Message-Id: <1267164821-28303-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 6, 2010 at 6:38 AM,  <tom.leiming@gmail.com> wrote:
-> From: Ming Lei <tom.leiming@gmail.com>
->
-> If split tkip key is used, ath_delete_key should delete
-> rx key and rx mic key. This patch fixes the leak of hw
-> keycache in the case.
+If authentication has already been performed when the WLAN interface is
+stopped, (sometimes) the ieee80211_work_purge would corrupt some
+ieee80211_work-structures. The outcome is this (cleaned up):
 
-Can you please resend with Cc: stable@kernel.org on the commit log entry?
+[ 2252.398681] WARNING: at net/mac80211/work.c:995 ieee80211_work_purge
+[ 2252.466430] Backtrace:
+[ 2252.529266] (ieee80211_work_purge+0x0/0xcc [mac80211])
+[ 2252.546875] (ieee80211_stop+0x0/0x4c0 [mac80211])
 
-> ---
-> The patch is against the latest wireless test tree.
->
-> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+Additionally, one would get this, going on regarless of the WLAN interface
+state, going on forever:
 
-  Luis
+[ 2252.859985] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717525)
+[ 2253.055419] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717524)
+[ 2253.250610] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717523)
+[ 2253.446014] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717522)
+[ 2253.641357] wlan0: direct probe to 00:90:4c:60:04:00 (try -996717521)
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/work.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index 7e708d5..1e1ea30 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -869,6 +869,7 @@ static void ieee80211_work_work(struct work_struct *work)
+ 			break;
+ 		case IEEE80211_WORK_ABORT:
+ 			rma = WORK_ACT_TIMEOUT;
++			break;
+ 		case IEEE80211_WORK_DIRECT_PROBE:
+ 			rma = ieee80211_direct_probe(wk);
+ 			break;
+-- 
+1.6.3.3
+
