@@ -1,139 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:55690 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753067Ab0BSB2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 20:28:49 -0500
-Subject: [PATCH 3/3] ath5k: move ath5k_hw_register_timeout() into reset.c
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Thu, 18 Feb 2010 20:28:41 -0500
-Message-ID: <20100219012841.12460.64125.stgit@mj.roinet.com>
-In-Reply-To: <20100219012802.12460.42239.stgit@mj.roinet.com>
-References: <20100219012802.12460.42239.stgit@mj.roinet.com>
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:35685 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759448Ab0BZWIy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2010 17:08:54 -0500
+Received: by fxm19 with SMTP id 19so598311fxm.21
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2010 14:08:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <alpine.LFD.2.00.1002261345300.4513@localhost.localdomain>
+References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain>
+	<4B881C70.9030004@lwfinger.net> <alpine.LFD.2.00.1002261112590.4513@localhost.localdomain>
+	<alpine.LFD.2.00.1002261205160.4513@localhost.localdomain>
+	<69e28c911002261209m2b10ca27j5a62c91350e3597c@mail.gmail.com>
+	<alpine.LFD.2.00.1002261246330.4513@localhost.localdomain>
+	<4B8836BF.7000403@lwfinger.net> <alpine.LFD.2.00.1002261337460.4513@localhost.localdomain>
+	<alpine.LFD.2.00.1002261345300.4513@localhost.localdomain>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 26 Feb 2010 23:08:33 +0100
+Message-ID: <69e28c911002261408j4f5fa5cdo6a69a43749d99f3f@mail.gmail.com>
+Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal DMA
+	errors
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath5k_hw_register_timeout() was duplicated between phy.c and reset.c.
-Since it is too big and too much used to be an inline function, move it
-away from the ath5k.h header into reset.c.  Remove _ATH5K_RESET and
-_ATH5K_PHY defines.
+On Fri, Feb 26, 2010 at 10:50 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+>
+> On Fri, 26 Feb 2010, Linus Torvalds wrote:
+>>
+>> so even if mmiotrace fixes it for others, it's not working for me.
+>
+> Side note: In case this is timing-related: the machine in question is a
+> dual-core 1.3Ghz CPU (Core 2 Duo U1400). I think SMP has always been
+> enabled, I don't think I ever tried UP.
+>
+> Also, in addition to the PIO fallback code, that particular mmiotrace test
+> was done with the "udelay(10)" added to the b43_write*() functions. So it
+> was even slower.
+>
+> Maybe the bug only happens on slow machines (and then the udelay obviously
+> wouldn't help!), but that would not explain why mmiotrace might then
+> _hide_ the bug for some people.
+>
+>                        Linus
+>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |   25 ++-----------------------
- drivers/net/wireless/ath/ath5k/phy.c   |    4 ----
- drivers/net/wireless/ath/ath5k/reset.c |   25 +++++++++++++++++++++----
- 3 files changed, 23 insertions(+), 31 deletions(-)
+Well, we have a report from someone with an Intel T7250, which is
+definitely neither a slow CPU nor a ULV. The machine has PhoenixBIOS
+(in the same rebranded form as yours). My Intel T7100 + InsydeH2O
+machine (almost the same CPU, but with Insyde EFI in BIOS emulation
+mode instead of PhoenixBIOS, or maybe TrustedCore) didn't reproduce
+the bug. The trigger still seems to be PhoenixBIOS.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index f4e50ef..4de7fe0 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1172,6 +1172,8 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
- int ath5k_hw_on_hold(struct ath5k_hw *ah);
- int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 		   struct ieee80211_channel *channel, bool change_channel);
-+int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag, u32 val,
-+			      bool is_set);
- /* Power management functions */
- 
- /* DMA Related Functions */
-@@ -1328,29 +1330,6 @@ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
- 	iowrite32(val, ah->ah_iobase + reg);
- }
- 
--#if defined(_ATH5K_RESET) || defined(_ATH5K_PHY)
--/*
-- * Check if a register write has been completed
-- */
--static int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag,
--		u32 val, bool is_set)
--{
--	int i;
--	u32 data;
--
--	for (i = AR5K_TUNE_REGISTER_TIMEOUT; i > 0; i--) {
--		data = ath5k_hw_reg_read(ah, reg);
--		if (is_set && (data & flag))
--			break;
--		else if ((data & flag) == val)
--			break;
--		udelay(15);
--	}
--
--	return (i <= 0) ? -EAGAIN : 0;
--}
--#endif
--
- static inline u32 ath5k_hw_bitswap(u32 val, unsigned int bits)
- {
- 	u32 retval = 0, bit, i;
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index ac2a57a..10ad877 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -20,8 +20,6 @@
-  *
-  */
- 
--#define _ATH5K_PHY
--
- #include <linux/delay.h>
- 
- #include "ath5k.h"
-@@ -3144,5 +3142,3 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
- 
- 	return ath5k_hw_txpower(ah, channel, ee_mode, txpower);
- }
--
--#undef _ATH5K_PHY
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 8decf21..8bd62c1 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -19,8 +19,6 @@
-  *
-  */
- 
--#define _ATH5K_RESET
--
- /*****************************\
-   Reset functions and helpers
- \*****************************/
-@@ -34,6 +32,27 @@
- #include "base.h"
- #include "debug.h"
- 
-+/*
-+ * Check if a register write has been completed
-+ */
-+int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag, u32 val,
-+			      bool is_set)
-+{
-+	int i;
-+	u32 data;
-+
-+	for (i = AR5K_TUNE_REGISTER_TIMEOUT; i > 0; i--) {
-+		data = ath5k_hw_reg_read(ah, reg);
-+		if (is_set && (data & flag))
-+			break;
-+		else if ((data & flag) == val)
-+			break;
-+		udelay(15);
-+	}
-+
-+	return (i <= 0) ? -EAGAIN : 0;
-+}
-+
- /**
-  * ath5k_hw_write_ofdm_timings - set OFDM timings on AR5212
-  *
-@@ -1386,5 +1405,3 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 
- 	return 0;
- }
--
--#undef _ATH5K_RESET
+Peace,
+Gábor
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
