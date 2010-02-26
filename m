@@ -1,133 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from liberdade.minaslivre.org ([72.232.254.139]:60175 "EHLO
-	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753473Ab0BLOlR (ORCPT
+Received: from smtp102.plus.mail.re1.yahoo.com ([69.147.102.65]:46123 "HELO
+	smtp102.plus.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S934800Ab0BZBV4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2010 09:41:17 -0500
-From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Simon Raffeiner <sturmflut@lieberbiber.de>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH v2] nl80211: does not allow NEW_STATION and DEL_STATION for mesh
-Date: Fri, 12 Feb 2010 12:34:50 -0200
-Message-Id: <1265985290-1516-1-git-send-email-cascardo@holoscopio.com>
-In-Reply-To: <1265978241-1601-1-git-send-email-cascardo@holoscopio.com>
-References: <1265978241-1601-1-git-send-email-cascardo@holoscopio.com>
+	Thu, 25 Feb 2010 20:21:56 -0500
+Message-ID: <4B872231.5020609@yahoo.com>
+Date: Fri, 26 Feb 2010 02:21:53 +0100
+From: Alban Browaeys <prahal@yahoo.com>
+Reply-To: prahal@yahoo.com
+MIME-Version: 1.0
+To: Josef Bacik <josef@redhat.com>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, Pavel Roskin <proski@gnu.org>,
+	John Linville <linville@tuxdriver.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 1/2] rt2x00 : hw support txdone implementation.	(without
+ fallback change)
+References: <4B85FA66.2020503@yahoo.com> <1267120092.25296.31.camel@mj> <4B86D0BD.3000803@yahoo.com> <201002252146.22846.IvDoorn@gmail.com> <20100225205342.GF10960@localhost.localdomain>
+In-Reply-To: <20100225205342.GF10960@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As discussed in linux-wireless mailing list, adding and removing
-stations for mesh topologies is not necessary. Since doing it triggers
-bugs, the sugestion was to simply disable it.
+On 25/02/2010 21:53, Josef Bacik wrote:
+> On Thu, Feb 25, 2010 at 09:46:22PM +0100, Ivo van Doorn wrote:
+>    
+>> Hi,
+>>
+>> Overall this patch has great similarities to something which Josef (CC added)
+>> has posted earlier. The patch in question was not merged due to some issues,
+>> but he is working on an updated. You might want to synchronize your work
+>> with him. :)
+>>
+>>      
+> I was just looking at this patch series, but I couldn't get it to apply at all.
+> Alban, does your patch series depend on other patches not in wireless-testing?
+> It may have just been the whitespaces or something, cause the context looked
+> right, it just wouldn't apply anything.  Anyway I'm happy to work together, or
+> I can just send you what I have and I'll be the guinea pig, since this really
+> isn't my area of expertise.  Thanks,
+>
+>    
 
-Tested using a custom iw command "station new". Works only after using
-hostapd. "station del" command also works.
 
-Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Raffeiner <sturmflut@lieberbiber.de>
-Cc: Andrey Yurovsky <andrey@cozybit.com>
-Cc: Javier Cardona <javier@cozybit.com>
----
+Well I cannot agree on the replacement from TX_STA_FIFO by DMA DONE 
+interrupts
+handlers. As the latter prevents from having any success/failure status.
+The txdone was borked and could not worked since WirelessCliId was read 
+as a queue entry index
+and written as an encryption key. What you noticed too though with the 
+weird values you got.
 
-Should be fixed now! Sorry for all the noise.
+Could you try 
+http://article.gmane.org/gmane.linux.kernel.wireless.general/47183 
+probably and also "pull" from
+http://git.prahal.homelinux.net/?p=rt2x00.git;a=shortlog;h=refs/heads/rtt3070v2-next-debug.
+It is not a clean set of patches though I am doing my best to get it 
+ready at least for to be sent to the ML.
 
----
- net/wireless/nl80211.c |   49 ++++++++++++-----------------------------------
- 1 files changed, 13 insertions(+), 36 deletions(-)
+The last commits adds a lot of printk (this is a debug branch) to try to 
+decipher a weird issue with long range issues.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5b79ecf..a95ab9e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2010,6 +2010,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	if (!info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
- 		return -EINVAL;
- 
-+	if (!info->attrs[NL80211_ATTR_STA_AID])
-+		return -EINVAL;
-+
- 	mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 	params.supported_rates =
- 		nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
-@@ -2018,11 +2021,9 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	params.listen_interval =
- 		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
- 
--	if (info->attrs[NL80211_ATTR_STA_AID]) {
--		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
--		if (!params.aid || params.aid > IEEE80211_MAX_AID)
--			return -EINVAL;
--	}
-+	params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
-+	if (!params.aid || params.aid > IEEE80211_MAX_AID)
-+		return -EINVAL;
- 
- 	if (info->attrs[NL80211_ATTR_HT_CAPABILITY])
- 		params.ht_capa =
-@@ -2037,6 +2038,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		goto out_rtnl;
- 
-+	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
- 	err = get_vlan(info, rdev, &params.vlan);
- 	if (err)
- 		goto out;
-@@ -2044,35 +2051,6 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	/* validate settings */
- 	err = 0;
- 
--	switch (dev->ieee80211_ptr->iftype) {
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_AP_VLAN:
--		/* all ok but must have AID */
--		if (!params.aid)
--			err = -EINVAL;
--		break;
--	case NL80211_IFTYPE_MESH_POINT:
--		/* disallow things mesh doesn't support */
--		if (params.vlan)
--			err = -EINVAL;
--		if (params.aid)
--			err = -EINVAL;
--		if (params.ht_capa)
--			err = -EINVAL;
--		if (params.listen_interval >= 0)
--			err = -EINVAL;
--		if (params.supported_rates)
--			err = -EINVAL;
--		if (params.sta_flags_mask)
--			err = -EINVAL;
--		break;
--	default:
--		err = -EINVAL;
--	}
--
--	if (err)
--		goto out;
--
- 	if (!rdev->ops->add_station) {
- 		err = -EOPNOTSUPP;
- 		goto out;
-@@ -2113,8 +2091,7 @@ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
- 		goto out_rtnl;
- 
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
--	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
--	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT) {
-+	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN) {
- 		err = -EINVAL;
- 		goto out;
- 	}
--- 
-1.6.6.1
+
+Best regards
+Alban
 
