@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:42623 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932658Ab0BQNZe (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:38237 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936021Ab0BZNJl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 08:25:34 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH] nl80211: add power save commands
-Date: Wed, 17 Feb 2010 14:21:52 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kalle.valo@iki.fi>
-References: <20100216201026.25148.40799.stgit@tikku> <201002170835.00109.holgerschurig@gmail.com> <1266395616.4006.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1266395616.4006.1.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201002171421.52329.holgerschurig@gmail.com>
+	Fri, 26 Feb 2010 08:09:41 -0500
+Subject: Re: [PATCH v2 2/2] enhance sysfs rfkill interface
+From: Marcel Holtmann <marcel@holtmann.org>
+To: florian@mickler.org
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@suse.de>
+In-Reply-To: <1267182094-15469-1-git-send-email-florian@mickler.org>
+References: <20100225233516.GD5218@khazad-dum.debian.net>
+	 <1267182094-15469-1-git-send-email-florian@mickler.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Feb 2010 14:11:22 +0100
+Message-ID: <1267189882.18491.63.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> But if you wish you can emulate that with rate mask settings.
-> Not in cfg80211 though please.
+Hi Florian,
 
-No, modulaton != rates.
+> > > I am not shure about those names.  
+> > 
+> > I don't like them.  IMHO, you don't gain anything by being this terse, and
+> > it is difficult to understand what they mean at first glance.
+> >   
+> > > Other alternatives: 
+> > > [hs]w_block
+> > > block_[hs]w  
+> > 
+> 
+> I made that blocked_sw and blocked_hw, so that they are
+> lexicographically nearby and that they also give more information about
+> their content.
+> 
+> blocked_[hs]w -> 0/1 makes IMO kind of sense.
 
-AFAIK you can run 1 MB/s with both CCK (802.11b) and with OFDM 
-(802.11g), but they generate different wave-forms.
+the kernel and /dev/rfkill just talks about "hard" and "soft" blocks.
+
+Don't confuse this with hardware and software. It seems were are keeping
+to make this stupid semantical error over and over again. So everything
+that says hardware, software, hw or sw in the API is bluntly wrong.
+
+Regards
+
+Marcel
 
 
-With madwifi cards I had circumstances where the absolute range 
-of CCK was higher than that of OFDM, even when limiting to 1, 2, 
-5.5, 11 MB/s. This didn't happen in every storage warehouse, but 
-it happens. I don't have a clue why, the theory --- as far as I 
-understand it, which isn't far --- tells me otherwise.
-
--- 
-http://www.holgerschurig.de
