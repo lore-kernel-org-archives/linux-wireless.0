@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:64713 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750854Ab0BHMRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 07:17:12 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 04:17:12 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-	<stable@kernel.org>
-Subject: [PATCH] mac80211: Reset dynamic ps timer in Rx path.
-Date: Mon, 8 Feb 2010 17:47:01 +0530
-Message-ID: <1265631421-2574-2-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com>
-References: <1265631421-2574-1-git-send-email-vnatarajan@atheros.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:35296 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965692Ab0BZSnP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2010 13:43:15 -0500
+Received: by pvc21 with SMTP id 21so103560pvc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2010 10:43:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1267209201.30426.8.camel@mj>
+References: <19335.43241.887933.207404@gargle.gargle.HOWL>
+	<1267209201.30426.8.camel@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 26 Feb 2010 10:42:55 -0800
+Message-ID: <43e72e891002261042s587f9fb8g9f491b1bac363582@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_htc: Add ath9k_htc driver
+To: Pavel Roskin <proski@gnu.org>
+Cc: Sujith <Sujith.Manoharan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Vasanth.Thiagarajan@atheros.com,
+	Senthilkumar.Balasubramanian@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current mac80211 implementation enables power save if there
-is no Tx traffic for a specific timeout. Hence, PS is triggered
-even if there is a continuous Rx only traffic(like UDP) going on.
-This makes the drivers to wait on the tim bit in the next beacon
-to awake which leads to redundant sleep-wake cycles.
-Fix this by restarting the dynamic ps timer on receiving every
-data packet.
+On Fri, Feb 26, 2010 at 10:33 AM, Pavel Roskin <proski@gnu.org> wrote:
+> On Fri, 2010-02-26 at 16:26 +0530, Sujith wrote:
+>
+>> Support for AR9271 chipset.
+>
+> Great news!!!
+>
+>> --- a/drivers/net/wireless/ath/ath9k/calib.h
+>> +++ b/drivers/net/wireless/ath/ath9k/calib.h
+>> @@ -114,6 +114,7 @@ struct ath9k_nfcal_hist {
+>>  };
+>>
+>>  #define MAX_PACAL_SKIPCOUNT 8
+>> +
+>>  struct ath9k_pacal_info{
+>
+> You may want to omit this part ;-)
+>
+>> @@ -1240,7 +1228,7 @@ void ath9k_hw_deinit(struct ath_hw *ah)
+>>  {
+>>       struct ath_common *common = ath9k_hw_common(ah);
+>>
+>> -     if (common->state <= ATH_HW_INITIALIZED)
+>> +     if (common->state < ATH_HW_INITIALIZED)
+>>               goto free_hw;
+>>
+>>       if (!AR_SREV_9100(ah))
+>
+> There are some non-trivial parts like this one that could be submitted
+> separately.
+>
+>> @@ -1249,10 +1237,8 @@ void ath9k_hw_deinit(struct ath_hw *ah)
+>>       ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
+>>
+>>  free_hw:
+>> -     if (!AR_SREV_9280_10_OR_LATER(ah))
+>> +     if (!AR_SREV_9280_10_OR_LATER(ah) && !AR_SREV_9271(ah))
+>>               ath9k_hw_rf_free_ext_banks(ah);
+>> -     kfree(ah);
+>> -     ah = NULL;
+>
+> Another one.  Actually, it is trivial, but not ath9k_htc related.
+>
+> It would be really nice to fast track the ath9k_htc driver to 2.6.34,
+> but the changes affecting other devices should be separate, I believe.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-CC: stable@kernel.org
----
- net/mac80211/rx.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+While at it, if you can separate the ath9k_hw changes that would be great.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5709307..657ed66 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1719,6 +1719,7 @@ static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
-+	struct ieee80211_local *local = rx->local;
- 	struct net_device *dev = sdata->dev;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
- 	__le16 fc = hdr->frame_control;
-@@ -1750,6 +1751,13 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 	dev->stats.rx_packets++;
- 	dev->stats.rx_bytes += rx->skb->len;
- 
-+	if (ieee80211_is_data(hdr->frame_control) &&
-+	    !is_multicast_ether_addr(hdr->addr1) &&
-+	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
-+			mod_timer(&local->dynamic_ps_timer, jiffies +
-+			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
-+	}
-+
- 	ieee80211_deliver_skb(rx);
- 
- 	return RX_QUEUED;
--- 
-1.6.6.1
-
+  Luis
