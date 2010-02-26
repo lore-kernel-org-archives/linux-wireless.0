@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42541 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086Ab0BWSAk (ORCPT
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:53304 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966484Ab0BZWvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2010 13:00:40 -0500
-Date: Tue, 23 Feb 2010 12:58:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jens Westemeier <Jens_Westemeier@web.de>
-Cc: linux-wireless@vger.kernel.org, chunkeey@googlemail.com
-Subject: Re: problem with WG511v1
-Message-ID: <20100223175806.GD2928@tuxdriver.com>
-References: <4B83B96A.6050605@sorengo.com> <20100223144502.GA2928@tuxdriver.com> <201002231832.31015.Jens_Westemeier@web.de>
+	Fri, 26 Feb 2010 17:51:55 -0500
+Message-ID: <4B885089.6040605@gmail.com>
+Date: Fri, 26 Feb 2010 23:51:53 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201002231832.31015.Jens_Westemeier@web.de>
+To: prahal@yahoo.com
+CC: John Linville <linville@tuxdriver.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rt2x00: txdone implementation supporting hw encryption.
+References: <4B88490F.7030605@yahoo.com>
+In-Reply-To: <4B88490F.7030605@yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 23, 2010 at 06:32:30PM +0100, Jens Westemeier wrote:
-
-> modprobe p54pci gives (in /var/log/messages):
+On 02/26/10 23:19, Alban Browaeys wrote:
+> This is an implementation that support WCID being the encryption key.
+> Wireless Cli Id was set to be the encryption key in rt2800pci_write_tx_desc
+> and read (TX_STA_FIFO_WCID) as the current queue entry index.
 > 
-> p54pci 0000:05:01.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-> p54pci 0000:05:01.0: firmware: requesting isl3886pci
-> phy2: p54 detected a LM86 firmware
-> p54: rx_mtu reduced from 3240 to 2376
-> phy2: FW rev 2.17.2.0 - Softmac protocol 7.6
-> phy2: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-> phy2: device does not respond!
-> p54pci 0000:05:01.0: PCI INT A disabled
-> p54pci: probe of 0000:05:01.0 failed with error -16
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
+> ---
 
-I'm guessing this is the EBUSY return from p54_download_eeprom.
-I'm not immediately familiar enough with the driver to know what that
-means, but perhaps your device is showing its age?  Hopefully a P54
-person can provide a more concrete suggestion.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
