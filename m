@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:48749 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755146Ab0BKDGa convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:57904 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965976Ab0BZUKJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2010 22:06:30 -0500
-Received: by ewy28 with SMTP id 28so895048ewy.28
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2010 19:06:28 -0800 (PST)
+	Fri, 26 Feb 2010 15:10:09 -0500
+Received: by fg-out-1718.google.com with SMTP id d23so126855fga.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2010 12:10:07 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4b72d1f1.J9VQrXuO+0LD2CFM%Larry.Finger@lwfinger.net>
-References: <4b72d1f1.J9VQrXuO+0LD2CFM%Larry.Finger@lwfinger.net>
-Date: Thu, 11 Feb 2010 03:06:27 +0000
-Message-ID: <3ace41891002101906l641c7a84n4669b3af2dcdeeb8@mail.gmail.com>
-Subject: Re: [PATCH] rtl8187: Add new device ID
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>, jmkok@solutionsradio.com,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <alpine.LFD.2.00.1002261205160.4513@localhost.localdomain>
+References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain>
+	<4B881C70.9030004@lwfinger.net> <alpine.LFD.2.00.1002261112590.4513@localhost.localdomain>
+	<alpine.LFD.2.00.1002261205160.4513@localhost.localdomain>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 26 Feb 2010 21:09:46 +0100
+Message-ID: <69e28c911002261209m2b10ca27j5a62c91350e3597c@mail.gmail.com>
+Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal DMA
+	errors
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 10, 2010 at 3:34 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> From: Jelle Martijn Kok <jmkok@solutionsradio.com>
+On Fri, Feb 26, 2010 at 9:06 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
 >
-> Add new RTL8187B device.
 >
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@kernel.org>
+> On Fri, 26 Feb 2010, Linus Torvalds wrote:
+>> On Fri, 26 Feb 2010, Larry Finger wrote:
+>> >
+>> > Incidentally, we have learned today that the fault does not occur when running
+>> > MMIO traces, and that it is not SMP related.
+>>
+>> Timing? I guess MMIO tracing will slow down the actual command setup part
+>> a lot.
+>
+> Adding a "udelay(10)" to the "b43_write[16|32]()" functions doesn't make
+> any difference on the machine I have access to, though.
+>
+> Ill happily test other ideas or patches. Automatically falling back to PIO
+> makes things work, but I'd obviously _much_ rather have working DMA.
+>
+>                        Linus
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Does actually enabling mmiotrace fix it for you too?
 
-It looks obviously enough to be a newer version of an old supported
-device - Some info about what device it is, etc in the check-in
-message would be nice, but this can go in as is.
-
-> ---
->
->
-> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -65,6 +65,7 @@ static struct usb_device_id rtl8187_tabl
->        /* Sitecom */
->        {USB_DEVICE(0x0df6, 0x000d), .driver_info = DEVICE_RTL8187},
->        {USB_DEVICE(0x0df6, 0x0028), .driver_info = DEVICE_RTL8187B},
-> +       {USB_DEVICE(0x0df6, 0x0029), .driver_info = DEVICE_RTL8187B},
->        /* Sphairon Access Systems GmbH */
->        {USB_DEVICE(0x114B, 0x0150), .driver_info = DEVICE_RTL8187},
->        /* Dick Smith Electronics */
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
