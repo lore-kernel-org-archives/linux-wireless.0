@@ -1,145 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:65133 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752783Ab0BSGDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 01:03:13 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/6] iwlwifi: separated time check for different type of force reset
-Date: Thu, 18 Feb 2010 22:03:06 -0800
-Message-Id: <1266559387-19637-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
-References: <1266559387-19637-1-git-send-email-reinette.chatre@intel.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38840 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966477Ab0BZWrq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2010 17:47:46 -0500
+Date: Fri, 26 Feb 2010 14:46:57 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: =?ISO-8859-15?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal
+ DMA  errors
+In-Reply-To: <69e28c911002261408j4f5fa5cdo6a69a43749d99f3f@mail.gmail.com>
+Message-ID: <alpine.LFD.2.00.1002261430430.4513@localhost.localdomain>
+References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain>  <4B881C70.9030004@lwfinger.net> <alpine.LFD.2.00.1002261112590.4513@localhost.localdomain>  <alpine.LFD.2.00.1002261205160.4513@localhost.localdomain>  <69e28c911002261209m2b10ca27j5a62c91350e3597c@mail.gmail.com>
+  <alpine.LFD.2.00.1002261246330.4513@localhost.localdomain>  <4B8836BF.7000403@lwfinger.net> <alpine.LFD.2.00.1002261337460.4513@localhost.localdomain>  <alpine.LFD.2.00.1002261345300.4513@localhost.localdomain>
+ <69e28c911002261408j4f5fa5cdo6a69a43749d99f3f@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Use different timing duration check for different type of force reset,
-force reset request can come from different source and based on
-different reason; one type of reset request should not block other type of
-reset request.
 
-Adding structure to keep track of different force reset request.
+On Fri, 26 Feb 2010, Gábor Stefanik wrote:
+> 
+> Well, we have a report from someone with an Intel T7250, which is
+> definitely neither a slow CPU nor a ULV. The machine has PhoenixBIOS
+> (in the same rebranded form as yours). My Intel T7100 + InsydeH2O
+> machine (almost the same CPU, but with Insyde EFI in BIOS emulation
+> mode instead of PhoenixBIOS, or maybe TrustedCore) didn't reproduce
+> the bug. The trigger still seems to be PhoenixBIOS.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-core.c |   25 ++++++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-dev.h  |   14 +++++++++++++-
- 3 files changed, 33 insertions(+), 12 deletions(-)
+Well, I'd love to give you a register dump. It _looks_ like it should be 
+possible write some script to dump all the registers by accessing
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 52b6beb..c5b724e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3378,6 +3378,12 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
- 	priv->agg_tids_count = 0;
- 
-+	/* initialize force reset */
-+	priv->force_reset[IWL_RF_RESET].reset_duration =
-+		IWL_DELAY_NEXT_FORCE_RF_RESET;
-+	priv->force_reset[IWL_FW_RESET].reset_duration =
-+		IWL_DELAY_NEXT_FORCE_FW_RELOAD;
-+
- 	/* Choose which receivers/antennas to use */
- 	if (priv->cfg->ops->hcmd->set_rxon_chain)
- 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index bd56827..55252a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -3357,22 +3357,30 @@ static void iwl_force_rf_reset(struct iwl_priv *priv)
- 	return;
- }
- 
--#define IWL_DELAY_NEXT_FORCE_RESET (HZ*3)
- 
- int iwl_force_reset(struct iwl_priv *priv, int mode)
- {
-+	struct iwl_force_reset *force_reset;
-+
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return -EINVAL;
- 
--	if (priv->last_force_reset_jiffies &&
--	    time_after(priv->last_force_reset_jiffies +
--		       IWL_DELAY_NEXT_FORCE_RESET, jiffies)) {
-+	if (mode >= IWL_MAX_FORCE_RESET) {
-+		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
-+		return -EINVAL;
-+	}
-+	force_reset = &priv->force_reset[mode];
-+	force_reset->reset_request_count++;
-+	if (force_reset->last_force_reset_jiffies &&
-+	    time_after(force_reset->last_force_reset_jiffies +
-+	    force_reset->reset_duration, jiffies)) {
- 		IWL_DEBUG_INFO(priv, "force reset rejected\n");
-+		force_reset->reset_reject_count++;
- 		return -EAGAIN;
- 	}
--
-+	force_reset->reset_success_count++;
-+	force_reset->last_force_reset_jiffies = jiffies;
- 	IWL_DEBUG_INFO(priv, "perform force reset (%d)\n", mode);
--
- 	switch (mode) {
- 	case IWL_RF_RESET:
- 		iwl_force_rf_reset(priv);
-@@ -3389,12 +3397,7 @@ int iwl_force_reset(struct iwl_priv *priv, int mode)
- 		clear_bit(STATUS_READY, &priv->status);
- 		queue_work(priv->workqueue, &priv->restart);
- 		break;
--	default:
--		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
--		return -EINVAL;
- 	}
--	priv->last_force_reset_jiffies = jiffies;
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 021c686..7914d65 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1036,9 +1036,21 @@ struct iwl_event_log {
- #define IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF	(200)
- #define IWL_MAX_PLCP_ERR_THRESHOLD_MAX	(255)
- 
-+#define IWL_DELAY_NEXT_FORCE_RF_RESET  (HZ*3)
-+#define IWL_DELAY_NEXT_FORCE_FW_RELOAD (HZ*5)
-+
- enum iwl_reset {
- 	IWL_RF_RESET = 0,
- 	IWL_FW_RESET,
-+	IWL_MAX_FORCE_RESET,
-+};
-+
-+struct iwl_force_reset {
-+	int reset_request_count;
-+	int reset_success_count;
-+	int reset_reject_count;
-+	unsigned long reset_duration;
-+	unsigned long last_force_reset_jiffies;
- };
- 
- struct iwl_priv {
-@@ -1076,7 +1088,7 @@ struct iwl_priv {
- 	u8 agg_tids_count;
- 
- 	/* force reset */
--	unsigned long last_force_reset_jiffies;
-+	struct iwl_force_reset force_reset[IWL_MAX_FORCE_RESET];
- 
- 	/* we allocate array of iwl4965_channel_info for NIC's valid channels.
- 	 *    Access via channel # using indirect index array */
--- 
-1.6.3.3
+	/sys/kernel/debug/b43/phy0/[mmio,shm][16,32]read
 
+but that's a very odd interface and I don't know what the index ranges are 
+for them (and which registers need 16-bit vs 32-bit accesses).
+
+But if you give me a script to dump all the relevant registers, I could 
+just dump them after a cold-boot, and _before_ loading the b43 driver fir 
+the first time. Maybe you can compare it to your state with your BIOS, in 
+the same situation, and see if there is some obvious difference that 
+strikes you?
+
+Of course, maybe there is some hidden state that doesn't show up there 
+either?
+
+		Linus
