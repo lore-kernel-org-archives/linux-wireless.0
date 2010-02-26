@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:33933 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754536Ab0BRRKW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 12:10:22 -0500
-Date: Thu, 18 Feb 2010 09:09:23 -0800
-From: Greg KH <gregkh@suse.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Greg KH <greg@kroah.com>,
-	Bernhard Schiffner <bernhard@schiffner-limbach.de>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/3 V2] staging: r8187se: Miscellaneous cleanups
-Message-ID: <20100218170923.GA1614@suse.de>
-References: <4b7963d0.cocDj1pGMQ3LKF4a%Larry.Finger@lwfinger.net>
- <20100218160340.GH21785@kroah.com>
- <4B7D7270.6030900@lwfinger.net>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58174 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966126Ab0BZUuX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2010 15:50:23 -0500
+Date: Fri, 26 Feb 2010 12:50:08 -0800 (PST)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: =?ISO-8859-15?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal
+ DMA  errors
+In-Reply-To: <69e28c911002261209m2b10ca27j5a62c91350e3597c@mail.gmail.com>
+Message-ID: <alpine.LFD.2.00.1002261246330.4513@localhost.localdomain>
+References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain>  <4B881C70.9030004@lwfinger.net> <alpine.LFD.2.00.1002261112590.4513@localhost.localdomain>  <alpine.LFD.2.00.1002261205160.4513@localhost.localdomain>
+ <69e28c911002261209m2b10ca27j5a62c91350e3597c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B7D7270.6030900@lwfinger.net>
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 18, 2010 at 11:01:36AM -0600, Larry Finger wrote:
-> On 02/18/2010 10:03 AM, Greg KH wrote:
-> > On Mon, Feb 15, 2010 at 09:10:08AM -0600, Larry Finger wrote:
-> > 
-> > Ick, I just applied your first versions of these patches.  What was the
-> > difference here?  Care to look at the next linux-next tree and see if I
-> > missed anything?
-> > 
-> > sorry about that.
+
+
+On Fri, 26 Feb 2010, Gábor Stefanik wrote:
 > 
-> The only difference was that I fixed the line-wrap problem that you noted in
-> your previous Emails. I had found them and resubmitted. There were no content
-> changes in the patches and the tree appears to be OK.
-> 
-> Thanks for the heads-up and sorry for the trouble, Those damned long lines from
-> the Realtek driver are a pain.
+> Does actually enabling mmiotrace fix it for you too?
 
-Yes they are :)
+I haven't seen the report. What do you need to do? Certainly just enabling 
+CONFIG_MMIOTRACE does nothing, but I'd not expect it to - I'd expect that 
+you have to actually do the tracing itself.
 
-> FYI, the rewritten driver has received a beacon, and the first few parts have
-> been submitted to John Linville.
+So if somebody has a recipe for me to test actual tracing of the module, I 
+can try to see if it makes a difference for me.
 
-Wonderful, that's great to hear, hopefully we can delete this driver
-soon.
-
-thanks,
-
-greg k-h
+			Linus
