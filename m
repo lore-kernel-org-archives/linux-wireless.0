@@ -1,104 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:9340 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933525Ab0BYVAN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2010 16:00:13 -0500
-Subject: Re: [PATCH] rt2x00 : hw support txdone implementation.
-From: Pavel Roskin <proski@gnu.org>
-To: prahal@yahoo.com
-Cc: John Linville <linville@tuxdriver.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <4B86CCC3.80403@yahoo.com>
-References: <4B86CCC3.80403@yahoo.com>
-Content-Type: text/plain
-Date: Thu, 25 Feb 2010 16:00:00 -0500
-Message-Id: <1267131600.16176.47.camel@mj>
-Mime-Version: 1.0
+Received: from mail-iw0-f182.google.com ([209.85.223.182]:57563 "EHLO
+	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030634Ab0B0SyU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Feb 2010 13:54:20 -0500
+Received: by iwn12 with SMTP id 12so1227946iwn.21
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 10:54:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B895AAA.6070700@openwrt.org>
+References: <133e8d7e1002270926p64cfd2b5uc4017bf0187c53c2@mail.gmail.com>
+	 <4B895AAA.6070700@openwrt.org>
+Date: Sat, 27 Feb 2010 19:54:19 +0100
+Message-ID: <133e8d7e1002271054s71138b5csb10d5ea2f4488231@mail.gmail.com>
+Subject: Re: [RFC] ath9k: Make AR_SREV_5416() macro evaluate to true for
+	AR9100
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-02-25 at 20:17 +0100, Alban Browaeys wrote:
-> This is an implementation that support WCID being the key_index coming
-> from benoit without the change in the meaning of the tx fallback flag.
+Oops, I got those parenthesis mixed up. You are right. My bad.
 
-This text is hard to understand without context.  Please use a
-description for the changes contained in the patch, not for the
-circumstances around it.  The same applies to the subject.  A space
-before ":" is unnecessary.
+But is AR9100 really not AR5416 based? For instance the devid define
+is named AR5416_AR9100_DEVID and the original firmware reports the
+chipset as
 
-> It replaces the software only implementation by an implementation
-> supporting HW encryption.
+  ath_hal: 0.9.17.1 (AR5416, DEBUG, REGOPS_FUNC, WRITE_EEPROM, 11D)
 
-So, I guess rt2800pci_txdone() would not work correctly if hardware
-encryption is used?  Perhaps that should be explained.
+Confusing, but you are probably right.
 
-> It fixes the mixes of usage of WCID behing set to the key_idx and
-> then getting used as the entry index in the queue.
+/Björn
 
-Maybe WCID could be expanded at least once?  "behing" must be a typo.
+2010/2/27 Felix Fietkau <nbd@openwrt.org>:
+> On 2010-02-27 6:26 PM, Björn Smedman wrote:
+>> The AR_SREV_5416() macro evaluates to false for AR9100 while the
+>> definitions for AR_SREV_5416_20_OR_LATER() and
+>> AR_SREV_5416_22_OR_LATER() seem to assume AR9100 based chips fall
+>> under this category. For example the last line of
+>>
+>> #define AR_SREV_5416_20_OR_LATER(_ah) \
+>>         (((AR_SREV_5416(_ah)) && \
+>>          ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)) || \
+>>          ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
+>>
+>> makes no sense if AR_SREV_5416(_ah) is false when
+>> (_ah)->hw_version.macVersion == AR_SREV_VERSION_9100.
+> I think this is wrong. The AR_SREV_xxxx macros typically point to a
+> specific chip generation, whereas the AR_SREV_XXXX_OR_LATER() point to
+> the chip generation or any later.
+> AR9100 is related to AR9160, but not AR5416, so AR_SREV_5416() should
+> return false for 9100 based devices.
+> If you look at the AR_SREV_5416_20_OR_LATER macros, they do not assume
+> that AR_SREV_5416() evaluates to true for the
+> ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100) case, as it's
+> either (is 5416 && macRev >= 20) or macVersion > 9100
+>
+> - Felix
+>
 
->   	/*
-> -	 * During each loop we will compare the freshly read
-> -	 * TX_STA_FIFO register value with the value read from
-> -	 * the previous loop. If the 2 values are equal then
-> -	 * we should stop processing because the chance it
-> -	 * quite big that the device has been unplugged and
-> -	 * we risk going into an endless loop.
-> +	 * To avoid an endlees loop, we only read the TX_STA_FIFO register up
-> +	 * to 256 times (this is enought to get all values from the FIFO). In
-> +	 * normal situation, the loop is terminated when we reach a value with
-> +	 * TX_STA_FIFO_VALID bit is 0.
 
-Please spell check your comments.
-
-I think using a different way for terminating the loop is a completely
-separate issue not related to the hardware crypto support.  It should be
-explained why the old code needs to be changed.
-
->   		/*
->   		 * Skip this entry when it contains an invalid
->   		 * queue identication number.
->   		 */
-> -		type = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE) - 1;
-> -		if (type >= QID_RX)
-> +		if (pid < 1)
->   			continue;
-
-I'm concerned that you are killing a valid check here.  pid should be
-between 1 and QID_RX (inclusively).
-
-It looks like you are replacing the existing code with your code instead
-of improving it with a new check.  That alone could be a reason to
-reject your patch.
-
-> -			/*
-> -			 * Catch up.
-> -			 * Just report any entries we missed as failed.
-> -			 */
-> -			WARNING(rt2x00dev,
-> -				"TX status report missed for entry %d\n",
-> -				entry_done->entry_idx);
-
-I'm concerned that you are removing this check.  Is this condition
-impossible now or we just cannot detect it anymore?
-
-> -		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
-> -		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
-> +		mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
-> +		rt2x00_desc_read(txwi, 0, &word);
-> +		tx_mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
->   		__set_bit(TXDONE_FALLBACK, &txdesc.flags);
-> -		txdesc.retry = mcs - min(mcs, real_mcs);
-> +		txdesc.retry = tx_mcs - min(tx_mcs, mcs);
-
-Maybe you could avoid renaming and redefining variables to make your
-patch more readable?  Alternatively, you could do the renaming first in
-a separate patch.  You can use interdiff to create a difference between
-patches i.e. subtract the cleanups from the main patch.
 
 -- 
-Regards,
-Pavel Roskin
+Venatech AB
+Ideon Innovation
+Ole Römers väg 12
+SE-22370 LUND
+Sweden
+
++46 (0) 46 286 86 20
+info@venatech.se
+http://www.venatech.se
