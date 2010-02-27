@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f217.google.com ([209.85.217.217]:35317 "EHLO
-	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752090Ab0BSQkr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 11:40:47 -0500
-Received: by gxk9 with SMTP id 9so254055gxk.8
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2010 08:40:47 -0800 (PST)
-Message-ID: <4B7EBF0A.1060907@lwfinger.net>
-Date: Fri, 19 Feb 2010 10:40:42 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nbd.name ([88.198.39.176]:42421 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030250Ab0B0Rr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Feb 2010 12:47:27 -0500
+Message-ID: <4B895AAA.6070700@openwrt.org>
+Date: Sat, 27 Feb 2010 18:47:22 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/11] b43: N-PHY: add some registers and structs definitions
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>	 <1266591292.15178.1.camel@jlt3.sipsolutions.net>	 <4B7EB31D.2000603@lwfinger.net> <1266596602.15178.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1266596602.15178.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [RFC] ath9k: Make AR_SREV_5416() macro evaluate to true for AR9100
+References: <133e8d7e1002270926p64cfd2b5uc4017bf0187c53c2@mail.gmail.com>
+In-Reply-To: <133e8d7e1002270926p64cfd2b5uc4017bf0187c53c2@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2010 10:23 AM, Johannes Berg wrote:
+On 2010-02-27 6:26 PM, Bj�rn Smedman wrote:
+> The AR_SREV_5416() macro evaluates to false for AR9100 while the
+> definitions for AR_SREV_5416_20_OR_LATER() and
+> AR_SREV_5416_22_OR_LATER() seem to assume AR9100 based chips fall
+> under this category. For example the last line of
 > 
-> Right. I was also wondering if it is showing signs of life yet? Mine has
-> device version that also needs minor SSB adjustments still.
+> #define AR_SREV_5416_20_OR_LATER(_ah) \
+>         (((AR_SREV_5416(_ah)) && \
+>          ((_ah)->hw_version.macRev >= AR_SREV_REVISION_5416_20)) || \
+>          ((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100))
+> 
+> makes no sense if AR_SREV_5416(_ah) is false when
+> (_ah)->hw_version.macVersion == AR_SREV_VERSION_9100.
+I think this is wrong. The AR_SREV_xxxx macros typically point to a
+specific chip generation, whereas the AR_SREV_XXXX_OR_LATER() point to
+the chip generation or any later.
+AR9100 is related to AR9160, but not AR5416, so AR_SREV_5416() should
+return false for 9100 based devices.
+If you look at the AR_SREV_5416_20_OR_LATER macros, they do not assume
+that AR_SREV_5416() evaluates to true for the
+((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9100) case, as it's
+either (is 5416 && macRev >= 20) or macVersion > 9100
 
-Thanks for the update on the link. I pulled it out of a previous E-mail rather
-than using Google to find it again.
-
-Rafał is taking exams now, but said in one of our last communications that he
-was finishing up some radio code. After that, he expected some signs of life.
-
-What PHY revision do you have? Between 2 and 3 there were a lot of changes
-including a new radio version. Rafał has a 2, thus he has been concentrating on
-that one.
-
-Do you have any log messages on the SSB adjustments?
-
-Larry
+- Felix
