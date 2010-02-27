@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59234
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755892Ab0BJUZ0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2010 15:25:26 -0500
-Date: Wed, 10 Feb 2010 12:25:40 -0800 (PST)
-Message-Id: <20100210.122540.149553948.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org, mb@bu3sch.de
-Subject: Re: pull request: wireless-2.6 2010-02-10
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100210201953.GC3286@tuxdriver.com>
-References: <1265829337.19075.0.camel@jlt3.sipsolutions.net>
-	<20100210.113658.137273026.davem@davemloft.net>
-	<20100210201953.GC3286@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bu3sch.de ([62.75.166.246]:38007 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S968470Ab0B0PEv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Feb 2010 10:04:51 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal DMA  errors
+Date: Sat, 27 Feb 2010 16:04:37 +0100
+Cc: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain> <69e28c911002261408j4f5fa5cdo6a69a43749d99f3f@mail.gmail.com> <alpine.LFD.2.00.1002261430430.4513@localhost.localdomain>
+In-Reply-To: <alpine.LFD.2.00.1002261430430.4513@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201002271604.37585.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 10 Feb 2010 15:19:54 -0500
-
-> On Wed, Feb 10, 2010 at 11:36:58AM -0800, David Miller wrote:
->> From: Johannes Berg <johannes@sipsolutions.net>
->> Date: Wed, 10 Feb 2010 20:15:37 +0100
->> 
->> > It was intentional -- that sdev doesn't even have an irq member, but
->> > nobody ever noticed because of the wrong ifdef.
->> 
->> Ok, then this needs to be explained in the commit message.
+On Friday 26 February 2010 23:46:57 Linus Torvalds wrote:
+> Well, I'd love to give you a register dump. It _looks_ like it should be 
+> possible write some script to dump all the registers by accessing
 > 
-> OK...mind if I just revert the current version and ask Michael to
-> resubmit with an appropriate changelog entry?
+> 	/sys/kernel/debug/b43/phy0/[mmio,shm][16,32]read
 
-Have you pulled this tree into others already?  Why not
-just pop out the commit and fix it's commit message, then
-reapply?
+It is easily possible using libb43.py
+http://bu3sch.de/gitweb?p=b43-tools.git;a=blob;f=debug/libb43.py;h=e5c563823a5f67aea30587a22e0eabab063358fb;hb=HEAD
+See class B43.
 
-Having the revert commit in there is really stupid just for this.
+However, dumping registers in b43 is not as easy as it looks like.
+There is a _lot_ of indirect addressing and it has the tendency to
+lock up on certain machines and cards, if you access dangling registers.
 
+-- 
+Greetings, Michael.
