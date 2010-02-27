@@ -1,83 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35647 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755046Ab0BSSIW (ORCPT
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:57978 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966330Ab0B0MD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 13:08:22 -0500
-Message-Id: <20100219180737.156138399@sipsolutions.net>
-Date: Fri, 19 Feb 2010 19:06:56 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] ath9k: convert to new station add/remove callbacks
-References: <20100219180652.409890561@sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 27 Feb 2010 07:03:59 -0500
+Received: by mail-fx0-f219.google.com with SMTP id 19so915402fxm.21
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 04:03:59 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2 03/10] b43: N-PHY: turn radio on/off (rfkill)
+Date: Sat, 27 Feb 2010 13:03:34 +0100
+Message-Id: <1267272221-1873-4-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1267272221-1873-1-git-send-email-zajec5@gmail.com>
+References: <1267272221-1873-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This converts ath9k to use the new station
-add/remove callbacks instead of using the
-old sta_notify callback.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   35 +++++++++++++++++++---------------
- 1 file changed, 20 insertions(+), 15 deletions(-)
+ drivers/net/wireless/b43/phy_n.c |   50 ++++++++++++++++++++++++++++----------
+ 1 files changed, 37 insertions(+), 13 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2010-02-19 18:58:12.000000000 +0100
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2010-02-19 18:59:53.000000000 +0100
-@@ -1684,24 +1684,28 @@ static void ath9k_configure_filter(struc
- 		  "Set HW RX filter: 0x%x\n", rfilt);
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 2d8eda1..dd81e8a 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -218,7 +218,10 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
+ 	b43_radio_write16(dev, B2055_C2_RX_BB_MIDACHP, 0x83);
  }
  
--static void ath9k_sta_notify(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif,
--			     enum sta_notify_cmd cmd,
--			     struct ieee80211_sta *sta)
-+static int ath9k_sta_add(struct ieee80211_hw *hw,
-+			 struct ieee80211_vif *vif,
-+			 struct ieee80211_sta *sta)
+-/* Initialize a Broadcom 2055 N-radio */
++/*
++ * Initialize a Broadcom 2055 N-radio
++ * http://bcm-v4.sipsolutions.net/802.11/Radio/2055/Init
++ */
+ static void b43_radio_init2055(struct b43_wldev *dev)
  {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 
--	switch (cmd) {
--	case STA_NOTIFY_ADD:
--		ath_node_attach(sc, sta);
--		break;
--	case STA_NOTIFY_REMOVE:
--		ath_node_detach(sc, sta);
--		break;
--	default:
--		break;
--	}
-+	ath_node_attach(sc, sta);
-+
-+	return 0;
-+}
-+
-+static int ath9k_sta_remove(struct ieee80211_hw *hw,
-+			    struct ieee80211_vif *vif,
-+			    struct ieee80211_sta *sta)
-+{
-+	struct ath_wiphy *aphy = hw->priv;
-+	struct ath_softc *sc = aphy->sc;
-+
-+	ath_node_detach(sc, sta);
-+
-+	return 0;
+ 	b43_radio_init2055_pre(dev);
+@@ -229,17 +232,6 @@ static void b43_radio_init2055(struct b43_wldev *dev)
+ 	b43_radio_init2055_post(dev);
  }
  
- static int ath9k_conf_tx(struct ieee80211_hw *hw, u16 queue,
-@@ -2045,7 +2049,8 @@ struct ieee80211_ops ath9k_ops = {
- 	.remove_interface   = ath9k_remove_interface,
- 	.config 	    = ath9k_config,
- 	.configure_filter   = ath9k_configure_filter,
--	.sta_notify         = ath9k_sta_notify,
-+	.sta_add	    = ath9k_sta_add,
-+	.sta_remove	    = ath9k_sta_remove,
- 	.conf_tx 	    = ath9k_conf_tx,
- 	.bss_info_changed   = ath9k_bss_info_changed,
- 	.set_key            = ath9k_set_key,
-
+-void b43_nphy_radio_turn_on(struct b43_wldev *dev)
+-{
+-	b43_radio_init2055(dev);
+-}
+-
+-void b43_nphy_radio_turn_off(struct b43_wldev *dev)
+-{
+-	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
+-		     ~B43_NPHY_RFCTL_CMD_EN);
+-}
+-
+ /*
+  * Upload the N-PHY tables.
+  * http://bcm-v4.sipsolutions.net/802.11/PHY/N/InitTables
+@@ -3277,9 +3269,41 @@ static void b43_nphy_op_radio_write(struct b43_wldev *dev, u16 reg, u16 value)
+ 	b43_write16(dev, B43_MMIO_RADIO_DATA_LOW, value);
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/Radio/Switch%20Radio */
+ static void b43_nphy_op_software_rfkill(struct b43_wldev *dev,
+ 					bool blocked)
+-{//TODO
++{
++	if (b43_read32(dev, B43_MMIO_MACCTL) & B43_MACCTL_ENABLED)
++		b43err(dev->wl, "MAC not suspended\n");
++
++	if (blocked) {
++		b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
++				~B43_NPHY_RFCTL_CMD_CHIP0PU);
++		if (dev->phy.rev >= 3) {
++			b43_radio_mask(dev, 0x09, ~0x2);
++
++			b43_radio_write(dev, 0x204D, 0);
++			b43_radio_write(dev, 0x2053, 0);
++			b43_radio_write(dev, 0x2058, 0);
++			b43_radio_write(dev, 0x205E, 0);
++			b43_radio_mask(dev, 0x2062, ~0xF0);
++			b43_radio_write(dev, 0x2064, 0);
++
++			b43_radio_write(dev, 0x304D, 0);
++			b43_radio_write(dev, 0x3053, 0);
++			b43_radio_write(dev, 0x3058, 0);
++			b43_radio_write(dev, 0x305E, 0);
++			b43_radio_mask(dev, 0x3062, ~0xF0);
++			b43_radio_write(dev, 0x3064, 0);
++		}
++	} else {
++		if (dev->phy.rev >= 3) {
++			/* TODO: b43_radio_init2056(dev); */
++			/* TODO: PHY Set Channel Spec (dev, radio_chanspec) */
++		} else {
++			b43_radio_init2055(dev);
++		}
++	}
+ }
+ 
+ static void b43_nphy_op_switch_analog(struct b43_wldev *dev, bool on)
+-- 
+1.6.4.2
 
