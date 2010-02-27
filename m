@@ -1,199 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:34124 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359Ab0BIUFN (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:35865 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S968669Ab0B0RDX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2010 15:05:13 -0500
-Received: by mail-ew0-f228.google.com with SMTP id 28so4264852ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2010 12:05:13 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 06/11] b43: N-PHY: switch to chanspec struct
-Date: Tue,  9 Feb 2010 21:04:38 +0100
-Message-Id: <1265745883-3392-7-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-References: <1265745883-3392-2-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sat, 27 Feb 2010 12:03:23 -0500
+Received: by pwj8 with SMTP id 8so759038pwj.19
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2010 09:03:22 -0800 (PST)
+From: tom.leiming@gmail.com
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net,
+	stable@kernel.org, Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH] ath9k: decrease size of ath9k.ko
+Date: Sun, 28 Feb 2010 00:56:43 +0800
+Message-Id: <1267289803-6795-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   45 +++++++++++++++++++++++++------------
- drivers/net/wireless/b43/phy_n.h |   11 +++++----
- 2 files changed, 36 insertions(+), 20 deletions(-)
+From: Ming Lei <tom.leiming@gmail.com>
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 2f45817..4ff09b8 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -73,6 +73,21 @@ static void b43_nphy_rf_control_override(struct b43_wldev *dev, u16 field,
- static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
- 						u16 value, u8 core);
- 
-+static inline bool b43_empty_chanspec(struct b43_chanspec *chanspec)
-+{
-+	return !chanspec->channel && !chanspec->sideband &&
-+		!chanspec->b_width && !chanspec->b_freq;
-+}
-+
-+static inline bool b43_eq_chanspecs(struct b43_chanspec *chanspec1,
-+					struct b43_chanspec *chanspec2)
-+{
-+	return (chanspec1->channel == chanspec2->channel &&
-+		chanspec1->sideband == chanspec2->sideband &&
-+		chanspec1->b_width == chanspec2->b_width &&
-+		chanspec1->b_freq == chanspec2->b_freq);
-+}
-+
- void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
- {//TODO
- }
-@@ -768,7 +783,7 @@ static void b43_nphy_spur_workaround(struct b43_wldev *dev)
- {
- 	struct b43_phy_n *nphy = dev->phy.n;
- 
--	unsigned int channel;
-+	u8 channel = nphy->radio_chanspec.channel;
- 	int tone[2] = { 57, 58 };
- 	u32 noise[2] = { 0x3FF, 0x3FF };
- 
-@@ -777,8 +792,6 @@ static void b43_nphy_spur_workaround(struct b43_wldev *dev)
- 	if (nphy->hang_avoid)
- 		b43_nphy_stay_in_carrier_search(dev, 1);
- 
--	/* FIXME: channel = radio_chanspec */
--
- 	if (nphy->gband_spurwar_en) {
- 		/* TODO: N PHY Adjust Analog Pfbw (7) */
- 		if (channel == 11 && dev->phy.is_40mhz)
-@@ -2015,12 +2028,12 @@ static void b43_nphy_restore_rssi_cal(struct b43_wldev *dev)
- 	u16 *rssical_phy_regs = NULL;
- 
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
--		if (!nphy->rssical_chanspec_2G)
-+		if (b43_empty_chanspec(&nphy->rssical_chanspec_2G))
- 			return;
- 		rssical_radio_regs = nphy->rssical_cache.rssical_radio_regs_2G;
- 		rssical_phy_regs = nphy->rssical_cache.rssical_phy_regs_2G;
- 	} else {
--		if (!nphy->rssical_chanspec_5G)
-+		if (b43_empty_chanspec(&nphy->rssical_chanspec_5G))
- 			return;
- 		rssical_radio_regs = nphy->rssical_cache.rssical_radio_regs_5G;
- 		rssical_phy_regs = nphy->rssical_cache.rssical_phy_regs_5G;
-@@ -2440,7 +2453,7 @@ static void b43_nphy_save_cal(struct b43_wldev *dev)
- 
- 	struct b43_phy_n_iq_comp *rxcal_coeffs = NULL;
- 	u16 *txcal_radio_regs = NULL;
--	u8 *iqcal_chanspec;
-+	struct b43_chanspec *iqcal_chanspec;
- 	u16 *table = NULL;
- 
- 	if (nphy->hang_avoid)
-@@ -2496,12 +2509,12 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
- 	struct b43_phy_n_iq_comp *rxcal_coeffs = NULL;
- 
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
--		if (nphy->iqcal_chanspec_2G == 0)
-+		if (b43_empty_chanspec(&nphy->iqcal_chanspec_2G))
- 			return;
- 		table = nphy->cal_cache.txcal_coeffs_2G;
- 		loft = &nphy->cal_cache.txcal_coeffs_2G[5];
- 	} else {
--		if (nphy->iqcal_chanspec_5G == 0)
-+		if (b43_empty_chanspec(&nphy->iqcal_chanspec_5G))
- 			return;
- 		table = nphy->cal_cache.txcal_coeffs_5G;
- 		loft = &nphy->cal_cache.txcal_coeffs_5G[5];
-@@ -2746,8 +2759,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
- 			b43_ntab_read_bulk(dev, B43_NTAB16(15, 96), length,
- 						nphy->txiqlocal_bestc);
- 			nphy->txiqlocal_coeffsvalid = true;
--			/* TODO: Set nphy->txiqlocal_chanspec to
--				the current channel */
-+			nphy->txiqlocal_chanspec = nphy->radio_chanspec;
- 		} else {
- 			length = 11;
- 			if (dev->phy.rev < 3)
-@@ -2782,7 +2794,8 @@ static void b43_nphy_reapply_tx_cal_coeffs(struct b43_wldev *dev)
- 	u16 buffer[7];
- 	bool equal = true;
- 
--	if (!nphy->txiqlocal_coeffsvalid || 1 /* FIXME */)
-+	if (!nphy->txiqlocal_coeffsvalid ||
-+	    b43_eq_chanspecs(&nphy->txiqlocal_chanspec, &nphy->radio_chanspec))
- 		return;
- 
- 	b43_ntab_read_bulk(dev, B43_NTAB16(15, 80), 7, buffer);
-@@ -3137,9 +3150,11 @@ int b43_phy_initn(struct b43_wldev *dev)
- 	do_rssi_cal = false;
- 	if (phy->rev >= 3) {
- 		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
--			do_rssi_cal = (nphy->rssical_chanspec_2G == 0);
-+			do_rssi_cal =
-+				b43_empty_chanspec(&nphy->rssical_chanspec_2G);
- 		else
--			do_rssi_cal = (nphy->rssical_chanspec_5G == 0);
-+			do_rssi_cal =
-+				b43_empty_chanspec(&nphy->rssical_chanspec_5G);
- 
- 		if (do_rssi_cal)
- 			b43_nphy_rssi_cal(dev);
-@@ -3151,9 +3166,9 @@ int b43_phy_initn(struct b43_wldev *dev)
- 
- 	if (!((nphy->measure_hold & 0x6) != 0)) {
- 		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
--			do_cal = (nphy->iqcal_chanspec_2G == 0);
-+			do_cal = b43_empty_chanspec(&nphy->iqcal_chanspec_2G);
- 		else
--			do_cal = (nphy->iqcal_chanspec_5G == 0);
-+			do_cal = b43_empty_chanspec(&nphy->iqcal_chanspec_5G);
- 
- 		if (nphy->mute)
- 			do_cal = false;
-diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-index 47d20dc..e7acae2 100644
---- a/drivers/net/wireless/b43/phy_n.h
-+++ b/drivers/net/wireless/b43/phy_n.h
-@@ -984,7 +984,7 @@ struct b43_phy_n {
- 	u16 papd_epsilon_offset[2];
- 	s32 preamble_override;
- 	u32 bb_mult_save;
--	u16 radio_chanspec;
-+	struct b43_chanspec radio_chanspec;
- 
- 	bool gain_boost;
- 	bool elna_gain_config;
-@@ -1000,6 +1000,7 @@ struct b43_phy_n {
- 	u16 txiqlocal_bestc[11];
- 	bool txiqlocal_coeffsvalid;
- 	struct b43_phy_n_txpwrindex txpwrindex[2];
-+	struct b43_chanspec txiqlocal_chanspec;
- 
- 	u8 txrx_chain;
- 	u16 tx_rx_cal_phy_saveregs[11];
-@@ -1015,12 +1016,12 @@ struct b43_phy_n {
- 	bool gband_spurwar_en;
- 
- 	bool ipa2g_on;
--	u8 iqcal_chanspec_2G;
--	u8 rssical_chanspec_2G;
-+	struct b43_chanspec iqcal_chanspec_2G;
-+	struct b43_chanspec rssical_chanspec_2G;
- 
- 	bool ipa5g_on;
--	u8 iqcal_chanspec_5G;
--	u8 rssical_chanspec_5G;
-+	struct b43_chanspec iqcal_chanspec_5G;
-+	struct b43_chanspec rssical_chanspec_5G;
- 
- 	struct b43_phy_n_rssical_cache rssical_cache;
- 	struct b43_phy_n_cal_cache cal_cache;
+The patch defines the fields of 'valid_single_stream' and 'valid' in
+struct ath_rate_table as char type, so decrease the size of ath9k.ko
+about 2KB.
+
+old ath9k.ko
+[tom@tom-lei ath9k]$ size ath9k.ko
+   text    data     bss     dec     hex filename
+  69344    3080     168   72592   11b90 ath9k.ko
+
+new ath9k.ko
+[tom@tom-lei ath9k]$ size ath9k.ko
+   text    data     bss     dec     hex filename
+  67304    3080     168   70552   11398 ath9k.ko
+
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index 4f6d6fd..389168a 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -110,8 +110,8 @@ struct ath_rate_table {
+ 	int rate_cnt;
+ 	int mcs_start;
+ 	struct {
+-		int valid;
+-		int valid_single_stream;
++		char valid;
++		char valid_single_stream;
+ 		u8 phy;
+ 		u32 ratekbps;
+ 		u32 user_ratekbps;
 -- 
-1.6.4.2
+1.6.2.5
 
