@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:9148 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962Ab0BHRdH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2010 12:33:07 -0500
-Received: by qw-out-2122.google.com with SMTP id 9so701464qwb.37
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2010 09:33:06 -0800 (PST)
+Received: from bu3sch.de ([62.75.166.246]:36577 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S968426Ab0B0OpE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Feb 2010 09:45:04 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal DMA errors
+Date: Sat, 27 Feb 2010 15:44:42 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain> <alpine.LFD.2.00.1002261231320.4513@localhost.localdomain> <alpine.LFD.2.00.1002261239070.4513@localhost.localdomain>
+In-Reply-To: <alpine.LFD.2.00.1002261239070.4513@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <201002081454.13561.sturmflut@lieberbiber.de>
-References: <1265331642-27773-1-git-send-email-cascardo@holoscopio.com>
-	 <1265446793.4041.2.camel@johannes.local>
-	 <c1545bb51002071151wb2cefa3mb03501e0d6b3fb4b@mail.gmail.com>
-	 <201002081454.13561.sturmflut@lieberbiber.de>
-Date: Mon, 8 Feb 2010 09:26:05 -0800
-Message-ID: <445f43ac1002080926y4912fa6n7d94ce3333e879f5@mail.gmail.com>
-Subject: Re: [PATCH] nl80211: allow adding new station to devices in mesh mode
-From: Javier Cardona <javier@cozybit.com>
-To: Simon Raffeiner <sturmflut@lieberbiber.de>
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201002271544.43164.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simon,
+On Friday 26 February 2010 21:42:29 Linus Torvalds wrote:
+> 
+> On Fri, 26 Feb 2010, Linus Torvalds wrote:
+> > 
+> > So send me a patch. I'll try it. But I have no hardware docs, nor any 
+> > information about how that SSB bridge is supposed to work, or why DMA 
+> > might be failing.
+> 
+> Btw, I also object to your argument that
+> 
+>   "Well, my original plan was to get rid of controller_restart and not add 
+>    yet another user of it, because it is extremely broken and racy. The 
+>    locking in the whole driver is completely braindead due to the mere 
+>    existence of this function."
+> 
+> is a reason to not apply the patch.
 
-On Mon, Feb 8, 2010 at 5:54 AM, Simon Raffeiner
-<sturmflut@lieberbiber.de> wrote:
-> Am Sonntag 07 Februar 2010 08:51:03 pm schrieben Sie:
->
->> It was supported for automated testing and experimentation (you could
->> then force certain topologies).
->
-> Wouldn't one have to disable beaconing then, or at least automatic peering? IMO you can't force a topology if the nodes are still beaconing and establishing paths at the same time.
+Blah, I never said that. I just said what my original plan was and that
+the workaround is not as sound as it looks like. In fact, it kind of depends
+on luck that it works at all. The controller_restart _never_ worked correctly,
+because it does not notify the stack about the restart. So your code implicitly
+relies on getting a DMA error before the stack does any significant negotiation
+with the AP. (Or that the stack detects the device fuckup and starts over again).
 
-Automatic peering can be disabled via NL80211_MESHCONF_AUTO_OPEN_PLINKS.
+> The fact that the driver locking is odd is _not_ a reason to not fix other 
+> issues that are totally unrelated to locking.
 
-Javier
-
+To say it again: I _never_ said that.
 
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Greetings, Michael.
