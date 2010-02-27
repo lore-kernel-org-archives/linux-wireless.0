@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36925 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S968441Ab0B0Otg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 09:49:36 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal DMA errors
-Date: Sat, 27 Feb 2010 15:49:27 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain> <201002262120.37438.mb@bu3sch.de> <alpine.LFD.2.00.1002261231320.4513@localhost.localdomain>
-In-Reply-To: <alpine.LFD.2.00.1002261231320.4513@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201002271549.28154.mb@bu3sch.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:33963 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753809Ab0B0HDM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Feb 2010 02:03:12 -0500
+Subject: Re: Using asynchonous block cipher for CCMP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1267249474.6278.23.camel@mj>
+References: <1267249474.6278.23.camel@mj>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 27 Feb 2010 08:03:08 +0100
+Message-ID: <1267254188.3851.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 February 2010 21:33:08 Linus Torvalds wrote:
+On Sat, 2010-02-27 at 00:44 -0500, Pavel Roskin wrote:
+> Hello!
 > 
-> On Fri, 26 Feb 2010, Michael Buesch wrote:
-> > 
-> > I'd rather appreciate that somebody who owns such a device and can reproduce the bug
-> > would do some _real_ debugging on the issue instead.
+> I'm looking for ways to accelerate CCMP on Intel IXP425.
 > 
-> I have the hardware, I can reproduce the bug 100% of the time.
+> drivers/crypto/ixp4xx_crypto.c implements only asynchronous block
+> ciphers, and the reason appears to be that the crypto processor uses DMA
+> and interrupts to communicate with the CPU, which would make synchronous
+> encryption ineffective.
 > 
-> So send me a patch. I'll try it.
+> It turns out that mac80211 uses plain AES for CCMP.  However, it uses an
+> asynchronous block cipher "ecb(arc4)" for WEP and TKIP.
+> 
+> I'd like to make CCMP use an asynchronous block cipher.  Has anyone
+> attempted that?  Are there any issues I should be aware of?
 
-Well, unfortunately it is not as easy as sending a patch and testing it.
-If that was the case, the bug would've never hit you. Some serious very basic
-debugging work has to be done first. What we did for now basically was just
-poking around in the dark. What we need to do is find out what triggers
-the behavior. One thing that we know is that there are identical cards that
-work fine in one machine and fail in another. So it is kind of machine dependent.
-The first thing I would try is to start disabling features in the BIOS.
-You can't really do this remotely via email, so I think there needs to be done
-some work by somebody who knows what he does _and_ is able to reproduce the bug.
+Well the issue is going to be having to interrupt the flow there and
+then pick it back up after crypto. Or you can stick it after the entire
+flow and treat it like hw crypto in the card.
 
--- 
-Greetings, Michael.
+johannes
+
