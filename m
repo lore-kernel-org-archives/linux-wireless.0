@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57868 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754510Ab0BTMWD (ORCPT
+Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:62605 "EHLO
+	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S936600Ab0B1Tdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Feb 2010 07:22:03 -0500
-Subject: Re: [RFC/RFT] mwl8k: convert to new station add/remove callbacks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100220090345.GK1637@mail.wantstofly.org>
-References: <20100219180652.409890561@sipsolutions.net>
-	 <20100219180737.156138399@sipsolutions.net>
-	 <1266603517.10689.1.camel@jlt3.sipsolutions.net>
-	 <20100220090345.GK1637@mail.wantstofly.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/NQJpXwLypX4DhYsEMCV"
-Date: Sat, 20 Feb 2010 13:21:57 +0100
-Message-ID: <1266668517.12943.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 28 Feb 2010 14:33:42 -0500
+Message-ID: <4B8AC1BE.6000603@gmail.com>
+Date: Sun, 28 Feb 2010 20:19:26 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: prahal@yahoo.com, John Linville <linville@tuxdriver.com>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Josef Bacik <josef@redhat.com>
+Subject: Re: [PATCH] rt2x00: Fix TX status reporting for rt2800pci.
+References: <4B8A9670.1080906@yahoo.com>
+In-Reply-To: <4B8A9670.1080906@yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 02/28/10 17:14, Alban Browaeys wrote:
+> After testing, we found that TX_STA_FIFO_MCS is the last MCS value
+> tried. If the transmission failed, 8 frames have been transmitted. If the
+> transmission succeed, we can easily compute the number of retry.  This
+> patch fix
+> the way status is reported to mac80211 rate control. It has 2 bugs :
+> 
+> 1. mcs can contain the short preamble flag and it will lead to wrong
+> computations.
+> 
+> 2. minstrel nearly always say that 54 Mbits is the best rate, even if we
+> are
+> very far from the AP
+> 
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
+> ---
 
---=-/NQJpXwLypX4DhYsEMCV
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, 2010-02-20 at 10:03 +0100, Lennert Buytenhek wrote:
-> On Fri, Feb 19, 2010 at 07:18:37PM +0100, Johannes Berg wrote:
->=20
-> > This converts mwl8k to use the new station
-> > add/remove callbacks instead of using the
-> > old sta_notify callback.
-> >=20
-> > The new callbacks can sleep, so a lot of
-> > code can be removed now.
-> >=20
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> Acked-by: Lennert Buytenhek <buytenh@wantstofly.org>
-
-Ok, then I'll upgrade this to [PATCH]; John, can you pick it up?
-
-johannes
-
---=-/NQJpXwLypX4DhYsEMCV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJLf9PhAAoJEODzc/N7+QmahcEP/j+P6fqK6GeD3MbxBCc10acP
-94iuInPk9uxpVBMrAWarsA4kBSp8d1nJk55r1rCNKcaT3mnwHF41m922H/NoJP4Z
-oeXyJKmVKtrE2Sa8rflFhMGa2AGsu1v00h5yfUGvgE3rWAFj225jZ5v6FbyeFJyR
-w+DtiELsauyENE0F5LSMTFOiqInqV1ljIdCBU9s42VKVFxYhwJ5ZGJfiJvtP9agD
-5Ob4Np45bDbpv+wtBJTnMLMbScvbrqSfD1OtGnm+KlGm07iS4xC/gtpytInt7+se
-ElLBDQ17UXp4MKY9uCg3q1Qb2T9mPjIbCLuygEGX6vWuU0O1KX8gOxxjzUOl6w+R
-BZrB3wZMnTO7tTiBLJbu5lpcouleaWjjiGBB7L42qXtcMLjUIKNZNLhGVishYgSL
-v3Wl7KrtTWsQXskCnp8I1MQjSp58+VEVFCPMbBvOjRLN2JEh5tRPZyxX6JfcDVib
-QxMvbC/6tttWKb9376z9jsEzh+J/v+JQVFgjxWddlnoa4UyWg21witQ6Px33hygW
-/708UNNxdNu5mAqn5vwsL4ekL3w4BtNYfFtq0JdusfJ1sIBnNEtcE0XLsVpsKpZH
-M2acwe+D4yvexZgZTCGbeArc30CQPU/aGi5nLb5emtv/As6mmCtEWmVPkeBxXn7b
-aQ9FU94x7NA1jLfrxZ1b
-=jP3G
------END PGP SIGNATURE-----
-
---=-/NQJpXwLypX4DhYsEMCV--
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
