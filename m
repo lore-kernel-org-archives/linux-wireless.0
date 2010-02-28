@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f182.google.com ([209.85.210.182]:45889 "EHLO
-	mail-yx0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932290Ab0BYE71 (ORCPT
+Received: from smtp6.freeserve.com ([193.252.22.191]:27242 "EHLO
+	smtp6.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032025Ab0B1Uax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2010 23:59:27 -0500
-MIME-Version: 1.0
-In-Reply-To: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-Date: Thu, 25 Feb 2010 10:23:52 +0530
-Message-ID: <3f9a31f41002242053r169255d2hf2585aeb55174a92@mail.gmail.com>
-Subject: Re: 802.11 development process - extended documentation
-From: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>, Willy Tarreau <w@1wt.eu>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 28 Feb 2010 15:30:53 -0500
+Date: Sun, 28 Feb 2010 20:30:38 +0000
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+Message-ID: <20100228203038.456b9016@boulder.homenet>
+In-Reply-To: <201002281958.12607.mb@bu3sch.de>
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
+	<b170af451002281047s1cbb9168g61178c5bc06ad428@mail.gmail.com>
+	<69e28c911002281052p417fcd42n74552ad3ac0106a2@mail.gmail.com>
+	<201002281958.12607.mb@bu3sch.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Luis,
+On Sun, 28 Feb 2010 19:58:11 +0100
+Michael Buesch <mb@bu3sch.de> wrote:
+> It says 8k for all of my devices there. So an MMIO write to 0x2000
+> and above writes to completely random memory.
+> 
+My BCM4312 device is 16K:
 
-On Thu, Feb 25, 2010 at 5:48 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> I've extended our 802.11 development process into a new section on our
-> 802.11 wiki. I often get asked how this works from different parts of
-> the company here at Atheros so figured it'd be easier to illustrate
-> this as best as possible and share it.
->
-> http://wireless.kernel.org/en/developers/process
->
-> Hope it does justice, John if you see any mistakes feel free to edit.
-> If the diagram seems fishy let me know what I can fix.
->
+  Region 0: Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
 
-Thanks for the beautiful documentation.
+Chris
 
-Is this also applicable for Linux 2.4
 
-What is the status of Wireless in Linux 2.4
-
-Thanks,
---
-Jaswinder Singh.
