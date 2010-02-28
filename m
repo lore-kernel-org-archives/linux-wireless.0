@@ -1,164 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:53608 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756591Ab0BTWIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Feb 2010 17:08:10 -0500
-From: florian@mickler.org
+Received: from smtpfb2-g21.free.fr ([212.27.42.10]:53796 "EHLO
+	smtpfb2-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S968260Ab0B1OmY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Feb 2010 09:42:24 -0500
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
+	by smtpfb2-g21.free.fr (Postfix) with ESMTP id E353FCA89CB
+	for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2010 15:32:10 +0100 (CET)
+Message-ID: <4B8A7E39.3020809@free.fr>
+Date: Sun, 28 Feb 2010 15:31:21 +0100
+From: matthieu castet <castet.matthieu@free.fr>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@xenotime.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Florian Mickler <florian@mickler.org>
-Subject: [PATCH 1/2] Document the rfkill sysfs ABI
-Date: Sat, 20 Feb 2010 22:40:44 +0100
-Message-Id: <1266702045-6062-2-git-send-email-florian@mickler.org>
-In-Reply-To: <1266702045-6062-1-git-send-email-florian@mickler.org>
-References: <1266702045-6062-1-git-send-email-florian@mickler.org>
+CC: Dan Williams <dcbw@redhat.com>
+Subject: [PATCH] airo : fix printing status info
+Content-Type: multipart/mixed;
+ boundary="------------010205000201010405050509"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves sysfs ABI info from Documentation/rfkill.txt to the
-ABI subfolder and reformats it.
+This is a multi-part message in MIME format.
+--------------010205000201010405050509
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Florian Mickler <florian@mickler.org>
----
- Documentation/ABI/stable/sysfs-class-rfkill |   64 +++++++++++++++++++++++++++
- Documentation/rfkill.txt                    |   44 +++++-------------
- 2 files changed, 77 insertions(+), 31 deletions(-)
- create mode 100644 Documentation/ABI/stable/sysfs-class-rfkill
+For some status, reason is encoded in the low byte, but airo_print_status forgot tp mask low byte in status parsing.
 
-diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
-new file mode 100644
-index 0000000..53a4287
---- /dev/null
-+++ b/Documentation/ABI/stable/sysfs-class-rfkill
-@@ -0,0 +1,64 @@
-+rfkill - radio frequency (RF) connector kill switch support
-+
-+For details to this subsystem look at Documentation/rfkill.txt.
-+
-+What: 		/sys/class/rfkill
-+Date:		09-Jul-2007
-+KernelVersion:	v2.6.22
-+Contact:	linux-wireless@vger.kernel.org,
-+Description: 	The rfkill class subsystem folder.
-+		Each registered rfkill driver is represented by an rfkillX
-+		subfolder (X being an integer > 0).
-+
-+
-+What:		/sys/class/rfkill/rfkill[0-9]+/name
-+Date:		09-Jul-2007
-+KernelVersion	v2.6.22
-+Contact:	linux-wireless@vger.kernel.org
-+Description: 	Name assigned by driver to this key (interface or driver name).
-+Values: 	arbitrary string.
-+
-+
-+What: 		/sys/class/rfkill/rfkill[0-9]+/type
-+Date:		09-Jul-2007
-+KernelVersion	v2.6.22
-+Contact:	linux-wireless@vger.kernel.org
-+Description: 	Driver type string ("wlan", "bluetooth", etc).
-+Values: 	See include/linux/rfkill.h.
-+
-+
-+What:		/sys/class/rfkill/rfkill[0-9]+/persistent
-+Date:		09-Jul-2007
-+KernelVersion	v2.6.22
-+Contact:	linux-wireless@vger.kernel.org
-+Description: 	Whether the soft blocked state is initialised from non-volatile
-+		storage at startup.
-+Values: 	A numeric value.
-+		0: false
-+		1: true
-+
-+
-+What:		/sys/class/rfkill/rfkill[0-9]+/state
-+Date:		09-Jul-2007
-+KernelVersion	v2.6.22
-+Contact:	linux-wireless@vger.kernel.org
-+Description: 	Current state of the transmitter. This file is deprecated
-+		because it can only properly show three of the four possible
-+		states, soft-and-hard-blocked is missing.
-+Values: 	A numeric value.
-+		0: RFKILL_STATE_SOFT_BLOCKED
-+			transmitter is turned off by software
-+		1: RFKILL_STATE_UNBLOCKED
-+			transmitter is (potentially) active
-+		2: RFKILL_STATE_HARD_BLOCKED
-+			transmitter is forced off by something outside of
-+			the driver's control.
-+
-+
-+What:		/sys/class/rfkill/rfkill[0-9]+/claim
-+Date:		09-Jul-2007
-+KernelVersion	v2.6.22
-+Contact:	linux-wireless@vger.kernel.org
-+Description:	This file is deprecated because there no longer is a way to
-+		claim just control over a single rfkill instance.
-+Values: 	0: Kernel handles events
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index b486050..83668e5 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -99,37 +99,15 @@ system. Also, it is possible to switch all rfkill drivers (or all drivers of
- a specified type) into a state which also updates the default state for
- hotplugged devices.
- 
--After an application opens /dev/rfkill, it can read the current state of
--all devices, and afterwards can poll the descriptor for hotplug or state
--change events.
--
--Applications must ignore operations (the "op" field) they do not handle,
--this allows the API to be extended in the future.
--
--Additionally, each rfkill device is registered in sysfs and there has the
--following attributes:
--
--	name: Name assigned by driver to this key (interface or driver name).
--	type: Driver type string ("wlan", "bluetooth", etc).
--	persistent: Whether the soft blocked state is initialised from
--	            non-volatile storage at startup.
--	state: Current state of the transmitter
--		0: RFKILL_STATE_SOFT_BLOCKED
--			transmitter is turned off by software
--		1: RFKILL_STATE_UNBLOCKED
--			transmitter is (potentially) active
--		2: RFKILL_STATE_HARD_BLOCKED
--			transmitter is forced off by something outside of
--			the driver's control.
--	       This file is deprecated because it can only properly show
--	       three of the four possible states, soft-and-hard-blocked is
--	       missing.
--	claim: 0: Kernel handles events
--	       This file is deprecated because there no longer is a way to
--	       claim just control over a single rfkill instance.
--
--rfkill devices also issue uevents (with an action of "change"), with the
--following environment variables set:
-+After an application opens /dev/rfkill, it can read the current state of all
-+devices. Changes can be either obtained by either polling the descriptor for
-+hotplug or state change events or by listening for uevents emitted by the
-+rfkill core framework.
-+
-+Additionally, each rfkill device is registered in sysfs and emits uevents.
-+
-+rfkill devices issue uevents (with an action of "change"), with the following
-+environment variables set:
- 
- RFKILL_NAME
- RFKILL_STATE
-@@ -137,3 +115,7 @@ RFKILL_TYPE
- 
- The contents of these variables corresponds to the "name", "state" and
- "type" sysfs files explained above.
-+
-+
-+For further details consult Documentation/ABI/stable/dev-rfkill and
-+Documentation/ABI/stable/sysfs-class-rfkill.
--- 
-1.6.6.1
+This make it only work when reason is 0.
 
+Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+
+--------------010205000201010405050509
+Content-Type: text/x-diff;
+ name="airo_status.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="airo_status.diff"
+
+Index: airo.c
+===================================================================
+--- 1/drivers/net/wireless/airo.c
++++ 2/drivers/net/wireless/airo.c
+@@ -3325,20 +3325,27 @@
+ {
+ 	u8 reason = status & 0xFF;
+ 
+-	switch (status) {
++	switch (status & 0xFF00) {
+ 	case STAT_NOBEACON:
+-		airo_print_dbg(devname, "link lost (missed beacons)");
++		switch (status) {
++		case STAT_NOBEACON:
++			airo_print_dbg(devname, "link lost (missed beacons)");
++			break;
++		case STAT_MAXRETRIES:
++		case STAT_MAXARL:
++			airo_print_dbg(devname, "link lost (max retries)");
++			break;
++		case STAT_FORCELOSS:
++			airo_print_dbg(devname, "link lost (local choice)");
++			break;
++		case STAT_TSFSYNC:
++			airo_print_dbg(devname, "link lost (TSF sync lost)");
++			break;
++		default:
++			airo_print_dbg(devname, "unknow status %x\n", status);
++			break;
++		}
+ 		break;
+-	case STAT_MAXRETRIES:
+-	case STAT_MAXARL:
+-		airo_print_dbg(devname, "link lost (max retries)");
+-		break;
+-	case STAT_FORCELOSS:
+-		airo_print_dbg(devname, "link lost (local choice)");
+-		break;
+-	case STAT_TSFSYNC:
+-		airo_print_dbg(devname, "link lost (TSF sync lost)");
+-		break;
+ 	case STAT_DEAUTH:
+ 		airo_print_dbg(devname, "deauthenticated (reason: %d)", reason);
+ 		break;
+@@ -3353,7 +3360,11 @@
+ 		airo_print_dbg(devname, "authentication failed (reason: %d)",
+ 			       reason);
+ 		break;
++	case STAT_ASSOC:
++	case STAT_REASSOC:
++		break;
+ 	default:
++		airo_print_dbg(devname, "unknow status %x\n", status);
+ 		break;
+ 	}
+ }
+
+--------------010205000201010405050509--
