@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:9984 "EHLO c60.cesmail.net"
+Received: from smtp2-g21.free.fr ([212.27.42.2]:55160 "EHLO smtp2-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753624Ab0BQS7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2010 13:59:11 -0500
-Subject: Re: [PATCH] v2: rtl8187: micro cleanup
-From: Pavel Roskin <proski@gnu.org>
-To: okias <d.okias@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <c2673ca61002171038u14c7ab2fnf2d3ce2067bd1fd8@mail.gmail.com>
-References: <c2673ca61002171015j375922c0y4c7f61c3d3322bab@mail.gmail.com>
-	 <4B7C35C9.30607@lwfinger.net>
-	 <c2673ca61002171034q18edf1c2o817ac4e1ff367177@mail.gmail.com>
-	 <1266431764.15836.8.camel@jlt3.sipsolutions.net>
-	 <c2673ca61002171038u14c7ab2fnf2d3ce2067bd1fd8@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 17 Feb 2010 13:58:58 -0500
-Message-Id: <1266433138.9050.27.camel@mj>
-Mime-Version: 1.0
+	id S968431Ab0B1OnG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Feb 2010 09:43:06 -0500
+Message-ID: <4B8A80EE.6000102@free.fr>
+Date: Sun, 28 Feb 2010 15:42:54 +0100
+From: matthieu castet <castet.matthieu@free.fr>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: Dan Williams <dcbw@redhat.com>, Jose Alonso <joalonsof@gmail.com>
+Subject: [PATCH] airo : Print of firmware version
+Content-Type: multipart/mixed;
+ boundary="------------040300010604020708080406"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-02-17 at 19:38 +0100, okias wrote:
-> You have probably right, but when I use my testing program:
-> 
-> #include <stdio.h>
-> main() {
-> int a;
-> printf("%i\n", a);
-> a |= 22;
-> printf("%i\n", a);
-> }
-> 
-> Output is:
-> 0
-> 22
-> 
-> it look correct to me
+This is a multi-part message in MIME format.
+--------------040300010604020708080406
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-That's what I get if compiling for x86_64.  If compiling for i386, I get
+For the firmware version 5.30.17 the log file shows:
+Firmware version 5.30.11
 
-1258024948
-1258024950
+The variable softSubVer is binary.
 
-It just happens that 0 is on the stack where the variable is allocated,
-perhaps as a leftover from another call that used that area on the
-stack.
 
-No C standard says that automatic variables are initialized.  And
-indeed, they are not!
+Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+Signed-off-by: Jose Alonso <joalonsof@gmail.com>
 
-gcc will warn about it with -Wall
+--------------040300010604020708080406
+Content-Type: text/x-diff;
+ name="airo_firmware.diff"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline;
+ filename="airo_firmware.diff"
 
-Please let's stop this discussion now, as it doesn't belong to the
-linux-wireless mailing list.
+Index: airo.c
+===================================================================
+--- 1/drivers/net/wireless/airo.c	(révision 47)
++++ 2/drivers/net/wireless/airo.c	(révision 48)
+@@ -2993,7 +2993,7 @@
+ 	ai->wep_capable = (cap_rid.softCap & cpu_to_le16(0x02)) ? 1 : 0;
+ 	ai->max_wep_idx = (cap_rid.softCap & cpu_to_le16(0x80)) ? 3 : 0;
+ 
+-	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
++	airo_print_info(dev->name, "Firmware version %x.%x.%02d",
+ 	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
+ 	                (le16_to_cpu(cap_rid.softVer) & 0xFF),
+ 	                le16_to_cpu(cap_rid.softSubVer));
 
--- 
-Regards,
-Pavel Roskin
+--------------040300010604020708080406--
