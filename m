@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 94.43.138.210.xn.2iij.net ([210.138.43.94]:46084 "EHLO
-	mail.st-paulia.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751228Ab0BMTYy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Feb 2010 14:24:54 -0500
-Message-ID: <4B76FA80.5070607@linux-ipv6.org>
-Date: Sun, 14 Feb 2010 04:16:16 +0900
-From: YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+Received: from mail001.aei.ca ([206.123.6.130]:48860 "EHLO mail001.aei.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1032025Ab0B1Uu2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Feb 2010 15:50:28 -0500
+Message-ID: <4B8AD742.9000201@polymtl.ca>
+Date: Sun, 28 Feb 2010 15:51:14 -0500
+From: William Bourque <william.bourque@polymtl.ca>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linville@tuxdriver.com, David Miller <davem@davemloft.net>
-CC: yoshfuji@linux-ipv6.org, hirofumi@flycat.org
-Subject: [PATCH] p54usb: Add usbid for Corega CG-WLUSB2GT.
-Content-Type: text/plain; charset=ISO-2022-JP
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+CC: Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>	<b170af451002281047s1cbb9168g61178c5bc06ad428@mail.gmail.com>	<69e28c911002281052p417fcd42n74552ad3ac0106a2@mail.gmail.com>	<201002281958.12607.mb@bu3sch.de> <20100228203038.456b9016@boulder.homenet>
+In-Reply-To: <20100228203038.456b9016@boulder.homenet>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shimada Hirofumi <hirofumi@flycat.org>
+Chris Vine wrote:
+> On Sun, 28 Feb 2010 19:58:11 +0100
+> Michael Buesch <mb@bu3sch.de> wrote:
+>> It says 8k for all of my devices there. So an MMIO write to 0x2000
+>> and above writes to completely random memory.
+>>
+> My BCM4312 device is 16K:
+> 
+>   Region 0: Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
 
-p54usb: Add usbid for Corega CG-WLUSB2GT.
 
-Signed-off-by: Shimada Hirofumi <hirofumi@flycat.org>
-Signed-off-by: YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
----
- drivers/net/wireless/p54/p54usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Now that you mention it, mine as well :
 
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 92af9b9..dcb484b 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -36,6 +36,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
- 	/* Version 1 devices (pci chip + net2280) */
- 	{USB_DEVICE(0x0506, 0x0a11)},	/* 3COM 3CRWE254G72 */
- 	{USB_DEVICE(0x0707, 0xee06)},	/* SMC 2862W-G */
-+	{USB_DEVICE(0x07aa, 0x001c)},	/* Corega CG-WLUSB2GT */
- 	{USB_DEVICE(0x083a, 0x4501)},	/* Accton 802.11g WN4501 USB */
- 	{USB_DEVICE(0x083a, 0x4502)},	/* Siemens Gigaset USB Adapter */
- 	{USB_DEVICE(0x083a, 0x5501)},	/* Phillips CPWUA054 */
+01:00.0 Network controller: Broadcom Corporation BCM4312 802.11b/g (rev 01)
+         Subsystem: Hewlett-Packard Company Device 1507
+         Flags: bus master, fast devsel, latency 0, IRQ 16
+         Memory at feafc000 (64-bit, non-prefetchable) [size=16K]
+
+Are all the failing devices have a 16k mem space?
+
+- William
