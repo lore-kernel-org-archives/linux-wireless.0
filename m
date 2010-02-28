@@ -1,42 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:54318 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751353Ab0BTAWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2010 19:22:14 -0500
-Subject: Re: compat-wireless + Linux 2.6.26.8 testing results
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:38162 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932084Ab0B1Sm7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Feb 2010 13:42:59 -0500
+Received: by fxm19 with SMTP id 19so78768fxm.21
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2010 10:42:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B8AAF42.8000602@polymtl.ca>
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
+	<201002271708.29817.mb@bu3sch.de> <4B894A61.1070302@lwfinger.net>
+	<69e28c911002271145s590df31en9d2f8b2c47932451@mail.gmail.com>
+	<4B899DA3.4030100@lwfinger.net> <69e28c911002271534o8cab111vf7fcc1b93b6c4b47@mail.gmail.com>
+	<a221c0101002271542o5d928e56n8a22602860aeb761@mail.gmail.com>
+	<69e28c911002271544y62c93255k8a6dbb0adb2b5928@mail.gmail.com>
+	<20100228001655.4c9fd9ce@boulder.homenet> <4B8AAF42.8000602@polymtl.ca>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 28 Feb 2010 19:42:37 +0100
+Message-ID: <69e28c911002281042g15808a2cm81bd9528a30d2f85@mail.gmail.com>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+To: William Bourque <william.bourque@polymtl.ca>
+Cc: bcm43xx-dev@lists.berlios.de,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100218183058.GG8069@bombadil.infradead.org>
-References: <43e72e891002121810g25d21eb5y254969458a9a58e7@mail.gmail.com>
-	 <1266124222.13902.42.camel@mj>
-	 <43e72e891002161323v70636defr2500784ffb44d775@mail.gmail.com>
-	 <1266358340.2659.37.camel@mj>
-	 <43e72e891002161459m4174654aj8d7985f32cb8678d@mail.gmail.com>
-	 <43e72e891002161645p627c123g9ac571e4802cd8bf@mail.gmail.com>
-	 <43e72e891002161651w4718431dqaf258151241f72fc@mail.gmail.com>
-	 <1266467017.3065.62.camel@mj> <1266473734.11805.5.camel@mj>
-	 <20100218183058.GG8069@bombadil.infradead.org>
-Content-Type: text/plain
-Date: Fri, 19 Feb 2010 19:21:49 -0500
-Message-Id: <1266625309.25707.44.camel@mj>
-Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary=001485f3bd5c5178230480ad801e
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-02-18 at 13:30 -0500, Luis R. Rodriguez wrote:
+--001485f3bd5c5178230480ad801e
+Content-Type: text/plain; charset=ISO-8859-1
 
-> Sweeet, thanks a lot! I've sucked this into all the respective git trees. This
-> means we now have backporting re-enabled on bleeding edge for kernels older
-> than 2.6.27 (whoopdi-free'kin-doo for those who are on those ancient kernels).
+On Sun, Feb 28, 2010 at 7:00 PM, William Bourque
+<william.bourque@polymtl.ca> wrote:
+> I confirm, it still crashes on my notebook as well. However the new
+> "fallback to PIO" behavior introduced earlier do a fine job getting it back
+> on track.
+>
+> Btw, you are often refering to some documentation that document the register
+> for this device, where could I find it? I probably won't be able to do much,
+> but I'm curious to see...
+>
+> - William
 
-debugfs_remove_recursive() was misplaced.  It should be in
-compat-2.6.27, as it appeared in Linux 2.6.27.  With that change,
-compat-wireless compiles for 2.6.26.8 for Gateworks Cambria boards :)
+Thanks!
 
-Thank you for your great work on compat-wireless!
+New test patch attached.
+
+Please CC linux-wireless@vger.kernel.org on further e-mails,
+bcm43xx-dev appears to be having problems.
 
 -- 
-Regards,
-Pavel Roskin
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+
+--001485f3bd5c5178230480ad801e
+Content-Type: application/octet-stream; name="lpphy-test.patch"
+Content-Disposition: attachment; filename="lpphy-test.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g686uxd70
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc3NiL2RyaXZlcl9jaGlwY29tbW9uLmMgYi9kcml2ZXJzL3Nz
+Yi9kcml2ZXJfY2hpcGNvbW1vbi5jCmluZGV4IDk2ODE1MzYuLmEzYWIwNGEgMTAwNjQ0Ci0tLSBh
+L2RyaXZlcnMvc3NiL2RyaXZlcl9jaGlwY29tbW9uLmMKKysrIGIvZHJpdmVycy9zc2IvZHJpdmVy
+X2NoaXBjb21tb24uYwpAQCAtMjMzLDYgKzIzMywxMiBAQCB2b2lkIHNzYl9jaGlwY29tbW9uX2lu
+aXQoc3RydWN0IHNzYl9jaGlwY29tbW9uICpjYykKIHsKIAlpZiAoIWNjLT5kZXYpCiAJCXJldHVy
+bjsgLyogV2UgZG9uJ3QgaGF2ZSBhIENoaXBDb21tb24gKi8KKworCWlmIChjYy0+ZGV2LT5pZC5y
+ZXZpc2lvbiA+PSAyMCkgeworCQljaGlwY29fd3JpdGUzMihjYywgU1NCX0NISVBDT19HUElPX1BV
+TExVUCwgMCk7CisJCWNoaXBjb193cml0ZTMyKGNjLCBTU0JfQ0hJUENPX0dQSU9fUFVMTEROLCAw
+KTsKKwl9CisKIAlzc2JfcG11X2luaXQoY2MpOwogCWNoaXBjb19wb3dlcmNvbnRyb2xfaW5pdChj
+Yyk7CiAJc3NiX2NoaXBjb19zZXRfY2xvY2ttb2RlKGNjLCBTU0JfQ0xLTU9ERV9GQVNUKTsKZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvc3NiL2RyaXZlcl9jaGlwY29tbW9uX3BtdS5jIGIvZHJpdmVycy9z
+c2IvZHJpdmVyX2NoaXBjb21tb25fcG11LmMKaW5kZXggM2Q1NTEyNC4uMWZhMTY0OCAxMDA2NDQK
+LS0tIGEvZHJpdmVycy9zc2IvZHJpdmVyX2NoaXBjb21tb25fcG11LmMKKysrIGIvZHJpdmVycy9z
+c2IvZHJpdmVyX2NoaXBjb21tb25fcG11LmMKQEAgLTQyNyw3ICs0MjcsOSBAQCBzdGF0aWMgdm9p
+ZCBzc2JfcG11X3Jlc291cmNlc19pbml0KHN0cnVjdCBzc2JfY2hpcGNvbW1vbiAqY2MpCiAJCS8q
+IFdlIGtlZXAgdGhlIGRlZmF1bHQgc2V0dGluZ3M6CiAJCSAqIG1pbl9tc2sgPSAweENCQgogCQkg
+KiBtYXhfbXNrID0gMHg3RkZGRgorCQkgKiBIb3dldmVyLCB3ZSBuZWVkIHRvIGFjdHVhbGx5IHdy
+aXRlIG1pbl9tc2sgdG8gdGhlIGRldmljZS4KIAkJICovCisJCW1pbl9tc2sgPSAweENCQjsKIAkJ
+YnJlYWs7CiAJY2FzZSAweDQzMjU6CiAJCS8qIFBvd2VyIE9UUCBkb3duIGxhdGVyLiAqLwpAQCAt
+NTE2LDE1ICs1MTgsMTQgQEAgdm9pZCBzc2JfcG11X2luaXQoc3RydWN0IHNzYl9jaGlwY29tbW9u
+ICpjYykKIAlzc2JfZHByaW50ayhLRVJOX0RFQlVHIFBGWCAiRm91bmQgcmV2ICV1IFBNVSAoY2Fw
+YWJpbGl0aWVzIDB4JTA4WClcbiIsCiAJCSAgICBjYy0+cG11LnJldiwgcG11Y2FwKTsKIAotCWlm
+IChjYy0+cG11LnJldiA+PSAxKSB7Ci0JCWlmICgoYnVzLT5jaGlwX2lkID09IDB4NDMyNSkgJiYg
+KGJ1cy0+Y2hpcF9yZXYgPCAyKSkgewotCQkJY2hpcGNvX21hc2szMihjYywgU1NCX0NISVBDT19Q
+TVVfQ1RMLAotCQkJCSAgICAgIH5TU0JfQ0hJUENPX1BNVV9DVExfTk9JTFBPTlcpOwotCQl9IGVs
+c2UgewotCQkJY2hpcGNvX3NldDMyKGNjLCBTU0JfQ0hJUENPX1BNVV9DVEwsCi0JCQkJICAgICBT
+U0JfQ0hJUENPX1BNVV9DVExfTk9JTFBPTlcpOwotCQl9CisJaWYgKGNjLT5wbXUucmV2ID09IDEp
+IHsKKwkJY2hpcGNvX21hc2szMihjYywgU1NCX0NISVBDT19QTVVfQ1RMLAorCQkJICAgICAgflNT
+Ql9DSElQQ09fUE1VX0NUTF9OT0lMUE9OVyk7CisJfSBlbHNlIHsKKwkJY2hpcGNvX3NldDMyKGNj
+LCBTU0JfQ0hJUENPX1BNVV9DVEwsCisJCQkgICAgIFNTQl9DSElQQ09fUE1VX0NUTF9OT0lMUE9O
+Vyk7CiAJfQorCiAJc3NiX3BtdV9wbGxfaW5pdChjYyk7CiAJc3NiX3BtdV9yZXNvdXJjZXNfaW5p
+dChjYyk7CiB9CmRpZmYgLS1naXQgYS9kcml2ZXJzL3NzYi9kcml2ZXJfcGNpY29yZS5jIGIvZHJp
+dmVycy9zc2IvZHJpdmVyX3BjaWNvcmUuYwppbmRleCBmMWRjZDc5Li42NTkyM2Q4IDEwMDY0NAot
+LS0gYS9kcml2ZXJzL3NzYi9kcml2ZXJfcGNpY29yZS5jCisrKyBiL2RyaXZlcnMvc3NiL2RyaXZl
+cl9wY2ljb3JlLmMKQEAgLTQ0MSw2ICs0NDEsMTIgQEAgc3RhdGljIHZvaWQgc3NiX3BjaWNvcmVf
+aW5pdF9jbGllbnRtb2RlKHN0cnVjdCBzc2JfcGNpY29yZSAqcGMpCiB7CiAJLyogRGlzYWJsZSBQ
+Q0kgaW50ZXJydXB0cy4gKi8KIAlzc2Jfd3JpdGUzMihwYy0+ZGV2LCBTU0JfSU5UVkVDLCAwKTsK
+KworCS8qIFBDSS1FIG1pc2MgY29uZmlndXJhdGlvbiAqLworCS8qIEhBQ0sgVGhpcyBsb29rcyB3
+cm9uZywgYnV0IHRoaXMgaXMgd2hhdCB0aGUgdmVuZG9yIGRyaXZlciBkb2VzLi4uICovCisJc3Ni
+X3dyaXRlMzIocGMtPmRldiwgMHgyODBhLCBzc2JfcmVhZDMyKHBjLT5kZXYsIDB4MjgwYSkgfCAw
+eDgwMDApOworCS8qIEFuZCBub3cgYXMgdGhlIHNwZWNzIHNheTogKi8KKwlzc2Jfd3JpdGUzMihw
+Yy0+ZGV2LCAweDgwYSwgc3NiX3JlYWQzMihwYy0+ZGV2LCAweDgwYSkgfCAweDgwMDApOwogfQog
+CiB2b2lkIHNzYl9wY2ljb3JlX2luaXQoc3RydWN0IHNzYl9wY2ljb3JlICpwYykKZGlmZiAtLWdp
+dCBhL2luY2x1ZGUvbGludXgvc3NiL3NzYl9kcml2ZXJfY2hpcGNvbW1vbi5oIGIvaW5jbHVkZS9s
+aW51eC9zc2Ivc3NiX2RyaXZlcl9jaGlwY29tbW9uLmgKaW5kZXggNGUyN2FjZi4uZGM0NmMxYiAx
+MDA2NDQKLS0tIGEvaW5jbHVkZS9saW51eC9zc2Ivc3NiX2RyaXZlcl9jaGlwY29tbW9uLmgKKysr
+IGIvaW5jbHVkZS9saW51eC9zc2Ivc3NiX2RyaXZlcl9jaGlwY29tbW9uLmgKQEAgLTEyMiw2ICsx
+MjIsOCBAQAogI2RlZmluZSBTU0JfQ0hJUENPX0ZMQVNIREFUQQkJMHgwMDQ4CiAjZGVmaW5lIFNT
+Ql9DSElQQ09fQkNBU1RfQUREUgkJMHgwMDUwCiAjZGVmaW5lIFNTQl9DSElQQ09fQkNBU1RfREFU
+QQkJMHgwMDU0CisjZGVmaW5lIFNTQl9DSElQQ09fR1BJT19QVUxMVVAJCTB4MDA1OAorI2RlZmlu
+ZSBTU0JfQ0hJUENPX0dQSU9fUFVMTEROCQkweDAwNUMKICNkZWZpbmUgU1NCX0NISVBDT19HUElP
+SU4JCTB4MDA2MAogI2RlZmluZSBTU0JfQ0hJUENPX0dQSU9PVVQJCTB4MDA2NAogI2RlZmluZSBT
+U0JfQ0hJUENPX0dQSU9PVVRFTgkJMHgwMDY4Cg==
+--001485f3bd5c5178230480ad801e--
