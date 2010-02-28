@@ -1,69 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:34842 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753991Ab0BNNFF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2010 08:05:05 -0500
-Received: by fxm27 with SMTP id 27so244354fxm.25
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Feb 2010 05:05:03 -0800 (PST)
+Received: from mail001.aei.ca ([206.123.6.130]:47673 "EHLO mail001.aei.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936463Ab0B1TnZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Feb 2010 14:43:25 -0500
+Message-ID: <4B8AC78C.80505@polymtl.ca>
+Date: Sun, 28 Feb 2010 14:44:12 -0500
+From: William Bourque <william.bourque@polymtl.ca>
 MIME-Version: 1.0
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Sun, 14 Feb 2010 08:04:43 -0500
-Message-ID: <cb0375e11002140504u4dd18ba9sb4c0790d2aade23@mail.gmail.com>
-Subject: ath9k in AP mode got stuck
-To: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: bcm43xx-dev@lists.berlios.de,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> 	<201002271708.29817.mb@bu3sch.de> <4B894A61.1070302@lwfinger.net> 	<69e28c911002271145s590df31en9d2f8b2c47932451@mail.gmail.com> 	<4B899DA3.4030100@lwfinger.net> <69e28c911002271534o8cab111vf7fcc1b93b6c4b47@mail.gmail.com> 	<a221c0101002271542o5d928e56n8a22602860aeb761@mail.gmail.com> 	<69e28c911002271544y62c93255k8a6dbb0adb2b5928@mail.gmail.com> 	<20100228001655.4c9fd9ce@boulder.homenet> <4B8AAF42.8000602@polymtl.ca> <69e28c911002281042g15808a2cm81bd9528a30d2f85@mail.gmail.com>
+In-Reply-To: <69e28c911002281042g15808a2cm81bd9528a30d2f85@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all-
 
-I have a new AP running OpenWrt trunk (Ubiquiti Routerstation Pro)
-with hostapd and an AR9280-based NIC (Mikrotik R52n):
+> New test patch attached.
+> 
+> Please CC linux-wireless@vger.kernel.org on further e-mails,
+> bcm43xx-dev appears to be having problems.
+> 
 
-ath: EEPROM regdomain: 0x0
-ath: EEPROM indicates default country code should be used
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x3a
-ath: Country alpha2 being used: US
-ath: Regpair used: 0x3a
-phy0: Selected rate control algorithm 'ath9k_rate_control'
-Registered led device: ath9k-phy0::radio
-Registered led device: ath9k-phy0::assoc
-Registered led device: ath9k-phy0::tx
-Registered led device: ath9k-phy0::rx
-phy0: Atheros AR9280 Rev:2 mem=0xb0000000, irq=48
+Hmm... I don't know if it is only coincidence, but this one seems to 
+help somehow.
 
-It works great, except that this morning I couldn't connect.  Some
-quick tcpdump tests on the monitor interface show that it thinks it's
-sending probe responses and deauthentication frames but all that's
-really coming out (seen from my laptop, running a monitor interface on
-iwlagn) are beacons and ACKs.
+The driver raised the DMA error again, but instead of being as soon as I 
+brought up the interface, I had to stresstest (to transfert a file at 
+full speed from my LAN) to make it happens. Before that I was able to 
+DMA normally (loading web page ...).
 
-Running 'iwconfig wlan0 channel 10; iwconfig wlan0 channel 11' made it
-work again, albeit very slowly -- the AP refused to transmit above
-1Mbps and my laptop only hit 36Mbps.
-
-Any ideas or things to look at next time this happens?
-
-As far as I can tell, the board is running 2.6.32 with the wireless
-bits from compat-wireless-2010-01-25.  The only suspicious patch I see
-is this:
-
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2087,7 +2087,7 @@ int ath9k_hw_reset(struct ath_hw *ah, st
-
-        if (ah->config.rx_intr_mitigation) {
-                REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_LAST, 500);
--               REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, 2000);
-+               REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, 500);
-        }
-
-        ath9k_hw_init_bb(ah, chan);
-
-which doesn't look like I should blame it.
-
-Thanks,
-Andy
+- William
