@@ -1,84 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33650 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030474Ab0B0SxT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2010 13:53:19 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: Make b43 driver fall back gracefully to PIO mode after fatal DMA  errors
-Date: Sat, 27 Feb 2010 19:51:59 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-References: <alpine.LFD.2.00.1002261034140.4513@localhost.localdomain> <201002271559.20531.mb@bu3sch.de> <alpine.LFD.2.00.1002271016330.4513@localhost.localdomain>
-In-Reply-To: <alpine.LFD.2.00.1002271016330.4513@localhost.localdomain>
+Received: from qw-out-2122.google.com ([74.125.92.24]:21177 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032075Ab0B1WTR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Feb 2010 17:19:17 -0500
+Received: by qw-out-2122.google.com with SMTP id 8so379409qwh.37
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2010 14:19:16 -0800 (PST)
 MIME-Version: 1.0
-Message-Id: <201002271952.00144.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+In-Reply-To: <69e28c911002280814v56f2f553x847c8bae94e6aaab@mail.gmail.com>
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
+	 <201002271620.31410.mb@bu3sch.de> <4B8942D5.5020502@lwfinger.net>
+	 <201002271708.29817.mb@bu3sch.de> <4B894A61.1070302@lwfinger.net>
+	 <69e28c911002271145s590df31en9d2f8b2c47932451@mail.gmail.com>
+	 <4B899DA3.4030100@lwfinger.net>
+	 <a221c0101002271703p3f344ec4t78d5c8b77c6d1290@mail.gmail.com>
+	 <a221c0101002271828ye265d72y774320c08a4a15da@mail.gmail.com>
+	 <69e28c911002280814v56f2f553x847c8bae94e6aaab@mail.gmail.com>
+Date: Sun, 28 Feb 2010 16:19:16 -0600
+Message-ID: <a221c0101002281419t5401a571rcd60e6f87edbb6c@mail.gmail.com>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+From: Nathan Schulte <reklipz@gmail.com>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 27 February 2010 19:31:11 Linus Torvalds wrote:
-> 
-> On Sat, 27 Feb 2010, Michael Buesch wrote:
-> > 
-> > However, did you add the udelay to b43_write()? Please try to add it
-> > further down in the callchain into the lowlevel SSB read and write functions.
-> > drivers/ssb/pci.c
-> 
-> Well, I don't know what that would help from a timing standpoint, since 
-> the delay gets done either way,
+2010/2/28 Gábor Stefanik <netrolller.3d@gmail.com>:
+> OK, this dump shows the 0x280a write happening with core 3, i.e. PCIE,
+> active. So, it is indeed probably the "PCIE misc configuration"
+> routine. Why it's 0x280a is still a mystery to me, it should be 0x100a
+> according to the specs.
+Unless I'm reading the logs wrong, isn't wl setting bit 0x8000 when
+core 1 is mapped (0 indexed cores, 0x18001000 mapped to space 0)?
+And b43 appears to do it when core 0 is mapped (0x18000000 mapped to
+space 0).  b43 also reads from 0x100a after writing to 0x280a, and it
+reads as 0x8000 not set (while the 0x280a check show it is set).
 
-Well, but not for SSB-only accesses that access registers on the bus or other
-devices on the bus.
+This is when comparing the wl_cold and b43_cold logs.
 
-> but looking at it, I do note that the  
-> locking for the writes is very very wrong.
-
-Yeah that is known very well. But we don't care, as it is implicitely protected
-by b43's mutex.
-
-This is nontrivial to fix, so for now I don't care. We could simply
-remove the lowlevel SSB lock, if it bothers you much.
-
-> That said, I assume that 'mapped_device' almost never actually changes in 
-> practice, so the race presumably doesn't really matter.
-
-Yes, that's the case.
-There are no races in practice. Even if you remove the lock completely.
-I was going to fix this at some point, but it's really nontrivial.
-
-> I don't know how  
-> these "devices" even work - is there a separate "device" for different SSB 
-> functions (ie power management vs DMA vs wireless radio), or is there 
-> multiple devices only if you actually have multiple radio's?
-
-Depends on the actual device.
-The SSB is a bus like PCI. You can attach basically anything you want to it.
-
-> So for all I know, it's possible that in my case there is always just one 
-> device, and the race really fundamentally cannot ever happen.
-
-That's basically the case for a PCI device, yes.
-
-> I can write a patch and test whether it matters, but I'd like to know if 
-> my chip even _has_ multiple cores behind the ssb bridge. If people tell me 
-> that there is only one core on that chip, and that the race can never 
-> happen, then I won't bother.
-
-Nah, you really don't want to touch that lowlevel code. It is not broken as-is.
-Simply remove the lock, if you really care that much.
-I tried to fix this properly a few weeks ago, but I didn't really see a sane way
-to do it so I finally gave up, because it wouldn't fix a real-life problem anyway.
-The problem is that this code may basically run in any context. And (if that were not
-enough), it must work on all host-busses that SSB supports. That being plain SSB, PCI,
-PCMCIA and SDIO. Where SDIO is special in that it requires sleeping.
-
-I assure you that this is not part of the DMA problem. 100% guaranteed. ;)
-
--- 
-Greetings, Michael.
+-Nate
