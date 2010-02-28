@@ -1,160 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:24744 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754050Ab0BRL2W (ORCPT
+Received: from smtp5.freeserve.com ([193.252.22.159]:46426 "EHLO
+	smtp5.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031964Ab0B1UJO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2010 06:28:22 -0500
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH 06/22] wl1271: implement WMM
-Date: Thu, 18 Feb 2010 13:25:41 +0200
-Message-Id: <1266492357-462-7-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1266492357-462-1-git-send-email-juuso.oikarinen@nokia.com>
+	Sun, 28 Feb 2010 15:09:14 -0500
+Date: Sun, 28 Feb 2010 20:03:11 +0000
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: William Bourque <william.bourque@polymtl.ca>
+Cc: =?UTF-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+Message-ID: <20100228200311.4ca24d95@boulder.homenet>
+In-Reply-To: <4B8AC78C.80505@polymtl.ca>
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
+	<201002271708.29817.mb@bu3sch.de>
+	<4B894A61.1070302@lwfinger.net>
+	<69e28c911002271145s590df31en9d2f8b2c47932451@mail.gmail.com>
+	<4B899DA3.4030100@lwfinger.net>
+	<69e28c911002271534o8cab111vf7fcc1b93b6c4b47@mail.gmail.com>
+	<a221c0101002271542o5d928e56n8a22602860aeb761@mail.gmail.com>
+	<69e28c911002271544y62c93255k8a6dbb0adb2b5928@mail.gmail.com>
+	<20100228001655.4c9fd9ce@boulder.homenet>
+	<4B8AAF42.8000602@polymtl.ca>
+	<69e28c911002281042g15808a2cm81bd9528a30d2f85@mail.gmail.com>
+	<4B8AC78C.80505@polymtl.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Sun, 28 Feb 2010 14:44:12 -0500
+William Bourque <william.bourque@polymtl.ca> wrote:
+> > New test patch attached.
+> > 
+> > Please CC linux-wireless@vger.kernel.org on further e-mails,
+> > bcm43xx-dev appears to be having problems.
+> > 
+> 
+> Hmm... I don't know if it is only coincidence, but this one seems to 
+> help somehow.
+> 
+> The driver raised the DMA error again, but instead of being as soon
+> as I brought up the interface, I had to stresstest (to transfert a
+> file at full speed from my LAN) to make it happens. Before that I was
+> able to DMA normally (loading web page ...).
 
-Now that necessary commands for WMM are implemented, implement queue handling
-for WMM. But WMM is not enabled yet, only one queue is used.
+I also found that it stayed up marginally longer (ie about 2 seconds
+longer in my case) but I think this is probably co-incidence.
 
-Based on a similar patch from wl1251.
+On commenting out the line setting the 0x280a memory location, and
+leaving the line setting the 0x80a memory location, it failed
+immediately; but these difference may just be random effects.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   31 +++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   10 +++++---
- drivers/net/wireless/wl12xx/wl1271_tx.h   |   36 +++++++++++++++++++++++++++++
- 3 files changed, 73 insertions(+), 4 deletions(-)
+Chris
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index a3742c8..6f7a7d9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1712,6 +1712,36 @@ out:
- 	mutex_unlock(&wl->mutex);
- }
- 
-+static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+			     const struct ieee80211_tx_queue_params *params)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	int ret;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 conf tx %d", queue);
-+
-+	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
-+				params->cw_min, params->cw_max,
-+				params->aifs, params->txop);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
-+				 CONF_CHANNEL_TYPE_EDCF,
-+				 wl1271_tx_get_queue(queue),
-+				 CONF_PS_SCHEME_LEGACY_PSPOLL,
-+				 CONF_ACK_POLICY_LEGACY, 0, 0);
-+	if (ret < 0)
-+		goto out;
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+
-+	return ret;
-+}
-+
- 
- /* can't be const, mac80211 writes to this */
- static struct ieee80211_rate wl1271_rates[] = {
-@@ -1877,6 +1907,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.hw_scan = wl1271_op_hw_scan,
- 	.bss_info_changed = wl1271_op_bss_info_changed,
- 	.set_rts_threshold = wl1271_op_set_rts_threshold,
-+	.conf_tx = wl1271_op_conf_tx,
- };
- 
- static int wl1271_register_hw(struct wl1271 *wl)
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index a288cc3..f6815a9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -87,7 +87,7 @@ static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 			      u32 extra, struct ieee80211_tx_info *control)
- {
- 	struct wl1271_tx_hw_descr *desc;
--	int pad;
-+	int pad, ac;
- 	u16 tx_attr;
- 
- 	desc = (struct wl1271_tx_hw_descr *) skb->data;
-@@ -107,9 +107,11 @@ static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 
- 	/* configure the tx attributes */
- 	tx_attr = wl->session_counter << TX_HW_ATTR_OFST_SESSION_COUNTER;
--	/* FIXME: do we know the packet priority? can we identify mgmt
--	   packets, and use max prio for them at least? */
--	desc->tid = 0;
-+
-+	/* queue */
-+	ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
-+	desc->tid = wl1271_tx_ac_to_tid(ac);
-+
- 	desc->aid = TX_HW_DEFAULT_AID;
- 	desc->reserved = 0;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
-index 416396c..17e405a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
-@@ -123,6 +123,42 @@ struct wl1271_tx_hw_res_if {
- 	struct wl1271_tx_hw_res_descr tx_results_queue[TX_HW_RESULT_QUEUE_LEN];
- } __attribute__ ((packed));
- 
-+static inline int wl1271_tx_get_queue(int queue)
-+{
-+	/* FIXME: use best effort until WMM is enabled */
-+	return CONF_TX_AC_BE;
-+
-+	switch (queue) {
-+	case 0:
-+		return CONF_TX_AC_VO;
-+	case 1:
-+		return CONF_TX_AC_VI;
-+	case 2:
-+		return CONF_TX_AC_BE;
-+	case 3:
-+		return CONF_TX_AC_BK;
-+	default:
-+		return CONF_TX_AC_BE;
-+	}
-+}
-+
-+/* wl1271 tx descriptor needs the tid and we need to convert it from ac */
-+static inline int wl1271_tx_ac_to_tid(int ac)
-+{
-+	switch (ac) {
-+	case 0:
-+		return 0;
-+	case 1:
-+		return 2;
-+	case 2:
-+		return 4;
-+	case 3:
-+		return 6;
-+	default:
-+		return 0;
-+	}
-+}
-+
- void wl1271_tx_work(struct work_struct *work);
- void wl1271_tx_complete(struct wl1271 *wl, u32 count);
- void wl1271_tx_flush(struct wl1271 *wl);
--- 
-1.6.3.3
 
