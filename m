@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38153 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753927Ab0CBUAk (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33350 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751356Ab0CANSH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 15:00:40 -0500
-Date: Tue, 2 Mar 2010 14:45:33 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: [PATCH] rt2x00: fix rt2800pci compilation with SoC
-Message-ID: <20100302194533.GC16620@tuxdriver.com>
-References: <201003021634.50077.helmut.schaa@googlemail.com> <4B8D62CC.9040005@gmail.com>
+	Mon, 1 Mar 2010 08:18:07 -0500
+Date: Mon, 1 Mar 2010 15:18:01 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Bjarke Istrup Pedersen <gurligebis@gentoo.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Problem with bridges and wireless NIC's
+Message-ID: <20100301131801.GA3449@jm.kir.nu>
+References: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
+ <20100301075953.GA32038@jm.kir.nu>
+ <9c30dffe1003010012l5b3a912fma5655e630b83ce9f@mail.gmail.com>
+ <20100301105329.GA2684@jm.kir.nu>
+ <9c30dffe1003010340r20a179c6hd2d5e7eeeba8d106@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B8D62CC.9040005@gmail.com>
+In-Reply-To: <9c30dffe1003010340r20a179c6hd2d5e7eeeba8d106@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 02, 2010 at 08:11:08PM +0100, Gertjan van Wingerde wrote:
-> On 03/02/10 16:34, Helmut Schaa wrote:
-> > Compiling rt2800pci with CONFIG_RT2800PCI_SOC fails with "... rt2880pci.c:
-> > error: incompatible type for argument 2 of 'rt2x00soc_probe'".
-> > 
-> > Fix this by using &rt2800pci_ops instead of rt2800pci_ops.
-> > 
-> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> > ---
-> 
-> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> 
-> John, this is probably one that should go to wireless-2.6.
+On Mon, Mar 01, 2010 at 12:40:14PM +0100, Bjarke Istrup Pedersen wrote:
+> Okay, so the best thing to do, is to advise people to reverse the
+> patch if the need 0.6.x, or use 0.7.x - right?
 
-I agree, which is why I fixed the whitespace damage and applied it...grrr...
+I don't think I would recommend people to reverse the commit that made
+kernel reject invalid wlan0 mode in the bridge in general. It should be
+possible to reorder network configuration to work with it and if really
+not, reverting that change is reasonable only for a device that works as
+an AP and uses bridging. Alternatively, whoever needs hostapd 0.6.x for
+whatever reason could obviously also backport the hostapd patch for
+bridge setup.
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jouni Malinen                                            PGP id EFC895FA
