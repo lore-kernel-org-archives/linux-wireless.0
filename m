@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:35802 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752986Ab0CLGhj (ORCPT
+Received: from mail-yx0-f182.google.com ([209.85.210.182]:50484 "EHLO
+	mail-yx0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab0CAIMt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 01:37:39 -0500
-Received: by bwz1 with SMTP id 1so763695bwz.21
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2010 22:37:37 -0800 (PST)
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] wl1251: fix potential crash
-References: <1268322326-16721-1-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 12 Mar 2010 08:37:34 +0200
-In-Reply-To: <1268322326-16721-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Thu\, 11 Mar 2010 17\:45\:26 +0200")
-Message-ID: <87mxyecafl.fsf@purkki.valot.fi>
+	Mon, 1 Mar 2010 03:12:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100301075953.GA32038@jm.kir.nu>
+References: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
+	 <20100301075953.GA32038@jm.kir.nu>
+Date: Mon, 1 Mar 2010 09:12:48 +0100
+Message-ID: <9c30dffe1003010012l5b3a912fma5655e630b83ce9f@mail.gmail.com>
+Subject: Re: Problem with bridges and wireless NIC's
+From: Bjarke Istrup Pedersen <gurligebis@gentoo.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
-
-> In case debugfs does not init for some reason (or is disabled
-> on older kernels) driver does not allocate stats.fw_stats
-> structure, but tries to clear it later and trips on a NULL
-> pointer:
+2010/3/1 Jouni Malinen <j@w1.fi>:
+> On Sun, Feb 28, 2010 at 11:58:10PM +0100, Bjarke Istrup Pedersen wrote:
 >
-> Unable to handle kernel NULL pointer dereference at virtual address
-> 00000000
-> PC is at __memzero+0x24/0x80
-> Backtrace:
-> [<bf0ddb88>] (wl1251_debugfs_reset+0x0/0x30 [wl1251])
-> [<bf0d6a2c>] (wl1251_op_stop+0x0/0x12c [wl1251])
-> [<bf0bc228>] (ieee80211_stop_device+0x0/0x74 [mac80211])
-> [<bf0b0d10>] (ieee80211_stop+0x0/0x4ac [mac80211])
-> [<c02deeac>] (dev_close+0x0/0xb4)
-> [<c02deac0>] (dev_change_flags+0x0/0x184)
-> [<c031f478>] (devinet_ioctl+0x0/0x704)
-> [<c0320720>] (inet_ioctl+0x0/0x100)
+>> There is a problem when trying to create a bridge containing a normal
+>> NIC and a wireless NIC, and using hostapd.
+>>
+>> The problem is, that it is not possible to create a bridge containing
+>> a wireless NIC, if it hasn't been setup first.
+>>
+>> Does anyone have a solution for this?
 >
-> Add a NULL pointer check to fix this.
+> How about first creating the br0, then starting hostapd, and finally
+> adding wlan0 into br0?
 >
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+>> (The commit that introduced this problem is
+>> ad4bb6f8883a13bb0f65b194dae36c62a02ac779 , reverting it solves the
+>> problem).
+>
+> I don't know whether I would call that a solution, but well..
+>
+>> For more info, please have a look at this bug report:
+>> http://bugs.gentoo.org/show_bug.cgi?id=298824
+>
+> I'm not sure whether I understood the description correctly, but this
+> sounds like a limitation in the way the network setup is done. Forcing
+> br0 to be created with wlan0 before wlan0 has been configured is not
+> going to work. I would consider removing wlan0 from the static
+> configuration of br0 and just creating br0 with eth0 with the setup
+> scripts and allowing hostapd to add wlan0 into br0 once the interface
+> has been configured properly (support for this was added in hostapd
+> 0.7.1).
+>
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
 
-Acked-by: Kalle Valo <kalle.valo@iki.fi>
+Hey,
 
-Thank you for all the patches.
+That sounds interresting, is there any chance that that functionality
+can be added to the 0.6.x branch too? (I'm maintaining hostapd in
+Gentoo, but cannot stabilize a 0.7.x build, due to it being a
+development branch)
 
--- 
-Kalle Valo
+Best regards,
+Bjarke I. Pedersen
