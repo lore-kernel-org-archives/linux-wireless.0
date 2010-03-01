@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:29433 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731Ab0CQPKm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 11:10:42 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iw: change install command to make it compatible with ancient coreutils
-Date: Wed, 17 Mar 2010 17:09:20 +0200
-Message-Id: <1268838560-22354-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mga01.intel.com ([192.55.52.88]:18794 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750885Ab0CARqz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 12:46:55 -0500
+Subject: Re: iwl4965: 11a channels disabled in current wireless-testing
+From: reinette chatre <reinette.chatre@intel.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <201002281534.11656.helmut.schaa@googlemail.com>
+References: <201002281534.11656.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 01 Mar 2010 09:46:55 -0800
+Message-ID: <1267465615.2253.159.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In older versions of the install tool from the GNU coreutils package, the -t
-option is not supported.  The -t option can be safely replaced by the older
-"install [OPTION]... SOURCE... DIRECTORY" format.
+On Sun, 2010-02-28 at 06:34 -0800, Helmut Schaa wrote:
+> have there been any recent changes to the regulatory stuff, especially
+> in conjunction with iwlagn?
+> 
+> Because with wireless-testing I get all 11a channels disabled by default
+> and the same for channels 12 & 13 in the g-band.
 
-By changing the way we call install, we can make the iw tool more friendly to
-ancient distributions.
+This could be related to a change in the default regulatory domain. It
+used to be US, but now it is world, which is more restrictive. You can
+modify your regulatory domain using "iw reg set <domain>"
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- Makefile |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Reinette
 
-diff --git a/Makefile b/Makefile
-index b0a4278..c51706b 100644
---- a/Makefile
-+++ b/Makefile
-@@ -86,10 +86,10 @@ check:
- install: iw iw.8.gz
- 	@$(NQ) ' INST iw'
- 	$(Q)$(MKDIR) $(DESTDIR)$(SBINDIR)
--	$(Q)$(INSTALL) -m 755 -t $(DESTDIR)$(SBINDIR) iw
-+	$(Q)$(INSTALL) -m 755 iw $(DESTDIR)$(SBINDIR)
- 	@$(NQ) ' INST iw.8'
- 	$(Q)$(MKDIR) $(DESTDIR)$(MANDIR)/man8/
--	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)$(MANDIR)/man8/ iw.8.gz
-+	$(Q)$(INSTALL) -m 644 iw.8.gz $(DESTDIR)$(MANDIR)/man8/
- 
- clean:
- 	$(Q)rm -f iw *.o *~ *.gz version.c *-stamp
--- 
-1.5.6.5
 
