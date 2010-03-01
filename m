@@ -1,113 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:49617 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871Ab0CQFs2 (ORCPT
+Received: from mail-bw0-f212.google.com ([209.85.218.212]:46351 "EHLO
+	mail-bw0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015Ab0CARYu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 01:48:28 -0400
-Subject: Re: [RFC PATCHv2 1/1] mac80211: Add support connection monitor in
- hardware
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268775935.8918.2.camel@jlt3.sipsolutions.net>
-References: <1268650643-23191-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268650643-23191-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268775935.8918.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 07:44:31 +0200
-Message-ID: <1268804671.10120.584.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Mon, 1 Mar 2010 12:24:50 -0500
+Received: by bwz4 with SMTP id 4so1912579bwz.28
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 09:24:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <alpine.LNX.2.00.1003011205211.28884@eidolons.org>
+References: <51a465a61002281248jc7701abq642b67f0b68ed80a@mail.gmail.com>
+	 <4B8B3A1A.80403@gmail.com>
+	 <alpine.LNX.2.00.1003011205211.28884@eidolons.org>
+Date: Mon, 1 Mar 2010 18:24:46 +0100
+Message-ID: <a32f33a41003010924q43616ffhb858feac7b9ebb4a@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: Add USB ID for CEIVA adapter to rt73usb
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Bryan Polk <sainth@eidolons.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-16 at 22:45 +0100, ext Johannes Berg wrote:
-> On Mon, 2010-03-15 at 12:57 +0200, Juuso Oikarinen wrote:
-> > This patch is based on a RFC patch by Kalle Valo.
-> > 
-> > The wl1271 has a feature which handles the connection monitor logic
-> > in hardware, basically sending periodically nullfunc frames and reporting
-> > to the host if AP is lost, after attempting to recover by sending
-> > probe-requests to the AP.
-> > 
-> > Add support to mac80211 by adding a new flag IEEE80211_HW_CONNECTION_MONITOR
-> > which prevents conn_mon_timer from triggering during idle periods, and
-> > prevents sending probe-requests to the AP if beacon-loss is indicated by the
-> > hardware.
-> > 
-> > Cc: Kalle Valo <kalle.valo@nokia.com>
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > ---
-> >  include/net/mac80211.h |    4 ++++
-> >  net/mac80211/mlme.c    |   33 ++++++++++++++++++++++++++++++++-
-> >  2 files changed, 36 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> > index 936bc41..cd7b471 100644
-> > --- a/include/net/mac80211.h
-> > +++ b/include/net/mac80211.h
-> > @@ -954,6 +954,9 @@ enum ieee80211_tkip_key_type {
-> >   *	Hardware can provide ack status reports of Tx frames to
-> >   *	the stack.
-> >   *
-> > + * @IEEE80211_HW_CONNECTION_MONITOR:
-> > + *      The hardware performs its own connection monitoring, including
-> > + *      periodic keep-alives to the AP and probing the AP on beacon loss.
-> 
-> I think this should mention that you get disconnected right away when
-> you then signal beacon loss with the mac80211 api call, which is new.
-> Might also be worth updating the API docs for that function.
+On Mon, Mar 1, 2010 at 6:23 PM, Bryan Polk <sainth@eidolons.org> wrote:
+> This adds support for CEIVA USB wireless adapters to the rt73usb driver.
+>
+> Signed-off-by: Bryan Polk <sainth@eidolons.org>
 
-Yes, those are still missing. I'll add those to v3.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-> > @@ -936,8 +939,36 @@ void ieee80211_beacon_loss_work(struct work_struct *work)
-> >  	struct ieee80211_sub_if_data *sdata =
-> >  		container_of(work, struct ieee80211_sub_if_data,
-> >  			     u.mgd.beacon_loss_work);
-> > +	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-> > +	struct ieee80211_local *local = sdata->local;
-> > +	u8 bssid[ETH_ALEN];
-> > +
-> > +	if (!(sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR))
-> > +		ieee80211_mgd_probe_ap(sdata, true);
-> > +	else {
-> > +		mutex_lock(&ifmgd->mtx);
-> > +		if (!ifmgd->associated) {
-> > +			mutex_unlock(&ifmgd->mtx);
-> > +			return;
-> > +		}
-> >  
-> > -	ieee80211_mgd_probe_ap(sdata, true);
-> > +		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
-> > +
-> > +		printk(KERN_DEBUG "No probe-response from AP %pM, "
-> > +		       "disconnected.\n", bssid);
-> > +
-> > +		ieee80211_set_disassoc(sdata);
-> > +		ieee80211_recalc_idle(local);
-> > +		mutex_unlock(&ifmgd->mtx);
-> > +		/*
-> > +		 * must be outside lock due to cfg80211,
-> > +		 * but that's not a problem.
-> > +		 */
-> > +		ieee80211_send_deauth_disassoc(sdata, bssid,
-> > +					       IEEE80211_STYPE_DEAUTH,
-> > +					       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
-> > +					       NULL);
-> > +	}
-> 
-> This !() is a little awkward, how about moving this to a new function?
-> and the message is also really misleading.
-
-Technically, the message is not misleading at least for the hw I'm
-working with (as it will send probe-requests to the AP similarly as the
-mac80211 would in this case) but I'll try to figure out something more
-generic fort this.
-
-I'll try to address these still for v3.
-
--Juuso
-
-> johannes
-> 
-
-
+> ---
+> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+> index f39a8ed..47f3e4a 100644
+> --- a/drivers/net/wireless/rt2x00/rt73usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
+> @@ -2352,6 +2352,8 @@ static struct usb_device_id rt73usb_device_table[] = {
+>        { USB_DEVICE(0x0411, 0x00f4), USB_DEVICE_DATA(&rt73usb_ops) },
+>        { USB_DEVICE(0x0411, 0x0116), USB_DEVICE_DATA(&rt73usb_ops) },
+>        { USB_DEVICE(0x0411, 0x0119), USB_DEVICE_DATA(&rt73usb_ops) },
+> +       /* CEIVA */
+> +       { USB_DEVICE(0x178d, 0x02be), USB_DEVICE_DATA(&rt73usb_ops) },
+>        /* CNet */
+>        { USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt73usb_ops) },
+>        { USB_DEVICE(0x1371, 0x9032), USB_DEVICE_DATA(&rt73usb_ops) },
+>
