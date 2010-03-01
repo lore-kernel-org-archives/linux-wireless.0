@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34663 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753718Ab0CRSUq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 14:20:46 -0400
-Subject: Re: [PATCH V2] mac80211: Revise,pending queue depth in
- ieee80211_local data structure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "lorenzo.bianconi83@gmail.com" <lorenzo.bianconi@fluidmesh.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	br1@einfach.org, ht6100@gmail.com
-In-Reply-To: <4BA24A12.4030208@gmail.com>
-References: <4BA24A12.4030208@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Mar 2010 11:20:46 -0700
-Message-ID: <1268936446.4005.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:51880 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752327Ab0CAW6P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 17:58:15 -0500
+Message-ID: <4B8C4685.8020202@openwrt.org>
+Date: Mon, 01 Mar 2010 23:58:13 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Derek Smithies <derek@indranet.co.nz>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+References: <4B8C3A21.2050105@openwrt.org> <alpine.DEB.2.00.1003021122550.14059@kauri.acheron.indranet.co.nz>
+In-Reply-To: <alpine.DEB.2.00.1003021122550.14059@kauri.acheron.indranet.co.nz>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please try this.
+On 2010-03-01 11:38 PM, Derek Smithies wrote:
+> Hi,
+>   Great work on getting this far - it was a huge undertaking.
+> 
+>   Ok, before diving into the code, can we take a quick moment to think on 
+> this. I wonder if you can answer the following questions:
+> 
+> a)Minstrel worked hard at using information that is good and reliable: -
+>     which is the record of what rates worked, and what rates failed.
+>   Minstrel avoids using things like RSSI (which is not reliable)
+Yes, I still rely purely on tx status feedback, no RSSI voodoo.
 
-johannes
+> b)You have stated in previous emails that with 802.11n there are too many
+>   rates for minstrels random sampling technique.
+> 
+> What is the approach taken in 802.11n & minstrel? I remember some comment 
+> about dividing the 802.11n rate set up into groups, and then minstrel does 
+> its thing within the rates of each group. - Do I have the idea here?
+The previous comments were based on faulty tx status feedback because of
+an ath9k issue that I resolved in a previous patch. The current
+implementation still does random sampling, with one exception: each
+sampling attempt goes to a different MCS group.
+Other than that, I split up the MCS rates into groups mainly because
+it's easier to deal with and allows me to calculate raw transmit
+durations at compile time.
 
----
- net/mac80211/tx.c   |    6 ++++++
- net/mac80211/util.c |    6 ------
- 2 files changed, 6 insertions(+), 6 deletions(-)
+I did add some small special cases though. For instance if the code
+detects that the current transmit rate is failing really quickly on a
+multi-stream rate, it falls back to the max_tp_rate of a single-stream
+group, while leaving around enough feedback for EWMA.
+This reduces the strength of the throughput drop when I disconnect one
+antenna (which kills off pretty much all of the dual-stream rates
+immediately).
 
---- wireless-testing.orig/net/mac80211/tx.c	2010-03-18 11:17:43.000000000 -0700
-+++ wireless-testing/net/mac80211/tx.c	2010-03-18 11:19:16.000000000 -0700
-@@ -1991,6 +1991,7 @@ static bool ieee80211_tx_pending_skb(str
- void ieee80211_tx_pending(unsigned long data)
- {
- 	struct ieee80211_local *local = (struct ieee80211_local *)data;
-+	struct ieee80211_sub_if_data *sdata;
- 	unsigned long flags;
- 	int i;
- 	bool txok;
-@@ -2029,6 +2030,11 @@ void ieee80211_tx_pending(unsigned long
- 			if (!txok)
- 				break;
- 		}
-+
-+		if (skb_queue_empty(&local->pending[i]))
-+			list_for_each_entry_rcu(sdata, &local->interfaces, list)
-+				netif_tx_wake_queue(
-+					netdev_get_tx_queue(sdata->dev, i));
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
---- wireless-testing.orig/net/mac80211/util.c	2010-03-18 11:17:08.000000000 -0700
-+++ wireless-testing/net/mac80211/util.c	2010-03-18 11:19:28.000000000 -0700
-@@ -268,7 +268,6 @@ static void __ieee80211_wake_queue(struc
- 				   enum queue_stop_reason reason)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_sub_if_data *sdata;
- 
- 	if (WARN_ON(queue >= hw->queues))
- 		return;
-@@ -281,11 +280,6 @@ static void __ieee80211_wake_queue(struc
- 
- 	if (!skb_queue_empty(&local->pending[queue]))
- 		tasklet_schedule(&local->tx_pending_tasklet);
--
--	rcu_read_lock();
--	list_for_each_entry_rcu(sdata, &local->interfaces, list)
--		netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
--	rcu_read_unlock();
- }
- 
- void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
+> Where have you tested 802.11n & minstrel?
+Only at home. I just finished ironing out most of the important bugs
+today, so this hasn't seen any significant long-term testing yet.
 
+> Does 802.11n&minstrel pass the basic test
+>    a) put two nodes on the desk - rate is high
+>    b) move one of the nodes (or remove antenna) - rate should drop
+>    c) move nodes back to the configuration of a)
+>              -rate should go high again
+Yes, this was my primary test. I also did some tests with removing both
+antennas and moving the laptop away and back again.
 
+I also did quite a few tests switching back and forth between
+minstrel_ht and the ath9k rate control to compare them as accurately as
+possible. In HT40, rate adaptation with minstrel is usually a little
+slower (only a minor difference here, probably caused by the much larger
+search space), but it's able to deal with sources of interference (e.g.
+Bluetooth) a lot better.
+It also reacts much faster to problems with spatial multiplexing, and
+seems to get a better average throughput in HT20 in my tests.
+
+> Does 802.11n&minstrel work well with time?
+> In other words, is the throughput 10 hours later the same as at the start 
+> of the test?
+If I force it to single-stream mode, then it seems to be just as
+reliable at sticking to a specific rate as the legacy implementation.
+
+With dual-stream rates it's hard to tell, because the reliability of
+rates varies quickly, even if the positions is fixed. I do not see any
+*significant* variations in throughput though.
+
+- Felix
