@@ -1,63 +1,287 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33280 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243Ab0CLBAe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 20:00:34 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org, stable@kernel.org
-Cc: linux-kernel@vger.kernel.org, linville@tuxdriver.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [FYI] cfg80211: HT40 fix for APs with odd country IEs for 2.6.33.y
-Date: Thu, 11 Mar 2010 20:00:32 -0500
-Message-Id: <1268355632-32348-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:37858 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750898Ab0CAJRu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 04:17:50 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 01:17:50 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19339.35507.573949.425882@gargle.gargle.HOWL>
+Date: Mon, 1 Mar 2010 15:06:51 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/7] ath9k: Use crypto routines from library
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a heads up to distribution maintainers, 2.6.33 has an
-issue with disabling HT40 channels if you connect to an AP
-that has an odd country IE. Specifically if your AP sends
-out country IEs as follows:
+This removes redundant code in ath9k dealing
+with encryption.
 
-[1-1]
-[2-2]
-[3-3]
-[4-4]
-[5-5]
-[6-6]
-[7-7]
-[8-8]
-[9-9]
-[10-10]
-[11-11]
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |  232 +--------------------------------
+ 1 files changed, 2 insertions(+), 230 deletions(-)
 
-instead of like this:
-
-[1-11]
-
-Then HT40 gets disabled. This issue was fixed on 2.6.34 and the fixes
-were not propagated to 2.6.33.y as they are not "critical" fixes
-per se, but if you do value this as "important" you may want to
-fetch them and apply them to your 2.6.33.y kernel tree.
-
-I've backported them and stashed them here:
-
-http://kernel.org/pub/linux/kernel/people/mcgrof/patches/cfg80211/2010-03/reg-fixes-33/01-ht40-odd-country-ie/
-
-John W. Linville (1):
-  wireless: fix build breakage when CONFIG_CFG80211_REG_DEBUG not set
-
-Luis R. Rodriguez (7):
-  cfg80211: add a regulatory debug print
-  cfg80211: add debug print when we drop a bogus country IE
-  cfg80211: process the max power on a country IE
-  cfg80211: Fix country IE parsing for single channel triplets
-  cfg80211: fix 2 GHz subband calculation for country IEs
-  cfg80211: Ingore country IEs with a zero set of number of channels
-  cfg80211: make regulatory_hint_11d() band specific
-
- net/wireless/reg.c |  317 +++++++++++++++++++++++++++++++++++++++++++++++-----
- net/wireless/reg.h |   11 ++
- net/wireless/sme.c |    1 +
- 3 files changed, 302 insertions(+), 27 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9253b79..693932d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -545,234 +545,6 @@ chip_reset:
+ #undef SCHED_INTR
+ }
+ 
+-static int ath_setkey_tkip(struct ath_common *common, u16 keyix, const u8 *key,
+-			   struct ath9k_keyval *hk, const u8 *addr,
+-			   bool authenticator)
+-{
+-	struct ath_hw *ah = common->ah;
+-	const u8 *key_rxmic;
+-	const u8 *key_txmic;
+-
+-	key_txmic = key + NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY;
+-	key_rxmic = key + NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY;
+-
+-	if (addr == NULL) {
+-		/*
+-		 * Group key installation - only two key cache entries are used
+-		 * regardless of splitmic capability since group key is only
+-		 * used either for TX or RX.
+-		 */
+-		if (authenticator) {
+-			memcpy(hk->kv_mic, key_txmic, sizeof(hk->kv_mic));
+-			memcpy(hk->kv_txmic, key_txmic, sizeof(hk->kv_mic));
+-		} else {
+-			memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
+-			memcpy(hk->kv_txmic, key_rxmic, sizeof(hk->kv_mic));
+-		}
+-		return ath9k_hw_set_keycache_entry(ah, keyix, hk, addr);
+-	}
+-	if (!common->splitmic) {
+-		/* TX and RX keys share the same key cache entry. */
+-		memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
+-		memcpy(hk->kv_txmic, key_txmic, sizeof(hk->kv_txmic));
+-		return ath9k_hw_set_keycache_entry(ah, keyix, hk, addr);
+-	}
+-
+-	/* Separate key cache entries for TX and RX */
+-
+-	/* TX key goes at first index, RX key at +32. */
+-	memcpy(hk->kv_mic, key_txmic, sizeof(hk->kv_mic));
+-	if (!ath9k_hw_set_keycache_entry(ah, keyix, hk, NULL)) {
+-		/* TX MIC entry failed. No need to proceed further */
+-		ath_print(common, ATH_DBG_FATAL,
+-			  "Setting TX MIC Key Failed\n");
+-		return 0;
+-	}
+-
+-	memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
+-	/* XXX delete tx key on failure? */
+-	return ath9k_hw_set_keycache_entry(ah, keyix + 32, hk, addr);
+-}
+-
+-static int ath_reserve_key_cache_slot_tkip(struct ath_common *common)
+-{
+-	int i;
+-
+-	for (i = IEEE80211_WEP_NKID; i < common->keymax / 2; i++) {
+-		if (test_bit(i, common->keymap) ||
+-		    test_bit(i + 64, common->keymap))
+-			continue; /* At least one part of TKIP key allocated */
+-		if (common->splitmic &&
+-		    (test_bit(i + 32, common->keymap) ||
+-		     test_bit(i + 64 + 32, common->keymap)))
+-			continue; /* At least one part of TKIP key allocated */
+-
+-		/* Found a free slot for a TKIP key */
+-		return i;
+-	}
+-	return -1;
+-}
+-
+-static int ath_reserve_key_cache_slot(struct ath_common *common)
+-{
+-	int i;
+-
+-	/* First, try to find slots that would not be available for TKIP. */
+-	if (common->splitmic) {
+-		for (i = IEEE80211_WEP_NKID; i < common->keymax / 4; i++) {
+-			if (!test_bit(i, common->keymap) &&
+-			    (test_bit(i + 32, common->keymap) ||
+-			     test_bit(i + 64, common->keymap) ||
+-			     test_bit(i + 64 + 32, common->keymap)))
+-				return i;
+-			if (!test_bit(i + 32, common->keymap) &&
+-			    (test_bit(i, common->keymap) ||
+-			     test_bit(i + 64, common->keymap) ||
+-			     test_bit(i + 64 + 32, common->keymap)))
+-				return i + 32;
+-			if (!test_bit(i + 64, common->keymap) &&
+-			    (test_bit(i , common->keymap) ||
+-			     test_bit(i + 32, common->keymap) ||
+-			     test_bit(i + 64 + 32, common->keymap)))
+-				return i + 64;
+-			if (!test_bit(i + 64 + 32, common->keymap) &&
+-			    (test_bit(i, common->keymap) ||
+-			     test_bit(i + 32, common->keymap) ||
+-			     test_bit(i + 64, common->keymap)))
+-				return i + 64 + 32;
+-		}
+-	} else {
+-		for (i = IEEE80211_WEP_NKID; i < common->keymax / 2; i++) {
+-			if (!test_bit(i, common->keymap) &&
+-			    test_bit(i + 64, common->keymap))
+-				return i;
+-			if (test_bit(i, common->keymap) &&
+-			    !test_bit(i + 64, common->keymap))
+-				return i + 64;
+-		}
+-	}
+-
+-	/* No partially used TKIP slots, pick any available slot */
+-	for (i = IEEE80211_WEP_NKID; i < common->keymax; i++) {
+-		/* Do not allow slots that could be needed for TKIP group keys
+-		 * to be used. This limitation could be removed if we know that
+-		 * TKIP will not be used. */
+-		if (i >= 64 && i < 64 + IEEE80211_WEP_NKID)
+-			continue;
+-		if (common->splitmic) {
+-			if (i >= 32 && i < 32 + IEEE80211_WEP_NKID)
+-				continue;
+-			if (i >= 64 + 32 && i < 64 + 32 + IEEE80211_WEP_NKID)
+-				continue;
+-		}
+-
+-		if (!test_bit(i, common->keymap))
+-			return i; /* Found a free slot for a key */
+-	}
+-
+-	/* No free slot found */
+-	return -1;
+-}
+-
+-static int ath_key_config(struct ath_common *common,
+-			  struct ieee80211_vif *vif,
+-			  struct ieee80211_sta *sta,
+-			  struct ieee80211_key_conf *key)
+-{
+-	struct ath_hw *ah = common->ah;
+-	struct ath9k_keyval hk;
+-	const u8 *mac = NULL;
+-	int ret = 0;
+-	int idx;
+-
+-	memset(&hk, 0, sizeof(hk));
+-
+-	switch (key->alg) {
+-	case ALG_WEP:
+-		hk.kv_type = ATH9K_CIPHER_WEP;
+-		break;
+-	case ALG_TKIP:
+-		hk.kv_type = ATH9K_CIPHER_TKIP;
+-		break;
+-	case ALG_CCMP:
+-		hk.kv_type = ATH9K_CIPHER_AES_CCM;
+-		break;
+-	default:
+-		return -EOPNOTSUPP;
+-	}
+-
+-	hk.kv_len = key->keylen;
+-	memcpy(hk.kv_val, key->key, key->keylen);
+-
+-	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+-		/* For now, use the default keys for broadcast keys. This may
+-		 * need to change with virtual interfaces. */
+-		idx = key->keyidx;
+-	} else if (key->keyidx) {
+-		if (WARN_ON(!sta))
+-			return -EOPNOTSUPP;
+-		mac = sta->addr;
+-
+-		if (vif->type != NL80211_IFTYPE_AP) {
+-			/* Only keyidx 0 should be used with unicast key, but
+-			 * allow this for client mode for now. */
+-			idx = key->keyidx;
+-		} else
+-			return -EIO;
+-	} else {
+-		if (WARN_ON(!sta))
+-			return -EOPNOTSUPP;
+-		mac = sta->addr;
+-
+-		if (key->alg == ALG_TKIP)
+-			idx = ath_reserve_key_cache_slot_tkip(common);
+-		else
+-			idx = ath_reserve_key_cache_slot(common);
+-		if (idx < 0)
+-			return -ENOSPC; /* no free key cache entries */
+-	}
+-
+-	if (key->alg == ALG_TKIP)
+-		ret = ath_setkey_tkip(common, idx, key->key, &hk, mac,
+-				      vif->type == NL80211_IFTYPE_AP);
+-	else
+-		ret = ath9k_hw_set_keycache_entry(ah, idx, &hk, mac);
+-
+-	if (!ret)
+-		return -EIO;
+-
+-	set_bit(idx, common->keymap);
+-	if (key->alg == ALG_TKIP) {
+-		set_bit(idx + 64, common->keymap);
+-		if (common->splitmic) {
+-			set_bit(idx + 32, common->keymap);
+-			set_bit(idx + 64 + 32, common->keymap);
+-		}
+-	}
+-
+-	return idx;
+-}
+-
+-static void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf *key)
+-{
+-	struct ath_hw *ah = common->ah;
+-
+-	ath9k_hw_keyreset(ah, key->hw_key_idx);
+-	if (key->hw_key_idx < IEEE80211_WEP_NKID)
+-		return;
+-
+-	clear_bit(key->hw_key_idx, common->keymap);
+-	if (key->alg != ALG_TKIP)
+-		return;
+-
+-	clear_bit(key->hw_key_idx + 64, common->keymap);
+-	if (common->splitmic) {
+-		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
+-		clear_bit(key->hw_key_idx + 32, common->keymap);
+-		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
+-	}
+-}
+-
+ static void ath9k_bss_assoc_info(struct ath_softc *sc,
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_bss_conf *bss_conf)
+@@ -1703,7 +1475,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 
+ 	switch (cmd) {
+ 	case SET_KEY:
+-		ret = ath_key_config(common, vif, sta, key);
++		ret = ath9k_key_config(common, vif, sta, key);
+ 		if (ret >= 0) {
+ 			key->hw_key_idx = ret;
+ 			/* push IV and Michael MIC generation to stack */
+@@ -1716,7 +1488,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+ 		}
+ 		break;
+ 	case DISABLE_KEY:
+-		ath_key_delete(common, key);
++		ath9k_key_delete(common, key);
+ 		break;
+ 	default:
+ 		ret = -EINVAL;
+-- 
+1.7.0.1
 
