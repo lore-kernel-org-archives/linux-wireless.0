@@ -1,80 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:14808 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752506Ab0CYFtV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 01:49:21 -0400
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0296346159
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 14:49:19 +0900 (JST)
-Subject: [PATCH 03/10] ath5k: optimize ath5k_hw_calibration_poll
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
-	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com
-Date: Thu, 25 Mar 2010 14:49:14 +0900
-Message-ID: <20100325054914.10697.73582.stgit@tt-desk>
-In-Reply-To: <20100325054603.10697.48915.stgit@tt-desk>
-References: <20100325054603.10697.48915.stgit@tt-desk>
+Received: from mail.atheros.com ([12.36.123.2]:37859 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751072Ab0CAJRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 04:17:52 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 01:17:52 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19339.35508.571751.304682@gargle.gargle.HOWL>
+Date: Mon, 1 Mar 2010 15:06:52 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/7] ath9k: Use channel routine from library
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Optimize ath5k_hw_calibration_poll() since it is called on every singe
-interrupt.
+And remove the redundant code in ath9k.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/ath5k.h |    2 +-
- drivers/net/wireless/ath/ath5k/phy.c   |   20 ++++++--------------
- 2 files changed, 7 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   19 +++----------------
+ 1 files changed, 3 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index d84ccde..3f56d9e 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1100,7 +1100,7 @@ struct ath5k_hw {
- 	s32			ah_noise_floor;
- 
- 	/* Calibration timestamp */
--	unsigned long		ah_cal_tstamp;
-+	unsigned long		ah_cal_next_full;
- 
- 	/* Calibration mask */
- 	u8			ah_cal_mask;
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index cbdc511..60241ad 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1105,22 +1105,14 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
- void
- ath5k_hw_calibration_poll(struct ath5k_hw *ah)
- {
--	/* Calibration interval in jiffies */
--	unsigned long cal_intval;
--
--	cal_intval = msecs_to_jiffies(ATH5K_TUNE_CALIBRATION_INTERVAL_FULL);
--
--	/* Initialize timestamp if needed */
--	if (!ah->ah_cal_tstamp)
--		ah->ah_cal_tstamp = jiffies;
--
--	/* For now we always do full calibration
--	 * Mark software interrupt mask and fire software
--	 * interrupt (bit gets auto-cleared) */
--	if (time_is_before_eq_jiffies(ah->ah_cal_tstamp + cal_intval)) {
--		ah->ah_cal_tstamp = jiffies;
-+	if (time_is_before_eq_jiffies(ah->ah_cal_next_full)) {
-+		ah->ah_cal_next_full = jiffies +
-+			msecs_to_jiffies(ATH5K_TUNE_CALIBRATION_INTERVAL_FULL);
- 		tasklet_schedule(&ah->ah_sc->calib);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 693932d..40cff90 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -96,19 +96,6 @@ static u8 parse_mpdudensity(u8 mpdudensity)
  	}
-+	/* we could use SWI to generate enough interrupts to meet our
-+	 * calibration interval requirements, if necessary:
-+	 * AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI); */
  }
  
- static int sign_extend(int val, const int nbits)
+-static struct ath9k_channel *ath_get_curchannel(struct ath_softc *sc,
+-						struct ieee80211_hw *hw)
+-{
+-	struct ieee80211_channel *curchan = hw->conf.channel;
+-	struct ath9k_channel *channel;
+-	u8 chan_idx;
+-
+-	chan_idx = curchan->hw_value;
+-	channel = &sc->sc_ah->channels[chan_idx];
+-	ath9k_update_ichannel(hw, channel);
+-	return channel;
+-}
+-
+ bool ath9k_setpower(struct ath_softc *sc, enum ath9k_power_mode mode)
+ {
+ 	unsigned long flags;
+@@ -594,7 +581,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath9k_hw_configpcipowersave(ah, 0, 0);
+ 
+ 	if (!ah->curchan)
+-		ah->curchan = ath_get_curchannel(sc, sc->hw);
++		ah->curchan = ath9k_get_curchannel(hw, ah);
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 	r = ath9k_hw_reset(ah, ah->curchan, false);
+@@ -649,7 +636,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath_flushrecv(sc);		/* flush recv queue */
+ 
+ 	if (!ah->curchan)
+-		ah->curchan = ath_get_curchannel(sc, hw);
++		ah->curchan = ath9k_get_curchannel(hw, ah);
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 	r = ath9k_hw_reset(ah, ah->curchan, false);
+@@ -823,7 +810,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	sc->chan_idx = curchan->hw_value;
+ 
+-	init_channel = ath_get_curchannel(sc, hw);
++	init_channel = ath9k_get_curchannel(hw, ah);
+ 
+ 	/* Reset SERDES registers */
+ 	ath9k_hw_configpcipowersave(ah, 0, 0);
+-- 
+1.7.0.1
 
