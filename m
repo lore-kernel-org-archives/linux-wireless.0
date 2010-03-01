@@ -1,91 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22975 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751104Ab0CPWev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 18:34:51 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Mar 2010 15:34:51 -0700
-Date: Tue, 16 Mar 2010 15:33:38 +0530
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] wireless: convert reg_regdb_search_lock to mutex
-Message-ID: <20100316100337.GA1732@senthil-lnx.users.atheros.com>
-References: <4B9F86E9.2030702@gmail.com>
- <1268768940-5654-1-git-send-email-linville@tuxdriver.com>
+Received: from 63.mail-out.ovh.net ([91.121.185.56]:36571 "HELO
+	63.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751087Ab0CAV0w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 16:26:52 -0500
+Message-ID: <4B8C3118.30705@free.fr>
+Date: Mon, 01 Mar 2010 22:26:48 +0100
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1268768940-5654-1-git-send-email-linville@tuxdriver.com>
+To: Bruno Randolf <bruno@einfach.org>
+CC: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH 1/5] ath5k: fix injection in monitor mode
+References: <20100301115903.13996.95024.stgit@void> <201003012154.55633.bruno@einfach.org>
+In-Reply-To: <201003012154.55633.bruno@einfach.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 17, 2010 at 01:19:00AM +0530, John W. Linville wrote:
-> Stanse discovered that kmalloc can be called with GFP_KERNEL while
-This commit log is confusing. It Should be "Stanse discovered kmalloc
-was called with GFP_KERNEL". Obviously kmalloc with GFP_KERNEL shouldn't
-be used while holding a spinlock.
-> holding this spinlock.  It can be a mutex instead.
-> 
-> Reported-by: Jiri Slaby <jirislaby@gmail.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> Hmmm...I think I can get rid of the unlock of reg_regdb_search_mutex
-> before calling set_regdom now as well?
-> 
->  net/wireless/reg.c |   10 +++++-----
->  1 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index ed89c59..5f623ed 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -324,7 +324,7 @@ struct reg_regdb_search_request {
->  };
->  
->  static LIST_HEAD(reg_regdb_search_list);
-> -static DEFINE_SPINLOCK(reg_regdb_search_lock);
-> +static DEFINE_MUTEX(reg_regdb_search_mutex);
->  
->  static void reg_regdb_search(struct work_struct *work)
->  {
-> @@ -332,7 +332,7 @@ static void reg_regdb_search(struct work_struct *work)
->  	const struct ieee80211_regdomain *curdom, *regdom;
->  	int i, r;
->  
-> -	spin_lock(&reg_regdb_search_lock);
-> +	mutex_lock(&reg_regdb_search_mutex);
->  	while (!list_empty(&reg_regdb_search_list)) {
->  		request = list_first_entry(&reg_regdb_search_list,
->  					   struct reg_regdb_search_request,
-> @@ -346,18 +346,18 @@ static void reg_regdb_search(struct work_struct *work)
->  				r = reg_copy_regd(&regdom, curdom);
->  				if (r)
->  					break;
-> -				spin_unlock(&reg_regdb_search_lock);
-> +				mutex_unlock(&reg_regdb_search_mutex);
->  				mutex_lock(&cfg80211_mutex);
->  				set_regdom(regdom);
->  				mutex_unlock(&cfg80211_mutex);
-> -				spin_lock(&reg_regdb_search_lock);
-> +				mutex_lock(&reg_regdb_search_mutex);
->  				break;
->  			}
->  		}
->  
->  		kfree(request);
->  	}
-> -	spin_unlock(&reg_regdb_search_lock);
-> +	mutex_unlock(&reg_regdb_search_mutex);
->  }
->  
->  static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
-> -- 
-> 1.6.2.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bruno Randolf a écrit :
+> please ignore this one, sorry ;(
+>
+> bruno
+>   
+This one is cool & needed for testing IBSS merges. I have pretty much 
+the same in my tree.
+
+Regards,
+Benoit
+> On Monday 01 March 2010 20:59:03 Bruno Randolf wrote:
+>   
+>> injected frames have to use AR5K_PKT_TYPE_NORMAL, otherwise the hardware
+>> thinks it can mess with the contents of the frame - e.g. update the TSF of
+>> an injected beacon. injected frames should be sent as they are provided.
+>>
+>> Signed-off-by: Bruno Randolf <br1@einfach.org>
+>> ---
+>>
+>>  drivers/net/wireless/ath/ath5k/base.c |   11 ++++++++++-
+>>  1 files changed, 10 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath5k/base.c
+>> b/drivers/net/wireless/ath/ath5k/base.c index 2468c64..904d7f0 100644
+>> --- a/drivers/net/wireless/ath/ath5k/base.c
+>> +++ b/drivers/net/wireless/ath/ath5k/base.c
+>> @@ -1285,6 +1285,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
+>> ath5k_buf *bf, u16 cts_rate = 0;
+>>  	u16 duration = 0;
+>>  	u8 rc_flags;
+>> +	enum ath5k_pkt_type pkt_type;
+>>
+>>  	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
+>>
+>> @@ -1322,9 +1323,17 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
+>> ath5k_buf *bf, duration = le16_to_cpu(ieee80211_ctstoself_duration(sc->hw,
+>>  			sc->vif, pktlen, info));
+>>  	}
+>> +
+>> +	/* we don't want the hardware to mess with injected frames in monitor
+>> +	 * mode (e.g. update TSF in beacons) */
+>> +	if (sc->opmode == NL80211_IFTYPE_MONITOR)
+>> +		pkt_type = AR5K_PKT_TYPE_NORMAL;
+>> +	else
+>> +		pkt_type = get_hw_packet_type(skb);
+>> +
+>>  	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
+>>  		ieee80211_get_hdrlen_from_skb(skb),
+>> -		get_hw_packet_type(skb),
+>> +		pkt_type,
+>>  		(sc->power_level * 2),
+>>  		hw_rate,
+>>  		info->control.rates[0].count, keyidx, ah->ah_tx_ant, flags,
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>     
+> _______________________________________________
+> ath5k-devel mailing list
+> ath5k-devel@lists.ath5k.org
+> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
+>
+>   
+
