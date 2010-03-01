@@ -1,87 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:63825 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751285Ab0CaSiq (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54473 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750696Ab0CAIAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 14:38:46 -0400
-Message-ID: <4BB396B4.8090005@gmail.com>
-Date: Wed, 31 Mar 2010 20:38:44 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Mon, 1 Mar 2010 03:00:25 -0500
+Date: Mon, 1 Mar 2010 09:59:53 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Bjarke Istrup Pedersen <gurligebis@gentoo.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Problem with bridges and wireless NIC's
+Message-ID: <20100301075953.GA32038@jm.kir.nu>
+References: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
 MIME-Version: 1.0
-To: Ondrej Zary <linux@rainbow-software.org>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] [RFC] rt2500pci: fix powersaving
-References: <201003290956.54234.linux@rainbow-software.org> <201003301433.55355.linux@rainbow-software.org> <20100330125620.GA2173@katherina.student.utwente.nl> <201003302209.23334.linux@rainbow-software.org> <20100331174138.GE21160@katherina.student.utwente.nl>
-In-Reply-To: <20100331174138.GE21160@katherina.student.utwente.nl>
-Content-Type: multipart/mixed;
- boundary="------------030000060809020004020507"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030000060809020004020507
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Sun, Feb 28, 2010 at 11:58:10PM +0100, Bjarke Istrup Pedersen wrote:
 
-On 03/31/10 19:41, Matthijs Kooijman wrote:
-> Hi Ondrej,
+> There is a problem when trying to create a bridge containing a normal
+> NIC and a wireless NIC, and using hostapd.
 > 
->> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 1 (-16).
-> I've been running with your patches (applied to 2.6.32.7) for a day of normal
-> work, and the steady stream of these errors has stopped. During the entire
-> day, I've seen the error once, perhaps a corner case here or there?
+> The problem is, that it is not possible to create a bridge containing
+> a wireless NIC, if it hasn't been setup first.
 > 
-> Overall, I have the feeling that connectivity is a bit more unstable with
-> these two patches, however. On a few occasions, my SSH connections would hang
-> for a bit. Sometimes pinging would be ok (and sometimes it wouldn't), so I
-> haven't quite figured out if these problems were actually caused by the
-> driver, or some other cause). Once I seemd to solve the problem by turning off
-> powersaving, but that might have been a coincidence. Other times the problems
-> went away by themselves.
-> 
-> Is there anything else I can do at the moment I'm seeing connection problems?
-> Make a register dump or check some command?
-> 
-> I'll do some more testing, tonight on another (probably more stable)
-> connection.
+> Does anyone have a solution for this?
 
-Could you try the attached patch on top of Ondrej's?
+How about first creating the br0, then starting hostapd, and finally
+adding wlan0 into br0?
 
-The legacy Ralink drivers do not go to sleep when there are still active entries
-in the TX queues. This patch mimics that behavior by refusing to go to sleep if
-there still are active entries in any of the TX queues.
+> (The commit that introduced this problem is
+> ad4bb6f8883a13bb0f65b194dae36c62a02ac779 , reverting it solves the
+> problem).
 
----
-Gertjan
+I don't know whether I would call that a solution, but well..
 
---------------030000060809020004020507
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="patch"
+> For more info, please have a look at this bug report:
+> http://bugs.gentoo.org/show_bug.cgi?id=298824
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index c6d3f2c..a7ff006 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -633,9 +633,17 @@ static void rt2500usb_config_ps(struct rt2x00_dev *rt2x00dev,
- 	enum dev_state state =
- 	    (libconf->conf->flags & IEEE80211_CONF_PS) ?
- 		STATE_SLEEP : STATE_AWAKE;
-+	struct data_queue *queue;
- 	u16 reg;
+I'm not sure whether I understood the description correctly, but this
+sounds like a limitation in the way the network setup is done. Forcing
+br0 to be created with wlan0 before wlan0 has been configured is not
+going to work. I would consider removing wlan0 from the static
+configuration of br0 and just creating br0 with eth0 with the setup
+scripts and allowing hostapd to add wlan0 into br0 once the interface
+has been configured properly (support for this was added in hostapd
+0.7.1).
  
- 	if (state == STATE_SLEEP) {
-+		/*
-+		 * Don't go to sleep when the TX queues are not empty.
-+		 */
-+		tx_queue_for_each(rt2x00dev, queue)
-+			if (!rt2x00queue_empty(queue))
-+				return;
-+
- 		rt2500usb_register_read(rt2x00dev, MAC_CSR18, &reg);
- 		rt2x00_set_field16(&reg, MAC_CSR18_DELAY_AFTER_BEACON,
- 				   rt2x00dev->beacon_int - 20);
-
---------------030000060809020004020507--
+-- 
+Jouni Malinen                                            PGP id EFC895FA
