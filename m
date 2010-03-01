@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:40732 "EHLO mga14.intel.com"
+Received: from plexity.net ([206.123.115.38]:60203 "EHLO plexity.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752235Ab0CYUoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 16:44:34 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org
-Subject: [PATCH 2/3] iwlwifi: counting number of tfds can be free for 4965
-Date: Thu, 25 Mar 2010 13:44:28 -0700
-Message-Id: <1269549869-19162-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1269549869-19162-1-git-send-email-reinette.chatre@intel.com>
-References: <1269549869-19162-1-git-send-email-reinette.chatre@intel.com>
+	id S1751887Ab0CAUAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 15:00:31 -0500
+Date: Mon, 1 Mar 2010 11:59:48 -0800
+From: Deepak Saxena <dsaxena@laptop.org>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: add auto auth mode feature
+Message-ID: <20100301195948.GA19200@plexity.net>
+Reply-To: dsaxena@laptop.org
+References: <1267146996-3725-1-git-send-email-bzhao@marvell.com> <201002261355.06127.holgerschurig@gmail.com> <c1545bb51002261210h27ba9868tca0261742b848e51@mail.gmail.com> <1267225266.14995.7.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1267225266.14995.7.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Feb 26 2010, at 15:01, Dan Williams was caught saying:
+> On Fri, 2010-02-26 at 12:10 -0800, Andrey Yurovsky wrote:
+> > On Fri, Feb 26, 2010 at 4:55 AM, Holger Schurig
+> > <holgerschurig at googlemail.com> wrote:
+> > >> Auto auth mode is enabled by default. If user doesn't specify the
+> > >> auth mode, while association driver will first try with open mode
+> > >> and then with shared key mode. If user specifies an auth mode,
+> > >> auto auth is disabled and driver will not try association with
+> > >> another auth mode.
+> > >
+> > > I'd rather would like if you guys chime in into the cfg80211 port rather
+> > > than adding stuff to assoc.c and wext.c, which hopefully get's removed
+> > > really soon now.
+> > >
+> > >
+> > > As a side note: I'm now inclined to get rid of Libertas' proprietary mesh
+> > > support in the driver. I don't know no one except OLPC that uses it, and
+> > > even they don't seem work with upstream. For me, this mesh stuff is the last
+> > > obstacle for cfg80211 support in libertas.
+<snip>
+> > Perhaps the OLPC folks might want to fork the driver or maintain a
+> > patch set for the XO-1 mesh features.  Meanwhile we could all move on
+> > and use cfg80211 and clean things up accordingly.
+<snip>
+> It might not be a bad thing to rip out the mesh stuff and add it later,
+> but we do want to coordinate with OLPC folks as they are still the
+> *largest user by far* of this driver.  As in a million+ units.
 
-Forget one hunk in 4965 during "iwlwifi: error checking for number of tfds
-in queue" patch.
+As has been pointed out, the next-gen XO wireless FW does not have mesh 
+support; however, there are still plenty of end users and developers on 
+the existing XO-1 laptops and I don't think completely removing mesh 
+support is an option our community would be happy with. However, I also 
+don't want to end up with a libertas fork (all our mesh patches are
+currently upstream and not forkd off) in the OLPC tree so let's figure 
+out a path to make this work for everyone.
 
-Reported-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-CC: stable@kernel.org
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+It looks like there is already some work in progress towards mesh support
+using cfg80211 [1] and if I can get pointers to the latest version, I can 
+point the OLPC community to them and see if we can find some testers.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 1bd2cd8..83c52a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2041,16 +2041,14 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 				   tx_resp->failure_frame);
- 
- 		freed = iwl_tx_queue_reclaim(priv, txq_id, index);
--		if (qc && likely(sta_id != IWL_INVALID_STATION))
--			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
-+		iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
- 
- 		if (priv->mac80211_registered &&
- 		    (iwl_queue_space(&txq->q) > txq->q.low_mark))
- 			iwl_wake_queue(priv, txq_id);
- 	}
- 
--	if (qc && likely(sta_id != IWL_INVALID_STATION))
--		iwl_txq_check_empty(priv, sta_id, tid, txq_id);
-+	iwl_txq_check_empty(priv, sta_id, tid, txq_id);
- 
- 	if (iwl_check_bits(status, TX_ABORT_REQUIRED_MSK))
- 		IWL_ERR(priv, "TODO:  Implement Tx ABORT REQUIRED!!!\n");
--- 
-1.6.3.3
+> Is it seriously that large of a block?  I thought we'd discussed a
+> fairly viable plan for keeping mesh around while still doing cfg80211.
+> Would shipping you a usb8388 dongle or two make it easier to work with?
+
+Or a few XO-1 laptops? :)
+
+~Deepak
 
