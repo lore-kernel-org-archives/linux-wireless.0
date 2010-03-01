@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53180 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754152Ab0C2I1Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 04:27:25 -0400
-Subject: Re: [PATCH 1/2] mac80211: explicitly disable/enable QoS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>, wey-yi.w.guy@intel.com
-In-Reply-To: <20100329071733.GB2732@dhcp-lab-161.englab.brq.redhat.com>
-References: <1269621992-5034-1-git-send-email-sgruszka@redhat.com>
-	 <1269624363.4342.2.camel@jlt3.sipsolutions.net>
-	 <20100329071733.GB2732@dhcp-lab-161.englab.brq.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Mar 2010 10:27:16 +0200
-Message-ID: <1269851236.4131.25.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:51496 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751463Ab0CAWCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 17:02:04 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Status of http://patchwork.kernel.org/patch/56785/
+Date: Mon, 1 Mar 2010 23:01:50 +0100
+Cc: Drapko Nitzhonot <drapkos@gmail.com>,
+	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	stable@kernel.org
+References: <753864a31002271218r7fce0601l51f78efdf2576f75@mail.gmail.com> <201002272124.31863.mb@bu3sch.de> <20100301201214.GG2961@tuxdriver.com>
+In-Reply-To: <20100301201214.GG2961@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201003012301.51478.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-03-29 at 09:17 +0200, Stanislaw Gruszka wrote:
-> On Fri, Mar 26, 2010 at 10:26:03AM -0700, Johannes Berg wrote:
-> > >  void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
-> > > @@ -816,7 +824,7 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
-> > >  	else
-> > >  		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
-> > >  
-> > > -	ieee80211_set_wmm_default(sdata);
-> > > +	ieee80211_set_wmm_default(sdata, true);
-> > 
-> > Shouldn't that be false though?
+On Monday 01 March 2010 21:12:14 John W. Linville wrote:
+> > An AP running 2.6.32 is unusable without those two patches.
+> > However, it's rock stable as soon as those are applied.
 > 
-> I think so, I did like that just to not change old behaviour (on iwlwifi).
+> commit a951ae2176b982574ffa197455db6c89359fd5eb
+> Author: Bob Copeland <me@bobcopeland.com>
+> Date:   Wed Jan 20 23:51:04 2010 -0500
 > 
-> But I think also, that all ieee80211_set_wmm_default function calls
-> should be with false, in other words, we should disable QoS in
-> ieee80211_set_wmm_default().
+>     ath5k: fix setup for CAB queue
+>     
+>     The beacon sent gating doesn't seem to work with any combination
+>     of flags.  Thus, buffered frames tend to stay buffered forever,
+>     using up tx descriptors.
+>     
+>     Instead, use the DBA gating and hold transmission of the buffered
+>     frames until 80% of the beacon interval has elapsed using the ready
+>     time.  This fixes the following error in AP mode:
+>     
+>        ath5k phy0: no further txbuf available, dropping packet
+>     
+>     Add a comment to acknowledge that this isn't the best solution.
+>     
+>     Signed-off-by: Bob Copeland <me@bobcopeland.com>
+>     Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
 > 
-> What is your opinion?
+> commit 5d6ce628f986d1a3c523cbb0a5a52095c48cc332
+> Author: Bob Copeland <me@bobcopeland.com>
+> Date:   Wed Jan 20 23:51:03 2010 -0500
+> 
+>     ath5k: dont use external sleep clock in AP mode
+>     
+>     When using the external sleep clock in AP mode, the
+>     TSF increments too quickly, causing beacon interval
+>     to be much lower than it is supposed to be, resulting
+>     in lots of beacon-not-ready interrupts.
+>     
+>     This fixes http://bugzilla.kernel.org/show_bug.cgi?id=14802.
+>     
+>     Signed-off-by: Bob Copeland <me@bobcopeland.com>
+>     Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
 
-Yeah that seems right to me, if we're going to set to the default then
-that should probably mean off, even if we do configure the queues. I'm
-just not exactly sure how AP should be handled wrt. turning QoS on,
-probably on the first queue config from userspace?
+Ok, so indeed, there was no CC to stable. I think these are critical patches
+that should go into the stable tree.
 
-johannes
-
+-- 
+Greetings, Michael.
