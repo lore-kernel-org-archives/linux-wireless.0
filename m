@@ -1,152 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:59056 "EHLO
-	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752051Ab0C3VCf (ORCPT
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:63035 "EHLO
+	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752281Ab0CAXC1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 17:02:35 -0400
-Message-ID: <4BB266E9.2010404@gmail.com>
-Date: Tue, 30 Mar 2010 23:02:33 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Mon, 1 Mar 2010 18:02:27 -0500
+Date: Tue, 2 Mar 2010 12:04:20 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Felix Fietkau <nbd@openwrt.org>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+In-Reply-To: <4B8C4685.8020202@openwrt.org>
+Message-ID: <alpine.DEB.2.00.1003021203230.14059@kauri.acheron.indranet.co.nz>
+References: <4B8C3A21.2050105@openwrt.org> <alpine.DEB.2.00.1003021122550.14059@kauri.acheron.indranet.co.nz> <4B8C4685.8020202@openwrt.org>
 MIME-Version: 1.0
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-CC: Ondrej Zary <linux@rainbow-software.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] [RFC] rt2500pci: fix powersaving
-References: <201003290956.54234.linux@rainbow-software.org>	<201003301433.55355.linux@rainbow-software.org>	<20100330125620.GA2173@katherina.student.utwente.nl> <201003302209.23334.linux@rainbow-software.org>
-In-Reply-To: <201003302209.23334.linux@rainbow-software.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/10 22:09, Ondrej Zary wrote:
-> On Tuesday 30 March 2010, Matthijs Kooijman wrote:
->> Hi all,
+Hi,
+
+On Mon, 1 Mar 2010, Felix Fietkau wrote:
+
+> On 2010-03-01 11:38 PM, Derek Smithies wrote:
+>> Hi,
+>>   Great work on getting this far - it was a huge undertaking.
 >>
->>> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state
->>> 1 (-16).
+>>   Ok, before diving into the code, can we take a quick moment to think on
+>> this. I wonder if you can answer the following questions:
 >>
->> I'm seeing this one on my rt2500pci as well (and also works ok otherwise).
-> 
-> OK, so let's try to fix it.
-> 
-> The first patch below fixes this problem. And reveals two other problems. Now the
-> device has problems entering states 3 and 4 (remains stuck in state 1) - the
-> driver seems to not like this and oopses.
-> The second patch fixes the "stuck state 1" problem (same fix as in rt2500usb).
-> The oops does not appear anymore with the second patch - but I think that it
-> should be fixed anyway separately.
-> (I'm testing this with "while true; do ifdown wlan0; ifup wlan0; done")
-> 
+>> a)Minstrel worked hard at using information that is good and reliable: -
+>>     which is the record of what rates worked, and what rates failed.
+>>   Minstrel avoids using things like RSSI (which is not reliable)
+> Yes, I still rely purely on tx status feedback, no RSSI voodoo.
+>
+>> b)You have stated in previous emails that with 802.11n there are too many
+>>   rates for minstrels random sampling technique.
+>>
+>> What is the approach taken in 802.11n & minstrel? I remember some comment
+>> about dividing the 802.11n rate set up into groups, and then minstrel does
+>> its thing within the rates of each group. - Do I have the idea here?
+> The previous comments were based on faulty tx status feedback because of
+> an ath9k issue that I resolved in a previous patch. The current
+> implementation still does random sampling, with one exception: each
+> sampling attempt goes to a different MCS group.
+> Other than that, I split up the MCS rates into groups mainly because
+> it's easier to deal with and allows me to calculate raw transmit
+> durations at compile time.
+>
+> I did add some small special cases though. For instance if the code
+> detects that the current transmit rate is failing really quickly on a
+> multi-stream rate, it falls back to the max_tp_rate of a single-stream
+> group, while leaving around enough feedback for EWMA.
+> This reduces the strength of the throughput drop when I disconnect one
+> antenna (which kills off pretty much all of the dual-stream rates
+> immediately).
+>
+>> Where have you tested 802.11n & minstrel?
+> Only at home. I just finished ironing out most of the important bugs
+> today, so this hasn't seen any significant long-term testing yet.
+>
+>> Does 802.11n&minstrel pass the basic test
+>>    a) put two nodes on the desk - rate is high
+>>    b) move one of the nodes (or remove antenna) - rate should drop
+>>    c) move nodes back to the configuration of a)
+>>              -rate should go high again
+> Yes, this was my primary test. I also did some tests with removing both
+> antennas and moving the laptop away and back again.
+>
+> I also did quite a few tests switching back and forth between
+> minstrel_ht and the ath9k rate control to compare them as accurately as
+> possible. In HT40, rate adaptation with minstrel is usually a little
+> slower (only a minor difference here, probably caused by the much larger
+> search space), but it's able to deal with sources of interference (e.g.
+> Bluetooth) a lot better.
+> It also reacts much faster to problems with spatial multiplexing, and
+> seems to get a better average throughput in HT20 in my tests.
+>
+>> Does 802.11n&minstrel work well with time?
+>> In other words, is the throughput 10 hours later the same as at the start
+>> of the test?
+> If I force it to single-stream mode, then it seems to be just as
+> reliable at sticking to a specific rate as the legacy implementation.
+>
+> With dual-stream rates it's hard to tell, because the reliability of
+> rates varies quickly, even if the positions is fixed. I do not see any
+> *significant* variations in throughput though.
 
-Thanks again for your hard and persistent work on this.
+  Fantastic. This is encouraging, time to test further then.
 
-> oops:
-> 
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 3 (-16).
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 3 (-16).
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 3 (-16).
-> wlan0: deauthenticating from 00:13:d4:0f:f3:19 by local choice (reason=3)
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 3 (-16).
-> cfg80211: Calling CRDA to update world regulatory domain
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 3 (-16).
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 4 (-5).
-> BUG: unable to handle kernel NULL pointer dereference at (null)
-> IP: [<c8949726>] rt2x00queue_init_queues+0x25/0x64 [rt2x00lib]
-> *pde = 00000000
-> Oops: 0002 [#1] SMP
-> last sysfs file: /sys/devices/virtual/input/mice/uevent
-> Modules linked in: aes_generic arc4 ecb rt2500pci rt2x00pci rt2x00lib mac80211 cfg80211 rfkill ns558 pcspkr eeprom_93cx6 gameport 8139too 
-> 8139cp mii [last 
-> unloaded: scsi_wait_scan]
-> 
-> Pid: 2051, comm: ifconfig Not tainted 2.6.34-rc2 #8 i815-W83627/
-> EIP: 0060:[<c8949726>] EFLAGS: 00010202 CPU: 0
-> EIP is at rt2x00queue_init_queues+0x25/0x64 [rt2x00lib]
-> EAX: 00000000 EBX: c703b100 ECX: c703b10c EDX: 00000000
-> ESI: c72b2ac0 EDI: 00000001 EBP: c7293df4 ESP: c7293de4
->  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-> Process ifconfig (pid: 2051, ti=c7293000 task=c7253280 task.ti=c7293000)
-> Stack:
->  c703b130 c72b2ac0 00000000 c72b2884 c7293e04 c894868a c72b2ac0 00000000
-> <0> c7293e14 c8948773 c72b2240 c72b53c0 c7293e1c c8949039 c7293e48 c890cd83
-> <0> c72b2240 c72b2884 c72b5000 00000000 00005d31 00000000 c72b5000 c891e46c
-> Call Trace:
->  [<c894868a>] ? rt2x00lib_stop+0x54/0xb4 [rt2x00lib]
->  [<c8948773>] ? rt2x00lib_start+0x89/0xa6 [rt2x00lib]
->  [<c8949039>] ? rt2x00mac_start+0x18/0x1a [rt2x00lib]
->  [<c890cd83>] ? ieee80211_open+0x24a/0x567 [mac80211]
->  [<c05f73dd>] ? __dev_open+0x7b/0xa4
->  [<c05f5a81>] ? __dev_change_flags+0x93/0x108
->  [<c05f7336>] ? dev_change_flags+0x13/0x3f
->  [<c062aa81>] ? devinet_ioctl+0x21e/0x497
->  [<c062bcce>] ? inet_ioctl+0x8e/0xa7
->  [<c05eac3e>] ? sock_ioctl+0x1c0/0x1e4
->  [<c04a762d>] ? vfs_ioctl+0x27/0x91
->  [<c05eaa7e>] ? sock_ioctl+0x0/0x1e4
->  [<c04a7bce>] ? do_vfs_ioctl+0x48e/0x4cc
->  [<c048a13f>] ? handle_mm_fault+0x3fd/0x86a
->  [<c046cff1>] ? call_rcu_sched+0xd/0xf
->  [<c04a7c3a>] ? sys_ioctl+0x2e/0x48
->  [<c0402ed8>] ? sysenter_do_call+0x12/0x28
-> Code: f7 5b 5e 5f 5d c3 55 89 e5 57 56 89 c6 53 83 ec 04 8b 98 c8 02 00 00 eb 30 89 d8 31 ff e8 a9 ff ff ff eb 1a 6b c7 14 8b 53 04 47 <c7> 
-> 04 02 00 00 00 
-> 00 8b 56 04 03 43 04 8b 52 2c ff 52 20 0f b7
-> EIP: [<c8949726>] rt2x00queue_init_queues+0x25/0x64 [rt2x00lib] SS:ESP 0068:c7293de4
-> CR2: 0000000000000000
-> ---[ end trace 65bcf981f552d652 ]---
-> 
-> 
-> 
-> 
-> --- linux-2.6.34-rc2-orig/drivers/net/wireless/rt2x00/rt2500pci.c	2010-03-20 02:17:57.000000000 +0100
-> +++ linux-2.6.34-rc2/drivers/net/wireless/rt2x00/rt2500pci.c	2010-03-30 15:04:50.000000000 +0200
-> @@ -1079,7 +1079,7 @@
->  static int rt2500pci_set_state(struct rt2x00_dev *rt2x00dev,
->  			       enum dev_state state)
->  {
-> -	u32 reg;
-> +	u32 reg, reg2;
->  	unsigned int i;
->  	char put_to_sleep;
->  	char bbp_state;
-> @@ -1100,11 +1100,12 @@
->  	 * device has entered the correct state.
->  	 */
->  	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-> -		rt2x00pci_register_read(rt2x00dev, PWRCSR1, &reg);
-> -		bbp_state = rt2x00_get_field32(reg, PWRCSR1_BBP_CURR_STATE);
-> -		rf_state = rt2x00_get_field32(reg, PWRCSR1_RF_CURR_STATE);
-> +		rt2x00pci_register_read(rt2x00dev, PWRCSR1, &reg2);
-> +		bbp_state = rt2x00_get_field32(reg2, PWRCSR1_BBP_CURR_STATE);
-> +		rf_state = rt2x00_get_field32(reg2, PWRCSR1_RF_CURR_STATE);
->  		if (bbp_state == state && rf_state == state)
->  			return 0;
-> +		rt2x00pci_register_write(rt2x00dev, PWRCSR1, reg);
->  		msleep(10);
->  	}
->  
+Derek.
 
-Hmmm, checking the old legacy Ralink rt2500 driver it shows that the legacy driver never waits and checks
-whether the device has come in the right power state. What does happen to the stability of the connection
-if you simply remove this entire for-loop?
+-- 
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
 
-> 
-> 
-> --- linux-2.6.34-rc2-orig/drivers/net/wireless/rt2x00/rt2500pci.c       2010-03-20 02:17:57.000000000 +0100
-> +++ linux-2.6.34-rc2/drivers/net/wireless/rt2x00/rt2500pci.c    2010-03-30 21:15:03.000000000 +0200
-> @@ -573,6 +573,10 @@
-> 
->  		rt2x00_set_field32(&reg, CSR20_AUTOWAKE, 1);
->  		rt2x00pci_register_write(rt2x00dev, CSR20, reg);
-> +	} else {
-> +		rt2x00pci_register_read(rt2x00dev, CSR20, &reg);
-> +		rt2x00_set_field32(&reg, CSR20_AUTOWAKE, 0);
-> +		rt2x00pci_register_write(rt2x00dev, CSR20, reg);
->  	}
-> 
->  	rt2x00dev->ops->lib->set_device_state(rt2x00dev, state);
+"The only thing IE should be used for is to download Fire Fox"
 
-OK. Got this queued up already (based upon your patch to rt2500usb).
-
----
-Gertjan.
+"My favorite language is call STAR. It's extremely concise. It has
+  exactly one verb '*', which does exactly what I want at the moment."
+     --Larry Wall
