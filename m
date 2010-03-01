@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:33185 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752594Ab0CRK1u (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:20096 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751298Ab0CAL72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 06:27:50 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Mon, 1 Mar 2010 06:59:28 -0500
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0294944767
+	for <linux-wireless@vger.kernel.org>; Mon,  1 Mar 2010 20:59:27 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+Subject: [PATCH 5/5] ath5k: fix TSF reset
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 20/21] wl1271: Remove circular interlocking related to the inetaddr notifier chain
-Date: Thu, 18 Mar 2010 12:26:45 +0200
-Message-Id: <1268908006-16992-21-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
-References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Mon, 01 Mar 2010 20:59:26 +0900
+Message-ID: <20100301115926.13996.42566.stgit@void>
+In-Reply-To: <20100301115903.13996.95024.stgit@void>
+References: <20100301115903.13996.95024.stgit@void>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+to reset the TSF, AR5K_BEACON_RESET_TSF has to be 1, not 0. also we have a
+function for that so use it.
 
-Removing the wl1271 from the inet addr notifier chain sometimes causes the
-registered handler to be called - causing locking problems if the removing
-function is called from within the mutex.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 6f6d366..0bebc45 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1029,12 +1029,13 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 	struct wl1271 *wl = hw->priv;
- 	int i;
+ drivers/net/wireless/ath/ath5k/reset.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index a35a7db..c780b55 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1379,11 +1379,10 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 		ath5k_hw_set_sleep_clock(ah, true);
  
-+	unregister_inetaddr_notifier(&wl1271_dev_notifier);
-+
- 	mutex_lock(&wl->mutex);
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
+ 	/*
+-	 * Disable beacons and reset the register
++	 * Disable beacons and reset the TSF
+ 	 */
+-	AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE |
+-			AR5K_BEACON_RESET_TSF);
+-
++	AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
++	ath5k_hw_reset_tsf(ah);
+ 	return 0;
+ }
  
- 	wl1271_info("down");
- 
--	unregister_inetaddr_notifier(&wl1271_dev_notifier);
- 	list_del(&wl->list);
- 
- 	WARN_ON(wl->state != WL1271_STATE_ON);
--- 
-1.6.3.3
 
