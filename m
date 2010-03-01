@@ -1,92 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43869 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:49393 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750696Ab0CAIxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 03:53:55 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 00:53:55 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1751695Ab0CAAXD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Feb 2010 19:23:03 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: Nathan Schulte <reklipz@gmail.com>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+Date: Mon, 1 Mar 2010 01:22:50 +0100
+Cc: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <69e28c911002281503l7259c897hafa26171adeaf0b1@mail.gmail.com> <a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com>
+In-Reply-To: <a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19339.34073.723714.219572@gargle.gargle.HOWL>
-Date: Mon, 1 Mar 2010 14:42:57 +0530
-To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Fix HT configuration
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201003010122.51341.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handling HT configuration changes involved setting the channel
-with the new HT parameters and then issuing a rate_update()
-notification to the driver.
+On Monday 01 March 2010 00:38:16 Nathan Schulte wrote:
+> 2010/2/28 Gábor Stefanik <netrolller.3d@gmail.com>:
+> > The latest patch, which is a partial success according to some
+> > testers, writes to core 1 (PCI-E) instead of core 0 (ChipCommon).
+> Then either I am misinterpreting the logs, or the last patch in this
+> thread is not the patch you are referring to.
+> 
+> A successful write/read to PCI config register 0x80 indicates that any
+> following MMIO read/writes will be done on that core, correct?
+> 
+> With the lpphy-test.patch you posted earlier, I see the following
+> output from b43:
+> Wrote 0x18003000 to pos 0x80
+> Read 0x18003000 from pos 0x80
+> MAP 1 0xf4000000 0xffffc900225b8000 0x4000 0x0 0
+> [snip some mmio read/writes and some PCI config read/writes]
+> Wrote 0x18000000 to pos 0x80
+> Read 0x18000000 from pos 0x80
+> R 4 1 0xf400280a 0x6dbe 0x0 0
+> W 4 1 0xf400280a 0xedbe 0x0 0
+> 
+> This first maps core 3, does some read/writes with it, then maps core
+> 0, and sets bit 0x8000, correct?
+> 
+> Also, is the address space limited to the 4k range?  wl maps core 1,
+> but sets bit 0x8000 at address 0x280a, which when added to 0x18001000
+> is 0x1800380a, right in the PCIE cores address space (for address
+> 0x100a).
 
-This behavior changed after the off-channel changes. Now, the channel
-is not updated with the new HT params in enable_ht() - instead, it
-is now done when the scan work terminates. This results in the driver
-depending on stale information, defaulting to non-HT mode always.
+Well, you are confusing address spaces here.
 
-Fix this by passing the new channel type to the driver.
+On a PCI based SSB device all host-side MMIO transfers go into
+the PCI device's address space first. The core-switching moves the window of
+the SSB address space that is mapped into 0-0xFFF of the PCI address space.
+So if you write to anything above 0xFFF on the PCI device, the write will
+not (directly) map to the SSB bus or any device on it.
+On the PCI device there is more stuff mapped on top of the SSB sliding
+window. For example the SPROM is mapped right on top of it.
 
-Cc: stable@kernel.org
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- include/net/mac80211.h |    3 ++-
- net/mac80211/mlme.c    |    3 ++-
- net/mac80211/rate.h    |    5 +++--
- 3 files changed, 7 insertions(+), 4 deletions(-)
+So it might be the case that on a PCI-E device the PCI-E-core's registers
+are permanently mapped into 0x2000 of the PCI address apace. This is to
+avoid sliding the SSB address space window when accessing the PCI-E core.
+This can have several reasons: For one speed (unlikely) and for another
+to avoid concurrency and ugly races when we need to access the PCI-E core
+while the wireless core is already running and generating interrupts.
+Note that this is a GUESS, but it would make sense to me.
+It would be cool if somebody could compare more registers of the PCI-E
+core using the sliding window and the 0x2000 + reg method to check my theory.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 80eb7cc..45d7d44 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2426,7 +2426,8 @@ struct rate_control_ops {
- 			  struct ieee80211_sta *sta, void *priv_sta);
- 	void (*rate_update)(void *priv, struct ieee80211_supported_band *sband,
- 			    struct ieee80211_sta *sta,
--			    void *priv_sta, u32 changed);
-+			    void *priv_sta, u32 changed,
-+			    enum nl80211_channel_type oper_chan_type);
- 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
- 			 void *priv_sta);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 41812a1..2b621e1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -177,7 +177,8 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		sta = sta_info_get(sdata, bssid);
- 		if (sta)
- 			rate_control_rate_update(local, sband, sta,
--						 IEEE80211_RC_HT_CHANGED);
-+						 IEEE80211_RC_HT_CHANGED,
-+						 local->oper_channel_type);
- 		rcu_read_unlock();
-         }
- 
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index b6108bc..065a961 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -66,7 +66,8 @@ static inline void rate_control_rate_init(struct sta_info *sta)
- 
- static inline void rate_control_rate_update(struct ieee80211_local *local,
- 				    struct ieee80211_supported_band *sband,
--				    struct sta_info *sta, u32 changed)
-+				    struct sta_info *sta, u32 changed,
-+				    enum nl80211_channel_type oper_chan_type)
- {
- 	struct rate_control_ref *ref = local->rate_ctrl;
- 	struct ieee80211_sta *ista = &sta->sta;
-@@ -74,7 +75,7 @@ static inline void rate_control_rate_update(struct ieee80211_local *local,
- 
- 	if (ref && ref->ops->rate_update)
- 		ref->ops->rate_update(ref->priv, sband, ista,
--				      priv_sta, changed);
-+				      priv_sta, changed, oper_chan_type);
- }
- 
- static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
 -- 
-1.7.0.1
-
+Greetings, Michael.
