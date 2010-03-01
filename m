@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:56394 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755831Ab0C3Iw6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 04:52:58 -0400
-Date: Tue, 30 Mar 2010 10:52:53 +0200
-From: Daniel Mack <daniel@caiaq.de>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] net/wireless/libertas: do not call wiphy_unregister()
- w/o wiphy_register()
-Message-ID: <20100330085253.GL30801@buzzloop.caiaq.de>
-References: <1269875658-3324-1-git-send-email-daniel@caiaq.de>
- <201003300849.07441.hs4233@mail.mn-solutions.de>
+Received: from nbd.name ([88.198.39.176]:48812 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751192Ab0CAMcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 07:32:21 -0500
+Message-ID: <4B8BB3CB.7070601@openwrt.org>
+Date: Mon, 01 Mar 2010 13:32:11 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201003300849.07441.hs4233@mail.mn-solutions.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: fix rate control tx status handling for A-MPDU
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 30, 2010 at 08:49:07AM +0200, Holger Schurig wrote:
-> > The libertas driver calls wiphy_unregister() without a prior
-> > wiphy_register() when a devices fails initialization. Fix this by
-> > introducing a private flag.
-> 
-> Nice.
-> 
-> However, I wonder: do we really need a private variable?  Does each driver 
-> introduce a private variable for this?
+Currently the rate control tx status update gets called for every
+subframe of an A-MPDU, and ath9k marks the frame with the relevant
+status update with an internal flag. This not suitable for rate control
+algorithms using the standard mac80211 rate control API, so fix this by
+using IEEE80211_TX_STAT_AMPDU for marking the correct frames that
+should be processed.
 
-I didn't check other drivers thoroughly. I just saw the comment on the
-function which does the wiphy allocation and considered libertas to be
-special in the way it deals with the wireless core:
-
-/*
- * At this time lbs_private *priv doesn't even exist, so we just allocate
- * memory and don't initialize the wiphy further. This is postponed until we
- * can talk to the firmware and happens at registration time in
- * lbs_cfg_wiphy_register().
- */
-
-And as I didn't find any function to tell me whether a wiphy has been
-registered and not just allocated, I saw no other way than manually
-track what the libertas driver does.
-
-If there's any better solution, I'd happily test it.
-
-Thanks,
-Daniel
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1947,10 +1947,10 @@ static void ath_tx_rc_status(struct ath_
+ 	tx_rateindex = ds->ds_txstat.ts_rateindex;
+ 	WARN_ON(tx_rateindex >= hw->max_rates);
+ 
+-	if (update_rc)
+-		tx_info->pad[0] |= ATH_TX_INFO_UPDATE_RC;
+ 	if (ds->ds_txstat.ts_status & ATH9K_TXERR_FILT)
+ 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
++	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && update_rc)
++		tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
+ 
+ 	if ((ds->ds_txstat.ts_status & ATH9K_TXERR_FILT) == 0 &&
+ 	    (bf->bf_flags & ATH9K_TXDESC_NOACK) == 0 && update_rc) {
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -172,7 +172,6 @@ struct ath_rate_priv {
+ 
+ #define ATH_TX_INFO_FRAME_TYPE_INTERNAL	(1 << 0)
+ #define ATH_TX_INFO_FRAME_TYPE_PAUSE	(1 << 1)
+-#define ATH_TX_INFO_UPDATE_RC		(1 << 2)
+ #define ATH_TX_INFO_XRETRY		(1 << 3)
+ #define ATH_TX_INFO_UNDERRUN		(1 << 4)
+ 
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1226,8 +1226,12 @@ static void ath_tx_status(void *priv, st
+ 		long_retry = rate->count - 1;
+ 	}
+ 
+-	if (!priv_sta || !ieee80211_is_data(fc) ||
+-	    !(tx_info->pad[0] & ATH_TX_INFO_UPDATE_RC))
++	if (!priv_sta || !ieee80211_is_data(fc))
++		return;
++
++	/* This packet was aggregated but doesn't carry status info */
++	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
++	    !(tx_info->flags & IEEE80211_TX_STAT_AMPDU))
+ 		return;
+ 
+ 	if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
