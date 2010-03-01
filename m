@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5691 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752017Ab0C2OGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 10:06:37 -0400
-Date: Mon, 29 Mar 2010 14:08:33 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>, wey-yi.w.guy@intel.com
-Subject: Re: [PATCH v2 3/3] mac80211: enable QoS explicitly in AP mode
-Message-ID: <20100329120832.GA2593@dhcp-lab-161.englab.brq.redhat.com>
-References: <1269857916-4440-1-git-send-email-sgruszka@redhat.com> <1269857916-4440-2-git-send-email-sgruszka@redhat.com> <1269857916-4440-3-git-send-email-sgruszka@redhat.com> <1269868568.4131.31.camel@jlt3.sipsolutions.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44992 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778Ab0CAUAm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 15:00:42 -0500
+Date: Mon, 1 Mar 2010 14:57:57 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: 802.11 development process - extended documentation
+Message-ID: <20100301195756.GF2961@tuxdriver.com>
+References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1269868568.4131.31.camel@jlt3.sipsolutions.net>
+In-Reply-To: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 03:16:08PM +0200, Johannes Berg wrote:
-> On Mon, 2010-03-29 at 12:18 +0200, Stanislaw Gruszka wrote:
-> > Enable QoS explicitly, when user space AP program will setup a QoS
-> > queues. Currently this is not needed as iwlwifi not work in AP mode
-> > and no other driver implement enable/disable QoS.
+On Wed, Feb 24, 2010 at 04:18:08PM -0800, Luis R. Rodriguez wrote:
+> I've extended our 802.11 development process into a new section on our
+> 802.11 wiki. I often get asked how this works from different parts of
+> the company here at Atheros so figured it'd be easier to illustrate
+> this as best as possible and share it.
 > 
-> Shouldn't this be part of patch 1?
+> http://wireless.kernel.org/en/developers/process
+> 
+> Hope it does justice, John if you see any mistakes feel free to edit.
+> If the diagram seems fishy let me know what I can fix.
 
-This part is not really needed to make anything works. Moreover
-can break things. Even it is untested. So I did it separately.
+Overall, looks good.  I would make these changes to the diagram:
 
-> Does IBSS/mesh support QoS?
+	-- remove wireless-testing -> wireless-next-2.6 arrow
 
-It is described in specification, at least for IBSS.
-Does we support it - no.
+	-- add me -> wireless-next-2.6 arrow
 
-Stanislaw
+	-- add wireless-2.6 -> wireless-testing arrow
+
+	-- add wireless-next-2.6 -> wireless-testing arrow
+
+This would reflect that patches go into wireless-2.6 and
+wireless-next-2.6, then are pulled to wireless-testing.  A few patches
+may go to wireless-testing directly, but they will eventually be
+reverted and possibly replaced with a patch in one of the other trees
+(and subsequently pulled back into wireless-testing).  Nothing pulls
+from wireless-testing (except developers).
+
+Thanks for the doc! :-)
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
