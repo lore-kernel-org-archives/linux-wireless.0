@@ -1,97 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:40260 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988Ab0CQDHV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 23:07:21 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Weird wireless/wpa_supplicant screw-up.
-In-Reply-To: Your message of "Fri, 12 Mar 2010 19:09:09 PST."
-             <1268449749.4880.2.camel@jlt3.sipsolutions.net>
-From: Valdis.Kletnieks@vt.edu
-References: <7197.1268086939@localhost> <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost>
-            <1268449749.4880.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1268795213_4069P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Tue, 16 Mar 2010 23:06:53 -0400
-Message-ID: <12262.1268795213@localhost>
+Received: from home.einfach.org ([80.86.92.145]:55525 "EHLO home.einfach.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751361Ab0CANP0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 08:15:26 -0500
+From: Bruno Randolf <bruno@einfach.org>
+To: linville@tuxdriver.com
+Subject: Re: [PATCH 1/5] ath5k: fix injection in monitor mode
+Date: Mon, 1 Mar 2010 21:54:55 +0900
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+References: <20100301115903.13996.95024.stgit@void>
+In-Reply-To: <20100301115903.13996.95024.stgit@void>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201003012154.55633.bruno@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1268795213_4069P
-Content-Type: text/plain; charset=us-ascii
+please ignore this one, sorry ;(
 
-On Fri, 12 Mar 2010 19:09:09 PST, Johannes Berg said:
-> No ... look at _all_ that it produces.
+bruno
+
+On Monday 01 March 2010 20:59:03 Bruno Randolf wrote:
+> injected frames have to use AR5K_PKT_TYPE_NORMAL, otherwise the hardware
+> thinks it can mess with the contents of the frame - e.g. update the TSF of
+> an injected beacon. injected frames should be sent as they are provided.
 > 
-> [   98.592575] In giwencode idx=0 keys=ffff88001b304000 cipher=0
-> [   98.592580] And we're going home...
-> *****
-> [   98.592633] In giwencode idx=1 keys=ffff88001b304000 cipher=fac04
-> *****
-> [   98.592749] In giwencode idx=2 keys=ffff88001b304000 cipher=0
-> [   98.592751] And we're going home...
-> [   98.592803] In giwencode idx=3 keys=ffff88001b304000 cipher=0
-> [   98.592805] And we're going home...
-> [   98.592856] In giwencode idx=0 keys=ffff88001b304000 cipher=0
-> [   98.592859] And we're going home...
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
 > 
-> See? It reports one key which is the RX-only group key which is
-> absolutely correct.
-
-It matches what 'iwlist keys' reports, but I remain unconvinced of
-its "correctness".  If a TX key has been set anyplace, what allows me
-to verify that it was in fact set?
-
-> > So the root cause has something to do with params[idx].cipher being unset.
+>  drivers/net/wireless/ath/ath5k/base.c |   11 ++++++++++-
+>  1 files changed, 10 insertions(+), 1 deletions(-)
 > 
-> Not at all.
-
-I was referring to the root cause of why 'iwlist keys' wasn't reporting
-anything for the other 3 key slots.
-
-> GIWENCODE is 100% unsuitable for WPA. Just forget about "iwlist key".
-
-Feel free to point me at the officially approved substitute.
-
-> And then we'd like to know what the actual problem is.
-
-The problem is that I do 'iwconfig', and I see:
-
-Encryption key:off
-
-And if I do 'iwlist keys', I don't see a TX key listed, which certainly gives
-the at least the impression that we're not encrypting outbound traffic.  If I'm
-not supposed to trust 'iwconfig' or 'iwlist key' to tell me whether WPA2
-traffic is in fact encrypted or not, what *am* I supposed to use instead?
-
-There's two possibilities:
-
-1) iwconfig and iwlist keys are correctly reporting I don't have a TX key
-set - which means wpa_supplicant and/or the kernel is failing to get the
-key set, which is a problem.
-
-2) iwconfig and iwlist are lying through their teeth, and reporting there
-isn't any key set when in fact there is.  This is still a problem because it
-implies to users their traffic isn't secured.
-
-I'll point out that until fairly recently 'iwconfig' *did* report a key for
-WPA2, so this looks like a regression on somebody's part.
-
-
---==_Exmh_1268795213_4069P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFLoEdNcC3lWbTT17ARAgE3AKDxlTrvsTPkYR/tsy9JLX8ehBPA3ACfU0aG
-i18TPXQEXyrzWhUEKdJR6DI=
-=rZEE
------END PGP SIGNATURE-----
-
---==_Exmh_1268795213_4069P--
-
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c
+> b/drivers/net/wireless/ath/ath5k/base.c index 2468c64..904d7f0 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -1285,6 +1285,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
+> ath5k_buf *bf, u16 cts_rate = 0;
+>  	u16 duration = 0;
+>  	u8 rc_flags;
+> +	enum ath5k_pkt_type pkt_type;
+> 
+>  	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
+> 
+> @@ -1322,9 +1323,17 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
+> ath5k_buf *bf, duration = le16_to_cpu(ieee80211_ctstoself_duration(sc->hw,
+>  			sc->vif, pktlen, info));
+>  	}
+> +
+> +	/* we don't want the hardware to mess with injected frames in monitor
+> +	 * mode (e.g. update TSF in beacons) */
+> +	if (sc->opmode == NL80211_IFTYPE_MONITOR)
+> +		pkt_type = AR5K_PKT_TYPE_NORMAL;
+> +	else
+> +		pkt_type = get_hw_packet_type(skb);
+> +
+>  	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
+>  		ieee80211_get_hdrlen_from_skb(skb),
+> -		get_hw_packet_type(skb),
+> +		pkt_type,
+>  		(sc->power_level * 2),
+>  		hw_rate,
+>  		info->control.rates[0].count, keyidx, ah->ah_tx_ant, flags,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
