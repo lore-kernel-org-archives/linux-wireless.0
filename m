@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:45973 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752335Ab0CWVL6 (ORCPT
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:50446 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751660Ab0CADw7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 17:11:58 -0400
-Received: by ewy8 with SMTP id 8so909326ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Mar 2010 14:11:55 -0700 (PDT)
-From: Steven Wheeler <stevenwheel@gmail.com>
-To: "'Christian Lamparter'" <chunkeey@googlemail.com>
-Cc: "'Pavel Roskin'" <proski@gnu.org>, <linux-wireless@vger.kernel.org>
-References: <002a01cac969$b726e8d0$2574ba70$@com> <201003221647.43357.chunkeey@googlemail.com> <000001cac9de$00a868c0$01f93a40$@com> <201003221807.45672.chunkeey@googlemail.com>
-In-Reply-To: <201003221807.45672.chunkeey@googlemail.com>
-Subject: RE: Problems with Netgear WG511v1 PCMCIA
-Date: Tue, 23 Mar 2010 16:11:47 -0500
-Message-ID: <000601cacacd$75b9ae90$612d0bb0$@com>
+	Sun, 28 Feb 2010 22:52:59 -0500
+Message-ID: <4B8B3A1A.80403@gmail.com>
+Date: Mon, 01 Mar 2010 04:52:58 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+To: Alaan <sainth@eidolons.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: add USB ID for CEIVA adapter to rt73usb
+References: <51a465a61002281248jc7701abq642b67f0b68ed80a@mail.gmail.com>
+In-Reply-To: <51a465a61002281248jc7701abq642b67f0b68ed80a@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update: I rebuilt my system with the latest Slackware (v13.0) which has
-kernel 2.6.29.6
-I installed the firmware (Thanks Christian), did a little configuration and
-wireless came up without an issue using prism54
-I intend to try out P54pci later when I build the latest kernel. 
+On 02/28/10 21:48, Alaan wrote:
+> First time submitting a patch, apologies if I did something wrong.
+> Tested this adapter for a couple days and it seems stable.
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c
+> b/drivers/net/wireless/rt2x00/rt73usb.c
+> index f39a8ed..47f3e4a 100644
+> --- a/drivers/net/wireless/rt2x00/rt73usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
+> @@ -2352,6 +2352,8 @@ static struct usb_device_id rt73usb_device_table[] = {
+>         { USB_DEVICE(0x0411, 0x00f4), USB_DEVICE_DATA(&rt73usb_ops) },
+>         { USB_DEVICE(0x0411, 0x0116), USB_DEVICE_DATA(&rt73usb_ops) },
+>         { USB_DEVICE(0x0411, 0x0119), USB_DEVICE_DATA(&rt73usb_ops) },
+> +       /* CEIVA */
+> +       { USB_DEVICE(0x178d, 0x02be), USB_DEVICE_DATA(&rt73usb_ops) },
+>         /* CNet */
+>         { USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt73usb_ops) },
+>         { USB_DEVICE(0x1371, 0x9032), USB_DEVICE_DATA(&rt73usb_ops) },
+> 
 
-Thank you very much
+Hi,
 
------Original Message-----
-From: Christian Lamparter [mailto:chunkeey@googlemail.com] 
-Sent: Monday, March 22, 2010 12:08 PM
-To: Steven Wheeler
-Cc: 'Pavel Roskin'; linux-wireless@vger.kernel.org
-Subject: Re: Problems with Netgear WG511v1 PCMCIA
+In order for your patch to be considered for inclusion you will have to include
+a Signed-off-by line with your own name and email address in the patch description.
 
-On Monday 22 March 2010 17:37:44 Steven Wheeler wrote:
-> OK, from the pictures it appears to be the WG511 V2 or V3, the front and
-> back labeling matches the label positions in the V3 pic
-> But, an lspci shows that it has the isl3890 chipset
-It almost certainly isn't a ISL3890. Because they only
-featured in (dual band) APs and early evaluation/development boards.
-(But as things usually go, some could have ended up in customer products...)
+See Documentation/SubmittingPatches of a kernel tree for more information on this.
 
->From my stash of p54pci hardware only one manufacture bothered to fix the
-Chip and PCI ID... (Zcom XG-603). Netgear on the other hand managed to ship
-WG511v2 batchs with broken rssi<->dbm conversion parameters.
-Therefore, don't be surprised if you see some odd signal readings.
-
-(Note: This bug does not affect range or performance.
-Rhe conversion is done in the driver and so far the dBm signal is
-only a indicator for the user about signal strength...)
- 
-> I just downloaded the latest kernel (2.6.33.1), will build this afternoon
-> I already have the P%$ firmware for kernels above 2.6.28, so I can test
-> Will update later
-
-here is the link: (also has fullmac firmwares)
-http://daemonizer.de/prism54/prism54-fw/
-
-Regards,
-	Chr
-
+---
+Gertjan.
