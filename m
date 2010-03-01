@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:62306 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753438Ab0C1PsW (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:52486 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751264Ab0CAHeT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 11:48:22 -0400
-Received: by bwz1 with SMTP id 1so2977222bwz.21
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Mar 2010 08:48:20 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
-	IvDoorn@gmail.com, Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH 3/3] wireless: rt2x00: rt2800pci: new id
-Date: Sun, 28 Mar 2010 17:48:05 +0200
-Message-Id: <1269791285-8678-1-git-send-email-xose.vazquez@gmail.com>
+	Mon, 1 Mar 2010 02:34:19 -0500
+Received: by mail-ew0-f220.google.com with SMTP id 20so1061584ewy.21
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2010 23:34:18 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: prahal@yahoo.com
+Subject: Re: [PATCH] rt2x00: txdone implementation supporting hw encryption.
+Date: Mon, 1 Mar 2010 08:34:16 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <4B88490F.7030605@yahoo.com>
+In-Reply-To: <4B88490F.7030605@yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201003010834.17027.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taken from latest ralink linux driver, it's a RT3593 PCI/PCIe.
+On Friday 26 February 2010, Alban Browaeys wrote:
+> This is an implementation that support WCID being the encryption key.
+> Wireless Cli Id was set to be the encryption key in rt2800pci_write_tx_desc
+> and read (TX_STA_FIFO_WCID) as the current queue entry index.
+> 
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
 
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index b1f5643..ce7e88e 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1212,6 +1212,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
- 	{ PCI_DEVICE(0x1814, 0x3062), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x3562), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x3592), PCI_DEVICE_DATA(&rt2800pci_ops) },
-+	{ PCI_DEVICE(0x1814, 0x3593), PCI_DEVICE_DATA(&rt2800pci_ops) },
- #endif
- 	{ 0, }
- };
--- 
-1.6.6.1
 
