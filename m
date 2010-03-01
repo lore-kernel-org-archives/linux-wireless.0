@@ -1,98 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:41601 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755438Ab0C2AJ3 (ORCPT
+Received: from home.einfach.org ([80.86.92.145]:47578 "EHLO home.einfach.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750696Ab0CAIsq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 20:09:29 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: stable@kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Halton <johnhalton@gmail.com>, 575726@bugs.debian.org
-In-Reply-To: <alpine.DEB.2.00.1003282040480.4731@ernie.pinecrest>
-References: <alpine.DEB.2.00.1003282040480.4731@ernie.pinecrest>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SN3QLJ45FfnfRugWJ4+m"
-Date: Mon, 29 Mar 2010 01:09:17 +0100
-Message-ID: <1269821357.8653.231.camel@localhost>
-Mime-Version: 1.0
-Subject: [PATCH] rt2860sta: Fix argument to linux_pci_unmap_single()
+	Mon, 1 Mar 2010 03:48:46 -0500
+From: Bruno Randolf <br1@einfach.org>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Subject: Re: [PATCH] mac80211: fix rates setup on IBSS merge
+Date: Mon, 1 Mar 2010 17:24:35 +0900
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+References: <20100223095113.25360.75291.stgit@void> <43e72e891002231128w45c357a6v157dc4f7ddf3bbae@mail.gmail.com> <4B85BCB8.1000006@free.fr>
+In-Reply-To: <4B85BCB8.1000006@free.fr>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201003011724.36089.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 25 February 2010 08:56:40 Benoit PAPILLAULT wrote:
+> Luis R. Rodriguez a écrit :
+> > On Tue, Feb 23, 2010 at 1:51 AM, Bruno Randolf <br1@einfach.org> wrote:
+> >> when an IBSS merge happened, the supported rates for the newly added
+> >> station were left empty, causing the rate control module to be
+> >> initialized with only the basic rates.
+> >> 
+> >> also the section of the ibss code which deals with updating supported
+> >> rates for an already existing station fails to inform the rate control
+> >> module about the new rates. as i don't know how to fix this (minstrel
+> >> does not have an update function), i have just added a comment for now.
+> >> 
+> >> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > 
+> > This seems like a stable fix, if it applies can you please resend with a
+> > 
+> > Cc: stable@kernel.org
+> > 
+> > on the commit log entry right below your own SOB.
+> > 
+> >   Luis
+> 
+> Hi Bruno,
+> 
+> I think the root cause is that IBSS neighbor entries are added whenever
+> we received any packet from a neighbor. However, the supported rates are
+> only available in the beacon/probe responses. I think one fix is to only
+> add IBSS neighbors on beacon/probe response reception (and moreover,
+> beacon/probe responses contains the timestamp that is needed for IBSS
+> merge).
+> 
+> Basically, I removed the call to ieee80211_ibss_add_sta in
+> net/mac80211/rx.c.
 
---=-SN3QLJ45FfnfRugWJ4+m
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+i think we need to keep that.
 
-John Halton wrote in <http://bugs.debian.org/575726>:
-> Whenever wpa_supplicant is deactivated (whether by killing the process or=
-=20
-> during a normal shutdown) I am getting a kerneloops that prevents the=20
-> computer from completing shutdown. Here is the relevant syslog output:
+it can happen in normal IBSS operation, that we get a data packet from a node 
+which we did not yet receive a beacon from. for example: he might be part of 
+the IBSS, correctly merged and all, but have deferred from sending a beacon 
+the last couple of beacon intervals because some other node sent a beacon 
+first. or we might have missed his beacons due to interference. nevertheless 
+we should try to be able to communicate with him.
 
-The backtrace points to an incorrect call from RTMPFreeTxRxRingMemory()
-into linux_pci_unmap_single().  This appears to have been fixed in Linux
-2.6.33 by this change:
+also there are many broken implementation out there (prominent example: 
+madwifi) which fail to send beacons at some times. in order to communicate 
+with then we also need to add stations on receiving data packets.
 
-commit ca97b8388838ee9ea4b4bad04948f8f7f8a607a3
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Tue Sep 22 20:44:07 2009 +0200
+so i think the proper way is to add an update function to the rate control 
+module. (i will try to do that and send in another patch.)
 
-    Staging: rt28x0: updates from vendor's V2.1.0.0 drivers
-
-For stable-2.6.32, just fix this one function call.
-
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/staging/rt2860/common/2860_rtmp_init.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/staging/rt2860/common/2860_rtmp_init.c b/drivers/stagi=
-ng/rt2860/common/2860_rtmp_init.c
-index 0bc0fb9..98b0f8e 100644
---- a/drivers/staging/rt2860/common/2860_rtmp_init.c
-+++ b/drivers/staging/rt2860/common/2860_rtmp_init.c
-@@ -716,7 +716,7 @@ VOID RTMPFreeTxRxRingMemory(
- 	{
- 		if ((pAd->RxRing.Cell[index].DmaBuf.AllocVa) && (pAd->RxRing.Cell[index]=
-.pNdisPacket))
- 		{
--			PCI_UNMAP_SINGLE(pObj->pci_dev, pAd->RxRing.Cell[index].DmaBuf.AllocPa,=
- pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
-+			PCI_UNMAP_SINGLE(pAd, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRi=
-ng.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
- 			RELEASE_NDIS_PACKET(pAd, pAd->RxRing.Cell[index].pNdisPacket, NDIS_STAT=
-US_SUCCESS);
- 		}
- 	}
---=20
-1.7.0.3
-
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-SN3QLJ45FfnfRugWJ4+m
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUAS6/vpue/yOyVhhEJAQIkPQ//Ttmy1wwBOMHWY8kZ/YuIyX81JDknxhMJ
-tEaCMREJYdTcPcTOoUadIPadRnP5PMPMa/yh9hp9c+WX1d1LRU6324g73v29hnqx
-Jp2qhwTttFsOLCmsLv1UdGoiSeealtBbW+ERGTZr7tRM7TEAeOI6WCBjfaAnf1Fy
-8JREss88lZWXD/rK8jz537uglxbW7iQvVPCpbFPQA5VneCddzGM6q687rMLeIoST
-SymvO5XwzetMaRQ129Jq4bLUXDRwoTbQhj+/Jq8GnrPL12DzzuKC8u4JHtXSIt2e
-ILua5IpBl7B3UrG7sIi0104X8RYpZOE34rmwV3K+fb+8z0Mb9XoyfFG+2mB50WD4
-2QXJ3npdti7RbFTnK7yERkd7corCRDzO8vNWQLkgyZ7BNS03L4Au8Spf9bBe6kWS
-nHM+530J94ORqkwEoFA3RSy2GnfFIWKrQ8/B++V7yavsFxlSWeWuwDYC0BtkxiwC
-iapGC7wjW44vJXN/BfZ6XGBcR/YfK80kl54maJgVgnIwSCWdNgJE2BZNmDKaqX1Q
-wZw1f7ERHWbdcWwEDXkhKUcW8HZWZkamch15s+vY/7pfk8lyT5t4nzB3HJwcgrjf
-R1sk3UVbB5KlWhZ3aUkdqWD9528JIK3z1I4RLaX9xYv7+E2eKhqjgInzqEHqoCUO
-TiXuhxHqpVI=
-=NxJn
------END PGP SIGNATURE-----
-
---=-SN3QLJ45FfnfRugWJ4+m--
+bruno
