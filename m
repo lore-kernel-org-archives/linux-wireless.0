@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:30750 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753676Ab0CZKye (ORCPT
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:51738 "EHLO
+	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753770Ab0CACHb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:54:34 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 06/24] wl1271: Configure clock-request drive mode to open-drain
-Date: Fri, 26 Mar 2010 12:53:15 +0200
-Message-Id: <1269600813-32145-7-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	Sun, 28 Feb 2010 21:07:31 -0500
+Date: Mon, 1 Mar 2010 15:02:16 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Benoit Papillault <benoit.papillault@free.fr>
+cc: jirislaby@gmail.com, mickflemm@gmail.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Fix 64 bits TSF reading.
+In-Reply-To: <1267394932-11038-1-git-send-email-benoit.papillault@free.fr>
+Message-ID: <alpine.DEB.2.00.1003011457470.20218@kauri.acheron.indranet.co.nz>
+References: <4B8AE8F1.40006@free.fr> <1267394932-11038-1-git-send-email-benoit.papillault@free.fr>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-This patch configures the wl1271 chipset clock-request line to be
-driver in open-drain mode instead of push-pull.
+Hi,
+  No, canot support this.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_boot.c |    8 ++++++--
- drivers/net/wireless/wl12xx/wl1271_boot.h |    7 +++++--
- 2 files changed, 11 insertions(+), 4 deletions(-)
+What happens if there is an interrupt immediately after the first 
+two reads - before the test on tsf_lower? - and thisinterrupt lasts longer 
+than 100us ? Most often, this is ok - until the interrupt happens at the 
+wrong time.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 41c6aff..4195298 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -451,11 +451,15 @@ int wl1271_boot(struct wl1271 *wl)
- 
- 	if (REF_CLOCK != 0) {
- 		u16 val;
--		/* Set clock type */
-+		/* Set clock type (open drain) */
- 		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
- 		val &= FREF_CLK_TYPE_BITS;
--		val |= CLK_REQ_PRCM;
- 		wl1271_top_reg_write(wl, OCP_REG_CLK_TYPE, val);
-+
-+		/* Set clock pull mode (no pull) */
-+		val = wl1271_top_reg_read(wl, OCP_REG_CLK_PULL);
-+		val |= NO_PULL;
-+		wl1271_top_reg_write(wl, OCP_REG_CLK_PULL, val);
- 	} else {
- 		u16 val;
- 		/* Set clock polarity */
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.h b/drivers/net/wireless/wl12xx/wl1271_boot.h
-index 412443e..95ecc52 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.h
-@@ -53,10 +53,13 @@ struct wl1271_static_data {
- #define OCP_REG_POLARITY     0x0064
- #define OCP_REG_CLK_TYPE     0x0448
- #define OCP_REG_CLK_POLARITY 0x0cb2
-+#define OCP_REG_CLK_PULL     0x0cb4
- 
--#define CMD_MBOX_ADDRESS 0x407B4
- 
--#define POLARITY_LOW BIT(1)
-+#define CMD_MBOX_ADDRESS     0x407B4
-+
-+#define POLARITY_LOW         BIT(1)
-+#define NO_PULL              (BIT(14) | BIT(15))
- 
- #define FREF_CLK_TYPE_BITS     0xfffffe7f
- #define CLK_REQ_PRCM           0x100
+OR, there is a TSF merge event after the tsf_upper has been read, but 
+before the tsf_lower has been read? The tsf merge (which is done by the 
+hardware), adjusted both the high and low registers.
+
+Derek.
+On Sun, 28 Feb 2010, Benoit Papillault wrote:
+
+> +
+> +	tsf_upper = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
+> +	tsf_lower = ath5k_hw_reg_read(ah, AR5K_TSF_L32);
+> +
+> +	if (tsf_lower < 100)
+> +		tsf_upper = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
+> +
+> 	ATH5K_TRACE(ah->ah_sc);
+>
+> -	return ath5k_hw_reg_read(ah, AR5K_TSF_L32) | (tsf << 32);
+> +	return (((u64)tsf_upper << 32) | tsf_lower);
+> }
+>
+> /**
+>
+
 -- 
-1.6.3.3
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
 
+"The only thing IE should be used for is to download Fire Fox"
+
+"My favorite language is call STAR. It's extremely concise. It has
+  exactly one verb '*', which does exactly what I want at the moment."
+     --Larry Wall
