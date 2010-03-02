@@ -1,60 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39658 "EHLO mga02.intel.com"
+Received: from home.einfach.org ([80.86.92.145]:53679 "EHLO home.einfach.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750783Ab0CXVma (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 17:42:30 -0400
-Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
-In-Reply-To: <1269466426.6935.8.camel@jlt3.sipsolutions.net>
-References: <4BAA73D2.1000301@oracle.com>
-	 <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
-	 <1269466426.6935.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Mar 2010 14:42:28 -0700
-Message-ID: <1269466948.2446.3216.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1751337Ab0CBBSI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Mar 2010 20:18:08 -0500
+From: Bruno Randolf <bruno@einfach.org>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Subject: Re: [ath5k-devel] [PATCH 1/5] ath5k: fix injection in monitor mode
+Date: Tue, 2 Mar 2010 10:17:33 +0900
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+References: <20100301115903.13996.95024.stgit@void> <201003012154.55633.bruno@einfach.org> <4B8C3118.30705@free.fr>
+In-Reply-To: <4B8C3118.30705@free.fr>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003021017.34636.bruno@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-24 at 14:33 -0700, Johannes Berg wrote:
-> On Wed, 2010-03-24 at 17:23 -0400, John W. Linville wrote:
-> > drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
+On Tuesday 02 March 2010 06:26:48 Benoit PAPILLAULT wrote:
+> Bruno Randolf a écrit :
+> > please ignore this one, sorry ;(
 > > 
-> > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
-> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> > bruno
+> 
+> This one is cool & needed for testing IBSS merges. I have pretty much
+> the same in my tree.
+
+yes - only sc->opmode is never set. i'll come up with a patch to fix that. 
+
+bruno
+
+
+> Regards,
+> Benoit
+> 
+> > On Monday 01 March 2010 20:59:03 Bruno Randolf wrote:
+> >> injected frames have to use AR5K_PKT_TYPE_NORMAL, otherwise the hardware
+> >> thinks it can mess with the contents of the frame - e.g. update the TSF
+> >> of an injected beacon. injected frames should be sent as they are
+> >> provided.
+> >> 
+> >> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> >> ---
+> >> 
+> >>  drivers/net/wireless/ath/ath5k/base.c |   11 ++++++++++-
+> >>  1 files changed, 10 insertions(+), 1 deletions(-)
+> >> 
+> >> diff --git a/drivers/net/wireless/ath/ath5k/base.c
+> >> b/drivers/net/wireless/ath/ath5k/base.c index 2468c64..904d7f0 100644
+> >> --- a/drivers/net/wireless/ath/ath5k/base.c
+> >> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> >> @@ -1285,6 +1285,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
+> >> ath5k_buf *bf, u16 cts_rate = 0;
+> >> 
+> >>  	u16 duration = 0;
+> >>  	u8 rc_flags;
+> >> 
+> >> +	enum ath5k_pkt_type pkt_type;
+> >> 
+> >>  	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
+> >> 
+> >> @@ -1322,9 +1323,17 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
+> >> ath5k_buf *bf, duration =
+> >> le16_to_cpu(ieee80211_ctstoself_duration(sc->hw,
+> >> 
+> >>  			sc->vif, pktlen, info));
+> >>  	
+> >>  	}
+> >> 
+> >> +
+> >> +	/* we don't want the hardware to mess with injected frames in monitor
+> >> +	 * mode (e.g. update TSF in beacons) */
+> >> +	if (sc->opmode == NL80211_IFTYPE_MONITOR)
+> >> +		pkt_type = AR5K_PKT_TYPE_NORMAL;
+> >> +	else
+> >> +		pkt_type = get_hw_packet_type(skb);
+> >> +
+> >> 
+> >>  	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
+> >>  	
+> >>  		ieee80211_get_hdrlen_from_skb(skb),
+> >> 
+> >> -		get_hw_packet_type(skb),
+> >> +		pkt_type,
+> >> 
+> >>  		(sc->power_level * 2),
+> >>  		hw_rate,
+> >>  		info->control.rates[0].count, keyidx, ah->ah_tx_ant, flags,
+> >> 
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe
+> >> linux-wireless" in the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > > 
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-> > index b6a64d8..2fa30df 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-> > @@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
-> >  #define BA_TIMEOUT_CNT (5)
-> >  #define BA_TIMEOUT_MAX (16)
-> >  
-> > +#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
-> >  /**
-> >   * iwl_good_ack_health - checks for ACK count ratios, BA timeout
-> > retries.
-> 
-> I thought we had a patch moving it?
-> 
-
-We do, but it has not been pushed upstream yet. 
-
-John, I'd prefer
-http://viggo.jf.intel.com/~wifi/repos.git/?p=iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1 
-
-Should we push it upstream asap or can it wait until our next series
-goes out after all our validation cycles pass?
-
-Reinette
-
-
+> > _______________________________________________
+> > ath5k-devel mailing list
+> > ath5k-devel@lists.ath5k.org
+> > https://lists.ath5k.org/mailman/listinfo/ath5k-devel
