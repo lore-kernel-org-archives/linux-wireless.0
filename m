@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44992 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778Ab0CAUAm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 15:00:42 -0500
-Date: Mon, 1 Mar 2010 14:57:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: 802.11 development process - extended documentation
-Message-ID: <20100301195756.GF2961@tuxdriver.com>
-References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:35260 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753366Ab0CBWaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 17:30:06 -0500
+From: Michael Buesch <mb@bu3sch.de>
+To: William Bourque <william.bourque@polymtl.ca>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+Date: Tue, 2 Mar 2010 23:29:58 +0100
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <201003022257.51878.mb@bu3sch.de> <4B8D906C.9020102@polymtl.ca>
+In-Reply-To: <4B8D906C.9020102@polymtl.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201003022329.58627.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 24, 2010 at 04:18:08PM -0800, Luis R. Rodriguez wrote:
-> I've extended our 802.11 development process into a new section on our
-> 802.11 wiki. I often get asked how this works from different parts of
-> the company here at Atheros so figured it'd be easier to illustrate
-> this as best as possible and share it.
+On Tuesday 02 March 2010 23:25:48 William Bourque wrote:
+> So if I get this right, this code is responsible of handling the b43
+> devices, as well as several other PCI-E devices, correct?
+
+Nah, this is a broadcom specific thing of the on-chip SSB bus.
+
 > 
-> http://wireless.kernel.org/en/developers/process
-> 
-> Hope it does justice, John if you see any mistakes feel free to edit.
-> If the diagram seems fishy let me know what I can fix.
+> Because now that you mention this, the wired network card (Marvel Yukon,
+> with sky2 drivers) on this netbook also have a tons of issue (doesn't
+> show in lspci on a clean boot, oops the kernel if network cable is
+> unplugged while in use, fails to load if the module is ever unloaded, ... )
+> I thought it was unrelated but from your comment, I feel like this could
+> be linked to the same PCI-E bugs as well.
 
-Overall, looks good.  I would make these changes to the diagram:
+Uh, well. Are you sure your hardware is OK then?
 
-	-- remove wireless-testing -> wireless-next-2.6 arrow
-
-	-- add me -> wireless-next-2.6 arrow
-
-	-- add wireless-2.6 -> wireless-testing arrow
-
-	-- add wireless-next-2.6 -> wireless-testing arrow
-
-This would reflect that patches go into wireless-2.6 and
-wireless-next-2.6, then are pulled to wireless-testing.  A few patches
-may go to wireless-testing directly, but they will eventually be
-reverted and possibly replaced with a patch in one of the other trees
-(and subsequently pulled back into wireless-testing).  Nothing pulls
-from wireless-testing (except developers).
-
-Thanks for the doc! :-)
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Greetings, Michael.
