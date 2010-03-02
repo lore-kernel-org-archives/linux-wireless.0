@@ -1,88 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46474 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754207Ab0CEEKk (ORCPT
+Received: from mail-iw0-f196.google.com ([209.85.223.196]:59228 "EHLO
+	mail-iw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840Ab0CBMTf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 23:10:40 -0500
-Date: Thu, 4 Mar 2010 23:08:53 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kel Modderman <kel@otaku42.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] crda: do not embed crypto data when USE_OPENSSL=1
-Message-ID: <20100305040853.GA4640@tuxdriver.com>
-References: <201003050008.51066.kel@otaku42.de>
- <201003051027.03091.kel@otaku42.de>
- <20100305013721.GA3255@tuxdriver.com>
- <201003051156.11922.kel@otaku42.de>
+	Tue, 2 Mar 2010 07:19:35 -0500
+Received: by iwn34 with SMTP id 34so117442iwn.15
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 04:19:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201003051156.11922.kel@otaku42.de>
+In-Reply-To: <4B8C3A21.2050105@openwrt.org>
+References: <4B8C3A21.2050105@openwrt.org>
+Date: Tue, 2 Mar 2010 13:19:34 +0100
+Message-ID: <133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 05, 2010 at 11:56:11AM +1000, Kel Modderman wrote:
-> On Friday 05 March 2010 11:37:22 John W. Linville wrote:
-> > On Fri, Mar 05, 2010 at 10:27:03AM +1000, Kel Modderman wrote:
-> > > On Friday 05 March 2010 01:31:28 John W. Linville wrote:
-> > > > On Fri, Mar 05, 2010 at 12:08:50AM +1000, Kel Modderman wrote:
+Hi Felix,
 
-> > > > > This allows wireless-regdb to be built from source and upgraded independently
-> > > > > of crda and is _crucial_ for distributions who want to build their own
-> > > > > regulatory.bin.
-> > > > 
-> > > > I don't understand -- isn't this possible already?
-> > > 
-> > > No.
-> > 
-> > Perhaps you could use a few more words?  It seems to me that what
-> > limits you is the policies of some distributions.  Certainly crda
-> > and wireless-regdb can be maintained separately so long as the key
-> > doesn't change between builds or with alternate keys installed in
-> > the proper locations.  Am I missing something?
-> 
-> Yes you are missing something. Its not the policy of my distribution which
-> is limiting its the design of the crda/wireless-regdb build systems.
-> 
-> Now that openssl support allows reading pubkeys at runtime, the  embedding
-> of crypto data into binaries can be totally removed when built with openssl.
+First of all thanx for this new rate control algorithm!
 
-I don't think anyone said that this change could not be made.
-I merely challenged the flawed reasoning you asserted for its need.
+One question about AMPDUs (which is not really specific to your code
+but anyway): How do you handle "software retries"?
 
-> wireless-regdb can be built from source, when it does so it generates a new
-> custom key which is installed to /lib/crda/pubkeys/<key>. Your key is also
-> installed here, oh but hang on, its also embedded into the binary so why bother
-> installing it at all? Alright, so we can manually move our custom generated
-> key from /lib/crda/pubkeys/<key> to /etc/wireless-regdb/pubkeys/<key> and things
-> will probably be okay next time we build wireless-regdb and upgrade it
-> independently of crda, except for:
+At least ath9k seems to retry frames in serveral AMPDUs up to
+ATH_MAX_SW_RETRIES times within the driver (without notifying
+mac80211). First of all, is this your understanding as well?
 
-Why would you need to move it?  Did someone break the code that uses
-regdb_paths in crda.c?  Does PUBKEY_DIR not work?
+If my understanding is correct then there are two problems as I see it:
 
-> 1. we now have /lib/crda/pubkeys/linville.pub.pem for no reason at all
+1) The rate control algorithm will get incorrect information about the
+transmission attempts. This could be corrected to some extent by
+correctly setting the count and idx tx_status fields taking software
+retries into account, but that interface is actually too thin to carry
+all the information since the frame may have been retried at many
+bitrates (more than 4). Also, the duration the radio has been busy
+transmitting the frame is impossible to derive because you do not know
+how many separate AMPDUs it has been transmitted in which makes a
+difference in contention window and inter frame space, etc.
 
-If you don't want my key (or any other) in your binary then simply
-delete it from crda/pubkeys in your build scripts...?
+2) The rate selection is suboptimal if software retries are not taken
+into account. The reason you want to use a high probability bitrate on
+the last few transmission attempts is that you want to avoid packet
+loss at (almost) any price. But if you can retry the frame in software
+it may be better to transmit only at spectrum efficient bitrates and
+use the receivers reorder buffer to avoid packet loss. This is IMHO
+one of the main advantages of the 802.11n MAC and something we should
+really try to take advantage of.
 
-> 2. the distribution is installing to /etc/wireless-regdb/pubkeys/ which should
->    be reserved for the admin
+Best regards,
 
-"make PUBKEY_DIR=/lib/crda/pubkeys"?
+Björn
 
-> 3. you're maintaining a bunch of useless code which embeds openssl data into
->    binaries when you do not have to
-
-See rebuttal to #1...just because you don't use some functionality
-doesn't mean no one else wants it or uses it.
-
-> These 3 points is what my patch attempts to address.
-
-It seems to me that you address the points by simply removing
-functionality rather than using other means that already exist to
-address the same concerns.
-
-John
--- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+On Mon, Mar 1, 2010 at 11:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>
+> Hi all,
+>
+> this my initial implementation of minstrel for 802.11n. It works well
+> for me with ath9k, haven't tested any other drivers yet. It handles
+> guard interval setting, HT20/HT40 and multiple streams properly,
+> STBC isn't implemented yet (I'll implement driver support in ath9k
+> first). Legacy stations are handled by falling back to the old minstrel
+> implementation.
+>
+> It requires the following other patches that I submitted:
+> - ath9k: fix rate control tx status handling for A-MPDU
+> - minstrel: simplify and fix debugfs code
+> - minstrel: make the rate control ops reusable from another rc implementation
+>
+> There are still some things that need cleaning, for instance the
+> internal flags that I use on tx_info->flags, or the sharing of
+> the private struct with the old minstrel code.
+[snip]
