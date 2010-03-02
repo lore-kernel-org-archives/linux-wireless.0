@@ -1,43 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:23201 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753478Ab0CBHyX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 02:54:23 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 23:54:23 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from sypressi.dnainternet.net ([83.102.40.135]:50699 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751921Ab0CBWrE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 17:47:04 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 3/4] rndis_wlan: get max_num_pmkids from device
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 03 Mar 2010 00:38:36 +0200
+Message-ID: <20100302223836.2794.49756.stgit@fate.lan>
+In-Reply-To: <20100302223825.2794.13615.stgit@fate.lan>
+References: <20100302223825.2794.13615.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19340.51368.13804.986275@gargle.gargle.HOWL>
-Date: Tue, 2 Mar 2010 13:43:28 +0530
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [PATCH 1/3] ath9k_htc: Add ath9k_htc driver
-In-Reply-To: <43e72e891003012343l655bacc1i57ebe9ca55262878@mail.gmail.com>
-References: <19336.46643.733555.555640@gargle.gargle.HOWL>
-	<20100302002759.GH8069@bombadil.infradead.org>
-	<19340.37002.731064.872605@gargle.gargle.HOWL>
-	<43e72e891003012343l655bacc1i57ebe9ca55262878@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> My modular approach most things were I had hope the AR6003 driver
-> could also make use of the HTC/HIF framework, they would just register
-> a ath9k_hif_sdio module, register itself to HTC, and use a separate
-> hardware family mac80211 core driver for ar6k devices. After review of
-> the current AR6003 driver architecture later on though I found out
-> this was not possible, but for future mobile device I do have hope its
-> possible, just as well as sharing a common ath9k_hw.
+Extend rndis_wlan_get_caps() to get 802.11 capabilities and maximum
+supported number of PMKIDs by device.
 
-Ah ok.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-But yeah, we can make it modular as we add new families/transports.
+ drivers/net/wireless/rndis_wlan.c |   35 +++++++++++++++++++++++++++++++++--
+ 1 files changed, 33 insertions(+), 2 deletions(-)
 
-Sujith
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 51e6880..4054b70 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -117,6 +117,7 @@ MODULE_PARM_DESC(workaround_interval,
+ #define OID_802_11_ADD_KEY			cpu_to_le32(0x0d01011d)
+ #define OID_802_11_REMOVE_KEY			cpu_to_le32(0x0d01011e)
+ #define OID_802_11_ASSOCIATION_INFORMATION	cpu_to_le32(0x0d01011f)
++#define OID_802_11_CAPABILITY			cpu_to_le32(0x0d010122)
+ #define OID_802_11_PMKID			cpu_to_le32(0x0d010123)
+ #define OID_802_11_NETWORK_TYPES_SUPPORTED	cpu_to_le32(0x0d010203)
+ #define OID_802_11_NETWORK_TYPE_IN_USE		cpu_to_le32(0x0d010204)
+@@ -358,6 +359,19 @@ struct ndis_80211_assoc_info {
+ 	__le32 offset_resp_ies;
+ } __attribute__((packed));
+ 
++struct ndis_80211_auth_encr_pair {
++	__le32 auth_mode;
++	__le32 encr_mode;
++} __attribute__((packed));
++
++struct ndis_80211_capability {
++	__le32 length;
++	__le32 version;
++	__le32 num_pmkids;
++	__le32 num_auth_encr_pair;
++	struct ndis_80211_auth_encr_pair auth_encr_pair[0];
++} __attribute__((packed));
++
+ /*
+  *  private data
+  */
+@@ -2498,12 +2512,14 @@ static void rndis_wlan_indication(struct usbnet *usbdev, void *ind, int buflen)
+ 	}
+ }
+ 
+-static int rndis_wlan_get_caps(struct usbnet *usbdev)
++static int rndis_wlan_get_caps(struct usbnet *usbdev, struct wiphy *wiphy)
+ {
+ 	struct {
+ 		__le32	num_items;
+ 		__le32	items[8];
+ 	} networks_supported;
++	struct ndis_80211_capability *caps;
++	u8 caps_buf[sizeof(*caps) + sizeof(caps->auth_encr_pair) * 16];
+ 	int len, retval, i, n;
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 
+@@ -2531,6 +2547,21 @@ static int rndis_wlan_get_caps(struct usbnet *usbdev)
+ 		}
+ 	}
+ 
++	/* get device 802.11 capabilities, number of PMKIDs */
++	caps = (struct ndis_80211_capability *)caps_buf;
++	len = sizeof(caps_buf);
++	retval = rndis_query_oid(usbdev, OID_802_11_CAPABILITY, caps, &len);
++	if (retval >= 0) {
++		devdbg(usbdev, "OID_802_11_CAPABILITY -> len %d, ver %d, "
++				"pmkids %d, auth-encr-pairs %d",
++				le32_to_cpu(caps->length),
++				le32_to_cpu(caps->version),
++				le32_to_cpu(caps->num_pmkids),
++				le32_to_cpu(caps->num_auth_encr_pair));
++		wiphy->max_num_pmkids = le32_to_cpu(caps->num_pmkids);
++	} else
++		wiphy->max_num_pmkids = 0;
++
+ 	return retval;
+ }
+ 
+@@ -2778,7 +2809,7 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	wiphy->max_scan_ssids = 1;
+ 
+ 	/* TODO: fill-out band/encr information based on priv->caps */
+-	rndis_wlan_get_caps(usbdev);
++	rndis_wlan_get_caps(usbdev, wiphy);
+ 
+ 	memcpy(priv->channels, rndis_channels, sizeof(rndis_channels));
+ 	memcpy(priv->rates, rndis_rates, sizeof(rndis_rates));
+
