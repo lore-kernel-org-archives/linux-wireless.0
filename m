@@ -1,106 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13561 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965013Ab0COXtL convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38153 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753927Ab0CBUAk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Mar 2010 19:49:11 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 16:49:11 -0700
-Date: Mon, 15 Mar 2010 16:49:09 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
-Message-ID: <20100315234909.GA2662@tux>
-References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
- <20100315214338.GB4000@tux>
- <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com>
+	Tue, 2 Mar 2010 15:00:40 -0500
+Date: Tue, 2 Mar 2010 14:45:33 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: fix rt2800pci compilation with SoC
+Message-ID: <20100302194533.GC16620@tuxdriver.com>
+References: <201003021634.50077.helmut.schaa@googlemail.com> <4B8D62CC.9040005@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B8D62CC.9040005@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 15, 2010 at 04:25:14PM -0700, Luis R. Rodriguez wrote:
-> On Mon, Mar 15, 2010 at 2:43 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Fri, Mar 12, 2010 at 09:46:44PM -0800, Luis R. Rodriguez wrote:
-> >>   * I spotted a check added to bail out for tweaking the ACK/CTS
-> >>     time out values -- this check should no longer be required
-> >>     since Felix sent a proper fix for this recenlty. I removed that
-> >>     hunk:
-> >>
-> >> @@ -1210,6 +1195,9 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
-> >>               REG_WRITE(ah, AR_PCU_MISC,
-> >>                         REG_READ(ah, AR_PCU_MISC) | ah->misc_mode);
-> >>
-> >> +     if (AR_SREV_9271(ah))
-> >> +             return;
-> >> +
-> >>       if (conf->channel && conf->channel->band == IEEE80211_BAND_5GHZ)
-> >>               sifstime = 16;
-> >>       else
-> >> --
-> >
-> > Turns out this hunk is required... but the rf changes are not (patch 4/12)
-> > so I'll just respin and send a new series out.
-> >
-> > We should look for a better way to address this issue instead of the above hunk
-> > otherwise we will be skipping all changes to the slot time from mac80211.
-> > Right now ath9k_htc does not support this (BSS_CHANGED_ERP_SLOT) or a
-> > set_coverage_class() callback.
+On Tue, Mar 02, 2010 at 08:11:08PM +0100, Gertjan van Wingerde wrote:
+> On 03/02/10 16:34, Helmut Schaa wrote:
+> > Compiling rt2800pci with CONFIG_RT2800PCI_SOC fails with "... rt2880pci.c:
+> > error: incompatible type for argument 2 of 'rt2x00soc_probe'".
+> > 
+> > Fix this by using &rt2800pci_ops instead of rt2800pci_ops.
+> > 
+> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> > ---
 > 
-> We'll need to support at least BSS_CHANGED_ERP_SLOT in case the AP
-> switches to compatibility mode.
+> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> 
+> John, this is probably one that should go to wireless-2.6.
 
-How about something like this:
+I agree, which is why I fixed the whitespace damage and applied it...grrr...
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 3b4c636..387eef9 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1438,6 +1438,14 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 		ath9k_htc_beacon_config(priv, vif, bss_conf);
- 	}
- 
-+	if (changed & BSS_CHANGED_ERP_SLOT) {
-+		if (bss_conf->use_short_slot)
-+			ah->slottime = 9;
-+		else
-+			ah->slottime = 20;
-+		ath9k_hw_init_global_settings(ah);
-+	}
-+
- 	if (changed & BSS_CHANGED_BEACON)
- 		ath9k_htc_beacon_update(priv, vif);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 00570fb..867cfaf 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -784,9 +784,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		REG_WRITE(ah, AR_PCU_MISC,
- 			  REG_READ(ah, AR_PCU_MISC) | ah->misc_mode);
- 
--	if (AR_SREV_9271(ah))
--		return;
--
- 	if (conf->channel && conf->channel->band == IEEE80211_BAND_5GHZ)
- 		sifstime = 16;
- 	else
-@@ -807,6 +804,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		acktimeout += 64 - sifstime - ah->slottime;
- 
- 	ath9k_hw_setslottime(ah, slottime);
-+
-+	if (AR_SREV_9271(ah))
-+		return;
-+
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
- 	ath9k_hw_set_cts_timeout(ah, acktimeout);
- 	if (ah->globaltxtimeout != (u32) -1)
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
