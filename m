@@ -1,190 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:33031 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660Ab0CRK1K (ORCPT
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:51782 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998Ab0CBKCt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 06:27:10 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 02/21] wl1271: Cleaned up wlan power on/off functions
-Date: Thu, 18 Mar 2010 12:26:27 +0200
-Message-Id: <1268908006-16992-3-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
-References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 2 Mar 2010 05:02:49 -0500
+Received: by fxm19 with SMTP id 19so65657fxm.21
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 02:02:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20100302094238.GA24391@jm.kir.nu>
+References: <20100302025158.9527.43764.stgit@void> <20100302094238.GA24391@jm.kir.nu>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 2 Mar 2010 11:02:28 +0100
+Message-ID: <69e28c911003020202t1e55cc4avd3b36c71ffbbe691@mail.gmail.com>
+Subject: Re: [PATCH v2] ath5k: fix injection in monitor mode
+To: Jouni Malinen <j@w1.fi>
+Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	benoit.papillault@free.fr
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+On Tue, Mar 2, 2010 at 10:42 AM, Jouni Malinen <j@w1.fi> wrote:
+> On Tue, Mar 02, 2010 at 11:51:58AM +0900, Bruno Randolf wrote:
+>> injected frames have to use AR5K_PKT_TYPE_NORMAL, otherwise the hardware thinks
+>> it can mess with the contents of the frame - e.g. update the TSF of an injected
+>> beacon. injected frames should be sent as they are provided.
+>
+> Why would we never want the hardware to update fields in injected
+> frames? Unless I missed something, this seems to break hostapd use cases
+> where the hardware is indeed expected to update the timestamp in Probe
+> Response frames and set up seq# and duration etc. as appropriate for the
+> frames (the latter may be driver/mac80211 work; the timestamp needs to
+> come from hardware/firmware).
+>
+> If we want to have an option to prevent hardware from touching the frame
+> payload, that really should be an option (a radiotap and TX control
+> flags, etc.), not default functionality for monitor interface. The use
+> case for this seems to be some kind of testing purpose and that should
+> not really break more common functionality.
+>
+>
+>> +     /* we don't want the hardware to mess with injected frames in monitor
+>> +      * mode (e.g. update TSF in beacons) */
+>> +     if (info->flags & IEEE80211_TX_CTL_INJECTED)
+>> +             pkt_type = AR5K_PKT_TYPE_NORMAL;
+>
+> This is the part I object to. IEEE80211_TX_CTL_INJECTED should not be
+> used for this.
+>
 
-Added method for wlan power control to io_ops struct and moved
-wl1271_power_on and wl1271_power_off functions to wl1271_io.h.
+Umm... what should be used, then? A check for monitor mode? That's
+even more wrong...
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h         |    1 +
- drivers/net/wireless/wl12xx/wl1271_debugfs.c |   12 +++++-------
- drivers/net/wireless/wl12xx/wl1271_io.h      |   12 ++++++++++++
- drivers/net/wireless/wl12xx/wl1271_main.c    |   12 ------------
- drivers/net/wireless/wl12xx/wl1271_sdio.c    |   11 +++++------
- drivers/net/wireless/wl12xx/wl1271_spi.c     |    7 +++++++
- 6 files changed, 30 insertions(+), 25 deletions(-)
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+>
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 0deb4fd..7397999 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -344,6 +344,7 @@ struct wl1271_if_operations {
- 		     bool fixed);
- 	void (*reset)(struct wl1271 *wl);
- 	void (*init)(struct wl1271 *wl);
-+	void (*power)(struct wl1271 *wl, bool enable);
- 	struct device* (*dev)(struct wl1271 *wl);
- 	void (*enable_irq)(struct wl1271 *wl);
- 	void (*disable_irq)(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_debugfs.c b/drivers/net/wireless/wl12xx/wl1271_debugfs.c
-index 8d7588c..3c0f5b1 100644
---- a/drivers/net/wireless/wl12xx/wl1271_debugfs.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_debugfs.c
-@@ -28,6 +28,7 @@
- #include "wl1271.h"
- #include "wl1271_acx.h"
- #include "wl1271_ps.h"
-+#include "wl1271_io.h"
- 
- /* ms */
- #define WL1271_DEBUGFS_STATS_LIFETIME 1000
-@@ -276,13 +277,10 @@ static ssize_t gpio_power_write(struct file *file,
- 		goto out;
- 	}
- 
--	if (value) {
--		wl->set_power(true);
--		set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
--	} else {
--		wl->set_power(false);
--		clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
--	}
-+	if (value)
-+		wl1271_power_on(wl);
-+	else
-+		wl1271_power_off(wl);
- 
- out:
- 	mutex_unlock(&wl->mutex);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
-index 95d2168..3ff88d9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_io.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_io.h
-@@ -138,6 +138,18 @@ static inline void wl1271_write32(struct wl1271 *wl, int addr, u32 val)
- 	wl1271_raw_write32(wl, wl1271_translate_addr(wl, addr), val);
- }
- 
-+static inline void wl1271_power_off(struct wl1271 *wl)
-+{
-+	wl->if_ops->power(wl, false);
-+	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
-+}
-+
-+static inline void wl1271_power_on(struct wl1271 *wl)
-+{
-+	wl->if_ops->power(wl, true);
-+	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
-+}
-+
- 
- /* Top Register IO */
- void wl1271_top_reg_write(struct wl1271 *wl, int addr, u16 val);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 0de337f..b3abb45 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -359,18 +359,6 @@ static int wl1271_plt_init(struct wl1271 *wl)
- 	return ret;
- }
- 
--static void wl1271_power_off(struct wl1271 *wl)
--{
--	wl->set_power(false);
--	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
--}
--
--static void wl1271_power_on(struct wl1271 *wl)
--{
--	wl->set_power(true);
--	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
--}
--
- static void wl1271_fw_status(struct wl1271 *wl,
- 			     struct wl1271_fw_status *status)
- {
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 1f204db..d43e0d4 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -156,20 +156,21 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 	sdio_release_host(func);
- }
- 
-+static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
-+{
-+}
-+
- static struct wl1271_if_operations sdio_ops = {
- 	.read		= wl1271_sdio_raw_read,
- 	.write		= wl1271_sdio_raw_write,
- 	.reset		= wl1271_sdio_reset,
- 	.init		= wl1271_sdio_init,
-+	.power		= wl1271_sdio_set_power,
- 	.dev		= wl1271_sdio_wl_to_dev,
- 	.enable_irq	= wl1271_sdio_enable_interrupts,
- 	.disable_irq	= wl1271_sdio_disable_interrupts
- };
- 
--static void wl1271_sdio_set_power(bool enable)
--{
--}
--
- static int __devinit wl1271_probe(struct sdio_func *func,
- 				  const struct sdio_device_id *id)
- {
-@@ -190,8 +191,6 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	wl->if_priv = func;
- 	wl->if_ops = &sdio_ops;
- 
--	wl->set_power = wl1271_sdio_set_power;
--
- 	/* Grab access to FN0 for ELP reg. */
- 	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index ed285fe..0eea733 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -347,11 +347,18 @@ static struct platform_device wl1271_device = {
- 	},
- };
- 
-+static void wl1271_spi_set_power(struct wl1271 *wl, bool enable)
-+{
-+	if (wl->set_power)
-+		wl->set_power(enable);
-+}
-+
- static struct wl1271_if_operations spi_ops = {
- 	.read		= wl1271_spi_raw_read,
- 	.write		= wl1271_spi_raw_write,
- 	.reset		= wl1271_spi_reset,
- 	.init		= wl1271_spi_init,
-+	.power		= wl1271_spi_set_power,
- 	.dev		= wl1271_spi_wl_to_dev,
- 	.enable_irq	= wl1271_spi_enable_interrupts,
- 	.disable_irq	= wl1271_spi_disable_interrupts
+
+
 -- 
-1.6.3.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
