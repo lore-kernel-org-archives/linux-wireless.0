@@ -1,30 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:60331 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752818Ab0CPSms (ORCPT
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:59189 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757310Ab0CBUbb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 14:42:48 -0400
-Message-ID: <4B9FD11E.5050108@gmail.com>
-Date: Tue, 16 Mar 2010 19:42:38 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
+	Tue, 2 Mar 2010 15:31:31 -0500
+Message-ID: <4B8D75A1.9070603@gmail.com>
+Date: Tue, 02 Mar 2010 21:31:29 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: regd: sleeping in atomic
-References: <4B9F86E9.2030702@gmail.com> <43e72e891003160918x3b7e3c9asf4fc8a9db35ccd8a@mail.gmail.com>
-In-Reply-To: <43e72e891003160918x3b7e3c9asf4fc8a9db35ccd8a@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: fix rt2800pci compilation with SoC
+References: <201003021634.50077.helmut.schaa@googlemail.com> <4B8D62CC.9040005@gmail.com> <20100302194533.GC16620@tuxdriver.com>
+In-Reply-To: <20100302194533.GC16620@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/2010 05:18 PM, Luis R. Rodriguez wrote:
-> one iteration of call_crda() which happens during module
-> initialization and from what I gather I don't think the kernel is
-> happy when you mutex_lock on load routines, please correct my foggy
-> memory if I am mistaken.
+On 03/02/10 20:45, John W. Linville wrote:
+> On Tue, Mar 02, 2010 at 08:11:08PM +0100, Gertjan van Wingerde wrote:
+>> On 03/02/10 16:34, Helmut Schaa wrote:
+>>> Compiling rt2800pci with CONFIG_RT2800PCI_SOC fails with "... rt2880pci.c:
+>>> error: incompatible type for argument 2 of 'rt2x00soc_probe'".
+>>>
+>>> Fix this by using &rt2800pci_ops instead of rt2800pci_ops.
+>>>
+>>> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>>> ---
+>>
+>> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>
+>> John, this is probably one that should go to wireless-2.6.
+> 
+> I agree, which is why I fixed the whitespace damage and applied it...grrr...
 
-No, using mutex in init/exit module routines is fine. Where do you have 
-the information from? There might be problems only with request_module, 
-flush_scheduled_work or similar.
+OK. Thanks for that.
+
+---
+Gertjan.
+
