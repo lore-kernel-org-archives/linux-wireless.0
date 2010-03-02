@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51996 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755761Ab0CPO5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 10:57:08 -0400
-Date: Tue, 16 Mar 2010 15:55:08 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Adel Gadllah <adel.gadllah@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-Subject: Re: [PATCH] iwlwifi: Silence tfds_in_queue message
-Message-ID: <20100316145507.GA2364@dhcp-lab-161.englab.brq.redhat.com>
-References: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:33782 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753420Ab0CBHi0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 02:38:26 -0500
+Received: by pva4 with SMTP id 4so796206pva.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 23:38:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
+In-Reply-To: <19340.37231.983326.296054@gargle.gargle.HOWL>
+References: <19339.35506.86567.739868@gargle.gargle.HOWL> <43e72e891003011524m4d14bb2ai550f5e07e5a11aa4@mail.gmail.com>
+	<19340.37231.983326.296054@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 1 Mar 2010 23:38:06 -0800
+Message-ID: <43e72e891003012338q7da06ac0o7ff6ed6398626dcb@mail.gmail.com>
+Subject: Re: [PATCH 4/7] ath9k: Remove common module
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Adel 
+On Mon, Mar 1, 2010 at 8:17 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Luis R. Rodriguez wrote:
+>> Interesting approach, instead of having two modules you linked lib.o
+>> twice to two separate modules, ath9k.ko and ath9k_htc.ko. While this
+>> does reduce module proliferation is there any advantage to that over
+>> the approach of stuffing these into one common module shared between
+>> both?
+>>
+>> The benefit of doing it as a module is if both are built-in you reduce
+>> the final kernel size. On my box with debugging this is 256 KB.
+>
+> The built-in case would be mostly useful in embedded systems (SoC etc ..).
+> And it is likely to be either ath9k or ath9k_htc. I don't think that
+> both family of chipsets can exist simultaneously.
 
-On Sun, Mar 14, 2010 at 07:44:59PM +0100, Adel Gadllah wrote:
-> From 83bf3f1dba41e3dccdef4fecfccb094559568342 Mon Sep 17 00:00:00 2001
-> From: Adel Gadllah <adel.gadllah@gmail.com>
-> Date: Sun, 14 Mar 2010 19:16:25 +0100
-> Subject: [PATCH] iwlwifi: Silence tfds_in_queue message
-> 
-> Commit a239a8b47cc0e5e6d7416a89f340beac06d5edaa introduced a
-> noisy message, that fills up the log very fast.
-> 
-> The error seems not to be fatal (the connection is stable and
-> performance is ok), so make it IWL_DEBUG_TX rather than IWL_ERR.
+ChromeOs builds everything as built-in so in that case you will have
+both eventually enabled.
 
-Did you fill a bug report on http://bugzilla.intellinuxwireless.org/
-to allow Intel fix the real root of the issue. If not please do.
-You may CC me to bug report. 
+> And since the code that is shared is very minimal (a few general routines and crypto),
+> it felt reasonable to just stuff into a common library.
 
-In general patch looks good for me. 
+Although it may be a few common helpers it could grow to share common
+mac80211 helpers. After all, there are a few calls which could simply
+be shared.
 
-Cheers
-Stanislaw
+  Luis
