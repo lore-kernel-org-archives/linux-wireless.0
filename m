@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f212.google.com ([209.85.218.212]:46351 "EHLO
-	mail-bw0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751015Ab0CARYu convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:56335 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601Ab0CBTrP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 12:24:50 -0500
-Received: by bwz4 with SMTP id 4so1912579bwz.28
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 09:24:48 -0800 (PST)
+	Tue, 2 Mar 2010 14:47:15 -0500
+Received: by bwz1 with SMTP id 1so25614bwz.21
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 11:47:14 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: iwl4965: 11a channels disabled in current wireless-testing
+Date: Tue, 2 Mar 2010 20:47:09 +0100
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+References: <201002281534.11656.helmut.schaa@googlemail.com> <201003011927.53208.helmut.schaa@googlemail.com> <43e72e891003011059v564931e2qfe390657b698c277@mail.gmail.com>
+In-Reply-To: <43e72e891003011059v564931e2qfe390657b698c277@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1003011205211.28884@eidolons.org>
-References: <51a465a61002281248jc7701abq642b67f0b68ed80a@mail.gmail.com>
-	 <4B8B3A1A.80403@gmail.com>
-	 <alpine.LNX.2.00.1003011205211.28884@eidolons.org>
-Date: Mon, 1 Mar 2010 18:24:46 +0100
-Message-ID: <a32f33a41003010924q43616ffhb858feac7b9ebb4a@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: Add USB ID for CEIVA adapter to rt73usb
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Bryan Polk <sainth@eidolons.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003022047.10196.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 1, 2010 at 6:23 PM, Bryan Polk <sainth@eidolons.org> wrote:
-> This adds support for CEIVA USB wireless adapters to the rt73usb driver.
->
-> Signed-off-by: Bryan Polk <sainth@eidolons.org>
+Am Montag 01 März 2010 schrieb Luis R. Rodriguez:
+> You can try to register to nl80211 events after loading cfg80211:
+> 
+> iw event -t
+> 
+> Then load iwlagn and see if you pick anything up. Might want to enable
+> CFG80211_REG_DEBUG.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+That's the only regulatory event I get:
 
-> ---
-> diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-> index f39a8ed..47f3e4a 100644
-> --- a/drivers/net/wireless/rt2x00/rt73usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt73usb.c
-> @@ -2352,6 +2352,8 @@ static struct usb_device_id rt73usb_device_table[] = {
->        { USB_DEVICE(0x0411, 0x00f4), USB_DEVICE_DATA(&rt73usb_ops) },
->        { USB_DEVICE(0x0411, 0x0116), USB_DEVICE_DATA(&rt73usb_ops) },
->        { USB_DEVICE(0x0411, 0x0119), USB_DEVICE_DATA(&rt73usb_ops) },
-> +       /* CEIVA */
-> +       { USB_DEVICE(0x178d, 0x02be), USB_DEVICE_DATA(&rt73usb_ops) },
->        /* CNet */
->        { USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt73usb_ops) },
->        { USB_DEVICE(0x1371, 0x9032), USB_DEVICE_DATA(&rt73usb_ops) },
->
+1267558985.672513: phy #0: regulatory domain change: set to world roaming by the wireless core upon initialization request
+
+When I set the reg domain to DE via iw I get:
+
+1267559015.166161: regulatory domain change: set to DE by a user request
+
+However all previously disabled channels are still disabled.
+Reloading iwlagn afterwards gives the following again:
+
+1267559087.050649: regulatory domain change: set to DE by a user request
+
+And afterwards the 11a channels and 12+13bg are enabled (passive scanning
+only, but that is fine) again.
+
+I have no clue what's happening here.
+
+Helmut
