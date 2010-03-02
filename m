@@ -1,53 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from katherina.student.utwente.nl ([130.89.168.160]:53880 "EHLO
-	katherina.student.utwente.nl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752204Ab0C3Na7 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:20279 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830Ab0CBKB3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 09:30:59 -0400
-Date: Tue, 30 Mar 2010 14:56:21 +0200
-From: Matthijs Kooijman <matthijs@stdin.nl>
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] rt2500usb: fix powersaving random
- failures
-Message-ID: <20100330125620.GA2173@katherina.student.utwente.nl>
-References: <201003290956.54234.linux@rainbow-software.org>
- <201003292300.12013.IvDoorn@gmail.com>
- <4BB18816.4040603@gmail.com>
- <201003301433.55355.linux@rainbow-software.org>
+	Tue, 2 Mar 2010 05:01:29 -0500
+From: Holger Schurig <holgerschurig@gmail.com>
+To: dsaxena@laptop.org
+Subject: Re: [PATCH] libertas: add auto auth mode feature
+Date: Tue, 2 Mar 2010 13:02:09 +0100
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <1267146996-3725-1-git-send-email-bzhao@marvell.com> <1267225266.14995.7.camel@localhost.localdomain> <20100301195948.GA19200@plexity.net>
+In-Reply-To: <20100301195948.GA19200@plexity.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VbJkn9YxBvnuCH5J"
-In-Reply-To: <201003301433.55355.linux@rainbow-software.org>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003021302.10039.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> support is an option our community would be happy with. However, I also
+> don't want to end up with a libertas fork (all our mesh patches are
+> currently upstream and not forkd off)
 
---VbJkn9YxBvnuCH5J
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Oh, sorry for being misinformed and spreading this misinformation. I had some 
+read-only variables in the mainline libertas driver (for example  
+mesh_autostart_enabled get's never written to) and heard that this is a 
+remnant, and that the real implementation in in the OLPC tree.
 
-Hi all,
+Therefore I thought that you're sticking to some older kernel, and not 
+following mainline linux at all.
 
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 1 (-16).
-I'm seeing this one on my rt2500pci as well (and also works ok otherwise).
+Isn't that true?
 
-Gr.
-
-Matthijs
-
---VbJkn9YxBvnuCH5J
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkux9PQACgkQz0nQ5oovr7wSUQCfePbZ9PyXDtXIUvyypwRS3X9y
-w8cAoOUKmutEMVcBBvWs/8WsniH49oor
-=xwds
------END PGP SIGNATURE-----
-
---VbJkn9YxBvnuCH5J--
+-- 
+http://www.holgerschurig.de
