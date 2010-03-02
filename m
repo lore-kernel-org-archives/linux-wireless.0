@@ -1,121 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:24408 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753486Ab0CZKyO (ORCPT
+Received: from mail-pz0-f179.google.com ([209.85.222.179]:42723 "EHLO
+	mail-pz0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753420Ab0CBIAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:54:14 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 11/24] wl1271: wait for join command complete event
-Date: Fri, 26 Mar 2010 12:53:20 +0200
-Message-Id: <1269600813-32145-12-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 2 Mar 2010 03:00:08 -0500
+Received: by pzk9 with SMTP id 9so2651647pzk.25
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 00:00:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <19340.51272.987517.174933@gargle.gargle.HOWL>
+References: <19339.35506.86567.739868@gargle.gargle.HOWL> <43e72e891003011524m4d14bb2ai550f5e07e5a11aa4@mail.gmail.com>
+	<19340.37231.983326.296054@gargle.gargle.HOWL> <43e72e891003012338q7da06ac0o7ff6ed6398626dcb@mail.gmail.com>
+	<19340.51272.987517.174933@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 1 Mar 2010 23:59:48 -0800
+Message-ID: <43e72e891003012359jfb59df8t4c386a427b3c99a1@mail.gmail.com>
+Subject: Re: [PATCH 4/7] ath9k: Remove common module
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Poll for join command completion instead of waiting blindly for 10 msecs.
-There is a timeout of 100 msecs, if the command doesn't complete by then, we
-return an error code.
+On Tue, Mar 2, 2010 at 12:11 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Luis R. Rodriguez wrote:
+>> ChromeOs builds everything as built-in so in that case you will have
+>> both eventually enabled.
+>
+> Right, in this case a small fix is needed.
+> I'll send a patch to link in the library only once.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_boot.c |    3 +-
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   38 +++++++++++++++++++++++++----
- drivers/net/wireless/wl12xx/wl1271_cmd.h  |    1 +
- 3 files changed, 36 insertions(+), 6 deletions(-)
+So you still don't like a common module approach? I guess I can wait
+to see your patch.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 4195298..2c7e561 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -410,7 +410,8 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
- 	/* unmask required mbox events  */
- 	wl->event_mask = BSS_LOSE_EVENT_ID |
- 		SCAN_COMPLETE_EVENT_ID |
--		PS_REPORT_EVENT_ID;
-+		PS_REPORT_EVENT_ID |
-+		JOIN_EVENT_COMPLETE_ID;
- 
- 	ret = wl1271_event_unmask(wl);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index efd94f2..e677f97 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -34,6 +34,7 @@
- #include "wl1271_acx.h"
- #include "wl12xx_80211.h"
- #include "wl1271_cmd.h"
-+#include "wl1271_event.h"
- 
- /*
-  * send command to firmware
-@@ -248,6 +249,35 @@ int wl1271_cmd_radio_parms(struct wl1271 *wl)
- 	return ret;
- }
- 
-+/*
-+ * Poll the mailbox event field until any of the bits in the mask is set or a
-+ * timeout occurs (WL1271_EVENT_TIMEOUT in msecs)
-+ */
-+static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
-+{
-+	u32 events_vector, event;
-+	unsigned long timeout;
-+
-+	timeout = jiffies + msecs_to_jiffies(WL1271_EVENT_TIMEOUT);
-+
-+	do {
-+		if (time_after(jiffies, timeout))
-+			return -ETIMEDOUT;
-+
-+		msleep(1);
-+
-+		/* read from both event fields */
-+		wl1271_read(wl, wl->mbox_ptr[0], &events_vector,
-+			    sizeof(events_vector), false);
-+		event = events_vector & mask;
-+		wl1271_read(wl, wl->mbox_ptr[1], &events_vector,
-+			    sizeof(events_vector), false);
-+		event |= events_vector & mask;
-+	} while (!event);
-+
-+	return 0;
-+}
-+
- int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
- {
- 	static bool do_cal = true;
-@@ -318,11 +348,9 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
- 		goto out_free;
- 	}
- 
--	/*
--	 * ugly hack: we should wait for JOIN_EVENT_COMPLETE_ID but to
--	 * simplify locking we just sleep instead, for now
--	 */
--	msleep(10);
-+	ret = wl1271_cmd_wait_for_event(wl, JOIN_EVENT_COMPLETE_ID);
-+	if (ret < 0)
-+		wl1271_error("cmd join event completion error");
- 
- out_free:
- 	kfree(join);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 6324bbf..bdd7a3d 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -123,6 +123,7 @@ enum cmd_templ {
- /* unit ms */
- #define WL1271_COMMAND_TIMEOUT     2000
- #define WL1271_CMD_TEMPL_MAX_SIZE  252
-+#define WL1271_EVENT_TIMEOUT       100
- 
- struct wl1271_cmd_header {
- 	__le16 id;
--- 
-1.6.3.3
+>> Although it may be a few common helpers it could grow to share common
+>> mac80211 helpers. After all, there are a few calls which could simply
+>> be shared.
+>
+> I wanted to do this too, have a single mac80211 layer - but eventually,
+> there were just too many differences between the callbacks.
 
+Year I hear you, so there are two things I think we can do in the long
+run to bring in mac80211 helpers together. The first one is to remove
+the ath9k wiphy. The second is to use a threaded ISR and change our
+bottom halves to use a workqueue instead of a tasklet so we can also
+sleep during our work. I think these two things should enable us to
+start sharing some callbacks. But ath9k virtual wiphy seems to provide
+some functionality we don't yet have in mac80211/cfg80211 centrally
+but we could work on that.
+
+  Luis
