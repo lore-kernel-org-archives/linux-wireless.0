@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ksp.mff.cuni.cz ([195.113.26.206]:35498 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757120Ab0CJUwa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 15:52:30 -0500
-Date: Wed, 10 Mar 2010 21:48:19 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	"Kevin Hayes <kevin@atheros.com>, Dan Tian" <Dan.Tian@atheros.com>
-Subject: Re: Linux Bluetooth Coexistence documentation in general and for
-	ath9k
-Message-ID: <20100310204818.GF1394@ucw.cz>
-References: <43e72e891003031643u353c72dcj23bf429363a16ec8@mail.gmail.com> <1267715451.29510.20.camel@localhost.localdomain>
+Received: from nbd.name ([88.198.39.176]:48638 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753619Ab0CBQOh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 11:14:37 -0500
+Message-ID: <4B8D396B.5040007@openwrt.org>
+Date: Tue, 02 Mar 2010 17:14:35 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1267715451.29510.20.camel@localhost.localdomain>
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+References: <4B8C3A21.2050105@openwrt.org>	 <133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>	 <4B8D25DC.8070502@openwrt.org> <133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
+In-Reply-To: <133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-
-> > The question of Bluetooth coexistence pops up here, on IRC and on bug
-> > reports quite too often so I've stuffed what I could onto a page with
-> > a few references / code and about ath9k's schemes for BT coexistence,
-> > feel free to extend or correct:
-> > 
-> > http://wireless.kernel.org/en/users/Documentation/Bluetooth-coexistence
-> > http://wireless.kernel.org/en/users/Drivers/ath9k/btcoex
-> > 
-> > I'm still not sure if "2-wire" and "3-wire" are generic terms and if
-> > someone owns a trademark on them or what, but looking down the road I
-> > think it would be nice to export this information through nl80211, if
-> > a device supports any of these BT-coex schemes and if so, perhaps
-> > display the current signal status of:
-> > 
-> >   * WLAN_ACTIVE
-> >   * BT_PRIORITY
-> >   * BT_STATE
-...
-> the only thing the host has control over is AFH channel map, and even
-> modifying that is not really needed. The Bluetooth controller will do
-> AFH automatically and it is on by default. We never switch that off
-> actually.
+On 2010-03-02 4:47 PM, Björn Smedman wrote:
+> 2010/3/2 Felix Fietkau <nbd@openwrt.org>:
+>> [snip] also the hardware
+>> doesn't even provide enough information to do any kind of precise
+>> calculation on airtime utilization by tx attempts. For instance, I don't
+>> get any information on how many frames in an A-MPDU were successfully
+>> transmitted on each retransmission attempt.
 > 
-> Normally the co-ex stuff is hard-wired between the Bluetooth and WiFi
-> and thus out of control to the host OS.
+> You mean the hardware interprets the block-ack and keeps retrying the
+> un-acked frames? I thought it stopped as soon as it got a block-ack to
+> let software sort out the acked and un-acked frames and handle the
+> "partial" A-MPDU retry.
+Not sure, actually. I just looked at the ath9k tx path again, and it
+seems that you're right. However it looks like it's not sending rate
+control updates until it's done with the software retry, so that's
+probably the reason why I wasn't able to make it more precise yet.
 
-I believe that 'internal wifi, usb bluetooth' is still quite common
-setup...
-								Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+>> Software retries are being taken into account on some level, because a
+>> software retry is simply going to be part of the next A-MPDU, which will
+>> get accounted for in the rate control code.
+> 
+> If my guess on block-ack implementation is correctly there is still
+> have a major uncertainty: if the first frame in the A-MPDU is
+> transferred correctly but every other frame in the AMPDU fails (and
+> has to be retransmitted in other A-MPDUs) you run the risk of counting
+> that as a success (and of course wise-versa)...
+Yeah, I definitely need to deal with that.
+
+>> This early version will probably not make a fully optimal tradeoff
+>> between retransmission probability and raw throughput, but that can
+>> probably be tweaked over time, simply by adjusting the internal
+>> throughput metric calculation to something that gets close in practice
+>> at least most of the time.
+> 
+> I agree this new code is a big step forward and the aim here (with
+> this patch) should of course not be a fully optimal solution. But
+> shouldn't we try to at least set up a roadmap to remove as much as
+> possible of these fundamental flaws / uncertainties?
+Sure. I think the way to make this more precise is to ensure that the tx
+path sends rate control updates even before it's done with the software
+retry. The resulting feedback can then properly be accounted for by
+comparing ampdu_len against ampdu_ack_len in the status info, thus
+getting accurate statistics on subframe failures.
+Still leaves open the question of how this is supposed to be handled for
+other drivers, but I guess that can be dealt with later.
+
+> The reason I'm so interested in this subject is I've tried to tweak
+> the ath9k rate control to behave reasonably for me. This has taken a
+> lot of time and the result is rather poor. Also, these tweaks are not
+> general enough to even be contributed back as patches. My feeling is
+> that the reason it is so difficult to get a rate control algorithm to
+> work for all use-cases is that the underlying model is just plain
+> wrong. Radio environments are very varied and complex. Add to that all
+> the other variability, such as ANI dynamically adjusting radio chain
+> parameters and it's very very difficult to know what is "incorrect but
+> good enough".
+Interesting.
+
+- Felix
