@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay007.isp.belgacom.be ([195.238.6.173]:59637 "EHLO
-	mailrelay007.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754405Ab0C3UnM (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2254 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431Ab0CBM5z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 16:43:12 -0400
-Date: Tue, 30 Mar 2010 22:43:04 +0200
-From: Philippe De Muyter <phdm@macqel.be>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
-Message-ID: <20100330204304.GB26538@frolo.macqel>
-References: <20100329201236.GA9587@frolo.macqel> <4BB1335F.7030306@lwfinger.net> <20100330073401.GA13675@frolo.macqel> <1269967657.3019.16.camel@localhost.localdomain> <20100330171139.GA28367@srcf.ucam.org> <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org> <20100330200039.GA26538@frolo.macqel> <20100330200642.GA32654@srcf.ucam.org>
+	Tue, 2 Mar 2010 07:57:55 -0500
+Date: Tue, 2 Mar 2010 07:57:06 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Drapko Nitzhonot <drapkos@gmail.com>,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: Status of http://patchwork.kernel.org/patch/56785/
+Message-ID: <20100302125705.GB30344@hash.localnet>
+References: <753864a31002271218r7fce0601l51f78efdf2576f75@mail.gmail.com> <201002272124.31863.mb@bu3sch.de> <20100301201214.GG2961@tuxdriver.com> <201003012301.51478.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100330200642.GA32654@srcf.ucam.org>
+In-Reply-To: <201003012301.51478.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 30, 2010 at 09:06:42PM +0100, Matthew Garrett wrote:
-> On Tue, Mar 30, 2010 at 10:00:39PM +0200, Philippe De Muyter wrote:
-> 
-> > ACPI: I/O resource 0000:00:1f.3 [0x8000-0x801f] conflicts with ACPI region SMBI [0x8000-0x800f] (copied by hand)
-> 
-> That's harmless. It just indicates that ACPI is telling us not to drive 
-> your SMBus controller directly.
-> 
-> > > 
-> > > That's your bug, then.
+On Mon, Mar 01, 2010 at 11:01:50PM +0100, Michael Buesch wrote:
+> On Monday 01 March 2010 21:12:14 John W. Linville wrote:
+> > commit a951ae2176b982574ffa197455db6c89359fd5eb
+> > Author: Bob Copeland <me@bobcopeland.com>
+> > Date:   Wed Jan 20 23:51:04 2010 -0500
 > > 
-> > Any hint on what I can do to diagnose more what the problem(s) is/are ?
+> >     ath5k: fix setup for CAB queue
+> > 
+> > commit 5d6ce628f986d1a3c523cbb0a5a52095c48cc332
+> > Author: Bob Copeland <me@bobcopeland.com>
+> > Date:   Wed Jan 20 23:51:03 2010 -0500
+> > 
+> >     ath5k: dont use external sleep clock in AP mode
 > 
-> Best plan would be to post a complete description of the problem to 
-> linux-acpi@vger.kernel.org.
+> Ok, so indeed, there was no CC to stable. I think these are critical patches
+> that should go into the stable tree.
 
-Thanks
+Agreed - and stable is CCed on this thread.
+-- 
+Bob Copeland %% www.bobcopeland.com
 
-I will do that
-
-Philippe
