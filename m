@@ -1,124 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55791 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325Ab0CRUpK (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:2622 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753418Ab0CBH6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 16:45:10 -0400
-Date: Thu, 18 Mar 2010 16:35:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2010-03-18
-Message-ID: <20100318203532.GE17357@tuxdriver.com>
+	Tue, 2 Mar 2010 02:58:45 -0500
+Received: from vs30p.wh2.ocn.ne.jp (125.206.180.218)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0159236723
+	for <linux-wireless@vger.kernel.org>; Tue,  2 Mar 2010 16:58:43 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+Subject: [PATCH 3/4] ath5k: remove ah_mac_revision
+To: linville@tuxdriver.com
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Tue, 02 Mar 2010 16:58:42 +0900
+Message-ID: <20100302075842.20555.44088.stgit@void>
+In-Reply-To: <20100302075526.20555.14622.stgit@void>
+References: <20100302075526.20555.14622.stgit@void>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+it's not used, and we have ah_mac_srev.
 
-Three more intended for 2.6.34...  The biggest one is for ath9k, which
-removes some unused code along with the one-liner that makes the code
-unused.  (Did you follow that?)  The others are a null-pointer fix and a
-"hush dawg" for a noisy warning message.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
 
-The following changes since commit 22001a13d09d82772e831dcdac0553994a4bac5d:
-  Tilman Schmidt (1):
-        gigaset: fix build failure
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    1 -
+ drivers/net/wireless/ath/ath5k/attach.c |    1 -
+ 2 files changed, 0 insertions(+), 2 deletions(-)
 
-are available in the git repository at:
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 3d63511..54f35ae 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1047,7 +1047,6 @@ struct ath5k_hw {
+ 	u32			ah_phy;
+ 	u32			ah_mac_srev;
+ 	u16			ah_mac_version;
+-	u16			ah_mac_revision;
+ 	u16			ah_phy_revision;
+ 	u16			ah_radio_5ghz_revision;
+ 	u16			ah_radio_2ghz_revision;
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 66758cb..dd4099a 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -148,7 +148,6 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+ 	/* Get MAC, PHY and RADIO revisions */
+ 	ah->ah_mac_srev = srev;
+ 	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
+-	ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
+ 	ah->ah_phy_revision = ath5k_hw_reg_read(ah, AR5K_PHY_CHIP_ID) &
+ 			0xffffffff;
+ 	ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Adel Gadllah (1):
-      iwlwifi: Silence tfds_in_queue message
-
-Felix Fietkau (1):
-      ath9k: fix BUG_ON triggered by PAE frames
-
-Grazvydas Ignotas (1):
-      wl1251: fix potential crash
-
- drivers/net/wireless/ath/ath9k/xmit.c        |   21 +--------------------
- drivers/net/wireless/iwlwifi/iwl-tx.c        |    2 +-
- drivers/net/wireless/wl12xx/wl1251_debugfs.c |    3 ++-
- 3 files changed, 4 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index b2c8207..294b486 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1353,25 +1353,6 @@ static enum ath9k_pkt_type get_hw_packet_type(struct sk_buff *skb)
- 	return htype;
- }
- 
--static bool is_pae(struct sk_buff *skb)
--{
--	struct ieee80211_hdr *hdr;
--	__le16 fc;
--
--	hdr = (struct ieee80211_hdr *)skb->data;
--	fc = hdr->frame_control;
--
--	if (ieee80211_is_data(fc)) {
--		if (ieee80211_is_nullfunc(fc) ||
--		    /* Port Access Entity (IEEE 802.1X) */
--		    (skb->protocol == cpu_to_be16(ETH_P_PAE))) {
--			return true;
--		}
--	}
--
--	return false;
--}
--
- static int get_hw_crypto_keytype(struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-@@ -1696,7 +1677,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 			goto tx_done;
- 		}
- 
--		if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && !is_pae(skb)) {
-+		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
- 			/*
- 			 * Try aggregation if it's a unicast data frame
- 			 * and the destination is HT capable.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 1ed5206..8c12311 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -124,7 +124,7 @@ void iwl_free_tfds_in_queue(struct iwl_priv *priv,
- 	if (priv->stations[sta_id].tid[tid].tfds_in_queue >= freed)
- 		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
- 	else {
--		IWL_ERR(priv, "free more than tfds_in_queue (%u:%d)\n",
-+		IWL_DEBUG_TX(priv, "free more than tfds_in_queue (%u:%d)\n",
- 			priv->stations[sta_id].tid[tid].tfds_in_queue,
- 			freed);
- 		priv->stations[sta_id].tid[tid].tfds_in_queue = 0;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_debugfs.c b/drivers/net/wireless/wl12xx/wl1251_debugfs.c
-index 0ccba57..05e4d68 100644
---- a/drivers/net/wireless/wl12xx/wl1251_debugfs.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_debugfs.c
-@@ -466,7 +466,8 @@ out:
- 
- void wl1251_debugfs_reset(struct wl1251 *wl)
- {
--	memset(wl->stats.fw_stats, 0, sizeof(*wl->stats.fw_stats));
-+	if (wl->stats.fw_stats != NULL)
-+		memset(wl->stats.fw_stats, 0, sizeof(*wl->stats.fw_stats));
- 	wl->stats.retry_count = 0;
- 	wl->stats.excessive_retries = 0;
- }
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
