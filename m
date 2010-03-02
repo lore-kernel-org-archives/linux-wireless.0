@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:56007 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752873Ab0CXTJr (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:37342 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309Ab0CBCgo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 15:09:47 -0400
-Message-ID: <4BAA6379.2000203@gmail.com>
-Date: Wed, 24 Mar 2010 20:09:45 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Mon, 1 Mar 2010 21:36:44 -0500
 MIME-Version: 1.0
-To: Ben Hutchings <ben@decadent.org.uk>, Dawid <quadri@tlen.pl>
-CC: 567212@bugs.debian.org, linux-wireless@vger.kernel.org
-Subject: Re: Bug#567212: rt73usb with 2.6.32-trunk kernel
-References: <4B60D3DD.60802@tlen.pl> <1264721331.373.555.camel@localhost>	 <4B62D7C9.9050904@tlen.pl> <1267375207.2282.23.camel@localhost>
-In-Reply-To: <1267375207.2282.23.camel@localhost>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 1 Mar 2010 18:36:24 -0800
+Message-ID: <43e72e891003011836x5c3d0336h6f0f99100b525b9@mail.gmail.com>
+Subject: compat-wireless based on the 2.6.33 kernel release
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/28/10 17:40, Ben Hutchings wrote:
-> Dawid wrote:
->> I use Edimax EW-7318USg  usb wifi adapter with rt73 chipset  - i use 
->> default rt73usb driver that is built in kernel and standard firmware 
->> from non-free repository package: firmware-ralink (0.22)  - on new 
->> 2.6.32 trunk kernel, connection is very unstable - i can connect to my 
->> access point but i get disconnected periodicly in about 6 to 10 seconds 
->> and get connected again afer about 4 seconds. This process repeats 
->> itself continously. I use WPAPSK autentication TKIP encryption in 
->> managed mode - with wpa_supplicant - encryption works but i guess 
->> becouse of such frequent disconnetions dhclient can't get IP and i can't 
->> connect to internet.
->>
->> On previous 2.6.30 kernel and same configuration, everything works fine 
->> and connection is stable.
->>
->> scanning with iwlist works on both kernels but on 2.6.32-trunk takes 2 
->> times longer.
-> 
-> Dawid wrote:
->> I attached kern.log to this e-mail.  Last logs in this file were made on 
->> 2.6.32-trunk kernel to make wlan0 entries from this kernel, clearly seen 
->> at the end of the file.
->>
->>
->>>
->>> Were you using the rt73usb driver (from Debian kernel packages) or the
->>> rt73 driver (from rt73-source or from Ralink)?
->>>
->>>   
->> I'm using standard rt73usb driver from Debian kernel packages on both 
->> kernels 2.6.30 and 2.6.32 - and as i wrote before, described problem 
->> exist only in 2.6.32 . Now i'm forced to use 2.6.30 becouse on this 
->> kernel internet connection is possible.
-> 
-> I'm forwarding this to the linux-wireless list in the hope that someone
-> there will be able to investigate this.
-> 
+I kicked out a new release for compat-wireless based on 2.6.33 [1]. As
+usual this ships the entire 802.11 and Bluetooth subsystems, the Sonic
+Silicon Backplane, b44 (Broadcom Ethernet driver as it depends on the
+ssb as being replaced for b43), and all Atheros Ethernet drivers as
+are released on the 2.6.33 kernel.
 
-We recently discovered that rt73usb may be affected with powersaving issues.
+This release also now has a directory for cherry picked patches we
+think are important for 802.11 but not so critical for stable, the
+only one I have added so far is Atheros Ethernet AR8152 and AR8152
+support which won't get to users until 2.6.34 otherwise. If you have a
+few important yet not stable mac80211/new-driver send me the
+respective backported cherry pick from linux-next and we can add it;
+the only requirement is it *must* be part of linux-next already.
+Distributions could also potentially use the patches in this directory
+as a guide for cherry picking some changes / new drivers / etc.
 
-Is it possible to check the stability of the connection with powersaving
-disabled?
-Just execute a iwconfig wlan0 power off before associating.
+You can find the kernel ChangeLog for the driver/subsystem changes for
+this release on orbit [2]. For the backport work you can review the
+2.6.32.y branch via gitweb for both compat-wireless.git [3] and
+compat.git [4]. Please help test it and report any issues [5].
 
----
-Gertjan.
+Thanks to Pavel Roskin's backporting of debugfs_remove_recursive()
+through the compat.git tree we can now take again the entire tree to
+older kernels, so far tested are 2.6.25 with this and the new
+Multiqueue backport work, but technically you can take kernel
+compatibility further to older kernels by selecting individual
+drivers. It should be possible to use ath5k and ath9k on >= 2.6.23
+with this release so that is left enabled if you choose to select only
+those drivers from compilation:
+
+./scripts/driver-select ath5k
+or
+./scripts/driver-select ath9k
+
+A few users reported issues with SSB and B43 not compiling on the last
+release but I tested this myself and it does compile. Please be sure
+to check that you have CONFIG_SSB enabled as a module on your current
+kernel configuration, otherwise CONFIG_SSB does not get built. If you
+are using a distribution kernel you should be fine.
+
+[1] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.33/compat-wireless-2.6.33.tar.bz2
+[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.33/ChangeLog-2.6.33-wireless
+[3] http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-wireless-2.6.git;a=shortlog;h=refs/heads/linux-2.6.33.y
+[4] http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat.git;a=shortlog;h=refs/heads/linux-2.6.33.y
+[5] http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
+
+  Luis
