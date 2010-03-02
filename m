@@ -1,43 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:44114 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369Ab0CCRIw convert rfc822-to-8bit (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:57553 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751848Ab0CBWrE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 12:08:52 -0500
-Received: by gyd8 with SMTP id 8so145249gyd.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 09:08:51 -0800 (PST)
+	Tue, 2 Mar 2010 17:47:04 -0500
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 1/4] rndis_wlan: copy only useful data from rndis_command
+	respond
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 03 Mar 2010 00:38:25 +0200
+Message-ID: <20100302223825.2794.13615.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <201003031804.54121.helmut.schaa@googlemail.com>
-References: <201003031742.55842.helmut.schaa@googlemail.com>
-	 <14add3d11003030850j2c16a92dsfad2a4a43c4d126c@mail.gmail.com>
-	 <201003031804.54121.helmut.schaa@googlemail.com>
-Date: Wed, 3 Mar 2010 18:08:51 +0100
-Message-ID: <14add3d11003030908v620dc63ci4712373a77da275a@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: Export rt2x00soc_probe from rt2x00soc
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 3, 2010 at 6:04 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Am Mittwoch 03 März 2010 schrieb Gertjan van Wingerde:
->> Thanks for doing this. I couldn't test these configurations as I am
->> lacking SoC devices.
->
-> No problem, I'm just trying to get the driver up on one of these SoC devices.
-> Not sure how far I'll get :)
->
+rndis_query_oid() uses full output buffer size to copy response buffer
+from rndis_command()/device. This doesn't cause problems as response buffer
+is sized based on output buffer but does copy extra unset bytes.
+So change rndis_query_oid() so that only meaningful bytes are being copied.
 
-All I can say is to please keep us informed on your progress. It is
-the first time I'm hearing someone actually working with a SoC device.
+Also in case of malfunctioning device/cable/etc returned data offset from
+device might be wrong so bound check memory access correctly, so add
+checks for this.
 
-Can you share some information on what device you have, and what
-Ralink chipset is on this device (the detection messages in dmesg for
-this device would be interesting).
-
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
-Gertjan.
+
+ drivers/net/wireless/rndis_wlan.c |   33 +++++++++++++++++++++++++++++----
+ 1 files changed, 29 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 305c106..b275713 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -704,6 +704,7 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
+ 		struct rndis_query_c	*get_c;
+ 	} u;
+ 	int ret, buflen;
++	int resplen, respoffs, copylen;
+ 
+ 	buflen = *len + sizeof(*u.get);
+ 	if (buflen < CONTROL_BUFFER_SIZE)
+@@ -733,11 +734,34 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
+ 			le32_to_cpu(u.get_c->status));
+ 
+ 	if (ret == 0) {
+-		memcpy(data, u.buf + le32_to_cpu(u.get_c->offset) + 8, *len);
++		resplen = le32_to_cpu(u.get_c->len);
++		respoffs = le32_to_cpu(u.get_c->offset) + 8;
+ 
+-		ret = le32_to_cpu(u.get_c->len);
+-		if (ret > *len)
+-			*len = ret;
++		if (respoffs > buflen) {
++			/* Device returned data offset outside buffer, error. */
++			devdbg(dev, "rndis_query_oid(%s): received invalid "
++				"data offset: %d > %d", oid_to_string(oid),
++				respoffs, buflen);
++
++			ret = -EINVAL;
++			goto exit_unlock;
++		}
++
++		if ((resplen + respoffs) > buflen) {
++			/* Device would have returned more data if buffer would
++			 * have been big enough. Copy just the bits that we got.
++			 */
++			copylen = buflen - respoffs;
++		} else {
++			copylen = resplen;
++		}
++
++		if (copylen > *len)
++			copylen = *len;
++
++		memcpy(data, u.buf + respoffs, copylen);
++
++		*len = resplen;
+ 
+ 		ret = rndis_error_status(u.get_c->status);
+ 		if (ret < 0)
+@@ -746,6 +770,7 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
+ 				le32_to_cpu(u.get_c->status), ret);
+ 	}
+ 
++exit_unlock:
+ 	mutex_unlock(&priv->command_lock);
+ 
+ 	if (u.buf != priv->command_buffer)
+
