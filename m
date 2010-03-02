@@ -1,85 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46904 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237Ab0CKB2c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 20:28:32 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 09/14] ath9k_hw: Use a helper for setting phy error masks
-Date: Wed, 10 Mar 2010 20:28:26 -0500
-Message-Id: <1268270911-24568-10-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+Received: from smtp.polymtl.ca ([132.207.4.11]:47517 "EHLO smtp.polymtl.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751427Ab0CBWu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 17:50:58 -0500
+Message-ID: <4B8D9649.8020907@polymtl.ca>
+Date: Tue, 02 Mar 2010 17:50:49 -0500
+From: William Bourque <william.bourque@polymtl.ca>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <201003022257.51878.mb@bu3sch.de> <4B8D906C.9020102@polymtl.ca> <201003022329.58627.mb@bu3sch.de>
+In-Reply-To: <201003022329.58627.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The phy error masks are used consistently on ani.c so
-define a common helper for this. We will later use this to
-further abstract direct hardware reads/writes depending on
-the chipset. While at it, add some sort of explanation as
-to what these masks are for.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |   21 +++++++++++++++------
- 1 files changed, 15 insertions(+), 6 deletions(-)
+Michael Buesch wrote:
+> On Tuesday 02 March 2010 23:25:48 William Bourque wrote:
+>> So if I get this right, this code is responsible of handling the b43
+>> devices, as well as several other PCI-E devices, correct?
+> 
+> Nah, this is a broadcom specific thing of the on-chip SSB bus.
+> 
+Ok, sorry then :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 2a0cd64..08deda3 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -231,6 +231,18 @@ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
- 	stats->beacons += REG_READ(ah, AR_BEACON_CNT);
- }
- 
-+/*
-+ * These masks are used by the hardware to know which
-+ * type of phy errors to include on their error counts.
-+ * We use one counter for OFDM phy timing errors and the
-+ * other for CCK phy timing errors only.
-+ */
-+static void ath9k_hw_update_phy_err_masks(struct ath_hw *ah)
-+{
-+	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
-+	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+}
-+
- static void ath9k_ani_restart(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
-@@ -264,8 +276,7 @@ static void ath9k_ani_restart(struct ath_hw *ah)
- 		  aniState->cckPhyErrBase);
- 	REG_WRITE(ah, AR_PHY_ERR_1, aniState->ofdmPhyErrBase);
- 	REG_WRITE(ah, AR_PHY_ERR_2, aniState->cckPhyErrBase);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+	ath9k_hw_update_phy_err_masks(ah);
- 
- 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
- 
-@@ -540,8 +551,7 @@ void ath9k_ani_reset(struct ath_hw *ah)
- 	ath9k_hw_setrxfilter(ah, ath9k_hw_getrxfilter(ah) &
- 			     ~ATH9K_RX_FILTER_PHYERR);
- 	ath9k_ani_restart(ah);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+	ath9k_hw_update_phy_err_masks(ah);
- }
- 
- void ath9k_hw_ani_monitor(struct ath_hw *ah,
-@@ -644,8 +654,7 @@ void ath9k_enable_mib_counters(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_MIBC,
- 		  ~(AR_MIBC_COW | AR_MIBC_FMC | AR_MIBC_CMC | AR_MIBC_MCS)
- 		  & 0x0f);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+	ath9k_hw_update_phy_err_masks(ah);
- }
- 
- /* Freeze the MIB counters, get the stats and then clear them */
--- 
-1.6.3.3
+>> Because now that you mention this, the wired network card (Marvel Yukon,
+>> with sky2 drivers) on this netbook also have a tons of issue (doesn't
+>> show in lspci on a clean boot, oops the kernel if network cable is
+>> unplugged while in use, fails to load if the module is ever unloaded, ... )
+>> I thought it was unrelated but from your comment, I feel like this could
+>> be linked to the same PCI-E bugs as well.
+> 
+> Uh, well. Are you sure your hardware is OK then?
+> 
+I sure hope so. The laptop is very new and I never had trouble with it,
+but to tell the truth, it is a refurbished model so can't say for sure.
 
+I think the hardware is fine but there is _very weird_ stuff about the
+laptop... I feel like their ACPI implemention is nowhere near standard
+and that might cause the problems. It's like everything on this laptop
+is under a very agressive power management that bypass the OS and
+confuse drivers. But again, it's just a feeling, I don't really have
+much facts that back up this theory ;)
+
+- William
