@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:42010 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754754Ab0C3RI3 convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:62473 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753208Ab0CBWLO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 13:08:29 -0400
+	Tue, 2 Mar 2010 17:11:14 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so339600fgg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 14:11:12 -0800 (PST)
+Message-ID: <4B8D8CF8.8030003@lwfinger.net>
+Date: Tue, 02 Mar 2010 16:11:04 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20100330165645.GB25095@tux>
-References: <1269963873-2070-1-git-send-email-luisbg@ubuntu.com>
-	 <20100330165645.GB25095@tux>
-Date: Tue, 30 Mar 2010 18:08:26 +0100
-Message-ID: <506b70dc1003301008r7079b9c7u96249c28d67a5bdd@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ath: fix code readability in regd.c
-From: Luis de Bethencourt <luisbg@ubuntu.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Nathan Schulte <reklipz@gmail.com>,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com> <201003010122.51341.mb@bu3sch.de> <201003022257.51878.mb@bu3sch.de>
+In-Reply-To: <201003022257.51878.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 30, 2010 at 5:56 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Tue, Mar 30, 2010 at 08:44:33AM -0700, Luis de Bethencourt wrote:
->> This is a patch to the ath/regd.c file that fixes two code
->> readability issues. A space between to separate two defines
->> and the indentation inside the ath_redg_is_eeprom_valid
->> function.
->
-> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->
-> You can drop netdev and linux-kernel from future linux-wireless e-mails
-> like this one.
->
->  Luis
->
+On 03/02/2010 03:57 PM, Michael Buesch wrote:
+> 
+> So what's the status on this? I think the fact that the testing patch showed some
+> improvement is a clear indicator that something in the PCI-E core init is wrong.
+> It's also not surprising that something is going wrong there. The whole PCI-E core
+> code basically is undebugged. I wrote most of it long time ago, but I still
+> don't have a device that tests it (and probably won't get one anytime soon).
+> So I'm really not surprised that there are bugs. There also are missing parts.
+> 
+> A bug in the PCI-E core code is able to show such behavior, because all memory
+> transfers (MMIO and DMA) from the PCI device to the wireless core are translated
+> by the PCI-E core.
+> I think the whole PCI-E core code has to be audited (also the specs, probably).
 
-OK. Will do.
+You are right about the audit of the PCIe code and specs. Some of the MMIO
+sequences found for wl and missing in b43 come from the code described in
+http://bcm-v4.sipsolutions.net/PCI-E; however, that code needs to be checked as
+at least one routine is missing, I have not yet had a chance to go through it,
+but I hope to soon.
 
-Luis
+Larry
