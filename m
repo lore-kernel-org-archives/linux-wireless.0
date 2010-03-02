@@ -1,82 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42299 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407Ab0CAUPr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 15:15:47 -0500
-Date: Mon, 1 Mar 2010 15:12:14 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Drapko Nitzhonot <drapkos@gmail.com>,
-	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	stable@kernel.org
-Subject: Re: Status of http://patchwork.kernel.org/patch/56785/
-Message-ID: <20100301201214.GG2961@tuxdriver.com>
-References: <753864a31002271218r7fce0601l51f78efdf2576f75@mail.gmail.com> <201002272124.31863.mb@bu3sch.de>
+Received: from smtp.polymtl.ca ([132.207.4.11]:44893 "EHLO smtp.polymtl.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751001Ab0CBWqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 17:46:19 -0500
+Message-ID: <4B8D906C.9020102@polymtl.ca>
+Date: Tue, 02 Mar 2010 17:25:48 -0500
+From: William Bourque <william.bourque@polymtl.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201002272124.31863.mb@bu3sch.de>
+To: Michael Buesch <mb@bu3sch.de>
+CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>	<a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com>	<201003010122.51341.mb@bu3sch.de> <201003022257.51878.mb@bu3sch.de>
+In-Reply-To: <201003022257.51878.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 27, 2010 at 09:24:31PM +0100, Michael Buesch wrote:
-> On Saturday 27 February 2010 21:18:39 Drapko Nitzhonot wrote:
-> > Hi,
-> > I've been using this patch for over one month and it resolves my
-> > problem with ath5k in AP mode.
-> > Before patch, I got "ath5k phy0: no further txbuf available, dropping
-> > packet" and I had to restart hostapd
-> > to make it to work again.
-> > 
-> > Does anybody knows if this patch will be finally apply to kernel?
+
+Michael Buesch wrote:
+> On Monday 01 March 2010 01:22:50 Michael Buesch wrote:
+>> Well, you are confusing address spaces here.
+>>
+>> On a PCI based SSB device all host-side MMIO transfers go into
+>> the PCI device's address space first. The core-switching moves the window of
+>> the SSB address space that is mapped into 0-0xFFF of the PCI address space.
+>> So if you write to anything above 0xFFF on the PCI device, the write will
+>> not (directly) map to the SSB bus or any device on it.
+>> On the PCI device there is more stuff mapped on top of the SSB sliding
+>> window. For example the SPROM is mapped right on top of it.
+>>
+>> So it might be the case that on a PCI-E device the PCI-E-core's registers
+>> are permanently mapped into 0x2000 of the PCI address apace. This is to
+>> avoid sliding the SSB address space window when accessing the PCI-E core.
+>> This can have several reasons: For one speed (unlikely) and for another
+>> to avoid concurrency and ugly races when we need to access the PCI-E core
+>> while the wireless core is already running and generating interrupts.
+>> Note that this is a GUESS, but it would make sense to me.
+>> It would be cool if somebody could compare more registers of the PCI-E
+>> core using the sliding window and the 0x2000 + reg method to check my theory.
+>>
 > 
-> I think it is upstream through wireless-testing.
-> However, to say it once again, this is a -stable candidate.
-> (And while we are at it, that ath5k_dont_use_external_sleep_clock_in_AP_mode.patch
-> also is a stable candidate).
+> So what's the status on this? I think the fact that the testing patch showed some
+> improvement is a clear indicator that something in the PCI-E core init is wrong.
+> It's also not surprising that something is going wrong there. The whole PCI-E core
+> code basically is undebugged. I wrote most of it long time ago, but I still
+> don't have a device that tests it (and probably won't get one anytime soon).
+> So I'm really not surprised that there are bugs. There also are missing parts.
 > 
-> An AP running 2.6.32 is unusable without those two patches.
-> However, it's rock stable as soon as those are applied.
+> A bug in the PCI-E core code is able to show such behavior, because all memory
+> transfers (MMIO and DMA) from the PCI device to the wireless core are translated
+> by the PCI-E core.
+> I think the whole PCI-E core code has to be audited (also the specs, probably).
+> 
 
-commit a951ae2176b982574ffa197455db6c89359fd5eb
-Author: Bob Copeland <me@bobcopeland.com>
-Date:   Wed Jan 20 23:51:04 2010 -0500
+So if I get this right, this code is responsible of handling the b43
+devices, as well as several other PCI-E devices, correct?
 
-    ath5k: fix setup for CAB queue
-    
-    The beacon sent gating doesn't seem to work with any combination
-    of flags.  Thus, buffered frames tend to stay buffered forever,
-    using up tx descriptors.
-    
-    Instead, use the DBA gating and hold transmission of the buffered
-    frames until 80% of the beacon interval has elapsed using the ready
-    time.  This fixes the following error in AP mode:
-    
-       ath5k phy0: no further txbuf available, dropping packet
-    
-    Add a comment to acknowledge that this isn't the best solution.
-    
-    Signed-off-by: Bob Copeland <me@bobcopeland.com>
-    Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Because now that you mention this, the wired network card (Marvel Yukon,
+with sky2 drivers) on this netbook also have a tons of issue (doesn't
+show in lspci on a clean boot, oops the kernel if network cable is
+unplugged while in use, fails to load if the module is ever unloaded, ... )
+I thought it was unrelated but from your comment, I feel like this could
+be linked to the same PCI-E bugs as well.
 
-commit 5d6ce628f986d1a3c523cbb0a5a52095c48cc332
-Author: Bob Copeland <me@bobcopeland.com>
-Date:   Wed Jan 20 23:51:03 2010 -0500
-
-    ath5k: dont use external sleep clock in AP mode
-    
-    When using the external sleep clock in AP mode, the
-    TSF increments too quickly, causing beacon interval
-    to be much lower than it is supposed to be, resulting
-    in lots of beacon-not-ready interrupts.
-    
-    This fixes http://bugzilla.kernel.org/show_bug.cgi?id=14802.
-    
-    Signed-off-by: Bob Copeland <me@bobcopeland.com>
-    Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+- William
