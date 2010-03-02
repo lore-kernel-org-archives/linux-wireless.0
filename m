@@ -1,78 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:56330 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932205Ab0CLWsh (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:35168 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536Ab0CBIWA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 17:48:37 -0500
-Date: Fri, 12 Mar 2010 14:48:28 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Florian Mickler <florian@mickler.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
-Message-ID: <20100312224828.GA18618@core.coreip.homeip.net>
-References: <1268416988-24862-1-git-send-email-florian@mickler.org>
- <1268416988-24862-2-git-send-email-florian@mickler.org>
- <1268416988-24862-3-git-send-email-florian@mickler.org>
- <20100312182209.GB8736@core.coreip.homeip.net>
- <20100312215743.7671d173@schatten.dmk.lab>
- <20100312212025.GA17712@core.coreip.homeip.net>
- <20100312233925.74effc7d@schatten.dmk.lab>
+	Tue, 2 Mar 2010 03:22:00 -0500
+Received: by pwj8 with SMTP id 8so2254552pwj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 00:21:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100312233925.74effc7d@schatten.dmk.lab>
+In-Reply-To: <19340.52259.880731.243673@gargle.gargle.HOWL>
+References: <19339.35506.86567.739868@gargle.gargle.HOWL> <43e72e891003011524m4d14bb2ai550f5e07e5a11aa4@mail.gmail.com>
+	<19340.37231.983326.296054@gargle.gargle.HOWL> <43e72e891003012338q7da06ac0o7ff6ed6398626dcb@mail.gmail.com>
+	<19340.51272.987517.174933@gargle.gargle.HOWL> <43e72e891003012359jfb59df8t4c386a427b3c99a1@mail.gmail.com>
+	<19340.52259.880731.243673@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 2 Mar 2010 00:21:39 -0800
+Message-ID: <43e72e891003020021l49191ceaye56c204e74a3c004@mail.gmail.com>
+Subject: Re: [PATCH 4/7] ath9k: Remove common module
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 12, 2010 at 11:39:25PM +0100, Florian Mickler wrote:
-> On Fri, 12 Mar 2010 13:20:26 -0800
-> Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
-> 
-> > On Fri, Mar 12, 2010 at 09:57:43PM +0100, Florian Mickler wrote:
-> > > On Fri, 12 Mar 2010 10:22:09 -0800
-> > > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
-> > > 
-> > > > On Fri, Mar 12, 2010 at 07:03:08PM +0100, florian@mickler.org wrote:
-> > > > >  
-> > > > > +static ssize_t rfkill_hard_show(struct device *dev,
-> > > > > +				 struct device_attribute *attr,
-> > > > > +				 char *buf)
-> > > > > +{
-> > > > > +	struct rfkill *rfkill = to_rfkill(dev);
-> > > > > +	unsigned long flags;
-> > > > > +	u32 state;
-> > > > > +
-> > > > > +	spin_lock_irqsave(&rfkill->lock, flags);
-> > > > > +	state = rfkill->state;
-> > > > > +	spin_unlock_irqrestore(&rfkill->lock, flags);
-> > > > 
-> > > > Why exactly is this lock needed?
-> > > 
-> > > The rfkill state is updated from multiple contexts... Am I overlooking
-> > > smth obvious here?
-> > > 
-> > 
-> > You are not updating but reading... Are you concerned about seeing
-> > a partial write to u32? It does not happen.
-> > 
-> Hm.. You shure? On every arch that supports wireless drivers? 
-> 
-> I've just copied that code from the old sysfs state-file handler.
-> So I assumed that reading partial updated state can happen... Also I
-> just searched a little but did not find anything, cause i didn't know
-> where to look. Who garantees this? Is it a gcc thing? 
-> 
+On Tue, Mar 2, 2010 at 12:28 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Luis R. Rodriguez wrote:
+>> So you still don't like a common module approach? I guess I can wait
+>> to see your patch.
+>
+> I don't know, Luis.
+> It seems a bit cleaner to me, just ath.ko, ath9k_hw.ko and ath9k.ko
 
-None of the arches would do byte-by-byte writes to a u32, they'd write
-dword at once. Also, even if they could, you are interested in a single
-flag (bit). You do realize that once you leave spinlock whatever you
-fetched is stale data and may not be trusted?
+Well I agree, if some common code exists though it should just go into
+a module, and if its real small to some inline helpers but from the
+looks of it that is not the case.
 
--- 
-Dmitry
+> But I don't really care, anyway - maybe we can just dump this series and
+> use ath9k_common.ko as such.
+>
+> I'll send patches removing lib.c from ath9k_htc.
+
+Well so my goal with ath9k_common was to use it as a place holder was
+we don't have common mac80211 helpers between both ath9k and ath9k_htc
+but with an end goal that we try to merge as much as is possible. I
+only got to completing basic legacy RX support on ath9k_htc so did
+only get that far to see the extend to what things can be shared as
+far as mac80211 callbacks are concerned.
+
+>> Year I hear you, so there are two things I think we can do in the long
+>> run to bring in mac80211 helpers together. The first one is to remove
+>> the ath9k wiphy. The second is to use a threaded ISR and change our
+>> bottom halves to use a workqueue instead of a tasklet so we can also
+>> sleep during our work. I think these two things should enable us to
+>> start sharing some callbacks. But ath9k virtual wiphy seems to provide
+>> some functionality we don't yet have in mac80211/cfg80211 centrally
+>> but we could work on that.
+>
+> My vote is to keep the drivers separate.
+
+You would be more familiar with the commonality between ath9k and
+ath9k_htc at this point. Even though the two drivers are separate
+right now, say we did remove the ath9k virtual wiphy, is there a set
+of mac80211 callbacks we can start sharing?
+
+My motivation for sharing more callbacks comes from the eventual goal
+to support multiple virtual interfaces on the same radio each on a
+separate channel. The complexity of the drivers increase so it seems
+there is value in trying to reach more common ground.
+
+  Luis
