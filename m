@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f179.google.com ([209.85.221.179]:44814 "EHLO
-	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756176Ab0CIAra (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 19:47:30 -0500
-Received: by qyk9 with SMTP id 9so5184449qyk.5
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 16:47:29 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:23201 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753478Ab0CBHyX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 02:54:23 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 23:54:23 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <201003090934.59740.br1@einfach.org>
-References: <20100308025841.7460.69949.stgit@void> <201003081317.25155.br1@einfach.org>
-	<43e72e891003080824l74ecd4fbrf5a02e51c275c9b1@mail.gmail.com>
-	<201003090934.59740.br1@einfach.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 8 Mar 2010 16:47:09 -0800
-Message-ID: <43e72e891003081647r5cb0a286la5217ff1f97e0652@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: fix I/Q calibration (for real)
-To: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19340.51368.13804.986275@gargle.gargle.HOWL>
+Date: Tue, 2 Mar 2010 13:43:28 +0530
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+Subject: Re: [PATCH 1/3] ath9k_htc: Add ath9k_htc driver
+In-Reply-To: <43e72e891003012343l655bacc1i57ebe9ca55262878@mail.gmail.com>
+References: <19336.46643.733555.555640@gargle.gargle.HOWL>
+	<20100302002759.GH8069@bombadil.infradead.org>
+	<19340.37002.731064.872605@gargle.gargle.HOWL>
+	<43e72e891003012343l655bacc1i57ebe9ca55262878@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 8, 2010 at 4:34 PM, Bruno Randolf <br1@einfach.org> wrote:
-> On Tuesday 09 March 2010 01:24:48 Luis R. Rodriguez wrote:
->> >> Thanks Bruno, are these stable fixes?
->> >
->> > hi luis!
->> >
->> > i think so. the behaviour before was completely broken, now it's better.
->> >
->> > but i'm not sure about that whole Cc: stable@kernel.org thing... (sorry
->> > i've been away for a while)... i read
->> > Documentation/stable_kernel_rules.txt but still not sure if that applies
->> > for this patch.
->>
->> Just add:
->>
->> Cc: stable@kernel.org
->>
->> below your Singed-off-by on the commit log entry. That list will get
->> spammed once the patch is merged on Linus' tree.
->
-> i understand that.
->
-> the question is more if my patch justifies bothering 'stable' or not.
->
-> as i said, in my point of view ath5k has several problems right now
-> (performace and stability), and i guess nobody will be using it seriously in
-> actual production use (does anyone?). so i think it does not really matter if
-> this or any of my other patches go into stable sooner or later. does it?
+Luis R. Rodriguez wrote:
+> My modular approach most things were I had hope the AR6003 driver
+> could also make use of the HTC/HIF framework, they would just register
+> a ath9k_hif_sdio module, register itself to HTC, and use a separate
+> hardware family mac80211 core driver for ar6k devices. After review of
+> the current AR6003 driver architecture later on though I found out
+> this was not possible, but for future mobile device I do have hope its
+> possible, just as well as sharing a common ath9k_hw.
 
-2.6.32 will be used by a lot of "enterprise" releases, I'd prefer
-connection stability fixes do indeed go in for 2.6.32 for ath5k, this
-seems like one. I'll let John be the judge.
+Ah ok.
 
-  Luis
+But yeah, we can make it modular as we add new families/transports.
+
+Sujith
