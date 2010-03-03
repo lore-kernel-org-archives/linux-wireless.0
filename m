@@ -1,183 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:38363 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329Ab0CSIG0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34026 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752860Ab0CCUam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 04:06:26 -0400
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2J86Cbx019305
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 10:06:23 +0200
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: luciano.coelho@nokia.com
-Subject: [RFC PATCHv5 2/2] mac80211: Add support for connection quality monitoring
-Date: Fri, 19 Mar 2010 10:03:21 +0200
-Message-Id: <1268985801-25225-3-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1268985801-25225-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1268985801-25225-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 3 Mar 2010 15:30:42 -0500
+Date: Wed, 3 Mar 2010 15:27:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix HT configuration
+Message-ID: <20100303202746.GG23920@tuxdriver.com>
+References: <19339.34073.723714.219572@gargle.gargle.HOWL>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <19339.34073.723714.219572@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for the set_cqm_config op. This op function configures the
-requested connection quality monitor rssi threshold and rssi hysteresis
-values to the hardware  if the hardware supports
-IEEE80211_HW_SUPPORTS_CQM.
+On Mon, Mar 01, 2010 at 02:42:57PM +0530, Sujith wrote:
+> Handling HT configuration changes involved setting the channel
+> with the new HT parameters and then issuing a rate_update()
+> notification to the driver.
+> 
+> This behavior changed after the off-channel changes. Now, the channel
+> is not updated with the new HT params in enable_ht() - instead, it
+> is now done when the scan work terminates. This results in the driver
+> depending on stale information, defaulting to non-HT mode always.
+> 
+> Fix this by passing the new channel type to the driver.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  include/net/mac80211.h |    3 ++-
+>  net/mac80211/mlme.c    |    3 ++-
+>  net/mac80211/rate.h    |    5 +++--
+>  3 files changed, 7 insertions(+), 4 deletions(-)
 
-For unsupporting hardware, currently -EOPNOTSUPP is returned, so the mac80211
-is currently not doing connection quality monitoring on the host. This could be
-added later, if needed.
+This should be combined with "ath9k: Fix HT rate control configuration"
+-- I'll take care of it.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- include/net/mac80211.h |   30 ++++++++++++++++++++++++++++++
- net/mac80211/cfg.c     |   27 +++++++++++++++++++++++++++
- net/mac80211/mlme.c    |   10 ++++++++++
- 3 files changed, 67 insertions(+), 0 deletions(-)
+Thanks,
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 936bc41..5af4365 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -144,6 +144,7 @@ struct ieee80211_low_level_stats {
-  *	new beacon (beaconing modes)
-  * @BSS_CHANGED_BEACON_ENABLED: Beaconing should be
-  *	enabled/disabled (beaconing modes)
-+ * @BSS_CHANGED_CQM: Connection quality monitor config changed
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -156,6 +157,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_BSSID		= 1<<7,
- 	BSS_CHANGED_BEACON		= 1<<8,
- 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
-+	BSS_CHANGED_CQM			= 1<<10,
- };
- 
- /**
-@@ -185,6 +187,9 @@ enum ieee80211_bss_change {
-  * @enable_beacon: whether beaconing should be enabled or not
-  * @ht_operation_mode: HT operation mode (like in &struct ieee80211_ht_info).
-  *	This field is only valid when the channel type is one of the HT types.
-+ * @cqm_rssi_thold: Connection quality monitor RSSI threshold, a zero value
-+ *	implies disabled
-+ * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
-  */
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
-@@ -202,6 +207,8 @@ struct ieee80211_bss_conf {
- 	u64 timestamp;
- 	u32 basic_rates;
- 	u16 ht_operation_mode;
-+	s32 cqm_rssi_thold;
-+	u8 cqm_rssi_hyst;
- };
- 
- /**
-@@ -954,6 +961,11 @@ enum ieee80211_tkip_key_type {
-  *	Hardware can provide ack status reports of Tx frames to
-  *	the stack.
-  *
-+ * @IEEE80211_HW_SUPPORTS_CQM:
-+ *	Hardware can do connection quality monitoring - i.e. it can monitor
-+ *	connection quality related parameters, such as the RSSI level and
-+ *	provide notifications if configured trigger levels are reached.
-+ *
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -975,6 +987,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
- 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
- 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
-+	IEEE80211_HW_SUPPORTS_CQM			= 1<<19,
- };
- 
- /**
-@@ -2370,6 +2383,23 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
-  */
- void ieee80211_beacon_loss(struct ieee80211_vif *vif);
- 
-+/**
-+ * ieee80211_cqm_notify - inform a configured connection quality monitoring
-+ *	threshold triggered
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @rssi_event: the RSSI trigger event type, if any
-+ * @gfp: context flags
-+ *
-+ * When the IEEE80211_HW_SUPPORTS_CQM is set, and a connection quality
-+ * monitoring is configured for specific quality related parameters,
-+ * the driver will inform whenever any monitored parameter reaches its
-+ * threshold. Currently only RSSI events are supported.
-+ */
-+void ieee80211_cqm_notify(struct ieee80211_vif *vif,
-+			  enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			  gfp_t gfp);
-+
- /* Rate control API */
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b7116ef..95f422c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1402,6 +1402,32 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+static int ieee80211_set_cqm_config(struct wiphy *wiphy,
-+				    struct net_device *dev,
-+				    s32 rssi_thold, u8 rssi_hyst)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+	struct ieee80211_vif *vif = &sdata->vif;
-+	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return -EOPNOTSUPP;
-+
-+	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_CQM))
-+		return -EOPNOTSUPP;
-+
-+	if (rssi_thold == bss_conf->cqm_rssi_thold &&
-+	    rssi_hyst == bss_conf->cqm_rssi_hyst)
-+		return 0;
-+
-+	bss_conf->cqm_rssi_thold = rssi_thold;
-+	bss_conf->cqm_rssi_hyst = rssi_hyst;
-+
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
-+	return 0;
-+}
-+
- static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 				      struct net_device *dev,
- 				      const u8 *addr,
-@@ -1506,4 +1532,5 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.remain_on_channel = ieee80211_remain_on_channel,
- 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
- 	.action = ieee80211_action,
-+	.set_cqm_config = ieee80211_set_cqm_config,
- };
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index be5f723..68ba5d9 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2135,3 +2135,13 @@ int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
- 	*cookie = (unsigned long) skb;
- 	return 0;
- }
-+
-+void ieee80211_cqm_notify(struct ieee80211_vif *vif,
-+			  enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			  gfp_t gfp)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	cfg80211_cqm_notify(sdata->dev, rssi_event, gfp);
-+}
-+EXPORT_SYMBOL(ieee80211_cqm_notify);
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
