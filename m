@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57900 "EHLO mx1.redhat.com"
+Received: from c60.cesmail.net ([216.154.195.49]:13180 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751309Ab0CSK6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 06:58:21 -0400
-Date: Fri, 19 Mar 2010 11:56:13 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [RFC PATCH 1/2] mac80211: add interface for disabling QoS
-Message-ID: <20100319105612.GA4915@dhcp-lab-161.englab.brq.redhat.com>
-References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com> <20100310152024.GB2969@dhcp-lab-161.englab.brq.redhat.com> <1268265597.4192.3.camel@jlt3.sipsolutions.net> <20100311095656.GB4682@dhcp-lab-161.englab.brq.redhat.com> <1268319960.4413.1.camel@jlt3.sipsolutions.net> <20100316145114.GA2496@dhcp-lab-161.englab.brq.redhat.com> <1268774282.4054.1.camel@jlt3.sipsolutions.net> <20100317092612.GB3726@dhcp-lab-161.englab.brq.redhat.com> <1268841106.5989.1.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1268841106.5989.1.camel@jlt3.sipsolutions.net>
+	id S1750771Ab0CCFCy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 00:02:54 -0500
+Subject: Re: [PATCH] ath9k: decrease size of ath9k.ko
+From: Pavel Roskin <proski@gnu.org>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net
+In-Reply-To: <20100301231329.64e3dd3b@tom-lei>
+References: <1267289803-6795-1-git-send-email-tom.leiming@gmail.com>
+	 <4B89520D.1000209@lwfinger.net>
+	 <d82e647a1002271852j20006c27i92d1f7a99e032f2d@mail.gmail.com>
+	 <4B89E0D7.9020103@lwfinger.net>  <20100301231329.64e3dd3b@tom-lei>
+Content-Type: text/plain
+Date: Wed, 03 Mar 2010 00:02:44 -0500
+Message-Id: <1267592564.4725.11.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add BSS_CHANGE_QOS_DISABLED flag to pass to drivers when want to disable
-QoS (aka WMM, WME).
+On Mon, 2010-03-01 at 23:13 +0800, Ming Lei wrote:
+> -		int valid;
+> -		int valid_single_stream;
+> +		u8 valid;
+> +		u8 valid_single_stream;
 
-When AP do not provide QoS parameters, we should assume that it not
-supporting QoS and we should not send QoS frames to it.
+You can use bool instead, and that would give the same size saving while
+being even more descriptive.  I think using bool could be safer, as the
+compiler would be able to detect some misuses and the values.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- include/net/mac80211.h |    2 ++
- net/mac80211/mlme.c    |    2 +-
- 2 files changed, 3 insertions(+), 1 deletions(-)
+But I could get even more saving by using bool with the field width:
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 45d7d44..11a192d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -144,6 +144,7 @@ struct ieee80211_low_level_stats {
-  *	new beacon (beaconing modes)
-  * @BSS_CHANGED_BEACON_ENABLED: Beaconing should be
-  *	enabled/disabled (beaconing modes)
-+ * @BSS_CHANGED_QOS_DISABLED: QoS should be disabled
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -156,6 +157,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_BSSID		= 1<<7,
- 	BSS_CHANGED_BEACON		= 1<<8,
- 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
-+	BSS_CHANGED_QOS_DISABLED	= 1<<10,
- };
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index be5f723..64be5f4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1130,7 +1130,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 		ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
- 					 elems.wmm_param_len);
- 	else
--		ieee80211_set_wmm_default(sdata);
-+		changed |= BSS_CHANGED_QOS_DISABLED;
- 
- 	local->oper_channel = wk->chan;
- 
+bool valid:1;
+bool valid_single_stream:1;
+
+That would place both variables into one byte.  It may be ineffective
+for speed, but it's more effective for storage.
+
+In my configuration, I get following sizes:
+
+original (int):    2792138
+your patch (u8):   2790186
+bool:              2790186
+bool (1 bit):      2789218
+
 -- 
-1.6.2.5
-
+Regards,
+Pavel Roskin
