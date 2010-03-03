@@ -1,44 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47434 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752676Ab0CHJGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 04:06:10 -0500
-Subject: Re: [PATCH] libipw: split ieee->networks into small pieces
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268035309.3819.14.camel@jlt3.sipsolutions.net>
-References: <1268025483-9267-1-git-send-email-yi.zhu@intel.com>
-	 <1268035309.3819.14.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Mar 2010 17:07:11 +0800
-Message-ID: <1268039231.2774.93.camel@debian>
-Mime-Version: 1.0
+Received: from fbr02.csee.onr.siteprotect.com ([64.26.60.146]:44694 "EHLO
+	fbr02.csee.onr.siteprotect.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752573Ab0CCPcx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 10:32:53 -0500
+From: "Frank W. Miller" <frankwmiller@frankwmiller.net>
+To: <tcpdump-workers@lists.tcpdump.org>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Cc: "'Jiri Pirko'" <jpirko@redhat.com>
+References: <1267578048.14049.11.camel@mj>
+In-Reply-To: <1267578048.14049.11.camel@mj>
+Subject: RE: [tcpdump-workers] Current wireless-testing breaks libpcap: mr_alen should be set
+Date: Wed, 3 Mar 2010 08:31:07 -0700
+Message-ID: <A5B3F074CA554D3E95CFD349116E4D5B@FrankWMillerPC>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-03-08 at 16:01 +0800, Johannes Berg wrote:
-> On Mon, 2010-03-08 at 13:18 +0800, Zhu Yi wrote:
-> > The ieee->networks consists of 128 struct libipw_network entries. If
-> > we allocate this chunk of memory altogether, it ends up with an
-> > order 4 page allocation. High order page allocation is likely to
-> fail
-> > on system high load. This patch splits the big chunk memory
-> allocation
-> > into small pieces, each is 344 bytes, allocates them with 128 times.
-> > 
-> > The patch fixed bug http://bugzilla.kernel.org/show_bug.cgi?id=14989
-> 
-> Could it use cfg80211's scan list stuff and the wext handlers for
-> scanning there? 
 
-Probably yes. It all depends on how we organize the network list
-internally. The ipw firmware sends raw management frames (assoc, beacon,
-etc) to driver directly. So We can use cfg80211_bss to track beacons.
-But it can require some effort since libipw_network is used throughout
-libipw.
+Would this be preventing pcap_inject() from working say in kernel 2.6.31
+(stock FC12 kernel)?
 
 Thanks,
--yi
+FM
+
+
+> -----Original Message-----
+> From: tcpdump-workers-owner@lists.tcpdump.org [mailto:tcpdump-workers-
+> owner@lists.tcpdump.org] On Behalf Of Pavel Roskin
+> Sent: Tuesday, March 02, 2010 6:01 PM
+> To: linux-wireless@vger.kernel.org; netdev@vger.kernel.org; tcpdump-
+> workers@lists.tcpdump.org
+> Cc: Jiri Pirko
+> Subject: [tcpdump-workers] Current wireless-testing breaks libpcap:
+> mr_alen should be set
+> 
+> Hello!
+> 
+> The current wireless-testing appears to have some non-wireless bits from
+> the upcoming Linux 2.6.34.  As a result, libpcap and all capture
+> programs that use it are broken.
+> 
+> This patch to libpcap helps:
+> 
+> --- a/pcap-linux.c
+> +++ b/pcap-linux.c
+> @@ -1563,6 +1563,7 @@ live_open_new(pcap_t *handle, const char
+>  			memset(&mr, 0, sizeof(mr));
+>  			mr.mr_ifindex = handle->md.ifindex;
+>  			mr.mr_type    = PACKET_MR_PROMISC;
+> +			mr.mr_alen    = 6;
+>  			if (setsockopt(sock_fd, SOL_PACKET,
+>  				PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) ==
+-1)
+>  			{
+> 
+> libpcap git doesn't have the fix yet.
+> 
+> The breakage must be coming from the commit 914c8ad2 by Jiri Pirko to
+> net/packet/af_packet.c
+> 
+> I think it's very unhelpful to introduce patches that break significant
+> userspace functionality without giving the affected programs an advance
+> warning.
+> 
+> Also, pulling bleeding edge stuff into wireless-testing before rc1
+> appears to be either a mistake or a bad decision.
+> 
+> Sorry for cross-post, but it's an urgent issue.  Repliers are encouraged
+> to trim the recipient list as necessary.
+> 
+> --
+> Regards,
+> Pavel Roskin
+> -
+> This is the tcpdump-workers list.
+> Visit https://cod.sandelman.ca/ to unsubscribe.
 
