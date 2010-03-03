@@ -1,56 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:56777 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932187Ab0CIDcx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 22:32:53 -0500
-Received: by pvb32 with SMTP id 32so1687322pvb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 19:32:53 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:18225 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753353Ab0CCPyt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 10:54:49 -0500
+Date: Wed, 3 Mar 2010 16:54:34 +0100
+From: Jiri Pirko <jpirko@redhat.com>
+To: "Frank W. Miller" <frankwmiller@frankwmiller.net>
+Cc: tcpdump-workers@lists.tcpdump.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [tcpdump-workers] Current wireless-testing breaks libpcap:
+ mr_alen should be set
+Message-ID: <20100303155434.GI2961@psychotron.lab.eng.brq.redhat.com>
+References: <1267578048.14049.11.camel@mj>
+ <A5B3F074CA554D3E95CFD349116E4D5B@FrankWMillerPC>
 MIME-Version: 1.0
-In-Reply-To: <b6c5339f1003081910t745c3e5ftafbedd1298487875@mail.gmail.com>
-References: <20100308025841.7460.69949.stgit@void> <201003090934.59740.br1@einfach.org>
-	<43e72e891003081647r5cb0a286la5217ff1f97e0652@mail.gmail.com>
-	<201003090950.21811.br1@einfach.org> <43e72e891003081721h3db9ca53n4a3688ca8aa452a4@mail.gmail.com>
-	<b6c5339f1003081910t745c3e5ftafbedd1298487875@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 8 Mar 2010 19:32:33 -0800
-Message-ID: <43e72e891003081932h49340b6aia3fb6fd1e60ae8d7@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: fix I/Q calibration (for real)
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Bruno Randolf <br1@einfach.org>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <A5B3F074CA554D3E95CFD349116E4D5B@FrankWMillerPC>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 8, 2010 at 7:10 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Mon, Mar 8, 2010 at 8:21 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Mon, Mar 8, 2010 at 4:50 PM, Bruno Randolf <br1@einfach.org> wrote:
+Wed, Mar 03, 2010 at 04:31:07PM CET, frankwmiller@frankwmiller.net wrote:
 >
->>>> > as i said, in my point of view ath5k has several problems right now
->>>> > (performace and stability), and i guess nobody will be using it seriously
->>>> > in actual production use (does anyone?).
->
-> Yes, people do use ath5k in production.  Some large companies.
->
->>>> 2.6.32 will be used by a lot of "enterprise" releases, I'd prefer
->>>> connection stability fixes do indeed go in for 2.6.32 for ath5k
->
->>> sure, as i said, i don't mind. :)
->>
->> Alright lets skip stable for this.
->
-> Wow this whole line of conversation is confusing :)
+>Would this be preventing pcap_inject() from working say in kernel 2.6.31
+>(stock FC12 kernel)?
 
-Hehe. sorry well I was talking to Bruno about the "stable"
-qualifications of this fix, and it doesn't fix an oops or serious bug,
-but it certainly can improve performance but I haven't myself seen
-numbers and would hate to justify just about pushing anything
-upstream.
+Nope. The patch went in just recently.
 
-> If this fixes a calibration bug it needs to go to stable.
-
-Perhaps a little more elaboration on the commit log on the impact and
-how this helps and how much would help.
-
-  Luis
+>
+>Thanks,
+>FM
+>
+>
+>> -----Original Message-----
+>> From: tcpdump-workers-owner@lists.tcpdump.org [mailto:tcpdump-workers-
+>> owner@lists.tcpdump.org] On Behalf Of Pavel Roskin
+>> Sent: Tuesday, March 02, 2010 6:01 PM
+>> To: linux-wireless@vger.kernel.org; netdev@vger.kernel.org; tcpdump-
+>> workers@lists.tcpdump.org
+>> Cc: Jiri Pirko
+>> Subject: [tcpdump-workers] Current wireless-testing breaks libpcap:
+>> mr_alen should be set
+>> 
+>> Hello!
+>> 
+>> The current wireless-testing appears to have some non-wireless bits from
+>> the upcoming Linux 2.6.34.  As a result, libpcap and all capture
+>> programs that use it are broken.
+>> 
+>> This patch to libpcap helps:
+>> 
+>> --- a/pcap-linux.c
+>> +++ b/pcap-linux.c
+>> @@ -1563,6 +1563,7 @@ live_open_new(pcap_t *handle, const char
+>>  			memset(&mr, 0, sizeof(mr));
+>>  			mr.mr_ifindex = handle->md.ifindex;
+>>  			mr.mr_type    = PACKET_MR_PROMISC;
+>> +			mr.mr_alen    = 6;
+>>  			if (setsockopt(sock_fd, SOL_PACKET,
+>>  				PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) ==
+>-1)
+>>  			{
+>> 
+>> libpcap git doesn't have the fix yet.
+>> 
+>> The breakage must be coming from the commit 914c8ad2 by Jiri Pirko to
+>> net/packet/af_packet.c
+>> 
+>> I think it's very unhelpful to introduce patches that break significant
+>> userspace functionality without giving the affected programs an advance
+>> warning.
+>> 
+>> Also, pulling bleeding edge stuff into wireless-testing before rc1
+>> appears to be either a mistake or a bad decision.
+>> 
+>> Sorry for cross-post, but it's an urgent issue.  Repliers are encouraged
+>> to trim the recipient list as necessary.
+>> 
+>> --
+>> Regards,
+>> Pavel Roskin
+>> -
+>> This is the tcpdump-workers list.
+>> Visit https://cod.sandelman.ca/ to unsubscribe.
+>
