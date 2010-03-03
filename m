@@ -1,261 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50322 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752713Ab0C2KRA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 06:17:00 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 03:17:00 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:40512 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751555Ab0CCQmD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 11:42:03 -0500
+Received: by fxm19 with SMTP id 19so1731079fxm.21
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 08:42:02 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: Re: Export rt2x00soc_probe from rt2x00soc
+Date: Wed, 3 Mar 2010 17:41:39 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+References: <201003031738.49706.helmut.schaa@googlemail.com>
+In-Reply-To: <201003031738.49706.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19376.33493.418210.626000@gargle.gargle.HOWL>
-Date: Mon, 29 Mar 2010 16:07:09 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/7] ath9k_common: Move RX filter code to ath9k_htc
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003031741.39958.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The calculation of RX filter is fairly different
-between ath9k and ath9k_htc, trying to make this
-common between the two drivers would result in code churn.
+Am Mittwoch 03 März 2010 schrieb Helmut Schaa:
+> This time without whitespace damage John ... hopefully ;)
 
-While at it, remove the handling of PSPOLL filter,
-it can be added when(if) AP support is added to ath9k_htc.
+But this time without a [PATCH] in the header. I shouldn't send patches in
+the evening anymore. Will resend in a minute.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/common.c       |   82 -------------------------
- drivers/net/wireless/ath/ath9k/common.h       |    4 -
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   76 ++++++++++++++++++++++-
- 5 files changed, 77 insertions(+), 88 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 7902d28..cf768f2 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -303,88 +303,6 @@ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb)
- }
- EXPORT_SYMBOL(ath9k_cmn_get_hw_crypto_keytype);
- 
--/*
-- * Calculate the RX filter to be set in the HW.
-- */
--u32 ath9k_cmn_calcrxfilter(struct ieee80211_hw *hw, struct ath_hw *ah,
--			   unsigned int rxfilter)
--{
--#define	RX_FILTER_PRESERVE (ATH9K_RX_FILTER_PHYERR | ATH9K_RX_FILTER_PHYRADAR)
--
--	u32 rfilt;
--
--	rfilt = (ath9k_hw_getrxfilter(ah) & RX_FILTER_PRESERVE)
--		| ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
--		| ATH9K_RX_FILTER_MCAST;
--
--	/* If not a STA, enable processing of Probe Requests */
--	if (ah->opmode != NL80211_IFTYPE_STATION)
--		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
--
--	/*
--	 * Set promiscuous mode when FIF_PROMISC_IN_BSS is enabled for station
--	 * mode interface or when in monitor mode. AP mode does not need this
--	 * since it receives all in-BSS frames anyway.
--	 */
--	if (((ah->opmode != NL80211_IFTYPE_AP) &&
--	     (rxfilter & FIF_PROMISC_IN_BSS)) ||
--	    (ah->opmode == NL80211_IFTYPE_MONITOR))
--		rfilt |= ATH9K_RX_FILTER_PROM;
--
--	if (rxfilter & FIF_CONTROL)
--		rfilt |= ATH9K_RX_FILTER_CONTROL;
--
--	if ((ah->opmode == NL80211_IFTYPE_STATION) &&
--	    !(rxfilter & FIF_BCN_PRBRESP_PROMISC))
--		rfilt |= ATH9K_RX_FILTER_MYBEACON;
--	else
--		rfilt |= ATH9K_RX_FILTER_BEACON;
--
--	if ((AR_SREV_9280_10_OR_LATER(ah) ||
--	    AR_SREV_9285_10_OR_LATER(ah)) &&
--	    (ah->opmode == NL80211_IFTYPE_AP) &&
--	    (rxfilter & FIF_PSPOLL))
--		rfilt |= ATH9K_RX_FILTER_PSPOLL;
--
--	if (conf_is_ht(&hw->conf))
--		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
--
--	return rfilt;
--
--#undef RX_FILTER_PRESERVE
--}
--EXPORT_SYMBOL(ath9k_cmn_calcrxfilter);
--
--/*
-- * Recv initialization for opmode change.
-- */
--void ath9k_cmn_opmode_init(struct ieee80211_hw *hw, struct ath_hw *ah,
--			   unsigned int rxfilter)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--
--	u32 rfilt, mfilt[2];
--
--	/* configure rx filter */
--	rfilt = ath9k_cmn_calcrxfilter(hw, ah, rxfilter);
--	ath9k_hw_setrxfilter(ah, rfilt);
--
--	/* configure bssid mask */
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
--		ath_hw_setbssidmask(common);
--
--	/* configure operational mode */
--	ath9k_hw_setopmode(ah);
--
--	/* Handle any link-level address change. */
--	ath9k_hw_setmac(ah, common->macaddr);
--
--	/* calculate and install multicast filter */
--	mfilt[0] = mfilt[1] = ~0;
--	ath9k_hw_setmcastfilter(ah, mfilt[0], mfilt[1]);
--}
--EXPORT_SYMBOL(ath9k_cmn_opmode_init);
--
- static u32 ath9k_get_extchanmode(struct ieee80211_channel *chan,
- 				 enum nl80211_channel_type channel_type)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index bbcc57f..72a835d 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -128,10 +128,6 @@ void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
- 
- int ath9k_cmn_padpos(__le16 frame_control);
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
--u32 ath9k_cmn_calcrxfilter(struct ieee80211_hw *hw, struct ath_hw *ah,
--			   unsigned int rxfilter);
--void ath9k_cmn_opmode_init(struct ieee80211_hw *hw, struct ath_hw *ah,
--			   unsigned int rxfilter);
- void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
- 			       struct ath9k_channel *ichan);
- struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 7770649..698e6f1 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -415,6 +415,7 @@ int ath9k_rx_init(struct ath9k_htc_priv *priv);
- void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
- void ath9k_host_rx_init(struct ath9k_htc_priv *priv);
- void ath9k_rx_tasklet(unsigned long data);
-+u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv);
- 
- void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv);
- void ath9k_init_leds(struct ath9k_htc_priv *priv);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 20a2c13..e5f78c7 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1299,7 +1299,7 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
- 	*total_flags &= SUPPORTED_FILTERS;
- 
- 	priv->rxfilter = *total_flags;
--	rfilt = ath9k_cmn_calcrxfilter(hw, priv->ah, priv->rxfilter);
-+	rfilt = ath9k_htc_calcrxfilter(priv);
- 	ath9k_hw_setrxfilter(priv->ah, rfilt);
- 
- 	ath_print(ath9k_hw_common(priv->ah), ATH_DBG_CONFIG,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index ac66cf0..94e299f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -290,10 +290,84 @@ bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
- /* RX */
- /******/
- 
-+/*
-+ * Calculate the RX filter to be set in the HW.
-+ */
-+u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv)
-+{
-+#define	RX_FILTER_PRESERVE (ATH9K_RX_FILTER_PHYERR | ATH9K_RX_FILTER_PHYRADAR)
-+
-+	struct ath_hw *ah = priv->ah;
-+	u32 rfilt;
-+
-+	rfilt = (ath9k_hw_getrxfilter(ah) & RX_FILTER_PRESERVE)
-+		| ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
-+		| ATH9K_RX_FILTER_MCAST;
-+
-+	/* If not a STA, enable processing of Probe Requests */
-+	if (ah->opmode != NL80211_IFTYPE_STATION)
-+		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
-+
-+	/*
-+	 * Set promiscuous mode when FIF_PROMISC_IN_BSS is enabled for station
-+	 * mode interface or when in monitor mode. AP mode does not need this
-+	 * since it receives all in-BSS frames anyway.
-+	 */
-+	if (((ah->opmode != NL80211_IFTYPE_AP) &&
-+	     (priv->rxfilter & FIF_PROMISC_IN_BSS)) ||
-+	    (ah->opmode == NL80211_IFTYPE_MONITOR))
-+		rfilt |= ATH9K_RX_FILTER_PROM;
-+
-+	if (priv->rxfilter & FIF_CONTROL)
-+		rfilt |= ATH9K_RX_FILTER_CONTROL;
-+
-+	if ((ah->opmode == NL80211_IFTYPE_STATION) &&
-+	    !(priv->rxfilter & FIF_BCN_PRBRESP_PROMISC))
-+		rfilt |= ATH9K_RX_FILTER_MYBEACON;
-+	else
-+		rfilt |= ATH9K_RX_FILTER_BEACON;
-+
-+	if (conf_is_ht(&priv->hw->conf))
-+		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
-+
-+	return rfilt;
-+
-+#undef RX_FILTER_PRESERVE
-+}
-+
-+/*
-+ * Recv initialization for opmode change.
-+ */
-+static void ath9k_htc_opmode_init(struct ath9k_htc_priv *priv)
-+{
-+	struct ath_hw *ah = priv->ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	u32 rfilt, mfilt[2];
-+
-+	/* configure rx filter */
-+	rfilt = ath9k_htc_calcrxfilter(priv);
-+	ath9k_hw_setrxfilter(ah, rfilt);
-+
-+	/* configure bssid mask */
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
-+		ath_hw_setbssidmask(common);
-+
-+	/* configure operational mode */
-+	ath9k_hw_setopmode(ah);
-+
-+	/* Handle any link-level address change. */
-+	ath9k_hw_setmac(ah, common->macaddr);
-+
-+	/* calculate and install multicast filter */
-+	mfilt[0] = mfilt[1] = ~0;
-+	ath9k_hw_setmcastfilter(ah, mfilt[0], mfilt[1]);
-+}
-+
- void ath9k_host_rx_init(struct ath9k_htc_priv *priv)
- {
- 	ath9k_hw_rxena(priv->ah);
--	ath9k_cmn_opmode_init(priv->hw, priv->ah, priv->rxfilter);
-+	ath9k_htc_opmode_init(priv);
- 	ath9k_hw_startpcureceive(priv->ah);
- 	priv->rx.last_rssi = ATH_RSSI_DUMMY_MARKER;
- }
--- 
-1.7.0.3
-
+Helmut
