@@ -1,119 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:48596 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756551Ab0CaA0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 20:26:19 -0400
-From: Krzysztof Halasa <khc@pm.waw.pl>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-References: <m3tys0tbhk.fsf@intrepid.localdomain>
-	<43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
-	<m3wrwtoekv.fsf@intrepid.localdomain>
-	<201003302049.24231.chunkeey@googlemail.com>
-	<m3mxxpo8h6.fsf@intrepid.localdomain>
-	<n2r43e72e891003301507wb3359afcvd2e3656bc70e431c@mail.gmail.com>
-Date: Wed, 31 Mar 2010 02:26:15 +0200
-In-Reply-To: <n2r43e72e891003301507wb3359afcvd2e3656bc70e431c@mail.gmail.com>
-	(Luis R. Rodriguez's message of "Tue, 30 Mar 2010 15:07:14 -0700")
-Message-ID: <m3634dnxp4.fsf@intrepid.localdomain>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:44114 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369Ab0CCRIw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 12:08:52 -0500
+Received: by gyd8 with SMTP id 8so145249gyd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 09:08:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201003031804.54121.helmut.schaa@googlemail.com>
+References: <201003031742.55842.helmut.schaa@googlemail.com>
+	 <14add3d11003030850j2c16a92dsfad2a4a43c4d126c@mail.gmail.com>
+	 <201003031804.54121.helmut.schaa@googlemail.com>
+Date: Wed, 3 Mar 2010 18:08:51 +0100
+Message-ID: <14add3d11003030908v620dc63ci4712373a77da275a@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: Export rt2x00soc_probe from rt2x00soc
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
-
->> Then again: does the regdomain = 0 means "US" or "default country" (or
->> something completely different), according to Atheros' docs?
+On Wed, Mar 3, 2010 at 6:04 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Am Mittwoch 03 März 2010 schrieb Gertjan van Wingerde:
+>> Thanks for doing this. I couldn't test these configurations as I am
+>> lacking SoC devices.
 >
-> As per Atheros documentation 0x0 means "US". I've already provided
-> links for you. I'm sending this from an Atheros e-mail address, not
-> sure if this helps get this through to you or not.
+> No problem, I'm just trying to get the driver up on one of these SoC devices.
+> Not sure how far I'll get :)
+>
 
-Why are you writing like this? Christian noted there is a difference
-between regdomain and country, and you (sort of) confirmed it. This
-doesn't seem to be that black and white as you say it is, and it has
-nothing to do with you working for Atheros.
+All I can say is to please keep us informed on your progress. It is
+the first time I'm hearing someone actually working with a SoC device.
 
-BTW is this documentation publicly available? Or perhaps the fragment
-listing the possible regdomains? Are the docs limited to specific chips
-only? Did the previous versions of the docs, if any, differ in this
-matter?
+Can you share some information on what device you have, and what
+Ralink chipset is on this device (the detection messages in dmesg for
+this device would be interesting).
 
-Obviously I'm not saying the following has any authority, and I assume
-it may have changed:
-
-http://madwifi-project.org/wiki/UserDocs/CountryCode
-
-This is a preliminary list of regdomains for people who want to play
-with changing their regdomain using the ar5k utility
-
- 0x00 (wildcarded)
- 0x10 (FCC)
- 0x20 (DOC)
- 0x30 (ETSI)
- 0x31 (Spain)
- 0x32 (France)
- 0x37 (South Africa)
- 0x40 (MKK-Japan)
- 0xFF (debug)
- Most "universal/worldwide" cards use zero as the value, some 0xFF
-
-I don't know what the binary HAL did, but this regdomain thing is at
-least confusing, not only for me, but apparently also for card
-manufacturers with access to the current (and maybe previous) Atheros
-docs (and no, this isn't only about Mikrotik).
-
-Unfortunately this confusion makes it easy for the following to not
-happen (though probably only outside USA):
-
-    * Average users should not accidentally fail to comply with
-      regulations if at all possible;
-    * The Linux kernel should offer necessary and reasonable regulatory
-      enforcement mechanisms in order to facilitate implementation of a
-      broad variety of regulatory policies;
-    * Options to disable or circumvent regulatory enforcement should not
-      be included in kernels from any public source; and,
-    * It is unacceptable for either distributions or community
-      developers to knowingly violate the principles stated above.
-
-You also wrote:
-
-> My point was that this is not something meant to be interpreted by
-> anyone for what "default country" means, the documentation I pointed
-> out clearly states that 0x0 is designed to mean to match the "US" by
-> Atheros hardware as per hardware documentation provided to ODMs.
-
-Is the documentation you pointed out more verbose than the following?
-http://wireless.kernel.org/en/users/Drivers/ath/#The_0x0_regulatory_domain
-
-> So be aware, 0x0 will always map to the US. If the manufacturer did
-> not intend to do that they can provide their own regulatory.bin to
-> customers where they can map "US" to their own defined regulatory
-> domain.
-
-Could you please show some short example how to do that, according to
-the four rules?
-
-Do you mean changing the mapping regdomain 0 -> "US" to another country,
-or simply overriding the following:
-
-country US:
-        (2402 - 2472 @ 40), (3, 27)
-        (5170 - 5250 @ 40), (3, 17)
-        (5250 - 5330 @ 40), (3, 20), DFS
-        (5490 - 5600 @ 40), (3, 20), DFS
-        (5650 - 5710 @ 40), (3, 20), DFS
-        (5735 - 5835 @ 40), (3, 30)
-
-(IOW, including frequencies which are not legal in US under the "country
-US", thus violating the 4 and other rules)?
-
-Still confused,
--- 
-Krzysztof Halasa
-
-(and yes, changing anything in the EEPROM is trivial for me - am I wrong
-that I wish this cleared without doing this?).
+---
+Gertjan.
