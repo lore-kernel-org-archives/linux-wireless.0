@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:15497 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753734Ab0CBIO0 (ORCPT
+Received: from mail-bw0-f212.google.com ([209.85.218.212]:48998 "EHLO
+	mail-bw0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754722Ab0CCG5o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 03:14:26 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: 802.11 development process - extended documentation
-Date: Tue, 2 Mar 2010 11:15:10 +0100
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-In-Reply-To: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201003021115.10858.holgerschurig@gmail.com>
+	Wed, 3 Mar 2010 01:57:44 -0500
+Subject: Re: [net-2.6 PATCH] af_packet: move strict addr_len check right
+ before dev_[mc/unicast]_[add/del]
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Jiri Pirko <jpirko@redhat.com>
+Cc: netdev@vger.kernel.org, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, tcpdump-workers@lists.tcpdump.org,
+	proski@gnu.org
+In-Reply-To: <20100303064001.GB2648@psychotron.redhat.com>
+References: <1267578048.14049.11.camel@mj>
+	 <20100303064001.GB2648@psychotron.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 03 Mar 2010 07:57:39 +0100
+Message-ID: <1267599459.2839.91.camel@edumazet-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First impression: nice idea
+Le mercredi 03 mars 2010 à 07:40 +0100, Jiri Pirko a écrit :
+> Subject: [net-2.6 PATCH] af_packet: move strict addr_len check right before dev_[mc/unicast]_[add/del]
+> 
+> My previous patch 914c8ad2d18b62ad1420f518c0cab0b0b90ab308 incorrectly changed
+> the length check in packet_mc_add to be more strict. The problem is that
+> userspace is not filling this field (and it stays zeroed) in case of setting
+> PACKET_MR_PROMISC or PACKET_MR_ALLMULTI. So move the strict check to the point
+> in path where the addr_len must be set correctly.
+> 
+> Signed-off-by: Jiri Pirko <jpirko@redhat.com>
+> 
 
-Second impression: too complex (entangled and slightly confusing mix)
+I am not sure it solves Pavel Roskin concern, but some credit should be
+given to him :)
 
+Reported-by: Pavel Roskin <proski@gnu.org>
 
-Suggestion: make it simpler by divide & conquer, e.g. make two or more 
-pictures. Putting everything into one picture is too much, let people learn 
-little-by-little, based on concepts.
-
-For example, make a picture with only the way of a patch towards Linus.
-
-Patch flow in a picture should be structured, linear. Not circular. 
-Suggestion: make it from top-to-bottom. And not start in the middle of the 
-picture.
-
-Also, put names towards below the pictures. Who knows the face of of Linville? 
-Only insiders. But "outsiders" (like me) have to scroll down to the text 
-description, then up again ... not nice.
-
-
+Thanks
 
 
-Also, the text list below the picture starts with Linus, then comes Stephen. 
-It should sorted differently. As the scope of this page is about wireless 
-patches, everything (pic & text) should start at John W.
-
--- 
-http://www.holgerschurig.de
