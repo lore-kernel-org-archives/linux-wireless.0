@@ -1,2550 +1,930 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46895 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129Ab0CKB2c (ORCPT
+Received: from m-04.th.seeweb.it ([217.64.195.227]:37353 "EHLO
+	m-04.th.seeweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864Ab0CCImG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 20:28:32 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 05/14] ath9k_hw: move < AR9002 specific calibration stuff to its own file
-Date: Wed, 10 Mar 2010 20:28:22 -0500
-Message-Id: <1268270911-24568-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 3 Mar 2010 03:42:06 -0500
+Message-ID: <4B8E20CF.50109@users.sourceforge.net>
+Date: Wed, 03 Mar 2010 09:41:51 +0100
+From: "Daniele C." <legolas558@users.sourceforge.net>
+MIME-Version: 1.0
+To: users@rt2x00.serialmonkey.com
+CC: linux-wireless@vger.kernel.org
+Subject: rt2870 (staging kernel driver) crashes fatally
+Content-Type: multipart/mixed;
+ boundary="------------060309070607020201070300"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves the calibration hardware code specific to AR5008,
-AR9001 and AR9002 to its own set of files. To make things easier
-to read and maintain we split the calibration hardware code into
-two files, one for generic calibration routines and another for
-the settings used for the three different types of calibration
-supported:
+This is a multi-part message in MIME format.
+--------------060309070607020201070300
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-  * IQ calibration
-  * ADC gain calibration
-  * ADC-DC calibration
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Each of these have their own respective collection routine
-and calibration routines.
+Hello,
 
-To get do all this we move power amplifier calibration
-code to its own helper, ath9k_hw_pa_cal(). I noticed that
-ath9k_hw_pa_cal() checks for a skip on calibration, but during
-ar9002_hw_init_cal(), which is called upon reset we don't check
-for a skip. We'll need to review that further.
+I am experiencing the documented crash after intense usage of the wi-fi device.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/Makefile            |    2 +
- drivers/net/wireless/ath/ath9k/ar9002_calib.c      |  824 +++++++++++++++
- .../net/wireless/ath/ath9k/ar9002_calib_settings.c |  350 +++++++
- drivers/net/wireless/ath/ath9k/ar9002_hw.c         |    2 +
- drivers/net/wireless/ath/ath9k/calib.c             | 1099 +-------------------
- drivers/net/wireless/ath/ath9k/calib.h             |    7 +-
- drivers/net/wireless/ath/ath9k/hw-ops.h            |   50 +
- drivers/net/wireless/ath/ath9k/hw.h                |   25 +
- 8 files changed, 1258 insertions(+), 1101 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_calib.c
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
+Best regards,
+- --
+  Daniele C.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index fe53595..6c1594b 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -15,6 +15,8 @@ obj-$(CONFIG_ATH9K) += ath9k.o
- 
- ath9k_hw-y:=	hw.o \
- 		ar9002_hw.o \
-+		ar9002_calib.o \
-+		ar9002_calib_settings.o \
- 		eeprom.o \
- 		eeprom_def.o \
- 		eeprom_4k.o \
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-new file mode 100644
-index 0000000..9d7f624
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -0,0 +1,824 @@
-+/*
-+ * Copyright (c) 2008-2010 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "hw.h"
-+#include "hw-ops.h"
-+
-+/*
-+ * This file has the calibration specific stuff for
-+ * the chipsets under the hardware families: AR5008, AR9001, and AR9002
-+ */
-+
-+static void ar9002_hw_do_getnf(struct ath_hw *ah,
-+			      int16_t nfarray[NUM_NF_READINGS])
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	int16_t nf;
-+
-+	if (AR_SREV_9280_10_OR_LATER(ah))
-+		nf = MS(REG_READ(ah, AR_PHY_CCA), AR9280_PHY_MINCCA_PWR);
-+	else
-+		nf = MS(REG_READ(ah, AR_PHY_CCA), AR_PHY_MINCCA_PWR);
-+
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
-+
-+	if (AR_SREV_9271(ah))
-+		if (nf >= -114)
-+			nf = -116;
-+	nfarray[0] = nf;
-+
-+	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
-+		if (AR_SREV_9280_10_OR_LATER(ah))
-+			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
-+					AR9280_PHY_CH1_MINCCA_PWR);
-+		else
-+			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
-+					AR_PHY_CH1_MINCCA_PWR);
-+
-+		if (nf & 0x100)
-+			nf = 0 - ((nf ^ 0x1ff) + 1);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "NF calibrated [ctl] [chain 1] is %d\n", nf);
-+		nfarray[1] = nf;
-+
-+		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
-+			nf = MS(REG_READ(ah, AR_PHY_CH2_CCA),
-+					AR_PHY_CH2_MINCCA_PWR);
-+			if (nf & 0x100)
-+				nf = 0 - ((nf ^ 0x1ff) + 1);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "NF calibrated [ctl] [chain 2] is %d\n", nf);
-+			nfarray[2] = nf;
-+		}
-+	}
-+
-+	if (AR_SREV_9280_10_OR_LATER(ah))
-+		nf = MS(REG_READ(ah, AR_PHY_EXT_CCA),
-+			AR9280_PHY_EXT_MINCCA_PWR);
-+	else
-+		nf = MS(REG_READ(ah, AR_PHY_EXT_CCA),
-+			AR_PHY_EXT_MINCCA_PWR);
-+
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ext] [chain 0] is %d\n", nf);
-+
-+	if (AR_SREV_9271(ah))
-+		if (nf >= -114)
-+			nf = -116;
-+
-+	nfarray[3] = nf;
-+
-+	if (!AR_SREV_9285(ah)) {
-+		if (AR_SREV_9280_10_OR_LATER(ah))
-+			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
-+					AR9280_PHY_CH1_EXT_MINCCA_PWR);
-+		else
-+			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
-+					AR_PHY_CH1_EXT_MINCCA_PWR);
-+
-+		if (nf & 0x100)
-+			nf = 0 - ((nf ^ 0x1ff) + 1);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "NF calibrated [ext] [chain 1] is %d\n", nf);
-+		nfarray[4] = nf;
-+
-+		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
-+			nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA),
-+					AR_PHY_CH2_EXT_MINCCA_PWR);
-+			if (nf & 0x100)
-+				nf = 0 - ((nf ^ 0x1ff) + 1);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "NF calibrated [ext] [chain 2] is %d\n", nf);
-+			nfarray[5] = nf;
-+		}
-+	}
-+}
-+
-+static bool ar9002_hw_getnf_thres(struct ath_hw *ah,
-+				 enum ieee80211_band band,
-+				 int16_t *nft)
-+{
-+	switch (band) {
-+	case IEEE80211_BAND_5GHZ:
-+		*nft = (int8_t)ah->eep_ops->get_eeprom(ah, EEP_NFTHRESH_5);
-+		break;
-+	case IEEE80211_BAND_2GHZ:
-+		*nft = (int8_t)ah->eep_ops->get_eeprom(ah, EEP_NFTHRESH_2);
-+		break;
-+	default:
-+		BUG_ON(1);
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
-+static int16_t ar9002_hw_get_nf_hist_mid(int16_t *nfCalBuffer)
-+{
-+	int16_t nfval;
-+	int16_t sort[ATH9K_NF_CAL_HIST_MAX];
-+	int i, j;
-+
-+	for (i = 0; i < ATH9K_NF_CAL_HIST_MAX; i++)
-+		sort[i] = nfCalBuffer[i];
-+
-+	for (i = 0; i < ATH9K_NF_CAL_HIST_MAX - 1; i++) {
-+		for (j = 1; j < ATH9K_NF_CAL_HIST_MAX - i; j++) {
-+			if (sort[j] > sort[j - 1]) {
-+				nfval = sort[j];
-+				sort[j] = sort[j - 1];
-+				sort[j - 1] = nfval;
-+			}
-+		}
-+	}
-+	nfval = sort[(ATH9K_NF_CAL_HIST_MAX - 1) >> 1];
-+
-+	return nfval;
-+}
-+
-+static void ar9002_hw_update_nfcal_hist_buffer(struct ath9k_nfcal_hist *h,
-+					      int16_t *nfarray)
-+{
-+	int i;
-+
-+	for (i = 0; i < NUM_NF_READINGS; i++) {
-+		h[i].nfCalBuffer[h[i].currIndex] = nfarray[i];
-+
-+		if (++h[i].currIndex >= ATH9K_NF_CAL_HIST_MAX)
-+			h[i].currIndex = 0;
-+
-+		if (h[i].invalidNFcount > 0) {
-+			if (nfarray[i] < AR_PHY_CCA_MIN_BAD_VALUE ||
-+			    nfarray[i] > AR_PHY_CCA_MAX_HIGH_VALUE) {
-+				h[i].invalidNFcount = ATH9K_NF_CAL_HIST_MAX;
-+			} else {
-+				h[i].invalidNFcount--;
-+				h[i].privNF = nfarray[i];
-+			}
-+		} else {
-+			h[i].privNF =
-+				ar9002_hw_get_nf_hist_mid(h[i].nfCalBuffer);
-+		}
-+	}
-+	return;
-+}
-+
-+static int16_t ar9002_hw_getnf(struct ath_hw *ah,
-+			       struct ath9k_channel *chan)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	int16_t nf, nfThresh;
-+	int16_t nfarray[NUM_NF_READINGS] = { 0 };
-+	struct ath9k_nfcal_hist *h;
-+	struct ieee80211_channel *c = chan->chan;
-+
-+	chan->channelFlags &= (~CHANNEL_CW_INT);
-+	if (REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF) {
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "NF did not complete in calibration window\n");
-+		nf = 0;
-+		chan->rawNoiseFloor = nf;
-+		return chan->rawNoiseFloor;
-+	} else {
-+		ar9002_hw_do_getnf(ah, nfarray);
-+		nf = nfarray[0];
-+		if (ar9002_hw_getnf_thres(ah, c->band, &nfThresh)
-+		    && nf > nfThresh) {
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "noise floor failed detected; "
-+				  "detected %d, threshold %d\n",
-+				  nf, nfThresh);
-+			chan->channelFlags |= CHANNEL_CW_INT;
-+		}
-+	}
-+
-+	h = ah->nfCalHist;
-+
-+	ar9002_hw_update_nfcal_hist_buffer(h, nfarray);
-+	chan->rawNoiseFloor = h[0].privNF;
-+
-+	return chan->rawNoiseFloor;
-+}
-+
-+static void ar9002_hw_setup_calibration(struct ath_hw *ah,
-+				       struct ath9k_cal_list *currCal)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(0),
-+		      AR_PHY_TIMING_CTRL4_IQCAL_LOG_COUNT_MAX,
-+		      currCal->calData->calCountMax);
-+
-+	switch (currCal->calData->calType) {
-+	case IQ_MISMATCH_CAL:
-+		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_IQ);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "starting IQ Mismatch Calibration\n");
-+		break;
-+	case ADC_GAIN_CAL:
-+		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_GAIN);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "starting ADC Gain Calibration\n");
-+		break;
-+	case ADC_DC_CAL:
-+		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_DC_PER);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "starting ADC DC Calibration\n");
-+		break;
-+	case ADC_DC_INIT_CAL:
-+		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_DC_INIT);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "starting Init ADC DC Calibration\n");
-+		break;
-+	}
-+
-+	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
-+		    AR_PHY_TIMING_CTRL4_DO_CAL);
-+}
-+
-+static void ar9002_hw_reset_calibration(struct ath_hw *ah,
-+					struct ath9k_cal_list *currCal)
-+{
-+	int i;
-+
-+	ar9002_hw_setup_calibration(ah, currCal);
-+
-+	currCal->calState = CAL_RUNNING;
-+
-+	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+		ah->meas0.sign[i] = 0;
-+		ah->meas1.sign[i] = 0;
-+		ah->meas2.sign[i] = 0;
-+		ah->meas3.sign[i] = 0;
-+	}
-+
-+	ah->cal_samples = 0;
-+}
-+
-+static bool ar9002_hw_per_calibration(struct ath_hw *ah,
-+				      struct ath9k_channel *ichan,
-+				      u8 rxchainmask,
-+				      struct ath9k_cal_list *currCal)
-+{
-+	bool iscaldone = false;
-+
-+	if (currCal->calState == CAL_RUNNING) {
-+		if (!(REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
-+		      AR_PHY_TIMING_CTRL4_DO_CAL)) {
-+
-+			currCal->calData->calCollect(ah);
-+			ah->cal_samples++;
-+
-+			if (ah->cal_samples >= currCal->calData->calNumSamples) {
-+				int i, numChains = 0;
-+				for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+					if (rxchainmask & (1 << i))
-+						numChains++;
-+				}
-+
-+				currCal->calData->calPostProc(ah, numChains);
-+				ichan->CalValid |= currCal->calData->calType;
-+				currCal->calState = CAL_DONE;
-+				iscaldone = true;
-+			} else {
-+				ar9002_hw_setup_calibration(ah, currCal);
-+			}
-+		}
-+	} else if (!(ichan->CalValid & currCal->calData->calType)) {
-+		ath9k_hw_reset_calibration(ah, currCal);
-+	}
-+
-+	return iscaldone;
-+}
-+
-+static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 regVal;
-+	unsigned int i;
-+	u32 regList [][2] = {
-+		{ 0x786c, 0 },
-+		{ 0x7854, 0 },
-+		{ 0x7820, 0 },
-+		{ 0x7824, 0 },
-+		{ 0x7868, 0 },
-+		{ 0x783c, 0 },
-+		{ 0x7838, 0 } ,
-+		{ 0x7828, 0 } ,
-+	};
-+
-+	ath_print(common, ATH_DBG_CALIBRATE, "Running PA Calibration\n");
-+
-+	for (i = 0; i < ARRAY_SIZE(regList); i++)
-+		regList[i][1] = REG_READ(ah, regList[i][0]);
-+
-+	regVal = REG_READ(ah, 0x7834);
-+	regVal &= (~(0x1));
-+	REG_WRITE(ah, 0x7834, regVal);
-+	regVal = REG_READ(ah, 0x9808);
-+	regVal |= (0x1 << 27);
-+	REG_WRITE(ah, 0x9808, regVal);
-+
-+	/* 786c,b23,1, pwddac=1 */
-+	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
-+	/* 7854, b5,1, pdrxtxbb=1 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
-+	/* 7854, b7,1, pdv2i=1 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
-+	/* 7854, b8,1, pddacinterface=1 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
-+	/* 7824,b12,0, offcal=0 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
-+	/* 7838, b1,0, pwddb=0 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
-+	/* 7820,b11,0, enpacal=0 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
-+	/* 7820,b25,1, pdpadrv1=0 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
-+	/* 7820,b24,0, pdpadrv2=0 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1,AR9285_AN_RF2G1_PDPADRV2,0);
-+	/* 7820,b23,0, pdpaout=0 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
-+	/* 783c,b14-16,7, padrvgn2tab_0=7 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G8,AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
-+	/*
-+	 * 7838,b29-31,0, padrvgn1tab_0=0
-+	 * does not matter since we turn it off
-+	 */
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G7,AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
-+
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9271_AN_RF2G3_CCOMP, 0xfff);
-+
-+	/* Set:
-+	 * localmode=1,bmode=1,bmoderxtx=1,synthon=1,
-+	 * txon=1,paon=1,oscon=1,synthon_force=1
-+	 */
-+	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
-+	udelay(30);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9271_AN_RF2G6_OFFS, 0);
-+
-+	/* find off_6_1; */
-+	for (i = 6; i > 0; i--) {
-+		regVal = REG_READ(ah, 0x7834);
-+		regVal |= (1 << (20 + i));
-+		REG_WRITE(ah, 0x7834, regVal);
-+		udelay(1);
-+		//regVal = REG_READ(ah, 0x7834);
-+		regVal &= (~(0x1 << (20 + i)));
-+		regVal |= (MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9)
-+			    << (20 + i));
-+		REG_WRITE(ah, 0x7834, regVal);
-+	}
-+
-+	regVal = (regVal >>20) & 0x7f;
-+
-+	/* Update PA cal info */
-+	if ((!is_reset) && (ah->pacal_info.prev_offset == regVal)) {
-+		if (ah->pacal_info.max_skipcount < MAX_PACAL_SKIPCOUNT)
-+			ah->pacal_info.max_skipcount =
-+				2 * ah->pacal_info.max_skipcount;
-+		ah->pacal_info.skipcount = ah->pacal_info.max_skipcount;
-+	} else {
-+		ah->pacal_info.max_skipcount = 1;
-+		ah->pacal_info.skipcount = 0;
-+		ah->pacal_info.prev_offset = regVal;
-+	}
-+
-+	regVal = REG_READ(ah, 0x7834);
-+	regVal |= 0x1;
-+	REG_WRITE(ah, 0x7834, regVal);
-+	regVal = REG_READ(ah, 0x9808);
-+	regVal &= (~(0x1 << 27));
-+	REG_WRITE(ah, 0x9808, regVal);
-+
-+	for (i = 0; i < ARRAY_SIZE(regList); i++)
-+		REG_WRITE(ah, regList[i][0], regList[i][1]);
-+}
-+
-+static inline void ar9285_hw_pa_cal(struct ath_hw *ah, bool is_reset)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 regVal;
-+	int i, offset, offs_6_1, offs_0;
-+	u32 ccomp_org, reg_field;
-+	u32 regList[][2] = {
-+		{ 0x786c, 0 },
-+		{ 0x7854, 0 },
-+		{ 0x7820, 0 },
-+		{ 0x7824, 0 },
-+		{ 0x7868, 0 },
-+		{ 0x783c, 0 },
-+		{ 0x7838, 0 },
-+	};
-+
-+	ath_print(common, ATH_DBG_CALIBRATE, "Running PA Calibration\n");
-+
-+	/* PA CAL is not needed for high power solution */
-+	if (ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE) ==
-+	    AR5416_EEP_TXGAIN_HIGH_POWER)
-+		return;
-+
-+	if (AR_SREV_9285_11(ah)) {
-+		REG_WRITE(ah, AR9285_AN_TOP4, (AR9285_AN_TOP4_DEFAULT | 0x14));
-+		udelay(10);
-+	}
-+
-+	for (i = 0; i < ARRAY_SIZE(regList); i++)
-+		regList[i][1] = REG_READ(ah, regList[i][0]);
-+
-+	regVal = REG_READ(ah, 0x7834);
-+	regVal &= (~(0x1));
-+	REG_WRITE(ah, 0x7834, regVal);
-+	regVal = REG_READ(ah, 0x9808);
-+	regVal |= (0x1 << 27);
-+	REG_WRITE(ah, 0x9808, regVal);
-+
-+	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
-+	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
-+	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
-+	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2, 0);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G8, AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
-+	ccomp_org = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_CCOMP);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, 0xf);
-+
-+	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
-+	udelay(30);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_OFFS, 0);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, 0);
-+
-+	for (i = 6; i > 0; i--) {
-+		regVal = REG_READ(ah, 0x7834);
-+		regVal |= (1 << (19 + i));
-+		REG_WRITE(ah, 0x7834, regVal);
-+		udelay(1);
-+		regVal = REG_READ(ah, 0x7834);
-+		regVal &= (~(0x1 << (19 + i)));
-+		reg_field = MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9);
-+		regVal |= (reg_field << (19 + i));
-+		REG_WRITE(ah, 0x7834, regVal);
-+	}
-+
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, 1);
-+	udelay(1);
-+	reg_field = MS(REG_READ(ah, AR9285_AN_RF2G9), AR9285_AN_RXTXBB1_SPARE9);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, reg_field);
-+	offs_6_1 = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_OFFS);
-+	offs_0   = MS(REG_READ(ah, AR9285_AN_RF2G3), AR9285_AN_RF2G3_PDVCCOMP);
-+
-+	offset = (offs_6_1<<1) | offs_0;
-+	offset = offset - 0;
-+	offs_6_1 = offset>>1;
-+	offs_0 = offset & 1;
-+
-+	if ((!is_reset) && (ah->pacal_info.prev_offset == offset)) {
-+		if (ah->pacal_info.max_skipcount < MAX_PACAL_SKIPCOUNT)
-+			ah->pacal_info.max_skipcount =
-+				2 * ah->pacal_info.max_skipcount;
-+		ah->pacal_info.skipcount = ah->pacal_info.max_skipcount;
-+	} else {
-+		ah->pacal_info.max_skipcount = 1;
-+		ah->pacal_info.skipcount = 0;
-+		ah->pacal_info.prev_offset = offset;
-+	}
-+
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_OFFS, offs_6_1);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, offs_0);
-+
-+	regVal = REG_READ(ah, 0x7834);
-+	regVal |= 0x1;
-+	REG_WRITE(ah, 0x7834, regVal);
-+	regVal = REG_READ(ah, 0x9808);
-+	regVal &= (~(0x1 << 27));
-+	REG_WRITE(ah, 0x9808, regVal);
-+
-+	for (i = 0; i < ARRAY_SIZE(regList); i++)
-+		REG_WRITE(ah, regList[i][0], regList[i][1]);
-+
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, ccomp_org);
-+
-+	if (AR_SREV_9285_11(ah))
-+		REG_WRITE(ah, AR9285_AN_TOP4, AR9285_AN_TOP4_DEFAULT);
-+
-+}
-+
-+/* Carrier leakage Calibration fix */
-+static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
-+	if (IS_CHAN_HT20(chan)) {
-+		REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
-+		REG_SET_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
-+		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
-+			    AR_PHY_AGC_CONTROL_FLTR_CAL);
-+		REG_CLR_BIT(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_CAL_ENABLE);
-+		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL);
-+		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
-+				  AR_PHY_AGC_CONTROL_CAL, 0, AH_WAIT_TIMEOUT)) {
-+			ath_print(common, ATH_DBG_CALIBRATE, "offset "
-+				  "calibration failed to complete in "
-+				  "1ms; noisy ??\n");
-+			return false;
-+		}
-+		REG_CLR_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
-+		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
-+		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
-+	}
-+	REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
-+	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
-+	REG_SET_BIT(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_CAL_ENABLE);
-+	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL);
-+	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
-+			  0, AH_WAIT_TIMEOUT)) {
-+		ath_print(common, ATH_DBG_CALIBRATE, "offset calibration "
-+			  "failed to complete in 1ms; noisy ??\n");
-+		return false;
-+	}
-+
-+	REG_SET_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
-+	REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
-+	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
-+
-+	return true;
-+}
-+
-+bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (AR_SREV_9271(ah) || AR_SREV_9285_12_OR_LATER(ah)) {
-+		if (!ar9285_clc(ah, chan))
-+			return false;
-+	} else {
-+		if (AR_SREV_9280_10_OR_LATER(ah)) {
-+			if (!AR_SREV_9287_10_OR_LATER(ah))
-+				REG_CLR_BIT(ah, AR_PHY_ADC_CTL,
-+					    AR_PHY_ADC_CTL_OFF_PWDADC);
-+			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
-+				    AR_PHY_AGC_CONTROL_FLTR_CAL);
-+		}
-+
-+		/* Calibrate the AGC */
-+		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
-+			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
-+			  AR_PHY_AGC_CONTROL_CAL);
-+
-+		/* Poll for offset calibration complete */
-+		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
-+				   0, AH_WAIT_TIMEOUT)) {
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "offset calibration failed to "
-+				  "complete in 1ms; noisy environment?\n");
-+			return false;
-+		}
-+
-+		if (AR_SREV_9280_10_OR_LATER(ah)) {
-+			if (!AR_SREV_9287_10_OR_LATER(ah))
-+				REG_SET_BIT(ah, AR_PHY_ADC_CTL,
-+					    AR_PHY_ADC_CTL_OFF_PWDADC);
-+			REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
-+				    AR_PHY_AGC_CONTROL_FLTR_CAL);
-+		}
-+	}
-+
-+	/*
-+	 * Do PA Calibration
-+	 * XXX: figure out why we don't check for the skip as is
-+	 * done on ar9002_hw_pa_cal()
-+	 */
-+	if (AR_SREV_9271(ah))
-+		ar9271_hw_pa_cal(ah, true);
-+	else if (AR_SREV_9285_11_OR_LATER(ah))
-+		ar9285_hw_pa_cal(ah, true);
-+
-+	/* Do NF Calibration after DC offset and other calibrations */
-+	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
-+		  REG_READ(ah, AR_PHY_AGC_CONTROL) | AR_PHY_AGC_CONTROL_NF);
-+
-+	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
-+
-+	/* Enable IQ, ADC Gain and ADC DC offset CALs */
-+	if (AR_SREV_9100(ah) || AR_SREV_9160_10_OR_LATER(ah)) {
-+		if (ath9k_hw_iscal_supported(ah, ADC_GAIN_CAL)) {
-+			INIT_CAL(&ah->adcgain_caldata);
-+			INSERT_CAL(ah, &ah->adcgain_caldata);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "enabling ADC Gain Calibration.\n");
-+		}
-+		if (ath9k_hw_iscal_supported(ah, ADC_DC_CAL)) {
-+			INIT_CAL(&ah->adcdc_caldata);
-+			INSERT_CAL(ah, &ah->adcdc_caldata);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "enabling ADC DC Calibration.\n");
-+		}
-+		if (ath9k_hw_iscal_supported(ah, IQ_MISMATCH_CAL)) {
-+			INIT_CAL(&ah->iq_caldata);
-+			INSERT_CAL(ah, &ah->iq_caldata);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "enabling IQ Calibration.\n");
-+		}
-+
-+		ah->cal_list_curr = ah->cal_list;
-+
-+		if (ah->cal_list_curr)
-+			ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
-+	}
-+
-+	chan->CalValid = 0;
-+
-+	return true;
-+}
-+
-+static void ar9287_hw_olc_temp_compensation(struct ath_hw *ah)
-+{
-+	u32 rddata;
-+	int32_t delta, currPDADC, slope;
-+
-+	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
-+	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
-+
-+	if (ah->initPDADC == 0 || currPDADC == 0) {
-+		/*
-+		 * Zero value indicates that no frames have been transmitted yet,
-+		 * can't do temperature compensation until frames are transmitted.
-+		 */
-+		return;
-+	} else {
-+		slope = ah->eep_ops->get_eeprom(ah, EEP_TEMPSENSE_SLOPE);
-+
-+		if (slope == 0) { /* to avoid divide by zero case */
-+			delta = 0;
-+		} else {
-+			delta = ((currPDADC - ah->initPDADC)*4) / slope;
-+		}
-+		REG_RMW_FIELD(ah, AR_PHY_CH0_TX_PWRCTRL11,
-+			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
-+		REG_RMW_FIELD(ah, AR_PHY_CH1_TX_PWRCTRL11,
-+			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
-+	}
-+}
-+
-+static void ar9002_hw_olc_temp_compensation(struct ath_hw *ah)
-+{
-+	u32 rddata, i;
-+	int delta, currPDADC, regval;
-+
-+	if (OLC_FOR_AR9287_10_LATER) {
-+		ar9287_hw_olc_temp_compensation(ah);
-+	} else {
-+		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
-+		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
-+
-+		if (ah->initPDADC == 0 || currPDADC == 0) {
-+			return;
-+		} else {
-+			if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
-+				delta = (currPDADC - ah->initPDADC + 4) / 8;
-+			else
-+				delta = (currPDADC - ah->initPDADC + 5) / 10;
-+
-+			if (delta != ah->PDADCdelta) {
-+				ah->PDADCdelta = delta;
-+				for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
-+					regval = ah->originalGain[i] - delta;
-+					if (regval < 0)
-+						regval = 0;
-+
-+					REG_RMW_FIELD(ah,
-+						      AR_PHY_TX_GAIN_TBL1 + i * 4,
-+						      AR_PHY_TX_GAIN, regval);
-+				}
-+			}
-+		}
-+	}
-+}
-+
-+void ar9002_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	struct ath9k_nfcal_hist *h;
-+	int i, j;
-+	int32_t val;
-+	const u32 ar5416_cca_regs[6] = {
-+		AR_PHY_CCA,
-+		AR_PHY_CH1_CCA,
-+		AR_PHY_CH2_CCA,
-+		AR_PHY_EXT_CCA,
-+		AR_PHY_CH1_EXT_CCA,
-+		AR_PHY_CH2_EXT_CCA
-+	};
-+	u8 chainmask, rx_chain_status;
-+
-+	rx_chain_status = REG_READ(ah, AR_PHY_RX_CHAINMASK);
-+	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
-+		chainmask = 0x9;
-+	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
-+		if ((rx_chain_status & 0x2) || (rx_chain_status & 0x4))
-+			chainmask = 0x1B;
-+		else
-+			chainmask = 0x09;
-+	} else {
-+		if (rx_chain_status & 0x4)
-+			chainmask = 0x3F;
-+		else if (rx_chain_status & 0x2)
-+			chainmask = 0x1B;
-+		else
-+			chainmask = 0x09;
-+	}
-+
-+	h = ah->nfCalHist;
-+
-+	for (i = 0; i < NUM_NF_READINGS; i++) {
-+		if (chainmask & (1 << i)) {
-+			val = REG_READ(ah, ar5416_cca_regs[i]);
-+			val &= 0xFFFFFE00;
-+			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
-+			REG_WRITE(ah, ar5416_cca_regs[i], val);
-+		}
-+	}
-+
-+	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
-+		    AR_PHY_AGC_CONTROL_ENABLE_NF);
-+	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
-+		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
-+	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-+
-+	for (j = 0; j < 5; j++) {
-+		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
-+		     AR_PHY_AGC_CONTROL_NF) == 0)
-+			break;
-+		udelay(50);
-+	}
-+
-+	for (i = 0; i < NUM_NF_READINGS; i++) {
-+		if (chainmask & (1 << i)) {
-+			val = REG_READ(ah, ar5416_cca_regs[i]);
-+			val &= 0xFFFFFE00;
-+			val |= (((u32) (-50) << 1) & 0x1ff);
-+			REG_WRITE(ah, ar5416_cca_regs[i], val);
-+		}
-+	}
-+}
-+
-+static void ar9002_hw_start_nfcal(struct ath_hw *ah)
-+{
-+	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
-+		    AR_PHY_AGC_CONTROL_ENABLE_NF);
-+	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
-+		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
-+	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-+}
-+
-+static void ar9002_hw_pa_cal(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9271(ah)) {
-+		if (!ah->pacal_info.skipcount)
-+			ar9271_hw_pa_cal(ah, false);
-+		else
-+			ah->pacal_info.skipcount--;
-+	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
-+		if (!ah->pacal_info.skipcount)
-+			ar9285_hw_pa_cal(ah, false);
-+		else
-+			ah->pacal_info.skipcount--;
-+	}
-+}
-+
-+void ar9002_hw_attach_calib_ops(struct ath_hw *ah)
-+{
-+	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-+
-+	priv_ops->getnf = &ar9002_hw_getnf;
-+	priv_ops->reset_calibration = &ar9002_hw_reset_calibration;
-+	priv_ops->per_calibration = &ar9002_hw_per_calibration;
-+	priv_ops->init_cal = &ar9002_hw_init_cal;
-+	priv_ops->olc_temp_compensation = &ar9002_hw_olc_temp_compensation;
-+	priv_ops->loadnf = &ar9002_hw_loadnf;
-+	priv_ops->start_nfcal = &ar9002_hw_start_nfcal;
-+	priv_ops->pa_cal = &ar9002_hw_pa_cal;
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c b/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
-new file mode 100644
-index 0000000..c22f6c3
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
-@@ -0,0 +1,350 @@
-+/*
-+ * Copyright (c) 2008-2010 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "hw.h"
-+#include "hw-ops.h"
-+
-+/*
-+ * This file has the different collection routines
-+ * and calibration routines we use for the 3 different
-+ * types of calibration we perform on AR5008, AR9001
-+ * and AR9002:
-+ *
-+ * - IQ calibration
-+ * - ADC gain calibration
-+ * - ADC-DC calibration
-+ *
-+ * These are set, depending on the chipset through
-+ * ar9002_hw_init_cal_settings()
-+ */
-+static void ar9002_hw_iqcal_collect(struct ath_hw *ah)
-+{
-+	int i;
-+
-+	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+		ah->totalPowerMeasI[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
-+		ah->totalPowerMeasQ[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
-+		ah->totalIqCorrMeas[i] +=
-+			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
-+		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
-+			  "%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
-+			  ah->cal_samples, i, ah->totalPowerMeasI[i],
-+			  ah->totalPowerMeasQ[i],
-+			  ah->totalIqCorrMeas[i]);
-+	}
-+}
-+
-+static void ar9002_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 powerMeasQ, powerMeasI, iqCorrMeas;
-+	u32 qCoffDenom, iCoffDenom;
-+	int32_t qCoff, iCoff;
-+	int iqCorrNeg, i;
-+
-+	for (i = 0; i < numChains; i++) {
-+		powerMeasI = ah->totalPowerMeasI[i];
-+		powerMeasQ = ah->totalPowerMeasQ[i];
-+		iqCorrMeas = ah->totalIqCorrMeas[i];
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Starting IQ Cal and Correction for Chain %d\n",
-+			  i);
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Orignal: Chn %diq_corr_meas = 0x%08x\n",
-+			  i, ah->totalIqCorrMeas[i]);
-+
-+		iqCorrNeg = 0;
-+
-+		if (iqCorrMeas > 0x80000000) {
-+			iqCorrMeas = (0xffffffff - iqCorrMeas) + 1;
-+			iqCorrNeg = 1;
-+		}
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_i = 0x%08x\n", i, powerMeasI);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_q = 0x%08x\n", i, powerMeasQ);
-+		ath_print(common, ATH_DBG_CALIBRATE, "iqCorrNeg is 0x%08x\n",
-+			  iqCorrNeg);
-+
-+		iCoffDenom = (powerMeasI / 2 + powerMeasQ / 2) / 128;
-+		qCoffDenom = powerMeasQ / 64;
-+
-+		if ((powerMeasQ != 0) && (iCoffDenom != 0) &&
-+		    (qCoffDenom != 0)) {
-+			iCoff = iqCorrMeas / iCoffDenom;
-+			qCoff = powerMeasI / qCoffDenom - 64;
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d iCoff = 0x%08x\n", i, iCoff);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d qCoff = 0x%08x\n", i, qCoff);
-+
-+			iCoff = iCoff & 0x3f;
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "New: Chn %d iCoff = 0x%08x\n", i, iCoff);
-+			if (iqCorrNeg == 0x0)
-+				iCoff = 0x40 - iCoff;
-+
-+			if (qCoff > 15)
-+				qCoff = 15;
-+			else if (qCoff <= -16)
-+				qCoff = 16;
-+
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
-+				  i, iCoff, qCoff);
-+
-+			REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(i),
-+				      AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF,
-+				      iCoff);
-+			REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(i),
-+				      AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF,
-+				      qCoff);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "IQ Cal and Correction done for Chain %d\n",
-+				  i);
-+		}
-+	}
-+
-+	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
-+		    AR_PHY_TIMING_CTRL4_IQCORR_ENABLE);
-+}
-+
-+const struct ath9k_percal_data iq_cal_multi_sample = {
-+	IQ_MISMATCH_CAL,
-+	MAX_CAL_SAMPLES,
-+	PER_MIN_LOG_COUNT,
-+	ar9002_hw_iqcal_collect,
-+	ar9002_hw_iqcalibrate
-+};
-+
-+const struct ath9k_percal_data iq_cal_single_sample = {
-+	IQ_MISMATCH_CAL,
-+	MIN_CAL_SAMPLES,
-+	PER_MAX_LOG_COUNT,
-+	ar9002_hw_iqcal_collect,
-+	ar9002_hw_iqcalibrate
-+};
-+
-+static void ar9002_hw_adc_gaincal_collect(struct ath_hw *ah)
-+{
-+	int i;
-+
-+	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+		ah->totalAdcIOddPhase[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
-+		ah->totalAdcIEvenPhase[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
-+		ah->totalAdcQOddPhase[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
-+		ah->totalAdcQEvenPhase[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_3(i));
-+
-+		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
-+			  "%d: Chn %d oddi=0x%08x; eveni=0x%08x; "
-+			  "oddq=0x%08x; evenq=0x%08x;\n",
-+			  ah->cal_samples, i,
-+			  ah->totalAdcIOddPhase[i],
-+			  ah->totalAdcIEvenPhase[i],
-+			  ah->totalAdcQOddPhase[i],
-+			  ah->totalAdcQEvenPhase[i]);
-+	}
-+}
-+
-+static void ar9002_hw_adc_gaincal_calibrate(struct ath_hw *ah, u8 numChains)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 iOddMeasOffset, iEvenMeasOffset, qOddMeasOffset, qEvenMeasOffset;
-+	u32 qGainMismatch, iGainMismatch, val, i;
-+
-+	for (i = 0; i < numChains; i++) {
-+		iOddMeasOffset = ah->totalAdcIOddPhase[i];
-+		iEvenMeasOffset = ah->totalAdcIEvenPhase[i];
-+		qOddMeasOffset = ah->totalAdcQOddPhase[i];
-+		qEvenMeasOffset = ah->totalAdcQEvenPhase[i];
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Starting ADC Gain Cal for Chain %d\n", i);
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_odd_i = 0x%08x\n", i,
-+			  iOddMeasOffset);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_even_i = 0x%08x\n", i,
-+			  iEvenMeasOffset);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_odd_q = 0x%08x\n", i,
-+			  qOddMeasOffset);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_even_q = 0x%08x\n", i,
-+			  qEvenMeasOffset);
-+
-+		if (iOddMeasOffset != 0 && qEvenMeasOffset != 0) {
-+			iGainMismatch =
-+				((iEvenMeasOffset * 32) /
-+				 iOddMeasOffset) & 0x3f;
-+			qGainMismatch =
-+				((qOddMeasOffset * 32) /
-+				 qEvenMeasOffset) & 0x3f;
-+
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d gain_mismatch_i = 0x%08x\n", i,
-+				  iGainMismatch);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d gain_mismatch_q = 0x%08x\n", i,
-+				  qGainMismatch);
-+
-+			val = REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i));
-+			val &= 0xfffff000;
-+			val |= (qGainMismatch) | (iGainMismatch << 6);
-+			REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i), val);
-+
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "ADC Gain Cal done for Chain %d\n", i);
-+		}
-+	}
-+
-+	REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0),
-+		  REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0)) |
-+		  AR_PHY_NEW_ADC_GAIN_CORR_ENABLE);
-+}
-+
-+const struct ath9k_percal_data adc_gain_cal_multi_sample = {
-+	ADC_GAIN_CAL,
-+	MAX_CAL_SAMPLES,
-+	PER_MIN_LOG_COUNT,
-+	ar9002_hw_adc_gaincal_collect,
-+	ar9002_hw_adc_gaincal_calibrate
-+};
-+
-+const struct ath9k_percal_data adc_gain_cal_single_sample = {
-+	ADC_GAIN_CAL,
-+	MIN_CAL_SAMPLES,
-+	PER_MAX_LOG_COUNT,
-+	ar9002_hw_adc_gaincal_collect,
-+	ar9002_hw_adc_gaincal_calibrate
-+};
-+
-+static void ar9002_hw_adc_dccal_collect(struct ath_hw *ah)
-+{
-+	int i;
-+
-+	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+		ah->totalAdcDcOffsetIOddPhase[i] +=
-+			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
-+		ah->totalAdcDcOffsetIEvenPhase[i] +=
-+			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
-+		ah->totalAdcDcOffsetQOddPhase[i] +=
-+			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
-+		ah->totalAdcDcOffsetQEvenPhase[i] +=
-+			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_3(i));
-+
-+		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
-+			  "%d: Chn %d oddi=0x%08x; eveni=0x%08x; "
-+			  "oddq=0x%08x; evenq=0x%08x;\n",
-+			  ah->cal_samples, i,
-+			  ah->totalAdcDcOffsetIOddPhase[i],
-+			  ah->totalAdcDcOffsetIEvenPhase[i],
-+			  ah->totalAdcDcOffsetQOddPhase[i],
-+			  ah->totalAdcDcOffsetQEvenPhase[i]);
-+	}
-+}
-+
-+static void ar9002_hw_adc_dccal_calibrate(struct ath_hw *ah, u8 numChains)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 iOddMeasOffset, iEvenMeasOffset, val, i;
-+	int32_t qOddMeasOffset, qEvenMeasOffset, qDcMismatch, iDcMismatch;
-+	const struct ath9k_percal_data *calData =
-+		ah->cal_list_curr->calData;
-+	u32 numSamples =
-+		(1 << (calData->calCountMax + 5)) * calData->calNumSamples;
-+
-+	for (i = 0; i < numChains; i++) {
-+		iOddMeasOffset = ah->totalAdcDcOffsetIOddPhase[i];
-+		iEvenMeasOffset = ah->totalAdcDcOffsetIEvenPhase[i];
-+		qOddMeasOffset = ah->totalAdcDcOffsetQOddPhase[i];
-+		qEvenMeasOffset = ah->totalAdcDcOffsetQEvenPhase[i];
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			   "Starting ADC DC Offset Cal for Chain %d\n", i);
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_odd_i = %d\n", i,
-+			  iOddMeasOffset);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_even_i = %d\n", i,
-+			  iEvenMeasOffset);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_odd_q = %d\n", i,
-+			  qOddMeasOffset);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_even_q = %d\n", i,
-+			  qEvenMeasOffset);
-+
-+		iDcMismatch = (((iEvenMeasOffset - iOddMeasOffset) * 2) /
-+			       numSamples) & 0x1ff;
-+		qDcMismatch = (((qOddMeasOffset - qEvenMeasOffset) * 2) /
-+			       numSamples) & 0x1ff;
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d dc_offset_mismatch_i = 0x%08x\n", i,
-+			  iDcMismatch);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d dc_offset_mismatch_q = 0x%08x\n", i,
-+			  qDcMismatch);
-+
-+		val = REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i));
-+		val &= 0xc0000fff;
-+		val |= (qDcMismatch << 12) | (iDcMismatch << 21);
-+		REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i), val);
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "ADC DC Offset Cal done for Chain %d\n", i);
-+	}
-+
-+	REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0),
-+		  REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0)) |
-+		  AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE);
-+}
-+
-+const struct ath9k_percal_data adc_dc_cal_multi_sample = {
-+	ADC_DC_CAL,
-+	MAX_CAL_SAMPLES,
-+	PER_MIN_LOG_COUNT,
-+	ar9002_hw_adc_dccal_collect,
-+	ar9002_hw_adc_dccal_calibrate
-+};
-+
-+const struct ath9k_percal_data adc_dc_cal_single_sample = {
-+	ADC_DC_CAL,
-+	MIN_CAL_SAMPLES,
-+	PER_MAX_LOG_COUNT,
-+	ar9002_hw_adc_dccal_collect,
-+	ar9002_hw_adc_dccal_calibrate
-+};
-+
-+const struct ath9k_percal_data adc_init_dc_cal = {
-+	ADC_DC_INIT_CAL,
-+	MIN_CAL_SAMPLES,
-+	INIT_LOG_COUNT,
-+	ar9002_hw_adc_dccal_collect,
-+	ar9002_hw_adc_dccal_calibrate
-+};
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index bf2a87c..c9ca71c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -834,5 +834,7 @@ void ar9002_hw_attach_ops(struct ath_hw *ah)
- 
- 	ops->set_power = &ar9002_hw_setpower;
- 	ops->config_pci_powersave = &ar9002_hw_configpcipowersave;
-+
-+	ar9002_hw_attach_calib_ops(ah);
- }
- EXPORT_SYMBOL(ar9002_hw_attach_ops);
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 4ecc061..360b1db 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include "hw.h"
-+#include "hw-ops.h"
- 
- /* We can tune this as we go by monitoring really low values */
- #define ATH9K_NF_TOO_LOW	-60
-@@ -36,259 +37,8 @@ static bool ath9k_hw_nf_in_range(struct ath_hw *ah, s16 nf)
- 	return true;
- }
- 
--static int16_t ath9k_hw_get_nf_hist_mid(int16_t *nfCalBuffer)
--{
--	int16_t nfval;
--	int16_t sort[ATH9K_NF_CAL_HIST_MAX];
--	int i, j;
--
--	for (i = 0; i < ATH9K_NF_CAL_HIST_MAX; i++)
--		sort[i] = nfCalBuffer[i];
--
--	for (i = 0; i < ATH9K_NF_CAL_HIST_MAX - 1; i++) {
--		for (j = 1; j < ATH9K_NF_CAL_HIST_MAX - i; j++) {
--			if (sort[j] > sort[j - 1]) {
--				nfval = sort[j];
--				sort[j] = sort[j - 1];
--				sort[j - 1] = nfval;
--			}
--		}
--	}
--	nfval = sort[(ATH9K_NF_CAL_HIST_MAX - 1) >> 1];
--
--	return nfval;
--}
--
--static void ath9k_hw_update_nfcal_hist_buffer(struct ath9k_nfcal_hist *h,
--					      int16_t *nfarray)
--{
--	int i;
--
--	for (i = 0; i < NUM_NF_READINGS; i++) {
--		h[i].nfCalBuffer[h[i].currIndex] = nfarray[i];
--
--		if (++h[i].currIndex >= ATH9K_NF_CAL_HIST_MAX)
--			h[i].currIndex = 0;
--
--		if (h[i].invalidNFcount > 0) {
--			if (nfarray[i] < AR_PHY_CCA_MIN_BAD_VALUE ||
--			    nfarray[i] > AR_PHY_CCA_MAX_HIGH_VALUE) {
--				h[i].invalidNFcount = ATH9K_NF_CAL_HIST_MAX;
--			} else {
--				h[i].invalidNFcount--;
--				h[i].privNF = nfarray[i];
--			}
--		} else {
--			h[i].privNF =
--				ath9k_hw_get_nf_hist_mid(h[i].nfCalBuffer);
--		}
--	}
--	return;
--}
--
--static void ath9k_hw_do_getnf(struct ath_hw *ah,
--			      int16_t nfarray[NUM_NF_READINGS])
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--	int16_t nf;
--
--	if (AR_SREV_9280_10_OR_LATER(ah))
--		nf = MS(REG_READ(ah, AR_PHY_CCA), AR9280_PHY_MINCCA_PWR);
--	else
--		nf = MS(REG_READ(ah, AR_PHY_CCA), AR_PHY_MINCCA_PWR);
--
--	if (nf & 0x100)
--		nf = 0 - ((nf ^ 0x1ff) + 1);
--	ath_print(common, ATH_DBG_CALIBRATE,
--		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
--
--	if (AR_SREV_9271(ah))
--		if (nf >= -114)
--			nf = -116;
--	nfarray[0] = nf;
--
--	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
--		if (AR_SREV_9280_10_OR_LATER(ah))
--			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
--					AR9280_PHY_CH1_MINCCA_PWR);
--		else
--			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
--					AR_PHY_CH1_MINCCA_PWR);
--
--		if (nf & 0x100)
--			nf = 0 - ((nf ^ 0x1ff) + 1);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "NF calibrated [ctl] [chain 1] is %d\n", nf);
--		nfarray[1] = nf;
--
--		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
--			nf = MS(REG_READ(ah, AR_PHY_CH2_CCA),
--					AR_PHY_CH2_MINCCA_PWR);
--			if (nf & 0x100)
--				nf = 0 - ((nf ^ 0x1ff) + 1);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "NF calibrated [ctl] [chain 2] is %d\n", nf);
--			nfarray[2] = nf;
--		}
--	}
--
--	if (AR_SREV_9280_10_OR_LATER(ah))
--		nf = MS(REG_READ(ah, AR_PHY_EXT_CCA),
--			AR9280_PHY_EXT_MINCCA_PWR);
--	else
--		nf = MS(REG_READ(ah, AR_PHY_EXT_CCA),
--			AR_PHY_EXT_MINCCA_PWR);
--
--	if (nf & 0x100)
--		nf = 0 - ((nf ^ 0x1ff) + 1);
--	ath_print(common, ATH_DBG_CALIBRATE,
--		  "NF calibrated [ext] [chain 0] is %d\n", nf);
--
--	if (AR_SREV_9271(ah))
--		if (nf >= -114)
--			nf = -116;
--
--	nfarray[3] = nf;
--
--	if (!AR_SREV_9285(ah)) {
--		if (AR_SREV_9280_10_OR_LATER(ah))
--			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
--					AR9280_PHY_CH1_EXT_MINCCA_PWR);
--		else
--			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
--					AR_PHY_CH1_EXT_MINCCA_PWR);
--
--		if (nf & 0x100)
--			nf = 0 - ((nf ^ 0x1ff) + 1);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "NF calibrated [ext] [chain 1] is %d\n", nf);
--		nfarray[4] = nf;
--
--		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
--			nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA),
--					AR_PHY_CH2_EXT_MINCCA_PWR);
--			if (nf & 0x100)
--				nf = 0 - ((nf ^ 0x1ff) + 1);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "NF calibrated [ext] [chain 2] is %d\n", nf);
--			nfarray[5] = nf;
--		}
--	}
--}
--
--static bool ath9k_hw_getnf_thres(struct ath_hw *ah,
--				 enum ieee80211_band band,
--				 int16_t *nft)
--{
--	switch (band) {
--	case IEEE80211_BAND_5GHZ:
--		*nft = (int8_t)ah->eep_ops->get_eeprom(ah, EEP_NFTHRESH_5);
--		break;
--	case IEEE80211_BAND_2GHZ:
--		*nft = (int8_t)ah->eep_ops->get_eeprom(ah, EEP_NFTHRESH_2);
--		break;
--	default:
--		BUG_ON(1);
--		return false;
--	}
--
--	return true;
--}
--
--static void ath9k_hw_setup_calibration(struct ath_hw *ah,
--				       struct ath9k_cal_list *currCal)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--
--	REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(0),
--		      AR_PHY_TIMING_CTRL4_IQCAL_LOG_COUNT_MAX,
--		      currCal->calData->calCountMax);
--
--	switch (currCal->calData->calType) {
--	case IQ_MISMATCH_CAL:
--		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_IQ);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "starting IQ Mismatch Calibration\n");
--		break;
--	case ADC_GAIN_CAL:
--		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_GAIN);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "starting ADC Gain Calibration\n");
--		break;
--	case ADC_DC_CAL:
--		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_DC_PER);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "starting ADC DC Calibration\n");
--		break;
--	case ADC_DC_INIT_CAL:
--		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_DC_INIT);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "starting Init ADC DC Calibration\n");
--		break;
--	}
--
--	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
--		    AR_PHY_TIMING_CTRL4_DO_CAL);
--}
--
--static void ath9k_hw_reset_calibration(struct ath_hw *ah,
--				       struct ath9k_cal_list *currCal)
--{
--	int i;
--
--	ath9k_hw_setup_calibration(ah, currCal);
--
--	currCal->calState = CAL_RUNNING;
--
--	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
--		ah->meas0.sign[i] = 0;
--		ah->meas1.sign[i] = 0;
--		ah->meas2.sign[i] = 0;
--		ah->meas3.sign[i] = 0;
--	}
--
--	ah->cal_samples = 0;
--}
--
--static bool ath9k_hw_per_calibration(struct ath_hw *ah,
--				     struct ath9k_channel *ichan,
--				     u8 rxchainmask,
--				     struct ath9k_cal_list *currCal)
--{
--	bool iscaldone = false;
--
--	if (currCal->calState == CAL_RUNNING) {
--		if (!(REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
--		      AR_PHY_TIMING_CTRL4_DO_CAL)) {
--
--			currCal->calData->calCollect(ah);
--			ah->cal_samples++;
--
--			if (ah->cal_samples >= currCal->calData->calNumSamples) {
--				int i, numChains = 0;
--				for (i = 0; i < AR5416_MAX_CHAINS; i++) {
--					if (rxchainmask & (1 << i))
--						numChains++;
--				}
--
--				currCal->calData->calPostProc(ah, numChains);
--				ichan->CalValid |= currCal->calData->calType;
--				currCal->calState = CAL_DONE;
--				iscaldone = true;
--			} else {
--				ath9k_hw_setup_calibration(ah, currCal);
--			}
--		}
--	} else if (!(ichan->CalValid & currCal->calData->calType)) {
--		ath9k_hw_reset_calibration(ah, currCal);
--	}
--
--	return iscaldone;
--}
--
- /* Assumes you are talking about the currently configured channel */
--static bool ath9k_hw_iscal_supported(struct ath_hw *ah,
--				     enum ath9k_cal_types calType)
-+bool ath9k_hw_iscal_supported(struct ath_hw *ah, enum ath9k_cal_types calType)
- {
- 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
- 
-@@ -305,269 +55,6 @@ static bool ath9k_hw_iscal_supported(struct ath_hw *ah,
- 	return false;
- }
- 
--static void ath9k_hw_iqcal_collect(struct ath_hw *ah)
--{
--	int i;
--
--	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
--		ah->totalPowerMeasI[i] +=
--			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
--		ah->totalPowerMeasQ[i] +=
--			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
--		ah->totalIqCorrMeas[i] +=
--			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
--		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
--			  "%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
--			  ah->cal_samples, i, ah->totalPowerMeasI[i],
--			  ah->totalPowerMeasQ[i],
--			  ah->totalIqCorrMeas[i]);
--	}
--}
--
--static void ath9k_hw_adc_gaincal_collect(struct ath_hw *ah)
--{
--	int i;
--
--	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
--		ah->totalAdcIOddPhase[i] +=
--			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
--		ah->totalAdcIEvenPhase[i] +=
--			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
--		ah->totalAdcQOddPhase[i] +=
--			REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
--		ah->totalAdcQEvenPhase[i] +=
--			REG_READ(ah, AR_PHY_CAL_MEAS_3(i));
--
--		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
--			  "%d: Chn %d oddi=0x%08x; eveni=0x%08x; "
--			  "oddq=0x%08x; evenq=0x%08x;\n",
--			  ah->cal_samples, i,
--			  ah->totalAdcIOddPhase[i],
--			  ah->totalAdcIEvenPhase[i],
--			  ah->totalAdcQOddPhase[i],
--			  ah->totalAdcQEvenPhase[i]);
--	}
--}
--
--static void ath9k_hw_adc_dccal_collect(struct ath_hw *ah)
--{
--	int i;
--
--	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
--		ah->totalAdcDcOffsetIOddPhase[i] +=
--			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
--		ah->totalAdcDcOffsetIEvenPhase[i] +=
--			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
--		ah->totalAdcDcOffsetQOddPhase[i] +=
--			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
--		ah->totalAdcDcOffsetQEvenPhase[i] +=
--			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_3(i));
--
--		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
--			  "%d: Chn %d oddi=0x%08x; eveni=0x%08x; "
--			  "oddq=0x%08x; evenq=0x%08x;\n",
--			  ah->cal_samples, i,
--			  ah->totalAdcDcOffsetIOddPhase[i],
--			  ah->totalAdcDcOffsetIEvenPhase[i],
--			  ah->totalAdcDcOffsetQOddPhase[i],
--			  ah->totalAdcDcOffsetQEvenPhase[i]);
--	}
--}
--
--static void ath9k_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--	u32 powerMeasQ, powerMeasI, iqCorrMeas;
--	u32 qCoffDenom, iCoffDenom;
--	int32_t qCoff, iCoff;
--	int iqCorrNeg, i;
--
--	for (i = 0; i < numChains; i++) {
--		powerMeasI = ah->totalPowerMeasI[i];
--		powerMeasQ = ah->totalPowerMeasQ[i];
--		iqCorrMeas = ah->totalIqCorrMeas[i];
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Starting IQ Cal and Correction for Chain %d\n",
--			  i);
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Orignal: Chn %diq_corr_meas = 0x%08x\n",
--			  i, ah->totalIqCorrMeas[i]);
--
--		iqCorrNeg = 0;
--
--		if (iqCorrMeas > 0x80000000) {
--			iqCorrMeas = (0xffffffff - iqCorrMeas) + 1;
--			iqCorrNeg = 1;
--		}
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_i = 0x%08x\n", i, powerMeasI);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_q = 0x%08x\n", i, powerMeasQ);
--		ath_print(common, ATH_DBG_CALIBRATE, "iqCorrNeg is 0x%08x\n",
--			  iqCorrNeg);
--
--		iCoffDenom = (powerMeasI / 2 + powerMeasQ / 2) / 128;
--		qCoffDenom = powerMeasQ / 64;
--
--		if ((powerMeasQ != 0) && (iCoffDenom != 0) &&
--		    (qCoffDenom != 0)) {
--			iCoff = iqCorrMeas / iCoffDenom;
--			qCoff = powerMeasI / qCoffDenom - 64;
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "Chn %d iCoff = 0x%08x\n", i, iCoff);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "Chn %d qCoff = 0x%08x\n", i, qCoff);
--
--			iCoff = iCoff & 0x3f;
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "New: Chn %d iCoff = 0x%08x\n", i, iCoff);
--			if (iqCorrNeg == 0x0)
--				iCoff = 0x40 - iCoff;
--
--			if (qCoff > 15)
--				qCoff = 15;
--			else if (qCoff <= -16)
--				qCoff = 16;
--
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
--				  i, iCoff, qCoff);
--
--			REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(i),
--				      AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF,
--				      iCoff);
--			REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(i),
--				      AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF,
--				      qCoff);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "IQ Cal and Correction done for Chain %d\n",
--				  i);
--		}
--	}
--
--	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
--		    AR_PHY_TIMING_CTRL4_IQCORR_ENABLE);
--}
--
--static void ath9k_hw_adc_gaincal_calibrate(struct ath_hw *ah, u8 numChains)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--	u32 iOddMeasOffset, iEvenMeasOffset, qOddMeasOffset, qEvenMeasOffset;
--	u32 qGainMismatch, iGainMismatch, val, i;
--
--	for (i = 0; i < numChains; i++) {
--		iOddMeasOffset = ah->totalAdcIOddPhase[i];
--		iEvenMeasOffset = ah->totalAdcIEvenPhase[i];
--		qOddMeasOffset = ah->totalAdcQOddPhase[i];
--		qEvenMeasOffset = ah->totalAdcQEvenPhase[i];
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Starting ADC Gain Cal for Chain %d\n", i);
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_odd_i = 0x%08x\n", i,
--			  iOddMeasOffset);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_even_i = 0x%08x\n", i,
--			  iEvenMeasOffset);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_odd_q = 0x%08x\n", i,
--			  qOddMeasOffset);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_even_q = 0x%08x\n", i,
--			  qEvenMeasOffset);
--
--		if (iOddMeasOffset != 0 && qEvenMeasOffset != 0) {
--			iGainMismatch =
--				((iEvenMeasOffset * 32) /
--				 iOddMeasOffset) & 0x3f;
--			qGainMismatch =
--				((qOddMeasOffset * 32) /
--				 qEvenMeasOffset) & 0x3f;
--
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "Chn %d gain_mismatch_i = 0x%08x\n", i,
--				  iGainMismatch);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "Chn %d gain_mismatch_q = 0x%08x\n", i,
--				  qGainMismatch);
--
--			val = REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i));
--			val &= 0xfffff000;
--			val |= (qGainMismatch) | (iGainMismatch << 6);
--			REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i), val);
--
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "ADC Gain Cal done for Chain %d\n", i);
--		}
--	}
--
--	REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0),
--		  REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0)) |
--		  AR_PHY_NEW_ADC_GAIN_CORR_ENABLE);
--}
--
--static void ath9k_hw_adc_dccal_calibrate(struct ath_hw *ah, u8 numChains)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--	u32 iOddMeasOffset, iEvenMeasOffset, val, i;
--	int32_t qOddMeasOffset, qEvenMeasOffset, qDcMismatch, iDcMismatch;
--	const struct ath9k_percal_data *calData =
--		ah->cal_list_curr->calData;
--	u32 numSamples =
--		(1 << (calData->calCountMax + 5)) * calData->calNumSamples;
--
--	for (i = 0; i < numChains; i++) {
--		iOddMeasOffset = ah->totalAdcDcOffsetIOddPhase[i];
--		iEvenMeasOffset = ah->totalAdcDcOffsetIEvenPhase[i];
--		qOddMeasOffset = ah->totalAdcDcOffsetQOddPhase[i];
--		qEvenMeasOffset = ah->totalAdcDcOffsetQEvenPhase[i];
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			   "Starting ADC DC Offset Cal for Chain %d\n", i);
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_odd_i = %d\n", i,
--			  iOddMeasOffset);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_even_i = %d\n", i,
--			  iEvenMeasOffset);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_odd_q = %d\n", i,
--			  qOddMeasOffset);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d pwr_meas_even_q = %d\n", i,
--			  qEvenMeasOffset);
--
--		iDcMismatch = (((iEvenMeasOffset - iOddMeasOffset) * 2) /
--			       numSamples) & 0x1ff;
--		qDcMismatch = (((qOddMeasOffset - qEvenMeasOffset) * 2) /
--			       numSamples) & 0x1ff;
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d dc_offset_mismatch_i = 0x%08x\n", i,
--			  iDcMismatch);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "Chn %d dc_offset_mismatch_q = 0x%08x\n", i,
--			  qDcMismatch);
--
--		val = REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i));
--		val &= 0xc0000fff;
--		val |= (qDcMismatch << 12) | (iDcMismatch << 21);
--		REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i), val);
--
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "ADC DC Offset Cal done for Chain %d\n", i);
--	}
--
--	REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0),
--		  REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0)) |
--		  AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE);
--}
--
- /* This is done for the currently configured channel */
- bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
- {
-@@ -605,118 +92,6 @@ bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_reset_calvalid);
- 
--void ath9k_hw_start_nfcal(struct ath_hw *ah)
--{
--	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
--		    AR_PHY_AGC_CONTROL_ENABLE_NF);
--	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
--		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
--	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
--}
--
--void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
--{
--	struct ath9k_nfcal_hist *h;
--	int i, j;
--	int32_t val;
--	const u32 ar5416_cca_regs[6] = {
--		AR_PHY_CCA,
--		AR_PHY_CH1_CCA,
--		AR_PHY_CH2_CCA,
--		AR_PHY_EXT_CCA,
--		AR_PHY_CH1_EXT_CCA,
--		AR_PHY_CH2_EXT_CCA
--	};
--	u8 chainmask, rx_chain_status;
--
--	rx_chain_status = REG_READ(ah, AR_PHY_RX_CHAINMASK);
--	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
--		chainmask = 0x9;
--	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
--		if ((rx_chain_status & 0x2) || (rx_chain_status & 0x4))
--			chainmask = 0x1B;
--		else
--			chainmask = 0x09;
--	} else {
--		if (rx_chain_status & 0x4)
--			chainmask = 0x3F;
--		else if (rx_chain_status & 0x2)
--			chainmask = 0x1B;
--		else
--			chainmask = 0x09;
--	}
--
--	h = ah->nfCalHist;
--
--	for (i = 0; i < NUM_NF_READINGS; i++) {
--		if (chainmask & (1 << i)) {
--			val = REG_READ(ah, ar5416_cca_regs[i]);
--			val &= 0xFFFFFE00;
--			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
--			REG_WRITE(ah, ar5416_cca_regs[i], val);
--		}
--	}
--
--	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
--		    AR_PHY_AGC_CONTROL_ENABLE_NF);
--	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
--		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
--	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
--
--	for (j = 0; j < 5; j++) {
--		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
--		     AR_PHY_AGC_CONTROL_NF) == 0)
--			break;
--		udelay(50);
--	}
--
--	for (i = 0; i < NUM_NF_READINGS; i++) {
--		if (chainmask & (1 << i)) {
--			val = REG_READ(ah, ar5416_cca_regs[i]);
--			val &= 0xFFFFFE00;
--			val |= (((u32) (-50) << 1) & 0x1ff);
--			REG_WRITE(ah, ar5416_cca_regs[i], val);
--		}
--	}
--}
--
--int16_t ath9k_hw_getnf(struct ath_hw *ah,
--		       struct ath9k_channel *chan)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--	int16_t nf, nfThresh;
--	int16_t nfarray[NUM_NF_READINGS] = { 0 };
--	struct ath9k_nfcal_hist *h;
--	struct ieee80211_channel *c = chan->chan;
--
--	chan->channelFlags &= (~CHANNEL_CW_INT);
--	if (REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF) {
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "NF did not complete in calibration window\n");
--		nf = 0;
--		chan->rawNoiseFloor = nf;
--		return chan->rawNoiseFloor;
--	} else {
--		ath9k_hw_do_getnf(ah, nfarray);
--		nf = nfarray[0];
--		if (ath9k_hw_getnf_thres(ah, c->band, &nfThresh)
--		    && nf > nfThresh) {
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "noise floor failed detected; "
--				  "detected %d, threshold %d\n",
--				  nf, nfThresh);
--			chan->channelFlags |= CHANNEL_CW_INT;
--		}
--	}
--
--	h = ah->nfCalHist;
--
--	ath9k_hw_update_nfcal_hist_buffer(h, nfarray);
--	chan->rawNoiseFloor = h[0].privNF;
--
--	return chan->rawNoiseFloor;
--}
--
- void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah)
- {
- 	int i, j;
-@@ -758,287 +133,6 @@ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
- }
- EXPORT_SYMBOL(ath9k_hw_getchan_noise);
- 
--static void ath9k_olc_temp_compensation_9287(struct ath_hw *ah)
--{
--	u32 rddata;
--	int32_t delta, currPDADC, slope;
--
--	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
--	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
--
--	if (ah->initPDADC == 0 || currPDADC == 0) {
--		/*
--		 * Zero value indicates that no frames have been transmitted yet,
--		 * can't do temperature compensation until frames are transmitted.
--		 */
--		return;
--	} else {
--		slope = ah->eep_ops->get_eeprom(ah, EEP_TEMPSENSE_SLOPE);
--
--		if (slope == 0) { /* to avoid divide by zero case */
--			delta = 0;
--		} else {
--			delta = ((currPDADC - ah->initPDADC)*4) / slope;
--		}
--		REG_RMW_FIELD(ah, AR_PHY_CH0_TX_PWRCTRL11,
--			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
--		REG_RMW_FIELD(ah, AR_PHY_CH1_TX_PWRCTRL11,
--			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
--	}
--}
--
--static void ath9k_olc_temp_compensation(struct ath_hw *ah)
--{
--	u32 rddata, i;
--	int delta, currPDADC, regval;
--
--	if (OLC_FOR_AR9287_10_LATER) {
--		ath9k_olc_temp_compensation_9287(ah);
--	} else {
--		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
--		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
--
--		if (ah->initPDADC == 0 || currPDADC == 0) {
--			return;
--		} else {
--			if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
--				delta = (currPDADC - ah->initPDADC + 4) / 8;
--			else
--				delta = (currPDADC - ah->initPDADC + 5) / 10;
--
--			if (delta != ah->PDADCdelta) {
--				ah->PDADCdelta = delta;
--				for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
--					regval = ah->originalGain[i] - delta;
--					if (regval < 0)
--						regval = 0;
--
--					REG_RMW_FIELD(ah,
--						      AR_PHY_TX_GAIN_TBL1 + i * 4,
--						      AR_PHY_TX_GAIN, regval);
--				}
--			}
--		}
--	}
--}
--
--static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--	u32 regVal;
--	unsigned int i;
--	u32 regList [][2] = {
--		{ 0x786c, 0 },
--		{ 0x7854, 0 },
--		{ 0x7820, 0 },
--		{ 0x7824, 0 },
--		{ 0x7868, 0 },
--		{ 0x783c, 0 },
--		{ 0x7838, 0 } ,
--		{ 0x7828, 0 } ,
--	};
--
--	ath_print(common, ATH_DBG_CALIBRATE, "Running PA Calibration\n");
--
--	for (i = 0; i < ARRAY_SIZE(regList); i++)
--		regList[i][1] = REG_READ(ah, regList[i][0]);
--
--	regVal = REG_READ(ah, 0x7834);
--	regVal &= (~(0x1));
--	REG_WRITE(ah, 0x7834, regVal);
--	regVal = REG_READ(ah, 0x9808);
--	regVal |= (0x1 << 27);
--	REG_WRITE(ah, 0x9808, regVal);
--
--	/* 786c,b23,1, pwddac=1 */
--	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
--	/* 7854, b5,1, pdrxtxbb=1 */
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
--	/* 7854, b7,1, pdv2i=1 */
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
--	/* 7854, b8,1, pddacinterface=1 */
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
--	/* 7824,b12,0, offcal=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
--	/* 7838, b1,0, pwddb=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
--	/* 7820,b11,0, enpacal=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
--	/* 7820,b25,1, pdpadrv1=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
--	/* 7820,b24,0, pdpadrv2=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1,AR9285_AN_RF2G1_PDPADRV2,0);
--	/* 7820,b23,0, pdpaout=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
--	/* 783c,b14-16,7, padrvgn2tab_0=7 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G8,AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
--	/*
--	 * 7838,b29-31,0, padrvgn1tab_0=0
--	 * does not matter since we turn it off
--	 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G7,AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
--
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9271_AN_RF2G3_CCOMP, 0xfff);
--
--	/* Set:
--	 * localmode=1,bmode=1,bmoderxtx=1,synthon=1,
--	 * txon=1,paon=1,oscon=1,synthon_force=1
--	 */
--	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
--	udelay(30);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9271_AN_RF2G6_OFFS, 0);
--
--	/* find off_6_1; */
--	for (i = 6; i > 0; i--) {
--		regVal = REG_READ(ah, 0x7834);
--		regVal |= (1 << (20 + i));
--		REG_WRITE(ah, 0x7834, regVal);
--		udelay(1);
--		//regVal = REG_READ(ah, 0x7834);
--		regVal &= (~(0x1 << (20 + i)));
--		regVal |= (MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9)
--			    << (20 + i));
--		REG_WRITE(ah, 0x7834, regVal);
--	}
--
--	regVal = (regVal >>20) & 0x7f;
--
--	/* Update PA cal info */
--	if ((!is_reset) && (ah->pacal_info.prev_offset == regVal)) {
--		if (ah->pacal_info.max_skipcount < MAX_PACAL_SKIPCOUNT)
--			ah->pacal_info.max_skipcount =
--				2 * ah->pacal_info.max_skipcount;
--		ah->pacal_info.skipcount = ah->pacal_info.max_skipcount;
--	} else {
--		ah->pacal_info.max_skipcount = 1;
--		ah->pacal_info.skipcount = 0;
--		ah->pacal_info.prev_offset = regVal;
--	}
--
--	regVal = REG_READ(ah, 0x7834);
--	regVal |= 0x1;
--	REG_WRITE(ah, 0x7834, regVal);
--	regVal = REG_READ(ah, 0x9808);
--	regVal &= (~(0x1 << 27));
--	REG_WRITE(ah, 0x9808, regVal);
--
--	for (i = 0; i < ARRAY_SIZE(regList); i++)
--		REG_WRITE(ah, regList[i][0], regList[i][1]);
--}
--
--static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--	u32 regVal;
--	int i, offset, offs_6_1, offs_0;
--	u32 ccomp_org, reg_field;
--	u32 regList[][2] = {
--		{ 0x786c, 0 },
--		{ 0x7854, 0 },
--		{ 0x7820, 0 },
--		{ 0x7824, 0 },
--		{ 0x7868, 0 },
--		{ 0x783c, 0 },
--		{ 0x7838, 0 },
--	};
--
--	ath_print(common, ATH_DBG_CALIBRATE, "Running PA Calibration\n");
--
--	/* PA CAL is not needed for high power solution */
--	if (ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE) ==
--	    AR5416_EEP_TXGAIN_HIGH_POWER)
--		return;
--
--	if (AR_SREV_9285_11(ah)) {
--		REG_WRITE(ah, AR9285_AN_TOP4, (AR9285_AN_TOP4_DEFAULT | 0x14));
--		udelay(10);
--	}
--
--	for (i = 0; i < ARRAY_SIZE(regList); i++)
--		regList[i][1] = REG_READ(ah, regList[i][0]);
--
--	regVal = REG_READ(ah, 0x7834);
--	regVal &= (~(0x1));
--	REG_WRITE(ah, 0x7834, regVal);
--	regVal = REG_READ(ah, 0x9808);
--	regVal |= (0x1 << 27);
--	REG_WRITE(ah, 0x9808, regVal);
--
--	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2, 0);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G8, AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
--	ccomp_org = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_CCOMP);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, 0xf);
--
--	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
--	udelay(30);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_OFFS, 0);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, 0);
--
--	for (i = 6; i > 0; i--) {
--		regVal = REG_READ(ah, 0x7834);
--		regVal |= (1 << (19 + i));
--		REG_WRITE(ah, 0x7834, regVal);
--		udelay(1);
--		regVal = REG_READ(ah, 0x7834);
--		regVal &= (~(0x1 << (19 + i)));
--		reg_field = MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9);
--		regVal |= (reg_field << (19 + i));
--		REG_WRITE(ah, 0x7834, regVal);
--	}
--
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, 1);
--	udelay(1);
--	reg_field = MS(REG_READ(ah, AR9285_AN_RF2G9), AR9285_AN_RXTXBB1_SPARE9);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, reg_field);
--	offs_6_1 = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_OFFS);
--	offs_0   = MS(REG_READ(ah, AR9285_AN_RF2G3), AR9285_AN_RF2G3_PDVCCOMP);
--
--	offset = (offs_6_1<<1) | offs_0;
--	offset = offset - 0;
--	offs_6_1 = offset>>1;
--	offs_0 = offset & 1;
--
--	if ((!is_reset) && (ah->pacal_info.prev_offset == offset)) {
--		if (ah->pacal_info.max_skipcount < MAX_PACAL_SKIPCOUNT)
--			ah->pacal_info.max_skipcount =
--				2 * ah->pacal_info.max_skipcount;
--		ah->pacal_info.skipcount = ah->pacal_info.max_skipcount;
--	} else {
--		ah->pacal_info.max_skipcount = 1;
--		ah->pacal_info.skipcount = 0;
--		ah->pacal_info.prev_offset = offset;
--	}
--
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_OFFS, offs_6_1);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, offs_0);
--
--	regVal = REG_READ(ah, 0x7834);
--	regVal |= 0x1;
--	REG_WRITE(ah, 0x7834, regVal);
--	regVal = REG_READ(ah, 0x9808);
--	regVal &= (~(0x1 << 27));
--	REG_WRITE(ah, 0x9808, regVal);
--
--	for (i = 0; i < ARRAY_SIZE(regList); i++)
--		REG_WRITE(ah, regList[i][0], regList[i][1]);
--
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, ccomp_org);
--
--	if (AR_SREV_9285_11(ah))
--		REG_WRITE(ah, AR9285_AN_TOP4, AR9285_AN_TOP4_DEFAULT);
--
--}
--
- bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 			u8 rxchainmask, bool longcal)
- {
-@@ -1063,20 +157,10 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 	/* Do NF cal only at longer intervals */
- 	if (longcal) {
- 		/* Do periodic PAOffset Cal */
--		if (AR_SREV_9271(ah)) {
--			if (!ah->pacal_info.skipcount)
--				ath9k_hw_9271_pa_cal(ah, false);
--			else
--				ah->pacal_info.skipcount--;
--		} else if (AR_SREV_9285_11_OR_LATER(ah)) {
--			if (!ah->pacal_info.skipcount)
--				ath9k_hw_9285_pa_cal(ah, false);
--			else
--				ah->pacal_info.skipcount--;
--		}
-+		ath9k_hw_pa_cal(ah);
- 
- 		if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
--			ath9k_olc_temp_compensation(ah);
-+			ath9k_hw_olc_temp_compensation(ah);
- 
- 		/* Get the value from the previous NF cal and update history buffer */
- 		ath9k_hw_getnf(ah, chan);
-@@ -1093,178 +177,3 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 	return iscaldone;
- }
- EXPORT_SYMBOL(ath9k_hw_calibrate);
--
--/* Carrier leakage Calibration fix */
--static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--
--	REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
--	if (IS_CHAN_HT20(chan)) {
--		REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
--		REG_SET_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
--		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
--			    AR_PHY_AGC_CONTROL_FLTR_CAL);
--		REG_CLR_BIT(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_CAL_ENABLE);
--		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL);
--		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
--				  AR_PHY_AGC_CONTROL_CAL, 0, AH_WAIT_TIMEOUT)) {
--			ath_print(common, ATH_DBG_CALIBRATE, "offset "
--				  "calibration failed to complete in "
--				  "1ms; noisy ??\n");
--			return false;
--		}
--		REG_CLR_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
--		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
--		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
--	}
--	REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
--	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
--	REG_SET_BIT(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_CAL_ENABLE);
--	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL);
--	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
--			  0, AH_WAIT_TIMEOUT)) {
--		ath_print(common, ATH_DBG_CALIBRATE, "offset calibration "
--			  "failed to complete in 1ms; noisy ??\n");
--		return false;
--	}
--
--	REG_SET_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
--	REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
--	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
--
--	return true;
--}
--
--bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--
--	if (AR_SREV_9271(ah) || AR_SREV_9285_12_OR_LATER(ah)) {
--		if (!ar9285_clc(ah, chan))
--			return false;
--	} else {
--		if (AR_SREV_9280_10_OR_LATER(ah)) {
--			if (!AR_SREV_9287_10_OR_LATER(ah))
--				REG_CLR_BIT(ah, AR_PHY_ADC_CTL,
--					    AR_PHY_ADC_CTL_OFF_PWDADC);
--			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
--				    AR_PHY_AGC_CONTROL_FLTR_CAL);
--		}
--
--		/* Calibrate the AGC */
--		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
--			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
--			  AR_PHY_AGC_CONTROL_CAL);
--
--		/* Poll for offset calibration complete */
--		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
--				   0, AH_WAIT_TIMEOUT)) {
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "offset calibration failed to "
--				  "complete in 1ms; noisy environment?\n");
--			return false;
--		}
--
--		if (AR_SREV_9280_10_OR_LATER(ah)) {
--			if (!AR_SREV_9287_10_OR_LATER(ah))
--				REG_SET_BIT(ah, AR_PHY_ADC_CTL,
--					    AR_PHY_ADC_CTL_OFF_PWDADC);
--			REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
--				    AR_PHY_AGC_CONTROL_FLTR_CAL);
--		}
--	}
--
--	/* Do PA Calibration */
--	if (AR_SREV_9271(ah))
--		ath9k_hw_9271_pa_cal(ah, true);
--	else if (AR_SREV_9285_11_OR_LATER(ah))
--		ath9k_hw_9285_pa_cal(ah, true);
--
--	/* Do NF Calibration after DC offset and other calibrations */
--	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
--		  REG_READ(ah, AR_PHY_AGC_CONTROL) | AR_PHY_AGC_CONTROL_NF);
--
--	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
--
--	/* Enable IQ, ADC Gain and ADC DC offset CALs */
--	if (AR_SREV_9100(ah) || AR_SREV_9160_10_OR_LATER(ah)) {
--		if (ath9k_hw_iscal_supported(ah, ADC_GAIN_CAL)) {
--			INIT_CAL(&ah->adcgain_caldata);
--			INSERT_CAL(ah, &ah->adcgain_caldata);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "enabling ADC Gain Calibration.\n");
--		}
--		if (ath9k_hw_iscal_supported(ah, ADC_DC_CAL)) {
--			INIT_CAL(&ah->adcdc_caldata);
--			INSERT_CAL(ah, &ah->adcdc_caldata);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "enabling ADC DC Calibration.\n");
--		}
--		if (ath9k_hw_iscal_supported(ah, IQ_MISMATCH_CAL)) {
--			INIT_CAL(&ah->iq_caldata);
--			INSERT_CAL(ah, &ah->iq_caldata);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "enabling IQ Calibration.\n");
--		}
--
--		ah->cal_list_curr = ah->cal_list;
--
--		if (ah->cal_list_curr)
--			ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
--	}
--
--	chan->CalValid = 0;
--
--	return true;
--}
--
--const struct ath9k_percal_data iq_cal_multi_sample = {
--	IQ_MISMATCH_CAL,
--	MAX_CAL_SAMPLES,
--	PER_MIN_LOG_COUNT,
--	ath9k_hw_iqcal_collect,
--	ath9k_hw_iqcalibrate
--};
--const struct ath9k_percal_data iq_cal_single_sample = {
--	IQ_MISMATCH_CAL,
--	MIN_CAL_SAMPLES,
--	PER_MAX_LOG_COUNT,
--	ath9k_hw_iqcal_collect,
--	ath9k_hw_iqcalibrate
--};
--const struct ath9k_percal_data adc_gain_cal_multi_sample = {
--	ADC_GAIN_CAL,
--	MAX_CAL_SAMPLES,
--	PER_MIN_LOG_COUNT,
--	ath9k_hw_adc_gaincal_collect,
--	ath9k_hw_adc_gaincal_calibrate
--};
--const struct ath9k_percal_data adc_gain_cal_single_sample = {
--	ADC_GAIN_CAL,
--	MIN_CAL_SAMPLES,
--	PER_MAX_LOG_COUNT,
--	ath9k_hw_adc_gaincal_collect,
--	ath9k_hw_adc_gaincal_calibrate
--};
--const struct ath9k_percal_data adc_dc_cal_multi_sample = {
--	ADC_DC_CAL,
--	MAX_CAL_SAMPLES,
--	PER_MIN_LOG_COUNT,
--	ath9k_hw_adc_dccal_collect,
--	ath9k_hw_adc_dccal_calibrate
--};
--const struct ath9k_percal_data adc_dc_cal_single_sample = {
--	ADC_DC_CAL,
--	MIN_CAL_SAMPLES,
--	PER_MAX_LOG_COUNT,
--	ath9k_hw_adc_dccal_collect,
--	ath9k_hw_adc_dccal_calibrate
--};
--const struct ath9k_percal_data adc_init_dc_cal = {
--	ADC_DC_INIT_CAL,
--	MIN_CAL_SAMPLES,
--	INIT_LOG_COUNT,
--	ath9k_hw_adc_dccal_collect,
--	ath9k_hw_adc_dccal_calibrate
--};
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 3b634d4..921f237 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -122,15 +122,10 @@ struct ath9k_pacal_info{
- };
- 
- bool ath9k_hw_reset_calvalid(struct ath_hw *ah);
--void ath9k_hw_start_nfcal(struct ath_hw *ah);
--void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan);
--int16_t ath9k_hw_getnf(struct ath_hw *ah,
--		       struct ath9k_channel *chan);
- void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah);
- s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan);
- bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 			u8 rxchainmask, bool longcal);
--bool ath9k_hw_init_cal(struct ath_hw *ah,
--		       struct ath9k_channel *chan);
-+bool ath9k_hw_iscal_supported(struct ath_hw *ah, enum ath9k_cal_types calType);
- 
- #endif /* CALIB_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 54bb57f..6d20bb7 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -62,4 +62,54 @@ static inline void ath9k_hw_init_14_spread(struct ath_hw *ah)
- 	ath9k_hw_private_ops(ah)->init_14_spread(ah);
- }
- 
-+/* Calibration ops */
-+
-+static inline int16_t ath9k_hw_getnf(struct ath_hw *ah,
-+				     struct ath9k_channel *chan)
-+{
-+	return ath9k_hw_private_ops(ah)->getnf(ah, chan);
-+}
-+
-+static inline void ath9k_hw_reset_calibration(struct ath_hw *ah,
-+					      struct ath9k_cal_list *currCal)
-+{
-+	ath9k_hw_private_ops(ah)->reset_calibration(ah, currCal);
-+}
-+
-+static inline bool ath9k_hw_per_calibration(struct ath_hw *ah,
-+					    struct ath9k_channel *ichan,
-+					    u8 rxchainmask,
-+					    struct ath9k_cal_list *currCal)
-+{
-+	return ath9k_hw_private_ops(ah)->per_calibration(ah, ichan,
-+							 rxchainmask, currCal);
-+}
-+
-+static inline bool ath9k_hw_init_cal(struct ath_hw *ah,
-+				     struct ath9k_channel *chan)
-+{
-+	return ath9k_hw_private_ops(ah)->init_cal(ah, chan);
-+}
-+
-+static inline void ath9k_hw_olc_temp_compensation(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->olc_temp_compensation(ah);
-+}
-+
-+static inline void ath9k_hw_loadnf(struct ath_hw *ah,
-+				   struct ath9k_channel *chan)
-+{
-+	ath9k_hw_private_ops(ah)->loadnf(ah, chan);
-+}
-+
-+static inline void ath9k_hw_start_nfcal(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->start_nfcal(ah);
-+}
-+
-+static inline void ath9k_hw_pa_cal(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->pa_cal(ah);
-+}
-+
- #endif /* ATH9K_HW_OPS_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 1b1b18d..06d5c2a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -456,8 +456,18 @@ struct ath_gen_timer_table {
-  * @init_pll:
-  * @init_mode_gains:
-  * @init_14_spread:
-+ *
-+ * @getnf: get the noise floor for the passed channel
-+ * @reset_calibration:
-+ * @per_calibration:
-+ * @init_cal:
-+ * @olc_temp_compensation:
-+ * @loadnf:
-+ * @start_nfcal: start noise floor calibration
-+ * @pa_cal: Power amplifier calibration
-  */
- struct ath_hw_private_ops {
-+	/* General hardware ops */
- 	void (*init_cal_settings)(struct ath_hw *ah);
- 	void (*init_mode_regs)(struct ath_hw *ah);
- 	bool (*macversion_supported)(u32 macversion);
-@@ -466,6 +476,20 @@ struct ath_hw_private_ops {
- 	void (*init_pll)(struct ath_hw *ah, struct ath9k_channel *chan);
- 	void (*init_mode_gains)(struct ath_hw *ah);
- 	void (*init_14_spread)(struct ath_hw *ah);
-+
-+	/* Calibration ops */
-+	int16_t (*getnf)(struct ath_hw *ah, struct ath9k_channel *chan);
-+	void (*reset_calibration)(struct ath_hw *ah,
-+				  struct ath9k_cal_list *currCal);
-+	bool (*per_calibration)(struct ath_hw *ah,
-+				struct ath9k_channel *ichan,
-+				u8 rxchainmask,
-+				struct ath9k_cal_list *currCal);
-+	bool (*init_cal)(struct ath_hw *ah, struct ath9k_channel *chan);
-+	void (*olc_temp_compensation)(struct ath_hw *ah);
-+	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
-+	void (*start_nfcal)(struct ath_hw *ah);
-+	void (*pa_cal)(struct ath_hw *ah);
- };
- 
- /**
-@@ -761,6 +785,7 @@ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
- void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
- 
- void ar9002_hw_attach_ops(struct ath_hw *ah);
-+void ar9002_hw_attach_calib_ops(struct ath_hw *ah);
- 
- /* HTC */
- void ath9k_hw_htc_resetinit(struct ath_hw *ah);
--- 
-1.6.3.3
+iQEcBAEBAgAGBQJLjiDOAAoJEON28As9epPAacQH/igJUCDKGDLzTnZhllzpR6yn
+jl7BusfXbpxwBUT6SYB4UQ8RobapmJCGpmcYMlbFTOnXRTK2WmiPrcbORqSBgZJV
+MZM8kvNoF9fJOg4Yr7mvwaMAaDBhYTPJFaCDcbHeLL06Sg1XLkiCaWnAQNk7IyVp
+cbVa031vh3lDrRJi7Xbcb2FLU7gxaKU9jc3dQcLWuBzu+Yte+Wn0ymbsVFDKFxQi
+3ZObIaIVS3AQDS1seSielPfW3igP9blB05+S6XagGMsrolEE+yXG1SmAmk8+v7dl
+XHIOQCE51yPwjFQ5ExcM3slCPBUEczEupEj/Urngck8FXnJ8jIHD/AA8z6rIhEI=
+=Kees
+-----END PGP SIGNATURE-----
 
+--------------060309070607020201070300
+Content-Type: application/zip;
+ name="rt2870crash.zip"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="rt2870crash.zip"
+
+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
+--------------060309070607020201070300--
