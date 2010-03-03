@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:19153 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696Ab0CAKSZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 05:18:25 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH] ath9k: decrease size of ath9k.ko
-Date: Mon, 1 Mar 2010 13:19:12 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, lrodriguez@atheros.com,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linville@tuxdriver.com, johannes@sipsolutions.net,
-	stable@kernel.org
-References: <1267289803-6795-1-git-send-email-tom.leiming@gmail.com> <4B89520D.1000209@lwfinger.net> <d82e647a1002271852j20006c27i92d1f7a99e032f2d@mail.gmail.com>
-In-Reply-To: <d82e647a1002271852j20006c27i92d1f7a99e032f2d@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:34554 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751578Ab0CCDbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 22:31:11 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 19:31:11 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003011319.12395.holgerschurig@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19341.56441.523682.509267@gargle.gargle.HOWL>
+Date: Wed, 3 Mar 2010 09:20:17 +0530
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/7] ath9k: Add common code to lib
+In-Reply-To: <20100303005220.GJ8069@bombadil.infradead.org>
+References: <19339.35501.467215.380773@gargle.gargle.HOWL>
+	<19340.54345.580466.373621@gargle.gargle.HOWL>
+	<20100303005220.GJ8069@bombadil.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Either 'char' or 'u8' is OK, since both has one-byte size, isn't it?
+Luis R. Rodriguez wrote:
+> Can I trouble you to repost a new series of patches required for
+> ath9k_htc which does not add/use a lib.c and instead stuffs
+> things into common from the start? If there are patches
+> which are cosmetic, can you send them as a second series
+> so that we are clear what stuff is 2.6.34-rc2 material or
+> not?
 
-Besides Johannes' comment: char is signed, u8 is unsigned. This can sometimes 
-byte you.
+I sent a mail yesterday to JWL, but forgot to CC the list.
+Here is the series.
 
--- 
-http://www.holgerschurig.de
+To clarify things, these are the pending patches for
+ath9k_htc (in order).
+
+[PATCH 1/3] ath9k_htc: Add ath9k_htc driver
+[PATCH 2/3] ath9k_hw: HW fixes for ath9k_htc
+[PATCH 3/3] ath9k: Fix HW deinit
+
+[PATCH 1/2] ath9k: Fix symbol collision between ath9k and ath9k_htc
+[PATCH 2/2] ath9k_htc: Remove library
+
+Sujith
