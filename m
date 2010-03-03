@@ -1,84 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:30729 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750888Ab0CXVZV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 17:25:21 -0400
-Subject: [PATCH] compat-wireless: update 22-multiqueue.patch for the current
- linux-next
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-From: Pavel Roskin <proski@gnu.org>
-Date: Wed, 24 Mar 2010 17:25:20 -0400
-Message-ID: <20100324212520.15474.94735.stgit@mj.roinet.com>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:53745 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756486Ab0CCUFO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 15:05:14 -0500
+Received: by bwz1 with SMTP id 1so234473bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 12:05:13 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current wireless-testing
+Date: Wed, 3 Mar 2010 21:05:08 +0100
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+References: <201002281534.11656.helmut.schaa@googlemail.com> <201003032008.47379.helmut.schaa@googlemail.com> <20100303192946.GC23920@tuxdriver.com>
+In-Reply-To: <20100303192946.GC23920@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003032105.08938.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adjust for spacing change in net/mac80211/util.c.  Add a replacement for
-netif_tx_wake_queue() for net/mac80211/tx.c
+Am Mittwoch 03 März 2010 schrieb John W. Linville:
+> On Wed, Mar 03, 2010 at 08:08:47PM +0100, Helmut Schaa wrote:
+> > Am Mittwoch 03 März 2010 schrieb reinette chatre:
+> 
+> > > $ iw reg get
+> > > country 00:
+> > > 	(2402 - 2472 @ 40), (3, 20)
+> > > 	(2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
+> > > 	(2474 - 2494 @ 20), (3, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
+> > > 	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
+> > > 	(5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
+> > 
+> > Oops, that's what I get:
+> > 
+> > country 00:
+> >         (2402 - 2472 @ 40), (3, 20)
+> > 
+> > Luis, is the world reg domain encoded in cfg80211 or in the regdb? Maybe
+> > the regdb is too old or something like that?
+> 
+> Should be both -- start w/ the one encoded in the kernel and request
+> an update from userland if it is available.
+> 
+> Hth!
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- 0 files changed, 0 insertions(+), 0 deletions(-)
+It does indeed. I moved crda out of the way so that it cannot get called
+anymore and after loading cfg80211, mac80211 and iwlagn I had all the
+channels set up the same way as Reinette (and that is how I expected it to
+be).
 
-diff --git a/patches/22-multiqueue.patch b/patches/22-multiqueue.patch
-index 421c32f..4485b94 100644
---- a/patches/22-multiqueue.patch
-+++ b/patches/22-multiqueue.patch
-@@ -65,21 +65,21 @@ queue by using skb_set_queue_mapping(skb, 0) through ieee80211_tx_skb()
-  static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
-  				   enum queue_stop_reason reason)
-  {
--@@ -286,7 +298,14 @@ static void __ieee80211_wake_queue(struc
-- 
-- 	rcu_read_lock();
-- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
-+@@ -284,7 +296,14 @@ static void __ieee80211_wake_queue(struc
-+ 	if (skb_queue_empty(&local->pending[queue])) {
-+ 		rcu_read_lock();
-+ 		list_for_each_entry_rcu(sdata, &local->interfaces, list)
- +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
-- 		netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
-+ 			netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
- +#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
--+		netif_start_subqueue(sdata->dev, queue);
-++			netif_start_subqueue(sdata->dev, queue);
- +#else
--+		if (ieee80211_all_queues_started(hw))
--+			netif_wake_queue(sdata->dev);
-++			if (ieee80211_all_queues_started(hw))
-++				netif_wake_queue(sdata->dev);
- +#endif
-- 	rcu_read_unlock();
-- }
-- 
-+ 		rcu_read_unlock();
-+ 	} else
-+ 		tasklet_schedule(&local->tx_pending_tasklet);
- @@ -321,7 +340,13 @@ static void __ieee80211_stop_queue(struc
-  
-  	rcu_read_lock();
-@@ -107,6 +107,22 @@ queue by using skb_set_queue_mapping(skb, 0) through ieee80211_tx_skb()
-  	ieee80211_set_qos_hdr(local, skb);
-  	ieee80211_tx(sdata, skb, false);
-  	rcu_read_unlock();
-+@@ -2039,8 +2039,15 @@ void ieee80211_tx_pending(unsigned long 
-+ 
-+ 		if (skb_queue_empty(&local->pending[i]))
-+ 			list_for_each_entry_rcu(sdata, &local->interfaces, list)
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
-+ 				netif_tx_wake_queue(
-+ 					netdev_get_tx_queue(sdata->dev, i));
-++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
-++				netif_start_subqueue(sdata->dev, i);
-++#else
-++				if (ieee80211_all_queues_started(hw))
-++					netif_wake_queue(sdata->dev);
-++#endif
-+ 	}
-+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+ 
- --- a/net/mac80211/iface.c
- +++ b/net/mac80211/iface.c
- @@ -660,11 +660,13 @@ static void ieee80211_teardown_sdata(str
+So I guess it's my regdb that's outdated.
+
+Thanks,
+Helmut
