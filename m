@@ -1,282 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37367 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756838Ab0CJQPy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 11:15:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: me@bobcopeland.com, mickflemm@gmail.com, proski@gnu.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/3] ath5k: remove unused beacon timer code
-Date: Wed, 10 Mar 2010 11:08:50 -0500
-Message-Id: <1268237330-30013-3-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1268237330-30013-2-git-send-email-linville@tuxdriver.com>
-References: <1268237330-30013-1-git-send-email-linville@tuxdriver.com>
- <1268237330-30013-2-git-send-email-linville@tuxdriver.com>
+Received: from mga11.intel.com ([192.55.52.93]:22477 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752800Ab0CCVTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 16:19:34 -0500
+Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current
+ wireless-testing
+From: reinette chatre <reinette.chatre@intel.com>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <03690D90-3C5E-4E37-8BC6-7EE6FE0B4E1D@cs.washington.edu>
+References: <201002281534.11656.helmut.schaa@googlemail.com>
+	 <201003011927.53208.helmut.schaa@googlemail.com>
+	 <43e72e891003011059v564931e2qfe390657b698c277@mail.gmail.com>
+	 <201003022047.10196.helmut.schaa@googlemail.com>
+	 <1267640304.15761.121.camel@rchatre-DESK>
+	 <03690D90-3C5E-4E37-8BC6-7EE6FE0B4E1D@cs.washington.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 03 Mar 2010 13:19:33 -0800
+Message-ID: <1267651173.15761.155.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |   28 -----
- drivers/net/wireless/ath/ath5k/pcu.c   |  197 --------------------------------
- 2 files changed, 0 insertions(+), 225 deletions(-)
+On Wed, 2010-03-03 at 12:14 -0800, Daniel Halperin wrote:
+> On Mar 3, 2010, at 10:18 AM, reinette chatre wrote:
+> > 	Band 2:
+> > [...]
+> > 		Frequencies:
+> > 			* 5180 MHz [36] (15.0 dBm) (passive scanning, no IBSS)
+> > 			* 5200 MHz [40] (15.0 dBm) (passive scanning, no IBSS)
+> > 			* 5220 MHz [44] (15.0 dBm) (passive scanning, no IBSS)
+> > 			* 5240 MHz [48] (15.0 dBm) (passive scanning, no IBSS)
+> > 			* 5260 MHz [52] (disabled)
+> > 			* 5280 MHz [56] (disabled)
+> > 			* 5300 MHz [60] (disabled)
+> > 			* 5320 MHz [64] (disabled)
+> > 			* 5500 MHz [100] (disabled)
+> > 			* 5520 MHz [104] (disabled)
+> > 			* 5540 MHz [108] (disabled)
+> > 			* 5560 MHz [112] (disabled)
+> > 			* 5580 MHz [116] (disabled)
+> > 			* 5600 MHz [120] (disabled)
+> > 			* 5620 MHz [124] (disabled)
+> > 			* 5640 MHz [128] (disabled)
+> > 			* 5660 MHz [132] (disabled)
+> > 			* 5680 MHz [136] (disabled)
+> > 			* 5700 MHz [140] (disabled)
+> 
+> Is this really correct?
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 4de7fe0..3e77332 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -614,28 +614,6 @@ struct ath5k_rx_status {
- #define AR5K_BEACON_ENA		0x00800000 /*enable beacon xmit*/
- #define AR5K_BEACON_RESET_TSF	0x01000000 /*force a TSF reset*/
- 
--#if 0
--/**
-- * struct ath5k_beacon_state - Per-station beacon timer state.
-- * @bs_interval: in TU's, can also include the above flags
-- * @bs_cfp_max_duration: if non-zero hw is setup to coexist with a
-- * 	Point Coordination Function capable AP
-- */
--struct ath5k_beacon_state {
--	u32	bs_next_beacon;
--	u32	bs_next_dtim;
--	u32	bs_interval;
--	u8	bs_dtim_period;
--	u8	bs_cfp_period;
--	u16	bs_cfp_max_duration;
--	u16	bs_cfp_du_remain;
--	u16	bs_tim_offset;
--	u16	bs_sleep_duration;
--	u16	bs_bmiss_threshold;
--	u32  	bs_cfp_next;
--};
--#endif
--
- 
- /*
-  * TSF to TU conversion:
-@@ -1218,12 +1196,6 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah);
- void ath5k_hw_set_tsf64(struct ath5k_hw *ah, u64 tsf64);
- void ath5k_hw_reset_tsf(struct ath5k_hw *ah);
- void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval);
--#if 0
--int ath5k_hw_set_beacon_timers(struct ath5k_hw *ah,
--			       const struct ath5k_beacon_state *state);
--void ath5k_hw_reset_beacon(struct ath5k_hw *ah);
--int ath5k_hw_beaconq_finish(struct ath5k_hw *ah, unsigned long phys_addr);
--#endif
- /* ACK bit rate */
- void ath5k_hw_set_ack_bitrate_high(struct ath5k_hw *ah, bool high);
- /* Clock rate related functions */
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 8eaa5d6..8f95189 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -648,203 +648,6 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
- 
- }
- 
--#if 0
--/*
-- * Set beacon timers
-- */
--int ath5k_hw_set_beacon_timers(struct ath5k_hw *ah,
--		const struct ath5k_beacon_state *state)
--{
--	u32 cfp_period, next_cfp, dtim, interval, next_beacon;
--
--	/*
--	 * TODO: should be changed through *state
--	 * review struct ath5k_beacon_state struct
--	 *
--	 * XXX: These are used for cfp period bellow, are they
--	 * ok ? Is it O.K. for tsf here to be 0 or should we use
--	 * get_tsf ?
--	 */
--	u32 dtim_count = 0; /* XXX */
--	u32 cfp_count = 0; /* XXX */
--	u32 tsf = 0; /* XXX */
--
--	ATH5K_TRACE(ah->ah_sc);
--	/* Return on an invalid beacon state */
--	if (state->bs_interval < 1)
--		return -EINVAL;
--
--	interval = state->bs_interval;
--	dtim = state->bs_dtim_period;
--
--	/*
--	 * PCF support?
--	 */
--	if (state->bs_cfp_period > 0) {
--		/*
--		 * Enable PCF mode and set the CFP
--		 * (Contention Free Period) and timer registers
--		 */
--		cfp_period = state->bs_cfp_period * state->bs_dtim_period *
--			state->bs_interval;
--		next_cfp = (cfp_count * state->bs_dtim_period + dtim_count) *
--			state->bs_interval;
--
--		AR5K_REG_ENABLE_BITS(ah, AR5K_STA_ID1,
--				AR5K_STA_ID1_DEFAULT_ANTENNA |
--				AR5K_STA_ID1_PCF);
--		ath5k_hw_reg_write(ah, cfp_period, AR5K_CFP_PERIOD);
--		ath5k_hw_reg_write(ah, state->bs_cfp_max_duration,
--				AR5K_CFP_DUR);
--		ath5k_hw_reg_write(ah, (tsf + (next_cfp == 0 ? cfp_period :
--						next_cfp)) << 3, AR5K_TIMER2);
--	} else {
--		/* Disable PCF mode */
--		AR5K_REG_DISABLE_BITS(ah, AR5K_STA_ID1,
--				AR5K_STA_ID1_DEFAULT_ANTENNA |
--				AR5K_STA_ID1_PCF);
--	}
--
--	/*
--	 * Enable the beacon timer register
--	 */
--	ath5k_hw_reg_write(ah, state->bs_next_beacon, AR5K_TIMER0);
--
--	/*
--	 * Start the beacon timers
--	 */
--	ath5k_hw_reg_write(ah, (ath5k_hw_reg_read(ah, AR5K_BEACON) &
--		~(AR5K_BEACON_PERIOD | AR5K_BEACON_TIM)) |
--		AR5K_REG_SM(state->bs_tim_offset ? state->bs_tim_offset + 4 : 0,
--		AR5K_BEACON_TIM) | AR5K_REG_SM(state->bs_interval,
--		AR5K_BEACON_PERIOD), AR5K_BEACON);
--
--	/*
--	 * Write new beacon miss threshold, if it appears to be valid
--	 * XXX: Figure out right values for min <= bs_bmiss_threshold <= max
--	 * and return if its not in range. We can test this by reading value and
--	 * setting value to a largest value and seeing which values register.
--	 */
--
--	AR5K_REG_WRITE_BITS(ah, AR5K_RSSI_THR, AR5K_RSSI_THR_BMISS,
--			state->bs_bmiss_threshold);
--
--	/*
--	 * Set sleep control register
--	 * XXX: Didn't find this in 5210 code but since this register
--	 * exists also in ar5k's 5210 headers i leave it as common code.
--	 */
--	AR5K_REG_WRITE_BITS(ah, AR5K_SLEEP_CTL, AR5K_SLEEP_CTL_SLDUR,
--			(state->bs_sleep_duration - 3) << 3);
--
--	/*
--	 * Set enhanced sleep registers on 5212
--	 */
--	if (ah->ah_version == AR5K_AR5212) {
--		if (state->bs_sleep_duration > state->bs_interval &&
--				roundup(state->bs_sleep_duration, interval) ==
--				state->bs_sleep_duration)
--			interval = state->bs_sleep_duration;
--
--		if (state->bs_sleep_duration > dtim && (dtim == 0 ||
--				roundup(state->bs_sleep_duration, dtim) ==
--				state->bs_sleep_duration))
--			dtim = state->bs_sleep_duration;
--
--		if (interval > dtim)
--			return -EINVAL;
--
--		next_beacon = interval == dtim ? state->bs_next_dtim :
--			state->bs_next_beacon;
--
--		ath5k_hw_reg_write(ah,
--			AR5K_REG_SM((state->bs_next_dtim - 3) << 3,
--			AR5K_SLEEP0_NEXT_DTIM) |
--			AR5K_REG_SM(10, AR5K_SLEEP0_CABTO) |
--			AR5K_SLEEP0_ENH_SLEEP_EN |
--			AR5K_SLEEP0_ASSUME_DTIM, AR5K_SLEEP0);
--
--		ath5k_hw_reg_write(ah, AR5K_REG_SM((next_beacon - 3) << 3,
--			AR5K_SLEEP1_NEXT_TIM) |
--			AR5K_REG_SM(10, AR5K_SLEEP1_BEACON_TO), AR5K_SLEEP1);
--
--		ath5k_hw_reg_write(ah,
--			AR5K_REG_SM(interval, AR5K_SLEEP2_TIM_PER) |
--			AR5K_REG_SM(dtim, AR5K_SLEEP2_DTIM_PER), AR5K_SLEEP2);
--	}
--
--	return 0;
--}
--
--/*
-- * Reset beacon timers
-- */
--void ath5k_hw_reset_beacon(struct ath5k_hw *ah)
--{
--	ATH5K_TRACE(ah->ah_sc);
--	/*
--	 * Disable beacon timer
--	 */
--	ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);
--
--	/*
--	 * Disable some beacon register values
--	 */
--	AR5K_REG_DISABLE_BITS(ah, AR5K_STA_ID1,
--			AR5K_STA_ID1_DEFAULT_ANTENNA | AR5K_STA_ID1_PCF);
--	ath5k_hw_reg_write(ah, AR5K_BEACON_PERIOD, AR5K_BEACON);
--}
--
--/*
-- * Wait for beacon queue to finish
-- */
--int ath5k_hw_beaconq_finish(struct ath5k_hw *ah, unsigned long phys_addr)
--{
--	unsigned int i;
--	int ret;
--
--	ATH5K_TRACE(ah->ah_sc);
--
--	/* 5210 doesn't have QCU*/
--	if (ah->ah_version == AR5K_AR5210) {
--		/*
--		 * Wait for beaconn queue to finish by checking
--		 * Control Register and Beacon Status Register.
--		 */
--		for (i = AR5K_TUNE_BEACON_INTERVAL / 2; i > 0; i--) {
--			if (!(ath5k_hw_reg_read(ah, AR5K_BSR) & AR5K_BSR_TXQ1F)
--					||
--			    !(ath5k_hw_reg_read(ah, AR5K_CR) & AR5K_BSR_TXQ1F))
--				break;
--			udelay(10);
--		}
--
--		/* Timeout... */
--		if (i <= 0) {
--			/*
--			 * Re-schedule the beacon queue
--			 */
--			ath5k_hw_reg_write(ah, phys_addr, AR5K_NOQCU_TXDP1);
--			ath5k_hw_reg_write(ah, AR5K_BCR_TQ1V | AR5K_BCR_BDMAE,
--					AR5K_BCR);
--
--			return -EIO;
--		}
--		ret = 0;
--	} else {
--	/*5211/5212*/
--		ret = ath5k_hw_register_timeout(ah,
--			AR5K_QUEUE_STATUS(AR5K_TX_QUEUE_ID_BEACON),
--			AR5K_QCU_STS_FRMPENDCNT, 0, false);
--
--		if (AR5K_REG_READ_Q(ah, AR5K_QCU_TXE, AR5K_TX_QUEUE_ID_BEACON))
--			return -EIO;
--	}
--
--	return ret;
--}
--#endif
--
- 
- /*********************\
- * Key table functions *
--- 
-1.6.2.5
+This is the information that iw provides. I am not familiar with how it
+obtains it and is perhaps just a reflection of the regulatory domain in
+use as opposed to what the device actually supports. The above does not
+reflect what the device is capable of and since it does its own
+regulatory things should work. When I load the module with debug=0x1 I
+do see that the channels listed above as disabled can be used (just not
+for beaconing) since they are radar channels.
+
+
+[13071.468278] ieee80211 phy0: U iwl_init_channel_map Ch. 34 Flags 0 [5.2GHz] - No traffic
+[13071.476329] ieee80211 phy0: U iwl_init_channel_map Ch. 36 [5.2GHz] VALID IBSS ACTIVE WIDE DFS (0xab 15dBm): Ad-Hoc supported
+[13071.487587] ieee80211 phy0: U iwl_init_channel_map Ch. 38 Flags 0 [5.2GHz] - No traffic
+[13071.495646] ieee80211 phy0: U iwl_init_channel_map Ch. 40 [5.2GHz] VALID IBSS ACTIVE WIDE DFS (0xab 15dBm): Ad-Hoc supported
+[13071.506902] ieee80211 phy0: U iwl_init_channel_map Ch. 42 Flags 0 [5.2GHz] - No traffic
+[13071.514952] ieee80211 phy0: U iwl_init_channel_map Ch. 44 [5.2GHz] VALID IBSS ACTIVE WIDE DFS (0xab 15dBm): Ad-Hoc supported
+[13071.526210] ieee80211 phy0: U iwl_init_channel_map Ch. 46 Flags 0 [5.2GHz] - No traffic
+[13071.534260] ieee80211 phy0: U iwl_init_channel_map Ch. 48 [5.2GHz] VALID IBSS ACTIVE WIDE DFS (0xab 15dBm): Ad-Hoc supported
+[13071.545520] ieee80211 phy0: U iwl_init_channel_map Ch. 52 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.556293] ieee80211 phy0: U iwl_init_channel_map Ch. 56 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.567032] ieee80211 phy0: U iwl_init_channel_map Ch. 60 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.577770] ieee80211 phy0: U iwl_init_channel_map Ch. 64 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.588509] ieee80211 phy0: U iwl_init_channel_map Ch. 100 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.599332] ieee80211 phy0: U iwl_init_channel_map Ch. 104 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.610157] ieee80211 phy0: U iwl_init_channel_map Ch. 108 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.620999] ieee80211 phy0: U iwl_init_channel_map Ch. 112 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.631822] ieee80211 phy0: U iwl_init_channel_map Ch. 116 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.642646] ieee80211 phy0: U iwl_init_channel_map Ch. 120 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.653471] ieee80211 phy0: U iwl_init_channel_map Ch. 124 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.664294] ieee80211 phy0: U iwl_init_channel_map Ch. 128 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.675120] ieee80211 phy0: U iwl_init_channel_map Ch. 132 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.685977] ieee80211 phy0: U iwl_init_channel_map Ch. 136 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.696802] ieee80211 phy0: U iwl_init_channel_map Ch. 140 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
+[13071.707624] ieee80211 phy0: U iwl_init_channel_map Ch. 145 Flags 0 [5.2GHz] - No traffic
+[13071.715762] ieee80211 phy0: U iwl_init_channel_map Ch. 149 Flags 0 [5.2GHz] - No traffic
+[13071.723897] ieee80211 phy0: U iwl_init_channel_map Ch. 153 Flags 0 [5.2GHz] - No traffic
+[13071.732041] ieee80211 phy0: U iwl_init_channel_map Ch. 157 Flags 0 [5.2GHz] - No traffic
+[13071.740185] ieee80211 phy0: U iwl_init_channel_map Ch. 161 Flags 0 [5.2GHz] - No traffic
+[13071.748322] ieee80211 phy0: U iwl_init_channel_map Ch. 165 Flags 0 [5.2GHz] - No traffic
+
+
+>  With some update between now and a while ago (October?) I can no
+> longer even monitor on most 11a channels. (E.g., "iwconfig wlan0 mode
+> monitor ; iwconfig wlan0 channel 64" returns an error). This was not
+> the old behavior, and seems to be wrong to me.
+
+What error do you get? Have you tried to set up monitor channel using
+iw? Is bisect an option to try to find out what caused this?
+
+Reinette
+
+
 
