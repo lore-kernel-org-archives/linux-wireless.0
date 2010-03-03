@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46887 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862Ab0CKB2c (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:40139 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755019Ab0CCArd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 20:28:32 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 04/14] ath9k_hw: rename getNoiseFloorThresh() to ath9k_hw_getnf_thres()
-Date: Wed, 10 Mar 2010 20:28:21 -0500
-Message-Id: <1268270911-24568-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 2 Mar 2010 19:47:33 -0500
+Date: Wed, 03 Mar 2010 09:47:31 +0900
+From: Jaehoon Chung <jh80.chung@samsung.com>
+Subject: Re: [PATCH] rfkill bug fixed in rfkill_set_sw_state
+In-reply-to: <20100302125003.f7919c53.akpm@linux-foundation.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Reply-to: jh80.chung@samsung.com
+Message-id: <4B8DB1A3.9060902@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; format=flowed; charset=ISO-8859-1
+References: <000301cab69f$ec61ad00$c5250700$%chung@samsung.com>
+ <20100302125003.f7919c53.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Ok Next time, i will add sutatble cc's scripts/get_maintainer.pl. thanks..
+> Suitable cc's (from scripts/get_maintainer.pl) added.
+>
+> On Fri, 26 Feb 2010 13:55:31 +0900
+> _________<jh80.chung@samsung.com>  wrote:
+>
+>    
+>> Don___t work expected operation in __rfkill_set_sw_state.
+>> when rfkill initialized. Rfkill___s blocked&  unblocked is operating on the
+>> contrary.
+>>
+>> Signed-off-by: Jaehoon Chung<jh80.chung@samsung.com>
+>>
+>> ---
+>>   net/rfkill/core.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+>> index c224cb2..dcc2d38 100644
+>> --- a/net/rfkill/core.c
+>> +++ b/net/rfkill/core.c
+>> @@ -488,7 +488,7 @@ static void __rfkill_set_sw_state(struct rfkill
+>> *rfkill, bool blocked)
+>>   	if (rfkill->state&  RFKILL_BLOCK_SW_SETCALL)
+>>   		bit = RFKILL_BLOCK_SW_PREV;
+>>
+>> -	if (blocked)
+>> +	if (!blocked)
+>>   		rfkill->state |= bit;
+>>   	else
+>>   		rfkill->state&= ~bit;
+>>      
+> Are you sure?  What problems were you observing with the existing code?
+> Please fully describe your hardware and the driver's behaviour.
+>
+> The current code _looks_ OK to me.  If bool `blocked' is true, we set
+> the RFKILL_BLOCK_SW bit?
+>    
+I implemented the wlan driver using rfkill.
+In my source code, the wlan driver initalized to 
+RFKLL_USESR_STATE_UNBLOCKED..
+if that is correct, maybe do working the unblocked...but not work 
+"unblocked"
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index f8d4da6..4ecc061 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -176,9 +176,9 @@ static void ath9k_hw_do_getnf(struct ath_hw *ah,
- 	}
- }
- 
--static bool getNoiseFloorThresh(struct ath_hw *ah,
--				enum ieee80211_band band,
--				int16_t *nft)
-+static bool ath9k_hw_getnf_thres(struct ath_hw *ah,
-+				 enum ieee80211_band band,
-+				 int16_t *nft)
- {
- 	switch (band) {
- 	case IEEE80211_BAND_5GHZ:
-@@ -699,7 +699,7 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
- 	} else {
- 		ath9k_hw_do_getnf(ah, nfarray);
- 		nf = nfarray[0];
--		if (getNoiseFloorThresh(ah, c->band, &nfThresh)
-+		if (ath9k_hw_getnf_thres(ah, c->band, &nfThresh)
- 		    && nf > nfThresh) {
- 			ath_print(common, ATH_DBG_CALIBRATE,
- 				  "noise floor failed detected; "
--- 
-1.6.3.3
+below code is unblock's operation..right?
+rfkill_init_sw_state(wlan, RFKILL_USER_STATE_UNBLOCKED);
+
+but, do not operate unblocked.
+please check that source code..
+
+thanks for your comment, Andrew.
 
