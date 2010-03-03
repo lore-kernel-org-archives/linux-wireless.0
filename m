@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:24633 "EHLO mga03.intel.com"
+Received: from home.einfach.org ([80.86.92.145]:36318 "EHLO home.einfach.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755115Ab0C3WCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 18:02:05 -0400
-Subject: Re: Problem with IW5300
-From: reinette chatre <reinette.chatre@intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	"lee_matheson@hotmail.com" <lee_matheson@hotmail.com>
-In-Reply-To: <4BB25756.2040201@lwfinger.net>
-References: <4BB25756.2040201@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Mar 2010 15:01:59 -0700
-Message-ID: <1269986519.2446.3467.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1750963Ab0CCBLL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 20:11:11 -0500
+From: Bruno Randolf <br1@einfach.org>
+To: Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH v2] ath5k: fix injection in monitor mode
+Date: Wed, 3 Mar 2010 10:10:49 +0900
+Cc: linville@tuxdriver.com, ath5k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org, netrolller.3d@gmail.com,
+	benoit.papillault@free.fr
+References: <20100302025158.9527.43764.stgit@void> <20100302094238.GA24391@jm.kir.nu>
+In-Reply-To: <20100302094238.GA24391@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003031010.49887.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+On Tuesday 02 March 2010 18:42:38 Jouni Malinen wrote:
+> On Tue, Mar 02, 2010 at 11:51:58AM +0900, Bruno Randolf wrote:
+> > injected frames have to use AR5K_PKT_TYPE_NORMAL, otherwise the hardware
+> > thinks it can mess with the contents of the frame - e.g. update the TSF
+> > of an injected beacon. injected frames should be sent as they are
+> > provided.
+> 
+> Why would we never want the hardware to update fields in injected
+> frames? Unless I missed something, this seems to break hostapd use cases
+> where the hardware is indeed expected to update the timestamp in Probe
+> Response frames and set up seq# and duration etc. as appropriate for the
+> frames (the latter may be driver/mac80211 work; the timestamp needs to
+> come from hardware/firmware).
 
-On Tue, 2010-03-30 at 12:56 -0700, Larry Finger wrote:
-> His problem is that the wireless keeps getting a microcode error and is dropping
-> and remaking the connection about every 40 seconds. It logs the following:
+ok, i see.
 
-How severe is the impact of this restart? Does "remake the connection"
-mean that a reassociation is needed?
+> If we want to have an option to prevent hardware from touching the frame
+> payload, that really should be an option (a radiotap and TX control
+> flags, etc.), not default functionality for monitor interface. The use
+> case for this seems to be some kind of testing purpose and that should
+> not really break more common functionality.
 
-> [  652.749175] iwlagn 0000:04:00.0: Microcode SW error detected.  Restarting
-> 0x2000000.
-> [  652.749201] iwlagn 0000:04:00.0: Start IWL Error Log Dump:
-> [  652.749207] iwlagn 0000:04:00.0: Status: 0x000212E4, count: 5
-> [  652.749346] iwlagn 0000:04:00.0: Desc                               Time
->   data1      data2      line
-> [  652.749356] iwlagn 0000:04:00.0: NMI_INTERRUPT_WDG            (#04)
-> 1197632519 0x00000002 0x07030000 3664
-> [  652.749361] iwlagn 0000:04:00.0: blink1  blink2  ilink1  ilink2
-> [  652.749367] iwlagn 0000:04:00.0: 0x005AA 0x006E8 0x008B2 0x0CF76
+yes, we use it for testing IBSS mode (merging, TSF updates) by injecting 
+custom beacons. i guess other packet injectors would also assume that their 
+packets go out untouched.
 
-This is the firmware watchdog timer kicking in because something is
-hanging in firmware or maybe just talking too long. Unfortunately quite
-a few of these have been popping up recently, so far I have recorded six
-bug reports with the same line number you are reporting here.
+so what would be a way to support that properly?
+what about a monitor mode flag?
 
-You could try the patches accompanying
-https://bugzilla.kernel.org/show_bug.cgi?id=15374 ... that will not make
-the firmware error go away, but should help with cleanup when it does
-occur and hopefully enable the connection to recover without user
-noticing ... although I am not sure about that if this error is hit so
-often.
-
-Reinette
-
-
+bruno
