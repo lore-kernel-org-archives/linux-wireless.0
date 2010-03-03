@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37654 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753981Ab0C3RsG (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48904 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752480Ab0CCITE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 13:48:06 -0400
-Received: by mail-vw0-f46.google.com with SMTP id 20so895732vws.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 10:48:05 -0700 (PDT)
-Message-ID: <4BB23953.9010104@lwfinger.net>
-Date: Tue, 30 Mar 2010 12:48:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 3 Mar 2010 03:19:04 -0500
+Date: Wed, 3 Mar 2010 10:18:35 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org, netrolller.3d@gmail.com,
+	benoit.papillault@free.fr
+Subject: Re: [PATCH v2] ath5k: fix injection in monitor mode
+Message-ID: <20100303081835.GA1637@jm.kir.nu>
+References: <20100302025158.9527.43764.stgit@void>
+ <20100302094238.GA24391@jm.kir.nu>
+ <201003031010.49887.br1@einfach.org>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Broadcom card totally not visible for system (lspci)
-References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>	 <4BB2328D.9010503@lwfinger.net> <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
-In-Reply-To: <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201003031010.49887.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2010 12:31 PM, Rafał Miłecki wrote:
-> 
-> Is this possible it's disabled in BIOS by default and needs execution
-> of some ACPI command or sth to make it work?
-> 
-> Yeah, trying to find some other reason than faulty WiFi... It's weird
-> it was working fine "before a moment" on Windows.
+On Wed, Mar 03, 2010 at 10:10:49AM +0900, Bruno Randolf wrote:
+> On Tuesday 02 March 2010 18:42:38 Jouni Malinen wrote:
+> > If we want to have an option to prevent hardware from touching the frame
+> > payload, that really should be an option (a radiotap and TX control
+> > flags, etc.), not default functionality for monitor interface.
 
-Winblows can fiddle with the "Wake-on-LAN" setting in the BIOS, but AFAIK, the
-BCM4306 does not have this capability. If the BIOS has that setting, it should
-be turned off.
+> yes, we use it for testing IBSS mode (merging, TSF updates) by injecting 
+> custom beacons. i guess other packet injectors would also assume that their 
+> packets go out untouched.
 
-Larry
+Like I said, not all packet injectors do and hostapd certainly depends
+on the injected packet being updated (both for contents and for
+selecting a suitable TX rate and also to encrypt the frame when a key is
+set for this).
 
+> so what would be a way to support that properly?
+> what about a monitor mode flag?
+
+My preference is shown in the quoted text above, i.e., a new radiotap
+(per packet, not per monitor interface) flag and then internally in
+mac80211--driver a new TX control flag to indicate that the frame is not
+to be updated.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
