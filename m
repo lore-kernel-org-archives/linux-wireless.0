@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:45534 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756179Ab0CLI73 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 03:59:29 -0500
-Message-ID: <4B9A026D.1030806@gmail.com>
-Date: Fri, 12 Mar 2010 09:59:25 +0100
-From: Till Kamppeter <till.kamppeter@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:36140 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750864Ab0CCFTz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 00:19:55 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 21:19:55 -0800
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19341.62966.393227.239280@gargle.gargle.HOWL>
+Date: Wed, 3 Mar 2010 11:09:02 +0530
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>
-Subject: Re: Linux wireless GSoC 2010 project ideas
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com> <20100128231545.GH18683@nowhere> <43e72e891001281523s56707279x896ab059e6d4e530@mail.gmail.com> <4B62231F.5080104@gmail.com> <20100309224347.GD5058@nowhere>
-In-Reply-To: <20100309224347.GD5058@nowhere>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/7] ath9k: Add common code to lib
+In-Reply-To: <43e72e891003022017l73226794kd3856f2d9ca0ae2@mail.gmail.com>
+References: <19339.35501.467215.380773@gargle.gargle.HOWL>
+	<19340.54345.580466.373621@gargle.gargle.HOWL>
+	<20100303005220.GJ8069@bombadil.infradead.org>
+	<19341.56441.523682.509267@gargle.gargle.HOWL>
+	<43e72e891003022017l73226794kd3856f2d9ca0ae2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can someone post this project idea on the ideas list today (marking that 
-it comes from a student). This could support our application as 
-mentoring organization.
+Luis R. Rodriguez wrote:
+> Ah thanks. So why remove a library at the end if the driver hasn't
+> been merged yet, how about just do away with the library from the
+> start and add the stuff you need to ath9k_htc on the first patch.
 
-    Till
+Ok.
 
-On 03/09/2010 11:43 PM, Frederic Weisbecker wrote:
-> On Fri, Jan 29, 2010 at 12:51:59AM +0100, Till Kamppeter wrote:
->> No problem for students to suggest topics. We are not restricted to
->> wireless in terms of kernel. We support kernel projects in general.
->>
->> Please give your suggestion as answer to this e-mail, doing "Reply to
->> all", as I am not a kernel export, the other participants of this thread
->> should have a look at the student's project ideas and help finding
->> mentors.
->>
->>     Till
->
->
->
-> Ok, I hope it's not too late.
-> Here is one subject that I would like to apply for:
->
->
-> = Improving tracing in perf events / ftrace =
->
->
-> Using trace events under perf events is still a young feature
-> and needs various improvements.
->
-> - Syscall events can carry only raw values and addresses.
-> We need to make them "aware" of strings and structures contents
-> from userspace.
->
-> - Make function / function graph tracers usable by perf
->
-> - Optimize tracing fast-path
->
-> - Improve perf tools to better handle trace events scalability
->
-> - Provide new perf tools that exploit trace events (scheduler
->    migration analysis, etc...)
->
-> - Implement a per context excluding (eg: exclude irqs, exclude functions, etc...)
->
-> - There are always things to do there.
->
->
-> Of course, each of these elements require a lot of work,
-> so not all of them can be done in two months, and some
-> of them can be started already before the summer.
->
->
+John, can you just drop everything ?
+I (or someone) will send fresh patches after we fix this mess.
 
+I know you are probably seething with irritation now, but remember,
+I might save the world someday and you might not be on the hero's side ...
+
+Sujith
