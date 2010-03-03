@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:48422 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752809Ab0C3Lqg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 07:46:36 -0400
-From: Krzysztof Halasa <khc@pm.waw.pl>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-References: <m3tys0tbhk.fsf@intrepid.localdomain>
-	<43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
-	<m3y6hayhv1.fsf@intrepid.localdomain>
-	<201003300842.18335.holgerschurig@gmail.com>
-Date: Tue, 30 Mar 2010 13:46:34 +0200
-In-Reply-To: <201003300842.18335.holgerschurig@gmail.com> (Holger Schurig's
-	message of "Tue, 30 Mar 2010 08:42:18 +0200")
-Message-ID: <m3mxxqqbfp.fsf@intrepid.localdomain>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:35257 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752231Ab0CCRGc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 12:06:32 -0500
+Received: by gyd8 with SMTP id 8so144403gyd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 09:06:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B8D37AC.4010000@nets.rwth-aachen.de>
+References: <4B8D37AC.4010000@nets.rwth-aachen.de>
+Date: Wed, 3 Mar 2010 12:06:26 -0500
+Message-ID: <b6c5339f1003030906jaa47f8dld615865b52bf19a1@mail.gmail.com>
+Subject: Re: ath5k IBSS mode high latency
+From: Bob Copeland <me@bobcopeland.com>
+To: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+Cc: ath5k-devel@lists.ath5k.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Holger Schurig <holgerschurig@gmail.com> writes:
+On Tue, Mar 2, 2010 at 11:07 AM, Arnd Hannemann
+<hannemann@nets.rwth-aachen.de> wrote:
+> Hi,
+>
+> I'm currently experimenting with ath5k of kernel 2.6.33 in our
+> mesh network. We, were previously using madwifi in "ahdemo" mode,
+> which worked reasonably well.
+>
+> At the same time there is no reasonable traffic that justifies this high backlog.
+> I'm not yet sure, but it may be related to this message in dmesg:
+>
+> [ 3681.006797] ath5k phy0: no further txbuf available, dropping packet
 
-> Creating my won regdomain bin with my own signature was way too much for me.
+It's likely.
 
-I can do that but I don't think it solves the problem. Overriding the
-"default" country in EEPROM or in the driver, sure it does.
+When this happens, we tell mac80211 to stop all of the
+tx queues -- regardless of which queue stopped -- until
+the hardware interrupts begin processing tx status
+descriptors.  We re-enable them when there is a certain
+amount of headroom.
 
-I can't simply change the freq ranges assigned to US to those valid in
-EU and pretend it's "fixed".
+> Any idea how to debug this problem further?
+
+I would add a printk to where the queues are stopped
+and re-enabled, and when packets are queued, to determine
+which queue is using up all of the descriptors.  I can put
+together a patch with the appropriate debug for you if you
+like, but in a day or two when I'm a bit less busy.
+
+By the way, I did notice that if we fail to map DMA
+buffers we can leak tx descriptors, but this is unlikely
+to be the cause.
+
 -- 
-Krzysztof Halasa
+Bob Copeland %% www.bobcopeland.com
