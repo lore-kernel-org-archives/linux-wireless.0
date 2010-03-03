@@ -1,51 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40341 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555Ab0C2UpJ (ORCPT
+Received: from mail-bw0-f212.google.com ([209.85.218.212]:55721 "EHLO
+	mail-bw0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754359Ab0CCJgO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:45:09 -0400
-Date: Mon, 29 Mar 2010 16:30:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?iso-8859-1?Q?Ren=E9?= Bolldorf <xsecute@googlemail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-Message-ID: <20100329203005.GK4984@tuxdriver.com>
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10B62.9070408@googlemail.com>
+	Wed, 3 Mar 2010 04:36:14 -0500
+Message-ID: <4B8E2DCD.6020308@tuffmail.co.uk>
+Date: Wed, 03 Mar 2010 09:37:17 +0000
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4BB10B62.9070408@googlemail.com>
+To: jh80.chung@samsung.com
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] rfkill bug fixed in rfkill_set_sw_state
+References: <000301cab69f$ec61ad00$c5250700$%chung@samsung.com> <20100302125003.f7919c53.akpm@linux-foundation.org> <4B8DB1A3.9060902@samsung.com>
+In-Reply-To: <4B8DB1A3.9060902@samsung.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 10:19:46PM +0200, René Bolldorf wrote:
-> On 03/29/10 21:47, John W. Linville wrote:
-
->> OK, I'm new to the thread -- what exactly is the issue?  Was your
->> device working previously?
+Jaehoon Chung wrote:
+> Ok Next time, i will add sutatble cc's scripts/get_maintainer.pl. 
+> thanks..
+>> Suitable cc's (from scripts/get_maintainer.pl) added.
 >>
->> John
+>> On Fri, 26 Feb 2010 13:55:31 +0900
+>> _________<jh80.chung@samsung.com>  wrote:
+>>
+>>   
+>>> Don___t work expected operation in __rfkill_set_sw_state.
+>>> when rfkill initialized. Rfkill___s blocked&  unblocked is operating 
+>>> on the
+>>> contrary.
+>>>
+>>> Signed-off-by: Jaehoon Chung<jh80.chung@samsung.com>
+>>>
+>>> ---
+>>>   net/rfkill/core.c |    2 +-
+>>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+>>> index c224cb2..dcc2d38 100644
+>>> --- a/net/rfkill/core.c
+>>> +++ b/net/rfkill/core.c
+>>> @@ -488,7 +488,7 @@ static void __rfkill_set_sw_state(struct rfkill
+>>> *rfkill, bool blocked)
+>>>       if (rfkill->state&  RFKILL_BLOCK_SW_SETCALL)
+>>>           bit = RFKILL_BLOCK_SW_PREV;
+>>>
+>>> -    if (blocked)
+>>> +    if (!blocked)
+>>>           rfkill->state |= bit;
+>>>       else
+>>>           rfkill->state&= ~bit;
+>>>      
+>> Are you sure?  What problems were you observing with the existing code?
+>> Please fully describe your hardware and the driver's behaviour.
+>>
+>> The current code _looks_ OK to me.  If bool `blocked' is true, we set
+>> the RFKILL_BLOCK_SW bit?
+>>    
+> I implemented the wlan driver using rfkill.
+> In my source code, the wlan driver initalized to 
+> RFKLL_USESR_STATE_UNBLOCKED..
+> if that is correct, maybe do working the unblocked...but not work 
+> "unblocked"
 >
-> The problem is since commit fcb54b0bf7d3fe730c2b72e224bc616e358f24cb, my  
-> b43 (4312)
-> device doesn't work because i get the message "No SPROM available" and  
-> then the device get's disabled.
+> below code is unblock's operation..right?
+> rfkill_init_sw_state(wlan, RFKILL_USER_STATE_UNBLOCKED);
 >
-> My colleague have the same problem. I have made a patch for that but it  
-> seems thats not work for all 4312 devices. I and my colleage have the  
-> same netbook for testing purposes so the patch work while we have the  
-> same chip status.
->
-> The problem is I think: Larry had written his output is ssb: chip_id  
-> 0x4312, status 0x10, he have a different chip status.
-> What to do? Any ideas?
+> but, do not operate unblocked.
+> please check that source code..
 
-Not really, no... :-(
+I see the problem :).  The hint is in the _USER_ - those constants are 
+not for use by drivers.  You want this instead:
 
-Larry, any chance the definitions of those OTP_SEL bits are inverted
-between 4325 and 4312?
+rfkill_init_sw_state(wlan, false);
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+(assuming you really want init_sw_state().  Please do check that your 
+device state is persistent, as described by the comment in rfkill.h).
+
+Regards
+Alan
