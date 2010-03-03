@@ -1,72 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:62340 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660Ab0CRK1A (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:17390 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755204Ab0CCJpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 06:27:00 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Wed, 3 Mar 2010 04:45:45 -0500
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0235099543
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Mar 2010 18:45:43 +0900 (JST)
+Subject: [PATCH v2] mac80211: fix rates setup on IBSS merge
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/21] wl1271: another patch bomb from our internal repo
-Date: Thu, 18 Mar 2010 12:26:25 +0200
-Message-Id: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, awozniak@irobot.com,
+	benoit.papillault@free.fr
+Date: Wed, 03 Mar 2010 18:45:42 +0900
+Message-ID: <20100303094542.13968.96481.stgit@void>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+when an IBSS merge happened, the supported rates for the newly added station
+were left empty, causing the rate control module to be initialized with only
+the basic rates.
 
-Here's another set of patches that have been pending for a while in our
-internal tree.  This is the last bomb and hopefully we'll be able to send them
-more frequently from now on.
+the section of the ibss code which deals with updating supported rates for
+an already existing station failed to inform the rate control module about the
+new rates. as both minstrel and pid don't have an update function i just use
+the init function.
 
-There are some SDIO fixes and improvements, some WMM and U-APSD stuff and the
-usual bunch of general improvements and bugfixes.
+also remove unnecessary (unsigned long long) casts and edit debug message.
 
-Cheers,
-Luca.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ net/mac80211/ibss.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-Juuso Oikarinen (10):
-  wl1271: Fix configuration of the TX opportunity value
-  wl1271: Fix SG configuration message structures
-  wl1271: Add proper WLAN-BT co-ex configuration, and enable co-ex.
-  wl1271: Move platform device registration from _spi to _main
-  wl1271: Add sysfs file to control BT co-ex state
-  wl1271: Fix MAC address handling
-  wl1271: Remove deprecated interface config function
-  wl1271: Update filters properly
-  wl1271: Don't generate null func template for ad-hoc
-  wl1271: Remove circular interlocking related to the inetaddr notifier
-    chain
-
-Kalle Valo (6):
-  wl1271: enable WMM
-  wl1271: get pspoll and nullfunc templates from mac80211
-  wl1271: get probe request template from mac80211
-  wl1271: create qos nullfunc template
-  wl1271: fix ps scheme in wl1271_op_conf_tx()
-  wl1271: enable U-APSD
-
-Teemu Paasikivi (5):
-  wl1271: Cleaned up wlan power on/off functions
-  wl1271: Changed SDIO MMC host claiming
-  wl1271: Added DEBUG_SDIO flag
-  wl1271: Removed duplicate code from module remove function.
-  wl1271: Changed platform_device to be dynamically allocated
-
- drivers/net/wireless/wl12xx/wl1271.h         |    7 +
- drivers/net/wireless/wl12xx/wl1271_acx.c     |   25 +-
- drivers/net/wireless/wl12xx/wl1271_acx.h     |   68 +----
- drivers/net/wireless/wl12xx/wl1271_boot.c    |    8 +
- drivers/net/wireless/wl12xx/wl1271_cmd.c     |  218 ++++-------
- drivers/net/wireless/wl12xx/wl1271_cmd.h     |   12 +-
- drivers/net/wireless/wl12xx/wl1271_conf.h    |  330 ++++++++++++++----
- drivers/net/wireless/wl12xx/wl1271_debugfs.c |   12 +-
- drivers/net/wireless/wl12xx/wl1271_event.c   |    2 +
- drivers/net/wireless/wl12xx/wl1271_init.c    |    4 +-
- drivers/net/wireless/wl12xx/wl1271_io.h      |   13 +
- drivers/net/wireless/wl12xx/wl1271_main.c    |  496 ++++++++++++++++----------
- drivers/net/wireless/wl12xx/wl1271_sdio.c    |   74 ++---
- drivers/net/wireless/wl12xx/wl1271_spi.c     |   35 +--
- drivers/net/wireless/wl12xx/wl1271_tx.h      |    3 -
- 15 files changed, 748 insertions(+), 559 deletions(-)
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index f3e9424..01974c2 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -264,17 +264,16 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 			sta->sta.supp_rates[band] = supp_rates |
+ 				ieee80211_mandatory_rates(local, band);
+ 
++			if (sta->sta.supp_rates[band] != prev_rates) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+-			if (sta->sta.supp_rates[band] != prev_rates)
+ 				printk(KERN_DEBUG "%s: updated supp_rates set "
+-				    "for %pM based on beacon info (0x%llx | "
+-				    "0x%llx -> 0x%llx)\n",
+-				    sdata->name,
+-				    sta->sta.addr,
+-				    (unsigned long long) prev_rates,
+-				    (unsigned long long) supp_rates,
+-				    (unsigned long long) sta->sta.supp_rates[band]);
++				    "for %pM based on beacon/probe_response "
++				    "(0x%x -> 0x%x)\n",
++				    sdata->name, sta->sta.addr,
++				    prev_rates, sta->sta.supp_rates[band]);
+ #endif
++				rate_control_rate_init(sta);
++			}
+ 			rcu_read_unlock();
+ 		} else {
+ 			rcu_read_unlock();
+@@ -370,6 +369,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		       sdata->name, mgmt->bssid);
+ #endif
+ 		ieee80211_sta_join_ibss(sdata, bss);
++		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+ 				       supp_rates, GFP_KERNEL);
+ 	}
 
