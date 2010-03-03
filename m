@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f222.google.com ([209.85.219.222]:63146 "EHLO
-	mail-ew0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755168Ab0C2KaW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 06:30:22 -0400
-Received: by ewy22 with SMTP id 22so1763369ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 03:30:20 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH 2/2] wireless: rt2x00: rt2800usb: delete id
-Date: Mon, 29 Mar 2010 11:30:18 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com
-References: <1269788252-7473-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1269788252-7473-1-git-send-email-xose.vazquez@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:3213 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751200Ab0CCJF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 04:05:27 -0500
+Date: Wed, 3 Mar 2010 10:05:13 +0100
+From: Jiri Pirko <jpirko@redhat.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, tcpdump-workers@lists.tcpdump.org,
+	proski@gnu.org, netdev@vger.kernel.org
+Subject: Re: [net-2.6 PATCH] af_packet: move strict addr_len check right
+ before dev_[mc/unicast]_[add/del]
+Message-ID: <20100303090512.GB2961@psychotron.lab.eng.brq.redhat.com>
+References: <1267578048.14049.11.camel@mj>
+ <20100303064001.GB2648@psychotron.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201003291230.18379.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100303064001.GB2648@psychotron.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 28 March 2010, Xose Vazquez Perez wrote:
-> It was removed in the windows inf file by ralink.
-> And it isn't on ralink linux drivers.
+Wed, Mar 03, 2010 at 07:40:01AM CET, jpirko@redhat.com wrote:
+>Subject: [net-2.6 PATCH] af_packet: move strict addr_len check right before dev_[mc/unicast]_[add/del]
+
+Dave please apply this against net-next-2.6. I see that 914c8ad2d18b is still not in
+net-2.6.
+
+Thanks a lot
+
+Jirka
+
+>
+>My previous patch 914c8ad2d18b62ad1420f518c0cab0b0b90ab308 incorrectly changed
+>the length check in packet_mc_add to be more strict. The problem is that
+>userspace is not filling this field (and it stays zeroed) in case of setting
+>PACKET_MR_PROMISC or PACKET_MR_ALLMULTI. So move the strict check to the point
+>in path where the addr_len must be set correctly.
+>
+>Signed-off-by: Jiri Pirko <jpirko@redhat.com>
+>
+>diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
+>index 031a5e6..1612d41 100644
+>--- a/net/packet/af_packet.c
+>+++ b/net/packet/af_packet.c
+>@@ -1688,6 +1688,8 @@ static int packet_dev_mc(struct net_device *dev, struct packet_mclist *i,
+> {
+> 	switch (i->type) {
+> 	case PACKET_MR_MULTICAST:
+>+		if (i->alen != dev->addr_len)
+>+			return -EINVAL;
+> 		if (what > 0)
+> 			return dev_mc_add(dev, i->addr, i->alen, 0);
+> 		else
+>@@ -1700,6 +1702,8 @@ static int packet_dev_mc(struct net_device *dev, struct packet_mclist *i,
+> 		return dev_set_allmulti(dev, what);
+> 		break;
+> 	case PACKET_MR_UNICAST:
+>+		if (i->alen != dev->addr_len)
+>+			return -EINVAL;
+> 		if (what > 0)
+> 			return dev_unicast_add(dev, i->addr);
+> 		else
+>@@ -1734,7 +1738,7 @@ static int packet_mc_add(struct sock *sk, struct packet_mreq_max *mreq)
+> 		goto done;
 > 
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
+> 	err = -EINVAL;
+>-	if (mreq->mr_alen != dev->addr_len)
+>+	if (mreq->mr_alen > dev->addr_len)
+> 		goto done;
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index a1691b8..c1cc15d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -1010,8 +1010,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  	/* Amigo */
->  	{ USB_DEVICE(0x0e0b, 0x9031), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x0e0b, 0x9041), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -	/* Askey */
-> -	{ USB_DEVICE(0x0930, 0x0a07), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	/* ASUS */
->  	{ USB_DEVICE(0x0b05, 0x1760), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x0b05, 0x1761), USB_DEVICE_DATA(&rt2800usb_ops) },
-
-
+> 	err = -ENOBUFS;
