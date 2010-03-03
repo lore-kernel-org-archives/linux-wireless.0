@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:44147 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752691Ab0CYQdl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 12:33:41 -0400
-Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
-In-Reply-To: <20100324233832.GB32563@tuxdriver.com>
-References: <4BAA73D2.1000301@oracle.com>
-	 <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
-	 <1269466426.6935.8.camel@jlt3.sipsolutions.net>
-	 <1269466948.2446.3216.camel@rchatre-DESK>
-	 <20100324223719.GA32563@tuxdriver.com>
-	 <1269470489.2446.3217.camel@rchatre-DESK>
-	 <20100324233832.GB32563@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 25 Mar 2010 09:33:40 -0700
-Message-ID: <1269534820.2446.3230.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:40240 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753299Ab0CCERW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Mar 2010 23:17:22 -0500
+Received: by pwj8 with SMTP id 8so630115pwj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 20:17:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <19341.56441.523682.509267@gargle.gargle.HOWL>
+References: <19339.35501.467215.380773@gargle.gargle.HOWL>
+	<19340.54345.580466.373621@gargle.gargle.HOWL> <20100303005220.GJ8069@bombadil.infradead.org>
+	<19341.56441.523682.509267@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 2 Mar 2010 20:17:02 -0800
+Message-ID: <43e72e891003022017l73226794kd3856f2d9ca0ae2@mail.gmail.com>
+Subject: Re: [PATCH 1/7] ath9k: Add common code to lib
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, Mar 2, 2010 at 7:50 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Luis R. Rodriguez wrote:
+>> Can I trouble you to repost a new series of patches required for
+>> ath9k_htc which does not add/use a lib.c and instead stuffs
+>> things into common from the start? If there are patches
+>> which are cosmetic, can you send them as a second series
+>> so that we are clear what stuff is 2.6.34-rc2 material or
+>> not?
+>
+> I sent a mail yesterday to JWL, but forgot to CC the list.
+> Here is the series.
+>
+> To clarify things, these are the pending patches for
+> ath9k_htc (in order).
+>
+> [PATCH 1/3] ath9k_htc: Add ath9k_htc driver
+> [PATCH 2/3] ath9k_hw: HW fixes for ath9k_htc
+> [PATCH 3/3] ath9k: Fix HW deinit
+>
+> [PATCH 1/2] ath9k: Fix symbol collision between ath9k and ath9k_htc
+> [PATCH 2/2] ath9k_htc: Remove library
 
-On Wed, 2010-03-24 at 16:38 -0700, John W. Linville wrote:
-> On Wed, Mar 24, 2010 at 03:41:29PM -0700, reinette chatre wrote:
-> 
-> > I am very sorry, here is the correct link:
-> > http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1
-> 
-> FWIW, that one misses the definition of iwl_good_ack_health in iwl-core.h.
+Ah thanks. So why remove a library at the end if the driver hasn't
+been merged yet, how about just do away with the library from the
+start and add the stuff you need to ath9k_htc on the first patch.
 
-This definition was added in an recent patch "iwlwifi: code cleanup for
-connectivity recovery" which is already in wireless-next-2.6.
-
-> I already put the other one in wireless-next-2.6.  I'll just resolve
-> the conflict when I pull your tree.
-
-I'll try to sort this out with our next submission so that there are no
-conflicts to resolve.
-
-Reinette
-
-
+  Luis
