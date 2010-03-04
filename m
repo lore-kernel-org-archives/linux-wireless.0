@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:45120 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752337Ab0CXWNu (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.26]:29329 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab0CDAal (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 18:13:50 -0400
-Received: by mail-ew0-f216.google.com with SMTP id 8so127383ewy.28
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 15:13:49 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 2/2] rt2x00: Disable powersaving by default in rt2500usb.
-Date: Wed, 24 Mar 2010 23:13:47 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1269463357-32563-1-git-send-email-gwingerde@gmail.com> <1269463357-32563-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1269463357-32563-3-git-send-email-gwingerde@gmail.com>
+	Wed, 3 Mar 2010 19:30:41 -0500
+Received: by qw-out-2122.google.com with SMTP id 5so61170qwd.37
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 16:30:40 -0800 (PST)
+Message-ID: <4B8EFF26.6040005@lwfinger.net>
+Date: Wed, 03 Mar 2010 18:30:30 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201003242313.47959.IvDoorn@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: Nathan Schulte <reklipz@gmail.com>,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com> <201003010122.51341.mb@bu3sch.de> <201003022257.51878.mb@bu3sch.de>
+In-Reply-To: <201003022257.51878.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 24 March 2010, Gertjan van Wingerde wrote:
-> Recent bug reports have shown that rt2500usb also suffers from the
-> powersave problems that the PCI rt2x00 drivers suffer from.
-> So disable powersaving by default for rt2500usb as well.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On 03/02/2010 03:57 PM, Michael Buesch wrote:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> A bug in the PCI-E core code is able to show such behavior, because all memory
+> transfers (MMIO and DMA) from the PCI device to the wireless core are translated
+> by the PCI-E core.
+> I think the whole PCI-E core code has to be audited (also the specs, probably).
 
-> ---
->  drivers/net/wireless/rt2x00/rt2500usb.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index ee34c13..dbaa781 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -1643,6 +1643,11 @@ static int rt2500usb_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  	unsigned int i;
->  
->  	/*
-> +	 * Disable powersaving as default.
-> +	 */
-> +	rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> +
-> +	/*
->  	 * Initialize all hw fields.
->  	 */
->  	rt2x00dev->hw->flags =
+I have nearly finished the update on the code section of the specs page at
+http://bcm-v4.sipsolutions.net/PCI-E. The part that is not done involves the
+sections that read an address from the SPROM and perform operations on that address.
 
+I found that the chip common registers are mapped at 12K for newer cores on
+PCIe. This explains the 0x3XXX addresses. Similarly, the PCIe registers are
+mapped at 8K - the 0x2XXX addresses. The SPROM is shadowed at 4K or 0x1XXX.
+
+Larry
 
