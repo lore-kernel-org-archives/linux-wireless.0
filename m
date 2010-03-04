@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:54340 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755185Ab0CHPWm (ORCPT
+Received: from mail-iw0-f175.google.com ([209.85.223.175]:58993 "EHLO
+	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755176Ab0CDBiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 10:22:42 -0500
-Received: by fxm19 with SMTP id 19so6432051fxm.21
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 07:22:41 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: Re: [PATCH] ar9170: Fix illegal kfree_skb
-Date: Mon, 8 Mar 2010 16:22:38 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <1267709313-2222-1-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1267709313-2222-1-git-send-email-senthilkumar@atheros.com>
+	Wed, 3 Mar 2010 20:38:25 -0500
+Received: by iwn5 with SMTP id 5so1726072iwn.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 17:38:24 -0800 (PST)
+Message-ID: <4B8F0DB6.5090209@lwfinger.net>
+Date: Wed, 03 Mar 2010 19:32:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201003081622.38911.chunkeey@googlemail.com>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>, Nathan Schulte <reklipz@gmail.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> 	<a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com> 	<201003010122.51341.mb@bu3sch.de> <201003022257.51878.mb@bu3sch.de> 	<4B8EFF26.6040005@lwfinger.net> <69e28c911003031647o23cf5638xb0d29fb1b73aee64@mail.gmail.com>
+In-Reply-To: <69e28c911003031647o23cf5638xb0d29fb1b73aee64@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 04 March 2010 14:28:33 Senthil Balasubramanian wrote:
-> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-> ---
->  drivers/net/wireless/ath/ar9170/main.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
+On 03/03/2010 06:47 PM, Gábor Stefanik wrote:
+> On Thu, Mar 4, 2010 at 1:30 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 03/02/2010 03:57 PM, Michael Buesch wrote:
+>>
+>>> A bug in the PCI-E core code is able to show such behavior, because all memory
+>>> transfers (MMIO and DMA) from the PCI device to the wireless core are translated
+>>> by the PCI-E core.
+>>> I think the whole PCI-E core code has to be audited (also the specs, probably).
+>>
+>> I have nearly finished the update on the code section of the specs page at
+>> http://bcm-v4.sipsolutions.net/PCI-E. The part that is not done involves the
+>> sections that read an address from the SPROM and perform operations on that address.
+>>
+>> I found that the chip common registers
 > 
-> diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-> index f4650fc..d47450a 100644
-> --- a/drivers/net/wireless/ath/ar9170/main.c
-> +++ b/drivers/net/wireless/ath/ar9170/main.c
-> @@ -2517,7 +2517,7 @@ void *ar9170_alloc(size_t priv_size)
->  
->  	skb = __dev_alloc_skb(AR9170_MAX_RX_BUFFER_SIZE, GFP_KERNEL);
->  	if (!skb)
-> -		goto err_nomem;
-> +		goto err_out;
->  
->  	hw = ieee80211_alloc_hw(priv_size, &ar9170_ops);
->  	if (!hw)
-> @@ -2574,6 +2574,7 @@ void *ar9170_alloc(size_t priv_size)
->  
->  err_nomem:
->  	kfree_skb(skb);
-> +err_out:
->  	return ERR_PTR(-ENOMEM);
->  }
+> Do you mean the ChipCommon registers or the Backplane common registers?
 
-err, wait. It's perfectly legal to call kfree_skb(NULL). This is
-also true for most other kfree* functions. 
-
-But, if you can't stand this freeing NULL business (e.g.: prop. mem checker?),
-then why not got the direct path and replace "goto err_nomem" with 
-"return ERR_PTR(-ENOMEM)"?
-
-Regards,
-	Chr
+Definitely, it is the chipcommon registers.
