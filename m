@@ -1,115 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f221.google.com ([209.85.219.221]:34048 "EHLO
-	mail-ew0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485Ab0CYV7P (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:38973 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753560Ab0CDHj3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 17:59:15 -0400
-Received: by ewy21 with SMTP id 21so1932701ewy.25
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 14:59:14 -0700 (PDT)
-From: Rakesh <gopchandani@gmail.com>
-To: johannes@sipsolutions.net
-Cc: rakesh.illini@gmail.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] Changes for implementing NL80211_CMD_SET_TX_BITRATE_MASK for legacy rates for now.
-Date: Thu, 25 Mar 2010 16:52:35 -0500
-Message-Id: <1269553955-5858-1-git-send-email-gopchandani@gmail.com>
+	Thu, 4 Mar 2010 02:39:29 -0500
+Received: by wwa36 with SMTP id 36so1265482wwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 23:39:28 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B8F5228.4080001@freemail.hu>
+References: <4B8F5228.4080001@freemail.hu>
+Date: Thu, 4 Mar 2010 07:39:28 +0000
+Message-ID: <efe7343f1003032339x32bd512et9eebe0518546cfee@mail.gmail.com>
+Subject: Re: Linux 2.6.33 + Edimax EW-7318Ug?
+From: Luis Correia <luis.f.correia@gmail.com>
+To: =?ISO-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rakesh <rakesh@pineapple.(none)>
+Hi!
 
----
- mask.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 82 insertions(+), 0 deletions(-)
- create mode 100755 mask.c
+2010/3/4 Németh Márton <nm127@freemail.hu>:
+> Hi,
+>
+> I'm new to the Edimax EW-7318Ug ( http://www.edimax.com/en/produce_detail.php?pd_id=3&pl1_id=1&pl2_id=44 )
+> device. I could find out so far that there are different drivers for Linux
+> which can be used with this device. I think this device have the RT73 chip.
+>
+> I tried Linux kernel 2.6.33, compiled with CONFIG_RT2X00=m and CONFIG_RT2X00_DEBUG=y
+> (the full kernel config is attached). I copied the rt73.bin from
+> http://www.edimax.com/images/Image/driver/Linux%20driver/Wireless/USB%20adaptor/2008_0506_RT73_Linux_STA_Drv1.1.0.1.tar.zip
+> to /lib/firmware/rt73.bin .
 
-diff --git a/mask.c b/mask.c
-new file mode 100755
-index 0000000..a184b67
---- /dev/null
-+++ b/mask.c
-@@ -0,0 +1,82 @@
-+#include <net/if.h>
-+#include <errno.h>
-+#include <string.h>
-+#include <ctype.h>
-+#include <stdbool.h>
-+
-+#include <netlink/genl/genl.h>
-+#include <netlink/genl/family.h>
-+#include <netlink/genl/ctrl.h>
-+#include <netlink/msg.h>
-+#include <netlink/attr.h>
-+
-+#include "nl80211.h"
-+#include "iw.h"
-+
-+
-+static int handle_mask(struct nl80211_state *state,
-+		       struct nl_cb *cb,
-+		       struct nl_msg *msg,
-+		       int argc, char **argv)
-+{
-+	__u8 input_legacy_rates[32];
-+	struct nlattr *nl_rates, *nl_rate;
-+	
-+	char *eptr;
-+	int err = -ENOBUFS;
-+	int i,legacy_rate_counter=0;
-+	
-+	enum {
-+		NONE,
-+		LEGACY,
-+		MCS,
-+	} parse = NONE;
-+	bool have_legacy,have_mcs;
-+	for (i = 0; i < argc; i++) {
-+		if (strcmp(argv[i], "legacy") == 0) {
-+			parse = LEGACY;
-+			have_legacy = true;	
-+			continue;
-+		}
-+
-+                if (strcmp(argv[i], "mcs") == 0) {
-+                        parse = MCS;
-+                        have_mcs = true;
-+                        continue;
-+                }
-+
-+		switch (parse) {
-+		case NONE:
-+		case LEGACY:
-+			input_legacy_rates[legacy_rate_counter] = strtoul(argv[i], &eptr, 10);
-+			legacy_rate_counter++;	
-+			break;
-+		case MCS:
-+			//NLA_PUT(ssids, i, strlen(argv[i]), argv[i]);
-+			break;
-+		}
-+	}
-+	err = 0;
-+
-+// Nesting of attribute begins
-+
-+	nl_rates = nla_nest_start(msg, NL80211_ATTR_TX_RATES);
-+	if (!nl_rates)
-+		goto nla_put_failure;
-+	int band = 0;
-+	nl_rate = nla_nest_start(msg,band);
-+	if (!nl_rate)
-+		goto nla_put_failure;
-+
-+	nla_put(msg, NL80211_TXRATE_LEGACY, legacy_rate_counter, input_legacy_rates);
-+	
-+	nla_nest_end(msg,nl_rate);
-+	nla_nest_end(msg,nl_rates);
-+
-+//Nesting of attribute ends.
-+ nla_put_failure:
-+	return err;
-+}
-+COMMAND(set, mask, "[legacy <legacy rate in Mbps multiplied by 2, e.g. 11 for 5.5 Mbps>*]",
-+	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_mask,
-+	 "Sets up the specified rate masks for different bands.");
--- 
-1.6.3.3
+While I'm not 100% sure, this may be one of those devices thas has
+it's ID in both rt2500usb and rt73usb.
 
+Besides prying it open to see which is the actual chip used, there is
+little we can do, software side, to be sure of which exact driver
+should be used.
+
+But to be honest, I can't really recall which exact driver ID conflict.
+
+Luis Correia
+rt2x00 project admin
+
+[snipped the rest of the email]
