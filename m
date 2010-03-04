@@ -1,65 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:45397 "EHLO coco.kroah.org"
+Received: from mx1.redhat.com ([209.132.183.28]:22703 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932303Ab0C3XSp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 19:18:45 -0400
-Message-Id: <20100330225657.012198937@linux.site>
-Date: Tue, 30 Mar 2010 15:56:06 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	575726@bugs.debian.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	John Halton <johnhalton@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: [088/116] rt2860sta: Fix argument to linux_pci_unmap_single()
-In-Reply-To: <20100330230600.GA28802@kroah.com>
+	id S1752415Ab0CDQKX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Mar 2010 11:10:23 -0500
+Subject: Re: [PATCH] airo : Print of firmware version
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jose Alonso <joalonsof@gmail.com>,
+	matthieu castet <castet.matthieu@free.fr>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1267718815.22699.6.camel@localhost.localdomain>
+References: <4B8A80EE.6000102@free.fr>
+	 <20100303201411.GF23920@tuxdriver.com> <1267657973.6254.11.camel@laptop>
+	 <20100304022012.GA1994@tuxdriver.com>
+	 <1267718815.22699.6.camel@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 04 Mar 2010 08:10:45 -0800
+Message-ID: <1267719045.22699.7.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.32-stable review patch.  If anyone has any objections, please let us know.
+On Thu, 2010-03-04 at 08:06 -0800, Dan Williams wrote:
+> On Wed, 2010-03-03 at 21:20 -0500, John W. Linville wrote:
+> > On Wed, Mar 03, 2010 at 08:12:53PM -0300, Jose Alonso wrote:
+> > > On Wed, 2010-03-03 at 15:14 -0500, John W. Linville wrote:
+> > > > On Sun, Feb 28, 2010 at 03:42:54PM +0100, matthieu castet wrote:
+> > > > > For the firmware version 5.30.17 the log file shows:
+> > > > > Firmware version 5.30.11
+> > > > >
+> > > > > The variable softSubVer is binary.
+> > > > >
+> > > > >
+> > > > > Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
+> > > > > Signed-off-by: Jose Alonso <joalonsof@gmail.com>
+> > > > 
+> > > > > Index: airo.c
+> > > > > ===================================================================
+> > > > > --- 1/drivers/net/wireless/airo.c	(r?vision 47)
+> > > > > +++ 2/drivers/net/wireless/airo.c	(r?vision 48)
+> > > > > @@ -2993,7 +2993,7 @@
+> > > > >  	ai->wep_capable = (cap_rid.softCap & cpu_to_le16(0x02)) ? 1 : 0;
+> > > > >  	ai->max_wep_idx = (cap_rid.softCap & cpu_to_le16(0x80)) ? 3 : 0;
+> > > > >  
+> > > > > -	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
+> > > > > +	airo_print_info(dev->name, "Firmware version %x.%x.%02d",
+> > > > >  	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
+> > > > >  	                (le16_to_cpu(cap_rid.softVer) & 0xFF),
+> > > > >  	                le16_to_cpu(cap_rid.softSubVer));
+> > > > 
+> > > > Why should the last segment be in decimal form if the other two
+> > > > segments of the version number are in hexadecimal form?
+> > > 
+> > > The airo.c shows the usage of hexadecimal and binary form:
+> > > 
+> > >         /* Test for WPA support */
+> > >         /* Only firmware versions 5.30.17 or better can do WPA */
+> > >         if (le16_to_cpu(cap_rid.softVer) > 0x530
+> > >          || (le16_to_cpu(cap_rid.softVer) == 0x530
+> > >               && le16_to_cpu(cap_rid.softSubVer) >= 17)) {
+> > >                 airo_print_info(ai->dev->name, "WPA supported.");
+> > 
+> > Alright, but that could be an argument for changing the comment.
+> > Probably too much to ask, but is there some authoritative source for
+> > this busted numbering scheme?
+> 
+> Not really, you flash a certain known version of firmware onto the
+> device in Windows, then see what Linux supports.  I'll see if I can
+> check my card out and see what I come up with.
 
-------------------
+s/supports/reports.
 
-From: Ben Hutchings <ben@decadent.org.uk>
-
-John Halton wrote in <http://bugs.debian.org/575726>:
-> Whenever wpa_supplicant is deactivated (whether by killing the process or
-> during a normal shutdown) I am getting a kerneloops that prevents the
-> computer from completing shutdown. Here is the relevant syslog output:
-
-The backtrace points to an incorrect call from RTMPFreeTxRxRingMemory()
-into linux_pci_unmap_single().  This appears to have been fixed in Linux
-2.6.33 by this change:
-
-commit ca97b8388838ee9ea4b4bad04948f8f7f8a607a3
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Tue Sep 22 20:44:07 2009 +0200
-
-    Staging: rt28x0: updates from vendor's V2.1.0.0 drivers
-
-For stable-2.6.32, just fix this one function call.
-
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/staging/rt2860/common/2860_rtmp_init.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/drivers/staging/rt2860/common/2860_rtmp_init.c
-+++ b/drivers/staging/rt2860/common/2860_rtmp_init.c
-@@ -716,7 +716,7 @@ VOID RTMPFreeTxRxRingMemory(
- 	{
- 		if ((pAd->RxRing.Cell[index].DmaBuf.AllocVa) && (pAd->RxRing.Cell[index].pNdisPacket))
- 		{
--			PCI_UNMAP_SINGLE(pObj->pci_dev, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
-+			PCI_UNMAP_SINGLE(pAd, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
- 			RELEASE_NDIS_PACKET(pAd, pAd->RxRing.Cell[index].pNdisPacket, NDIS_STATUS_SUCCESS);
- 		}
- 	}
+Dan
 
 
