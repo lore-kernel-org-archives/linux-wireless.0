@@ -1,142 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:59050 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753491Ab0CIMWF convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:57538 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756146Ab0CDTBB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 07:22:05 -0500
-Received: by ewy8 with SMTP id 8so655681ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 04:22:04 -0800 (PST)
+	Thu, 4 Mar 2010 14:01:01 -0500
+Date: Thu, 4 Mar 2010 14:00:59 -0500
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: Kel Modderman <kel@otaku42.de>
+Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH] crda: allow build with gcrypt support
+Message-ID: <20100304190059.GK8069@bombadil.infradead.org>
+References: <201003050011.44807.kel@otaku42.de>
 MIME-Version: 1.0
-In-Reply-To: <20100309075605.30616.63221.stgit@void>
-References: <20100309075124.30616.40896.stgit@void>
-	 <20100309075605.30616.63221.stgit@void>
-Date: Tue, 9 Mar 2010 14:22:03 +0200
-Message-ID: <40f31dec1003090422s1550da93o469ac6ea0087fcb0@mail.gmail.com>
-Subject: Re: [PATCH 10/13] ath5k: fix I/Q calibration (for real)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201003050011.44807.kel@otaku42.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/9 Bruno Randolf <br1@einfach.org>:
-> I/Q calibration was completely broken, resulting in a high number of CRC errors
-> on received packets. before i could see around 10% to 20% CRC errors, with this
-> patch they are between 0% and 3%.
->
-> 1.) the removal of the mask in commit "ath5k: Fix I/Q calibration
-> (f1cf2dbd0f798b71b1590e7aca6647f2caef1649)" resulted in no mask beeing used
-> when writing the I/Q values into the register. additional errors in the
-> calculation of the values (see 2.) resulted too high numbers, exceeding the
-> masks, so wrong values like 0xfffffffe were written. to be safe we should
-> always use the bitmask when writing parts of a register.
->
-> 2.) using a (s32) cast for q_coff is a wrong conversion to signed, since we
-> convert to a signed value later by substracting 128. this resulted in too low
-> numbers for Q many times, which were limited to -16 by the boundary check later
-> on.
->
-> 3.) checked everything against the HAL sources and took over comments and minor
-> optimizations from there.
->
-> 4.) we can't use ENABLE_BITS when we want to write a number (the number can
-> contain zeros). also always write the correction values first and set ENABLE
-> bit last, like the HAL does.
->
-> Cc: stable@kernel.org
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+On Fri, Mar 05, 2010 at 12:11:44AM +1000, Kel Modderman wrote:
+> USE_GCRYPT=0 disables using gcrypt for signature verification.
+> 
+> Signed-off-by: Kel Modderman <kel@otaku42.de>
 > ---
->  drivers/net/wireless/ath/ath5k/phy.c |   37 +++++++++++++++++-----------------
->  drivers/net/wireless/ath/ath5k/reg.h |    1 +
->  2 files changed, 20 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index 3fa4f4d..95cebd6 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -1386,38 +1386,39 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
->                goto done;
->
->        /* Calibration has finished, get the results and re-run */
-> +
-> +       /* work around empty results which can apparently happen on 5212 */
->        for (i = 0; i <= 10; i++) {
->                iq_corr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_CORR);
->                i_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_I);
->                q_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_Q);
-> +               ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
-> +                       "iq_corr:%x i_pwr:%x q_pwr:%x", iq_corr, i_pwr, q_pwr);
-> +               if (i_pwr && q_pwr)
-> +                       break;
->        }
->
->        i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
->        q_coffd = q_pwr >> 7;
->
-> -       /* No correction */
-> -       if (i_coffd == 0 || q_coffd == 0)
-> +       /* protect against divide by 0 and loss of sign bits */
-> +       if (i_coffd == 0 || q_coffd < 2)
->                goto done;
->
-> -       i_coff = ((-iq_corr) / i_coffd);
-> +       i_coff = (-iq_corr) / i_coffd;
-> +       i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
->
-> -       /* Boundary check */
-> -       if (i_coff > 31)
-> -               i_coff = 31;
-> -       if (i_coff < -32)
-> -               i_coff = -32;
-> +       q_coff = (i_pwr / q_coffd) - 128;
-> +       q_coff = clamp(q_coff, -16, 15); /* signed 5 bit */
->
-> -       q_coff = (((s32)i_pwr / q_coffd) - 128);
-> +       ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
-> +                       "new I:%d Q:%d (i_coffd:%x q_coffd:%x)",
-> +                       i_coff, q_coff, i_coffd, q_coffd);
->
-> -       /* Boundary check */
-> -       if (q_coff > 15)
-> -               q_coff = 15;
-> -       if (q_coff < -16)
-> -               q_coff = -16;
-> -
-> -       /* Commit new I/Q value */
-> -       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE |
-> -               ((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
-> +       /* Commit new I/Q values (set enable bit last to match HAL sources) */
-> +       AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF, i_coff);
-> +       AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF, q_coff);
-> +       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
->
->        /* Re-enable calibration -if we don't we'll commit
->         * the same values again and again */
-> diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
-> index 4cb9c5d..1464f89 100644
-> --- a/drivers/net/wireless/ath/ath5k/reg.h
-> +++ b/drivers/net/wireless/ath/ath5k/reg.h
-> @@ -2187,6 +2187,7 @@
->  */
->  #define        AR5K_PHY_IQ                     0x9920                  /* Register Address */
->  #define        AR5K_PHY_IQ_CORR_Q_Q_COFF       0x0000001f      /* Mask for q correction info */
-> +#define        AR5K_PHY_IQ_CORR_Q_Q_COFF_S     0
->  #define        AR5K_PHY_IQ_CORR_Q_I_COFF       0x000007e0      /* Mask for i correction info */
->  #define        AR5K_PHY_IQ_CORR_Q_I_COFF_S     5
->  #define        AR5K_PHY_IQ_CORR_ENABLE         0x00000800      /* Enable i/q correction */
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -28,6 +28,7 @@ CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$
+>  LDLIBS += `pkg-config --libs openssl`
+>  
+>  else
+> +ifneq ($(USE_GCRYPT),0)
+>  PUBKEY_DIR?=pubkeys
+>  CFLAGS += -DUSE_GCRYPT
+>  LDLIBS += -lgcrypt
+> @@ -40,6 +41,7 @@ keys-gcrypt: utils/key2pub.py $(wildcard
+>  	$(Q)./utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem) $@
+>  
+>  endif
+> +endif
+>  MKDIR ?= mkdir -p
+>  INSTALL ?= install
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Thanks for the patch but it did not apply, is this against a
+release or is this against git master? How about something like
+this instead, granted the debian example stuff is now completely
+outdated but nevertheless it covers it based on what is on
+the debian-example/ stuff:
 
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
+Subject: [PATCH] Use openssl by default
+
+Now that openssl supports the /etc/wireless-regdb/pubkeys/
+directory to read trusted public keys dynamically just
+enable openssl by default. Propagate this to the debian
+and rpm package build files.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ Makefile                 |   14 ++++++------
+ crda.spec                |    6 ++--
+ debian-example/changelog |    7 ++++++
+ debian-example/control   |   29 ++++++++++++++++++++-------
+ debian-example/copyright |   48 ++++++++++++++++++++++++++++++---------------
+ 5 files changed, 70 insertions(+), 34 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index b8bc7d3..0ab1e2b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -29,18 +29,18 @@ all: all_noverify verify
+ 
+ all_noverify: crda intersect regdbdump
+ 
+-ifeq ($(USE_OPENSSL),1)
+-CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
+-LDLIBS += `pkg-config --libs openssl`
+-
+-reglib.o: keys-ssl.c
+-
+-else
++ifeq ($(USE_GCRYPT),1)
+ CFLAGS += -DUSE_GCRYPT
+ LDLIBS += -lgcrypt
+ 
+ reglib.o: keys-gcrypt.c
+ 
++else
++CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
++LDLIBS += `pkg-config --libs openssl`
++
++reglib.o: keys-ssl.c
++
+ endif
+ MKDIR ?= mkdir -p
+ INSTALL ?= install
+diff --git a/crda.spec b/crda.spec
+index f44a3e5..9876d90 100644
+--- a/crda.spec
++++ b/crda.spec
+@@ -1,6 +1,6 @@
+ Summary: Linux central regulatory domain agent
+ Name: crda
+-Version: 1.0.1
++Version: 1.1.1
+ Release: 1
+ License: ISC
+ Group: System Enviroment/Base
+@@ -8,8 +8,8 @@ Source: http://wireless.kernel.org/download/crda/crda-%version.tar.bz2
+ URL: http://wireless.kernel.org/en/developers/Regulatory/
+ Packager: Luis R. Rodriguez <mcgrof@gmail.com>
+ BuildRoot : /var/tmp/%{name}-buildroot
+-Requires: libnl, libgcrypt
+-BuildRequires: libnl-devel, gcc, wireless-regdb, libgcrypt-devel, m2crypto
++Requires: libnl, openssl
++BuildRequires: libnl-devel, gcc, wireless-regdb, openssl-devel, m2crypto
+ 
+ %description
+ This package provides CRDA to be used by the new Linux kernel
+diff --git a/debian-example/changelog b/debian-example/changelog
+index b083b42..4d273d2 100644
+--- a/debian-example/changelog
++++ b/debian-example/changelog
+@@ -1,3 +1,10 @@
++crda (1.1.1-1) unstable; urgency=low
++
++  * New package slightly based on Kel Modderman <kel@otaku42.de>'s work
++  * Use openssl instead of gcrypt to enable dynamic reading of keys
++
++ -- Luis R. Rodriguez <mcgrof@gmail.com>  Sat, 24 Jan 2009 16:00:00 +0100
++
+ crda (1.0.1-1) unstable; urgency=low
+ 
+   * Compiles nicely on # CPUs > 1
+diff --git a/debian-example/control b/debian-example/control
+index eba7c0c..7e3334f 100644
+--- a/debian-example/control
++++ b/debian-example/control
+@@ -1,17 +1,30 @@
+ Source: crda
+ Section: admin
+ Priority: optional
+-Maintainer: Luis R. Rodriguez <mcgrof@gmail.com>
+-Build-Depends: cdbs, debhelper (>= 5), gcc, wireless-regdb, libgcrypt11-dev, python-m2crypto, libnl1
+-Standards-Version: 3.7.3
++Maintainer: Debian/Ubuntu wpasupplicant Maintainers <pkg-wpa-devel@lists.alioth.debian.org>
++Uploaders: Luis R. Rodriguez <mcgrof@gmail.com>
++Build-Depends: cdbs, debhelper (>= 7.0.50),
++ gcc,
++ wireless-regdb,
++ libssl-dev,
++ python-m2crypto,
++ libnl1,
++ libnl-dev
++Standards-Version: 3.8.1
+ 
+ Package: crda
+-Architecture: all
+-Depends: udev, libgcrypt11, libnl1
+-Suggests: iw
++Architecture: any
++Depends: ${shlibs:Depends}, ${misc:Depends}, wireless-regdb
++Recommends: iw (>= 0.9.18-1)
+ Description: Linux wireless central regulatory domain agent
+- This package provides CRDA to be used by the new Linux kernel wireless
+- subsystem to query from userspace regulatory domains. For more information
++ This package provides CRDA to be used by the new Linux kernel
++ cfg80211 wireless subsystem to query from userspace regulatory
++ domain settings wireless devices may operate within for a given location.
++ .
++ CRDA queries operational frequency regulations stored within the regulatory
++ database provided by the wireless-regdb package.
++ .
++ For more information
+  see:
+  .
+  http://wireless.kernel.org/en/developers/Regulatory/
+diff --git a/debian-example/copyright b/debian-example/copyright
+index 85d6068..3325045 100644
+--- a/debian-example/copyright
++++ b/debian-example/copyright
+@@ -1,21 +1,37 @@
+-This package was debianized by Luis Rodriguez <mcgrof@gmail.com> on
+-Thu, 22 Jan 2009 16:00:00 +0100.
++Upstream-Name: crda
++Upstream-Maintainer: Luis R. Rodriguez <mcgrof@gmail.com>
++Upstream-Source: git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git
+ 
+-The crda packages was downloaded from <http://wireless.kernel.org/download/crda/>
++Files: *
++Copyright: Copyright (c) 2008, Luis R. Rodriguez <mcgrof@gmail.com>
++Copyright: Copyright (c) 2008, Johannes Berg <johannes@sipsolutions.net>
++Copyright: Copyright (c) 2008, Michael Green <Michael.Green@Atheros.com>
++License: ISC
+ 
+-Copyright (c) 2008, Luis R. Rodriguez <mcgrof@gmail.com>
+-Copyright (c) 2008, Johannes Berg <johannes@sipsolutions.net>
+-Copyright (c) 2008, Michael Green <Michael.Green@Atheros.com>
++Files: nl80211.h
++Copyright: Copyright 2006, 2007, 2008 Johannes Berg <johannes@sipsolutions.net>
++Copyright: Copyright 2008 Michael Wu <flamingice@sourmilk.net>
++Copyright: Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
++Copyright: Copyright 2008 Michael Buesch <mb@bu3sch.de>
++Copyright: Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
++Copyright: Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
++Copyright: Copyright 2008 Colin McCabe <colin@cozybit.com>
++License: ISC
+ 
+-Permission to use, copy, modify, and/or distribute this software for any
+-purpose with or without fee is hereby granted, provided that the above
+-copyright notice and this permission notice appear in all copies.
++Files: debian/*
++Copyright: Copyright (c) 2009, Kel Modderman <kel@otaku42.de>
++Copyright: Copyright (c) 2010, Luis R. Rodriguez <mcgrof@gmail.com>
++License: ISC
+ 
+-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++License: ISC
++ Permission to use, copy, modify, and/or distribute this software for any
++ purpose with or without fee is hereby granted, provided that the above
++ copyright notice and this permission notice appear in all copies.
+ 
++ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.3.3
+
