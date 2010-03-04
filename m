@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:24454 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753577Ab0CZKy1 (ORCPT
+Received: from hermes.jacobs-university.de ([212.201.44.23]:55187 "EHLO
+	hermes.jacobs-university.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753845Ab0CEAfe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:54:27 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 21/24] wl1271: Configure HW connection monitor
-Date: Fri, 26 Mar 2010 12:53:30 +0200
-Message-Id: <1269600813-32145-22-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 4 Mar 2010 19:35:34 -0500
+Received: from localhost (demetrius4.jacobs-university.de [212.201.44.49])
+	by hermes.jacobs-university.de (Postfix) with ESMTP id 2E881C000D
+	for <linux-wireless@vger.kernel.org>; Fri,  5 Mar 2010 01:25:42 +0100 (CET)
+Received: from hermes.jacobs-university.de ([212.201.44.23])
+	by localhost (demetrius4.jacobs-university.de [212.201.44.32]) (amavisd-new, port 10024)
+	with ESMTP id GDjPJAMbcXit for <linux-wireless@vger.kernel.org>;
+	Fri,  5 Mar 2010 01:25:41 +0100 (CET)
+Received: from exchange.jacobs-university.de (SHUBCAS02.jacobs.jacobs-university.de [10.70.0.123])
+	(using TLSv1 with cipher AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by hermes.jacobs-university.de (Postfix) with ESMTPS id 7E5ACC0002
+	for <linux-wireless@vger.kernel.org>; Fri,  5 Mar 2010 01:25:41 +0100 (CET)
+Message-ID: <4B9024DE.308@jacobs-university.de>
+Date: Thu, 4 Mar 2010 22:23:42 +0100
+From: Darko Makreshanski <d.makreshanski@jacobs-university.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Mesh support for gumstix's wireless (Marvell 88W8385 wireless chip
+ with CF interface)
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Dear all,
 
-This patch configures the mac80211 to not perform connection monitoring
-(periodic probe-requests) and instead rely on the hardware to do it.
+I would like to ask a quick question to anybody that is familiar in this 
+area.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+I would like to know if I can use a mesh networking with the wifi chip 
+used for gumstix (88W8385 with most probably CF interface).
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 849c4ac..2df00ad 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -2155,7 +2155,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 		IEEE80211_HW_BEACON_FILTER |
- 		IEEE80211_HW_SUPPORTS_PS |
- 		IEEE80211_HW_SUPPORTS_UAPSD |
--		IEEE80211_HW_HAS_RATE_CONTROL;
-+		IEEE80211_HW_HAS_RATE_CONTROL |
-+		IEEE80211_HW_CONNECTION_MONITOR;
- 
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
--- 
-1.6.3.3
+I am aware that the XO (OLPC) laptops have a Marvell 88W8388 chip (with 
+USB interface) which is used with the libertas_tf driver, has support 
+for mesh networking through open80211s.
 
+Couple of things that I have found out:
+
+1. on the linux-wireless website it is stated that libertas_tf driver 
+supports only 88W8388 driver and libertas driver supports both 88W8385 
+and 88W8388
+2. also at linux-wireless it is also stated that both libertas_tf and 
+libertas are supported for mesh networking
+3. on the open80211s website at the drivers page only the libertas_tf is 
+present.
+4. i have read somewhere that the libertas driver is not based on the 
+mac80211 layer, so it cannot work with open80211s.
+
+What I would like to ask:
+
+1. will mesh networking work with the 88W8385 chip on gumstix with the 
+libertas driver?
+2. if yes, is it open80211s or something else?
+3. if not, is it possible to make the libertas_tf driver work with this 
+chip?
+
+Best regards,
+Darko
