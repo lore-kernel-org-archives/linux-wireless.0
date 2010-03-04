@@ -1,258 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41099 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756130Ab0CQW2P (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:50783 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755713Ab0CDCOk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 18:28:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 06/20] ath9k_hw: move calibration settings to ar9002_calib_settings.c
-Date: Wed, 17 Mar 2010 18:27:59 -0400
-Message-Id: <1268864893-11428-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
-References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 3 Mar 2010 21:14:40 -0500
+Received: by wwa36 with SMTP id 36so1159126wwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 18:14:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4B8E20CF.50109@users.sourceforge.net>
+References: <4B8E20CF.50109@users.sourceforge.net>
+Date: Thu, 4 Mar 2010 02:14:38 +0000
+Message-ID: <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com>
+Subject: Re: rt2870 (staging kernel driver) crashes fatally
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Daniele C." <legolas558@users.sourceforge.net>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we now have all the calibration functions and structures
-on ar9002_calib_settings.c we might as well move the function
-that sets these up there as well.
+You appear to have two issues - (1) the driver doesn't
+hibernate/resume well, (2) there is some bad memory leak which causes
+your system to run out of memory.
 
-While at it, simplify it a little and also move the AR9100
-calibration settings there too since they were just dangling
-on a random place on __ath9k_hw_init().
+You did not mention issue (1) - that you were hibernating and resuming
+(and expecting it to work, which it does not). For the latter, you
+probably need to track down where the memory is leaking in the driver,
+which is probably easier than tracking down the hibernate/resume
+issue.
 
-Doing this lets us remove the externs on the structures
-saving ourselves about 272 bytes mostly on the text area
-of ath9k_hw:
+Good luck with tracking down the memory leak. (you do understand that
+staging drivers are DIY - i.e. you try it only if you are willing to
+look into fixing it yourself - I hope )
 
-Before:
-3746008 bytes ath9k_hw.ko
-   text    data     bss     dec     hex filename
- 221433    1088    1808  224329   36c49 ath9k_hw.ko
-
-After:
-3745736 bytes ath9k_hw.ko
-   text    data     bss     dec     hex filename
- 221417    1088    1808  224313   36c39 ath9k_hw.ko
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c      |    3 +
- .../net/wireless/ath/ath9k/ar9002_calib_settings.c |   52 +++++++++++++++++---
- drivers/net/wireless/ath/ath9k/ar9002_hw.c         |   25 ---------
- drivers/net/wireless/ath/ath9k/calib.h             |    8 ---
- drivers/net/wireless/ath/ath9k/hw.c                |    5 +--
- 5 files changed, 49 insertions(+), 44 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index bec0467..0313121 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -22,6 +22,8 @@
-  * the chipsets under the hardware families: AR5008, AR9001, and AR9002
-  */
- 
-+extern void ar9002_hw_init_cal_settings(struct ath_hw *ah);
-+
- static void ar9002_hw_do_getnf(struct ath_hw *ah,
- 			      int16_t nfarray[NUM_NF_READINGS])
- {
-@@ -820,4 +822,5 @@ void ar9002_hw_attach_calib_ops(struct ath_hw *ah)
- 	priv_ops->loadnf = &ar9002_hw_loadnf;
- 	priv_ops->start_nfcal = &ar9002_hw_start_nfcal;
- 	priv_ops->pa_cal = &ar9002_hw_pa_cal;
-+	priv_ops->init_cal_settings = &ar9002_hw_init_cal_settings;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c b/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
-index c22f6c3..b301b59 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
-@@ -127,7 +127,7 @@ static void ar9002_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
- 		    AR_PHY_TIMING_CTRL4_IQCORR_ENABLE);
- }
- 
--const struct ath9k_percal_data iq_cal_multi_sample = {
-+static const struct ath9k_percal_data iq_cal_multi_sample = {
- 	IQ_MISMATCH_CAL,
- 	MAX_CAL_SAMPLES,
- 	PER_MIN_LOG_COUNT,
-@@ -135,7 +135,7 @@ const struct ath9k_percal_data iq_cal_multi_sample = {
- 	ar9002_hw_iqcalibrate
- };
- 
--const struct ath9k_percal_data iq_cal_single_sample = {
-+static const struct ath9k_percal_data iq_cal_single_sample = {
- 	IQ_MISMATCH_CAL,
- 	MIN_CAL_SAMPLES,
- 	PER_MAX_LOG_COUNT,
-@@ -226,7 +226,7 @@ static void ar9002_hw_adc_gaincal_calibrate(struct ath_hw *ah, u8 numChains)
- 		  AR_PHY_NEW_ADC_GAIN_CORR_ENABLE);
- }
- 
--const struct ath9k_percal_data adc_gain_cal_multi_sample = {
-+static const struct ath9k_percal_data adc_gain_cal_multi_sample = {
- 	ADC_GAIN_CAL,
- 	MAX_CAL_SAMPLES,
- 	PER_MIN_LOG_COUNT,
-@@ -234,7 +234,7 @@ const struct ath9k_percal_data adc_gain_cal_multi_sample = {
- 	ar9002_hw_adc_gaincal_calibrate
- };
- 
--const struct ath9k_percal_data adc_gain_cal_single_sample = {
-+static const struct ath9k_percal_data adc_gain_cal_single_sample = {
- 	ADC_GAIN_CAL,
- 	MIN_CAL_SAMPLES,
- 	PER_MAX_LOG_COUNT,
-@@ -325,7 +325,7 @@ static void ar9002_hw_adc_dccal_calibrate(struct ath_hw *ah, u8 numChains)
- 		  AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE);
- }
- 
--const struct ath9k_percal_data adc_dc_cal_multi_sample = {
-+static const struct ath9k_percal_data adc_dc_cal_multi_sample = {
- 	ADC_DC_CAL,
- 	MAX_CAL_SAMPLES,
- 	PER_MIN_LOG_COUNT,
-@@ -333,7 +333,7 @@ const struct ath9k_percal_data adc_dc_cal_multi_sample = {
- 	ar9002_hw_adc_dccal_calibrate
- };
- 
--const struct ath9k_percal_data adc_dc_cal_single_sample = {
-+static const struct ath9k_percal_data adc_dc_cal_single_sample = {
- 	ADC_DC_CAL,
- 	MIN_CAL_SAMPLES,
- 	PER_MAX_LOG_COUNT,
-@@ -341,10 +341,48 @@ const struct ath9k_percal_data adc_dc_cal_single_sample = {
- 	ar9002_hw_adc_dccal_calibrate
- };
- 
--const struct ath9k_percal_data adc_init_dc_cal = {
-+static const struct ath9k_percal_data adc_init_dc_cal = {
- 	ADC_DC_INIT_CAL,
- 	MIN_CAL_SAMPLES,
- 	INIT_LOG_COUNT,
- 	ar9002_hw_adc_dccal_collect,
- 	ar9002_hw_adc_dccal_calibrate
- };
-+
-+static void ar9002_hw_setup_calib_single(struct ath_hw *ah)
-+{
-+	ah->iq_caldata.calData = &iq_cal_single_sample;
-+	ah->adcgain_caldata.calData =
-+		&adc_gain_cal_single_sample;
-+	ah->adcdc_caldata.calData =
-+		&adc_dc_cal_single_sample;
-+	ah->adcdc_calinitdata.calData =
-+		&adc_init_dc_cal;
-+}
-+
-+static void ar9002_hw_setup_calib_multi(struct ath_hw *ah)
-+{
-+	ah->iq_caldata.calData = &iq_cal_multi_sample;
-+	ah->adcgain_caldata.calData =
-+		&adc_gain_cal_multi_sample;
-+	ah->adcdc_caldata.calData =
-+		&adc_dc_cal_multi_sample;
-+	ah->adcdc_calinitdata.calData =
-+		&adc_init_dc_cal;
-+}
-+
-+void ar9002_hw_init_cal_settings(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9160_10_OR_LATER(ah)) {
-+		if (AR_SREV_9280_10_OR_LATER(ah))
-+			ar9002_hw_setup_calib_single(ah);
-+		else
-+			ar9002_hw_setup_calib_multi(ah);
-+		ah->supp_cals = ADC_GAIN_CAL | ADC_DC_CAL | IQ_MISMATCH_CAL;
-+	}
-+
-+	if (AR_SREV_9100(ah)) {
-+		ah->iq_caldata.calData = &iq_cal_multi_sample;
-+		ah->supp_cals = IQ_MISMATCH_CAL;
-+        }
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 5a8da22..7c46c1e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -55,30 +55,6 @@ static bool ar9002_hw_macversion_supported(u32 macversion)
- 	return false;
- }
- 
--static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
--{
--	if (AR_SREV_9160_10_OR_LATER(ah)) {
--		if (AR_SREV_9280_10_OR_LATER(ah)) {
--			ah->iq_caldata.calData = &iq_cal_single_sample;
--			ah->adcgain_caldata.calData =
--				&adc_gain_cal_single_sample;
--			ah->adcdc_caldata.calData =
--				&adc_dc_cal_single_sample;
--			ah->adcdc_calinitdata.calData =
--				&adc_init_dc_cal;
--		} else {
--			ah->iq_caldata.calData = &iq_cal_multi_sample;
--			ah->adcgain_caldata.calData =
--				&adc_gain_cal_multi_sample;
--			ah->adcdc_caldata.calData =
--				&adc_dc_cal_multi_sample;
--			ah->adcdc_calinitdata.calData =
--				&adc_init_dc_cal;
--		}
--		ah->supp_cals = ADC_GAIN_CAL | ADC_DC_CAL | IQ_MISMATCH_CAL;
--	}
--}
--
- static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
- {
- 	if (AR_SREV_9271(ah)) {
-@@ -824,7 +800,6 @@ void ar9002_hw_attach_ops(struct ath_hw *ah)
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
- 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
- 
--	priv_ops->init_cal_settings = &ar9002_hw_init_cal_settings;
- 	priv_ops->init_mode_regs = &ar9002_hw_init_mode_regs;
- 	priv_ops->macversion_supported = &ar9002_hw_macversion_supported;
- 	priv_ops->set_reset_reg = &ar9002_hw_set_reset_reg;
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 039c247..9d647db 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -19,14 +19,6 @@
- 
- #include "hw.h"
- 
--extern const struct ath9k_percal_data iq_cal_multi_sample;
--extern const struct ath9k_percal_data iq_cal_single_sample;
--extern const struct ath9k_percal_data adc_gain_cal_multi_sample;
--extern const struct ath9k_percal_data adc_gain_cal_single_sample;
--extern const struct ath9k_percal_data adc_dc_cal_multi_sample;
--extern const struct ath9k_percal_data adc_dc_cal_single_sample;
--extern const struct ath9k_percal_data adc_init_dc_cal;
--
- #define AR_PHY_CCA_MAX_AR5416_GOOD_VALUE	-85
- #define AR_PHY_CCA_MAX_AR9280_GOOD_VALUE	-112
- #define AR_PHY_CCA_MAX_AR9285_GOOD_VALUE	-118
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2a63b42..8d376ce 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -535,11 +535,8 @@ int __ath9k_hw_init(struct ath_hw *ah)
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (AR_SREV_9100(ah)) {
--		ah->iq_caldata.calData = &iq_cal_multi_sample;
--		ah->supp_cals = IQ_MISMATCH_CAL;
-+	if (AR_SREV_9100(ah))
- 		ah->is_pciexpress = false;
--	}
- 
- 	if (AR_SREV_9271(ah))
- 		ah->is_pciexpress = false;
--- 
-1.6.3.3
-
+On Wed, Mar 3, 2010 at 8:41 AM, Daniele C.
+<legolas558@users.sourceforge.net> wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> Hello,
+>
+> I am experiencing the documented crash after intense usage of the wi-fi device.
+>
+> Best regards,
+> - --
+>  Daniele C.
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.10 (GNU/Linux)
+> Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+>
+> iQEcBAEBAgAGBQJLjiDOAAoJEON28As9epPAacQH/igJUCDKGDLzTnZhllzpR6yn
+> jl7BusfXbpxwBUT6SYB4UQ8RobapmJCGpmcYMlbFTOnXRTK2WmiPrcbORqSBgZJV
+> MZM8kvNoF9fJOg4Yr7mvwaMAaDBhYTPJFaCDcbHeLL06Sg1XLkiCaWnAQNk7IyVp
+> cbVa031vh3lDrRJi7Xbcb2FLU7gxaKU9jc3dQcLWuBzu+Yte+Wn0ymbsVFDKFxQi
+> 3ZObIaIVS3AQDS1seSielPfW3igP9blB05+S6XagGMsrolEE+yXG1SmAmk8+v7dl
+> XHIOQCE51yPwjFQ5ExcM3slCPBUEczEupEj/Urngck8FXnJ8jIHD/AA8z6rIhEI=
+> =Kees
+> -----END PGP SIGNATURE-----
+>
