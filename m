@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49555 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757618Ab0CMDIt (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3404 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819Ab0CDOON (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 22:08:49 -0500
-Subject: Re: Weird wireless/wpa_supplicant screw-up.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Valdis.Kletnieks@vt.edu
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <5220.1268430568@localhost>
-References: <7197.1268086939@localhost>
-	 <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 12 Mar 2010 19:09:09 -0800
-Message-ID: <1268449749.4880.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 4 Mar 2010 09:14:13 -0500
+Date: Thu, 4 Mar 2010 09:12:57 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Derek Smithies <derek@indranet.co.nz>
+Cc: Bj?rn Smedman <bjorn.smedman@venatech.se>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+Message-ID: <20100304141256.GA1985@hash.localnet>
+References: <4B8C3A21.2050105@openwrt.org> <133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com> <4B8D25DC.8070502@openwrt.org> <133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com> <alpine.DEB.2.00.1003031006390.10063@kauri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.00.1003031006390.10063@kauri>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-12 at 16:49 -0500, Valdis.Kletnieks@vt.edu wrote:
+On Wed, Mar 03, 2010 at 10:55:26AM +1300, Derek Smithies wrote:
+> PID got it wrong - implicit in PID is the assumption that the rates can 
+> be ordered in terms of more successful / less successful - and the 
+> ordering follows the speed (faster speed=less successful).
+>
+> Since very slow rates are subject to interference loss (imagine there is 
+> a 60hz transmitter out there) packets that take a long time to transmit 
+> are far more likely to be shot down, stepping down a rate is going to 
+> increase the loss rate.
 
-> OK, getting closer ;)
+PID has more problems than just that -- it has lots of oscillation even
+when the rate is relatively stable.  See this chart which I
+made using mac80211 hwsim and simulated loss (this was after I fixed
+the problem in commit e850f68b8f):
 
-No ... you're not getting closer at all ... you ignored my second email.
+http://bobcopeland.com/srcs/tcp_perf.pdf
 
-> in net/wireless/wext-compat.c, we have this in cfg80211_wext_giwencode()
-> after I add some printk's:
-> 
-> printk(KERN_INFO "In giwencode idx=%d keys=%x cipher=%x\n", idx, wdev->wext.keys, wdev->wext.keys->params[idx].cipher);
->         if (!wdev->wext.keys || !wdev->wext.keys->params[idx].cipher) {
-> printk(KERN_INFO "And we're going home...\n");
->                 erq->flags |= IW_ENCODE_DISABLED;
->                 erq->length = 0;
->                 return 0;
->         }
-> 
-> which produces
-> 
-> [  151.401195] In giwencode idx=0 keys=1d023600 cipher=0
-> [  151.401198] And we're going home...
+My simulation involved no collisions and just reduced the SNR over
+time.  AARF in this case is an algorithm from academia, which is
+susceptible to collision related-loss as you describe above.
+In this example, it performed badly because of the latency inherent
+between packet queuing and status reporting.
 
-No ... look at _all_ that it produces.
+Minstrel definitely performs better in real life.
 
-[   98.592575] In giwencode idx=0 keys=ffff88001b304000 cipher=0
-[   98.592580] And we're going home...
-*****
-[   98.592633] In giwencode idx=1 keys=ffff88001b304000 cipher=fac04
-*****
-[   98.592749] In giwencode idx=2 keys=ffff88001b304000 cipher=0
-[   98.592751] And we're going home...
-[   98.592803] In giwencode idx=3 keys=ffff88001b304000 cipher=0
-[   98.592805] And we're going home...
-[   98.592856] In giwencode idx=0 keys=ffff88001b304000 cipher=0
-[   98.592859] And we're going home...
+That said, I looked at the current minstrel code and have a few
+puzzlements:
 
-See? It reports one key which is the RX-only group key which is
-absolutely correct.
+- As I understand it, minstrel is not supposed to delay packets more
+  than 24 ms to avoid TCP resends.  However, if I understand the code,
+  this is done by limiting each MRR segment to 6 ms, which doesn't seem
+  right to me.  The retries in the second MRR slot will have to wait
+  a backoff before being used, right?
 
-> So the root cause has something to do with params[idx].cipher being unset.
+- Often, two slots in the MRR array use the same rate (e.g. slots 1 and 3).
+  Maybe we should pick a 'next lower' rate for the lower slot in such a case?
+  If we are really in a place where the originally attempted rate isn't
+  workable, this might slightly boost throughput. 
+ 
+The large spikes at rate transition boundaries aren't quite so deep with
+fewer retries.
 
-Not at all.
-
-GIWENCODE is 100% unsuitable for WPA. Just forget about "iwlist key".
-And then we'd like to know what the actual problem is.
-
-johannes
+-- 
+Bob Copeland %% www.bobcopeland.com
 
