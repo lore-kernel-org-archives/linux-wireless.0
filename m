@@ -1,199 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:10165 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753062Ab0CIHzl (ORCPT
+Received: from mail-iw0-f175.google.com ([209.85.223.175]:55363 "EHLO
+	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750718Ab0CDFFG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 02:55:41 -0500
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0342471339
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:55:39 +0900 (JST)
-Subject: [PATCH 05/13] ath5k: remove double opmode definition
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 09 Mar 2010 16:55:38 +0900
-Message-ID: <20100309075538.30616.93872.stgit@void>
-In-Reply-To: <20100309075124.30616.40896.stgit@void>
-References: <20100309075124.30616.40896.stgit@void>
+	Thu, 4 Mar 2010 00:05:06 -0500
+Received: by iwn5 with SMTP id 5so1835084iwn.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 21:05:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Date: Thu, 4 Mar 2010 15:58:58 +1100
+Message-ID: <e44ae5e1003032058g2cf1b5a1lcf62e8919dddea58@mail.gmail.com>
+Subject: KEY_RFKILL not found on kernel 2.6.30
+From: Keith Bannister <k.bannister@ieee.org>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-opmode (operating mode) was defined in struct ath5k_hw and struct ath5k_softc.
-remove it from ath5k_hw and use only from ath5k_softc (sc->opmode).
+I All,
 
-(btw: what's the meaning of opmode when we have multiple interfaces?)
+I'm trying to compile compat-wireless on EasyPeasy (an Ubuntu 9.04
+derivative for the eeepc)
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/ath5k.h  |    3 +--
- drivers/net/wireless/ath/ath5k/attach.c |    3 +--
- drivers/net/wireless/ath/ath5k/base.c   |    7 ++++---
- drivers/net/wireless/ath/ath5k/pcu.c    |   14 +++++++-------
- drivers/net/wireless/ath/ath5k/reset.c  |    9 ++-------
- 5 files changed, 15 insertions(+), 21 deletions(-)
+The kernel headers are installed for my current kernel:
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index ac67f02..cb79d44 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1036,7 +1036,6 @@ struct ath5k_hw {
- 
- 	enum ath5k_int		ah_imr;
- 
--	enum nl80211_iftype	ah_op_mode;
- 	struct ieee80211_channel *ah_current_channel;
- 	bool			ah_turbo;
- 	bool			ah_calibration;
-@@ -1199,7 +1198,7 @@ extern int ath5k_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac);
- extern bool ath5k_eeprom_is_hb63(struct ath5k_hw *ah);
- 
- /* Protocol Control Unit Functions */
--extern int ath5k_hw_set_opmode(struct ath5k_hw *ah);
-+extern int ath5k_hw_set_opmode(struct ath5k_hw *ah, enum nl80211_iftype opmode);
- extern void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class);
- /* BSSID Functions */
- extern int ath5k_hw_set_lladdr(struct ath5k_hw *ah, const u8 *mac);
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index c8bb102..66758cb 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -113,7 +113,6 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
- 	/*
- 	 * HW information
- 	 */
--	ah->ah_op_mode = NL80211_IFTYPE_STATION;
- 	ah->ah_radar.r_enabled = AR5K_TUNE_RADAR_ALERT;
- 	ah->ah_turbo = false;
- 	ah->ah_txpower.txp_tpc = AR5K_TUNE_TPC_TXPOWER;
-@@ -328,7 +327,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
- 	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
- 	memcpy(common->curbssid, ath_bcast_mac, ETH_ALEN);
- 	ath5k_hw_set_associd(ah);
--	ath5k_hw_set_opmode(ah);
-+	ath5k_hw_set_opmode(ah, sc->opmode);
- 
- 	ath5k_hw_rfgain_opt_init(ah);
- 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index fd4dd3c..e63cca9 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1137,8 +1137,6 @@ ath5k_mode_setup(struct ath5k_softc *sc)
- 	struct ath5k_hw *ah = sc->ah;
- 	u32 rfilt;
- 
--	ah->ah_op_mode = sc->opmode;
--
- 	/* configure rx filter */
- 	rfilt = sc->filter_flags;
- 	ath5k_hw_set_rx_filter(ah, rfilt);
-@@ -1147,8 +1145,9 @@ ath5k_mode_setup(struct ath5k_softc *sc)
- 		ath5k_hw_set_bssid_mask(ah, sc->bssidmask);
- 
- 	/* configure operational mode */
--	ath5k_hw_set_opmode(ah);
-+	ath5k_hw_set_opmode(ah, sc->opmode);
- 
-+	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d\n", sc->opmode);
- 	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "RX filter 0x%x\n", rfilt);
- }
- 
-@@ -2846,6 +2845,8 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 		goto end;
- 	}
- 
-+	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "add interface mode %d\n", sc->opmode);
-+
- 	ath5k_hw_set_lladdr(sc->ah, vif->addr);
- 	ath5k_mode_setup(sc);
- 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index aefe84f..b597b99 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -39,16 +39,16 @@
-  * ath5k_hw_set_opmode - Set PCU operating mode
-  *
-  * @ah: The &struct ath5k_hw
-+ * @op_mode: &enum nl80211_iftype operating mode
-  *
-  * Initialize PCU for the various operating modes (AP/STA etc)
-- *
-- * NOTE: ah->ah_op_mode must be set before calling this.
-  */
--int ath5k_hw_set_opmode(struct ath5k_hw *ah)
-+int ath5k_hw_set_opmode(struct ath5k_hw *ah, enum nl80211_iftype op_mode)
- {
- 	struct ath_common *common = ath5k_hw_common(ah);
- 	u32 pcu_reg, beacon_reg, low_id, high_id;
- 
-+	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_MODE, "mode %d\n", op_mode);
- 
- 	/* Preserve rest settings */
- 	pcu_reg = ath5k_hw_reg_read(ah, AR5K_STA_ID1) & 0xffff0000;
-@@ -61,7 +61,7 @@ int ath5k_hw_set_opmode(struct ath5k_hw *ah)
- 
- 	ATH5K_TRACE(ah->ah_sc);
- 
--	switch (ah->ah_op_mode) {
-+	switch (op_mode) {
- 	case NL80211_IFTYPE_ADHOC:
- 		pcu_reg |= AR5K_STA_ID1_ADHOC | AR5K_STA_ID1_KEYSRCH_MODE;
- 		beacon_reg |= AR5K_BCR_ADHOC;
-@@ -651,7 +651,7 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
- 	/*
- 	 * Set the additional timers by mode
- 	 */
--	switch (ah->ah_op_mode) {
-+	switch (ah->ah_sc->opmode) {
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_STATION:
- 		/* In STA mode timer1 is used as next wakeup
-@@ -688,8 +688,8 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
- 	 * Set the beacon register and enable all timers.
- 	 */
- 	/* When in AP or Mesh Point mode zero timer0 to start TSF */
--	if (ah->ah_op_mode == NL80211_IFTYPE_AP ||
--	    ah->ah_op_mode == NL80211_IFTYPE_MESH_POINT)
-+	if (ah->ah_sc->opmode == NL80211_IFTYPE_AP ||
-+	    ah->ah_sc->opmode == NL80211_IFTYPE_MESH_POINT)
- 		ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);
- 
- 	ath5k_hw_reg_write(ah, next_beacon, AR5K_TIMER0);
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index c780b55..6d9a1e8 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1014,11 +1014,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	if (ret)
- 		return ret;
- 
--	/*
--	 * Initialize operating mode
--	 */
--	ah->ah_op_mode = op_mode;
--
- 	/* PHY access enable */
- 	if (ah->ah_mac_srev >= AR5K_SREV_AR5211)
- 		ath5k_hw_reg_write(ah, AR5K_PHY_SHIFT_5GHZ, AR5K_PHY(0));
-@@ -1189,7 +1184,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	ath5k_hw_set_associd(ah);
- 
- 	/* Set PCU config */
--	ath5k_hw_set_opmode(ah);
-+	ath5k_hw_set_opmode(ah, op_mode);
- 
- 	/* Clear any pending interrupts
- 	 * PISR/SISR Not available on 5210 */
-@@ -1375,7 +1370,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	 * external 32KHz crystal when sleeping if one
- 	 * exists */
- 	if (ah->ah_version == AR5K_AR5212 &&
--	    ah->ah_op_mode != NL80211_IFTYPE_AP)
-+	    op_mode != NL80211_IFTYPE_AP)
- 		ath5k_hw_set_sleep_clock(ah, true);
- 
- 	/*
+with
 
+$ sudo apt-get install linux-headers-2.6.30.5-ep0
+
+$ ls -l /lib/modules/`uname -r`/build
+lrwxrwxrwx 1 root root 36 2010-03-04 12:02
+/lib/modules/2.6.30.5-ep0/build ->
+/usr/src/linux-headers-2.6.30.5-ep0/
+
+I got the following compile error, after running
+
+$ ./scripts/driver-select ath5k
+
+$ make clean; make
+make[1]: Entering directory `/usr/src/linux-headers-2.6.30.5-ep0'
+  CLEAN   /home/keith/wireless/compat-wireless-2010-03-03
+  CLEAN   /home/keith/wireless/compat-wireless-2010-03-03/.tmp_versions
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.30.5-ep0'
+./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+make -C /lib/modules/2.6.30.5-ep0/build
+M=/home/keith/wireless/compat-wireless-2010-03-03 modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.30.5-ep0'
+  LD      /home/keith/wireless/compat-wireless-2010-03-03/compat/built-in.o
+
+.....
+
+
+CC [M]  /home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.o
+/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c: In
+function ‘rfkill_event’:
+/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:219:
+error: ‘KEY_RFKILL’ undeclared (first use in this function)
+/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:219:
+error: (Each undeclared identifier is reported only once
+/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:219:
+error: for each function it appears in.)
+/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c: At
+top level:
+/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:307:
+error: ‘KEY_RFKILL’ undeclared here (not in a function)
+/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:307:
+error: array index in initialiser not of integer type
+/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:307:
+error: (near initialisation for ‘rfkill_ids[4].keybit’)
+make[3]: *** [/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.o]
+Error 1
+make[2]: *** [/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill]
+Error 2
+make[1]: *** [_module_/home/keith/wireless/compat-wireless-2010-03-03] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.30.5-ep0'
+make: *** [modules] Error 2
+keith@keith-laptop:~/wireless/compat-wireless-2010-03-03$ uname -a
+Linux keith-laptop 2.6.30.5-ep0 #10 SMP PREEMPT Thu Aug 27 19:45:06
+CEST 2009 i686 GNU/Linux
+
+Any Ideas?
+
+-- 
+Keith Bannister
