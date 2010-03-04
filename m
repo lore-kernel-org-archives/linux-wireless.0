@@ -1,84 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f175.google.com ([209.85.223.175]:55363 "EHLO
-	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718Ab0CDFFG convert rfc822-to-8bit (ORCPT
+Received: from m-04.th.seeweb.it ([217.64.195.227]:60364 "EHLO
+	m-04.th.seeweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753619Ab0CDKNR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 00:05:06 -0500
-Received: by iwn5 with SMTP id 5so1835084iwn.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 21:05:05 -0800 (PST)
+	Thu, 4 Mar 2010 05:13:17 -0500
+Message-ID: <4B8F87B6.9060901@users.sourceforge.net>
+Date: Thu, 04 Mar 2010 11:13:10 +0100
+From: "Daniele C." <legolas558@users.sourceforge.net>
 MIME-Version: 1.0
-Date: Thu, 4 Mar 2010 15:58:58 +1100
-Message-ID: <e44ae5e1003032058g2cf1b5a1lcf62e8919dddea58@mail.gmail.com>
-Subject: KEY_RFKILL not found on kernel 2.6.30
-From: Keith Bannister <k.bannister@ieee.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+To: Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2870 (staging kernel driver) crashes fatally
+References: <4B8E20CF.50109@users.sourceforge.net> <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com>
+In-Reply-To: <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I All,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I'm trying to compile compat-wireless on EasyPeasy (an Ubuntu 9.04
-derivative for the eeepc)
+- -------- Original Message  --------
+Subject: Re: rt2870 (staging kernel driver) crashes fatally
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Daniele C. <legolas558@users.sourceforge.net>
+Date: Thu Mar 04 2010 03:14:38 GMT+0100 (CET)
 
-The kernel headers are installed for my current kernel:
+> You appear to have two issues - (1) the driver doesn't
+> hibernate/resume well, (2) there is some bad memory leak which causes
+> your system to run out of memory.
+> 
+> You did not mention issue (1) - that you were hibernating and resuming
+> (and expecting it to work, which it does not). For the latter, you
+> probably need to track down where the memory is leaking in the driver,
+> which is probably easier than tracking down the hibernate/resume
+> issue.
+> 
+Sorry I thought that hibernation/resume was supported.
 
-with
+> Good luck with tracking down the memory leak. (you do understand that
+> staging drivers are DIY - i.e. you try it only if you are willing to
+> look into fixing it yourself - I hope )
+> 
+I wish I were that good, but I'll try.
 
-$ sudo apt-get install linux-headers-2.6.30.5-ep0
+Best regards,
+- --
+  Daniele
 
-$ ls -l /lib/modules/`uname -r`/build
-lrwxrwxrwx 1 root root 36 2010-03-04 12:02
-/lib/modules/2.6.30.5-ep0/build ->
-/usr/src/linux-headers-2.6.30.5-ep0/
+> On Wed, Mar 3, 2010 at 8:41 AM, Daniele C.
+> <legolas558@users.sourceforge.net> wrote:
+> Hello,
+> 
+> I am experiencing the documented crash after intense usage of the wi-fi device.
+> 
+> Best regards,
+>>
 
-I got the following compile error, after running
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-$ ./scripts/driver-select ath5k
-
-$ make clean; make
-make[1]: Entering directory `/usr/src/linux-headers-2.6.30.5-ep0'
-  CLEAN   /home/keith/wireless/compat-wireless-2010-03-03
-  CLEAN   /home/keith/wireless/compat-wireless-2010-03-03/.tmp_versions
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.30.5-ep0'
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.30.5-ep0/build
-M=/home/keith/wireless/compat-wireless-2010-03-03 modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.30.5-ep0'
-  LD      /home/keith/wireless/compat-wireless-2010-03-03/compat/built-in.o
-
-.....
-
-
-CC [M]  /home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.o
-/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c: In
-function ‘rfkill_event’:
-/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:219:
-error: ‘KEY_RFKILL’ undeclared (first use in this function)
-/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:219:
-error: (Each undeclared identifier is reported only once
-/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:219:
-error: for each function it appears in.)
-/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c: At
-top level:
-/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:307:
-error: ‘KEY_RFKILL’ undeclared here (not in a function)
-/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:307:
-error: array index in initialiser not of integer type
-/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:307:
-error: (near initialisation for ‘rfkill_ids[4].keybit’)
-make[3]: *** [/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.o]
-Error 1
-make[2]: *** [/home/keith/wireless/compat-wireless-2010-03-03/net/rfkill]
-Error 2
-make[1]: *** [_module_/home/keith/wireless/compat-wireless-2010-03-03] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.30.5-ep0'
-make: *** [modules] Error 2
-keith@keith-laptop:~/wireless/compat-wireless-2010-03-03$ uname -a
-Linux keith-laptop 2.6.30.5-ep0 #10 SMP PREEMPT Thu Aug 27 19:45:06
-CEST 2009 i686 GNU/Linux
-
-Any Ideas?
-
--- 
-Keith Bannister
+iQEcBAEBAgAGBQJLj4e2AAoJEON28As9epPA/+4H/jDpF8Y8FIzJ9UlDOD4yuVNb
+yeRgoJW4h1fnL5atZ66Ku+5EehOsKYQEjQDa3Apwl+g1RXFPenbIm4+A/mJQ4INu
+7/wIgQIGRh9mPLmRw1+ylMExBbGSm/v4yp4oUj1ZygLGbiBgV2iQMxbmYPQoCdNt
+Rf6lvj20Sz0cfVZWvAw+9HfpMRHYYzQ2UgJkdl4iMaJyNIHhAHCgtMsC/00SGsCn
+Wi9iQDtw4O5BbhGPx99J4OipBg0LfAihsOdzgxfv8/jNB9z6OwS4hudmwyHc4PHF
+B+ZyEnEJfD3CL8qyaknHZXC18QV0NfnrM1P0NBU/E+WTlFuooywBOG+EWDRmF9E=
+=NLMu
+-----END PGP SIGNATURE-----
