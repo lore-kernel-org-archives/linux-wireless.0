@@ -1,34 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml107.kpnxchange.com ([195.121.3.11]:61366 "EHLO
-	CPSMTPM-EML107.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752051Ab0C3UiX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 16:38:23 -0400
-Message-ID: <4BB2613E.1020405@gmail.com>
-Date: Tue, 30 Mar 2010 22:38:22 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:60325 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752379Ab0CDAyf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Mar 2010 19:54:35 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 16:54:35 -0800
+Date: Wed, 3 Mar 2010 16:54:33 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: Ming Lei <tom.leiming@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [PATCH] ath9k: decrease size of ath9k.ko
+Message-ID: <20100304005433.GA8410@tux>
+References: <1267289803-6795-1-git-send-email-tom.leiming@gmail.com>
+ <4B89520D.1000209@lwfinger.net>
+ <d82e647a1002271852j20006c27i92d1f7a99e032f2d@mail.gmail.com>
+ <4B89E0D7.9020103@lwfinger.net>
+ <20100301231329.64e3dd3b@tom-lei>
+ <1267592564.4725.11.camel@mj>
 MIME-Version: 1.0
-To: Ondrej Zary <linux@rainbow-software.org>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] [RFC] rt2500pci: fix powersaving
-References: <201003290956.54234.linux@rainbow-software.org>	<201003301433.55355.linux@rainbow-software.org>	<20100330125620.GA2173@katherina.student.utwente.nl>	<201003302209.23334.linux@rainbow-software.org> <20100330203239.GA21160@katherina.student.utwente.nl>
-In-Reply-To: <20100330203239.GA21160@katherina.student.utwente.nl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1267592564.4725.11.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/10 22:32, Matthijs Kooijman wrote:
-> Hi Ondrej,
+On Tue, Mar 02, 2010 at 09:02:44PM -0800, Pavel Roskin wrote:
+> On Mon, 2010-03-01 at 23:13 +0800, Ming Lei wrote:
+> > -		int valid;
+> > -		int valid_single_stream;
+> > +		u8 valid;
+> > +		u8 valid_single_stream;
 > 
-> do you need testing of your patches? If so, let me know and I'll give them a
-> go.
+> You can use bool instead, and that would give the same size saving while
+> being even more descriptive.  I think using bool could be safer, as the
+> compiler would be able to detect some misuses and the values.
 > 
+> But I could get even more saving by using bool with the field width:
+> 
+> bool valid:1;
+> bool valid_single_stream:1;
+> 
+> That would place both variables into one byte.  It may be ineffective
+> for speed, but it's more effective for storage.
+> 
+> In my configuration, I get following sizes:
+> 
+> original (int):    2792138
+> your patch (u8):   2790186
+> bool:              2790186
+> bool (1 bit):      2789218
 
-Matthijs,
+Or use flags, and use BIT(1), BIT(2), etc for #defines for each stream mode.
+Would save even more.
 
-It would be good if you could test these patches (I can't really test them on rt2500pci).
-As I'm including them in a bigger powersave patch-set, it would be good to see if Ondrej's
-patches have any unwanted side effects.
-
----
-Gertjan.
+  Luis
