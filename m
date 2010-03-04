@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35079 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755565Ab0CQT0t (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34945
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754295Ab0CDIw1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 15:26:49 -0400
-Date: Wed, 17 Mar 2010 12:26:38 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] cfg80211: Add local-state-change-only
- auth/deauth/disassoc
-Message-ID: <20100317192638.GA30167@jm.kir.nu>
-References: <20100313195335.GA2420@jm.kir.nu>
- <1268842963.5989.20.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1268842963.5989.20.camel@jlt3.sipsolutions.net>
+	Thu, 4 Mar 2010 03:52:27 -0500
+Date: Thu, 04 Mar 2010 00:52:46 -0800 (PST)
+Message-Id: <20100304.005246.240968829.davem@davemloft.net>
+To: jpirko@redhat.com
+Cc: netdev@vger.kernel.org, jussi.kivilinna@mbnet.fi,
+	linux-wireless@vger.kernel.org
+Subject: Re: [net-next-2.6 PATCH] wireless: convert to use
+ netdev_for_each_mc_addr
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100304.004150.129762672.davem@davemloft.net>
+References: <20100303200510.17531s9x98zyvwm8@hayate.sektori.org>
+	<20100303180956.GC2760@psychotron.redhat.com>
+	<20100304.004150.129762672.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 17, 2010 at 09:22:43AM -0700, Johannes Berg wrote:
-> On Sat, 2010-03-13 at 21:53 +0200, Jouni Malinen wrote:
-> >  static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+From: David Miller <davem@davemloft.net>
+Date: Thu, 04 Mar 2010 00:41:50 -0800 (PST)
 
-> I'm wondering now why we even bother sending events to userspace when it
-> itself triggered the transition?
+> From: Jiri Pirko <jpirko@redhat.com>
+> Date: Wed, 3 Mar 2010 19:09:56 +0100
+> 
+>> Here's corrected patch:
+>> 
+>> Subject: [net-2.6 PATCH] rndis_wlan: correct multicast_list handling V2
+>> 
+>> My previous patch (655ffee284dfcf9a24ac0343f3e5ee6db85b85c5) added locking in
+>> a bad way. Because rndis_set_oid can sleep, there is need to prepare multicast
+>> addresses into local buffer under netif_addr_lock first, then call
+>> rndis_set_oid outside. This caused reorganizing of the whole function.
+>> 
+>> Signed-off-by: Jiri Pirko <jpirko@redhat.com>
+>> Reported-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> 
+> Applied.
 
-You are not the only one who was trying to figure that out.. ;-) I did
-not come up with any particularly good reason when working on the patch,
-but decided to avoid breaking any old behavior in the first version. If
-we are fine with dropping those events for locally triggered
-transitions, these areas here could be optimized.
+Jiri did ou even type make on this patch?  The 'size' is still
+referenced:
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+drivers/net/wireless/rndis_wlan.c: In function 'set_multicast_list':
+drivers/net/wireless/rndis_wlan.c:1530: error: 'size' undeclared (first use in this function)
+drivers/net/wireless/rndis_wlan.c:1530: error: (Each undeclared identifier is reported only once
+drivers/net/wireless/rndis_wlan.c:1530: error: for each function it appears in.)
+
+I reverted, and I'm pissed off.
