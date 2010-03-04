@@ -1,36 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46184 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751257Ab0CAHtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 02:49:08 -0500
-Date: Mon, 1 Mar 2010 08:47:10 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH resend] airo: return from set_wep_key() when key length
-	is zero
-Message-ID: <20100301074709.GA2365@dhcp-lab-161.englab.brq.redhat.com>
-References: <1265121290-2969-1-git-send-email-sgruszka@redhat.com> <20100204120713.GB6068@dhcp-lab-161.englab.brq.redhat.com> <20100208205358.GA3852@tuxdriver.com> <20100226141027.GA10280@dhcp-lab-161.englab.brq.redhat.com> <1267225769.14995.10.camel@localhost.localdomain> <20100227012616.GA2590@tuxdriver.com>
+Received: from m-04.th.seeweb.it ([217.64.195.227]:32921 "EHLO
+	m-04.th.seeweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752555Ab0CDKpE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Mar 2010 05:45:04 -0500
+Message-ID: <4B8F8F10.5040404@users.sourceforge.net>
+Date: Thu, 04 Mar 2010 11:44:32 +0100
+From: "Daniele C." <legolas558@users.sourceforge.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100227012616.GA2590@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2870 (staging kernel driver) crashes fatally
+References: <4B8E20CF.50109@users.sourceforge.net> <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com> <4B8F1C7F.7050305@lwfinger.net>
+In-Reply-To: <4B8F1C7F.7050305@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 26, 2010 at 08:26:17PM -0500, John W. Linville wrote:
-> On Fri, Feb 26, 2010 at 03:09:29PM -0800, Dan Williams wrote:
-> > On Fri, 2010-02-26 at 15:10 +0100, Stanislaw Gruszka wrote:
-> > > Even if keylen == 0 is a bug and should not really happen, better avoid
-> > > possibility of passing bad value to firmware.
-> > > 
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-This is small v1->v2 patch on top of below commit. You asked for it :)
+- -------- Original Message  --------
+Subject: Re: rt2870 (staging kernel driver) crashes fatally
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Daniele C. <legolas558@users.sourceforge.net>
+Date: Thu Mar 04 2010 03:35:43 GMT+0100 (CET)
 
-> commit f09c256375c7cf1e112b8ef6306cdd313490d7c0
-> Author: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date:   Tue Feb 2 15:34:50 2010 +0100
+> On 03/03/2010 08:14 PM, Hin-Tak Leung wrote:
+>> You appear to have two issues - (1) the driver doesn't
+>> hibernate/resume well, (2) there is some bad memory leak which causes
+>> your system to run out of memory.
+>>
+>> You did not mention issue (1) - that you were hibernating and resuming
+>> (and expecting it to work, which it does not). For the latter, you
+>> probably need to track down where the memory is leaking in the driver,
+>> which is probably easier than tracking down the hibernate/resume
+>> issue.
+>>
+>> Good luck with tracking down the memory leak. (you do understand that
+>> staging drivers are DIY - i.e. you try it only if you are willing to
+>> look into fixing it yourself - I hope )
 > 
->     airo: fix setting zero length WEP key
+> By generating your own kernel with MEMLEAK enabled, you should be able to see
+> which data blob is being leaked. If you post that info, someone on this list
+> should be able to help you find the cause.
+> 
+I will enable this feature so that next time it happens I will have such information.
+However looks like bug is not triggering unless I first do a resume.
 
-Stanislaw
+Thank you both for reviewing my logs and for the pointers.
+
+Best regards,
+- --
+  Daniele C.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQEcBAEBAgAGBQJLj48QAAoJEON28As9epPAqfIH/AktbatFnxAt6peijPxz64PV
+jElSTuDYaieRRjKfoTQCVZoiSsf4f4sPAiqBR4E30zX7u9nWqqbaTIxLJjeC74Nr
+fqfoFS2QBg8Ow5pLhs/pXUKR4c7g/x/QIQ7fzCAOUj/enirni2f6n9Gc8Tf8O1Mo
+ejKXqqKeKPsnlNoBXtnB3ihE5sVp7O2PJZvxV3GCRy5KEmoIivPkrd3U4Lsc2pZG
+86LOolgilto6I73/bdoU0CffiKyTENwpyJTMy1VFjqwOWLLn9ukuFbfyBd00Oo3W
+uYX/SSCnouAKeAG0LzzTZMaYKOGkqJQzVLv/B0nhlcrrlk+xzWBNe04fxHamVo8=
+=8q9G
+-----END PGP SIGNATURE-----
