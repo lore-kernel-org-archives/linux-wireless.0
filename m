@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:52486 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751264Ab0CAHeg (ORCPT
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:64401 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753620Ab0CDArh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 02:34:36 -0500
-Received: by mail-ew0-f220.google.com with SMTP id 20so1061584ewy.21
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2010 23:34:36 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: prahal@yahoo.com
-Subject: Re: [PATCH] rt2x00: Fix TX status reporting for rt2800pci.
-Date: Mon, 1 Mar 2010 08:34:34 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Josef Bacik <josef@redhat.com>
-References: <4B8A9670.1080906@yahoo.com>
-In-Reply-To: <4B8A9670.1080906@yahoo.com>
+	Wed, 3 Mar 2010 19:47:37 -0500
+Received: by fxm19 with SMTP id 19so2236427fxm.21
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 16:47:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201003010834.34740.IvDoorn@gmail.com>
+In-Reply-To: <4B8EFF26.6040005@lwfinger.net>
+References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com>
+	<a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com>
+	<201003010122.51341.mb@bu3sch.de> <201003022257.51878.mb@bu3sch.de>
+	<4B8EFF26.6040005@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 4 Mar 2010 01:47:15 +0100
+Message-ID: <69e28c911003031647o23cf5638xb0d29fb1b73aee64@mail.gmail.com>
+Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, Nathan Schulte <reklipz@gmail.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 28 February 2010, Alban Browaeys wrote:
-> After testing, we found that TX_STA_FIFO_MCS is the last MCS value
-> tried. If the transmission failed, 8 frames have been transmitted. If the
-> transmission succeed, we can easily compute the number of retry.  This patch fix
-> the way status is reported to mac80211 rate control. It has 2 bugs :
-> 
-> 1. mcs can contain the short preamble flag and it will lead to wrong
-> computations.
-> 
-> 2. minstrel nearly always say that 54 Mbits is the best rate, even if we are
-> very far from the AP
-> 
-> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
+On Thu, Mar 4, 2010 at 1:30 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 03/02/2010 03:57 PM, Michael Buesch wrote:
+>
+>> A bug in the PCI-E core code is able to show such behavior, because all memory
+>> transfers (MMIO and DMA) from the PCI device to the wireless core are translated
+>> by the PCI-E core.
+>> I think the whole PCI-E core code has to be audited (also the specs, probably).
+>
+> I have nearly finished the update on the code section of the specs page at
+> http://bcm-v4.sipsolutions.net/PCI-E. The part that is not done involves the
+> sections that read an address from the SPROM and perform operations on that address.
+>
+> I found that the chip common registers
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Do you mean the ChipCommon registers or the Backplane common registers?
 
+> are mapped at 12K for newer cores on
+> PCIe. This explains the 0x3XXX addresses. Similarly, the PCIe registers are
+> mapped at 8K - the 0x2XXX addresses. The SPROM is shadowed at 4K or 0x1XXX.
+>
+> Larry
+>
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
