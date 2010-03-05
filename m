@@ -1,353 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1749 "EHLO mail.perches.com"
+Received: from venema.h4ckr.net ([217.24.1.135]:34993 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754231Ab0CQRqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 13:46:33 -0400
-Subject: [PATCH 1/2] net/wireless/wext_core.c: Use IW_IOCTL_IDX macro
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
-	Andy Whitcroft <apw@canonical.com>, gregkh@suse.de,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268842112.5989.8.camel@jlt3.sipsolutions.net>
-References: <1268823629.1999.9.camel@localhost>
-	 <1268839535.1652.43.camel@Joe-Laptop.home>
-	 <1268840454.1999.22.camel@localhost>
-	 <1268841904.1652.94.camel@Joe-Laptop.home>
-	 <1268842112.5989.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 10:46:31 -0700
-Message-ID: <1268847991.1652.106.camel@Joe-Laptop.home>
-Mime-Version: 1.0
+	id S1755178Ab0CEARR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Mar 2010 19:17:17 -0500
+From: Kel Modderman <kel@otaku42.de>
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Subject: Re: [PATCH] crda: allow build with gcrypt support
+Date: Fri, 5 Mar 2010 10:17:04 +1000
+Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+References: <201003050011.44807.kel@otaku42.de> <20100304190059.GK8069@bombadil.infradead.org>
+In-Reply-To: <20100304190059.GK8069@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003051017.04394.kel@otaku42.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's a wireless.h macro for this, might as well use it.
+On Friday 05 March 2010 05:00:59 Luis R. Rodriguez wrote:
+> On Fri, Mar 05, 2010 at 12:11:44AM +1000, Kel Modderman wrote:
+> > USE_GCRYPT=0 disables using gcrypt for signature verification.
+> > 
+> > Signed-off-by: Kel Modderman <kel@otaku42.de>
+> > ---
+> > --- a/Makefile
+> > +++ b/Makefile
+> > @@ -28,6 +28,7 @@ CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$
+> >  LDLIBS += `pkg-config --libs openssl`
+> >  
+> >  else
+> > +ifneq ($(USE_GCRYPT),0)
+> >  PUBKEY_DIR?=pubkeys
+> >  CFLAGS += -DUSE_GCRYPT
+> >  LDLIBS += -lgcrypt
+> > @@ -40,6 +41,7 @@ keys-gcrypt: utils/key2pub.py $(wildcard
+> >  	$(Q)./utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem) $@
+> >  
+> >  endif
+> > +endif
+> >  MKDIR ?= mkdir -p
+> >  INSTALL ?= install
+> 
+> Thanks for the patch but it did not apply, is this against a
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index 5e1656b..dbde22b 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -28,226 +28,226 @@ typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
-  * know about.
-  */
- static const struct iw_ioctl_description standard_ioctl[] = {
--	[SIOCSIWCOMMIT	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWCOMMIT)] = {
- 		.header_type	= IW_HEADER_TYPE_NULL,
- 	},
--	[SIOCGIWNAME	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWNAME)] = {
- 		.header_type	= IW_HEADER_TYPE_CHAR,
- 		.flags		= IW_DESCR_FLAG_DUMP,
- 	},
--	[SIOCSIWNWID	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWNWID)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 		.flags		= IW_DESCR_FLAG_EVENT,
- 	},
--	[SIOCGIWNWID	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWNWID)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 		.flags		= IW_DESCR_FLAG_DUMP,
- 	},
--	[SIOCSIWFREQ	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWFREQ)] = {
- 		.header_type	= IW_HEADER_TYPE_FREQ,
- 		.flags		= IW_DESCR_FLAG_EVENT,
- 	},
--	[SIOCGIWFREQ	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWFREQ)] = {
- 		.header_type	= IW_HEADER_TYPE_FREQ,
- 		.flags		= IW_DESCR_FLAG_DUMP,
- 	},
--	[SIOCSIWMODE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWMODE)] = {
- 		.header_type	= IW_HEADER_TYPE_UINT,
- 		.flags		= IW_DESCR_FLAG_EVENT,
- 	},
--	[SIOCGIWMODE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWMODE)] = {
- 		.header_type	= IW_HEADER_TYPE_UINT,
- 		.flags		= IW_DESCR_FLAG_DUMP,
- 	},
--	[SIOCSIWSENS	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWSENS)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCGIWSENS	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWSENS)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCSIWRANGE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWRANGE)] = {
- 		.header_type	= IW_HEADER_TYPE_NULL,
- 	},
--	[SIOCGIWRANGE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWRANGE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= sizeof(struct iw_range),
- 		.flags		= IW_DESCR_FLAG_DUMP,
- 	},
--	[SIOCSIWPRIV	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWPRIV)] = {
- 		.header_type	= IW_HEADER_TYPE_NULL,
- 	},
--	[SIOCGIWPRIV	- SIOCIWFIRST] = { /* (handled directly by us) */
-+	[IW_IOCTL_IDX(SIOCGIWPRIV)] = { /* (handled directly by us) */
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= sizeof(struct iw_priv_args),
- 		.max_tokens	= 16,
- 		.flags		= IW_DESCR_FLAG_NOMAX,
- 	},
--	[SIOCSIWSTATS	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWSTATS)] = {
- 		.header_type	= IW_HEADER_TYPE_NULL,
- 	},
--	[SIOCGIWSTATS	- SIOCIWFIRST] = { /* (handled directly by us) */
-+	[IW_IOCTL_IDX(SIOCGIWSTATS)] = { /* (handled directly by us) */
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= sizeof(struct iw_statistics),
- 		.flags		= IW_DESCR_FLAG_DUMP,
- 	},
--	[SIOCSIWSPY	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWSPY)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= sizeof(struct sockaddr),
- 		.max_tokens	= IW_MAX_SPY,
- 	},
--	[SIOCGIWSPY	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWSPY)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= sizeof(struct sockaddr) +
- 				  sizeof(struct iw_quality),
- 		.max_tokens	= IW_MAX_SPY,
- 	},
--	[SIOCSIWTHRSPY	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWTHRSPY)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= sizeof(struct iw_thrspy),
- 		.min_tokens	= 1,
- 		.max_tokens	= 1,
- 	},
--	[SIOCGIWTHRSPY	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWTHRSPY)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= sizeof(struct iw_thrspy),
- 		.min_tokens	= 1,
- 		.max_tokens	= 1,
- 	},
--	[SIOCSIWAP	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWAP)] = {
- 		.header_type	= IW_HEADER_TYPE_ADDR,
- 	},
--	[SIOCGIWAP	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWAP)] = {
- 		.header_type	= IW_HEADER_TYPE_ADDR,
- 		.flags		= IW_DESCR_FLAG_DUMP,
- 	},
--	[SIOCSIWMLME	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWMLME)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.min_tokens	= sizeof(struct iw_mlme),
- 		.max_tokens	= sizeof(struct iw_mlme),
- 	},
--	[SIOCGIWAPLIST	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWAPLIST)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= sizeof(struct sockaddr) +
- 				  sizeof(struct iw_quality),
- 		.max_tokens	= IW_MAX_AP,
- 		.flags		= IW_DESCR_FLAG_NOMAX,
- 	},
--	[SIOCSIWSCAN	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWSCAN)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.min_tokens	= 0,
- 		.max_tokens	= sizeof(struct iw_scan_req),
- 	},
--	[SIOCGIWSCAN	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWSCAN)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_SCAN_MAX_DATA,
- 		.flags		= IW_DESCR_FLAG_NOMAX,
- 	},
--	[SIOCSIWESSID	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWESSID)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_ESSID_MAX_SIZE,
- 		.flags		= IW_DESCR_FLAG_EVENT,
- 	},
--	[SIOCGIWESSID	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWESSID)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_ESSID_MAX_SIZE,
- 		.flags		= IW_DESCR_FLAG_DUMP,
- 	},
--	[SIOCSIWNICKN	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWNICKN)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_ESSID_MAX_SIZE,
- 	},
--	[SIOCGIWNICKN	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWNICKN)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_ESSID_MAX_SIZE,
- 	},
--	[SIOCSIWRATE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWRATE)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCGIWRATE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWRATE)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCSIWRTS	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWRTS)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCGIWRTS	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWRTS)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCSIWFRAG	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWFRAG)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCGIWFRAG	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWFRAG)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCSIWTXPOW	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWTXPOW)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCGIWTXPOW	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWTXPOW)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCSIWRETRY	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWRETRY)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCGIWRETRY	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWRETRY)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCSIWENCODE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWENCODE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_ENCODING_TOKEN_MAX,
- 		.flags		= IW_DESCR_FLAG_EVENT | IW_DESCR_FLAG_RESTRICT,
- 	},
--	[SIOCGIWENCODE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWENCODE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_ENCODING_TOKEN_MAX,
- 		.flags		= IW_DESCR_FLAG_DUMP | IW_DESCR_FLAG_RESTRICT,
- 	},
--	[SIOCSIWPOWER	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWPOWER)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCGIWPOWER	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWPOWER)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCSIWGENIE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWGENIE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_GENERIC_IE_MAX,
- 	},
--	[SIOCGIWGENIE	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWGENIE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_GENERIC_IE_MAX,
- 	},
--	[SIOCSIWAUTH	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWAUTH)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCGIWAUTH	- SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWAUTH)] = {
- 		.header_type	= IW_HEADER_TYPE_PARAM,
- 	},
--	[SIOCSIWENCODEEXT - SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWENCODEEXT)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.min_tokens	= sizeof(struct iw_encode_ext),
- 		.max_tokens	= sizeof(struct iw_encode_ext) +
- 				  IW_ENCODING_TOKEN_MAX,
- 	},
--	[SIOCGIWENCODEEXT - SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCGIWENCODEEXT)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.min_tokens	= sizeof(struct iw_encode_ext),
- 		.max_tokens	= sizeof(struct iw_encode_ext) +
- 				  IW_ENCODING_TOKEN_MAX,
- 	},
--	[SIOCSIWPMKSA - SIOCIWFIRST] = {
-+	[IW_IOCTL_IDX(SIOCSIWPMKSA)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.min_tokens	= sizeof(struct iw_pmksa),
-@@ -449,7 +449,7 @@ void wireless_send_event(struct net_device *	dev,
- 
- 	/* Get the description of the Event */
- 	if (cmd <= SIOCIWLAST) {
--		cmd_index = cmd - SIOCIWFIRST;
-+		cmd_index = IW_IOCTL_IDX(cmd);
- 		if (cmd_index < standard_ioctl_num)
- 			descr = &(standard_ioctl[cmd_index]);
- 	} else {
-@@ -662,7 +662,7 @@ static iw_handler get_handler(struct net_device *dev, unsigned int cmd)
- 		return NULL;
- 
- 	/* Try as a standard command */
--	index = cmd - SIOCIWFIRST;
-+	index = IW_IOCTL_IDX(cmd);
- 	if (index < handlers->num_standard)
- 		return handlers->standard[index];
- 
-@@ -954,9 +954,9 @@ static int ioctl_standard_call(struct net_device *	dev,
- 	int					ret = -EINVAL;
- 
- 	/* Get the description of the IOCTL */
--	if ((cmd - SIOCIWFIRST) >= standard_ioctl_num)
-+	if (IW_IOCTL_IDX(cmd) >= standard_ioctl_num)
- 		return -EOPNOTSUPP;
--	descr = &(standard_ioctl[cmd - SIOCIWFIRST]);
-+	descr = &(standard_ioctl[IW_IOCTL_IDX(cmd)]);
- 
- 	/* Check if we have a pointer to user space data or not */
- 	if (descr->header_type != IW_HEADER_TYPE_POINT) {
-@@ -1012,7 +1012,7 @@ static int compat_standard_call(struct net_device	*dev,
- 	struct iw_point iwp;
- 	int err;
- 
--	descr = standard_ioctl + (cmd - SIOCIWFIRST);
-+	descr = standard_ioctl + IW_IOCTL_IDX(cmd);
- 
- 	if (descr->header_type != IW_HEADER_TYPE_POINT)
- 		return ioctl_standard_call(dev, iwr, cmd, info, handler);
+It depends on the previous patch because PUBKEY_DIR was moved.
 
+> release or is this against git master? How about something like
+> this instead, granted the debian example stuff is now completely
+> outdated but nevertheless it covers it based on what is on
+> the debian-example/ stuff:
+> 
+> From: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Subject: [PATCH] Use openssl by default
+> 
+> Now that openssl supports the /etc/wireless-regdb/pubkeys/
+> directory to read trusted public keys dynamically just
+> enable openssl by default. Propagate this to the debian
+> and rpm package build files.
 
+1. wireless-regdb does not install custom keys to /etc/wireless-regdb/pubkeys/
+
+2. crypto data would be needlessly embedded into the binaries
+
+3. $(PREFIX)/lib/crda/pukeys/linville.pub.pem would be a waste of space
+
+4. why have all this code supporting embedding of crypto data into binary
+   when its no longer needed
+
+> 
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  Makefile                 |   14 ++++++------
+>  crda.spec                |    6 ++--
+>  debian-example/changelog |    7 ++++++
+>  debian-example/control   |   29 ++++++++++++++++++++-------
+>  debian-example/copyright |   48 ++++++++++++++++++++++++++++++---------------
+>  5 files changed, 70 insertions(+), 34 deletions(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index b8bc7d3..0ab1e2b 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -29,18 +29,18 @@ all: all_noverify verify
+>  
+>  all_noverify: crda intersect regdbdump
+>  
+> -ifeq ($(USE_OPENSSL),1)
+> -CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
+> -LDLIBS += `pkg-config --libs openssl`
+> -
+> -reglib.o: keys-ssl.c
+> -
+> -else
+> +ifeq ($(USE_GCRYPT),1)
+>  CFLAGS += -DUSE_GCRYPT
+>  LDLIBS += -lgcrypt
+>  
+>  reglib.o: keys-gcrypt.c
+>  
+> +else
+> +CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
+> +LDLIBS += `pkg-config --libs openssl`
+> +
+> +reglib.o: keys-ssl.c
+> +
+>  endif
+>  MKDIR ?= mkdir -p
+>  INSTALL ?= install
+> diff --git a/crda.spec b/crda.spec
+> index f44a3e5..9876d90 100644
+> --- a/crda.spec
+> +++ b/crda.spec
+> @@ -1,6 +1,6 @@
+>  Summary: Linux central regulatory domain agent
+>  Name: crda
+> -Version: 1.0.1
+> +Version: 1.1.1
+>  Release: 1
+>  License: ISC
+>  Group: System Enviroment/Base
+> @@ -8,8 +8,8 @@ Source: http://wireless.kernel.org/download/crda/crda-%version.tar.bz2
+>  URL: http://wireless.kernel.org/en/developers/Regulatory/
+>  Packager: Luis R. Rodriguez <mcgrof@gmail.com>
+>  BuildRoot : /var/tmp/%{name}-buildroot
+> -Requires: libnl, libgcrypt
+> -BuildRequires: libnl-devel, gcc, wireless-regdb, libgcrypt-devel, m2crypto
+> +Requires: libnl, openssl
+> +BuildRequires: libnl-devel, gcc, wireless-regdb, openssl-devel, m2crypto
+>  
+>  %description
+>  This package provides CRDA to be used by the new Linux kernel
+> diff --git a/debian-example/changelog b/debian-example/changelog
+> index b083b42..4d273d2 100644
+> --- a/debian-example/changelog
+> +++ b/debian-example/changelog
+> @@ -1,3 +1,10 @@
+> +crda (1.1.1-1) unstable; urgency=low
+> +
+> +  * New package slightly based on Kel Modderman <kel@otaku42.de>'s work
+> +  * Use openssl instead of gcrypt to enable dynamic reading of keys
+> +
+> + -- Luis R. Rodriguez <mcgrof@gmail.com>  Sat, 24 Jan 2009 16:00:00 +0100
+> +
+>  crda (1.0.1-1) unstable; urgency=low
+>  
+>    * Compiles nicely on # CPUs > 1
+> diff --git a/debian-example/control b/debian-example/control
+> index eba7c0c..7e3334f 100644
+> --- a/debian-example/control
+> +++ b/debian-example/control
+> @@ -1,17 +1,30 @@
+>  Source: crda
+>  Section: admin
+>  Priority: optional
+> -Maintainer: Luis R. Rodriguez <mcgrof@gmail.com>
+> -Build-Depends: cdbs, debhelper (>= 5), gcc, wireless-regdb, libgcrypt11-dev, python-m2crypto, libnl1
+> -Standards-Version: 3.7.3
+> +Maintainer: Debian/Ubuntu wpasupplicant Maintainers <pkg-wpa-devel@lists.alioth.debian.org>
+> +Uploaders: Luis R. Rodriguez <mcgrof@gmail.com>
+> +Build-Depends: cdbs, debhelper (>= 7.0.50),
+> + gcc,
+> + wireless-regdb,
+> + libssl-dev,
+> + python-m2crypto,
+> + libnl1,
+> + libnl-dev
+> +Standards-Version: 3.8.1
+>  
+>  Package: crda
+> -Architecture: all
+> -Depends: udev, libgcrypt11, libnl1
+> -Suggests: iw
+> +Architecture: any
+> +Depends: ${shlibs:Depends}, ${misc:Depends}, wireless-regdb
+> +Recommends: iw (>= 0.9.18-1)
+>  Description: Linux wireless central regulatory domain agent
+> - This package provides CRDA to be used by the new Linux kernel wireless
+> - subsystem to query from userspace regulatory domains. For more information
+> + This package provides CRDA to be used by the new Linux kernel
+> + cfg80211 wireless subsystem to query from userspace regulatory
+> + domain settings wireless devices may operate within for a given location.
+> + .
+> + CRDA queries operational frequency regulations stored within the regulatory
+> + database provided by the wireless-regdb package.
+> + .
+> + For more information
+>   see:
+>   .
+>   http://wireless.kernel.org/en/developers/Regulatory/
+> diff --git a/debian-example/copyright b/debian-example/copyright
+> index 85d6068..3325045 100644
+> --- a/debian-example/copyright
+> +++ b/debian-example/copyright
+> @@ -1,21 +1,37 @@
+> -This package was debianized by Luis Rodriguez <mcgrof@gmail.com> on
+> -Thu, 22 Jan 2009 16:00:00 +0100.
+> +Upstream-Name: crda
+> +Upstream-Maintainer: Luis R. Rodriguez <mcgrof@gmail.com>
+> +Upstream-Source: git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git
+>  
+> -The crda packages was downloaded from <http://wireless.kernel.org/download/crda/>
+> +Files: *
+> +Copyright: Copyright (c) 2008, Luis R. Rodriguez <mcgrof@gmail.com>
+> +Copyright: Copyright (c) 2008, Johannes Berg <johannes@sipsolutions.net>
+> +Copyright: Copyright (c) 2008, Michael Green <Michael.Green@Atheros.com>
+> +License: ISC
+>  
+> -Copyright (c) 2008, Luis R. Rodriguez <mcgrof@gmail.com>
+> -Copyright (c) 2008, Johannes Berg <johannes@sipsolutions.net>
+> -Copyright (c) 2008, Michael Green <Michael.Green@Atheros.com>
+> +Files: nl80211.h
+> +Copyright: Copyright 2006, 2007, 2008 Johannes Berg <johannes@sipsolutions.net>
+> +Copyright: Copyright 2008 Michael Wu <flamingice@sourmilk.net>
+> +Copyright: Copyright 2008 Luis Carlos Cobo <luisca@cozybit.com>
+> +Copyright: Copyright 2008 Michael Buesch <mb@bu3sch.de>
+> +Copyright: Copyright 2008 Luis R. Rodriguez <lrodriguez@atheros.com>
+> +Copyright: Copyright 2008 Jouni Malinen <jouni.malinen@atheros.com>
+> +Copyright: Copyright 2008 Colin McCabe <colin@cozybit.com>
+> +License: ISC
+>  
+> -Permission to use, copy, modify, and/or distribute this software for any
+> -purpose with or without fee is hereby granted, provided that the above
+> -copyright notice and this permission notice appear in all copies.
+> +Files: debian/*
+> +Copyright: Copyright (c) 2009, Kel Modderman <kel@otaku42.de>
+> +Copyright: Copyright (c) 2010, Luis R. Rodriguez <mcgrof@gmail.com>
+> +License: ISC
+>  
+> -THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> -WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> -MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> -ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> -WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> -ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> -OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> +License: ISC
+> + Permission to use, copy, modify, and/or distribute this software for any
+> + purpose with or without fee is hereby granted, provided that the above
+> + copyright notice and this permission notice appear in all copies.
+>  
+> + THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> + ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+> 
