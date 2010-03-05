@@ -1,118 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:55817 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756251Ab0CaIXW convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f181.google.com ([209.85.216.181]:47601 "EHLO
+	mail-px0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752826Ab0CEDsd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 04:23:22 -0400
+	Thu, 4 Mar 2010 22:48:33 -0500
+Received: by pxi11 with SMTP id 11so124737pxi.15
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Mar 2010 19:48:33 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
-References: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
-Date: Wed, 31 Mar 2010 13:53:21 +0530
-Message-ID: <y2q703729f11003310123w505134f8y61efb0c9f7168a30@mail.gmail.com>
-Subject: Re: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit transfers
-From: Alagu Sankar Vellaichamy <alagusankar@gmail.com>
-To: Daniel Mack <daniel@caiaq.de>
-Cc: linux-kernel@vger.kernel.org, Volker Ernst <volker.ernst@txtr.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
+References: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 4 Mar 2010 19:48:13 -0800
+Message-ID: <43e72e891003041948m5854a11fy168c275912d803d5@mail.gmail.com>
+Subject: Re: [RFC 0/3] ath9k: initial work for ar9003 support
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: kevin@atheros.com, doug.dahlby@atheros.com,
+	cliff.holden@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SCSI is read-only.  We ideally should be checking this bit and then
-set the ECSI accordingly, rather than setting both ECSI and SCSI.
+On Thu, Mar 4, 2010 at 7:44 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> We are working on supporting the AR9003 chipset family.
+> This is the new 802.11n family of chipset by Atheros,
+> it will include 2-stream chipsets and the new shiny 3-stream
+> chipsets. The plan of attack is to support the 2-stream
+> chipsets first and then move on the the 3-stream devices.
+>
+> The new family of chipsets are supported in the same traditional
+> Atheros way of using code on the host, however the register map
+> for the new chipset is now defined through an alternative approach [1].
+> This essentially requires new routines for every read/write operation
+> and as such requires an abstraction layer for hardware support.
+>
+> This first patch series illustrates the direction I'm taking so far
+> for the abstraction. Please review and let me know what you think.
+> Fortunately I believe we will be able to re-use some core harware
+> code by implementing both generic harware callbacks and also some
+> private callbacks, to be used only by hardware code itself. I
+> intend on stuffing the generic harware code on hw.c and moving
+> chipset specific stuff into their own files.
+>
+> Let me know what you think so far. If this seems peachy I'll
+> continue with this strategy and complete the abstraction for
+> the AR5008/AR9001/AR9002 family first. We can then work on
+> the AR9003 family support by simply adding new callbacks for
+> it.
+>
+> There are some cases where I think its pointless to keep using
+> callbacks where the code is exactly the same and although we are
+> using a different register definition for some families they are
+> ikely 100% identical. A case I found so far was ath9k_hw_chip_test()
+> and in fact I noticed we can even share this same call with
+> the legacy family, through ath5k. So I think in cases like those
+> where not many registers are being picked at it makes sense to
+> standardize the calls accross the board, and sometimes this may
+> mean sharing for all the chipset families, legacy, and all 802.11n
+> including the new ar9003 family.
+>
+> [1] http://wireless.kernel.org/en/users/Drivers/ath9k/todo/ar93xx#Register_offset_definitions
+>
 
-- Alagu Sankar
+I also forgot to mention that I see two advantages with this new
+approach. With this abstraction in place if we really wanted to we
+could try to unify ath5k/ath9k some more, although it is not one of my
+own goals. Another neat advantage we can take from the new changes is
+add a tracer on hw-ops.h.
 
-On Tue, Mar 30, 2010 at 11:08 PM, Daniel Mack <daniel@caiaq.de> wrote:
-> When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
-> However, the 8686 will only drive this line when the ECSI and SCSI bits
-> are set in the CCCR_IF register.
->
-> Thanks to Alagu Sankar for pointing me in the right direction.
->
-> Signed-off-by: Daniel Mack <daniel@caiaq.de>
-> Cc: Alagu Sankar <alagusankar@embwise.com>
-> Cc: Volker Ernst <volker.ernst@txtr.com>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Cc: libertas-dev@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: linux-mmc@vger.kernel.org
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |   24 ++++++++++++++++++++++++
->  include/linux/mmc/sdio.h                |    2 ++
->  2 files changed, 26 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 7a73f62..d3170f2 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -34,6 +34,8 @@
->  #include <linux/mmc/card.h>
->  #include <linux/mmc/sdio_func.h>
->  #include <linux/mmc/sdio_ids.h>
-> +#include <linux/mmc/sdio.h>
-> +#include <linux/mmc/host.h>
->
->  #include "host.h"
->  #include "decl.h"
-> @@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
->        int ret, i;
->        unsigned int model;
->        struct if_sdio_packet *packet;
-> +       struct mmc_host *host = func->card->host;
->
->        lbs_deb_enter(LBS_DEB_SDIO);
->
-> @@ -1022,6 +1025,27 @@ static int if_sdio_probe(struct sdio_func *func,
->        if (ret)
->                goto disable;
->
-> +       /* For 1-bit transfers, we need to enable the interrupt flags in
-> +        * the CCCR register. Temporarily set the function number to 0
-> +        * for that. */
-> +       if ((host->caps & MMC_CAP_SDIO_IRQ) &&
-> +           (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-> +               unsigned int num = func->num;
-> +               u8 reg;
-> +
-> +               func->num = 0;
-> +               reg = sdio_readb(func, SDIO_CCCR_IF, &ret);
-> +               if (ret)
-> +                       goto release_int;
-> +
-> +               reg |= SDIO_BUS_ECSI | SDIO_BUS_SCSI;
-> +               sdio_writeb(func, reg, SDIO_CCCR_IF, &ret);
-> +               if (ret)
-> +                       goto release_int;
-> +
-> +               func->num = num;
-> +       }
-> +
->        card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
->        if (ret)
->                goto release_int;
-> diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
-> index 0ebaef5..329a8fa 100644
-> --- a/include/linux/mmc/sdio.h
-> +++ b/include/linux/mmc/sdio.h
-> @@ -94,6 +94,8 @@
->
->  #define  SDIO_BUS_WIDTH_1BIT   0x00
->  #define  SDIO_BUS_WIDTH_4BIT   0x02
-> +#define  SDIO_BUS_ECSI         0x20    /* Enable continuous SPI interrupt */
-> +#define  SDIO_BUS_SCSI         0x40    /* Support continuous SPI interrupt */
->
->  #define  SDIO_BUS_ASYNC_INT    0x20
->
-> --
-> 1.7.0
->
->
+  Luis
