@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49826 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311Ab0CFP4t (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:41200 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719Ab0CENeD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Mar 2010 10:56:49 -0500
-Date: Sat, 6 Mar 2010 10:54:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Sujith <Sujith.Manoharan@atheros.com>,
-	Pavel Roskin <proski@gnu.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [PATCH] ath9k_htc: Add ath9k_htc driver
-Message-ID: <20100306155451.GA3595@tuxdriver.com>
-References: <19335.43241.887933.207404@gargle.gargle.HOWL>
- <1267209201.30426.8.camel@mj>
- <43e72e891002261042s587f9fb8g9f491b1bac363582@mail.gmail.com>
- <1267233595.2835.20.camel@mj>
- <19336.44484.226966.463482@gargle.gargle.HOWL>
- <87hboteaia.fsf@purkki.valot.fi>
+	Fri, 5 Mar 2010 08:34:03 -0500
+Received: by gwb15 with SMTP id 15so1806341gwb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Mar 2010 05:34:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <87hboteaia.fsf@purkki.valot.fi>
+In-Reply-To: <20100305063255.29522.83920.stgit@void>
+References: <20100305063255.29522.83920.stgit@void>
+Date: Fri, 5 Mar 2010 08:26:44 -0500
+Message-ID: <b6c5339f1003050526r12b21c8awdd4ea5e0fcd72425@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath5k: fix I/Q calibration (for real)
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, 8an@praha12.net,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 06, 2010 at 05:27:09PM +0200, Kalle Valo wrote:
-> Sujith <Sujith.Manoharan@atheros.com> writes:
-> 
-> >> The original patch should be run through checkpatch.pl.  In addition to
-> >> overly long lines, there are some other formatting issues.
-> >
-> > I thought that the default was 106 (or 132 ?) these days ..
-> 
-> From CodingStyle:
-> 
-> "The limit on the length of lines is 80 columns and this is a strongly
-> preferred limit."
-> 
-> And I fully agree with that. It's easier to read code that way.
+On Fri, Mar 5, 2010 at 1:32 AM, Bruno Randolf <br1@einfach.org> wrote:
+> I/Q calibration was completely broken, resulting in a high number of CRC errors
+> on received packets. before i could see around 10% to 20% CRC errors, with this
+> patch they are between 0% and 3%.
 
-ACK
+Er, ouch.  This is definitely stable material -- can
+you add cc to stable@kernel.org?
+
+> -       i_coff = ((-iq_corr) / i_coffd);
+> -
+> -       /* Boundary check */
+> +       i_coff = (-iq_corr) / i_coffd;
+> +       /* Boundary check (signed 6 bit) */
+
+
+>        if (i_coff > 31)
+>                i_coff = 31;
+> -       if (i_coff < -32)
+> +       else if (i_coff < -32)
+>                i_coff = -32;
+
+Can't we just do
+
+i_coff &= 0x3f;
+
+
+Boundary check */
+> +       q_coff = (i_pwr / q_coffd) - 128;
+> +       /* Boundary check (signed 5 bit) */
+>        if (q_coff > 15)
+>                q_coff = 15;
+
+q_coff &= 0x1f;
+
+... and then these are equivalent to the masks we
+already use in WRITE_BITS, right?
 
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
