@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:51000 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755194Ab0C2Rli (ORCPT
+Received: from mail-iw0-f175.google.com ([209.85.223.175]:63825 "EHLO
+	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754207Ab0CEAis (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 13:41:38 -0400
-Date: Mon, 29 Mar 2010 19:41:35 +0200
-From: Ralph Benzinger <t1@endlos.net>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Problems with hardware radio kill switch on Sony Vaio notebook
-Message-ID: <20100329174135.GD6445@endlos.net>
-References: <20100329152721.GC6445@endlos.net> <20100329170604.GC4984@tuxdriver.com>
+	Thu, 4 Mar 2010 19:38:48 -0500
+Received: by iwn5 with SMTP id 5so2278303iwn.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Mar 2010 16:38:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100329170604.GC4984@tuxdriver.com>
+In-Reply-To: <4B9024DE.308@jacobs-university.de>
+References: <4B9024DE.308@jacobs-university.de>
+Date: Thu, 4 Mar 2010 16:38:47 -0800
+Message-ID: <c1545bb51003041638v28e5fe9me336735fc940e1ea@mail.gmail.com>
+Subject: Re: Mesh support for gumstix's wireless (Marvell 88W8385 wireless
+	chip with CF interface)
+From: Andrey Yurovsky <yurovsky@gmail.com>
+To: Darko Makreshanski <d.makreshanski@jacobs-university.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On March 29, you wrote:
-> Generally, sony-laptop would be responsible for correctly reporting
-> the rfkill switch state.
+On Thu, Mar 4, 2010 at 1:23 PM, Darko Makreshanski
+<d.makreshanski@jacobs-university.de> wrote:
+> 1. will mesh networking work with the 88W8385 chip on gumstix with the
+> libertas driver?
 
-John,
+No.  The OLPC uses an 88w8288 with in-firmware mesh on the USB
+variant.  That firmware won't run on other chips.
 
-Thanks for the info, I appreciate it!
+> 3. if not, is it possible to make the libertas_tf driver work with this
+> chip?
 
-Just a naive follow-up question then: Wouldn't it be possible for the
-ath9k driver to ignore the rfkill switch settings?  (Assuming, of
-course, that there is no actual physical power disconnect, which I
-doubt.)
+No.  That driver only supports the 88w8388 USB variant with special
+firmware.  Your chip is a full-MAC device and therefore cannot use the
+mac80211 mesh stack (and there isn't a special firmware to make it do
+something else).
 
-Is there a simple way to override the rfkill effect on ath9k via
-/proc or /sys?  Or alternatively, if I were to recompile the ath9k
-module, what would I need to change/disable?  (On the other hand,
-hacking sony-laptop seems to be the easier way.)
-
-Any pointers would be greatly appreciated.
-
-Regards
-Ralph
+  -Andrey
