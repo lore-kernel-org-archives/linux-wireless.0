@@ -1,49 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45998 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754807Ab0C3RaM (ORCPT
+Received: from mail-px0-f175.google.com ([209.85.216.175]:57016 "EHLO
+	mail-px0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752462Ab0CEViv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 13:30:12 -0400
-Date: Tue, 30 Mar 2010 13:20:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Daniel Mack <daniel@caiaq.de>,
-	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net/wireless/libertas: do not call wiphy_unregister()
-	w/o wiphy_register()
-Message-ID: <20100330172008.GD13120@tuxdriver.com>
-References: <1269875658-3324-1-git-send-email-daniel@caiaq.de> <201003301149.13462.hs4233@mail.mn-solutions.de> <20100330105029.GO30801@buzzloop.caiaq.de> <201003301259.23973.hs4233@mail.mn-solutions.de> <1269968673.3019.37.camel@localhost.localdomain>
+	Fri, 5 Mar 2010 16:38:51 -0500
+Received: by pxi5 with SMTP id 5so1327216pxi.21
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Mar 2010 13:38:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1269968673.3019.37.camel@localhost.localdomain>
+In-Reply-To: <20100305205825.2631.44019.stgit@mj.roinet.com>
+References: <20100305205825.2631.44019.stgit@mj.roinet.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 5 Mar 2010 13:38:31 -0800
+Message-ID: <43e72e891003051338v4a97f45di2fdd46b0bfa783b8@mail.gmail.com>
+Subject: Re: [PATCH] compat: define KEY_RFKILL, which appeared in Linux 2.6.33
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 30, 2010 at 10:04:33AM -0700, Dan Williams wrote:
-> On Tue, 2010-03-30 at 12:59 +0200, Holger Schurig wrote:
-> > > I don't get your point. The patch I submitted fixes an Ooops in the
-> > > driver, due to wrong handling of an API. What does that have to do with
-> > > principle discussions about the frameworks in use?
-> > 
-> > I asked if there is a better method, and you said that you would test a better 
-> > solution. That means that someone else should make a better solution.
-> > 
-> > I just pointed out that I won't be the one who creates the better solution, 
-> > because for fundamental reasons I don't see the libertas+cfg80211 approach 
-> > going forward. That issue has nothing to do with you or your patch, so please 
-> > don't feel offended or confused.
-> 
-> Fine; just rip out the mesh code and do the vanilla cfg80211 conversion
-> for infra & adhoc, and we'll add the mesh code back later.  I don't have
-> time to do the cfg80211 bits, neither do the OLPC guys (AFAIK), so lets
-> take advantage of your willingness to do this and just move the driver
-> forward.
+On Fri, Mar 5, 2010 at 12:58 PM, Pavel Roskin <proski@gnu.org> wrote:
+> It is used in net/rfkill/input.c
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-Someone post a feature removal patch, please?
+Thanks, applied to the 2.6.33.y branch as well.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
