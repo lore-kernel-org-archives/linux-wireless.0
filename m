@@ -1,135 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22722 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752453Ab0CYUo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 16:44:56 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:15714 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753872Ab0CEGdF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Mar 2010 01:33:05 -0500
+Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-029043781
+	for <linux-wireless@vger.kernel.org>; Fri,  5 Mar 2010 15:33:03 +0900 (JST)
+Subject: [PATCH 2/3] ath5k: read eeprom IQ calibration values correctly for G
+	mode
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 10/22] iwlwifi: each device has its own eeprom tx power version
-Date: Thu, 25 Mar 2010 13:44:38 -0700
-Message-Id: <1269549890-19195-11-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
-References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
+From: Bruno Randolf <br1@einfach.org>
+Cc: 8an@praha12.net, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, mickflemm@gmail.com
+Date: Fri, 05 Mar 2010 15:33:01 +0900
+Message-ID: <20100305063301.29522.53398.stgit@void>
+In-Reply-To: <20100305063255.29522.83920.stgit@void>
+References: <20100305063255.29522.83920.stgit@void>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+we read the IQ correction values (i_cal and q_cal) for G mode from a wrong
+location (the same shifts as for A mode is applied which is incorrect). use
+correct locations, matching the docs and HAL sources.
 
-Each device has it own eeprom, so the tx power version could be
-different, define TX_POWER_VERSION per device.
+also we should write IQ correction only when we have that information in the
+EEPROM, starting from version 4. also write it in the same way as we do in the
+periodic recalibration (enable last), just to be sure.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-6000.c   |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    3 +++
- 3 files changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath5k/eeprom.c |    4 ++--
+ drivers/net/wireless/ath/ath5k/reset.c  |   15 +++++++++------
+ 2 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index a99945b..cf0aa71 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -234,7 +234,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
- 	.ops = &iwl1000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwl50_mod_params,
-@@ -264,7 +264,7 @@ struct iwl_cfg iwl1000_bg_cfg = {
- 	.ops = &iwl1000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.eeprom_calib_ver = EEPROM_1000_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwl50_mod_params,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 92b407f..cb9c2d6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -371,7 +371,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwl50_mod_params,
-@@ -404,7 +404,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwl50_mod_params,
-@@ -436,7 +436,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwl50_mod_params,
-@@ -468,7 +468,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.ops = &iwl6050_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwl50_mod_params,
-@@ -501,7 +501,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
- 	.ops = &iwl6050_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwl50_mod_params,
-@@ -533,7 +533,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwl50_mod_params,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 907a30a..cb6d50b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -261,12 +261,15 @@ struct iwl_eeprom_enhanced_txpwr {
- #define EEPROM_5050_EEPROM_VERSION	(0x21E)
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index 6a3f4da..10b5226 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -429,8 +429,8 @@ static int ath5k_eeprom_read_modes(struct ath5k_hw *ah, u32 *offset,
+ 			ee->ee_margin_tx_rx[mode] = (val >> 8) & 0x3f;
  
- /* 1000 Specific */
-+#define EEPROM_1000_TX_POWER_VERSION    (4)
- #define EEPROM_1000_EEPROM_VERSION	(0x15C)
+ 		AR5K_EEPROM_READ(o++, val);
+-		ee->ee_i_cal[mode] = (val >> 8) & 0x3f;
+-		ee->ee_q_cal[mode] = (val >> 3) & 0x1f;
++		ee->ee_i_cal[mode] = (val >> 5) & 0x3f;
++		ee->ee_q_cal[mode] = val & 0x1f;
  
- /* 6x00 Specific */
-+#define EEPROM_6000_TX_POWER_VERSION    (4)
- #define EEPROM_6000_EEPROM_VERSION	(0x434)
+ 		if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_2) {
+ 			AR5K_EEPROM_READ(o++, val);
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 6d9a1e8..e9e69dc 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -851,12 +851,15 @@ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+ 				AR5K_PHY_OFDM_SELFCORR_CYPWR_THR1,
+ 				AR5K_INIT_CYCRSSI_THR1);
  
- /* 6x50 Specific */
-+#define EEPROM_6050_TX_POWER_VERSION    (4)
- #define EEPROM_6050_EEPROM_VERSION	(0x532)
+-	/* I/Q correction
+-	 * TODO: Per channel i/q infos ? */
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ,
+-		AR5K_PHY_IQ_CORR_ENABLE |
+-		(ee->ee_i_cal[ee_mode] << AR5K_PHY_IQ_CORR_Q_I_COFF_S) |
+-		ee->ee_q_cal[ee_mode]);
++	/* I/Q correction (set enable bit last to match HAL sources) */
++	/* TODO: Per channel i/q infos ? */
++	if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_0) {
++		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF,
++			    ee->ee_i_cal[ee_mode]);
++		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF,
++			    ee->ee_q_cal[ee_mode]);
++		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
++	}
  
- /* OTP */
--- 
-1.6.3.3
+ 	/* Heavy clipping -disable for now */
+ 	if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_5_1)
 
