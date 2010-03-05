@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:59891 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545Ab0CLGCG convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:44427 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755198Ab0CEDoj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 01:02:06 -0500
-MIME-Version: 1.0
-In-Reply-To: <20100312025330.GA15402@tuxdriver.com>
-References: <43e72e891003111722n4b4d5b6crf764dfe357ff8965@mail.gmail.com>
-	<69e28c911003111756h224ef6a9x622c979232b6698b@mail.gmail.com>
-	<20100312025330.GA15402@tuxdriver.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 12 Mar 2010 07:01:42 +0100
-Message-ID: <69e28c911003112201j6917d7b3t87cc981a0d9f03eb@mail.gmail.com>
-Subject: Re: cfg80211 conversion of all drivers
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	devel@linuxdriverproject.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 4 Mar 2010 22:44:39 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: kevin@atheros.com, doug.dahlby@atheros.com,
+	cliff.holden@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC 3/3] ath9k: rename initvals.h to ar9200_initvals.h
+Date: Thu,  4 Mar 2010 22:44:38 -0500
+Message-Id: <1267760678-5421-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
+References: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/12 John W. Linville <linville@tuxdriver.com>:
-> On Fri, Mar 12, 2010 at 02:56:31AM +0100, Gábor Stefanik wrote:
->
->> May I ask you why hostap is "to be killed"? What is the alternative?
->
-> I think that is code for "replace it with something based on mac80211"...
+The register initialization values we have so far are
+only for the AR5008, AR9002 and AR9002 hardware families
+and we've managed to get ar90002_hw.c to be its only user
+so clarify this by renaming the initvals.
 
-Isn't Prism2 a Fullmac chipset?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c         |    2 +-
+ .../ath/ath9k/{initvals.h => ar9200_initvals.h}    |    0
+ 2 files changed, 1 insertions(+), 1 deletions(-)
+ rename drivers/net/wireless/ath/ath9k/{initvals.h => ar9200_initvals.h} (100%)
 
-Anyway, as I hoped for, it is not "kill in favor of orinoco" (which
-also has some support for Prism2, though not as good as hostap).
-
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 9e9247f..902d239 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -17,7 +17,7 @@
+ #include "hw.h"
+ #include "hw-ops.h"
+ #include "rc.h"
+-#include "initvals.h"
++#include "ar9200_initvals.h"
+ 
+ static void ar9002_hw_disablepcie(struct ath_hw *ah)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/ar9200_initvals.h
+similarity index 100%
+rename from drivers/net/wireless/ath/ath9k/initvals.h
+rename to drivers/net/wireless/ath/ath9k/ar9200_initvals.h
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
