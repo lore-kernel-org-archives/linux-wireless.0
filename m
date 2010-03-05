@@ -1,199 +1,595 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1472 "EHLO mga11.intel.com"
+Received: from venema.h4ckr.net ([217.24.1.135]:47048 "EHLO venema.h4ckr.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752126Ab0CJFWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 00:22:04 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 04/24] iwlagn: remove write-only variables
-Date: Tue,  9 Mar 2010 21:21:32 -0800
-Message-Id: <1268198512-6572-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
-References: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
+	id S1751469Ab0CEO7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Mar 2010 09:59:55 -0500
+From: Kel Modderman <kel@otaku42.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] crda: do not embed crypto data when USE_OPENSSL=1
+Date: Sat, 6 Mar 2010 00:59:42 +1000
+Cc: linux-wireless@vger.kernel.org
+References: <201003050008.51066.kel@otaku42.de> <201003051156.11922.kel@otaku42.de> <20100305040853.GA4640@tuxdriver.com>
+In-Reply-To: <20100305040853.GA4640@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_exRkLn4zd+i8rvK"
+Message-Id: <201003060059.42588.kel@otaku42.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+--Boundary-00=_exRkLn4zd+i8rvK
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 
-Updating the variables last_rx_rssi, last_tsf
-and last_beacon_time needs a lot of code but
-they are not actually used in iwlagn (only in
-3945) so we can move them to the 3945 specific
-data.
+Hi John,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+On Friday 05 March 2010 14:08:53 John W. Linville wrote:
+> On Fri, Mar 05, 2010 at 11:56:11AM +1000, Kel Modderman wrote:
+> > On Friday 05 March 2010 11:37:22 John W. Linville wrote:
+> > > On Fri, Mar 05, 2010 at 10:27:03AM +1000, Kel Modderman wrote:
+> > > > On Friday 05 March 2010 01:31:28 John W. Linville wrote:
+> > > > > On Fri, Mar 05, 2010 at 12:08:50AM +1000, Kel Modderman wrote:
+> 
+> > > > > > This allows wireless-regdb to be built from source and upgraded independently
+> > > > > > of crda and is _crucial_ for distributions who want to build their own
+> > > > > > regulatory.bin.
+> > > > > 
+> > > > > I don't understand -- isn't this possible already?
+> > > > 
+> > > > No.
+> > > 
+> > > Perhaps you could use a few more words?  It seems to me that what
+> > > limits you is the policies of some distributions.  Certainly crda
+> > > and wireless-regdb can be maintained separately so long as the key
+> > > doesn't change between builds or with alternate keys installed in
+> > > the proper locations.  Am I missing something?
+> > 
+> > Yes you are missing something. Its not the policy of my distribution which
+> > is limiting its the design of the crda/wireless-regdb build systems.
+> > 
+> > Now that openssl support allows reading pubkeys at runtime, the  embedding
+> > of crypto data into binaries can be totally removed when built with openssl.
+> 
+> I don't think anyone said that this change could not be made.
+> I merely challenged the flawed reasoning you asserted for its need.
+> 
+> > wireless-regdb can be built from source, when it does so it generates a new
+> > custom key which is installed to /lib/crda/pubkeys/<key>. Your key is also
+> > installed here, oh but hang on, its also embedded into the binary so why bother
+> > installing it at all? Alright, so we can manually move our custom generated
+> > key from /lib/crda/pubkeys/<key> to /etc/wireless-regdb/pubkeys/<key> and things
+> > will probably be okay next time we build wireless-regdb and upgrade it
+> > independently of crda, except for:
+> 
+> Why would you need to move it?  Did someone break the code that uses
+> regdb_paths in crda.c?  Does PUBKEY_DIR not work?
+> 
+> > 1. we now have /lib/crda/pubkeys/linville.pub.pem for no reason at all
+> 
+> If you don't want my key (or any other) in your binary then simply
+> delete it from crda/pubkeys in your build scripts...?
+> 
+> > 2. the distribution is installing to /etc/wireless-regdb/pubkeys/ which should
+> >    be reserved for the admin
+> 
+> "make PUBKEY_DIR=/lib/crda/pubkeys"?
+> 
+> > 3. you're maintaining a bunch of useless code which embeds openssl data into
+> >    binaries when you do not have to
+> 
+> See rebuttal to #1...just because you don't use some functionality
+> doesn't mean no one else wants it or uses it.
+> 
+> > These 3 points is what my patch attempts to address.
+> 
+> It seems to me that you address the points by simply removing
+> functionality rather than using other means that already exist to
+> address the same concerns.
+
+I am obviously having hard time clearly communicating what I think is wrong,
+so attached is 2 files demonstrating the problem with step by step reproducible
+commands with output. regdb-upgrade-does-not-work.txt shows the current
+behaviour which must be improved, regdb-upgrade-does-work.txt shows
+the behaviour with my patch applied. The patch which was used is also attached.
+
+The steps simulate the independent upgrade/re-installation of wireless-regdb after
+rebuilding regulatory.bin and signing with a new key. This is a simulation of
+the expected upgrade path when wireless-regdb and crda are packaged separately
+and one-time ssl keys are used when building wireless-regdb.
+
+I hope that these logs, along with the patch, help show that I am not removing
+any current interface from crda, just trying to fix up its current ones.
+
+Thanks, Kel.
+
+--Boundary-00=_exRkLn4zd+i8rvK
+Content-Type: text/x-patch;
+  charset="UTF-8";
+  name="openssl_runtime_verification_tuneup.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="openssl_runtime_verification_tuneup.patch"
+
+When USE_OPENSSL=1 do not embed crypto data into binary, use the PUBKEY_DIR
+variable just as it is when USE_GCRYPT=1 and just load certs from PUBKEY_DIR
+for signature verification at runtime. Remove ssl support from
+utils/key2pub.py.
+
+This allows wireless-regdb to be built from source and upgraded independently
+of crda and is _crucial_ for distributions who want to build their own
+regulatory.bin.
+
+When verification fails provide information about the PUBKEY_DIR variable.
+
+Fix typo (s/make noverify/make all_noverify/).
+
+Signed-off-by: Kel Modderman <kel@otaku42.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    8 ++------
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   10 +++++-----
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   24 ------------------------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +++---
- 6 files changed, 15 insertions(+), 42 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index effdd36..b588cb6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -946,7 +946,7 @@ void iwl3945_rate_scale_init(struct ieee80211_hw *hw, s32 sta_id)
+--- a/Makefile
++++ b/Makefile
+@@ -16,13 +16,6 @@ UDEV_LEVEL=$(CRDA_UDEV_LEVEL)-
+ # a different location.
+ UDEV_RULE_DIR?=/lib/udev/rules.d/
  
- 	spin_unlock_irqrestore(&rs_sta->lock, flags);
+-# If your distribution requires a custom pubkeys dir
+-# you must update this variable to reflect where the
+-# keys are put when building. For example you can run
+-# with make PUBKEY_DIR=/usr/lib/crda/pubkeys
+-PUBKEY_DIR?=pubkeys
+-RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
+-
+ CFLAGS += -Wall -g
  
--	rssi = priv->last_rx_rssi;
-+	rssi = priv->_3945.last_rx_rssi;
- 	if (rssi == 0)
- 		rssi = IWL_MIN_RSSI_VAL;
+ all: all_noverify verify
+@@ -30,17 +23,24 @@ all: all_noverify verify
+ all_noverify: crda intersect regdbdump
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 867bd69..9a5a7b1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -705,9 +705,10 @@ static void iwl3945_rx_reply_rx(struct iwl_priv *priv,
- 	iwl_dbg_log_rx_data_frame(priv, le16_to_cpu(rx_hdr->len), header);
+ ifeq ($(USE_OPENSSL),1)
+-CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
++PUBKEY_DIR?=$(PREFIX)/lib/crda/pubkeys
++RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
++CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
++CFLAGS += -DPUBKEY_DIR=\"$(PUBKEY_DIR)\" -DALT_PUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\"
+ LDLIBS += `pkg-config --libs openssl`
  
- 	if (network_packet) {
--		priv->last_beacon_time = le32_to_cpu(rx_end->beacon_timestamp);
--		priv->last_tsf = le64_to_cpu(rx_end->timestamp);
--		priv->last_rx_rssi = rx_status.signal;
-+		priv->_3945.last_beacon_time =
-+			le32_to_cpu(rx_end->beacon_timestamp);
-+		priv->_3945.last_tsf = le64_to_cpu(rx_end->timestamp);
-+		priv->_3945.last_rx_rssi = rx_status.signal;
- 		priv->last_rx_noise = rx_status.noise;
+-reglib.o: keys-ssl.c
+-
+ else
++PUBKEY_DIR?=pubkeys
+ CFLAGS += -DUSE_GCRYPT
+ LDLIBS += -lgcrypt
+ 
+ reglib.o: keys-gcrypt.c
+ 
++keys-gcrypt.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
++	$(NQ) '  GEN ' $@
++	$(NQ) '  Trusted pubkeys:' $(wildcard $(PUBKEY_DIR)/*.pem)
++	$(Q)./utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem) $@
++
+ endif
+ MKDIR ?= mkdir -p
+ INSTALL ?= install
+@@ -82,15 +82,10 @@ $(REG_BIN):
+ 	$(NQ) $(REG_GIT)
+ 	$(NQ)
+ 	$(NQ) "Once cloned (no need to build) cp regulatory.bin to $(REG_BIN)"
+-	$(NQ) "Use \"make noverify\" to disable verification"
++	$(NQ) "Use \"make all_noverify\" to disable verification"
+ 	$(NQ)
+ 	$(Q) exit 1
+ 
+-keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
+-	$(NQ) '  GEN ' $@
+-	$(NQ) '  Trusted pubkeys:' $(wildcard $(PUBKEY_DIR)/*.pem)
+-	$(Q)./utils/key2pub.py --$* $(wildcard $(PUBKEY_DIR)/*.pem) $@
+-
+ %.o: %.c regdb.h
+ 	$(NQ) '  CC  ' $@
+ 	$(Q)$(CC) -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
+@@ -109,7 +104,15 @@ intersect: reglib.o intersect.o print-re
+ 
+ verify: $(REG_BIN) regdbdump
+ 	$(NQ) '  CHK  $(REG_BIN)'
+-	$(Q)./regdbdump $(REG_BIN) >/dev/null
++	@if ! ./regdbdump $(REG_BIN) >/dev/null; then \
++		echo; \
++		echo "If your distribution requires a custom pubkeys dir you must set"; \
++		echo "PUBKEY_DIR to path where the keys are installed by wireless-regdb."; \
++		echo "For example:"; \
++		echo "    make PUBKEY_DIR=/lib/crda/pubkeys"; \
++		echo; \
++		exit 1; \
++	fi
+ 
+ %.gz: %
+ 	@$(NQ) ' GZIP' $<
+--- a/reglib.c
++++ b/reglib.c
+@@ -18,10 +18,6 @@
+ 
+ #include "reglib.h"
+ 
+-#ifdef USE_OPENSSL
+-#include "keys-ssl.c"
+-#endif
+-
+ #ifdef USE_GCRYPT
+ #include "keys-gcrypt.c"
+ #endif
+@@ -49,7 +45,6 @@ int crda_verify_db_signature(__u8 *db, i
+ #ifdef USE_OPENSSL
+ 	RSA *rsa;
+ 	__u8 hash[SHA_DIGEST_LENGTH];
+-	unsigned int i;
+ 	int ok = 0;
+ 	DIR *pubkey_dir;
+ 	struct dirent *nextfile;
+@@ -61,26 +56,26 @@ int crda_verify_db_signature(__u8 *db, i
+ 		goto out;
  	}
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 8bf7c20..696e668 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2956,12 +2956,8 @@ static ssize_t rs_sta_dbgfs_rate_scale_data_read(struct file *file,
- 		desc += sprintf(buff+desc,
- 				"Bit Rate= %d Mb/s\n",
- 				iwl_rates[lq_sta->last_txrate_idx].ieee >> 1);
--	desc += sprintf(buff+desc,
--			"Signal Level= %d dBm\tNoise Level= %d dBm\n",
--			priv->last_rx_rssi, priv->last_rx_noise);
--	desc += sprintf(buff+desc,
--			"Tsf= 0x%llx\tBeacon time= 0x%08X\n",
--			priv->last_tsf, priv->last_beacon_time);
-+	desc += sprintf(buff+desc, "Noise Level= %d dBm\n",
-+			priv->last_rx_noise);
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
- 	return ret;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index f9210b7..c277e4e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1197,7 +1197,6 @@ struct iwl_priv {
- 
- 	unsigned long status;
- 
--	int last_rx_rssi;	/* From Rx packet statistics */
- 	int last_rx_noise;	/* From beacon statistics */
- 
- 	/* counts mgmt, ctl, and data packets */
-@@ -1244,10 +1243,6 @@ struct iwl_priv {
- 
- 	u8 mac80211_registered;
- 
--	/* Rx'd packet timing information */
--	u32 last_beacon_time;
--	u64 last_tsf;
+-	for (i = 0; (i < sizeof(keys)/sizeof(keys[0])) && (!ok); i++) {
+-		rsa = RSA_new();
+-		if (!rsa) {
+-			fprintf(stderr, "Failed to create RSA key.\n");
+-			goto out;
++	if ((pubkey_dir = opendir(PUBKEY_DIR))) {
++		while (!ok && (nextfile = readdir(pubkey_dir))) {
++			snprintf(filename, PATH_MAX, "%s/%s", PUBKEY_DIR,
++				nextfile->d_name);
++			if ((keyfile = fopen(filename, "rb"))) {
++				rsa = PEM_read_RSA_PUBKEY(keyfile,
++					NULL, NULL, NULL);
++				if (rsa)
++					ok = RSA_verify(NID_sha1, hash, SHA_DIGEST_LENGTH,
++						db + dblen, siglen, rsa) == 1;
++				RSA_free(rsa);
++				fclose(keyfile);
++			}
+ 		}
 -
- 	/* eeprom -- this is in the card's little endian byte order */
- 	u8 *eeprom;
- 	int    nvm_device_type;
-@@ -1274,6 +1269,11 @@ struct iwl_priv {
- 			struct iwl3945_notif_statistics statistics;
- 
- 			u32 sta_supp_rates;
-+			int last_rx_rssi;	/* From Rx packet statistics */
+-		rsa->e = &keys[i].e;
+-		rsa->n = &keys[i].n;
+-
+-		ok = RSA_verify(NID_sha1, hash, SHA_DIGEST_LENGTH,
+-				db + dblen, siglen, rsa) == 1;
+-
+-		rsa->e = NULL;
+-		rsa->n = NULL;
+-		RSA_free(rsa);
++		closedir(pubkey_dir);
+ 	}
+-	if (!ok && (pubkey_dir = opendir(PUBKEY_DIR))) {
 +
-+			/* Rx'd packet timing information */
-+			u32 last_beacon_time;
-+			u64 last_tsf;
- 		} _3945;
- #endif
- #if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index df257bc..8116aa0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -1036,24 +1036,6 @@ static void iwl_pass_packet_to_mac80211(struct iwl_priv *priv,
- 	rxb->page = NULL;
- }
++	if (!ok && (pubkey_dir = opendir(ALT_PUBKEY_DIR))) {
+ 		while (!ok && (nextfile = readdir(pubkey_dir))) {
+-			snprintf(filename, PATH_MAX, "%s/%s", PUBKEY_DIR,
++			snprintf(filename, PATH_MAX, "%s/%s", ALT_PUBKEY_DIR,
+ 				nextfile->d_name);
+ 			if ((keyfile = fopen(filename, "rb"))) {
+ 				rsa = PEM_read_RSA_PUBKEY(keyfile,
+--- a/utils/key2pub.py
++++ b/utils/key2pub.py
+@@ -9,81 +9,6 @@ except ImportError, e:
+        sys.stderr.write('On Debian GNU/Linux the package is called "python-m2crypto".\n')
+        sys.exit(1)
  
--/* This is necessary only for a number of statistics, see the caller. */
--static int iwl_is_network_packet(struct iwl_priv *priv,
--		struct ieee80211_hdr *header)
--{
--	/* Filter incoming packets to determine if they are targeted toward
--	 * this network, discarding packets coming from ourselves */
--	switch (priv->iw_mode) {
--	case NL80211_IFTYPE_ADHOC: /* Header: Dest. | Source    | BSSID */
--		/* packets to our IBSS update information */
--		return !compare_ether_addr(header->addr3, priv->bssid);
--	case NL80211_IFTYPE_STATION: /* Header: Dest. | AP{BSSID} | Source */
--		/* packets to our IBSS update information */
--		return !compare_ether_addr(header->addr2, priv->bssid);
--	default:
--		return 1;
--	}
+-def print_ssl_64(output, name, val):
+-    while val[0] == '\0':
+-        val = val[1:]
+-    while len(val) % 8:
+-        val = '\0' + val
+-    vnew = []
+-    while len(val):
+-        vnew.append((val[0], val[1], val[2], val[3], val[4], val[5], val[6], val[7]))
+-        val = val[8:]
+-    vnew.reverse()
+-    output.write('static BN_ULONG %s[%d] = {\n' % (name, len(vnew)))
+-    idx = 0
+-    for v1, v2, v3, v4, v5, v6, v7, v8 in vnew:
+-        if not idx:
+-            output.write('\t')
+-        output.write('0x%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x, ' % (ord(v1), ord(v2), ord(v3), ord(v4), ord(v5), ord(v6), ord(v7), ord(v8)))
+-        idx += 1
+-        if idx == 2:
+-            idx = 0
+-            output.write('\n')
+-    if idx:
+-        output.write('\n')
+-    output.write('};\n\n')
+-
+-def print_ssl_32(output, name, val):
+-    while val[0] == '\0':
+-        val = val[1:]
+-    while len(val) % 4:
+-        val = '\0' + val
+-    vnew = []
+-    while len(val):
+-        vnew.append((val[0], val[1], val[2], val[3], ))
+-        val = val[4:]
+-    vnew.reverse()
+-    output.write('static BN_ULONG %s[%d] = {\n' % (name, len(vnew)))
+-    idx = 0
+-    for v1, v2, v3, v4 in vnew:
+-        if not idx:
+-            output.write('\t')
+-        output.write('0x%.2x%.2x%.2x%.2x, ' % (ord(v1), ord(v2), ord(v3), ord(v4)))
+-        idx += 1
+-        if idx == 4:
+-            idx = 0
+-            output.write('\n')
+-    if idx:
+-        output.write('\n')
+-    output.write('};\n\n')
+-
+-def print_ssl(output, name, val):
+-    import struct
+-    if len(struct.pack('@L', 0)) == 8:
+-        return print_ssl_64(output, name, val)
+-    else:
+-        return print_ssl_32(output, name, val)
+-
+-def print_ssl_keys(output, n):
+-    output.write(r'''
+-struct pubkey {
+-	struct bignum_st e, n;
+-};
+-
+-#define KEY(data) {				\
+-	.d = data,				\
+-	.top = sizeof(data)/sizeof(data[0]),	\
 -}
 -
- /* Called for REPLY_RX (legacy ABG frames), or
-  * REPLY_RX_MPDU_CMD (HT high-throughput N frames). */
- void iwl_rx_reply_rx(struct iwl_priv *priv,
-@@ -1190,12 +1172,6 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
- 	if (rate_n_flags & RATE_MCS_SGI_MSK)
- 		rx_status.flag |= RX_FLAG_SHORT_GI;
- 
--	if (iwl_is_network_packet(priv, header)) {
--		priv->last_rx_rssi = rx_status.signal;
--		priv->last_beacon_time =  priv->ucode_beacon_time;
--		priv->last_tsf = le64_to_cpu(phy_res->timestamp);
--	}
+-#define KEYS(e,n)	{ KEY(e), KEY(n), }
 -
- 	iwl_pass_packet_to_mac80211(priv, header, len, ampdu_status,
- 				    rxb, &rx_status);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 1b3a1ba..a825092 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -753,7 +753,7 @@ static int iwl3945_get_measurement(struct iwl_priv *priv,
- 	if (iwl_is_associated(priv))
- 		add_time =
- 		    iwl3945_usecs_to_beacons(
--			le64_to_cpu(params->start_time) - priv->last_tsf,
-+			le64_to_cpu(params->start_time) - priv->_3945.last_tsf,
- 			le16_to_cpu(priv->rxon_timing.beacon_interval));
+-static struct pubkey keys[] = {
+-''')
+-    for n in xrange(n + 1):
+-        output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
+-    output.write('};\n')
+-    pass
+-
+ def print_gcrypt(output, name, val):
+     while val[0] == '\0':
+         val = val[1:]
+@@ -118,24 +43,10 @@ static const struct key_params keys[] =
+     for n in xrange(n + 1):
+         output.write('	KEYS(e_%d, n_%d),\n' % (n, n))
+     output.write('};\n')
+-    
+-
+-modes = {
+-    '--ssl': (print_ssl, print_ssl_keys),
+-    '--gcrypt': (print_gcrypt, print_gcrypt_keys),
+-}
  
- 	memset(&spectrum, 0, sizeof(spectrum));
-@@ -767,7 +767,7 @@ static int iwl3945_get_measurement(struct iwl_priv *priv,
+-try:
+-    mode = sys.argv[1]
+-    files = sys.argv[2:-1]
+-    outfile = sys.argv[-1]
+-except IndexError:
+-    mode = None
+-
+-if not mode in modes:
+-    print 'Usage: %s [%s] input-file... output-file' % (sys.argv[0], '|'.join(modes.keys()))
+-    sys.exit(2)
  
- 	if (iwl_is_associated(priv))
- 		spectrum.start_time =
--		    iwl3945_add_beacon_time(priv->last_beacon_time,
-+		    iwl3945_add_beacon_time(priv->_3945.last_beacon_time,
- 				add_time,
- 				le16_to_cpu(priv->rxon_timing.beacon_interval));
- 	else
-@@ -3590,7 +3590,7 @@ static ssize_t store_measurement(struct device *d,
- 	struct iwl_priv *priv = dev_get_drvdata(d);
- 	struct ieee80211_measurement_params params = {
- 		.channel = le16_to_cpu(priv->active_rxon.channel),
--		.start_time = cpu_to_le64(priv->last_tsf),
-+		.start_time = cpu_to_le64(priv->_3945.last_tsf),
- 		.duration = cpu_to_le16(1),
- 	};
- 	u8 type = IWL_MEASURE_BASIC;
--- 
-1.6.3.3
++files = sys.argv[1:-1]
++outfile = sys.argv[-1]
+ output = open(outfile, 'w')
+ 
+ # load key
+@@ -146,8 +57,8 @@ for f in files:
+     except RSA.RSAError:
+         key = RSA.load_key(f)
+ 
+-    modes[mode][0](output, 'e_%d' % idx, key.e[4:])
+-    modes[mode][0](output, 'n_%d' % idx, key.n[4:])
++    print_gcrypt(output, 'e_%d' % idx, key.e[4:])
++    print_gcrypt(output, 'n_%d' % idx, key.n[4:])
+     idx += 1
+ 
+-modes[mode][1](output, idx - 1)
++print_gcrypt_keys(output, idx - 1)
 
+--Boundary-00=_exRkLn4zd+i8rvK
+Content-Type: text/plain;
+  charset="UTF-8";
+  name="regdb-upgrade-does-not-work.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="regdb-upgrade-does-not-work.txt"
+
+# wget -q -O/tmp/wireless-regdb-2009.11.25.tar.bz2 http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.11.25.tar.bz2    
+# wget -q -O/tmp/crda-1.1.1.tar.bz2 http://wireless.kernel.org/download/crda/crda-1.1.1.tar.bz2                                            
+# tar -C /tmp -xjf /tmp/wireless-regdb-2009.11.25.tar.bz2                                                                                  
+# make -C /tmp/wireless-regdb-2009.11.25 all                                                                                               
+make: Entering directory `/tmp/wireless-regdb-2009.11.25'                                                                                  
+Generating private key for root...                                                                                                         
+openssl genrsa -out ~/.wireless-regdb-root.key.priv.pem 2048                                                                               
+Generating RSA private key, 2048 bit long modulus                                                                                          
+...................................................................................................................................................................................+++                                                                                                    
+................................................................+++                                                                          
+e is 65537 (0x10001)                                                                                                                         
+Generating public key for root...                                                                                                            
+openssl rsa -in ~/.wireless-regdb-root.key.priv.pem -out root.key.pub.pem -pubout -outform PEM                                               
+writing RSA key                                                                                                                              
+Generating regulatory.bin digitally signed by root...                                                                                        
+./db2bin.py regulatory.bin db.txt ~/.wireless-regdb-root.key.priv.pem                                                                        
+make: Leaving directory `/tmp/wireless-regdb-2009.11.25'                                                                                     
+# make -C /tmp/wireless-regdb-2009.11.25 install                                                                                             
+make: Entering directory `/tmp/wireless-regdb-2009.11.25'                                                                                    
+gzip < regulatory.bin.5 > regulatory.bin.5.gz                                                                                                
+install -m 755 -d //usr/lib/crda                                                                                                             
+install -m 755 -d //usr/lib/crda/pubkeys                                                                                                     
+if [ -f .custom ]; then \                                                                                                                    
+                install -m 644 -t //usr/lib/crda/pubkeys/ root.key.pub.pem; \                                                                
+        fi                                                                                                                                   
+install -m 644 -t //usr/lib/crda/pubkeys/ linville.key.pub.pem                                                                               
+install -m 644 -t //usr/lib/crda/ regulatory.bin                                                                                             
+install -m 755 -d //usr/share/man//man5/                                                                                                     
+install -m 644 -t //usr/share/man//man5/ regulatory.bin.5.gz                                                                                 
+make: Leaving directory `/tmp/wireless-regdb-2009.11.25'                                                                                     
+# tar -C /tmp -xjf /tmp/crda-1.1.1.tar.bz2                                                                                                   
+# make -C /tmp/crda-1.1.1 all USE_OPENSSL=1 PUBKEY_DIR=/usr/lib/crda/pubkeys/                                                                
+make: Entering directory `/tmp/crda-1.1.1'                                                                                                   
+  GEN  keys-ssl.c                                                                                                                            
+  Trusted pubkeys: /usr/lib/crda/pubkeys//linville.key.pub.pem /usr/lib/crda/pubkeys//root.key.pub.pem                                       
+  CC   reglib.o                                                                                                                              
+  CC   crda.o                                                                                                                                
+  LD   crda                                                                                                                                  
+  CC   intersect.o                                                                                                                           
+  CC   print-regdom.o                                                                                                                        
+  LD   intersect                                                                                                                             
+  CC   regdbdump.o                                                                                                                           
+  LD   regdbdump
+  CHK  /usr/lib/crda/regulatory.bin
+make: Leaving directory `/tmp/crda-1.1.1'
+# make -C /tmp/crda-1.1.1 install USE_OPENSSL=1 PUBKEY_DIR=/usr/lib/crda/pubkeys/
+make: Entering directory `/tmp/crda-1.1.1'
+ GZIP crda.8
+ GZIP regdbdump.8
+  INSTALL  crda
+  INSTALL  regdbdump
+  INSTALL  85-regulatory.rules
+  INSTALL  crda.8.gz
+  INSTALL  regdbdump.8.gz
+make: Leaving directory `/tmp/crda-1.1.1'
+# rm -v /root/.wireless-regdb-root.key.priv.pem
+removed `/root/.wireless-regdb-root.key.priv.pem'
+# make -C /tmp/wireless-regdb-2009.11.25 all
+make: Entering directory `/tmp/wireless-regdb-2009.11.25'
+Generating private key for root...
+openssl genrsa -out ~/.wireless-regdb-root.key.priv.pem 2048
+Generating RSA private key, 2048 bit long modulus
+...........................+++
+.....................................+++
+e is 65537 (0x10001)
+Generating public key for root...
+openssl rsa -in ~/.wireless-regdb-root.key.priv.pem -out root.key.pub.pem -pubout -outform PEM
+writing RSA key
+Generating regulatory.bin digitally signed by root...
+./db2bin.py regulatory.bin db.txt ~/.wireless-regdb-root.key.priv.pem
+make: Leaving directory `/tmp/wireless-regdb-2009.11.25'
+# make -C /tmp/wireless-regdb-2009.11.25 install
+make: Entering directory `/tmp/wireless-regdb-2009.11.25'
+gzip < regulatory.bin.5 > regulatory.bin.5.gz
+install -m 755 -d //usr/lib/crda
+install -m 755 -d //usr/lib/crda/pubkeys
+if [ -f .custom ]; then \
+                install -m 644 -t //usr/lib/crda/pubkeys/ root.key.pub.pem; \
+        fi
+install -m 644 -t //usr/lib/crda/pubkeys/ linville.key.pub.pem
+install -m 644 -t //usr/lib/crda/ regulatory.bin
+install -m 755 -d //usr/share/man//man5/
+install -m 644 -t //usr/share/man//man5/ regulatory.bin.5.gz
+make: Leaving directory `/tmp/wireless-regdb-2009.11.25'
+# regdbdump /usr/lib/crda/regulatory.bin
+Database signature verification failed.
+
+--Boundary-00=_exRkLn4zd+i8rvK
+Content-Type: text/plain;
+  charset="UTF-8";
+  name="regdb-upgrade-does-work.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="regdb-upgrade-does-work.txt"
+
+# wget -q -O/tmp/wireless-regdb-2009.11.25.tar.bz2 http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.11.25.tar.bz2      
+# wget -q -O/tmp/crda-1.1.1.tar.bz2 http://wireless.kernel.org/download/crda/crda-1.1.1.tar.bz2                                              
+# tar -C /tmp -xjf /tmp/wireless-regdb-2009.11.25.tar.bz2                                                                                    
+# make -C /tmp/wireless-regdb-2009.11.25 all                                                                                                 
+make: Entering directory `/tmp/wireless-regdb-2009.11.25'                                                                                    
+Generating private key for root...                                                                                                           
+openssl genrsa -out ~/.wireless-regdb-root.key.priv.pem 2048                                                                                 
+Generating RSA private key, 2048 bit long modulus                                                                                            
+..............+++                                                                                                                            
+....................................................................................................................................................................................+++                                                                                                   
+e is 65537 (0x10001)                                                                                                                         
+Generating public key for root...                                                                                                            
+openssl rsa -in ~/.wireless-regdb-root.key.priv.pem -out root.key.pub.pem -pubout -outform PEM                                               
+writing RSA key                                                                                                                              
+Generating regulatory.bin digitally signed by root...                                                                                        
+./db2bin.py regulatory.bin db.txt ~/.wireless-regdb-root.key.priv.pem                                                                        
+make: Leaving directory `/tmp/wireless-regdb-2009.11.25'                                                                                     
+# make -C /tmp/wireless-regdb-2009.11.25 install                                                                                             
+make: Entering directory `/tmp/wireless-regdb-2009.11.25'                                                                                    
+gzip < regulatory.bin.5 > regulatory.bin.5.gz                                                                                                
+install -m 755 -d //usr/lib/crda                                                                                                             
+install -m 755 -d //usr/lib/crda/pubkeys                                                                                                     
+if [ -f .custom ]; then \                                                                                                                    
+                install -m 644 -t //usr/lib/crda/pubkeys/ root.key.pub.pem; \                                                                
+        fi                                                                                                                                   
+install -m 644 -t //usr/lib/crda/pubkeys/ linville.key.pub.pem                                                                               
+install -m 644 -t //usr/lib/crda/ regulatory.bin                                                                                             
+install -m 755 -d //usr/share/man//man5/                                                                                                     
+install -m 644 -t //usr/share/man//man5/ regulatory.bin.5.gz                                                                                 
+make: Leaving directory `/tmp/wireless-regdb-2009.11.25'                                                                                     
+# tar -C /tmp -xjf /tmp/crda-1.1.1.tar.bz2                                                                                                   
+# wget -q -O/tmp/crda.patch http://users.tpg.com.au/sigm/patches/openssl_runtime_verification_tuneup.patch                                   
+# patch -d /tmp/crda-1.1.1 -p1 -i /tmp/crda.patch                                                                                            
+patching file Makefile                                                                                                                       
+patching file reglib.c                                                                                                                       
+patching file utils/key2pub.py                                                                                                               
+# make -C /tmp/crda-1.1.1 all USE_OPENSSL=1                                                                                                  
+make: Entering directory `/tmp/crda-1.1.1'                                                                                                   
+  CC   reglib.o                                                                                                                              
+  CC   crda.o                                                                                                                                
+  LD   crda                                                                                                                                  
+  CC   intersect.o                                                                                                                           
+  CC   print-regdom.o                                                                                                                        
+  LD   intersect                                                                                                                             
+  CC   regdbdump.o                                                                                                                           
+  LD   regdbdump                                                                                                                             
+  CHK  /usr/lib/crda/regulatory.bin                                                                                                          
+make: Leaving directory `/tmp/crda-1.1.1'                                                                                                    
+# make -C /tmp/crda-1.1.1 install USE_OPENSSL=1                                                                                              
+make: Entering directory `/tmp/crda-1.1.1'                                                                                                   
+ GZIP crda.8                                                                                                                                 
+ GZIP regdbdump.8                                                                                                                            
+  INSTALL  crda                                                                                                                              
+  INSTALL  regdbdump                                                                                                                         
+  INSTALL  85-regulatory.rules                                                                                                               
+  INSTALL  crda.8.gz                                                                                                                         
+  INSTALL  regdbdump.8.gz                                                                                                                    
+make: Leaving directory `/tmp/crda-1.1.1'                                                                                                    
+# rm -v /root/.wireless-regdb-root.key.priv.pem                                                                                              
+removed `/root/.wireless-regdb-root.key.priv.pem'                                                                                            
+# make -C /tmp/wireless-regdb-2009.11.25 all                                                                                                 
+make: Entering directory `/tmp/wireless-regdb-2009.11.25'                                                                                    
+Generating private key for root...                                                                                                           
+openssl genrsa -out ~/.wireless-regdb-root.key.priv.pem 2048                                                                                 
+Generating RSA private key, 2048 bit long modulus                                                                                            
+.....................................+++                                                                                                     
+.........................+++                                                                                                                 
+e is 65537 (0x10001)                                                                                                                         
+Generating public key for root...                                                                                                            
+openssl rsa -in ~/.wireless-regdb-root.key.priv.pem -out root.key.pub.pem -pubout -outform PEM                                               
+writing RSA key                                                                                                                              
+Generating regulatory.bin digitally signed by root...                                                                                        
+./db2bin.py regulatory.bin db.txt ~/.wireless-regdb-root.key.priv.pem                                                                        
+make: Leaving directory `/tmp/wireless-regdb-2009.11.25'                                                                                     
+# make -C /tmp/wireless-regdb-2009.11.25 install                                                                                             
+make: Entering directory `/tmp/wireless-regdb-2009.11.25'                                                                                    
+gzip < regulatory.bin.5 > regulatory.bin.5.gz                                                                                                
+install -m 755 -d //usr/lib/crda                                                                                                             
+install -m 755 -d //usr/lib/crda/pubkeys                                                                                                     
+if [ -f .custom ]; then \                                                                                                                    
+                install -m 644 -t //usr/lib/crda/pubkeys/ root.key.pub.pem; \                                                                
+        fi                                                                                                                                   
+install -m 644 -t //usr/lib/crda/pubkeys/ linville.key.pub.pem                                                                               
+install -m 644 -t //usr/lib/crda/ regulatory.bin                                                                                             
+install -m 755 -d //usr/share/man//man5/                                                                                                     
+install -m 644 -t //usr/share/man//man5/ regulatory.bin.5.gz                                                                                 
+make: Leaving directory `/tmp/wireless-regdb-2009.11.25'                                                                                     
+# regdbdump /usr/lib/crda/regulatory.bin                                                                                                     
+country 00:                                                                                                                                  
+        (2402.000 - 2472.000 @ 40.000), (3.00, 20.00)                                                                                        
+        (2457.000 - 2482.000 @ 20.000), (3.00, 20.00), PASSIVE-SCAN, NO-IBSS                                                                 
+        (2474.000 - 2494.000 @ 20.000), (3.00, 20.00), NO-OFDM, PASSIVE-SCAN, NO-IBSS                                                        
+        (5170.000 - 5250.000 @ 40.000), (3.00, 20.00), PASSIVE-SCAN, NO-IBSS                                                                 
+        (5735.000 - 5835.000 @ 40.000), (3.00, 20.00), PASSIVE-SCAN, NO-IBSS
+...
+
+--Boundary-00=_exRkLn4zd+i8rvK--
