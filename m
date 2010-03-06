@@ -1,83 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:32886 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756338Ab0CKTZa (ORCPT
+Received: from b.mail.sonic.net ([64.142.19.5]:60465 "EHLO b.mail.sonic.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752412Ab0CFWCT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 14:25:30 -0500
-Message-ID: <4B9942A7.40205@redfish-solutions.com>
-Date: Thu, 11 Mar 2010 12:21:11 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: Dunc <dunc@lemonia.org>
-CC: Kalle Valo <kalle.valo@iki.fi>, David Miller <davem@davemloft.net>,
-	kaber@trash.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-References: <877hr5nkx0.fsf@purkki.valot.fi>	<20100126.041610.226004766.davem@davemloft.net>	<87wrz5m3cd.fsf@purkki.valot.fi>	<20100126.050645.184040277.davem@davemloft.net> <87my01m0zm.fsf@purkki.valot.fi> <4B5EF5DF.2070005@lemonia.org>
-In-Reply-To: <4B5EF5DF.2070005@lemonia.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 6 Mar 2010 17:02:19 -0500
+Subject: Re: [tcpdump-workers] Current wireless-testing breaks libpcap: mr_alen should be set
+Mime-Version: 1.0 (Apple Message framework v1077)
+Content-Type: text/plain; charset=us-ascii
+From: Guy Harris <guy@alum.mit.edu>
+In-Reply-To: <1267578048.14049.11.camel@mj>
+Date: Sat, 6 Mar 2010 13:23:12 -0800
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jiri Pirko <jpirko@redhat.com>
+Message-Id: <7D621661-59E7-46C4-9E86-1D9654A626E7@alum.mit.edu>
+References: <1267578048.14049.11.camel@mj>
+To: tcpdump-workers@lists.tcpdump.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2010 07:02 AM, Dunc wrote:
->   
->> And you are perfectly right, as always. My choise of using the word
->> "universal" was bad. With word "universal" I meant to use same network
->> QoS API with different network technologies: ethernet, wi-fi,
->> bluetooth etc.
->>
->> But we don't need to solve everything in one go, instead we can make
->> small steps. The first step is to start pushing applications to
->> classify their streams. That's the enabler to get some sort of QoS
->> support, at least to inside kernel and to the next hop. With luck, in
->> future it might get more widely used.
->>
->> I was hoping to base the classification on some standard, but there
->> doesn't really seem to be one which would specify a complete solution.
->> But that's ok, we can always create a de facto standard :)
->>
->> I'm curious how other operation systems handle this? Or is it a
->> similar situation, nobody just doesn't use QoS for anything?
->>
->>     
-> If applications set the QoS values, the who's to stop someone (for
-> example) writing a bittorrent client that marks all packets for the
-> highest priority as if they were VoIP or something? At this point all
-> the good work done in the applications is useless and the network admin
-> is going to have to not trust the QoS values and then attempt to
-> classify traffic by themselves, so it was all a waste of time.
->
-> It's probably better to just always leave it up to the network devices IMHO.
->
-> Cheers,
->
-> Dunc
->
->   
 
-I disagree.
+On Mar 2, 2010, at 5:00 PM, Pavel Roskin wrote:
 
-Some protocols are *very* hard to classify without looking into the
-application layer, which I have no interest in having network devices do
-(especially since in a multipath environment, they might not even see
-the entire flow).
+> This patch to libpcap helps:
+> 
+> --- a/pcap-linux.c
+> +++ b/pcap-linux.c
+> @@ -1563,6 +1563,7 @@ live_open_new(pcap_t *handle, const char
+> 			memset(&mr, 0, sizeof(mr));
+> 			mr.mr_ifindex = handle->md.ifindex;
+> 			mr.mr_type    = PACKET_MR_PROMISC;
+> +			mr.mr_alen    = 6;
 
-RTP, FTP-DATA, and TFTP are all very hard to classify because they don't
-use fixed port numbers.
+If there are any network types that support promiscuous mode and have link-layer addresses that aren't 6 octets long, that would still fail.
 
-And even if you identify RTP, you still don't know if it's voice or
-video since that is signaled out-of-band.
-
-And yes, there will always be misbehaving users.  They are a fact of
-life.  That doesn't mean we should lobotomize the network.  We don't
-have an authentication mechanism on ICMP Redirects or Source-Quench, for
-instance.  Nor is ARP authenticated.
-
-BTW:  Why not have Linux do DSCP/CS to 802.1p priority mapping on
-Ethernet drivers "out-of-the-box", regardless of whatever 802.1p tagging
-is actually being used or not (i.e. make it implied on the sending
-end-system).
-
--Philip
-
-
+It sounds as if the fix is not to care about the address length if the address isn't used, so you don't need to get the length right for PACKET_MR_PROMISC or PACKET_MR_ALLMULTI, so libpcap, and other clients setting promiscuous or "show me all multicast packets" mode, don't need to change.  Is that the case?
