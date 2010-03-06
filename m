@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:7856 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753907Ab0C3TCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 15:02:35 -0400
-Subject: Re: Broadcom card totally not visible for system (lspci)
-From: Pavel Roskin <proski@gnu.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?iso-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <4BB23953.9010104@lwfinger.net>
-References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>
-	 <4BB2328D.9010503@lwfinger.net>
-	 <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
-	 <4BB23953.9010104@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Mar 2010 15:02:33 -0400
-Message-Id: <1269975753.4938.8.camel@mj>
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47488 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751713Ab0CFQfT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Mar 2010 11:35:19 -0500
+Date: Sat, 6 Mar 2010 18:35:08 +0200
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Fix sta_mtx unlocking on insert STA failure path
+Message-ID: <20100306163508.GA9236@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-30 at 12:48 -0500, Larry Finger wrote:
-> On 03/30/2010 12:31 PM, Rafał Miłecki wrote:
-> > 
-> > Is this possible it's disabled in BIOS by default and needs execution
-> > of some ACPI command or sth to make it work?
-> > 
-> > Yeah, trying to find some other reason than faulty WiFi... It's weird
-> > it was working fine "before a moment" on Windows.
-> 
-> Winblows can fiddle with the "Wake-on-LAN" setting in the BIOS, but AFAIK, the
-> BCM4306 does not have this capability. If the BIOS has that setting, it should
-> be turned off.
+Commit 34e895075e21be3e21e71d6317440d1ee7969ad0 introduced sta_mtx
+locking into sta_info_insert() (now sta_info_insert_rcu), but forgot
+to unlock this mutex on one of the error paths. Fix this by adding
+the missing mutex_unlock() call for the case where STA insert fails
+due to an entry existing already. This may happen at least in AP mode
+when a STA roams between two BSSes (vifs).
 
-Perhaps it's a crazy idea, but what if the Ethernet device and the WiFi
-device are connected to the same SSB bus, an thus sharing the PCI ID?
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-Is there the full kernel log?  In particular, the lines containing "ssb"
-would be interesting.
+---
+ net/mac80211/sta_info.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+By the way, that roaming between two vifs did not work either, but
+regardless, fixing missing mutex_unlock is of higher priority.. The STA
+entry was not updated to point to the correct dev when the STA roamed
+from one BSS to another one (both BSSes running on the same wiphy). To
+be more exact, I think it was updated once, but not when roaming back to
+the original BSS.
+
+--- wireless-testing.orig/net/mac80211/sta_info.c	2010-03-06 17:53:12.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.c	2010-03-06 17:54:04.000000000 +0200
+@@ -434,6 +434,7 @@ int sta_info_insert_rcu(struct sta_info 
+ 	/* check if STA exists already */
+ 	if (sta_info_get_bss(sdata, sta->sta.addr)) {
+ 		spin_unlock_irqrestore(&local->sta_lock, flags);
++		mutex_unlock(&local->sta_mtx);
+ 		rcu_read_lock();
+ 		err = -EEXIST;
+ 		goto out_free;
 
 -- 
-Regards,
-Pavel Roskin
+Jouni Malinen                                            PGP id EFC895FA
