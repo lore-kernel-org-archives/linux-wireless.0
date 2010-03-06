@@ -1,46 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47995 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab0C2UAK (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:49345 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753882Ab0CFRu4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:00:10 -0400
-Date: Mon, 29 Mar 2010 15:47:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?iso-8859-1?Q?Ren=E9?= Bolldorf <xsecute@googlemail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-Message-ID: <20100329194745.GH4984@tuxdriver.com>
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com>
+	Sat, 6 Mar 2010 12:50:56 -0500
+Received: by pwj8 with SMTP id 8so3002618pwj.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Mar 2010 09:50:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4BB10110.9090202@googlemail.com>
+Date: Sat, 6 Mar 2010 10:45:47 -0700
+Message-ID: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>
+Subject: Realtek rtl8188 support?
+From: Paul Thomas <pthomas8589@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 09:35:44PM +0200, René Bolldorf wrote:
-> On 03/29/10 21:20, Larry Finger wrote:
->> Ren�,
->>
->> When you have a wireless problem, please post it to
->> linux-wireless@vger.kernel.org. The Linux Kernel Mailing List may or may not be
->> appropriate.
->>
->> To help in diagnosing your problem, please apply this patch and post the output
->> line that it produces. On my system, it shows
->>
->> ssb: chip_id 0x4312, status 0x10
->>
-> and on my: ssb: chip_id 0x4312, status 0x12
->> Please also post the output of 'lspci -nnv | grep 14e4'.
-> Yep:
-> 01:00.0 Network controller [0280]: Broadcom Corporation BCM4312  
-> 802.11b/g [14e4:4315] (rev 01)
+Hello,
 
-OK, I'm new to the thread -- what exactly is the issue?  Was your
-device working previously?
+I was wondering if a Realtek rtl8188 driver was in the works? Here's
+Realtek's page:
+http://www.realtek.com.tw/products/productsView.aspx?Langid=1&PNid=21&PFid=48&Level=5&Conn=4&ProdID=228
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The chip is used in devices like the Trendnet TEW-649UB, (newegg page):
+http://www.newegg.com/Product/Product.aspx?Item=N82E16833156268
+
+I'd be happy to test on an arm platform.
+
+thanks,
+Paul
