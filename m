@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:30751 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753679Ab0CZKyf (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:8018 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753311Ab0CFOrN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:54:35 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 17/24] wl1271: Removed checking of PSM from handling BSS_LOST_EVENT
-Date: Fri, 26 Mar 2010 12:53:26 +0200
-Message-Id: <1269600813-32145-18-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	Sat, 6 Mar 2010 09:47:13 -0500
+Received: by qw-out-2122.google.com with SMTP id 5so742192qwd.37
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Mar 2010 06:47:12 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1267592564.4725.11.camel@mj>
+References: <1267289803-6795-1-git-send-email-tom.leiming@gmail.com>
+	 <4B89520D.1000209@lwfinger.net>
+	 <d82e647a1002271852j20006c27i92d1f7a99e032f2d@mail.gmail.com>
+	 <4B89E0D7.9020103@lwfinger.net> <20100301231329.64e3dd3b@tom-lei>
+	 <1267592564.4725.11.camel@mj>
+Date: Sat, 6 Mar 2010 22:47:11 +0800
+Message-ID: <d82e647a1003060647y45090d41oe9508d915ab21225@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: decrease size of ath9k.ko
+From: Ming Lei <tom.leiming@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linville@tuxdriver.com, johannes@sipsolutions.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+2010/3/3 Pavel Roskin <proski@gnu.org>:
+> On Mon, 2010-03-01 at 23:13 +0800, Ming Lei wrote:
+>> -             int valid;
+>> -             int valid_single_stream;
+>> +             u8 valid;
+>> +             u8 valid_single_stream;
+>
+> You can use bool instead, and that would give the same size saving while
+> being even more descriptive.  I think using bool could be safer, as the
+> compiler would be able to detect some misuses and the values.
+>
+> But I could get even more saving by using bool with the field width:
+>
+> bool valid:1;
+> bool valid_single_stream:1;
+>
+> That would place both variables into one byte.  It may be ineffective
+> for speed, but it's more effective for storage.
+>
+> In my configuration, I get following sizes:
+>
+> original (int):    2792138
+> your patch (u8):   2790186
+> bool:              2790186
+> bool (1 bit):      2789218
 
-Change the driver to call ieee80211_beacon_loss function always when
-BSS_LOST_EVENT is received. Reason for the change is that entering PSM
-might fail before driver receives BSS_LOST_EVENT. In such case the
-driver would disable PSM and the stack would not be notified about beacon
-loss and connection loss detection would be delayed by tens of seconds.
+1bit is not enough, at least 3bit is required for each one.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_event.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+We does not save more using bit field since size of the least type
+is 1 byte.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
-index 4d35af9..a5c1910 100644
---- a/drivers/net/wireless/wl12xx/wl1271_event.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_event.c
-@@ -173,9 +173,12 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 	 * The BSS_LOSE_EVENT_ID is only needed while psm (and hence beacon
- 	 * filtering) is enabled. Without PSM, the stack will receive all
- 	 * beacons and can detect beacon loss by itself.
-+	 *
-+	 * As there's possibility that the driver disables PSM before receiving
-+	 * BSS_LOSE_EVENT, beacon loss has to be reported to the stack.
-+	 *
- 	 */
--	if (vector & BSS_LOSE_EVENT_ID &&
--	    test_bit(WL1271_FLAG_PSM, &wl->flags)) {
-+	if (vector & BSS_LOSE_EVENT_ID) {
- 		wl1271_debug(DEBUG_EVENT, "BSS_LOSE_EVENT");
- 
- 		/* indicate to the stack, that beacons have been lost */
 -- 
-1.6.3.3
-
+Lei Ming
