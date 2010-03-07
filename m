@@ -1,80 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37491 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447Ab0C3TaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 15:30:12 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1Nwh8d-0004aR-35
-	for linux-wireless@vger.kernel.org; Tue, 30 Mar 2010 15:30:11 -0400
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.3/8.14.3) with ESMTP id o2UJFdcS022596
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 15:15:39 -0400
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.3/8.14.3/Submit) id o2UJFdPD022595
-	for linux-wireless@vger.kernel.org; Tue, 30 Mar 2010 15:15:39 -0400
-Date: Tue, 30 Mar 2010 15:15:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: Cancelled/postponed -- Re: Linux Wireless Summit -- Boston 2010
-Message-ID: <20100330191539.GK13120@tuxdriver.com>
-References: <20100111135741.GB3223@tuxdriver.com> <20100222212029.GD2988@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100222212029.GD2988@tuxdriver.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33535 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753706Ab0CGKU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Mar 2010 05:20:56 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Gus Wirth <gwirth79@gmail.com>
+Subject: [PATCH 2/2] compat: backport device_{lock,trylock,unlock}
+Date: Sun,  7 Mar 2010 11:20:41 +0100
+Message-Id: <1267957241-5578-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1267957241-5578-1-git-send-email-hauke@hauke-m.de>
+References: <1267957241-5578-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+This fixes build of ar9170.
 
-Since peer-to-peer is a major discussion driver for our next
-wireless mini-summit and since the specification for that won't be
-publicly released in time for LinuxCon, we are cancelling our planned
-LinuxCon-hosted event.  I apologize for any inconvenience this causes
-for any individuals.
+CC: Gus Wirth <gwirth79@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.34.h |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-We are hoping to organize a replacement even for later in the year,
-probably still in the Boston area.  If/when we arrange such an event,
-I will announce it here.
-
-Thanks for your understanding!
-
-John
-
-On Mon, Feb 22, 2010 at 04:20:30PM -0500, John W. Linville wrote:
-> This year we'll hold the Linux Wireless Summit on the two days before
-> LinuxCon in Boston (that's Sunday and Monday) at the Renaissance Hotel:
-> 
-> http://events.linuxfoundation.org/events/linuxcon
-> 
-> A page has been dedicated to this event on the Linux Wireless wiki:
-> 
-> http://wireless.kernel.org/en/developers/Summits/Boston-2010
-> 
-> Those interested in attending the event should add their names to
-> the Attendees list on that page.  Feel free to extend the Proposed
-> Topics list.  The mailing list is open for further discussion as well,
-> of course.
-> 
-> Attendees will be required to register for LinuxCon 2010.  Some links
-> to more information are avaliable at the URLs above.  FWIW, I strongly
-> encourage attendees to submit proposals to speak at LinuxCon.
-> 
-> Questions?
-> 
-> Thanks,
-> 
-> John
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
+index b5d1903..d189bee 100644
+--- a/include/linux/compat-2.6.34.h
++++ b/include/linux/compat-2.6.34.h
+@@ -139,6 +139,22 @@ do {								\
+ #endif
+ /* source: include/linux/netdevice.h */
+ 
++
++static inline void device_lock(struct device *dev)
++{
++	down(&dev->sem);
++}
++
++static inline int device_trylock(struct device *dev)
++{
++	return down_trylock(&dev->sem);
++}
++
++static inline void device_unlock(struct device *dev)
++{
++	up(&dev->sem);
++}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
+ 
+ #endif /* LINUX_26_34_COMPAT_H */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
