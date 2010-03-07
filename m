@@ -1,171 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40605 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755390Ab0CCSKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 13:10:06 -0500
-Date: Wed, 3 Mar 2010 19:09:56 +0100
-From: Jiri Pirko <jpirko@redhat.com>
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, jussi.kivilinna@mbnet.fi,
-	linux-wireless@vger.kernel.org
-Subject: Re: [net-next-2.6 PATCH] wireless: convert to use
- netdev_for_each_mc_addr
-Message-ID: <20100303180956.GC2760@psychotron.redhat.com>
-References: <20100303114506.19575pbsu8yz2kjk@hayate.sektori.org>
- <20100303124249.GD2961@psychotron.lab.eng.brq.redhat.com>
- <20100303184256.19122kg5hcqolfgg@hayate.sektori.org>
- <20100303175229.GB2760@psychotron.redhat.com>
- <20100303200510.17531s9x98zyvwm8@hayate.sektori.org>
+Received: from fg-out-1718.google.com ([72.14.220.158]:25659 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754590Ab0CGRwr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Mar 2010 12:52:47 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so2090662fgg.1
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Mar 2010 09:52:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100303200510.17531s9x98zyvwm8@hayate.sektori.org>
+In-Reply-To: <87d3zgdolb.fsf@purkki.valot.fi>
+References: <20100202000934.GA19847@sortiz.org> <201002151146.48156.holgerschurig@gmail.com>
+	<cdd918981002240005o1fa50956yfb2a692716c06a55@mail.gmail.com>
+	<1267054502.6162.9.camel@localhost.localdomain> <cdd918981002250042m16cdf34ap8305ed2fbfd7804d@mail.gmail.com>
+	<1267087684.3796.0.camel@jlt3.sipsolutions.net> <c1545bb51002251005o396130e9g906e5efff024c78@mail.gmail.com>
+	<87d3zgdolb.fsf@purkki.valot.fi>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 7 Mar 2010 18:52:25 +0100
+Message-ID: <69e28c911003070952g4a4a1bddo47affe3c63d27f3a@mail.gmail.com>
+Subject: Re: [PATCH] libertas: cfg80211 support
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Andrey Yurovsky <yurovsky@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David MOUSSAUD <d.moussaud@gmail.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Holger Schurig <holgerschurig@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <holgerschurig@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wed, Mar 03, 2010 at 07:05:10PM CET, jussi.kivilinna@mbnet.fi wrote:
->Quoting "Jiri Pirko" <jpirko@redhat.com>:
+On Sun, Mar 7, 2010 at 6:32 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> Andrey Yurovsky <yurovsky@gmail.com> writes:
 >
->>Wed, Mar 03, 2010 at 05:42:56PM CET, jussi.kivilinna@mbnet.fi wrote:
->>>Hello!
+>>>> Do you know an other sdio chipset that would do the job ?
 >>>
->>>Quoting "Jiri Pirko" <jpirko@redhat.com>:
->>>
->>>>+	} else if (mc_count) {
->>>>+		int size = min(priv->multicast_size, mc_count);
->>>>+		int i = 0;
->>>>+
->>>>+		mc_addrs = kmalloc(size * ETH_ALEN, GFP_ATOMIC);
->>>...
->>>>+	if (filter != basefilter)
->>>>+		goto set_filter;
->>>>+
->>>>+	if (mc_count) {
->>>>+		ret = rndis_set_oid(usbdev, OID_802_3_MULTICAST_LIST, mc_addrs,
->>>>+				    mc_count * ETH_ALEN);
->>>>+		kfree(mc_addrs);
->>>
->>>mc_addrs was alloced by with 'size * ETH_ALEN', which might be less
->>>than mc_count * ETH_ALEN.
+>>> libertas_tf driver has AP iirc.
 >>
->>Actually it cannot. That's covered by:
+>> Yes but it only supports one variant with USB (88w8388) and special
+>> firmware, there's no SDIO equivalent.
 >>
->>if (mc_count > priv->multicast_size) {
->>
->>This was also in the original code. In that case "size" can be eliminated and
->>"mc_addrs" can be allocated with "mc_count * ETH_ALEN".
->>
->>Jussi are you ok with this?
->>
->>Jirka
+>> The only soft-MAC/mac80211 hardware/driver that I can think of that
+>> has an SDIO variant right now is the TI wl12xx stuff but I don't know
+>> anything about it or whether it can do enough to support AP via
+>> mac80211.
 >
->Ah, you're right. Yes, 'size' can go away, it isn't needed after all.
->I'm ok with this patch, I can fix 'size' to 'mc_count' myself later.
+> wl1251 at least doesn't support AP mode. Maybe it's possible to hack
+> something in the driver, but because firmware doesn't support it it
+> would be incomplete anyway.
+>
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Here's corrected patch:
+B43 also has SDIO support, and AFAIK AP mode also works (though not
+sure if you can use AP mode on an SDIO card). The only problem is
+finding an SDIO card with a Broadcom chipset.
 
-Subject: [net-2.6 PATCH] rndis_wlan: correct multicast_list handling V2
-
-My previous patch (655ffee284dfcf9a24ac0343f3e5ee6db85b85c5) added locking in
-a bad way. Because rndis_set_oid can sleep, there is need to prepare multicast
-addresses into local buffer under netif_addr_lock first, then call
-rndis_set_oid outside. This caused reorganizing of the whole function.
-
-Signed-off-by: Jiri Pirko <jpirko@redhat.com>
-Reported-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 9f6d6bf..07e6fdd 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -1496,23 +1496,37 @@ static void set_multicast_list(struct usbnet *usbdev)
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
- 	struct dev_mc_list *mclist;
--	__le32 filter;
--	int ret, i, size;
--	char *buf;
-+	__le32 filter, basefilter;
-+	int ret;
-+	char *mc_addrs = NULL;
-+	int mc_count;
- 
--	filter = RNDIS_PACKET_TYPE_DIRECTED | RNDIS_PACKET_TYPE_BROADCAST;
-+	basefilter = filter = RNDIS_PACKET_TYPE_DIRECTED |
-+			      RNDIS_PACKET_TYPE_BROADCAST;
- 
--	netif_addr_lock_bh(usbdev->net);
- 	if (usbdev->net->flags & IFF_PROMISC) {
- 		filter |= RNDIS_PACKET_TYPE_PROMISCUOUS |
- 			RNDIS_PACKET_TYPE_ALL_LOCAL;
--	} else if (usbdev->net->flags & IFF_ALLMULTI ||
--		   netdev_mc_count(usbdev->net) > priv->multicast_size) {
-+	} else if (usbdev->net->flags & IFF_ALLMULTI) {
-+		filter |= RNDIS_PACKET_TYPE_ALL_MULTICAST;
-+	}
-+
-+	if (filter != basefilter)
-+		goto set_filter;
-+
-+	/*
-+	 * mc_list should be accessed holding the lock, so copy addresses to
-+	 * local buffer first.
-+	 */
-+	netif_addr_lock_bh(usbdev->net);
-+	mc_count = netdev_mc_count(usbdev->net);
-+	if (mc_count > priv->multicast_size) {
- 		filter |= RNDIS_PACKET_TYPE_ALL_MULTICAST;
--	} else if (!netdev_mc_empty(usbdev->net)) {
--		size = min(priv->multicast_size, netdev_mc_count(usbdev->net));
--		buf = kmalloc(size * ETH_ALEN, GFP_KERNEL);
--		if (!buf) {
-+	} else if (mc_count) {
-+		int i = 0;
-+
-+		mc_addrs = kmalloc(mc_count * ETH_ALEN, GFP_ATOMIC);
-+		if (!mc_addrs) {
- 			netdev_warn(usbdev->net,
- 				    "couldn't alloc %d bytes of memory\n",
- 				    size * ETH_ALEN);
-@@ -1520,27 +1534,29 @@ static void set_multicast_list(struct usbnet *usbdev)
- 			return;
- 		}
- 
--		i = 0;
--		netdev_for_each_mc_addr(mclist, usbdev->net) {
--			if (i == size)
--				break;
--			memcpy(buf + i++ * ETH_ALEN, mclist->dmi_addr, ETH_ALEN);
--		}
-+		netdev_for_each_mc_addr(mclist, usbdev->net)
-+			memcpy(mc_addrs + i++ * ETH_ALEN,
-+			       mclist->dmi_addr, ETH_ALEN);
-+	}
-+	netif_addr_unlock_bh(usbdev->net);
- 
--		ret = rndis_set_oid(usbdev, OID_802_3_MULTICAST_LIST, buf,
--								i * ETH_ALEN);
--		if (ret == 0 && i > 0)
-+	if (filter != basefilter)
-+		goto set_filter;
-+
-+	if (mc_count) {
-+		ret = rndis_set_oid(usbdev, OID_802_3_MULTICAST_LIST, mc_addrs,
-+				    mc_count * ETH_ALEN);
-+		kfree(mc_addrs);
-+		if (ret == 0)
- 			filter |= RNDIS_PACKET_TYPE_MULTICAST;
- 		else
- 			filter |= RNDIS_PACKET_TYPE_ALL_MULTICAST;
- 
- 		netdev_dbg(usbdev->net, "OID_802_3_MULTICAST_LIST(%d, max: %d) -> %d\n",
--			   i, priv->multicast_size, ret);
--
--		kfree(buf);
-+			   mc_count, priv->multicast_size, ret);
- 	}
--	netif_addr_unlock_bh(usbdev->net);
- 
-+set_filter:
- 	ret = rndis_set_oid(usbdev, OID_GEN_CURRENT_PACKET_FILTER, &filter,
- 							sizeof(filter));
- 	if (ret < 0) {
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
