@@ -1,108 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:43577 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933319Ab0CaNcW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 09:32:22 -0400
-From: Daniel Mack <daniel@caiaq.de>
-To: linux-kernel@vger.kernel.org
-Cc: mirqus@gmail.com, Daniel Mack <daniel@caiaq.de>,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Subject: [PATCH] libertas/sdio: set ECSI bit for 1-bit transfers
-Date: Wed, 31 Mar 2010 15:31:49 +0200
-Message-Id: <1270042309-18606-1-git-send-email-daniel@caiaq.de>
-In-Reply-To: <k2he2d7436a1003310249v63878e0ahe1b398401937a225@mail.gmail.com>
-References: <k2he2d7436a1003310249v63878e0ahe1b398401937a225@mail.gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:24876 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752378Ab0CGIQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Mar 2010 03:16:31 -0500
+Subject: Re: Realtek rtl8188 support?
+From: Pavel Roskin <proski@gnu.org>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Paul Thomas <pthomas8589@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>
+	 <69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 07 Mar 2010 03:16:22 -0500
+Message-Id: <1267949782.15192.13.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
-However, the 8686 will only drive this line when the ECSI bit is set in
-the CCCR_IF register.
+On Sat, 2010-03-06 at 19:07 +0100, Gábor Stefanik wrote: 
+> Doesn't the RTL8192SU driver handle this chipset already?
 
-Thanks to Alagu Sankar for pointing me in the right direction.
+Yes, I was able to test it.  I followed instructions from this site:
+http://blog.xff.lt/2009/12/28/canyon-cnp-wf518n2-usb-wireless-linux/
 
-Signed-off-by: Daniel Mack <daniel@caiaq.de>
-Cc: Alagu Sankar <alagusankar@embwise.com>
-Cc: Volker Ernst <volker.ernst@txtr.com>
-Cc: Dan Williams <dcbw@redhat.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: linux-mmc@vger.kernel.org
----
- drivers/net/wireless/libertas/if_sdio.c |   21 +++++++++++++++++++++
- include/linux/mmc/sdio.h                |    2 ++
- 2 files changed, 23 insertions(+), 0 deletions(-)
+I added the ID
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 7a73f62..f89bb8b 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -34,6 +34,8 @@
- #include <linux/mmc/card.h>
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/mmc/host.h>
+diff --git a/drivers/staging/rtl8192su/r8192U_core.c b/drivers/staging/rtl8192su/r8192U_core.c
+index 6f424fe..bec729f 100644
+--- a/drivers/staging/rtl8192su/r8192U_core.c
++++ b/drivers/staging/rtl8192su/r8192U_core.c
+@@ -130,6 +130,7 @@ static struct usb_device_id rtl8192_usb_id_tbl[] = {
+ 	{USB_DEVICE(0x06f8, 0xe031)},
+ 	//92SU
+ 	{USB_DEVICE(0x0bda, 0x8172)},
++	{USB_DEVICE(0x0bda, 0x8171)},
+ 	{}
+ };
  
- #include "host.h"
- #include "decl.h"
-@@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
- 	int ret, i;
- 	unsigned int model;
- 	struct if_sdio_packet *packet;
-+	struct mmc_host *host = func->card->host;
- 
- 	lbs_deb_enter(LBS_DEB_SDIO);
- 
-@@ -1022,6 +1025,24 @@ static int if_sdio_probe(struct sdio_func *func,
- 	if (ret)
- 		goto disable;
- 
-+	/* For 1-bit transfers, we need to enable the interrupt flag in
-+	 * the CCCR register. Set the MMC_QUIRK_LENIENT_FN0 bit to allow
-+	 * access to non-vendor registers. */
-+	if ((host->caps & MMC_CAP_SDIO_IRQ) &&
-+	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-+		u8 reg;
-+
-+		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-+		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
-+		if (ret)
-+			goto release_int;
-+
-+		reg |= SDIO_BUS_ECSI;
-+		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
-+		if (ret)
-+			goto release_int;
-+	}
-+
- 	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
- 	if (ret)
- 		goto release_int;
-diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
-index 0ebaef5..329a8fa 100644
---- a/include/linux/mmc/sdio.h
-+++ b/include/linux/mmc/sdio.h
-@@ -94,6 +94,8 @@
- 
- #define  SDIO_BUS_WIDTH_1BIT	0x00
- #define  SDIO_BUS_WIDTH_4BIT	0x02
-+#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
-+#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
- 
- #define  SDIO_BUS_ASYNC_INT	0x20
- 
+
+Then I downloaded the driver from
+http://xff.lt/stuff/canyon-wifi/rtl8192se_linux_2.6.0013.1204.2009.tar.gz
+
+I took rtl8192sfw.bin from it and put it to /lib/firmware/RTL8192SU (not
+RTL8192SE as in the archive).
+
+I was able to load the driver, bring the interface up and scan.  I could
+not connect to an AP with CCMP for some reason:
+
+# wpa_supplicant -c /etc/wpa_supplicant/mike1.conf -i wlan29 -D wext
+ioctl[SIOCSIWPMKSA]: Invalid argument
+ioctl[SIOCSIWPMKSA]: Invalid argument
+CTRL-EVENT-SCAN-RESULTS 
+CTRL-EVENT-SCAN-RESULTS 
+Trying to associate with 00:25:9c:28:15:62 (SSID='mike1' freq=2437 MHz)
+ioctl[SIOCSIWFREQ]: Operation not supported
+Association request to the driver failed
+
+But I was able to connect to an unsecured AP:
+
+wlan29    802.11b/g/n  li  ESSID:"mike2"  
+          Mode:Managed  Frequency=2.437 GHz  Access Point: 00:26:5A:C2:4C:3D   
+          Bit Rate=130 Mb/s   
+          Retry min limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=89/100  Signal level=-56 dBm  Noise level=-114 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+I could also use the firmware called rtl8192sfw492.bin by renaming it to
+rtl8192sfw.bin.
+
 -- 
-1.7.0
-
+Regards,
+Pavel Roskin
