@@ -1,69 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:5940 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751981Ab0CZA2H (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:2327 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753858Ab0CHDxw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 20:28:07 -0400
-Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0564913283
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 09:28:04 +0900 (JST)
+	Sun, 7 Mar 2010 22:53:52 -0500
+Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-055268429
+	for <linux-wireless@vger.kernel.org>; Mon,  8 Mar 2010 12:53:50 +0900 (JST)
+Subject: [PATCH v2] ath5k: IQ calibration for AR5211 is slightly different
+To: linville@tuxdriver.com
 From: Bruno Randolf <br1@einfach.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath5k-devel] [PATCH 00/10] ANI for ath5k
-Date: Fri, 26 Mar 2010 09:27:57 +0900
-Cc: Derek Smithies <derek@indranet.co.nz>,
-	"bob@bobcopeland.com" <bob@bobcopeland.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20100325054603.10697.48915.stgit@tt-desk> <alpine.DEB.2.00.1003261001530.24989@kauri.acheron.indranet.co.nz> <20100325211311.GG7651@tux>
-In-Reply-To: <20100325211311.GG7651@tux>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Mon, 08 Mar 2010 12:53:49 +0900
+Message-ID: <20100308035255.10384.22952.stgit@void>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003260927.57491.br1@einfach.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 March 2010 06:13:11 Luis R. Rodriguez wrote:
-> > > - Improve beacon averaging algorithm for IBSS: Maybe we should keep
-> > > track of
-> > > 
-> > >  the average RSSI on a per-node basis and use the minimum of those in
-> > >  order not to loose far away nodes? The other option would be to limit
-> > >  the parameters we control similar to AP mode.
-> > 
-> > We have talked about this before. I thought that we agreed
-> > that adhoc nodes may
-> > 
-> >    a)be activated at any time
-> >    b)be positioned at an unknown distance apart
-> > 
-> > it therefore makes no sense to average the RSSI over the current nodes.
-> > If all the current nodes in the network are close by, the ani algorithm
-> > will wind the sensitivity down. Consequently, if a remote node is
-> > started, it will not be able to connect. Yet, the remote node should
-> > have been able to connect as the slot times etc were long enough,
-> > and the link budget is fine...
+according to the HAL sources the calculation of the Q value is slightly
+different for AR5211 chips.
 
-i'm not sure how big the effect of ANI is - would it really shut the remote 
-node out completely? or would just performance degrade? also beacons are sent 
-at the lowest rate, so they will travel far. this needs to be tested! it 
-doesnt make sense to discuss this based on hypothetical assumptions.
+i couldn't test this since IQ calibration never finishes on older parts. this
+is a different problem...
 
-> > So yes, the only way to
-> > 
-> > > - Improve beacon averaging algorithm for IBSS:
-> > is to turn ani off. which means the issue you raised else where of
-> > providing reasonable userland controls (not via debugfs) becomes
-> > important.
-> 
-> If ANI helps IBSS so much then why not just default to turning it
-> off within the driver?
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+v2: resend to fix merge errors caused by the change to the previous patch
+---
+ drivers/net/wireless/ath/ath5k/phy.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-i would say in most standard cases, IBSS nodes are close together or at a 
-similar distance, so it does make sense to use ANI by default.
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index b7f2949..975c865 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1399,7 +1399,11 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+ 	}
+ 
+ 	i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
+-	q_coffd = q_pwr >> 7;
++
++	if (ah->ah_version == AR5K_AR5211)
++		q_coffd = q_pwr >> 6;
++	else
++		q_coffd = q_pwr >> 7;
+ 
+ 	/* protect against divide by 0 and loss of sign bits */
+ 	if (i_coffd == 0 || q_coffd < 2)
+@@ -1408,7 +1412,10 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+ 	i_coff = (-iq_corr) / i_coffd;
+ 	i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
+ 
+-	q_coff = (i_pwr / q_coffd) - 128;
++	if (ah->ah_version == AR5K_AR5211)
++		q_coff = (i_pwr / q_coffd) - 64;
++	else
++		q_coff = (i_pwr / q_coffd) - 128;
+ 	q_coff = clamp(q_coff, -16, 15); /* signed 5 bit */
+ 
+ 	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
 
-as well, we all agree that there should be userland controls. the questions is 
-just about the interface to use.
-
-bruno
