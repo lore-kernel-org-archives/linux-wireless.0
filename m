@@ -1,88 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:38494 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060Ab0CZSOw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 14:14:52 -0400
-Received: by pzk32 with SMTP id 32so2856065pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 11:14:52 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:16103 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751681Ab0CHILp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Mar 2010 03:11:45 -0500
+Date: Mon, 8 Mar 2010 09:11:35 +0100
+From: Jiri Pirko <jpirko@redhat.com>
+To: Guy Harris <guy@alum.mit.edu>
+Cc: tcpdump-workers@lists.tcpdump.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [tcpdump-workers] Current wireless-testing breaks libpcap:
+ mr_alen should be set
+Message-ID: <20100308081134.GA2816@psychotron.redhat.com>
+References: <1267578048.14049.11.camel@mj>
+ <7D621661-59E7-46C4-9E86-1D9654A626E7@alum.mit.edu>
 MIME-Version: 1.0
-In-Reply-To: <445f43ac1003241816p2d00b79br224a155b605ce7ac@mail.gmail.com>
-References: <20100324120645.5b43757c.nledovskih@mail.ru>
-	 <445f43ac1003241816p2d00b79br224a155b605ce7ac@mail.gmail.com>
-Date: Fri, 26 Mar 2010 11:14:52 -0700
-Message-ID: <445f43ac1003261114h55918152rd76be84c97716c99@mail.gmail.com>
-Subject: Re: Mesh mode broken since 2.6.34-rc1
-From: Javier Cardona <javier@cozybit.com>
-To: =?KOI8-R?B?7MXEz9fTy8nIIO7Jy8/Mwcog98HMxdLYxdfJ3g==?=
-	<nledovskih@mail.ru>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	devel@lists.open80211s.org,
-	"Porsch, Marco" <marco.porsch@siemens.com>,
-	"steve.derosier" <steve.derosier@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=KOI8-R
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7D621661-59E7-46C4-9E86-1D9654A626E7@alum.mit.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nick,
-
-The commit that broke the mesh seems to be:
-
-commit 8404080568613d93ad7cf0a16dfb68459b42a264
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Mon Feb 15 12:46:39 2010 +0200
-
-    mac80211: reject unhandled action frames
-
-    802.11-2007 7.3.1.11 mandates that we need to
-    reject action frames we don't handle by setting
-    the 0x80 bit in the category and returning them
-    to the sender, so do that. In AP mode, hostapd
-    is responsible for this.
-
-    Additionally, drop completely malformed action
-    frames or ones that should've been encrypted as
-    unusable, userspace shouldn't see those.
-
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-After that commit we observe invalid action category codes (0x9e) in
-response to valid peer link open action frames (0x1e) and so no peer
-links are established.  We don't have a fix at this time.
-
-Cheers,
-
-Javier
-
-
-2010/3/24 Javier Cardona <javier@cozybit.com>:
-> Nick,
+Sat, Mar 06, 2010 at 10:23:12PM CET, guy@alum.mit.edu wrote:
 >
-> 2010/3/24 Ледовских Николай Валерьевич <nledovskih@mail.ru>:
->> Mesh mode does not work any more. I have some x86 MPs with 2.6.33.1, which work fine.
->> But there are establishment problems with 2.6.34-rc1.
->> The peering status changes between LISTEN, OPN_SNT and HOLDING, but does not reach ESTAB.
+>On Mar 2, 2010, at 5:00 PM, Pavel Roskin wrote:
 >
-> Yes, confirmed on our testbed that wireless-testing commit
-> 60b341b778cc2929df16c0a504c91621b3c6a4ad is good.  We'll investigate.
+>> This patch to libpcap helps:
+>> 
+>> --- a/pcap-linux.c
+>> +++ b/pcap-linux.c
+>> @@ -1563,6 +1563,7 @@ live_open_new(pcap_t *handle, const char
+>> 			memset(&mr, 0, sizeof(mr));
+>> 			mr.mr_ifindex = handle->md.ifindex;
+>> 			mr.mr_type    = PACKET_MR_PROMISC;
+>> +			mr.mr_alen    = 6;
 >
-> Thanks,
+>If there are any network types that support promiscuous mode and have link-layer addresses that aren't 6 octets long, that would still fail.
 >
-> Javier
->
->
-> --
-> Javier Cardona
-> cozybit Inc.
-> http://www.cozybit.com
->
+>It sounds as if the fix is not to care about the address length if the address isn't used, so you don't need to get the length right for PACKET_MR_PROMISC or PACKET_MR_ALLMULTI, so libpcap, and other clients setting promiscuous or "show me all multicast packets" mode, don't need to change.  Is that the case?
 
+This should be fixed in kernel (net-2.6
+1162563f82b434e3099c9e6c1bbdba846d792f0d)
 
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Jirka
