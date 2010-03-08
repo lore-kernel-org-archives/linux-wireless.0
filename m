@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:49837 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755416Ab0C3Ud2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 16:33:28 -0400
-From: Krzysztof Halasa <khc@pm.waw.pl>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-References: <m3tys0tbhk.fsf@intrepid.localdomain>
-	<43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
-	<m3wrwtoekv.fsf@intrepid.localdomain>
-	<201003302049.24231.chunkeey@googlemail.com>
-Date: Tue, 30 Mar 2010 22:33:25 +0200
-In-Reply-To: <201003302049.24231.chunkeey@googlemail.com> (Christian
-	Lamparter's message of "Tue, 30 Mar 2010 20:49:23 +0200")
-Message-ID: <m3mxxpo8h6.fsf@intrepid.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:43096 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752475Ab0CHIB4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Mar 2010 03:01:56 -0500
+Subject: Re: [PATCH] libipw: split ieee->networks into small pieces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1268025483-9267-1-git-send-email-yi.zhu@intel.com>
+References: <1268025483-9267-1-git-send-email-yi.zhu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Mar 2010 09:01:49 +0100
+Message-ID: <1268035309.3819.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> writes:
+On Mon, 2010-03-08 at 13:18 +0800, Zhu Yi wrote:
+> The ieee->networks consists of 128 struct libipw_network entries. If
+> we allocate this chunk of memory altogether, it ends up with an
+> order 4 page allocation. High order page allocation is likely to fail
+> on system high load. This patch splits the big chunk memory allocation
+> into small pieces, each is 344 bytes, allocates them with 128 times.
+> 
+> The patch fixed bug http://bugzilla.kernel.org/show_bug.cgi?id=14989
 
-> Are you sure, you (or the hw manufacturer for that matter) didn't confuse
-> the country code with regdomain code?
->
-> because while they have more or less the same function, they do have different
-> mappings. The 0x00 country code is reserved for the FCC (US), while the 0x00
-> regdomain code is a described as "debug" with supposedly no limitations?!
+Could it use cfg80211's scan list stuff and the wext handlers for
+scanning there?
 
-I meant regdomain, is the country code (two letters) stored in the
-EEPROM as well? If so and if others were talking about it instead of
-regdomain, then I was/am really confused.
+johannes
 
-ath: EEPROM regdomain: 0x0
-ath: EEPROM indicates default country code should be used
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x3a
-ath: Country alpha2 being used: US
-ath: Regpair used: 0x3a
-
-(This is for other, old card but I think the ones I need to use produce
-the same output).
-
-Then again: does the regdomain = 0 means "US" or "default country" (or
-something completely different), according to Atheros' docs?
--- 
-Krzysztof Halasa
