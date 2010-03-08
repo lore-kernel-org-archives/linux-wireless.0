@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:23060 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753189Ab0CJFuV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33792 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651Ab0CHIRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 00:50:21 -0500
-Subject: Re: [PATCH 20/22] wl1271: Clean up TX security sequence number
- handling
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Kalle Valo <kalle.valo@iki.fi>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <878wa1dy0u.fsf@purkki.valot.fi>
-References: <1266820722-20202-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1266820722-20202-21-git-send-email-juuso.oikarinen@nokia.com>
-	 <878wa1dy0u.fsf@purkki.valot.fi>
+	Mon, 8 Mar 2010 03:17:11 -0500
+Subject: Re: [PATCH] ath5k: Fix 64 bits TSF reading.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: jirislaby@gmail.com, mickflemm@gmail.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1267394932-11038-1-git-send-email-benoit.papillault@free.fr>
+References: <4B8AE8F1.40006@free.fr>
+	 <1267394932-11038-1-git-send-email-benoit.papillault@free.fr>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Mar 2010 07:47:29 +0200
-Message-ID: <1268200049.10120.455.camel@wimaxnb.nmp.nokia.com>
+Date: Mon, 08 Mar 2010 09:17:08 +0100
+Message-ID: <1268036228.3819.19.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-09 at 21:45 +0100, ext Kalle Valo wrote:
-> Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
-> 
-> > Instead of managing the TX security sequence number as two variables, use
-> > one 64 bit variable. This greatly simplifies the handling of the number.
-> 
-> [...]
-> 
-> > -	u16 tx_security_seq_16;
-> > -	u32 tx_security_seq_32;
-> > +	s64 tx_security_seq;
-> 
-> I'm curious, why s64 and not u64? I'm sure there's a good reason, I
-> just wasn't able figure it out.
-> 
+On Sun, 2010-02-28 at 23:08 +0100, Benoit Papillault wrote:
 
-Hi, good question. I don't remember the reasoning either.
+> -	u64 tsf = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
+> +	u32 tsf_lower, tsf_upper;
+> +
+> +	/*
+> +	 * While reading TSF upper and then lower part, the clock is still
+> +	 * counting so the lower part can rollover just after reading the
+> +	 * upper part. In this case, we expect the lower part to be quite
+> +	 * small (let's say less than 100us) and we would just need to read
+> +	 * the upper part again to get the correct value.
+> +	 *
+> +	 * Tested on AR2425 (AR5001)
+> +	 */
+> +
+> +	tsf_upper = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
+> +	tsf_lower = ath5k_hw_reg_read(ah, AR5K_TSF_L32);
+> +
+> +	if (tsf_lower < 100)
+> +		tsf_upper = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
 
-Good news is that we only need the first 48 bits, so it shouldn't matter
-so much.
+You would typically do
 
--Juuso
+do {
+   read upper 1
+   read lower
+   read upper 2
+} while (upper 1 != upper 2)
+
+or so but that obviously incurs another read in most cases.
+
+johannes
 
