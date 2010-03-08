@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plexity.net ([206.123.115.38]:60203 "EHLO plexity.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751887Ab0CAUAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 15:00:31 -0500
-Date: Mon, 1 Mar 2010 11:59:48 -0800
-From: Deepak Saxena <dsaxena@laptop.org>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: add auto auth mode feature
-Message-ID: <20100301195948.GA19200@plexity.net>
-Reply-To: dsaxena@laptop.org
-References: <1267146996-3725-1-git-send-email-bzhao@marvell.com> <201002261355.06127.holgerschurig@gmail.com> <c1545bb51002261210h27ba9868tca0261742b848e51@mail.gmail.com> <1267225266.14995.7.camel@localhost.localdomain>
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:41544 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070Ab0CHGd2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Mar 2010 01:33:28 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1267225266.14995.7.camel@localhost.localdomain>
+In-Reply-To: <201003022006.o22K6QqH019931@hera.kernel.org>
+References: <201003022006.o22K6QqH019931@hera.kernel.org>
+Date: Mon, 8 Mar 2010 07:33:27 +0100
+Message-ID: <10f740e81003072233j1f9f6a0fr633e1fc65f4e5a5a@mail.gmail.com>
+Subject: Re: ps3_gelic_wireless: fix format warning
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, cbe-oss-dev@lists.ozlabs.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Feb 26 2010, at 15:01, Dan Williams was caught saying:
-> On Fri, 2010-02-26 at 12:10 -0800, Andrey Yurovsky wrote:
-> > On Fri, Feb 26, 2010 at 4:55 AM, Holger Schurig
-> > <holgerschurig at googlemail.com> wrote:
-> > >> Auto auth mode is enabled by default. If user doesn't specify the
-> > >> auth mode, while association driver will first try with open mode
-> > >> and then with shared key mode. If user specifies an auth mode,
-> > >> auto auth is disabled and driver will not try association with
-> > >> another auth mode.
-> > >
-> > > I'd rather would like if you guys chime in into the cfg80211 port rather
-> > > than adding stuff to assoc.c and wext.c, which hopefully get's removed
-> > > really soon now.
-> > >
-> > >
-> > > As a side note: I'm now inclined to get rid of Libertas' proprietary mesh
-> > > support in the driver. I don't know no one except OLPC that uses it, and
-> > > even they don't seem work with upstream. For me, this mesh stuff is the last
-> > > obstacle for cfg80211 support in libertas.
-<snip>
-> > Perhaps the OLPC folks might want to fork the driver or maintain a
-> > patch set for the XO-1 mesh features.  Meanwhile we could all move on
-> > and use cfg80211 and clean things up accordingly.
-<snip>
-> It might not be a bad thing to rip out the mesh stuff and add it later,
-> but we do want to coordinate with OLPC folks as they are still the
-> *largest user by far* of this driver.  As in a million+ units.
+On Tue, Mar 2, 2010 at 21:06, Linux Kernel Mailing List
+<linux-kernel@vger.kernel.org> wrote:
+> Gitweb:     http://git.kernel.org/linus/c6c97bdaa3307d0811f14c99c38c63a8dae36e1f
+> Commit:     c6c97bdaa3307d0811f14c99c38c63a8dae36e1f
+> Parent:     d3a571971e5af241074947fc80f6284677f6e014
+> Author:     John W. Linville <linville@tuxdriver.com>
+> AuthorDate: Mon Feb 1 09:55:56 2010 -0500
+> Committer:  John W. Linville <linville@tuxdriver.com>
+> CommitDate: Mon Feb 1 09:55:56 2010 -0500
+>
+>    ps3_gelic_wireless: fix format warning
+>
+>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/ps3_gelic_wireless.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/ps3_gelic_wireless.c b/drivers/net/ps3_gelic_wireless.c
+> index d520e9e..448c5b6 100644
+> --- a/drivers/net/ps3_gelic_wireless.c
+> +++ b/drivers/net/ps3_gelic_wireless.c
+> @@ -1449,7 +1449,7 @@ static int gelic_wl_start_scan(struct gelic_wl_info *wl, int always_scan,
+>        void *buf = NULL;
+>        size_t len;
+>
+> -       pr_debug("%s: <- always=%d essid_len=%d\n", __func__,
+> +       pr_debug("%s: <- always=%d essid_len=%z\n", __func__,
 
-As has been pointed out, the next-gen XO wireless FW does not have mesh 
-support; however, there are still plenty of end users and developers on 
-the existing XO-1 laptops and I don't think completely removing mesh 
-support is an option our community would be happy with. However, I also 
-don't want to end up with a libertas fork (all our mesh patches are
-currently upstream and not forkd off) in the OLPC tree so let's figure 
-out a path to make this work for everyone.
+`z' is just a modifier for a (missing) type, so this should be `%zu'.
 
-It looks like there is already some work in progress towards mesh support
-using cfg80211 [1] and if I can get pointers to the latest version, I can 
-point the OLPC community to them and see if we can find some testers.
+>                 always_scan, essid_len);
+>        if (mutex_lock_interruptible(&wl->scan_lock))
+>                return -ERESTARTSYS;
 
-> Is it seriously that large of a block?  I thought we'd discussed a
-> fairly viable plan for keeping mesh around while still doing cfg80211.
-> Would shipping you a usb8388 dongle or two make it easier to work with?
+Gr{oetje,eeting}s,
 
-Or a few XO-1 laptops? :)
+						Geert
 
-~Deepak
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
