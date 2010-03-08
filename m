@@ -1,83 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:54913 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553Ab0CIMQu convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:38958 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755763Ab0CHXik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 07:16:50 -0500
-Received: by ewy8 with SMTP id 8so653646ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 04:16:49 -0800 (PST)
+	Mon, 8 Mar 2010 18:38:40 -0500
+Received: by bwz1 with SMTP id 1so3375313bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 15:38:39 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Deauthentications with p54usb
+Date: Tue, 9 Mar 2010 00:38:34 +0100
+References: <1756555272@web.de> <4A7F314E.7050808@lwfinger.net>
+In-Reply-To: <4A7F314E.7050808@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20100309075528.30616.58727.stgit@void>
-References: <20100309075124.30616.40896.stgit@void>
-	 <20100309075528.30616.58727.stgit@void>
-Date: Tue, 9 Mar 2010 14:16:42 +0200
-Message-ID: <40f31dec1003090416v7d69f28fv6b91e26d03787c3@mail.gmail.com>
-Subject: Re: [PATCH 03/13] ath5k: preserve antenna settings
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201003090038.34884.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/9 Bruno Randolf <br1@einfach.org>:
-> save antenna settings and preserve across resets.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath5k/attach.c |    1 +
->  drivers/net/wireless/ath/ath5k/base.c   |    2 +-
->  drivers/net/wireless/ath/ath5k/phy.c    |    1 +
->  3 files changed, 3 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-> index 4228444..c8bb102 100644
-> --- a/drivers/net/wireless/ath/ath5k/attach.c
-> +++ b/drivers/net/wireless/ath/ath5k/attach.c
-> @@ -123,6 +123,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
->        ah->ah_cw_min = AR5K_TUNE_CWMIN;
->        ah->ah_limit_tx_retries = AR5K_INIT_TX_RETRY;
->        ah->ah_software_retry = false;
-> +       ah->ah_ant_mode = AR5K_ANTMODE_DEFAULT;
->
->        /*
->         * Find the mac version
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index 85eb670..fd4dd3c 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -2916,7 +2916,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
->         * then we must allow the user to set how many tx antennas we
->         * have available
->         */
-> -       ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
-> +       ath5k_hw_set_antenna_mode(ah, ah->ah_ant_mode);
->
->  unlock:
->        mutex_unlock(&sc->lock);
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index ffe253a..3fa4f4d 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -1929,6 +1929,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
->
->        ah->ah_tx_ant = tx_ant;
->        ah->ah_ant_mode = ant_mode;
-> +       ah->ah_def_ant = def_ant;
->
->        sta_id1 |= use_def_for_tx ? AR5K_STA_ID1_DEFAULT_ANTENNA : 0;
->        sta_id1 |= update_def_on_tx ? AR5K_STA_ID1_DESC_ANTENNA : 0;
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Hello Larry,
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Remember?
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+On Sunday 09 August 2009 22:27:58 Larry Finger wrote:
+> Chunkeey@web.de wrote:
+> > Ahh, wait... screw up: I failed to explain the difference between:
+> > 
+> > - powersave (=> responsible for your connection problems)
+> >    In this mode: the device goes into a lower power state,
+> >    but continues to listen for dtim beacons and multicast frames,
+> >    from the AP.
+> > 
+> >    mac80211 does not have printks for these ps events,
+> >    since the device power state may chance every second.
+> > 
+> >    howeve, it's possible to trace them through the generic _trace_
+> >    framework with MAC80211_DRIVER_API_TRACER Kconfig
+> >    option enabled.
+> >    
+> > vs. 
+> > 
+> >  - hibernation (soft rfkill that went in with "[PATCH] p54: implement rfkill")
+> >    In this mode: the device's radio is completely shutdown... so
+> >    it only makes sense to enter this mode when there's really nothing
+> >    to do (=> the device is not scanning or associating/associated)
+> >    
+> >    mac80211 will printk (with CONFIG_MAC80211_VERBOSE_DEBUG set)
+> >    whenever the IEEE80211_CONF_IDLE changes. e.g: 
+> >        phy0: device no longer idle - REASON
+> >     or:
+> >        phy0: device now idle
+> >     in the kernel logs.
+> > 
+> >> Turning off CONFIG_CFG80211_DEFAULT_PS stopped the messages,
+> >> thus it certainly looks like a power saving event.
+> > so hibernation (rfkill) is fine, just powersave is playing tricks...
+> > weirdly, intel disabled ps in their driver _again_ not too long ago,
+> > maybe a coincident, maybe not... do you think you can send me
+> > a kismet/wireshark/airodump dump whenever the AP kicks the device?
+> 
+> We don't know that hibernation is OK. I just never make my machine
+> hibernate (suspend to disk) or sleep (suspend to RAM). The last time I
+> tried it had one or more drivers that would not cooperate, and I have
+> not tried recently.
+> 
+> I'll try to collect a dump.
+> 
+> > BTW: you can set different PS modes with the old iwconfig utility:
+> > iwconfig wlanX power off <-- disables PS
+> > (just like turning off the CONFIG_CFG80211_DEFAULT_PS option)
+> > 
+> > iwconfig wlanX power timeout 0 <--- most aggressive PS setting,
+> > (only uses PS-POLL to retrieve data).
+> > 
+> > AFAIK the current default is just "1", maybe your link would be
+> > totally reliable with a more  _relaxed_ 200, 500 setting...
+> 
+> I'll re-enable CONFIG_CFG80211_DEFAULT_PS and try a more relaxed value
+> for the power timeout. In any case, with it disabled, there have been
+> no deauthentications nor disassociations. The link is rock solid.
+
+Obviously, there has been a lot of progress on power saving.
+Can you please retest if p54(usb) link is still dying when
+PSM is enabled?
+
+(NB: the easiest way to enable/disable PSM: iwconfig wlanX power on/off,
+ no need to recompile/rebuild the module)
+
+Regards,
+	Chr
