@@ -1,56 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42981 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011Ab0CQNar (ORCPT
+Received: from lennier.cc.vt.edu ([198.82.162.213]:37018 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755839Ab0CHWWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 09:30:47 -0400
-Date: Wed, 17 Mar 2010 09:22:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCHv3 0/2] mac80211: cfg80211: Roam trigger support
-Message-ID: <20100317132236.GC2990@tuxdriver.com>
-References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 8 Mar 2010 17:22:20 -0500
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Weird wireless/wpa_supplicant screw-up.
+From: Valdis.Kletnieks@vt.edu
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1268086939_3979P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Mon, 08 Mar 2010 17:22:19 -0500
+Message-ID: <7197.1268086939@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 17, 2010 at 03:01:15PM +0200, Juuso Oikarinen wrote:
-> To implement good performance WLAN roaming, it is not sufficient to start
-> scanning for other available AP's only after the currently serving association
-> is lost.
-> 
-> The entity controlling the roaming will need to get indication of a
-> deteriorating WLAN connection in order to start preparing for roaming already
-> before the serving association is lost. This way, it can roam to a better AP
-> perhaps even before the serving association becomes too bad in quality.
-> 
-> These patches propose an implementation facilitating this using a simple RSSI
-> threshold and hysteresis approach.
-> 
-> These patches add a nl80211 interface for simply configuring a rssi threshold
-> and hysteresis value to facilitate very basic connection quality monitoring.
-> 
-> For the triggering, these patches currently rely on HW support, host based
-> triggering is not implemented, but could be added later if needed.
-> 
-> These patches have been tested with the wl1271 driver.
-> 
-> Thanks in advance for your comments and suggestions.
-> 
-> Juuso Oikarinen (2):
->   cfg80211: Add connection quality monitoring support to nl80211
->   mac80211: Add support for connection quality monitoring
+--==_Exmh_1268086939_3979P
+Content-Type: text/plain; charset=us-ascii
 
-Any idea what other hardware (besides libertas) supports this concept?
-Do you anticipate adding a host-based implementation to mac80211?
+(This could be user error/userspace bug, feel free to point me in the right
+direction if you think so.  Hopefully somebody knows what I've broken this
+time...)
 
-Is RSSI really a useful enough indicator for this function?
-Will applications actually use it?
+Fedora Rawhide as of this morning, 2.6.33-mmotm0304 kernel, wpa_supplicant-0.6.8-8.fc13.x86_64
+wireless-tools-29-5.1.fc12.x86_64.  Dell Latitude E6500, Intel 5100AGN card.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+So I finally get a few spare cycles, and re-try getting WPA2 working on our
+enterprise wireless network, and wpa_supplicant reports it completed
+successfully and set the keys, but 'iwconfig' reports back:
+
+wlan0     IEEE 802.11abgn  ESSID:"VT-Wireless"  
+          Mode:Managed  Frequency:2.412 GHz  Access Point: 00:0F:F7:14:2A:91   
+          Bit Rate=1 Mb/s   Tx-Power=15 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=42/70  Signal level=-68 dBm  
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+No encryption key. Yee. Hah.
+
+But wait... 'iwlist keys' reports:
+
+wlan0     2 key sizes : 40, 104bits
+          4 keys available :
+                [1]: off
+                [2]: 6A7D-5232-BDE6-E40A-71C5-EC21-6399-00F3-5CAD-D394-D1E5-1261-BD99-0115-F4A8-63B2 (256 bits)
+                [3]: off
+                [4]: off
+          Current Transmit Key: [1]
+
+So we got a perfectly good key, but we're not using it.
+
+Anybody got any ideas/hints?
+
+
+
+--==_Exmh_1268086939_3979P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFLlXibcC3lWbTT17ARAoRRAJ9cnA9eNaACHwt/XrT7mGVQsDy+jgCfQZUW
+7CeL6/hsCptoeZcdxeqye54=
+=03dn
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1268086939_3979P--
+
