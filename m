@@ -1,74 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:40465 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751931Ab0CKP2a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 10:28:30 -0500
-Message-ID: <4B990C18.5050807@openwrt.org>
-Date: Thu, 11 Mar 2010 16:28:24 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:49457 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972Ab0CHFlp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Mar 2010 00:41:45 -0500
+Received: by pzk32 with SMTP id 32so2465401pzk.4
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Mar 2010 21:41:44 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: optimize tx status processing
+In-Reply-To: <70f6a1ed1003072120w37fa176ya2c3a8af742dfd97@mail.gmail.com>
+References: <4B93F42F.7030306@openwrt.org>
+	 <70f6a1ed1003072120w37fa176ya2c3a8af742dfd97@mail.gmail.com>
+Date: Sun, 7 Mar 2010 21:36:27 -0800
+Message-ID: <70f6a1ed1003072136r6f78a969k8847736e210ba7f7@mail.gmail.com>
+Subject: Re: [RFC v3] minstrel_ht: new rate control module for 802.11n
+From: Duy Nguyen <dnlove@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	=?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	Bob Copeland <me@bobcopeland.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a cooked monitor interface is active, ieee80211_tx_status()
-generates a radiotap header for every single frame, even if it wasn't
-injected and thus won't be sent to a monitor interface.
-This patch reduces cpu utilization by moving the cooked monitor check a
-bit earlier, before it generates the rtap header.
+After many more runs on scenario 2, it is on par with atheros default.
+ Sorry for the earlier hasty reporting.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -171,7 +171,7 @@ void ieee80211_tx_status(struct ieee8021
- 	struct net_device *prev_dev = NULL;
- 	struct sta_info *sta, *tmp;
- 	int retry_count = -1, i;
--	bool injected;
-+	bool send_to_cooked;
- 
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		/* the HW cannot have attempted that rate */
-@@ -296,11 +296,15 @@ void ieee80211_tx_status(struct ieee8021
- 	/* this was a transmitted frame, but now we want to reuse it */
- 	skb_orphan(skb);
- 
-+	/* Need to make a copy before skb->cb gets cleared */
-+	send_to_cooked = !!(info->flags & IEEE80211_TX_CTL_INJECTED) ||
-+			(type != IEEE80211_FTYPE_DATA);
-+
- 	/*
- 	 * This is a bit racy but we can avoid a lot of work
- 	 * with this test...
- 	 */
--	if (!local->monitors && !local->cooked_mntrs) {
-+	if (!local->monitors && (!send_to_cooked || !local->cooked_mntrs)) {
- 		dev_kfree_skb(skb);
- 		return;
- 	}
-@@ -345,9 +349,6 @@ void ieee80211_tx_status(struct ieee8021
- 	/* for now report the total retry_count */
- 	rthdr->data_retries = retry_count;
- 
--	/* Need to make a copy before skb->cb gets cleared */
--	injected = !!(info->flags & IEEE80211_TX_CTL_INJECTED);
--
- 	/* XXX: is this sufficient for BPF? */
- 	skb_set_mac_header(skb, 0);
- 	skb->ip_summed = CHECKSUM_UNNECESSARY;
-@@ -362,8 +363,7 @@ void ieee80211_tx_status(struct ieee8021
- 				continue;
- 
- 			if ((sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) &&
--			    !injected &&
--			    (type == IEEE80211_FTYPE_DATA))
-+			    !send_to_cooked)
- 				continue;
- 
- 			if (prev_dev) {
+scenario 2: node 1 to node 2
 
+802.11n Felix's Minstrel    Avg Transfer= 95.5  Avg Bandwidth=80.11
+802.11n Atheros Default    Avg Transfer= 95.2  Avg Bandwidth=79.8
+
+On Sun, Mar 7, 2010 at 9:20 PM, Duy Nguyen <dnlove@gmail.com> wrote:
+> Hi Felix, thanks for the awesome patch and great progress on the
+> 802.11n!  I just tried out your patch version 3, and got the following
+> results.
+>
+> The results are an average of 10 different iperf runs, Throughputs are
+> in Mbits/sec
+> AP: dir-615 (settings: 802.11n mode only, Auto 20/40 Mhz).  This AP
+> does not seem to allow me to set 40Mhz only
+> Node interfaces:  D-Link DWA-556 Xtreme N PC
+>
+>
+> scenario 1: node 1 to node 2
+>
+> node1-----wireless_link-----AP-----wireless_link-----node2
+>
+> 802.11n Felix's Minstrel    Avg Transfer= 38.6  Avg Bandwidth=32.3
+> 802.11n Atheros Default    Avg Transfer= 36.6  Avg Bandwidth=30.6
+>
+> scenario 2: node 1 to node 2
+>
+> node1-----wireless_link-----AP-----wired_link-----node2
+>
+> 802.11n Felix's Minstrel    Avg Transfer= 83.4  Avg Bandwidth=69.8
+> 802.11n Atheros Default    Avg Transfer= 95.2  Avg Bandwidth=79.8
+>
+> Overall, the results look pretty good.  I am much more interested in
+> results in scenario 1 but I am going to take a look at scenario 2
+> again.  Let me know if I can help you test any other scenarios.
+>
+> Duy
+>
+>
+> On Sun, Mar 7, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Here's v3 of minstrel_ht.
+>>
+>> Changelog:
+>>
+>> v3:
+>> - Add two fixes by Christian Lamparter (division by zero, debugfs mcs
+>>  rate display)
+>> - Improve throughput a bit more by spreading out slow rate sampling
+>>  attempts over multiple sampling intervals
+>>
+>> v2:
+>> - Use accurate A-MPDU statistics from tx feedback
+>> - Rewrite the sampling algorithm to optimize for good A-MPDU lengths
+>>  and faster throughput recovery
+>> - Implement .rate_update to handle changes in HT capabilities or
+>>  channel bandwidth
+>> - Remove the private tx flags hack
+>
