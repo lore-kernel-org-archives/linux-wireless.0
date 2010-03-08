@@ -1,37 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35260 "EHLO vs166246.vserver.de"
+Received: from mail.perches.com ([173.55.12.10]:1514 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753366Ab0CBWaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 17:30:06 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: William Bourque <william.bourque@polymtl.ca>
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-Date: Tue, 2 Mar 2010 23:29:58 +0100
-Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <201003022257.51878.mb@bu3sch.de> <4B8D906C.9020102@polymtl.ca>
-In-Reply-To: <4B8D906C.9020102@polymtl.ca>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201003022329.58627.mb@bu3sch.de>
+	id S1752241Ab0CHQym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Mar 2010 11:54:42 -0500
+Subject: Re: [PATCH] staging: wavelan: fix coding style of first 1000 lines
+ in wavelan.c
+From: Joe Perches <joe@perches.com>
+To: Jason Dreisbach <jtdreisb@gmail.com>
+Cc: jt@hp1.hp.com, gregkh@suse.de--to, jpirko@redhat.com,
+	linville@tuxdriver.com, jtdreisb@gmail.com--cc,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1268043630-5893-1-git-send-email-jtdreisb@gmail.com>
+References: <1268043630-5893-1-git-send-email-jtdreisb@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Mar 2010 08:54:39 -0800
+Message-ID: <1268067279.1925.41.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 02 March 2010 23:25:48 William Bourque wrote:
-> So if I get this right, this code is responsible of handling the b43
-> devices, as well as several other PCI-E devices, correct?
+On Mon, 2010-03-08 at 02:20 -0800, Jason Dreisbach wrote:
+> From: Jason <jtdreisb@gmail.com>
+> diff --git a/drivers/staging/wavelan/wavelan.c b/drivers/staging/wavelan/wavelan.c
+> index 54ca631..37ede43 100644
+> --- a/drivers/staging/wavelan/wavelan.c
+> +++ b/drivers/staging/wavelan/wavelan.c
+[]
+> @@ -279,7 +285,8 @@ static void update_psa_checksum(struct net_device * dev, unsigned long ioaddr, u
+>  
+>  	if (crc != 0)
+>  		printk(KERN_WARNING
+> -		       "%s: update_psa_checksum(): CRC does not agree with PSA data (even after recalculating)\n",
+> +		       "%s: update_psa_checksum(): CRC does not \
+> +		       agree with PSA data (even after recalculating)\n",
+>  		       dev->name);
+>  #endif				/* DEBUG_IOCTL_INFO */
+>  #endif				/* SET_PSA_CRC */
 
-Nah, this is a broadcom specific thing of the on-chip SSB bus.
+Hi Jason.
 
-> 
-> Because now that you mention this, the wired network card (Marvel Yukon,
-> with sky2 drivers) on this netbook also have a tons of issue (doesn't
-> show in lspci on a clean boot, oops the kernel if network cable is
-> unplugged while in use, fails to load if the module is ever unloaded, ... )
-> I thought it was unrelated but from your comment, I feel like this could
-> be linked to the same PCI-E bugs as well.
+What you've done here actually adds a defect.
 
-Uh, well. Are you sure your hardware is OK then?
+Breaking up a string using line continuations adds the
+initial spaces on the next line to the string.
 
--- 
-Greetings, Michael.
+Ignore the checkpatch error for long format lines.
+They are not an error and are actually the preferred style.
+
+One thing you could do is to change the logging form from:
+	printk(KERN_<level> "%s: fmt...", dev->name, args);
+to
+	netdev_<level>(dev, "fmt...", args);
+
+as this may now be a preferred style.
+It gives a bit more information in the logs.
+
+When dev is a struct device *, the conversion should be from:
+	printk(KERN_<level> "%s: fmt...", dev->name, args);
+to:
+	dev_<level>(dev, "fmt...", args);
+
+Another thing you could do would be to take the
+embedded function name out of the format string
+and use "%s() ...", __func__ as this can save
+some text space when there's more than 1 use of
+the function name and if the function is renamed
+or refactored, the right function name is used.
+
+So this gets converted from:
+		printk(KERN_WARNING
+		       "%s: update_psa_checksum(): CRC does not agree with PSA data (even after recalculating)\n",
+		       dev->name);
+to:
+		netdev_warn(dev, "%s(): CRC does not agree with PSA data (even after recalculating)\n",
+			    __func__);
+
+
