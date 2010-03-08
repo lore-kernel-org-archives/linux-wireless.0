@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:45794 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200Ab0CCTJj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 14:09:39 -0500
-Received: by fg-out-1718.google.com with SMTP id l26so406180fgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 11:09:37 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: Export rt2x00soc_probe from rt2x00soc
-Date: Wed, 3 Mar 2010 20:09:34 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
-References: <201003031742.55842.helmut.schaa@googlemail.com> <201003031804.54121.helmut.schaa@googlemail.com> <14add3d11003030908v620dc63ci4712373a77da275a@mail.gmail.com>
-In-Reply-To: <14add3d11003030908v620dc63ci4712373a77da275a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003032009.35111.helmut.schaa@googlemail.com>
+Received: from mga01.intel.com ([192.55.52.88]:47434 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676Ab0CHJGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Mar 2010 04:06:10 -0500
+Subject: Re: [PATCH] libipw: split ieee->networks into small pieces
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1268035309.3819.14.camel@jlt3.sipsolutions.net>
+References: <1268025483-9267-1-git-send-email-yi.zhu@intel.com>
+	 <1268035309.3819.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Mar 2010 17:07:11 +0800
+Message-ID: <1268039231.2774.93.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch 03 März 2010 schrieb Gertjan van Wingerde:
-> On Wed, Mar 3, 2010 at 6:04 PM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
-> > Am Mittwoch 03 März 2010 schrieb Gertjan van Wingerde:
-> >> Thanks for doing this. I couldn't test these configurations as I am
-> >> lacking SoC devices.
-> >
-> > No problem, I'm just trying to get the driver up on one of these SoC devices.
-> > Not sure how far I'll get :)
-> >
+On Mon, 2010-03-08 at 16:01 +0800, Johannes Berg wrote:
+> On Mon, 2010-03-08 at 13:18 +0800, Zhu Yi wrote:
+> > The ieee->networks consists of 128 struct libipw_network entries. If
+> > we allocate this chunk of memory altogether, it ends up with an
+> > order 4 page allocation. High order page allocation is likely to
+> fail
+> > on system high load. This patch splits the big chunk memory
+> allocation
+> > into small pieces, each is 344 bytes, allocates them with 128 times.
+> > 
+> > The patch fixed bug http://bugzilla.kernel.org/show_bug.cgi?id=14989
 > 
-> All I can say is to please keep us informed on your progress. It is
-> the first time I'm hearing someone actually working with a SoC device.
+> Could it use cfg80211's scan list stuff and the wext handlers for
+> scanning there? 
 
-I'll keep you posted, however I'm not very far yet ;)
+Probably yes. It all depends on how we organize the network list
+internally. The ipw firmware sends raw management frames (assoc, beacon,
+etc) to driver directly. So We can use cfg80211_bss to track beacons.
+But it can require some effort since libipw_network is used throughout
+libipw.
 
-Helmut
+Thanks,
+-yi
+
