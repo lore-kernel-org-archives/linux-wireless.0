@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:7216 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753024Ab0CZUs6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 16:48:58 -0400
-Subject: Re: Memory leaks from swapper, wpa_supplicant, glxgears
-From: Pavel Roskin <proski@gnu.org>
-To: "Daniele C." <legolas558@users.sourceforge.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4BACBD71.9040107@users.sourceforge.net>
-References: <4BACBD71.9040107@users.sourceforge.net>
-Content-Type: text/plain
-Date: Fri, 26 Mar 2010 16:48:57 -0400
-Message-Id: <1269636537.8534.11.camel@mj>
+Received: from he.sipsolutions.net ([78.46.109.217]:48009 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202Ab0CHH5e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Mar 2010 02:57:34 -0500
+Subject: Re: Using asynchonous block cipher for CCMP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100227171450.5t7ns1l9ck80kgwo-cebfxv@webmail.spamcop.net>
+References: <1267249474.6278.23.camel@mj>
+	 <1267254188.3851.1.camel@jlt3.sipsolutions.net>
+	 <20100227171450.5t7ns1l9ck80kgwo-cebfxv@webmail.spamcop.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Mar 2010 08:57:32 +0100
+Message-ID: <1268035052.3819.12.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-26 at 14:58 +0100, Daniele C. wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Sat, 2010-02-27 at 17:14 -0500, Pavel Roskin wrote:
+
+> I should not have emphasized the "asynchronous" part.  It's possible  
+> to call a block cipher synchronously, and that's what the WEP code does:
 > 
-> Hello there,
+> crypto_blkcipher_encrypt(&desc, &sg, &sg, sg.length);
 > 
-> I have enabled CONFIG_KMEMLEAK and I am finding some memory leakage
-> apparently caused by "swapper" process; I have also had leaks from
-> glxgears and wpa_supplicant, but they can be triggered only once (e.g.
-> restarting wpa_supplicant does not trigger more leaks).
+> That encrypts the whole packet at once.  The function returns when it's done.
 > 
-> The swapper leaks seem to be an incremental decimal string, starting
-> from "0" to "10", while the wpa_supplicant leaks were the AP ESSID
-> (not in attached report).
+> The CCMP code, on the other hand, calls crypto_cipher_encrypt_one() in  
+> a loop for 16 byte long chunks.  That would be simply ineffective for  
+> some hardware accelerators.
 
-The attachment is quite useless since it has no function names, only
-numeric addresses that vary between systems.
+Ah. Well the problem is that CCM has the authentication rolled in, so
+you'd have to find hw support for the entire loop that calls it, or find
+an equivalent mode.
 
-The backtrace that only has 0xffffffff suggests that kmemleak is not
-working properly on your system.
+johannes
 
-Please figure out how to use kmemleak first.
-
--- 
-Regards,
-Pavel Roskin
