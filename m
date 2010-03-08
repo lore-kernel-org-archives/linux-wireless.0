@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47376 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754529Ab0CKVdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 16:33:10 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/5] compat-wireless: fix building of iwmc3200wifi
-Date: Thu, 11 Mar 2010 22:32:45 +0100
-Message-Id: <1268343167-2961-6-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
-References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:44214 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649Ab0CHD5N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Mar 2010 22:57:13 -0500
+Received: by pvb32 with SMTP id 32so1310368pvb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Mar 2010 19:57:12 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20100308025841.7460.69949.stgit@void>
+References: <20100308025841.7460.69949.stgit@void>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 7 Mar 2010 19:56:52 -0800
+Message-ID: <43e72e891003071956xb651ec0he6774b43c56d8d91@mail.gmail.com>
+Subject: Re: [PATCH v2] ath5k: fix I/Q calibration (for real)
+To: Bruno Randolf <br1@einfach.org>
+Cc: me@bobcopeland.com, linville@tuxdriver.com, 8an@praha12.net,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com, benoit.papillault@free.fr
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Mar 7, 2010 at 6:59 PM, Bruno Randolf <br1@einfach.org> wrote:
+> I/Q calibration was completely broken, resulting in a high number of CRC errors
+> on received packets. before i could see around 10% to 20% CRC errors, with this
+> patch they are between 0% and 3%.
+>
+> 1.) the removal of the mask in commit "ath5k: Fix I/Q calibration
+> (f1cf2dbd0f798b71b1590e7aca6647f2caef1649)" resulted in no mask beeing used
+> when writing the I/Q values into the register. additional errors in the
+> calculation of the values (see 2.) resulted too high numbers, exceeding the
+> masks, so wrong values like 0xfffffffe were written. to be safe we should
+> always use the bitmask when writing parts of a register.
+>
+> 2.) using a (s32) cast for q_coff is a wrong conversion to signed, since we
+> convert to a signed value later by substracting 128. this resulted in too low
+> numbers for Q many times, which were limited to -16 by the boundary check later
+> on.
+>
+> 3.) checked everything against the HAL sources and took over comments and minor
+> optimizations from there.
+>
+> 4.) we can't use ENABLE_BITS when we want to write a number (the number can
+> contain zeros). also always write the correction values first and set ENABLE
+> bit last, like the HAL does.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+> v2: use clamp() as Bob suggested
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/13-trace.patch |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
+Thanks Bruno, are these stable fixes?
 
-diff --git a/patches/13-trace.patch b/patches/13-trace.patch
-index 8c000f3..82b2643 100644
---- a/patches/13-trace.patch
-+++ b/patches/13-trace.patch
-@@ -23,6 +23,25 @@ in or compat headers.
- +#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
-  #include <trace/define_trace.h>
- +#endif
-+--- a/drivers/net/wireless/iwmc3200wifi/trace.h
-++++ b/drivers/net/wireless/iwmc3200wifi/trace.h
-+@@ -1,7 +1,9 @@
-+ #if !defined(__IWM_TRACE_H__) || defined(TRACE_HEADER_MULTI_READ)
-+ #define __IWM_TRACE_H__
-+ 
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-+ #include <linux/tracepoint.h>
-++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
-+ 
-+ #if !defined(CONFIG_IWM_TRACING)
-+ #undef TRACE_EVENT
-+@@ -280,4 +282,6 @@ TRACE_EVENT(iwm_rx_packet,
-+ #define TRACE_INCLUDE_PATH .
-+ #undef TRACE_INCLUDE_FILE
-+ #define TRACE_INCLUDE_FILE trace
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
-+ #include <trace/define_trace.h>
-++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
- --- a/net/mac80211/driver-trace.h
- +++ b/net/mac80211/driver-trace.h
- @@ -1,7 +1,9 @@
--- 
-1.6.3.3
-
+  Luis
