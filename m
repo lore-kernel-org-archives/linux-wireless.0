@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:57732 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941Ab0CEUVy (ORCPT
+Received: from mail-ew0-f216.google.com ([209.85.219.216]:45747 "EHLO
+	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754623Ab0CIMTB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 15:21:54 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so647886eya.19
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Mar 2010 12:21:53 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "Daniele C." <legolas558@users.sourceforge.net>
-Subject: Re: rt2870 (staging kernel driver) crashes fatally
-Date: Fri, 5 Mar 2010 21:21:43 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"Hin-Tak Leung" <hintak.leung@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <4B8E20CF.50109@users.sourceforge.net> <201003051722.42437.IvDoorn@gmail.com> <4B9165FE.1080502@users.sourceforge.net>
-In-Reply-To: <4B9165FE.1080502@users.sourceforge.net>
+	Tue, 9 Mar 2010 07:19:01 -0500
+Received: by mail-ew0-f216.google.com with SMTP id 8so654430ewy.28
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 04:19:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201003052121.44331.IvDoorn@gmail.com>
+In-Reply-To: <20100309075554.30616.12221.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
+	 <20100309075554.30616.12221.stgit@void>
+Date: Tue, 9 Mar 2010 14:19:00 +0200
+Message-ID: <40f31dec1003090419m38145df9u46c48b7cc37fd3ec@mail.gmail.com>
+Subject: Re: [PATCH 08/13] ath5k: remove ah_gpio_npins
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 05 March 2010, Daniele C. wrote:
-> -------- Original Message  --------
-> Subject: Re: rt2870 (staging kernel driver) crashes fatally
-> From: Ivo van Doorn <ivdoorn@gmail.com>
-> To: Larry Finger <Larry.Finger@lwfinger.net>
-> Date: Fri Mar 05 2010 17:22:41 GMT+0100 (CET)
-> 
-> > On Thursday 04 March 2010, Larry Finger wrote:
-> >> On 03/03/2010 08:14 PM, Hin-Tak Leung wrote:
-> >>> You appear to have two issues - (1) the driver doesn't
-> >>> hibernate/resume well, (2) there is some bad memory leak which causes
-> >>> your system to run out of memory.
-> >>>
-> >>> You did not mention issue (1) - that you were hibernating and resuming
-> >>> (and expecting it to work, which it does not). For the latter, you
-> >>> probably need to track down where the memory is leaking in the driver,
-> >>> which is probably easier than tracking down the hibernate/resume
-> >>> issue.
-> >>>
-> >>> Good luck with tracking down the memory leak. (you do understand that
-> >>> staging drivers are DIY - i.e. you try it only if you are willing to
-> >>> look into fixing it yourself - I hope )
-> >>
-> >> By generating your own kernel with MEMLEAK enabled, you should be able to see
-> >> which data blob is being leaked. If you post that info, someone on this list
-> >> should be able to help you find the cause.
-> >
-> > Actually the rt2x00-users list is not intended for the Ralink staging drivers.
-> > You have to use the staging mailing list: devel@driverdev.osuosl.org
-> >
-> Yes, they refused my message but didn't tell anything about the staging mailing list which I couldn't find either and I am now reading from you. Many thanks for pointing this out.
+2010/3/9 Bruno Randolf <br1@einfach.org>:
+> it's never used and we have a newer implementation in gpio.c.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/ath5k.h |    2 --
+>  drivers/net/wireless/ath/ath5k/caps.c  |    3 ---
+>  2 files changed, 0 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index 54f35ae..7721d7d 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -1068,8 +1068,6 @@ struct ath5k_hw {
+>        u8                      ah_def_ant;
+>        bool                    ah_software_retry;
+>
+> -       int                     ah_gpio_npins;
+> -
+>        struct ath5k_capabilities ah_capabilities;
+>
+>        struct ath5k_txq_info   ah_txq[AR5K_NUM_TX_QUEUES];
+> diff --git a/drivers/net/wireless/ath/ath5k/caps.c b/drivers/net/wireless/ath/ath5k/caps.c
+> index 367a6c7..e618e71 100644
+> --- a/drivers/net/wireless/ath/ath5k/caps.c
+> +++ b/drivers/net/wireless/ath/ath5k/caps.c
+> @@ -102,9 +102,6 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+>                }
+>        }
+>
+> -       /* GPIO */
+> -       ah->ah_gpio_npins = AR5K_NUM_GPIO;
+> -
+>        /* Set number of supported TX queues */
+>        if (ah->ah_version == AR5K_AR5210)
+>                ah->ah_capabilities.cap_queues.q_tx_num =
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Your mail wasn't refused for the rt2x00-users mailinglist, we have a filter that prevents non-subscribed members from sending mails to it.
-Luis and myself are administrating the list, so your mails were approoved, but we forgot to press the button to allow all your mails
-to the list to be accepted. :)
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-> I am now running with MEMLEAK enabled, as soon as I will make a new "hammering session" I'll grab the debug data and post another message.
-
-Good luck. :)
-
-Ivo
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
