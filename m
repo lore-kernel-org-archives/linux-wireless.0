@@ -1,136 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dmz4.indranet.co.nz ([203.97.93.68]:57378 "EHLO
-	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753105Ab0CBVx1 (ORCPT
+Received: from coco.cs.washington.edu ([128.208.3.82]:56603 "EHLO
+	coco.cs.washington.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751719Ab0CIWFj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 16:53:27 -0500
-Date: Wed, 3 Mar 2010 10:55:26 +1300 (NZDT)
-From: Derek Smithies <derek@indranet.co.nz>
-To: =?ISO-8859-15?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
-In-Reply-To: <133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.1003031006390.10063@kauri>
-References: <4B8C3A21.2050105@openwrt.org>  <133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>  <4B8D25DC.8070502@openwrt.org> <133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="0-716154148-1267565278=:10063"
+	Tue, 9 Mar 2010 17:05:39 -0500
+Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current  wireless-testing
+Mime-Version: 1.0 (Apple Message framework v1077)
+Content-Type: text/plain; charset=us-ascii
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+In-Reply-To: <43e72e891003040931n2dbd3c9cgdfbdcf1091adfe67@mail.gmail.com>
+Date: Tue, 9 Mar 2010 14:05:29 -0800
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Message-Id: <33ED094E-EFBC-4BAD-B9F4-4C81BCEE9537@cs.washington.edu>
+References: <201002281534.11656.helmut.schaa@googlemail.com>  <201003011927.53208.helmut.schaa@googlemail.com> <43e72e891003011059v564931e2qfe390657b698c277@mail.gmail.com>  <201003022047.10196.helmut.schaa@googlemail.com> <1267640304.15761.121.camel@rchatre-DESK>  <03690D90-3C5E-4E37-8BC6-7EE6FE0B4E1D@cs.washington.edu> <1267651173.15761.155.camel@rchatre-DESK>  <0A6DB552-23FC-46ED-9326-60EB0370C062@cs.washington.edu> <C2DE0F0B-F62A-47BC-A719-E8A598146776@cs.washington.edu> <43e72e891003040931n2dbd3c9cgdfbdcf1091adfe67@mail.gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mar 4, 2010, at 9:31 AM, Luis R. Rodriguez wrote:
 
---0-716154148-1267565278=:10063
-Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15; FORMAT=flowed
-Content-Transfer-Encoding: 8BIT
-Content-ID: <alpine.DEB.2.00.1003031029321.10063@kauri>
+> On Thu, Mar 4, 2010 at 2:24 AM, Daniel Halperin
+> <dhalperi@cs.washington.edu> wrote:
+>> On Mar 3, 2010, at 2:54 PM, Daniel Halperin wrote:
+> 
+>> My hypothesis as to why this code used to work is that I was using the CONFIG_WIRELESS_OLD_REGULATORY.
+> 
+> Can you test the same by disabling CONFIG_WIRELESS_OLD_REGULATORY ?
 
-On Tue, 2 Mar 2010, Björn Smedman wrote:
-(lots deleted)
->
-> The reason I'm so interested in this subject is I've tried to tweak
-> the ath9k rate control to behave reasonably for me. This has taken a
-> lot of time and the result is rather poor. Also, these tweaks are not
-> general enough to even be contributed back as patches. My feeling is
-> that the reason it is so difficult to get a rate control algorithm to
-> work for all use-cases is that the underlying model is just plain
-> wrong. Radio environments are very varied and complex. Add to that all
-> the other variability, such as ANI dynamically adjusting radio chain
-> parameters and it's very very difficult to know what is "incorrect but
-> good enough".
+I am no longer using CONFIG_WIRELESS_OLD_REGULATORY; in fact I believe that kernel option has been removed. I don't have any old versions around any more unfortunately to test this hypothesis with.
 
-Some years ago, my colleagues and I set out to write a rate control 
-algorithm for madwifi. At that time, the existing rate control algorithms 
-were best described as "junk". Manual adjustment of the rates at either 
-end of a link would often double the throughput.
---After some thought - we realised that the rate control algorithm had to 
-use good data, and make the correct decision on the data.
-And so an EWMA based approach was devised which only looked at the success 
-probability of packets to determine which rate to use in the future.
-In other words, "select a rate that we know works, and have recently 
-tested and verified to work".
+> There is a way for a driver to claim a custom world regulatory domain,
+> this can be done wiphy_apply_custom_regulatory(), ath/regd.c uses
+> that. Otherwise indeed the pegged regulatory domain will be used as a
+> basis for disabling further channels.
 
-This approach worked. When the hardware/driver selected a bad ani setting,
-manual adjustment of the rate, or using the ewma based approach -
-the throughput was the same (as good as can be achieved).
+It turns out that disabling WIPHY_FLAG_STRICT_REGULATORY:
 
-Even when there were issues in the firmware (ramping, or transmission 
-delay) manual adjustment of the rate, or using the ewma based approach -
-the throughput was the same (as good as can be achieved).
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2632,7 +2632,7 @@ static int iwl_mac_setup_register(struct iwl_priv *priv)
+                BIT(NL80211_IFTYPE_STATION) |
+                BIT(NL80211_IFTYPE_ADHOC);
+ 
+-       hw->wiphy->flags |= WIPHY_FLAG_STRICT_REGULATORY |
++       hw->wiphy->flags |= //WIPHY_FLAG_STRICT_REGULATORY |
+                            WIPHY_FLAG_DISABLE_BEACON_HINTS;
+ 
+        /*
 
-And the rate control algorithm that we wrote was called minstrel.
-Felix has taken this on and done wonders to get it to mac80211 and 
-accepted as the default rate algorithm.
-==================
+also fixes the problem; in reality this is a hack. It does seem to keep the proper driver-set regulatory limits even when I switch modes or channels or CRDA domains. This is because iwl_mac_setup_register() happens after the eeprom is read in iwl-agn.c, and thus the regulatory flags (chan->orig_flags) are pegged and thus stay set properly throughout the run. But it seems like the right approach is actually to do what ath/regd.c does and apply the custom regulatory domain.
 
-if you look on linux wireless,
-http://linuxwireless.org/en/developers/Documentation/mac80211#mac80211_rate_control_algorithms
-and read up on rate control algorithms you will find docs for PID and 
-minstrel.
+Right now, iwlwifi sets WIPHY_FLAG_STRICT_REGULATORY but never sends the custom regulatory domain and so all CRDA requests are ignored by the checks in <base>/net/wireless/reg.c:handle_channel. (Until iwlagn, but not cfg80211, is reloaded).
 
-Where are the docs for the ath9k rate control algorithm?
-
-PID got it wrong - implicit in PID is the assumption that the rates can be 
-ordered in terms of more successful / less successful - and the ordering 
-follows the speed (faster speed=less successful).
-
-Since very slow rates are subject to interference loss (imagine there is a 
-60hz transmitter out there) packets that take a long time to transmit are 
-far more likely to be shot down, stepping down a rate is going to increase 
-the loss rate.
-
-*Going on messages like:
-   http://osdir.com/ml/linux-wireless/2009-11/msg00952.html
-*the absence of any docs,
-*reliance on RSSI (which is a misleading figure)
-I would say your efforts in working on the ath9k rate algorithm were 
-doomed to failure.
-
-=================================================
-
-> My feeling is that the reason it is so difficult to get a rate control 
-> algorithm to work for all use-cases is that the underlying model is just 
-> plain wrong.
-yes. minstrel has a very very good model, and works very very well. 
-Minstrel's model needs to be used in ath9k - and so the work of Felix to 
-port Minstrel is valuable and appreciated.
-
-> Radio environments are very varied and complex.
-Yes, radio environments are varied and complex. If you have a good model 
-for the rate control algorithm, your rate control algorithm will work well.
-
-> Add to that all the other variability, such as ANI dynamically adjusting 
-> radio chain parameters and it's very very difficult to know what is 
-> "incorrect but good enough".
-The best measure of a rate control algorithm was hinted at above. I will 
-state it clearly here:
-Take 2 nodes.
-use your rate control algorithm on the 2 nodes.
-a)measure the throughput between them.
-Change to using manually adjust fixed rate.
-b)Manually adjust the tx rate of either node until you achieve the best
-   throughput.
-Compare the throughput from a) and b)
-
-If ANI (or whatever else you can think of) is reducing throughput, the 
-above simple test should still give the same result. The throughput for a) 
-and b) should still be the same.
-
-Derek.
-  -- 
-Derek Smithies Ph.D.
-IndraNet Technologies Ltd.
-ph +64 3 365 6485
-Web: http://www.indranet-technologies.com/
-
-"The only thing IE should be used for is to download Fire Fox"
-
-"My favorite language is call STAR. It's extremely concise. It has
-  exactly one verb '*', which does exactly what I want at the moment."
-     --Larry Wall
---0-716154148-1267565278=:10063--
+Dan
