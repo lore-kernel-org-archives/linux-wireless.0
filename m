@@ -1,92 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:10123 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752506Ab0CYFtK (ORCPT
+Received: from mail-pz0-f200.google.com ([209.85.222.200]:54966 "EHLO
+	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756389Ab0CIBVs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 01:49:10 -0400
-Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0812996148
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 14:49:09 +0900 (JST)
-Subject: [PATCH 01/10] ath5k: remove static calibration interval variable
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
-	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com
-Date: Thu, 25 Mar 2010 14:49:03 +0900
-Message-ID: <20100325054903.10697.14362.stgit@tt-desk>
-In-Reply-To: <20100325054603.10697.48915.stgit@tt-desk>
-References: <20100325054603.10697.48915.stgit@tt-desk>
+	Mon, 8 Mar 2010 20:21:48 -0500
+Received: by pzk38 with SMTP id 38so1409967pzk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 17:21:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <201003090950.21811.br1@einfach.org>
+References: <20100308025841.7460.69949.stgit@void> <201003090934.59740.br1@einfach.org>
+	<43e72e891003081647r5cb0a286la5217ff1f97e0652@mail.gmail.com>
+	<201003090950.21811.br1@einfach.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 8 Mar 2010 17:21:27 -0800
+Message-ID: <43e72e891003081721h3db9ca53n4a3688ca8aa452a4@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: fix I/Q calibration (for real)
+To: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove static variable ath5k_calinterval which was used as a constant. Use a
-#define instead. Also we don't need ah_cal_intval.
+On Mon, Mar 8, 2010 at 4:50 PM, Bruno Randolf <br1@einfach.org> wrote:
+> On Tuesday 09 March 2010 09:47:09 Luis R. Rodriguez wrote:
+>> On Mon, Mar 8, 2010 at 4:34 PM, Bruno Randolf <br1@einfach.org> wrote:
+>> > On Tuesday 09 March 2010 01:24:48 Luis R. Rodriguez wrote:
+>> >> >> Thanks Bruno, are these stable fixes?
+>> >> >
+>> >> > hi luis!
+>> >> >
+>> >> > i think so. the behaviour before was completely broken, now it's
+>> >> > better.
+>> >> >
+>> >> > but i'm not sure about that whole Cc: stable@kernel.org thing...
+>> >> > (sorry i've been away for a while)... i read
+>> >> > Documentation/stable_kernel_rules.txt but still not sure if that
+>> >> > applies for this patch.
+>> >>
+>> >> Just add:
+>> >>
+>> >> Cc: stable@kernel.org
+>> >>
+>> >> below your Singed-off-by on the commit log entry. That list will get
+>> >> spammed once the patch is merged on Linus' tree.
+>> >
+>> > i understand that.
+>> >
+>> > the question is more if my patch justifies bothering 'stable' or not.
+>> >
+>> > as i said, in my point of view ath5k has several problems right now
+>> > (performace and stability), and i guess nobody will be using it seriously
+>> > in actual production use (does anyone?). so i think it does not really
+>> > matter if this or any of my other patches go into stable sooner or
+>> > later. does it?
+>>
+>> 2.6.32 will be used by a lot of "enterprise" releases, I'd prefer
+>> connection stability fixes do indeed go in for 2.6.32 for ath5k, this
+>> seems like one. I'll let John be the judge.
+>
+> sure, as i said, i don't mind. :)
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    4 +---
- drivers/net/wireless/ath/ath5k/base.c  |    4 ----
- drivers/net/wireless/ath/ath5k/phy.c   |    2 +-
- 3 files changed, 2 insertions(+), 8 deletions(-)
+Alright lets skip stable for this.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 1d7491c..a3019ee 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -202,6 +202,7 @@
- #define AR5K_TUNE_MAX_TXPOWER			63
- #define AR5K_TUNE_DEFAULT_TXPOWER		25
- #define AR5K_TUNE_TPC_TXPOWER			false
-+#define ATH5K_TUNE_CALIBRATION_INTERVAL_FULL    10000   /* 10 sec */
- 
- #define AR5K_INIT_CARR_SENSE_EN			1
- 
-@@ -1101,9 +1102,6 @@ struct ath5k_hw {
- 	/* Calibration timestamp */
- 	unsigned long		ah_cal_tstamp;
- 
--	/* Calibration interval (secs) */
--	u8			ah_cal_intval;
--
- 	/* Software interrupt mask */
- 	u8			ah_swi_mask;
- 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index b142a78..39d5800 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -59,7 +59,6 @@
- #include "reg.h"
- #include "debug.h"
- 
--static u8 ath5k_calinterval = 10; /* Calibrate PHY every 10 secs (TODO: Fixme) */
- static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
-@@ -2497,9 +2496,6 @@ ath5k_init(struct ath5k_softc *sc)
- 	 */
- 	ath5k_stop_locked(sc);
- 
--	/* Set PHY calibration interval */
--	ah->ah_cal_intval = ath5k_calinterval;
--
- 	/*
- 	 * The basic interface to setting the hardware in a good
- 	 * state is ``reset''.  On return the hardware is known to
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 47f3679..07f59b1 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1108,7 +1108,7 @@ ath5k_hw_calibration_poll(struct ath5k_hw *ah)
- 	/* Calibration interval in jiffies */
- 	unsigned long cal_intval;
- 
--	cal_intval = msecs_to_jiffies(ah->ah_cal_intval * 1000);
-+	cal_intval = msecs_to_jiffies(ATH5K_TUNE_CALIBRATION_INTERVAL_FULL);
- 
- 	/* Initialize timestamp if needed */
- 	if (!ah->ah_cal_tstamp)
-
+  Luis
