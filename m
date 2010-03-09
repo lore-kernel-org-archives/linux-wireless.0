@@ -1,40 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:28491 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752609Ab0CZU5F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 16:57:05 -0400
-Subject: Re: [PATCH] setup correct int pipe type in ar9170_usb_exec_cmd
-From: Pavel Roskin <proski@gnu.org>
-To: Valentin Longchamp <valentin.longchamp@epfl.ch>
-Cc: chunkeey@web.de, linux-wireless@vger.kernel.org
-In-Reply-To: <1269600273-7974-1-git-send-email-valentin.longchamp@epfl.ch>
-References: <1269600273-7974-1-git-send-email-valentin.longchamp@epfl.ch>
-Content-Type: text/plain
-Date: Fri, 26 Mar 2010 16:57:03 -0400
-Message-Id: <1269637023.8534.17.camel@mj>
-Mime-Version: 1.0
+Received: from coco.cs.washington.edu ([128.208.3.82]:51374 "EHLO
+	coco.cs.washington.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752145Ab0CIW4W convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Mar 2010 17:56:22 -0500
+Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current wireless-testing
+Mime-Version: 1.0 (Apple Message framework v1077)
+Content-Type: text/plain; charset=us-ascii
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+In-Reply-To: <33ED094E-EFBC-4BAD-B9F4-4C81BCEE9537@cs.washington.edu>
+Date: Tue, 9 Mar 2010 14:56:12 -0800
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Message-Id: <460593D3-F23F-4168-B7D6-3053181728AE@cs.washington.edu>
+References: <201002281534.11656.helmut.schaa@googlemail.com> <201003011927.53208.helmut.schaa@googlemail.com> <43e72e891003011059v564931e2qfe390657b698c277@mail.gmail.com> <201003022047.10196.helmut.schaa@googlemail.com> <1267640304.15761.121.camel@rchatre-DESK> <03690D90-3C5E-4E37-8BC6-7EE6FE0B4E1D@cs.washington.edu> <1267651173.15761.155.camel@rchatre-DESK> <0A6DB552-23FC-46ED-9326-60EB0370C062@cs.washington.edu> <C2DE0F0B-F62A-47BC-A719-E8A598146776@cs.washington.edu> <43e72e891003040931n2dbd3c9cgdfbdcf1091adfe67@mail.gmail.com> <33ED094E-EFBC-4BAD-B9F4-4C81BCEE9537@cs.washington.edu>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-26 at 11:44 +0100, Valentin Longchamp wrote:
-> An int urb is constructed but we fill it in with a bulk pipe type.
+Fyi, I created bug #2172 (http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2172) for this issue.
+
+Dan
+
+On Mar 9, 2010, at 2:05 PM, Daniel Halperin wrote:
+
+> On Mar 4, 2010, at 9:31 AM, Luis R. Rodriguez wrote:
 > 
-> Commit f661c6f8c67bd55e93348f160d590ff9edf08904 implemented a pipe type
-> check when CONFIG_USB_DEBUG is enabled. The check failed for all the ar9170
-> usb transfers and the driver could not configure the wifi dongle.
+>> On Thu, Mar 4, 2010 at 2:24 AM, Daniel Halperin
+>> <dhalperi@cs.washington.edu> wrote:
+>>> On Mar 3, 2010, at 2:54 PM, Daniel Halperin wrote:
+>> 
+>>> My hypothesis as to why this code used to work is that I was using the CONFIG_WIRELESS_OLD_REGULATORY.
+>> 
+>> Can you test the same by disabling CONFIG_WIRELESS_OLD_REGULATORY ?
 > 
-> This went unnoticed until now because most people don't have
-> CONFIG_USB_DEBUG enabled.
+> I am no longer using CONFIG_WIRELESS_OLD_REGULATORY; in fact I believe that kernel option has been removed. I don't have any old versions around any more unfortunately to test this hypothesis with.
+> 
+>> There is a way for a driver to claim a custom world regulatory domain,
+>> this can be done wiphy_apply_custom_regulatory(), ath/regd.c uses
+>> that. Otherwise indeed the pegged regulatory domain will be used as a
+>> basis for disabling further channels.
+> 
+> It turns out that disabling WIPHY_FLAG_STRICT_REGULATORY:
+> 
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -2632,7 +2632,7 @@ static int iwl_mac_setup_register(struct iwl_priv *priv)
+>                BIT(NL80211_IFTYPE_STATION) |
+>                BIT(NL80211_IFTYPE_ADHOC);
+> 
+> -       hw->wiphy->flags |= WIPHY_FLAG_STRICT_REGULATORY |
+> +       hw->wiphy->flags |= //WIPHY_FLAG_STRICT_REGULATORY |
+>                            WIPHY_FLAG_DISABLE_BEACON_HINTS;
+> 
+>        /*
+> 
+> also fixes the problem; in reality this is a hack. It does seem to keep the proper driver-set regulatory limits even when I switch modes or channels or CRDA domains. This is because iwl_mac_setup_register() happens after the eeprom is read in iwl-agn.c, and thus the regulatory flags (chan->orig_flags) are pegged and thus stay set properly throughout the run. But it seems like the right approach is actually to do what ath/regd.c does and apply the custom regulatory domain.
+> 
+> Right now, iwlwifi sets WIPHY_FLAG_STRICT_REGULATORY but never sends the custom regulatory domain and so all CRDA requests are ignored by the checks in <base>/net/wireless/reg.c:handle_channel. (Until iwlagn, but not cfg80211, is reloaded).
+> 
+> Dan
+> ------------------------------------------------------------------------------
+> Download Intel&#174; Parallel Studio Eval
+> Try the new software tools for yourself. Speed compiling, find bugs
+> proactively, and fine-tune applications for parallel performance.
+> See why Intel Parallel Studio got high marks during beta.
+> http://p.sf.net/sfu/intel-sw-dev
+> _______________________________________________
+> Ipw3945-devel mailing list
+> Ipw3945-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
 
-Actually, if the code was broken and nobody noticed, do we need it at
-all?  ar9170_usb_tx_urb_complete() is an empty function.
-
-Suppose we need it, then maybe we could put some debug code there?  I
-think that function has a poor name, it should be something with "cmd",
-like ar9170_usb_tx_urb_complete_cmd().
-
-By the way, I think such fixes belong to stable.
- 
--- 
-Regards,
-Pavel Roskin
