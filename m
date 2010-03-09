@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:32901 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899Ab0C3DTl (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:49101 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab0CIGp7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 23:19:41 -0400
-Received: by gwaa18 with SMTP id a18so4493655gwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 20:19:41 -0700 (PDT)
+	Tue, 9 Mar 2010 01:45:59 -0500
+Received: by gyh3 with SMTP id 3so1246388gyh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 22:45:59 -0800 (PST)
 MIME-Version: 1.0
-Date: Mon, 29 Mar 2010 23:19:40 -0400
-Message-ID: <9f266c561003292019w33d2797dye02cc508c41c0818@mail.gmail.com>
-Subject: WIFI on embedded board.
-From: Suraj Linux <suraj.embedded.linux@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <201003091456.37577.br1@einfach.org>
+References: <20100308025841.7460.69949.stgit@void>
+	 <b6c5339f1003081910t745c3e5ftafbedd1298487875@mail.gmail.com>
+	 <43e72e891003081932h49340b6aia3fb6fd1e60ae8d7@mail.gmail.com>
+	 <201003091456.37577.br1@einfach.org>
+Date: Tue, 9 Mar 2010 01:45:58 -0500
+Message-ID: <b6c5339f1003082245j2ef6ada1ka454cc379b26a695@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: fix I/Q calibration (for real)
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Mar 9, 2010 at 12:56 AM, Bruno Randolf <br1@einfach.org> wrote:
+> On Tuesday 09 March 2010 12:32:33 Luis R. Rodriguez wrote:
+>> Perhaps a little more elaboration on the commit log on the impact and
+>> how this helps and how much would help.
+>
+> ok. to stop the confusion, i'll add cc: stable.
 
-I am not sure if this is the right place to post this thread.But I am
-looking for some help and guidance so that I can learn about WIFI ,
-Embedded linux and Device driver.
+:) thanks!
 
-I am working on a project to build an embedded board with WIFI connectivity.
+FWIW, I tested the patches, and they worked well for my not-very-thorough
+tests.  I think there was a regression in 2.6.32 time-frame that I never
+pinned down, hopefully this corrects some things.  I did not test the 5211
+stuff though, that one patch is probably not for stable unless someone can
+test that.
 
-I need help in deciding how to get WIFI connectivity to the board. I
-have two options to buy a WIFI module or a WIFI USB dongle.
-
-What would you suggest?
-
-How should I get it working ? I could load the driver on the board and use it.
-
-I want to build an application using it. The reading material on the
-site is very good. I have tried to go over it as much as possible. I
-understand that I need use IOCTL once the driver is working. Can I get
-help with a sample code which could give me a head start.
-
- My present status:
-- I have a embedded development board TS7200 .
-- It has USB and Ethernet Port.
-- I am able to get port Linux on it and run program to communicate
-between  devices  and a computer using socket programming and
-Ethernet.
-
-I am bit clueless because this is an embedded board and I have just
-started working on such platform.
-
-Thank you.
-
-Regards,
-Suraj Swami
+-- 
+Bob Copeland %% www.bobcopeland.com
