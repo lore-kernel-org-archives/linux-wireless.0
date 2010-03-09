@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:60011 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753118Ab0C2VcR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 17:32:17 -0400
-Received: by ewy20 with SMTP id 20so931673ewy.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 14:32:16 -0700 (PDT)
+Received: from home.einfach.org ([80.86.92.145]:45447 "EHLO home.einfach.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756071Ab0CIAuh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Mar 2010 19:50:37 -0500
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: fix I/Q calibration (for real)
+Date: Tue, 9 Mar 2010 09:50:21 +0900
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+References: <20100308025841.7460.69949.stgit@void> <201003090934.59740.br1@einfach.org> <43e72e891003081647r5cb0a286la5217ff1f97e0652@mail.gmail.com>
+In-Reply-To: <43e72e891003081647r5cb0a286la5217ff1f97e0652@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4BB11AA4.3010108@gmail.com>
-References: <4BB11AA4.3010108@gmail.com>
-Date: Mon, 29 Mar 2010 22:32:15 +0100
-Message-ID: <880c1631003291432y6df631b0w26c1c6531556e580@mail.gmail.com>
-Subject: Re: [rt2x00-users] FW RT307x/RT309x
-From: Luis Correia <buga@loide.net>
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201003090950.21811.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Xose
+On Tuesday 09 March 2010 09:47:09 Luis R. Rodriguez wrote:
+> On Mon, Mar 8, 2010 at 4:34 PM, Bruno Randolf <br1@einfach.org> wrote:
+> > On Tuesday 09 March 2010 01:24:48 Luis R. Rodriguez wrote:
+> >> >> Thanks Bruno, are these stable fixes?
+> >> > 
+> >> > hi luis!
+> >> > 
+> >> > i think so. the behaviour before was completely broken, now it's
+> >> > better.
+> >> > 
+> >> > but i'm not sure about that whole Cc: stable@kernel.org thing...
+> >> > (sorry i've been away for a while)... i read
+> >> > Documentation/stable_kernel_rules.txt but still not sure if that
+> >> > applies for this patch.
+> >> 
+> >> Just add:
+> >> 
+> >> Cc: stable@kernel.org
+> >> 
+> >> below your Singed-off-by on the commit log entry. That list will get
+> >> spammed once the patch is merged on Linus' tree.
+> > 
+> > i understand that.
+> > 
+> > the question is more if my patch justifies bothering 'stable' or not.
+> > 
+> > as i said, in my point of view ath5k has several problems right now
+> > (performace and stability), and i guess nobody will be using it seriously
+> > in actual production use (does anyone?). so i think it does not really
+> > matter if this or any of my other patches go into stable sooner or
+> > later. does it?
+> 
+> 2.6.32 will be used by a lot of "enterprise" releases, I'd prefer
+> connection stability fixes do indeed go in for 2.6.32 for ath5k, this
+> seems like one. I'll let John be the judge.
 
-On Mon, Mar 29, 2010 at 22:24, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> hi,
->
-> to make the RT307x and RT309x chips work, the drivers
-> rt2800usb and rt2800pci need to load rt307x.bin and
-> rt3090.bin respectively.
->
-> FW is here:http://git.decadent.org.uk/gitweb?p=linux-firmware.git;a=tree
->
+sure, as i said, i don't mind. :)
 
-I'm sorry to be kinda annoying, but the firmware cannot be distributed
-unless it is available directly from Ralink's website with a proper
-license.
-
-Therefore I kindly request that nothing should be done about this request.
-
-I will personally contact Ralink and ask for the relevant firmware
-files to be made available.
-
-
-thank you,
-Luis Correia
-rt2x00 project admin
+bruno
