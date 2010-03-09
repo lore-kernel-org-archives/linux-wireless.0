@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63365 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab0CVIFR (ORCPT
+Received: from mail-pz0-f200.google.com ([209.85.222.200]:48028 "EHLO
+	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972Ab0CITeG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 04:05:17 -0400
-Received: by wyb38 with SMTP id 38so2335921wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 01:05:15 -0700 (PDT)
+	Tue, 9 Mar 2010 14:34:06 -0500
+Received: by pzk38 with SMTP id 38so1808479pzk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 11:34:04 -0800 (PST)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <19366.65089.541041.18060@gargle.gargle.HOWL>
-References: <2d0a357f1003191828g2d133a06qd8902785ae015cd0@mail.gmail.com>
-	 <19366.65089.541041.18060@gargle.gargle.HOWL>
-Date: Mon, 22 Mar 2010 09:05:15 +0100
-Message-ID: <2d0a357f1003220105uaafb04aq86459c822ad313b7@mail.gmail.com>
-Subject: Re: [ath9k_htc] Wrong kernel config parameters in wiki?
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1268161528-24028-1-git-send-email-sprecher.m@gmail.com>
+References: <1268161528-24028-1-git-send-email-sprecher.m@gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 9 Mar 2010 11:33:44 -0800
+Message-ID: <43e72e891003091133h31bfb1c5sceb4d3c9258792e6@mail.gmail.com>
+Subject: Re: [PATCH] wireless: ath9k: Fix most coding style issues in ath9k
+	This patch fixed up almost all coding style issues in the ath9k driver found
+	by the ceckpatch.pl tool. Signed-off-by: Michael Sprecher
+	<sprecher.m@gmail.com>
+To: Michael Sprecher <sprecher.m@gmail.com>
+Cc: jmalinen@atheros.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 22, 2010 at 6:21 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> Sedat Dilek wrote:
->> Hi,
->>
->> a person asked on IRC about ath9k_htc support.
->>
->> First question:
->> Has the patch from [1] already entered one of the wireless-* GIT repositories?
->
-> Nope, the driver has not been merged yet.
-> A revised series (12 patches) was submitted.
-> They should be available on patchwork.
->
+On Tue, Mar 9, 2010 at 11:05 AM, Michael Sprecher <sprecher.m@gmail.com> wrote:
+> ---
+>  drivers/net/wireless/ath/ath9k/ani.c         |    5 ++-
+>  drivers/net/wireless/ath/ath9k/ath9k.h       |   28 ++++++++--------
+>  drivers/net/wireless/ath/ath9k/beacon.c      |    6 ++--
+>  drivers/net/wireless/ath/ath9k/btcoex.h      |    6 ++--
+>  drivers/net/wireless/ath/ath9k/calib.c       |   15 ++++-----
+>  drivers/net/wireless/ath/ath9k/calib.h       |    4 +-
+>  drivers/net/wireless/ath/ath9k/common.c      |   20 +++++------
+>  drivers/net/wireless/ath/ath9k/common.h      |   10 +++---
+>  drivers/net/wireless/ath/ath9k/debug.c       |   12 +++---
+>  drivers/net/wireless/ath/ath9k/eeprom.h      |    4 +-
+>  drivers/net/wireless/ath/ath9k/eeprom_4k.c   |   16 +++++-----
+>  drivers/net/wireless/ath/ath9k/eeprom_9287.c |   14 +++++---
+>  drivers/net/wireless/ath/ath9k/eeprom_def.c  |   31 +++++++++---------
+>  drivers/net/wireless/ath/ath9k/gpio.c        |    2 +-
+>  drivers/net/wireless/ath/ath9k/hw.c          |   44 +++++++++++--------------
+>  drivers/net/wireless/ath/ath9k/hw.h          |   22 ++++++------
+>  drivers/net/wireless/ath/ath9k/init.c        |    6 ++--
+>  drivers/net/wireless/ath/ath9k/mac.h         |    2 +-
+>  drivers/net/wireless/ath/ath9k/main.c        |   26 +++++++-------
+>  drivers/net/wireless/ath/ath9k/phy.c         |   12 +++----
+>  drivers/net/wireless/ath/ath9k/phy.h         |    4 +-
+>  drivers/net/wireless/ath/ath9k/rc.c          |   13 +++----
+>  drivers/net/wireless/ath/ath9k/rc.h          |    4 +-
+>  drivers/net/wireless/ath/ath9k/recv.c        |    5 +--
+>  drivers/net/wireless/ath/ath9k/reg.h         |   22 ++++++------
+>  drivers/net/wireless/ath/ath9k/virtual.c     |    3 +-
+>  drivers/net/wireless/ath/ath9k/xmit.c        |   11 +++---
+>  27 files changed, 167 insertions(+), 180 deletions(-)
 
-New patchset from [1] applies cleanly against 2.6.34-rc2.
+Thanks a lot! Unfortunately right now we have two large patch bombs
+pending integration which would likely conflict with your patch. One
+set which I hope we can get into 2.6.34-rc2, the ath9k_htc driver.
+Then after that I have an already accumulated set of patches (count is
+at 10 right now) for AR93xx work. The ar93xx work is not intended for
+2.6.34 though so I could rebase my work on top of yours but lets first
+see ath9k_htc get merged first and decide then.
 
->> I could apply the ath9k_htc patch against 2.6.34-rc1-git9.
->>
->> The kernel config parameters in wiki [2] seems to be wrong to me:
->>
->> CONFIG_ATH=m
->> CONFIG_ATH9K_HW=m
->> CONFIG_ATH9K_HTC=m
->
-> Yep, they are wrong and are fixed now.
->
+So NACK for now.
 
-The correct kernel config parameters are (only for documentation purposes):
-
-CONFIG_ATH_COMMON=m
-CONFIG_ATH9K_HW=m
-CONFIG_ATH9K_COMMON=m
-CONFIG_ATH9K_HTC=m
-
-Thanks for the informations.
-
---
-Sedat
-
-[1] https://patchwork.kernel.org/patch/{86517..86528}/ (12 patches)
+  Luis
