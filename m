@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:33870 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261Ab0CRI7v (ORCPT
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:45738 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756516Ab0CICMy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 04:59:51 -0400
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2I8xRRl003047
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 10:59:48 +0200
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: luciano.coelho@nokia.com
-Subject: [RFC PATCHv4 0/2] mac80211: cfg80211: Roam trigger support
-Date: Thu, 18 Mar 2010 10:56:50 +0200
-Message-Id: <1268902612-27492-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 8 Mar 2010 21:12:54 -0500
+Received: by qyk9 with SMTP id 9so5250103qyk.5
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 18:12:52 -0800 (PST)
+Message-ID: <4B95AEA1.3040401@lwfinger.net>
+Date: Mon, 08 Mar 2010 20:12:49 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Deauthentications with p54usb
+References: <1756555272@web.de> <4A7F314E.7050808@lwfinger.net> <201003090038.34884.chunkeey@googlemail.com>
+In-Reply-To: <201003090038.34884.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To implement good performance WLAN roaming, it is not sufficient to start
-scanning for other available AP's only after the currently serving association
-is lost.
+On 03/08/2010 05:38 PM, Christian Lamparter wrote:
+> Hello Larry,
+> 
+> Remember?
 
-The entity controlling the roaming will need to get indication of a
-deteriorating WLAN connection in order to start preparing for roaming already
-before the serving association is lost. This way, it can roam to a better AP
-perhaps even before the serving association becomes too bad in quality.
+I had forgotten. Using the 'iwconfig wlanX power on' results in lots of
+deauthentications:
 
-These patches propose an implementation facilitating this using a simple RSSI
-threshold and hysteresis approach.
+The output of 'dmesg | grep deauthen' results in
 
-These patches add a nl80211 interface for simply configuring a rssi threshold
-and hysteresis value to facilitate very basic connection quality monitoring.
+[19826.645917] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[20006.645407] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[20126.663059] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[20301.031865] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[20366.659815] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[20501.417748] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[20606.644271] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[20846.658392] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[20966.653835] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[21095.942856] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[21332.790772] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[21446.649393] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[21570.643913] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[21686.652360] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[21946.714794] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[22078.162861] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[22166.651450] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[22406.651968] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[22526.667053] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[22646.651483] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[23054.133847] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[23139.129081] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[23249.743447] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[23377.759110] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[23487.119197] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[23622.154154] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[23846.651794] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[23966.649980] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[24206.644314] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[24446.650418] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[24576.569191] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[24686.645975] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
+[24806.650948] wlan6: deauthenticated from 00:14:bf:85:49:fa (Reason: 7)
 
-For the triggering, these patches currently rely on HW support, host based
-triggering is not implemented, but could be added later if needed.
+As soon as I used 'iwconfig wlanX power off', the deauthentications stopped.
 
-These patches have been tested with the wl1271 driver.
-
-Thanks in advance for your comments and suggestions.
-
-Juuso Oikarinen (2):
-  cfg80211: Add connection quality monitoring support to nl80211
-  mac80211: Add support for connection quality monitoring
-
- include/linux/nl80211.h |   31 ++++++++++++
- include/net/cfg80211.h  |   18 +++++++
- include/net/mac80211.h  |   26 ++++++++++
- net/mac80211/cfg.c      |   27 +++++++++++
- net/mac80211/mlme.c     |    8 +++
- net/wireless/mlme.c     |   11 ++++
- net/wireless/nl80211.c  |  118 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    5 ++
- 8 files changed, 244 insertions(+), 0 deletions(-)
-
+Larry
