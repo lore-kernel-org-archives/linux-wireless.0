@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:50188 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753782Ab0CLCQ7 (ORCPT
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:47252 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756619Ab0CIDKd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 21:16:59 -0500
-Received: by fg-out-1718.google.com with SMTP id l26so179698fgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2010 18:16:58 -0800 (PST)
+	Mon, 8 Mar 2010 22:10:33 -0500
+Received: by ywh36 with SMTP id 36so678419ywh.4
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 19:10:32 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1268343167-2961-3-git-send-email-hauke@hauke-m.de>
-References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
-	<1268343167-2961-3-git-send-email-hauke@hauke-m.de>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 12 Mar 2010 03:16:38 +0100
-Message-ID: <69e28c911003111816m4bf0d04dnc94a387b3d42f05b@mail.gmail.com>
-Subject: Re: [PATCH 1/5] compat-wireless: rename {free,alloc}_ieee80211 to
-	{free,alloc}_libipw
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	mcgrof@infradead.org
+In-Reply-To: <43e72e891003081721h3db9ca53n4a3688ca8aa452a4@mail.gmail.com>
+References: <20100308025841.7460.69949.stgit@void>
+	 <201003090934.59740.br1@einfach.org>
+	 <43e72e891003081647r5cb0a286la5217ff1f97e0652@mail.gmail.com>
+	 <201003090950.21811.br1@einfach.org>
+	 <43e72e891003081721h3db9ca53n4a3688ca8aa452a4@mail.gmail.com>
+Date: Mon, 8 Mar 2010 22:10:32 -0500
+Message-ID: <b6c5339f1003081910t745c3e5ftafbedd1298487875@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: fix I/Q calibration (for real)
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Bruno Randolf <br1@einfach.org>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 11, 2010 at 10:32 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> {free,alloc}_ieee80211 are also defined by ieee80211 module for example
-> used on kernel 2.6.26. Without this patch ipwlib will not load on this
-> kernel, because of a duplicate symbol.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Mon, Mar 8, 2010 at 8:21 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Mar 8, 2010 at 4:50 PM, Bruno Randolf <br1@einfach.org> wrote:
 
-I believe this should be done upstream for 2.6.35 as well - this
-"_ieee80211" is not a reference to the name of  the IEEE 802.11
-specification, but rather to the old name of libipw - "ieee80211";
-this was somehow missed during the libipw rename.
+>>> > as i said, in my point of view ath5k has several problems right now
+>>> > (performace and stability), and i guess nobody will be using it seriously
+>>> > in actual production use (does anyone?).
+
+Yes, people do use ath5k in production.  Some large companies.
+
+>>> 2.6.32 will be used by a lot of "enterprise" releases, I'd prefer
+>>> connection stability fixes do indeed go in for 2.6.32 for ath5k
+
+>> sure, as i said, i don't mind. :)
+>
+> Alright lets skip stable for this.
+
+Wow this whole line of conversation is confusing :)
+
+If this fixes a calibration bug it needs to go to stable.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Bob Copeland %% www.bobcopeland.com
