@@ -1,40 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:62660 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047Ab0CVFWu convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f216.google.com ([209.85.219.216]:45747 "EHLO
+	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753738Ab0CIMSm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 01:22:50 -0400
-From: Karsten Keil <isdn@linux-pingi.de>
-Reply-To: isdn@linux-pingi.de
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: [RFC PATCH 10/19] pcmcia: dev_node removal (drivers with updated printk call)
-Date: Mon, 22 Mar 2010 06:22:28 +0100
-Cc: linux-pcmcia@lists.infradead.org,
-	Harald Welte <laforge@gnumonks.org>, linux-ide@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org
-References: <20100321230617.GA24791@comet.dominikbrodowski.net> <1269212857-25364-10-git-send-email-linux@dominikbrodowski.net>
-In-Reply-To: <1269212857-25364-10-git-send-email-linux@dominikbrodowski.net>
+	Tue, 9 Mar 2010 07:18:42 -0500
+Received: by ewy8 with SMTP id 8so654430ewy.28
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 04:18:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003220622.28507.isdn@linux-pingi.de>
+In-Reply-To: <20100309075549.30616.4609.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
+	 <20100309075549.30616.4609.stgit@void>
+Date: Tue, 9 Mar 2010 14:18:41 +0200
+Message-ID: <40f31dec1003090418p479ff97bpdaadee407a6416be@mail.gmail.com>
+Subject: Re: [PATCH 07/13] ath5k: remove ah_mac_revision
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Montag, 22. M�rz 2010 00:07:28 Dominik Brodowski wrote:
-> As a second step, remove any usage of dev_node_t from drivers which
-> only wrote to this typedef/struct, except one printk() which can
-> easily be replaced by a dev_info()/dev_warn() call.
-> 
-> CC: Harald Welte <laforge@gnumonks.org>
-> CC: linux-ide@vger.kernel.org
-> CC: Karsten Keil <isdn@linux-pingi.de>
-> CC: linux-wireless@vger.kernel.org
-> CC: netdev@vger.kernel.org
-> CC: linux-usb@vger.kernel.org
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+2010/3/9 Bruno Randolf <br1@einfach.org>:
+> it's not used, and we have ah_mac_srev.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/ath5k.h  |    1 -
+>  drivers/net/wireless/ath/ath5k/attach.c |    1 -
+>  2 files changed, 0 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index 3d63511..54f35ae 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -1047,7 +1047,6 @@ struct ath5k_hw {
+>        u32                     ah_phy;
+>        u32                     ah_mac_srev;
+>        u16                     ah_mac_version;
+> -       u16                     ah_mac_revision;
+>        u16                     ah_phy_revision;
+>        u16                     ah_radio_5ghz_revision;
+>        u16                     ah_radio_2ghz_revision;
+> diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+> index 66758cb..dd4099a 100644
+> --- a/drivers/net/wireless/ath/ath5k/attach.c
+> +++ b/drivers/net/wireless/ath/ath5k/attach.c
+> @@ -148,7 +148,6 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+>        /* Get MAC, PHY and RADIO revisions */
+>        ah->ah_mac_srev = srev;
+>        ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
+> -       ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
+>        ah->ah_phy_revision = ath5k_hw_reg_read(ah, AR5K_PHY_CHIP_ID) &
+>                        0xffffffff;
+>        ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Acked-by: Karsten Keil  <isdn@linux-pingi.de>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Thanks.
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
