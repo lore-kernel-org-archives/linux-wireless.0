@@ -1,168 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46571 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751315Ab0CSUdS (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:8068 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752226Ab0CIHza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 16:33:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, stable@kernel.org
-Subject: [PATCH v2] ssb: do not read SPROM if it does not exist
-Date: Fri, 19 Mar 2010 16:33:05 -0400
-Message-Id: <1269030785-5347-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1269025687-9817-1-git-send-email-linville@tuxdriver.com>
-References: <1269025687-9817-1-git-send-email-linville@tuxdriver.com>
+	Tue, 9 Mar 2010 02:55:30 -0500
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0898951329
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:55:29 +0900 (JST)
+Subject: [PATCH 03/13] ath5k: preserve antenna settings
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Tue, 09 Mar 2010 16:55:28 +0900
+Message-ID: <20100309075528.30616.58727.stgit@void>
+In-Reply-To: <20100309075124.30616.40896.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Attempting to read registers that don't exist on the SSB bus can cause
-hangs on some boxes.  At least some b43 devices are 'in the wild' that
-don't have SPROMs at all.  When the SSB bus support loads, it attempts
-to read these (non-existant) SPROMs and causes hard hangs on the box --
-no console output, etc.
+save antenna settings and preserve across resets.
 
-This patch adds some intelligence to determine whether or not the SPROM
-is present before attempting to read it.  This avoids those hard hangs
-on those devices with no SPROM attached to their SSB bus.  The
-SSB-attached devices (e.g. b43, et al.) won't work, but at least the box
-will survive to test further patches. :-)
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: stable@kernel.org
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
-Version 2, check the correct place for ChipCommon core revision... :-)
+ drivers/net/wireless/ath/ath5k/attach.c |    1 +
+ drivers/net/wireless/ath/ath5k/base.c   |    2 +-
+ drivers/net/wireless/ath/ath5k/phy.c    |    1 +
+ 3 files changed, 3 insertions(+), 1 deletions(-)
 
- drivers/ssb/pci.c                         |    3 +++
- drivers/ssb/scan.c                        |    4 ++++
- drivers/ssb/sprom.c                       |   22 ++++++++++++++++++++++
- include/linux/ssb/ssb.h                   |    3 +++
- include/linux/ssb/ssb_driver_chipcommon.h |   15 +++++++++++++++
- 5 files changed, 47 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 9e50896..2f7b16d 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -620,6 +620,9 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
- 	int err = -ENOMEM;
- 	u16 *buf;
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 4228444..c8bb102 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -123,6 +123,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+ 	ah->ah_cw_min = AR5K_TUNE_CWMIN;
+ 	ah->ah_limit_tx_retries = AR5K_INIT_TX_RETRY;
+ 	ah->ah_software_retry = false;
++	ah->ah_ant_mode = AR5K_ANTMODE_DEFAULT;
  
-+	if (!ssb_is_sprom_available(bus))
-+		return -ENODEV;
-+
- 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
- 	if (!buf)
- 		goto out;
-diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
-index 0d6c028..c4944b9 100644
---- a/drivers/ssb/scan.c
-+++ b/drivers/ssb/scan.c
-@@ -306,6 +306,10 @@ int ssb_bus_scan(struct ssb_bus *bus,
- 		}
- 		tmp = scan_read32(bus, 0, SSB_CHIPCO_CAP);
- 		bus->chipco.capabilities = tmp;
-+		if (bus->chipco.dev->id.revision >= 11)
-+			tmp = scan_read32(bus, 0, SSB_CHIPCO_CHIPSTAT);
-+			bus->chipco.status = tmp;
-+		}
- 	} else {
- 		if (bus->bustype == SSB_BUSTYPE_PCI) {
- 			bus->chip_id = pcidev_to_chipid(bus->host_pci);
-diff --git a/drivers/ssb/sprom.c b/drivers/ssb/sprom.c
-index d0e6762..55eb9b0 100644
---- a/drivers/ssb/sprom.c
-+++ b/drivers/ssb/sprom.c
-@@ -175,3 +175,25 @@ const struct ssb_sprom *ssb_get_fallback_sprom(void)
- {
- 	return fallback_sprom;
- }
-+
-+bool ssb_is_sprom_available(struct ssb_bus *bus)
-+{
-+	/* status register only exists on chipcomon rev >= 11 */
-+	if (bus->chipco.dev->id.revision < 11)
-+		return true;
-+
-+	switch (bus->chip_id) {
-+	case 0x4312:
-+		return SSB_CHIPCO_CHST_4312_SPROM_PRESENT(bus->chipco.status);
-+	case 0x4322:
-+		return SSB_CHIPCO_CHST_4322_SPROM_PRESENT(bus->chipco.status);
-+	case 0x4325:
-+		return SSB_CHIPCO_CHST_4325_SPROM_PRESENT(bus->chipco.status);
-+	default:
-+		break;
-+	}
-+	if (bus->chipco.dev->id.revision >= 31)
-+		return bus->chipco.capabilities & SSB_CHIPCO_CAP_SPROM;
-+
-+	return true;
-+}
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 24f9885..3b4da23 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -394,6 +394,9 @@ extern int ssb_bus_sdiobus_register(struct ssb_bus *bus,
+ 	/*
+ 	 * Find the mac version
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 85eb670..fd4dd3c 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2916,7 +2916,7 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+ 	 * then we must allow the user to set how many tx antennas we
+ 	 * have available
+ 	 */
+-	ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
++	ath5k_hw_set_antenna_mode(ah, ah->ah_ant_mode);
  
- extern void ssb_bus_unregister(struct ssb_bus *bus);
+ unlock:
+ 	mutex_unlock(&sc->lock);
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index ffe253a..3fa4f4d 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1929,6 +1929,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
  
-+/* Does the device have an SPROM? */
-+extern bool ssb_is_sprom_available(struct ssb_bus *bus);
-+
- /* Set a fallback SPROM.
-  * See kdoc at the function definition for complete documentation. */
- extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index 4e27acf..2cdf249 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -53,6 +53,7 @@
- #define  SSB_CHIPCO_CAP_64BIT		0x08000000	/* 64-bit Backplane */
- #define  SSB_CHIPCO_CAP_PMU		0x10000000	/* PMU available (rev >= 20) */
- #define  SSB_CHIPCO_CAP_ECI		0x20000000	/* ECI available (rev >= 20) */
-+#define  SSB_CHIPCO_CAP_SPROM		0x40000000	/* SPROM present */
- #define SSB_CHIPCO_CORECTL		0x0008
- #define  SSB_CHIPCO_CORECTL_UARTCLK0	0x00000001	/* Drive UART with internal clock */
- #define	 SSB_CHIPCO_CORECTL_SE		0x00000002	/* sync clk out enable (corerev >= 3) */
-@@ -385,6 +386,7 @@
+ 	ah->ah_tx_ant = tx_ant;
+ 	ah->ah_ant_mode = ant_mode;
++	ah->ah_def_ant = def_ant;
  
- 
- /** Chip specific Chip-Status register contents. */
-+#define SSB_CHIPCO_CHST_4322_SPROM_EXISTS	0x00000040 /* SPROM present */
- #define SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL	0x00000003
- #define SSB_CHIPCO_CHST_4325_DEFCIS_SEL		0 /* OTP is powered up, use def. CIS, no SPROM */
- #define SSB_CHIPCO_CHST_4325_SPROM_SEL		1 /* OTP is powered up, SPROM is present */
-@@ -398,6 +400,18 @@
- #define SSB_CHIPCO_CHST_4325_RCAL_VALUE_SHIFT	4
- #define SSB_CHIPCO_CHST_4325_PMUTOP_2B 		0x00000200 /* 1 for 2b, 0 for to 2a */
- 
-+/** Macros to determine SPROM presence based on Chip-Status register. */
-+#define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
-+	((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_OTP_SEL)
-+#define SSB_CHIPCO_CHST_4322_SPROM_PRESENT(status) \
-+	(status & SSB_CHIPCO_CHST_4322_SPROM_EXISTS)
-+#define SSB_CHIPCO_CHST_4325_SPROM_PRESENT(status) \
-+	(((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_DEFCIS_SEL) && \
-+	 ((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_OTP_SEL))
-+
- 
- 
- /** Clockcontrol masks and values **/
-@@ -564,6 +578,7 @@ struct ssb_chipcommon_pmu {
- struct ssb_chipcommon {
- 	struct ssb_device *dev;
- 	u32 capabilities;
-+	u32 status;
- 	/* Fast Powerup Delay constant */
- 	u16 fast_pwrup_delay;
- 	struct ssb_chipcommon_pmu pmu;
--- 
-1.6.2.5
+ 	sta_id1 |= use_def_for_tx ? AR5K_STA_ID1_DEFAULT_ANTENNA : 0;
+ 	sta_id1 |= update_def_on_tx ? AR5K_STA_ID1_DESC_ANTENNA : 0;
 
