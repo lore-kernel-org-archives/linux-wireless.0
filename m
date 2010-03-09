@@ -1,95 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:60285 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753202Ab0CDQ1E (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:27709 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754736Ab0CILzi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 11:27:04 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 1/4 v2] rndis_wlan: copy only useful data from rndis_command
-	respond
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 04 Mar 2010 18:27:02 +0200
-Message-ID: <20100304162657.2609.64867.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 9 Mar 2010 06:55:38 -0500
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o29BtBiD028719
+	for <linux-wireless@vger.kernel.org>; Tue, 9 Mar 2010 13:55:35 +0200
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o29BtL6e020412
+	for <linux-wireless@vger.kernel.org>; Tue, 9 Mar 2010 13:55:22 +0200
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 1/1] mac80211: Add ieee80211_probereq_failed function
+Date: Tue,  9 Mar 2010 13:52:52 +0200
+Message-Id: <1268135572-30722-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1268135572-30722-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268135572-30722-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rndis_query_oid() uses full output buffer size to copy response buffer
-from rndis_command()/device. This doesn't cause problems as response buffer
-is sized based on output buffer but does copy extra unset bytes.
-So change rndis_query_oid() so that only meaningful bytes are being copied.
+Some hardware (i.e. the wl1271) are able to monitor beacons, and send
+probe-requests to AP in case of beacon loss independently to try to recover
+the connection. In these cases, it is useless for the mac80211 to send
+further probe-requests.
 
-Also in case of malfunctioning device/cable/etc returned data offset from
-device might be wrong so bound check memory access correctly, so add
-checks for this.
+Add a new function for the hardware to indicate that the AP has been lost.
+This function immediately tears down the connection.
 
-v2: fixed to use new netdev_dbg/warn/etc instead of old devdbg/warn/etc
-
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
+ include/net/mac80211.h |   12 ++++++++++++
+ net/mac80211/mlme.c    |   32 ++++++++++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/rndis_wlan.c |   33 +++++++++++++++++++++++++++++----
- 1 files changed, 29 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 9f6d6bf..a4f70de 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -704,6 +704,7 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
- 		struct rndis_query_c	*get_c;
- 	} u;
- 	int ret, buflen;
-+	int resplen, respoffs, copylen;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 45d7d44..d9792e4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2370,6 +2370,18 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+  */
+ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
  
- 	buflen = *len + sizeof(*u.get);
- 	if (buflen < CONTROL_BUFFER_SIZE)
-@@ -733,11 +734,34 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
- 			   le32_to_cpu(u.get_c->status));
- 
- 	if (ret == 0) {
--		memcpy(data, u.buf + le32_to_cpu(u.get_c->offset) + 8, *len);
-+		resplen = le32_to_cpu(u.get_c->len);
-+		respoffs = le32_to_cpu(u.get_c->offset) + 8;
- 
--		ret = le32_to_cpu(u.get_c->len);
--		if (ret > *len)
--			*len = ret;
-+		if (respoffs > buflen) {
-+			/* Device returned data offset outside buffer, error. */
-+			netdev_dbg(dev->net, "%s(%s): received invalid "
-+				"data offset: %d > %d\n", __func__,
-+				oid_to_string(oid), respoffs, buflen);
++/**
++ * ieee80211_probereq_failed - inform hardware has lost connection with the AP
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * When beacon filtering is enabled with IEEE80211_HW_BEACON_FILTERING and
++ * IEEE80211_CONF_PS is set, the driver needs to inform with this function
++ * whenever the hardware is not receiving beacons and the AP is not responding
++ * to probe requests with this function.
++ */
++void ieee80211_probereq_failed(struct ieee80211_vif *vif);
 +
-+			ret = -EINVAL;
-+			goto exit_unlock;
-+		}
-+
-+		if ((resplen + respoffs) > buflen) {
-+			/* Device would have returned more data if buffer would
-+			 * have been big enough. Copy just the bits that we got.
-+			 */
-+			copylen = buflen - respoffs;
-+		} else {
-+			copylen = resplen;
-+		}
-+
-+		if (copylen > *len)
-+			copylen = *len;
-+
-+		memcpy(data, u.buf + respoffs, copylen);
-+
-+		*len = resplen;
+ /* Rate control API */
  
- 		ret = rndis_error_status(u.get_c->status);
- 		if (ret < 0)
-@@ -746,6 +770,7 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
- 				   le32_to_cpu(u.get_c->status), ret);
- 	}
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0ab284c..8f591a4 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -945,6 +945,38 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
+ }
+ EXPORT_SYMBOL(ieee80211_beacon_loss);
  
-+exit_unlock:
- 	mutex_unlock(&priv->command_lock);
- 
- 	if (u.buf != priv->command_buffer)
++void ieee80211_probereq_failed(struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct ieee80211_local *local = sdata->local;
++	u8 bssid[ETH_ALEN];
++
++	mutex_lock(&ifmgd->mtx);
++	if (!ifmgd->associated) {
++		mutex_unlock(&ifmgd->mtx);
++		return;
++	}
++
++	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
++
++	printk(KERN_DEBUG "No probe-response from AP %pM, "
++	       "disconnected.\n", bssid);
++
++	ieee80211_set_disassoc(sdata);
++	ieee80211_recalc_idle(local);
++	mutex_unlock(&ifmgd->mtx);
++	/*
++	 * must be outside lock due to cfg80211,
++	 * but that's not a problem.
++	 */
++	ieee80211_send_deauth_disassoc(sdata, bssid,
++				       IEEE80211_STYPE_DEAUTH,
++				       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
++				       NULL);
++}
++EXPORT_SYMBOL(ieee80211_probereq_failed);
++
+ static enum rx_mgmt_action __must_check
+ ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 			 struct ieee80211_mgmt *mgmt, size_t len)
+-- 
+1.6.3.3
 
