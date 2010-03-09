@@ -1,62 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:33191 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752590Ab0CRK1w (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:36990 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753092Ab0CIH4H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 06:27:52 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Tue, 9 Mar 2010 02:56:07 -0500
+Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0427811366
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:56:06 +0900 (JST)
+Subject: [PATCH 10/13] ath5k: fix I/Q calibration (for real)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 17/21] wl1271: Removed duplicate code from module remove function.
-Date: Thu, 18 Mar 2010 12:26:42 +0200
-Message-Id: <1268908006-16992-18-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
-References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Tue, 09 Mar 2010 16:56:05 +0900
+Message-ID: <20100309075605.30616.63221.stgit@void>
+In-Reply-To: <20100309075124.30616.40896.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+I/Q calibration was completely broken, resulting in a high number of CRC errors
+on received packets. before i could see around 10% to 20% CRC errors, with this
+patch they are between 0% and 3%.
 
-Removed duplicate code from wl1271_sdio module remove function. For
-freeing stuff in the remove function wl1271_free_hw function is now
-used.
+1.) the removal of the mask in commit "ath5k: Fix I/Q calibration
+(f1cf2dbd0f798b71b1590e7aca6647f2caef1649)" resulted in no mask beeing used
+when writing the I/Q values into the register. additional errors in the
+calculation of the values (see 2.) resulted too high numbers, exceeding the
+masks, so wrong values like 0xfffffffe were written. to be safe we should
+always use the bitmask when writing parts of a register.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+2.) using a (s32) cast for q_coff is a wrong conversion to signed, since we
+convert to a signed value later by substracting 128. this resulted in too low
+numbers for Q many times, which were limited to -16 by the boundary check later
+on.
+
+3.) checked everything against the HAL sources and took over comments and minor
+optimizations from there.
+
+4.) we can't use ENABLE_BITS when we want to write a number (the number can
+contain zeros). also always write the correction values first and set ENABLE
+bit last, like the HAL does.
+
+Cc: stable@kernel.org
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/wl12xx/wl1271_sdio.c |   13 +------------
- 1 files changed, 1 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath5k/phy.c |   37 +++++++++++++++++-----------------
+ drivers/net/wireless/ath/ath5k/reg.h |    1 +
+ 2 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 0478919..99b5b3f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -248,20 +248,9 @@ static void __devexit wl1271_remove(struct sdio_func *func)
- {
- 	struct wl1271 *wl = sdio_get_drvdata(func);
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 3fa4f4d..95cebd6 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1386,38 +1386,39 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+ 		goto done;
  
--	ieee80211_unregister_hw(wl->hw);
--
- 	free_irq(wl->irq, wl);
+ 	/* Calibration has finished, get the results and re-run */
++
++	/* work around empty results which can apparently happen on 5212 */
+ 	for (i = 0; i <= 10; i++) {
+ 		iq_corr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_CORR);
+ 		i_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_I);
+ 		q_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_Q);
++		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++			"iq_corr:%x i_pwr:%x q_pwr:%x", iq_corr, i_pwr, q_pwr);
++		if (i_pwr && q_pwr)
++			break;
+ 	}
  
--	kfree(wl->target_mem_map);
--	vfree(wl->fw);
--	wl->fw = NULL;
--	kfree(wl->nvs);
--	wl->nvs = NULL;
--
--	kfree(wl->fw_status);
--	kfree(wl->tx_res_if);
--
--	ieee80211_free_hw(wl->hw);
-+	wl1271_free_hw(wl);
- }
+ 	i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
+ 	q_coffd = q_pwr >> 7;
  
- static struct sdio_driver wl1271_sdio_driver = {
--- 
-1.6.3.3
+-	/* No correction */
+-	if (i_coffd == 0 || q_coffd == 0)
++	/* protect against divide by 0 and loss of sign bits */
++	if (i_coffd == 0 || q_coffd < 2)
+ 		goto done;
+ 
+-	i_coff = ((-iq_corr) / i_coffd);
++	i_coff = (-iq_corr) / i_coffd;
++	i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
+ 
+-	/* Boundary check */
+-	if (i_coff > 31)
+-		i_coff = 31;
+-	if (i_coff < -32)
+-		i_coff = -32;
++	q_coff = (i_pwr / q_coffd) - 128;
++	q_coff = clamp(q_coff, -16, 15); /* signed 5 bit */
+ 
+-	q_coff = (((s32)i_pwr / q_coffd) - 128);
++	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++			"new I:%d Q:%d (i_coffd:%x q_coffd:%x)",
++			i_coff, q_coff, i_coffd, q_coffd);
+ 
+-	/* Boundary check */
+-	if (q_coff > 15)
+-		q_coff = 15;
+-	if (q_coff < -16)
+-		q_coff = -16;
+-
+-	/* Commit new I/Q value */
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE |
+-		((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
++	/* Commit new I/Q values (set enable bit last to match HAL sources) */
++	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF, i_coff);
++	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF, q_coff);
++	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
+ 
+ 	/* Re-enable calibration -if we don't we'll commit
+ 	 * the same values again and again */
+diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
+index 4cb9c5d..1464f89 100644
+--- a/drivers/net/wireless/ath/ath5k/reg.h
++++ b/drivers/net/wireless/ath/ath5k/reg.h
+@@ -2187,6 +2187,7 @@
+  */
+ #define	AR5K_PHY_IQ			0x9920			/* Register Address */
+ #define	AR5K_PHY_IQ_CORR_Q_Q_COFF	0x0000001f	/* Mask for q correction info */
++#define	AR5K_PHY_IQ_CORR_Q_Q_COFF_S	0
+ #define	AR5K_PHY_IQ_CORR_Q_I_COFF	0x000007e0	/* Mask for i correction info */
+ #define	AR5K_PHY_IQ_CORR_Q_I_COFF_S	5
+ #define	AR5K_PHY_IQ_CORR_ENABLE		0x00000800	/* Enable i/q correction */
 
