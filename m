@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:64427 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342Ab0CaQcX convert rfc822-to-8bit (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:45351 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753269Ab0CIHz5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 12:32:23 -0400
-Received: by pwi5 with SMTP id 5so287449pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Mar 2010 09:32:22 -0700 (PDT)
+	Tue, 9 Mar 2010 02:55:57 -0500
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-086001355
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:55:55 +0900 (JST)
+Subject: [PATCH 08/13] ath5k: remove ah_gpio_npins
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Tue, 09 Mar 2010 16:55:55 +0900
+Message-ID: <20100309075554.30616.12221.stgit@void>
+In-Reply-To: <20100309075124.30616.40896.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
 MIME-Version: 1.0
-In-Reply-To: <20100331162442.274220@gmx.net>
-References: <20100330155834.56510@gmx.net> <43e72e891003300925s59def37exd515374c34ca73f@mail.gmail.com>
-	<20100330171040.56500@gmx.net> <43e72e891003301102i5e8ba846le9e9e76d5e1d4215@mail.gmail.com>
-	<20100331083822.203290@gmx.net> <g2o43e72e891003310858ld1ba635fh67342202ddd76f97@mail.gmail.com>
-	<u2g43e72e891003310908hd796bee1w45f9d5d2364be41d@mail.gmail.com>
-	<20100331162442.274220@gmx.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 31 Mar 2010 09:32:02 -0700
-Message-ID: <o2x43e72e891003310932ucfb1783aj10674bb09ab3306@mail.gmail.com>
-Subject: Re: [ath9k-devel] Power Save for ath9k
-To: =?UTF-8?Q?Lorna_Gonz=C3=A1lez?= <lorna.glez@gmx.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/31 "Lorna González" <lorna.glez@gmx.net>:
-> Hi,
->
-> I have an Atheros AR928X and today I install the linux version 2.6.34 and iw 0.9.19. but still does not work.
->
-> when I use iw phy phy1 info I get:
-> Capabilities: SM Power Save disabled
-> I can set power on/off but no period or timeout.
+it's never used and we have a newer implementation in gpio.c.
 
-Not sure what this period thing is, can't make it out from the man page.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    2 --
+ drivers/net/wireless/ath/ath5k/caps.c  |    3 ---
+ 2 files changed, 0 insertions(+), 5 deletions(-)
 
-       power  Used to manipulate power management scheme parameters and mode.
-              To  set  the  period between wake ups, enter period
-`value'.  To set the timeout before going back to sleep, enter timeout
-`value'.  To set
-              the generic level of power saving, enter saving `value'.
- You can also add the min and max modifiers. By default, those values
-are in  sec‐
-              onds, append the suffix m or u to specify values in
-milliseconds or microseconds. Sometimes, those values are without
-units (number of bea‐
-              con periods, dwell, percentage or similar).
-              off and on disable and reenable power management.
-Finally, you may set the power management mode to  all  (receive  all
-packets),  unicast
-              (receive  unicast packets only, discard multicast and
-broadcast) and multicast (receive multicast and broadcast only,
-discard unicast pack‐
-              ets).
-              Examples :
-                   iwconfig eth0 power period 2
-                   iwconfig eth0 power 500m unicast
-                   iwconfig eth0 power timeout 300u all
-                   iwconfig eth0 power saving 3
-                   iwconfig eth0 power off
-                   iwconfig eth0 power min period 2 power max period 4
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 54f35ae..7721d7d 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1068,8 +1068,6 @@ struct ath5k_hw {
+ 	u8			ah_def_ant;
+ 	bool			ah_software_retry;
+ 
+-	int			ah_gpio_npins;
+-
+ 	struct ath5k_capabilities ah_capabilities;
+ 
+ 	struct ath5k_txq_info	ah_txq[AR5K_NUM_TX_QUEUES];
+diff --git a/drivers/net/wireless/ath/ath5k/caps.c b/drivers/net/wireless/ath/ath5k/caps.c
+index 367a6c7..e618e71 100644
+--- a/drivers/net/wireless/ath/ath5k/caps.c
++++ b/drivers/net/wireless/ath/ath5k/caps.c
+@@ -102,9 +102,6 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+ 		}
+ 	}
+ 
+-	/* GPIO */
+-	ah->ah_gpio_npins = AR5K_NUM_GPIO;
+-
+ 	/* Set number of supported TX queues */
+ 	if (ah->ah_version == AR5K_AR5210)
+ 		ah->ah_capabilities.cap_queues.q_tx_num =
+
