@@ -1,58 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:2111 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752864Ab0CCImh convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:6282 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750756Ab0CIF6k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 03:42:37 -0500
-Received: by fg-out-1718.google.com with SMTP id l26so193429fgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 00:42:36 -0800 (PST)
+	Tue, 9 Mar 2010 00:58:40 -0500
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0434454316
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 14:58:38 +0900 (JST)
+Subject: [PATCH v3] ath5k: fix I/Q calibration (for real)
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	me@bobcopeland.com, mcgrof@gmail.com
+Date: Tue, 09 Mar 2010 14:58:35 +0900
+Message-ID: <20100309055813.8124.28149.stgit@void>
 MIME-Version: 1.0
-In-Reply-To: <20100303081835.GA1637@jm.kir.nu>
-References: <20100302025158.9527.43764.stgit@void> <20100302094238.GA24391@jm.kir.nu>
-	<201003031010.49887.br1@einfach.org> <20100303081835.GA1637@jm.kir.nu>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 3 Mar 2010 09:42:16 +0100
-Message-ID: <69e28c911003030042t540a13a8i145682f3b163975c@mail.gmail.com>
-Subject: Re: [PATCH v2] ath5k: fix injection in monitor mode
-To: Jouni Malinen <j@w1.fi>
-Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	benoit.papillault@free.fr
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 3, 2010 at 9:18 AM, Jouni Malinen <j@w1.fi> wrote:
-> On Wed, Mar 03, 2010 at 10:10:49AM +0900, Bruno Randolf wrote:
->> On Tuesday 02 March 2010 18:42:38 Jouni Malinen wrote:
->> > If we want to have an option to prevent hardware from touching the frame
->> > payload, that really should be an option (a radiotap and TX control
->> > flags, etc.), not default functionality for monitor interface.
->
->> yes, we use it for testing IBSS mode (merging, TSF updates) by injecting
->> custom beacons. i guess other packet injectors would also assume that their
->> packets go out untouched.
->
-> Like I said, not all packet injectors do and hostapd certainly depends
-> on the injected packet being updated (both for contents and for
-> selecting a suitable TX rate and also to encrypt the frame when a key is
-> set for this).
->
->> so what would be a way to support that properly?
->> what about a monitor mode flag?
->
-> My preference is shown in the quoted text above, i.e., a new radiotap
-> (per packet, not per monitor interface) flag and then internally in
-> mac80211--driver a new TX control flag to indicate that the frame is not
-> to be updated.
->
-> --
-> Jouni Malinen                                            PGP id EFC895FA
->
+I/Q calibration was completely broken, resulting in a high number of CRC errors
+on received packets. before i could see around 10% to 20% CRC errors, with this
+patch they are between 0% and 3%.
 
-Shouldn't making this depend on COOK_FRAMES not being set be enough? A
-while ago, the consensus was that injectors that don't set COOK_FRAMES
-(should) expect packets to be transmitted unmodified.
+1.) the removal of the mask in commit "ath5k: Fix I/Q calibration
+(f1cf2dbd0f798b71b1590e7aca6647f2caef1649)" resulted in no mask beeing used
+when writing the I/Q values into the register. additional errors in the
+calculation of the values (see 2.) resulted too high numbers, exceeding the
+masks, so wrong values like 0xfffffffe were written. to be safe we should
+always use the bitmask when writing parts of a register.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+2.) using a (s32) cast for q_coff is a wrong conversion to signed, since we
+convert to a signed value later by substracting 128. this resulted in too low
+numbers for Q many times, which were limited to -16 by the boundary check later
+on.
+
+3.) checked everything against the HAL sources and took over comments and minor
+optimizations from there.
+
+4.) we can't use ENABLE_BITS when we want to write a number (the number can
+contain zeros). also always write the correction values first and set ENABLE
+bit last, like the HAL does.
+
+Cc: stable@kernel.org
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+v3: add Cc: stable@kernel.org
+---
+ drivers/net/wireless/ath/ath5k/phy.c |   37 +++++++++++++++++-----------------
+ drivers/net/wireless/ath/ath5k/reg.h |    1 +
+ 2 files changed, 20 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 3fa4f4d..b7f2949 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1386,38 +1386,39 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+ 		goto done;
+ 
+ 	/* Calibration has finished, get the results and re-run */
++
++	/* workaround against empty results which can apparently happen on 5212 */
+ 	for (i = 0; i <= 10; i++) {
+ 		iq_corr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_CORR);
+ 		i_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_I);
+ 		q_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_Q);
++		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++			"iq_corr:%x i_pwr:%x q_pwr:%x", iq_corr, i_pwr, q_pwr);
++		if (i_pwr && q_pwr)
++			break;
+ 	}
+ 
+ 	i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
+ 	q_coffd = q_pwr >> 7;
+ 
+-	/* No correction */
+-	if (i_coffd == 0 || q_coffd == 0)
++	/* protect against divide by 0 and loss of sign bits */
++	if (i_coffd == 0 || q_coffd < 2)
+ 		goto done;
+ 
+-	i_coff = ((-iq_corr) / i_coffd);
++	i_coff = (-iq_corr) / i_coffd;
++	i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
+ 
+-	/* Boundary check */
+-	if (i_coff > 31)
+-		i_coff = 31;
+-	if (i_coff < -32)
+-		i_coff = -32;
++	q_coff = (i_pwr / q_coffd) - 128;
++	q_coff = clamp(q_coff, -16, 15); /* signed 5 bit */
+ 
+-	q_coff = (((s32)i_pwr / q_coffd) - 128);
++	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
++			"new I:%d Q:%d (i_coffd:%x q_coffd:%x)",
++			i_coff, q_coff, i_coffd, q_coffd);
+ 
+-	/* Boundary check */
+-	if (q_coff > 15)
+-		q_coff = 15;
+-	if (q_coff < -16)
+-		q_coff = -16;
+-
+-	/* Commit new I/Q value */
+-	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE |
+-		((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
++	/* Commit new I/Q values (set enable bit last to match HAL sources) */
++	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF, i_coff);
++	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF, q_coff);
++	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
+ 
+ 	/* Re-enable calibration -if we don't we'll commit
+ 	 * the same values again and again */
+diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
+index 4cb9c5d..1464f89 100644
+--- a/drivers/net/wireless/ath/ath5k/reg.h
++++ b/drivers/net/wireless/ath/ath5k/reg.h
+@@ -2187,6 +2187,7 @@
+  */
+ #define	AR5K_PHY_IQ			0x9920			/* Register Address */
+ #define	AR5K_PHY_IQ_CORR_Q_Q_COFF	0x0000001f	/* Mask for q correction info */
++#define	AR5K_PHY_IQ_CORR_Q_Q_COFF_S	0
+ #define	AR5K_PHY_IQ_CORR_Q_I_COFF	0x000007e0	/* Mask for i correction info */
+ #define	AR5K_PHY_IQ_CORR_Q_I_COFF_S	5
+ #define	AR5K_PHY_IQ_CORR_ENABLE		0x00000800	/* Enable i/q correction */
+
