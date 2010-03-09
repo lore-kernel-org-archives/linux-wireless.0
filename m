@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coco.cs.washington.edu ([128.208.3.82]:53659 "EHLO
-	coco.cs.washington.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164Ab0CCWyp (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:36643 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753062Ab0CIHzg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 17:54:45 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Apple Message framework v1077)
-Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current wireless-testing
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-In-Reply-To: <1267651173.15761.155.camel@rchatre-DESK>
-Date: Wed, 3 Mar 2010 14:54:37 -0800
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Message-Id: <0A6DB552-23FC-46ED-9326-60EB0370C062@cs.washington.edu>
-References: <201002281534.11656.helmut.schaa@googlemail.com> <201003011927.53208.helmut.schaa@googlemail.com> <43e72e891003011059v564931e2qfe390657b698c277@mail.gmail.com> <201003022047.10196.helmut.schaa@googlemail.com> <1267640304.15761.121.camel@rchatre-DESK> <03690D90-3C5E-4E37-8BC6-7EE6FE0B4E1D@cs.washington.edu> <1267651173.15761.155.camel@rchatre-DESK>
-To: unlisted-recipients:; (no To-header on input)
+	Tue, 9 Mar 2010 02:55:36 -0500
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0899471334
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:55:34 +0900 (JST)
+Subject: [PATCH 04/13] ath5k: fix TSF reset
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Tue, 09 Mar 2010 16:55:33 +0900
+Message-ID: <20100309075533.30616.26457.stgit@void>
+In-Reply-To: <20100309075124.30616.40896.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+to reset the TSF, AR5K_BEACON_RESET_TSF has to be 1, not 0. also we have a
+function for that so use it.
 
-On Mar 3, 2010, at 1:19 PM, reinette chatre wrote:
-> 
->> With some update between now and a while ago (October?) I can no
->> longer even monitor on most 11a channels. (E.g., "iwconfig wlan0 mode
->> monitor ; iwconfig wlan0 channel 64" returns an error). This was not
->> the old behavior, and seems to be wrong to me.
-> 
-> What error do you get? Have you tried to set up monitor channel using
-> iw? Is bisect an option to try to find out what caused this?
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/reset.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-Haven't dug into it yet; I will though!
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index a35a7db..c780b55 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1379,11 +1379,10 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 		ath5k_hw_set_sleep_clock(ah, true);
+ 
+ 	/*
+-	 * Disable beacons and reset the register
++	 * Disable beacons and reset the TSF
+ 	 */
+-	AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE |
+-			AR5K_BEACON_RESET_TSF);
+-
++	AR5K_REG_DISABLE_BITS(ah, AR5K_BEACON, AR5K_BEACON_ENABLE);
++	ath5k_hw_reset_tsf(ah);
+ 	return 0;
+ }
+ 
 
-Dan
