@@ -1,32 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:42739 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754206Ab0CKAQO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 19:16:14 -0500
-Date: Wed, 10 Mar 2010 15:52:20 -0800
-From: Greg KH <greg@kroah.com>
-To: tom.leiming@gmail.com
-Cc: lrodriguez@atheros.com, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, stable@kernel.org
-Subject: Re: [stable] [PATCH] ath9k: decrease size of ath9k.ko
-Message-ID: <20100310235220.GA7247@kroah.com>
-References: <1267289803-6795-1-git-send-email-tom.leiming@gmail.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:64627 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754271Ab0CIR7F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Mar 2010 12:59:05 -0500
+Received: by pvb32 with SMTP id 32so1882176pvb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 09:59:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1267289803-6795-1-git-send-email-tom.leiming@gmail.com>
+In-Reply-To: <1268137502-25339-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268137502-25339-1-git-send-email-juuso.oikarinen@nokia.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 9 Mar 2010 09:58:43 -0800
+Message-ID: <43e72e891003090958k4413b171i911b163b8ee675ba@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Fix (dynamic) power save entry
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 28, 2010 at 12:56:43AM +0800, tom.leiming@gmail.com wrote:
-> From: Ming Lei <tom.leiming@gmail.com>
-> 
-> The patch defines the fields of 'valid_single_stream' and 'valid' in
-> struct ath_rate_table as char type, so decrease the size of ath9k.ko
-> about 2KB.
+On Tue, Mar 9, 2010 at 4:25 AM, Juuso Oikarinen
+<juuso.oikarinen@nokia.com> wrote:
+> Currently hardware with !IEEE80211_HW_PS_NULLFUNC_STACK and
+> IEEE80211_HW_REPORTS_TX_ACK_STATUS will never enter PSM due to the
+> conditions in the power save entry functions.
+>
+> Fix those conditions.
 
-Why would this be a -stable patch?
+Is this a stable fix, for 33?
 
-confused,
-
-greg k-h
+  Luis
