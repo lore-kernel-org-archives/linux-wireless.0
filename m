@@ -1,47 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f175.google.com ([209.85.223.175]:58128 "EHLO
-	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826Ab0CEDy2 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f216.google.com ([209.85.219.216]:65354 "EHLO
+	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754796Ab0CIMWx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 22:54:28 -0500
-Received: by iwn5 with SMTP id 5so2381848iwn.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Mar 2010 19:54:27 -0800 (PST)
+	Tue, 9 Mar 2010 07:22:53 -0500
+Received: by ewy8 with SMTP id 8so655952ewy.28
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 04:22:52 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1267760678-5421-4-git-send-email-lrodriguez@atheros.com>
-References: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
-	<1267760678-5421-4-git-send-email-lrodriguez@atheros.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 5 Mar 2010 14:54:07 +1100
-Message-ID: <646765f41003041954r6b11813al41248117dd383584@mail.gmail.com>
-Subject: Re: [RFC 3/3] ath9k: rename initvals.h to ar9200_initvals.h
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kevin@atheros.com, doug.dahlby@atheros.com,
-	cliff.holden@atheros.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20100309075610.30616.82140.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
+	 <20100309075610.30616.82140.stgit@void>
+Date: Tue, 9 Mar 2010 14:22:51 +0200
+Message-ID: <40f31dec1003090422m557092b2ybc471f74e7530f95@mail.gmail.com>
+Subject: Re: [PATCH 11/13] ath5k: read eeprom IQ calibration values correctly
+	for G mode
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 5, 2010 at 14:44, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-> The register initialization values we have so far are
-> only for the AR5008, AR9002 and AR9002 hardware families
-> and we've managed to get ar90002_hw.c to be its only user
-> so clarify this by renaming the initvals.
+2010/3/9 Bruno Randolf <br1@einfach.org>:
+> we read the IQ correction values (i_cal and q_cal) for G mode from a wrong
+> location (the same shifts as for A mode is applied which is incorrect). use
+> correct locations, matching the docs and HAL sources.
 >
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> also we should write IQ correction only when we have that information in the
+> EEPROM, starting from version 4. also write it in the same way as we do in the
+> periodic recalibration (enable last), just to be sure.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
 > ---
-> �drivers/net/wireless/ath/ath9k/ar9002_hw.c � � � � | � �2 +-
-> �.../ath/ath9k/{initvals.h => ar9200_initvals.h} � �| � �0
-> �2 files changed, 1 insertions(+), 1 deletions(-)
-> �rename drivers/net/wireless/ath/ath9k/{initvals.h => ar9200_initvals.h} (100%)
+>  drivers/net/wireless/ath/ath5k/eeprom.c |    4 ++--
+>  drivers/net/wireless/ath/ath5k/reset.c  |   15 +++++++++------
+>  2 files changed, 11 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+> index 6a3f4da..10b5226 100644
+> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
+> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+> @@ -429,8 +429,8 @@ static int ath5k_eeprom_read_modes(struct ath5k_hw *ah, u32 *offset,
+>                        ee->ee_margin_tx_rx[mode] = (val >> 8) & 0x3f;
+>
+>                AR5K_EEPROM_READ(o++, val);
+> -               ee->ee_i_cal[mode] = (val >> 8) & 0x3f;
+> -               ee->ee_q_cal[mode] = (val >> 3) & 0x1f;
+> +               ee->ee_i_cal[mode] = (val >> 5) & 0x3f;
+> +               ee->ee_q_cal[mode] = val & 0x1f;
+>
+>                if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_2) {
+>                        AR5K_EEPROM_READ(o++, val);
+> diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+> index 6d9a1e8..e9e69dc 100644
+> --- a/drivers/net/wireless/ath/ath5k/reset.c
+> +++ b/drivers/net/wireless/ath/ath5k/reset.c
+> @@ -851,12 +851,15 @@ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+>                                AR5K_PHY_OFDM_SELFCORR_CYPWR_THR1,
+>                                AR5K_INIT_CYCRSSI_THR1);
+>
+> -       /* I/Q correction
+> -        * TODO: Per channel i/q infos ? */
+> -       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ,
+> -               AR5K_PHY_IQ_CORR_ENABLE |
+> -               (ee->ee_i_cal[ee_mode] << AR5K_PHY_IQ_CORR_Q_I_COFF_S) |
+> -               ee->ee_q_cal[ee_mode]);
+> +       /* I/Q correction (set enable bit last to match HAL sources) */
+> +       /* TODO: Per channel i/q infos ? */
+> +       if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_0) {
+> +               AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF,
+> +                           ee->ee_i_cal[ee_mode]);
+> +               AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF,
+> +                           ee->ee_q_cal[ee_mode]);
+> +               AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
+> +       }
+>
+>        /* Heavy clipping -disable for now */
+>        if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_5_1)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Should this possibly be ar9002_initvals.h as to match up with ar9002_hw.c?
-
-Thanks,
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 -- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
