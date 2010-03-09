@@ -1,79 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f175.google.com ([209.85.223.175]:63413 "EHLO
-	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755842Ab0CDQq7 convert rfc822-to-8bit (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:1403 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753088Ab0CIHzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 11:46:59 -0500
-Received: by iwn5 with SMTP id 5so2082828iwn.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Mar 2010 08:46:59 -0800 (PST)
+	Tue, 9 Mar 2010 02:55:47 -0500
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-084651345
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:55:45 +0900 (JST)
+Subject: [PATCH 06/13] ath5k: remove ah_magic
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Tue, 09 Mar 2010 16:55:44 +0900
+Message-ID: <20100309075544.30616.17222.stgit@void>
+In-Reply-To: <20100309075124.30616.40896.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
 MIME-Version: 1.0
-In-Reply-To: <20100304141256.GA1985@hash.localnet>
-References: <4B8C3A21.2050105@openwrt.org>
-	 <133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>
-	 <4B8D25DC.8070502@openwrt.org>
-	 <133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
-	 <alpine.DEB.2.00.1003031006390.10063@kauri>
-	 <20100304141256.GA1985@hash.localnet>
-Date: Thu, 4 Mar 2010 17:40:46 +0100
-Message-ID: <133e8d7e1003040840p6d1eddc2nfab2876c4e5af474@mail.gmail.com>
-Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Derek Smithies <derek@indranet.co.nz>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 4, 2010 at 3:12 PM, Bob Copeland <me@bobcopeland.com> wrote:
->
-> Minstrel definitely performs better in real life.
+it's never used. probably a leftover from the old OpenHAL days...
 
-Agree, minstrel works very well in real life.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    1 -
+ drivers/net/wireless/ath/ath5k/desc.c   |    6 ------
+ drivers/net/wireless/ath/ath5k/eeprom.h |    3 ---
+ 3 files changed, 0 insertions(+), 10 deletions(-)
 
-> That said, I looked at the current minstrel code and have a few
-> puzzlements:
->
-> - As I understand it, minstrel is not supposed to delay packets more
->  than 24 ms to avoid TCP resends.  However, if I understand the code,
->  this is done by limiting each MRR segment to 6 ms, which doesn't seem
->  right to me.  The retries in the second MRR slot will have to wait
->  a backoff before being used, right?
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index cb79d44..3d63511 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1028,7 +1028,6 @@ struct ath5k_nfcal_hist
+ 
+ /* TODO: Clean up and merge with ath5k_softc */
+ struct ath5k_hw {
+-	u32			ah_magic;
+ 	struct ath_common       common;
+ 
+ 	struct ath5k_softc	*ah_sc;
+diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
+index dc30a2b..dff58e2 100644
+--- a/drivers/net/wireless/ath/ath5k/desc.c
++++ b/drivers/net/wireless/ath/ath5k/desc.c
+@@ -668,12 +668,6 @@ int ath5k_hw_init_desc_functions(struct ath5k_hw *ah)
+ 		ah->ah_version != AR5K_AR5212)
+ 			return -ENOTSUPP;
+ 
+-	/* XXX: What is this magic value and where is it used ? */
+-	if (ah->ah_version == AR5K_AR5212)
+-		ah->ah_magic = AR5K_EEPROM_MAGIC_5212;
+-	else if (ah->ah_version == AR5K_AR5211)
+-		ah->ah_magic = AR5K_EEPROM_MAGIC_5211;
+-
+ 	if (ah->ah_version == AR5K_AR5212) {
+ 		ah->ah_setup_rx_desc = ath5k_hw_setup_rx_desc;
+ 		ah->ah_setup_tx_desc = ath5k_hw_setup_4word_tx_desc;
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+index 473a483..1a65683 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.h
++++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+@@ -24,9 +24,6 @@
+ 						 * SERDES infos are present */
+ #define AR5K_EEPROM_MAGIC		0x003d	/* EEPROM Magic number */
+ #define AR5K_EEPROM_MAGIC_VALUE		0x5aa5	/* Default - found on EEPROM */
+-#define AR5K_EEPROM_MAGIC_5212		0x0000145c /* 5212 */
+-#define AR5K_EEPROM_MAGIC_5211		0x0000145b /* 5211 */
+-#define AR5K_EEPROM_MAGIC_5210		0x0000145a /* 5210 */
+ 
+ #define	AR5K_EEPROM_IS_HB63		0x000b	/* Talon detect */
+ 
 
-I took a look at the minstrel code back in madwifi and the comments
-there suggest this 24 ms thing is not very theoretically based. It
-sounds like a very reasonable explanation though so I'm not saying it
-is wrong. But I think there might be another very good reason to limit
-the number of attempts at a given rate: after a certain number of
-retries we have to conclude that our hypothesis about the packet
-error/success rate is probably incorrect, and there is no point in
-more retries at that rate.
-
-An example: Lets say my hypothesis is that the packet error rate at 24
-Mbit/s is 10%. The probability that 3 attempts in a row will fail is
-then 0.1^3 = 0.1% (given that my hypothesis is correct). A
-statistician would say that we have tested my hypothesis and that it
-can be rejected on the 99.9%-level. Continuing with a fourth attempt
-is approaching what Einstein defined as insanity: doing the same thing
-over and over again and expecting different results. :)
-
-> - Often, two slots in the MRR array use the same rate (e.g. slots 1 and 3).
->  Maybe we should pick a 'next lower' rate for the lower slot in such a case?
->  If we are really in a place where the originally attempted rate isn't
->  workable, this might slightly boost throughput.
-
-Agree. With the same reasoning as above this can be generalized to: if
-an MRR slot has failed and we have fallen through to the next one then
-that slot should be set up to be optimal under a new hypothesis
-(taking the failed MRR segment into account).
-
-In any case Felix patch is a giant leap towards better rate control.
-Looking forward to tweaking it and this time hopefully submitting
-something.
-
-/Björn
