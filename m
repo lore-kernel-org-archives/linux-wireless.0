@@ -1,258 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46898 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147Ab0CKB2c (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:12568 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753288Ab0CIH4S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 20:28:32 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Tue, 9 Mar 2010 02:56:18 -0500
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0428981376
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:56:16 +0900 (JST)
+Subject: [PATCH 12/13] ath5k: IQ calibration for AR5211 is slightly different
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 06/14] ath9k_hw: move calibration settings to ar9002_calib_settings.c
-Date: Wed, 10 Mar 2010 20:28:23 -0500
-Message-Id: <1268270911-24568-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Tue, 09 Mar 2010 16:56:15 +0900
+Message-ID: <20100309075615.30616.36296.stgit@void>
+In-Reply-To: <20100309075124.30616.40896.stgit@void>
+References: <20100309075124.30616.40896.stgit@void>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we now have all the calibration functions and structures
-on ar9002_calib_settings.c we might as well move the function
-that sets these up there as well.
+according to the HAL sources the calculation of the Q value is slightly
+different for AR5211 chips.
 
-While at it, simplify it a little and also move the AR9100
-calibration settings there too since they were just dangling
-on a random place on __ath9k_hw_init().
+i couldn't test this since IQ calibration never finishes on older parts. this
+is a different problem...
 
-Doing this lets us remove the externs on the structures
-saving ourselves about 272 bytes mostly on the text area
-of ath9k_hw:
-
-Before:
-3746008 bytes ath9k_hw.ko
-   text    data     bss     dec     hex filename
- 221433    1088    1808  224329   36c49 ath9k_hw.ko
-
-After:
-3745736 bytes ath9k_hw.ko
-   text    data     bss     dec     hex filename
- 221417    1088    1808  224313   36c39 ath9k_hw.ko
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_calib.c      |    3 +
- .../net/wireless/ath/ath9k/ar9002_calib_settings.c |   52 +++++++++++++++++---
- drivers/net/wireless/ath/ath9k/ar9002_hw.c         |   25 ---------
- drivers/net/wireless/ath/ath9k/calib.h             |    8 ---
- drivers/net/wireless/ath/ath9k/hw.c                |    5 +--
- 5 files changed, 49 insertions(+), 44 deletions(-)
+ drivers/net/wireless/ath/ath5k/phy.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 9d7f624..23f49ff 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -22,6 +22,8 @@
-  * the chipsets under the hardware families: AR5008, AR9001, and AR9002
-  */
- 
-+extern void ar9002_hw_init_cal_settings(struct ath_hw *ah);
-+
- static void ar9002_hw_do_getnf(struct ath_hw *ah,
- 			      int16_t nfarray[NUM_NF_READINGS])
- {
-@@ -821,4 +823,5 @@ void ar9002_hw_attach_calib_ops(struct ath_hw *ah)
- 	priv_ops->loadnf = &ar9002_hw_loadnf;
- 	priv_ops->start_nfcal = &ar9002_hw_start_nfcal;
- 	priv_ops->pa_cal = &ar9002_hw_pa_cal;
-+	priv_ops->init_cal_settings = &ar9002_hw_init_cal_settings;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c b/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
-index c22f6c3..b301b59 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
-@@ -127,7 +127,7 @@ static void ar9002_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
- 		    AR_PHY_TIMING_CTRL4_IQCORR_ENABLE);
- }
- 
--const struct ath9k_percal_data iq_cal_multi_sample = {
-+static const struct ath9k_percal_data iq_cal_multi_sample = {
- 	IQ_MISMATCH_CAL,
- 	MAX_CAL_SAMPLES,
- 	PER_MIN_LOG_COUNT,
-@@ -135,7 +135,7 @@ const struct ath9k_percal_data iq_cal_multi_sample = {
- 	ar9002_hw_iqcalibrate
- };
- 
--const struct ath9k_percal_data iq_cal_single_sample = {
-+static const struct ath9k_percal_data iq_cal_single_sample = {
- 	IQ_MISMATCH_CAL,
- 	MIN_CAL_SAMPLES,
- 	PER_MAX_LOG_COUNT,
-@@ -226,7 +226,7 @@ static void ar9002_hw_adc_gaincal_calibrate(struct ath_hw *ah, u8 numChains)
- 		  AR_PHY_NEW_ADC_GAIN_CORR_ENABLE);
- }
- 
--const struct ath9k_percal_data adc_gain_cal_multi_sample = {
-+static const struct ath9k_percal_data adc_gain_cal_multi_sample = {
- 	ADC_GAIN_CAL,
- 	MAX_CAL_SAMPLES,
- 	PER_MIN_LOG_COUNT,
-@@ -234,7 +234,7 @@ const struct ath9k_percal_data adc_gain_cal_multi_sample = {
- 	ar9002_hw_adc_gaincal_calibrate
- };
- 
--const struct ath9k_percal_data adc_gain_cal_single_sample = {
-+static const struct ath9k_percal_data adc_gain_cal_single_sample = {
- 	ADC_GAIN_CAL,
- 	MIN_CAL_SAMPLES,
- 	PER_MAX_LOG_COUNT,
-@@ -325,7 +325,7 @@ static void ar9002_hw_adc_dccal_calibrate(struct ath_hw *ah, u8 numChains)
- 		  AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE);
- }
- 
--const struct ath9k_percal_data adc_dc_cal_multi_sample = {
-+static const struct ath9k_percal_data adc_dc_cal_multi_sample = {
- 	ADC_DC_CAL,
- 	MAX_CAL_SAMPLES,
- 	PER_MIN_LOG_COUNT,
-@@ -333,7 +333,7 @@ const struct ath9k_percal_data adc_dc_cal_multi_sample = {
- 	ar9002_hw_adc_dccal_calibrate
- };
- 
--const struct ath9k_percal_data adc_dc_cal_single_sample = {
-+static const struct ath9k_percal_data adc_dc_cal_single_sample = {
- 	ADC_DC_CAL,
- 	MIN_CAL_SAMPLES,
- 	PER_MAX_LOG_COUNT,
-@@ -341,10 +341,48 @@ const struct ath9k_percal_data adc_dc_cal_single_sample = {
- 	ar9002_hw_adc_dccal_calibrate
- };
- 
--const struct ath9k_percal_data adc_init_dc_cal = {
-+static const struct ath9k_percal_data adc_init_dc_cal = {
- 	ADC_DC_INIT_CAL,
- 	MIN_CAL_SAMPLES,
- 	INIT_LOG_COUNT,
- 	ar9002_hw_adc_dccal_collect,
- 	ar9002_hw_adc_dccal_calibrate
- };
-+
-+static void ar9002_hw_setup_calib_single(struct ath_hw *ah)
-+{
-+	ah->iq_caldata.calData = &iq_cal_single_sample;
-+	ah->adcgain_caldata.calData =
-+		&adc_gain_cal_single_sample;
-+	ah->adcdc_caldata.calData =
-+		&adc_dc_cal_single_sample;
-+	ah->adcdc_calinitdata.calData =
-+		&adc_init_dc_cal;
-+}
-+
-+static void ar9002_hw_setup_calib_multi(struct ath_hw *ah)
-+{
-+	ah->iq_caldata.calData = &iq_cal_multi_sample;
-+	ah->adcgain_caldata.calData =
-+		&adc_gain_cal_multi_sample;
-+	ah->adcdc_caldata.calData =
-+		&adc_dc_cal_multi_sample;
-+	ah->adcdc_calinitdata.calData =
-+		&adc_init_dc_cal;
-+}
-+
-+void ar9002_hw_init_cal_settings(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9160_10_OR_LATER(ah)) {
-+		if (AR_SREV_9280_10_OR_LATER(ah))
-+			ar9002_hw_setup_calib_single(ah);
-+		else
-+			ar9002_hw_setup_calib_multi(ah);
-+		ah->supp_cals = ADC_GAIN_CAL | ADC_DC_CAL | IQ_MISMATCH_CAL;
-+	}
-+
-+	if (AR_SREV_9100(ah)) {
-+		ah->iq_caldata.calData = &iq_cal_multi_sample;
-+		ah->supp_cals = IQ_MISMATCH_CAL;
-+        }
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index c9ca71c..d937b47 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -55,30 +55,6 @@ static bool ar9002_hw_macversion_supported(u32 macversion)
- 	return false;
- }
- 
--static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
--{
--	if (AR_SREV_9160_10_OR_LATER(ah)) {
--		if (AR_SREV_9280_10_OR_LATER(ah)) {
--			ah->iq_caldata.calData = &iq_cal_single_sample;
--			ah->adcgain_caldata.calData =
--				&adc_gain_cal_single_sample;
--			ah->adcdc_caldata.calData =
--				&adc_dc_cal_single_sample;
--			ah->adcdc_calinitdata.calData =
--				&adc_init_dc_cal;
--		} else {
--			ah->iq_caldata.calData = &iq_cal_multi_sample;
--			ah->adcgain_caldata.calData =
--				&adc_gain_cal_multi_sample;
--			ah->adcdc_caldata.calData =
--				&adc_dc_cal_multi_sample;
--			ah->adcdc_calinitdata.calData =
--				&adc_init_dc_cal;
--		}
--		ah->supp_cals = ADC_GAIN_CAL | ADC_DC_CAL | IQ_MISMATCH_CAL;
--	}
--}
--
- static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
- {
- 	if (AR_SREV_9271(ah)) {
-@@ -823,7 +799,6 @@ void ar9002_hw_attach_ops(struct ath_hw *ah)
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
- 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
- 
--	priv_ops->init_cal_settings = &ar9002_hw_init_cal_settings;
- 	priv_ops->init_mode_regs = &ar9002_hw_init_mode_regs;
- 	priv_ops->macversion_supported = &ar9002_hw_macversion_supported;
- 	priv_ops->set_reset_reg = &ar9002_hw_set_reset_reg;
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 921f237..dfa7497 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -19,14 +19,6 @@
- 
- #include "hw.h"
- 
--extern const struct ath9k_percal_data iq_cal_multi_sample;
--extern const struct ath9k_percal_data iq_cal_single_sample;
--extern const struct ath9k_percal_data adc_gain_cal_multi_sample;
--extern const struct ath9k_percal_data adc_gain_cal_single_sample;
--extern const struct ath9k_percal_data adc_dc_cal_multi_sample;
--extern const struct ath9k_percal_data adc_dc_cal_single_sample;
--extern const struct ath9k_percal_data adc_init_dc_cal;
--
- #define AR_PHY_CCA_MAX_AR5416_GOOD_VALUE	-85
- #define AR_PHY_CCA_MAX_AR9280_GOOD_VALUE	-112
- #define AR_PHY_CCA_MAX_AR9285_GOOD_VALUE	-118
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 124d25b..75bfce6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -535,11 +535,8 @@ int __ath9k_hw_init(struct ath_hw *ah)
- 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 95cebd6..3a18742 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1399,7 +1399,11 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
  	}
  
--	if (AR_SREV_9100(ah)) {
--		ah->iq_caldata.calData = &iq_cal_multi_sample;
--		ah->supp_cals = IQ_MISMATCH_CAL;
-+	if (AR_SREV_9100(ah))
- 		ah->is_pciexpress = false;
--	}
+ 	i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
+-	q_coffd = q_pwr >> 7;
++
++	if (ah->ah_version == AR5K_AR5211)
++		q_coffd = q_pwr >> 6;
++	else
++		q_coffd = q_pwr >> 7;
  
- 	if (AR_SREV_9271(ah))
- 		ah->is_pciexpress = false;
--- 
-1.6.3.3
+ 	/* protect against divide by 0 and loss of sign bits */
+ 	if (i_coffd == 0 || q_coffd < 2)
+@@ -1408,7 +1412,10 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
+ 	i_coff = (-iq_corr) / i_coffd;
+ 	i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
+ 
+-	q_coff = (i_pwr / q_coffd) - 128;
++	if (ah->ah_version == AR5K_AR5211)
++		q_coff = (i_pwr / q_coffd) - 64;
++	else
++		q_coff = (i_pwr / q_coffd) - 128;
+ 	q_coff = clamp(q_coff, -16, 15); /* signed 5 bit */
+ 
+ 	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
 
