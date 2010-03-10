@@ -1,29 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f175.google.com ([209.85.216.175]:57016 "EHLO
-	mail-px0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462Ab0CEViv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 16:38:51 -0500
-Received: by pxi5 with SMTP id 5so1327216pxi.21
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Mar 2010 13:38:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100305205825.2631.44019.stgit@mj.roinet.com>
-References: <20100305205825.2631.44019.stgit@mj.roinet.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 5 Mar 2010 13:38:31 -0800
-Message-ID: <43e72e891003051338v4a97f45di2fdd46b0bfa783b8@mail.gmail.com>
-Subject: Re: [PATCH] compat: define KEY_RFKILL, which appeared in Linux 2.6.33
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:32470 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752126Ab0CJFWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:22:23 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/2] fixes for 2.6.34
+Date: Tue,  9 Mar 2010 21:22:17 -0800
+Message-Id: <1268198539-6656-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 5, 2010 at 12:58 PM, Pavel Roskin <proski@gnu.org> wrote:
-> It is used in net/rfkill/input.c
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+We include two fixes targeting 2.6.34. The first solves a memory corruption
+error where the wrong index was used to initialize an array. The second
+reverts a patch found in 2.6.34 since it can cause some memory corruption.
 
-Thanks, applied to the 2.6.33.y branch as well.
+These patches are also available from wireless-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-  Luis
+Reinette Chatre (2):
+  iwl3945: fix memory corruption
+  Revert "iwlwifi: Send broadcast probe request only when asked to"
+
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    6 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   49 ++++++++++---------------------
+ 3 files changed, 20 insertions(+), 37 deletions(-)
+
