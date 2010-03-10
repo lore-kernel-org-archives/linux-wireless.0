@@ -1,80 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:42146 "EHLO coco.kroah.org"
+Received: from mga11.intel.com ([192.55.52.93]:57656 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753954Ab0C2Ulo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:41:44 -0400
-Subject: patch rt2860sta-fix-argument-to-linux_pci_unmap_single.patch added to 2.6.32-stable tree
-To: ben@decadent.org.uk, bzolnier@gmail.com, gregkh@suse.de,
-	johnhalton@gmail.com, linux-wireless@vger.kernel.org
-Cc: <stable@kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@suse.de>
-Date: Mon, 29 Mar 2010 13:41:57 -0700
-In-Reply-To: <1269821357.8653.231.camel@localhost>
-Message-ID: <12698953171603@site>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+	id S1751483Ab0CJFWI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:22:08 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 21/24] iwlwifi: remove unnecessary parameter in scan function
+Date: Tue,  9 Mar 2010 21:21:49 -0800
+Message-Id: <1268198512-6572-22-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
+References: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-This is a note to let you know that we have just queued up the patch titled
+small change to remove unnecessary "ret" parameter since it not being
+used.
 
-    Subject: rt2860sta: Fix argument to linux_pci_unmap_single()
-
-to the 2.6.32-stable tree.  Its filename is
-
-    rt2860sta-fix-argument-to-linux_pci_unmap_single.patch
-
-A git repo of this tree can be found at 
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-
->From ben@decadent.org.uk  Mon Mar 29 13:35:12 2010
-From: Ben Hutchings <ben@decadent.org.uk>
-Date: Mon, 29 Mar 2010 01:09:17 +0100
-Subject: rt2860sta: Fix argument to linux_pci_unmap_single()
-To: stable@kernel.org
-Cc: 575726@bugs.debian.org, linux-wireless <linux-wireless@vger.kernel.org>, John Halton <johnhalton@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Message-ID: <1269821357.8653.231.camel@localhost>
-
-From: Ben Hutchings <ben@decadent.org.uk>
-
-John Halton wrote in <http://bugs.debian.org/575726>:
-> Whenever wpa_supplicant is deactivated (whether by killing the process or
-> during a normal shutdown) I am getting a kerneloops that prevents the
-> computer from completing shutdown. Here is the relevant syslog output:
-
-The backtrace points to an incorrect call from RTMPFreeTxRxRingMemory()
-into linux_pci_unmap_single().  This appears to have been fixed in Linux
-2.6.33 by this change:
-
-commit ca97b8388838ee9ea4b4bad04948f8f7f8a607a3
-Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date:   Tue Sep 22 20:44:07 2009 +0200
-
-    Staging: rt28x0: updates from vendor's V2.1.0.0 drivers
-
-For stable-2.6.32, just fix this one function call.
-
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/staging/rt2860/common/2860_rtmp_init.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
 
---- a/drivers/staging/rt2860/common/2860_rtmp_init.c
-+++ b/drivers/staging/rt2860/common/2860_rtmp_init.c
-@@ -716,7 +716,7 @@ VOID RTMPFreeTxRxRingMemory(
- 	{
- 		if ((pAd->RxRing.Cell[index].DmaBuf.AllocVa) && (pAd->RxRing.Cell[index].pNdisPacket))
- 		{
--			PCI_UNMAP_SINGLE(pObj->pci_dev, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
-+			PCI_UNMAP_SINGLE(pAd, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
- 			RELEASE_NDIS_PACKET(pAd, pAd->RxRing.Cell[index].pNdisPacket, NDIS_STATUS_SUCCESS);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index ccad04c..1544d75 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -675,7 +675,6 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 	};
+ 	struct iwl_scan_cmd *scan;
+ 	struct ieee80211_conf *conf = NULL;
+-	int ret = 0;
+ 	u32 rate_flags = 0;
+ 	u16 cmd_len;
+ 	u16 rx_chain = 0;
+@@ -708,7 +707,6 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 	if (test_bit(STATUS_SCAN_HW, &priv->status)) {
+ 		IWL_DEBUG_INFO(priv, "Multiple concurrent scan requests in parallel. "
+ 			       "Ignoring second request.\n");
+-		ret = -EIO;
+ 		goto done;
+ 	}
+ 
+@@ -741,7 +739,8 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 		priv->scan = kmalloc(sizeof(struct iwl_scan_cmd) +
+ 				     IWL_MAX_SCAN_SIZE, GFP_KERNEL);
+ 		if (!priv->scan) {
+-			ret = -ENOMEM;
++			IWL_DEBUG_SCAN(priv,
++				       "fail to allocate memory for scan\n");
+ 			goto done;
  		}
  	}
-
-
-Patches currently in stable-queue which might be from ben@decadent.org.uk are
+@@ -908,8 +907,7 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 	scan->len = cpu_to_le16(cmd.len);
+ 
+ 	set_bit(STATUS_SCAN_HW, &priv->status);
+-	ret = iwl_send_cmd_sync(priv, &cmd);
+-	if (ret)
++	if (iwl_send_cmd_sync(priv, &cmd))
+ 		goto done;
+ 
+ 	queue_delayed_work(priv->workqueue, &priv->scan_check,
+-- 
+1.6.3.3
 
