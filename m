@@ -1,358 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47372 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754528Ab0CKVdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 16:33:10 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/5] compat-wireless: add orinoco to compat-wireless
-Date: Thu, 11 Mar 2010 22:32:44 +0100
-Message-Id: <1268343167-2961-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
-References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+Received: from mga11.intel.com ([192.55.52.93]:57656 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753192Ab0CJFWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:22:06 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 15/24] iwlwifi: remove STATUS_MODE_PENDING
+Date: Tue,  9 Mar 2010 21:21:43 -0800
+Message-Id: <1268198512-6572-16-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
+References: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-orinoco now depends on cfg80211. If compat-wireless was installed it
-will install its own version of cfg80211 and orinoco will not work any
-more because it wants to use the version shipped with the kernel.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Since rfkill integration, mac80211 can no
+longer add an interface while the hardware
+is not ready, so STATUS_MODE_PENDING can
+never be set.
+
+Also, remove another superfluous channel
+sanity check and return the commit_rxon
+return value in case it failed.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- config.mk                         |   14 +++++++
- patches/01-netdev.patch           |   73 ++++++++++++++++++++++++++++---------
- patches/02-ksize.patch            |   25 +++++++++++++
- patches/24-pcmcia.patch           |   14 +++++++
- patches/99-change-makefiles.patch |    8 ++---
- scripts/admin-update.sh           |    1 +
- 6 files changed, 112 insertions(+), 23 deletions(-)
- create mode 100644 patches/24-pcmcia.patch
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 --
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   53 ++++++++++-----------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 -
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    2 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 --
+ 5 files changed, 19 insertions(+), 44 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index f4f019f..431940e 100644
---- a/config.mk
-+++ b/config.mk
-@@ -303,6 +303,20 @@ CONFIG_ATL2=m
- CONFIG_ATL1E=m
- CONFIG_ATL1C=m
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index b07c013..6c816d9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2144,9 +2144,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
  
-+CONFIG_HERMES=m
-+CONFIG_HERMES_CACHE_FW_ON_INIT=y
-+ifneq ($(CONFIG_PPC_PMAC),)
-+CONFIG_APPLE_AIRPORT=m
-+endif
-+CONFIG_PLX_HERMES=m
-+CONFIG_TMD_HERMES=m
-+CONFIG_NORTEL_HERMES=m
-+CONFIG_PCI_HERMES=m
-+ifneq ($(CONFIG_PCMCIA),)
-+CONFIG_PCMCIA_HERMES=m
-+CONFIG_PCMCIA_SPECTRUM=m
-+endif
+ 	iwl_power_update_mode(priv, true);
+ 
+-	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
+-		iwl_set_mode(priv, priv->iw_mode);
+-
+ 	return;
+ 
+  restart:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5fa1da1..a962fb3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2275,23 +2275,9 @@ int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(iwl_mac_beacon_update);
+ 
+-int iwl_set_mode(struct iwl_priv *priv, int mode)
++static int iwl_set_mode(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ {
+-	if (mode == NL80211_IFTYPE_ADHOC) {
+-		const struct iwl_channel_info *ch_info;
+-
+-		ch_info = iwl_get_channel_info(priv,
+-			priv->band,
+-			le16_to_cpu(priv->staging_rxon.channel));
+-
+-		if (!ch_info || !is_channel_ibss(ch_info)) {
+-			IWL_ERR(priv, "channel %d not IBSS channel\n",
+-				  le16_to_cpu(priv->staging_rxon.channel));
+-			return -EINVAL;
+-		}
+-	}
+-
+-	iwl_connection_init_rx_config(priv, mode);
++	iwl_connection_init_rx_config(priv, vif->type);
+ 
+ 	if (priv->cfg->ops->hcmd->set_rxon_chain)
+ 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
+@@ -2300,18 +2286,10 @@ int iwl_set_mode(struct iwl_priv *priv, int mode)
+ 
+ 	iwl_clear_stations_table(priv);
+ 
+-	/* dont commit rxon if rf-kill is on*/
+-	if (!iwl_is_ready_rf(priv))
+-		return -EAGAIN;
+-
+-	iwlcore_commit_rxon(priv);
+-
+-	return 0;
++	return iwlcore_commit_rxon(priv);
+ }
+-EXPORT_SYMBOL(iwl_set_mode);
+ 
+-int iwl_mac_add_interface(struct ieee80211_hw *hw,
+-				 struct ieee80211_vif *vif)
++int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	int err = 0;
+@@ -2320,6 +2298,11 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&priv->mutex);
+ 
++	if (WARN_ON(!iwl_is_ready_rf(priv))) {
++		err = -EINVAL;
++		goto out;
++	}
 +
- endif
- ## end of PCI
+ 	if (priv->vif) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - vif != NULL\n");
+ 		err = -EOPNOTSUPP;
+@@ -2329,15 +2312,17 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw,
+ 	priv->vif = vif;
+ 	priv->iw_mode = vif->type;
  
-diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
-index 5ba7e41..f976013 100644
---- a/patches/01-netdev.patch
-+++ b/patches/01-netdev.patch
-@@ -72,7 +72,7 @@ without creating a headache on maintenance of the pathes.
-  
- --- a/drivers/net/wireless/rndis_wlan.c
- +++ b/drivers/net/wireless/rndis_wlan.c
--@@ -2703,6 +2703,7 @@ static int bcm4320b_early_init(struct us
-+@@ -3047,6 +3047,7 @@ static int bcm4320b_early_init(struct us
-  	return 0;
-  }
-  
-@@ -80,7 +80,7 @@ without creating a headache on maintenance of the pathes.
-  /* same as rndis_netdev_ops but with local multicast handler */
-  static const struct net_device_ops rndis_wlan_netdev_ops = {
-  	.ndo_open		= usbnet_open,
--@@ -2713,6 +2714,7 @@ static const struct net_device_ops rndis
-+@@ -3057,6 +3058,7 @@ static const struct net_device_ops rndis
-  	.ndo_validate_addr	= eth_validate_addr,
-  	.ndo_set_multicast_list	= rndis_wlan_set_multicast_list,
-  };
-@@ -88,7 +88,7 @@ without creating a headache on maintenance of the pathes.
-  
-  static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
-  {
--@@ -2760,7 +2762,11 @@ static int rndis_wlan_bind(struct usbnet
-+@@ -3104,7 +3106,11 @@ static int rndis_wlan_bind(struct usbnet
-  	 * rndis_host wants to avoid all OID as much as possible
-  	 * so do promisc/multicast handling in rndis_wlan.
-  	 */
-@@ -181,7 +181,7 @@ without creating a headache on maintenance of the pathes.
-  		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
-  				      MONITOR_FLAG_OTHER_BSS;
-  		break;
--@@ -831,6 +858,8 @@ int ieee80211_if_add(struct ieee80211_lo
-+@@ -943,6 +970,8 @@ int ieee80211_if_add(struct ieee80211_lo
-  		return -ENOMEM;
-  	dev_net_set(ndev, wiphy_net(local->hw.wiphy));
-  
-@@ -190,7 +190,7 @@ without creating a headache on maintenance of the pathes.
-  	ndev->needed_headroom = local->tx_headroom +
-  				4*6 /* four MAC addresses */
-  				+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
--@@ -839,6 +868,7 @@ int ieee80211_if_add(struct ieee80211_lo
-+@@ -951,6 +980,7 @@ int ieee80211_if_add(struct ieee80211_lo
-  				- ETH_HLEN /* ethernet hard_header_len */
-  				+ IEEE80211_ENCRYPT_HEADROOM;
-  	ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
-@@ -198,7 +198,7 @@ without creating a headache on maintenance of the pathes.
-  
-  	ret = dev_alloc_name(ndev, ndev->name);
-  	if (ret < 0)
--@@ -884,6 +914,10 @@ int ieee80211_if_add(struct ieee80211_lo
-+@@ -996,6 +1026,10 @@ int ieee80211_if_add(struct ieee80211_lo
-  	if (ret)
-  		goto fail;
-  
-@@ -359,7 +359,7 @@ without creating a headache on maintenance of the pathes.
-  	priv->wireless_data.libipw = priv->ieee;
- --- a/drivers/net/wireless/ipw2x00/ipw2200.c
- +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
--@@ -11635,6 +11635,7 @@ static netdev_tx_t ipw_prom_hard_start_x
-+@@ -11650,6 +11650,7 @@ static netdev_tx_t ipw_prom_hard_start_x
-  	return NETDEV_TX_OK;
-  }
-  
-@@ -367,7 +367,7 @@ without creating a headache on maintenance of the pathes.
-  static const struct net_device_ops ipw_prom_netdev_ops = {
-  	.ndo_open 		= ipw_prom_open,
-  	.ndo_stop		= ipw_prom_stop,
--@@ -11643,6 +11644,7 @@ static const struct net_device_ops ipw_p
-+@@ -11658,6 +11659,7 @@ static const struct net_device_ops ipw_p
-  	.ndo_set_mac_address 	= eth_mac_addr,
-  	.ndo_validate_addr	= eth_validate_addr,
-  };
-@@ -375,7 +375,7 @@ without creating a headache on maintenance of the pathes.
-  
-  static int ipw_prom_alloc(struct ipw_priv *priv)
-  {
--@@ -11663,7 +11665,13 @@ static int ipw_prom_alloc(struct ipw_pri
-+@@ -11678,7 +11680,13 @@ static int ipw_prom_alloc(struct ipw_pri
-  	memcpy(priv->prom_net_dev->dev_addr, priv->mac_addr, ETH_ALEN);
-  
-  	priv->prom_net_dev->type = ARPHRD_IEEE80211_RADIOTAP;
-@@ -389,7 +389,7 @@ without creating a headache on maintenance of the pathes.
-  
-  	priv->prom_priv->ieee->iw_mode = IW_MODE_MONITOR;
-  	SET_NETDEV_DEV(priv->prom_net_dev, &priv->pci_dev->dev);
--@@ -11691,6 +11699,7 @@ static void ipw_prom_free(struct ipw_pri
-+@@ -11706,6 +11714,7 @@ static void ipw_prom_free(struct ipw_pri
-  
-  #endif
-  
-@@ -397,7 +397,7 @@ without creating a headache on maintenance of the pathes.
-  static const struct net_device_ops ipw_netdev_ops = {
-  	.ndo_init		= ipw_net_init,
-  	.ndo_open		= ipw_net_open,
--@@ -11701,6 +11710,7 @@ static const struct net_device_ops ipw_n
-+@@ -11716,6 +11725,7 @@ static const struct net_device_ops ipw_n
-  	.ndo_change_mtu		= libipw_change_mtu,
-  	.ndo_validate_addr	= eth_validate_addr,
-  };
-@@ -405,7 +405,7 @@ without creating a headache on maintenance of the pathes.
-  
-  static int __devinit ipw_pci_probe(struct pci_dev *pdev,
-  				   const struct pci_device_id *ent)
--@@ -11802,7 +11812,15 @@ static int __devinit ipw_pci_probe(struc
-+@@ -11817,7 +11827,15 @@ static int __devinit ipw_pci_probe(struc
-  	priv->ieee->perfect_rssi = -20;
-  	priv->ieee->worst_rssi = -85;
-  
-@@ -423,7 +423,7 @@ without creating a headache on maintenance of the pathes.
-  	net_dev->wireless_handlers = &ipw_wx_handler_def;
- --- a/drivers/net/wireless/ipw2x00/libipw_module.c
- +++ b/drivers/net/wireless/ipw2x00/libipw_module.c
--@@ -157,6 +157,10 @@ struct net_device *alloc_ieee80211(int s
-+@@ -154,6 +154,10 @@ struct net_device *alloc_ieee80211(int s
-  		goto failed;
-  	}
-  	ieee = netdev_priv(dev);
-@@ -436,7 +436,7 @@ without creating a headache on maintenance of the pathes.
-  
- --- a/drivers/net/wireless/libertas/main.c
- +++ b/drivers/net/wireless/libertas/main.c
--@@ -881,6 +881,7 @@ static void lbs_free_adapter(struct lbs_
-+@@ -885,6 +885,7 @@ static void lbs_free_adapter(struct lbs_
-  	lbs_deb_leave(LBS_DEB_MAIN);
-  }
-  
-@@ -444,7 +444,7 @@ without creating a headache on maintenance of the pathes.
-  static const struct net_device_ops lbs_netdev_ops = {
-  	.ndo_open 		= lbs_dev_open,
-  	.ndo_stop		= lbs_eth_stop,
--@@ -891,6 +892,7 @@ static const struct net_device_ops lbs_n
-+@@ -895,6 +896,7 @@ static const struct net_device_ops lbs_n
-  	.ndo_change_mtu		= eth_change_mtu,
-  	.ndo_validate_addr	= eth_validate_addr,
-  };
-@@ -452,7 +452,7 @@ without creating a headache on maintenance of the pathes.
-  
-  /**
-   * @brief This function adds the card. it will probe the
--@@ -936,7 +938,16 @@ struct lbs_private *lbs_add_card(void *c
-+@@ -940,7 +942,16 @@ struct lbs_private *lbs_add_card(void *c
-  	wdev->netdev = dev;
-  	priv->dev = dev;
-  
-@@ -469,7 +469,7 @@ without creating a headache on maintenance of the pathes.
-  	dev->watchdog_timeo = 5 * HZ;
-  	dev->ethtool_ops = &lbs_ethtool_ops;
-  #ifdef	WIRELESS_EXT
--@@ -1242,11 +1253,13 @@ out:
-+@@ -1246,11 +1257,13 @@ out:
-  	lbs_deb_leave(LBS_DEB_MAIN);
-  }
-  
-@@ -483,7 +483,7 @@ without creating a headache on maintenance of the pathes.
-  
-  static int lbs_add_rtap(struct lbs_private *priv)
-  {
--@@ -1267,7 +1280,13 @@ static int lbs_add_rtap(struct lbs_priva
-+@@ -1271,7 +1284,13 @@ static int lbs_add_rtap(struct lbs_priva
-  
-  	memcpy(rtap_dev->dev_addr, priv->current_addr, ETH_ALEN);
-  	rtap_dev->type = ARPHRD_IEEE80211_RADIOTAP;
-@@ -573,6 +573,43 @@ without creating a headache on maintenance of the pathes.
-  	dev->destructor = free_netdev;
-  	ether_setup(dev);
-  	dev->tx_queue_len = 0;
-+--- a/drivers/net/wireless/orinoco/main.c
-++++ b/drivers/net/wireless/orinoco/main.c
-+@@ -2077,6 +2077,7 @@ int orinoco_init(struct orinoco_private 
-+ }
-+ EXPORT_SYMBOL(orinoco_init);
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-+ static const struct net_device_ops orinoco_netdev_ops = {
-+ 	.ndo_open		= orinoco_open,
-+ 	.ndo_stop		= orinoco_stop,
-+@@ -2088,6 +2089,7 @@ static const struct net_device_ops orino
-+ 	.ndo_tx_timeout		= orinoco_tx_timeout,
-+ 	.ndo_get_stats		= orinoco_get_stats,
-+ };
-++#endif
-+ 
-+ /* Allocate private data.
-+  *
-+@@ -2210,7 +2212,18 @@ int orinoco_if_add(struct orinoco_privat
-+ 
-+ 	/* Setup / override net_device fields */
-+ 	dev->ieee80211_ptr = wdev;
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-+ 	dev->netdev_ops = &orinoco_netdev_ops;
-++#else
-++	dev->open = orinoco_open;
-++	dev->stop = orinoco_stop;
-++	dev->hard_start_xmit = orinoco_xmit;
-++	dev->set_multicast_list = orinoco_set_multicast_list;
-++	dev->change_mtu = orinoco_change_mtu;
-++	dev->set_mac_address = eth_mac_addr;
-++	dev->tx_timeout = orinoco_tx_timeout;
-++	dev->get_stats = orinoco_get_stats;
-++#endif
-+ 	dev->watchdog_timeo = HZ; /* 1 second timeout */
-+ 	dev->wireless_handlers = &orinoco_handler_def;
-+ #ifdef WIRELESS_SPY
- --- a/net/bluetooth/bnep/netdev.c
- +++ b/net/bluetooth/bnep/netdev.c
- @@ -167,8 +167,12 @@ static inline int bnep_net_proto_filter(
-diff --git a/patches/02-ksize.patch b/patches/02-ksize.patch
-index 28bacba..5f4e039 100644
---- a/patches/02-ksize.patch
-+++ b/patches/02-ksize.patch
-@@ -10,6 +10,31 @@ define ksize(bleh) SOME_LARGE_NUMBER
- but doing it this way emphasis careful review
- of the situation.
+-	if (vif->addr) {
+-		IWL_DEBUG_MAC80211(priv, "Set %pM\n", vif->addr);
+-		memcpy(priv->mac_addr, vif->addr, ETH_ALEN);
+-	}
++	IWL_DEBUG_MAC80211(priv, "Set %pM\n", vif->addr);
++	memcpy(priv->mac_addr, vif->addr, ETH_ALEN);
  
-+--- a/drivers/net/wireless/orinoco/wext.c
-++++ b/drivers/net/wireless/orinoco/wext.c
-+@@ -28,8 +28,22 @@ static int orinoco_set_key(struct orinoc
-+ 			   enum orinoco_alg alg, const u8 *key, int key_len,
-+ 			   const u8 *seq, int seq_len)
-+ {
-++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,28)
-++	int len;
-++	if (!unlikely(ZERO_OR_NULL_PTR(priv->keys[index].key))) {
-++		len = priv->keys[index].key_len;
-++		memset(priv->keys[index].key, 0, len);
-++		kfree(priv->keys[index].key);
-++	}
-++	if (!unlikely(ZERO_OR_NULL_PTR(priv->keys[index].seq))) {
-++		len = priv->keys[index].seq_len;
-++		memset(priv->keys[index].seq, 0, len);
-++		kfree(priv->keys[index].seq);
-++	}
-++#else
-+ 	kzfree(priv->keys[index].key);
-+ 	kzfree(priv->keys[index].seq);
-++#endif
-+ 
-+ 	if (key_len) {
-+ 		priv->keys[index].key = kzalloc(key_len, GFP_ATOMIC);
- --- a/net/wireless/scan.c
- +++ b/net/wireless/scan.c
- @@ -426,9 +426,14 @@ cfg80211_bss_update(struct cfg80211_regi
-diff --git a/patches/24-pcmcia.patch b/patches/24-pcmcia.patch
-new file mode 100644
-index 0000000..5ffaa7a
---- /dev/null
-+++ b/patches/24-pcmcia.patch
-@@ -0,0 +1,14 @@
-+--- a/drivers/net/wireless/orinoco/orinoco_cs.c
-++++ b/drivers/net/wireless/orinoco/orinoco_cs.c
-+@@ -81,7 +81,11 @@ orinoco_cs_hard_reset(struct orinoco_pri
-+ 	/* We need atomic ops here, because we're not holding the lock */
-+ 	set_bit(0, &card->hard_reset_in_progress);
-+ 
-++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,27)
-++	err = pcmcia_reset_card(link, NULL);
-++#else
-+ 	err = pcmcia_reset_card(link->socket);
-++#endif
-+ 	if (err)
-+ 		return err;
-+ 
-diff --git a/patches/99-change-makefiles.patch b/patches/99-change-makefiles.patch
-index 2fe68e5..7d59537 100644
---- a/patches/99-change-makefiles.patch
-+++ b/patches/99-change-makefiles.patch
-@@ -40,12 +40,10 @@ only the wireless stuff.
-  
- --- a/drivers/net/wireless/Makefile
- +++ b/drivers/net/wireless/Makefile
--@@ -5,33 +5,16 @@
-- obj-$(CONFIG_IPW2100) += ipw2x00/
-- obj-$(CONFIG_IPW2200) += ipw2x00/
-+@@ -7,31 +7,16 @@ obj-$(CONFIG_IPW2200) += ipw2x00/
-+ 
-+ obj-$(CONFIG_HERMES)		+= orinoco/
-  
---obj-$(CONFIG_HERMES)		+= orinoco/
---
- -obj-$(CONFIG_AIRO)		+= airo.o
- -obj-$(CONFIG_AIRO_CS)		+= airo_cs.o airo.o
- -
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index c75af30..29dd460 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -96,6 +96,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
- DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
- DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
- DRIVERS="$DRIVERS drivers/net/wireless/iwmc3200wifi"
-+DRIVERS="$DRIVERS drivers/net/wireless/orinoco"
+-	if (iwl_set_mode(priv, vif->type) == -EAGAIN)
+-		/* we are not ready, will run again when ready */
+-		set_bit(STATUS_MODE_PENDING, &priv->status);
++	err = iwl_set_mode(priv, vif);
++	if (err)
++		goto out_err;
++	goto out;
  
- # Ethernet drivers
- DRIVERS="$DRIVERS drivers/net/atl1c"
++ out_err:
++	priv->vif = NULL;
++	priv->iw_mode = NL80211_IFTYPE_STATION;
+  out:
+ 	mutex_unlock(&priv->mutex);
+ 
+@@ -2347,7 +2332,7 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw,
+ EXPORT_SYMBOL(iwl_mac_add_interface);
+ 
+ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+-				     struct ieee80211_vif *vif)
++			      struct ieee80211_vif *vif)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index f493248..bec00c7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -336,7 +336,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 				     u32 changes);
+ int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb);
+ int iwl_commit_rxon(struct iwl_priv *priv);
+-int iwl_set_mode(struct iwl_priv *priv, int mode);
+ int iwl_mac_add_interface(struct ieee80211_hw *hw,
+ 			  struct ieee80211_vif *vif);
+ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+@@ -617,7 +616,6 @@ void iwlcore_free_geos(struct iwl_priv *priv);
+ #define STATUS_SCAN_HW		15
+ #define STATUS_POWER_PMI	16
+ #define STATUS_FW_ERROR		17
+-#define STATUS_MODE_PENDING	18
+ 
+ 
+ static inline int iwl_is_ready(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 7bf44f1..fc084dd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -560,8 +560,6 @@ static ssize_t iwl_dbgfs_status_read(struct file *file,
+ 		test_bit(STATUS_POWER_PMI, &priv->status));
+ 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_FW_ERROR:\t %d\n",
+ 		test_bit(STATUS_FW_ERROR, &priv->status));
+-	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_MODE_PENDING:\t %d\n",
+-		test_bit(STATUS_MODE_PENDING, &priv->status));
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index bdd5fc7..2fd1b3d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2537,9 +2537,6 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
+ 	set_bit(STATUS_READY, &priv->status);
+ 	wake_up_interruptible(&priv->wait_command_queue);
+ 
+-	if (test_and_clear_bit(STATUS_MODE_PENDING, &priv->status))
+-		iwl_set_mode(priv, priv->iw_mode);
+-
+ 	return;
+ 
+  restart:
 -- 
 1.6.3.3
 
