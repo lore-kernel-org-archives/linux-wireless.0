@@ -1,79 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:39672 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754967Ab0CQOAm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 10:00:42 -0400
-Subject: Re: [RFC PATCHv3 0/2] mac80211: cfg80211: Roam trigger support
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: "ext John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100317132236.GC2990@tuxdriver.com>
-References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <20100317132236.GC2990@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 15:56:18 +0200
-Message-ID: <1268834178.10120.638.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:1472 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752618Ab0CJFWF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:22:05 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/24] iwlwifi: remove never-changing priv->rates_mask variable
+Date: Tue,  9 Mar 2010 21:21:36 -0800
+Message-Id: <1268198512-6572-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
+References: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-17 at 14:22 +0100, ext John W. Linville wrote:
-> On Wed, Mar 17, 2010 at 03:01:15PM +0200, Juuso Oikarinen wrote:
-> > To implement good performance WLAN roaming, it is not sufficient to start
-> > scanning for other available AP's only after the currently serving association
-> > is lost.
-> > 
-> > The entity controlling the roaming will need to get indication of a
-> > deteriorating WLAN connection in order to start preparing for roaming already
-> > before the serving association is lost. This way, it can roam to a better AP
-> > perhaps even before the serving association becomes too bad in quality.
-> > 
-> > These patches propose an implementation facilitating this using a simple RSSI
-> > threshold and hysteresis approach.
-> > 
-> > These patches add a nl80211 interface for simply configuring a rssi threshold
-> > and hysteresis value to facilitate very basic connection quality monitoring.
-> > 
-> > For the triggering, these patches currently rely on HW support, host based
-> > triggering is not implemented, but could be added later if needed.
-> > 
-> > These patches have been tested with the wl1271 driver.
-> > 
-> > Thanks in advance for your comments and suggestions.
-> > 
-> > Juuso Oikarinen (2):
-> >   cfg80211: Add connection quality monitoring support to nl80211
-> >   mac80211: Add support for connection quality monitoring
-> 
-> Any idea what other hardware (besides libertas) supports this concept?
-> Do you anticipate adding a host-based implementation to mac80211?
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm not currently anticipating on doing a host-based implementation in
-the near future for this because the driver I co-maintain does not need
-it and I would not have the time to do it properly.
+It's always just IWL_RATES_MASK.
 
-I'm currently aware of only libertas and wl1271 with hardware support
-for this. I'm relatively sure though that there are more, as this is a
-pretty basic feature, supported even by some of the most hated of
-operating systems ;)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    5 ++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 --
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++---
+ 3 files changed, 4 insertions(+), 8 deletions(-)
 
-> Is RSSI really a useful enough indicator for this function?
-> Will applications actually use it?
-
-RSSI by itself is perhaps not ideal, but it's still way better than
-nothing. Currently we have to wait for the connection to be lost to do
-roaming - taking up a significant amount of time. A dropping RSSI does
-give a hint that the AP is getting further away.
-
-I believe there is pressure for this feature from others than just me.
-Based on these patches I already received queries on this feature, so
-I'm positive that wider support will emerge, also in user-space.
-
--Juuso
-
-
-
-> John
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d0fab87..e7e4bf7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2103,8 +2103,8 @@ static void iwl_alive_start(struct iwl_priv *priv)
+ 
+ 	ieee80211_wake_queues(priv->hw);
+ 
+-	priv->active_rate = priv->rates_mask;
+-	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
++	priv->active_rate = IWL_RATES_MASK;
++	priv->active_rate_basic = IWL_RATES_MASK & IWL_BASIC_RATES_MASK;
+ 
+ 	/* Configure Tx antenna selection based on H/W config */
+ 	if (priv->cfg->ops->hcmd->set_tx_ant)
+@@ -3392,7 +3392,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->qos_data.qos_active = 0;
+ 	priv->qos_data.qos_cap.val = 0;
+ 
+-	priv->rates_mask = IWL_RATES_MASK;
+ 	/* Set the tx_power_user_lmt to the lowest power level
+ 	 * this value will get overwritten by channel max power avg
+ 	 * from eeprom */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index c277e4e..4d6558f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1217,8 +1217,6 @@ struct iwl_priv {
+ #endif
+ 
+ 	/* context information */
+-	u16 rates_mask;
+-
+ 	u8 bssid[ETH_ALEN];
+ 	u16 rts_threshold;
+ 	u8 mac_addr[ETH_ALEN];
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 2b2c96b..b2b0505 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2508,8 +2508,8 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
+ 
+ 	ieee80211_wake_queues(priv->hw);
+ 
+-	priv->active_rate = priv->rates_mask;
+-	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
++	priv->active_rate = IWL_RATES_MASK;
++	priv->active_rate_basic = IWL_RATES_MASK & IWL_BASIC_RATES_MASK;
+ 
+ 	iwl_power_update_mode(priv, true);
+ 
+@@ -3855,7 +3855,6 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
+ 	priv->qos_data.qos_active = 0;
+ 	priv->qos_data.qos_cap.val = 0;
+ 
+-	priv->rates_mask = IWL_RATES_MASK;
+ 	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
+ 
+ 	if (eeprom->version < EEPROM_3945_EEPROM_VERSION) {
+-- 
+1.6.3.3
 
