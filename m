@@ -1,93 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:38958 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755763Ab0CHXik (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 18:38:40 -0500
-Received: by bwz1 with SMTP id 1so3375313bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 15:38:39 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Deauthentications with p54usb
-Date: Tue, 9 Mar 2010 00:38:34 +0100
-References: <1756555272@web.de> <4A7F314E.7050808@lwfinger.net>
-In-Reply-To: <4A7F314E.7050808@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201003090038.34884.chunkeey@googlemail.com>
+Received: from mga11.intel.com ([192.55.52.93]:57656 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750724Ab0CJFWA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:22:00 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 00/24] iwlwifi updates for 2.6.35
+Date: Tue,  9 Mar 2010 21:21:28 -0800
+Message-Id: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Larry,
+The bulk of this work consists of code cleanup and reorganization. We received a significant
+contribution from Johannes when he (among other cleanups) cleaned up actions
+taken by driver which are not necessary based on what mac80211 does and/or provides.
 
-Remember?
+Two other mentionable changes are the addition of short scan
+support which enables iwl3945 to now also perform RF reset, and modifying WEP key
+protection to use a mutex that enable code using this to sleep.
 
-On Sunday 09 August 2009 22:27:58 Larry Finger wrote:
-> Chunkeey@web.de wrote:
-> > Ahh, wait... screw up: I failed to explain the difference between:
-> > 
-> > - powersave (=> responsible for your connection problems)
-> >    In this mode: the device goes into a lower power state,
-> >    but continues to listen for dtim beacons and multicast frames,
-> >    from the AP.
-> > 
-> >    mac80211 does not have printks for these ps events,
-> >    since the device power state may chance every second.
-> > 
-> >    howeve, it's possible to trace them through the generic _trace_
-> >    framework with MAC80211_DRIVER_API_TRACER Kconfig
-> >    option enabled.
-> >    
-> > vs. 
-> > 
-> >  - hibernation (soft rfkill that went in with "[PATCH] p54: implement rfkill")
-> >    In this mode: the device's radio is completely shutdown... so
-> >    it only makes sense to enter this mode when there's really nothing
-> >    to do (=> the device is not scanning or associating/associated)
-> >    
-> >    mac80211 will printk (with CONFIG_MAC80211_VERBOSE_DEBUG set)
-> >    whenever the IEEE80211_CONF_IDLE changes. e.g: 
-> >        phy0: device no longer idle - REASON
-> >     or:
-> >        phy0: device now idle
-> >     in the kernel logs.
-> > 
-> >> Turning off CONFIG_CFG80211_DEFAULT_PS stopped the messages,
-> >> thus it certainly looks like a power saving event.
-> > so hibernation (rfkill) is fine, just powersave is playing tricks...
-> > weirdly, intel disabled ps in their driver _again_ not too long ago,
-> > maybe a coincident, maybe not... do you think you can send me
-> > a kismet/wireshark/airodump dump whenever the AP kicks the device?
-> 
-> We don't know that hibernation is OK. I just never make my machine
-> hibernate (suspend to disk) or sleep (suspend to RAM). The last time I
-> tried it had one or more drivers that would not cooperate, and I have
-> not tried recently.
-> 
-> I'll try to collect a dump.
-> 
-> > BTW: you can set different PS modes with the old iwconfig utility:
-> > iwconfig wlanX power off <-- disables PS
-> > (just like turning off the CONFIG_CFG80211_DEFAULT_PS option)
-> > 
-> > iwconfig wlanX power timeout 0 <--- most aggressive PS setting,
-> > (only uses PS-POLL to retrieve data).
-> > 
-> > AFAIK the current default is just "1", maybe your link would be
-> > totally reliable with a more  _relaxed_ 200, 500 setting...
-> 
-> I'll re-enable CONFIG_CFG80211_DEFAULT_PS and try a more relaxed value
-> for the power timeout. In any case, with it disabled, there have been
-> no deauthentications nor disassociations. The link is rock solid.
+This series is rather large since we have been holding back patches waiting
+for 2.6.34-rc1 to be released so that we can base patches on
+wireless-next-2.6. Please do let me know if there is some better system you
+would like me to follow.
 
-Obviously, there has been a lot of progress on power saving.
-Can you please retest if p54(usb) link is still dying when
-PSM is enabled?
+These patches are also available from wireless-next-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-(NB: the easiest way to enable/disable PSM: iwconfig wlanX power on/off,
- no need to recompile/rebuild the module)
+Abhijeet Kolekar (1):
+  iwl3945: check ucode load error code
 
-Regards,
-	Chr
+Johannes Berg (18):
+  iwlagn: move ICT code into separate file
+  iwlwifi: move 3945 specific data into union
+  iwlwifi: move ICT data to agn part of union
+  iwlagn: remove write-only variables
+  iwlwifi: remove superfluous channel check
+  iwlwifi: remove dead code from iwl_mac_reset_tsf
+  iwlwifi: remove frame dropping
+  iwlwifi: remove never-changing priv->rates_mask variable
+  iwlwifi: remove priv->active_rate_basic
+  iwlwifi: remove IBSS channel sanity check
+  iwlwifi: remove sanity check
+  iwlwifi: clear up AC/FIFO debug output
+  iwlwifi: move 3945 clip groups to 3945 data
+  iwlwifi: remove alive start adhoc restart
+  iwlwifi: remove STATUS_MODE_PENDING
+  iwlagn: move sysfs flags and filter_flags files to debugfs
+  iwlwifi: change WEP key protection to use mutex
+  iwlwifi: clean up queue/fifo handling
+
+Reinette Chatre (1):
+  iwlwifi: remove needlessly exported symbols
+
+Wey-Yi Guy (4):
+  iwlwifi: remove un-necessary parameters
+  iwlwifi: remove duplicate function
+  iwlwifi: remove unnecessary parameter in scan function
+  iwlwifi: add internal short scan support for 3945
+
+ drivers/net/wireless/iwlwifi/Makefile       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    2 +
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   42 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   40 ++--
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-ict.c  |  305 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |  110 +-------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |   74 +++++
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  418 ++------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    8 -
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   82 +++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   90 +++---
+ drivers/net/wireless/iwlwifi/iwl-helpers.h  |    3 +
+ drivers/net/wireless/iwlwifi/iwl-prph.h     |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |   24 --
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |  115 +++++---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   78 ++---
+ 24 files changed, 687 insertions(+), 789 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-ict.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn.h
+
