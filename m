@@ -1,72 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f182.google.com ([209.85.223.182]:36129 "EHLO
-	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156Ab0C2UOM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:14:12 -0400
-Received: by iwn12 with SMTP id 12so943053iwn.21
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 13:14:11 -0700 (PDT)
-Message-ID: <4BB10A0F.1030608@lwfinger.net>
-Date: Mon, 29 Mar 2010 15:14:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:26912 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754024Ab0CJPYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 10:24:12 -0500
+Date: Wed, 10 Mar 2010 16:22:21 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [RFC PATCH 2/2] iwlwifi: implement disable_qos
+Message-ID: <20100310152220.GD2969@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com>
-In-Reply-To: <20100329194745.GH4984@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/29/2010 02:47 PM, John W. Linville wrote:
-> On Mon, Mar 29, 2010 at 09:35:44PM +0200, René Bolldorf wrote:
->> On 03/29/10 21:20, Larry Finger wrote:
->>> Ren�,
->>>
->>> When you have a wireless problem, please post it to
->>> linux-wireless@vger.kernel.org. The Linux Kernel Mailing List may or may not be
->>> appropriate.
->>>
->>> To help in diagnosing your problem, please apply this patch and post the output
->>> line that it produces. On my system, it shows
->>>
->>> ssb: chip_id 0x4312, status 0x10
->>>
->> and on my: ssb: chip_id 0x4312, status 0x12
->>> Please also post the output of 'lspci -nnv | grep 14e4'.
->> Yep:
->> 01:00.0 Network controller [0280]: Broadcom Corporation BCM4312  
->> 802.11b/g [14e4:4315] (rev 01)
-> 
-> OK, I'm new to the thread -- what exactly is the issue?  Was your
-> device working previously?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   16 +++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
+ 4 files changed, 18 insertions(+), 1 deletions(-)
 
-Yes. He originally posted only to LKML
-(http://marc.info/?l=linux-kernel&m=126988911025280&w=2), where he posted
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 921dc4a..56bfe49 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2879,6 +2879,7 @@ static struct ieee80211_ops iwl_hw_ops = {
+ 	.get_stats = iwl_mac_get_stats,
+ 	.get_tx_stats = iwl_mac_get_tx_stats,
+ 	.conf_tx = iwl_mac_conf_tx,
++	.disable_qos = iwl_mac_disable_qos,
+ 	.reset_tsf = iwl_mac_reset_tsf,
+ 	.bss_info_changed = iwl_bss_info_changed,
+ 	.ampdu_action = iwl_mac_ampdu_action,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 0cd4ec4..f99fdae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -303,7 +303,7 @@ EXPORT_SYMBOL(iwl_activate_qos);
+  * AC_BE      15            1023        3           0               0
+  * AC_VI       7              15        2          6.016ms       3.008ms
+  * AC_VO       3               7        2          3.264ms       1.504ms
+- */
++	 */
+ void iwl_reset_qos(struct iwl_priv *priv)
+ {
+ 	u16 cw_min = 15;
+@@ -2227,6 +2227,20 @@ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ }
+ EXPORT_SYMBOL(iwl_mac_conf_tx);
+ 
++int iwl_mac_disable_qos(struct ieee80211_hw *hw)
++{
++	struct iwl_priv *priv = hw->priv;
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->lock, flags);
++	priv->qos_data.qos_active = 0;
++	iwl_activate_qos(priv, 1);
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	return 0;
++}
++EXPORT_SYMBOL(iwl_mac_disable_qos);
++
+ static void iwl_ht_conf(struct iwl_priv *priv,
+ 			    struct ieee80211_bss_conf *bss_conf)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 7754538..61ccd44 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -270,6 +270,7 @@ void iwl_reset_qos(struct iwl_priv *priv);
+ void iwl_activate_qos(struct iwl_priv *priv, u8 force);
+ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		    const struct ieee80211_tx_queue_params *params);
++int iwl_mac_disable_qos(struct ieee80211_hw *hw);
+ void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, int hw_decrypt);
+ int iwl_check_rxon_cmd(struct iwl_priv *priv);
+ int iwl_full_rxon_required(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 5f26c93..1b90171 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3774,6 +3774,7 @@ static struct ieee80211_ops iwl3945_hw_ops = {
+ 	.set_key = iwl3945_mac_set_key,
+ 	.get_tx_stats = iwl_mac_get_tx_stats,
+ 	.conf_tx = iwl_mac_conf_tx,
++	.disable_qos = iwl_mac_disable_qos,
+ 	.reset_tsf = iwl_mac_reset_tsf,
+ 	.bss_info_changed = iwl_bss_info_changed,
+ 	.hw_scan = iwl_mac_hw_scan
+-- 
+1.6.6
 
-=========================
-since commit fcb54b0bf7d3fe730c2b72e224bc616e358f24cb, my b43 (4312)
-device doesn't work.
-
-But the device have a sprom. Maybe the chip-status register check is wrong?
-
-+/** Macros to determine SPROM presence based on Chip-Status register. */
-+#define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
-+       ((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+               SSB_CHIPCO_CHST_4325_OTP_SEL)
-=======================================
-
-I just happened to do one of my infrequent scans of LKML, and happened to see
-it. In a follow-up, he proposes a patch that would fail on your system and leave
-it locked up..
-
-I rechecked the Broadcom driver, and stick by my specs that you used for your patch.
-
-Could you please apply my little test patch and send me the contents of the
-chipcommon status register in your netbook?
-
-Thanks,
-
-Larry
