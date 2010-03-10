@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35965 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754829Ab0CKXXz (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:57950 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753864Ab0CJB1W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 18:23:55 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: stable@kernel.org
-Cc: linville@tuxdriver.com, mb@bu3sch.de, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/2] ath5k: dont use external sleep clock in AP mode
-Date: Thu, 11 Mar 2010 18:23:48 -0500
-Message-Id: <1268349829-3195-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268349829-3195-1-git-send-email-lrodriguez@atheros.com>
-References: <1268349829-3195-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 9 Mar 2010 20:27:22 -0500
+Received: by bwz1 with SMTP id 1so4525719bwz.21
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 17:27:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <6c6bb6f91003091723t31972586uba80a0a849f3634@mail.gmail.com>
+References: <6c6bb6f91003091723t31972586uba80a0a849f3634@mail.gmail.com>
+From: Alastair McKinley <amckinley03@googlemail.com>
+Date: Wed, 10 Mar 2010 01:27:01 +0000
+Message-ID: <6c6bb6f91003091727p322c5589n117a7d774094b20c@mail.gmail.com>
+Subject: building the rt2x00 drivers on compat-wireless
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
+Hi everyone,
 
-When using the external sleep clock in AP mode, the
-TSF increments too quickly, causing beacon interval
-to be much lower than it is supposed to be, resulting
-in lots of beacon-not-ready interrupts.
+I'm on ubuntu karmic and I recently installed ath5k from
+compat-wireless 2.6.33-rc4.  Upgrading ath5k works great but seems to
+have broken my usb adaptor with is some sort of rt2x00 device.
+Whenever I insert the adaptor I get a lot of:
 
-This fixes http://bugzilla.kernel.org/show_bug.cgi?id=14802.
+>>
+>> rt2x00lib: disagrees about version of symbol ieee80211_register_hw
+>>
+>> [249986.361060] rt2x00lib: Unknown symbol ieee80211_register_hw
+>>
+>> [249986.361503] rt2x00lib: disagrees about version of symbol ieee80211_get_hdrlen_from_skb
+>>
+>> [249986.361509] rt2x00lib: Unknown symbol ieee80211_get_hdrlen_from_skb
+>>
+>> [249986.361727] rt2x00lib: disagrees about version of symbol ieee80211_wake_queue
+>>
+>> [249986.361733] rt2x00lib: Unknown symbol ieee80211_wake_queue
+>>
+>> [249986.362182] rt2x00lib: disagrees about version of symbol ieee80211_tx_status_irqsafe
+>>
+>> [249986.362188] rt2x00lib: Unknown symbol ieee80211_tx_status_irqsafe
+>
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath/ath5k/reset.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 34e13c7..257ea18 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1382,8 +1382,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	 * Set clocks to 32KHz operation and use an
- 	 * external 32KHz crystal when sleeping if one
- 	 * exists */
--	if (ah->ah_version == AR5K_AR5212)
--			ath5k_hw_set_sleep_clock(ah, true);
-+	if (ah->ah_version == AR5K_AR5212 &&
-+	    ah->ah_op_mode != NL80211_IFTYPE_AP)
-+		ath5k_hw_set_sleep_clock(ah, true);
- 
- 	/*
- 	 * Disable beacons and reset the register
--- 
-1.6.3.3
+I guess this is because of the new mac80211 module from
+compat-wireless mismatch with my original rt2x00 driver.
 
+So my question is, how do you build rt2x00 and friends from
+compat-wireless, there doesn't seem to be an option in
+./scripts/driver-select.
+
+Any help would be greatly appreciated!
+
+Alastair
