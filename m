@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:47624 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753126Ab0C3Pom (ORCPT
+Received: from ksp.mff.cuni.cz ([195.113.26.206]:35498 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757120Ab0CJUwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 11:44:42 -0400
-From: Luis de Bethencourt <luisbg@ubuntu.com>
-To: linville@tuxdriver.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Wed, 10 Mar 2010 15:52:30 -0500
+Date: Wed, 10 Mar 2010 21:48:19 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
 	linux-kernel@vger.kernel.org,
-	Luis de Bethencourt <luisbg@ubuntu.com>
-Subject: [PATCH 2/2] ath: fix code readability in regd.c
-Date: Tue, 30 Mar 2010 16:44:33 +0100
-Message-Id: <1269963873-2070-1-git-send-email-luisbg@ubuntu.com>
-In-Reply-To: <ath/regd.c>
-References: <ath/regd.c>
+	"Kevin Hayes <kevin@atheros.com>, Dan Tian" <Dan.Tian@atheros.com>
+Subject: Re: Linux Bluetooth Coexistence documentation in general and for
+	ath9k
+Message-ID: <20100310204818.GF1394@ucw.cz>
+References: <43e72e891003031643u353c72dcj23bf429363a16ec8@mail.gmail.com> <1267715451.29510.20.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1267715451.29510.20.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a patch to the ath/regd.c file that fixes two code
-readability issues. A space between to separate two defines
-and the indentation inside the ath_redg_is_eeprom_valid
-function.
+Hi!
 
-Signed-off-by: Luis de Bethencourt <luisbg@ubuntu.com>
----
- drivers/net/wireless/ath/regd.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+> > The question of Bluetooth coexistence pops up here, on IRC and on bug
+> > reports quite too often so I've stuffed what I could onto a page with
+> > a few references / code and about ath9k's schemes for BT coexistence,
+> > feel free to extend or correct:
+> > 
+> > http://wireless.kernel.org/en/users/Documentation/Bluetooth-coexistence
+> > http://wireless.kernel.org/en/users/Drivers/ath9k/btcoex
+> > 
+> > I'm still not sure if "2-wire" and "3-wire" are generic terms and if
+> > someone owns a trademark on them or what, but looking down the road I
+> > think it would be nice to export this information through nl80211, if
+> > a device supports any of these BT-coex schemes and if so, perhaps
+> > display the current signal status of:
+> > 
+> >   * WLAN_ACTIVE
+> >   * BT_PRIORITY
+> >   * BT_STATE
+...
+> the only thing the host has control over is AFH channel map, and even
+> modifying that is not really needed. The Bluetooth controller will do
+> AFH automatically and it is on by default. We never switch that off
+> actually.
+> 
+> Normally the co-ex stuff is hard-wired between the Bluetooth and WiFi
+> and thus out of control to the host OS.
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 04abd1f..d5c2332 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -51,6 +51,7 @@
- 
- #define ATH9K_5GHZ_ALL		ATH9K_5GHZ_5150_5350, \
- 				ATH9K_5GHZ_5470_5850
-+
- /* This one skips what we call "mid band" */
- #define ATH9K_5GHZ_NO_MIDBAND	ATH9K_5GHZ_5150_5350, \
- 				ATH9K_5GHZ_5725_5850
-@@ -361,7 +362,7 @@ EXPORT_SYMBOL(ath_reg_notifier_apply);
- 
- static bool ath_regd_is_eeprom_valid(struct ath_regulatory *reg)
- {
--	 u16 rd = ath_regd_get_eepromRD(reg);
-+	u16 rd = ath_regd_get_eepromRD(reg);
- 	int i;
- 
- 	if (rd & COUNTRY_ERD_FLAG) {
+I believe that 'internal wifi, usb bluetooth' is still quite common
+setup...
+								Pavel
 -- 
-1.6.3.3
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
