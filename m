@@ -1,86 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:36347 "EHLO ogre.sisk.pl"
+Received: from mga11.intel.com ([192.55.52.93]:32470 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755189Ab0CVVB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 17:01:56 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 15551] New: wifi doesn't work after resume from s2ram on ThinkPad T61
-Date: Mon, 22 Mar 2010 22:04:47 +0100
-Cc: bugzilla-daemon@bugzilla.kernel.org,
-	bugme-daemon@bugzilla.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alex.vizor@gmail.com
-References: <bug-15551-10286@http.bugzilla.kernel.org/> <20100322125656.24ce2c11.akpm@linux-foundation.org>
-In-Reply-To: <20100322125656.24ce2c11.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003222204.47169.rjw@sisk.pl>
+	id S1752483Ab0CJFWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:22:24 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/2] Revert "iwlwifi: Send broadcast probe request only when asked to"
+Date: Tue,  9 Mar 2010 21:22:19 -0800
+Message-Id: <1268198539-6656-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1268198539-6656-1-git-send-email-reinette.chatre@intel.com>
+References: <1268198539-6656-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 March 2010, Andrew Morton wrote:
-> On Tue, 16 Mar 2010 22:03:53 GMT
-> bugzilla-daemon@bugzilla.kernel.org wrote:
-> 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=15551
-> 
-> This'll be a post-2.6.33 regression.
-> 
-> >            Summary: wifi doesn't work after resume from s2ram on ThinkPad
-> >                     T61
-> >            Product: Networking
-> >            Version: 2.5
-> >     Kernel Version: 2.6.34-rc1
-> >           Platform: All
-> >         OS/Version: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: Wireless
-> >         AssignedTo: networking_wireless@kernel-bugs.osdl.org
-> >         ReportedBy: alex.vizor@gmail.com
-> >         Regression: Yes
-> > 
-> > 
-> > Created an attachment (id=25561)
-> >  --> (http://bugzilla.kernel.org/attachment.cgi?id=25561)
-> > dmesg
-> > 
-> > Hi. I caught this after several resumes from s2ram, from s2disk it works ok.
-> > 
-> > I attached my dmesg. Please inform me if I can do the report more useful.
-> > 
-> 
-> This:
-> 
-> : [22456.252166] s2ram: page allocation failure. order:4, mode:0x4010
-> : [22456.252172] Pid: 23558, comm: s2ram Not tainted 2.6.34-rc1 #1
-> : [22456.252175] Call Trace:
-> : [22456.252187]  [<ffffffff810b8dc9>] __alloc_pages_nodemask+0x565/0x60c
-> : [22456.252195]  [<ffffffff810de879>] alloc_pages_current+0x90/0x99
-> : [22456.252201]  [<ffffffff810b7a9e>] __get_free_pages+0x9/0x46
-> : [22456.252221]  [<ffffffffa03b4bdd>] iwl_tx_queue_init+0xf2/0x2a1 [iwlcore]
-> : [22456.252227]  [<ffffffffa03b4f12>] iwl_txq_ctx_reset+0x186/0x20c [iwlcore]
-> : [22456.252233]  [<ffffffffa03ae41c>] iwl_hw_nic_init+0x124/0x139 [iwlcore]
-> 
-> Rafael, this is fallout from 452aa6999e6703ffbddd7f6ea124d3968915f3e3
-> ("mm/pm: force GFP_NOIO during suspend/hibernation and resume"). 
-> Wireless was previously doing this stupidly-large allocation with
-> GFP_KERNEL.  But I think the above change is what flipped it to
-> __GFP_WAIT, which caused the page allocator to go into lame-and-sucky
-> mode, so the allocation failed.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Well, technically the problem is in the driver.  It shouldn't do anything like
-this during suspend/resume.  I'll try to figure out how to fix this at minimal cost.
+This reverts commit 21b2d8bd2f0d4e0f21ade147fd193c8b9c1fd2b9.
 
-> (btw, that was a bug - 452aa6999e6703ffbddd7f6ea124d3968915f3e3 should
-> have cleared the __GFP_WAIT bit too).
+As explained by Johannes Berg <johannes.berg@intel.com>:
+When we
+build a probe request frame in the buffer with the SSID, we could
+arrive over the limit of 200 bytes. When we build it in the buffer
+without the SSID (wildcard) we don't arrive over 200 bytes, but the
+ucode still allows direct probe in addition because it has an internal
+buffer that is larger when it inserts the SSID...
 
-Hmm, should it?  That would make all allocations GFP_ATOMIC and is this what
-we really want?
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   49 ++++++++++---------------------
+ 2 files changed, 17 insertions(+), 34 deletions(-)
 
-Rafael
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 47b0214..818367b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2653,7 +2653,7 @@ static int iwl_mac_setup_register(struct iwl_priv *priv)
+ 	 */
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+-	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX + 1;
++	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
+ 	/* we create the 802.11 header and a zero-length SSID element */
+ 	hw->wiphy->max_scan_ie_len = IWL_MAX_PROBE_REQUEST - 24 - 2;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index dd9ff2e..bd2f7c4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -638,20 +638,9 @@ u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
+ 	if (left < 0)
+ 		return 0;
+ 	*pos++ = WLAN_EID_SSID;
+-	if (!priv->is_internal_short_scan &&
+-	    priv->scan_request->n_ssids) {
+-		struct cfg80211_ssid *ssid =
+-			priv->scan_request->ssids;
+-
+-		/* Broadcast if ssid_len is 0 */
+-		*pos++ = ssid->ssid_len;
+-		memcpy(pos, ssid->ssid, ssid->ssid_len);
+-		pos += ssid->ssid_len;
+-		len += 2 + ssid->ssid_len;
+-	} else {
+-		*pos++ = 0;
+-		len += 2;
+-	}
++	*pos++ = 0;
++
++	len += 2;
+ 
+ 	if (WARN_ON(left < ie_len))
+ 		return len;
+@@ -780,26 +769,20 @@ static void iwl_bg_request_scan(struct work_struct *data)
+ 	if (priv->is_internal_short_scan) {
+ 		IWL_DEBUG_SCAN(priv, "Start internal passive scan.\n");
+ 	} else if (priv->scan_request->n_ssids) {
++		int i, p = 0;
+ 		IWL_DEBUG_SCAN(priv, "Kicking off active scan\n");
+-		/*
+-		 * The first SSID to scan is stuffed into the probe request
+-		 * template and the remaining ones are handled through the
+-		 * direct_scan array.
+-		 */
+-		if (priv->scan_request->n_ssids > 1) {
+-			int i, p = 0;
+-			for (i = 1; i < priv->scan_request->n_ssids; i++) {
+-				if (!priv->scan_request->ssids[i].ssid_len)
+-					continue;
+-				scan->direct_scan[p].id = WLAN_EID_SSID;
+-				scan->direct_scan[p].len =
+-					priv->scan_request->ssids[i].ssid_len;
+-				memcpy(scan->direct_scan[p].ssid,
+-				       priv->scan_request->ssids[i].ssid,
+-				       priv->scan_request->ssids[i].ssid_len);
+-				n_probes++;
+-				p++;
+-			}
++		for (i = 0; i < priv->scan_request->n_ssids; i++) {
++			/* always does wildcard anyway */
++			if (!priv->scan_request->ssids[i].ssid_len)
++				continue;
++			scan->direct_scan[p].id = WLAN_EID_SSID;
++			scan->direct_scan[p].len =
++				priv->scan_request->ssids[i].ssid_len;
++			memcpy(scan->direct_scan[p].ssid,
++			       priv->scan_request->ssids[i].ssid,
++			       priv->scan_request->ssids[i].ssid_len);
++			n_probes++;
++			p++;
+ 		}
+ 		is_active = true;
+ 	} else
+-- 
+1.6.3.3
+
