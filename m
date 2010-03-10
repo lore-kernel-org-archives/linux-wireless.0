@@ -1,92 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40649 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752060Ab0CMFq6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Mar 2010 00:46:58 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 02/12] ath9k_hw: add GPIO setup code for AR9271
-Date: Sat, 13 Mar 2010 00:46:46 -0500
-Message-Id: <1268459216-22372-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
-References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:61924 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755980Ab0CJJgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 04:36:19 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Mar 2010 01:36:19 -0800
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>
+Subject: [PATCH 3/3] ath9k: Fix HW deinit
+Date: Wed, 10 Mar 2010 15:04:51 +0530
+Message-ID: <1268213691-2497-3-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1268213691-2497-2-git-send-email-senthilkumar@atheros.com>
+References: <1268213691-2497-1-git-send-email-senthilkumar@atheros.com>
+ <1268213691-2497-2-git-send-email-senthilkumar@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Sujith <Sujith.Manoharan@atheros.com>
 
-Assign the proper number of GPIO pins for AR9271.
+Also, free ath_hw instance properly.
+ath9k_hw_deinit() shouldn't do it.
 
 Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  |   11 +++++++++--
- drivers/net/wireless/ath/ath9k/reg.h |    3 +++
- 2 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c   |    4 +---
+ drivers/net/wireless/ath/ath9k/init.c |    3 +++
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9de4603..7b1ba6f 100644
+index ecd70fb..9699007 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.c
 +++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3229,7 +3229,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	else
- 		pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD;
- 
--	if (AR_SREV_9285_10_OR_LATER(ah))
-+	if (AR_SREV_9271(ah))
-+		pCap->num_gpio_pins = AR9271_NUM_GPIO;
-+	else if (AR_SREV_9285_10_OR_LATER(ah))
- 		pCap->num_gpio_pins = AR9285_NUM_GPIO;
- 	else if (AR_SREV_9280_10_OR_LATER(ah))
- 		pCap->num_gpio_pins = AR928X_NUM_GPIO;
-@@ -3465,7 +3467,9 @@ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
- 	if (gpio >= ah->caps.num_gpio_pins)
- 		return 0xffffffff;
- 
--	if (AR_SREV_9287_10_OR_LATER(ah))
-+	if (AR_SREV_9271(ah))
-+		return MS_REG_READ(AR9271, gpio) != 0;
-+	else if (AR_SREV_9287_10_OR_LATER(ah))
- 		return MS_REG_READ(AR9287, gpio) != 0;
- 	else if (AR_SREV_9285_10_OR_LATER(ah))
- 		return MS_REG_READ(AR9285, gpio) != 0;
-@@ -3494,6 +3498,9 @@ EXPORT_SYMBOL(ath9k_hw_cfg_output);
- 
- void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val)
+@@ -1229,7 +1229,7 @@ void ath9k_hw_deinit(struct ath_hw *ah)
  {
-+	if (AR_SREV_9271(ah))
-+		val = ~val;
-+
- 	REG_RMW(ah, AR_GPIO_IN_OUT, ((val & 1) << gpio),
- 		AR_GPIO_BIT(gpio));
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	if (common->state <= ATH_HW_INITIALIZED)
++	if (common->state < ATH_HW_INITIALIZED)
+ 		goto free_hw;
+ 
+ 	if (!AR_SREV_9100(ah))
+@@ -1240,8 +1240,6 @@ void ath9k_hw_deinit(struct ath_hw *ah)
+ free_hw:
+ 	if (!AR_SREV_9280_10_OR_LATER(ah) && !AR_SREV_9271(ah))
+ 		ath9k_hw_rf_free_ext_banks(ah);
+-	kfree(ah);
+-	ah = NULL;
  }
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 72cfa8e..198e41d 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -940,6 +940,7 @@ enum {
- #define AR928X_NUM_GPIO                          10
- #define AR9285_NUM_GPIO                          12
- #define AR9287_NUM_GPIO                          11
-+#define AR9271_NUM_GPIO                          16
+ EXPORT_SYMBOL(ath9k_hw_deinit);
  
- #define AR_GPIO_IN_OUT                           0x4048
- #define AR_GPIO_IN_VAL                           0x0FFFC000
-@@ -950,6 +951,8 @@ enum {
- #define AR9285_GPIO_IN_VAL_S                     12
- #define AR9287_GPIO_IN_VAL                       0x003FF800
- #define AR9287_GPIO_IN_VAL_S                     11
-+#define AR9271_GPIO_IN_VAL                       0xFFFF0000
-+#define AR9271_GPIO_IN_VAL_S                     16
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 623c2f8..6063f54 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -758,6 +758,9 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
  
- #define AR_GPIO_OE_OUT                           0x404c
- #define AR_GPIO_OE_OUT_DRV                       0x3
+ 	tasklet_kill(&sc->intr_tq);
+ 	tasklet_kill(&sc->bcon_tasklet);
++
++	kfree(sc->sc_ah);
++	sc->sc_ah = NULL;
+ }
+ 
+ void ath9k_deinit_device(struct ath_softc *sc)
 -- 
 1.6.3.3
 
