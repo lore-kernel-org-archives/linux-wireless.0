@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:43739 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037Ab0C1O5l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 10:57:41 -0400
-Received: by bwz1 with SMTP id 1so2956974bwz.21
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Mar 2010 07:57:39 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
-	IvDoorn@gmail.com, Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH 2/2] wireless: rt2x00: rt2800usb: delete id
-Date: Sun, 28 Mar 2010 16:57:32 +0200
-Message-Id: <1269788252-7473-1-git-send-email-xose.vazquez@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:54329 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753969Ab0CJB75 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Mar 2010 20:59:57 -0500
+Subject: Re: Realtek rtl8188 support?
+From: Pavel Roskin <proski@gnu.org>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Paul Thomas <pthomas8589@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c911003070736t678cf6ccld0fe6dc332f4380d@mail.gmail.com>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>
+	 <69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>
+	 <1267949782.15192.13.camel@mj>
+	 <69e28c911003070736t678cf6ccld0fe6dc332f4380d@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Mar 2010 20:59:55 -0500
+Message-Id: <1268186395.3410.4.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was removed in the windows inf file by ralink.
-And it isn't on ralink linux drivers.
+On Sun, 2010-03-07 at 16:36 +0100, Gábor Stefanik wrote:
+> 2010/3/7 Pavel Roskin <proski@gnu.org>:
+> > I was able to load the driver, bring the interface up and scan.  I could
+> > not connect to an AP with CCMP for some reason:
+> >
+> > # wpa_supplicant -c /etc/wpa_supplicant/mike1.conf -i wlan29 -D wext
+> > ioctl[SIOCSIWPMKSA]: Invalid argument
+> > ioctl[SIOCSIWPMKSA]: Invalid argument
+> > CTRL-EVENT-SCAN-RESULTS
+> > CTRL-EVENT-SCAN-RESULTS
+> > Trying to associate with 00:25:9c:28:15:62 (SSID='mike1' freq=2437 MHz)
+> > ioctl[SIOCSIWFREQ]: Operation not supported
+> > Association request to the driver failed
+> 
+> Maybe with an actual RTL8192SU firmware it would work... just my 2 HUF.
 
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+I brushed up my firmware extraction skills and extracted the firmware
+from the latest Windows driver for rtl8188su.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index a1691b8..c1cc15d 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1010,8 +1010,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Amigo */
- 	{ USB_DEVICE(0x0e0b, 0x9031), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0e0b, 0x9041), USB_DEVICE_DATA(&rt2800usb_ops) },
--	/* Askey */
--	{ USB_DEVICE(0x0930, 0x0a07), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* ASUS */
- 	{ USB_DEVICE(0x0b05, 0x1760), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0b05, 0x1761), USB_DEVICE_DATA(&rt2800usb_ops) },
+Unfortunately, the results are exactly the same.  Scanning works, but
+wpa_supplicant fails in the same way.
+
+OK, at least I won't be able to blame the firmware from now on.
+
 -- 
-1.6.6.1
-
+Regards,
+Pavel Roskin
