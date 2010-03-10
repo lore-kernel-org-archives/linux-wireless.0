@@ -1,65 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:35852 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757188Ab0CJVOY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 16:14:24 -0500
-Received: by mail-bw0-f209.google.com with SMTP id 1so5394977bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Mar 2010 13:14:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1268191776.10669.20.camel@mj>
-References: <6c6bb6f91003091723t31972586uba80a0a849f3634@mail.gmail.com>
-	<6c6bb6f91003091727p322c5589n117a7d774094b20c@mail.gmail.com>
-	<1268191776.10669.20.camel@mj>
-From: Alastair McKinley <amckinley03@googlemail.com>
-Date: Wed, 10 Mar 2010 21:14:04 +0000
-Message-ID: <6c6bb6f91003101314l3cce11a6x50ce8b202757d4ef@mail.gmail.com>
-Subject: Re: building the rt2x00 drivers on compat-wireless
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:64897 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756227Ab0CJEeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Mar 2010 23:34:17 -0500
+Subject: Re: [PATCH 2/2] compat-wireless: disable wl12xx if crc7 is not
+ available
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20100310035414.28564.10870.stgit@mj.roinet.com>
+References: <20100310035408.28564.65912.stgit@mj.roinet.com>
+	 <20100310035414.28564.10870.stgit@mj.roinet.com>
+Content-Type: text/plain
+Date: Tue, 09 Mar 2010 23:34:16 -0500
+Message-Id: <1268195656.10669.37.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 10, 2010 at 3:29 AM, Pavel Roskin <proski@gnu.org> wrote:
-> On Wed, 2010-03-10 at 01:27 +0000, Alastair McKinley wrote:
->
->> So my question is, how do you build rt2x00 and friends from
->> compat-wireless, there doesn't seem to be an option in
->> ./scripts/driver-select.
->
-> Just compile and install everything in compat-wireless.  If something
-> fails to compile, please report.  If some drivers fail symbol
-> verification, it's not a problem as long as you don't need those
-> drivers.
->
-> I checked the current compat-wireless on Linux 2.6.26, and following
-> modules have unresolved symbols:
->
-> b43.ko
-> b43legacy.ko
-> b44.ko
-> rt2800pci.ko
-> rt2800usb.ko
-> wl1271.ko
->
-> rt2800usb could be your device, but most likely your device is something
-> older and shouldn't be affected.
->
-> --
-> Regards,
-> Pavel Roskin
->
+On Tue, 2010-03-09 at 22:54 -0500, Pavel Roskin wrote:
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+>  config.mk |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 
-Hi Pavel,
+Please disregards this patch, it goes too far.  wl1251_sdio still can be
+compiled without crc7().
 
-I didn't realise the default behaviour was to build everything... whoops.
+That's the second version (RFC):
 
-ath5k and rt73usb on compat-wireless-2.6.33 works fine for me on
-2.6.31-20 from ubuntu karmic.
 
-Thanks for your help.
+compat-wireless: disable wl1251 SPI and wl1271 if crc7 is not available
 
-Best regards,
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ config.mk |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Alastair
+diff --git a/config.mk b/config.mk
+index e5be3fd..f4f019f 100644
+--- a/config.mk
++++ b/config.mk
+@@ -386,7 +386,9 @@ endif # end of USB driver list
+ ifneq ($(CONFIG_SPI_MASTER),)
+ 
+ CONFIG_WL1251=m
++ifneq ($(CONFIG_CRC7),)
+ CONFIG_WL1251_SPI=m
++endif
+ CONFIG_P54_SPI=m
+ 
+ ifdef CONFIG_COMPAT_KERNEL_27
+@@ -449,7 +451,9 @@ CONFIG_ATH_COMMON=m
+ 
+ CONFIG_WL12XX=y
+ CONFIG_WL1251=m
++ifneq ($(CONFIG_CRC7),)
+ CONFIG_WL1271=m
++endif
+ 
+ ifdef CONFIG_COMPAT_KERNEL_27
+ CONFIG_LIBERTAS=n
+
+-- 
+Regards,
+Pavel Roskin
