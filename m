@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1846 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752954Ab0CSB3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 21:29:44 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Geoff Levand <geoffrey.levand@am.sony.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pavel Roskin <proski@gnu.org>,
-	David Gibson <hermes@gibson.dropbear.id.au>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	"David S. Miller" <davem@davemloft.net>, linuxppc-dev@ozlabs.org,
-	cbe-oss-dev@ozlabs.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net
-Subject: [PATCH v3 0/9] wireless: Use macros from wireless.h
-Date: Thu, 18 Mar 2010 18:29:31 -0700
-Message-Id: <cover.1268961559.git.joe@perches.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:39915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750752Ab0CKGkz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 01:40:55 -0500
+Subject: Re: [RFC] mac80211,iwlwifi: disabling qos queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <20100310152024.GB2969@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com>
+	 <20100310152024.GB2969@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Mar 2010 15:59:57 -0800
+Message-ID: <1268265597.4192.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a IW_HANDLER macro for iw_handler array entries in wireless.h
-Use the wireless.h macros in various wireless files
-Use starting index define SIOCIWFIRST where appropriate 
-Remove local #defines of IW_IOCTL
-Remove STD_IW_HANDLER macro in orinoco, use IW_HANDLER instead
+On Wed, 2010-03-10 at 16:20 +0100, Stanislaw Gruszka wrote:
+> On Tue, Mar 09, 2010 at 02:21:14PM +0100, Stanislaw Gruszka wrote:
+> > Problem is that we enable QoS queues, when AP do not send us any QoS
+> > parameters. I think when AP not support QoS and does not tell anything
+> > about that, we should not enable QoS in H/W. I prepared a draft patch,
+> > it fixes the issue. However I'm not sure if this is right approach,
+> > perhaps we should find something better.
+> 
+> I divide my fix into two patches. I'll send them in next emails.
+> If no one have objections I'll post them "officially" with -stable cc.
 
-Joe Perches (9):
-  include/linux/wireless.h: Add IW_HANDLER macro to initialize array entry
-  wireless.h: Use SIOCIWFIRST not SIOCSIWCOMMIT for range check
-  include/net/iw_handler.h: Use SIOCIWFIRST not SIOCSIWCOMMIT in comment
-  net/wireless/wext_core.c: Use IW_IOCTL_IDX macro
-  net/wireless/wext-core.c: Use IW_EVENT_IDX macro
-  drivers/net/wireless: Use IW_HANDLER macro
-  drivers/net: Remove local #define IW_IOCTL, use IW_HANDLER
-  orinoco/wext.c: Remove local #define STD_IW_HANDLER
-  drivers/net/wireless/ray_cs.c: Use iw_handler function prototypes
+I have objections. Or maybe not, but I don't think this makes a whole
+lot of sense since the BE queue should be programmed in the "qos turned
+off" way normally. That may be broken right now, but to me your patches
+seem like a workaround rather than a solution which would require an
+analysis of what's really going on.
 
- drivers/net/ps3_gelic_wireless.c       |   35 +++---
- drivers/net/wireless/ipw2x00/ipw2200.c |   83 ++++++-------
- drivers/net/wireless/orinoco/wext.c    |   94 +++++++-------
- drivers/net/wireless/ray_cs.c          |  212 +++++++++++++++-----------------
- drivers/net/wireless/wl3501_cs.c       |   52 ++++----
- include/linux/wireless.h               |    4 +-
- include/net/iw_handler.h               |    2 +-
- net/wireless/wext-core.c               |  134 ++++++++++----------
- 8 files changed, 298 insertions(+), 318 deletions(-)
+johannes
+
