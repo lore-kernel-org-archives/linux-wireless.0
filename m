@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep16-int.chello.at ([62.179.121.36]:11152 "EHLO
-	viefep16-int.chello.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757412Ab0CMIF2 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:58244 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753015Ab0CJLXG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Mar 2010 03:05:28 -0500
-Received: from edge01.upcmail.net ([192.168.13.236])
-          by viefep15-int.chello.at
-          (InterMail vM.8.01.02.00 201-2260-120-20100118) with ESMTP
-          id <20100313075012.DFOL16925.viefep15-int.chello.at@edge01.upcmail.net>
-          for <linux-wireless@vger.kernel.org>;
-          Sat, 13 Mar 2010 08:50:12 +0100
-Message-ID: <4B9B43B0.1030801@dp.fce.vutbr.cz>
-Date: Sat, 13 Mar 2010 08:50:08 +0100
-From: Jan Martinek <honza@dp.fce.vutbr.cz>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ISL3890, master mode, prism54 -> p54pci regression
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+	Wed, 10 Mar 2010 06:23:06 -0500
+From: Luciano Coelho <luciano.coelho@Nokia.com>
+To: linville@tuxdriver.com
+Cc: sfr@canb.auug.org.au, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+	ext-teemu.3.paasikivi@Nokia.com
+Subject: [PATCH] wl1271: Changed wl1271_sdio to be selectable only on ARM
+Date: Wed, 10 Mar 2010 13:22:31 +0200
+Message-Id: <1268220151-19431-1-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1268219993.10194.82.camel@chilepepper>
+References: <1268219993.10194.82.camel@chilepepper>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 
-I have been using prism54 driver and my PCI wireless card was working in 
-Master mode. After upgrade to kernel-2.6.32 there is no prism54 driver 
-so I switched to p54pci. The problem is that I cannot set the Master 
-mode anymore, I get this error:
+As wl1271_sdio implementation depends on ARM GPIO impelementation it is
+not directly usable on other architectures at the moment. Added
+ARM dependency to kernel configuration option.
 
-# iwconfig wlan0 mode master
-Error for wireless request "Set Mode" (8B06) :
-     SET failed on device wlan0 ; Invalid argument.
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/Kconfig |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-This is my wireless card:
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 2f67335..337fc7b 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -53,7 +53,7 @@ config WL1271
+ 	  unsure.
+ 
+ config WL1271_SPI
+-	tristate "TI wl1251 SPI support"
++	tristate "TI wl1271 SPI support"
+ 	depends on WL1271 && SPI_MASTER
+ 	---help---
+ 	  This module adds support for the SPI interface of adapters using
+@@ -65,7 +65,7 @@ config WL1271_SPI
+ 
+ config WL1271_SDIO
+ 	tristate "TI wl1271 SDIO support"
+-	depends on WL1271 && MMC
++	depends on WL1271 && MMC && ARM
+ 	---help---
+ 	  This module adds support for the SDIO interface of adapters using
+ 	  TI wl1271 chipset.  Select this if your platform is using
+-- 
+1.6.3.3
 
-03:05.0 Network controller: Intersil Corporation ISL3890 [Prism GT/Prism 
-Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
-
-this is my kernel version: kernel-2.6.32.9-70.fc12.x86_64
-And here is what I found in dmesg:
-
-cfg80211: World regulatory domain updated:
-	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-	(2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-	(2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-	(2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-	(5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-	(5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-p54pci 0000:03:05.0: PCI INT A -> GSI 20 (level, low) -> IRQ 20
-p54pci 0000:03:05.0: firmware: requesting isl3886pci
-phy0: p54 detected a LM86 firmware
-p54: rx_mtu reduced from 3240 to 2376
-phy0: FW rev 2.13.12.0 - Softmac protocol 5.9
-phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-phy0: hwaddr 00:60:b3:1c:41:e5, MAC:isl3890 RF:Frisbee
-phy0: Selected rate control algorithm 'minstrel'
-Registered led device: p54-phy0::assoc
-Registered led device: p54-phy0::tx
-Registered led device: p54-phy0::rx
-Registered led device: p54-phy0::radio
-p54pci 0000:03:05.0: is registered as 'phy0'
-cfg80211: Calling CRDA for country: CZ
-cfg80211: Regulatory domain changed to country: CZ
-	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-	(2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-	(5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2301 mBm)
-	(5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2301 mBm)
-	(5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 3000 mBm)
-
-Is there any possibility to set the master mode?
-
-Thank you,
-Jan Martinek
