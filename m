@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:40996 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752272Ab0C2TPi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 15:15:38 -0400
-From: Krzysztof Halasa <khc@pm.waw.pl>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-References: <m3tys0tbhk.fsf@intrepid.localdomain>
-	<43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
-Date: Mon, 29 Mar 2010 21:15:35 +0200
-In-Reply-To: <43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
-	(Luis R. Rodriguez's message of "Sun, 28 Mar 2010 16:45:59 -0700")
-Message-ID: <m3eij3ym5k.fsf@intrepid.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtp.nokia.com ([192.100.122.230]:62062 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752403Ab0CJFir (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:38:47 -0500
+Subject: Re: [PATCH] mac80211: Fix (dynamic) power save entry
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: "ext Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <43e72e891003090958k4413b171i911b163b8ee675ba@mail.gmail.com>
+References: <1268137502-25339-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <43e72e891003090958k4413b171i911b163b8ee675ba@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Mar 2010 07:36:00 +0200
+Message-ID: <1268199360.10120.442.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@gmail.com> writes:
+On Tue, 2010-03-09 at 18:58 +0100, ext Luis R. Rodriguez wrote:
+> On Tue, Mar 9, 2010 at 4:25 AM, Juuso Oikarinen
+> <juuso.oikarinen@nokia.com> wrote:
+> > Currently hardware with !IEEE80211_HW_PS_NULLFUNC_STACK and
+> > IEEE80211_HW_REPORTS_TX_ACK_STATUS will never enter PSM due to the
+> > conditions in the power save entry functions.
+> >
+> > Fix those conditions.
+> 
+> Is this a stable fix, for 33?
+> 
+>   Luis
 
-> I've documented this specific case here:
->
-> http://wireless.kernel.org/en/users/Drivers/ath/#The_0x0_regulatory_domain
+I have only tested this on our hardware (wl1271), which is configured as
+stated above - though I tried to consider all other combinations of
+those two flags too, but I haven't tested them.
 
-Thanks.
+-Juuso
 
-I'm not sure how the modified regulatory.bin could work, though:
-I really don't want to use restricted frequencies etc. when the
-regulatory domain is set to US (i.e. when operating in USA), I only want
-to use the extra channels etc. when in e.g. Europe. IOW I should be able
-to iw reg set US and get the US freqs only.
-
-A driver modification to ignore the default restrictions (while obeying
-the regulatory.bin, on a 0-country cards only, of course) - that would
-work.
--- 
-Krzysztof Halasa
