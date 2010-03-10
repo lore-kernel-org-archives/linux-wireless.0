@@ -1,66 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:25659 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754590Ab0CGRwr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Mar 2010 12:52:47 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so2090662fgg.1
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Mar 2010 09:52:45 -0800 (PST)
+Received: from porcine.com ([130.94.188.223]:3131 "EHLO porcine.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755481Ab0CJQFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 11:05:00 -0500
+Received: from unknown (HELO [192.168.0.172]) ([66.159.230.24])
+          (envelope-sender <jimham@porcine.com>)
+          by 130.94.188.223 (qmail-ldap-1.03) with SMTP
+          for <linux-wireless@vger.kernel.org>; 10 Mar 2010 15:58:20 -0000
+Message-ID: <4B97C1AC.6020405@porcine.com>
+Date: Wed, 10 Mar 2010 07:58:36 -0800
+From: Jim Ham <jimham@porcine.com>
+Reply-To: jimham@porcine.com
 MIME-Version: 1.0
-In-Reply-To: <87d3zgdolb.fsf@purkki.valot.fi>
-References: <20100202000934.GA19847@sortiz.org> <201002151146.48156.holgerschurig@gmail.com>
-	<cdd918981002240005o1fa50956yfb2a692716c06a55@mail.gmail.com>
-	<1267054502.6162.9.camel@localhost.localdomain> <cdd918981002250042m16cdf34ap8305ed2fbfd7804d@mail.gmail.com>
-	<1267087684.3796.0.camel@jlt3.sipsolutions.net> <c1545bb51002251005o396130e9g906e5efff024c78@mail.gmail.com>
-	<87d3zgdolb.fsf@purkki.valot.fi>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 7 Mar 2010 18:52:25 +0100
-Message-ID: <69e28c911003070952g4a4a1bddo47affe3c63d27f3a@mail.gmail.com>
-Subject: Re: [PATCH] libertas: cfg80211 support
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Andrey Yurovsky <yurovsky@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	David MOUSSAUD <d.moussaud@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Holger Schurig <holgerschurig@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <holgerschurig@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+CC: Pavel Roskin <proski@gnu.org>
+Subject: Re: Athros wireless stopped working
+References: <1268102255.10290.24.camel@localhost> <1268187196.3410.14.camel@mj>
+In-Reply-To: <1268187196.3410.14.camel@mj>
+Content-Type: multipart/mixed;
+ boundary="------------050905040202090902090606"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 7, 2010 at 6:32 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Andrey Yurovsky <yurovsky@gmail.com> writes:
+This is a multi-part message in MIME format.
+--------------050905040202090902090606
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+
+Pavel Roskin wrote:
+> On Mon, 2010-03-08 at 18:37 -0800, Jim Ham wrote:
 >
->>>> Do you know an other sdio chipset that would do the job ?
->>>
->>> libertas_tf driver has AP iirc.
->>
->> Yes but it only supports one variant with USB (88w8388) and special
->> firmware, there's no SDIO equivalent.
->>
->> The only soft-MAC/mac80211 hardware/driver that I can think of that
->> has an SDIO variant right now is the TI wl12xx stuff but I don't know
->> anything about it or whether it can do enough to support AP via
->> mac80211.
+>> What I have discovered is that if the ESSID is not active, iwconfig sets
+>> it correctly and it sticks. If the ESSID is one that is locally present,
+>> iwconfig seems to set it, but it almost immediately reverts to garbage.
 >
-> wl1251 at least doesn't support AP mode. Maybe it's possible to hack
-> something in the driver, but because firmware doesn't support it it
-> would be incomplete anyway.
+> Either you have a memory corruption bug in your kernel, or you have some
+> buggy userspace tool (it could be a misbehaving NetworkManager or wicd)
+> that changes ESSID on the interface as soon as the driver reports
+> association.  I haven't seen any similar reports.
+Right on! All works in single user mode. On poking around I found that 
+the Gnome client for NetworkManager was missing. Once I installed the 
+client all started to work. So this is a Debian package management 
+issue, along with perhaps a bug in NetworkManager or it's underlying 
+utilities.
+
+My distribution is Debian Testing (Squeeze). I'm not sure when 
+NetworkManager showed up, but I'm betting that it was coincident with 
+the wireless problem.
+
+Thanks for the advice.
+
+
 >
-> --
-> Kalle Valo
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 	Kernel driver in use: ath5k
+>
+> ath5k is not an example of code quality, but I don't remember any memory
+> corruption bugs in it fixed since 2.6.32.
+>
+> I suggest following steps:
+>
+> 1) Check for updates for your distribution, install updates, recheck.
+>
+> 2) Boot to the single user mode, make sure that wpa_supplicant and wicd
+> are not running (kill them otherwise) and try setting up the connection
+> manually.
+>
+> 3) Install the latest compat-wireless, recheck.
+>
+>
+>
+>
+>
+> No virus found in this incoming message.
+> Checked by AVG - www.avg.com
+> Version: 9.0.733 / Virus Database: 271.1.1/2733 - Release Date: 03/09/10 11:33:00
 >
 
-B43 also has SDIO support, and AFAIK AP mode also works (though not
-sure if you can use AP mode on an SDIO card). The only problem is
-finding an SDIO card with a Broadcom chipset.
+--------------050905040202090902090606
+Content-Type: text/x-vcard; charset=utf-8;
+ name="jimham.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="jimham.vcf"
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+begin:vcard
+fn:James Ham
+n:Ham;James
+org:Porcine Associates
+adr:;;244 O'Connor St.;Menlo Park;CA;94025;USA
+email;internet:jimham@porcine.com
+tel;work:+1 650 326.2669
+tel;fax:+1 650 326.1071
+x-mozilla-html:FALSE
+url:www.porcine.com
+version:2.1
+end:vcard
+
+
+--------------050905040202090902090606--
