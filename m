@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:53043 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755057Ab0CMOBh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Mar 2010 09:01:37 -0500
-Received: by bwz1 with SMTP id 1so1779818bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Mar 2010 06:01:35 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current wireless-testing
-Date: Sat, 13 Mar 2010 15:01:31 +0100
-Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-References: <201002281534.11656.helmut.schaa@googlemail.com> <33ED094E-EFBC-4BAD-B9F4-4C81BCEE9537@cs.washington.edu> <1268203295.2446.30.camel@rchatre-DESK>
-In-Reply-To: <1268203295.2446.30.camel@rchatre-DESK>
+Received: from c60.cesmail.net ([216.154.195.49]:20336 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756151Ab0CJDyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Mar 2010 22:54:15 -0500
+Subject: [PATCH 2/2] compat-wireless: disable wl12xx if crc7 is not available
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+From: Pavel Roskin <proski@gnu.org>
+Date: Tue, 09 Mar 2010 22:54:14 -0500
+Message-ID: <20100310035414.28564.10870.stgit@mj.roinet.com>
+In-Reply-To: <20100310035408.28564.65912.stgit@mj.roinet.com>
+References: <20100310035408.28564.65912.stgit@mj.roinet.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003131501.31524.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Reinette,
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ config.mk |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Am Mittwoch 10 März 2010 schrieb reinette chatre:
-> For this I think we need to set WIPHY_FLAG_CUSTOM_REGULATORY instead of
-> WIPHY_FLAG_STRICT_REGULATORY. Looking closer it actually look as though
-> this is a typo that slipped in with "cfg80211: convert bools to flags"
-> where "hw->wiphy->custom_regulatory = true" was translated to
-> "hw->wiphy->flags |= WIPHY_FLAG_STRICT_REGULATORY" by mistake.
-> 
-> Can you please try by replacing WIPHY_FLAG_STRICT_REGULATORY with
-> WIPHY_FLAG_CUSTOM_REGULATORY instead?
-
-Works perfectly for me.
-
-Thanks a lot,
-Helmut
-
+diff --git a/config.mk b/config.mk
+index e5be3fd..990eac6 100644
+--- a/config.mk
++++ b/config.mk
+@@ -447,9 +447,11 @@ CONFIG_P54_LEDS=y
+ CONFIG_ATH_COMMON=m
+ # CONFIG_ATH_DEBUG=y
+ 
++ifneq ($(CONFIG_CRC7),)
+ CONFIG_WL12XX=y
+ CONFIG_WL1251=m
+ CONFIG_WL1271=m
++endif
+ 
+ ifdef CONFIG_COMPAT_KERNEL_27
+ CONFIG_LIBERTAS=n
