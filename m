@@ -1,84 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48894 "EHLO vs166246.vserver.de"
+Received: from mga11.intel.com ([192.55.52.93]:1472 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752822Ab0CWWCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 18:02:50 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Calvin Walton <calvin.walton@gmail.com>
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-Date: Tue, 23 Mar 2010 23:02:45 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <4BA8CF6C.2050701@lwfinger.net> <1269377903.21181.8.camel@nayuki>
-In-Reply-To: <1269377903.21181.8.camel@nayuki>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201003232302.45875.mb@bu3sch.de>
+	id S1753279Ab0CJFWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:22:07 -0500
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 20/24] iwlwifi: remove duplicate function
+Date: Tue,  9 Mar 2010 21:21:48 -0800
+Message-Id: <1268198512-6572-21-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
+References: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 23 March 2010 21:58:22 Calvin Walton wrote:
-> On Tue, 2010-03-23 at 09:25 -0500, Larry Finger wrote:
-> > Will someone please write me udev rule(s) that do the following:
-> > 
-> > 1. Detect a MAC address of FF:FF:FF:FF:FF:FF
-> > 2. If this is the first time for this bus address, then generate a random MAC
-> > address with the bus address encoded in it.
-> > 3. Preserve the address for future reloads
-> > 4. Load the saved address into the device.
-> > 5. Do the above with only standard external commands - no new programs
-> > 
-> > My skills with udev are not up to the task.
-> 
-> I will warn you that the following is rather untested, as I don't have
-> any of the affected hardware (or any b43 devices at all, actually), but
-> something along these lines should work. There's no syntax errors, at
-> least :)
-> 
-> --- /lib/udev/rules.d/65-persistent-b43-mac-generator.rules
-> 
-> ACTION!="add" GOTO="persistent_b43_mac_generator_end"
-> 
-> SUBSYSTEM=="net", DRIVERS=="b43", ATTR{address}=="ff:ff:ff:ff:ff:ff", IMPORT{program}="write_persistent_b43_mac"
-> 
-> SUBSYSTEM=="net", ENV{MACADDRESS_NEW}=="?*", RUN+="ifconfig $env{INTERFACE} hw ether $env{MACADDRESS_NEW}"
-> 
-> LABEL="persistent_b43_mac_generator_end"
-> 
-> --- /lib/udev/write_persistent_b43_mac (chmod +x)
-> 
-> #!/bin/bash
-> 
-> # This mac address generation function could be replaced with something better
-> MACADDRESS=$(dd if=/dev/urandom bs=1 count=6 2>/dev/null | od -tx1 | head -1 | cut -d' ' -f2- | awk '{ print $1":"$2":"$3":"$4":"$5":"$6 }')
-> 
-> RULES_FILE='/etc/udev/rules.d/60-persistent-b43-mac.rules'
-> 
-> . /lib64/udev/rule_generator.functions
-> 
-> lock_rules_file
-> 
-> choose_rules_file
-> 
-> echo "DEVPATH==\"$DEVPATH\", DRIVERS==\"b43\", ATTR{address}==\"ff:ff:ff:ff:ff:ff\", RUN+=\"ifconfig $INTERFACE hw ether $MACADDRESS\"" >> $RULES_FILE
-> 
-> echo "MACADDRESS_NEW=$MACADDRESS"
-> 
-> unlock_rules_file
-> 
-> ---
-> 
-> A new file "/etc/udev/rules.d/60-persistent-b43-mac.rules" will be
-> created, which will contain the the saved mac address and bypass the
-> generating script on future boots.
-> 
-> This should probably be run by the udev maintainers, but is a start,
-> anyways.
-> 
-> 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Thanks a lot for this proof of concept. This looks very nice.
+"internal_scan" debugfs function serves the same propose of mode "0" of
+"force_reset" debugfs function. Remove it to avoid duplicate.
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   23 -----------------------
+ 1 files changed, 0 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index d9255b5..5f58202 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -2170,27 +2170,6 @@ static ssize_t iwl_dbgfs_missed_beacon_write(struct file *file,
+ 	return count;
+ }
+ 
+-static ssize_t iwl_dbgfs_internal_scan_write(struct file *file,
+-					 const char __user *user_buf,
+-					 size_t count, loff_t *ppos)
+-{
+-	struct iwl_priv *priv = file->private_data;
+-	char buf[8];
+-	int buf_size;
+-	int scan;
+-
+-	memset(buf, 0, sizeof(buf));
+-	buf_size = min(count, sizeof(buf) -  1);
+-	if (copy_from_user(buf, user_buf, buf_size))
+-		return -EFAULT;
+-	if (sscanf(buf, "%d", &scan) != 1)
+-		return -EINVAL;
+-
+-	iwl_internal_short_hw_scan(priv);
+-
+-	return count;
+-}
+-
+ static ssize_t iwl_dbgfs_plcp_delta_read(struct file *file,
+ 					char __user *user_buf,
+ 					size_t count, loff_t *ppos) {
+@@ -2304,7 +2283,6 @@ DEBUGFS_WRITE_FILE_OPS(csr);
+ DEBUGFS_READ_WRITE_FILE_OPS(ucode_tracing);
+ DEBUGFS_READ_FILE_OPS(fh_reg);
+ DEBUGFS_READ_WRITE_FILE_OPS(missed_beacon);
+-DEBUGFS_WRITE_FILE_OPS(internal_scan);
+ DEBUGFS_READ_WRITE_FILE_OPS(plcp_delta);
+ DEBUGFS_READ_WRITE_FILE_OPS(force_reset);
+ DEBUGFS_READ_FILE_OPS(rxon_flags);
+@@ -2360,7 +2338,6 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(csr, dir_debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(fh_reg, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(missed_beacon, dir_debug, S_IWUSR);
+-	DEBUGFS_ADD_FILE(internal_scan, dir_debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(plcp_delta, dir_debug, S_IWUSR | S_IRUSR);
+ 	DEBUGFS_ADD_FILE(force_reset, dir_debug, S_IWUSR | S_IRUSR);
+ 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
 -- 
-Greetings, Michael.
+1.6.3.3
+
