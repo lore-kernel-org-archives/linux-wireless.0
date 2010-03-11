@@ -1,79 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:44360 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753269Ab0CIH4R (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:60285 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756564Ab0CKJ6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 02:56:17 -0500
-Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0346011371
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:56:12 +0900 (JST)
-Subject: [PATCH 11/13] ath5k: read eeprom IQ calibration values correctly for
-	G mode
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 09 Mar 2010 16:56:10 +0900
-Message-ID: <20100309075610.30616.82140.stgit@void>
-In-Reply-To: <20100309075124.30616.40896.stgit@void>
-References: <20100309075124.30616.40896.stgit@void>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 11 Mar 2010 04:58:48 -0500
+From: Stewart Malik <mali0037@gmail.com>
+To: dcbw@redhat.com
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Stewart Malik <mali0037@gmail.com>
+Subject: [PATCH] DRIVER: Libertas: Fixed coding style in rx.c
+Date: Thu, 11 Mar 2010 20:28:29 +1030
+Message-Id: <1268301509-9247-1-git-send-email-mali0037@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we read the IQ correction values (i_cal and q_cal) for G mode from a wrong
-location (the same shifts as for A mode is applied which is incorrect). use
-correct locations, matching the docs and HAL sources.
-
-also we should write IQ correction only when we have that information in the
-EEPROM, starting from version 4. also write it in the same way as we do in the
-periodic recalibration (enable last), just to be sure.
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/ath/ath5k/eeprom.c |    4 ++--
- drivers/net/wireless/ath/ath5k/reset.c  |   15 +++++++++------
- 2 files changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wireless/libertas/rx.c |   50 ++++++++++++++++++------------------
+ 1 files changed, 25 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index 6a3f4da..10b5226 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -429,8 +429,8 @@ static int ath5k_eeprom_read_modes(struct ath5k_hw *ah, u32 *offset,
- 			ee->ee_margin_tx_rx[mode] = (val >> 8) & 0x3f;
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index 2daf8ff..7a867e3 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -38,10 +38,10 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
+ 	struct sk_buff *skb);
  
- 		AR5K_EEPROM_READ(o++, val);
--		ee->ee_i_cal[mode] = (val >> 8) & 0x3f;
--		ee->ee_q_cal[mode] = (val >> 3) & 0x1f;
-+		ee->ee_i_cal[mode] = (val >> 5) & 0x3f;
-+		ee->ee_q_cal[mode] = val & 0x1f;
+ /**
+- *  @brief This function computes the avgSNR .
++ *  @brief	This function computes the avgSNR .
+  *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @return 	   avgSNR
++ *  @param	priv	A pointer to struct lbs_private structure
++ *  @return	avgSNR
+  */
+ static u8 lbs_getavgsnr(struct lbs_private *priv)
+ {
+@@ -56,10 +56,10 @@ static u8 lbs_getavgsnr(struct lbs_private *priv)
+ }
  
- 		if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_2) {
- 			AR5K_EEPROM_READ(o++, val);
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 6d9a1e8..e9e69dc 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -851,12 +851,15 @@ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
- 				AR5K_PHY_OFDM_SELFCORR_CYPWR_THR1,
- 				AR5K_INIT_CYCRSSI_THR1);
+ /**
+- *  @brief This function computes the AvgNF
++ *  @brief	This function computes the AvgNF
+  *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @return 	   AvgNF
++ *  @param	priv	A pointer to struct lbs_private structure
++ *  @return	AvgNF
+  */
+ static u8 lbs_getavgnf(struct lbs_private *priv)
+ {
+@@ -74,11 +74,11 @@ static u8 lbs_getavgnf(struct lbs_private *priv)
+ }
  
--	/* I/Q correction
--	 * TODO: Per channel i/q infos ? */
--	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ,
--		AR5K_PHY_IQ_CORR_ENABLE |
--		(ee->ee_i_cal[ee_mode] << AR5K_PHY_IQ_CORR_Q_I_COFF_S) |
--		ee->ee_q_cal[ee_mode]);
-+	/* I/Q correction (set enable bit last to match HAL sources) */
-+	/* TODO: Per channel i/q infos ? */
-+	if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_0) {
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF,
-+			    ee->ee_i_cal[ee_mode]);
-+		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF,
-+			    ee->ee_q_cal[ee_mode]);
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
-+	}
+ /**
+- *  @brief This function save the raw SNR/NF to our internel buffer
++ *  @brief	This function save the raw SNR/NF to our internel buffer
+  *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @param prxpd   A pointer to rxpd structure of received packet
+- *  @return 	   n/a
++ *  @param	priv	A pointer to struct lbs_private structure
++ *  @param	prxpd	A pointer to rxpd structure of received packet
++ *  @return	n/a
+  */
+ static void lbs_save_rawSNRNF(struct lbs_private *priv, struct rxpd *p_rx_pd)
+ {
+@@ -93,11 +93,11 @@ static void lbs_save_rawSNRNF(struct lbs_private *priv, struct rxpd *p_rx_pd)
+ }
  
- 	/* Heavy clipping -disable for now */
- 	if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_5_1)
+ /**
+- *  @brief This function computes the RSSI in received packet.
++ *  @brief	This function computes the RSSI in received packet.
+  *
+- *  @param priv    A pointer to struct lbs_private structure
+- *  @param prxpd   A pointer to rxpd structure of received packet
+- *  @return 	   n/a
++ *  @param	priv	A pointer to struct lbs_private structure
++ *  @param	prxpd	A pointer to rxpd structure of received packet
++ *  @return	n/a
+  */
+ static void lbs_compute_rssi(struct lbs_private *priv, struct rxpd *p_rx_pd)
+ {
+@@ -134,9 +134,9 @@ static void lbs_compute_rssi(struct lbs_private *priv, struct rxpd *p_rx_pd)
+  *  @brief This function processes received packet and forwards it
+  *  to kernel/upper layer
+  *
+- *  @param priv    A pointer to struct lbs_private
+- *  @param skb     A pointer to skb which includes the received packet
+- *  @return 	   0 or -1
++ *  @param	priv	A pointer to struct lbs_private
++ *  @param	skb		A pointer to skb which includes the received packet
++ *  @return	0 or -1
+  */
+ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ {
+@@ -196,7 +196,7 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ 		 *    before the snap_type.
+ 		 */
+ 		p_ethhdr = (struct ethhdr *)
+-		    ((u8 *) & p_rx_pkt->eth803_hdr
++		    ((u8 *) &p_rx_pkt->eth803_hdr
+ 		     + sizeof(p_rx_pkt->eth803_hdr) + sizeof(p_rx_pkt->rfc1042_hdr)
+ 		     - sizeof(p_rx_pkt->eth803_hdr.dest_addr)
+ 		     - sizeof(p_rx_pkt->eth803_hdr.src_addr)
+@@ -213,7 +213,7 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ 		hdrchop = (u8 *)p_ethhdr - (u8 *)p_rx_pd;
+ 	} else {
+ 		lbs_deb_hex(LBS_DEB_RX, "RX Data: LLC/SNAP",
+-			(u8 *) & p_rx_pkt->rfc1042_hdr,
++			(u8 *) &p_rx_pkt->rfc1042_hdr,
+ 			sizeof(p_rx_pkt->rfc1042_hdr));
+ 
+ 		/* Chop off the rxpd */
+@@ -254,8 +254,8 @@ EXPORT_SYMBOL_GPL(lbs_process_rxed_packet);
+  *  @brief This function converts Tx/Rx rates from the Marvell WLAN format
+  *  (see Table 2 in Section 3.1) to IEEE80211_RADIOTAP_RATE units (500 Kb/s)
+  *
+- *  @param rate    Input rate
+- *  @return 	   Output Rate (0 if invalid)
++ *  @param	rate	Input rate
++ *  @return	Output Rate (0 if invalid)
+  */
+ static u8 convert_mv_rate_to_radiotap(u8 rate)
+ {
+@@ -294,9 +294,9 @@ static u8 convert_mv_rate_to_radiotap(u8 rate)
+  *  @brief This function processes a received 802.11 packet and forwards it
+  *  to kernel/upper layer
+  *
+- *  @param priv    A pointer to struct lbs_private
+- *  @param skb     A pointer to skb which includes the received packet
+- *  @return 	   0 or -1
++ *  @param	priv	A pointer to struct lbs_private
++ *  @param	skb		A pointer to skb which includes the received packet
++ *  @return	0 or -1
+  */
+ static int process_rxed_802_11_packet(struct lbs_private *priv,
+ 	struct sk_buff *skb)
+@@ -313,7 +313,7 @@ static int process_rxed_802_11_packet(struct lbs_private *priv,
+ 	p_rx_pkt = (struct rx80211packethdr *) skb->data;
+ 	prxpd = &p_rx_pkt->rx_pd;
+ 
+-	// lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data, min(skb->len, 100));
++	/* lbs_deb_hex(LBS_DEB_RX, "RX Data: Before chop rxpd", skb->data, min(skb->len, 100)); */
+ 
+ 	if (skb->len < (ETH_HLEN + 8 + sizeof(struct rxpd))) {
+ 		lbs_deb_rx("rx err: frame received with bad length\n");
+-- 
+1.6.0.4
 
