@@ -1,63 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 64.mail-out.ovh.net ([91.121.185.65]:53544 "HELO
-	64.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750790Ab0CAGrQ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:57983 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757234Ab0CKV5H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 01:47:16 -0500
-Message-ID: <4B8B62EE.7000802@free.fr>
-Date: Mon, 01 Mar 2010 07:47:10 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
-To: Derek Smithies <derek@indranet.co.nz>
-CC: jirislaby@gmail.com, mickflemm@gmail.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Fix 64 bits TSF reading.
-References: <4B8AE8F1.40006@free.fr> <1267394932-11038-1-git-send-email-benoit.papillault@free.fr> <alpine.DEB.2.00.1003011457470.20218@kauri.acheron.indranet.co.nz>
-In-Reply-To: <alpine.DEB.2.00.1003011457470.20218@kauri.acheron.indranet.co.nz>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 11 Mar 2010 16:57:07 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: stable@kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org,
+	Vivek Natarajan <vnatarajan@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/2] mac80211: Retry null data frame for power save
+Date: Thu, 11 Mar 2010 16:57:02 -0500
+Message-Id: <1268344623-22076-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268344623-22076-1-git-send-email-lrodriguez@atheros.com>
+References: <1268344623-22076-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Derek Smithies a écrit :
->
-> Hi,
->  No, canot support this.
->
-> What happens if there is an interrupt immediately after the first two 
-> reads - before the test on tsf_lower? - and thisinterrupt lasts longer 
-> than 100us ? Most often, this is ok - until the interrupt happens at 
-> the wrong time.
->
-> OR, there is a TSF merge event after the tsf_upper has been read, but 
-> before the tsf_lower has been read? The tsf merge (which is done by 
-> the hardware), adjusted both the high and low registers.
->
-> Derek.
+From: Vivek Natarajan <vnatarajan@atheros.com>
 
-Hi Derek,
+commit 375177bf35efc08e1bd37bbda4cc0c8cc4db8500 upstream.
 
-You are indeed right. This was a first step, but like you mentioned, it  
-does not handle every cases, so let's forget it.
+Even if the null data frame is not acked by the AP, mac80211
+goes into power save. This might lead to loss of frames
+from the AP.
+Prevent this by restarting dynamic_ps_timer when ack is not
+received for null data frames.
 
-Regards,
-Benoit
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/mac80211.h     |    4 ++++
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   20 +++++++++++++++-----
+ net/mac80211/status.c      |   17 +++++++++++++++--
+ 4 files changed, 35 insertions(+), 7 deletions(-)
 
-> On Sun, 28 Feb 2010, Benoit Papillault wrote:
->
->> +
->> +    tsf_upper = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
->> +    tsf_lower = ath5k_hw_reg_read(ah, AR5K_TSF_L32);
->> +
->> +    if (tsf_lower < 100)
->> +        tsf_upper = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
->> +
->>     ATH5K_TRACE(ah->ah_sc);
->>
->> -    return ath5k_hw_reg_read(ah, AR5K_TSF_L32) | (tsf << 32);
->> +    return (((u64)tsf_upper << 32) | tsf_lower);
->> }
->>
->> /**
->>
->
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0bf3697..8f42fcf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -926,6 +926,9 @@ enum ieee80211_tkip_key_type {
+  * @IEEE80211_HW_BEACON_FILTER:
+  *	Hardware supports dropping of irrelevant beacon frames to
+  *	avoid waking up cpu.
++ * @IEEE80211_HW_REPORTS_TX_ACK_STATUS:
++ *	Hardware can provide ack status reports of Tx frames to
++ *	the stack.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -943,6 +946,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
+ 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
+ 	IEEE80211_HW_BEACON_FILTER			= 1<<14,
++	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<15,
+ };
+ 
+ /**
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 91dc863..3521c17 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -264,6 +264,7 @@ enum ieee80211_sta_flags {
+ 	IEEE80211_STA_DISABLE_11N	= BIT(4),
+ 	IEEE80211_STA_CSA_RECEIVED	= BIT(5),
+ 	IEEE80211_STA_MFP_ENABLED	= BIT(6),
++	IEEE80211_STA_NULLFUNC_ACKED	= BIT(7),
+ };
+ 
+ /* flags for MLME request */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 05a18f4..add45ae 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -661,8 +661,11 @@ static void ieee80211_enable_ps(struct ieee80211_local *local,
+ 	} else {
+ 		if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
+ 			ieee80211_send_nullfunc(local, sdata, 1);
+-		conf->flags |= IEEE80211_CONF_PS;
+-		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++
++		if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)) {
++			conf->flags |= IEEE80211_CONF_PS;
++			ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++		}
+ 	}
+ }
+ 
+@@ -753,6 +756,7 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_local,
+ 			     dynamic_ps_enable_work);
+ 	struct ieee80211_sub_if_data *sdata = local->ps_sdata;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+ 	/* can only happen when PS was just disabled anyway */
+ 	if (!sdata)
+@@ -761,11 +765,16 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS)
+ 		return;
+ 
+-	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
++	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
++	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)))
+ 		ieee80211_send_nullfunc(local, sdata, 1);
+ 
+-	local->hw.conf.flags |= IEEE80211_CONF_PS;
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	if (!(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) ||
++	    (ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
++		ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
++		local->hw.conf.flags |= IEEE80211_CONF_PS;
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
++	}
+ }
+ 
+ void ieee80211_dynamic_ps_timer(unsigned long data)
+@@ -2467,6 +2476,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	list_add(&wk->list, &ifmgd->work_list);
+ 
+ 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
++	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
+ 
+ 	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
+ 		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index d78f36c..f5abeec 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -165,6 +165,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	rcu_read_lock();
+ 
+ 	sband = local->hw.wiphy->bands[info->band];
++	fc = hdr->frame_control;
+ 
+ 	sta = sta_info_get(local, hdr->addr1);
+ 
+@@ -180,8 +181,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			return;
+ 		}
+ 
+-		fc = hdr->frame_control;
+-
+ 		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
+ 		    (ieee80211_is_data_qos(fc))) {
+ 			u16 tid, ssn;
+@@ -246,6 +245,20 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			local->dot11FailedCount++;
+ 	}
+ 
++	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
++	    (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) &&
++	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
++	    local->ps_sdata && !(local->scanning)) {
++		if (info->flags & IEEE80211_TX_STAT_ACK) {
++			local->ps_sdata->u.mgd.flags |=
++					IEEE80211_STA_NULLFUNC_ACKED;
++			ieee80211_queue_work(&local->hw,
++					&local->dynamic_ps_enable_work);
++		} else
++			mod_timer(&local->dynamic_ps_timer, jiffies +
++					msecs_to_jiffies(10));
++	}
++
+ 	/* this was a transmitted frame, but now we want to reuse it */
+ 	skb_orphan(skb);
+ 
+-- 
+1.6.3.3
 
