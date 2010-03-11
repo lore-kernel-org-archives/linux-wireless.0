@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34506 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986Ab0CSWLM (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46889 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750891Ab0CKB2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 18:11:12 -0400
-Date: Fri, 19 Mar 2010 18:10:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
+	Wed, 10 Mar 2010 20:28:32 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>, stable@kernel.org
-Subject: Re: [PATCH v3] ssb: do not read SPROM if it does not exist
-Message-ID: <20100319221048.GG9552@tuxdriver.com>
-References: <1269030785-5347-1-git-send-email-linville@tuxdriver.com> <1269031309-23297-1-git-send-email-linville@tuxdriver.com> <201003192212.55680.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201003192212.55680.mb@bu3sch.de>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 03/14] ath9k: rename initvals.h to ar9002_initvals.h
+Date: Wed, 10 Mar 2010 20:28:20 -0500
+Message-Id: <1268270911-24568-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 19, 2010 at 10:12:55PM +0100, Michael Buesch wrote:
-> On Friday 19 March 2010 21:41:49 John W. Linville wrote:
+The register initialization values we have so far are
+only for the AR5008, AR9002 and AR9002 hardware families
+and we've managed to get ar90002_hw.c to be its only user
+so clarify this by renaming the initvals.
 
-> > diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
-> > index 0d6c028..6d51895 100644
-> > --- a/drivers/ssb/scan.c
-> > +++ b/drivers/ssb/scan.c
-> > @@ -306,6 +306,10 @@ int ssb_bus_scan(struct ssb_bus *bus,
-> >  		}
-> >  		tmp = scan_read32(bus, 0, SSB_CHIPCO_CAP);
-> >  		bus->chipco.capabilities = tmp;
-> > +		if (bus->chipco.dev->id.revision >= 11) {
-> > +			tmp = scan_read32(bus, 0, SSB_CHIPCO_CHIPSTAT);
-> > +			bus->chipco.status = tmp;
-> > +		}
-> 
-> Hm, Ok. There's another issue here. We're that early in the scan that
-> id.xxxx is not assigned, yet. I think chipco.dev might even be NULL here, so
-> it'd crash.
-> This gets a little bit ugly. The revisions are read later in the scan function.
-> And as you can see there the actual read is pretty ugly, too.
-> 
-> What if we do not read the status _that_ early? We're really very very
-> early here. If you move the read into the chipcommon driver init, it will be much
-> easier.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c         |    6 +++---
+ .../ath/ath9k/{initvals.h => ar9002_initvals.h}    |    0
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+ rename drivers/net/wireless/ath/ath9k/{initvals.h => ar9002_initvals.h} (100%)
 
-Yeah, that makes sense.  Patch to follow...
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index e984a12..bf2a87c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -17,7 +17,7 @@
+ #include "hw.h"
+ #include "hw-ops.h"
+ #include "rc.h"
+-#include "initvals.h"
++#include "ar9002_initvals.h"
+ 
+ static void ar9002_hw_disablepcie(struct ath_hw *ah)
+ {
+@@ -610,8 +610,8 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+ 		if (AR_SREV_9280_20_OR_LATER(ah)) {
+ 			/*
+ 			 * AR9280 2.0 or later chips use SerDes values from the
+-			 * initvals.h initialized depending on chipset during
+-			 * __ath9k_hw_init()
++			 * ar9002_initvals.h initialized depending on chipset
++			 * during __ath9k_hw_init()
+ 			 */
+ 			for (i = 0; i < ah->iniPcieSerdes.ia_rows; i++) {
+ 				REG_WRITE(ah, INI_RA(&ah->iniPcieSerdes, i, 0),
+diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+similarity index 100%
+rename from drivers/net/wireless/ath/ath9k/initvals.h
+rename to drivers/net/wireless/ath/ath9k/ar9002_initvals.h
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
