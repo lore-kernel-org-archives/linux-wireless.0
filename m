@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:35450 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722Ab0CZNNa (ORCPT
+Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:54048 "EHLO
+	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756153Ab0CKU02 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 09:13:30 -0400
-Subject: Re: [PATCH 00/24] wl1271: bunch of patches from our internal tree
- wk12
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "ext John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100326130215.GA15128@tuxdriver.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-	 <20100326130215.GA15128@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 26 Mar 2010 15:13:15 +0200
-Message-ID: <1269609195.22348.13.camel@powerslave>
-Mime-Version: 1.0
+	Thu, 11 Mar 2010 15:26:28 -0500
+Date: Thu, 11 Mar 2010 21:26:27 +0100
+From: Andreas Mohr <andi@lisas.de>
+To: Andreas Mohr <andi@lisas.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: Anyone using ray_cs wireless driver?
+Message-ID: <20100311202627.GA11047@rhlx01.hs-esslingen.de>
+References: <20100310162243.GA3093@tuxdriver.com> <20100311200629.GA20089@rhlx01.hs-esslingen.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100311200629.GA20089@rhlx01.hs-esslingen.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-26 at 14:02 +0100, ext John W. Linville wrote:
-> On Fri, Mar 26, 2010 at 12:53:09PM +0200, Luciano Coelho wrote:
+On Thu, Mar 11, 2010 at 09:06:29PM +0100, Andreas Mohr wrote:
+> Hi,
 > 
-> > Here are 25 more patches for wl1271 which are still pending in our internal
-> > tree.  Please apply. :)
+> > I'm just curious to know if anyone is using ray_cs (even occasionally
+> > and/or just for testing)?  Does anyone even have the hardware?
 > 
-> Are we catching-up?  Or will these dumps continue indefinitely?
+> Would that be... me? ;)
+> 
+> I _think_ my cards are ray_cs.
 
-Now we have finally caught up! Sorry for the mess, but we haven't been
-sending patches for a while and they really got delayed.
+Yup, it must be this one (flip antenna!):
+http://www.sekaimon.com/i120539073445
+http://images.google.de/imgres?imgurl=http://di1.shopping.com/images1/pi/c5/1f/00/20630490-60x60-0-0_Webgear+Aviator+97010007+101.jpg&imgrefurl=http://www.dealtime.com/-save+link+wireless&usg=__Sg0J_zo1D57Q27bIqP8lnXJFit4=&h=60&w=60&sz=1&hl=de&start=1&itbs=1&tbnid=NL8vISfc_6rC6M:&tbnh=60&tbnw=60&prev=/images?q=webgear+fhss&hl=de&sa=G&gbv=2&tbs=isch:1
 
-The idea from now on is to send them weekly (still in patch-sets), but
-not so many at once.  We review and test our patches internally before
-sending upstream, that's why we have to send them in batches.
+I.e., a WebGear Aviator and thus ray_cs.
 
-I'm currently reconsidering this process and trying to figure out how we
-can do things in a simpler way.  We are already doing all our mac80211
-work upstream, but for the driver we haven't found a good solution yet.
+Although with an ISA PCMCIA adaptor. Which is a problem, since I'd need
+_two_ CardBus notebooks then. OTOH I do have an older notebook
+installation which I could use for the other side.
 
-Would you prefer to pull stuff from a git tree instead of applying the
-patches?
-
--- 
-Cheers,
-Luca.
-
+Andreas Mohr
