@@ -1,73 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36698 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752683Ab0CTP0X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Mar 2010 11:26:23 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Cyril Brulebois <kibi@debian.org>, 574526@bugs.debian.org,
-	Greg KH <greg@kroah.com>
-In-Reply-To: <20100319084623.GA27646@dhcp-lab-161.englab.brq.redhat.com>
-References: <20100318200535.5639.6476.reportbug@bowmore>
-	 <1268961358.18314.43.camel@localhost>
-	 <20100319084623.GA27646@dhcp-lab-161.englab.brq.redhat.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YZ1gIG89ZdyQAGHhKKK1"
-Date: Sat, 20 Mar 2010 15:26:13 +0000
-Message-ID: <1269098773.18314.49.camel@localhost>
+Received: from c60.cesmail.net ([216.154.195.49]:17055 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752792Ab0CKHQe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 02:16:34 -0500
+Subject: Re: question about ath9k/hw.c,mac.c
+From: Pavel Roskin <proski@gnu.org>
+To: Julia Lawall <julia@diku.dk>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.1003101325500.24684@ask.diku.dk>
+References: <Pine.LNX.4.64.1003101325500.24684@ask.diku.dk>
+Content-Type: text/plain
+Date: Thu, 11 Mar 2010 02:16:32 -0500
+Message-Id: <1268291792.6951.34.camel@mj>
 Mime-Version: 1.0
-Subject: Re: Bug#574526: linux-image-2.6.32-4-amd64: iwlagn flood in dmesg:
- free more than tfds_in_queue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2010-03-10 at 13:36 +0100, Julia Lawall wrote:
 
---=-YZ1gIG89ZdyQAGHhKKK1
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> mac.c contains the following code:
+> 
+> omask = ath9k_hw_set_interrupts(ah, ah->mask_reg & ~ATH9K_INT_GLOBAL);
+...
+> Is it correct that the call to ath9k_hw_set_interrupts is masking out what 
+> appears to be the flag AR_IMR_RXINTM?
 
-On Fri, 2010-03-19 at 09:46 +0100, Stanislaw Gruszka wrote:
-> On Fri, Mar 19, 2010 at 01:15:58AM +0000, Ben Hutchings wrote:
-[...]
-> > Stanislaw, do you understand how this is going wrong?  Do you have a
-> > fix?
-> >=20
->=20
-> It's here: https://patchwork.kernel.org/patch/86722/
->=20
-> I'm really sorry that make this bug during backport to .32.
+Thank you for asking this question!
 
-Thanks, I will apply this to the Debian kernel.
+I checked the code, and I see several cases when
+ath9k_hw_set_interrupts() is called with constants beginning with
+"ATH9K_INT_" in the second argument.
 
-Ben.
+On the other hand, the use of ah->mask_reg appears to be inconsistent
+across the code.  Sometimes it's used with "ATH9K_INT_", sometimes with
+"AR_IMR_".
 
---=20
-Ben Hutchings
-Power corrupts.  Absolute power is kind of neat.
-                           - John Lehman, Secretary of the US Navy 1981-198=
-7
+While at that, using enum ath9k_int appears to be a bad idea, especially
+for storing values that don't fit int, such as ATH9K_INT_GLOBAL.  If the
+goal is to use sparse to check for errors, I would use bitwise types
+like gfp_t.  Perhaps sparse could be patched to allow mutually
+incompatible bitwise types.
 
---=-YZ1gIG89ZdyQAGHhKKK1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+My guess is that ath9k_hw_init_interrupt_masks() should be using a local
+variable instead of ah->mask_reg:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1fb14ed..97cc35f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1134,23 +1134,23 @@ static void ath9k_hw_init_chain_masks(struct ath_hw *ah)
+ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+ 					  enum nl80211_iftype opmode)
+ {
+-	ah->mask_reg = AR_IMR_TXERR |
++	u32 imr_mask = AR_IMR_TXERR |
+ 		AR_IMR_TXURN |
+ 		AR_IMR_RXERR |
+ 		AR_IMR_RXORN |
+ 		AR_IMR_BCNMISC;
+ 
+ 	if (ah->config.rx_intr_mitigation)
+-		ah->mask_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
++		imr_mask |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
+ 	else
+-		ah->mask_reg |= AR_IMR_RXOK;
++		imr_mask |= AR_IMR_RXOK;
+ 
+-	ah->mask_reg |= AR_IMR_TXOK;
++	imr_mask |= AR_IMR_TXOK;
+ 
+ 	if (opmode == NL80211_IFTYPE_AP)
+-		ah->mask_reg |= AR_IMR_MIB;
++		imr_mask |= AR_IMR_MIB;
+ 
+-	REG_WRITE(ah, AR_IMR, ah->mask_reg);
++	REG_WRITE(ah, AR_IMR, imr_mask);
+ 	ah->imrs2_reg |= AR_IMR_S2_GTT;
+ 	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
+ 
 
-iQIVAwUAS6TpEOe/yOyVhhEJAQKV7w/9Gneu5ImwnGBL8lFLe+S5GJY3W9IObpon
-uruoDZgHvGa+mP5lHUSVwES1oNNnCmEwJu7vAnxWggWhhXQXTqkoicRFEnXN4KXH
-VrpX36lq6MXgN9QD4zBkSUi6NB/dOJdLJxSnFuVOIG1ctWuzfC+smoxbwo0otjyv
-+ep2KpJgSDh06R7nb3Nssk1jusMyEcKQdgakfvOAG+Sb4L2DmwfE+PSdc9jk05KW
-IvZMyO3AlotVwtjKPoxvrrXFDK+NaztDf3uUkmQL5ADlNk1oHIVhqF60klOYcsNd
-m1ySOGBWI2Fv5y470nLS6UihdQ69Yh7KuC4N2cdbT9ZgfUaZHIcil7Hm3DEBv+/9
-Ws5P1uCaVvTgf11eF9YK8OPSxtYhuBIGE7NkT2HAt9mb2iLc1Z+9lS5vahVAFiki
-MfY9zr8OvPbwxah0s8jxEXZYqi1Sue0yar9oCer6f3Pe141CpIORgHeFMTfkIvwI
-OBAol3KKjag0hFhq578rk5i8LYdBeIaLfdONu0vrnvotVIy4P0mJ3zehrkm7RcRm
-3a39ecqR9IwzTyJ/RX+mmB9ViDuw04tmMdg4O6lVmxgLhb+6tJRF4dh/0rAGOi+B
-kUR5+X+ovw3m9290XPXHwFsgIoVVPiPur419TliWlH4FSZ6AwVGWfqRozhXvKsr7
-8K/7FzflJMM=
-=d0x+
------END PGP SIGNATURE-----
-
---=-YZ1gIG89ZdyQAGHhKKK1--
+-- 
+Regards,
+Pavel Roskin
