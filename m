@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43475 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753964Ab0CCGYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 01:24:16 -0500
-Date: Wed, 3 Mar 2010 07:24:00 +0100
-From: Jiri Pirko <jpirko@redhat.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	tcpdump-workers@lists.tcpdump.org
-Subject: Re: Current wireless-testing breaks libpcap: mr_alen should be set
-Message-ID: <20100303062359.GA2648@psychotron.redhat.com>
-References: <1267578048.14049.11.camel@mj>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1267578048.14049.11.camel@mj>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47376 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754529Ab0CKVdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 16:33:10 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/5] compat-wireless: fix building of iwmc3200wifi
+Date: Thu, 11 Mar 2010 22:32:45 +0100
+Message-Id: <1268343167-2961-6-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wed, Mar 03, 2010 at 02:00:48AM CET, proski@gnu.org wrote:
->Hello!
->
->The current wireless-testing appears to have some non-wireless bits from
->the upcoming Linux 2.6.34.  As a result, libpcap and all capture
->programs that use it are broken.
->
->This patch to libpcap helps:
->
->--- a/pcap-linux.c
->+++ b/pcap-linux.c
->@@ -1563,6 +1563,7 @@ live_open_new(pcap_t *handle, const char
-> 			memset(&mr, 0, sizeof(mr));
-> 			mr.mr_ifindex = handle->md.ifindex;
-> 			mr.mr_type    = PACKET_MR_PROMISC;
->+			mr.mr_alen    = 6;
-> 			if (setsockopt(sock_fd, SOL_PACKET,
-> 				PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) == -1)
-> 			{
->
->libpcap git doesn't have the fix yet.
->
->The breakage must be coming from the commit 914c8ad2 by Jiri Pirko to
->net/packet/af_packet.c
->
->I think it's very unhelpful to introduce patches that break significant
->userspace functionality without giving the affected programs an advance
->warning.
->
->Also, pulling bleeding edge stuff into wireless-testing before rc1
->appears to be either a mistake or a bad decision.
->
->Sorry for cross-post, but it's an urgent issue.  Repliers are encouraged
->to trim the recipient list as necessary.
 
-Sorry about this. Corrected patch will follow.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/13-trace.patch |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
-Jirka
->
->-- 
->Regards,
->Pavel Roskin
+diff --git a/patches/13-trace.patch b/patches/13-trace.patch
+index 8c000f3..82b2643 100644
+--- a/patches/13-trace.patch
++++ b/patches/13-trace.patch
+@@ -23,6 +23,25 @@ in or compat headers.
+ +#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
+  #include <trace/define_trace.h>
+ +#endif
++--- a/drivers/net/wireless/iwmc3200wifi/trace.h
+++++ b/drivers/net/wireless/iwmc3200wifi/trace.h
++@@ -1,7 +1,9 @@
++ #if !defined(__IWM_TRACE_H__) || defined(TRACE_HEADER_MULTI_READ)
++ #define __IWM_TRACE_H__
++ 
+++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
++ #include <linux/tracepoint.h>
+++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
++ 
++ #if !defined(CONFIG_IWM_TRACING)
++ #undef TRACE_EVENT
++@@ -280,4 +282,6 @@ TRACE_EVENT(iwm_rx_packet,
++ #define TRACE_INCLUDE_PATH .
++ #undef TRACE_INCLUDE_FILE
++ #define TRACE_INCLUDE_FILE trace
+++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
++ #include <trace/define_trace.h>
+++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
+ --- a/net/mac80211/driver-trace.h
+ +++ b/net/mac80211/driver-trace.h
+ @@ -1,7 +1,9 @@
+-- 
+1.6.3.3
+
