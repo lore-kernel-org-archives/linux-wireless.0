@@ -1,41 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:34243 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754535Ab0CDRbl (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:45081 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933079Ab0CKPoz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 12:31:41 -0500
-Received: by pvb32 with SMTP id 32so430720pvb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Mar 2010 09:31:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <C2DE0F0B-F62A-47BC-A719-E8A598146776@cs.washington.edu>
-References: <201002281534.11656.helmut.schaa@googlemail.com>
-	<201003011927.53208.helmut.schaa@googlemail.com> <43e72e891003011059v564931e2qfe390657b698c277@mail.gmail.com>
-	<201003022047.10196.helmut.schaa@googlemail.com> <1267640304.15761.121.camel@rchatre-DESK>
-	<03690D90-3C5E-4E37-8BC6-7EE6FE0B4E1D@cs.washington.edu> <1267651173.15761.155.camel@rchatre-DESK>
-	<0A6DB552-23FC-46ED-9326-60EB0370C062@cs.washington.edu> <C2DE0F0B-F62A-47BC-A719-E8A598146776@cs.washington.edu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 4 Mar 2010 09:31:21 -0800
-Message-ID: <43e72e891003040931n2dbd3c9cgdfbdcf1091adfe67@mail.gmail.com>
-Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current
-	wireless-testing
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=UTF-8
+	Thu, 11 Mar 2010 10:44:55 -0500
+Received: by bwz1 with SMTP id 1so156999bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2010 07:44:54 -0800 (PST)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/4] wl1251: make local symbols static
+Date: Thu, 11 Mar 2010 17:44:36 +0200
+Message-Id: <1268322276-16640-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 4, 2010 at 2:24 AM, Daniel Halperin
-<dhalperi@cs.washington.edu> wrote:
-> On Mar 3, 2010, at 2:54 PM, Daniel Halperin wrote:
+Make local functions and data static, also constify
+some structures. While at it, clean up unneeded includes.
 
-> My hypothesis as to why this code used to work is that I was using the CONFIG_WIRELESS_OLD_REGULATORY.
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |   25 +++++++++----------------
+ 1 files changed, 9 insertions(+), 16 deletions(-)
 
-Can you test the same by disabling CONFIG_WIRELESS_OLD_REGULATORY ?
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index 9423f22..0aceb91 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -20,20 +20,10 @@
+  * Copyright (C) 2009 Bob Copeland (me@bobcopeland.com)
+  */
+ #include <linux/module.h>
+-#include <linux/crc7.h>
+-#include <linux/mod_devicetable.h>
+-#include <linux/irq.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
+-#include <linux/platform_device.h>
+ 
+ #include "wl1251.h"
+-#include "wl12xx_80211.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_ps.h"
+-#include "wl1251_io.h"
+-#include "wl1251_tx.h"
+-#include "wl1251_debugfs.h"
+ 
+ #ifndef SDIO_VENDOR_ID_TI
+ #define SDIO_VENDOR_ID_TI		0x104c
+@@ -65,7 +55,8 @@ static const struct sdio_device_id wl1251_devices[] = {
+ MODULE_DEVICE_TABLE(sdio, wl1251_devices);
+ 
+ 
+-void wl1251_sdio_read(struct wl1251 *wl, int addr, void *buf, size_t len)
++static void wl1251_sdio_read(struct wl1251 *wl, int addr,
++			     void *buf, size_t len)
+ {
+ 	int ret;
+ 	struct sdio_func *func = wl_to_func(wl);
+@@ -77,7 +68,8 @@ void wl1251_sdio_read(struct wl1251 *wl, int addr, void *buf, size_t len)
+ 	sdio_release_host(func);
+ }
+ 
+-void wl1251_sdio_write(struct wl1251 *wl, int addr, void *buf, size_t len)
++static void wl1251_sdio_write(struct wl1251 *wl, int addr,
++			      void *buf, size_t len)
+ {
+ 	int ret;
+ 	struct sdio_func *func = wl_to_func(wl);
+@@ -89,7 +81,7 @@ void wl1251_sdio_write(struct wl1251 *wl, int addr, void *buf, size_t len)
+ 	sdio_release_host(func);
+ }
+ 
+-void wl1251_sdio_reset(struct wl1251 *wl)
++static void wl1251_sdio_reset(struct wl1251 *wl)
+ {
+ }
+ 
+@@ -111,11 +103,11 @@ static void wl1251_sdio_disable_irq(struct wl1251 *wl)
+ 	sdio_release_host(func);
+ }
+ 
+-void wl1251_sdio_set_power(bool enable)
++static void wl1251_sdio_set_power(bool enable)
+ {
+ }
+ 
+-struct wl1251_if_operations wl1251_sdio_ops = {
++static const struct wl1251_if_operations wl1251_sdio_ops = {
+ 	.read = wl1251_sdio_read,
+ 	.write = wl1251_sdio_write,
+ 	.reset = wl1251_sdio_reset,
+@@ -123,7 +115,8 @@ struct wl1251_if_operations wl1251_sdio_ops = {
+ 	.disable_irq = wl1251_sdio_disable_irq,
+ };
+ 
+-int wl1251_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
++static int wl1251_sdio_probe(struct sdio_func *func,
++			     const struct sdio_device_id *id)
+ {
+ 	int ret;
+ 	struct wl1251 *wl;
+-- 
+1.6.3.3
 
-There is a way for a driver to claim a custom world regulatory domain,
-this can be done wiphy_apply_custom_regulatory(), ath/regd.c uses
-that. Otherwise indeed the pegged regulatory domain will be used as a
-basis for disabling further channels.
-
-  Luis?
