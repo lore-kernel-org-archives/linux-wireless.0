@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47389 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754647Ab0CKVdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 16:33:15 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/5] compat-wireless: remove some uneeded header files
-Date: Thu, 11 Mar 2010 22:32:46 +0100
-Message-Id: <1268343167-2961-7-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
-References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:45866 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729Ab0CKGFM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 01:05:12 -0500
+Received: by pzk32 with SMTP id 32so469983pzk.4
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Mar 2010 22:05:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 10 Mar 2010 22:04:51 -0800
+Message-ID: <43e72e891003102204u17bc2916xbc4cc17af30d3360@mail.gmail.com>
+Subject: Re: [PATCH 00/14] ath9k: initial work for hardware layering
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wireless.h and wext.h must not be shipped with compat-wireless.
+On Wed, Mar 10, 2010 at 5:28 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> This is my first series which starts the work of adding a new layering for
+> abstraction for hardware access. The goal is to enable the AR9003 hardware
+> family to be supported by sharing as much code as is possible. To do that
+> we abstract away all calls which do reads/writes.
+>
+> I'll next address more abstraction on ANI/mac/hw calls. The final
+> move will be to rename reg.h to ar92002_reg.h and ensure no common
+> hardware code uses it. We then should be able to start adding
+> ar9003 hardware family code support and the rest of the core
+> driver changes required.
+>
+> It should be technically possible to even share some stuff like ANI
+> with ath5k but that's my own priority right now but I welcome others
+> to review that. If its not clear how that's possible now perhaps
+> it will be on my next series where I'll dabble a bit more on ANI.
+>
+> I've rebased this on top of the ath9k_htc patches, and tested this
+> with AR9280 (ath9k) and AR9271 (ath9k_htc).
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- scripts/admin-update.sh |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+John, disregard this patch series, we will resubmit ath9k_htc stuff
+and I will have to rebase laster on top of that.
 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 29dd460..af4479a 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -21,7 +21,7 @@ GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
- INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h"
- NET_BT_DIRS="bluetooth bluetooth/bnep bluetooth/cmtp bluetooth/rfcomm bluetooth/hidp"
- 
--INCLUDE_LINUX="ieee80211.h nl80211.h wireless.h"
-+INCLUDE_LINUX="ieee80211.h nl80211.h"
- INCLUDE_LINUX="$INCLUDE_LINUX pci_ids.h eeprom_93cx6.h"
- INCLUDE_LINUX="$INCLUDE_LINUX ath9k_platform.h"
- 
-@@ -32,7 +32,7 @@ INCLUDE_LINUX_SPI="wl12xx.h libertas_spi.h"
- 
- # The good new yummy stuff
- INCLUDE_NET="cfg80211.h ieee80211_radiotap.h"
--INCLUDE_NET="$INCLUDE_NET mac80211.h wext.h lib80211.h regulatory.h"
-+INCLUDE_NET="$INCLUDE_NET mac80211.h lib80211.h regulatory.h"
- 
- # Pretty colors
- GREEN="\033[01;32m"
--- 
-1.6.3.3
-
+  Luis
