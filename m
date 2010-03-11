@@ -1,58 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:30501 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751389Ab0CXXBI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 19:01:08 -0400
-Message-ID: <4BAA9960.9070102@oracle.com>
-Date: Wed, 24 Mar 2010 15:59:44 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
-References: <4BAA73D2.1000301@oracle.com> <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47331 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753150Ab0CKVdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 16:33:00 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat: update bitops.h
+Date: Thu, 11 Mar 2010 22:32:41 +0100
+Message-Id: <1268343167-2961-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/10 14:23, John W. Linville wrote:
-> drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
-> drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
-> 
-> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Copy header from recent linux-next
 
-ACK if you end up using this one.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/bitops.h |   33 ++++++++++++++++++++++++++++++---
+ 1 files changed, 30 insertions(+), 3 deletions(-)
 
-Thanks.
-
-> ---
->  drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-> index b6a64d8..2fa30df 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-> @@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
->  #define BA_TIMEOUT_CNT (5)
->  #define BA_TIMEOUT_MAX (16)
->  
-> +#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
->  /**
->   * iwl_good_ack_health - checks for ACK count ratios, BA timeout retries.
->   *
-> @@ -670,6 +671,7 @@ bool iwl_good_ack_health(struct iwl_priv *priv,
->  	return rc;
->  }
->  EXPORT_SYMBOL(iwl_good_ack_health);
-> +#endif
->  
->  /**
->   * iwl_good_plcp_health - checks for plcp error.
-
-
+diff --git a/include/linux/bitops.h b/include/linux/bitops.h
+index 8469d35..b62de8c 100644
+--- a/include/linux/bitops.h
++++ b/include/linux/bitops.h
+@@ -18,16 +18,18 @@
+  */
+ #include <asm/bitops.h>
+ 
+-#define for_each_bit(bit, addr, size) \
++#define for_each_set_bit(bit, addr, size) \
+ 	for ((bit) = find_first_bit((addr), (size)); \
+ 	     (bit) < (size); \
+ 	     (bit) = find_next_bit((addr), (size), (bit) + 1))
+ 
++/* Temporary */
++#define for_each_bit(bit, addr, size) for_each_set_bit(bit, addr, size)
+ 
+ static __inline__ int get_bitmask_order(unsigned int count)
+ {
+ 	int order;
+-	
++
+ 	order = fls(count);
+ 	return order;	/* We could be slightly more clever with -1 here... */
+ }
+@@ -35,7 +37,7 @@ static __inline__ int get_bitmask_order(unsigned int count)
+ static __inline__ int get_count_order(unsigned int count)
+ {
+ 	int order;
+-	
++
+ 	order = fls(count) - 1;
+ 	if (count & (count - 1))
+ 		order++;
+@@ -47,6 +49,31 @@ static inline unsigned long hweight_long(unsigned long w)
+ 	return sizeof(w) == 4 ? hweight32(w) : hweight64(w);
+ }
+ 
++/*
++ * Clearly slow versions of the hweightN() functions, their benefit is
++ * of course compile time evaluation of constant arguments.
++ */
++#define HWEIGHT8(w)					\
++      (	BUILD_BUG_ON_ZERO(!__builtin_constant_p(w)) +	\
++	(!!((w) & (1ULL << 0))) +			\
++	(!!((w) & (1ULL << 1))) +			\
++	(!!((w) & (1ULL << 2))) +			\
++	(!!((w) & (1ULL << 3))) +			\
++	(!!((w) & (1ULL << 4))) +			\
++	(!!((w) & (1ULL << 5))) +			\
++	(!!((w) & (1ULL << 6))) +			\
++	(!!((w) & (1ULL << 7)))	)
++
++#define HWEIGHT16(w) (HWEIGHT8(w)  + HWEIGHT8((w) >> 8))
++#define HWEIGHT32(w) (HWEIGHT16(w) + HWEIGHT16((w) >> 16))
++#define HWEIGHT64(w) (HWEIGHT32(w) + HWEIGHT32((w) >> 32))
++
++/*
++ * Type invariant version that simply casts things to the
++ * largest type.
++ */
++#define HWEIGHT(w)   HWEIGHT64((u64)(w))
++
+ /**
+  * rol32 - rotate a 32-bit value left
+  * @word: value to rotate
 -- 
-~Randy
+1.6.3.3
+
