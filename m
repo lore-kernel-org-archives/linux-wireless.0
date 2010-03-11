@@ -1,60 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:31050 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750739Ab0CXVXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 17:23:40 -0400
-Subject: compat: add compat-2.6.35.h and IW_HANDLER
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+Received: from mail.redfish-solutions.com ([66.232.79.143]:32886 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756338Ab0CKTZa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 14:25:30 -0500
+Message-ID: <4B9942A7.40205@redfish-solutions.com>
+Date: Thu, 11 Mar 2010 12:21:11 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: Dunc <dunc@lemonia.org>
+CC: Kalle Valo <kalle.valo@iki.fi>, David Miller <davem@davemloft.net>,
+	kaber@trash.net, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Wed, 24 Mar 2010 17:23:37 -0400
-Message-Id: <1269465817.26368.5.camel@mj>
-Mime-Version: 1.0
+Subject: Re: Network QoS support in applications
+References: <877hr5nkx0.fsf@purkki.valot.fi>	<20100126.041610.226004766.davem@davemloft.net>	<87wrz5m3cd.fsf@purkki.valot.fi>	<20100126.050645.184040277.davem@davemloft.net> <87my01m0zm.fsf@purkki.valot.fi> <4B5EF5DF.2070005@lemonia.org>
+In-Reply-To: <4B5EF5DF.2070005@lemonia.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-compat: add compat-2.6.35.h and IW_HANDLER
+On 01/26/2010 07:02 AM, Dunc wrote:
+>   
+>> And you are perfectly right, as always. My choise of using the word
+>> "universal" was bad. With word "universal" I meant to use same network
+>> QoS API with different network technologies: ethernet, wi-fi,
+>> bluetooth etc.
+>>
+>> But we don't need to solve everything in one go, instead we can make
+>> small steps. The first step is to start pushing applications to
+>> classify their streams. That's the enabler to get some sort of QoS
+>> support, at least to inside kernel and to the next hop. With luck, in
+>> future it might get more widely used.
+>>
+>> I was hoping to base the classification on some standard, but there
+>> doesn't really seem to be one which would specify a complete solution.
+>> But that's ok, we can always create a de facto standard :)
+>>
+>> I'm curious how other operation systems handle this? Or is it a
+>> similar situation, nobody just doesn't use QoS for anything?
+>>
+>>     
+> If applications set the QoS values, the who's to stop someone (for
+> example) writing a bittorrent client that marks all packets for the
+> highest priority as if they were VoIP or something? At this point all
+> the good work done in the applications is useless and the network admin
+> is going to have to not trust the QoS values and then attempt to
+> classify traffic by themselves, so it was all a waste of time.
+>
+> It's probably better to just always leave it up to the network devices IMHO.
+>
+> Cheers,
+>
+> Dunc
+>
+>   
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+I disagree.
 
-I assume the patch that introduced IW_HANDLER won't be applied to
-2.6.34, so the definition belongs to a new file, compat-2.6.35.h
+Some protocols are *very* hard to classify without looking into the
+application layer, which I have no interest in having network devices do
+(especially since in a multipath environment, they might not even see
+the entire flow).
 
- include/linux/compat-2.6.35.h |   13 +++++++++++++
- include/linux/compat-2.6.h    |    1 +
- 2 files changed, 14 insertions(+), 0 deletions(-)
- create mode 100644 include/linux/compat-2.6.35.h
+RTP, FTP-DATA, and TFTP are all very hard to classify because they don't
+use fixed port numbers.
 
-diff --git a/include/linux/compat-2.6.35.h
-b/include/linux/compat-2.6.35.h
-new file mode 100644
-index 0000000..7387c46
---- /dev/null
-+++ b/include/linux/compat-2.6.35.h
-@@ -0,0 +1,13 @@
-+#ifndef LINUX_26_35_COMPAT_H
-+#define LINUX_26_35_COMPAT_H
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
-+
-+#define IW_HANDLER(id, func)			\
-+	[IW_IOCTL_IDX(id)] = func
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
-+
-+#endif /* LINUX_26_35_COMPAT_H */
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index ceca997..6171cd9 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -27,5 +27,6 @@
- #include <linux/compat-2.6.32.h>
- #include <linux/compat-2.6.33.h>
- #include <linux/compat-2.6.34.h>
-+#include <linux/compat-2.6.35.h>
- 
- #endif /* LINUX_26_COMPAT_H */
+And even if you identify RTP, you still don't know if it's voice or
+video since that is signaled out-of-band.
+
+And yes, there will always be misbehaving users.  They are a fact of
+life.  That doesn't mean we should lobotomize the network.  We don't
+have an authentication mechanism on ICMP Redirects or Source-Quench, for
+instance.  Nor is ARP authenticated.
+
+BTW:  Why not have Linux do DSCP/CS to 802.1p priority mapping on
+Ethernet drivers "out-of-the-box", regardless of whatever 802.1p tagging
+is actually being used or not (i.e. make it implied on the sending
+end-system).
+
+-Philip
+
+
