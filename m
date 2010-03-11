@@ -1,81 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22622 "EHLO mx1.redhat.com"
+Received: from c60.cesmail.net ([216.154.195.49]:18278 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754002Ab0CJPXr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 10:23:47 -0500
-Date: Wed, 10 Mar 2010 16:21:35 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [RFC PATCH 1/2] mac80211: disable_qos callback
-Message-ID: <20100310152134.GC2969@dhcp-lab-161.englab.brq.redhat.com>
-References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com>
+	id S934238Ab0CKSZh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 13:25:37 -0500
+Subject: Re: Kernel 2.6.33: ar9170.fw firmware file not found
+From: Pavel Roskin <proski@gnu.org>
+To: Malte Gell <malte.gell@gmx.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201003110933.18581.malte.gell@gmx.de>
+References: <201003040835.29387.malte.gell@gmx.de>
+	 <201003110748.12919.malte.gell@gmx.de> <1268293219.2989.7.camel@mj>
+	 <201003110933.18581.malte.gell@gmx.de>
+Content-Type: text/plain
+Date: Thu, 11 Mar 2010 13:25:35 -0500
+Message-Id: <1268331935.1915.19.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add disable_qos callback and use it when AP do not send
-QoS (WMM) information.
+On Thu, 2010-03-11 at 09:33 +0100, Malte Gell wrote:
+> Pavel Roskin <proski@gnu.org> wrote
+> > Please post your .config file.  I guess you are missing something
+> > obvious, like sysfs support or inotify.
+> 
+> Thanx, okay. It is attached. But to me it seems sysfs and inotify is there...
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- include/net/mac80211.h    |    1 +
- net/mac80211/driver-ops.h |    9 +++++++++
- net/mac80211/mlme.c       |    5 ++++-
- 3 files changed, 14 insertions(+), 1 deletions(-)
+I compiled a kernel with your config on plain 2.6.33.  I'm using the
+x86_64 architecture, so "make oldconfig" asked a few questions, but
+nothing important.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 998c30f..e646e8f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1504,6 +1504,7 @@ struct ieee80211_ops {
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
- 	int (*conf_tx)(struct ieee80211_hw *hw, u16 queue,
- 		       const struct ieee80211_tx_queue_params *params);
-+	int (*disable_qos)(struct ieee80211_hw *hw);
- 	int (*get_tx_stats)(struct ieee80211_hw *hw,
- 			    struct ieee80211_tx_queue_stats *stats);
- 	u64 (*get_tsf)(struct ieee80211_hw *hw);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 020a94a..471e297 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -198,6 +198,15 @@ static inline int drv_conf_tx(struct ieee80211_local *local, u16 queue,
- 	return ret;
- }
- 
-+static inline int drv_disable_qos(struct ieee80211_local *local)
-+{
-+	int ret = -EOPNOTSUPP;
-+	if (local->ops->disable_qos)
-+		ret = local->ops->disable_qos(&local->hw);
-+	/* TODO trace_drv_disable_qos(local); */
-+	return ret;
-+}
-+
- static inline int drv_get_tx_stats(struct ieee80211_local *local,
- 				   struct ieee80211_tx_queue_stats *stats)
- {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6cae295..928cc07 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1584,8 +1584,11 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 	if (elems.wmm_param)
- 		ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
- 					 elems.wmm_param_len);
--	else
-+	else {
-+		/* set QoS default parameters but disable it */
- 		ieee80211_set_wmm_default(sdata);
-+		drv_disable_qos(sdata->local);
-+	}
- 
- 	if (elems.ht_info_elem && elems.wmm_param &&
- 	    (ifmgd->flags & IEEE80211_STA_WMM_ENABLED) &&
+I'm running that kernel with no problems.  The driver loads and works
+fine.  Here's the output of udevadm monitor:
+
+# udevadm monitor
+monitor will print the received events for:
+UDEV - the event which udev sends out after rule processing
+KERNEL - the kernel uevent
+
+KERNEL[1268330587.328525] add      /module/ar9170usb (module)
+UDEV  [1268330587.329955] add      /module/ar9170usb (module)
+KERNEL[1268330588.565742] remove   /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0 (usb)
+KERNEL[1268330588.565772] remove   /devices/pci0000:00/0000:00:1d.7/usb1/1-8 (usb)
+KERNEL[1268330588.565987] add      /bus/usb/drivers/ar9170usb (drivers)
+UDEV  [1268330588.567718] add      /bus/usb/drivers/ar9170usb (drivers)
+UDEV  [1268330588.569497] remove   /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0 (usb)
+UDEV  [1268330588.571498] remove   /devices/pci0000:00/0000:00:1d.7/usb1/1-8 (usb)
+KERNEL[1268330589.868626] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8 (usb)
+KERNEL[1268330589.869178] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0 (usb)
+KERNEL[1268330591.158658] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/firmware/1-8 (firmware)
+KERNEL[1268330591.161688] remove   /devices/pci0000:00/0000:00:1d.7/usb1/1-8/firmware/1-8 (firmware)
+UDEV  [1268330591.162451] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/firmware/1-8 (firmware)
+UDEV  [1268330591.163424] remove   /devices/pci0000:00/0000:00:1d.7/usb1/1-8/firmware/1-8 (firmware)
+KERNEL[1268330591.736323] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/ieee80211/phy2 (ieee80211)
+KERNEL[1268330591.736349] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/ieee80211/phy2/rfkill1 (rfkill)
+KERNEL[1268330591.736503] change   /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/ieee80211/phy2/rfkill1 (rfkill)
+KERNEL[1268330591.737446] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/net/wlan0 (net)
+KERNEL[1268330591.740066] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/leds/ar9170-phy2::tx (leds)
+UDEV  [1268330591.740094] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8 (usb)
+KERNEL[1268330591.740105] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/leds/ar9170-phy2::assoc (leds)
+UDEV  [1268330591.745693] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0 (usb)
+UDEV  [1268330591.746816] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/leds/ar9170-phy2::assoc (leds)
+UDEV  [1268330591.748185] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/leds/ar9170-phy2::tx (leds)
+KERNEL[1268330591.751861] move     /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/net/wlan25 (net)
+UDEV  [1268330591.768580] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/ieee80211/phy2 (ieee80211)
+UDEV  [1268330591.771943] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/ieee80211/phy2/rfkill1 (rfkill)
+UDEV  [1268330591.775586] change   /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/ieee80211/phy2/rfkill1 (rfkill)
+UDEV  [1268330591.789582] add      /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/net/wlan25 (net)
+UDEV  [1268330591.799576] move     /devices/pci0000:00/0000:00:1d.7/usb1/1-8/1-8:1.0/net/wlan25 (net)
+
+
+It looks like you get no USB events.  Also, the output looks
+differently.  KERNEL events are called UEVENT in your log.
+
+Maybe you could try another USB port, just in case?  I would probably
+add debugging to the udev scripts to see what they are doing.  Maybe
+there is an update for udev for your system?
+
+Perhaps you should find another forum to ask questions about udev.  I
+think the kernel is not a suspect anymore.
+
 -- 
-1.6.6
-
+Regards,
+Pavel Roskin
