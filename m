@@ -1,128 +1,357 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:8024 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752572Ab0CEGc7 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46902 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751317Ab0CKB2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 01:32:59 -0500
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-017705776
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Mar 2010 15:32:57 +0900 (JST)
-Subject: [PATCH 1/3] ath5k: fix I/Q calibration (for real)
+	Wed, 10 Mar 2010 20:28:32 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: 8an@praha12.net, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, mickflemm@gmail.com
-Date: Fri, 05 Mar 2010 15:32:55 +0900
-Message-ID: <20100305063255.29522.83920.stgit@void>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 08/14] ath9k_hw: move ar9002 bluetooth coexistence code to its own file
+Date: Wed, 10 Mar 2010 20:28:25 -0500
+Message-Id: <1268270911-24568-9-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I/Q calibration was completely broken, resulting in a high number of CRC errors
-on received packets. before i could see around 10% to 20% CRC errors, with this
-patch they are between 0% and 3%.
+It turns out all these routines do their own read/writes so just move the
+entire file. If btcoex is supported by the chipset the calls will be enabled
+and the driver core and hardware call will issue calls for btcoex.
 
-1.) the removal of the mask in commit "ath5k: Fix I/Q calibration
-(f1cf2dbd0f798b71b1590e7aca6647f2caef1649)" resulted in no mask beeing used
-when writing the I/Q values into the register. additional errors in the
-calculation of the values (see 2.) resulted too high numbers, exceeding the
-masks, so wrong values like 0xfffffffe were written. to be safe we should
-always use the bitmask when writing parts of a register.
-
-2.) using a (s32) cast for q_coff is a wrong conversion to signed, since we
-convert to a signed value later by substracting 128. this resulted in too low
-numbers for Q many times, which were limited to -16 by the boundary check later
-on.
-
-3.) checked everything against the HAL sources and took over comments and minor
-optimizations from there.
-
-4.) we can't use ENABLE_BITS when we want to write a number (the number can
-contain zeros). also always write the correction values first and set ENABLE
-bit last, like the HAL does.
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/phy.c |   35 +++++++++++++++++++++-------------
- drivers/net/wireless/ath/ath5k/reg.h |    1 +
- 2 files changed, 23 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath9k/Makefile            |    2 +-
+ .../ath/ath9k/{btcoex.c => ar9002_btcoex.c}        |   46 +++++++++++-------
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c         |    3 +
+ drivers/net/wireless/ath/ath9k/btcoex.h            |   10 ----
+ drivers/net/wireless/ath/ath9k/hw-ops.h            |   51 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h                |   26 ++++++++++
+ drivers/net/wireless/ath/ath9k/init.c              |    2 +-
+ 7 files changed, 111 insertions(+), 29 deletions(-)
+ rename drivers/net/wireless/ath/ath9k/{btcoex.c => ar9002_btcoex.c} (82%)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 3fa4f4d..4977d22 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1386,38 +1386,47 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
- 		goto done;
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 6c1594b..affbf84 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -17,6 +17,7 @@ ath9k_hw-y:=	hw.o \
+ 		ar9002_hw.o \
+ 		ar9002_calib.o \
+ 		ar9002_calib_settings.o \
++		ar9002_btcoex.o \
+ 		eeprom.o \
+ 		eeprom_def.o \
+ 		eeprom_4k.o \
+@@ -24,7 +25,6 @@ ath9k_hw-y:=	hw.o \
+ 		calib.o \
+ 		ani.o \
+ 		phy.o \
+-		btcoex.o \
+ 		mac.o \
  
- 	/* Calibration has finished, get the results and re-run */
-+
-+	/* workaround against empty results which can apparently happen on 5212 */
- 	for (i = 0; i <= 10; i++) {
- 		iq_corr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_CORR);
- 		i_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_I);
- 		q_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_Q);
-+		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
-+			"iq_corr:%x i_pwr:%x q_pwr:%x", iq_corr, i_pwr, q_pwr);
-+		if (i_pwr && q_pwr)
-+			break;
- 	}
- 
- 	i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
- 	q_coffd = q_pwr >> 7;
- 
--	/* No correction */
--	if (i_coffd == 0 || q_coffd == 0)
-+	/* protect against divide by 0 and loss of sign bits */
-+	if (i_coffd == 0 || q_coffd < 2)
- 		goto done;
- 
--	i_coff = ((-iq_corr) / i_coffd);
--
--	/* Boundary check */
-+	i_coff = (-iq_corr) / i_coffd;
-+	/* Boundary check (signed 6 bit) */
- 	if (i_coff > 31)
- 		i_coff = 31;
--	if (i_coff < -32)
-+	else if (i_coff < -32)
- 		i_coff = -32;
- 
--	q_coff = (((s32)i_pwr / q_coffd) - 128);
--
--	/* Boundary check */
-+	q_coff = (i_pwr / q_coffd) - 128;
-+	/* Boundary check (signed 5 bit) */
- 	if (q_coff > 15)
- 		q_coff = 15;
--	if (q_coff < -16)
-+	else if (q_coff < -16)
- 		q_coff = -16;
- 
--	/* Commit new I/Q value */
--	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE |
--		((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
-+	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
-+			"new I:%d Q:%d (i_coffd:%x q_coffd:%x)",
-+			i_coff, q_coff, i_coffd, q_coffd);
-+
-+	/* Commit new I/Q values (set enable bit last to match HAL sources) */
-+	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF, i_coff);
-+	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF, q_coff);
-+	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
- 
- 	/* Re-enable calibration -if we don't we'll commit
- 	 * the same values again and again */
-diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
-index 4cb9c5d..1464f89 100644
---- a/drivers/net/wireless/ath/ath5k/reg.h
-+++ b/drivers/net/wireless/ath/ath5k/reg.h
-@@ -2187,6 +2187,7 @@
+ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/ar9002_btcoex.c
+similarity index 82%
+rename from drivers/net/wireless/ath/ath9k/btcoex.c
+rename to drivers/net/wireless/ath/ath9k/ar9002_btcoex.c
+index fb4ac15..3db3edb 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_btcoex.c
+@@ -15,6 +15,7 @@
   */
- #define	AR5K_PHY_IQ			0x9920			/* Register Address */
- #define	AR5K_PHY_IQ_CORR_Q_Q_COFF	0x0000001f	/* Mask for q correction info */
-+#define	AR5K_PHY_IQ_CORR_Q_Q_COFF_S	0
- #define	AR5K_PHY_IQ_CORR_Q_I_COFF	0x000007e0	/* Mask for i correction info */
- #define	AR5K_PHY_IQ_CORR_Q_I_COFF_S	5
- #define	AR5K_PHY_IQ_CORR_ENABLE		0x00000800	/* Enable i/q correction */
+ 
+ #include "hw.h"
++#include "hw-ops.h"
+ 
+ enum ath_bt_mode {
+ 	ATH_BT_COEX_MODE_LEGACY,        /* legacy rx_clear mode */
+@@ -45,7 +46,7 @@ static const u16 ath_subsysid_tbl[] = {
+  * Checks the subsystem id of the device to see if it
+  * supports btcoex
+  */
+-bool ath9k_hw_btcoex_supported(struct ath_hw *ah)
++static bool ar9002_hw_btcoex_supported(struct ath_hw *ah)
+ {
+ 	int i;
+ 
+@@ -59,7 +60,7 @@ bool ath9k_hw_btcoex_supported(struct ath_hw *ah)
+ 	return false;
+ }
+ 
+-void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
++static void ar9002_hw_btcoex_init(struct ath_hw *ah, int qnum)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 	const struct ath_btcoex_config ath_bt_config = {
+@@ -95,9 +96,8 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
+ 	for (i = 0; i < 32; i++)
+ 		ah->hw_gen_timers.gen_timer_index[(debruijn32 << i) >> 27] = i;
+ }
+-EXPORT_SYMBOL(ath9k_hw_init_btcoex_hw);
+ 
+-void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
++static void ar9002_hw_btcoex_init_2wire(struct ath_hw *ah)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 
+@@ -117,9 +117,8 @@ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
+ 	/* Configure the desired gpio port for input */
+ 	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btactive_gpio);
+ }
+-EXPORT_SYMBOL(ath9k_hw_btcoex_init_2wire);
+ 
+-void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
++static void ar9002_hw_btcoex_init_3wire(struct ath_hw *ah)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 
+@@ -143,9 +142,8 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
+ 	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btactive_gpio);
+ 	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btpriority_gpio);
+ }
+-EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
+ 
+-static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
++static void ar9002_hw_btcoex_enable_2wire(struct ath_hw *ah)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 
+@@ -154,18 +152,17 @@ static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
+ 			    AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
+ }
+ 
+-void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+-				u32 bt_weight,
+-				u32 wlan_weight)
++static void ar9002_hw_btcoex_set_weight(struct ath_hw *ah,
++					u32 bt_weight,
++					u32 wlan_weight)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 
+ 	btcoex_hw->bt_coex_weights = SM(bt_weight, AR_BTCOEX_BT_WGHT) |
+ 				     SM(wlan_weight, AR_BTCOEX_WL_WGHT);
+ }
+-EXPORT_SYMBOL(ath9k_hw_btcoex_set_weight);
+ 
+-static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
++static void ar9002_hw_btcoex_enable_3wire(struct ath_hw *ah)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 
+@@ -184,7 +181,7 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
+ 			    AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
+ }
+ 
+-void ath9k_hw_btcoex_enable(struct ath_hw *ah)
++static void ar9002_hw_btcoex_enable(struct ath_hw *ah)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 
+@@ -205,9 +202,8 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
+ 
+ 	ah->btcoex_hw.enabled = true;
+ }
+-EXPORT_SYMBOL(ath9k_hw_btcoex_enable);
+ 
+-void ath9k_hw_btcoex_disable(struct ath_hw *ah)
++static void ar9002_hw_btcoex_disable(struct ath_hw *ah)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 
+@@ -224,4 +220,20 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
+ 
+ 	ah->btcoex_hw.enabled = false;
+ }
+-EXPORT_SYMBOL(ath9k_hw_btcoex_disable);
++
++void ar9002_hw_attach_btcoex_ops(struct ath_hw *ah)
++{
++	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
++
++	priv_ops->btcoex_supported = &ar9002_hw_btcoex_supported;
++	priv_ops->btcoex_enable_2wire = &ar9002_hw_btcoex_enable_2wire;
++	priv_ops->btcoex_enable_3wire = &ar9002_hw_btcoex_enable_3wire;
++
++	ops->btcoex_init = &ar9002_hw_btcoex_init;
++	ops->btcoex_init_2wire = &ar9002_hw_btcoex_init_2wire;
++	ops->btcoex_init_3wire = &ar9002_hw_btcoex_init_3wire;
++	ops->btcoex_set_weight = &ar9002_hw_btcoex_set_weight;
++	ops->btcoex_enable = &ar9002_hw_btcoex_enable;
++	ops->btcoex_disable = &ar9002_hw_btcoex_disable;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index d937b47..5363878 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -19,6 +19,8 @@
+ #include "rc.h"
+ #include "ar9002_initvals.h"
+ 
++extern void ar9002_hw_attach_btcoex_ops(struct ath_hw *ah);
++
+ static void ar9002_hw_disablepcie(struct ath_hw *ah)
+ {
+ 	if (AR_SREV_9100(ah))
+@@ -811,5 +813,6 @@ void ar9002_hw_attach_ops(struct ath_hw *ah)
+ 	ops->config_pci_powersave = &ar9002_hw_configpcipowersave;
+ 
+ 	ar9002_hw_attach_calib_ops(ah);
++	ar9002_hw_attach_btcoex_ops(ah);
+ }
+ EXPORT_SYMBOL(ar9002_hw_attach_ops);
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 1ee5a15..0217df0 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -49,14 +49,4 @@ struct ath_btcoex_hw {
+ 	u32 bt_coex_mode2; 	/* Register setting for AR_BT_COEX_MODE2 */
+ };
+ 
+-bool ath9k_hw_btcoex_supported(struct ath_hw *ah);
+-void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
+-void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
+-void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+-void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+-				u32 bt_weight,
+-				u32 wlan_weight);
+-void ath9k_hw_btcoex_enable(struct ath_hw *ah);
+-void ath9k_hw_btcoex_disable(struct ath_hw *ah);
+-
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 6d20bb7..3e4f49f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -112,4 +112,55 @@ static inline void ath9k_hw_pa_cal(struct ath_hw *ah)
+ 	ath9k_hw_private_ops(ah)->pa_cal(ah);
+ }
+ 
++/* Bluetooth coexistence ops */
++
++static inline bool ath9k_hw_btcoex_supported(struct ath_hw *ah)
++{
++	if (!ath9k_hw_private_ops(ah)->btcoex_supported)
++		return false;
++	return ath9k_hw_private_ops(ah)->btcoex_supported(ah);
++}
++
++static inline void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
++{
++	ath9k_hw_private_ops(ah)->btcoex_enable_2wire(ah);
++}
++
++static inline void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
++{
++	ath9k_hw_private_ops(ah)->btcoex_enable_3wire(ah);
++}
++
++static inline void ath9k_hw_btcoex_init(struct ath_hw *ah, int qnum)
++{
++	ath9k_hw_ops(ah)->btcoex_init(ah, qnum);
++}
++
++static inline void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
++{
++	ath9k_hw_ops(ah)->btcoex_init_2wire(ah);
++}
++
++static inline void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
++{
++	ath9k_hw_ops(ah)->btcoex_init_3wire(ah);
++}
++
++static inline void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
++					      u32 bt_weight,
++					      u32 wlan_weight)
++{
++	ath9k_hw_ops(ah)->btcoex_set_weight(ah, bt_weight, wlan_weight);
++}
++
++static inline void ath9k_hw_btcoex_enable(struct ath_hw *ah)
++{
++	ath9k_hw_ops(ah)->btcoex_enable(ah);
++}
++
++static inline void ath9k_hw_btcoex_disable(struct ath_hw *ah)
++{
++	ath9k_hw_ops(ah)->btcoex_disable(ah);
++}
++
+ #endif /* ATH9K_HW_OPS_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 06d5c2a..ed137a8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -465,6 +465,10 @@ struct ath_gen_timer_table {
+  * @loadnf:
+  * @start_nfcal: start noise floor calibration
+  * @pa_cal: Power amplifier calibration
++ *
++ * @btcoex_supported: whether or not bluetooth coexistence is supported
++ * @btcoex_enable_2wire:
++ * @btcoex_enable_3wire:
+  */
+ struct ath_hw_private_ops {
+ 	/* General hardware ops */
+@@ -490,6 +494,11 @@ struct ath_hw_private_ops {
+ 	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
+ 	void (*start_nfcal)(struct ath_hw *ah);
+ 	void (*pa_cal)(struct ath_hw *ah);
++
++	/* Bluetooth coexistence ops */
++	bool (*btcoex_supported)(struct ath_hw *ah);
++	void (*btcoex_enable_2wire)(struct ath_hw *ah);
++	void (*btcoex_enable_3wire)(struct ath_hw *ah);
+ };
+ 
+ /**
+@@ -500,12 +509,29 @@ struct ath_hw_private_ops {
+  *
+  * @set_power:
+  * @config_pci_powersave:
++ *
++ * @btcoex_init:
++ * @btcoex_init_2wire:
++ * @btcoex_init_3wire:
++ * @btcoex_set_weight:
++ * @btcoex_enable:
++ * @btcoex_disable:
+  */
+ struct ath_hw_ops {
+ 	bool (*set_power)(struct ath_hw *ah, enum ath9k_power_mode mode);
+ 	void (*config_pci_powersave)(struct ath_hw *ah,
+ 				    int restore,
+ 				    int power_off);
++
++	/* Bluetooth coexistence ops */
++	void (*btcoex_init)(struct ath_hw *ah, int qnum);
++	void (*btcoex_init_2wire)(struct ath_hw *ah);
++	void (*btcoex_init_3wire)(struct ath_hw *ah);
++	void (*btcoex_set_weight)(struct ath_hw *ah,
++				  u32 bt_weight,
++				  u32 wlan_weight);
++	void (*btcoex_enable)(struct ath_hw *ah);
++	void (*btcoex_disable)(struct ath_hw *ah);
+ };
+ 
+ struct ath_hw {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 62682cc..b7fd491 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -402,7 +402,7 @@ static int ath9k_init_btcoex(struct ath_softc *sc)
+ 		if (r)
+ 			return -1;
+ 		qnum = ath_tx_get_qnum(sc, ATH9K_TX_QUEUE_DATA, ATH9K_WME_AC_BE);
+-		ath9k_hw_init_btcoex_hw(sc->sc_ah, qnum);
++		ath9k_hw_btcoex_init(sc->sc_ah, qnum);
+ 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+ 		break;
+ 	default:
+-- 
+1.6.3.3
 
