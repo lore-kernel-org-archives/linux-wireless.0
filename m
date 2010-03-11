@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m-04.th.seeweb.it ([217.64.195.227]:60364 "EHLO
-	m-04.th.seeweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753619Ab0CDKNR (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35965 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754829Ab0CKXXz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 05:13:17 -0500
-Message-ID: <4B8F87B6.9060901@users.sourceforge.net>
-Date: Thu, 04 Mar 2010 11:13:10 +0100
-From: "Daniele C." <legolas558@users.sourceforge.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt2870 (staging kernel driver) crashes fatally
-References: <4B8E20CF.50109@users.sourceforge.net> <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com>
-In-Reply-To: <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 11 Mar 2010 18:23:55 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: stable@kernel.org
+Cc: linville@tuxdriver.com, mb@bu3sch.de, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/2] ath5k: dont use external sleep clock in AP mode
+Date: Thu, 11 Mar 2010 18:23:48 -0500
+Message-Id: <1268349829-3195-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268349829-3195-1-git-send-email-lrodriguez@atheros.com>
+References: <1268349829-3195-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+From: Bob Copeland <me@bobcopeland.com>
 
-- -------- Original Message  --------
-Subject: Re: rt2870 (staging kernel driver) crashes fatally
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Daniele C. <legolas558@users.sourceforge.net>
-Date: Thu Mar 04 2010 03:14:38 GMT+0100 (CET)
+When using the external sleep clock in AP mode, the
+TSF increments too quickly, causing beacon interval
+to be much lower than it is supposed to be, resulting
+in lots of beacon-not-ready interrupts.
 
-> You appear to have two issues - (1) the driver doesn't
-> hibernate/resume well, (2) there is some bad memory leak which causes
-> your system to run out of memory.
-> 
-> You did not mention issue (1) - that you were hibernating and resuming
-> (and expecting it to work, which it does not). For the latter, you
-> probably need to track down where the memory is leaking in the driver,
-> which is probably easier than tracking down the hibernate/resume
-> issue.
-> 
-Sorry I thought that hibernation/resume was supported.
+This fixes http://bugzilla.kernel.org/show_bug.cgi?id=14802.
 
-> Good luck with tracking down the memory leak. (you do understand that
-> staging drivers are DIY - i.e. you try it only if you are willing to
-> look into fixing it yourself - I hope )
-> 
-I wish I were that good, but I'll try.
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ath/ath5k/reset.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Best regards,
-- --
-  Daniele
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 34e13c7..257ea18 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1382,8 +1382,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	 * Set clocks to 32KHz operation and use an
+ 	 * external 32KHz crystal when sleeping if one
+ 	 * exists */
+-	if (ah->ah_version == AR5K_AR5212)
+-			ath5k_hw_set_sleep_clock(ah, true);
++	if (ah->ah_version == AR5K_AR5212 &&
++	    ah->ah_op_mode != NL80211_IFTYPE_AP)
++		ath5k_hw_set_sleep_clock(ah, true);
+ 
+ 	/*
+ 	 * Disable beacons and reset the register
+-- 
+1.6.3.3
 
-> On Wed, Mar 3, 2010 at 8:41 AM, Daniele C.
-> <legolas558@users.sourceforge.net> wrote:
-> Hello,
-> 
-> I am experiencing the documented crash after intense usage of the wi-fi device.
-> 
-> Best regards,
->>
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQEcBAEBAgAGBQJLj4e2AAoJEON28As9epPA/+4H/jDpF8Y8FIzJ9UlDOD4yuVNb
-yeRgoJW4h1fnL5atZ66Ku+5EehOsKYQEjQDa3Apwl+g1RXFPenbIm4+A/mJQ4INu
-7/wIgQIGRh9mPLmRw1+ylMExBbGSm/v4yp4oUj1ZygLGbiBgV2iQMxbmYPQoCdNt
-Rf6lvj20Sz0cfVZWvAw+9HfpMRHYYzQ2UgJkdl4iMaJyNIHhAHCgtMsC/00SGsCn
-Wi9iQDtw4O5BbhGPx99J4OipBg0LfAihsOdzgxfv8/jNB9z6OwS4hudmwyHc4PHF
-B+ZyEnEJfD3CL8qyaknHZXC18QV0NfnrM1P0NBU/E+WTlFuooywBOG+EWDRmF9E=
-=NLMu
------END PGP SIGNATURE-----
