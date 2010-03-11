@@ -1,66 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:36941 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696Ab0C2SAg (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35962 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754630Ab0CKXXz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 14:00:36 -0400
-Received: by pwi5 with SMTP id 5so6836309pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 11:00:35 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org
-Subject: [PATCH 1/2 v3] mac80211: Handle mesh action frames in ieee80211_rx_h_action
-Date: Mon, 29 Mar 2010 11:00:20 -0700
-Message-Id: <1269885621-10257-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <1269844239.4131.3.camel@jlt3.sipsolutions.net>
-References: <1269844239.4131.3.camel@jlt3.sipsolutions.net>
+	Thu, 11 Mar 2010 18:23:55 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: stable@kernel.org
+Cc: linville@tuxdriver.com, mb@bu3sch.de, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/2] ath5k: few AP fixes for 2.6.32
+Date: Thu, 11 Mar 2010 18:23:47 -0500
+Message-Id: <1268349829-3195-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the problem introduced in commit
-8404080568613d93ad7cf0a16dfb68 which broke mesh peer link establishment.
+These patches were already merged into the latest 2.6.33.y,
+however they are not yet in the latest 2.6.32.y, they are
+reported to make ath5k AP support rock solid by a few people.
 
-changes:
-v2 	Added missing break (Johannes)
-v3 	Broke original patch into two (Johannes)
+For your conveinience I have also put these patches up here:
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh.c |    3 ---
- net/mac80211/rx.c   |    5 +++++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+http://kernel.org/pub/linux/kernel/people/mcgrof/patches/ath5k/2010-03/ath5k-ap-fixes-32/
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 61080c5..7a6bebc 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -749,9 +749,6 @@ ieee80211_mesh_rx_mgmt(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- 
- 	switch (fc & IEEE80211_FCTL_STYPE) {
- 	case IEEE80211_STYPE_ACTION:
--		if (skb->len < IEEE80211_MIN_ACTION_SIZE)
--			return RX_DROP_MONITOR;
--		/* fall through */
- 	case IEEE80211_STYPE_PROBE_RESP:
- 	case IEEE80211_STYPE_BEACON:
- 		skb_queue_tail(&ifmsh->skb_queue, skb);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 1da57c8..1e03972 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1964,6 +1964,11 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 			goto handled;
- 		}
- 		break;
-+	case MESH_PLINK_CATEGORY:
-+	case MESH_PATH_SEL_CATEGORY:
-+		if (ieee80211_vif_is_mesh(&sdata->vif))
-+			return ieee80211_mesh_rx_mgmt(sdata, rx->skb);
-+		break;
- 	}
- 
- 	/*
--- 
-1.6.3.3
+Bob Copeland (2):
+  ath5k: dont use external sleep clock in AP mode
+  ath5k: fix setup for CAB queue
+
+ drivers/net/wireless/ath/ath5k/ath5k.h |    2 +-
+ drivers/net/wireless/ath/ath5k/base.c  |   22 +++++++++++++++++++---
+ drivers/net/wireless/ath/ath5k/qcu.c   |    5 +++--
+ drivers/net/wireless/ath/ath5k/reset.c |    5 +++--
+ 4 files changed, 26 insertions(+), 8 deletions(-)
 
