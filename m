@@ -1,90 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59358 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013Ab0CSUWu (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46904 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237Ab0CKB2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 16:22:50 -0400
-Date: Fri, 19 Mar 2010 16:21:21 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
+	Wed, 10 Mar 2010 20:28:32 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>, stable@kernel.org
-Subject: Re: [PATCH] ssb: do not read SPROM if it does not exist
-Message-ID: <20100319202120.GD9552@tuxdriver.com>
-References: <4BA266FB.1080507@lwfinger.net> <1269025687-9817-1-git-send-email-linville@tuxdriver.com> <201003192041.47211.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201003192041.47211.mb@bu3sch.de>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 09/14] ath9k_hw: Use a helper for setting phy error masks
+Date: Wed, 10 Mar 2010 20:28:26 -0500
+Message-Id: <1268270911-24568-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 19, 2010 at 08:41:47PM +0100, Michael Buesch wrote:
-> On Friday 19 March 2010 20:08:07 John W. Linville wrote:
-> > +	switch (bus->chip_id) {
-> > +	case 0x4312:
-> > +		return SSB_CHIPCO_CHST_4312_SPROM_PRESENT(bus->chipco.status);
-> 
-> Not sure why we want to hide the logic in defines. But I don't care much, either.
+The phy error masks are used consistently on ani.c so
+define a common helper for this. We will later use this to
+further abstract direct hardware reads/writes depending on
+the chipset. While at it, add some sort of explanation as
+to what these masks are for.
 
-To me it just seems clearer than a bunch of long and ugly bit
-operations that differ in the details but are logically accomplishing
-the same thing.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |   21 +++++++++++++++------
+ 1 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 2a0cd64..08deda3 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -231,6 +231,18 @@ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
+ 	stats->beacons += REG_READ(ah, AR_BEACON_CNT);
+ }
  
-> > +	case 0x4322:
-> > +		return SSB_CHIPCO_CHST_4322_SPROM_PRESENT(bus->chipco.status);
-> > +	case 0x4325:
-> > +		return SSB_CHIPCO_CHST_4325_SPROM_PRESENT(bus->chipco.status);
-> > +	default:
-> > +		break;
-> > +	}
-> > +	if (bus->chip_rev >= 31)
-> 
-> This check is wrong.
-> You need to check the chipcommon core revision. Not the chip revision.
-
-I'm sorry, I had trouble figuring-out what you meant (since chip_rev
-comes from a chipcommon register).  I think you mean this:
-
--       if (bus->chip_rev >= 31)
-+       if (bus->chipco.dev->id.revision >= 31)
-
-Is that right?
-
-John
-
-> > +		return bus->chipco.capabilities & SSB_CHIPCO_CAP_SPROM;
-> > +
-> > +	return true;
-> > +}
-> > diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-> > index 24f9885..3b4da23 100644
-> > --- a/include/linux/ssb/ssb.h
-> > +++ b/include/linux/ssb/ssb.h
-> > @@ -394,6 +394,9 @@ extern int ssb_bus_sdiobus_register(struct ssb_bus *bus,
-> >  
-> >  extern void ssb_bus_unregister(struct ssb_bus *bus);
-> >  
-> > +/* Does the device have an SPROM? */
-> > +extern bool ssb_is_sprom_available(struct ssb_bus *bus);
-> > +
-> >  /* Set a fallback SPROM.
-> >   * See kdoc at the function definition for complete documentation. */
-> >  extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
-> > diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-> > index 4e27acf..4e5726d 100644
-> > --- a/include/linux/ssb/ssb_driver_chipcommon.h
-> > +++ b/include/linux/ssb/ssb_driver_chipcommon.h
-> > @@ -30,6 +30,7 @@
-> >  #define   SSB_CHIPCO_CAP_UARTCLK_INT	0x00000008	/* UARTs are driven by internal divided clock */
-> >  #define  SSB_CHIPCO_CAP_UARTGPIO	0x00000020	/* UARTs on GPIO 15-12 */
-> >  #define  SSB_CHIPCO_CAP_EXTBUS		0x000000C0	/* External buses present */
-> > +#define  SSB_CHIPCO_CAP_SPROM		0x40000000	/* SPROM present */
-> >  #define  SSB_CHIPCO_CAP_FLASHT		0x00000700	/* Flash Type */
-> 
-> Probably keep ordering of capabilities correct.
-
-Oops, sorry...
-
++/*
++ * These masks are used by the hardware to know which
++ * type of phy errors to include on their error counts.
++ * We use one counter for OFDM phy timing errors and the
++ * other for CCK phy timing errors only.
++ */
++static void ath9k_hw_update_phy_err_masks(struct ath_hw *ah)
++{
++	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
++	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
++}
++
+ static void ath9k_ani_restart(struct ath_hw *ah)
+ {
+ 	struct ar5416AniState *aniState;
+@@ -264,8 +276,7 @@ static void ath9k_ani_restart(struct ath_hw *ah)
+ 		  aniState->cckPhyErrBase);
+ 	REG_WRITE(ah, AR_PHY_ERR_1, aniState->ofdmPhyErrBase);
+ 	REG_WRITE(ah, AR_PHY_ERR_2, aniState->cckPhyErrBase);
+-	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
+-	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
++	ath9k_hw_update_phy_err_masks(ah);
+ 
+ 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+ 
+@@ -540,8 +551,7 @@ void ath9k_ani_reset(struct ath_hw *ah)
+ 	ath9k_hw_setrxfilter(ah, ath9k_hw_getrxfilter(ah) &
+ 			     ~ATH9K_RX_FILTER_PHYERR);
+ 	ath9k_ani_restart(ah);
+-	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
+-	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
++	ath9k_hw_update_phy_err_masks(ah);
+ }
+ 
+ void ath9k_hw_ani_monitor(struct ath_hw *ah,
+@@ -644,8 +654,7 @@ void ath9k_enable_mib_counters(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_MIBC,
+ 		  ~(AR_MIBC_COW | AR_MIBC_FMC | AR_MIBC_CMC | AR_MIBC_MCS)
+ 		  & 0x0f);
+-	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
+-	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
++	ath9k_hw_update_phy_err_masks(ah);
+ }
+ 
+ /* Freeze the MIB counters, get the stats and then clear them */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
