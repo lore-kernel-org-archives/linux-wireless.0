@@ -1,54 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:62902 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003Ab0CGRcx (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:45081 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933079Ab0CKPpE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Mar 2010 12:32:53 -0500
-Received: by ewy20 with SMTP id 20so1224916ewy.1
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Mar 2010 09:32:52 -0800 (PST)
-To: Andrey Yurovsky <yurovsky@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David MOUSSAUD <d.moussaud@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Holger Schurig <holgerschurig@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <holgerschurig@googlemail.com>
-Subject: Re: [PATCH] libertas: cfg80211 support
-References: <20100202000934.GA19847@sortiz.org>
-	<201002151146.48156.holgerschurig@gmail.com>
-	<cdd918981002240005o1fa50956yfb2a692716c06a55@mail.gmail.com>
-	<1267054502.6162.9.camel@localhost.localdomain>
-	<cdd918981002250042m16cdf34ap8305ed2fbfd7804d@mail.gmail.com>
-	<1267087684.3796.0.camel@jlt3.sipsolutions.net>
-	<c1545bb51002251005o396130e9g906e5efff024c78@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 07 Mar 2010 19:32:48 +0200
-In-Reply-To: <c1545bb51002251005o396130e9g906e5efff024c78@mail.gmail.com> (Andrey Yurovsky's message of "Thu\, 25 Feb 2010 10\:05\:30 -0800")
-Message-ID: <87d3zgdolb.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 11 Mar 2010 10:45:04 -0500
+Received: by mail-bw0-f209.google.com with SMTP id 1so156999bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2010 07:45:02 -0800 (PST)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/4] wl1251: fix ELP_CTRL register accesses when using SDIO
+Date: Thu, 11 Mar 2010 17:44:57 +0200
+Message-Id: <1268322297-16667-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrey Yurovsky <yurovsky@gmail.com> writes:
+For some unknown reason ELP_CTRL can't be accesed using
+sdio_memcpy_* functions (any attemts to do so result in timeouts):
 
->>> Do you know an other sdio chipset that would do the job ?
->>
->> libertas_tf driver has AP iirc.
->
-> Yes but it only supports one variant with USB (88w8388) and special
-> firmware, there's no SDIO equivalent.
->
-> The only soft-MAC/mac80211 hardware/driver that I can think of that
-> has an SDIO variant right now is the TI wl12xx stuff but I don't know
-> anything about it or whether it can do enough to support AP via
-> mac80211.
+ wl1251: ERROR sdio write failed (-110)
+ wl1251: ERROR sdio read failed (-110)
+ wl1251: WARNING WLAN not ready
 
-wl1251 at least doesn't support AP mode. Maybe it's possible to hack
-something in the driver, but because firmware doesn't support it it
-would be incomplete anyway.
+To fix this, add special IO functions for ELP_CTRL access that are
+using sdio_readb/sdio_writeb. Similar handling is done in TI
+reference driver from Android code drop.
 
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/wl12xx/wl1251.h      |    2 ++
+ drivers/net/wireless/wl12xx/wl1251_io.h   |   20 ++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_main.c |    4 ++--
+ drivers/net/wireless/wl12xx/wl1251_ps.c   |    8 ++++----
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |   28 ++++++++++++++++++++++++++++
+ 5 files changed, 56 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl12xx/wl1251.h
+index 37c61c1..4f5f02a 100644
+--- a/drivers/net/wireless/wl12xx/wl1251.h
++++ b/drivers/net/wireless/wl12xx/wl1251.h
+@@ -256,6 +256,8 @@ struct wl1251_debugfs {
+ struct wl1251_if_operations {
+ 	void (*read)(struct wl1251 *wl, int addr, void *buf, size_t len);
+ 	void (*write)(struct wl1251 *wl, int addr, void *buf, size_t len);
++	void (*read_elp)(struct wl1251 *wl, int addr, u32 *val);
++	void (*write_elp)(struct wl1251 *wl, int addr, u32 val);
+ 	void (*reset)(struct wl1251 *wl);
+ 	void (*enable_irq)(struct wl1251 *wl);
+ 	void (*disable_irq)(struct wl1251 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_io.h b/drivers/net/wireless/wl12xx/wl1251_io.h
+index b89d2ac..c545e9d 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_io.h
++++ b/drivers/net/wireless/wl12xx/wl1251_io.h
+@@ -48,6 +48,26 @@ static inline void wl1251_write32(struct wl1251 *wl, int addr, u32 val)
+ 	wl->if_ops->write(wl, addr, &val, sizeof(u32));
+ }
+ 
++static inline u32 wl1251_read_elp(struct wl1251 *wl, int addr)
++{
++	u32 response;
++
++	if (wl->if_ops->read_elp)
++		wl->if_ops->read_elp(wl, addr, &response);
++	else
++		wl->if_ops->read(wl, addr, &response, sizeof(u32));
++
++	return response;
++}
++
++static inline void wl1251_write_elp(struct wl1251 *wl, int addr, u32 val)
++{
++	if (wl->if_ops->write_elp)
++		wl->if_ops->write_elp(wl, addr, val);
++	else
++		wl->if_ops->write(wl, addr, &val, sizeof(u32));
++}
++
+ /* Memory target IO, address is translated to partition 0 */
+ void wl1251_mem_read(struct wl1251 *wl, int addr, void *buf, size_t len);
+ void wl1251_mem_write(struct wl1251 *wl, int addr, void *buf, size_t len);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 24ae6a3..0155653 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -146,8 +146,8 @@ static void wl1251_fw_wakeup(struct wl1251 *wl)
+ 	u32 elp_reg;
+ 
+ 	elp_reg = ELPCTRL_WAKE_UP;
+-	wl1251_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, elp_reg);
+-	elp_reg = wl1251_read32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR);
++	wl1251_write_elp(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, elp_reg);
++	elp_reg = wl1251_read_elp(wl, HW_ACCESS_ELP_CTRL_REG_ADDR);
+ 
+ 	if (!(elp_reg & ELPCTRL_WLAN_READY))
+ 		wl1251_warning("WLAN not ready");
+diff --git a/drivers/net/wireless/wl12xx/wl1251_ps.c b/drivers/net/wireless/wl12xx/wl1251_ps.c
+index 851dfb6..b55cb2b 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1251_ps.c
+@@ -45,7 +45,7 @@ void wl1251_elp_work(struct work_struct *work)
+ 		goto out;
+ 
+ 	wl1251_debug(DEBUG_PSM, "chip to elp");
+-	wl1251_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
++	wl1251_write_elp(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
+ 	wl->elp = true;
+ 
+ out:
+@@ -79,9 +79,9 @@ int wl1251_ps_elp_wakeup(struct wl1251 *wl)
+ 	start = jiffies;
+ 	timeout = jiffies + msecs_to_jiffies(WL1251_WAKEUP_TIMEOUT);
+ 
+-	wl1251_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_WAKE_UP);
++	wl1251_write_elp(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_WAKE_UP);
+ 
+-	elp_reg = wl1251_read32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR);
++	elp_reg = wl1251_read_elp(wl, HW_ACCESS_ELP_CTRL_REG_ADDR);
+ 
+ 	/*
+ 	 * FIXME: we should wait for irq from chip but, as a temporary
+@@ -93,7 +93,7 @@ int wl1251_ps_elp_wakeup(struct wl1251 *wl)
+ 			return -ETIMEDOUT;
+ 		}
+ 		msleep(1);
+-		elp_reg = wl1251_read32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR);
++		elp_reg = wl1251_read_elp(wl, HW_ACCESS_ELP_CTRL_REG_ADDR);
+ 	}
+ 
+ 	wl1251_debug(DEBUG_PSM, "wakeup time: %u ms",
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index 0aceb91..4df1a20 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -81,6 +81,32 @@ static void wl1251_sdio_write(struct wl1251 *wl, int addr,
+ 	sdio_release_host(func);
+ }
+ 
++static void wl1251_sdio_read_elp(struct wl1251 *wl, int addr, u32 *val)
++{
++	int ret = 0;
++	struct sdio_func *func = wl_to_func(wl);
++
++	sdio_claim_host(func);
++	*val = sdio_readb(func, addr, &ret);
++	sdio_release_host(func);
++
++	if (ret)
++		wl1251_error("sdio_readb failed (%d)", ret);
++}
++
++static void wl1251_sdio_write_elp(struct wl1251 *wl, int addr, u32 val)
++{
++	int ret = 0;
++	struct sdio_func *func = wl_to_func(wl);
++
++	sdio_claim_host(func);
++	sdio_writeb(func, val, addr, &ret);
++	sdio_release_host(func);
++
++	if (ret)
++		wl1251_error("sdio_writeb failed (%d)", ret);
++}
++
+ static void wl1251_sdio_reset(struct wl1251 *wl)
+ {
+ }
+@@ -110,6 +136,8 @@ static void wl1251_sdio_set_power(bool enable)
+ static const struct wl1251_if_operations wl1251_sdio_ops = {
+ 	.read = wl1251_sdio_read,
+ 	.write = wl1251_sdio_write,
++	.write_elp = wl1251_sdio_write_elp,
++	.read_elp = wl1251_sdio_read_elp,
+ 	.reset = wl1251_sdio_reset,
+ 	.enable_irq = wl1251_sdio_enable_irq,
+ 	.disable_irq = wl1251_sdio_disable_irq,
 -- 
-Kalle Valo
+1.6.3.3
+
