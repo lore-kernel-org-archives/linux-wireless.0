@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 26.mail-out.ovh.net ([91.121.27.225]:48886 "HELO
-	26.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755532Ab0CHVom (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 16:44:42 -0500
-Message-ID: <4B956FC5.40202@free.fr>
-Date: Mon, 08 Mar 2010 22:44:37 +0100
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:61635 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755746Ab0CKJ6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 04:58:50 -0500
+Date: Thu, 11 Mar 2010 10:56:56 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: jirislaby@gmail.com, mickflemm@gmail.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Fix 64 bits TSF reading.
-References: <4B8AE8F1.40006@free.fr>	 <1267394932-11038-1-git-send-email-benoit.papillault@free.fr> <1268036228.3819.19.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1268036228.3819.19.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: Re: [RFC] mac80211,iwlwifi: disabling qos queues
+Message-ID: <20100311095656.GB4682@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com> <20100310152024.GB2969@dhcp-lab-161.englab.brq.redhat.com> <1268265597.4192.3.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1268265597.4192.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg a écrit :
-> On Sun, 2010-02-28 at 23:08 +0100, Benoit Papillault wrote:
->
->   
->> -	u64 tsf = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
->> +	u32 tsf_lower, tsf_upper;
->> +
->> +	/*
->> +	 * While reading TSF upper and then lower part, the clock is still
->> +	 * counting so the lower part can rollover just after reading the
->> +	 * upper part. In this case, we expect the lower part to be quite
->> +	 * small (let's say less than 100us) and we would just need to read
->> +	 * the upper part again to get the correct value.
->> +	 *
->> +	 * Tested on AR2425 (AR5001)
->> +	 */
->> +
->> +	tsf_upper = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
->> +	tsf_lower = ath5k_hw_reg_read(ah, AR5K_TSF_L32);
->> +
->> +	if (tsf_lower < 100)
->> +		tsf_upper = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
->>     
->
-> You would typically do
->
-> do {
->    read upper 1
->    read lower
->    read upper 2
-> } while (upper 1 != upper 2)
->
-> or so but that obviously incurs another read in most cases.
->
-> johannes
->
->   
-Indeed. I'll redo the patch. Derek has convinced me that accuracy is 
-sometimes more important than few register reads. So forget this patch.
+On Wed, Mar 10, 2010 at 03:59:57PM -0800, Johannes Berg wrote:
+> I have objections. Or maybe not, but I don't think this makes a whole
+> lot of sense since the BE queue should be programmed in the "qos turned
+> off" way normally. That may be broken right now, but to me your patches
+> seem like a workaround rather than a solution which would require an
+> analysis of what's really going on.
 
-Regards,
-Benoit
+I looked at this on the air. Everything is fine until device send QoS
+NULL frame (even with default parameters: normal ACK, TXOP request). 
+Then AP send two strange Probe Response frames and Disassociate frame
+with "Micheal MIC failure" error.
 
+So I think problem is with that, when WMM is configured device send
+QoS frames, which AP do not expect. So when AP does not support WMM, we
+should have QoS disabled. Currently in mac80211 there is no such option,
+so I add it. In kernels before 2.6.31 everything works fine, because
+drivers use own tx queue defaults with QoS disabled.
+
+I guess we can do something better with that, for example change
+ieee80211_set_wmm_default() to do:
+
+if (data->vif.type == NL80211_IFTYPE_AP || data->vif.type ==  NL80211_IFTYPE_ADHOC)
+	set_default_tx_queues();
+else
+	disable_qos();
+
+But I wrote fix to do not affect other drivers, which I'm unable
+to test and which may relay on current mac80211 behaviour. Fix is
+intended to be backported. During next development cycle I plan
+revise my patch and maybe send some more code changes related with
+that area.
+
+Stanislaw
