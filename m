@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42353 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753474Ab0CRNpR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 09:45:17 -0400
-Date: Thu, 18 Mar 2010 09:42:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Florian Mickler <florian@mickler.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Valdis.Kletnieks@vt.edu, Marcel Holtmann <marcel@holtmann.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v2] rename new rfkill sysfs knobs
-Message-ID: <20100318134215.GA17357@tuxdriver.com>
-References: <20100313095626.GB16038@core.coreip.homeip.net> <1268483465-11810-1-git-send-email-florian@mickler.org> <20100318115917.64b7268f@schatten.dmk.lab>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100318115917.64b7268f@schatten.dmk.lab>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47389 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754647Ab0CKVdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 16:33:15 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/5] compat-wireless: remove some uneeded header files
+Date: Thu, 11 Mar 2010 22:32:46 +0100
+Message-Id: <1268343167-2961-7-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 18, 2010 at 11:59:17AM +0100, Florian Mickler wrote:
-> On Sat, 13 Mar 2010 13:31:05 +0100
-> florian@mickler.org wrote:
-> 
-> > This patch renames the (never officially released) sysfs-knobs
-> > "blocked_hw" and "blocked_sw" to "hard" and "soft", as the hardware vs
-> > software conotation is misleading.
-> > 
-> > It also gets rid of not needed locks around u32-read-access.
-> > 
-> > Signed-off-by: Florian Mickler <florian@mickler.org>
-> 
-> Is this ok?
+wireless.h and wext.h must not be shipped with compat-wireless.
 
-Yes, fine.  Sorry, I got distracted by some other things.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/admin-update.sh |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks!
-
-John
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 29dd460..af4479a 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -21,7 +21,7 @@ GIT_COMPAT_URL="git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git"
+ INCLUDE_NET_BT="hci_core.h l2cap.h bluetooth.h rfcomm.h hci.h"
+ NET_BT_DIRS="bluetooth bluetooth/bnep bluetooth/cmtp bluetooth/rfcomm bluetooth/hidp"
+ 
+-INCLUDE_LINUX="ieee80211.h nl80211.h wireless.h"
++INCLUDE_LINUX="ieee80211.h nl80211.h"
+ INCLUDE_LINUX="$INCLUDE_LINUX pci_ids.h eeprom_93cx6.h"
+ INCLUDE_LINUX="$INCLUDE_LINUX ath9k_platform.h"
+ 
+@@ -32,7 +32,7 @@ INCLUDE_LINUX_SPI="wl12xx.h libertas_spi.h"
+ 
+ # The good new yummy stuff
+ INCLUDE_NET="cfg80211.h ieee80211_radiotap.h"
+-INCLUDE_NET="$INCLUDE_NET mac80211.h wext.h lib80211.h regulatory.h"
++INCLUDE_NET="$INCLUDE_NET mac80211.h lib80211.h regulatory.h"
+ 
+ # Pretty colors
+ GREEN="\033[01;32m"
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
