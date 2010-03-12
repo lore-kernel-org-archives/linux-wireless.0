@@ -1,28 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serv4.vsi.ru ([80.82.32.19]:53464 "EHLO serv4.vsi.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755645Ab0CXLBi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 07:01:38 -0400
-Received: from lnv.homelinux.net (76.89.32.95.dsl-dynamic.vsi.ru [95.32.89.76])
-	by serv4.vsi.ru (8.13.8+Sun/8.13.8) with ESMTP id o2O971jl023253
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 12:07:02 +0300 (MSK)
-Received: from nledovskikh.lnv.homelinux.net (nledovskikh.lnv.homelinux.net [192.168.2.2])
-	by lnv.homelinux.net (Postfix) with SMTP id 9505317F5A
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 12:07:01 +0300 (MSK)
-Date: Wed, 24 Mar 2010 12:06:45 +0300
-From: =?KOI8-R?Q?=EC=C5=C4=CF=D7=D3=CB=C9=C8_=EE=C9=CB=CF=CC=C1=CA_=F7=C1?=
-	 =?KOI8-R?Q?=CC=C5=D2=D8=C5=D7=C9=DE?= <nledovskih@mail.ru>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Mesh mode broken since 2.6.34-rc1
-Message-Id: <20100324120645.5b43757c.nledovskih@mail.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:59891 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752545Ab0CLGCG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 01:02:06 -0500
+MIME-Version: 1.0
+In-Reply-To: <20100312025330.GA15402@tuxdriver.com>
+References: <43e72e891003111722n4b4d5b6crf764dfe357ff8965@mail.gmail.com>
+	<69e28c911003111756h224ef6a9x622c979232b6698b@mail.gmail.com>
+	<20100312025330.GA15402@tuxdriver.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 12 Mar 2010 07:01:42 +0100
+Message-ID: <69e28c911003112201j6917d7b3t87cc981a0d9f03eb@mail.gmail.com>
+Subject: Re: cfg80211 conversion of all drivers
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	devel@linuxdriverproject.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh mode does not work any more. I have some x86 MPs with 2.6.33.1, which work fine. 
-But there are establishment problems with 2.6.34-rc1. 
-The peering status changes between LISTEN, OPN_SNT and HOLDING, but does not reach ESTAB.
+2010/3/12 John W. Linville <linville@tuxdriver.com>:
+> On Fri, Mar 12, 2010 at 02:56:31AM +0100, Gábor Stefanik wrote:
+>
+>> May I ask you why hostap is "to be killed"? What is the alternative?
+>
+> I think that is code for "replace it with something based on mac80211"...
+
+Isn't Prism2 a Fullmac chipset?
+
+Anyway, as I hoped for, it is not "kill in favor of orinoco" (which
+also has some support for Prism2, though not as good as hostap).
+
+>
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
+
+
 
 -- 
-Best regards, Nick.
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
