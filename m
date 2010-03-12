@@ -1,38 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:56487 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531Ab0C2UEp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34463 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932219Ab0CLLKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:04:45 -0400
-Received: by bwz1 with SMTP id 1so3870260bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 13:04:44 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-Date: Mon, 29 Mar 2010 22:04:36 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com> <m339zizz4o.fsf@intrepid.localdomain>
-In-Reply-To: <m339zizz4o.fsf@intrepid.localdomain>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003292204.37467.chunkeey@googlemail.com>
+	Fri, 12 Mar 2010 06:10:17 -0500
+Subject: Re: [RFC PATCH 1/1] mac80211: Add ieee80211_probereq_failed
+ function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1268135572-30722-2-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268135572-30722-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268135572-30722-2-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Mar 2010 03:10:06 -0800
+Message-ID: <1268392206.4828.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 29 March 2010 21:49:59 Krzysztof Halasa wrote:
-> The other thing is the meaning of country=0 in case of Mikrotik cards
-> (and maybe others). Perhaps they should get them back. I wonder if
-> their drivers break the FCC rules, allowing "0" (=US) cards to use
-> channels restricted in the US.
+On Tue, 2010-03-09 at 13:52 +0200, Juuso Oikarinen wrote:
+> Some hardware (i.e. the wl1271) are able to monitor beacons, and send
+> probe-requests to AP in case of beacon loss independently to try to recover
+> the connection. In these cases, it is useless for the mac80211 to send
+> further probe-requests.
+> 
+> Add a new function for the hardware to indicate that the AP has been lost.
+> This function immediately tears down the connection.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
+>  include/net/mac80211.h |   12 ++++++++++++
+>  net/mac80211/mlme.c    |   32 ++++++++++++++++++++++++++++++++
+>  2 files changed, 44 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 45d7d44..d9792e4 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -2370,6 +2370,18 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+>   */
+>  void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+>  
+> +/**
+> + * ieee80211_probereq_failed - inform hardware has lost connection with the AP
+> + *
+> + * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+> + *
+> + * When beacon filtering is enabled with IEEE80211_HW_BEACON_FILTERING and
+> + * IEEE80211_CONF_PS is set, the driver needs to inform with this function
+> + * whenever the hardware is not receiving beacons and the AP is not responding
+> + * to probe requests with this function.
+> + */
+> +void ieee80211_probereq_failed(struct ieee80211_vif *vif);
+> +
+>  /* Rate control API */
+>  
+>  /**
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 0ab284c..8f591a4 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -945,6 +945,38 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
+>  }
+>  EXPORT_SYMBOL(ieee80211_beacon_loss);
+>  
+> +void ieee80211_probereq_failed(struct ieee80211_vif *vif)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> +	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> +	struct ieee80211_local *local = sdata->local;
+> +	u8 bssid[ETH_ALEN];
+> +
+> +	mutex_lock(&ifmgd->mtx);
+> +	if (!ifmgd->associated) {
+> +		mutex_unlock(&ifmgd->mtx);
+> +		return;
+> +	}
+> +
+> +	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
 
-why should they? You can _easily_ edit the whole eeprom content
-and change the country code to your heart's delight.
+I think the actual work should be deferred to a workqueue struct item so
+that you don't get into locking trouble with drivers here.
 
-Just get a _tool_ called: ath_info and read the instructions how to use it.
-If you have doubts, you can also connect eeprom (24c16) to a i2c-bus and
-reprogram it, it's as simple as that....
+johannes
 
-Regards,
-	Chr
