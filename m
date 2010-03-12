@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:50609 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759765Ab0CPRDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 13:03:00 -0400
-Subject: Re: [PATCH] iwlwifi: Silence tfds_in_queue message
-From: reinette chatre <reinette.chatre@intel.com>
-To: Adel Gadllah <adel.gadllah@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>
-In-Reply-To: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
-References: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 16 Mar 2010 10:00:59 -0700
-Message-ID: <1268758859.2446.595.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:56330 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932205Ab0CLWsh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 17:48:37 -0500
+Date: Fri, 12 Mar 2010 14:48:28 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Florian Mickler <florian@mickler.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
+Message-ID: <20100312224828.GA18618@core.coreip.homeip.net>
+References: <1268416988-24862-1-git-send-email-florian@mickler.org>
+ <1268416988-24862-2-git-send-email-florian@mickler.org>
+ <1268416988-24862-3-git-send-email-florian@mickler.org>
+ <20100312182209.GB8736@core.coreip.homeip.net>
+ <20100312215743.7671d173@schatten.dmk.lab>
+ <20100312212025.GA17712@core.coreip.homeip.net>
+ <20100312233925.74effc7d@schatten.dmk.lab>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100312233925.74effc7d@schatten.dmk.lab>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-03-14 at 11:44 -0700, Adel Gadllah wrote:
-> From 83bf3f1dba41e3dccdef4fecfccb094559568342 Mon Sep 17 00:00:00 2001
-> From: Adel Gadllah <adel.gadllah@gmail.com>
-> Date: Sun, 14 Mar 2010 19:16:25 +0100
-> Subject: [PATCH] iwlwifi: Silence tfds_in_queue message
+On Fri, Mar 12, 2010 at 11:39:25PM +0100, Florian Mickler wrote:
+> On Fri, 12 Mar 2010 13:20:26 -0800
+> Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
 > 
-> Commit a239a8b47cc0e5e6d7416a89f340beac06d5edaa introduced a
-> noisy message, that fills up the log very fast.
+> > On Fri, Mar 12, 2010 at 09:57:43PM +0100, Florian Mickler wrote:
+> > > On Fri, 12 Mar 2010 10:22:09 -0800
+> > > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
+> > > 
+> > > > On Fri, Mar 12, 2010 at 07:03:08PM +0100, florian@mickler.org wrote:
+> > > > >  
+> > > > > +static ssize_t rfkill_hard_show(struct device *dev,
+> > > > > +				 struct device_attribute *attr,
+> > > > > +				 char *buf)
+> > > > > +{
+> > > > > +	struct rfkill *rfkill = to_rfkill(dev);
+> > > > > +	unsigned long flags;
+> > > > > +	u32 state;
+> > > > > +
+> > > > > +	spin_lock_irqsave(&rfkill->lock, flags);
+> > > > > +	state = rfkill->state;
+> > > > > +	spin_unlock_irqrestore(&rfkill->lock, flags);
+> > > > 
+> > > > Why exactly is this lock needed?
+> > > 
+> > > The rfkill state is updated from multiple contexts... Am I overlooking
+> > > smth obvious here?
+> > > 
+> > 
+> > You are not updating but reading... Are you concerned about seeing
+> > a partial write to u32? It does not happen.
+> > 
+> Hm.. You shure? On every arch that supports wireless drivers? 
 > 
-> The error seems not to be fatal (the connection is stable and
-> performance is ok), so make it IWL_DEBUG_TX rather than IWL_ERR.
+> I've just copied that code from the old sysfs state-file handler.
+> So I assumed that reading partial updated state can happen... Also I
+> just searched a little but did not find anything, cause i didn't know
+> where to look. Who garantees this? Is it a gcc thing? 
 > 
-> Cc: Reinette Chatre <reinette.chatre@intel.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: stable@kernel.org
-> 
-> Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+None of the arches would do byte-by-byte writes to a u32, they'd write
+dword at once. Also, even if they could, you are interested in a single
+flag (bit). You do realize that once you leave spinlock whatever you
+fetched is stale data and may not be trusted?
 
-Reinette
-
-
+-- 
+Dmitry
