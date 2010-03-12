@@ -1,59 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:61283 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753938Ab0C3Vuf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 17:50:35 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from ist.d-labs.de ([213.239.218.44]:50442 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934354Ab0CLSEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 13:04:04 -0500
+From: florian@mickler.org
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, <users@rt2x00.serialmonkey.com>,
-	<linux-wireless@vger.kernel.org>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 4/4] rt2x00: Add wakeup interrupt handler to rt2800pci.
-Date: Tue, 30 Mar 2010 23:50:26 +0200
-Message-Id: <1269985826-17438-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
-References: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
+Cc: "Marcel Holtmann" <marcel@holtmann.org>,
+	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Randy Dunlap" <rdunlap@xenotime.net>,
+	"Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	Florian Mickler <florian@mickler.org>
+Subject: [PATCH 2/2] enhance sysfs rfkill interface
+Date: Fri, 12 Mar 2010 19:03:08 +0100
+Message-Id: <1268416988-24862-3-git-send-email-florian@mickler.org>
+In-Reply-To: <1268416988-24862-2-git-send-email-florian@mickler.org>
+References: <1268416988-24862-1-git-send-email-florian@mickler.org>
+ <1268416988-24862-2-git-send-email-florian@mickler.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed to wake up the device automatically for receiving beacons,
-and is required for proper powersave handling.
+This commit introduces two new sysfs knobs.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+/sys/class/rfkill/rfkill[0-9]+/hard: (ro)
+	hardblock kill state
+/sys/class/rfkill/rfkill[0-9]+/soft: (rw)
+	softblock kill state
+
+Signed-off-by: Florian Mickler <florian@mickler.org>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ Documentation/ABI/stable/sysfs-class-rfkill |   25 ++++++++++++
+ net/rfkill/core.c                           |   57 +++++++++++++++++++++++++++
+ 2 files changed, 82 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 91cce2d..357873c 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1006,6 +1006,14 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
- 	}
+diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
+index 3884344..097f522 100644
+--- a/Documentation/ABI/stable/sysfs-class-rfkill
++++ b/Documentation/ABI/stable/sysfs-class-rfkill
+@@ -40,3 +40,28 @@ Description: 	Whether the soft blocked state is initialised from non-volatile
+ Values: 	A numeric value.
+ 		0: false
+ 		1: true
++
++
++What:		/sys/class/rfkill/rfkill[0-9]+/hard
++Date:		12-March-2010
++KernelVersion	v2.6.34
++Contact:	linux-wireless@vger.kernel.org
++Description: 	Current hardblock state. This file is read only.
++Values: 	A numeric value.
++		0: inactive
++			The transmitter is (potentially) active.
++		1: active
++			The transmitter is forced off by something outside of
++			the driver's control.
++
++
++What:		/sys/class/rfkill/rfkill[0-9]+/soft
++Date:		12-March-2010
++KernelVersion	v2.6.34
++Contact:	linux-wireless@vger.kernel.org
++Description:	Current softblock state. This file is read and write.
++Values: 	A numeric value.
++		0: inactive
++			The transmitter is (potentially) active.
++		1: active
++			The transmitter is turned off by software.
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index c218e07..38a0358 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -628,6 +628,61 @@ static ssize_t rfkill_persistent_show(struct device *dev,
+ 	return sprintf(buf, "%d\n", rfkill->persistent);
  }
  
-+static void rt2800pci_wakeup(struct rt2x00_dev *rt2x00dev)
++static ssize_t rfkill_hard_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
 +{
-+	struct ieee80211_conf conf = { .flags = 0 };
-+	struct rt2x00lib_conf libconf = { .conf = &conf };
++	struct rfkill *rfkill = to_rfkill(dev);
++	unsigned long flags;
++	u32 state;
 +
-+	rt2800_config(rt2x00dev, &libconf, IEEE80211_CONF_CHANGE_PS);
++	spin_lock_irqsave(&rfkill->lock, flags);
++	state = rfkill->state;
++	spin_unlock_irqrestore(&rfkill->lock, flags);
++
++	return sprintf(buf, "%d\n", (state & RFKILL_BLOCK_HW) ? 1 : 0 );
 +}
 +
- static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- {
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
-@@ -1030,6 +1038,9 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS))
- 		rt2800pci_txdone(rt2x00dev);
- 
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AUTO_WAKEUP))
-+		rt2800pci_wakeup(rt2x00dev);
++static ssize_t rfkill_soft_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct rfkill *rfkill = to_rfkill(dev);
++	unsigned long flags;
++	u32 state;
 +
- 	return IRQ_HANDLED;
- }
++	spin_lock_irqsave(&rfkill->lock, flags);
++	state = rfkill->state;
++	spin_unlock_irqrestore(&rfkill->lock, flags);
++
++	return sprintf(buf, "%d\n", (state & RFKILL_BLOCK_SW) ? 1 : 0 );
++}
++
++static ssize_t rfkill_soft_store(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct rfkill *rfkill = to_rfkill(dev);
++	unsigned long state;
++	int err;
++
++	if (!capable(CAP_NET_ADMIN))
++		return -EPERM;
++
++	err = strict_strtoul(buf, 0, &state);
++	if (err)
++		return err;
++
++	if (state > 1 )
++		return -EINVAL;
++
++	mutex_lock(&rfkill_global_mutex);
++	rfkill_set_block(rfkill, state);
++	mutex_unlock(&rfkill_global_mutex);
++
++	return err ?: count;
++}
++
+ static u8 user_state_from_blocked(unsigned long state)
+ {
+ 	if (state & RFKILL_BLOCK_HW)
+@@ -700,6 +755,8 @@ static struct device_attribute rfkill_dev_attrs[] = {
+ 	__ATTR(persistent, S_IRUGO, rfkill_persistent_show, NULL),
+ 	__ATTR(state, S_IRUGO|S_IWUSR, rfkill_state_show, rfkill_state_store),
+ 	__ATTR(claim, S_IRUGO|S_IWUSR, rfkill_claim_show, rfkill_claim_store),
++	__ATTR(soft, S_IRUGO|S_IWUSR, rfkill_soft_show, rfkill_soft_store),
++	__ATTR(hard, S_IRUGO, rfkill_hard_show, NULL),
+ 	__ATTR_NULL
+ };
  
 -- 
-1.7.0.3
+1.6.6.1
 
