@@ -1,69 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:38566 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752066Ab0CXWla (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 18:41:30 -0400
-Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
-In-Reply-To: <20100324223719.GA32563@tuxdriver.com>
-References: <4BAA73D2.1000301@oracle.com>
-	 <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
-	 <1269466426.6935.8.camel@jlt3.sipsolutions.net>
-	 <1269466948.2446.3216.camel@rchatre-DESK>
-	 <20100324223719.GA32563@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Mar 2010 15:41:29 -0700
-Message-ID: <1269470489.2446.3217.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34779 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751667Ab0CLCzc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 21:55:32 -0500
+Date: Thu, 11 Mar 2010 21:53:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	devel@linuxdriverproject.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: cfg80211 conversion of all drivers
+Message-ID: <20100312025330.GA15402@tuxdriver.com>
+References: <43e72e891003111722n4b4d5b6crf764dfe357ff8965@mail.gmail.com>
+ <69e28c911003111756h224ef6a9x622c979232b6698b@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c911003111756h224ef6a9x622c979232b6698b@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-24 at 15:37 -0700, John W. Linville wrote:
-> On Wed, Mar 24, 2010 at 02:42:28PM -0700, reinette chatre wrote:
-> > On Wed, 2010-03-24 at 14:33 -0700, Johannes Berg wrote:
-> > > On Wed, 2010-03-24 at 17:23 -0400, John W. Linville wrote:
-> > > > drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
-> > > > drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
-> > > > 
-> > > > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> > > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > > > ---
-> > > >  drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
-> > > >  1 files changed, 2 insertions(+), 0 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-> > > > index b6a64d8..2fa30df 100644
-> > > > --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-> > > > +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-> > > > @@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
-> > > >  #define BA_TIMEOUT_CNT (5)
-> > > >  #define BA_TIMEOUT_MAX (16)
-> > > >  
-> > > > +#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
-> > > >  /**
-> > > >   * iwl_good_ack_health - checks for ACK count ratios, BA timeout
-> > > > retries.
-> > > 
-> > > I thought we had a patch moving it?
-> > > 
-> > 
-> > We do, but it has not been pushed upstream yet. 
-> > 
-> > John, I'd prefer
-> > http://viggo.jf.intel.com/~wifi/repos.git/?p=iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1 
-> > 
-> > Should we push it upstream asap or can it wait until our next series
-> > goes out after all our validation cycles pass?
-> 
-> I can't see that link.  How does the patch differ?
+On Fri, Mar 12, 2010 at 02:56:31AM +0100, Gábor Stefanik wrote:
 
-I am very sorry, here is the correct link:
-http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1
+> May I ask you why hostap is "to be killed"? What is the alternative?
 
-Reinette
+I think that is code for "replace it with something based on mac80211"...
 
-
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
