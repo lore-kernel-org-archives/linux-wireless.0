@@ -1,130 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:52032 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342Ab0CUJkg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Mar 2010 05:40:36 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] ssb: Implement virtual SPROM on disk
-Date: Sun, 21 Mar 2010 10:40:30 +0100
-Cc: John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <4ba564fb.PfAZePu8tStyxs44%Larry.Finger@lwfinger.net>
-In-Reply-To: <4ba564fb.PfAZePu8tStyxs44%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003211040.31118.mb@bu3sch.de>
+Received: from fg-out-1718.google.com ([72.14.220.153]:53403 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932482Ab0CLK2t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 05:28:49 -0500
+Received: by fg-out-1718.google.com with SMTP id 16so470437fgg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Mar 2010 02:28:47 -0800 (PST)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/4 v2] wl1251: make local symbols static
+Date: Fri, 12 Mar 2010 12:28:41 +0200
+Message-Id: <1268389721-3375-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 21 March 2010 01:14:51 Larry Finger wrote:
-> Some recent BCM43XX devices lack an on-board SPROM. The pertinent data
-> from the SPROM could be included in the kernel; however, this presents
-> a problem in the generation of a unique, reproducible MAC address. The
-> solution has been to create a utility that generates a virtual SPROM
-> image with a random MAC address. This image is stored in the firmware
-> area, and loaded using the asyncronous firmware load facility.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> Michael,
-> 
-> I think this patch eliminates the need for the fallback sprom code; however,
-> I have not touched that facility yet.
-> 
-> Larry
-> ---
-> 
-> Index: wireless-testing/drivers/ssb/pci.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/ssb/pci.c
-> +++ wireless-testing/drivers/ssb/pci.c
-> @@ -19,6 +19,7 @@
->  #include <linux/ssb/ssb_regs.h>
->  #include <linux/pci.h>
->  #include <linux/delay.h>
-> +#include <linux/firmware.h>
->  
->  #include "ssb_private.h"
->  
-> @@ -613,6 +614,39 @@ static int sprom_extract(struct ssb_bus
->  	return 0;
->  }
->  
-> +static int ssb_get_vsprom(struct device *dev, u16 *buf, size_t size)
-> +{
-> +	/* Use the firmware load facility to get the disk image of an SPROM */
-> +	const struct firmware *blob;
-> +	int err;
-> +	int i;
-> +
-> +	err = request_firmware(&blob, "ssb/vsprom_image", dev);
+Make local functions and data static, also constify
+some structures. While at it, clean up unneeded includes.
 
-Well, this has the problem every synchronous firmware fetching mechanism has:
-bootup with builtin module.
-I think it should be done asynchronously.
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>
+---
+John, I haven't added you to 'To:' when sent patches 2-4 of this
+series as SubmittingPatches requires (sent to the mailing list
+only), let me know in case I need to resend them.
 
-> +	if (err) {
-> +		printk(KERN_ERR "ssb: The BCM43XX device does not have an "
-> +		       "SPROM built in, and the virtual SPROM file is not"
-> +		       " available.\n");
-> +		printk(KERN_ERR "ssb: Please go to "
-> +		       "http://wireless.kernel.org/en/users/Drivers/b43 "
-> +		       "and download the utility to create the file.\n");
-> +		return err;
-> +	}
-> +	if (blob->size != size * 2) {
-> +		printk(KERN_ERR "ssb: The virtual SPROM file has the wrong"
-> +		       " size\n");
-> +		return -ENOENT;
-> +	}
-> +	for (i = 0; i < size; i++)
-> +		buf[i] = blob->data[2 * i + 1] << 8 | blob->data[2 * i];
-> +	err = sprom_check_crc(buf, size);
-> +	if (err) {
-> +		printk(KERN_ERR "ssb: Invalid CRC for virtual SPROM\n");
-> +		return err;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int ssb_pci_sprom_get(struct ssb_bus *bus,
->  			     struct ssb_sprom *sprom)
->  {
-> @@ -620,8 +654,18 @@ static int ssb_pci_sprom_get(struct ssb_
->  	int err = -ENOMEM;
->  	u16 *buf;
->  
-> -	if (!ssb_is_sprom_available(bus))
-> -		return -ENODEV;
-> +	if (!ssb_is_sprom_available(bus)) {
-> +		buf = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
-> +			      GFP_KERNEL);
-> +		if (!buf)
-> +			return -ENOMEM;
-> +		bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
-> +		if (ssb_get_vsprom(&bus->host_pci->dev, buf, bus->sprom_size)) {
-> +			err = -ENODEV;
-> +			goto out_free;
-> +		}
-> +		goto extract;
-> +	}
->  
->  	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
->  	if (!buf)
-> @@ -653,6 +697,7 @@ static int ssb_pci_sprom_get(struct ssb_
->  				   " SPROM CRC (corrupt SPROM)\n");
->  		}
->  	}
-> +extract:
->  	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
->  
->  out_free:
-> 
-> 
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |   24 +++++++++---------------
+ 1 files changed, 9 insertions(+), 15 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index 9423f22..cfca232 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -20,20 +20,11 @@
+  * Copyright (C) 2009 Bob Copeland (me@bobcopeland.com)
+  */
+ #include <linux/module.h>
+-#include <linux/crc7.h>
+ #include <linux/mod_devicetable.h>
+-#include <linux/irq.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
+-#include <linux/platform_device.h>
+ 
+ #include "wl1251.h"
+-#include "wl12xx_80211.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_ps.h"
+-#include "wl1251_io.h"
+-#include "wl1251_tx.h"
+-#include "wl1251_debugfs.h"
+ 
+ #ifndef SDIO_VENDOR_ID_TI
+ #define SDIO_VENDOR_ID_TI		0x104c
+@@ -65,7 +56,8 @@ static const struct sdio_device_id wl1251_devices[] = {
+ MODULE_DEVICE_TABLE(sdio, wl1251_devices);
+ 
+ 
+-void wl1251_sdio_read(struct wl1251 *wl, int addr, void *buf, size_t len)
++static void wl1251_sdio_read(struct wl1251 *wl, int addr,
++			     void *buf, size_t len)
+ {
+ 	int ret;
+ 	struct sdio_func *func = wl_to_func(wl);
+@@ -77,7 +69,8 @@ void wl1251_sdio_read(struct wl1251 *wl, int addr, void *buf, size_t len)
+ 	sdio_release_host(func);
+ }
+ 
+-void wl1251_sdio_write(struct wl1251 *wl, int addr, void *buf, size_t len)
++static void wl1251_sdio_write(struct wl1251 *wl, int addr,
++			      void *buf, size_t len)
+ {
+ 	int ret;
+ 	struct sdio_func *func = wl_to_func(wl);
+@@ -89,7 +82,7 @@ void wl1251_sdio_write(struct wl1251 *wl, int addr, void *buf, size_t len)
+ 	sdio_release_host(func);
+ }
+ 
+-void wl1251_sdio_reset(struct wl1251 *wl)
++static void wl1251_sdio_reset(struct wl1251 *wl)
+ {
+ }
+ 
+@@ -111,11 +104,11 @@ static void wl1251_sdio_disable_irq(struct wl1251 *wl)
+ 	sdio_release_host(func);
+ }
+ 
+-void wl1251_sdio_set_power(bool enable)
++static void wl1251_sdio_set_power(bool enable)
+ {
+ }
+ 
+-struct wl1251_if_operations wl1251_sdio_ops = {
++static const struct wl1251_if_operations wl1251_sdio_ops = {
+ 	.read = wl1251_sdio_read,
+ 	.write = wl1251_sdio_write,
+ 	.reset = wl1251_sdio_reset,
+@@ -123,7 +116,8 @@ struct wl1251_if_operations wl1251_sdio_ops = {
+ 	.disable_irq = wl1251_sdio_disable_irq,
+ };
+ 
+-int wl1251_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
++static int wl1251_sdio_probe(struct sdio_func *func,
++			     const struct sdio_device_id *id)
+ {
+ 	int ret;
+ 	struct wl1251 *wl;
 -- 
-Greetings, Michael.
+1.6.3.3
+
