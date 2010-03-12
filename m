@@ -1,98 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53740 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757129Ab0CLMAW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 07:00:22 -0500
-Subject: Re: [RFC PATCH 1/2] cfg80211: Add roaming trigger support to
- nl80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1268393671-5498-2-git-send-email-juuso.oikarinen@nokia.com>
-References: <1268393671-5498-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268393671-5498-2-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 12 Mar 2010 04:00:13 -0800
-Message-ID: <1268395213.4828.27.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:60656 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755948Ab0CLDCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Mar 2010 22:02:50 -0500
+Message-ID: <4B99AED3.4000204@openwrt.org>
+Date: Fri, 12 Mar 2010 04:02:43 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: fix BUG_ON triggered by PAE frames
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-12 at 13:34 +0200, Juuso Oikarinen wrote:
-> Add support for basic configuration of a roaming RSSI trigger to the nl80211
-> interface, and basic support for notifying about trigger events.
+When I initially stumbled upon sequence number problems with PAE frames
+in ath9k, I submitted a patch to remove all special cases for PAE
+frames and let them go through the normal transmit path.
+Out of concern about crypto incompatibility issues, this change was
+merged instead:
 
-Cool.
+commit 6c8afef551fef87a3bf24f8a74c69a7f2f72fc82
+Author: Sujith <Sujith.Manoharan@atheros.com>
+Date:   Tue Feb 9 10:07:00 2010 +0530
 
-> +	NL80211_ATTR_RTRIG_RSSI_STATE,
-> +	NL80211_ATTR_RTRIG_RSSI_THOLD,
-> +	NL80211_ATTR_RTRIG_RSSI_HYST,
-> +	NL80211_ATTR_RTRIG_LEVEL,
+    ath9k: Fix sequence numbers for PAE frames
 
-IMHO we should have one NL80211_ATTR_ROAM_TRIGGER_CONFIG or something
-like that which nests NL80211_RTRIG_ATTR_* from a separate attribute
-namespace (note the transposition to tell which namespace they belong
-to) so it's easier to understand when extended.
+After a lot of testing, I'm able to reliably trigger a driver crash on
+rekeying with current versions with this change in place.
+It seems that the driver does not support sending out regular MPDUs with
+the same TID while an A-MPDU session is active.
+This leads to duplicate entries in the TID Tx buffer, which hits the
+following BUG_ON in ath_tx_addto_baw():
 
-> +enum nl80211_rtrig_rssi_state {
-> +	NL80211_RTRIG_RSSI_DISABLED,
-> +	NL80211_RTRIG_RSSI_ENABLED,
-> +};
+    index  = ATH_BA_INDEX(tid->seq_start, bf->bf_seqno);
+    cindex = (tid->baw_head + index) & (ATH_TID_MAX_BUFS - 1);
 
-Shouldn't _STATE be implicitly enabled when you give the required
-attributes? Missing docstrings too.
+    BUG_ON(tid->tx_buf[cindex] != NULL);
 
-Also overall I'm not sure this should be called roam_trigger at all. It
-will eventually trigger roaming in userspace, but I think the actual
-feature it implements in the kernel/device side is better called
-something like "connection quality monitoring".
+I believe until we actually have a reproducible case of an
+incompatibility with another AP using no PAE special cases, we should
+simply get rid of this mess.
 
-> +/**
-> + * enum ieee80211_roam_trigger_level - supported frequency bands
+This patch completely fixes my crash issues in STA mode and makes it
+stay connected without throughput drops or connectivity issues even
+when the AP is configured to a very short group rekey interval.
 
-??
-
-> + * @IEEE80211_ROAM_TRIGGER_LOW: current RSSI level is below the threshold
-> + * @IEEE80211_ROAM_TRIGGER_HIGH: current RSSI level is above the threshold
-> + */
-
-> +
-> +enum ieee80211_roam_trigger_level {
-> +	IEEE80211_ROAM_TRIGGER_LEVEL_LOW,
-> +	IEEE80211_ROAM_TRIGGER_LEVEL_HIGH,
-> +};
-
-You should just reuse the nl80211 enum.
-
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index 7fdb940..c8156d6 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -713,6 +713,18 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
->  				wdev->ps = false;
->  			}
->  
-> +		wdev->rtrig_rssi = false;
-> +		wdev->rtrig_rssi_thold = -75;
-> +		wdev->rtrig_rssi_hyst = 2;
-> +		if (rdev->ops->set_roam_trigger)
-> +			if (rdev->ops->set_roam_trigger(wdev->wiphy, dev,
-> +							wdev->rtrig_rssi,
-> +							wdev->rtrig_rssi_thold,
-> +							wdev->rtrig_rssi_hyst)) {
-> +				/* assume this means it's off */
-> +				wdev->rtrig_rssi = false;
-> +			}
-
-I'm not sure I agree this should be enabled by default ... it needs
-software listening to it anyway so that software can just enable it.
-
-Also, you don't need to keep track of rtrig_rssi etc. in the wdev since
-you never read those variables again, unless you want to add code to
-export them again when the interface configuration is dumped out.
-
-Either way, it's a good start, thanks for doing this work.
-
-johannes
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+---
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1353,25 +1353,6 @@ static enum ath9k_pkt_type get_hw_packet
+ 	return htype;
+ }
+ 
+-static bool is_pae(struct sk_buff *skb)
+-{
+-	struct ieee80211_hdr *hdr;
+-	__le16 fc;
+-
+-	hdr = (struct ieee80211_hdr *)skb->data;
+-	fc = hdr->frame_control;
+-
+-	if (ieee80211_is_data(fc)) {
+-		if (ieee80211_is_nullfunc(fc) ||
+-		    /* Port Access Entity (IEEE 802.1X) */
+-		    (skb->protocol == cpu_to_be16(ETH_P_PAE))) {
+-			return true;
+-		}
+-	}
+-
+-	return false;
+-}
+-
+ static int get_hw_crypto_keytype(struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+@@ -1696,7 +1677,7 @@ static void ath_tx_start_dma(struct ath_
+ 			goto tx_done;
+ 		}
+ 
+-		if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && !is_pae(skb)) {
++		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
+ 			/*
+ 			 * Try aggregation if it's a unicast data frame
+ 			 * and the destination is HT capable.
