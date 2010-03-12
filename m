@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:49101 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466Ab0CIGp7 (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:45534 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756179Ab0CLI73 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 01:45:59 -0500
-Received: by gyh3 with SMTP id 3so1246388gyh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 22:45:59 -0800 (PST)
+	Fri, 12 Mar 2010 03:59:29 -0500
+Message-ID: <4B9A026D.1030806@gmail.com>
+Date: Fri, 12 Mar 2010 09:59:25 +0100
+From: Till Kamppeter <till.kamppeter@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201003091456.37577.br1@einfach.org>
-References: <20100308025841.7460.69949.stgit@void>
-	 <b6c5339f1003081910t745c3e5ftafbedd1298487875@mail.gmail.com>
-	 <43e72e891003081932h49340b6aia3fb6fd1e60ae8d7@mail.gmail.com>
-	 <201003091456.37577.br1@einfach.org>
-Date: Tue, 9 Mar 2010 01:45:58 -0500
-Message-ID: <b6c5339f1003082245j2ef6ada1ka454cc379b26a695@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: fix I/Q calibration (for real)
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	lsb-discuss@lists.linux-foundation.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>
+Subject: Re: Linux wireless GSoC 2010 project ideas
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com> <20100128231545.GH18683@nowhere> <43e72e891001281523s56707279x896ab059e6d4e530@mail.gmail.com> <4B62231F.5080104@gmail.com> <20100309224347.GD5058@nowhere>
+In-Reply-To: <20100309224347.GD5058@nowhere>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 9, 2010 at 12:56 AM, Bruno Randolf <br1@einfach.org> wrote:
-> On Tuesday 09 March 2010 12:32:33 Luis R. Rodriguez wrote:
->> Perhaps a little more elaboration on the commit log on the impact and
->> how this helps and how much would help.
+Can someone post this project idea on the ideas list today (marking that 
+it comes from a student). This could support our application as 
+mentoring organization.
+
+    Till
+
+On 03/09/2010 11:43 PM, Frederic Weisbecker wrote:
+> On Fri, Jan 29, 2010 at 12:51:59AM +0100, Till Kamppeter wrote:
+>> No problem for students to suggest topics. We are not restricted to
+>> wireless in terms of kernel. We support kernel projects in general.
+>>
+>> Please give your suggestion as answer to this e-mail, doing "Reply to
+>> all", as I am not a kernel export, the other participants of this thread
+>> should have a look at the student's project ideas and help finding
+>> mentors.
+>>
+>>     Till
 >
-> ok. to stop the confusion, i'll add cc: stable.
+>
+>
+> Ok, I hope it's not too late.
+> Here is one subject that I would like to apply for:
+>
+>
+> = Improving tracing in perf events / ftrace =
+>
+>
+> Using trace events under perf events is still a young feature
+> and needs various improvements.
+>
+> - Syscall events can carry only raw values and addresses.
+> We need to make them "aware" of strings and structures contents
+> from userspace.
+>
+> - Make function / function graph tracers usable by perf
+>
+> - Optimize tracing fast-path
+>
+> - Improve perf tools to better handle trace events scalability
+>
+> - Provide new perf tools that exploit trace events (scheduler
+>    migration analysis, etc...)
+>
+> - Implement a per context excluding (eg: exclude irqs, exclude functions, etc...)
+>
+> - There are always things to do there.
+>
+>
+> Of course, each of these elements require a lot of work,
+> so not all of them can be done in two months, and some
+> of them can be started already before the summer.
+>
+>
 
-:) thanks!
-
-FWIW, I tested the patches, and they worked well for my not-very-thorough
-tests.  I think there was a regression in 2.6.32 time-frame that I never
-pinned down, hopefully this corrects some things.  I did not test the 5211
-stuff though, that one patch is probably not for stable unless someone can
-test that.
-
--- 
-Bob Copeland %% www.bobcopeland.com
