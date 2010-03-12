@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22725 "EHLO mga11.intel.com"
+Received: from smtp.ispras.ru ([83.149.198.201]:42743 "EHLO smtp.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753960Ab0CYUpB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 16:45:01 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 20/22] iwlwifi: remove "\n" from module parameter description
-Date: Thu, 25 Mar 2010 13:44:48 -0700
-Message-Id: <1269549890-19195-21-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
-References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
+	id S1755849Ab0CLJiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 04:38:17 -0500
+Message-ID: <4B9A0B87.9010001@ispras.ru>
+Date: Fri, 12 Mar 2010 12:38:15 +0300
+From: Denis Silakov <silakov@ispras.ru>
+MIME-Version: 1.0
+To: Till Kamppeter <till.kamppeter@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	lsb-discuss@lists.linux-foundation.org,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>
+Subject: Re: [lsb-discuss] Linux wireless GSoC 2010 project ideas
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>	<20100128231545.GH18683@nowhere>	<43e72e891001281523s56707279x896ab059e6d4e530@mail.gmail.com>	<4B62231F.5080104@gmail.com> <20100309224347.GD5058@nowhere> <4B9A026D.1030806@gmail.com>
+In-Reply-To: <4B9A026D.1030806@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Added this item to '2010 GSoC Kernel work' page:
 
-Remove the "\n" from following module parameter description:
- - enable wifi/bluetooth co-exist
- - led mode: 0=blinking, 1=On(RF On)/Off(RF Off), (default 0)
-to be consistence with the rest of iwlagn/iwlcore module parameters format.
+https://www.linuxfoundation.org/collaborate/workgroups/gsoc/2010-gsoc-kernel-work
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-led.c  |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On 03/12/10 11:59, Till Kamppeter wrote:
+> Can someone post this project idea on the ideas list today (marking that 
+> it comes from a student). This could support our application as 
+> mentoring organization.
+>
+>     Till
+>   
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 6fe7853..d152198 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -65,7 +65,7 @@ MODULE_LICENSE("GPL");
-  */
- static bool bt_coex_active = true;
- module_param(bt_coex_active, bool, S_IRUGO);
--MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist\n");
-+MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
- 
- static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
- 	{COEX_CU_UNASSOC_IDLE_RP, COEX_CU_UNASSOC_IDLE_WP,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index a6f9c91..db5bfcb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -46,7 +46,7 @@
- static int led_mode;
- module_param(led_mode, int, S_IRUGO);
- MODULE_PARM_DESC(led_mode, "led mode: 0=blinking, 1=On(RF On)/Off(RF Off), "
--			   "(default 0)\n");
-+			   "(default 0)");
- 
- 
- static const struct {
 -- 
-1.6.3.3
+Regards,
+Denis.
 
