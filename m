@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from katherina.student.utwente.nl ([130.89.168.160]:59012 "EHLO
-	katherina.student.utwente.nl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754405Ab0C3Ucn (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:50188 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753782Ab0CLCQ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 16:32:43 -0400
-Date: Tue, 30 Mar 2010 22:32:40 +0200
-From: Matthijs Kooijman <matthijs@stdin.nl>
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] [RFC] rt2500pci: fix powersaving
-Message-ID: <20100330203239.GA21160@katherina.student.utwente.nl>
-References: <201003290956.54234.linux@rainbow-software.org>
- <201003301433.55355.linux@rainbow-software.org>
- <20100330125620.GA2173@katherina.student.utwente.nl>
- <201003302209.23334.linux@rainbow-software.org>
+	Thu, 11 Mar 2010 21:16:59 -0500
+Received: by fg-out-1718.google.com with SMTP id l26so179698fgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2010 18:16:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="gBBFr7Ir9EOA20Yy"
-In-Reply-To: <201003302209.23334.linux@rainbow-software.org>
+In-Reply-To: <1268343167-2961-3-git-send-email-hauke@hauke-m.de>
+References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+	<1268343167-2961-3-git-send-email-hauke@hauke-m.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 12 Mar 2010 03:16:38 +0100
+Message-ID: <69e28c911003111816m4bf0d04dnc94a387b3d42f05b@mail.gmail.com>
+Subject: Re: [PATCH 1/5] compat-wireless: rename {free,alloc}_ieee80211 to
+	{free,alloc}_libipw
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Mar 11, 2010 at 10:32 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> {free,alloc}_ieee80211 are also defined by ieee80211 module for example
+> used on kernel 2.6.26. Without this patch ipwlib will not load on this
+> kernel, because of a duplicate symbol.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
---gBBFr7Ir9EOA20Yy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I believe this should be done upstream for 2.6.35 as well - this
+"_ieee80211" is not a reference to the name of  the IEEE 802.11
+specification, but rather to the old name of libipw - "ieee80211";
+this was somehow missed during the libipw rename.
 
-Hi Ondrej,
-
-do you need testing of your patches? If so, let me know and I'll give them a
-go.
-
-Gr.
-
-Matthijs
-
---gBBFr7Ir9EOA20Yy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkuyX+cACgkQz0nQ5oovr7w0wACfXI0tGVy83fuWyMA5J/Ot3MXV
-NZYAoMD9SU7VK9X6SWRzfbyznBmMgIUs
-=avC7
------END PGP SIGNATURE-----
-
---gBBFr7Ir9EOA20Yy--
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
