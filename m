@@ -1,51 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1771 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752714Ab0CRGVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 02:21:44 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Geoff Levand <geoffrey.levand@am.sony.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pavel Roskin <proski@gnu.org>,
-	David Gibson <hermes@gibson.dropbear.id.au>,
-	Corey Thomas <coreythomas@charter.net>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	"David S. Miller" <davem@davemloft.net>, linuxppc-dev@ozlabs.org,
-	cbe-oss-dev@ozlabs.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net
-Subject: [PATCH v2 0/7] wireless: Use macros from wireless.h
-Date: Wed, 17 Mar 2010 23:21:33 -0700
-Message-Id: <cover.1268892663.git.joe@perches.com>
+Received: from lennier.cc.vt.edu ([198.82.162.213]:33497 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753786Ab0CLVtx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 16:49:53 -0500
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Weird wireless/wpa_supplicant screw-up.
+In-Reply-To: Your message of "Fri, 12 Mar 2010 03:14:41 PST."
+             <1268392481.4828.7.camel@jlt3.sipsolutions.net>
+From: Valdis.Kletnieks@vt.edu
+References: <7197.1268086939@localhost>
+            <1268392481.4828.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1268430568_4034P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Fri, 12 Mar 2010 16:49:28 -0500
+Message-ID: <5220.1268430568@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the STD_IW_HANDLER macro from orinoco to wireless.h
-Use the wireless.h macros in various wireless files
-Remove local #defines of IW_IOCTL
+--==_Exmh_1268430568_4034P
+Content-Type: text/plain; charset=us-ascii
 
-Joe Perches (7):
-  wireless.h: Add STD_IW_HANDLER macro
-  net/wireless/wext_core.c: Use IW_IOCTL_IDX macro
-  net/wireless/wext-core.c: Use IW_EVENT_IDX macro
-  drivers/net/wireless: Use STD_IW_HANDLER macro
-  drivers/net: Remove local #define IW_IOCTL, use STD_IW_HANDLER
-  orinoco/wext.c: Remove local #define STD_IW_HANDLER
-  wireless.h: Use SIOCIWFIRST not SIOCSIWCOMMIT for range check
+On Fri, 12 Mar 2010 03:14:41 PST, Johannes Berg said:
+> On Mon, 2010-03-08 at 17:22 -0500, Valdis.Kletnieks@vt.edu wrote:
+> > (This could be user error/userspace bug, feel free to point me in the right
+> > direction if you think so.  Hopefully somebody knows what I've broken this
+> > time...)
+> > 
+> > Fedora Rawhide as of this morning, 2.6.33-mmotm0304 kernel, wpa_supplicant-0.6.8-8.fc13.x86_64
+> > wireless-tools-29-5.1.fc12.x86_64.  Dell Latitude E6500, Intel 5100AGN card.
+> > 
+> > So I finally get a few spare cycles, and re-try getting WPA2 working on our
+> > enterprise wireless network, and wpa_supplicant reports it completed
+> > successfully and set the keys,
+> 
+> and does it work? The iwlist stuff could just be a reporting error...
 
- drivers/net/ps3_gelic_wireless.c       |   35 ++++----
- drivers/net/wireless/ipw2x00/ipw2200.c |   83 ++++++++++----------
- drivers/net/wireless/orinoco/wext.c    |    2 -
- drivers/net/wireless/ray_cs.c          |   40 +++++-----
- drivers/net/wireless/wl3501_cs.c       |   52 ++++++------
- include/linux/wireless.h               |    4 +-
- net/wireless/wext-core.c               |  134 ++++++++++++++++----------------
- 7 files changed, 174 insertions(+), 176 deletions(-)
+OK, getting closer ;)
+
+in net/wireless/wext-compat.c, we have this in cfg80211_wext_giwencode()
+after I add some printk's:
+
+printk(KERN_INFO "In giwencode idx=%d keys=%x cipher=%x\n", idx, wdev->wext.keys, wdev->wext.keys->params[idx].cipher);
+        if (!wdev->wext.keys || !wdev->wext.keys->params[idx].cipher) {
+printk(KERN_INFO "And we're going home...\n");
+                erq->flags |= IW_ENCODE_DISABLED;
+                erq->length = 0;
+                return 0;
+        }
+
+which produces
+
+[  151.401195] In giwencode idx=0 keys=1d023600 cipher=0
+[  151.401198] And we're going home...
+
+So the root cause has something to do with params[idx].cipher being unset.
+
+I've become reasonably sure it's not pilot error on my part, as a co-worker's
+laptop has the same issue - mine is a Dell Latitude E6500 with an Intel 5000agn
+cardrunning Fedora Rawhide and a 2.6.34-rc1-mmotm kernel, and his is a Latitude
+D830 with an Intel 3945, Ubuntu with a 2.6.32 kernel.
+
+Looks like time to instrument more of wext-compat.c.  Oh joy.
+
+
+--==_Exmh_1268430568_4034P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFLmrbocC3lWbTT17ARAvmbAKD8Jt01f2gvj6yoyqki+HmfVhIQpACdEUWc
+2ZdYZFfTWk4M+xGdUUDoKTo=
+=GMD0
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1268430568_4034P--
 
