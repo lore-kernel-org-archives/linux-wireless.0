@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:23754 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660Ab0CRK1H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 06:27:07 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 01/21] wl1271: Fix configuration of the TX opportunity value
-Date: Thu, 18 Mar 2010 12:26:26 +0200
-Message-Id: <1268908006-16992-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
-References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+Received: from ist.d-labs.de ([213.239.218.44]:50420 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933630Ab0CLSDw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 13:03:52 -0500
+From: florian@mickler.org
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Marcel Holtmann" <marcel@holtmann.org>,
+	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Randy Dunlap" <rdunlap@xenotime.net>,
+	"Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	Florian Mickler <florian@mickler.org>
+Subject: [PATCH 0/2]  rfkill sysfs ABI 
+Date: Fri, 12 Mar 2010 19:03:06 +0100
+Message-Id: <1268416988-24862-1-git-send-email-florian@mickler.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Hi all!
 
-The per-queue TX opportunity value is configured by the mac80211 in units
-of 32us. The firmware however wants it in us, so add the conversion.
+The first patch moves the rfkill sysfs ABI Documentation to Documentation/ABI
+and deprecates the state and claim file. 
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+The second patch creates a replacement for the state file. Instead of exporting
+some made-up state we just export the state of the 2 kill lines. 
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 0a4ff7b..0de337f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1745,9 +1745,10 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	if (ret < 0)
- 		goto out;
- 
-+	/* the txop is confed in units of 32us by the mac80211, we need us */
- 	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
- 				params->cw_min, params->cw_max,
--				params->aifs, params->txop);
-+				params->aifs, params->txop << 5);
- 	if (ret < 0)
- 		goto out_sleep;
- 
--- 
-1.6.3.3
+The first patch should probably go into 2.6.34, as to warn users 
+(if there are any) early about this removal. 
+If there is no intent to remove the broken files, the feature-removal-schedule hunk 
+should probably be skipped. 
+
+Cheers,
+Flo
+
+p.s.: first discussion of this: http://lkml.org/lkml/2010/2/22/127
+
+Florian Mickler (2):
+  Document the rfkill sysfs ABI
+  enhance sysfs rfkill interface
+
+ Documentation/ABI/obsolete/sysfs-class-rfkill |   29 +++++++++++
+ Documentation/ABI/stable/sysfs-class-rfkill   |   67 +++++++++++++++++++++++++
+ Documentation/feature-removal-schedule.txt    |   18 +++++++
+ Documentation/rfkill.txt                      |   44 +++++-----------
+ net/rfkill/core.c                             |   57 +++++++++++++++++++++
+ 5 files changed, 184 insertions(+), 31 deletions(-)
+ create mode 100644 Documentation/ABI/obsolete/sysfs-class-rfkill
+ create mode 100644 Documentation/ABI/stable/sysfs-class-rfkill
 
