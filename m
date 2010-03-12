@@ -1,31 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47117 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753673Ab0C2U4V (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35258 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753655Ab0CLBEa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:56:21 -0400
-Date: Mon, 29 Mar 2010 16:48:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?iso-8859-1?Q?Ren=E9?= Bolldorf <xsecute@googlemail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-Message-ID: <20100329204822.GL4984@tuxdriver.com>
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10A0F.1030608@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4BB10A0F.1030608@lwfinger.net>
+	Thu, 11 Mar 2010 20:04:30 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org, stable@kernel.org
+Cc: linux-kernel@vger.kernel.org, linville@tuxdriver.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [FYI] cfg80211: cfg80211: fix suspend/resume case when world roaming
+Date: Thu, 11 Mar 2010 20:04:30 -0500
+Message-Id: <1268355870-1496-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 03:14:07PM -0500, Larry Finger wrote:
+Just a heads up to distribution maintainers, for 2.6.33 has an issue
+with suspend and resume and world roaming when you move from one AP
+with one set of regulatory settings to another. The issue happens when for
+example if a user from JP travels to the US and connects to an AP
+which disables channel 13, they suspend and go home, and resume
+channel 13 will still be disabled. This has been fixed on 2.6.34
+but the fix was rather large for propagating to stable but if you do
+wnat the fix I have backported them for you.
 
-> Could you please apply my little test patch and send me the contents of the
-> chipcommon status register in your netbook?
+These patches have been baking on wireless-testing, linux-next, and
+now upstream 2.6.34-rc1 for a while now. You can find them here:
 
-Mine looks like yours, "chip_id 0x4312, status 0x12"...
+http://kernel.org/pub/linux/kernel/people/mcgrof/patches/cfg80211/2010-03/reg-fixes-33/02-suspend-resume-regulatory/
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Luis R. Rodriguez (2):
+  cfg80211: avoid flushing the global workqueue for core reg hints
+  cfg80211: add regulatory hint disconnect support
+
+ include/net/regulatory.h |    1 +
+ net/wireless/reg.c       |  162 ++++++++++++++++++++++++++++++++++++++++++++--
+ net/wireless/reg.h       |   18 +++++
+ net/wireless/sme.c       |   40 +++++++++++
+ 4 files changed, 215 insertions(+), 6 deletions(-)
+
