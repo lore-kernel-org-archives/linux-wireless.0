@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:10960 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753418Ab0CBH62 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57987 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756984Ab0CLQas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 02:58:28 -0500
-Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0682086707
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Mar 2010 16:58:27 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-Subject: [PATCH 0/4] ath5k cleanup
-To: linville@tuxdriver.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 02 Mar 2010 16:58:26 +0900
-Message-ID: <20100302075526.20555.14622.stgit@void>
+	Fri, 12 Mar 2010 11:30:48 -0500
+Date: Fri, 12 Mar 2010 11:20:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Janne Tanskanen <jannejt@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt2500pci master mode and hostapd
+Message-ID: <20100312162040.GA17689@tuxdriver.com>
+References: <4ADF4285.7010405@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4ADF4285.7010405@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi!
+On Wed, Oct 21, 2009 at 08:19:01PM +0300, Janne Tanskanen wrote:
+> Hi! I build a wireless access point using a-link wl54pc (pcmcia card,  
+> rt2500pci module) and hostapd 0.6.9 with kernel version 2.6.32-rc5.  
+> Problem is that even tho hostapd starts and iwconfig shows wlan0 in  
+> master mode, other computers cant find the wireless network.
+>
+> I found a working patch from here:  
+> http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?p=32632#p32632 and  
+> all works now with it applied to vanilla kernel. Just wanted to post  
+> this to the mailing list and ask why it's not added to mainline rt2x00  
+> kernel tree yet? Patch on forum is from May, almost half year ago.  
+> Hopefully it'll be included to mainline kernel asap.
 
-this is a series of cleanup patches for ath5k. as the beginning of a larger
-initiative to merge ath5k_hw and ath5k_softc i have removed the double use of
-'opmode' and removed some unused variables in ath5k_hw. please check if anyone
-still needs these definitions...
+This is an old one -- sorry if no one got back to you sooner!
+It looks to me like the equivalent of the patch you cited is available
+in 2.6.34-rc1 (if not before) -- look for DRIVER_REQUIRE_DMA and
+rt2x00queue_align_frame.  There were some changes between 2.6.32-rc5
+and now, but I'm not sure if they affect things for your or not.
 
-thanks,
-bruno
+Could you try 2.6.34-rc1 and see if things are working for you?
 
----
+Thanks!
 
-Bruno Randolf (4):
-      ath5k: remove ah_gpio_npins
-      ath5k: remove ah_mac_revision
-      ath5k: remove ah_magic
-      ath5k: remove double opmode definition
-
-
- drivers/net/wireless/ath/ath5k/ath5k.h  |    7 +------
- drivers/net/wireless/ath/ath5k/attach.c |    4 +---
- drivers/net/wireless/ath/ath5k/base.c   |    7 ++++---
- drivers/net/wireless/ath/ath5k/caps.c   |    3 ---
- drivers/net/wireless/ath/ath5k/desc.c   |    6 ------
- drivers/net/wireless/ath/ath5k/eeprom.h |    3 ---
- drivers/net/wireless/ath/ath5k/pcu.c    |   14 +++++++-------
- drivers/net/wireless/ath/ath5k/reset.c  |    9 ++-------
- 8 files changed, 15 insertions(+), 38 deletions(-)
-
+John
 -- 
-Signature
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
