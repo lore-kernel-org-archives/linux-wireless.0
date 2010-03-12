@@ -1,93 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:49586 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210Ab0CTB2q (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:46453 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934119Ab0CLSWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 21:28:46 -0400
-Received: by wyb38 with SMTP id 38so1776353wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 18:28:45 -0700 (PDT)
+	Fri, 12 Mar 2010 13:22:20 -0500
+Date: Fri, 12 Mar 2010 10:22:09 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: florian@mickler.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
+Message-ID: <20100312182209.GB8736@core.coreip.homeip.net>
+References: <1268416988-24862-1-git-send-email-florian@mickler.org>
+ <1268416988-24862-2-git-send-email-florian@mickler.org>
+ <1268416988-24862-3-git-send-email-florian@mickler.org>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-Date: Sat, 20 Mar 2010 02:28:44 +0100
-Message-ID: <2d0a357f1003191828g2d133a06qd8902785ae015cd0@mail.gmail.com>
-Subject: [ath9k_htc] Wrong kernel config parameters in wiki?
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: wireless <linux-wireless@vger.kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1268416988-24862-3-git-send-email-florian@mickler.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Mar 12, 2010 at 07:03:08PM +0100, florian@mickler.org wrote:
+>  
+> +static ssize_t rfkill_hard_show(struct device *dev,
+> +				 struct device_attribute *attr,
+> +				 char *buf)
+> +{
+> +	struct rfkill *rfkill = to_rfkill(dev);
+> +	unsigned long flags;
+> +	u32 state;
+> +
+> +	spin_lock_irqsave(&rfkill->lock, flags);
+> +	state = rfkill->state;
+> +	spin_unlock_irqrestore(&rfkill->lock, flags);
 
-a person asked on IRC about ath9k_htc support.
+Why exactly is this lock needed?
 
-First question:
-Has the patch from [1] already entered one of the wireless-* GIT repositories?
+> +
+> +	return sprintf(buf, "%d\n", (state & RFKILL_BLOCK_HW) ? 1 : 0 );
+> +}
+> +
+> +static ssize_t rfkill_soft_show(struct device *dev,
+> +				 struct device_attribute *attr,
+> +				 char *buf)
+> +{
+> +	struct rfkill *rfkill = to_rfkill(dev);
+> +	unsigned long flags;
+> +	u32 state;
+> +
+> +	spin_lock_irqsave(&rfkill->lock, flags);
+> +	state = rfkill->state;
+> +	spin_unlock_irqrestore(&rfkill->lock, flags);
 
-I could apply the ath9k_htc patch against 2.6.34-rc1-git9.
+And here as well...
 
-The kernel config parameters in wiki [2] seems to be wrong to me:
-
-CONFIG_ATH=m
-CONFIG_ATH9K_HW=m
-CONFIG_ATH9K_HTC=m
-
-Checking here:
-
-$ grep CONFIG_ATH .config
-CONFIG_ATH_COMMON=m
-# CONFIG_ATH_DEBUG is not set
-CONFIG_ATH5K=m
-# CONFIG_ATH5K_DEBUG is not set
-CONFIG_ATH9K_HW=m
-CONFIG_ATH9K_COMMON=m
-CONFIG_ATH9K=m
-# CONFIG_ATH9K_DEBUGFS is not set
-CONFIG_ATH9K_HTC=m
-# CONFIG_ATH9K_HTC_DEBUGFS is not set
-
-Should CONFIG_ATH=m be replaced by one/both of these ones?
-
-$ grep CONFIG_ATH .config | grep COMMON
-CONFIG_ATH_COMMON=m
-CONFIG_ATH9K_COMMON=m
-
-File drivers/net/wireless/ath/ath9k/Kconfig says:
-...
-config ATH9K_HTC
-       tristate "Atheros HTC based wireless cards support"
-       depends on USB && MAC80211
-       select ATH9K_HW
-       select MAC80211_LEDS
-       select LEDS_CLASS
-       select NEW_LEDS
-       ---help---
-	 Support for Atheros HTC based cards.
-	 Chipsets supported: AR9271
-
-	 For more information: http://wireless.kernel.org/en/users/Drivers/ath9k_htc
-
-	 The built module will be ath9k_htc.
-...
-
-Maybe the confusion results from drivers/net/wireless/ath/Kconfig:
-
-menuconfig ATH_COMMON
-	tristate "Atheros Wireless Cards"
-...
-
-IMHO setting CONFIG_ATH9K_HW=m and CONFIG_ATH9K_HTC=m should be enough.
-
-Who can clarify?
-
-Thanks in advance.
-
-Kind Regards,
-- Sedat -
-
-References:
-------------------
-[1] https://patchwork.kernel.org/patch/82299/
-[2] http://wireless.kernel.org/en/users/Drivers/ath9k_htc#Configuring_your_kernel
-[3] http://wireless.kernel.org/en/users/Drivers/ath9k_htc
+-- 
+Dmitry
