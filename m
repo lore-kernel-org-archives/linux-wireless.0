@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:57766 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756856Ab0CKV4E (ORCPT
+Received: from lennier.cc.vt.edu ([198.82.162.213]:38684 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932699Ab0CLWWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 16:56:04 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: stable@kernel.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/2] ath9k: configure the beacon only if the STA is associated
-Date: Thu, 11 Mar 2010 16:55:58 -0500
-Message-Id: <1268344558-13835-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268344558-13835-1-git-send-email-lrodriguez@atheros.com>
-References: <1268344558-13835-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 12 Mar 2010 17:22:54 -0500
+To: Pavel Roskin <proski@gnu.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Weird wireless/wpa_supplicant screw-up.
+In-Reply-To: Your message of "Fri, 12 Mar 2010 17:19:41 EST."
+             <1268432381.3596.12.camel@mj>
+From: Valdis.Kletnieks@vt.edu
+References: <7197.1268086939@localhost> <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost>
+            <1268432381.3596.12.camel@mj>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1268432548_4034P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Fri, 12 Mar 2010 17:22:28 -0500
+Message-ID: <6480.1268432548@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+--==_Exmh_1268432548_4034P
+Content-Type: text/plain; charset=us-ascii
 
-commit 1a20034a73a40b8056731f9db0c535cec2961eb7 upstream.
+On Fri, 12 Mar 2010 17:19:41 EST, Pavel Roskin said:
+> On Fri, 2010-03-12 at 16:49 -0500, Valdis.Kletnieks@vt.edu wrote:
+> 
+> > So the root cause has something to do with params[idx].cipher being unset.
+> 
+> Sorry if it's obvious, but please make sure you don't have another
+> wpa_supplicant running and there is no other software that tries to
+> control the interface.
+> 
+> If you have NetworkManager, the device in question should be unmanaged.
 
-beacons configuration SHOULD be done only if the STA is associated.
+No NetworkManager here, so that shoots that theory. There's just a
+wpa_supplicant running and nothing else managing the interface.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+--==_Exmh_1268432548_4034P
+Content-Type: application/pgp-signature
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 1660ef1..9b73282 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -576,6 +576,13 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
- 	u64 tsf;
- 	int num_beacons, offset, dtim_dec_count, cfp_dec_count;
- 
-+	/* No need to configure beacon if we are not associated */
-+	if (!common->curaid) {
-+		ath_print(common, ATH_DBG_BEACON,
-+			 "STA is not yet associated..skipping beacon config\n");
-+		return;
-+	}
-+
- 	memset(&bs, 0, sizeof(bs));
- 	intval = conf->beacon_interval & ATH9K_BEACON_PERIOD;
- 
--- 
-1.6.3.3
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFLmr6kcC3lWbTT17ARArSpAJ9ILKTYo1dDnrZ7aXh8+vtzKv+aAACdEEpU
+gcfC+vIutc//OYBgAlp1+UM=
+=WK6/
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1268432548_4034P--
 
