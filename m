@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:52091 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750839Ab0CLWjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 17:39:41 -0500
-Date: Fri, 12 Mar 2010 23:39:25 +0100
-From: Florian Mickler <florian@mickler.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
-Message-ID: <20100312233925.74effc7d@schatten.dmk.lab>
-In-Reply-To: <20100312212025.GA17712@core.coreip.homeip.net>
-References: <1268416988-24862-1-git-send-email-florian@mickler.org>
-	<1268416988-24862-2-git-send-email-florian@mickler.org>
-	<1268416988-24862-3-git-send-email-florian@mickler.org>
-	<20100312182209.GB8736@core.coreip.homeip.net>
-	<20100312215743.7671d173@schatten.dmk.lab>
-	<20100312212025.GA17712@core.coreip.homeip.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtp.nokia.com ([192.100.122.230]:54835 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754589Ab0CLLhQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 06:37:16 -0500
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2CBaww5001785
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Mar 2010 13:37:14 +0200
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2CBb6aB028203
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Mar 2010 13:37:06 +0200
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 0/2] mac80211: cfg80211: Roam trigger support
+Date: Fri, 12 Mar 2010 13:34:29 +0200
+Message-Id: <1268393671-5498-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 12 Mar 2010 13:20:26 -0800
-Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
+To implement good performance WLAN roaming, it is not sufficient to start
+scanning for other available AP's only after the currently serving association
+is lost.
 
-> On Fri, Mar 12, 2010 at 09:57:43PM +0100, Florian Mickler wrote:
-> > On Fri, 12 Mar 2010 10:22:09 -0800
-> > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
-> > 
-> > > On Fri, Mar 12, 2010 at 07:03:08PM +0100, florian@mickler.org wrote:
-> > > >  
-> > > > +static ssize_t rfkill_hard_show(struct device *dev,
-> > > > +				 struct device_attribute *attr,
-> > > > +				 char *buf)
-> > > > +{
-> > > > +	struct rfkill *rfkill = to_rfkill(dev);
-> > > > +	unsigned long flags;
-> > > > +	u32 state;
-> > > > +
-> > > > +	spin_lock_irqsave(&rfkill->lock, flags);
-> > > > +	state = rfkill->state;
-> > > > +	spin_unlock_irqrestore(&rfkill->lock, flags);
-> > > 
-> > > Why exactly is this lock needed?
-> > 
-> > The rfkill state is updated from multiple contexts... Am I overlooking
-> > smth obvious here?
-> > 
-> 
-> You are not updating but reading... Are you concerned about seeing
-> a partial write to u32? It does not happen.
-> 
-Hm.. You shure? On every arch that supports wireless drivers? 
+The entity controlling the roaming will need to get indication of a
+deteriorating WLAN connection in order to start preparing for roaming already
+before the serving association is lost. This way, it can roam to a better AP
+perhaps even before the serving association becomes too bad in quality.
 
-I've just copied that code from the old sysfs state-file handler.
-So I assumed that reading partial updated state can happen... Also I
-just searched a little but did not find anything, cause i didn't know
-where to look. Who garantees this? Is it a gcc thing? 
+These patches propose an implementation facilitating this using a simple RSSI
+threshold and hysteresis approach.
+
+These patches add a nl80211 interface for simply enabling and disabling a 
+roam trigger, and configuring a RSSI threshold and hysteresis value to 
+facilitate the triggering.
+
+For the triggering, these patches currently rely on HW support, host based
+triggering is not implemented, but could be added later if needed.
+
+These patches are currently still under development, and mostly untested.
+
+Thanks in advance for your comments and suggestions.
+
+Juuso Oikarinen (2):
+  cfg80211: Add roaming trigger support to nl80211
+  mac80211: Add support for roam trigger configuration
+
+ include/linux/nl80211.h |   21 ++++++++
+ include/net/cfg80211.h  |   33 ++++++++++++
+ include/net/mac80211.h  |   28 +++++++++++
+ net/mac80211/cfg.c      |   29 +++++++++++
+ net/mac80211/mlme.c     |    9 +++
+ net/wireless/core.c     |   12 +++++
+ net/wireless/mlme.c     |   25 +++++++++
+ net/wireless/nl80211.c  |  125 +++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    5 ++
+ 9 files changed, 287 insertions(+), 0 deletions(-)
 
