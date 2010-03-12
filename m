@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31655 "EHLO mail.atheros.com"
+Received: from ist.d-labs.de ([213.239.218.44]:42480 "EHLO mx01.d-labs.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750945Ab0CRQxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 12:53:38 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 09:53:38 -0700
-Date: Thu, 18 Mar 2010 09:53:36 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: selvam <sathakselva@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vipin M <vipintm@gmail.com>
-Subject: Re: [ath9k-devel] [RFC] ath9k: 4ms frame length table update
-Message-ID: <20100318165335.GA4011@vasanth-laptop>
-References: <1aee2dca1003172337g5d66a03ex20ebab74707a6c56@mail.gmail.com>
- <20100318160034.GC2269@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20100318160034.GC2269@tux>
+	id S934212Ab0CLSSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 13:18:37 -0500
+Date: Fri, 12 Mar 2010 19:18:19 +0100
+From: Florian Mickler <florian@mickler.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Marcel Holtmann" <marcel@holtmann.org>,
+	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	"Randy Dunlap" <rdunlap@xenotime.net>,
+	"Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH 0/2]  rfkill sysfs ABI
+Message-ID: <20100312191819.73ac4700@schatten.dmk.lab>
+In-Reply-To: <1268416988-24862-1-git-send-email-florian@mickler.org>
+References: <1268416988-24862-1-git-send-email-florian@mickler.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 18, 2010 at 09:30:34PM +0530, Luis R. Rodriguez wrote:
-> On Wed, Mar 17, 2010 at 11:37:29PM -0700, selvam wrote:
-> > Hi,
-> > 
-> > The 4 ms frame length table is updated to support up to MCS 31.
-> > 
-> > These values are calculated based on the equation 9.1 from the IEEE 802.11n standard.
-> > These values are rounded off to multiple of 4 bytes. If the final value is greater than 65535 then it is changed to 65532, since the maximum A-MPDU length is 65535 bytes.
+On Fri, 12 Mar 2010 19:03:06 +0100
+florian@mickler.org wrote:
+
+> Hi all!
 > 
-> Thanks for this patch, but can you elaborate on what your patch does other
-> than the above. For example, you may want to mention that although the current
-> ath9k driver does not support up to MCS31 your patch would enable such support
-> for future chipsets which could be supported. You also forgot to Signed-off-by
-> it, and provide a clearer commit log entry. Check git log for examples on
-> wireless-testing, also read:
+> The first patch moves the rfkill sysfs ABI Documentation to Documentation/ABI
+> and deprecates the state and claim file. 
+> 
+> The second patch creates a replacement for the state file. Instead of exporting
+> some made-up state we just export the state of the 2 kill lines. 
+> 
+> The first patch should probably go into 2.6.34, as to warn users 
+> (if there are any) early about this removal. 
+> If there is no intent to remove the broken files, the feature-removal-schedule hunk 
+> should probably be skipped. 
+> 
+> Cheers,
+> Flo
+> 
+> p.s.: first discussion of this: http://lkml.org/lkml/2010/2/22/127
 > 
 
-Also, rate control component of ath9k is not generic, it is specific
-to ath9k. So this sort of patches make sense only when ath9k supports hw with
-three chains, currently ath9k does not have support for those hw.
+Hi,
 
-Vasanth
+sorry! I just realised that you already have the blocked_sw / blocked_hw one's
+queued. 
+
+This just changes the name of blocked_sw and blocked_hw to "soft" and
+"hard". 
+
+I don't know what you wanna do. I'm fine with blocked_hw and
+blocked_sw as it's referenced as such (hw/sw) in the code, but Marcel
+wanted to get away from the "hard blocked by hardware" notation, as it
+suggests that the transmitter could only be blocked by hardware...
+
+cheers,
+Flo
