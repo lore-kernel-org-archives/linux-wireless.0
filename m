@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:30708 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753486Ab0CZKyK (ORCPT
+Received: from lennier.cc.vt.edu ([198.82.162.213]:50519 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932773Ab0CLXtE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:54:10 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 18/24] wl1271: Fix memory leak in firmware crash scenario
-Date: Fri, 26 Mar 2010 12:53:27 +0200
-Message-Id: <1269600813-32145-19-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	Fri, 12 Mar 2010 18:49:04 -0500
+To: Florian Mickler <florian@mickler.org>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
+In-Reply-To: Your message of "Fri, 12 Mar 2010 23:39:25 +0100."
+             <20100312233925.74effc7d@schatten.dmk.lab>
+From: Valdis.Kletnieks@vt.edu
+References: <1268416988-24862-1-git-send-email-florian@mickler.org> <1268416988-24862-2-git-send-email-florian@mickler.org> <1268416988-24862-3-git-send-email-florian@mickler.org> <20100312182209.GB8736@core.coreip.homeip.net> <20100312215743.7671d173@schatten.dmk.lab> <20100312212025.GA17712@core.coreip.homeip.net>
+            <20100312233925.74effc7d@schatten.dmk.lab>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1268437699_4034P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Fri, 12 Mar 2010 18:48:19 -0500
+Message-ID: <12058.1268437699@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+--==_Exmh_1268437699_4034P
+Content-Type: text/plain; charset=us-ascii
 
-The driver tx-queue flush operation leaks broadcast-frames. This leak occurs
-if the driver is shut down while there are frames in TX buffers (such as in
-a firmware crash scenario.) Fix the leak.
+On Fri, 12 Mar 2010 23:39:25 +0100, Florian Mickler said:
+> On Fri, 12 Mar 2010 13:20:26 -0800
+> Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_tx.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+> > You are not updating but reading... Are you concerned about seeing
+> > a partial write to u32? It does not happen.
+> > 
+> Hm.. You shure? On every arch that supports wireless drivers? 
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 5712489..66b48b7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -426,8 +426,10 @@ void wl1271_tx_flush(struct wl1271 *wl)
- 
- 		wl1271_debug(DEBUG_TX, "flushing skb 0x%p", skb);
- 
--		if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS))
--				continue;
-+		if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
-+			kfree_skb(skb);
-+			continue;
-+		}
- 
- 		ieee80211_tx_status(wl->hw, skb);
- 	}
-@@ -437,8 +439,10 @@ void wl1271_tx_flush(struct wl1271 *wl)
- 			skb = wl->tx_frames[i];
- 			info = IEEE80211_SKB_CB(skb);
- 
--			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS))
-+			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
-+				kfree_skb(skb);
- 				continue;
-+			}
- 
- 			ieee80211_tx_status(wl->hw, skb);
- 			wl->tx_frames[i] = NULL;
--- 
-1.6.3.3
+If a u32 load or store from memory isn't atomic, the Linux kernel is screwed
+anyhow.  Hint - imagine if every 32-bit reference had to be treated the way
+we currently treat 64-bit references on a 32-bit system.
+
+--==_Exmh_1268437699_4034P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFLmtLDcC3lWbTT17ARAoUlAJ9PMVZS/+1dk+OT8hIJsrR6bUma8gCeOdwy
+g1K5M60opaPiEDX8C19AbIs=
+=Rkjv
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1268437699_4034P--
 
