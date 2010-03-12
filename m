@@ -1,171 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:49944 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756203Ab0CaTjM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 15:39:12 -0400
-Received: by ewy20 with SMTP id 20so143142ewy.1
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Mar 2010 12:39:10 -0700 (PDT)
-From: "John W. Linville" <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>
-Subject: [PATCH V3] ssb: do not read SPROM if it does not exist
-Date: Wed, 31 Mar 2010 21:39:35 +0200
-Message-Id: <1270064375-3138-2-git-send-email-linville@tuxdriver.com>
+Received: from c60.cesmail.net ([216.154.195.49]:36765 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751220Ab0CLFBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 00:01:25 -0500
+Subject: [PATCH] ipw2x00: replace "ieee80211" with "libipw" where appropriate
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Fri, 12 Mar 2010 00:01:22 -0500
+Message-ID: <20100312050122.525.80031.stgit@mj.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Attempting to read registers that don't exist on the SSB bus can cause
-hangs on some boxes.  At least some b43 devices are 'in the wild' that
-don't have SPROMs at all.  When the SSB bus support loads, it attempts
-to read these (non-existant) SPROMs and causes hard hangs on the box --
-no console output, etc.
+"ieee80211" was the old name of the common library for ipw2100 and
+ipw2200.  It was renamed to "libipw", but some occurrences of the old
+name remained.
 
-This patch adds some intelligence to determine whether or not the SPROM
-is present before attempting to read it.  This avoids those hard hangs
-on those devices with no SPROM attached to their SSB bus.  The
-SSB-attached devices (e.g. b43, et al.) won't work, but at least the box
-will survive to test further patches. :-)
+Rename alloc_ieee80211() to alloc_libipw() and free_ieee80211() to
+free_libipw().  Adjust comments and label names.  Change prefixes in
+diagnostic messages.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>
+Keep /proc/net/ieee80211 under the original name to avoid breaking user
+interface.
+
+Move the affected EXPORT_SYMBOL macros to their proper places.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
-V2: adapt to updated specs, drop some warning-causing braces
-V3: updated specs again, drop PCMCIA part
+ drivers/net/wireless/ipw2x00/ipw2100.c       |   10 +++++-----
+ drivers/net/wireless/ipw2x00/ipw2200.c       |   18 +++++++++---------
+ drivers/net/wireless/ipw2x00/libipw.h        |   14 +++++++-------
+ drivers/net/wireless/ipw2x00/libipw_module.c |   13 ++++++-------
+ 4 files changed, 27 insertions(+), 28 deletions(-)
 
-OK, so hopefully we have it figured out now.
-
-However I have no idea what PCMCIA tuples are. Do we need similar check for
-some PCMCIA code?
-
-I feel badly pretending to be John. Did I really get your tip correct, Larry?
----
- drivers/ssb/driver_chipcommon.c           |    2 ++
- drivers/ssb/pci.c                         |    5 +++++
- drivers/ssb/sprom.c                       |   14 ++++++++++++++
- include/linux/ssb/ssb.h                   |    3 +++
- include/linux/ssb/ssb_driver_chipcommon.h |   15 +++++++++++++++
- 5 files changed, 39 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
-index 59c3c0f..59ae76b 100644
---- a/drivers/ssb/driver_chipcommon.c
-+++ b/drivers/ssb/driver_chipcommon.c
-@@ -233,6 +233,8 @@ void ssb_chipcommon_init(struct ssb_chipcommon *cc)
- {
- 	if (!cc->dev)
- 		return; /* We don't have a ChipCommon */
-+	if (cc->dev->id.revision >= 11)
-+		cc->status = chipco_read32(cc, SSB_CHIPCO_CHIPSTAT);
- 	ssb_pmu_init(cc);
- 	chipco_powercontrol_init(cc);
- 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_FAST);
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 9e50896..a4b2b99 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -620,6 +620,11 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
- 	int err = -ENOMEM;
- 	u16 *buf;
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index 9b72c45..fe63bf2 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -6102,7 +6102,7 @@ static const struct net_device_ops ipw2100_netdev_ops = {
+ 	.ndo_validate_addr	= eth_validate_addr,
+ };
  
-+	if (!ssb_is_sprom_available(bus)) {
-+		ssb_printk(KERN_ERR PFX "No SPROM available!\n");
-+		return -ENODEV;
-+	}
-+
- 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
- 	if (!buf)
- 		goto out;
-diff --git a/drivers/ssb/sprom.c b/drivers/ssb/sprom.c
-index d0e6762..83bc088 100644
---- a/drivers/ssb/sprom.c
-+++ b/drivers/ssb/sprom.c
-@@ -175,3 +175,17 @@ const struct ssb_sprom *ssb_get_fallback_sprom(void)
- {
- 	return fallback_sprom;
+-/* Look into using netdev destructor to shutdown ieee80211? */
++/* Look into using netdev destructor to shutdown libipw? */
+ 
+ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+ 					       void __iomem * base_addr,
+@@ -6112,7 +6112,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+ 	struct ipw2100_priv *priv;
+ 	struct net_device *dev;
+ 
+-	dev = alloc_ieee80211(sizeof(struct ipw2100_priv), 0);
++	dev = alloc_libipw(sizeof(struct ipw2100_priv), 0);
+ 	if (!dev)
+ 		return NULL;
+ 	priv = libipw_priv(dev);
+@@ -6425,7 +6425,7 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 		sysfs_remove_group(&pci_dev->dev.kobj,
+ 				   &ipw2100_attribute_group);
+ 
+-		free_ieee80211(dev, 0);
++		free_libipw(dev, 0);
+ 		pci_set_drvdata(pci_dev, NULL);
+ 	}
+ 
+@@ -6483,10 +6483,10 @@ static void __devexit ipw2100_pci_remove_one(struct pci_dev *pci_dev)
+ 		if (dev->base_addr)
+ 			iounmap((void __iomem *)dev->base_addr);
+ 
+-		/* wiphy_unregister needs to be here, before free_ieee80211 */
++		/* wiphy_unregister needs to be here, before free_libipw */
+ 		wiphy_unregister(priv->ieee->wdev.wiphy);
+ 		kfree(priv->ieee->bg_band.channels);
+-		free_ieee80211(dev, 0);
++		free_libipw(dev, 0);
+ 	}
+ 
+ 	pci_release_regions(pci_dev);
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 5c7aa1b..6dc0733 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -11666,7 +11666,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
+ 	if (priv->prom_net_dev)
+ 		return -EPERM;
+ 
+-	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv), 1);
++	priv->prom_net_dev = alloc_libipw(sizeof(struct ipw_prom_priv), 1);
+ 	if (priv->prom_net_dev == NULL)
+ 		return -ENOMEM;
+ 
+@@ -11685,7 +11685,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
+ 
+ 	rc = register_netdev(priv->prom_net_dev);
+ 	if (rc) {
+-		free_ieee80211(priv->prom_net_dev, 1);
++		free_libipw(priv->prom_net_dev, 1);
+ 		priv->prom_net_dev = NULL;
+ 		return rc;
+ 	}
+@@ -11699,7 +11699,7 @@ static void ipw_prom_free(struct ipw_priv *priv)
+ 		return;
+ 
+ 	unregister_netdev(priv->prom_net_dev);
+-	free_ieee80211(priv->prom_net_dev, 1);
++	free_libipw(priv->prom_net_dev, 1);
+ 
+ 	priv->prom_net_dev = NULL;
  }
-+
-+/* http://bcm-v4.sipsolutions.net/802.11/IsSpromAvailable */
-+bool ssb_is_sprom_available(struct ssb_bus *bus)
-+{
-+	/* status register only exists on chipcomon rev >= 11 and we need check
-+	   for >= 31 only */
-+	/* this routine differs from specs as we do not access SPROM directly
-+	   on PCMCIA */
-+	if (bus->bustype == SSB_BUSTYPE_PCI &&
-+	    bus->chipco.dev->id.revision >= 31)
-+		return bus->chipco.capabilities & SSB_CHIPCO_CAP_SPROM;
-+
-+	return true;
-+}
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 24f9885..3b4da23 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -394,6 +394,9 @@ extern int ssb_bus_sdiobus_register(struct ssb_bus *bus,
+@@ -11727,7 +11727,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 	struct ipw_priv *priv;
+ 	int i;
  
- extern void ssb_bus_unregister(struct ssb_bus *bus);
+-	net_dev = alloc_ieee80211(sizeof(struct ipw_priv), 0);
++	net_dev = alloc_libipw(sizeof(struct ipw_priv), 0);
+ 	if (net_dev == NULL) {
+ 		err = -ENOMEM;
+ 		goto out;
+@@ -11747,7 +11747,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 	mutex_init(&priv->mutex);
+ 	if (pci_enable_device(pdev)) {
+ 		err = -ENODEV;
+-		goto out_free_ieee80211;
++		goto out_free_libipw;
+ 	}
  
-+/* Does the device have an SPROM? */
-+extern bool ssb_is_sprom_available(struct ssb_bus *bus);
-+
- /* Set a fallback SPROM.
-  * See kdoc at the function definition for complete documentation. */
- extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index 4e27acf..2cdf249 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -53,6 +53,7 @@
- #define  SSB_CHIPCO_CAP_64BIT		0x08000000	/* 64-bit Backplane */
- #define  SSB_CHIPCO_CAP_PMU		0x10000000	/* PMU available (rev >= 20) */
- #define  SSB_CHIPCO_CAP_ECI		0x20000000	/* ECI available (rev >= 20) */
-+#define  SSB_CHIPCO_CAP_SPROM		0x40000000	/* SPROM present */
- #define SSB_CHIPCO_CORECTL		0x0008
- #define  SSB_CHIPCO_CORECTL_UARTCLK0	0x00000001	/* Drive UART with internal clock */
- #define	 SSB_CHIPCO_CORECTL_SE		0x00000002	/* sync clk out enable (corerev >= 3) */
-@@ -385,6 +386,7 @@
+ 	pci_set_master(pdev);
+@@ -11874,8 +11874,8 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+       out_pci_disable_device:
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+-      out_free_ieee80211:
+-	free_ieee80211(priv->net_dev, 0);
++      out_free_libipw:
++	free_libipw(priv->net_dev, 0);
+       out:
+ 	return err;
+ }
+@@ -11942,11 +11942,11 @@ static void __devexit ipw_pci_remove(struct pci_dev *pdev)
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+-	/* wiphy_unregister needs to be here, before free_ieee80211 */
++	/* wiphy_unregister needs to be here, before free_libipw */
+ 	wiphy_unregister(priv->ieee->wdev.wiphy);
+ 	kfree(priv->ieee->a_band.channels);
+ 	kfree(priv->ieee->bg_band.channels);
+-	free_ieee80211(priv->net_dev, 0);
++	free_libipw(priv->net_dev, 0);
+ 	free_firmware();
+ }
  
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
+index a6d5e42..284b0e4 100644
+--- a/drivers/net/wireless/ipw2x00/libipw.h
++++ b/drivers/net/wireless/ipw2x00/libipw.h
+@@ -64,7 +64,7 @@
+ extern u32 libipw_debug_level;
+ #define LIBIPW_DEBUG(level, fmt, args...) \
+ do { if (libipw_debug_level & (level)) \
+-  printk(KERN_DEBUG "ieee80211: %c %s " fmt, \
++  printk(KERN_DEBUG "libipw: %c %s " fmt, \
+          in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
+ static inline bool libipw_ratelimit_debug(u32 level)
+ {
+@@ -116,8 +116,8 @@ static inline bool libipw_ratelimit_debug(u32 level)
+ #define LIBIPW_DL_RX            (1<<9)
+ #define LIBIPW_DL_QOS           (1<<31)
  
- /** Chip specific Chip-Status register contents. */
-+#define SSB_CHIPCO_CHST_4322_SPROM_EXISTS	0x00000040 /* SPROM present */
- #define SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL	0x00000003
- #define SSB_CHIPCO_CHST_4325_DEFCIS_SEL		0 /* OTP is powered up, use def. CIS, no SPROM */
- #define SSB_CHIPCO_CHST_4325_SPROM_SEL		1 /* OTP is powered up, SPROM is present */
-@@ -398,6 +400,18 @@
- #define SSB_CHIPCO_CHST_4325_RCAL_VALUE_SHIFT	4
- #define SSB_CHIPCO_CHST_4325_PMUTOP_2B 		0x00000200 /* 1 for 2b, 0 for to 2a */
+-#define LIBIPW_ERROR(f, a...) printk(KERN_ERR "ieee80211: " f, ## a)
+-#define LIBIPW_WARNING(f, a...) printk(KERN_WARNING "ieee80211: " f, ## a)
++#define LIBIPW_ERROR(f, a...) printk(KERN_ERR "libipw: " f, ## a)
++#define LIBIPW_WARNING(f, a...) printk(KERN_WARNING "libipw: " f, ## a)
+ #define LIBIPW_DEBUG_INFO(f, a...)   LIBIPW_DEBUG(LIBIPW_DL_INFO, f, ## a)
  
-+/** Macros to determine SPROM presence based on Chip-Status register. */
-+#define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
-+	((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_OTP_SEL)
-+#define SSB_CHIPCO_CHST_4322_SPROM_PRESENT(status) \
-+	(status & SSB_CHIPCO_CHST_4322_SPROM_EXISTS)
-+#define SSB_CHIPCO_CHST_4325_SPROM_PRESENT(status) \
-+	(((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_DEFCIS_SEL) && \
-+	 ((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_OTP_SEL))
-+
+ #define LIBIPW_DEBUG_WX(f, a...)     LIBIPW_DEBUG(LIBIPW_DL_WX, f, ## a)
+@@ -905,7 +905,7 @@ struct libipw_device {
+ 				       struct libipw_reassoc_request * req);
  
+ 	/* This must be the last item so that it points to the data
+-	 * allocated beyond this structure by alloc_ieee80211 */
++	 * allocated beyond this structure by alloc_libipw */
+ 	u8 priv[0];
+ };
  
- /** Clockcontrol masks and values **/
-@@ -564,6 +578,7 @@ struct ssb_chipcommon_pmu {
- struct ssb_chipcommon {
- 	struct ssb_device *dev;
- 	u32 capabilities;
-+	u32 status;
- 	/* Fast Powerup Delay constant */
- 	u16 fast_pwrup_delay;
- 	struct ssb_chipcommon_pmu pmu;
--- 
-1.6.4.2
-
+@@ -1017,9 +1017,9 @@ static inline int libipw_is_cck_rate(u8 rate)
+ 	return 0;
+ }
+ 
+-/* ieee80211.c */
+-extern void free_ieee80211(struct net_device *dev, int monitor);
+-extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
++/* libipw.c */
++extern void free_libipw(struct net_device *dev, int monitor);
++extern struct net_device *alloc_libipw(int sizeof_priv, int monitor);
+ extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
+ 
+ extern void libipw_networks_age(struct libipw_device *ieee,
+diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
+index 2fa5586..5596540 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_module.c
++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+@@ -53,7 +53,7 @@
+ #include "libipw.h"
+ 
+ #define DRV_DESCRIPTION "802.11 data/management/control stack"
+-#define DRV_NAME        "ieee80211"
++#define DRV_NAME        "libipw"
+ #define DRV_VERSION	LIBIPW_VERSION
+ #define DRV_COPYRIGHT   "Copyright (C) 2004-2005 Intel Corporation <jketreno@linux.intel.com>"
+ 
+@@ -140,7 +140,7 @@ int libipw_change_mtu(struct net_device *dev, int new_mtu)
+ }
+ EXPORT_SYMBOL(libipw_change_mtu);
+ 
+-struct net_device *alloc_ieee80211(int sizeof_priv, int monitor)
++struct net_device *alloc_libipw(int sizeof_priv, int monitor)
+ {
+ 	struct libipw_device *ieee;
+ 	struct net_device *dev;
+@@ -222,8 +222,9 @@ failed_free_netdev:
+ failed:
+ 	return NULL;
+ }
++EXPORT_SYMBOL(alloc_libipw);
+ 
+-void free_ieee80211(struct net_device *dev, int monitor)
++void free_libipw(struct net_device *dev, int monitor)
+ {
+ 	struct libipw_device *ieee = netdev_priv(dev);
+ 
+@@ -237,6 +238,7 @@ void free_ieee80211(struct net_device *dev, int monitor)
+ 
+ 	free_netdev(dev);
+ }
++EXPORT_SYMBOL(free_libipw);
+ 
+ #ifdef CONFIG_LIBIPW_DEBUG
+ 
+@@ -291,7 +293,7 @@ static int __init libipw_init(void)
+ 	struct proc_dir_entry *e;
+ 
+ 	libipw_debug_level = debug;
+-	libipw_proc = proc_mkdir(DRV_NAME, init_net.proc_net);
++	libipw_proc = proc_mkdir("ieee80211", init_net.proc_net);
+ 	if (libipw_proc == NULL) {
+ 		LIBIPW_ERROR("Unable to create " DRV_NAME
+ 				" proc directory\n");
+@@ -331,6 +333,3 @@ MODULE_PARM_DESC(debug, "debug output mask");
+ 
+ module_exit(libipw_exit);
+ module_init(libipw_init);
+-
+-EXPORT_SYMBOL(alloc_ieee80211);
+-EXPORT_SYMBOL(free_ieee80211);
