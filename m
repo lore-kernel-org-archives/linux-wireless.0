@@ -1,70 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khc.piap.pl ([195.187.100.11]:39677 "EHLO khc.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752034Ab0C2UsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:48:20 -0400
-From: Krzysztof Halasa <khc@pm.waw.pl>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-References: <m3tys0tbhk.fsf@intrepid.localdomain>
-	<43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
-	<m3eij3ym5k.fsf@intrepid.localdomain>
-	<43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
-	<m339zizz4o.fsf@intrepid.localdomain>
-	<43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
-Date: Mon, 29 Mar 2010 22:48:18 +0200
-In-Reply-To: <43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
-	(Luis R. Rodriguez's message of "Mon, 29 Mar 2010 12:56:50 -0700")
-Message-ID: <m3y6hayhv1.fsf@intrepid.localdomain>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:61831 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894Ab0CLGco (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 01:32:44 -0500
+Received: by bwz1 with SMTP id 1so762019bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2010 22:32:43 -0800 (PST)
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH 1/4] wl1251: make local symbols static
+References: <1268322276-16640-1-git-send-email-notasas@gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 12 Mar 2010 08:32:40 +0200
+In-Reply-To: <1268322276-16640-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Thu\, 11 Mar 2010 17\:44\:36 +0200")
+Message-ID: <87zl2ecanr.fsf@purkki.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@gmail.com> writes:
+Grazvydas Ignotas <notasas@gmail.com> writes:
 
->> But... isn't the modifying of the regulatory.bin (the US part of it)
->> to include channels valid in e.g. Europe breaking the (US) rules?
+> Make local functions and data static, also constify
+> some structures. While at it, clean up unneeded includes.
 >
-> Not if you sign off on it, which is exactly why the whole singing
-> thing was invented. You would do this if say, you sell an AP and you
-> verify and tested regulatory compliance against a different regulatory
-> region.
+> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+> Cc: Bob Copeland <me@bobcopeland.com>
 
-So what exactly do I change? Can the regulatory.bin change the default
-country?
+Thanks. Looks good, but...
 
-Remember I need to be compliant to the US freq sets as well - when the
-regdomain is set to US. IOW I can't allow the user operating the device
-to set e.g. channel 12 when the user selects country=US (so there is a
-big difference between country 0=US and the real country=US).
+> -#include <linux/mod_devicetable.h>
 
-> country code programmed to 0 is defined by Atheros documentation to be
-> in the "US".
+...this is needed for struct sdio_device_id AFAICS. If you can send a
+new version which keeps that include, you'll have my acked-by.
 
-But the driver says:
-ath: EEPROM regdomain: 0x0
-ath: EEPROM indicates default country code should be used
-ath: doing EEPROM country->regdmn map search
-ath: country maps to regdmn code: 0x3a
-ath: Country alpha2 being used: US
-ath: Regpair used: 0x3a
-
-At least for the driver 0 doesn't mean US, it means "default country".
-Perhaps the meaning of "default country" depends on maybe location of
-the hw and/or sw manufacturer?
-Then maybe what I really need to do is substituting "EU" as the default
-country and enforcing EU restrictions, even when the country selected by
-the user is outside EU (e.g. enforcing EU+US in US)?
-And when the user gets a card with country=US (not 0), the EU
-restictions would be dropped (when physically in USA)?
-
-I think this all reduces to the meaning of country=0 for cards sold (in
-this case) in Europe (and maybe manufactured here).
-
-
-If the driver said "EEPROM regdomain: 0x0 = US" I'd return the cards to
-the manufacturer, simple (realistically they'd fix the EEPROM instead).
 -- 
-Krzysztof Halasa
+Kalle Valo
