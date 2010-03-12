@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52425 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753219Ab0CBUvO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 15:51:14 -0500
-Date: Tue, 2 Mar 2010 12:50:03 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: =?UTF-8?Q?=EC=A0=95=EC=9E=AC=ED=9B=88?= <jh80.chung@samsung.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: Re: [PATCH] rfkill bug fixed in rfkill_set_sw_state
-Message-Id: <20100302125003.f7919c53.akpm@linux-foundation.org>
-In-Reply-To: <000301cab69f$ec61ad00$c5250700$%chung@samsung.com>
-References: <000301cab69f$ec61ad00$c5250700$%chung@samsung.com>
+Received: from c60.cesmail.net ([216.154.195.49]:56815 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758703Ab0CLWTn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Mar 2010 17:19:43 -0500
+Subject: Re: Weird wireless/wpa_supplicant screw-up.
+From: Pavel Roskin <proski@gnu.org>
+To: Valdis.Kletnieks@vt.edu
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <5220.1268430568@localhost>
+References: <7197.1268086939@localhost>
+	 <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost>
+Content-Type: text/plain
+Date: Fri, 12 Mar 2010 17:19:41 -0500
+Message-Id: <1268432381.3596.12.camel@mj>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Suitable cc's (from scripts/get_maintainer.pl) added.
+On Fri, 2010-03-12 at 16:49 -0500, Valdis.Kletnieks@vt.edu wrote:
 
-On Fri, 26 Feb 2010 13:55:31 +0900
-_________ <jh80.chung@samsung.com> wrote:
+> So the root cause has something to do with params[idx].cipher being unset.
 
-> Don___t work expected operation in __rfkill_set_sw_state. 
-> when rfkill initialized. Rfkill___s blocked & unblocked is operating on the
-> contrary.
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> 
-> ---
->  net/rfkill/core.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index c224cb2..dcc2d38 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -488,7 +488,7 @@ static void __rfkill_set_sw_state(struct rfkill
-> *rfkill, bool blocked)
->  	if (rfkill->state & RFKILL_BLOCK_SW_SETCALL)
->  		bit = RFKILL_BLOCK_SW_PREV;
->  
-> -	if (blocked)
-> +	if (!blocked)
->  		rfkill->state |= bit;
->  	else
->  		rfkill->state &= ~bit;
+Sorry if it's obvious, but please make sure you don't have another
+wpa_supplicant running and there is no other software that tries to
+control the interface.
 
-Are you sure?  What problems were you observing with the existing code?
-Please fully describe your hardware and the driver's behaviour.
+If you have NetworkManager, the device in question should be unmanaged.
+This could be done by adding this
+to /etc/NetworkManager/nm-system-settings.conf:
 
-The current code _looks_ OK to me.  If bool `blocked' is true, we set
-the RFKILL_BLOCK_SW bit?
+[main]
+plugins=keyfile
 
+[keyfile]
+unmanaged-devices=/org/freedesktop/Hal/devices/net_00_1f_11_01_06_55
+
+If the "plugins" line exists, "keyfile" should be added, separated by
+comma from the previous word.  The MAC address must be lowercase.
+Entries on the unmanaged-devices line are separated by semicolons.
+
+Use "cnetworkmanager -d" to make sure the device is unmanaged (install
+cnetworkmanager if needed).  You may need to restart NetworkManager or
+even reboot after changing the configuration.
+
+Perhaps we need it in the FAQ somewhere.
+
+-- 
+Regards,
+Pavel Roskin
