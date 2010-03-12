@@ -1,63 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f223.google.com ([209.85.220.223]:40898 "EHLO
-	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751283Ab0CXU1L convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:50594 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932219Ab0CLLUh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 16:27:11 -0400
-Received: by fxm23 with SMTP id 23so482448fxm.21
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 13:27:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1269459825.2631.115.camel@mj>
-References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
-	<201003230942.15718.br1@einfach.org> <loom.20100323T162144-640@post.gmane.org>
-	<201003242015.21409.br1@einfach.org> <1269459825.2631.115.camel@mj>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 24 Mar 2010 21:26:50 +0100
-Message-ID: <69e28c911003241326l6e747113t606f50f61eb435b4@mail.gmail.com>
-Subject: Re: [Proposal]TX flags
-To: Pavel Roskin <proski@gnu.org>
-Cc: Bruno Randolf <br1@einfach.org>, Michael Stahn <m1kes@web.de>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 12 Mar 2010 06:20:37 -0500
+Subject: Re: [RFC PATCH 1/1] mac80211: Add ieee80211_probereq_failed
+ function
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1268392206.4828.6.camel@jlt3.sipsolutions.net>
+References: <1268135572-30722-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268135572-30722-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268392206.4828.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Mar 2010 13:17:49 +0200
+Message-ID: <1268392669.10120.517.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 24, 2010 at 8:43 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Wed, 2010-03-24 at 20:15 +0900, Bruno Randolf wrote:
->> On Wednesday 24 March 2010 00:50:31 Michael Stahn wrote:
->> > > similar to this we would also need to be able to specify that the beacon
->> > > TSF should not be overwritten. maybe a general flag like "do not change"
->> > > would do?
->> >
->> > Is TSF really overwritten at manual injection from userspace?
->>
->> Yes, it is, at least on ath5k. And as jouni has pointed out recently this
->> behaviour is expected by hostapd (maybe not for beacons but for probe
->> request/response frames, i dont know).
->>
->> Gabor Stefanik proposed a while ago that frames should only be modified by the
->> driver in cooked monitor mode (COOK_FRAMES), that way we could avoid defining
->> new radiotap flags. What's your view on that, Jouni?
->
-> Maybe we could create a socket option that would put a _socket_ into a
-> cooked monitor mode?  A "monitor mode socket" would accept and transmit
-> packets with radiotap and 802.11 headers and receive the packets that
-> the interface already receives, also with radiotap and 802.11 headers.
-> That interface could be optimized for use with hostapd and other similar
-> programs.  The driver could fill some data from the interface settings.
->
-> The monitor mode, on the other hand, could be optimized for the
-> "hardcore" stuff when the driver interferes as little as possible.  Then
-> no special flags would be needed to pass the frame as is.
->
+On Fri, 2010-03-12 at 12:10 +0100, ext Johannes Berg wrote:
+> On Tue, 2010-03-09 at 13:52 +0200, Juuso Oikarinen wrote:
+> > Some hardware (i.e. the wl1271) are able to monitor beacons, and send
+> > probe-requests to AP in case of beacon loss independently to try to recover
+> > the connection. In these cases, it is useless for the mac80211 to send
+> > further probe-requests.
+> > 
+> > Add a new function for the hardware to indicate that the AP has been lost.
+> > This function immediately tears down the connection.
+> > 
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > ---
+> >  include/net/mac80211.h |   12 ++++++++++++
+> >  net/mac80211/mlme.c    |   32 ++++++++++++++++++++++++++++++++
+> >  2 files changed, 44 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> > index 45d7d44..d9792e4 100644
+> > --- a/include/net/mac80211.h
+> > +++ b/include/net/mac80211.h
+> > @@ -2370,6 +2370,18 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+> >   */
+> >  void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+> >  
+> > +/**
+> > + * ieee80211_probereq_failed - inform hardware has lost connection with the AP
+> > + *
+> > + * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+> > + *
+> > + * When beacon filtering is enabled with IEEE80211_HW_BEACON_FILTERING and
+> > + * IEEE80211_CONF_PS is set, the driver needs to inform with this function
+> > + * whenever the hardware is not receiving beacons and the AP is not responding
+> > + * to probe requests with this function.
+> > + */
+> > +void ieee80211_probereq_failed(struct ieee80211_vif *vif);
+> > +
+> >  /* Rate control API */
+> >  
+> >  /**
+> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> > index 0ab284c..8f591a4 100644
+> > --- a/net/mac80211/mlme.c
+> > +++ b/net/mac80211/mlme.c
+> > @@ -945,6 +945,38 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif)
+> >  }
+> >  EXPORT_SYMBOL(ieee80211_beacon_loss);
+> >  
+> > +void ieee80211_probereq_failed(struct ieee80211_vif *vif)
+> > +{
+> > +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> > +	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> > +	struct ieee80211_local *local = sdata->local;
+> > +	u8 bssid[ETH_ALEN];
+> > +
+> > +	mutex_lock(&ifmgd->mtx);
+> > +	if (!ifmgd->associated) {
+> > +		mutex_unlock(&ifmgd->mtx);
+> > +		return;
+> > +	}
+> > +
+> > +	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
+> 
+> I think the actual work should be deferred to a workqueue struct item so
+> that you don't get into locking trouble with drivers here.
+
+You're right. I will send a v2 of this patch next week with that
+change. 
+
+Then, I will also bundle Kalle Valo's "mac80211: add support connection
+monitor in hardware" patch to this set to propose a fully hardware based
+connection maintenance (periodic probe-req's (or keep-alives) and
+automatic probe-requests on beacon loss.)
+
+-Juuso
+
+> johannes
+> 
 > --
-> Regards,
-> Pavel Roskin
->
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I don't think that is needed, as we already support multiple monitor
-interfaces (including a situation where some are cooked, others are
-raw).
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
