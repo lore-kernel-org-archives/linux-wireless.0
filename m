@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from home.einfach.org ([80.86.92.145]:44988 "EHLO home.einfach.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753884Ab0CIAYw convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39723 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752387Ab0CLICd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 19:24:52 -0500
-From: Bruno Randolf <br1@einfach.org>
-To: jorge@dti2.net
-Subject: Re: [PATCH v2] ath5k: fix I/Q calibration (for real)
-Date: Tue, 9 Mar 2010 09:24:35 +0900
-Cc: me@bobcopeland.com, linville@tuxdriver.com, 8an@praha12.net,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, benoit.papillault@free.fr
-References: <20100308025841.7460.69949.stgit@void> <4B94F183.2080002@dti2.net>
-In-Reply-To: <4B94F183.2080002@dti2.net>
+	Fri, 12 Mar 2010 03:02:33 -0500
+Date: Fri, 12 Mar 2010 10:02:16 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	=?utf-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, devel@driverdev.osuosl.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: cfg80211 conversion of all drivers
+Message-ID: <20100312080216.GA18550@jm.kir.nu>
+References: <43e72e891003111722n4b4d5b6crf764dfe357ff8965@mail.gmail.com>
+ <69e28c911003111756h224ef6a9x622c979232b6698b@mail.gmail.com>
+ <20100312025330.GA15402@tuxdriver.com>
+ <201003120810.38194.holgerschurig@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201003090924.35470.br1@einfach.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201003120810.38194.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 March 2010 21:45:55 Jorge Boncompte [DTI2] wrote:
-> El 08/03/2010 3:59, Bruno Randolf escribió:
-> > 4.) we can't use ENABLE_BITS when we want to write a number (the number
-> > can contain zeros). also always write the correction values first and
-> > set ENABLE bit last, like the HAL does.
+On Fri, Mar 12, 2010 at 08:10:37AM +0100, Holger Schurig wrote:
+> > I think that is code for "replace it with something based on mac80211"...
 > 
-> 	Hi Bruno,
-> 
-> 	does not ath5k_hw_commit_eeprom_settings() have the same problem 
-described
-> above when committing the IQ values from the EEPROM? legacy-hal does
-> differently too.
+> That's not going to happen, hostap + orinoco both work against fullmac chips, 
+> which can't send arbitrary packets and therefore no 802.11 management frames.
 
-yes, but i have fixed that in the second patch of this series:
+The Host AP mode in Prism 2/2.5/3 provides for a somewhat special
+situation.. It does actually allow sending of (almost) arbitrary packets
+and management frames in AP mode. In other words, it should be possible
+to create a mac80211-based AP mode driver for Prism 2/2.5/3 to replace
+the AP side of the Host AP driver. Whether anyone has enough interest
+and time to do that is another question, though.
 
-[PATCH 2/3] ath5k: read eeprom IQ calibration values correctly for G mode
+As far as station functionality is concerned, I would agree that
+mac80211 is not a good target for the Host AP driver. If AP side were to
+be made available as a mac80211-based driver, it could make more sense
+to merge station side from the Host AP driver into orinoco or some kind
+of combination of the driver. However, having two different drivers for
+same hardware issue would not go anywhere with this.
 
-i forgot to mention that in the changelog.
-
-bruno
+One of the problems here is that the hardware is question is quite old
+and for many practical purposes obsolete, so finding people to work on
+this can get difficult. I can certainly come up with much better uses
+for my time.. ;-)
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
