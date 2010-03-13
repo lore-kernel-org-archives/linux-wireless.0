@@ -1,128 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:7107 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751900Ab0CHC7F (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40666 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752336Ab0CMFrD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Mar 2010 21:59:05 -0500
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0729387141
-	for <linux-wireless@vger.kernel.org>; Mon,  8 Mar 2010 11:59:02 +0900 (JST)
-Subject: [PATCH v2] ath5k: fix I/Q calibration (for real)
-To: me@bobcopeland.com, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: 8an@praha12.net, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, mickflemm@gmail.com,
-	benoit.papillault@free.fr
-Date: Mon, 08 Mar 2010 11:59:01 +0900
-Message-ID: <20100308025841.7460.69949.stgit@void>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sat, 13 Mar 2010 00:47:03 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 11/12] ath9k_hw: add HTC init hardware call for special resets for AR9271
+Date: Sat, 13 Mar 2010 00:46:55 -0500
+Message-Id: <1268459216-22372-12-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I/Q calibration was completely broken, resulting in a high number of CRC errors
-on received packets. before i could see around 10% to 20% CRC errors, with this
-patch they are between 0% and 3%.
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-1.) the removal of the mask in commit "ath5k: Fix I/Q calibration
-(f1cf2dbd0f798b71b1590e7aca6647f2caef1649)" resulted in no mask beeing used
-when writing the I/Q values into the register. additional errors in the
-calculation of the values (see 2.) resulted too high numbers, exceeding the
-masks, so wrong values like 0xfffffffe were written. to be safe we should
-always use the bitmask when writing parts of a register.
+AR9271 needs a full reset only upon the first reset, add
+a call for the driver to enable these special resets. We
+can optimize this out later without an export.
 
-2.) using a (s32) cast for q_coff is a wrong conversion to signed, since we
-convert to a signed value later by substracting 128. this resulted in too low
-numbers for Q many times, which were limited to -16 by the boundary check later
-on.
-
-3.) checked everything against the HAL sources and took over comments and minor
-optimizations from there.
-
-4.) we can't use ENABLE_BITS when we want to write a number (the number can
-contain zeros). also always write the correction values first and set ENABLE
-bit last, like the HAL does.
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-v2: use clamp() as Bob suggested
----
- drivers/net/wireless/ath/ath5k/phy.c |   37 +++++++++++++++++-----------------
- drivers/net/wireless/ath/ath5k/reg.h |    1 +
- 2 files changed, 20 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |   12 ++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h |    3 +++
+ 2 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 3fa4f4d..b7f2949 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1386,38 +1386,39 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
- 		goto done;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0b1737f..0670d98 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1951,6 +1951,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
  
- 	/* Calibration has finished, get the results and re-run */
-+
-+	/* workaround against empty results which can apparently happen on 5212 */
- 	for (i = 0; i <= 10; i++) {
- 		iq_corr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_CORR);
- 		i_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_I);
- 		q_pwr = ath5k_hw_reg_read(ah, AR5K_PHY_IQRES_CAL_PWR_Q);
-+		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
-+			"iq_corr:%x i_pwr:%x q_pwr:%x", iq_corr, i_pwr, q_pwr);
-+		if (i_pwr && q_pwr)
-+			break;
+ 	ath9k_hw_mark_phy_inactive(ah);
+ 
++	/* Only required on the first reset */
+ 	if (AR_SREV_9271(ah) && ah->htc_reset_init) {
+ 		REG_WRITE(ah,
+ 			  AR9271_RESET_POWER_DOWN_CONTROL,
+@@ -1963,6 +1964,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		return -EINVAL;
  	}
  
- 	i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
- 	q_coffd = q_pwr >> 7;
++	/* Only required on the first reset */
+ 	if (AR_SREV_9271(ah) && ah->htc_reset_init) {
+ 		ah->htc_reset_init = false;
+ 		REG_WRITE(ah,
+@@ -3857,6 +3859,16 @@ void ath_gen_timer_isr(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath_gen_timer_isr);
  
--	/* No correction */
--	if (i_coffd == 0 || q_coffd == 0)
-+	/* protect against divide by 0 and loss of sign bits */
-+	if (i_coffd == 0 || q_coffd < 2)
- 		goto done;
++/********/
++/* HTC  */
++/********/
++
++void ath9k_hw_htc_resetinit(struct ath_hw *ah)
++{
++	ah->htc_reset_init = true;
++}
++EXPORT_SYMBOL(ath9k_hw_htc_resetinit);
++
+ static struct {
+ 	u32 version;
+ 	const char * name;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e63edfb..6b03e16 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -707,6 +707,9 @@ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
  
--	i_coff = ((-iq_corr) / i_coffd);
-+	i_coff = (-iq_corr) / i_coffd;
-+	i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
+ void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
  
--	/* Boundary check */
--	if (i_coff > 31)
--		i_coff = 31;
--	if (i_coff < -32)
--		i_coff = -32;
-+	q_coff = (i_pwr / q_coffd) - 128;
-+	q_coff = clamp(q_coff, -16, 15); /* signed 5 bit */
- 
--	q_coff = (((s32)i_pwr / q_coffd) - 128);
-+	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
-+			"new I:%d Q:%d (i_coffd:%x q_coffd:%x)",
-+			i_coff, q_coff, i_coffd, q_coffd);
- 
--	/* Boundary check */
--	if (q_coff > 15)
--		q_coff = 15;
--	if (q_coff < -16)
--		q_coff = -16;
--
--	/* Commit new I/Q value */
--	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE |
--		((u32)q_coff) | ((u32)i_coff << AR5K_PHY_IQ_CORR_Q_I_COFF_S));
-+	/* Commit new I/Q values (set enable bit last to match HAL sources) */
-+	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF, i_coff);
-+	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF, q_coff);
-+	AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
- 
- 	/* Re-enable calibration -if we don't we'll commit
- 	 * the same values again and again */
-diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
-index 4cb9c5d..1464f89 100644
---- a/drivers/net/wireless/ath/ath5k/reg.h
-+++ b/drivers/net/wireless/ath/ath5k/reg.h
-@@ -2187,6 +2187,7 @@
-  */
- #define	AR5K_PHY_IQ			0x9920			/* Register Address */
- #define	AR5K_PHY_IQ_CORR_Q_Q_COFF	0x0000001f	/* Mask for q correction info */
-+#define	AR5K_PHY_IQ_CORR_Q_Q_COFF_S	0
- #define	AR5K_PHY_IQ_CORR_Q_I_COFF	0x000007e0	/* Mask for i correction info */
- #define	AR5K_PHY_IQ_CORR_Q_I_COFF_S	5
- #define	AR5K_PHY_IQ_CORR_ENABLE		0x00000800	/* Enable i/q correction */
++/* HTC */
++void ath9k_hw_htc_resetinit(struct ath_hw *ah);
++
+ #define ATH_PCIE_CAP_LINK_CTRL	0x70
+ #define ATH_PCIE_CAP_LINK_L0S	1
+ #define ATH_PCIE_CAP_LINK_L1	2
+-- 
+1.6.3.3
 
