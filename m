@@ -1,118 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:33065 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362Ab0CRK1V (ORCPT
+Received: from smtp-out1.tiscali.nl ([195.241.79.176]:55710 "EHLO
+	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633Ab0CMQvs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 06:27:21 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 15/21] wl1271: Remove deprecated interface config function
-Date: Thu, 18 Mar 2010 12:26:40 +0200
-Message-Id: <1268908006-16992-16-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
-References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+	Sat, 13 Mar 2010 11:51:48 -0500
+Received: from [212.123.130.47] (helo=[10.0.0.8])
+	by smtp-out1.tiscali.nl with esmtp (Exim)
+	(envelope-from <thijsvanderkraan@telfort.nl>)
+	id 1NqUH6-0003JY-7G
+	for linux-wireless@vger.kernel.org; Sat, 13 Mar 2010 17:33:16 +0100
+Subject: 
+From: Thijs van der Kraan <thijsvanderkraan@telfort.nl>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 13 Mar 2010 17:33:14 +0100
+Message-ID: <1268497994.2475.12.camel@desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+The zd1211rw does not work with the Shuttle PN15G (D-Link Corp. WL54).
+After the driver fails it also break the device for my windows XP
+install.
+To get it back in working order I have to physically re-plug it while
+windows is running, this is pretty annoying as the PN15G is meant to be,
+and is, built inside my shuttle box.
 
-It's no longer needed.
+I tried another device that uses the same driver, the ZyAIR G-220, and
+it works like a charm.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   68 -----------------------------
- 1 files changed, 0 insertions(+), 68 deletions(-)
+- Is there a way to get the Shuttle PN15G working ?
+- Can prevent the driver from breaking my device, so it will remain
+working under windows XP.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index d8cb514..688009b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1088,73 +1088,6 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 	mutex_unlock(&wl->mutex);
- }
- 
--#if 0
--static int wl1271_op_config_interface(struct ieee80211_hw *hw,
--				      struct ieee80211_vif *vif,
--				      struct ieee80211_if_conf *conf)
--{
--	struct wl1271 *wl = hw->priv;
--	struct sk_buff *beacon;
--	int ret;
--
--	wl1271_debug(DEBUG_MAC80211, "mac80211 config_interface bssid %pM",
--		     conf->bssid);
--	wl1271_dump_ascii(DEBUG_MAC80211, "ssid: ", conf->ssid,
--			  conf->ssid_len);
--
--	mutex_lock(&wl->mutex);
--
--	ret = wl1271_ps_elp_wakeup(wl, false);
--	if (ret < 0)
--		goto out;
--
--	if (memcmp(wl->bssid, conf->bssid, ETH_ALEN)) {
--		wl1271_debug(DEBUG_MAC80211, "bssid changed");
--
--		memcpy(wl->bssid, conf->bssid, ETH_ALEN);
--
--		ret = wl1271_cmd_join(wl, wl->bss_type);
--		if (ret < 0)
--			goto out_sleep;
--
--		ret = wl1271_cmd_build_null_data(wl);
--		if (ret < 0)
--			goto out_sleep;
--	}
--
--	wl->ssid_len = conf->ssid_len;
--	if (wl->ssid_len)
--		memcpy(wl->ssid, conf->ssid, wl->ssid_len);
--
--	if (conf->changed & IEEE80211_IFCC_BEACON) {
--		beacon = ieee80211_beacon_get(hw, vif);
--		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_BEACON,
--					      beacon->data, beacon->len);
--
--		if (ret < 0) {
--			dev_kfree_skb(beacon);
--			goto out_sleep;
--		}
--
--		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_PROBE_RESPONSE,
--					      beacon->data, beacon->len);
--
--		dev_kfree_skb(beacon);
--
--		if (ret < 0)
--			goto out_sleep;
--	}
--
--out_sleep:
--	wl1271_ps_elp_sleep(wl);
--
--out:
--	mutex_unlock(&wl->mutex);
--
--	return ret;
--}
--#endif
--
- static int wl1271_join_channel(struct wl1271 *wl, int channel)
- {
- 	int ret = 0;
-@@ -1940,7 +1873,6 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.add_interface = wl1271_op_add_interface,
- 	.remove_interface = wl1271_op_remove_interface,
- 	.config = wl1271_op_config,
--/* 	.config_interface = wl1271_op_config_interface, */
- 	.prepare_multicast = wl1271_op_prepare_multicast,
- 	.configure_filter = wl1271_op_configure_filter,
- 	.tx = wl1271_op_tx,
--- 
-1.6.3.3
+
+Thijs van de Kraan
+
+
+lsusb:
+---------------
+Bus 001 Device 004: ID 0586:3401 ZyXEL Communications Corp. ZyAIR G-220
+Bus 001 Device 003: ID 07b8:6001 D-Link Corp. WL54
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 004 Device 002: ID 04fc:05d8 Sunplus Technology Co., Ltd 
+Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+---------------
+
+dmesg (Shuttle PN15G):
+---------------
+[    9.419022] zd1211rw 1-8:1.0: phy0
+[    9.419050] usbcore: registered new interface driver zd1211rw
+[   11.618783] usb 1-8: firmware: requesting zd1211/zd1211b_ub
+[   11.979913] usb 1-8: firmware version 0x4810 and device bootcode
+version 0x4721 differ
+[   11.979919] usb 1-8: firmware: requesting zd1211/zd1211b_ur
+[   12.184918] usb 1-8: firmware: requesting zd1211/zd1211b_uphr
+[   12.261522] zd1211rw 1-8:1.0: RF2959 is currently not supported for
+ZD1211B devices
+[   12.263744] eth0: link down
+[   12.263950] ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   14.491044] usb 1-8: firmware: requesting zd1211/zd1211b_ub
+[   14.496834] usb 1-8: firmware version 0x4810 and device bootcode
+version 0x4721 differ
+[   14.496841] usb 1-8: firmware: requesting zd1211/zd1211b_ur
+[   15.526035] usb 1-8: USB control request for firmware upload failed.
+Error number -110
+[   15.526049] zd1211rw 1-8:1.0: couldn't load firmware. Error number
+-110
+
+dmesg (ZyAIR G-220):
+---------------
+
+[  283.920025] usb 1-4: new high speed USB device using ehci_hcd and
+address 4
+[  284.070953] usb 1-4: configuration #1 chosen from 1 choice
+[  284.200081] usb 1-4: reset high speed USB device using ehci_hcd and
+address 4
+[  284.351553] phy1: Selected rate control algorithm 'minstrel'
+[  284.352966] zd1211rw 1-4:1.0: phy1
+[  284.387607] usb 1-4: firmware: requesting zd1211/zd1211_ub
+[  284.422786] usb 1-4: firmware version 0x4330 and device bootcode
+version 0x4810 differ
+[  284.422796] usb 1-4: firmware: requesting zd1211/zd1211_ur
+[  284.446550] usb 1-4: firmware: requesting zd1211/zd1211_uphr
+[  284.528039] zd1211rw 1-4:1.0: firmware version 4605
+[  284.568044] zd1211rw 1-4:1.0: zd1211 chip 0586:3401 v4810 high
+00-13-49 AL2230_RF pa0 -----
+[  284.570691] cfg80211: Calling CRDA for country: DE
+[  284.574176] cfg80211: Regulatory domain changed to country: DE
+[  284.574184] 	(start_freq - end_freq @ bandwidth), (max_antenna_gain,
+max_eirp)
+[  284.574190] 	(2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[  284.574195] 	(5150000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[  284.574200] 	(5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
+[  284.589627] ADDRCONF(NETDEV_UP): wlan1: link is not ready
+[  291.145078] wlan1: authenticate with AP 00:21:29:8b:3a:49
+[  291.146703] wlan1: authenticated
+[  291.146708] wlan1: associate with AP 00:21:29:8b:3a:49
+[  291.148944] wlan1: RX AssocResp from 00:21:29:8b:3a:49 (capab=0x411
+status=0 aid=2)
+[  291.148950] wlan1: associated
+[  291.149928] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[  301.720021] wlan1: no IPv6 routers present
 
