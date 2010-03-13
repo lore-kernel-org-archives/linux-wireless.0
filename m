@@ -1,53 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:65330 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704Ab0CRViX (ORCPT
+Received: from mail-iw0-f176.google.com ([209.85.223.176]:50909 "EHLO
+	mail-iw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480Ab0CMJ4B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 17:38:23 -0400
-Received: by fxm19 with SMTP id 19so97294fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 14:38:21 -0700 (PDT)
-Message-ID: <4BA29D49.80707@lwfinger.net>
-Date: Thu, 18 Mar 2010 16:38:17 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 13 Mar 2010 04:56:01 -0500
+Date: Sat, 13 Mar 2010 01:55:54 -0800
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Florian Mickler <florian@mickler.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+	Valdis.Kletnieks@vt.edu
+Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
+Message-ID: <20100313095554.GA16038@core.coreip.homeip.net>
+References: <1268416988-24862-1-git-send-email-florian@mickler.org>
+ <1268416988-24862-2-git-send-email-florian@mickler.org>
+ <1268416988-24862-3-git-send-email-florian@mickler.org>
+ <20100312182209.GB8736@core.coreip.homeip.net>
+ <20100312215743.7671d173@schatten.dmk.lab>
+ <20100312212025.GA17712@core.coreip.homeip.net>
+ <20100312233925.74effc7d@schatten.dmk.lab>
+ <20100312224828.GA18618@core.coreip.homeip.net>
+ <20100313104128.79aa2846@schatten.dmk.lab>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: A workaround for BCM43XX devices with no on-board SPROM
-References: <4BA266FB.1080507@lwfinger.net> <201003182031.25013.mb@bu3sch.de>
-In-Reply-To: <201003182031.25013.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100313104128.79aa2846@schatten.dmk.lab>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/18/2010 02:31 PM, Michael Buesch wrote:
-> On Thursday 18 March 2010 18:46:35 Larry Finger wrote:
->> (1) Modify b43-fwcutter to take data from an existing SPROM,
+On Sat, Mar 13, 2010 at 10:41:28AM +0100, Florian Mickler wrote:
+> On Fri, 12 Mar 2010 14:48:28 -0800
+> Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
 > 
-> Why not extend the ssb-sprom tool? I don't think this has anything to do with
-> firmware, except that we (ab)use the firmware loading mechanism of the kernel
-> for loading the blob into the kernel.
-
-It has nothing to do with firmware, but the existing fwcutter has all the parts
-to generate files in the firmware directory, which is a good place to put this
-virtual SPROM.
+> > On Fri, Mar 12, 2010 at 11:39:25PM +0100, Florian Mickler wrote:
+> > > On Fri, 12 Mar 2010 13:20:26 -0800
+> > > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
+> > > 
+> > > > On Fri, Mar 12, 2010 at 09:57:43PM +0100, Florian Mickler wrote:
+> > > > > On Fri, 12 Mar 2010 10:22:09 -0800
+> > > > > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
+> > > > > 
+> > > > > > On Fri, Mar 12, 2010 at 07:03:08PM +0100, florian@mickler.org wrote:
+> > > > > > >  
+> > > > > > > +static ssize_t rfkill_hard_show(struct device *dev,
+> > > > > > > +				 struct device_attribute *attr,
+> > > > > > > +				 char *buf)
+> > > > > > > +{
+> > > > > > > +	struct rfkill *rfkill = to_rfkill(dev);
+> > > > > > > +	unsigned long flags;
+> > > > > > > +	u32 state;
+> > > > > > > +
+> > > > > > > +	spin_lock_irqsave(&rfkill->lock, flags);
+> > > > > > > +	state = rfkill->state;
+> > > > > > > +	spin_unlock_irqrestore(&rfkill->lock, flags);
+> > > > > > 
+> > > > > > Why exactly is this lock needed?
+> > > > > 
+> > > > > The rfkill state is updated from multiple contexts... Am I overlooking
+> > > > > smth obvious here?
+> > > > > 
+> > > > 
+> > > > You are not updating but reading... Are you concerned about seeing
+> > > > a partial write to u32? It does not happen.
+> > > > 
+> > > Hm.. You shure? On every arch that supports wireless drivers? 
+> > > 
+> > > I've just copied that code from the old sysfs state-file handler.
+> > > So I assumed that reading partial updated state can happen... Also I
+> > > just searched a little but did not find anything, cause i didn't know
+> > > where to look. Who garantees this? Is it a gcc thing? 
+> > > 
+> > 
+> > None of the arches would do byte-by-byte writes to a u32, they'd write
+> > dword at once. Also, even if they could, you are interested in a single
+> > flag (bit). You do realize that once you leave spinlock whatever you
+> > fetched is stale data and may not be trusted?
 > 
->> I have chosen to implement this in
->> fwcutter rather than ssb_sprom because the ordinary user will not have access to
->> ssb_sprom;
+> On Fri, 12 Mar 2010 18:48:19 -0500
+> Valdis.Kletnieks@vt.edu wrote:
+> > If a u32 load or store from memory isn't atomic, the Linux kernel is screwed
+> > anyhow.  Hint - imagine if every 32-bit reference had to be treated the way
+> > we currently treat 64-bit references on a 32-bit system.
 > 
-> Huh? ssb-sprom is GPL software. I have no problem relicensing it under BSD or
-> even something more liberal. I don't see a problem for "ordinary users" here.
+> 
+> i presume, there is no way any digital device could write _one bit_
+> partial :) 
+> so this _may_ actually be safe *g* 
+>  
+> how about the write in the _store() function? there we
+> read,update and write back the whole 32 bit which then potentially
+> overwrites some other flag concurrently set by an driver interrupt on
+> another cpu? i think the lock there is needed.
+>
 
-It has nothing to do with the license. My distro, openSUSE, packages fwcutter
-along with a script that uses wget to download the Broadcom drivers and extract
-firmware for both b43 and b43legacy. The average user only has to execute that
-script. Of course, the package could include both fwcutter and ssb_sprom
-programs, but that would make a bigger change to the openSUSE package than just
-a patch to fwcutter. I suspect that other distros use similar packages.
+Well, right now it is mutex so it will not protect if something happens
+in interrupt context. Takeing the global rfkill mutex seems pretty heavy
+but there does not seem to be a per-device mutex. There also some
+muching with spinlock inside rfkill_set_state but it is dropped when we
+actually carry out the operation. I am afraid the locking in rfkill
+needs some reviewing...
 
-> Well, but that version won't do anything on the SPROM, too.
-
-Yes, but if fwcutter were modified, it could write the virtual SPROM file.
-
-Larry
+-- 
+Dmitry
