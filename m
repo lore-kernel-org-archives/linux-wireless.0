@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:44427 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755198Ab0CEDoj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49555 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757618Ab0CMDIt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 22:44:39 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: kevin@atheros.com, doug.dahlby@atheros.com,
-	cliff.holden@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC 3/3] ath9k: rename initvals.h to ar9200_initvals.h
-Date: Thu,  4 Mar 2010 22:44:38 -0500
-Message-Id: <1267760678-5421-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
-References: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 12 Mar 2010 22:08:49 -0500
+Subject: Re: Weird wireless/wpa_supplicant screw-up.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Valdis.Kletnieks@vt.edu
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <5220.1268430568@localhost>
+References: <7197.1268086939@localhost>
+	 <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Mar 2010 19:09:09 -0800
+Message-ID: <1268449749.4880.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The register initialization values we have so far are
-only for the AR5008, AR9002 and AR9002 hardware families
-and we've managed to get ar90002_hw.c to be its only user
-so clarify this by renaming the initvals.
+On Fri, 2010-03-12 at 16:49 -0500, Valdis.Kletnieks@vt.edu wrote:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c         |    2 +-
- .../ath/ath9k/{initvals.h => ar9200_initvals.h}    |    0
- 2 files changed, 1 insertions(+), 1 deletions(-)
- rename drivers/net/wireless/ath/ath9k/{initvals.h => ar9200_initvals.h} (100%)
+> OK, getting closer ;)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 9e9247f..902d239 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -17,7 +17,7 @@
- #include "hw.h"
- #include "hw-ops.h"
- #include "rc.h"
--#include "initvals.h"
-+#include "ar9200_initvals.h"
- 
- static void ar9002_hw_disablepcie(struct ath_hw *ah)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/ar9200_initvals.h
-similarity index 100%
-rename from drivers/net/wireless/ath/ath9k/initvals.h
-rename to drivers/net/wireless/ath/ath9k/ar9200_initvals.h
--- 
-1.6.3.3
+No ... you're not getting closer at all ... you ignored my second email.
+
+> in net/wireless/wext-compat.c, we have this in cfg80211_wext_giwencode()
+> after I add some printk's:
+> 
+> printk(KERN_INFO "In giwencode idx=%d keys=%x cipher=%x\n", idx, wdev->wext.keys, wdev->wext.keys->params[idx].cipher);
+>         if (!wdev->wext.keys || !wdev->wext.keys->params[idx].cipher) {
+> printk(KERN_INFO "And we're going home...\n");
+>                 erq->flags |= IW_ENCODE_DISABLED;
+>                 erq->length = 0;
+>                 return 0;
+>         }
+> 
+> which produces
+> 
+> [  151.401195] In giwencode idx=0 keys=1d023600 cipher=0
+> [  151.401198] And we're going home...
+
+No ... look at _all_ that it produces.
+
+[   98.592575] In giwencode idx=0 keys=ffff88001b304000 cipher=0
+[   98.592580] And we're going home...
+*****
+[   98.592633] In giwencode idx=1 keys=ffff88001b304000 cipher=fac04
+*****
+[   98.592749] In giwencode idx=2 keys=ffff88001b304000 cipher=0
+[   98.592751] And we're going home...
+[   98.592803] In giwencode idx=3 keys=ffff88001b304000 cipher=0
+[   98.592805] And we're going home...
+[   98.592856] In giwencode idx=0 keys=ffff88001b304000 cipher=0
+[   98.592859] And we're going home...
+
+See? It reports one key which is the RX-only group key which is
+absolutely correct.
+
+> So the root cause has something to do with params[idx].cipher being unset.
+
+Not at all.
+
+GIWENCODE is 100% unsuitable for WPA. Just forget about "iwlist key".
+And then we'd like to know what the actual problem is.
+
+johannes
 
