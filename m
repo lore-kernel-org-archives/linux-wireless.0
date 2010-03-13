@@ -1,72 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f181.google.com ([209.85.216.181]:47601 "EHLO
-	mail-px0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826Ab0CEDsd (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40649 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752060Ab0CMFq6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 22:48:33 -0500
-Received: by pxi11 with SMTP id 11so124737pxi.15
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Mar 2010 19:48:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
-References: <1267760678-5421-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 13 Mar 2010 00:46:58 -0500
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 4 Mar 2010 19:48:13 -0800
-Message-ID: <43e72e891003041948m5854a11fy168c275912d803d5@mail.gmail.com>
-Subject: Re: [RFC 0/3] ath9k: initial work for ar9003 support
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: kevin@atheros.com, doug.dahlby@atheros.com,
-	cliff.holden@atheros.com,
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v3 02/12] ath9k_hw: add GPIO setup code for AR9271
+Date: Sat, 13 Mar 2010 00:46:46 -0500
+Message-Id: <1268459216-22372-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 4, 2010 at 7:44 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> We are working on supporting the AR9003 chipset family.
-> This is the new 802.11n family of chipset by Atheros,
-> it will include 2-stream chipsets and the new shiny 3-stream
-> chipsets. The plan of attack is to support the 2-stream
-> chipsets first and then move on the the 3-stream devices.
->
-> The new family of chipsets are supported in the same traditional
-> Atheros way of using code on the host, however the register map
-> for the new chipset is now defined through an alternative approach [1].
-> This essentially requires new routines for every read/write operation
-> and as such requires an abstraction layer for hardware support.
->
-> This first patch series illustrates the direction I'm taking so far
-> for the abstraction. Please review and let me know what you think.
-> Fortunately I believe we will be able to re-use some core harware
-> code by implementing both generic harware callbacks and also some
-> private callbacks, to be used only by hardware code itself. I
-> intend on stuffing the generic harware code on hw.c and moving
-> chipset specific stuff into their own files.
->
-> Let me know what you think so far. If this seems peachy I'll
-> continue with this strategy and complete the abstraction for
-> the AR5008/AR9001/AR9002 family first. We can then work on
-> the AR9003 family support by simply adding new callbacks for
-> it.
->
-> There are some cases where I think its pointless to keep using
-> callbacks where the code is exactly the same and although we are
-> using a different register definition for some families they are
-> ikely 100% identical. A case I found so far was ath9k_hw_chip_test()
-> and in fact I noticed we can even share this same call with
-> the legacy family, through ath5k. So I think in cases like those
-> where not many registers are being picked at it makes sense to
-> standardize the calls accross the board, and sometimes this may
-> mean sharing for all the chipset families, legacy, and all 802.11n
-> including the new ar9003 family.
->
-> [1] http://wireless.kernel.org/en/users/Drivers/ath9k/todo/ar93xx#Register_offset_definitions
->
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-I also forgot to mention that I see two advantages with this new
-approach. With this abstraction in place if we really wanted to we
-could try to unify ath5k/ath9k some more, although it is not one of my
-own goals. Another neat advantage we can take from the new changes is
-add a tracer on hw-ops.h.
+Assign the proper number of GPIO pins for AR9271.
 
-  Luis
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |   11 +++++++++--
+ drivers/net/wireless/ath/ath9k/reg.h |    3 +++
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9de4603..7b1ba6f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3229,7 +3229,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	else
+ 		pCap->tx_triglevel_max = MAX_TX_FIFO_THRESHOLD;
+ 
+-	if (AR_SREV_9285_10_OR_LATER(ah))
++	if (AR_SREV_9271(ah))
++		pCap->num_gpio_pins = AR9271_NUM_GPIO;
++	else if (AR_SREV_9285_10_OR_LATER(ah))
+ 		pCap->num_gpio_pins = AR9285_NUM_GPIO;
+ 	else if (AR_SREV_9280_10_OR_LATER(ah))
+ 		pCap->num_gpio_pins = AR928X_NUM_GPIO;
+@@ -3465,7 +3467,9 @@ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
+ 	if (gpio >= ah->caps.num_gpio_pins)
+ 		return 0xffffffff;
+ 
+-	if (AR_SREV_9287_10_OR_LATER(ah))
++	if (AR_SREV_9271(ah))
++		return MS_REG_READ(AR9271, gpio) != 0;
++	else if (AR_SREV_9287_10_OR_LATER(ah))
+ 		return MS_REG_READ(AR9287, gpio) != 0;
+ 	else if (AR_SREV_9285_10_OR_LATER(ah))
+ 		return MS_REG_READ(AR9285, gpio) != 0;
+@@ -3494,6 +3498,9 @@ EXPORT_SYMBOL(ath9k_hw_cfg_output);
+ 
+ void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val)
+ {
++	if (AR_SREV_9271(ah))
++		val = ~val;
++
+ 	REG_RMW(ah, AR_GPIO_IN_OUT, ((val & 1) << gpio),
+ 		AR_GPIO_BIT(gpio));
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 72cfa8e..198e41d 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -940,6 +940,7 @@ enum {
+ #define AR928X_NUM_GPIO                          10
+ #define AR9285_NUM_GPIO                          12
+ #define AR9287_NUM_GPIO                          11
++#define AR9271_NUM_GPIO                          16
+ 
+ #define AR_GPIO_IN_OUT                           0x4048
+ #define AR_GPIO_IN_VAL                           0x0FFFC000
+@@ -950,6 +951,8 @@ enum {
+ #define AR9285_GPIO_IN_VAL_S                     12
+ #define AR9287_GPIO_IN_VAL                       0x003FF800
+ #define AR9287_GPIO_IN_VAL_S                     11
++#define AR9271_GPIO_IN_VAL                       0xFFFF0000
++#define AR9271_GPIO_IN_VAL_S                     16
+ 
+ #define AR_GPIO_OE_OUT                           0x404c
+ #define AR_GPIO_OE_OUT_DRV                       0x3
+-- 
+1.6.3.3
+
