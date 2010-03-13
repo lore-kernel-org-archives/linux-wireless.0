@@ -1,34 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from osmium.mv.net ([199.125.85.152]:55788 "HELO shell.mv.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756670Ab0CKKoo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 05:44:44 -0500
-Date: Thu, 11 Mar 2010 05:20:06 -0500 (EST)
-From: RHS Linux User <xxx@nei.mv.com>
-To: yingqiang Ma <yma.cool@gmail.com>
-cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [ath9k-devel] is it possible to get a positive signal strength?
-In-Reply-To: <8247263b1003102035h420d956bt298fe33e8746f3c7@mail.gmail.com>
-Message-ID: <Pine.LNX.3.95.1100311051900.2778A-100000@nei>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from bombadil.infradead.org ([18.85.46.34]:40640 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751655Ab0CMFq6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Mar 2010 00:46:58 -0500
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 09/12] ath9k_hw: use the skip count for PA calibration on AR9271
+Date: Sat, 13 Mar 2010 00:46:53 -0500
+Message-Id: <1268459216-22372-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-Hi,
+Periodic power amplifier offset calibration is skipped on ath9k
+algorithmically, this is required on AR9271.
 
-   I see occasional "junk" as reported signal strength too !!
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-   Buggy Atheros code or hardware I assume.
-
-   Regards,
- 
-   Wiz
-
-
-On Thu, 11 Mar 2010, yingqiang Ma wrote:
-
-
-  [NON-Text Body part not included]
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index e76dd74..d5026e4 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -1059,9 +1059,12 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	/* Do NF cal only at longer intervals */
+ 	if (longcal) {
+ 		/* Do periodic PAOffset Cal */
+-		if (AR_SREV_9271(ah))
+-			ath9k_hw_9271_pa_cal(ah, false);
+-		else if (AR_SREV_9285_11_OR_LATER(ah)) {
++		if (AR_SREV_9271(ah)) {
++			if (!ah->pacal_info.skipcount)
++				ath9k_hw_9271_pa_cal(ah, false);
++			else
++				ah->pacal_info.skipcount--;
++		} else if (AR_SREV_9285_11_OR_LATER(ah)) {
+ 			if (!ah->pacal_info.skipcount)
+ 				ath9k_hw_9285_pa_cal(ah, false);
+ 			else
+-- 
+1.6.3.3
 
