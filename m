@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:25731 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753229Ab0CZCsR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 22:48:17 -0400
-Subject: Re: [ipw3945-devel] [PATCH 21/22] iwlwifi: change spin_lock to
- spin_lock_irqsave
-From: Zhu Yi <yi.zhu@intel.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1269551457.2626.12.camel@mj>
-References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
-	 <1269549890-19195-22-git-send-email-reinette.chatre@intel.com>
-	 <1269551457.2626.12.camel@mj>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 26 Mar 2010 10:49:02 +0800
-Message-ID: <1269571742.4043.161.camel@debian>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39180 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965680Ab0COTAq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Mar 2010 15:00:46 -0400
+Date: Mon, 15 Mar 2010 14:56:54 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Alban Browaeys <prahal@yahoo.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rt2x00: txdone implementation supporting hw encryption.
+Message-ID: <20100315185654.GB2974@tuxdriver.com>
+References: <4B871EA6.9050105@yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B871EA6.9050105@yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-26 at 05:10 +0800, Pavel Roskin wrote:
-> As far as I understand, spin_lock_irqsave() is superfluous in
-> interrupt handlers, since interrupt handlers are run with interrupts
-> disabled.
+On Fri, Feb 26, 2010 at 02:06:46AM +0100, Alban Browaeys wrote:
+> This is an implementation that support WCID being the encryption key.
+> Wireless Cli Id was set to be the encryption key in rt2800pci_write_tx_desc
+> and read (TX_STA_FIFO_WCID) as the current queue entry index.
+>
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
 
-spin_lock_irqsave is required if multiple interrupts are used, i.e.
-MSI-X. IOAPIC only guarantees the same interrupt line is disabled during
-the isr.
+/home/linville/git/wireless-testing
+[linville-t400.local]:> patch -p1 < rt2x00.patch
+patching file drivers/net/wireless/rt2x00/rt2800pci.c
+Hunk #1 FAILED at 907.
+Hunk #2 FAILED at 936.
+Hunk #3 FAILED at 997.
+3 out of 3 hunks FAILED -- saving rejects to file drivers/net/wireless/rt2x00/rt2800pci.c.rej
 
-Thanks,
--yi
+Would you care to post a version that applies against the current
+wireless-testing?
 
+Thanks!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
