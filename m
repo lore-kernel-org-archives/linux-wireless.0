@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:42148 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752493Ab0CWMPC (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:41591 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965869Ab0COXzW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 08:15:02 -0400
-Subject: Re: [PATCH 2/2] mac80211: Add support for connection quality
- monitoring
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+	Mon, 15 Mar 2010 19:55:22 -0400
+Received: by pva4 with SMTP id 4so230739pva.19
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 16:55:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4B9EC85B.8070800@openwrt.org>
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
+	<20100315214338.GB4000@tux> <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com>
+	<20100315234909.GA2662@tux> <4B9EC85B.8070800@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 15 Mar 2010 16:55:02 -0700
+Message-ID: <43e72e891003151655i7dc051d0lc1da26267e9c706@mail.gmail.com>
+Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
+To: Felix Fietkau <nbd@openwrt.org>
 Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho Luciano (Nokia-D/Helsinki)" <Luciano.Coelho@nokia.com>
-In-Reply-To: <1269329862.10120.768.camel@wimaxnb.nmp.nokia.com>
-References: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1269327754-995-3-git-send-email-juuso.oikarinen@nokia.com>
-	 <1269328436.11714.56.camel@localhost.localdomain>
-	 <1269329862.10120.768.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 23 Mar 2010 05:14:53 -0700
-Message-ID: <1269346493.11714.64.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Juuso,
+On Mon, Mar 15, 2010 at 4:52 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-03-16 12:49 AM, Luis R. Rodriguez wrote:
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+>> index 00570fb..867cfaf 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>> @@ -807,6 +804,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+>>               acktimeout += 64 - sifstime - ah->slottime;
+>>
+>>       ath9k_hw_setslottime(ah, slottime);
+>> +
+>> +     if (AR_SREV_9271(ah))
+>> +             return;
+>> +
+>>       ath9k_hw_set_ack_timeout(ah, acktimeout);
+>>       ath9k_hw_set_cts_timeout(ah, acktimeout);
+>>       if (ah->globaltxtimeout != (u32) -1)
+>
+> Why leave out the ACK/CTS timeout setting? How does the hw handle ACK
+> and CTS timeouts?
 
-> > > Add support for the set_cqm_config op. This op function configures the
-> > > requested connection quality monitor rssi threshold and rssi hysteresis
-> > > values to the hardware  if the hardware supports
-> > > IEEE80211_HW_SUPPORTS_CQM.
-> > > 
-> > > For unsupporting hardware, currently -EOPNOTSUPP is returned, so the mac80211
-> > > is currently not doing connection quality monitoring on the host. This could be
-> > > added later, if needed.
-> > 
-> > I think you mean "For unsupported hardware, ..." ;)
-> 
-> I guess you could phrase it like this as well. Do you think this is a
-> problem, i.e. do you want me to resubmit a fixed patch?
+Right, so that's why I originally removed this hunk completely, I was
+under the impression you latest fix would have addressed any issues
+but it does not, we get association time outs. I think we'll have to
+review this further in order to support coverage class.
 
-you can leave this up to John actually. He could also fix this on the
-fly when it applies the patch. However if he wants you to re-submit you
-might have to do it ;)
-
-Regards
-
-Marcel
-
-
+  Luis
