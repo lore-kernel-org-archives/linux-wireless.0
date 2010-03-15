@@ -1,77 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:33995 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553Ab0CIMQF convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f216.google.com ([209.85.219.216]:61190 "EHLO
+	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964955Ab0COQfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 07:16:05 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so379251eya.5
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 04:16:03 -0800 (PST)
+	Mon, 15 Mar 2010 12:35:52 -0400
+Received: by ewy8 with SMTP id 8so1160136ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 09:35:50 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH] rt2x00: fix warning when building rt2800pci with just soc support
+Date: Mon, 15 Mar 2010 17:35:46 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201003151722.26406.helmut.schaa@googlemail.com>
+In-Reply-To: <201003151722.26406.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <20100309075523.30616.63612.stgit@void>
-References: <20100309075124.30616.40896.stgit@void>
-	 <20100309075523.30616.63612.stgit@void>
-Date: Tue, 9 Mar 2010 14:16:03 +0200
-Message-ID: <40f31dec1003090416v3c88b371ld88678f83a8b644f@mail.gmail.com>
-Subject: Re: [PATCH 02/13] ath5k: use fixed antenna for tx descriptors
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201003151735.46646.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/9 Bruno Randolf <br1@einfach.org>:
-> when using a fixed antenna we should use the antenna number in all tx
-> descriptors, otherwise the hardware will sometimes send the frame out on the
-> other antenna. it seems like the hardware does not always respect the default
-> antenna and diversity settings (esp.  AR5K_STA_ID1_DEFAULT_ANTENNA).
->
-> also i would like to note that antenna diversity does not always work correctly
-> on 5414 (at least) when only one antenna is connected: for example all frames
-> might be received on antenna A but still the HW tries to send on antenna B some
-> times, causing packet loss.
->
-> this is both verified with the antenna statistics output of the previous patch
-> and a spectrum analyzer.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+On Monday 15 March 2010, Helmut Schaa wrote:
+> Fix compile warning "rt2800pci.c:1248: warning: 'rt2800pci_device_table'
+> defined but not used" when building rt2800pci with only soc support
+> (without pci).
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
 > ---
->  drivers/net/wireless/ath/ath5k/phy.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index 72474c0..ffe253a 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -1873,7 +1873,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
->                break;
->        case AR5K_ANTMODE_FIXED_A:
->                def_ant = 1;
-> -               tx_ant = 0;
-> +               tx_ant = 1;
->                use_def_for_tx = true;
->                update_def_on_tx = false;
->                use_def_for_rts = true;
-> @@ -1882,7 +1882,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
->                break;
->        case AR5K_ANTMODE_FIXED_B:
->                def_ant = 2;
-> -               tx_ant = 0;
-> +               tx_ant = 2;
->                use_def_for_tx = true;
->                update_def_on_tx = false;
->                use_def_for_rts = true;
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Nothing important, had the patch in my tree and just noticed that I didn't
+> send it out yet.
+> 
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 10fafd0..0104906 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -1184,6 +1184,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
+>  /*
+>   * RT2800pci module information.
+>   */
+> +#ifdef CONFIG_RT2800PCI_PCI
+>  static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+>  	{ PCI_DEVICE(0x1814, 0x0601), PCI_DEVICE_DATA(&rt2800pci_ops) },
+>  	{ PCI_DEVICE(0x1814, 0x0681), PCI_DEVICE_DATA(&rt2800pci_ops) },
+> @@ -1211,6 +1212,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+>  #endif
+>  	{ 0, }
+>  };
+> +#endif /* CONFIG_RT2800PCI_PCI */
+>  
+>  MODULE_AUTHOR(DRV_PROJECT);
+>  MODULE_VERSION(DRV_VERSION);
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
