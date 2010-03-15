@@ -1,108 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:50699 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751921Ab0CBWrE (ORCPT
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:44799 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936616Ab0COTyR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 17:47:04 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 3/4] rndis_wlan: get max_num_pmkids from device
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 03 Mar 2010 00:38:36 +0200
-Message-ID: <20100302223836.2794.49756.stgit@fate.lan>
-In-Reply-To: <20100302223825.2794.13615.stgit@fate.lan>
-References: <20100302223825.2794.13615.stgit@fate.lan>
+	Mon, 15 Mar 2010 15:54:17 -0400
+Received: by fxm19 with SMTP id 19so3590066fxm.21
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 12:54:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <6b5e31691003151250v77fea2fdh2af375225a54ffd@mail.gmail.com>
+References: <6b5e31691003010730ie73ff4cld32e3a9d38def7d0@mail.gmail.com>
+	 <b6c5339f1003031530l2a89c265t98a8560bdbf9c758@mail.gmail.com>
+	 <6b5e31691003040621ge2ca051n1bb3abb4b0158546@mail.gmail.com>
+	 <b6c5339f1003050515m7ec8518fy5bd29c6886228e4f@mail.gmail.com>
+	 <6b5e31691003151250v77fea2fdh2af375225a54ffd@mail.gmail.com>
+Date: Mon, 15 Mar 2010 15:54:12 -0400
+Message-ID: <6b5e31691003151254x658e227bl8f627b66c984b1fc@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: fixing retries in ath5k_hw_setup_4word_tx_desc
+From: Andrew Blaich <ablaich@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend rndis_wlan_get_caps() to get 802.11 capabilities and maximum
-supported number of PMKIDs by device.
+Ignore previous email, quoted text was included.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Removing AR5K_TUNE_HWTXTRIES from the Ath5k code as it adds in 4
+retries on top of what is already in tx_tries0.  By removing
+AR5K_TUNE_HWTXTRIES, the rate control algorithm is given full control
+in setting the number of retries.
+
+Signed-off-by:: Andrew Blaich <ablaich@gmail.com>
 ---
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h
+b/drivers/net/wireless/ath/ath5k/ath5k.h
+index ac67f02..1c5834a 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -202,7 +202,6 @@
+ #define AR5K_TUNE_MAX_TXPOWER                  63
+ #define AR5K_TUNE_DEFAULT_TXPOWER              25
+ #define AR5K_TUNE_TPC_TXPOWER                  false
+-#define AR5K_TUNE_HWTXTRIES                    4
 
- drivers/net/wireless/rndis_wlan.c |   35 +++++++++++++++++++++++++++++++++--
- 1 files changed, 33 insertions(+), 2 deletions(-)
+ #define AR5K_INIT_CARR_SENSE_EN                        1
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 51e6880..4054b70 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -117,6 +117,7 @@ MODULE_PARM_DESC(workaround_interval,
- #define OID_802_11_ADD_KEY			cpu_to_le32(0x0d01011d)
- #define OID_802_11_REMOVE_KEY			cpu_to_le32(0x0d01011e)
- #define OID_802_11_ASSOCIATION_INFORMATION	cpu_to_le32(0x0d01011f)
-+#define OID_802_11_CAPABILITY			cpu_to_le32(0x0d010122)
- #define OID_802_11_PMKID			cpu_to_le32(0x0d010123)
- #define OID_802_11_NETWORK_TYPES_SUPPORTED	cpu_to_le32(0x0d010203)
- #define OID_802_11_NETWORK_TYPE_IN_USE		cpu_to_le32(0x0d010204)
-@@ -358,6 +359,19 @@ struct ndis_80211_assoc_info {
- 	__le32 offset_resp_ies;
- } __attribute__((packed));
- 
-+struct ndis_80211_auth_encr_pair {
-+	__le32 auth_mode;
-+	__le32 encr_mode;
-+} __attribute__((packed));
-+
-+struct ndis_80211_capability {
-+	__le32 length;
-+	__le32 version;
-+	__le32 num_pmkids;
-+	__le32 num_auth_encr_pair;
-+	struct ndis_80211_auth_encr_pair auth_encr_pair[0];
-+} __attribute__((packed));
-+
- /*
-  *  private data
-  */
-@@ -2498,12 +2512,14 @@ static void rndis_wlan_indication(struct usbnet *usbdev, void *ind, int buflen)
- 	}
- }
- 
--static int rndis_wlan_get_caps(struct usbnet *usbdev)
-+static int rndis_wlan_get_caps(struct usbnet *usbdev, struct wiphy *wiphy)
- {
- 	struct {
- 		__le32	num_items;
- 		__le32	items[8];
- 	} networks_supported;
-+	struct ndis_80211_capability *caps;
-+	u8 caps_buf[sizeof(*caps) + sizeof(caps->auth_encr_pair) * 16];
- 	int len, retval, i, n;
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
- 
-@@ -2531,6 +2547,21 @@ static int rndis_wlan_get_caps(struct usbnet *usbdev)
- 		}
- 	}
- 
-+	/* get device 802.11 capabilities, number of PMKIDs */
-+	caps = (struct ndis_80211_capability *)caps_buf;
-+	len = sizeof(caps_buf);
-+	retval = rndis_query_oid(usbdev, OID_802_11_CAPABILITY, caps, &len);
-+	if (retval >= 0) {
-+		devdbg(usbdev, "OID_802_11_CAPABILITY -> len %d, ver %d, "
-+				"pmkids %d, auth-encr-pairs %d",
-+				le32_to_cpu(caps->length),
-+				le32_to_cpu(caps->version),
-+				le32_to_cpu(caps->num_pmkids),
-+				le32_to_cpu(caps->num_auth_encr_pair));
-+		wiphy->max_num_pmkids = le32_to_cpu(caps->num_pmkids);
-+	} else
-+		wiphy->max_num_pmkids = 0;
-+
- 	return retval;
- }
- 
-@@ -2778,7 +2809,7 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
- 	wiphy->max_scan_ssids = 1;
- 
- 	/* TODO: fill-out band/encr information based on priv->caps */
--	rndis_wlan_get_caps(usbdev);
-+	rndis_wlan_get_caps(usbdev, wiphy);
- 
- 	memcpy(priv->channels, rndis_channels, sizeof(rndis_channels));
- 	memcpy(priv->rates, rndis_rates, sizeof(rndis_rates));
-
+diff --git a/drivers/net/wireless/ath/ath5k/desc.c
+b/drivers/net/wireless/ath/ath5k/desc.c
+index dc30a2b..c18d8d4 100644
+--- a/drivers/net/wireless/ath/ath5k/desc.c
++++ b/drivers/net/wireless/ath/ath5k/desc.c
+@@ -229,7 +229,7 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
+              AR5K_REG_SM(antenna_mode, AR5K_4W_TX_DESC_CTL0_ANT_MODE_XMIT);
+      tx_ctl->tx_control_1 |= AR5K_REG_SM(type,
+                                      AR5K_4W_TX_DESC_CTL1_FRAME_TYPE);
+-       tx_ctl->tx_control_2 = AR5K_REG_SM(tx_tries0 + AR5K_TUNE_HWTXTRIES,
++       tx_ctl->tx_control_2 = AR5K_REG_SM(tx_tries0,
+                                      AR5K_4W_TX_DESC_CTL2_XMIT_TRIES0);
+      tx_ctl->tx_control_3 = tx_rate0 & AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
