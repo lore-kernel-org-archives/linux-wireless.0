@@ -1,501 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46891 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960Ab0CKB2c (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:18164 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936234Ab0COM7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 20:28:32 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 01/14] ath9k: start building an abstraction layer for hardware routines
-Date: Wed, 10 Mar 2010 20:28:18 -0500
-Message-Id: <1268270911-24568-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 15 Mar 2010 08:59:06 -0400
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2FCwoiZ002714
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 07:59:03 -0500
+Received: from localhost.localdomain (trdhcp21227.nmp.nokia.com [172.22.212.27])
+	by mgw-sa01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2FCwXrN010482
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 14:58:35 +0200
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCHv2 2/2] mac80211: Add support for connection quality monitoring
+Date: Mon, 15 Mar 2010 14:55:51 +0200
+Message-Id: <1268657751-1042-3-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1268657751-1042-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268657751-1042-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k supports the AR5008, AR9001 and AR9002 family of Atheros
-chipsets, all 802.11n. The new breed of 802.11n chips, the
-AR9003 family will be supported as well but each register read
-and write uses a different register definition and and such
-to support it we need to build a hardware family abstraction
-layer.
+Add support for the set_cqm_config op. This op function configures the
+requested connection quality monitor rssi threshold and rssi hysteresis
+values to the hardware  if the hardware supports
+IEEE80211_HW_SUPPORTS_CQM.
 
-This patch starts the abstraction layer through a set of callbacks.
-Our approach is to avoid as much duplicate code as is possible so
-where we can we will be re-using the same routines and only add
-callbacks for specific hardware functions which do direct hardware
-reads or writes. This starts off addressing hardware routines used
-during hardware initialization.
+For unsupporting hardware, currently -EOPNOTSUPP is returned, so the mac80211
+is currently not doing connection quality monitoring on the host. This could be
+added later, if needed.
 
-The benefit with this approach is the core of the driver won't
-need to be changed at all, except for areas where the hardware
-does require some changes like DMA, which is the case for AR9003.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/common.h |    1 +
- drivers/net/wireless/ath/ath9k/hw-ops.h |   36 ++++++++
- drivers/net/wireless/ath/ath9k/hw.c     |  144 ++++++++++++++++++++++---------
- drivers/net/wireless/ath/ath9k/hw.h     |   57 +++++++++++-
- drivers/net/wireless/ath/ath9k/init.c   |    7 +-
- 5 files changed, 194 insertions(+), 51 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/hw-ops.h
+ include/net/mac80211.h |   26 ++++++++++++++++++++++++++
+ net/mac80211/cfg.c     |   26 ++++++++++++++++++++++++++
+ net/mac80211/mlme.c    |    9 +++++++++
+ 3 files changed, 61 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index bbcc57f..17ad34a 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -20,6 +20,7 @@
- #include "../debug.h"
- 
- #include "hw.h"
-+#include "hw-ops.h"
- 
- /* Common header for Atheros 802.11n base driver cores */
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-new file mode 100644
-index 0000000..0f9c29d
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -0,0 +1,36 @@
-+/*
-+ * Copyright (c) 2010 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef ATH9K_HW_OPS_H
-+#define ATH9K_HW_OPS_H
-+
-+#include "hw.h"
-+
-+/* Hardware core and driver accessible callbacks */
-+
-+static inline bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
-+{
-+	return ath9k_hw_ops(ah)->set_power(ah, mode);
-+}
-+
-+static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
-+					       int restore,
-+					       int power_off)
-+{
-+	ath9k_hw_ops(ah)->config_pci_powersave(ah, restore, power_off);
-+}
-+
-+#endif /* ATH9K_HW_OPS_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9699007..c6801c9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -18,6 +18,7 @@
- #include <asm/unaligned.h>
- 
- #include "hw.h"
-+#include "hw-ops.h"
- #include "rc.h"
- #include "initvals.h"
- 
-@@ -25,7 +26,6 @@
- #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
- #define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
- 
--static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type);
- static void ath9k_hw_set_regs(struct ath_hw *ah, struct ath9k_channel *chan);
- static u32 ath9k_hw_ini_fixup(struct ath_hw *ah,
- 			      struct ar5416_eeprom_def *pEepData,
-@@ -48,6 +48,33 @@ static void __exit ath9k_exit(void)
- }
- module_exit(ath9k_exit);
- 
-+/* Private hardware callbacks */
-+
-+static void ath9k_hw_init_cal_settings(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->init_cal_settings(ah);
-+}
-+
-+static void ath9k_hw_init_mode_regs(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->init_mode_regs(ah);
-+}
-+
-+static bool ath9k_hw_macversion_supported(struct ath_hw *ah)
-+{
-+	return ath9k_hw_private_ops(ah)->macversion_supported(ah->hw_version.macVersion);
-+}
-+
-+static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
-+{
-+	return ath9k_hw_private_ops(ah)->set_reset_reg(ah, type);
-+}
-+
-+static void ath9k_hw_disablepcie(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->disable_pcie(ah);
-+}
-+
- /********************/
- /* Helper Functions */
- /********************/
-@@ -254,7 +281,7 @@ static int ath9k_hw_get_radiorev(struct ath_hw *ah)
- /* HW Attach, Detach, Init Routines */
- /************************************/
- 
--static void ath9k_hw_disablepcie(struct ath_hw *ah)
-+static void ar9002_hw_disablepcie(struct ath_hw *ah)
- {
- 	if (AR_SREV_9100(ah))
- 		return;
-@@ -371,7 +398,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 	if (num_possible_cpus() > 1)
- 		ah->config.serialize_regmode = SER_REG_MODE_AUTO;
- }
--EXPORT_SYMBOL(ath9k_hw_init);
- 
- static void ath9k_hw_init_defaults(struct ath_hw *ah)
- {
-@@ -535,28 +561,7 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
- 	return 0;
- }
- 
--static bool ath9k_hw_devid_supported(u16 devid)
--{
--	switch (devid) {
--	case AR5416_DEVID_PCI:
--	case AR5416_DEVID_PCIE:
--	case AR5416_AR9100_DEVID:
--	case AR9160_DEVID_PCI:
--	case AR9280_DEVID_PCI:
--	case AR9280_DEVID_PCIE:
--	case AR9285_DEVID_PCIE:
--	case AR5416_DEVID_AR9287_PCI:
--	case AR5416_DEVID_AR9287_PCIE:
--	case AR9271_USB:
--	case AR2427_DEVID_PCIE:
--		return true;
--	default:
--		break;
--	}
--	return false;
--}
--
--static bool ath9k_hw_macversion_supported(u32 macversion)
-+static bool ar9002_hw_macversion_supported(u32 macversion)
- {
- 	switch (macversion) {
- 	case AR_SREV_VERSION_5416_PCI:
-@@ -574,7 +579,7 @@ static bool ath9k_hw_macversion_supported(u32 macversion)
- 	return false;
- }
- 
--static void ath9k_hw_init_cal_settings(struct ath_hw *ah)
-+static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
- {
- 	if (AR_SREV_9160_10_OR_LATER(ah)) {
- 		if (AR_SREV_9280_10_OR_LATER(ah)) {
-@@ -598,7 +603,7 @@ static void ath9k_hw_init_cal_settings(struct ath_hw *ah)
- 	}
- }
- 
--static void ath9k_hw_init_mode_regs(struct ath_hw *ah)
-+static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
- {
- 	if (AR_SREV_9271(ah)) {
- 		INIT_INI_ARRAY(&ah->iniModes, ar9271Modes_9271,
-@@ -850,18 +855,12 @@ static void ath9k_hw_init_eeprom_fix(struct ath_hw *ah)
- 	}
- }
- 
--int ath9k_hw_init(struct ath_hw *ah)
-+/* Called for all hardware families */
-+int __ath9k_hw_init(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int r = 0;
- 
--	if (!ath9k_hw_devid_supported(ah->hw_version.devid)) {
--		ath_print(common, ATH_DBG_FATAL,
--			  "Unsupported device ID: 0x%0x\n",
--			  ah->hw_version.devid);
--		return -EOPNOTSUPP;
--	}
--
- 	ath9k_hw_init_defaults(ah);
- 	ath9k_hw_init_config(ah);
- 
-@@ -895,7 +894,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	else
- 		ah->config.max_txtrig_level = MAX_TX_FIFO_THRESHOLD;
- 
--	if (!ath9k_hw_macversion_supported(ah->hw_version.macVersion)) {
-+	if (!ath9k_hw_macversion_supported(ah)) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Mac Chip Rev 0x%02x.%x is not supported by "
- 			  "this driver\n", ah->hw_version.macVersion,
-@@ -912,6 +911,7 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	if (AR_SREV_9271(ah))
- 		ah->is_pciexpress = false;
- 
-+	/* XXX: move this to its own hw op */
- 	ah->hw_version.phyRev = REG_READ(ah, AR_PHY_CHIP_ID);
- 
- 	ath9k_hw_init_cal_settings(ah);
-@@ -973,6 +973,49 @@ int ath9k_hw_init(struct ath_hw *ah)
- 	return 0;
- }
- 
-+int ath9k_hw_init(struct ath_hw *ah)
-+{
-+	int ret;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	/* These are all the AR5008/AR9001/AR9002 hardware family of chipsets */
-+	switch (ah->hw_version.devid) {
-+	case AR5416_DEVID_PCI:
-+	case AR5416_DEVID_PCIE:
-+	case AR5416_AR9100_DEVID:
-+	case AR9160_DEVID_PCI:
-+	case AR9280_DEVID_PCI:
-+	case AR9280_DEVID_PCIE:
-+	case AR9285_DEVID_PCIE:
-+	case AR5416_DEVID_AR9287_PCI:
-+	case AR5416_DEVID_AR9287_PCIE:
-+	case AR9271_USB:
-+	case AR2427_DEVID_PCIE:
-+		ar9002_hw_attach_ops(ah);
-+		break;
-+	default:
-+		/*
-+		 * For the AR9003 hardware family we'll eventually add a
-+		 * respective ar9003_hw_attach_ops() call here.
-+		 */
-+		ath_print(common, ATH_DBG_FATAL,
-+			  "Hardware device ID 0x%04x not supported\n",
-+			  ah->hw_version.devid);
-+		return -EOPNOTSUPP;
-+	}
-+
-+	ret = __ath9k_hw_init(ah);
-+	if (ret) {
-+		ath_print(common, ATH_DBG_FATAL,
-+			  "Unable to initialize hardware; "
-+			  "initialization status: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(ath9k_hw_init);
-+
- static void ath9k_hw_init_bb(struct ath_hw *ah,
- 			     struct ath9k_channel *chan)
- {
-@@ -1761,7 +1804,7 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
- 	return ath9k_hw_set_reset(ah, ATH9K_RESET_WARM);
- }
- 
--static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
-+static bool ar9002_hw_set_reset_reg(struct ath_hw *ah, u32 type)
- {
- 	REG_WRITE(ah, AR_RTC_FORCE_WAKE,
- 		  AR_RTC_FORCE_WAKE_EN | AR_RTC_FORCE_WAKE_ON_INT);
-@@ -2489,7 +2532,7 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
- 	return true;
- }
- 
--bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
-+static bool ar9002_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int status = true, setChip = true;
-@@ -2526,7 +2569,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 
- 	return status;
- }
--EXPORT_SYMBOL(ath9k_hw_setpower);
- 
- /*
-  * Helper for ASPM support.
-@@ -2537,7 +2579,9 @@ EXPORT_SYMBOL(ath9k_hw_setpower);
-  * Programming the SerDes must go through the same 288 bit serial shift
-  * register as the other analog registers.  Hence the 9 writes.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 936bc41..391c063 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -599,6 +599,7 @@ enum ieee80211_conf_flags {
+  * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
+  * @IEEE80211_CONF_CHANGE_IDLE: Idle flag changed
+  * @IEEE80211_CONF_CHANGE_SMPS: Spatial multiplexing powersave mode changed
++ * @IEEE80211_CONF_CHANGE_CQM: Connection quality monitor config changed
   */
--void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore, int power_off)
-+static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
-+					 int restore,
-+					 int power_off)
- {
- 	u8 i;
- 	u32 val;
-@@ -2555,7 +2599,7 @@ void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore, int power_off)
- 			/*
- 			 * AR9280 2.0 or later chips use SerDes values from the
- 			 * initvals.h initialized depending on chipset during
--			 * ath9k_hw_init()
-+			 * __ath9k_hw_init()
- 			 */
- 			for (i = 0; i < ah->iniPcieSerdes.ia_rows; i++) {
- 				REG_WRITE(ah, INI_RA(&ah->iniPcieSerdes, i, 0),
-@@ -2659,7 +2703,6 @@ void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore, int power_off)
- 		}
- 	}
- }
--EXPORT_SYMBOL(ath9k_hw_configpcipowersave);
- 
- /**********************/
- /* Interrupt Handling */
-@@ -3953,3 +3996,20 @@ void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len)
- 	hw_name[used] = '\0';
- }
- EXPORT_SYMBOL(ath9k_hw_name);
-+
-+/* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
-+void ar9002_hw_attach_ops(struct ath_hw *ah)
-+{
-+	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-+	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
-+
-+	priv_ops->init_cal_settings = &ar9002_hw_init_cal_settings;
-+	priv_ops->init_mode_regs = &ar9002_hw_init_mode_regs;
-+	priv_ops->macversion_supported = &ar9002_hw_macversion_supported;
-+	priv_ops->set_reset_reg = &ar9002_hw_set_reset_reg;
-+	priv_ops->disable_pcie = &ar9002_hw_disablepcie;
-+
-+	ops->set_power = &ar9002_hw_setpower;
-+	ops->config_pci_powersave = &ar9002_hw_configpcipowersave;
-+}
-+EXPORT_SYMBOL(ar9002_hw_attach_ops);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 6b03e16..5a73d51 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -442,6 +442,42 @@ struct ath_gen_timer_table {
- 	} timer_mask;
+ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_SMPS		= BIT(1),
+@@ -609,6 +610,7 @@ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+ 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+ 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
++	IEEE80211_CONF_CHANGE_CQM		= BIT(9),
  };
  
-+/**
-+ * struct ath_hw_private_ops - callbacks used internally by hardware code
+ /**
+@@ -662,6 +664,9 @@ enum ieee80211_smps_mode {
+  *    frame, called "dot11ShortRetryLimit" in 802.11, but actually means the
+  *    number of transmissions not the number of retries
+  *
++ * @cqm_rssi_thold: Connection quality monitor RSSI threshold
++ * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
 + *
-+ * This structure contains private callbacks designed to only be used internally
-+ * by the hardware core.
-+ *
-+ * @init_cal_settings: Initializes calibration settings
-+ * @init_mode_regs: Initializes mode registers
-+ * @macversion_supported: If this specific mac revision is supported
-+ * @set_reset_reg:
-+ * @disable_pcie:
-+ */
-+struct ath_hw_private_ops {
-+	void (*init_cal_settings)(struct ath_hw *ah);
-+	void (*init_mode_regs)(struct ath_hw *ah);
-+	bool (*macversion_supported)(u32 macversion);
-+	bool (*set_reset_reg)(struct ath_hw *ah, u32 type);
-+	void (*disable_pcie)(struct ath_hw *ah);
-+};
-+
-+/**
-+ * struct ath_hw_ops - callbacks used by hardware code and driver code
-+ *
-+ * This structure contains callbacks designed to to be used internally by
-+ * hardware code and also by the lower level driver.
-+ *
-+ * @set_power:
-+ * @config_pci_powersave:
-+ */
-+struct ath_hw_ops {
-+	bool (*set_power)(struct ath_hw *ah, enum ath9k_power_mode mode);
-+	void (*config_pci_powersave)(struct ath_hw *ah,
-+				    int restore,
-+				    int power_off);
-+};
-+
- struct ath_hw {
- 	struct ieee80211_hw *hw;
- 	struct ath_common common;
-@@ -541,6 +577,11 @@ struct ath_hw {
- 	void (*ath9k_hw_spur_mitigate_freq)(struct ath_hw *ah,
- 					    struct ath9k_channel *chan);
+  * @smps_mode: spatial multiplexing powersave mode; note that
+  *	%IEEE80211_SMPS_STATIC is used when the device is not
+  *	configured for an HT channel
+@@ -676,6 +681,9 @@ struct ieee80211_conf {
  
-+	/* Private to hardware code */
-+	struct ath_hw_private_ops private_ops;
-+	/* Accessed by the lower level driver */
-+	struct ath_hw_ops ops;
+ 	u8 long_frame_max_tx_count, short_frame_max_tx_count;
+ 
++	s8 cqm_rssi_thold;
++	u8 cqm_rssi_hyst;
 +
- 	/* Used to program the radio on non single-chip devices */
- 	u32 *analogBank0Data;
- 	u32 *analogBank1Data;
-@@ -620,6 +661,16 @@ static inline struct ath_regulatory *ath9k_hw_regulatory(struct ath_hw *ah)
- 	return &(ath9k_hw_common(ah)->regulatory);
+ 	struct ieee80211_channel *channel;
+ 	enum nl80211_channel_type channel_type;
+ 	enum ieee80211_smps_mode smps_mode;
+@@ -954,6 +962,10 @@ enum ieee80211_tkip_key_type {
+  *	Hardware can provide ack status reports of Tx frames to
+  *	the stack.
+  *
++ * @IEEE80211_HW_SUPPORTS_CQM:
++ *	Hardware can do connection quality monitoring - i.e. it can monitor
++ *	RSSI levels and notify on changes based on a threshold and hysteresis.
++ *
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -975,6 +987,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
+ 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+ 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
++	IEEE80211_HW_SUPPORTS_CQM			= 1<<19,
+ };
+ 
+ /**
+@@ -2370,6 +2383,19 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+  */
+ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+ 
++/**
++ * ieee80211_cqm_notify - inform cqm RSSI threshold triggered
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @rssi_level: the current level of the RSSI value
++ *
++ * When the IEEE80211_HW_SUPPORTS_CQM is set, and a RSSI threshold has been
++ * configured, the driver will inform whenever RSSI goes above or below
++ * the threshold with this function.
++ */
++void ieee80211_cqm_notify(struct ieee80211_vif *vif,
++			  enum nl80211_cqm_level rssi_level);
++
+ /* Rate control API */
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b7116ef..fbd39ee 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1402,6 +1402,31 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
  }
  
-+static inline struct ath_hw_private_ops *ath9k_hw_private_ops(struct ath_hw *ah)
++static int ieee80211_set_cqm_config(struct wiphy *wiphy,
++				    struct net_device *dev,
++				    s8 rssi_thold, u8 rssi_hyst)
 +{
-+	return &ah->private_ops;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_conf *conf = &local->hw.conf;
++
++	if (sdata->vif.type != NL80211_IFTYPE_STATION)
++		return -EOPNOTSUPP;
++
++	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_CQM))
++		return -EOPNOTSUPP;
++
++	if (rssi_thold == conf->cqm_rssi_thold &&
++	    rssi_hyst == conf->cqm_rssi_hyst)
++		return 0;
++
++	conf->cqm_rssi_thold = rssi_thold;
++	conf->cqm_rssi_hyst = rssi_hyst;
++
++	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CQM);
++	return 0;
 +}
 +
-+static inline struct ath_hw_ops *ath9k_hw_ops(struct ath_hw *ah)
+ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				      struct net_device *dev,
+ 				      const u8 *addr,
+@@ -1506,4 +1531,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.remain_on_channel = ieee80211_remain_on_channel,
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.action = ieee80211_action,
++	.set_cqm_config = ieee80211_set_cqm_config
+ };
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index be5f723..baff89d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2135,3 +2135,12 @@ int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
+ 	*cookie = (unsigned long) skb;
+ 	return 0;
+ }
++
++void ieee80211_cqm_notify(struct ieee80211_vif *vif,
++			  enum nl80211_cqm_level rssi_level)
 +{
-+	return &ah->ops;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	cfg80211_cqm_notify(sdata->dev, rssi_level, GFP_KERNEL);
 +}
-+
- /* Initialization, Detach, Reset */
- const char *ath9k_hw_probe(u16 vendorid, u16 devid);
- void ath9k_hw_deinit(struct ath_hw *ah);
-@@ -680,10 +731,6 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
- void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
- 				    const struct ath9k_beacon_state *bs);
- 
--bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode);
--
--void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore, int power_off);
--
- /* Interrupt Handling */
- bool ath9k_hw_intrpend(struct ath_hw *ah);
- bool ath9k_hw_getisr(struct ath_hw *ah, enum ath9k_int *masked);
-@@ -707,6 +754,8 @@ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
- 
- void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
- 
-+void ar9002_hw_attach_ops(struct ath_hw *ah);
-+
- /* HTC */
- void ath9k_hw_htc_resetinit(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 6063f54..62682cc 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -566,13 +566,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	ath_read_cachesize(common, &csz);
- 	common->cachelsz = csz << 2; /* convert to bytes */
- 
-+	/* Initializes the hardware for all supported chipsets */
- 	ret = ath9k_hw_init(ah);
--	if (ret) {
--		ath_print(common, ATH_DBG_FATAL,
--			  "Unable to initialize hardware; "
--			  "initialization status: %d\n", ret);
-+	if (ret)
- 		goto err_hw;
--	}
- 
- 	ret = ath9k_init_debug(ah);
- 	if (ret) {
++EXPORT_SYMBOL(ieee80211_cqm_notify);
 -- 
 1.6.3.3
 
