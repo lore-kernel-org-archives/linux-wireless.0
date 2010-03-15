@@ -1,36 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:4025 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932451Ab0CaGiq (ORCPT
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:65110 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965673Ab0COTI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 02:38:46 -0400
-From: Holger Schurig <holgerschurig@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Broadcom card totally not visible for system (lspci)
-Date: Wed, 31 Mar 2010 08:39:42 +0200
-Cc: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com> <4BB2328D.9010503@lwfinger.net>
-In-Reply-To: <4BB2328D.9010503@lwfinger.net>
+	Mon, 15 Mar 2010 15:08:28 -0400
+Message-ID: <4B9E85AA.1030803@gmail.com>
+Date: Mon, 15 Mar 2010 20:08:26 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201003310839.42778.holgerschurig@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: fix warning when building rt2800pci with just
+ soc support
+References: <201003151722.26406.helmut.schaa@googlemail.com>
+In-Reply-To: <201003151722.26406.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> (1) It is disabled in the BIOS.
+On 03/15/10 17:22, Helmut Schaa wrote:
+> Fix compile warning "rt2800pci.c:1248: warning: 'rt2800pci_device_table'
+> defined but not used" when building rt2800pci with only soc support
+> (without pci).
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-I once had a geode-based tablet PC with a buggy ACPI, where the device hang 
-when I used the buttons extensively).
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-In the end, I dumped the ACPI bios and disassembled it with "iasl". Once you 
-get a grip to the mnemonics, disassembled ACPI opcodes are quite readable. I 
-found some quite interesting things about the tablet that haven't been 
-documented anywhere, e.g. most of the internal GPIO.
+> ---
+> Nothing important, had the patch in my tree and just noticed that I didn't
+> send it out yet.
+> 
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 10fafd0..0104906 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -1184,6 +1184,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
+>  /*
+>   * RT2800pci module information.
+>   */
+> +#ifdef CONFIG_RT2800PCI_PCI
+>  static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+>  	{ PCI_DEVICE(0x1814, 0x0601), PCI_DEVICE_DATA(&rt2800pci_ops) },
+>  	{ PCI_DEVICE(0x1814, 0x0681), PCI_DEVICE_DATA(&rt2800pci_ops) },
+> @@ -1211,6 +1212,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+>  #endif
+>  	{ 0, }
+>  };
+> +#endif /* CONFIG_RT2800PCI_PCI */
+>  
+>  MODULE_AUTHOR(DRV_PROJECT);
+>  MODULE_VERSION(DRV_VERSION);
 
-So, if your polish friend is willing to go this route ... that's at least a 
-possibility.
-
--- 
-http://www.holgerschurig.de
