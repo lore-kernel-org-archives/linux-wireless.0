@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:49024 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272Ab0C3Vaq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 17:30:46 -0400
-Received: by gwaa18 with SMTP id a18so4945039gwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 14:30:45 -0700 (PDT)
-Message-ID: <4BB26D82.6020805@lwfinger.net>
-Date: Tue, 30 Mar 2010 16:30:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:63619 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758870Ab0COHEn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Mar 2010 03:04:43 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 00:04:43 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Your netbook
-References: <4BB21787.4040501@lwfinger.net> <20100330202848.GO13120@tuxdriver.com>
-In-Reply-To: <20100330202848.GO13120@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19357.57506.489965.182709@gargle.gargle.HOWL>
+Date: Mon, 15 Mar 2010 12:54:18 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: fix BUG_ON triggered by PAE frames
+In-Reply-To: <4B99AED3.4000204@openwrt.org>
+References: <4B99AED3.4000204@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2010 03:28 PM, John W. Linville wrote:
-> On Tue, Mar 30, 2010 at 10:23:51AM -0500, Larry Finger wrote:
+Felix Fietkau wrote:
+> When I initially stumbled upon sequence number problems with PAE frames
+> in ath9k, I submitted a patch to remove all special cases for PAE
+> frames and let them go through the normal transmit path.
+> Out of concern about crypto incompatibility issues, this change was
+> merged instead:
 > 
->> If possible, I would like you to do one more test on that troublesome netbook.
->> Please build a kernel with CONFIG_MMIOTRACE=y and build the Broadcom wl driver
->> for it. Starting with wl unloaded, issue the following commands (as root):
->>
->> echo 10000 > /sys/kernel/debug/tracing/buffer_size_kb
->> echo mmiotrace > /sys/kernel/debug/tracing/current_tracer
->> cat /sys/kernel/debug/tracing/trace_pipe > wl_dump.txt &
->> modprobe -v wl
->>
->> After the wireless network device gets created, etc., then
->>
->> echo nop > /sys/kernel/debug/tracing/current_tracer
->> sleep 1
->> killproc cat
->>
->> and send me the file wl_dump.txt. With it, I will be able to see if the Broadcom
->> driver is actually finding an SPROM that b43 is missing.
+> commit 6c8afef551fef87a3bf24f8a74c69a7f2f72fc82
+> Author: Sujith <Sujith.Manoharan@atheros.com>
+> Date:   Tue Feb 9 10:07:00 2010 +0530
 > 
-> Done:
+>     ath9k: Fix sequence numbers for PAE frames
 > 
-> 	http://www.kernel.org/pub/linux/kernel/people/linville/ssb-debug/wl_dump.txt.gz
+> After a lot of testing, I'm able to reliably trigger a driver crash on
+> rekeying with current versions with this change in place.
+> It seems that the driver does not support sending out regular MPDUs with
+> the same TID while an A-MPDU session is active.
+> This leads to duplicate entries in the TID Tx buffer, which hits the
+> following BUG_ON in ath_tx_addto_baw():
 > 
-> Hth!
+>     index  = ATH_BA_INDEX(tid->seq_start, bf->bf_seqno);
+>     cindex = (tid->baw_head + index) & (ATH_TID_MAX_BUFS - 1);
+> 
+>     BUG_ON(tid->tx_buf[cindex] != NULL);
 
-It has already. The clue was in the fragment I sent you earlier. Every other
-BCM43XX card that we have seen had its SPROM starting at offset 0x1000 relative
-to the start of the MMIO mapping. Yours is at 0x0800! I would have hoped for an
-"incorrect CRC" message, but we got the hang instead. I now have to find the
-hidden flag that lets us know about the different location. I wonder what else
-has moved.
+I have seen this too, but am not sure if I was using encryption.
+I have triggered this occasionally during a suspend/resume cycle.
 
-As a warning to users of wl. I tried to run it from the 2.6.34-rc3 on Linus's
-tree. Broadcom (I really like the other variation of that name!) has not (yet)
-discovered the change in the DMA API in 2.6.34. As a result, I got a few "tries
-to free DMA memory it has not allocated" warnings followed by a lot of other
-stuff concluding in a kernel panic - the first I've had for a long time. Note: I
-will not be debugging this problem. I have enough to do already.
+> I believe until we actually have a reproducible case of an
+> incompatibility with another AP using no PAE special cases, we should
+> simply get rid of this mess.
+> 
+> This patch completely fixes my crash issues in STA mode and makes it
+> stay connected without throughput drops or connectivity issues even
+> when the AP is configured to a very short group rekey interval.
+> 
 
-Larry
+Ok. We can remove this and see if any users report crupto problems
+with random APs out there.
+
+We did run into re-keying issues with a few APs when sending PAE
+frames as part of aggregates, but unfortunately the bug reports seem
+to be non-existent ...
+
+Sujith
