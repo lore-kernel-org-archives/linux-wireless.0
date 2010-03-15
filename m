@@ -1,49 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:60451 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531Ab0C2Ueq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:34:46 -0400
-From: Luis de Bethencourt <luisbg@ubuntu.com>
-To: linville@tuxdriver.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Luis de Bethencourt <luisbg@openshine.com>,
-	Luis de Bethencourt <luisbg@ubuntu.com>
-Subject: [PATCH] Net: wireless: ath: fix macros coding style issue in hw.c
-Date: Mon, 29 Mar 2010 21:34:39 +0100
-Message-Id: <1269894879-13884-1-git-send-email-luisbg@ubuntu.com>
-In-Reply-To: <ath/hw.c>
-References: <ath/hw.c>
+Received: from mail.atheros.com ([12.36.123.2]:63566 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759712Ab0COGyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Mar 2010 02:54:52 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 14 Mar 2010 23:54:52 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19357.56903.472957.910182@gargle.gargle.HOWL>
+Date: Mon, 15 Mar 2010 12:44:15 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Fix HT configuration
+In-Reply-To: <20100303202746.GG23920@tuxdriver.com>
+References: <19339.34073.723714.219572@gargle.gargle.HOWL>
+	<20100303202746.GG23920@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis de Bethencourt <luisbg@openshine.com>
+John W. Linville wrote:
+> This should be combined with "ath9k: Fix HT rate control configuration"
+> -- I'll take care of it.
 
-This is a patch to the ath/hw.c file that fixes up a warning about
-macros found by the checkpatch.pl tool, that said that complex values
-should be enclosed in parenthesis.
+Thanks.
 
-Signed-off-by: Luis de Bethencourt <luisbg@ubuntu.com>
----
- drivers/net/wireless/ath/hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
-index ecc9eb0..a8f81ea 100644
---- a/drivers/net/wireless/ath/hw.c
-+++ b/drivers/net/wireless/ath/hw.c
-@@ -19,8 +19,8 @@
- #include "ath.h"
- #include "reg.h"
- 
--#define REG_READ	common->ops->read
--#define REG_WRITE	common->ops->write
-+#define REG_READ	(common->ops->read)
-+#define REG_WRITE	(common->ops->write)
- 
- /**
-  * ath_hw_set_bssid_mask - filter out bssids we listen
--- 
-1.6.3.3
-
+Sujith
