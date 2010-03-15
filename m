@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6735 "EHLO mga09.intel.com"
+Received: from nbd.name ([88.198.39.176]:46422 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119Ab0CSGFN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 02:05:13 -0400
-Subject: Re:
-From: reinette chatre <reinette.chatre@intel.com>
-To: Vasil Lalov <vasil.lalov@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <f39b508c1003170613g5a8754a2kc9e15075c16f499b@mail.gmail.com>
-References: <f39b508c1003170613g5a8754a2kc9e15075c16f499b@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Mar 2010 23:05:12 -0700
-Message-ID: <1268978712.2446.1757.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S965803Ab0COXxJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Mar 2010 19:53:09 -0400
+Message-ID: <4B9EC85B.8070800@openwrt.org>
+Date: Tue, 16 Mar 2010 00:52:59 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com> <20100315214338.GB4000@tux> <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com> <20100315234909.GA2662@tux>
+In-Reply-To: <20100315234909.GA2662@tux>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-17 at 06:13 -0700, Vasil Lalov wrote:
+On 2010-03-16 12:49 AM, Luis R. Rodriguez wrote:
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index 00570fb..867cfaf 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -807,6 +804,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+>  		acktimeout += 64 - sifstime - ah->slottime;
+>  
+>  	ath9k_hw_setslottime(ah, slottime);
+> +
+> +	if (AR_SREV_9271(ah))
+> +		return;
+> +
+>  	ath9k_hw_set_ack_timeout(ah, acktimeout);
+>  	ath9k_hw_set_cts_timeout(ah, acktimeout);
+>  	if (ah->globaltxtimeout != (u32) -1)
 
-> The error messages in dmesg:
-> 
-> iwlagn 0000:0c:00.0: Microcode SW error detected.  Restarting 0x2000000.
-> [40595.037808] iwlagn 0000:0c:00.0: Start IWL Error Log Dump:
-> [40595.037814] iwlagn 0000:0c:00.0: Status: 0x000212E4, count: 5
-> [40595.037945] iwlagn 0000:0c:00.0: Desc
-> Time       data1      data2      line
-> [40595.037954] iwlagn 0000:0c:00.0: NMI_INTERRUPT_WDG            (#04)
-> 3570070946 0x00000002 0x07030000 3664
+Why leave out the ACK/CTS timeout setting? How does the hw handle ACK
+and CTS timeouts?
 
-[...]
-
-> [40595.101312] iwlagn 0000:0c:00.0: Stopping AGG while state not ON or starting
-> [40595.101318] iwlagn 0000:0c:00.0: queue number out of range: 0, must
-> be 10 to 19
-> [40595.101340] iwlagn 0000:0c:00.0: Stopping AGG while state not ON or starting
-> [40595.101343] iwlagn 0000:0c:00.0: queue number out of range: 0, must
-> be 10 to 19
-
-This looks similar to https://bugzilla.kernel.org/show_bug.cgi?id=15374
-- could you please update your kernel to 2.6.33 and try the patches
-attached to that bug report?
-
-Reinette
-
-
+- Felix
