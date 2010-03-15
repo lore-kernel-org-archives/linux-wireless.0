@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:53591 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752770Ab0CUCov (ORCPT
+Received: from mail-ew0-f216.google.com ([209.85.219.216]:50034 "EHLO
+	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756483Ab0COLjV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Mar 2010 22:44:51 -0400
-Received: by bwz1 with SMTP id 1so984390bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Mar 2010 19:44:48 -0700 (PDT)
+	Mon, 15 Mar 2010 07:39:21 -0400
+Received: by ewy8 with SMTP id 8so1033882ewy.28
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 04:39:19 -0700 (PDT)
 From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] minstrel_ht: fix BUG_ON(rate[0]->idx < 0)
-Date: Sun, 21 Mar 2010 03:44:44 +0100
-Cc: Felix Fietkau <nbd@openwrt.org>
+To: Jan Martinek <honza@dp.fce.vutbr.cz>
+Subject: Re: ISL3890, master mode, prism54 -> p54pci regression
+Date: Mon, 15 Mar 2010 12:39:11 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <4B9B43B0.1030801@dp.fce.vutbr.cz> <201003131126.57729.chunkeey@googlemail.com> <4B9DEAF9.4020002@dp.fce.vutbr.cz>
+In-Reply-To: <4B9DEAF9.4020002@dp.fce.vutbr.cz>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201003210344.44985.chunkeey@googlemail.com>
+  charset="iso-8859-2"
+Message-Id: <201003151239.11473.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a panic which can be triggered by an
-out-of-bound array access.
+On Monday 15 March 2010 09:08:25 Jan Martinek wrote:
+> Hello,
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-static u8 sample_table[SAMPLE_COLUMNS][MCS_GROUP_RATES];
----
---- a/net/mac80211/rc80211_minstrel_ht.c.orig	2010-03-21 03:30:04.000000000 +0100
-+++ b/net/mac80211/rc80211_minstrel_ht.c	2010-03-21 03:30:33.000000000 +0100
-@@ -318,9 +318,9 @@ minstrel_next_sample_idx(struct minstrel
- 		if (!mg->supported)
- 			continue;
- 
--		if (++mg->index > MCS_GROUP_RATES) {
-+		if (++mg->index >= MCS_GROUP_RATES) {
- 			mg->index = 0;
--			if (++mg->column > ARRAY_SIZE(sample_table))
-+			if (++mg->column >= ARRAY_SIZE(sample_table))
- 				mg->column = 0;
- 		}
- 		break;
+Hi,
+
+> thank you very much to both of you for your answer. The reference to 
+> hostapd really helped me and now everything works fine. I set WPA2 with 
+> CCMP.
+> 
+> Well, there is one surprise. My computer, which serves as an Access 
+> Point used to be very stable. But since yesterday evening, when I got 
+> hostapd working the uptime is only several minutes, then it freezes.
+> 
+> It strongly depends on client's activity. Heavy internet traffic through 
+> WiFi makes my computer freeze. For example, if client (windows machine) 
+> connects to my WiFi network and watches some online video, it is a sure 
+> way to freeze the Access Point in several seconds.
+> 
+> I did not find anything suspicious in dmesg nor /var/log/messages.
+> 
+> This is my card:
+> 
+> 03:06.0 Network controller: Intersil Corporation ISL3890 [Prism GT/Prism 
+> Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
+> 
+> It is Z-Com XG-901 (Full-MAC, I think).
+
+_9_01. Interesting
+
+> Does anyone else encountered freezing problems under heavy internet load?
+Probably related to: http://bugzilla.kernel.org/show_bug.cgi?id=11386
+
+You can either patch the kernel yourself, Or switch to compat-wireless
+(which does also include fixes for mac80211-stack.) 
+
+Regards,
+	Chr
