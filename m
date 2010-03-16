@@ -1,47 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:45866 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729Ab0CKGFM (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56606 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937992Ab0CPQSx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 01:05:12 -0500
-Received: by pzk32 with SMTP id 32so469983pzk.4
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Mar 2010 22:05:11 -0800 (PST)
+	Tue, 16 Mar 2010 12:18:53 -0400
 MIME-Version: 1.0
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 10 Mar 2010 22:04:51 -0800
-Message-ID: <43e72e891003102204u17bc2916xbc4cc17af30d3360@mail.gmail.com>
-Subject: Re: [PATCH 00/14] ath9k: initial work for hardware layering
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <4B9F86E9.2030702@gmail.com>
+References: <4B9F86E9.2030702@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 16 Mar 2010 09:18:31 -0700
+Message-ID: <43e72e891003160918x3b7e3c9asf4fc8a9db35ccd8a@mail.gmail.com>
+Subject: Re: regd: sleeping in atomic
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 10, 2010 at 5:28 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> This is my first series which starts the work of adding a new layering for
-> abstraction for hardware access. The goal is to enable the AR9003 hardware
-> family to be supported by sharing as much code as is possible. To do that
-> we abstract away all calls which do reads/writes.
+2010/3/16 Jiri Slaby <jirislaby@gmail.com>:
+> Hi,
 >
-> I'll next address more abstraction on ANI/mac/hw calls. The final
-> move will be to rename reg.h to ar92002_reg.h and ensure no common
-> hardware code uses it. We then should be able to start adding
-> ar9003 hardware family code support and the rest of the core
-> driver changes required.
+> Stanse found an atomic error in reg_copy_regd:
 >
-> It should be technically possible to even share some stuff like ANI
-> with ath5k but that's my own priority right now but I welcome others
-> to review that. If its not clear how that's possible now perhaps
-> it will be on my next series where I'll dabble a bit more on ANI.
+> static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
+>                         const struct ieee80211_regdomain *src_regd)
+> {
+>        struct ieee80211_regdomain *regd;
+>        int size_of_regd = 0;
+>        unsigned int i;
 >
-> I've rebased this on top of the ath9k_htc patches, and tested this
-> with AR9280 (ath9k) and AR9271 (ath9k_htc).
+>        size_of_regd = sizeof(struct ieee80211_regdomain) +
+>          ((src_regd->n_reg_rules + 1) * sizeof(struct ieee80211_reg_rule));
+>
+>        regd = kzalloc(size_of_regd, GFP_KERNEL);       <---- here
+>
+> Called from:
+>
+> static void reg_regdb_search(struct work_struct *work)
+> {
+>        spin_lock(&reg_regdb_search_lock);
+>        while (!list_empty(&reg_regdb_search_list)) {
+> ...
+>                for (i=0; i<reg_regdb_size; i++) {
+>                        curdom = reg_regdb[i];
+>
+>                        if (!memcmp(request->alpha2, curdom->alpha2, 2)) {
+>                                r = reg_copy_regd(&regdom, curdom);
+> ...
+>        spin_unlock(&reg_regdb_search_lock);
+> }
+>
+> Whole error temporarily available at:
+> http://decibel.fi.muni.cz/~xslaby/stanse/error.cgi?db=34-rc&id=578
+>
+> It is introduced by 3b377ea9d4efc94dc52fe41b4dfdb463635ab298.
+>
+> Do you plan to extend it somehow or may the spinlock be converted to mutex?
 
-John, disregard this patch series, we will resubmit ath9k_htc stuff
-and I will have to rebase laster on top of that.
+I don't think you can convert this directly to a mutex. The spin_lock
+in question (&reg_regdb_search_lock) gets also used by
+reg_regdb_query() which in turn gets called by call_crda(). There is
+one iteration of call_crda() which happens during module
+initialization and from what I gather I don't think the kernel is
+happy when you mutex_lock on load routines, please correct my foggy
+memory if I am mistaken. So during module load we directly end up
+hitting the spin_lock in question, prior to the workqueue using it.
+
+Not sure yet how to address this, any ideas John?
+
+> If not how much may size_of_regd be -- can we safely switch to GFP_ATOMIC?
+
+The count is up to 117 right now. It should be around the number of
+countries of the world today, tomorrow even different countries could
+have different regulatory domains. This happened with Japan a while
+back when they required manufacturers to apply certification rules
+depending on the year the product went out.. and this changed many
+times in that country. But another reason why this number may also
+increase in any given country without regards to silly legislation is
+for experimenters who want to enhance the use of the spectrum in
+certain areas and would use sha1sums instead of alpha2s for the
+regdomains. But we're light years away from that happening.
 
   Luis
