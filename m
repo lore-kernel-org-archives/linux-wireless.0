@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53164 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754894Ab0CDPpl (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:19984 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937725Ab0CPKtH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 10:45:41 -0500
-Date: Thu, 4 Mar 2010 10:31:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kel Modderman <kel@otaku42.de>
+	Tue, 16 Mar 2010 06:49:07 -0400
+From: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] crda: do not embed crypto data when USE_OPENSSL=1
-Message-ID: <20100304153128.GB2910@tuxdriver.com>
-References: <201003050008.51066.kel@otaku42.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201003050008.51066.kel@otaku42.de>
+Subject: [PATCH] mac80211: Reschedule dynamic power save timer after wakeup
+Date: Tue, 16 Mar 2010 12:46:41 -0400
+Message-Id: <1268758001-18253-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 05, 2010 at 12:08:50AM +1000, Kel Modderman wrote:
-> When USE_OPENSSL=1 do not embed crypto data into binary, use the PUBKEY_DIR
-> variable just as it is when USE_GCRYPT=1 and just load certs from PUBKEY_DIR
-> for signature verification at runtime. Remove ssl support from
-> utils/key2pub.py.
-> 
-> This allows wireless-regdb to be built from source and upgraded independently
-> of crda and is _crucial_ for distributions who want to build their own
-> regulatory.bin.
+After last transmission, the device goes to sleep earlier
+than the configured dynamic power save timeout. If timeout
+is set to 400ms, device enters into sleep mode at around
+330ms since from last TX.
 
-I don't understand -- isn't this possible already?
+This patch re-schedules dynamic power save timer
+after PSM is disabled, which ensures timeout
+period starts only after wakeup and the timeout
+variation is around 2-3ms.
 
-> This change does remove support for alternate runtime pubkey dir
-> /etc/wireless-regdb/pubkeys, but wireless-regdb does not currently install
-> custom pubkeys to /etc/wireless-regdb/pubkeys, and I couldn't care less
-> about that feature atm :)
-> 
-> When verification fails provide information about the PUBKEY_DIR variable.
-> 
-> Fix typo (s/make noverify/make all_noverify/).
-> 
-> Signed-off-by: Kel Modderman <kel@otaku42.de>
+Signed-off-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ net/mac80211/mlme.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-So you want to remove this feature simply because you don't use
-it yourself?  What problem is it causing?
-
-John
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 86c6ad1..f7f3f61 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -537,6 +537,8 @@ void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
+ 
+ 	ieee80211_wake_queues_by_reason(&local->hw,
+ 					IEEE80211_QUEUE_STOP_REASON_PS);
++	mod_timer(&local->dynamic_ps_timer, jiffies +
++		  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+ }
+ 
+ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0
+
