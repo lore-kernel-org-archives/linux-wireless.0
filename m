@@ -1,86 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:33180 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752590Ab0CRK1t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 06:27:49 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 11/21] wl1271: create qos nullfunc template
-Date: Thu, 18 Mar 2010 12:26:36 +0200
-Message-Id: <1268908006-16992-12-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
-References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mga03.intel.com ([143.182.124.21]:50609 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759765Ab0CPRDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Mar 2010 13:03:00 -0400
+Subject: Re: [PATCH] iwlwifi: Silence tfds_in_queue message
+From: reinette chatre <reinette.chatre@intel.com>
+To: Adel Gadllah <adel.gadllah@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>
+In-Reply-To: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
+References: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Mar 2010 10:00:59 -0700
+Message-ID: <1268758859.2446.595.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Sun, 2010-03-14 at 11:44 -0700, Adel Gadllah wrote:
+> From 83bf3f1dba41e3dccdef4fecfccb094559568342 Mon Sep 17 00:00:00 2001
+> From: Adel Gadllah <adel.gadllah@gmail.com>
+> Date: Sun, 14 Mar 2010 19:16:25 +0100
+> Subject: [PATCH] iwlwifi: Silence tfds_in_queue message
+> 
+> Commit a239a8b47cc0e5e6d7416a89f340beac06d5edaa introduced a
+> noisy message, that fills up the log very fast.
+> 
+> The error seems not to be fatal (the connection is stable and
+> performance is ok), so make it IWL_DEBUG_TX rather than IWL_ERR.
+> 
+> Cc: Reinette Chatre <reinette.chatre@intel.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Cc: stable@kernel.org
+> 
+> Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
 
-Needed for U-APSD.
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_cmd.c |   22 ++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_cmd.h |    1 +
- 2 files changed, 23 insertions(+), 0 deletions(-)
+Reinette
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 8364270..0cbb0e1 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -26,6 +26,7 @@
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
- #include <linux/etherdevice.h>
-+#include <linux/ieee80211.h>
- 
- #include "wl1271.h"
- #include "wl1271_reg.h"
-@@ -778,6 +779,27 @@ out:
- 	return ret;
- }
- 
-+int wl1271_build_qos_null_data(struct wl1271 *wl)
-+{
-+	struct ieee80211_qos_hdr template;
-+
-+	memset(&template, 0, sizeof(template));
-+
-+	memcpy(template.addr1, wl->bssid, ETH_ALEN);
-+	memcpy(template.addr2, wl->mac_addr, ETH_ALEN);
-+	memcpy(template.addr3, wl->bssid, ETH_ALEN);
-+
-+	template.frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+					     IEEE80211_STYPE_QOS_NULLFUNC |
-+					     IEEE80211_FCTL_TODS);
-+
-+	/* FIXME: not sure what priority to use here */
-+	template.qos_ctrl = cpu_to_le16(0);
-+
-+	return wl1271_cmd_template_set(wl, CMD_TEMPL_QOS_NULL_DATA, &template,
-+				       sizeof(template));
-+}
-+
- int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id)
- {
- 	struct wl1271_cmd_set_keys *cmd;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index e936d3a..6324bbf 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -51,6 +51,7 @@ int wl1271_cmd_build_ps_poll(struct wl1271 *wl, u16 aid);
- int wl1271_cmd_build_probe_req(struct wl1271 *wl,
- 			       const u8 *ssid, size_t ssid_len,
- 			       const u8 *ie, size_t ie_len, u8 band);
-+int wl1271_build_qos_null_data(struct wl1271 *wl);
- int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id);
- int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 		       u8 key_size, const u8 *key, const u8 *addr,
--- 
-1.6.3.3
 
