@@ -1,69 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:42581 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752422Ab0C2O3N (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41251 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab0CQAxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 10:29:13 -0400
-Received: by bwz1 with SMTP id 1so3605308bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 07:29:10 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Subject: Re: [PATCH 7/7] ath9k_htc: Fix TKIP encryption
-Date: Mon, 29 Mar 2010 16:29:02 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <19376.33506.672695.950934@gargle.gargle.HOWL>
-In-Reply-To: <19376.33506.672695.950934@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003291629.02639.chunkeey@googlemail.com>
+	Tue, 16 Mar 2010 20:53:55 -0400
+Subject: Re: [RFC PATCHv2 1/2] cfg80211: Add connection quality monitoring
+ support to nl80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1268657751-1042-2-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268657751-1042-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268657751-1042-2-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Mar 2010 14:51:18 -0700
+Message-ID: <1268776278.8918.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 29 March 2010 12:37:22 Sujith wrote:
-> The FCS has to be stripped before the packet
-> is given to mac80211. Also, remove a redundant
-> assignment of skb length and include the FCS_LEN
-> when checking padding.
-> 
-> Fixing this issue makes TKIP work.
-> 
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> ---
-you don't need to strip the FCS, mac80211 can do that if necessary.
-(Or not, if you want to operate a network sniffer)
+On Mon, 2010-03-15 at 14:55 +0200, Juuso Oikarinen wrote:
 
----
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 10c8760..d5e015e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -509,6 +509,7 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 
- 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
-+		IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_AMPDU_AGGREGATION |
- 		IEEE80211_HW_SPECTRUM_MGMT |
- 		IEEE80211_HW_HAS_RATE_CONTROL;
+> + * @NL80211_ATTR_CQM: connection quality monitor configuration in a
+> + *	nested attribute with %NL80211_ATTR_CQM_* sub-attributes.
+> + *
+>   * @NL80211_ATTR_MAX: highest attribute number currently defined
+>   * @__NL80211_ATTR_AFTER_LAST: internal use
+>   */
+> @@ -842,6 +851,8 @@ enum nl80211_attrs {
+>  
+>  	NL80211_ATTR_PS_STATE,
+>  
+> +	NL80211_ATTR_CQM,
+> +
+>  	/* add attributes here, update the policy in nl80211.c */
+>  
+>  	__NL80211_ATTR_AFTER_LAST,
+> @@ -1583,4 +1594,29 @@ enum nl80211_ps_state {
+>  	NL80211_PS_ENABLED,
+>  };
+>  
+> +/**
+> + * enum nl80211_attr_cqm - connection quality monitor attributes
+> + * @__NL80211_ATTR_CQM_INVALID: invalid
+> + * @NL80211_ATTR_CQM_RSSI_THOLD: RSSI threshold in dBm
+> + * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm
 
+You really like abbreviations? I think it wouldn't hurt to make these
+more verbose :)
 
->  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> index befe574..b171f8e 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> @@ -646,7 +649,6 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
->  	spin_lock(&priv->rx.rxbuflock);
->  	memcpy(&rxbuf->rxstatus, rxstatus, HTC_RX_FRAME_HEADER_SIZE);
->  	skb_pull(skb, HTC_RX_FRAME_HEADER_SIZE);
-> -	skb->len = rxstatus->rs_datalen;
->  	rxbuf->skb = skb;
->  	rxbuf->in_process = true;
->  	spin_unlock(&priv->rx.rxbuflock);
-> 
-ok, this one looks odd...
+> + * @NL80211_ATTR_CQM_RSSI_LEVEL: Current level in relation to threshold
+> + * @__NL80211_ATTR_CQM_AFTER_LAST: internal
+> + * @NL80211_ATTR_CQM_MAX: highest key attribute
+> + */
+> +enum nl80211_attr_cqm {
+> +	__NL80211_ATTR_CQM_INVALID,
+> +	NL80211_ATTR_CQM_RSSI_THOLD,
+> +	NL80211_ATTR_CQM_RSSI_HYST,
+> +	NL80211_ATTR_CQM_RSSI_LEVEL,
+> +
+> +	/* keep last */
+> +	__NL80211_ATTR_CQM_AFTER_LAST,
+> +	NL80211_ATTR_CQM_MAX = __NL80211_ATTR_CQM_AFTER_LAST - 1
+> +};
+> +
+> +enum nl80211_cqm_level {
 
-BTW, 
+Docs? But then again, see further down.
+
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 3d134a1..5f48472 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1007,6 +1007,7 @@ struct cfg80211_pmksa {
+>   *	RSN IE. It allows for faster roaming between WPA2 BSSIDs.
+>   * @del_pmksa: Delete a cached PMKID.
+>   * @flush_pmksa: Flush all cached PMKIDs.
+> + * @set_cqm_config: Configure cqm RSSI notification threshold.
+
+abbreviations in the method are one thing, but in the docs?
+
+> +/**
+> + * cfg80211_cqm_notify - notification of a connection quality monitoring event
+> + * @dev: network device
+> + * @rssi_level: current level of the RSSI
+> + * @gfp: context flags
+> + *
+> + * This function is called, when a configured connection quality monitoring
+> + * event occurs.
+> + */
+> +void cfg80211_cqm_notify(struct net_device *dev,
+> +			 enum nl80211_cqm_level rssi_level, gfp_t gfp);
+
+I think you should just pass the RSSI value instead of this odd level.
+If you can't do that, then at least rename cqm_level to
+cqm_rssi_threshold_reached or something?
+
+> +static struct nla_policy
+> +nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX+1] __read_mostly = {
+> +	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U8 },
+> +	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U8 },
+> +	[NL80211_ATTR_CQM_RSSI_LEVEL] = { .type = NLA_U32 },
+> +};
+
+Using a u8 for RSSI isn't really a great thing to do, I think. Can't we
+just use s32 (aka u32)?
+
+johannes
+
