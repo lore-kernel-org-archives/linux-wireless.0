@@ -1,97 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp6-g21.free.fr ([212.27.42.6]:42365 "EHLO smtp6-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346Ab0CRUvf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 16:51:35 -0400
-Message-ID: <4BA2924C.7020905@free.fr>
-Date: Thu, 18 Mar 2010 21:51:24 +0100
-From: =?ISO-8859-1?Q?Nicolas_de_Peslo=FCan?= <nicolas.2p.debian@free.fr>
+Received: from mail-pz0-f200.google.com ([209.85.222.200]:58980 "EHLO
+	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965811Ab0CPAJZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Mar 2010 20:09:25 -0400
+Received: by pzk38 with SMTP id 38so2601420pzk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 17:09:24 -0700 (PDT)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>
-Subject: Re: RFC: A workaround for BCM43XX devices with no on-board SPROM
-References: <4BA266FB.1080507@lwfinger.net>
-In-Reply-To: <4BA266FB.1080507@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4B9ECB3E.3010802@openwrt.org>
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
+	<20100315214338.GB4000@tux> <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com>
+	<20100315234909.GA2662@tux> <4B9EC85B.8070800@openwrt.org>
+	<43e72e891003151655i7dc051d0lc1da26267e9c706@mail.gmail.com>
+	<4B9ECB3E.3010802@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 15 Mar 2010 17:09:04 -0700
+Message-ID: <43e72e891003151709r42745e27q6e42c131d202a4cb@mail.gmail.com>
+Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote :
-> Michael,
-> 
-> I'm switching this discussion from the kernel Bugzilla to the lists.
-> 
-> As you know, but I'm restating for anyone that has not read our previous
-> discussions, the b43 driver needs to be changed to handle some of the newer
-> devices do not have an on-board SPROM. It would be trivial to incorporate the
-> data except for the need to have a unique, reproducible MAC.
-> 
-> I am proposing to solve this problem using the following steps:
-> 
-> (1) Modify b43-fwcutter to take data from an existing SPROM, modify the MAC by
-> replacing the last 3 octets with random numbers, and write the resulting file to
-> /lib/firmware/b43. Fortunately, all affected devices seem to have Revision 8
-> SPROMS, which makes preparation easier. All such devices will need to use the
-> calibration parameters of the device from which the prototype SPROM was copied,
-> but that should not be a serious problem. I have chosen to implement this in
-> fwcutter rather than ssb_sprom because the ordinary user will not have access to
-> ssb_sprom; however, they do have a version of fwcutter supplied by the distro.
-> Unconditionally writing an additional small file to the firmware directory when
-> extracting firmware is small overhead and it will be transparent to the user of
-> whatever mechanism the distro uses. The routines needed to calculate the CRC,
-> etc. have been copied into fwcutter from ssb_sprom. A version of this code is
-> already running.
-> 
-> (2) Use the steps in http://bcm-v4.sipsolutions.net/802.11/IsSpromAvailable to
-> determine if the device has an SPROM. If not, then use the kernel's firmware
-> loading mechanism to get the contents of the file prepared in step 1. This file
-> has an 8-bit CRC, thus the validity of the file can be tested even though the
-> test is not very robust.
-> 
-> It it reasonable to keep the vendor portion of the MAC and only replace the
-> "serial number", or would it be better to randomize all 6 octants?
+On Mon, Mar 15, 2010 at 5:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-03-16 12:55 AM, Luis R. Rodriguez wrote:
+>> On Mon, Mar 15, 2010 at 4:52 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> On 2010-03-16 12:49 AM, Luis R. Rodriguez wrote:
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+>>>> index 00570fb..867cfaf 100644
+>>>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+>>>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>>>> @@ -807,6 +804,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+>>>>               acktimeout += 64 - sifstime - ah->slottime;
+>>>>
+>>>>       ath9k_hw_setslottime(ah, slottime);
+>>>> +
+>>>> +     if (AR_SREV_9271(ah))
+>>>> +             return;
+>>>> +
+>>>>       ath9k_hw_set_ack_timeout(ah, acktimeout);
+>>>>       ath9k_hw_set_cts_timeout(ah, acktimeout);
+>>>>       if (ah->globaltxtimeout != (u32) -1)
+>>>
+>>> Why leave out the ACK/CTS timeout setting? How does the hw handle ACK
+>>> and CTS timeouts?
+>>
+>> Right, so that's why I originally removed this hunk completely, I was
+>> under the impression you latest fix would have addressed any issues
+>> but it does not, we get association time outs. I think we'll have to
+>> review this further in order to support coverage class.
+> Are you sure the slot time was set properly by the callback?
 
-We know that there exist a risk (arguably low) for two devices in the same LAN to have the same 
-random part of the MAC. The risk might be higher if, for any reason, the random number generator 
-lack good entropy at the time fwcutter is run.
+Well ath9k_htc did not have it implemented, I just added the code for
+it, you know what.. I did not test modifying the ACK/CTS timeout *and*
+with the new slot time code I added to ath9k_htc, let me try that.
 
-Also, keeping the same MAC prefix (one from Broadcom) will lead to a risk of having the same MAC for 
-a randomly generated device and for a legitimate MAC from Broadcom.
+> Can you
+> print out the values that it's setting?
 
-To reduce the risk, we can chose two different ways :
+Yeah, 20 upon initial association and then I see another setting for 9.
 
-1/ Using a "private" MAC (having bit 0x02 of the lowest byte of the MAC set to 1). This will provide 
-a random area of 46 bits, far better than 24 bits if we keep the Broadcom prefix.
-2/ Registering a public MAC prefix for this usage.
+> The initvals for 9271 don't
+> really look all that different.
 
-Anyway, I think we should add a duplicate MAC detection system, that would at least issue a warning 
-if the NIC lacking an SPROM (and so knowing the MAC address was randomized) receive a packet with 
-its MAC as the source MAC.
+Indeed, odd... this should work with the fudge factor you added.
 
-Of course, in some network topologies, several NIC may share the same MAC, leading to some of them 
-receiving packets with their own MAC as source MAC. A bonding configuration is one such situation. 
-For this reason, it might be also desirable to have the ability to report to an upper layer that the 
-MAC is possibly "unsafe" (subject to a risk of duplicate MAC) and probably not suitable to become 
-the shared MAC for a bonding configuration. That way, at the time such configuration are setup, the 
-tool used to setup the configuration would have the ability to report the situation to the user.
-
-Also, in order to keep the same MAC if one run fwcutter again, we should provide fwcutter with an 
-option to decide whether we want to keep the previously randomized MAC or whether fwcutter should 
-provide a new one (in particular if the current one hit a duplicate MAC).
-
-	Nicolas.
-
-> 
-> Is there a better way to load a file into the kernel?
-> 
-> Thanks,
-> 
-> Larry
-> _______________________________________________
-> Bcm43xx-dev mailing list
-> Bcm43xx-dev@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
-> 
-
+  Luis
