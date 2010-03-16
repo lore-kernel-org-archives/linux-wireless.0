@@ -1,48 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:47252 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756619Ab0CIDKd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 22:10:33 -0500
-Received: by ywh36 with SMTP id 36so678419ywh.4
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 19:10:32 -0800 (PST)
+Received: from mail.atheros.com ([12.36.123.2]:22975 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751104Ab0CPWev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Mar 2010 18:34:51 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Mar 2010 15:34:51 -0700
+Date: Tue, 16 Mar 2010 15:33:38 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] wireless: convert reg_regdb_search_lock to mutex
+Message-ID: <20100316100337.GA1732@senthil-lnx.users.atheros.com>
+References: <4B9F86E9.2030702@gmail.com>
+ <1268768940-5654-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e891003081721h3db9ca53n4a3688ca8aa452a4@mail.gmail.com>
-References: <20100308025841.7460.69949.stgit@void>
-	 <201003090934.59740.br1@einfach.org>
-	 <43e72e891003081647r5cb0a286la5217ff1f97e0652@mail.gmail.com>
-	 <201003090950.21811.br1@einfach.org>
-	 <43e72e891003081721h3db9ca53n4a3688ca8aa452a4@mail.gmail.com>
-Date: Mon, 8 Mar 2010 22:10:32 -0500
-Message-ID: <b6c5339f1003081910t745c3e5ftafbedd1298487875@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: fix I/Q calibration (for real)
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Bruno Randolf <br1@einfach.org>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1268768940-5654-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 8, 2010 at 8:21 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Mar 8, 2010 at 4:50 PM, Bruno Randolf <br1@einfach.org> wrote:
-
->>> > as i said, in my point of view ath5k has several problems right now
->>> > (performace and stability), and i guess nobody will be using it seriously
->>> > in actual production use (does anyone?).
-
-Yes, people do use ath5k in production.  Some large companies.
-
->>> 2.6.32 will be used by a lot of "enterprise" releases, I'd prefer
->>> connection stability fixes do indeed go in for 2.6.32 for ath5k
-
->> sure, as i said, i don't mind. :)
->
-> Alright lets skip stable for this.
-
-Wow this whole line of conversation is confusing :)
-
-If this fixes a calibration bug it needs to go to stable.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+On Wed, Mar 17, 2010 at 01:19:00AM +0530, John W. Linville wrote:
+> Stanse discovered that kmalloc can be called with GFP_KERNEL while
+This commit log is confusing. It Should be "Stanse discovered kmalloc
+was called with GFP_KERNEL". Obviously kmalloc with GFP_KERNEL shouldn't
+be used while holding a spinlock.
+> holding this spinlock.  It can be a mutex instead.
+> 
+> Reported-by: Jiri Slaby <jirislaby@gmail.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> Hmmm...I think I can get rid of the unlock of reg_regdb_search_mutex
+> before calling set_regdom now as well?
+> 
+>  net/wireless/reg.c |   10 +++++-----
+>  1 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index ed89c59..5f623ed 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -324,7 +324,7 @@ struct reg_regdb_search_request {
+>  };
+>  
+>  static LIST_HEAD(reg_regdb_search_list);
+> -static DEFINE_SPINLOCK(reg_regdb_search_lock);
+> +static DEFINE_MUTEX(reg_regdb_search_mutex);
+>  
+>  static void reg_regdb_search(struct work_struct *work)
+>  {
+> @@ -332,7 +332,7 @@ static void reg_regdb_search(struct work_struct *work)
+>  	const struct ieee80211_regdomain *curdom, *regdom;
+>  	int i, r;
+>  
+> -	spin_lock(&reg_regdb_search_lock);
+> +	mutex_lock(&reg_regdb_search_mutex);
+>  	while (!list_empty(&reg_regdb_search_list)) {
+>  		request = list_first_entry(&reg_regdb_search_list,
+>  					   struct reg_regdb_search_request,
+> @@ -346,18 +346,18 @@ static void reg_regdb_search(struct work_struct *work)
+>  				r = reg_copy_regd(&regdom, curdom);
+>  				if (r)
+>  					break;
+> -				spin_unlock(&reg_regdb_search_lock);
+> +				mutex_unlock(&reg_regdb_search_mutex);
+>  				mutex_lock(&cfg80211_mutex);
+>  				set_regdom(regdom);
+>  				mutex_unlock(&cfg80211_mutex);
+> -				spin_lock(&reg_regdb_search_lock);
+> +				mutex_lock(&reg_regdb_search_mutex);
+>  				break;
+>  			}
+>  		}
+>  
+>  		kfree(request);
+>  	}
+> -	spin_unlock(&reg_regdb_search_lock);
+> +	mutex_unlock(&reg_regdb_search_mutex);
+>  }
+>  
+>  static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
+> -- 
+> 1.6.2.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
