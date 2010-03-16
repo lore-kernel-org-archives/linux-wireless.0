@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:44214 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649Ab0CHD5N (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:60331 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752818Ab0CPSms (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Mar 2010 22:57:13 -0500
-Received: by pvb32 with SMTP id 32so1310368pvb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Mar 2010 19:57:12 -0800 (PST)
+	Tue, 16 Mar 2010 14:42:48 -0400
+Message-ID: <4B9FD11E.5050108@gmail.com>
+Date: Tue, 16 Mar 2010 19:42:38 +0100
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20100308025841.7460.69949.stgit@void>
-References: <20100308025841.7460.69949.stgit@void>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 7 Mar 2010 19:56:52 -0800
-Message-ID: <43e72e891003071956xb651ec0he6774b43c56d8d91@mail.gmail.com>
-Subject: Re: [PATCH v2] ath5k: fix I/Q calibration (for real)
-To: Bruno Randolf <br1@einfach.org>
-Cc: me@bobcopeland.com, linville@tuxdriver.com, 8an@praha12.net,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, benoit.papillault@free.fr
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: regd: sleeping in atomic
+References: <4B9F86E9.2030702@gmail.com> <43e72e891003160918x3b7e3c9asf4fc8a9db35ccd8a@mail.gmail.com>
+In-Reply-To: <43e72e891003160918x3b7e3c9asf4fc8a9db35ccd8a@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 7, 2010 at 6:59 PM, Bruno Randolf <br1@einfach.org> wrote:
-> I/Q calibration was completely broken, resulting in a high number of CRC errors
-> on received packets. before i could see around 10% to 20% CRC errors, with this
-> patch they are between 0% and 3%.
->
-> 1.) the removal of the mask in commit "ath5k: Fix I/Q calibration
-> (f1cf2dbd0f798b71b1590e7aca6647f2caef1649)" resulted in no mask beeing used
-> when writing the I/Q values into the register. additional errors in the
-> calculation of the values (see 2.) resulted too high numbers, exceeding the
-> masks, so wrong values like 0xfffffffe were written. to be safe we should
-> always use the bitmask when writing parts of a register.
->
-> 2.) using a (s32) cast for q_coff is a wrong conversion to signed, since we
-> convert to a signed value later by substracting 128. this resulted in too low
-> numbers for Q many times, which were limited to -16 by the boundary check later
-> on.
->
-> 3.) checked everything against the HAL sources and took over comments and minor
-> optimizations from there.
->
-> 4.) we can't use ENABLE_BITS when we want to write a number (the number can
-> contain zeros). also always write the correction values first and set ENABLE
-> bit last, like the HAL does.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
-> v2: use clamp() as Bob suggested
+On 03/16/2010 05:18 PM, Luis R. Rodriguez wrote:
+> one iteration of call_crda() which happens during module
+> initialization and from what I gather I don't think the kernel is
+> happy when you mutex_lock on load routines, please correct my foggy
+> memory if I am mistaken.
 
-Thanks Bruno, are these stable fixes?
-
-  Luis
+No, using mutex in init/exit module routines is fine. Where do you have 
+the information from? There might be problems only with request_module, 
+flush_scheduled_work or similar.
