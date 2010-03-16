@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49687 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754855Ab0CGVX3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41248 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751479Ab0CQAxq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Mar 2010 16:23:29 -0500
-Date: Sun, 7 Mar 2010 23:23:19 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix sta_mtx unlocking on insert STA failure
- path
-Message-ID: <20100307212319.GA11281@jm.kir.nu>
-References: <20100306163508.GA9236@jm.kir.nu>
- <1267988567.3912.1.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1267988567.3912.1.camel@jlt3.sipsolutions.net>
+	Tue, 16 Mar 2010 20:53:46 -0400
+Subject: Re: [PATCH] mac80211: Reschedule dynamic power save timer after
+ wakeup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1268753462-18094-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
+References: <1268753462-18094-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Mar 2010 14:42:41 -0700
+Message-ID: <1268775761.8918.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 07, 2010 at 08:02:47PM +0100, Johannes Berg wrote:
-> > By the way, that roaming between two vifs did not work either, but
-> > regardless, fixing missing mutex_unlock is of higher priority.. The STA
-> > entry was not updated to point to the correct dev when the STA roamed
-> > from one BSS to another one (both BSSes running on the same wiphy). To
-> > be more exact, I think it was updated once, but not when roaming back to
-> > the original BSS.
-> 
-> This must be due to the sta_find_bss thing Felix did because hostapd
-> wasn't using the right ifindex...
+On Tue, 2010-03-16 at 11:31 -0400, Saravanan Dhanabal wrote:
+> After last transmission, the device goes to sleep earlier
+> than the configured dynamic power save timeout. If timeout
+> is set to 400ms, device enters into sleep mode at around
+> 330ms since from last TX.
 
-Yes, it was and I finally remembered to go through the patches from
-Felix to get this fixed. Multi-BSS works now with the current hostap.git
-version of hostapd and driver_nl80211.c.
+So that means the scheduling to the workqueue takes you 70ms?
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+johannes
+
