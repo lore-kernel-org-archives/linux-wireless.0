@@ -1,103 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41121 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:58200 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756153Ab0CQW2P (ORCPT
+	with ESMTP id S1756733Ab0CPAi7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 18:28:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 17/20] ath9k_hw: provide a helper for managing the MIB control register
-Date: Wed, 17 Mar 2010 18:28:10 -0400
-Message-Id: <1268864893-11428-18-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
-References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 15 Mar 2010 20:38:59 -0400
+Date: Mon, 15 Mar 2010 20:38:56 -0400
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
+Message-ID: <20100316003856.GL8069@bombadil.infradead.org>
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com> <20100315214338.GB4000@tux> <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com> <20100315234909.GA2662@tux> <4B9EC85B.8070800@openwrt.org> <43e72e891003151655i7dc051d0lc1da26267e9c706@mail.gmail.com> <4B9ECB3E.3010802@openwrt.org> <43e72e891003151709r42745e27q6e42c131d202a4cb@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <43e72e891003151709r42745e27q6e42c131d202a4cb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will help with the hardware family abstraction.
+On Mon, Mar 15, 2010 at 05:09:04PM -0700, Luis R. Rodriguez wrote:
+> On Mon, Mar 15, 2010 at 5:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> > On 2010-03-16 12:55 AM, Luis R. Rodriguez wrote:
+> >> On Mon, Mar 15, 2010 at 4:52 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> >>> On 2010-03-16 12:49 AM, Luis R. Rodriguez wrote:
+> >>>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> >>>> index 00570fb..867cfaf 100644
+> >>>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> >>>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> >>>> @@ -807,6 +804,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+> >>>>               acktimeout += 64 - sifstime - ah->slottime;
+> >>>>
+> >>>>       ath9k_hw_setslottime(ah, slottime);
+> >>>> +
+> >>>> +     if (AR_SREV_9271(ah))
+> >>>> +             return;
+> >>>> +
+> >>>>       ath9k_hw_set_ack_timeout(ah, acktimeout);
+> >>>>       ath9k_hw_set_cts_timeout(ah, acktimeout);
+> >>>>       if (ah->globaltxtimeout != (u32) -1)
+> >>>
+> >>> Why leave out the ACK/CTS timeout setting? How does the hw handle ACK
+> >>> and CTS timeouts?
+> >>
+> >> Right, so that's why I originally removed this hunk completely, I was
+> >> under the impression you latest fix would have addressed any issues
+> >> but it does not, we get association time outs. I think we'll have to
+> >> review this further in order to support coverage class.
+> > Are you sure the slot time was set properly by the callback?
+> 
+> Well ath9k_htc did not have it implemented, I just added the code for
+> it, you know what.. I did not test modifying the ACK/CTS timeout *and*
+> with the new slot time code I added to ath9k_htc, let me try that.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |   49 +++++++++++++++++++++++++++++++---
- 1 files changed, 45 insertions(+), 4 deletions(-)
+Hah, yeah that fixed this work around, it works fine with the below
+patch, I went ahead and added the coverage class calllback while
+at it.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index efe0bb9..024f8f6 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -833,6 +833,48 @@ static void ath9k_hw_clear_mib_counters(struct ath_hw *ah,
- 		REG_WRITE(ah, AR_SLP_MIB_CTRL, AR_SLP_MIB_CLEAR);
+John this means I don't have to resend this series out, we can just
+skip patch #4, that's all. I'll do one more review with our team and
+get back to you on a final ACK for this series.
+
+Sujith, please review and consider integration of the below changes
+on the ath9k_htc front.
+
+  Luis
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 3b4c636..e501599 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1438,6 +1438,14 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath9k_htc_beacon_config(priv, vif, bss_conf);
+ 	}
+ 
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		if (bss_conf->use_short_slot)
++			ah->slottime = 9;
++		else
++			ah->slottime = 20;
++		ath9k_hw_init_global_settings(ah);
++	}
++
+ 	if (changed & BSS_CHANGED_BEACON)
+ 		ath9k_htc_beacon_update(priv, vif);
+ 
+@@ -1567,6 +1575,18 @@ static int ath9k_htc_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	return 0;
  }
  
-+/**
-+ * ath9k_hw_mibc_cmd - commands for the MIB control register (MIBC)
-+ *
-+ * @ATH9K_HW_MIBC_INIT: initializes the register
-+ * @ATH9K_HW_MIBC_WARN_TEST: Warning test indicator
-+ * @ATH9K_HW_MIBC_FREEZE: freeze all counters, useful prior to collecting
-+ *	the MIB counters.
-+ * @ATH9K_HW_MIBC_CLEAR: clear all counters, can be used after collecting
-+ *	the MIB counters.
-+ * @ATH9K_HW_MIBC_STROBE: MIB counter strobe, can increment every
-+ *	counter by 1.
-+ */
-+enum ath9k_hw_mibc_cmd {
-+	ATH9K_HW_MIBC_INIT = 0,
-+	ATH9K_HW_MIBC_WARN_TEST,
-+	ATH9K_HW_MIBC_FREEZE,
-+	ATH9K_HW_MIBC_CLEAR,
-+	ATH9K_HW_MIBC_STROBE,
-+};
-+
-+static void ath9k_hw_send_mibc_cmd(struct ath_hw *ah,
-+				   enum ath9k_hw_mibc_cmd cmd)
++static void ath9k_htc_set_coverage_class(struct ieee80211_hw *hw,
++					 u8 coverage_class)
 +{
-+	switch (cmd) {
-+	case ATH9K_HW_MIBC_INIT:
-+		REG_WRITE(ah, AR_MIBC, 0);
-+		break;
-+	case ATH9K_HW_MIBC_WARN_TEST: /* unused */
-+		REG_WRITE(ah, AR_MIBC, AR_MIBC_COW);
-+		break;
-+	case ATH9K_HW_MIBC_FREEZE:
-+		REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
-+		break;
-+	case ATH9K_HW_MIBC_CLEAR:
-+		REG_WRITE(ah, AR_MIBC, AR_MIBC_CMC);
-+		break;
-+	case ATH9K_HW_MIBC_STROBE: /* unused */
-+		REG_WRITE(ah, AR_MIBC, AR_MIBC_MCS);
-+		break;
-+	}
++	struct ath9k_htc_priv *priv = hw->priv;
++	struct ath_hw *ah = priv->ah;
++
++	mutex_lock(&priv->mutex);
++	ah->coverage_class = coverage_class;
++	ath9k_hw_init_global_settings(ah);
++	mutex_unlock(&priv->mutex);
 +}
 +
- void ath9k_enable_mib_counters(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -841,8 +883,7 @@ void ath9k_enable_mib_counters(struct ath_hw *ah)
- 
- 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
- 	ath9k_hw_clear_mib_counters(ah, false);
--
--	REG_WRITE(ah, AR_MIBC, 0);
-+	ath9k_hw_send_mibc_cmd(ah, ATH9K_HW_MIBC_INIT);
- 	ath9k_hw_update_phy_err_masks(ah);
- }
- 
-@@ -853,9 +894,9 @@ void ath9k_hw_disable_mib_counters(struct ath_hw *ah)
- 
- 	ath_print(common, ATH_DBG_ANI, "Disable MIB counters\n");
- 
--	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
-+	ath9k_hw_send_mibc_cmd(ah, ATH9K_HW_MIBC_FREEZE);
- 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
--	REG_WRITE(ah, AR_MIBC, AR_MIBC_CMC);
-+	ath9k_hw_send_mibc_cmd(ah, ATH9K_HW_MIBC_CLEAR);
- 
- 	ath9k_hw_clear_mib_counters(ah, false);
- }
--- 
-1.6.3.3
-
+ struct ieee80211_ops ath9k_htc_ops = {
+ 	.tx                 = ath9k_htc_tx,
+ 	.start              = ath9k_htc_start,
+@@ -1587,4 +1607,5 @@ struct ieee80211_ops ath9k_htc_ops = {
+ 	.sw_scan_complete   = ath9k_htc_sw_scan_complete,
+ 	.set_rts_threshold  = ath9k_htc_set_rts_threshold,
+ 	.rfkill_poll        = ath9k_htc_rfkill_poll_state,
++	.set_coverage_class = ath9k_htc_set_coverage_class,
+ };
