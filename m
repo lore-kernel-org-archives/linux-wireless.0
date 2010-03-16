@@ -1,193 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54218 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751308Ab0CQU6W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 16:58:22 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: remove rename {free,alloc}_ieee80211 patch
-Date: Wed, 17 Mar 2010 21:58:13 +0100
-Message-Id: <1268859494-12019-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:41250 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751675Ab0CQAxv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Mar 2010 20:53:51 -0400
+Subject: Re: [RFC PATCHv2 1/1] mac80211: Add support connection monitor in
+ hardware
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1268650643-23191-2-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268650643-23191-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268650643-23191-2-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Mar 2010 14:45:35 -0700
+Message-ID: <1268775935.8918.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is now inclued in linux-next
+On Mon, 2010-03-15 at 12:57 +0200, Juuso Oikarinen wrote:
+> This patch is based on a RFC patch by Kalle Valo.
+> 
+> The wl1271 has a feature which handles the connection monitor logic
+> in hardware, basically sending periodically nullfunc frames and reporting
+> to the host if AP is lost, after attempting to recover by sending
+> probe-requests to the AP.
+> 
+> Add support to mac80211 by adding a new flag IEEE80211_HW_CONNECTION_MONITOR
+> which prevents conn_mon_timer from triggering during idle periods, and
+> prevents sending probe-requests to the AP if beacon-loss is indicated by the
+> hardware.
+> 
+> Cc: Kalle Valo <kalle.valo@nokia.com>
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
+>  include/net/mac80211.h |    4 ++++
+>  net/mac80211/mlme.c    |   33 ++++++++++++++++++++++++++++++++-
+>  2 files changed, 36 insertions(+), 1 deletions(-)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 936bc41..cd7b471 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -954,6 +954,9 @@ enum ieee80211_tkip_key_type {
+>   *	Hardware can provide ack status reports of Tx frames to
+>   *	the stack.
+>   *
+> + * @IEEE80211_HW_CONNECTION_MONITOR:
+> + *      The hardware performs its own connection monitoring, including
+> + *      periodic keep-alives to the AP and probing the AP on beacon loss.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/23-ipw.patch |  161 --------------------------------------------------
- 1 files changed, 0 insertions(+), 161 deletions(-)
- delete mode 100644 patches/23-ipw.patch
+I think this should mention that you get disconnected right away when
+you then signal beacon loss with the mac80211 api call, which is new.
+Might also be worth updating the API docs for that function.
 
-diff --git a/patches/23-ipw.patch b/patches/23-ipw.patch
-deleted file mode 100644
-index 179ad39..0000000
---- a/patches/23-ipw.patch
-+++ /dev/null
-@@ -1,161 +0,0 @@
--rename {free,alloc}_ieee80211 to {free,alloc}_libipw
--
--{free,alloc}_ieee80211 are also defined by ieee80211 module for example
--used on kernel 2.6.26. Without this patch ipwlib will not load on this
--kernel, because of a duplicate symbol.
--
----- a/drivers/net/wireless/ipw2x00/ipw2100.c
--+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
--@@ -6114,7 +6114,7 @@ static struct net_device *ipw2100_alloc_
-- 	struct ipw2100_priv *priv;
-- 	struct net_device *dev;
-- 
---	dev = alloc_ieee80211(sizeof(struct ipw2100_priv), 0);
--+	dev = alloc_libipw(sizeof(struct ipw2100_priv), 0);
-- 	if (!dev)
-- 		return NULL;
-- 	priv = libipw_priv(dev);
--@@ -6440,7 +6440,7 @@ static int ipw2100_pci_init_one(struct p
-- 		sysfs_remove_group(&pci_dev->dev.kobj,
-- 				   &ipw2100_attribute_group);
-- 
---		free_ieee80211(dev, 0);
--+		free_libipw(dev, 0);
-- 		pci_set_drvdata(pci_dev, NULL);
-- 	}
-- 
--@@ -6498,10 +6498,10 @@ static void __devexit ipw2100_pci_remove
-- 		if (dev->base_addr)
-- 			iounmap((void __iomem *)dev->base_addr);
-- 
---		/* wiphy_unregister needs to be here, before free_ieee80211 */
--+		/* wiphy_unregister needs to be here, before free_libipw */
-- 		wiphy_unregister(priv->ieee->wdev.wiphy);
-- 		kfree(priv->ieee->bg_band.channels);
---		free_ieee80211(dev, 0);
--+		free_libipw(dev, 0);
-- 	}
-- 
-- 	pci_release_regions(pci_dev);
----- a/drivers/net/wireless/ipw2x00/ipw2200.c
--+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
--@@ -11668,7 +11668,7 @@ static int ipw_prom_alloc(struct ipw_pri
-- 	if (priv->prom_net_dev)
-- 		return -EPERM;
-- 
---	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv), 1);
--+	priv->prom_net_dev = alloc_libipw(sizeof(struct ipw_prom_priv), 1);
-- 	if (priv->prom_net_dev == NULL)
-- 		return -ENOMEM;
-- 
--@@ -11693,7 +11693,7 @@ static int ipw_prom_alloc(struct ipw_pri
-- 
-- 	rc = register_netdev(priv->prom_net_dev);
-- 	if (rc) {
---		free_ieee80211(priv->prom_net_dev, 1);
--+		free_libipw(priv->prom_net_dev, 1);
-- 		priv->prom_net_dev = NULL;
-- 		return rc;
-- 	}
--@@ -11707,7 +11707,7 @@ static void ipw_prom_free(struct ipw_pri
-- 		return;
-- 
-- 	unregister_netdev(priv->prom_net_dev);
---	free_ieee80211(priv->prom_net_dev, 1);
--+	free_libipw(priv->prom_net_dev, 1);
-- 
-- 	priv->prom_net_dev = NULL;
-- }
--@@ -11737,7 +11737,7 @@ static int __devinit ipw_pci_probe(struc
-- 	struct ipw_priv *priv;
-- 	int i;
-- 
---	net_dev = alloc_ieee80211(sizeof(struct ipw_priv), 0);
--+	net_dev = alloc_libipw(sizeof(struct ipw_priv), 0);
-- 	if (net_dev == NULL) {
-- 		err = -ENOMEM;
-- 		goto out;
--@@ -11757,7 +11757,7 @@ static int __devinit ipw_pci_probe(struc
-- 	mutex_init(&priv->mutex);
-- 	if (pci_enable_device(pdev)) {
-- 		err = -ENODEV;
---		goto out_free_ieee80211;
--+		goto out_free_libipw;
-- 	}
-- 
-- 	pci_set_master(pdev);
--@@ -11892,8 +11892,8 @@ static int __devinit ipw_pci_probe(struc
--       out_pci_disable_device:
-- 	pci_disable_device(pdev);
-- 	pci_set_drvdata(pdev, NULL);
---      out_free_ieee80211:
---	free_ieee80211(priv->net_dev, 0);
--+      out_free_libipw:
--+	free_libipw(priv->net_dev, 0);
--       out:
-- 	return err;
-- }
--@@ -11960,11 +11960,11 @@ static void __devexit ipw_pci_remove(str
-- 	pci_release_regions(pdev);
-- 	pci_disable_device(pdev);
-- 	pci_set_drvdata(pdev, NULL);
---	/* wiphy_unregister needs to be here, before free_ieee80211 */
--+	/* wiphy_unregister needs to be here, before free_libipw */
-- 	wiphy_unregister(priv->ieee->wdev.wiphy);
-- 	kfree(priv->ieee->a_band.channels);
-- 	kfree(priv->ieee->bg_band.channels);
---	free_ieee80211(priv->net_dev, 0);
--+	free_libipw(priv->net_dev, 0);
-- 	free_firmware();
-- }
-- 
----- a/drivers/net/wireless/ipw2x00/libipw.h
--+++ b/drivers/net/wireless/ipw2x00/libipw.h
--@@ -905,7 +905,7 @@ struct libipw_device {
-- 				       struct libipw_reassoc_request * req);
-- 
-- 	/* This must be the last item so that it points to the data
---	 * allocated beyond this structure by alloc_ieee80211 */
--+	 * allocated beyond this structure by alloc_libipw */
-- 	u8 priv[0];
-- };
-- 
--@@ -1018,8 +1018,8 @@ static inline int libipw_is_cck_rate(u8 
-- }
-- 
-- /* ieee80211.c */
---extern void free_ieee80211(struct net_device *dev, int monitor);
---extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
--+extern void free_libipw(struct net_device *dev, int monitor);
--+extern struct net_device *alloc_libipw(int sizeof_priv, int monitor);
-- extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
-- 
-- extern void libipw_networks_age(struct libipw_device *ieee,
----- a/drivers/net/wireless/ipw2x00/libipw_module.c
--+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
--@@ -140,7 +140,7 @@ int libipw_change_mtu(struct net_device 
-- }
-- EXPORT_SYMBOL(libipw_change_mtu);
-- 
---struct net_device *alloc_ieee80211(int sizeof_priv, int monitor)
--+struct net_device *alloc_libipw(int sizeof_priv, int monitor)
-- {
-- 	struct libipw_device *ieee;
-- 	struct net_device *dev;
--@@ -227,7 +227,7 @@ failed:
-- 	return NULL;
-- }
-- 
---void free_ieee80211(struct net_device *dev, int monitor)
--+void free_libipw(struct net_device *dev, int monitor)
-- {
-- 	struct libipw_device *ieee = netdev_priv(dev);
-- 
--@@ -336,5 +336,5 @@ MODULE_PARM_DESC(debug, "debug output ma
-- module_exit(libipw_exit);
-- module_init(libipw_init);
-- 
---EXPORT_SYMBOL(alloc_ieee80211);
---EXPORT_SYMBOL(free_ieee80211);
--+EXPORT_SYMBOL(alloc_libipw);
--+EXPORT_SYMBOL(free_libipw);
--- 
-1.6.3.3
+> @@ -936,8 +939,36 @@ void ieee80211_beacon_loss_work(struct work_struct *work)
+>  	struct ieee80211_sub_if_data *sdata =
+>  		container_of(work, struct ieee80211_sub_if_data,
+>  			     u.mgd.beacon_loss_work);
+> +	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> +	struct ieee80211_local *local = sdata->local;
+> +	u8 bssid[ETH_ALEN];
+> +
+> +	if (!(sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR))
+> +		ieee80211_mgd_probe_ap(sdata, true);
+> +	else {
+> +		mutex_lock(&ifmgd->mtx);
+> +		if (!ifmgd->associated) {
+> +			mutex_unlock(&ifmgd->mtx);
+> +			return;
+> +		}
+>  
+> -	ieee80211_mgd_probe_ap(sdata, true);
+> +		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
+> +
+> +		printk(KERN_DEBUG "No probe-response from AP %pM, "
+> +		       "disconnected.\n", bssid);
+> +
+> +		ieee80211_set_disassoc(sdata);
+> +		ieee80211_recalc_idle(local);
+> +		mutex_unlock(&ifmgd->mtx);
+> +		/*
+> +		 * must be outside lock due to cfg80211,
+> +		 * but that's not a problem.
+> +		 */
+> +		ieee80211_send_deauth_disassoc(sdata, bssid,
+> +					       IEEE80211_STYPE_DEAUTH,
+> +					       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+> +					       NULL);
+> +	}
+
+This !() is a little awkward, how about moving this to a new function?
+and the message is also really misleading.
+
+johannes
 
