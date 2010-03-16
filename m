@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:62473 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753208Ab0CBWLO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41245 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025Ab0CQAxi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 17:11:14 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so339600fgg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 14:11:12 -0800 (PST)
-Message-ID: <4B8D8CF8.8030003@lwfinger.net>
-Date: Tue, 02 Mar 2010 16:11:04 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Nathan Schulte <reklipz@gmail.com>,
-	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com> <201003010122.51341.mb@bu3sch.de> <201003022257.51878.mb@bu3sch.de>
-In-Reply-To: <201003022257.51878.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Mar 2010 20:53:38 -0400
+Subject: Re: [RFC] mac80211,iwlwifi: disabling qos queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <20100316145114.GA2496@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com>
+	 <20100310152024.GB2969@dhcp-lab-161.englab.brq.redhat.com>
+	 <1268265597.4192.3.camel@jlt3.sipsolutions.net>
+	 <20100311095656.GB4682@dhcp-lab-161.englab.brq.redhat.com>
+	 <1268319960.4413.1.camel@jlt3.sipsolutions.net>
+	 <20100316145114.GA2496@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Mar 2010 14:18:02 -0700
+Message-ID: <1268774282.4054.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/02/2010 03:57 PM, Michael Buesch wrote:
-> 
-> So what's the status on this? I think the fact that the testing patch showed some
-> improvement is a clear indicator that something in the PCI-E core init is wrong.
-> It's also not surprising that something is going wrong there. The whole PCI-E core
-> code basically is undebugged. I wrote most of it long time ago, but I still
-> don't have a device that tests it (and probably won't get one anytime soon).
-> So I'm really not surprised that there are bugs. There also are missing parts.
-> 
-> A bug in the PCI-E core code is able to show such behavior, because all memory
-> transfers (MMIO and DMA) from the PCI device to the wireless core are translated
-> by the PCI-E core.
-> I think the whole PCI-E core code has to be audited (also the specs, probably).
+Hi,
 
-You are right about the audit of the PCIe code and specs. Some of the MMIO
-sequences found for wl and missing in b43 come from the code described in
-http://bcm-v4.sipsolutions.net/PCI-E; however, that code needs to be checked as
-at least one routine is missing, I have not yet had a chance to go through it,
-but I hope to soon.
+> > > I looked at this on the air. Everything is fine until device send QoS
+> > > NULL frame (even with default parameters: normal ACK, TXOP request). 
+> > > Then AP send two strange Probe Response frames and Disassociate frame
+> > > with "Micheal MIC failure" error.
+> > 
+> > So here's good information, why did you not mention that before? :)
+> > 
+> > Yeah I guess in some sense this code dates back in mac80211 to where it
+> > assumed that the driver wasn't sending frames. I'll give it a thought,
+> > but I'm at a conference right now.
+> 
+> May I proceed with my patches or do you have a better idea how to solve
+> issue?
 
-Larry
+Sorry ... I had given this some thought and then got distracted ...
+still had it unread but no time to reply. What I finally realised is
+that we set the information per queue, and even the userspace API is
+built that way, so we really need to have a separate configuration to
+enable/disable QoS. Maybe a BSS config flag would be appropriate?
+
+johannes
+
