@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44769 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950Ab0CHIJC (ORCPT
+Received: from mail-px0-f198.google.com ([209.85.216.198]:64061 "EHLO
+	mail-px0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932927Ab0CPDvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 03:09:02 -0500
-Subject: Re: [PATCH] crda: do not embed crypto data when USE_OPENSSL=1
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kel Modderman <kel@otaku42.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201003060059.42588.kel@otaku42.de>
-References: <201003050008.51066.kel@otaku42.de>
-	 <201003051156.11922.kel@otaku42.de> <20100305040853.GA4640@tuxdriver.com>
-	 <201003060059.42588.kel@otaku42.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Mar 2010 09:08:55 +0100
-Message-ID: <1268035735.3819.17.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 15 Mar 2010 23:51:55 -0400
+Received: by pxi36 with SMTP id 36so2469971pxi.21
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 20:51:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <19358.63849.107447.125247@gargle.gargle.HOWL>
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
+	<20100315214338.GB4000@tux> <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com>
+	<20100315234909.GA2662@tux> <4B9EC85B.8070800@openwrt.org>
+	<43e72e891003151655i7dc051d0lc1da26267e9c706@mail.gmail.com>
+	<4B9ECB3E.3010802@openwrt.org> <43e72e891003151709r42745e27q6e42c131d202a4cb@mail.gmail.com>
+	<20100316003856.GL8069@bombadil.infradead.org> <19358.63849.107447.125247@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 15 Mar 2010 20:51:35 -0700
+Message-ID: <43e72e891003152051i503c4e36je14ef17bbba6804d@mail.gmail.com>
+Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-03-06 at 00:59 +1000, Kel Modderman wrote:
+On Mon, Mar 15, 2010 at 8:22 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Luis R. Rodriguez wrote:
+>> Hah, yeah that fixed this work around, it works fine with the below
+>> patch, I went ahead and added the coverage class calllback while
+>> at it.
+>>
+>> John this means I don't have to resend this series out, we can just
+>> skip patch #4, that's all. I'll do one more review with our team and
+>> get back to you on a final ACK for this series.
+>>
+>> Sujith, please review and consider integration of the below changes
+>> on the ath9k_htc front.
+>
+> Integrate where ? I have no idea what is happening.
 
-> I am obviously having hard time clearly communicating what I think is wrong,
+Into the ath9k_htc driver patch.
 
-Yes.
+> Too many patch series floating around ..
 
-> so attached is 2 files demonstrating the problem with step by step reproducible
-> commands with output. regdb-upgrade-does-not-work.txt shows the current
-> behaviour which must be improved, regdb-upgrade-does-work.txt shows
-> the behaviour with my patch applied. The patch which was used is also attached.
+Oh? Let me clarify.
 
-That isn't helping, we don't want to do your work of digging through :)
+1 - ath9k_htc
+2 - hw code changes
+3 - hw deinit fix
 
-The building-in keys code should NOT be removed, it should be possible
-to build in keys AND use external keys (and I still think the external
-key code should be optional since it is _quite_ different from internal
-keys).
+I've split up patch #2 into individual ones with a few changes. I also
+merged patch #3 into this series because I need these patches in order
+to continue doing any work on ar93xx. So what I am referring to is
+your patch #1, the ath9k_htc patch.
 
-What exactly happens when you build in keys and use external ones? The
-code I originally wrote should try to validate the database using all
-available keys, it seems like that was broken and you're trying to fix
-the symptom rather than the cause.
-
-johannes
-
+  Luis
