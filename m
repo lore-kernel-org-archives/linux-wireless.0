@@ -1,98 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1785 "EHLO mail.perches.com"
+Received: from mail.atheros.com ([12.36.123.2]:24965 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752728Ab0CRGVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 02:21:45 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v2 3/7] net/wireless/wext-core.c: Use IW_EVENT_IDX macro
-Date: Wed, 17 Mar 2010 23:21:36 -0700
-Message-Id: <43329e554e9c7ee1a7e3eaa6e20a7ab329cbb3eb.1268892664.git.joe@perches.com>
-In-Reply-To: <cover.1268892663.git.joe@perches.com>
-References: <cover.1268892663.git.joe@perches.com>
+	id S937118Ab0CPDCj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Mar 2010 23:02:39 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 20:02:39 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19358.63849.107447.125247@gargle.gargle.HOWL>
+Date: Tue, 16 Mar 2010 08:52:17 +0530
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
+In-Reply-To: <20100316003856.GL8069@bombadil.infradead.org>
+References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
+	<20100315214338.GB4000@tux>
+	<43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com>
+	<20100315234909.GA2662@tux>
+	<4B9EC85B.8070800@openwrt.org>
+	<43e72e891003151655i7dc051d0lc1da26267e9c706@mail.gmail.com>
+	<4B9ECB3E.3010802@openwrt.org>
+	<43e72e891003151709r42745e27q6e42c131d202a4cb@mail.gmail.com>
+	<20100316003856.GL8069@bombadil.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's a wireless.h macro for this, might as well use it.
+Luis R. Rodriguez wrote:
+> Hah, yeah that fixed this work around, it works fine with the below
+> patch, I went ahead and added the coverage class calllback while
+> at it.
+> 
+> John this means I don't have to resend this series out, we can just
+> skip patch #4, that's all. I'll do one more review with our team and
+> get back to you on a final ACK for this series.
+> 
+> Sujith, please review and consider integration of the below changes
+> on the ath9k_htc front.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- net/wireless/wext-core.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+Integrate where ? I have no idea what is happening.
+Too many patch series floating around ..
 
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index dbde22b..bfcbeee 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -261,44 +261,44 @@ static const unsigned standard_ioctl_num = ARRAY_SIZE(standard_ioctl);
-  * we know about.
-  */
- static const struct iw_ioctl_description standard_event[] = {
--	[IWEVTXDROP	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVTXDROP)] = {
- 		.header_type	= IW_HEADER_TYPE_ADDR,
- 	},
--	[IWEVQUAL	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVQUAL)] = {
- 		.header_type	= IW_HEADER_TYPE_QUAL,
- 	},
--	[IWEVCUSTOM	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVCUSTOM)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_CUSTOM_MAX,
- 	},
--	[IWEVREGISTERED	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVREGISTERED)] = {
- 		.header_type	= IW_HEADER_TYPE_ADDR,
- 	},
--	[IWEVEXPIRED	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVEXPIRED)] = {
- 		.header_type	= IW_HEADER_TYPE_ADDR,
- 	},
--	[IWEVGENIE	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVGENIE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_GENERIC_IE_MAX,
- 	},
--	[IWEVMICHAELMICFAILURE	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVMICHAELMICFAILURE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= sizeof(struct iw_michaelmicfailure),
- 	},
--	[IWEVASSOCREQIE	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVASSOCREQIE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_GENERIC_IE_MAX,
- 	},
--	[IWEVASSOCRESPIE	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVASSOCRESPIE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_GENERIC_IE_MAX,
- 	},
--	[IWEVPMKIDCAND	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVPMKIDCAND)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= sizeof(struct iw_pmkid_cand),
-@@ -453,7 +453,7 @@ void wireless_send_event(struct net_device *	dev,
- 		if (cmd_index < standard_ioctl_num)
- 			descr = &(standard_ioctl[cmd_index]);
- 	} else {
--		cmd_index = cmd - IWEVFIRST;
-+		cmd_index = IW_EVENT_IDX(cmd);
- 		if (cmd_index < standard_event_num)
- 			descr = &(standard_event[cmd_index]);
- 	}
--- 
-1.7.0.14.g7e948
-
+Sujith
