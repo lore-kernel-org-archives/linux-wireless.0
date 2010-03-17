@@ -1,63 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:12568 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753288Ab0CIH4S (ORCPT
+Received: from lennier.cc.vt.edu ([198.82.162.213]:40260 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988Ab0CQDHV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 02:56:18 -0500
-Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0428981376
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:56:16 +0900 (JST)
-Subject: [PATCH 12/13] ath5k: IQ calibration for AR5211 is slightly different
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 09 Mar 2010 16:56:15 +0900
-Message-ID: <20100309075615.30616.36296.stgit@void>
-In-Reply-To: <20100309075124.30616.40896.stgit@void>
-References: <20100309075124.30616.40896.stgit@void>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 16 Mar 2010 23:07:21 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Weird wireless/wpa_supplicant screw-up.
+In-Reply-To: Your message of "Fri, 12 Mar 2010 19:09:09 PST."
+             <1268449749.4880.2.camel@jlt3.sipsolutions.net>
+From: Valdis.Kletnieks@vt.edu
+References: <7197.1268086939@localhost> <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost>
+            <1268449749.4880.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1268795213_4069P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Tue, 16 Mar 2010 23:06:53 -0400
+Message-ID: <12262.1268795213@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-according to the HAL sources the calculation of the Q value is slightly
-different for AR5211 chips.
+--==_Exmh_1268795213_4069P
+Content-Type: text/plain; charset=us-ascii
 
-i couldn't test this since IQ calibration never finishes on older parts. this
-is a different problem...
+On Fri, 12 Mar 2010 19:09:09 PST, Johannes Berg said:
+> No ... look at _all_ that it produces.
+> 
+> [   98.592575] In giwencode idx=0 keys=ffff88001b304000 cipher=0
+> [   98.592580] And we're going home...
+> *****
+> [   98.592633] In giwencode idx=1 keys=ffff88001b304000 cipher=fac04
+> *****
+> [   98.592749] In giwencode idx=2 keys=ffff88001b304000 cipher=0
+> [   98.592751] And we're going home...
+> [   98.592803] In giwencode idx=3 keys=ffff88001b304000 cipher=0
+> [   98.592805] And we're going home...
+> [   98.592856] In giwencode idx=0 keys=ffff88001b304000 cipher=0
+> [   98.592859] And we're going home...
+> 
+> See? It reports one key which is the RX-only group key which is
+> absolutely correct.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/phy.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+It matches what 'iwlist keys' reports, but I remain unconvinced of
+its "correctness".  If a TX key has been set anyplace, what allows me
+to verify that it was in fact set?
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 95cebd6..3a18742 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1399,7 +1399,11 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
- 	}
- 
- 	i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
--	q_coffd = q_pwr >> 7;
-+
-+	if (ah->ah_version == AR5K_AR5211)
-+		q_coffd = q_pwr >> 6;
-+	else
-+		q_coffd = q_pwr >> 7;
- 
- 	/* protect against divide by 0 and loss of sign bits */
- 	if (i_coffd == 0 || q_coffd < 2)
-@@ -1408,7 +1412,10 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
- 	i_coff = (-iq_corr) / i_coffd;
- 	i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
- 
--	q_coff = (i_pwr / q_coffd) - 128;
-+	if (ah->ah_version == AR5K_AR5211)
-+		q_coff = (i_pwr / q_coffd) - 64;
-+	else
-+		q_coff = (i_pwr / q_coffd) - 128;
- 	q_coff = clamp(q_coff, -16, 15); /* signed 5 bit */
- 
- 	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_CALIBRATE,
+> > So the root cause has something to do with params[idx].cipher being unset.
+> 
+> Not at all.
+
+I was referring to the root cause of why 'iwlist keys' wasn't reporting
+anything for the other 3 key slots.
+
+> GIWENCODE is 100% unsuitable for WPA. Just forget about "iwlist key".
+
+Feel free to point me at the officially approved substitute.
+
+> And then we'd like to know what the actual problem is.
+
+The problem is that I do 'iwconfig', and I see:
+
+Encryption key:off
+
+And if I do 'iwlist keys', I don't see a TX key listed, which certainly gives
+the at least the impression that we're not encrypting outbound traffic.  If I'm
+not supposed to trust 'iwconfig' or 'iwlist key' to tell me whether WPA2
+traffic is in fact encrypted or not, what *am* I supposed to use instead?
+
+There's two possibilities:
+
+1) iwconfig and iwlist keys are correctly reporting I don't have a TX key
+set - which means wpa_supplicant and/or the kernel is failing to get the
+key set, which is a problem.
+
+2) iwconfig and iwlist are lying through their teeth, and reporting there
+isn't any key set when in fact there is.  This is still a problem because it
+implies to users their traffic isn't secured.
+
+I'll point out that until fairly recently 'iwconfig' *did* report a key for
+WPA2, so this looks like a regression on somebody's part.
+
+
+--==_Exmh_1268795213_4069P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFLoEdNcC3lWbTT17ARAgE3AKDxlTrvsTPkYR/tsy9JLX8ehBPA3ACfU0aG
+i18TPXQEXyrzWhUEKdJR6DI=
+=rZEE
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1268795213_4069P--
 
