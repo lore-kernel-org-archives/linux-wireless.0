@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49021 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755738Ab0CDCVw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54239 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459Ab0CQPz3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 21:21:52 -0500
-Date: Wed, 3 Mar 2010 21:20:13 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jose Alonso <joalonsof@gmail.com>
-Cc: matthieu castet <castet.matthieu@free.fr>,
-	linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] airo : Print of firmware version
-Message-ID: <20100304022012.GA1994@tuxdriver.com>
-References: <4B8A80EE.6000102@free.fr>
- <20100303201411.GF23920@tuxdriver.com>
- <1267657973.6254.11.camel@laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1267657973.6254.11.camel@laptop>
+	Wed, 17 Mar 2010 11:55:29 -0400
+Subject: Re: [RFC] mac80211,iwlwifi: disabling qos queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <20100317092612.GB3726@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com>
+	 <20100310152024.GB2969@dhcp-lab-161.englab.brq.redhat.com>
+	 <1268265597.4192.3.camel@jlt3.sipsolutions.net>
+	 <20100311095656.GB4682@dhcp-lab-161.englab.brq.redhat.com>
+	 <1268319960.4413.1.camel@jlt3.sipsolutions.net>
+	 <20100316145114.GA2496@dhcp-lab-161.englab.brq.redhat.com>
+	 <1268774282.4054.1.camel@jlt3.sipsolutions.net>
+	 <20100317092612.GB3726@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Mar 2010 08:51:46 -0700
+Message-ID: <1268841106.5989.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 03, 2010 at 08:12:53PM -0300, Jose Alonso wrote:
-> On Wed, 2010-03-03 at 15:14 -0500, John W. Linville wrote:
-> > On Sun, Feb 28, 2010 at 03:42:54PM +0100, matthieu castet wrote:
-> > > For the firmware version 5.30.17 the log file shows:
-> > > Firmware version 5.30.11
-> > >
-> > > The variable softSubVer is binary.
-> > >
-> > >
-> > > Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
-> > > Signed-off-by: Jose Alonso <joalonsof@gmail.com>
-> > 
-> > > Index: airo.c
-> > > ===================================================================
-> > > --- 1/drivers/net/wireless/airo.c	(r?vision 47)
-> > > +++ 2/drivers/net/wireless/airo.c	(r?vision 48)
-> > > @@ -2993,7 +2993,7 @@
-> > >  	ai->wep_capable = (cap_rid.softCap & cpu_to_le16(0x02)) ? 1 : 0;
-> > >  	ai->max_wep_idx = (cap_rid.softCap & cpu_to_le16(0x80)) ? 3 : 0;
-> > >  
-> > > -	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
-> > > +	airo_print_info(dev->name, "Firmware version %x.%x.%02d",
-> > >  	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
-> > >  	                (le16_to_cpu(cap_rid.softVer) & 0xFF),
-> > >  	                le16_to_cpu(cap_rid.softSubVer));
-> > 
-> > Why should the last segment be in decimal form if the other two
-> > segments of the version number are in hexadecimal form?
-> 
-> The airo.c shows the usage of hexadecimal and binary form:
-> 
->         /* Test for WPA support */
->         /* Only firmware versions 5.30.17 or better can do WPA */
->         if (le16_to_cpu(cap_rid.softVer) > 0x530
->          || (le16_to_cpu(cap_rid.softVer) == 0x530
->               && le16_to_cpu(cap_rid.softSubVer) >= 17)) {
->                 airo_print_info(ai->dev->name, "WPA supported.");
+On Wed, 2010-03-17 at 10:26 +0100, Stanislaw Gruszka wrote:
 
-Alright, but that could be an argument for changing the comment.
-Probably too much to ask, but is there some authoritative source for
-this busted numbering scheme?
+> > Sorry ... I had given this some thought and then got distracted ...
+> > still had it unread but no time to reply. What I finally realised is
+> > that we set the information per queue, and even the userspace API is
+> > built that way, so we really need to have a separate configuration to
+> > enable/disable QoS. Maybe a BSS config flag would be appropriate?
+> 
+> Maybe in -next but not in -stable since drivers in ieee80211_ops->config 
+> and ieee80211_ops->bss_info_chnged do some additional work not looking at
+> changed variable. So my plan is put change I proposed in stable and
+> further optimize it in -next, ok?
 
-John
--- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+I really don't think it should work that way. I'd like to see the patch
+for the current kernels including 2.6.34 first, and then we can decide
+how to backport it. FWIW, I don't think drivers should be having trouble
+with a new flag there.
+
+johannes
+
