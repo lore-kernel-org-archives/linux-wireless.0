@@ -1,213 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:50706 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932784Ab0CXS7U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 14:59:20 -0400
-From: Frans Pop <elendil@planet.nl>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Frans Pop <elendil@planet.nl>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [PATCH 5/7] wireless/prism54: remove trailing space in messages
-Date: Wed, 24 Mar 2010 19:46:33 +0100
-Message-Id: <1269456395-15343-5-git-send-email-elendil@planet.nl>
-In-Reply-To: <201003241927.12434.elendil@planet.nl>
-References: <201003241927.12434.elendil@planet.nl>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54218 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751308Ab0CQU6W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 16:58:22 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: remove rename {free,alloc}_ieee80211 patch
+Date: Wed, 17 Mar 2010 21:58:13 +0100
+Message-Id: <1268859494-12019-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Frans Pop <elendil@planet.nl>
-Cc: Luis R. Rodriguez <mcgrof@gmail.com>
----
- drivers/net/wireless/p54/txrx.c           |    2 +-
- drivers/net/wireless/prism54/islpci_dev.c |   16 ++++++++--------
- drivers/net/wireless/prism54/islpci_eth.c |    8 ++++----
- drivers/net/wireless/prism54/islpci_mgt.c |    8 ++++----
- drivers/net/wireless/prism54/oid_mgt.c    |    2 +-
- 5 files changed, 18 insertions(+), 18 deletions(-)
+This patch is now inclued in linux-next
 
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 6605799..2ceff54 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -38,7 +38,7 @@ static void p54_dump_tx_queue(struct p54_common *priv)
- 	u32 largest_hole = 0, free;
- 
- 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
--	printk(KERN_DEBUG "%s: / --- tx queue dump (%d entries) --- \n",
-+	printk(KERN_DEBUG "%s: / --- tx queue dump (%d entries) ---\n",
- 	       wiphy_name(priv->hw->wiphy), skb_queue_len(&priv->tx_queue));
- 
- 	prev_addr = priv->rx_start;
-diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
-index a3ba353..7c82e43 100644
---- a/drivers/net/wireless/prism54/islpci_dev.c
-+++ b/drivers/net/wireless/prism54/islpci_dev.c
-@@ -227,14 +227,14 @@ islpci_interrupt(int irq, void *config)
- 
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 		DEBUG(SHOW_FUNCTION_CALLS,
--		      "IRQ: Identification register 0x%p 0x%x \n", device, reg);
-+		      "IRQ: Identification register 0x%p 0x%x\n", device, reg);
- #endif
- 
- 		/* check for each bit in the register separately */
- 		if (reg & ISL38XX_INT_IDENT_UPDATE) {
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 			/* Queue has been updated */
--			DEBUG(SHOW_TRACING, "IRQ: Update flag \n");
-+			DEBUG(SHOW_TRACING, "IRQ: Update flag\n");
- 
- 			DEBUG(SHOW_QUEUE_INDEXES,
- 			      "CB drv Qs: [%i][%i][%i][%i][%i][%i]\n",
-@@ -300,7 +300,7 @@ islpci_interrupt(int irq, void *config)
- 						ISL38XX_CB_RX_DATA_LQ) != 0) {
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 				DEBUG(SHOW_TRACING,
--				      "Received frame in Data Low Queue \n");
-+				      "Received frame in Data Low Queue\n");
- #endif
- 				islpci_eth_receive(priv);
- 			}
-@@ -325,7 +325,7 @@ islpci_interrupt(int irq, void *config)
- 			/* Device has been initialized */
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 			DEBUG(SHOW_TRACING,
--			      "IRQ: Init flag, device initialized \n");
-+			      "IRQ: Init flag, device initialized\n");
- #endif
- 			wake_up(&priv->reset_done);
- 		}
-@@ -333,7 +333,7 @@ islpci_interrupt(int irq, void *config)
- 		if (reg & ISL38XX_INT_IDENT_SLEEP) {
- 			/* Device intends to move to powersave state */
- #if VERBOSE > SHOW_ERROR_MESSAGES
--			DEBUG(SHOW_TRACING, "IRQ: Sleep flag \n");
-+			DEBUG(SHOW_TRACING, "IRQ: Sleep flag\n");
- #endif
- 			isl38xx_handle_sleep_request(priv->control_block,
- 						     &powerstate,
-@@ -343,7 +343,7 @@ islpci_interrupt(int irq, void *config)
- 		if (reg & ISL38XX_INT_IDENT_WAKEUP) {
- 			/* Device has been woken up to active state */
- #if VERBOSE > SHOW_ERROR_MESSAGES
--			DEBUG(SHOW_TRACING, "IRQ: Wakeup flag \n");
-+			DEBUG(SHOW_TRACING, "IRQ: Wakeup flag\n");
- #endif
- 
- 			isl38xx_handle_wakeup(priv->control_block,
-@@ -634,7 +634,7 @@ islpci_alloc_memory(islpci_private *priv)
- 	      ioremap(pci_resource_start(priv->pdev, 0),
- 		      ISL38XX_PCI_MEM_SIZE))) {
- 		/* error in remapping the PCI device memory address range */
--		printk(KERN_ERR "PCI memory remapping failed \n");
-+		printk(KERN_ERR "PCI memory remapping failed\n");
- 		return -1;
- 	}
- 
-@@ -901,7 +901,7 @@ islpci_setup(struct pci_dev *pdev)
- 
- 	if (register_netdev(ndev)) {
- 		DEBUG(SHOW_ERROR_MESSAGES,
--		      "ERROR: register_netdev() failed \n");
-+		      "ERROR: register_netdev() failed\n");
- 		goto do_islpci_free_memory;
- 	}
- 
-diff --git a/drivers/net/wireless/prism54/islpci_eth.c b/drivers/net/wireless/prism54/islpci_eth.c
-index 872b647..af9e7fb 100644
---- a/drivers/net/wireless/prism54/islpci_eth.c
-+++ b/drivers/net/wireless/prism54/islpci_eth.c
-@@ -89,7 +89,7 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
- 	u32 curr_frag;
- 
- #if VERBOSE > SHOW_ERROR_MESSAGES
--	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_transmit \n");
-+	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_transmit\n");
- #endif
- 
- 	/* lock the driver code */
-@@ -140,7 +140,7 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
- 			}
- 
- #if VERBOSE > SHOW_ERROR_MESSAGES
--			DEBUG(SHOW_TRACING, "memmove %p %p %i \n", skb->data,
-+			DEBUG(SHOW_TRACING, "memmove %p %p %i\n", skb->data,
- 			      src, skb->len);
- #endif
- 		} else {
-@@ -319,7 +319,7 @@ islpci_eth_receive(islpci_private *priv)
- 	int discard = 0;
- 
- #if VERBOSE > SHOW_ERROR_MESSAGES
--	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_receive \n");
-+	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_receive\n");
- #endif
- 
- 	/* the device has written an Ethernet frame in the data area
-@@ -431,7 +431,7 @@ islpci_eth_receive(islpci_private *priv)
- 		skb = dev_alloc_skb(MAX_FRAGMENT_SIZE_RX + 2);
- 		if (unlikely(skb == NULL)) {
- 			/* error allocating an sk_buff structure elements */
--			DEBUG(SHOW_ERROR_MESSAGES, "Error allocating skb \n");
-+			DEBUG(SHOW_ERROR_MESSAGES, "Error allocating skb\n");
- 			break;
- 		}
- 		skb_reserve(skb, (4 - (long) skb->data) & 0x03);
-diff --git a/drivers/net/wireless/prism54/islpci_mgt.c b/drivers/net/wireless/prism54/islpci_mgt.c
-index 69d2f88..89b0278 100644
---- a/drivers/net/wireless/prism54/islpci_mgt.c
-+++ b/drivers/net/wireless/prism54/islpci_mgt.c
-@@ -113,7 +113,7 @@ islpci_mgmt_rx_fill(struct net_device *ndev)
- 	u32 curr = le32_to_cpu(cb->driver_curr_frag[ISL38XX_CB_RX_MGMTQ]);
- 
- #if VERBOSE > SHOW_ERROR_MESSAGES
--	DEBUG(SHOW_FUNCTION_CALLS, "islpci_mgmt_rx_fill \n");
-+	DEBUG(SHOW_FUNCTION_CALLS, "islpci_mgmt_rx_fill\n");
- #endif
- 
- 	while (curr - priv->index_mgmt_rx < ISL38XX_CB_MGMT_QSIZE) {
-@@ -211,7 +211,7 @@ islpci_mgt_transmit(struct net_device *ndev, int operation, unsigned long oid,
- 	{
- 		pimfor_header_t *h = buf.mem;
- 		DEBUG(SHOW_PIMFOR_FRAMES,
--		      "PIMFOR: op %i, oid 0x%08lx, device %i, flags 0x%x length 0x%x \n",
-+		      "PIMFOR: op %i, oid 0x%08lx, device %i, flags 0x%x length 0x%x\n",
- 		      h->operation, oid, h->device_id, h->flags, length);
- 
- 		/* display the buffer contents for debugging */
-@@ -279,7 +279,7 @@ islpci_mgt_receive(struct net_device *ndev)
- 	u32 curr_frag;
- 
- #if VERBOSE > SHOW_ERROR_MESSAGES
--	DEBUG(SHOW_FUNCTION_CALLS, "islpci_mgt_receive \n");
-+	DEBUG(SHOW_FUNCTION_CALLS, "islpci_mgt_receive\n");
- #endif
- 
- 	/* Only once per interrupt, determine fragment range to
-@@ -338,7 +338,7 @@ islpci_mgt_receive(struct net_device *ndev)
- 
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 		DEBUG(SHOW_PIMFOR_FRAMES,
--		      "PIMFOR: op %i, oid 0x%08x, device %i, flags 0x%x length 0x%x \n",
-+		      "PIMFOR: op %i, oid 0x%08x, device %i, flags 0x%x length 0x%x\n",
- 		      header->operation, header->oid, header->device_id,
- 		      header->flags, header->length);
- 
-diff --git a/drivers/net/wireless/prism54/oid_mgt.c b/drivers/net/wireless/prism54/oid_mgt.c
-index 1187e61..07df70a 100644
---- a/drivers/net/wireless/prism54/oid_mgt.c
-+++ b/drivers/net/wireless/prism54/oid_mgt.c
-@@ -819,7 +819,7 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
- 			k = snprintf(str, PRIV_STR_SIZE, "nr=%u\n", list->nr);
- 			for (i = 0; i < list->nr; i++)
- 				k += snprintf(str + k, PRIV_STR_SIZE - k,
--					      "bss[%u] : \nage=%u\nchannel=%u\n"
-+					      "bss[%u] :\nage=%u\nchannel=%u\n"
- 					      "capinfo=0x%X\nrates=0x%X\n"
- 					      "basic_rates=0x%X\n",
- 					      i, list->bsslist[i].age,
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/23-ipw.patch |  161 --------------------------------------------------
+ 1 files changed, 0 insertions(+), 161 deletions(-)
+ delete mode 100644 patches/23-ipw.patch
+
+diff --git a/patches/23-ipw.patch b/patches/23-ipw.patch
+deleted file mode 100644
+index 179ad39..0000000
+--- a/patches/23-ipw.patch
++++ /dev/null
+@@ -1,161 +0,0 @@
+-rename {free,alloc}_ieee80211 to {free,alloc}_libipw
+-
+-{free,alloc}_ieee80211 are also defined by ieee80211 module for example
+-used on kernel 2.6.26. Without this patch ipwlib will not load on this
+-kernel, because of a duplicate symbol.
+-
+---- a/drivers/net/wireless/ipw2x00/ipw2100.c
+-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+-@@ -6114,7 +6114,7 @@ static struct net_device *ipw2100_alloc_
+- 	struct ipw2100_priv *priv;
+- 	struct net_device *dev;
+- 
+--	dev = alloc_ieee80211(sizeof(struct ipw2100_priv), 0);
+-+	dev = alloc_libipw(sizeof(struct ipw2100_priv), 0);
+- 	if (!dev)
+- 		return NULL;
+- 	priv = libipw_priv(dev);
+-@@ -6440,7 +6440,7 @@ static int ipw2100_pci_init_one(struct p
+- 		sysfs_remove_group(&pci_dev->dev.kobj,
+- 				   &ipw2100_attribute_group);
+- 
+--		free_ieee80211(dev, 0);
+-+		free_libipw(dev, 0);
+- 		pci_set_drvdata(pci_dev, NULL);
+- 	}
+- 
+-@@ -6498,10 +6498,10 @@ static void __devexit ipw2100_pci_remove
+- 		if (dev->base_addr)
+- 			iounmap((void __iomem *)dev->base_addr);
+- 
+--		/* wiphy_unregister needs to be here, before free_ieee80211 */
+-+		/* wiphy_unregister needs to be here, before free_libipw */
+- 		wiphy_unregister(priv->ieee->wdev.wiphy);
+- 		kfree(priv->ieee->bg_band.channels);
+--		free_ieee80211(dev, 0);
+-+		free_libipw(dev, 0);
+- 	}
+- 
+- 	pci_release_regions(pci_dev);
+---- a/drivers/net/wireless/ipw2x00/ipw2200.c
+-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+-@@ -11668,7 +11668,7 @@ static int ipw_prom_alloc(struct ipw_pri
+- 	if (priv->prom_net_dev)
+- 		return -EPERM;
+- 
+--	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv), 1);
+-+	priv->prom_net_dev = alloc_libipw(sizeof(struct ipw_prom_priv), 1);
+- 	if (priv->prom_net_dev == NULL)
+- 		return -ENOMEM;
+- 
+-@@ -11693,7 +11693,7 @@ static int ipw_prom_alloc(struct ipw_pri
+- 
+- 	rc = register_netdev(priv->prom_net_dev);
+- 	if (rc) {
+--		free_ieee80211(priv->prom_net_dev, 1);
+-+		free_libipw(priv->prom_net_dev, 1);
+- 		priv->prom_net_dev = NULL;
+- 		return rc;
+- 	}
+-@@ -11707,7 +11707,7 @@ static void ipw_prom_free(struct ipw_pri
+- 		return;
+- 
+- 	unregister_netdev(priv->prom_net_dev);
+--	free_ieee80211(priv->prom_net_dev, 1);
+-+	free_libipw(priv->prom_net_dev, 1);
+- 
+- 	priv->prom_net_dev = NULL;
+- }
+-@@ -11737,7 +11737,7 @@ static int __devinit ipw_pci_probe(struc
+- 	struct ipw_priv *priv;
+- 	int i;
+- 
+--	net_dev = alloc_ieee80211(sizeof(struct ipw_priv), 0);
+-+	net_dev = alloc_libipw(sizeof(struct ipw_priv), 0);
+- 	if (net_dev == NULL) {
+- 		err = -ENOMEM;
+- 		goto out;
+-@@ -11757,7 +11757,7 @@ static int __devinit ipw_pci_probe(struc
+- 	mutex_init(&priv->mutex);
+- 	if (pci_enable_device(pdev)) {
+- 		err = -ENODEV;
+--		goto out_free_ieee80211;
+-+		goto out_free_libipw;
+- 	}
+- 
+- 	pci_set_master(pdev);
+-@@ -11892,8 +11892,8 @@ static int __devinit ipw_pci_probe(struc
+-       out_pci_disable_device:
+- 	pci_disable_device(pdev);
+- 	pci_set_drvdata(pdev, NULL);
+--      out_free_ieee80211:
+--	free_ieee80211(priv->net_dev, 0);
+-+      out_free_libipw:
+-+	free_libipw(priv->net_dev, 0);
+-       out:
+- 	return err;
+- }
+-@@ -11960,11 +11960,11 @@ static void __devexit ipw_pci_remove(str
+- 	pci_release_regions(pdev);
+- 	pci_disable_device(pdev);
+- 	pci_set_drvdata(pdev, NULL);
+--	/* wiphy_unregister needs to be here, before free_ieee80211 */
+-+	/* wiphy_unregister needs to be here, before free_libipw */
+- 	wiphy_unregister(priv->ieee->wdev.wiphy);
+- 	kfree(priv->ieee->a_band.channels);
+- 	kfree(priv->ieee->bg_band.channels);
+--	free_ieee80211(priv->net_dev, 0);
+-+	free_libipw(priv->net_dev, 0);
+- 	free_firmware();
+- }
+- 
+---- a/drivers/net/wireless/ipw2x00/libipw.h
+-+++ b/drivers/net/wireless/ipw2x00/libipw.h
+-@@ -905,7 +905,7 @@ struct libipw_device {
+- 				       struct libipw_reassoc_request * req);
+- 
+- 	/* This must be the last item so that it points to the data
+--	 * allocated beyond this structure by alloc_ieee80211 */
+-+	 * allocated beyond this structure by alloc_libipw */
+- 	u8 priv[0];
+- };
+- 
+-@@ -1018,8 +1018,8 @@ static inline int libipw_is_cck_rate(u8 
+- }
+- 
+- /* ieee80211.c */
+--extern void free_ieee80211(struct net_device *dev, int monitor);
+--extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
+-+extern void free_libipw(struct net_device *dev, int monitor);
+-+extern struct net_device *alloc_libipw(int sizeof_priv, int monitor);
+- extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
+- 
+- extern void libipw_networks_age(struct libipw_device *ieee,
+---- a/drivers/net/wireless/ipw2x00/libipw_module.c
+-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+-@@ -140,7 +140,7 @@ int libipw_change_mtu(struct net_device 
+- }
+- EXPORT_SYMBOL(libipw_change_mtu);
+- 
+--struct net_device *alloc_ieee80211(int sizeof_priv, int monitor)
+-+struct net_device *alloc_libipw(int sizeof_priv, int monitor)
+- {
+- 	struct libipw_device *ieee;
+- 	struct net_device *dev;
+-@@ -227,7 +227,7 @@ failed:
+- 	return NULL;
+- }
+- 
+--void free_ieee80211(struct net_device *dev, int monitor)
+-+void free_libipw(struct net_device *dev, int monitor)
+- {
+- 	struct libipw_device *ieee = netdev_priv(dev);
+- 
+-@@ -336,5 +336,5 @@ MODULE_PARM_DESC(debug, "debug output ma
+- module_exit(libipw_exit);
+- module_init(libipw_init);
+- 
+--EXPORT_SYMBOL(alloc_ieee80211);
+--EXPORT_SYMBOL(free_ieee80211);
+-+EXPORT_SYMBOL(alloc_libipw);
+-+EXPORT_SYMBOL(free_libipw);
 -- 
-1.6.6.1
+1.6.3.3
 
