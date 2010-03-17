@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:52532 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754434Ab0CEIzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 03:55:11 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1NnTJJ-0001LF-Ao
-	for linux-wireless@vger.kernel.org; Fri, 05 Mar 2010 09:55:05 +0100
-Received: from c-71-195-11-126.hsd1.mn.comcast.net ([71.195.11.126])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Mar 2010 09:55:05 +0100
-Received: from nickbertrand by c-71-195-11-126.hsd1.mn.comcast.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Mar 2010 09:55:05 +0100
-To: linux-wireless@vger.kernel.org
-From: Nick Bertrand <nickbertrand@comcast.net>
-Subject: Re: =?utf-8?b?S0VZX1JGS0lMTA==?= not found on kernel 2.6.30
-Date: Fri, 5 Mar 2010 05:24:33 +0000 (UTC)
-Message-ID: <loom.20100305T062225-730@post.gmane.org>
-References: <e44ae5e1003032058g2cf1b5a1lcf62e8919dddea58@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:38362 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755180Ab0CQQWn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 12:22:43 -0400
+Subject: Re: [RFC] cfg80211: Add local-state-change-only
+ auth/deauth/disassoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20100313195335.GA2420@jm.kir.nu>
+References: <20100313195335.GA2420@jm.kir.nu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Mar 2010 09:22:43 -0700
+Message-ID: <1268842963.5989.20.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I ran into the same problem but was able to get around it by patching
-include/linux/input.h. Details here: http://patchwork.kernel.org/patch/46630/
+On Sat, 2010-03-13 at 21:53 +0200, Jouni Malinen wrote:
 
-HTH,
+>  static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+>  					   const u8 *bssid, u16 stype, u16 reason,
+> -					   void *cookie)
+> +					   void *cookie, bool send_frame)
+>  {
+>  	struct ieee80211_local *local = sdata->local;
+>  	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> @@ -240,7 +240,11 @@ static void ieee80211_send_deauth_disass
+>  			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
+>  	if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
+>  		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+> -	ieee80211_tx_skb(sdata, skb);
+> +
+> +	if (send_frame)
+> +		ieee80211_tx_skb(sdata, skb);
+> +	else
+> +		kfree_skb(skb);
+>  }
 
-Nick Bertrand
+I'm wondering now why we even bother sending events to userspace when it
+itself triggered the transition?
+
+johannes
 
