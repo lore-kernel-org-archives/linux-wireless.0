@@ -1,141 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41993 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753591Ab0C3CAe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53228 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752117Ab0CQDYn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 22:00:34 -0400
-Date: Mon, 29 Mar 2010 19:00:25 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC] mac80211: Send deauth/disassoc prior to dropping STA entry
-Message-ID: <20100330020025.GA18080@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 16 Mar 2010 23:24:43 -0400
+Subject: Re: [PATCH] wireless: convert reg_regdb_search_lock to mutex
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <20100317025656.GA9058@tuxdriver.com>
+References: <4B9F86E9.2030702@gmail.com>
+	 <1268768940-5654-1-git-send-email-linville@tuxdriver.com>
+	 <20100316100337.GA1732@senthil-lnx.users.atheros.com>
+	 <20100317002416.GA2095@tuxdriver.com>
+	 <20100316122449.GA17826@senthil-lnx.users.atheros.com>
+	 <20100317025656.GA9058@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Mar 2010 20:24:35 -0700
+Message-ID: <1268796275.7068.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Does this look fine or would there be better solution for reordering
-disconnections calls in a way that would allow us to maintain the keys
-needed to protect the deauth/disassoc frame?
+On Tue, 2010-03-16 at 22:56 -0400, John W. Linville wrote:
+> On Tue, Mar 16, 2010 at 05:54:50PM +0530, Senthil Balasubramanian wrote:
+> > On Wed, Mar 17, 2010 at 05:54:16AM +0530, John W. Linville wrote:
+> > > On Tue, Mar 16, 2010 at 03:33:38PM +0530, Senthil Balasubramanian wrote:
+> > > > On Wed, Mar 17, 2010 at 01:19:00AM +0530, John W. Linville wrote:
+> > > > > Stanse discovered that kmalloc can be called with GFP_KERNEL while
+> > > > This commit log is confusing. It Should be "Stanse discovered kmalloc
+> > > > was called with GFP_KERNEL". Obviously kmalloc with GFP_KERNEL shouldn't
+> > > > be used while holding a spinlock.
+> > > > > holding this spinlock.  It can be a mutex instead.
+> > > 
+> > > Not half so confusing as your criticism... :-)
+> > sorry! if my mail wasn't proper. I didn't meant to blame/criticize.
+> > I was confused when I read the commit log and so I replied.
+> > > 
+> > > Are you objecting to "can be" instead of "was"?
+> > I am not objecting anything...
+> 
+> Criticism is fine -- I just don't understand what you were saying or
+> what you think I should have said in the commit log.
 
+English at work ... let me guess:
 
-When management frame protection (IEEE 802.11w) is used, the
-deauthentication and disassociation frames must be protected whenever
-the encryption keys are configured. We were removing the STA entry and
-with it, the keys, just before actually sending out these frames which
-meant that the frames went out unprotected. The AP will drop them in
-such a case. Fix this by reordering the operations a bit so that
-sta_info_destroy_addr() gets called only after
-ieee80211_send_deauth_disassoc().
+For John: "can" == "it could happen that"
+For Senthil: "can" == "may"
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+(when really you may NOT do GFP_KERNEL allocations in atomic context)
 
----
- net/mac80211/mlme.c |   23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+johannes
 
---- wireless-testing.orig/net/mac80211/mlme.c	2010-03-29 18:51:05.000000000 -0700
-+++ wireless-testing/net/mac80211/mlme.c	2010-03-29 18:52:25.000000000 -0700
-@@ -778,7 +778,8 @@ static void ieee80211_set_associated(str
- 	netif_carrier_on(sdata->dev);
- }
- 
--static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata)
-+static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
-+				   int remove_sta)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_local *local = sdata->local;
-@@ -851,7 +852,8 @@ static void ieee80211_set_disassoc(struc
- 	changed |= BSS_CHANGED_BSSID;
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
--	sta_info_destroy_addr(sdata, bssid);
-+	if (remove_sta)
-+		sta_info_destroy_addr(sdata, bssid);
- }
- 
- void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
-@@ -964,7 +966,7 @@ static void __ieee80211_connection_loss(
- 
- 	printk(KERN_DEBUG "Connection to AP %pM lost.\n", bssid);
- 
--	ieee80211_set_disassoc(sdata);
-+	ieee80211_set_disassoc(sdata, 1);
- 	ieee80211_recalc_idle(local);
- 	mutex_unlock(&ifmgd->mtx);
- 	/*
-@@ -1030,7 +1032,7 @@ ieee80211_rx_mgmt_deauth(struct ieee8021
- 	printk(KERN_DEBUG "%s: deauthenticated from %pM (Reason: %u)\n",
- 			sdata->name, bssid, reason_code);
- 
--	ieee80211_set_disassoc(sdata);
-+	ieee80211_set_disassoc(sdata, 1);
- 	ieee80211_recalc_idle(sdata->local);
- 
- 	return RX_MGMT_CFG80211_DEAUTH;
-@@ -1060,7 +1062,7 @@ ieee80211_rx_mgmt_disassoc(struct ieee80
- 	printk(KERN_DEBUG "%s: disassociated from %pM (Reason: %u)\n",
- 			sdata->name, mgmt->sa, reason_code);
- 
--	ieee80211_set_disassoc(sdata);
-+	ieee80211_set_disassoc(sdata, 1);
- 	ieee80211_recalc_idle(sdata->local);
- 	return RX_MGMT_CFG80211_DISASSOC;
- }
-@@ -1708,7 +1710,7 @@ static void ieee80211_sta_work(struct wo
- 			printk(KERN_DEBUG "No probe response from AP %pM"
- 				" after %dms, disconnecting.\n",
- 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
--			ieee80211_set_disassoc(sdata);
-+			ieee80211_set_disassoc(sdata, 1);
- 			ieee80211_recalc_idle(local);
- 			mutex_unlock(&ifmgd->mtx);
- 			/*
-@@ -2010,7 +2012,7 @@ int ieee80211_mgd_assoc(struct ieee80211
- 		}
- 
- 		/* Trying to reassociate - clear previous association state */
--		ieee80211_set_disassoc(sdata);
-+		ieee80211_set_disassoc(sdata, 1);
- 	}
- 	mutex_unlock(&ifmgd->mtx);
- 
-@@ -2114,7 +2116,7 @@ int ieee80211_mgd_deauth(struct ieee8021
- 
- 	if (ifmgd->associated == req->bss) {
- 		bssid = req->bss->bssid;
--		ieee80211_set_disassoc(sdata);
-+		ieee80211_set_disassoc(sdata, 1);
- 		mutex_unlock(&ifmgd->mtx);
- 	} else {
- 		bool not_auth_yet = false;
-@@ -2171,6 +2173,7 @@ int ieee80211_mgd_disassoc(struct ieee80
- 			   void *cookie)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	u8 bssid[ETH_ALEN];
- 
- 	mutex_lock(&ifmgd->mtx);
- 
-@@ -2188,13 +2191,15 @@ int ieee80211_mgd_disassoc(struct ieee80
- 	printk(KERN_DEBUG "%s: disassociating from %pM by local choice (reason=%d)\n",
- 	       sdata->name, req->bss->bssid, req->reason_code);
- 
--	ieee80211_set_disassoc(sdata);
-+	memcpy(bssid, req->bss->bssid, ETH_ALEN);
-+	ieee80211_set_disassoc(sdata, 0);
- 
- 	mutex_unlock(&ifmgd->mtx);
- 
- 	ieee80211_send_deauth_disassoc(sdata, req->bss->bssid,
- 			IEEE80211_STYPE_DISASSOC, req->reason_code,
- 			cookie);
-+	sta_info_destroy_addr(sdata, bssid);
- 
- 	ieee80211_recalc_idle(sdata->local);
- 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
