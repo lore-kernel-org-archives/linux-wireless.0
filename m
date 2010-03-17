@@ -1,38 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2411 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755632Ab0C2CFu (ORCPT
+Received: from mail-pz0-f200.google.com ([209.85.222.200]:45196 "EHLO
+	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756128Ab0CQWdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 22:05:50 -0400
-Date: Sun, 28 Mar 2010 22:02:12 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH 10/10] ath5k: Adaptive Noise Immunity
-	(ANI) Implementation
-Message-ID: <20100329020212.GA27628@hash.localnet>
-References: <20100325054603.10697.48915.stgit@tt-desk> <20100325054952.10697.41515.stgit@tt-desk>
+	Wed, 17 Mar 2010 18:33:13 -0400
+Received: by pzk38 with SMTP id 38so1297805pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 15:33:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100325054952.10697.41515.stgit@tt-desk>
+In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 17 Mar 2010 15:32:53 -0700
+Message-ID: <43e72e891003171532x5e9893dfmfc1fb469a638d76e@mail.gmail.com>
+Subject: Re: [PATCH v2 00/20] ath9k_hw: ar93xx initial abstraction work
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 25, 2010 at 02:49:52PM +0900, Bruno Randolf wrote:
-> +	} else if (strncmp(buf, "noise-low", 8) == 0) {
-> +		ath5k_ani_set_noise_immunity_level(sc->ah, 0);
-> +	} else if (strncmp(buf, "noise-high", 9) == 0) {
+On Wed, Mar 17, 2010 at 3:27 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> Here's what I have so far, this is rebased on top of Senthil's patches
+> for ath9k_htc posted today. Just tested it on my AR9280, it doesn't
+> break anything.
 
-The number of characters here is off-by-one.
+BTW the new ath9k_htc series + this series can be downloaded in one file from:
 
-I also tried setting noise-high while in auto mode, but then the ani
-debug file still showed the values at 0, is that to be expected?
+http://bombadil.infradead.org/~mcgrof/tmp/all-ar93xx-03-17-v3.patch
 
-On my hardware in my location, I don't really notice much of a difference
-with/without ANI, but I definitely don't get any MIB storms, so it
-gets my thumbs up.  I can post my ani file if you're interested.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
