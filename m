@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60927 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753072Ab0CBV6q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 16:58:46 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Nathan Schulte <reklipz@gmail.com>
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-Date: Tue, 2 Mar 2010 22:57:51 +0100
-Cc: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com> <201003010122.51341.mb@bu3sch.de>
-In-Reply-To: <201003010122.51341.mb@bu3sch.de>
-MIME-Version: 1.0
-Message-Id: <201003022257.51878.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Received: from lennier.cc.vt.edu ([198.82.162.213]:42274 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753550Ab0CQIV6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 04:21:58 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Weird wireless/wpa_supplicant screw-up.
+In-Reply-To: Your message of "Tue, 16 Mar 2010 20:22:30 PDT."
+             <1268796150.7068.6.camel@jlt3.sipsolutions.net>
+From: Valdis.Kletnieks@vt.edu
+References: <7197.1268086939@localhost> <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost> <1268449749.4880.2.camel@jlt3.sipsolutions.net> <12262.1268795213@localhost>
+            <1268796150.7068.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1268814093_4069P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Wed, 17 Mar 2010 04:21:33 -0400
+Message-ID: <27228.1268814093@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 01 March 2010 01:22:50 Michael Buesch wrote:
-> Well, you are confusing address spaces here.
->
-> On a PCI based SSB device all host-side MMIO transfers go into
-> the PCI device's address space first. The core-switching moves the window of
-> the SSB address space that is mapped into 0-0xFFF of the PCI address space.
-> So if you write to anything above 0xFFF on the PCI device, the write will
-> not (directly) map to the SSB bus or any device on it.
-> On the PCI device there is more stuff mapped on top of the SSB sliding
-> window. For example the SPROM is mapped right on top of it.
+--==_Exmh_1268814093_4069P
+Content-Type: text/plain; charset=us-ascii
+
+On Tue, 16 Mar 2010 20:22:30 PDT, Johannes Berg said:
+> On Tue, 2010-03-16 at 23:06 -0400, Valdis.Kletnieks@vt.edu wrote:
+
+> > If a TX key has been set anyplace, what allows me
+> > to verify that it was in fact set?
 > 
-> So it might be the case that on a PCI-E device the PCI-E-core's registers
-> are permanently mapped into 0x2000 of the PCI address apace. This is to
-> avoid sliding the SSB address space window when accessing the PCI-E core.
-> This can have several reasons: For one speed (unlikely) and for another
-> to avoid concurrency and ugly races when we need to access the PCI-E core
-> while the wireless core is already running and generating interrupts.
-> Note that this is a GUESS, but it would make sense to me.
-> It would be cool if somebody could compare more registers of the PCI-E
-> core using the sliding window and the 0x2000 + reg method to check my theory.
-> 
+> Nothing. Blame it on wext and on the fact that nobody cares.
 
-So what's the status on this? I think the fact that the testing patch showed some
-improvement is a clear indicator that something in the PCI-E core init is wrong.
-It's also not surprising that something is going wrong there. The whole PCI-E core
-code basically is undebugged. I wrote most of it long time ago, but I still
-don't have a device that tests it (and probably won't get one anytime soon).
-So I'm really not surprised that there are bugs. There also are missing parts.
+Pretty fucking fundemental thing to not care about, being able to tell whether
+or not your connection is in fact encrypted or not. But I guess you expect
+users to be all-knowing and magically know that even though iwconfig says
+'Encryption key: off' that in fact their connection is encrypted (unless of
+course it's off because it's not encrypted), and how to troubleshoot the
+difference between "not encrypted" and "lying about not being encrypted" when
+the utilities in wireless-tools provide the same output in both cases.
 
-A bug in the PCI-E core code is able to show such behavior, because all memory
-transfers (MMIO and DMA) from the PCI device to the wireless core are translated
-by the PCI-E core.
-I think the whole PCI-E core code has to be audited (also the specs, probably).
+Unfortunately, I'm a stupid idiot, and when I'm trying to get wpa_supplicant
+working and hitting various unrelated certificate issues, resolve those,
+finally get wpa_supplicant to say it connected, but then I type 'iwconfig'
+and it *still* says "Encryption key: off", I'm unable to make the leap of
+logic and say "AHA! It's encrypted now", and I start trying to find what I
+still have to fix so it will say it's encrypted.
 
--- 
-Greetings, Michael.
+Sorry for bothering you and wasting your time.
+
+> problem is, if there is one. If your actual problem is just that iwlist
+> reports what you think is wrong information (which is just incomplete,
+> it doesn't show the PTK) then that's nothing I actually care about
+> fixing.
+
+The problem is a combination of things - (a) iwlist and iwconfig report no
+crypto and (b) there doesn't seem to be any *other* way for userspace to find
+out that in fact you have an encrypted WPA2 connection.
+
+
+--==_Exmh_1268814093_4069P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFLoJENcC3lWbTT17ARAsxYAKDjRLnZWhj1c2zZV1D/gE1H40kfaQCgm00D
+6O3y8QKZrwEJkoSbT+uKXiY=
+=UzQ0
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1268814093_4069P--
+
