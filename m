@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f184.google.com ([209.85.216.184]:50725 "EHLO
-	mail-px0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755010Ab0CWQYD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 12:24:03 -0400
-Received: by pxi14 with SMTP id 14so4146363pxi.15
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Mar 2010 09:24:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1269327754-995-2-git-send-email-juuso.oikarinen@nokia.com>
-References: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com>
-	<1269327754-995-2-git-send-email-juuso.oikarinen@nokia.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 23 Mar 2010 09:23:42 -0700
-Message-ID: <43e72e891003230923r60522440vff7c1db26300ca91@mail.gmail.com>
-Subject: Re: [PATCH 1/2] cfg80211: Add connection quality monitoring support
-	to nl80211
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	luciano.coelho@nokia.com
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:55737 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750791Ab0CQEtc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 00:49:32 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1NrlCD-00027T-Lr
+	for linux-wireless@vger.kernel.org; Wed, 17 Mar 2010 05:49:29 +0100
+Received: from 69-165-147-23.dsl.teksavvy.com ([69.165.147.23])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 05:49:29 +0100
+Received: from monnier by 69-165-147-23.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 05:49:29 +0100
+To: linux-wireless@vger.kernel.org
+From: Stefan Monnier <monnier@iro.umontreal.ca>
+Subject: iwl3945 and power saving
+Date: Wed, 17 Mar 2010 00:49:19 -0400
+Message-ID: <jwvwrxbimib.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 23, 2010 at 12:02 AM, Juuso Oikarinen
-<juuso.oikarinen@nokia.com> wrote:
+I finally upgraded from 2.6.30 to 2.6.33 (mostly for TRIM support) on my
+laptop and find that power saving doesn't seem to work any more on its
+iwl3945 card.
 
-> + * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm
+The extra power consumption is quite significant, so I'm considering
+compiling my own driver, manually re-enabling the power-saving code.
 
-I still don't get what this particular value is for, despite this kdoc entry.
+But before I do that, I'd like to know what is the risk involved (it
+seems pretty serious since it warranted removing the feature
+altogether, even tho it was runtime-disabled by default anyway).
 
-  Luis
+
+        Stefan
+
