@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:11130 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756490Ab0CVV4t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 17:56:49 -0400
-Received: by ey-out-2122.google.com with SMTP id d26so523128eyd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 14:56:48 -0700 (PDT)
-Message-ID: <4BA7E79C.9070100@lwfinger.net>
-Date: Mon, 22 Mar 2010 16:56:44 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:26833 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755869Ab0CQV1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 17:27:13 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 14:27:13 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 05/12] ath9k_hw: Fix full sleep setup for AR9271
+Date: Wed, 17 Mar 2010 14:25:18 +0530
+Message-ID: <1268816125-16173-6-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1268816125-16173-5-git-send-email-senthilkumar@atheros.com>
+References: <1268816125-16173-1-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-2-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-3-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-4-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-5-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-To: Calvin Walton <calvin.walton@gmail.com>
-CC: Michael Buesch <mb@bu3sch.de>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <1269239303.12836.17.camel@ayu>
-In-Reply-To: <1269239303.12836.17.camel@ayu>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/22/2010 01:28 AM, Calvin Walton wrote:
-> 
-> I'm curious, how would this firmware-loading scheme deal with having
-> multiple cards of this type installed? This seems like an unusual
-> situation, but it looks like this patch will cause all of the cards to
-> start up with the same MAC address due to the fixed filename.
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-I have a workaround for this problem based on the bus address of the device.
+After telling the AR9271 to go into full sleep we do not need
+to clear the RTC reset signal.
 
-> Instead of using a firmware file to load in the MAC address, might it be
-> possible to move the persistent MAC setting to a simple udev rule which
-> generates a persistent MAC address, saves it, then sets it each boot
-> using a command like "ip link set wlan0 address XX:XX:XX:XX:XX:XX" ?
-> 
-> This would remove the need to have this "fake" firmware file available
-> at boot, provided that the driver can handle leaving the address
-> unconfigured until userspace gets around to setting it. As well, it
-> could be written to work with multiple cards easily, saving a different
-> MAC for each.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Does anyone have any suggestions on what characteristic could be used to
-generate a unique MAC address for a box in a udev rule? Unless someone proposes
-a workable solution, I will push V3 of my patch with the bus address change
-noted above.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index b1a4a83..023c38b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2453,7 +2453,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
+ 		if (!AR_SREV_9100(ah))
+ 			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
+ 
+-		if(!AR_SREV_5416(ah))
++		if (!AR_SREV_5416(ah) && !AR_SREV_9271(ah))
+ 			REG_CLR_BIT(ah, (AR_RTC_RESET),
+ 				    AR_RTC_RESET_EN);
+ 	}
+-- 
+1.6.4.2
 
-Larry
