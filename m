@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:34315 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806Ab0CDFKR (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41109 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756143Ab0CQW2P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 00:10:17 -0500
-MIME-Version: 1.0
-In-Reply-To: <1267664353.10407.1960.camel@localhost.localdomain>
-References: <43e72e891003031643u353c72dcj23bf429363a16ec8@mail.gmail.com>
-	<1267664353.10407.1960.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 3 Mar 2010 21:09:55 -0800
-Message-ID: <43e72e891003032109v59f1ff52odb60de6111cfec53@mail.gmail.com>
-Subject: Re: Linux Bluetooth Coexistence documentation in general and for
-	ath9k
-To: Bastien Nocera <hadess@hadess.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	"Kevin Hayes\" <kevin@atheros.com>, \"Dan Tian\""
-	<Dan.Tian@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Mar 2010 18:28:15 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 11/20] ath9k_hw: add a helper for phy error counter reads
+Date: Wed, 17 Mar 2010 18:28:04 -0400
+Message-Id: <1268864893-11428-12-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 3, 2010 at 4:59 PM, Bastien Nocera <hadess@hadess.net> wrote:
-> On Wed, 2010-03-03 at 16:43 -0800, Luis R. Rodriguez wrote:
->> Marcel, a question for you below.
->>
->> The question of Bluetooth coexistence pops up here, on IRC and on bug
->> reports quite too often so I've stuffed what I could onto a page with
->> a few references / code and about ath9k's schemes for BT coexistence,
->> feel free to extend or correct:
-> <snip>
->> I do wonder if this could be useful to network applets like network
->> manager/connman.
->
-> Not really. To me, it sounds like a "make it work" button. The kernel
-> bits of Bluetooth should already have an idea of when a device is
-> connected, so the kernel should be able to "do the right thing".
->
-> Having options over what "the right thing" is is probably a good idea
-> whilst the kinks are worked out from the default behaviour, but this is
-> not something that should be advertised to users.
+This lets us now share more ANI routines accross different
+chipsets.
 
-I wasn't really thinking of buttons for BT coex, but instead just
-information exposed out and making it available. Reason for this is
-users tend to be blind about btcoex stuff and it would be nice if we
-had a way to inform the user of the btcoex mechanisms that actually
-are being used. Does that change your answer?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |   16 +++++++++++-----
+ 1 files changed, 11 insertions(+), 5 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 52852fc..7e87cf4 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -316,6 +316,14 @@ static void ath9k_hw_update_phy_err_count(struct ath_hw *ah,
+ 	ath9k_hw_update_phy_err2_count(ah, phy_err_count2, reset_masks);
+ }
+ 
++static void ath9k_hw_get_phy_err_count(struct ath_hw *ah,
++				       u32 *phy_err_count1,
++				       u32 *phy_err_count2)
++{
++	*phy_err_count1 = REG_READ(ah, AR_PHY_ERR_1);
++	*phy_err_count2 = REG_READ(ah, AR_PHY_ERR_2);
++}
++
+ static void ath9k_ani_restart(struct ath_hw *ah)
+ {
+ 	struct ar5416AniState *aniState;
+@@ -653,9 +661,7 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah,
+ 	aniState->listenTime += listenTime;
+ 
+ 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+-
+-	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
+-	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
++	ath9k_hw_get_phy_err_count(ah, &phyCnt1, &phyCnt2);
+ 
+ 	if (phyCnt1 < aniState->ofdmPhyErrBase ||
+ 	    phyCnt2 < aniState->cckPhyErrBase) {
+@@ -807,8 +813,8 @@ void ath9k_hw_procmibevent(struct ath_hw *ah)
+ 		return;
+ 
+ 	/* NB: these are not reset-on-read */
+-	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
+-	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
++	ath9k_hw_get_phy_err_count(ah, &phyCnt1, &phyCnt2);
++
+ 	if (((phyCnt1 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK) ||
+ 	    ((phyCnt2 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK)) {
+ 		struct ar5416AniState *aniState = ah->curani;
+-- 
+1.6.3.3
+
