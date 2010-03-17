@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:41544 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070Ab0CHGd2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 01:33:28 -0500
-MIME-Version: 1.0
-In-Reply-To: <201003022006.o22K6QqH019931@hera.kernel.org>
-References: <201003022006.o22K6QqH019931@hera.kernel.org>
-Date: Mon, 8 Mar 2010 07:33:27 +0100
-Message-ID: <10f740e81003072233j1f9f6a0fr633e1fc65f4e5a5a@mail.gmail.com>
-Subject: Re: ps3_gelic_wireless: fix format warning
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, cbe-oss-dev@lists.ozlabs.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:41760 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752466Ab0CQFfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 01:35:07 -0400
+Subject: Re: iwl3945 and power saving
+From: reinette chatre <reinette.chatre@intel.com>
+To: Stefan Monnier <monnier@iro.umontreal.ca>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <jwvwrxbimib.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+References: <jwvwrxbimib.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Mar 2010 22:35:05 -0700
+Message-ID: <1268804105.2446.620.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 2, 2010 at 21:06, Linux Kernel Mailing List
-<linux-kernel@vger.kernel.org> wrote:
-> Gitweb:     http://git.kernel.org/linus/c6c97bdaa3307d0811f14c99c38c63a8dae36e1f
-> Commit:     c6c97bdaa3307d0811f14c99c38c63a8dae36e1f
-> Parent:     d3a571971e5af241074947fc80f6284677f6e014
-> Author:     John W. Linville <linville@tuxdriver.com>
-> AuthorDate: Mon Feb 1 09:55:56 2010 -0500
-> Committer:  John W. Linville <linville@tuxdriver.com>
-> CommitDate: Mon Feb 1 09:55:56 2010 -0500
->
->    ps3_gelic_wireless: fix format warning
->
->    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/ps3_gelic_wireless.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/ps3_gelic_wireless.c b/drivers/net/ps3_gelic_wireless.c
-> index d520e9e..448c5b6 100644
-> --- a/drivers/net/ps3_gelic_wireless.c
-> +++ b/drivers/net/ps3_gelic_wireless.c
-> @@ -1449,7 +1449,7 @@ static int gelic_wl_start_scan(struct gelic_wl_info *wl, int always_scan,
->        void *buf = NULL;
->        size_t len;
->
-> -       pr_debug("%s: <- always=%d essid_len=%d\n", __func__,
-> +       pr_debug("%s: <- always=%d essid_len=%z\n", __func__,
+Stefan,
 
-`z' is just a modifier for a (missing) type, so this should be `%zu'.
+On Tue, 2010-03-16 at 21:49 -0700, Stefan Monnier wrote:
 
->                 always_scan, essid_len);
->        if (mutex_lock_interruptible(&wl->scan_lock))
->                return -ERESTARTSYS;
+> The extra power consumption is quite significant, so I'm considering
+> compiling my own driver, manually re-enabling the power-saving code.
 
-Gr{oetje,eeting}s,
+You will need to revert "iwl3945: disable power save" and then also
+enable power savings using "iwconfig wlanX power on"
 
-						Geert
+> 
+> But before I do that, I'd like to know what is the risk involved (it
+> seems pretty serious since it warranted removing the feature
+> altogether, even tho it was runtime-disabled by default anyway).
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+You should find all the details in
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2125
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Reinette
+
+
