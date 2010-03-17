@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f200.google.com ([209.85.222.200]:48028 "EHLO
-	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972Ab0CITeG convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53290 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754905Ab0CQQPE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 14:34:06 -0500
-Received: by pzk38 with SMTP id 38so1808479pzk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 11:34:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1268161528-24028-1-git-send-email-sprecher.m@gmail.com>
-References: <1268161528-24028-1-git-send-email-sprecher.m@gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 9 Mar 2010 11:33:44 -0800
-Message-ID: <43e72e891003091133h31bfb1c5sceb4d3c9258792e6@mail.gmail.com>
-Subject: Re: [PATCH] wireless: ath9k: Fix most coding style issues in ath9k
-	This patch fixed up almost all coding style issues in the ath9k driver found
-	by the ceckpatch.pl tool. Signed-off-by: Michael Sprecher
-	<sprecher.m@gmail.com>
-To: Michael Sprecher <sprecher.m@gmail.com>
-Cc: jmalinen@atheros.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Mar 2010 12:15:04 -0400
+Subject: Re: [RFC PATCHv3 1/1] mac80211: Add support connection monitor in
+ hardware
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1268830377-3450-2-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268830377-3450-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268830377-3450-2-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Mar 2010 09:15:03 -0700
+Message-ID: <1268842503.5989.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 9, 2010 at 11:05 AM, Michael Sprecher <sprecher.m@gmail.com> wrote:
-> ---
->  drivers/net/wireless/ath/ath9k/ani.c         |    5 ++-
->  drivers/net/wireless/ath/ath9k/ath9k.h       |   28 ++++++++--------
->  drivers/net/wireless/ath/ath9k/beacon.c      |    6 ++--
->  drivers/net/wireless/ath/ath9k/btcoex.h      |    6 ++--
->  drivers/net/wireless/ath/ath9k/calib.c       |   15 ++++-----
->  drivers/net/wireless/ath/ath9k/calib.h       |    4 +-
->  drivers/net/wireless/ath/ath9k/common.c      |   20 +++++------
->  drivers/net/wireless/ath/ath9k/common.h      |   10 +++---
->  drivers/net/wireless/ath/ath9k/debug.c       |   12 +++---
->  drivers/net/wireless/ath/ath9k/eeprom.h      |    4 +-
->  drivers/net/wireless/ath/ath9k/eeprom_4k.c   |   16 +++++-----
->  drivers/net/wireless/ath/ath9k/eeprom_9287.c |   14 +++++---
->  drivers/net/wireless/ath/ath9k/eeprom_def.c  |   31 +++++++++---------
->  drivers/net/wireless/ath/ath9k/gpio.c        |    2 +-
->  drivers/net/wireless/ath/ath9k/hw.c          |   44 +++++++++++--------------
->  drivers/net/wireless/ath/ath9k/hw.h          |   22 ++++++------
->  drivers/net/wireless/ath/ath9k/init.c        |    6 ++--
->  drivers/net/wireless/ath/ath9k/mac.h         |    2 +-
->  drivers/net/wireless/ath/ath9k/main.c        |   26 +++++++-------
->  drivers/net/wireless/ath/ath9k/phy.c         |   12 +++----
->  drivers/net/wireless/ath/ath9k/phy.h         |    4 +-
->  drivers/net/wireless/ath/ath9k/rc.c          |   13 +++----
->  drivers/net/wireless/ath/ath9k/rc.h          |    4 +-
->  drivers/net/wireless/ath/ath9k/recv.c        |    5 +--
->  drivers/net/wireless/ath/ath9k/reg.h         |   22 ++++++------
->  drivers/net/wireless/ath/ath9k/virtual.c     |    3 +-
->  drivers/net/wireless/ath/ath9k/xmit.c        |   11 +++---
->  27 files changed, 167 insertions(+), 180 deletions(-)
 
-Thanks a lot! Unfortunately right now we have two large patch bombs
-pending integration which would likely conflict with your patch. One
-set which I hope we can get into 2.6.34-rc2, the ath9k_htc driver.
-Then after that I have an already accumulated set of patches (count is
-at 10 right now) for AR93xx work. The ar93xx work is not intended for
-2.6.34 though so I could rebase my work on top of yours but lets first
-see ath9k_htc get merged first and decide then.
+> + *
+> + * When hardware connection monitoring is enabled with
+> + * IEEE80211_HW_CONNECTION_MONITOR, this function will cause immediate change
+> + * to disassociated state, without connection recovery attempts.
 
-So NACK for now.
+Tiny detail: putting a % in front of constants formats them nicer in the
+html output.
 
-  Luis
+> +static void ieee80211_beacon_loss_disassoc(struct ieee80211_sub_if_data *sdata)
+> +{
+
+I can see where you're coming from, but maybe this should be more like
+ieee80211_driver_notify_disconnect() or something like that?
+
+
+> +	printk(KERN_DEBUG "Beacon loss from AP %pM, "
+> +	       "disconnected.\n", bssid);
+
+printk lines are allowed to pass 80 chars to make grep easier. Also I
+really think this should be more like "Connection to AP %pM lost." or
+something like that?
+
+>  void ieee80211_beacon_loss_work(struct work_struct *work)
+>  {
+>  	struct ieee80211_sub_if_data *sdata =
+>  		container_of(work, struct ieee80211_sub_if_data,
+>  			     u.mgd.beacon_loss_work);
+>  
+> -	ieee80211_mgd_probe_ap(sdata, true);
+> +	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+> +		ieee80211_beacon_loss_disassoc(sdata);
+> +	else
+> +		ieee80211_mgd_probe_ap(sdata, true);
+>  }
+
+And I'm actually wondering now if using the same API is a good idea.
+Yes, it makes some sense, but it's quite different yet? Maybe we should
+have something like this:
+
+static inline void ieee80211_beacon_loss(hw, vif)
+{
+	WARN_ON(hw->flags & IEEE80211_HW_CONNECTION_MONITOR);
+	__ieee80211_beacon_connection_loss(vif);
+}
+
+static inline void ieee80211_connection_loss(hw, vif)
+{
+	WARN_ON(!(hw->flags & IEEE80211_HW_CONNECTION_MONITOR));
+	__ieee80211_beacon_connection_loss(vif);
+}
+
+to make at least the external API easier to understand?
+
+johannes
+
