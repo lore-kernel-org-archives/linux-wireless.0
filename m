@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:58668 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756799Ab0CXU2U (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48199 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292Ab0CQDPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 16:28:20 -0400
-From: Frans Pop <elendil@planet.nl>
-To: reinette chatre <reinette.chatre@intel.com>
-Subject: Re: [PATCH 4/7] wireless/iwlwifi: remove trailing space in messages
-Date: Wed, 24 Mar 2010 21:28:16 +0100
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-References: <201003241927.12434.elendil@planet.nl> <1269456395-15343-4-git-send-email-elendil@planet.nl> <1269461933.2446.3208.camel@rchatre-DESK>
-In-Reply-To: <1269461933.2446.3208.camel@rchatre-DESK>
+	Tue, 16 Mar 2010 23:15:46 -0400
+Date: Tue, 16 Mar 2010 22:56:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] wireless: convert reg_regdb_search_lock to mutex
+Message-ID: <20100317025656.GA9058@tuxdriver.com>
+References: <4B9F86E9.2030702@gmail.com> <1268768940-5654-1-git-send-email-linville@tuxdriver.com> <20100316100337.GA1732@senthil-lnx.users.atheros.com> <20100317002416.GA2095@tuxdriver.com> <20100316122449.GA17826@senthil-lnx.users.atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201003242128.18710.elendil@planet.nl>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100316122449.GA17826@senthil-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 24 March 2010, reinette chatre wrote:
-> Since this patch touches so many things, would it be possible to base
-> your patch on
-> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-> instead?
+On Tue, Mar 16, 2010 at 05:54:50PM +0530, Senthil Balasubramanian wrote:
+> On Wed, Mar 17, 2010 at 05:54:16AM +0530, John W. Linville wrote:
+> > On Tue, Mar 16, 2010 at 03:33:38PM +0530, Senthil Balasubramanian wrote:
+> > > On Wed, Mar 17, 2010 at 01:19:00AM +0530, John W. Linville wrote:
+> > > > Stanse discovered that kmalloc can be called with GFP_KERNEL while
+> > > This commit log is confusing. It Should be "Stanse discovered kmalloc
+> > > was called with GFP_KERNEL". Obviously kmalloc with GFP_KERNEL shouldn't
+> > > be used while holding a spinlock.
+> > > > holding this spinlock.  It can be a mutex instead.
+> > 
+> > Not half so confusing as your criticism... :-)
+> sorry! if my mail wasn't proper. I didn't meant to blame/criticize.
+> I was confused when I read the commit log and so I replied.
+> > 
+> > Are you objecting to "can be" instead of "was"?
+> I am not objecting anything...
 
-Sure. Which branch?
+Criticism is fine -- I just don't understand what you were saying or
+what you think I should have said in the commit log.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
