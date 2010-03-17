@@ -1,68 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63619 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758870Ab0COHEn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Mar 2010 03:04:43 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 00:04:43 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19357.57506.489965.182709@gargle.gargle.HOWL>
-Date: Mon, 15 Mar 2010 12:54:18 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: fix BUG_ON triggered by PAE frames
-In-Reply-To: <4B99AED3.4000204@openwrt.org>
-References: <4B99AED3.4000204@openwrt.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:41089 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756124Ab0CQW2P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 18:28:15 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 00/20] ath9k_hw: ar93xx initial abstraction work
+Date: Wed, 17 Mar 2010 18:27:53 -0400
+Message-Id: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> When I initially stumbled upon sequence number problems with PAE frames
-> in ath9k, I submitted a patch to remove all special cases for PAE
-> frames and let them go through the normal transmit path.
-> Out of concern about crypto incompatibility issues, this change was
-> merged instead:
-> 
-> commit 6c8afef551fef87a3bf24f8a74c69a7f2f72fc82
-> Author: Sujith <Sujith.Manoharan@atheros.com>
-> Date:   Tue Feb 9 10:07:00 2010 +0530
-> 
->     ath9k: Fix sequence numbers for PAE frames
-> 
-> After a lot of testing, I'm able to reliably trigger a driver crash on
-> rekeying with current versions with this change in place.
-> It seems that the driver does not support sending out regular MPDUs with
-> the same TID while an A-MPDU session is active.
-> This leads to duplicate entries in the TID Tx buffer, which hits the
-> following BUG_ON in ath_tx_addto_baw():
-> 
->     index  = ATH_BA_INDEX(tid->seq_start, bf->bf_seqno);
->     cindex = (tid->baw_head + index) & (ATH_TID_MAX_BUFS - 1);
-> 
->     BUG_ON(tid->tx_buf[cindex] != NULL);
+Here's what I have so far, this is rebased on top of Senthil's patches
+for ath9k_htc posted today. Just tested it on my AR9280, it doesn't
+break anything.
 
-I have seen this too, but am not sure if I was using encryption.
-I have triggered this occasionally during a suspend/resume cycle.
+Luis R. Rodriguez (20):
+  ath9k: start building an abstraction layer for hardware routines
+  ath9k: initial move of ar9002 specific code to its own file
+  ath9k: rename initvals.h to ar9002_initvals.h
+  ath9k_hw: rename getNoiseFloorThresh() to ath9k_hw_getnf_thres()
+  ath9k_hw: move < AR9002 specific calibration stuff to its own file
+  ath9k_hw: move calibration settings to ar9002_calib_settings.c
+  ath9k_hw: consolidate the pci express checks on __ath9k_hw_init()
+  ath9k_hw: move ar9002 bluetooth coexistence code to its own file
+  ath9k_hw: Use a helper for setting phy error masks
+  ath9k_hw: add helpers for writing phy errors counts
+  ath9k_hw: add a helper for phy error counter reads
+  ath9k_hw: add documentation for the TPC register
+  ath9k_hw: remove unused and buggy ath9k_hw_GetMibCycleCountsPct()
+  ath9k_hw: add a helper for retrieving the MIB cycle counters
+  ath9k_hw: provide a helper for clearing the MIB counters
+  ath9k_hw: simplify reseting of the MIB control register
+  ath9k_hw: provide a helper for managing the MIB control register
+  ath9k_hw: move common defines for ANI into ath/reg.h
+  ath9k_hw: move ar9002 ANI code to its own file
+  ath9k_hw: remove wrapper ath9k_hw_write_regs()
 
-> I believe until we actually have a reproducible case of an
-> incompatibility with another AP using no PAE special cases, we should
-> simply get rid of this mess.
-> 
-> This patch completely fixes my crash issues in STA mode and makes it
-> stay connected without throughput drops or connectivity issues even
-> when the AP is configured to a very short group rekey interval.
-> 
+ drivers/net/wireless/ath/ath9k/Makefile            |    6 +-
+ drivers/net/wireless/ath/ath9k/ani.c               |  403 +-
+ drivers/net/wireless/ath/ath9k/ani.h               |   22 +-
+ drivers/net/wireless/ath/ath9k/ar9002_ani.c        |  356 +
+ drivers/net/wireless/ath/ath9k/ar9002_btcoex.c     |  239 +
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c      |  826 +++
+ .../net/wireless/ath/ath9k/ar9002_calib_settings.c |  388 ++
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c         |  821 +++
+ drivers/net/wireless/ath/ath9k/ar9002_initvals.h   | 7115 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/btcoex.c            |  227 -
+ drivers/net/wireless/ath/ath9k/btcoex.h            |   10 -
+ drivers/net/wireless/ath/ath9k/calib.c             | 1095 +---
+ drivers/net/wireless/ath/ath9k/calib.h             |   15 +-
+ drivers/net/wireless/ath/ath9k/common.h            |    1 +
+ drivers/net/wireless/ath/ath9k/hw-ops.h            |  235 +
+ drivers/net/wireless/ath/ath9k/hw.c                |  911 +---
+ drivers/net/wireless/ath/ath9k/hw.h                |  149 +-
+ drivers/net/wireless/ath/ath9k/init.c              |    9 +-
+ drivers/net/wireless/ath/ath9k/initvals.h          | 7115 --------------------
+ drivers/net/wireless/ath/ath9k/phy.c               |   15 -
+ drivers/net/wireless/ath/ath9k/phy.h               |    3 -
+ drivers/net/wireless/ath/ath9k/reg.h               |   17 +-
+ drivers/net/wireless/ath/reg.h                     |    5 +
+ 23 files changed, 10382 insertions(+), 9601 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_ani.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_btcoex.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_calib.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_calib_settings.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_hw.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+ delete mode 100644 drivers/net/wireless/ath/ath9k/btcoex.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/hw-ops.h
+ delete mode 100644 drivers/net/wireless/ath/ath9k/initvals.h
 
-Ok. We can remove this and see if any users report crupto problems
-with random APs out there.
-
-We did run into re-keying issues with a few APs when sending PAE
-frames as part of aggregates, but unfortunately the bug reports seem
-to be non-existent ...
-
-Sujith
