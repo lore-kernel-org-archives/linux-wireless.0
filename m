@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39180 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965680Ab0COTAq (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41123 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756149Ab0CQW2P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Mar 2010 15:00:46 -0400
-Date: Mon, 15 Mar 2010 14:56:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Alban Browaeys <prahal@yahoo.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2x00: txdone implementation supporting hw encryption.
-Message-ID: <20100315185654.GB2974@tuxdriver.com>
-References: <4B871EA6.9050105@yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B871EA6.9050105@yahoo.com>
+	Wed, 17 Mar 2010 18:28:15 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 18/20] ath9k_hw: move common defines for ANI into ath/reg.h
+Date: Wed, 17 Mar 2010 18:28:11 -0400
+Message-Id: <1268864893-11428-19-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 26, 2010 at 02:06:46AM +0100, Alban Browaeys wrote:
-> This is an implementation that support WCID being the encryption key.
-> Wireless Cli Id was set to be the encryption key in rt2800pci_write_tx_desc
-> and read (TX_STA_FIFO_WCID) as the current queue entry index.
->
-> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
-> Signed-off-by: Alban Browaeys <prahal@yahoo.com>
+This will allow us to share a common ath9k_ani_restart()
+and ath9k_hw_procmibevent() once we split the hardware
+specific stuff.
 
-/home/linville/git/wireless-testing
-[linville-t400.local]:> patch -p1 < rt2x00.patch
-patching file drivers/net/wireless/rt2x00/rt2800pci.c
-Hunk #1 FAILED at 907.
-Hunk #2 FAILED at 936.
-Hunk #3 FAILED at 997.
-3 out of 3 hunks FAILED -- saving rejects to file drivers/net/wireless/rt2x00/rt2800pci.c.rej
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/reg.h |    3 ---
+ drivers/net/wireless/ath/reg.h       |    5 +++++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-Would you care to post a version that applies against the current
-wireless-testing?
-
-Thanks!
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index ce94e99..fa37e30 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1530,9 +1530,6 @@ enum {
+ #define AR_PHY_ERR_2_COUNT     0x00FFFFFF
+ #define AR_PHY_ERR_MASK_2      0x8138
+ 
+-#define AR_PHY_COUNTMAX        (3 << 22)
+-#define AR_MIBCNT_INTRMASK     (3 << 22)
+-
+ #define AR_TSFOOR_THRESHOLD       0x813c
+ #define AR_TSFOOR_THRESHOLD_VAL   0x0000FFFF
+ 
+diff --git a/drivers/net/wireless/ath/reg.h b/drivers/net/wireless/ath/reg.h
+index dfe1fbe..dc8de1b 100644
+--- a/drivers/net/wireless/ath/reg.h
++++ b/drivers/net/wireless/ath/reg.h
+@@ -24,4 +24,9 @@
+ #define AR_BSSMSKL		0x80e0
+ #define AR_BSSMSKU		0x80e4
+ 
++/* Max counted before intr */
++#define AR_PHY_COUNTMAX		(3 << 22)
++/* Mask top 2 bits of counters */
++#define AR_MIBCNT_INTRMASK	(3 << 22)
++
+ #endif /* ATH_REGISTERS_H */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
