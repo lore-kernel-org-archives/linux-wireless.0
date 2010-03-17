@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44044 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164Ab0CSPAK (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:19295 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752798Ab0CQJCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 11:00:10 -0400
-Date: Fri, 19 Mar 2010 10:56:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCHv3 0/2] mac80211: cfg80211: Roam trigger support
-Message-ID: <20100319145636.GB9552@tuxdriver.com>
-References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com> <20100317132236.GC2990@tuxdriver.com> <87aau4dcfm.fsf@purkki.valot.fi>
+	Wed, 17 Mar 2010 05:02:48 -0400
+From: Holger Schurig <holgerschurig@gmail.com>
+To: Valdis.Kletnieks@vt.edu
+Subject: Re: Weird wireless/wpa_supplicant screw-up.
+Date: Wed, 17 Mar 2010 10:03:54 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <7197.1268086939@localhost> <1268796150.7068.6.camel@jlt3.sipsolutions.net> <27228.1268814093@localhost>
+In-Reply-To: <27228.1268814093@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87aau4dcfm.fsf@purkki.valot.fi>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201003171003.54295.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 19, 2010 at 08:59:25AM +0200, Kalle Valo wrote:
-> "John W. Linville" <linville@tuxdriver.com> writes:
+> The problem is a combination of things - (a) iwlist and iwconfig report no
+> crypto and (b) there doesn't seem to be any *other* way for userspace to
+> find out that in fact you have an encrypted WPA2 connection.
 
-> > Will applications actually use it?
-> 
-> The idea is that wpa_supplicant will listen to these events, and will
-> enable or disable backround scan (ie. scanning for new APs when
-> associated) based on information received from the events. When the
-> connection to the AP is good enough, it can disable background scan
-> which makes it possible to save power and also get rid of latency
-> introduced by the background scan.
-> 
-> I haven't seen any implementation for wpa_supplicant yet, but we have
-> talked about that few times during the last two years.
+That's not true.
 
-If you can make wpa_supplicant scan less then I am sold! :-)
 
-John
+I'm using cfg80211 with wpa_supplicant (even when I only use WEP, despite the 
+name of the wpa_supplicant application!).
+
+And in this case, you can use "wpa_cli status" and well see all the details, 
+no matter if you use WPA, WPA2, WEXT or some of the 802.11x derivates:
+
+# wpa_cli status
+Selected interface 'wlan0'
+bssid=00:xx:xx:xx:xx:xx
+ssid=MUMBLEFUTZ
+id=0
+mode=station
+pairwise_cipher=WEP-40
+group_cipher=WEP-40
+key_mgmt=NONE
+wpa_state=COMPLETED
+ip_address=172.16.xxx.xx
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+http://www.holgerschurig.de
