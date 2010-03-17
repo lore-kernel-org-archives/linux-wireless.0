@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:33271 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752452Ab0CRVrK (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36290 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753161Ab0CQQAq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 17:47:10 -0400
-Received: by fxm19 with SMTP id 19so104435fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 14:47:08 -0700 (PDT)
-Message-ID: <4BA29F58.7040101@lwfinger.net>
-Date: Thu, 18 Mar 2010 16:47:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 17 Mar 2010 12:00:46 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1Nrvfo-0000WR-TG
+	for linux-wireless@vger.kernel.org; Wed, 17 Mar 2010 12:00:45 -0400
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id o2HFnUMV012861
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 11:49:30 -0400
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id o2HFnURW012848
+	for linux-wireless@vger.kernel.org; Wed, 17 Mar 2010 11:49:30 -0400
+Date: Wed, 17 Mar 2010 11:49:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: anyone else want to look at ath5k bugs?
+Message-ID: <20100317154930.GD2990@tuxdriver.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Michael Buesch <mb@bu3sch.de>,
-	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RFC: A workaround for BCM43XX devices with no on-board SPROM
-References: <4BA266FB.1080507@lwfinger.net>	 <1268945580.4005.15.camel@jlt3.sipsolutions.net>	 <4BA296BA.7000502@lwfinger.net> <1268947248.4005.16.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1268947248.4005.16.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/18/2010 04:20 PM, Johannes Berg wrote:
-> On Thu, 2010-03-18 at 16:10 -0500, Larry Finger wrote:
->> On 03/18/2010 03:53 PM, Johannes Berg wrote:
->>> On Thu, 2010-03-18 at 12:46 -0500, Larry Finger wrote:
->>>> Michael,
->>>>
->>>> I'm switching this discussion from the kernel Bugzilla to the lists.
->>>>
->>>> As you know, but I'm restating for anyone that has not read our previous
->>>> discussions, the b43 driver needs to be changed to handle some of the newer
->>>> devices do not have an on-board SPROM. It would be trivial to incorporate the
->>>> data except for the need to have a unique, reproducible MAC.
->>>
->>> Where does the data usually come from in these devices?
->>
->> It comes from the SPROM, which is missing in the devices in question. Broadcrap
->> wanted to save a few pennies.
-> 
-> Right, but they have to support getting the data somehow on for example
-> windows even if there's no sprom. Do we know where it comes from then?
+It seems like there are quite a few open ath5k bugs on
+bugzilla.kernel.org.  I've been asking Bob C. to look at a lot of
+them, as well as Nick K. and a few other people.  But honestly,
+there are just too many.  Anyone else want to help out with those?
 
-In the Linux driver and likely in the Windows driver, the SPROM data is read
-from the SPROM and encoded into a set of tagged strings. After that, the actual
-SPROM is ignored. I have not completed the RE on this area, but it looks as if
-they have a set of "canned" data that is copied into the area. How they handle a
-MAC is not yet understood.
+Let me know...
 
-Larry
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
