@@ -1,83 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1739 "EHLO mail.perches.com"
+Received: from mail.atheros.com ([12.36.123.2]:26848 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752130Ab0CQQFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 12:05:05 -0400
-Subject: [PATCH] wireless.h: Add STD_IW_HANDLER macro
-From: Joe Perches <joe@perches.com>
-To: Richard Kennedy <richard@rsk.demon.co.uk>
-Cc: Andy Whitcroft <apw@canonical.com>, gregkh@suse.de,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268840454.1999.22.camel@localhost>
-References: <1268823629.1999.9.camel@localhost>
-	 <1268839535.1652.43.camel@Joe-Laptop.home>
-	 <1268840454.1999.22.camel@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 09:05:04 -0700
-Message-ID: <1268841904.1652.94.camel@Joe-Laptop.home>
-Mime-Version: 1.0
+	id S1753132Ab0CQV1T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 17:27:19 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 14:27:19 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 08/12] ath9k_hw: use the skip count for PA calibration on AR9271
+Date: Wed, 17 Mar 2010 14:25:21 +0530
+Message-ID: <1268816125-16173-9-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1268816125-16173-8-git-send-email-senthilkumar@atheros.com>
+References: <1268816125-16173-1-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-2-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-3-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-4-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-5-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-6-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-7-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-8-git-send-email-senthilkumar@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-17 at 15:40 +0000, Richard Kennedy wrote:
-> On Wed, 2010-03-17 at 08:25 -0700, Joe Perches wrote:
-> > On Wed, 2010-03-17 at 11:00 +0000, Richard Kennedy wrote:
-> > > I'm getting this error from checkpatch which is a false positive AFAICT.
-> > > I don't see any other way to code this macro so maybe this rule
-> > > shouldn't apply?.
-> > > 	ERROR: space prohibited before open square bracket '['
-> > > 	#24: FILE: drivers/staging/wlan-ng/p80211wext.c:1685:
-> > > 	+#define IW_IOCTL(x) [(x)-SIOCSIWCOMMIT]
-> > While true that this is a false positive, hiding array indexing
-> > brackets in a macro doesn't seem a good idea.
-> > Maybe it'd be better to move the brackets to the use?
-> err maybe ;)
-> I copied it from driver/net/wireless/ipw2x00/ipw2200.c 
-> It just reduces typing when initialising the array :-
-> 	#define IW_IOCTL(x) [(x)-SIOCSIWCOMMIT]
-> 	static iw_handler p80211wext_handlers[] = {
-> 		IW_IOCTL(SIOCSIWCOMMIT) = (iw_handler) p80211wext_siwcommit,
-> 		...
-> Oh, having quickly looked at wireless.h, I see there is already a macro
-> IW_IOCTL_IDX so I guess I should have used that!
-> would something like this be better?
-> 	static iw_handler p80211wext_handlers[] = {
-> 		[IW_IOCTL_IDX(SIOCSIWCOMMIT)] = (iw_handler) p80211wext_siwcommit,
-> 		...
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-orinoco uses one more macro indirection which seems reasonable
+Periodic power amplifier offset calibration is skipped on ath9k
+algorithmically, this is required on AR9271.
 
-Maybe this define should be moved to wireless.h
-
-#define STD_IW_HANDLER(id, func) \
-	[IW_IOCTL_IDX(id)] = (iw_handler) func
-
-the line continued macro probably avoids checkpatch warnings too...
-
-orinoco use:
-
-static const iw_handler	orinoco_handler[] = {
-	STD_IW_HANDLER(SIOCSIWCOMMIT,	orinoco_ioctl_commit),
-	STD_IW_HANDLER(SIOCGIWNAME,	cfg80211_wext_giwname),
-
-Here's a suggested patch:
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-diff --git a/include/linux/wireless.h b/include/linux/wireless.h
-index 5b4c6c7..ad9f8d5 100644
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -346,6 +346,8 @@
- #define SIOCIWFIRST	0x8B00
- #define SIOCIWLAST	SIOCIWLASTPRIV		/* 0x8BFF */
- #define IW_IOCTL_IDX(cmd)	((cmd) - SIOCIWFIRST)
-+#define STD_IW_HANDLER(id, func) \
-+	[IW_IOCTL_IDX(id)] = (iw_handler) func
- 
- /* Odd : get (world access), even : set (root access) */
- #define IW_IS_SET(cmd)	(!((cmd) & 0x1))
+ drivers/net/wireless/ath/ath9k/calib.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index e76dd74..d5026e4 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -1059,9 +1059,12 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	/* Do NF cal only at longer intervals */
+ 	if (longcal) {
+ 		/* Do periodic PAOffset Cal */
+-		if (AR_SREV_9271(ah))
+-			ath9k_hw_9271_pa_cal(ah, false);
+-		else if (AR_SREV_9285_11_OR_LATER(ah)) {
++		if (AR_SREV_9271(ah)) {
++			if (!ah->pacal_info.skipcount)
++				ath9k_hw_9271_pa_cal(ah, false);
++			else
++				ah->pacal_info.skipcount--;
++		} else if (AR_SREV_9285_11_OR_LATER(ah)) {
+ 			if (!ah->pacal_info.skipcount)
+ 				ath9k_hw_9285_pa_cal(ah, false);
+ 			else
+-- 
+1.6.4.2
 
