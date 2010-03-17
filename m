@@ -1,64 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:37342 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309Ab0CBCgo (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41127 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756154Ab0CQW2Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 21:36:44 -0500
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 1 Mar 2010 18:36:24 -0800
-Message-ID: <43e72e891003011836x5c3d0336h6f0f99100b525b9@mail.gmail.com>
-Subject: compat-wireless based on the 2.6.33 kernel release
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Mar 2010 18:28:16 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 20/20] ath9k_hw: remove wrapper ath9k_hw_write_regs()
+Date: Wed, 17 Mar 2010 18:28:13 -0400
+Message-Id: <1268864893-11428-21-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I kicked out a new release for compat-wireless based on 2.6.33 [1]. As
-usual this ships the entire 802.11 and Bluetooth subsystems, the Sonic
-Silicon Backplane, b44 (Broadcom Ethernet driver as it depends on the
-ssb as being replaced for b43), and all Atheros Ethernet drivers as
-are released on the 2.6.33 kernel.
+This is used only once by ath9k_hw_process_ini() to
+write an array of phy registers through REG_WRITE_ARRAY(),
+but we already call REG_WRITE_ARRAY() multiple times
+on the same caller so just remove this pointless wrapper.
+We'll eventually just move the ath9k_hw_process_ini()
+caller as an callback to abstract away between different
+hardware families.
 
-This release also now has a directory for cherry picked patches we
-think are important for 802.11 but not so critical for stable, the
-only one I have added so far is Atheros Ethernet AR8152 and AR8152
-support which won't get to users until 2.6.34 otherwise. If you have a
-few important yet not stable mac80211/new-driver send me the
-respective backported cherry pick from linux-next and we can add it;
-the only requirement is it *must* be part of linux-next already.
-Distributions could also potentially use the patches in this directory
-as a guide for cherry picking some changes / new drivers / etc.
+Although this change is subtle I should note that this
+does change the delay pattern on writing the next series
+of registers. REG_WRITE_ARRAY() uses a counter for each
+register write and does a udelay(1) every 64 writes. By
+removing this call it means that the counter is processed
+for all the iniBB_RfGain registers and is incremented
+on ath9k_hw_process_ini(), before this the after the call
+ath9k_hw_write_regs() was made the register counter was
+kept at the same index number prior to the call.
 
-You can find the kernel ChangeLog for the driver/subsystem changes for
-this release on orbit [2]. For the backport work you can review the
-2.6.32.y branch via gitweb for both compat-wireless.git [3] and
-compat.git [4]. Please help test it and report any issues [5].
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    2 +-
+ drivers/net/wireless/ath/ath9k/phy.c |   15 ---------------
+ drivers/net/wireless/ath/ath9k/phy.h |    3 ---
+ 3 files changed, 1 insertions(+), 19 deletions(-)
 
-Thanks to Pavel Roskin's backporting of debugfs_remove_recursive()
-through the compat.git tree we can now take again the entire tree to
-older kernels, so far tested are 2.6.25 with this and the new
-Multiqueue backport work, but technically you can take kernel
-compatibility further to older kernels by selecting individual
-drivers. It should be possible to use ath5k and ath9k on >= 2.6.23
-with this release so that is left enabled if you choose to select only
-those drivers from compilation:
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9093235..2013b7e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1072,7 +1072,7 @@ static int ath9k_hw_process_ini(struct ath_hw *ah,
+ 					modesIndex, regWrites);
+ 	}
+ 
+-	ath9k_hw_write_regs(ah, freqIndex, regWrites);
++	REG_WRITE_ARRAY(&ah->iniBB_RfGain, freqIndex, regWrites);
+ 
+ 	if (AR_SREV_9280_20(ah) && IS_CHAN_A_5MHZ_SPACED(chan)) {
+ 		REG_WRITE_ARRAY(&ah->iniModesAdditional, modesIndex,
+diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
+index c3b5939..02d40df 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.c
++++ b/drivers/net/wireless/ath/ath9k/phy.c
+@@ -42,21 +42,6 @@
+ #include "hw.h"
+ 
+ /**
+- * ath9k_hw_write_regs - ??
+- *
+- * @ah: atheros hardware structure
+- * @freqIndex:
+- * @regWrites:
+- *
+- * Used for both the chipsets with an external AR2133/AR5133 radios and
+- * single-chip devices.
+- */
+-void ath9k_hw_write_regs(struct ath_hw *ah, u32 freqIndex, int regWrites)
+-{
+-	REG_WRITE_ARRAY(&ah->iniBB_RfGain, freqIndex, regWrites);
+-}
+-
+-/**
+  * ath9k_hw_ar9280_set_channel - set channel on single-chip device
+  * @ah: atheros hardware structure
+  * @chan:
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index 0999a49..dc2b915 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -17,9 +17,6 @@
+ #ifndef PHY_H
+ #define PHY_H
+ 
+-/* Common between single chip and non single-chip solutions */
+-void ath9k_hw_write_regs(struct ath_hw *ah, u32 freqIndex, int regWrites);
+-
+ /* Single chip radio settings */
+ int ath9k_hw_ar9280_set_channel(struct ath_hw *ah, struct ath9k_channel *chan);
+ void ath9k_hw_9280_spur_mitigate(struct ath_hw *ah, struct ath9k_channel *chan);
+-- 
+1.6.3.3
 
-./scripts/driver-select ath5k
-or
-./scripts/driver-select ath9k
-
-A few users reported issues with SSB and B43 not compiling on the last
-release but I tested this myself and it does compile. Please be sure
-to check that you have CONFIG_SSB enabled as a module on your current
-kernel configuration, otherwise CONFIG_SSB does not get built. If you
-are using a distribution kernel you should be fine.
-
-[1] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.33/compat-wireless-2.6.33.tar.bz2
-[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.33/ChangeLog-2.6.33-wireless
-[3] http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-wireless-2.6.git;a=shortlog;h=refs/heads/linux-2.6.33.y
-[4] http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat.git;a=shortlog;h=refs/heads/linux-2.6.33.y
-[5] http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
-
-  Luis
