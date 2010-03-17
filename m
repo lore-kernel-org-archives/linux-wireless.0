@@ -1,52 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:33485 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966047Ab0CPJcL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 05:32:11 -0400
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2G9Vgl4004094
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Mar 2010 04:32:10 -0500
-Received: from localhost.localdomain (trdhcp21240.nmp.nokia.com [172.22.212.40])
-	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2G9VvfX012751
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Mar 2010 11:31:57 +0200
-From: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Reschedule dynamic power save timer after wakeup
-Date: Tue, 16 Mar 2010 11:31:02 -0400
-Message-Id: <1268753462-18094-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
+Received: from mail.perches.com ([173.55.12.10]:1755 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753497Ab0CQRsG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 13:48:06 -0400
+Subject: [PATCH 2/2] net/wireless/wext_core.c: Use IW_EVENT_IDX macro
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
+	Andy Whitcroft <apw@canonical.com>, gregkh@suse.de,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1268847991.1652.106.camel@Joe-Laptop.home>
+References: <1268823629.1999.9.camel@localhost>
+	 <1268839535.1652.43.camel@Joe-Laptop.home>
+	 <1268840454.1999.22.camel@localhost>
+	 <1268841904.1652.94.camel@Joe-Laptop.home>
+	 <1268842112.5989.8.camel@jlt3.sipsolutions.net>
+	 <1268847991.1652.106.camel@Joe-Laptop.home>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Mar 2010 10:48:04 -0700
+Message-ID: <1268848084.1652.108.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After last transmission, the device goes to sleep earlier
-than the configured dynamic power save timeout. If timeout
-is set to 400ms, device enters into sleep mode at around
-330ms since from last TX.
+There's a wireless.h macro for this, might as well use it.
 
-This patch re-schedules dynamic power save timer
-after PSM is disabled, which ensures timeout
-period starts only after wakeup and the timeout
-variation is around 2-3ms.
-
-Signed-off-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- net/mac80211/mlme.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index dbde22b..bfcbeee 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -261,44 +261,44 @@ static const unsigned standard_ioctl_num = ARRAY_SIZE(standard_ioctl);
+  * we know about.
+  */
+ static const struct iw_ioctl_description standard_event[] = {
+-	[IWEVTXDROP	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVTXDROP)] = {
+ 		.header_type	= IW_HEADER_TYPE_ADDR,
+ 	},
+-	[IWEVQUAL	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVQUAL)] = {
+ 		.header_type	= IW_HEADER_TYPE_QUAL,
+ 	},
+-	[IWEVCUSTOM	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVCUSTOM)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= IW_CUSTOM_MAX,
+ 	},
+-	[IWEVREGISTERED	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVREGISTERED)] = {
+ 		.header_type	= IW_HEADER_TYPE_ADDR,
+ 	},
+-	[IWEVEXPIRED	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVEXPIRED)] = {
+ 		.header_type	= IW_HEADER_TYPE_ADDR,
+ 	},
+-	[IWEVGENIE	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVGENIE)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= IW_GENERIC_IE_MAX,
+ 	},
+-	[IWEVMICHAELMICFAILURE	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVMICHAELMICFAILURE)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= sizeof(struct iw_michaelmicfailure),
+ 	},
+-	[IWEVASSOCREQIE	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVASSOCREQIE)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= IW_GENERIC_IE_MAX,
+ 	},
+-	[IWEVASSOCRESPIE	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVASSOCRESPIE)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= IW_GENERIC_IE_MAX,
+ 	},
+-	[IWEVPMKIDCAND	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVPMKIDCAND)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= sizeof(struct iw_pmkid_cand),
+@@ -453,7 +453,7 @@ void wireless_send_event(struct net_device *	dev,
+ 		if (cmd_index < standard_ioctl_num)
+ 			descr = &(standard_ioctl[cmd_index]);
+ 	} else {
+-		cmd_index = cmd - IWEVFIRST;
++		cmd_index = IW_EVENT_IDX(cmd);
+ 		if (cmd_index < standard_event_num)
+ 			descr = &(standard_event[cmd_index]);
+ 	}
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 86c6ad1..f7f3f61 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -537,6 +537,8 @@ void ieee80211_dynamic_ps_disable_work(struct work_struct *work)
- 
- 	ieee80211_wake_queues_by_reason(&local->hw,
- 					IEEE80211_QUEUE_STOP_REASON_PS);
-+	mod_timer(&local->dynamic_ps_timer, jiffies +
-+		  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- }
- 
- void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
--- 
-1.7.0
 
