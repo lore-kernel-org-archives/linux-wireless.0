@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f222.google.com ([209.85.219.222]:49562 "EHLO
-	mail-ew0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293Ab0C1QZI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 12:25:08 -0400
-Received: by ewy22 with SMTP id 22so1592711ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Mar 2010 09:25:07 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH] wireless: rt2x00: rt2800usb: identify ids-chips
-Date: Sun, 28 Mar 2010 17:19:57 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com
-References: <1269784363-6077-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1269784363-6077-1-git-send-email-xose.vazquez@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:26830 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755781Ab0CQV1J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 17:27:09 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 14:27:09 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 03/12] ath9k_hw: skip chip tests for AR9271
+Date: Wed, 17 Mar 2010 14:25:16 +0530
+Message-ID: <1268816125-16173-4-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1268816125-16173-3-git-send-email-senthilkumar@atheros.com>
+References: <1268816125-16173-1-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-2-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-3-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201003281819.57992.IvDoorn@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 28 March 2010, Xose Vazquez Perez wrote:
-> Taken from ralink linux drivers:
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0B05,0x1784)}, /* Asus 3072 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x13D3,0x3305)}, /* AzureWave 3070*/
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x07D1,0x3C16)}, /* D-Link 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x203D,0x14A9)}, /* Encore 3070*/
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9707)}, /* EnGenius 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9708)}, /* EnGenius 3071 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9709)}, /* EnGenius 3072 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x04BB,0x0947)}, /* I-O DATA 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x04BB,0x0948)}, /* I-O DATA 3072 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3822)}, /* MSI 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3821)}, /* Ralink 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3870)}, /* MSI 3070*/
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3871)}, /* MSI 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x821A)}, /* Ralink 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x822A)}, /* MSI 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x870A)}, /* MSI 3070*/
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x871A)}, /* MSI 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x899A)}, /* MSI 3070*/
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x20B8,0x8888)}, /* PARA INDUSTRIAL 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DF6,0x0048)}, /* Sitecom 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DF6,0x0047)}, /* Sitecom 3071 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x083A,0xA701)}, /* SMC 3070 */
-> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x083A,0xA702)}, /* SMC 3072 */
-> 
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+The chip test is not required for AR9271 on the host driver
+code as the firmware will do the test internally on its own.
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 7b1ba6f..b1a4a83 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -499,8 +499,10 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ {
+ 	int ecode;
+ 
+-	if (!ath9k_hw_chip_test(ah))
+-		return -ENODEV;
++	if (!AR_SREV_9271(ah)) {
++		if (!ath9k_hw_chip_test(ah))
++			return -ENODEV;
++	}
+ 
+ 	ecode = ath9k_hw_rf_claim(ah);
+ 	if (ecode != 0)
+-- 
+1.6.4.2
+
