@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58410 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752560Ab0C2UPI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42092 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677Ab0CQQFR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:15:08 -0400
-Date: Mon, 29 Mar 2010 16:04:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?iso-8859-1?Q?Ren=E9?= Bolldorf <xsecute@googlemail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-Message-ID: <20100329200417.GI4984@tuxdriver.com>
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20100329194745.GH4984@tuxdriver.com>
+	Wed, 17 Mar 2010 12:05:17 -0400
+Subject: Re: [RFC PATCHv2 0/2] mac80211: cfg80211: Roam trigger support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1268805772.10120.603.camel@wimaxnb.nmp.nokia.com>
+References: <1268657751-1042-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268776349.8918.9.camel@jlt3.sipsolutions.net>
+	 <1268805772.10120.603.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Mar 2010 09:05:16 -0700
+Message-ID: <1268841917.5989.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 03:47:46PM -0400, John W. Linville wrote:
-> On Mon, Mar 29, 2010 at 09:35:44PM +0200, René Bolldorf wrote:
-> > On 03/29/10 21:20, Larry Finger wrote:
-> >> Ren�,
-> >>
-> >> When you have a wireless problem, please post it to
-> >> linux-wireless@vger.kernel.org. The Linux Kernel Mailing List may or may not be
-> >> appropriate.
-> >>
-> >> To help in diagnosing your problem, please apply this patch and post the output
-> >> line that it produces. On my system, it shows
-> >>
-> >> ssb: chip_id 0x4312, status 0x10
-> >>
-> > and on my: ssb: chip_id 0x4312, status 0x12
-> >> Please also post the output of 'lspci -nnv | grep 14e4'.
-> > Yep:
-> > 01:00.0 Network controller [0280]: Broadcom Corporation BCM4312  
-> > 802.11b/g [14e4:4315] (rev 01)
+On Wed, 2010-03-17 at 08:02 +0200, Juuso Oikarinen wrote:
+
+> > I'm curious. How does the HW/firmware do this?
 > 
-> OK, I'm new to the thread -- what exactly is the issue?  Was your
-> device working previously?
+> > In my testing on some hw, the beacon RSSI fluctuated wildly, so you'd
+> > have to set the hysteresis pretty high.
+> 
+> The HW/firmware can be configured with parameters related to averaging,
+> which will smoothen the worst of the fluctuation at least between single
+> frames.
 
-Sorry, didn't see the original post on LKML.
+Ok, cool. Thanks for taking the time to answer :)
 
-The patch you posted looks to me like it is just as likely to break
-someone else as it is to fix things for you. :-(
+> Still, there is the WLAN tendency of a very steep RSSI curve, so we'll
+> probably end up with a relatively high hysteresis. Figuring out good
+> values for the config is still to-be-done.
 
-Larry, can you provide some guidance based on the other info René
-has provided?
+Right. And it will be a tradeoff between roaming decision speed and
+battery life.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
