@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44056
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755823Ab0CDLh7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44751 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965Ab0CQNCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 06:37:59 -0500
-Date: Thu, 04 Mar 2010 03:38:17 -0800 (PST)
-Message-Id: <20100304.033817.217826832.davem@davemloft.net>
-To: jpirko@redhat.com
-Cc: netdev@vger.kernel.org, jussi.kivilinna@mbnet.fi,
-	linux-wireless@vger.kernel.org
-Subject: Re: [net-next-2.6 PATCH] wireless: convert to use
- netdev_for_each_mc_addr
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100304092014.GC2721@psychotron.lab.eng.brq.redhat.com>
-References: <20100304.004150.129762672.davem@davemloft.net>
-	<20100304.005246.240968829.davem@davemloft.net>
-	<20100304092014.GC2721@psychotron.lab.eng.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 17 Mar 2010 09:02:23 -0400
+Date: Wed, 17 Mar 2010 09:01:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] wireless: convert reg_regdb_search_lock to mutex
+Message-ID: <20100317130101.GB2990@tuxdriver.com>
+References: <4B9F86E9.2030702@gmail.com> <1268768940-5654-1-git-send-email-linville@tuxdriver.com> <20100316100337.GA1732@senthil-lnx.users.atheros.com> <20100317002416.GA2095@tuxdriver.com> <20100316122449.GA17826@senthil-lnx.users.atheros.com> <20100317025656.GA9058@tuxdriver.com> <1268796275.7068.8.camel@jlt3.sipsolutions.net> <20100317125513.GA2990@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100317125513.GA2990@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jiri Pirko <jpirko@redhat.com>
-Date: Thu, 4 Mar 2010 10:20:14 +0100
+On Wed, Mar 17, 2010 at 08:55:13AM -0400, John W. Linville wrote:
+> On Tue, Mar 16, 2010 at 08:24:35PM -0700, Johannes Berg wrote:
 
-> Slapping myself twice on each cheek.
+> > English at work ... let me guess:
+> > 
+> > For John: "can" == "it could happen that"
+> > For Senthil: "can" == "may"
+> > 
+> > (when really you may NOT do GFP_KERNEL allocations in atomic context)
 > 
-> Subject: [net-2.6 PATCH] rndis_wlan: correct multicast_list handling V3
-> 
-> My previous patch (655ffee284dfcf9a24ac0343f3e5ee6db85b85c5) added locking in
-> a bad way. Because rndis_set_oid can sleep, there is need to prepare multicast
-> addresses into local buffer under netif_addr_lock first, then call
-> rndis_set_oid outside. This caused reorganizing of the whole function.
-> 
-> Signed-off-by: Jiri Pirko <jpirko@redhat.com>
-> Reported-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> Ah, that seems like a plausible explanation for the confusion.
+> Bitte mein herr!
 
-Applied.
+Err...danke mein herr! :-)
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
