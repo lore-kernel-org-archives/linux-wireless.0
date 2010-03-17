@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f181.google.com ([209.85.216.181]:36119 "EHLO
-	mail-px0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101Ab0CDAn6 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:61695 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754464Ab0CQLal convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 19:43:58 -0500
+	Wed, 17 Mar 2010 07:30:41 -0400
+From: <ext-saravanan.dhanabal@nokia.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 17 Mar 2010 12:09:40 +0100
+Subject: RE: [PATCH] mac80211: Reschedule dynamic power save timer after
+ wakeup
+Message-ID: <04BB8F4F2843A24294353CA037CA5B58568D26B52F@NOK-EUMSG-01.mgdnok.nokia.com>
+References: <1268753462-18094-1-git-send-email-ext-saravanan.dhanabal@nokia.com>,<1268775761.8918.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1268775761.8918.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 3 Mar 2010 16:43:37 -0800
-Message-ID: <43e72e891003031643u353c72dcj23bf429363a16ec8@mail.gmail.com>
-Subject: Linux Bluetooth Coexistence documentation in general and for ath9k
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	"Kevin Hayes\" <kevin@atheros.com>, \"Dan Tian\""
-	<Dan.Tian@atheros.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcel, a question for you below.
+In worst case it takes up to that much,  though the average is less but still significant. 
 
-The question of Bluetooth coexistence pops up here, on IRC and on bug
-reports quite too often so I've stuffed what I could onto a page with
-a few references / code and about ath9k's schemes for BT coexistence,
-feel free to extend or correct:
+regards
+saravanan 
+________________________________________
+From: ext Johannes Berg [johannes@sipsolutions.net]
+Sent: Tuesday, March 16, 2010 11:42 PM
+To: Dhanabal Saravanan (EXT-Sasken/Tampere)
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Reschedule dynamic power save timer after wakeup
 
-http://wireless.kernel.org/en/users/Documentation/Bluetooth-coexistence
-http://wireless.kernel.org/en/users/Drivers/ath9k/btcoex
+On Tue, 2010-03-16 at 11:31 -0400, Saravanan Dhanabal wrote:
+> After last transmission, the device goes to sleep earlier
+> than the configured dynamic power save timeout. If timeout
+> is set to 400ms, device enters into sleep mode at around
+> 330ms since from last TX.
 
-I'm still not sure if "2-wire" and "3-wire" are generic terms and if
-someone owns a trademark on them or what, but looking down the road I
-think it would be nice to export this information through nl80211, if
-a device supports any of these BT-coex schemes and if so, perhaps
-display the current signal status of:
+So that means the scheduling to the workqueue takes you 70ms?
 
-  * WLAN_ACTIVE
-  * BT_PRIORITY
-  * BT_STATE
+johannes
 
-I do wonder if this could be useful to network applets like network
-manager/connman. The other BT coex schemes are BT specific it seems
-and not sure if those devices can expose that information out and
-inform userspace of certain events.
-
-Marcel, does the BlueZ support exporting if certain bt-coex schemes
-are supported like AFH, channel skipping, TDM, and also if they are
-being used and details of that?
-
-  Luis
