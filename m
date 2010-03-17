@@ -1,36 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:27720 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754832Ab0CILzk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 06:55:40 -0500
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o29Btb35029790
-	for <linux-wireless@vger.kernel.org>; Tue, 9 Mar 2010 13:55:37 +0200
-Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
-	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o29BtL6d020412
-	for <linux-wireless@vger.kernel.org>; Tue, 9 Mar 2010 13:55:21 +0200
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 0/1] mac80211: Support for HW connection recovery
-Date: Tue,  9 Mar 2010 13:52:51 +0200
-Message-Id: <1268135572-30722-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:26855 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755901Ab0CQV1Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Mar 2010 17:27:25 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 14:27:25 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Sujith <Sujith.Manoharan@atheros.com>, <stable@kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 11/12] ath9k_hw: fix hardware deinit
+Date: Wed, 17 Mar 2010 14:25:24 +0530
+Message-ID: <1268816125-16173-12-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1268816125-16173-11-git-send-email-senthilkumar@atheros.com>
+References: <1268816125-16173-1-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-2-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-3-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-4-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-5-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-6-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-7-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-8-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-9-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-10-git-send-email-senthilkumar@atheros.com>
+ <1268816125-16173-11-git-send-email-senthilkumar@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When PSM is enabled, the wl1271 performs connection recovery independently by
-sending probe-requests to the associated-to AP if it detects beacon loss.
+From: Sujith <Sujith.Manoharan@atheros.com>
 
-The wl1271 only indicates connection problem after the probe-requests have
-failed. At this stage, it's useless for the mac80211 to send further
-probe requests in attempt to recover the connection.
+Without this you will get a panic if the device initialization
+fails. Also, free ath_hw instance properly. ath9k_hw_deinit()
+shouldn't do it.
 
-Add a new function to allow the HW to indicate this situation.
+Cc: stable@kernel.org
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   |    4 +---
+ drivers/net/wireless/ath/ath9k/init.c |    3 +++
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-Juuso Oikarinen (1):
-  mac80211: Add ieee80211_probereq_failed function
-
- include/net/mac80211.h |   12 ++++++++++++
- net/mac80211/mlme.c    |   32 ++++++++++++++++++++++++++++++++
- 2 files changed, 44 insertions(+), 0 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 05aeb51..77db932 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1227,7 +1227,7 @@ void ath9k_hw_deinit(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	if (common->state <= ATH_HW_INITIALIZED)
++	if (common->state < ATH_HW_INITIALIZED)
+ 		goto free_hw;
+ 
+ 	if (!AR_SREV_9100(ah))
+@@ -1238,8 +1238,6 @@ void ath9k_hw_deinit(struct ath_hw *ah)
+ free_hw:
+ 	if (!AR_SREV_9280_10_OR_LATER(ah))
+ 		ath9k_hw_rf_free_ext_banks(ah);
+-	kfree(ah);
+-	ah = NULL;
+ }
+ EXPORT_SYMBOL(ath9k_hw_deinit);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 623c2f8..6063f54 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -758,6 +758,9 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+ 
+ 	tasklet_kill(&sc->intr_tq);
+ 	tasklet_kill(&sc->bcon_tasklet);
++
++	kfree(sc->sc_ah);
++	sc->sc_ah = NULL;
+ }
+ 
+ void ath9k_deinit_device(struct ath_softc *sc)
+-- 
+1.6.4.2
 
