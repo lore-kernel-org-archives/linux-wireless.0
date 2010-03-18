@@ -1,356 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:60580 "EHLO
+Received: from smtp.nokia.com ([192.100.122.230]:33863 "EHLO
 	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753965Ab0CQNEY (ORCPT
+	with ESMTP id S1751171Ab0CRI7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 09:04:24 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2HD4Jfr007732
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 15:04:22 +0200
-Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
-	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2HD42g3030104
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 15:04:03 +0200
+	Thu, 18 Mar 2010 04:59:49 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2I8xTRZ003093
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 10:59:47 +0200
 From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCHv3 1/2] cfg80211: Add connection quality monitoring support to nl80211
-Date: Wed, 17 Mar 2010 15:01:16 +0200
-Message-Id: <1268830877-5162-2-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
+Cc: luciano.coelho@nokia.com
+Subject: [RFC PATCHv4 2/2] mac80211: Add support for connection quality monitoring
+Date: Thu, 18 Mar 2010 10:56:52 +0200
+Message-Id: <1268902612-27492-3-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1268902612-27492-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268902612-27492-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for basic configuration of a connection quality monitoring to the
-nl80211 interface, and basic support for notifying about triggered monitoring
-events.
+Add support for the set_cqm_config op. This op function configures the
+requested connection quality monitor rssi threshold and rssi hysteresis
+values to the hardware  if the hardware supports
+IEEE80211_HW_SUPPORTS_CQM.
 
-Via this interface a user-space connection manager may configure and receive
-pre-warning events of deteriorating WLAN connection quality, and start
-preparing for roaming in advance, before the connection is already lost.
-
-An example usage of such a trigger is starting scanning for nearby AP's in
-an attempt to find one with better connection quality, and associate to it
-before the connection characteristics of the existing connection become too bad
-or the association is even lost, leading in a prolonged delay in connectivity.
-
-The interface currently supports only RSSI, but it could be later extended
-to include other parameters, such as signal-to-noise ratio, if need for that
-arises.
+For unsupporting hardware, currently -EOPNOTSUPP is returned, so the mac80211
+is currently not doing connection quality monitoring on the host. This could be
+added later, if needed.
 
 Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- include/linux/nl80211.h |   42 ++++++++++++++++
- include/net/cfg80211.h  |   18 +++++++
- net/wireless/mlme.c     |   12 +++++
- net/wireless/nl80211.c  |  119 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    5 ++
- 5 files changed, 196 insertions(+), 0 deletions(-)
+ include/net/mac80211.h |   26 ++++++++++++++++++++++++++
+ net/mac80211/cfg.c     |   27 +++++++++++++++++++++++++++
+ net/mac80211/mlme.c    |    8 ++++++++
+ 3 files changed, 61 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 28ba20f..b8ec9f8 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -323,6 +323,10 @@
-  *	the TX command and %NL80211_ATTR_FRAME includes the contents of the
-  *	frame. %NL80211_ATTR_ACK flag is included if the recipient acknowledged
-  *	the frame.
-+ * @NL80211_CMD_SET_CQM: Connection quality monitor configuration and
-+ *      notification. This command is used both as a command (to configure
-+ *      a trigger level) and as an event (to indicate the configured level was
-+ *      reached.) Setting zero threshold disables the feature.
-  *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-@@ -419,6 +423,8 @@ enum nl80211_commands {
- 	NL80211_CMD_SET_POWER_SAVE,
- 	NL80211_CMD_GET_POWER_SAVE,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 936bc41..1e941b2 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -144,6 +144,7 @@ struct ieee80211_low_level_stats {
+  *	new beacon (beaconing modes)
+  * @BSS_CHANGED_BEACON_ENABLED: Beaconing should be
+  *	enabled/disabled (beaconing modes)
++ * @BSS_CHANGED_CQM: Connection quality monitor config changed
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -156,6 +157,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_BSSID		= 1<<7,
+ 	BSS_CHANGED_BEACON		= 1<<8,
+ 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
++	BSS_CHANGED_CQM			= 1<<10,
+ };
  
-+	NL80211_CMD_SET_CQM,
-+
- 	/* add new commands above here */
+ /**
+@@ -185,6 +187,9 @@ enum ieee80211_bss_change {
+  * @enable_beacon: whether beaconing should be enabled or not
+  * @ht_operation_mode: HT operation mode (like in &struct ieee80211_ht_info).
+  *	This field is only valid when the channel type is one of the HT types.
++ * @cqm_rssi_thold: Connection quality monitor RSSI threshold, a zero value
++ *	implies disabled
++ * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -202,6 +207,8 @@ struct ieee80211_bss_conf {
+ 	u64 timestamp;
+ 	u32 basic_rates;
+ 	u16 ht_operation_mode;
++	s32 cqm_rssi_thold;
++	u8 cqm_rssi_hyst;
+ };
  
- 	/* used to define NL80211_CMD_MAX below */
-@@ -691,6 +697,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_ACK: Flag attribute indicating that the frame was
-  *	acknowledged by the recipient.
+ /**
+@@ -954,6 +961,10 @@ enum ieee80211_tkip_key_type {
+  *	Hardware can provide ack status reports of Tx frames to
+  *	the stack.
   *
-+ * @NL80211_ATTR_CQM: connection quality monitor configuration in a
-+ *	nested attribute with %NL80211_ATTR_CQM_* sub-attributes.
++ * @IEEE80211_HW_SUPPORTS_CQM:
++ *	Hardware can do connection quality monitoring - i.e. it can monitor
++ *	RSSI levels and notify on changes based on a threshold and hysteresis.
 + *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
   */
-@@ -842,6 +851,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PS_STATE,
- 
-+	NL80211_ATTR_CQM,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1583,4 +1594,35 @@ enum nl80211_ps_state {
- 	NL80211_PS_ENABLED,
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -975,6 +986,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
+ 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+ 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
++	IEEE80211_HW_SUPPORTS_CQM			= 1<<19,
  };
  
-+/**
-+ * enum nl80211_attr_cqm - connection quality monitor attributes
-+ * @__NL80211_ATTR_CQM_INVALID: invalid
-+ * @NL80211_ATTR_CQM_RSSI_THOLD: RSSI threshold in dBm
-+ * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm
-+ * @NL80211_ATTR_CQM_RSSI_STATE: Current state of the RSSI in relation to
-+ *	the configured threshold
-+ * @__NL80211_ATTR_CQM_AFTER_LAST: internal
-+ * @NL80211_ATTR_CQM_MAX: highest key attribute
-+ */
-+enum nl80211_attr_cqm {
-+	__NL80211_ATTR_CQM_INVALID,
-+	NL80211_ATTR_CQM_RSSI_THOLD,
-+	NL80211_ATTR_CQM_RSSI_HYST,
-+	NL80211_ATTR_CQM_RSSI_STATE,
-+
-+	/* keep last */
-+	__NL80211_ATTR_CQM_AFTER_LAST,
-+	NL80211_ATTR_CQM_MAX = __NL80211_ATTR_CQM_AFTER_LAST - 1
-+};
-+
-+/**
-+ * enum nl80211_cqm_state - current state in relation to set threshold
-+ * @NL80211_CQM_STATE_ABOVE: the level is above the configured threshold
-+ * @NL80211_CQM_STATE_BELOW: the level is below the configured threshold
-+ */
-+enum nl80211_cqm_state {
-+	NL80211_CQM_STATE_ABOVE,
-+	NL80211_CQM_STATE_BELOW,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3d134a1..13fa1ba 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1007,6 +1007,8 @@ struct cfg80211_pmksa {
-  *	RSN IE. It allows for faster roaming between WPA2 BSSIDs.
-  * @del_pmksa: Delete a cached PMKID.
-  * @flush_pmksa: Flush all cached PMKIDs.
-+ * @set_cqm_config: Configure connection quality monitor RSSI
-+ *	notification threshold.
-  *
+ /**
+@@ -2370,6 +2382,20 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
   */
- struct cfg80211_ops {
-@@ -1152,6 +1154,9 @@ struct cfg80211_ops {
+ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
  
- 	int	(*set_power_mgmt)(struct wiphy *wiphy, struct net_device *dev,
- 				  bool enabled, int timeout);
-+
-+	int	(*set_cqm_config)(struct wiphy *wiphy, struct net_device *dev,
-+				  s32 rssi_thold, u8 rssi_hyst);
- };
- 
- /*
-@@ -2337,4 +2342,17 @@ bool cfg80211_rx_action(struct net_device *dev, int freq, const u8 *buf,
- void cfg80211_action_tx_status(struct net_device *dev, u64 cookie,
- 			       const u8 *buf, size_t len, bool ack, gfp_t gfp);
- 
-+
 +/**
-+ * cfg80211_cqm_notify - notification of a connection quality monitoring event
-+ * @dev: network device
-+ * @rssi_state: current state of the RSSI in relation to the threshold
++ * ieee80211_cqm_notify - inform connection quality monitoring RSSI
++ *	threshold triggered
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @rssi_level: the current RSSI level
 + * @gfp: context flags
 + *
-+ * This function is called, when a configured connection quality monitoring
-+ * event occurs.
++ * When the IEEE80211_HW_SUPPORTS_CQM is set, and a RSSI threshold has been
++ * configured, the driver will inform whenever RSSI goes above or below
++ * the threshold with this function.
 + */
-+void cfg80211_cqm_notify(struct net_device *dev,
-+			 enum nl80211_cqm_state rssi_state, gfp_t gfp);
++void ieee80211_cqm_notify(struct ieee80211_vif *vif, s32 rssi_level, gfp_t gfp);
 +
- #endif /* __NET_CFG80211_H */
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 62bc885..5d0ab41 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -894,3 +894,15 @@ void cfg80211_action_tx_status(struct net_device *dev, u64 cookie,
- 	nl80211_send_action_tx_status(rdev, dev, cookie, buf, len, ack, gfp);
+ /* Rate control API */
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b7116ef..95f422c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1402,6 +1402,32 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
  }
- EXPORT_SYMBOL(cfg80211_action_tx_status);
-+
-+void cfg80211_cqm_notify(struct net_device *dev,
-+			 enum nl80211_cqm_state rssi_state, gfp_t gfp)
+ 
++static int ieee80211_set_cqm_config(struct wiphy *wiphy,
++				    struct net_device *dev,
++				    s32 rssi_thold, u8 rssi_hyst)
 +{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_vif *vif = &sdata->vif;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
 +
-+	/* Indicate roaming trigger event to user space */
-+	nl80211_send_cqm_notify(rdev, dev, rssi_state, gfp);
++	if (vif->type != NL80211_IFTYPE_STATION)
++		return -EOPNOTSUPP;
++
++	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_CQM))
++		return -EOPNOTSUPP;
++
++	if (rssi_thold == bss_conf->cqm_rssi_thold &&
++	    rssi_hyst == bss_conf->cqm_rssi_hyst)
++		return 0;
++
++	bss_conf->cqm_rssi_thold = rssi_thold;
++	bss_conf->cqm_rssi_hyst = rssi_hyst;
++
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
++	return 0;
 +}
-+EXPORT_SYMBOL(cfg80211_cqm_notify);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e447db0..77fab21 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -149,6 +149,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 				 .len = IEEE80211_MAX_DATA_LEN },
- 	[NL80211_ATTR_FRAME_MATCH] = { .type = NLA_BINARY, },
- 	[NL80211_ATTR_PS_STATE] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CQM] = { .type = NLA_NESTED, },
++
+ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				      struct net_device *dev,
+ 				      const u8 *addr,
+@@ -1506,4 +1532,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.remain_on_channel = ieee80211_remain_on_channel,
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.action = ieee80211_action,
++	.set_cqm_config = ieee80211_set_cqm_config,
  };
- 
- /* policy for the attributes */
-@@ -4778,6 +4779,75 @@ unlock_rtnl:
- 	return err;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index be5f723..c38d633 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2135,3 +2135,11 @@ int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
+ 	*cookie = (unsigned long) skb;
+ 	return 0;
  }
- 
-+static struct nla_policy
-+nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX + 1] __read_mostly = {
-+	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U8 },
-+	[NL80211_ATTR_CQM_RSSI_STATE] = { .type = NLA_U32 },
-+};
 +
-+static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
++void ieee80211_cqm_notify(struct ieee80211_vif *vif, s32 rssi_level, gfp_t gfp)
 +{
-+	struct cfg80211_registered_device *rdev;
-+	struct wireless_dev *wdev;
-+	struct net_device *dev;
-+	struct nlattr *attrs[NL80211_ATTR_CQM_MAX + 1];
-+	struct nlattr *cqm;
-+	s32 rssi_thold;
-+	u8 rssi_hyst;
-+	int err;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
 +
-+	cqm = info->attrs[NL80211_ATTR_CQM];
-+	if (!cqm) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	err = nla_parse_nested(attrs, NL80211_ATTR_CQM_MAX, cqm,
-+			       nl80211_attr_cqm_policy);
-+	if (err)
-+		goto out;
-+
-+
-+	if (!attrs[NL80211_ATTR_CQM_RSSI_THOLD] &&
-+	    !attrs[NL80211_ATTR_CQM_RSSI_HYST]) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	rssi_thold = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
-+	if (rssi_thold > 0) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	rssi_hyst = nla_get_u8(attrs[NL80211_ATTR_CQM_RSSI_HYST]);
-+
-+	rtnl_lock();
-+
-+	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
-+	if (err)
-+		goto unlock_rdev;
-+
-+	wdev = dev->ieee80211_ptr;
-+
-+	if (!rdev->ops->set_cqm_config) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	err = rdev->ops->set_cqm_config(wdev->wiphy, dev,
-+					rssi_thold, rssi_hyst);
-+
-+unlock_rdev:
-+	cfg80211_unlock_rdev(rdev);
-+	dev_put(dev);
-+	rtnl_unlock();
-+
-+out:
-+	return err;
++	cfg80211_cqm_notify(sdata->dev, rssi_level, gfp);
 +}
-+
- static struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_GET_WIPHY,
-@@ -5082,6 +5152,12 @@ static struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		/* can be retrieved by unprivileged users */
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_CQM,
-+		.doit = nl80211_set_cqm,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
-@@ -5832,6 +5908,49 @@ void nl80211_send_action_tx_status(struct cfg80211_registered_device *rdev,
- 	nlmsg_free(msg);
- }
- 
-+void nl80211_send_cqm_notify(struct cfg80211_registered_device *rdev,
-+			     struct net_device *netdev,
-+			     enum nl80211_cqm_state rssi_state,
-+			     gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	struct nlattr *pinfoattr;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_SET_CQM);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-+
-+	pinfoattr = nla_nest_start(msg, NL80211_ATTR_CQM);
-+	if (!pinfoattr)
-+		goto nla_put_failure;
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_CQM_RSSI_STATE, rssi_state);
-+	nla_nest_end(msg, pinfoattr);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
- static int nl80211_netlink_notify(struct notifier_block * nb,
- 				  unsigned long state,
- 				  void *_notify)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 4ca5111..f72ecc8 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -82,4 +82,9 @@ void nl80211_send_action_tx_status(struct cfg80211_registered_device *rdev,
- 				   const u8 *buf, size_t len, bool ack,
- 				   gfp_t gfp);
- 
-+void nl80211_send_cqm_notify(struct cfg80211_registered_device *rdev,
-+			     struct net_device *netdev,
-+			     enum nl80211_cqm_state rssi_state,
-+			     gfp_t gfp);
-+
- #endif /* __NET_WIRELESS_NL80211_H */
++EXPORT_SYMBOL(ieee80211_cqm_notify);
 -- 
 1.6.3.3
 
