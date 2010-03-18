@@ -1,61 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dmz4.indranet.co.nz ([203.97.93.68]:49971 "EHLO
-	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053Ab0CYVKU (ORCPT
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:35949 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751897Ab0CRKMe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 17:10:20 -0400
-Date: Fri, 26 Mar 2010 10:10:55 +1300 (NZDT)
-From: Derek Smithies <derek@indranet.co.nz>
-To: Bruno Randolf <br1@einfach.org>
-cc: linville@tuxdriver.com, bob@bobcopeland.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH 00/10] ANI for ath5k
-In-Reply-To: <20100325054603.10697.48915.stgit@tt-desk>
-Message-ID: <alpine.DEB.2.00.1003261001530.24989@kauri.acheron.indranet.co.nz>
-References: <20100325054603.10697.48915.stgit@tt-desk>
+	Thu, 18 Mar 2010 06:12:34 -0400
+Received: by fxm19 with SMTP id 19so1930625fxm.21
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 03:12:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Date: Thu, 18 Mar 2010 11:12:32 +0100
+Message-ID: <f74418681003180312k30dd39adtd00bd427cb88a710@mail.gmail.com>
+Subject: pending queue depth in ieee80211_local data structure
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-On Thu, 25 Mar 2010, Bruno Randolf wrote:
-> This is ANI for ath5k.
-Fantastic!!
-  I have used your initial ani patch set here, and it did help througput 
-etc.
->
-> - Improve beacon averaging algorithm for IBSS: Maybe we should keep track of
->  the average RSSI on a per-node basis and use the minimum of those in order
->  not to loose far away nodes? The other option would be to limit the
->  parameters we control similar to AP mode.
+Hi all,
 
-We have talked about this before. I thought that we agreed 
-that adhoc nodes may
-   a)be activated at any time
-   b)be positioned at an unknown distance apart
+I noticed a possible issue in the pending queue management of the
+ieee80211_local data structure.
+In particular, there is no control of the queue depth and this could
+cause a memory overflow.
+In the test I carried out this happen when I use a low priority queue
+(e.g. Backgreound queue) and
+I transmit a data stream that exceeds the channel capacity (e.g.
+50Mbps@MCS 3, 800ns GI and 20MHz
+channel width). I wrote this patch in order to fix the issue.
 
-it therefore makes no sense to average the RSSI over the current nodes.
-If all the current nodes in the network are close by, the ani algorithm 
-will wind the sensitivity down. Consequently, if a remote node is 
-started, it will not be able to connect. Yet, the remote node should 
-have been able to connect as the slot times etc were long enough, 
-and the link budget is fine...
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 
-So yes, the only way to 
-> - Improve beacon averaging algorithm for IBSS:
-is to turn ani off. which means the issue you raised else where of 
-providing reasonable userland controls (not via debugfs) becomes 
-important.
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -703,6 +703,8 @@
+ 	struct work_struct sta_finish_work;
+ 	int sta_generation;
+
++	/* Pending buffer dimension */
++	#define PENDING_BUF	512
+ 	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
+ 	struct tasklet_struct tx_pending_tasklet;
+
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1399,13 +1399,15 @@
+ 		skb = tx.skb;
+
+ 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-
++		
+ 		if (local->queue_stop_reasons[queue] ||
+ 		    !skb_queue_empty(&local->pending[queue])) {
+ 			/*
+-			 * if queue is stopped, queue up frames for later
+-			 * transmission from the tasklet
++			 * if queue is stopped and there is enough space in the queue,
++			 * queue up frames for later transmission from the tasklet
+ 			 */
++			if (skb_queue_len(&local->pending[queue]) >= PENDING_BUF)
++				goto drop;
+ 			do {
+ 				next = skb->next;
+ 				skb->next = NULL;
+@@ -2028,8 +2030,12 @@
+ 						flags);
+
+ 			txok = ieee80211_tx_pending_skb(local, skb);
+-			if (!txok)
+-				__skb_queue_head(&local->pending[i], skb);
++			if (!txok) {
++				if (skb_queue_len(&local->pending[i]) < PENDING_BUF)
++					__skb_queue_head(&local->pending[i], skb);
++				else
++					kfree_skb(skb);
++			}
+ 			spin_lock_irqsave(&local->queue_stop_reason_lock,
+ 					  flags);
+ 			if (!txok)
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -383,7 +383,10 @@
+
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+-	__skb_queue_tail(&local->pending[queue], skb);
++	if (skb_queue_len(&local->pending[queue]) < PENDING_BUF)
++		__skb_queue_tail(&local->pending[queue], skb);
++	else
++		kfree_skb(skb);	
+ 	__ieee80211_wake_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+@@ -409,9 +412,12 @@
+ 			continue;
+ 		}
+
+-		ret++;
+ 		queue = skb_get_queue_mapping(skb);
+-		__skb_queue_tail(&local->pending[queue], skb);
++		if (skb_queue_len(&local->pending[queue]) < PENDING_BUF) {
++			ret++;
++			__skb_queue_tail(&local->pending[queue], skb);
++		} else
++			kfree_skb(skb);
+ 	}
+
+ 	for (i = 0; i < hw->queues; i++)
 
 
-Derek.
+Regards
 
----
-Derek Smithies Ph.D. 
-IndraNet Technologies Ltd. 
-ph +64 3 365 6485 
-Web: http://www.indranet-technologies.com/
-
-"How did you make it work??"
-       "Oh, the usual, get everything right".
+Lorenzo
