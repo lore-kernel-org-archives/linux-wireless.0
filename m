@@ -1,81 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:1611 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753262Ab0C0BL2 (ORCPT
+Received: from mail-yw0-f172.google.com ([209.85.211.172]:62672 "EHLO
+	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191Ab0CRPht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 21:11:28 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so2747570qwh.37
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 18:11:27 -0700 (PDT)
+	Thu, 18 Mar 2010 11:37:49 -0400
+Received: by ywh2 with SMTP id 2so142071ywh.33
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 08:37:48 -0700 (PDT)
+Message-ID: <4BA24790.4040602@gmail.com>
+Date: Thu, 18 Mar 2010 16:32:32 +0100
+From: "lorenzo.bianconi83@gmail.com" <lorenzo.bianconi@fluidmesh.com>
 MIME-Version: 1.0
-In-Reply-To: <1269553955-5858-1-git-send-email-gopchandani@gmail.com>
-References: <1269553955-5858-1-git-send-email-gopchandani@gmail.com>
-Date: Fri, 26 Mar 2010 20:11:27 -0500
-Message-ID: <cdc21431003261811s1ad5a4c0pe3df5c4b43517e5e@mail.gmail.com>
-Subject: Re: [PATCH] Changes for implementing NL80211_CMD_SET_TX_BITRATE_MASK
-	for legacy rates for now.
-From: Rakesh Kumar <gopchandani@gmail.com>
-To: johannes@sipsolutions.net
-Cc: rakesh.illini@gmail.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+CC: Larry.Finger@lwfinger.ne, br1@einfach.org, ht6100@gmail.com
+Subject: [PATCH V2] mac80211: Revise,pending queue depth in ieee80211_local
+ data structure
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-YW55IGNvbW1lbnRzPwoKT24gVGh1LCBNYXIgMjUsIDIwMTAgYXQgNDo1MiBQTSwgUmFrZXNoIDxn
-b3BjaGFuZGFuaUBnbWFpbC5jb20+IHdyb3RlOgo+Cj4gRnJvbTogUmFrZXNoIDxyYWtlc2hAcGlu
-ZWFwcGxlLihub25lKT4KPgo+IC0tLQo+IMKgbWFzay5jIHwgwqAgODIgKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwo+IMKgMSBm
-aWxlcyBjaGFuZ2VkLCA4MiBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQo+IMKgY3JlYXRl
-IG1vZGUgMTAwNzU1IG1hc2suYwo+Cj4gZGlmZiAtLWdpdCBhL21hc2suYyBiL21hc2suYwo+IG5l
-dyBmaWxlIG1vZGUgMTAwNzU1Cj4gaW5kZXggMDAwMDAwMC4uYTE4NGI2Nwo+IC0tLSAvZGV2L251
-bGwKPiArKysgYi9tYXNrLmMKPiBAQCAtMCwwICsxLDgyIEBACj4gKyNpbmNsdWRlIDxuZXQvaWYu
-aD4KPiArI2luY2x1ZGUgPGVycm5vLmg+Cj4gKyNpbmNsdWRlIDxzdHJpbmcuaD4KPiArI2luY2x1
-ZGUgPGN0eXBlLmg+Cj4gKyNpbmNsdWRlIDxzdGRib29sLmg+Cj4gKwo+ICsjaW5jbHVkZSA8bmV0
-bGluay9nZW5sL2dlbmwuaD4KPiArI2luY2x1ZGUgPG5ldGxpbmsvZ2VubC9mYW1pbHkuaD4KPiAr
-I2luY2x1ZGUgPG5ldGxpbmsvZ2VubC9jdHJsLmg+Cj4gKyNpbmNsdWRlIDxuZXRsaW5rL21zZy5o
-Pgo+ICsjaW5jbHVkZSA8bmV0bGluay9hdHRyLmg+Cj4gKwo+ICsjaW5jbHVkZSAibmw4MDIxMS5o
-Igo+ICsjaW5jbHVkZSAiaXcuaCIKPiArCj4gKwo+ICtzdGF0aWMgaW50IGhhbmRsZV9tYXNrKHN0
-cnVjdCBubDgwMjExX3N0YXRlICpzdGF0ZSwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgc3RydWN0IG5sX2NiICpjYiwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgc3RydWN0IG5sX21zZyAqbXNnLAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqBpbnQgYXJnYywgY2hhciAqKmFyZ3YpCj4gK3sKPiArIMKgIMKgIMKgIF9fdTggaW5wdXRfbGVn
-YWN5X3JhdGVzWzMyXTsKPiArIMKgIMKgIMKgIHN0cnVjdCBubGF0dHIgKm5sX3JhdGVzLCAqbmxf
-cmF0ZTsKPiArCj4gKyDCoCDCoCDCoCBjaGFyICplcHRyOwo+ICsgwqAgwqAgwqAgaW50IGVyciA9
-IC1FTk9CVUZTOwo+ICsgwqAgwqAgwqAgaW50IGksbGVnYWN5X3JhdGVfY291bnRlcj0wOwo+ICsK
-PiArIMKgIMKgIMKgIGVudW0gewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgTk9ORSwKPiArIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIExFR0FDWSwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIE1DUywK
-PiArIMKgIMKgIMKgIH0gcGFyc2UgPSBOT05FOwo+ICsgwqAgwqAgwqAgYm9vbCBoYXZlX2xlZ2Fj
-eSxoYXZlX21jczsKPiArIMKgIMKgIMKgIGZvciAoaSA9IDA7IGkgPCBhcmdjOyBpKyspIHsKPiAr
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChzdHJjbXAoYXJndltpXSwgImxlZ2FjeSIpID09IDAp
-IHsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHBhcnNlID0gTEVHQUNZOwo+
-ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaGF2ZV9sZWdhY3kgPSB0cnVlOwo+
-ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY29udGludWU7Cj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCB9Cj4gKwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAoc3RyY21w
-KGFyZ3ZbaV0sICJtY3MiKSA9PSAwKSB7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoHBhcnNlID0gTUNTOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqBoYXZlX21jcyA9IHRydWU7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oGNvbnRpbnVlOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB9Cj4gKwo+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgc3dpdGNoIChwYXJzZSkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2Fz
-ZSBOT05FOgo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2FzZSBMRUdBQ1k6Cj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpbnB1dF9sZWdhY3lfcmF0ZXNbbGVnYWN5X3JhdGVf
-Y291bnRlcl0gPSBzdHJ0b3VsKGFyZ3ZbaV0sICZlcHRyLCAxMCk7Cj4gKyDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCBsZWdhY3lfcmF0ZV9jb3VudGVyKys7Cj4gKyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBicmVhazsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNh
-c2UgTUNTOgo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLy9OTEFfUFVUKHNz
-aWRzLCBpLCBzdHJsZW4oYXJndltpXSksIGFyZ3ZbaV0pOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgYnJlYWs7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9Cj4gKyDCoCDC
-oCDCoCB9Cj4gKyDCoCDCoCDCoCBlcnIgPSAwOwo+ICsKPiArLy8gTmVzdGluZyBvZiBhdHRyaWJ1
-dGUgYmVnaW5zCj4gKwo+ICsgwqAgwqAgwqAgbmxfcmF0ZXMgPSBubGFfbmVzdF9zdGFydChtc2cs
-IE5MODAyMTFfQVRUUl9UWF9SQVRFUyk7Cj4gKyDCoCDCoCDCoCBpZiAoIW5sX3JhdGVzKQo+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgZ290byBubGFfcHV0X2ZhaWx1cmU7Cj4gKyDCoCDCoCDCoCBp
-bnQgYmFuZCA9IDA7Cj4gKyDCoCDCoCDCoCBubF9yYXRlID0gbmxhX25lc3Rfc3RhcnQobXNnLGJh
-bmQpOwo+ICsgwqAgwqAgwqAgaWYgKCFubF9yYXRlKQo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-Z290byBubGFfcHV0X2ZhaWx1cmU7Cj4gKwo+ICsgwqAgwqAgwqAgbmxhX3B1dChtc2csIE5MODAy
-MTFfVFhSQVRFX0xFR0FDWSwgbGVnYWN5X3JhdGVfY291bnRlciwgaW5wdXRfbGVnYWN5X3JhdGVz
-KTsKPiArCj4gKyDCoCDCoCDCoCBubGFfbmVzdF9lbmQobXNnLG5sX3JhdGUpOwo+ICsgwqAgwqAg
-wqAgbmxhX25lc3RfZW5kKG1zZyxubF9yYXRlcyk7Cj4gKwo+ICsvL05lc3Rpbmcgb2YgYXR0cmli
-dXRlIGVuZHMuCj4gKyBubGFfcHV0X2ZhaWx1cmU6Cj4gKyDCoCDCoCDCoCByZXR1cm4gZXJyOwo+
-ICt9Cj4gK0NPTU1BTkQoc2V0LCBtYXNrLCAiW2xlZ2FjeSA8bGVnYWN5IHJhdGUgaW4gTWJwcyBt
-dWx0aXBsaWVkIGJ5IDIsIGUuZy4gMTEgZm9yIDUuNSBNYnBzPipdIiwKPiArIMKgIMKgIMKgIE5M
-ODAyMTFfQ01EX1NFVF9UWF9CSVRSQVRFX01BU0ssIDAsIENJQl9ORVRERVYsIGhhbmRsZV9tYXNr
-LAo+ICsgwqAgwqAgwqAgwqAiU2V0cyB1cCB0aGUgc3BlY2lmaWVkIHJhdGUgbWFza3MgZm9yIGRp
-ZmZlcmVudCBiYW5kcy4iKTsKPiAtLQo+IDEuNi4zLjMKPgo=
+Hi all,
+
+I resend the patch in order to fix style violations that Larry suggested me.
+
+I noticed a possible issue in the pending queue management of the
+ieee80211_local data structure. In particular, there is no control of the queue
+depth and this could cause a memory overflow. In the tests I carried out I
+obtain a memory overflow when I use a low priority queue (e.g. Backgreound
+queue) and I transmit a data stream that exceeds the channel capacity (e.g.
+50Mbps@MCS 3, 800ns GI and 20MHz channel width). I tested the patch below on the
+last compat-wireless (2010-03-03) on an AR9280 chipset (Ubiquiti Rocket M with
+the latest version of OpenWrt trunk).
+
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -703,6 +703,8 @@
+  	struct work_struct sta_finish_work;
+  	int sta_generation;
+
++/* Pending buffer dimension */
++#define PENDING_BUF	512
+  	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
+  	struct tasklet_struct tx_pending_tasklet;
+
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1403,10 +1403,17 @@
+  		if (local->queue_stop_reasons[queue] ||
+  		    !skb_queue_empty(&local->pending[queue])) {
+  			/*
+-			 * if queue is stopped, queue up frames for later
+-			 * transmission from the tasklet
++			 * if queue is stopped and there is enough space
++			 * in the queue, queue up frames for later transmission
++			 * from the tasklet
+  			 */
+-			do {
++			if (skb_queue_len(&local->pending[queue])
++					  >= PENDING_BUF) {
++				spin_unlock_irqrestore(
++						&local->queue_stop_reason_lock,
++						flags);
++				goto drop;
++			} do {
+  				next = skb->next;
+  				skb->next = NULL;
+  				if (unlikely(txpending))
+@@ -2028,8 +2035,14 @@
+  						flags);
+
+  			txok = ieee80211_tx_pending_skb(local, skb);
+-			if (!txok)
+-				__skb_queue_head(&local->pending[i], skb);
++			if (!txok) {
++				if (skb_queue_len(&local->pending[i])
++						  < PENDING_BUF)
++					__skb_queue_head(&local->pending[i],
++							 skb);
++				else
++					kfree_skb(skb);
++			}
+  			spin_lock_irqsave(&local->queue_stop_reason_lock,
+  					  flags);
+  			if (!txok)
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -383,7 +383,10 @@
+
+  	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+  	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+-	__skb_queue_tail(&local->pending[queue], skb);
++	if (skb_queue_len(&local->pending[queue]) < PENDING_BUF)
++		__skb_queue_tail(&local->pending[queue], skb);
++	else
++		kfree_skb(skb);
+  	__ieee80211_wake_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+  	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+  }
+@@ -409,9 +412,12 @@
+  			continue;
+  		}
+
+-		ret++;
+  		queue = skb_get_queue_mapping(skb);
+-		__skb_queue_tail(&local->pending[queue], skb);
++		if (skb_queue_len(&local->pending[queue]) < PENDING_BUF) {
++			ret++;
++			__skb_queue_tail(&local->pending[queue], skb);
++		} else
++			kfree_skb(skb);
+  	}
+
+  	for (i = 0; i < hw->queues; i++)
+--
+
+Regards
+
+Lorenzo
