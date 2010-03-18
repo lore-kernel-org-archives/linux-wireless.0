@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f179.google.com ([209.85.221.179]:62225 "EHLO
-	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538Ab0CVG23 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:33185 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594Ab0CRK1u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 02:28:29 -0400
-Received: by qyk9 with SMTP id 9so3042223qyk.1
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Mar 2010 23:28:28 -0700 (PDT)
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-From: Calvin Walton <calvin.walton@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 22 Mar 2010 02:28:23 -0400
-Message-ID: <1269239303.12836.17.camel@ayu>
-Mime-Version: 1.0
+	Thu, 18 Mar 2010 06:27:50 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 20/21] wl1271: Remove circular interlocking related to the inetaddr notifier chain
+Date: Thu, 18 Mar 2010 12:26:45 +0200
+Message-Id: <1268908006-16992-21-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-On Sat, 2010-03-20 at 19:14 -0500, Larry Finger wrote:
-Some recent BCM43XX devices lack an on-board SPROM. The pertinent data
-> from the SPROM could be included in the kernel; however, this presents
-> a problem in the generation of a unique, reproducible MAC address. The
-> solution has been to create a utility that generates a virtual SPROM
-> image with a random MAC address. This image is stored in the firmware
-> area, and loaded using the asyncronous firmware load facility.
+Removing the wl1271 from the inet addr notifier chain sometimes causes the
+registered handler to be called - causing locking problems if the removing
+function is called from within the mutex.
 
-I'm curious, how would this firmware-loading scheme deal with having
-multiple cards of this type installed? This seems like an unusual
-situation, but it looks like this patch will cause all of the cards to
-start up with the same MAC address due to the fixed filename.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Instead of using a firmware file to load in the MAC address, might it be
-possible to move the persistent MAC setting to a simple udev rule which
-generates a persistent MAC address, saves it, then sets it each boot
-using a command like "ip link set wlan0 address XX:XX:XX:XX:XX:XX" ?
-
-This would remove the need to have this "fake" firmware file available
-at boot, provided that the driver can handle leaving the address
-unconfigured until userspace gets around to setting it. As well, it
-could be written to work with multiple cards easily, saving a different
-MAC for each.
-
-Some thoughts for your consideration,
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 6f6d366..0bebc45 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1029,12 +1029,13 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+ 	struct wl1271 *wl = hw->priv;
+ 	int i;
+ 
++	unregister_inetaddr_notifier(&wl1271_dev_notifier);
++
+ 	mutex_lock(&wl->mutex);
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
+ 
+ 	wl1271_info("down");
+ 
+-	unregister_inetaddr_notifier(&wl1271_dev_notifier);
+ 	list_del(&wl->list);
+ 
+ 	WARN_ON(wl->state != WL1271_STATE_ON);
 -- 
-Calvin Walton <calvin.walton@gmail.com>
+1.6.3.3
 
