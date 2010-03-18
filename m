@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f198.google.com ([209.85.221.198]:65306 "EHLO
-	mail-qy0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab0CDCfr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 21:35:47 -0500
-Received: by qyk36 with SMTP id 36so1599296qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 18:35:46 -0800 (PST)
-Message-ID: <4B8F1C7F.7050305@lwfinger.net>
-Date: Wed, 03 Mar 2010 20:35:43 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Daniele C." <legolas558@users.sourceforge.net>
-CC: Hin-Tak Leung <hintak.leung@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: rt2870 (staging kernel driver) crashes fatally
-References: <4B8E20CF.50109@users.sourceforge.net> <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com>
-In-Reply-To: <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:17018 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753715Ab0CROnX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 10:43:23 -0400
+Subject: Re: [PATCH 2.6.32] iwlwifi: fix nfreed--
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	Greg KH <gregkh@suse.de>,
+	Adel Gadllah <adel.gadllah@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>
+In-Reply-To: <20100318142933.GB4063@dhcp-lab-161.englab.brq.redhat.com>
+References: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
+	 <1268758859.2446.595.camel@rchatre-DESK>
+	 <20100318142419.GA3904@dhcp-lab-161.englab.brq.redhat.com>
+	 <20100318142933.GB4063@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain
+Date: Thu, 18 Mar 2010 08:39:55 -0700
+Message-Id: <1268926795.7892.2.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/03/2010 08:14 PM, Hin-Tak Leung wrote:
-> You appear to have two issues - (1) the driver doesn't
-> hibernate/resume well, (2) there is some bad memory leak which causes
-> your system to run out of memory.
+Hi Gruszka,
+
+On Thu, 2010-03-18 at 07:29 -0700, Stanislaw Gruszka wrote:
+> During backporting of a120e912eb51e347f36c71b60a1d13af74d30e83
+> ("iwlwifi: sanity check before counting number of tfds can be free")
+> we forget one hunk, what make lot of messages "free more than
+> tfds_in_queue" show up in dmesg.
 > 
-> You did not mention issue (1) - that you were hibernating and resuming
-> (and expecting it to work, which it does not). For the latter, you
-> probably need to track down where the memory is leaking in the driver,
-> which is probably easier than tracking down the hibernate/resume
-> issue.
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-tx.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
 > 
-> Good luck with tracking down the memory leak. (you do understand that
-> staging drivers are DIY - i.e. you try it only if you are willing to
-> look into fixing it yourself - I hope )
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> index f449f06..cf5ac00 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+> @@ -1096,7 +1096,6 @@ int iwl_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index)
+>  			priv->cfg->ops->lib->txq_inval_byte_cnt_tbl(priv, txq);
+>  
+>  		priv->cfg->ops->lib->txq_free_tfd(priv, txq);
+> -		nfreed++;
+>  	}
+>  	return nfreed;
+>  }
 
-By generating your own kernel with MEMLEAK enabled, you should be able to see
-which data blob is being leaked. If you post that info, someone on this list
-should be able to help you find the cause.
+Thanks for catch this one, it puzzle me a lot because I am using the
+latest code and did not realize the "nfreed++" still there in the
+backport version.
 
-Larry
-
+Wey
 
