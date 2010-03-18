@@ -1,68 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48812 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751192Ab0CAMcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 07:32:21 -0500
-Message-ID: <4B8BB3CB.7070601@openwrt.org>
-Date: Mon, 01 Mar 2010 13:32:11 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:39222 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000Ab0CRLgA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 07:36:00 -0400
+Received: by fxm19 with SMTP id 19so1996190fxm.21
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 04:35:58 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: fix rate control tx status handling for A-MPDU
+In-Reply-To: <201003181944.32081.br1@einfach.org>
+References: <f74418681003180312k30dd39adtd00bd427cb88a710@mail.gmail.com>
+	 <201003181944.32081.br1@einfach.org>
+Date: Thu, 18 Mar 2010 12:35:57 +0100
+Message-ID: <f74418681003180435v3b762257q89c636d834897a5f@mail.gmail.com>
+Subject: Re: pending queue depth in ieee80211_local data structure
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: br1@einfach.org, ht6100@gmail.com
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the rate control tx status update gets called for every
-subframe of an A-MPDU, and ath9k marks the frame with the relevant
-status update with an internal flag. This not suitable for rate control
-algorithms using the standard mac80211 rate control API, so fix this by
-using IEEE80211_TX_STAT_AMPDU for marking the correct frames that
-should be processed.
+> On Thursday 18 March 2010 19:12:32 Lorenzo Bianconi wrote:
+>> Hi all,
+>>
+>> I noticed a possible issue in the pending queue management of the
+>> ieee80211_local data structure.
+>> In particular, there is no control of the queue depth and this could
+>> cause a memory overflow.
+>> In the test I carried out this happen when I use a low priority queue
+>> (e.g. Backgreound queue) and
+>> I transmit a data stream that exceeds the channel capacity (e.g.
+>> 50Mbps@MCS 3, 800ns GI and 20MHz
+>> channel width). I wrote this patch in order to fix the issue.
+>
+> i think, i noticed the same issue: sending a UDP stream which is higher than
+> the possible bandwidth will eventually cause an out of memory panic.
+>
+> bruno
+>
+>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+>>
+>> --- a/net/mac80211/ieee80211_i.h
+>> +++ b/net/mac80211/ieee80211_i.h
+>> @@ -703,6 +703,8 @@
+>>       struct work_struct sta_finish_work;
+>>       int sta_generation;
+>>
+>> +     /* Pending buffer dimension */
+>> +     #define PENDING_BUF     512
+>>       struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
+>>       struct tasklet_struct tx_pending_tasklet;
+>>
+>> --- a/net/mac80211/tx.c
+>> +++ b/net/mac80211/tx.c
+>> @@ -1399,13 +1399,15 @@
+>>               skb = tx.skb;
+>>
+>>               spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+>> -
+>> +
+>>               if (local->queue_stop_reasons[queue] ||
+>>                   !skb_queue_empty(&local->pending[queue])) {
+>>                       /*
+>> -                      * if queue is stopped, queue up frames for later
+>> -                      * transmission from the tasklet
+>> +                      * if queue is stopped and there is enough space in
+> the queue,
+>> +                      * queue up frames for later transmission from the
+> tasklet
+>>                        */
+>> +                     if (skb_queue_len(&local->pending[queue]) >=
+> PENDING_BUF)
+>> +                             goto drop;
+>>                       do {
+>>                               next = skb->next;
+>>                               skb->next = NULL;
+>> @@ -2028,8 +2030,12 @@
+>>                                               flags);
+>>
+>>                       txok = ieee80211_tx_pending_skb(local, skb);
+>> -                     if (!txok)
+>> -                             __skb_queue_head(&local->pending[i], skb);
+>> +                     if (!txok) {
+>> +                             if (skb_queue_len(&local->pending[i]) <
+> PENDING_BUF)
+>> +                                     __skb_queue_head(&local->pending[i],
+> skb);
+>> +                             else
+>> +                                     kfree_skb(skb);
+>> +                     }
+>>                       spin_lock_irqsave(&local->queue_stop_reason_lock,
+>>                                         flags);
+>>                       if (!txok)
+>> --- a/net/mac80211/util.c
+>> +++ b/net/mac80211/util.c
+>> @@ -383,7 +383,10 @@
+>>
+>>       spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+>>       __ieee80211_stop_queue(hw, queue,
+> IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+>> -     __skb_queue_tail(&local->pending[queue], skb);
+>> +     if (skb_queue_len(&local->pending[queue]) < PENDING_BUF)
+>> +             __skb_queue_tail(&local->pending[queue], skb);
+>> +     else
+>> +             kfree_skb(skb);
+>>       __ieee80211_wake_queue(hw, queue,
+> IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+>>       spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+>>  }
+>> @@ -409,9 +412,12 @@
+>>                       continue;
+>>               }
+>>
+>> -             ret++;
+>>               queue = skb_get_queue_mapping(skb);
+>> -             __skb_queue_tail(&local->pending[queue], skb);
+>> +             if (skb_queue_len(&local->pending[queue]) < PENDING_BUF) {
+>> +                     ret++;
+>> +                     __skb_queue_tail(&local->pending[queue], skb);
+>> +             } else
+>> +                     kfree_skb(skb);
+>>       }
+>>
+>>       for (i = 0; i < hw->queues; i++)
+>>
+>>
+>> Regards
+>>
+>> Lorenzo
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1947,10 +1947,10 @@ static void ath_tx_rc_status(struct ath_
- 	tx_rateindex = ds->ds_txstat.ts_rateindex;
- 	WARN_ON(tx_rateindex >= hw->max_rates);
- 
--	if (update_rc)
--		tx_info->pad[0] |= ATH_TX_INFO_UPDATE_RC;
- 	if (ds->ds_txstat.ts_status & ATH9K_TXERR_FILT)
- 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-+	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && update_rc)
-+		tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
- 
- 	if ((ds->ds_txstat.ts_status & ATH9K_TXERR_FILT) == 0 &&
- 	    (bf->bf_flags & ATH9K_TXDESC_NOACK) == 0 && update_rc) {
---- a/drivers/net/wireless/ath/ath9k/rc.h
-+++ b/drivers/net/wireless/ath/ath9k/rc.h
-@@ -172,7 +172,6 @@ struct ath_rate_priv {
- 
- #define ATH_TX_INFO_FRAME_TYPE_INTERNAL	(1 << 0)
- #define ATH_TX_INFO_FRAME_TYPE_PAUSE	(1 << 1)
--#define ATH_TX_INFO_UPDATE_RC		(1 << 2)
- #define ATH_TX_INFO_XRETRY		(1 << 3)
- #define ATH_TX_INFO_UNDERRUN		(1 << 4)
- 
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1226,8 +1226,12 @@ static void ath_tx_status(void *priv, st
- 		long_retry = rate->count - 1;
+Hi all,
+
+I pasted the first version of the patch where I missed to unlock the
+spinlock in the  ieee80211_tx().
+This is the last version of the patch.
+
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -708,6 +708,8 @@
+ 	struct work_struct sta_finish_work;
+ 	int sta_generation;
+
++	/* Pending buffer dimension */
++	#define PENDING_BUF	512
+ 	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
+ 	struct tasklet_struct tx_pending_tasklet;
+
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1449,14 +1449,18 @@
+ 		skb = tx.skb;
+
+ 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-
++		
+ 		if (local->queue_stop_reasons[queue] ||
+ 		    !skb_queue_empty(&local->pending[queue])) {
+ 			/*
+-			 * if queue is stopped, queue up frames for later
+-			 * transmission from the tasklet
++			 * if queue is stopped and there is enough space in the queue,
++			 * queue up frames for later transmission from the tasklet
+ 			 */
+-			do {
++			if (skb_queue_len(&local->pending[queue]) >= PENDING_BUF) {
++				spin_unlock_irqrestore(&local->queue_stop_reason_lock,
++							flags);
++				goto drop;
++			} do {
+ 				next = skb->next;
+ 				skb->next = NULL;
+ 				if (unlikely(txpending))
+@@ -2074,8 +2078,12 @@
+ 						flags);
+
+ 			txok = ieee80211_tx_pending_skb(local, skb);
+-			if (!txok)
+-				__skb_queue_head(&local->pending[i], skb);
++			if (!txok) {
++				if (skb_queue_len(&local->pending[i]) < PENDING_BUF)
++					__skb_queue_head(&local->pending[i], skb);
++				else
++					kfree_skb(skb);
++			}
+ 			spin_lock_irqsave(&local->queue_stop_reason_lock,
+ 					  flags);
+ 			if (!txok)
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -383,7 +383,10 @@
+
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+-	__skb_queue_tail(&local->pending[queue], skb);
++	if (skb_queue_len(&local->pending[queue]) < PENDING_BUF)
++		__skb_queue_tail(&local->pending[queue], skb);
++	else
++		kfree_skb(skb);	
+ 	__ieee80211_wake_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+@@ -409,9 +412,12 @@
+ 			continue;
+ 		}
+
+-		ret++;
+ 		queue = skb_get_queue_mapping(skb);
+-		__skb_queue_tail(&local->pending[queue], skb);
++		if (skb_queue_len(&local->pending[queue]) < PENDING_BUF) {
++			ret++;
++			__skb_queue_tail(&local->pending[queue], skb);
++		} else
++			kfree_skb(skb);
  	}
- 
--	if (!priv_sta || !ieee80211_is_data(fc) ||
--	    !(tx_info->pad[0] & ATH_TX_INFO_UPDATE_RC))
-+	if (!priv_sta || !ieee80211_is_data(fc))
-+		return;
-+
-+	/* This packet was aggregated but doesn't carry status info */
-+	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
-+	    !(tx_info->flags & IEEE80211_TX_STAT_AMPDU))
- 		return;
- 
- 	if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
+
+ 	for (i = 0; i < hw->queues; i++)
+
+Regards.
+
+Lorenzo
