@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39723 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752387Ab0CLICd (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:33191 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752590Ab0CRK1w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 03:02:33 -0500
-Date: Fri, 12 Mar 2010 10:02:16 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	=?utf-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, devel@driverdev.osuosl.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: cfg80211 conversion of all drivers
-Message-ID: <20100312080216.GA18550@jm.kir.nu>
-References: <43e72e891003111722n4b4d5b6crf764dfe357ff8965@mail.gmail.com>
- <69e28c911003111756h224ef6a9x622c979232b6698b@mail.gmail.com>
- <20100312025330.GA15402@tuxdriver.com>
- <201003120810.38194.holgerschurig@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201003120810.38194.holgerschurig@gmail.com>
+	Thu, 18 Mar 2010 06:27:52 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 17/21] wl1271: Removed duplicate code from module remove function.
+Date: Thu, 18 Mar 2010 12:26:42 +0200
+Message-Id: <1268908006-16992-18-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 12, 2010 at 08:10:37AM +0100, Holger Schurig wrote:
-> > I think that is code for "replace it with something based on mac80211"...
-> 
-> That's not going to happen, hostap + orinoco both work against fullmac chips, 
-> which can't send arbitrary packets and therefore no 802.11 management frames.
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 
-The Host AP mode in Prism 2/2.5/3 provides for a somewhat special
-situation.. It does actually allow sending of (almost) arbitrary packets
-and management frames in AP mode. In other words, it should be possible
-to create a mac80211-based AP mode driver for Prism 2/2.5/3 to replace
-the AP side of the Host AP driver. Whether anyone has enough interest
-and time to do that is another question, though.
+Removed duplicate code from wl1271_sdio module remove function. For
+freeing stuff in the remove function wl1271_free_hw function is now
+used.
 
-As far as station functionality is concerned, I would agree that
-mac80211 is not a good target for the Host AP driver. If AP side were to
-be made available as a mac80211-based driver, it could make more sense
-to merge station side from the Host AP driver into orinoco or some kind
-of combination of the driver. However, having two different drivers for
-same hardware issue would not go anywhere with this.
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |   13 +------------
+ 1 files changed, 1 insertions(+), 12 deletions(-)
 
-One of the problems here is that the hardware is question is quite old
-and for many practical purposes obsolete, so finding people to work on
-this can get difficult. I can certainly come up with much better uses
-for my time.. ;-)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index 0478919..99b5b3f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -248,20 +248,9 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ {
+ 	struct wl1271 *wl = sdio_get_drvdata(func);
  
+-	ieee80211_unregister_hw(wl->hw);
+-
+ 	free_irq(wl->irq, wl);
+ 
+-	kfree(wl->target_mem_map);
+-	vfree(wl->fw);
+-	wl->fw = NULL;
+-	kfree(wl->nvs);
+-	wl->nvs = NULL;
+-
+-	kfree(wl->fw_status);
+-	kfree(wl->tx_res_if);
+-
+-	ieee80211_free_hw(wl->hw);
++	wl1271_free_hw(wl);
+ }
+ 
+ static struct sdio_driver wl1271_sdio_driver = {
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.3.3
+
