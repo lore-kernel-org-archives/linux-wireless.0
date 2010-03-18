@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:21489 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759533Ab0CNSpA (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:42031 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752280Ab0CRFWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Mar 2010 14:45:00 -0400
-Received: by fg-out-1718.google.com with SMTP id 16so1202671fgg.1
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Mar 2010 11:44:59 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sun, 14 Mar 2010 19:44:59 +0100
-Message-ID: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
-Subject: [PATCH] iwlwifi: Silence tfds_in_queue message
-From: Adel Gadllah <adel.gadllah@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 18 Mar 2010 01:22:54 -0400
+Subject: Re: [RFC PATCHv3 1/2] cfg80211: Add connection quality monitoring
+ support to nl80211
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1268842663.5989.15.camel@jlt3.sipsolutions.net>
+References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268830877-5162-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268842663.5989.15.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 18 Mar 2010 07:19:55 +0200
+Message-ID: <1268889595.10120.660.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 83bf3f1dba41e3dccdef4fecfccb094559568342 Mon Sep 17 00:00:00 2001
-From: Adel Gadllah <adel.gadllah@gmail.com>
-Date: Sun, 14 Mar 2010 19:16:25 +0100
-Subject: [PATCH] iwlwifi: Silence tfds_in_queue message
+On Wed, 2010-03-17 at 17:17 +0100, ext Johannes Berg wrote:
+> On Wed, 2010-03-17 at 15:01 +0200, Juuso Oikarinen wrote:
+> 
+> > +/**
+> > + * enum nl80211_cqm_state - current state in relation to set threshold
+> > + * @NL80211_CQM_STATE_ABOVE: the level is above the configured threshold
+> > + * @NL80211_CQM_STATE_BELOW: the level is below the configured threshold
+> > + */
+> > +enum nl80211_cqm_state {
+> > +	NL80211_CQM_STATE_ABOVE,
+> > +	NL80211_CQM_STATE_BELOW,
+> > +};
+> 
+> Thoughts about removing this and just exporting the actual (smoothed?)
+> RSSI instead in the event? Or do you simply not get that from the hw?
 
-Commit a239a8b47cc0e5e6d7416a89f340beac06d5edaa introduced a
-noisy message, that fills up the log very fast.
+On the wl1271 we actually do get the value that triggered the event, but
+on the wl1251, for instance, we do not get it. On the wl1271 we get to
+decide the above/below on the host based on the reading, but the wl1251
+will just tell the host that now the RSSI went below, and now it just
+went above.
 
-The error seems not to be fatal (the connection is stable and
-performance is ok), so make it IWL_DEBUG_TX rather than IWL_ERR.
+Our thinking is that the above/below information is sufficient to make a
+decisions about roaming. Adding the literal value will give trouble with
+HW not supporting it.
 
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: stable@kernel.org
+If you feel the actual value of the RSSI would be important, we could
+add it as an optional field to the notifcation in addition to the
+above/below.
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
----
- drivers/net/wireless/iwlwifi/iwl-tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+-Juuso
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
-b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 045e4a6..d6222aa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -161,7 +161,7 @@ void iwl_free_tfds_in_queue(struct iwl_priv *priv,
- 	if (priv->stations[sta_id].tid[tid].tfds_in_queue >= freed)
- 		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
- 	else {
--		IWL_ERR(priv, "free more than tfds_in_queue (%u:%d)\n",
-+		IWL_DEBUG_TX(priv, "free more than tfds_in_queue (%u:%d)\n",
- 			priv->stations[sta_id].tid[tid].tfds_in_queue,
- 			freed);
- 		priv->stations[sta_id].tid[tid].tfds_in_queue = 0;
--- 
-1.6.6.1
+> johannes
+> 
+
+
