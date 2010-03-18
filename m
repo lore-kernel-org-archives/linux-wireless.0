@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from katherina.student.utwente.nl ([130.89.168.160]:50696 "EHLO
-	katherina.student.utwente.nl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757192Ab0CaTAP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 15:00:15 -0400
-Date: Wed, 31 Mar 2010 21:00:11 +0200
-From: Matthijs Kooijman <matthijs@stdin.nl>
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Cc: Ondrej Zary <linux@rainbow-software.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] [RFC] rt2500pci: fix powersaving
-Message-ID: <20100331190011.GG21160@katherina.student.utwente.nl>
-References: <201003290956.54234.linux@rainbow-software.org>
- <201003301433.55355.linux@rainbow-software.org>
- <20100330125620.GA2173@katherina.student.utwente.nl>
- <201003302209.23334.linux@rainbow-software.org>
- <20100331174138.GE21160@katherina.student.utwente.nl>
- <4BB396B4.8090005@gmail.com>
- <4BB3988C.40902@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="APlYHCtpeOhspHkB"
-In-Reply-To: <4BB3988C.40902@gmail.com>
+Received: from mail.perches.com ([173.55.12.10]:1771 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752714Ab0CRGVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 02:21:44 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Geoff Levand <geoffrey.levand@am.sony.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pavel Roskin <proski@gnu.org>,
+	David Gibson <hermes@gibson.dropbear.id.au>,
+	Corey Thomas <coreythomas@charter.net>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	"David S. Miller" <davem@davemloft.net>, linuxppc-dev@ozlabs.org,
+	cbe-oss-dev@ozlabs.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net
+Subject: [PATCH v2 0/7] wireless: Use macros from wireless.h
+Date: Wed, 17 Mar 2010 23:21:33 -0700
+Message-Id: <cover.1268892663.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Move the STD_IW_HANDLER macro from orinoco to wireless.h
+Use the wireless.h macros in various wireless files
+Remove local #defines of IW_IOCTL
 
---APlYHCtpeOhspHkB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Joe Perches (7):
+  wireless.h: Add STD_IW_HANDLER macro
+  net/wireless/wext_core.c: Use IW_IOCTL_IDX macro
+  net/wireless/wext-core.c: Use IW_EVENT_IDX macro
+  drivers/net/wireless: Use STD_IW_HANDLER macro
+  drivers/net: Remove local #define IW_IOCTL, use STD_IW_HANDLER
+  orinoco/wext.c: Remove local #define STD_IW_HANDLER
+  wireless.h: Use SIOCIWFIRST not SIOCSIWCOMMIT for range check
 
-Hi Gertjan,=20
+ drivers/net/ps3_gelic_wireless.c       |   35 ++++----
+ drivers/net/wireless/ipw2x00/ipw2200.c |   83 ++++++++++----------
+ drivers/net/wireless/orinoco/wext.c    |    2 -
+ drivers/net/wireless/ray_cs.c          |   40 +++++-----
+ drivers/net/wireless/wl3501_cs.c       |   52 ++++++------
+ include/linux/wireless.h               |    4 +-
+ net/wireless/wext-core.c               |  134 ++++++++++++++++----------------
+ 7 files changed, 174 insertions(+), 176 deletions(-)
 
-> Sorry, I got confused on which driver we were working on. Find attached t=
-he correct
-> patch, now for the rt2500pci driver instead of the rt2500usb driver.
-I had already come up with that patch myself. Rebooting in a minute, I'll g=
-et
-back to you when I have something to tell :-)
-
-Gr.
-
-Matthijs
-
---APlYHCtpeOhspHkB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkuzm7sACgkQz0nQ5oovr7wSewCgxvddlvvcVKO2zGq1EzYawNKK
-TtAAniHmtQc4btlqv5gROMEEmby6xQk+
-=Hfjx
------END PGP SIGNATURE-----
-
---APlYHCtpeOhspHkB--
