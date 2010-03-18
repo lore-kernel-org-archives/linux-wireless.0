@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36774 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955Ab0CXVdl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 17:33:41 -0400
-Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
-References: <4BAA73D2.1000301@oracle.com>
-	 <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Mar 2010 14:33:46 -0700
-Message-ID: <1269466426.6935.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:31655 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750945Ab0CRQxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 12:53:38 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 09:53:38 -0700
+Date: Thu, 18 Mar 2010 09:53:36 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: selvam <sathakselva@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Vipin M <vipintm@gmail.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k: 4ms frame length table update
+Message-ID: <20100318165335.GA4011@vasanth-laptop>
+References: <1aee2dca1003172337g5d66a03ex20ebab74707a6c56@mail.gmail.com>
+ <20100318160034.GC2269@tux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20100318160034.GC2269@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-24 at 17:23 -0400, John W. Linville wrote:
-> drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
-> drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
+On Thu, Mar 18, 2010 at 09:30:34PM +0530, Luis R. Rodriguez wrote:
+> On Wed, Mar 17, 2010 at 11:37:29PM -0700, selvam wrote:
+> > Hi,
+> > 
+> > The 4 ms frame length table is updated to support up to MCS 31.
+> > 
+> > These values are calculated based on the equation 9.1 from the IEEE 802.11n standard.
+> > These values are rounded off to multiple of 4 bytes. If the final value is greater than 65535 then it is changed to 65532, since the maximum A-MPDU length is 65535 bytes.
 > 
-> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
+> Thanks for this patch, but can you elaborate on what your patch does other
+> than the above. For example, you may want to mention that although the current
+> ath9k driver does not support up to MCS31 your patch would enable such support
+> for future chipsets which could be supported. You also forgot to Signed-off-by
+> it, and provide a clearer commit log entry. Check git log for examples on
+> wireless-testing, also read:
 > 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-> index b6a64d8..2fa30df 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-> @@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
->  #define BA_TIMEOUT_CNT (5)
->  #define BA_TIMEOUT_MAX (16)
->  
-> +#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
->  /**
->   * iwl_good_ack_health - checks for ACK count ratios, BA timeout
-> retries.
 
-I thought we had a patch moving it?
+Also, rate control component of ath9k is not generic, it is specific
+to ath9k. So this sort of patches make sense only when ath9k supports hw with
+three chains, currently ath9k does not have support for those hw.
 
-johannes
-
+Vasanth
