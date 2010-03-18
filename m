@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:22243 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753734Ab0CZKyk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45163 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129Ab0CRRHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:54:40 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 04/24] wl1271: Fix memory leaks in SPI initialization
-Date: Fri, 26 Mar 2010 12:53:13 +0200
-Message-Id: <1269600813-32145-5-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 18 Mar 2010 13:07:51 -0400
+Subject: Re: [PATCH V2] mac80211: Revise,pending queue depth in
+ ieee80211_local data structure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "lorenzo.bianconi83@gmail.com" <lorenzo.bianconi@fluidmesh.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	br1@einfach.org, ht6100@gmail.com
+In-Reply-To: <4BA24A12.4030208@gmail.com>
+References: <4BA24A12.4030208@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 18 Mar 2010 09:19:09 -0700
+Message-ID: <1268929149.4005.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Thu, 2010-03-18 at 16:43 +0100, lorenzo.bianconi83@gmail.com wrote:
+> Hi all,
+> 
+> I resend the patch in order to fix style violations that Larry suggested me.
+> 
+> I noticed a possible issue in the pending queue management of the
+> ieee80211_local data structure. In particular, there is no control of the queue
+> depth and this could cause a memory overflow. In the tests I carried out I
+> obtain a memory overflow when I use a low priority queue (e.g. Backgreound
+> queue) and I transmit a data stream that exceeds the channel capacity (e.g.
+> 50Mbps@MCS 3, 800ns GI and 20MHz channel width). I tested the patch below on the
+> last compat-wireless (2010-03-03) on an AR9280 chipset (Ubiquiti Rocket M with
+> the latest version of OpenWrt trunk).
 
-This patch fixes two memory leaks in the SPI initialization code.
+What kernel are you testing this on? I would have thought
+cf0277e714a0db302a8f80e1b85fd61c32cf00b3 fixed this.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@iki.fi>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_spi.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index db6c9f5..39b7dea 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -104,6 +104,7 @@ static void wl1271_spi_reset(struct wl1271 *wl)
- 	spi_message_add_tail(&t, &m);
- 
- 	spi_sync(wl_to_spi(wl), &m);
-+	kfree(cmd);
- 
- 	wl1271_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
- }
-@@ -158,6 +159,7 @@ static void wl1271_spi_init(struct wl1271 *wl)
- 	spi_message_add_tail(&t, &m);
- 
- 	spi_sync(wl_to_spi(wl), &m);
-+	kfree(cmd);
- 
- 	wl1271_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
- }
--- 
-1.6.3.3
+johannes
 
