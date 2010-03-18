@@ -1,63 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:9562 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752317Ab0CYUoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 16:44:34 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from smtp.nokia.com ([192.100.122.230]:62340 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660Ab0CRK1A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 06:27:00 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/3] iwlwifi: clear unattended interrupts in tasklet
-Date: Thu, 25 Mar 2010 13:44:29 -0700
-Message-Id: <1269549869-19162-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1269549869-19162-1-git-send-email-reinette.chatre@intel.com>
-References: <1269549869-19162-1-git-send-email-reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/21] wl1271: another patch bomb from our internal repo
+Date: Thu, 18 Mar 2010 12:26:25 +0200
+Message-Id: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+Hi John,
 
-Previously in interrupt handling tasklet, iwlwifi driver only clear/ack
-those interrupts that are enabled by the driver through inta_mask.
-If the hardware generates unattended interrupts, driver will not ack them,
-defeating the interrupt coalescing feature. This results in high number
-of interrupts per second and high CPU utilization.
+Here's another set of patches that have been pending for a while in our
+internal tree.  This is the last bomb and hopefully we'll be able to send them
+more frequently from now on.
 
-This patch addresses this issue by acking those unattended interrupts
-in the tasklet. Local test showed an order of magnitude improvement
-in terms of the number of interrupts without sacrificing networking
-throughput. This is a workaround for hardware issue.
+There are some SDIO fixes and improvements, some WMM and U-APSD stuff and the
+usual bunch of general improvements and bugfixes.
 
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+Cheers,
+Luca.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c8e2e3a..e4c2e1e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1258,7 +1258,15 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
- 	/* Ack/clear/reset pending uCode interrupts.
- 	 * Note:  Some bits in CSR_INT are "OR" of bits in CSR_FH_INT_STATUS,
- 	 */
--	iwl_write32(priv, CSR_INT, priv->inta);
-+	/* There is a hardware bug in the interrupt mask function that some
-+	 * interrupts (i.e. CSR_INT_BIT_SCD) can still be generated even if
-+	 * they are disabled in the CSR_INT_MASK register. Furthermore the
-+	 * ICT interrupt handling mechanism has another bug that might cause
-+	 * these unmasked interrupts fail to be detected. We workaround the
-+	 * hardware bugs here by ACKing all the possible interrupts so that
-+	 * interrupt coalescing can still be achieved.
-+	 */
-+	iwl_write32(priv, CSR_INT, priv->inta | ~priv->inta_mask);
- 
- 	inta = priv->inta;
- 
--- 
-1.6.3.3
+Juuso Oikarinen (10):
+  wl1271: Fix configuration of the TX opportunity value
+  wl1271: Fix SG configuration message structures
+  wl1271: Add proper WLAN-BT co-ex configuration, and enable co-ex.
+  wl1271: Move platform device registration from _spi to _main
+  wl1271: Add sysfs file to control BT co-ex state
+  wl1271: Fix MAC address handling
+  wl1271: Remove deprecated interface config function
+  wl1271: Update filters properly
+  wl1271: Don't generate null func template for ad-hoc
+  wl1271: Remove circular interlocking related to the inetaddr notifier
+    chain
+
+Kalle Valo (6):
+  wl1271: enable WMM
+  wl1271: get pspoll and nullfunc templates from mac80211
+  wl1271: get probe request template from mac80211
+  wl1271: create qos nullfunc template
+  wl1271: fix ps scheme in wl1271_op_conf_tx()
+  wl1271: enable U-APSD
+
+Teemu Paasikivi (5):
+  wl1271: Cleaned up wlan power on/off functions
+  wl1271: Changed SDIO MMC host claiming
+  wl1271: Added DEBUG_SDIO flag
+  wl1271: Removed duplicate code from module remove function.
+  wl1271: Changed platform_device to be dynamically allocated
+
+ drivers/net/wireless/wl12xx/wl1271.h         |    7 +
+ drivers/net/wireless/wl12xx/wl1271_acx.c     |   25 +-
+ drivers/net/wireless/wl12xx/wl1271_acx.h     |   68 +----
+ drivers/net/wireless/wl12xx/wl1271_boot.c    |    8 +
+ drivers/net/wireless/wl12xx/wl1271_cmd.c     |  218 ++++-------
+ drivers/net/wireless/wl12xx/wl1271_cmd.h     |   12 +-
+ drivers/net/wireless/wl12xx/wl1271_conf.h    |  330 ++++++++++++++----
+ drivers/net/wireless/wl12xx/wl1271_debugfs.c |   12 +-
+ drivers/net/wireless/wl12xx/wl1271_event.c   |    2 +
+ drivers/net/wireless/wl12xx/wl1271_init.c    |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_io.h      |   13 +
+ drivers/net/wireless/wl12xx/wl1271_main.c    |  496 ++++++++++++++++----------
+ drivers/net/wireless/wl12xx/wl1271_sdio.c    |   74 ++---
+ drivers/net/wireless/wl12xx/wl1271_spi.c     |   35 +--
+ drivers/net/wireless/wl12xx/wl1271_tx.h      |    3 -
+ 15 files changed, 748 insertions(+), 559 deletions(-)
 
