@@ -1,258 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:36765 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751220Ab0CLFBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 00:01:25 -0500
-Subject: [PATCH] ipw2x00: replace "ieee80211" with "libipw" where appropriate
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Fri, 12 Mar 2010 00:01:22 -0500
-Message-ID: <20100312050122.525.80031.stgit@mj.roinet.com>
+Received: from fg-out-1718.google.com ([72.14.220.158]:61037 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773Ab0CRVKX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 17:10:23 -0400
+Received: by fg-out-1718.google.com with SMTP id l26so2833044fgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 14:10:22 -0700 (PDT)
+Message-ID: <4BA296BA.7000502@lwfinger.net>
+Date: Thu, 18 Mar 2010 16:10:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michael Buesch <mb@bu3sch.de>,
+	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RFC: A workaround for BCM43XX devices with no on-board SPROM
+References: <4BA266FB.1080507@lwfinger.net> <1268945580.4005.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1268945580.4005.15.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"ieee80211" was the old name of the common library for ipw2100 and
-ipw2200.  It was renamed to "libipw", but some occurrences of the old
-name remained.
+On 03/18/2010 03:53 PM, Johannes Berg wrote:
+> On Thu, 2010-03-18 at 12:46 -0500, Larry Finger wrote:
+>> Michael,
+>>
+>> I'm switching this discussion from the kernel Bugzilla to the lists.
+>>
+>> As you know, but I'm restating for anyone that has not read our previous
+>> discussions, the b43 driver needs to be changed to handle some of the newer
+>> devices do not have an on-board SPROM. It would be trivial to incorporate the
+>> data except for the need to have a unique, reproducible MAC.
+> 
+> Where does the data usually come from in these devices?
 
-Rename alloc_ieee80211() to alloc_libipw() and free_ieee80211() to
-free_libipw().  Adjust comments and label names.  Change prefixes in
-diagnostic messages.
+It comes from the SPROM, which is missing in the devices in question. Broadcrap
+wanted to save a few pennies.
 
-Keep /proc/net/ieee80211 under the original name to avoid breaking user
-interface.
-
-Move the affected EXPORT_SYMBOL macros to their proper places.
-
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/ipw2x00/ipw2100.c       |   10 +++++-----
- drivers/net/wireless/ipw2x00/ipw2200.c       |   18 +++++++++---------
- drivers/net/wireless/ipw2x00/libipw.h        |   14 +++++++-------
- drivers/net/wireless/ipw2x00/libipw_module.c |   13 ++++++-------
- 4 files changed, 27 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 9b72c45..fe63bf2 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -6102,7 +6102,7 @@ static const struct net_device_ops ipw2100_netdev_ops = {
- 	.ndo_validate_addr	= eth_validate_addr,
- };
- 
--/* Look into using netdev destructor to shutdown ieee80211? */
-+/* Look into using netdev destructor to shutdown libipw? */
- 
- static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
- 					       void __iomem * base_addr,
-@@ -6112,7 +6112,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
- 	struct ipw2100_priv *priv;
- 	struct net_device *dev;
- 
--	dev = alloc_ieee80211(sizeof(struct ipw2100_priv), 0);
-+	dev = alloc_libipw(sizeof(struct ipw2100_priv), 0);
- 	if (!dev)
- 		return NULL;
- 	priv = libipw_priv(dev);
-@@ -6425,7 +6425,7 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 		sysfs_remove_group(&pci_dev->dev.kobj,
- 				   &ipw2100_attribute_group);
- 
--		free_ieee80211(dev, 0);
-+		free_libipw(dev, 0);
- 		pci_set_drvdata(pci_dev, NULL);
- 	}
- 
-@@ -6483,10 +6483,10 @@ static void __devexit ipw2100_pci_remove_one(struct pci_dev *pci_dev)
- 		if (dev->base_addr)
- 			iounmap((void __iomem *)dev->base_addr);
- 
--		/* wiphy_unregister needs to be here, before free_ieee80211 */
-+		/* wiphy_unregister needs to be here, before free_libipw */
- 		wiphy_unregister(priv->ieee->wdev.wiphy);
- 		kfree(priv->ieee->bg_band.channels);
--		free_ieee80211(dev, 0);
-+		free_libipw(dev, 0);
- 	}
- 
- 	pci_release_regions(pci_dev);
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 5c7aa1b..6dc0733 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11666,7 +11666,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
- 	if (priv->prom_net_dev)
- 		return -EPERM;
- 
--	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv), 1);
-+	priv->prom_net_dev = alloc_libipw(sizeof(struct ipw_prom_priv), 1);
- 	if (priv->prom_net_dev == NULL)
- 		return -ENOMEM;
- 
-@@ -11685,7 +11685,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
- 
- 	rc = register_netdev(priv->prom_net_dev);
- 	if (rc) {
--		free_ieee80211(priv->prom_net_dev, 1);
-+		free_libipw(priv->prom_net_dev, 1);
- 		priv->prom_net_dev = NULL;
- 		return rc;
- 	}
-@@ -11699,7 +11699,7 @@ static void ipw_prom_free(struct ipw_priv *priv)
- 		return;
- 
- 	unregister_netdev(priv->prom_net_dev);
--	free_ieee80211(priv->prom_net_dev, 1);
-+	free_libipw(priv->prom_net_dev, 1);
- 
- 	priv->prom_net_dev = NULL;
- }
-@@ -11727,7 +11727,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
- 	struct ipw_priv *priv;
- 	int i;
- 
--	net_dev = alloc_ieee80211(sizeof(struct ipw_priv), 0);
-+	net_dev = alloc_libipw(sizeof(struct ipw_priv), 0);
- 	if (net_dev == NULL) {
- 		err = -ENOMEM;
- 		goto out;
-@@ -11747,7 +11747,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
- 	mutex_init(&priv->mutex);
- 	if (pci_enable_device(pdev)) {
- 		err = -ENODEV;
--		goto out_free_ieee80211;
-+		goto out_free_libipw;
- 	}
- 
- 	pci_set_master(pdev);
-@@ -11874,8 +11874,8 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
-       out_pci_disable_device:
- 	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
--      out_free_ieee80211:
--	free_ieee80211(priv->net_dev, 0);
-+      out_free_libipw:
-+	free_libipw(priv->net_dev, 0);
-       out:
- 	return err;
- }
-@@ -11942,11 +11942,11 @@ static void __devexit ipw_pci_remove(struct pci_dev *pdev)
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
--	/* wiphy_unregister needs to be here, before free_ieee80211 */
-+	/* wiphy_unregister needs to be here, before free_libipw */
- 	wiphy_unregister(priv->ieee->wdev.wiphy);
- 	kfree(priv->ieee->a_band.channels);
- 	kfree(priv->ieee->bg_band.channels);
--	free_ieee80211(priv->net_dev, 0);
-+	free_libipw(priv->net_dev, 0);
- 	free_firmware();
- }
- 
-diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
-index a6d5e42..284b0e4 100644
---- a/drivers/net/wireless/ipw2x00/libipw.h
-+++ b/drivers/net/wireless/ipw2x00/libipw.h
-@@ -64,7 +64,7 @@
- extern u32 libipw_debug_level;
- #define LIBIPW_DEBUG(level, fmt, args...) \
- do { if (libipw_debug_level & (level)) \
--  printk(KERN_DEBUG "ieee80211: %c %s " fmt, \
-+  printk(KERN_DEBUG "libipw: %c %s " fmt, \
-          in_interrupt() ? 'I' : 'U', __func__ , ## args); } while (0)
- static inline bool libipw_ratelimit_debug(u32 level)
- {
-@@ -116,8 +116,8 @@ static inline bool libipw_ratelimit_debug(u32 level)
- #define LIBIPW_DL_RX            (1<<9)
- #define LIBIPW_DL_QOS           (1<<31)
- 
--#define LIBIPW_ERROR(f, a...) printk(KERN_ERR "ieee80211: " f, ## a)
--#define LIBIPW_WARNING(f, a...) printk(KERN_WARNING "ieee80211: " f, ## a)
-+#define LIBIPW_ERROR(f, a...) printk(KERN_ERR "libipw: " f, ## a)
-+#define LIBIPW_WARNING(f, a...) printk(KERN_WARNING "libipw: " f, ## a)
- #define LIBIPW_DEBUG_INFO(f, a...)   LIBIPW_DEBUG(LIBIPW_DL_INFO, f, ## a)
- 
- #define LIBIPW_DEBUG_WX(f, a...)     LIBIPW_DEBUG(LIBIPW_DL_WX, f, ## a)
-@@ -905,7 +905,7 @@ struct libipw_device {
- 				       struct libipw_reassoc_request * req);
- 
- 	/* This must be the last item so that it points to the data
--	 * allocated beyond this structure by alloc_ieee80211 */
-+	 * allocated beyond this structure by alloc_libipw */
- 	u8 priv[0];
- };
- 
-@@ -1017,9 +1017,9 @@ static inline int libipw_is_cck_rate(u8 rate)
- 	return 0;
- }
- 
--/* ieee80211.c */
--extern void free_ieee80211(struct net_device *dev, int monitor);
--extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
-+/* libipw.c */
-+extern void free_libipw(struct net_device *dev, int monitor);
-+extern struct net_device *alloc_libipw(int sizeof_priv, int monitor);
- extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
- 
- extern void libipw_networks_age(struct libipw_device *ieee,
-diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
-index 2fa5586..5596540 100644
---- a/drivers/net/wireless/ipw2x00/libipw_module.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
-@@ -53,7 +53,7 @@
- #include "libipw.h"
- 
- #define DRV_DESCRIPTION "802.11 data/management/control stack"
--#define DRV_NAME        "ieee80211"
-+#define DRV_NAME        "libipw"
- #define DRV_VERSION	LIBIPW_VERSION
- #define DRV_COPYRIGHT   "Copyright (C) 2004-2005 Intel Corporation <jketreno@linux.intel.com>"
- 
-@@ -140,7 +140,7 @@ int libipw_change_mtu(struct net_device *dev, int new_mtu)
- }
- EXPORT_SYMBOL(libipw_change_mtu);
- 
--struct net_device *alloc_ieee80211(int sizeof_priv, int monitor)
-+struct net_device *alloc_libipw(int sizeof_priv, int monitor)
- {
- 	struct libipw_device *ieee;
- 	struct net_device *dev;
-@@ -222,8 +222,9 @@ failed_free_netdev:
- failed:
- 	return NULL;
- }
-+EXPORT_SYMBOL(alloc_libipw);
- 
--void free_ieee80211(struct net_device *dev, int monitor)
-+void free_libipw(struct net_device *dev, int monitor)
- {
- 	struct libipw_device *ieee = netdev_priv(dev);
- 
-@@ -237,6 +238,7 @@ void free_ieee80211(struct net_device *dev, int monitor)
- 
- 	free_netdev(dev);
- }
-+EXPORT_SYMBOL(free_libipw);
- 
- #ifdef CONFIG_LIBIPW_DEBUG
- 
-@@ -291,7 +293,7 @@ static int __init libipw_init(void)
- 	struct proc_dir_entry *e;
- 
- 	libipw_debug_level = debug;
--	libipw_proc = proc_mkdir(DRV_NAME, init_net.proc_net);
-+	libipw_proc = proc_mkdir("ieee80211", init_net.proc_net);
- 	if (libipw_proc == NULL) {
- 		LIBIPW_ERROR("Unable to create " DRV_NAME
- 				" proc directory\n");
-@@ -331,6 +333,3 @@ MODULE_PARM_DESC(debug, "debug output mask");
- 
- module_exit(libipw_exit);
- module_init(libipw_init);
--
--EXPORT_SYMBOL(alloc_ieee80211);
--EXPORT_SYMBOL(free_ieee80211);
+Larry
