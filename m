@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fep02.xtra.co.nz ([210.54.141.244]:16700 "EHLO fep02.xtra.co.nz"
+Received: from bu3sch.de ([62.75.166.246]:55112 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752561Ab0CVMOQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 08:14:16 -0400
-Date: Tue, 23 Mar 2010 00:52:44 +1300
-From: Daniel Ngu <daniel.dy.ngu@gmail.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/net/wireless/b43/main.c:4351: Fixed coding style
-Message-ID: <20100322115244.GA10368@zooey>
+	id S1751995Ab0CRTb2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 15:31:28 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: RFC: A workaround for BCM43XX devices with no on-board SPROM
+Date: Thu, 18 Mar 2010 20:31:24 +0100
+Cc: bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <4BA266FB.1080507@lwfinger.net>
+In-Reply-To: <4BA266FB.1080507@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003182031.25013.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WARNING: braces {} are not necessary for any arm of this statement
+On Thursday 18 March 2010 18:46:35 Larry Finger wrote:
+> (1) Modify b43-fwcutter to take data from an existing SPROM,
 
-Signed-off-by: Daniel Ngu <daniel.dy.ngu@gmail.com>
----
- drivers/net/wireless/b43/main.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+Why not extend the ssb-sprom tool? I don't think this has anything to do with
+firmware, except that we (ab)use the firmware loading mechanism of the kernel
+for loading the blob into the kernel.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 1521b1e..14cf3bd 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4348,11 +4348,10 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 	b43_set_phytxctl_defaults(dev);
- 
- 	/* Minimum Contention Window */
--	if (phy->type == B43_PHYTYPE_B) {
-+	if (phy->type == B43_PHYTYPE_B)
- 		b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MINCONT, 0x1F);
--	} else {
-+	else
- 		b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MINCONT, 0xF);
--	}
- 	/* Maximum Contention Window */
- 	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MAXCONT, 0x3FF);
- 
+> I have chosen to implement this in
+> fwcutter rather than ssb_sprom because the ordinary user will not have access to
+> ssb_sprom;
+
+Huh? ssb-sprom is GPL software. I have no problem relicensing it under BSD or
+even something more liberal. I don't see a problem for "ordinary users" here.
+
+> however, they do have a version of fwcutter supplied by the distro.
+
+Well, but that version won't do anything on the SPROM, too.
+
+> It it reasonable to keep the vendor portion of the MAC and only replace the
+> "serial number", or would it be better to randomize all 6 octants?
+
+I think it doesn't really matter.
+
 -- 
-1.5.6.5
-
+Greetings, Michael.
