@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m-04.th.seeweb.it ([217.64.195.227]:32921 "EHLO
-	m-04.th.seeweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752555Ab0CDKpE (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:23754 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660Ab0CRK1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 05:45:04 -0500
-Message-ID: <4B8F8F10.5040404@users.sourceforge.net>
-Date: Thu, 04 Mar 2010 11:44:32 +0100
-From: "Daniele C." <legolas558@users.sourceforge.net>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt2870 (staging kernel driver) crashes fatally
-References: <4B8E20CF.50109@users.sourceforge.net> <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com> <4B8F1C7F.7050305@lwfinger.net>
-In-Reply-To: <4B8F1C7F.7050305@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 18 Mar 2010 06:27:07 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 01/21] wl1271: Fix configuration of the TX opportunity value
+Date: Thu, 18 Mar 2010 12:26:26 +0200
+Message-Id: <1268908006-16992-2-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-- -------- Original Message  --------
-Subject: Re: rt2870 (staging kernel driver) crashes fatally
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Daniele C. <legolas558@users.sourceforge.net>
-Date: Thu Mar 04 2010 03:35:43 GMT+0100 (CET)
+The per-queue TX opportunity value is configured by the mac80211 in units
+of 32us. The firmware however wants it in us, so add the conversion.
 
-> On 03/03/2010 08:14 PM, Hin-Tak Leung wrote:
->> You appear to have two issues - (1) the driver doesn't
->> hibernate/resume well, (2) there is some bad memory leak which causes
->> your system to run out of memory.
->>
->> You did not mention issue (1) - that you were hibernating and resuming
->> (and expecting it to work, which it does not). For the latter, you
->> probably need to track down where the memory is leaking in the driver,
->> which is probably easier than tracking down the hibernate/resume
->> issue.
->>
->> Good luck with tracking down the memory leak. (you do understand that
->> staging drivers are DIY - i.e. you try it only if you are willing to
->> look into fixing it yourself - I hope )
-> 
-> By generating your own kernel with MEMLEAK enabled, you should be able to see
-> which data blob is being leaked. If you post that info, someone on this list
-> should be able to help you find the cause.
-> 
-I will enable this feature so that next time it happens I will have such information.
-However looks like bug is not triggering unless I first do a resume.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Thank you both for reviewing my logs and for the pointers.
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 0a4ff7b..0de337f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1745,9 +1745,10 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 	if (ret < 0)
+ 		goto out;
+ 
++	/* the txop is confed in units of 32us by the mac80211, we need us */
+ 	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
+ 				params->cw_min, params->cw_max,
+-				params->aifs, params->txop);
++				params->aifs, params->txop << 5);
+ 	if (ret < 0)
+ 		goto out_sleep;
+ 
+-- 
+1.6.3.3
 
-Best regards,
-- --
-  Daniele C.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQEcBAEBAgAGBQJLj48QAAoJEON28As9epPAqfIH/AktbatFnxAt6peijPxz64PV
-jElSTuDYaieRRjKfoTQCVZoiSsf4f4sPAiqBR4E30zX7u9nWqqbaTIxLJjeC74Nr
-fqfoFS2QBg8Ow5pLhs/pXUKR4c7g/x/QIQ7fzCAOUj/enirni2f6n9Gc8Tf8O1Mo
-ejKXqqKeKPsnlNoBXtnB3ihE5sVp7O2PJZvxV3GCRy5KEmoIivPkrd3U4Lsc2pZG
-86LOolgilto6I73/bdoU0CffiKyTENwpyJTMy1VFjqwOWLLn9ukuFbfyBd00Oo3W
-uYX/SSCnouAKeAG0LzzTZMaYKOGkqJQzVLv/B0nhlcrrlk+xzWBNe04fxHamVo8=
-=8q9G
------END PGP SIGNATURE-----
