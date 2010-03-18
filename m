@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:31109 "EHLO mga14.intel.com"
+Received: from mail.perches.com ([173.55.12.10]:1802 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750946Ab0CXViS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 17:38:18 -0400
-Subject: Re: [PATCH 4/7 v2] wireless/iwlwifi: remove trailing space in
- messages
-From: reinette chatre <reinette.chatre@intel.com>
-To: Frans Pop <elendil@planet.nl>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-In-Reply-To: <201003242220.00328.elendil@planet.nl>
-References: <201003241927.12434.elendil@planet.nl>
-	 <1269456395-15343-4-git-send-email-elendil@planet.nl>
-	 <201003242220.00328.elendil@planet.nl>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Mar 2010 14:38:16 -0700
-Message-ID: <1269466696.2446.3213.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1752903Ab0CRGVv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 02:21:51 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	David Gibson <hermes@gibson.dropbear.id.au>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: [PATCH v2 6/7] orinoco/wext.c: Remove local #define STD_IW_HANDLER
+Date: Wed, 17 Mar 2010 23:21:39 -0700
+Message-Id: <02e23cb16a0d61f38e4550ae4e1f3eb5f8d4ab9d.1268892664.git.joe@perches.com>
+In-Reply-To: <cover.1268892663.git.joe@perches.com>
+References: <cover.1268892663.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-24 at 14:19 -0700, Frans Pop wrote:
-> Includes minor improvements in debugging messages in iwl-4965.c,
-> function iwl4965_is_temp_calib_needed().
-> 
-> Signed-off-by: Frans Pop <elendil@planet.nl>
-> Cc: Zhu Yi <yi.zhu@intel.com>
-> Cc: Reinette Chatre <reinette.chatre@intel.com>
-> Cc: Intel Linux Wireless <ilw@linux.intel.com>
-> ---
-> 
-> Rebased against and updated for iwlwifi-2.6.git/master
-> as requested by Reinette.
-> 
+It's been copied into wireless.h, so this one isn't necessary
 
-John, I'll take this patch and submit it as part of our regular process.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/orinoco/wext.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Reinette
-
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index 31ca241..069c333 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -1505,8 +1505,6 @@ static const struct iw_priv_args orinoco_privtab[] = {
+  * Structures to export the Wireless Handlers
+  */
+ 
+-#define STD_IW_HANDLER(id, func) \
+-	[IW_IOCTL_IDX(id)] = (iw_handler) func
+ static const iw_handler	orinoco_handler[] = {
+ 	STD_IW_HANDLER(SIOCSIWCOMMIT,	orinoco_ioctl_commit),
+ 	STD_IW_HANDLER(SIOCGIWNAME,	cfg80211_wext_giwname),
+-- 
+1.7.0.14.g7e948
 
