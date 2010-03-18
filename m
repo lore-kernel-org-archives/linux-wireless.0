@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39547 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753589Ab0CXVaL (ORCPT
+Received: from mail-px0-f198.google.com ([209.85.216.198]:65484 "EHLO
+	mail-px0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704Ab0CRVos (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 17:30:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: linux-next@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
-Date: Wed, 24 Mar 2010 17:23:19 -0400
-Message-Id: <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <4BAA73D2.1000301@oracle.com>
-References: <4BAA73D2.1000301@oracle.com>
+	Thu, 18 Mar 2010 17:44:48 -0400
+Received: by pxi36 with SMTP id 36so1861281pxi.21
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 14:44:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100318212410.GF31656@kroah.com>
+References: <1268349829-3195-1-git-send-email-lrodriguez@atheros.com>
+	<20100318212410.GF31656@kroah.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 18 Mar 2010 14:44:28 -0700
+Message-ID: <43e72e891003181444q73a5c2adpebcbad6665cad86c@mail.gmail.com>
+Subject: Re: [stable] [PATCH 0/2] ath5k: few AP fixes for 2.6.32
+To: Greg KH <greg@kroah.com>
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mb@bu3sch.de, ath5k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
-drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
+On Thu, Mar 18, 2010 at 2:24 PM, Greg KH <greg@kroah.com> wrote:
+> On Thu, Mar 11, 2010 at 06:23:47PM -0500, Luis R. Rodriguez wrote:
+>> These patches were already merged into the latest 2.6.33.y,
+>> however they are not yet in the latest 2.6.32.y, they are
+>> reported to make ath5k AP support rock solid by a few people.
+>>
+>> For your conveinience I have also put these patches up here:
+>
+> Odd, I don't see them in the 2.6.33.y tree, so I have also applied them
+> there, as well as for .32.
+>
+> Hope you don't mind,
 
-Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Wow, thought they were, yes please thanks.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index b6a64d8..2fa30df 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
- #define BA_TIMEOUT_CNT (5)
- #define BA_TIMEOUT_MAX (16)
- 
-+#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
- /**
-  * iwl_good_ack_health - checks for ACK count ratios, BA timeout retries.
-  *
-@@ -670,6 +671,7 @@ bool iwl_good_ack_health(struct iwl_priv *priv,
- 	return rc;
- }
- EXPORT_SYMBOL(iwl_good_ack_health);
-+#endif
- 
- /**
-  * iwl_good_plcp_health - checks for plcp error.
--- 
-1.6.2.5
-
+  Luis
