@@ -1,36 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:36157 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753153Ab0C0MWP (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:52838 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945Ab0CRFZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Mar 2010 08:22:15 -0400
-Received: by bwz1 with SMTP id 1so2442680bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Mar 2010 05:22:14 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Valentin Longchamp <valentin.longchamp@epfl.ch>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] setup correct int pipe type in ar9170_usb_exec_cmd
-Date: Sat, 27 Mar 2010 13:22:09 +0100
-References: <1269600273-7974-1-git-send-email-valentin.longchamp@epfl.ch>
-In-Reply-To: <1269600273-7974-1-git-send-email-valentin.longchamp@epfl.ch>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201003271322.09470.chunkeey@googlemail.com>
+	Thu, 18 Mar 2010 01:25:10 -0400
+Subject: Re: [RFC PATCHv3 2/2] mac80211: Add support for connection quality
+ monitoring
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1268842758.5989.17.camel@jlt3.sipsolutions.net>
+References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268830877-5162-3-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268842758.5989.17.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 18 Mar 2010 07:21:41 +0200
+Message-ID: <1268889701.10120.662.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 March 2010 11:44:33 Valentin Longchamp wrote:
-> An int urb is constructed but we fill it in with a bulk pipe type.
+On Wed, 2010-03-17 at 17:19 +0100, ext Johannes Berg wrote:
+> On Wed, 2010-03-17 at 15:01 +0200, Juuso Oikarinen wrote:
 > 
-> Commit f661c6f8c67bd55e93348f160d590ff9edf08904 implemented a pipe type
-> check when CONFIG_USB_DEBUG is enabled. The check failed for all the ar9170
-> usb transfers and the driver could not configure the wifi dongle.
+> > --- a/include/net/mac80211.h
+> > +++ b/include/net/mac80211.h
+> > @@ -599,6 +599,7 @@ enum ieee80211_conf_flags {
+> >   * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
+> >   * @IEEE80211_CONF_CHANGE_IDLE: Idle flag changed
+> >   * @IEEE80211_CONF_CHANGE_SMPS: Spatial multiplexing powersave mode changed
+> > + * @IEEE80211_CONF_CHANGE_CQM: Connection quality monitor config changed
+> >   */
+> >  enum ieee80211_conf_changed {
+> >  	IEEE80211_CONF_CHANGE_SMPS		= BIT(1),
+> > @@ -609,6 +610,7 @@ enum ieee80211_conf_changed {
+> >  	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+> >  	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+> >  	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
+> > +	IEEE80211_CONF_CHANGE_CQM		= BIT(9),
+> >  };
+> >  
+> >  /**
+> > @@ -662,6 +664,9 @@ enum ieee80211_smps_mode {
+> >   *    frame, called "dot11ShortRetryLimit" in 802.11, but actually means the
+> >   *    number of transmissions not the number of retries
+> >   *
+> > + * @cqm_rssi_thold: Connection quality monitor RSSI threshold
+> > + * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
+> > + *
+> >   * @smps_mode: spatial multiplexing powersave mode; note that
+> >   *	%IEEE80211_SMPS_STATIC is used when the device is not
+> >   *	configured for an HT channel
+> > @@ -676,6 +681,9 @@ struct ieee80211_conf {
+> >  
+> >  	u8 long_frame_max_tx_count, short_frame_max_tx_count;
+> >  
+> > +	s32 cqm_rssi_thold;
+> > +	u8 cqm_rssi_hyst;
 > 
-> This went unnoticed until now because most people don't have
-> CONFIG_USB_DEBUG enabled.
+> You probably don't care all that much, but I have a feeling this should
+> be part of the per-BSS data not the global configuration data, since
+> especially when we do it in software we could have to deal with multiple
+> virtual interfaces.
+
+Good point, for the wl12x1 it doesn't matter so much as they can only
+support one virtual interface. I'll change this.
+
+-Juuso
+
 > 
-> Signed-off-by: Valentin Longchamp <valentin.longchamp@epfl.ch>
-> ---
-Cc: Stable <stable@kernel.org>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+> johannes
+> 
+
+
