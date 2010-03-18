@@ -1,31 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54274 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751572Ab0CZICo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 04:02:44 -0400
-Subject: Re: [PATCH 1/2] mac80211: support paged rx SKBs
-From: Zhu Yi <yi.zhu@intel.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <87k4sz38y5.fsf@purkki.valot.fi>
-References: <1269399463-5244-1-git-send-email-yi.zhu@intel.com>
-	 <87eij8c3ld.fsf@purkki.valot.fi> <1269575877.4043.203.camel@debian>
-	 <87k4sz38y5.fsf@purkki.valot.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 26 Mar 2010 16:03:29 +0800
-Message-ID: <1269590609.4043.214.camel@debian>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.233]:33067 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752443Ab0CRK1W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 06:27:22 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 08/21] wl1271: enable WMM
+Date: Thu, 18 Mar 2010 12:26:33 +0200
+Message-Id: <1268908006-16992-9-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
+References: <1268908006-16992-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-26 at 14:15 +0800, Kalle Valo wrote:
-> 
-> I was thinking to add it to include/net/mac80211.h. Better to have all
-> documentation in one place. 
+From: Kalle Valo <kalle.valo@nokia.com>
 
-OK. I'll send out V2.
+Everything is ready now and we can enable WMM in wl1271.
 
-Thanks,
--yi
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    2 ++
+ drivers/net/wireless/wl12xx/wl1271_tx.h   |    3 ---
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index abf9f22..d21bfe2 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2091,6 +2091,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	if (wl1271_11a_enabled())
+ 		wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
+ 
++	wl->hw->queues = 4;
++
+ 	SET_IEEE80211_DEV(wl->hw, wl1271_wl_to_dev(wl));
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
+index 8b9f6b4..5e6c27a 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
+@@ -125,9 +125,6 @@ struct wl1271_tx_hw_res_if {
+ 
+ static inline int wl1271_tx_get_queue(int queue)
+ {
+-	/* FIXME: use best effort until WMM is enabled */
+-	return CONF_TX_AC_BE;
+-
+ 	switch (queue) {
+ 	case 0:
+ 		return CONF_TX_AC_VO;
+-- 
+1.6.3.3
 
