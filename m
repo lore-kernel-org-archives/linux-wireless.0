@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f198.google.com ([209.85.216.198]:41419 "EHLO
-	mail-px0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756558Ab0CLIrI convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f200.google.com ([209.85.222.200]:56287 "EHLO
+	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186Ab0CRBx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 03:47:08 -0500
-Received: by pxi36 with SMTP id 36so428237pxi.21
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Mar 2010 00:47:06 -0800 (PST)
+	Wed, 17 Mar 2010 21:53:27 -0400
+Received: by pzk38 with SMTP id 38so1374429pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 18:53:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4B99AED3.4000204@openwrt.org>
-References: <4B99AED3.4000204@openwrt.org>
+In-Reply-To: <43e72e891003171550i27531f3bl4e4692494ec36b8@mail.gmail.com>
+References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+	<43e72e891003171532x5e9893dfmfc1fb469a638d76e@mail.gmail.com>
+	<43e72e891003171550i27531f3bl4e4692494ec36b8@mail.gmail.com>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 12 Mar 2010 00:46:46 -0800
-Message-ID: <43e72e891003120046u2fc55bd4h4e3969bed54a38d@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: fix BUG_ON triggered by PAE frames
-To: Felix Fietkau <nbd@openwrt.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 17 Mar 2010 18:53:06 -0700
+Message-ID: <43e72e891003171853v7458802bgafcf060d75e240a7@mail.gmail.com>
+Subject: Re: [PATCH v2 00/20] ath9k_hw: ar93xx initial abstraction work
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 11, 2010 at 7:02 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> When I initially stumbled upon sequence number problems with PAE frames
-> in ath9k, I submitted a patch to remove all special cases for PAE
-> frames and let them go through the normal transmit path.
-> Out of concern about crypto incompatibility issues, this change was
-> merged instead:
+On Wed, Mar 17, 2010 at 3:50 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Mar 17, 2010 at 3:32 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Wed, Mar 17, 2010 at 3:27 PM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>>> Here's what I have so far, this is rebased on top of Senthil's patches
+>>> for ath9k_htc posted today. Just tested it on my AR9280, it doesn't
+>>> break anything.
+>>
+>> BTW the new ath9k_htc series + this series can be downloaded in one file from:
+>>
+>> http://bombadil.infradead.org/~mcgrof/tmp/all-ar93xx-03-17-v3.patch
 >
-> commit 6c8afef551fef87a3bf24f8a74c69a7f2f72fc82
-> Author: Sujith <Sujith.Manoharan@atheros.com>
-> Date:   Tue Feb 9 10:07:00 2010 +0530
->
->    ath9k: Fix sequence numbers for PAE frames
->
-> After a lot of testing, I'm able to reliably trigger a driver crash on
-> rekeying with current versions with this change in place.
-> It seems that the driver does not support sending out regular MPDUs with
-> the same TID while an A-MPDU session is active.
-> This leads to duplicate entries in the TID Tx buffer, which hits the
-> following BUG_ON in ath_tx_addto_baw():
->
->    index  = ATH_BA_INDEX(tid->seq_start, bf->bf_seqno);
->    cindex = (tid->baw_head + index) & (ATH_TID_MAX_BUFS - 1);
->
->    BUG_ON(tid->tx_buf[cindex] != NULL);
->
-> I believe until we actually have a reproducible case of an
-> incompatibility with another AP using no PAE special cases, we should
-> simply get rid of this mess.
+> bleh, I did not use -M here... let me resend with that for the renames.
 
-I believe that incompatibility does already exist, I think Sujith
-knows the details. Not sure if Sujith is in today, I think he's on a
-journey somewhere. Senthil, Vasanth, do you guys happen to recall?
+On second thought John -- please hold off on merging these new ar93xx
+abstraction patches, we are trying to mathematically prove if ar9002
+register definitions are the same as the ar9003 ones and if so well
+this is all pointless :D
 
   Luis
