@@ -1,52 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:40240 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299Ab0CCERW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 23:17:22 -0500
-Received: by pwj8 with SMTP id 8so630115pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 20:17:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <19341.56441.523682.509267@gargle.gargle.HOWL>
-References: <19339.35501.467215.380773@gargle.gargle.HOWL>
-	<19340.54345.580466.373621@gargle.gargle.HOWL> <20100303005220.GJ8069@bombadil.infradead.org>
-	<19341.56441.523682.509267@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 2 Mar 2010 20:17:02 -0800
-Message-ID: <43e72e891003022017l73226794kd3856f2d9ca0ae2@mail.gmail.com>
-Subject: Re: [PATCH 1/7] ath9k: Add common code to lib
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.perches.com ([173.55.12.10]:1785 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752728Ab0CRGVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 02:21:45 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH v2 3/7] net/wireless/wext-core.c: Use IW_EVENT_IDX macro
+Date: Wed, 17 Mar 2010 23:21:36 -0700
+Message-Id: <43329e554e9c7ee1a7e3eaa6e20a7ab329cbb3eb.1268892664.git.joe@perches.com>
+In-Reply-To: <cover.1268892663.git.joe@perches.com>
+References: <cover.1268892663.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 2, 2010 at 7:50 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> Luis R. Rodriguez wrote:
->> Can I trouble you to repost a new series of patches required for
->> ath9k_htc which does not add/use a lib.c and instead stuffs
->> things into common from the start? If there are patches
->> which are cosmetic, can you send them as a second series
->> so that we are clear what stuff is 2.6.34-rc2 material or
->> not?
->
-> I sent a mail yesterday to JWL, but forgot to CC the list.
-> Here is the series.
->
-> To clarify things, these are the pending patches for
-> ath9k_htc (in order).
->
-> [PATCH 1/3] ath9k_htc: Add ath9k_htc driver
-> [PATCH 2/3] ath9k_hw: HW fixes for ath9k_htc
-> [PATCH 3/3] ath9k: Fix HW deinit
->
-> [PATCH 1/2] ath9k: Fix symbol collision between ath9k and ath9k_htc
-> [PATCH 2/2] ath9k_htc: Remove library
+There's a wireless.h macro for this, might as well use it.
 
-Ah thanks. So why remove a library at the end if the driver hasn't
-been merged yet, how about just do away with the library from the
-start and add the stuff you need to ath9k_htc on the first patch.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ net/wireless/wext-core.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-  Luis
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index dbde22b..bfcbeee 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -261,44 +261,44 @@ static const unsigned standard_ioctl_num = ARRAY_SIZE(standard_ioctl);
+  * we know about.
+  */
+ static const struct iw_ioctl_description standard_event[] = {
+-	[IWEVTXDROP	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVTXDROP)] = {
+ 		.header_type	= IW_HEADER_TYPE_ADDR,
+ 	},
+-	[IWEVQUAL	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVQUAL)] = {
+ 		.header_type	= IW_HEADER_TYPE_QUAL,
+ 	},
+-	[IWEVCUSTOM	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVCUSTOM)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= IW_CUSTOM_MAX,
+ 	},
+-	[IWEVREGISTERED	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVREGISTERED)] = {
+ 		.header_type	= IW_HEADER_TYPE_ADDR,
+ 	},
+-	[IWEVEXPIRED	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVEXPIRED)] = {
+ 		.header_type	= IW_HEADER_TYPE_ADDR,
+ 	},
+-	[IWEVGENIE	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVGENIE)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= IW_GENERIC_IE_MAX,
+ 	},
+-	[IWEVMICHAELMICFAILURE	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVMICHAELMICFAILURE)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= sizeof(struct iw_michaelmicfailure),
+ 	},
+-	[IWEVASSOCREQIE	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVASSOCREQIE)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= IW_GENERIC_IE_MAX,
+ 	},
+-	[IWEVASSOCRESPIE	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVASSOCRESPIE)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= IW_GENERIC_IE_MAX,
+ 	},
+-	[IWEVPMKIDCAND	- IWEVFIRST] = {
++	[IW_EVENT_IDX(IWEVPMKIDCAND)] = {
+ 		.header_type	= IW_HEADER_TYPE_POINT,
+ 		.token_size	= 1,
+ 		.max_tokens	= sizeof(struct iw_pmkid_cand),
+@@ -453,7 +453,7 @@ void wireless_send_event(struct net_device *	dev,
+ 		if (cmd_index < standard_ioctl_num)
+ 			descr = &(standard_ioctl[cmd_index]);
+ 	} else {
+-		cmd_index = cmd - IWEVFIRST;
++		cmd_index = IW_EVENT_IDX(cmd);
+ 		if (cmd_index < standard_event_num)
+ 			descr = &(standard_event[cmd_index]);
+ 	}
+-- 
+1.7.0.14.g7e948
+
