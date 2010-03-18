@@ -1,97 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f223.google.com ([209.85.220.223]:63446 "EHLO
-	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606Ab0CYUdU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 16:33:20 -0400
-Received: by fxm23 with SMTP id 23so1540706fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 13:33:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <loom.20100325T020952-729@post.gmane.org>
-References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
-	<201003230942.15718.br1@einfach.org> <loom.20100323T162144-640@post.gmane.org>
-	<201003242015.21409.br1@einfach.org> <1269459825.2631.115.camel@mj>
-	<69e28c911003241326l6e747113t606f50f61eb435b4@mail.gmail.com>
-	<loom.20100325T020952-729@post.gmane.org>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 25 Mar 2010 21:32:57 +0100
-Message-ID: <69e28c911003251332k279cd3b8jdf8da464bf0011b4@mail.gmail.com>
-Subject: Re: [Proposal]TX flags
-To: Michael Stahn <m1kes@web.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:36500 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752200Ab0CRRXo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 13:23:44 -0400
+Subject: Re: [PATCH v2 1/7] wireless.h: Add STD_IW_HANDLER macro
+From: Pavel Roskin <proski@gnu.org>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org,
+	Richard Kennedy <richard@rsk.demon.co.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <0475f4511eedbcca7fe4e8b7fb8a457aa81358dc.1268892664.git.joe@perches.com>
+References: <cover.1268892663.git.joe@perches.com>
+	 <0475f4511eedbcca7fe4e8b7fb8a457aa81358dc.1268892664.git.joe@perches.com>
+Content-Type: text/plain
+Date: Thu, 18 Mar 2010 13:23:25 -0400
+Message-Id: <1268933005.24544.16.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 25, 2010 at 2:22 AM, Michael Stahn <m1kes@web.de> wrote:
->> > Maybe we could create a socket option that would put a _socket_ into a
->> > cooked monitor mode?  A "monitor mode socket" would accept and transmit
->> > packets with radiotap and 802.11 headers and receive the packets that
->> > the interface already receives, also with radiotap and 802.11 headers.
->> > That interface could be optimized for use with hostapd and other similar
->> > programs.  The driver could fill some data from the interface settings.
->> >
->> > The monitor mode, on the other hand, could be optimized for the
->> > "hardcore" stuff when the driver interferes as little as possible.  Then
->> > no special flags would be needed to pass the frame as is.
->> >
->> > --
->> > Regards,
->> > Pavel Roskin
->> >
->>
->> I don't think that is needed, as we already support multiple monitor
->> interfaces (including a situation where some are cooked, others are
->> raw).
->>
->
-> well after all.. for everyone who's interested I made a quick fix
-> considering the duration-problem. Perhaps on 2.6.34 there'll be
-> a stable/standardised solution for all those tx-packet-manipulation-stuff.
-> This is pretty much the same solution as on sequence-numbering..
->
+On Wed, 2010-03-17 at 23:21 -0700, Joe Perches wrote:
+> Copied from orinoco, initialize a iw_handler array entry
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 > ---
->  net/mac80211/tx.c |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index cbe53ed..8abf015 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -969,11 +969,18 @@ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
->  static ieee80211_tx_result debug_noinline
->  ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data *tx)
->  {
-> +       struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
->        struct sk_buff *skb = tx->skb;
->        struct ieee80211_hdr *hdr;
->        int next_len;
->        bool group_addr;
->
-> +       /*
-> +        * Packet injection may want to control duration time.
-> +        */
-> +       if (unlikely(info->control.vif->type == NL80211_IFTYPE_MONITOR))
+>  include/linux/wireless.h |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/wireless.h b/include/linux/wireless.h
+> index 5b4c6c7..ad9f8d5 100644
+> --- a/include/linux/wireless.h
+> +++ b/include/linux/wireless.h
+> @@ -346,6 +346,8 @@
+>  #define SIOCIWFIRST	0x8B00
+>  #define SIOCIWLAST	SIOCIWLASTPRIV		/* 0x8BFF */
+>  #define IW_IOCTL_IDX(cmd)	((cmd) - SIOCIWFIRST)
+> +#define STD_IW_HANDLER(id, func) \
+> +	[IW_IOCTL_IDX(id)] = (iw_handler) func
+>  
+>  /* Odd : get (world access), even : set (root access) */
+>  #define IW_IS_SET(cmd)	(!((cmd) & 0x1))
 
-if(unlikely(info->flags & IEEE80211_TX_CTL_INJECTED) is better. Also,
-check the cooked flag!
+Three objections.
 
-> +               return TX_CONTINUE;
-> +
->        do {
->                hdr = (void *) skb->data;
->                if (unlikely(ieee80211_is_pspoll(hdr->frame_control)))
-> --
-> 1.6.4.4
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+1) STD_IW_HANDLER is a poor name for a header.  The name should start
+with IW, just like those above and below it.
 
+2) Adding STD_IW_HANDLER to wireless.h and removing it from Orinoco in
+separate commits might create several commits in which Orinoco may not
+compile.  I think gcc would not object if you copy the definition
+exactly, but I would not rely on it.  Making life miserable for
+bisectors is bad - they are useful creatures.  Of course, the argument
+is moot if you use a different name for the new macro.
 
+3) Abstracting a cast is bad unless it's the whole purpose of the macro.
+While Orinoco needs the cast, other drivers may not need it.  Using a
+cast could prevent gcc from finding a legitimate problem.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Regards,
+Pavel Roskin
