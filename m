@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57801 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab0CZRZ5 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57347 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752471Ab0CRVAL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 13:25:57 -0400
-Subject: Re: [PATCH 1/2] mac80211: explicitly disable/enable QoS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>, wey-yi.w.guy@intel.com
-In-Reply-To: <1269621992-5034-1-git-send-email-sgruszka@redhat.com>
-References: <1269621992-5034-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 26 Mar 2010 10:26:03 -0700
-Message-ID: <1269624363.4342.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 18 Mar 2010 17:00:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v3] wireless: convert reg_regdb_search_lock to mutex
+Date: Thu, 18 Mar 2010 16:47:07 -0400
+Message-Id: <1268945227-24823-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1268854402-2823-1-git-send-email-linville@tuxdriver.com>
+References: <1268854402-2823-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-26 at 17:46 +0100, Stanislaw Gruszka wrote:
+Stanse discovered that kmalloc is being called with GFP_KERNEL while
+holding this spinlock.  The spinlock can be a mutex instead, which also
+enables the removal of the unlock/lock around the lock/unlock of
+cfg80211_mutex and the call to set_regdom.
 
-> + * QIEEE80211_CONF_QOS: Enable 802.11e QoS also know as WMM (Wireless
-      ^ typo
+Reported-by: Jiri Slaby <jirislaby@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Missed a hunk...
 
-> +
-> +	/* activate new settings */
-> +	if (wmm_on)
-> +		local->hw.conf.flags |=	IEEE80211_CONF_QOS;
-> +	else
-> +		local->hw.conf.flags &=	~IEEE80211_CONF_QOS;
-> +
-> +	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
+ net/wireless/reg.c |   12 +++++-------
+ 1 files changed, 5 insertions(+), 7 deletions(-)
 
-Ok, fair enough, we need to think this through in the multi-vif case
-anyway.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ed89c59..81fcafc 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -324,7 +324,7 @@ struct reg_regdb_search_request {
+ };
  
->  void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
-> @@ -816,7 +824,7 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
->  	else
->  		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
->  
-> -	ieee80211_set_wmm_default(sdata);
-> +	ieee80211_set_wmm_default(sdata, true);
-
-Shouldn't that be false though?
-
-johannes
+ static LIST_HEAD(reg_regdb_search_list);
+-static DEFINE_SPINLOCK(reg_regdb_search_lock);
++static DEFINE_MUTEX(reg_regdb_search_mutex);
+ 
+ static void reg_regdb_search(struct work_struct *work)
+ {
+@@ -332,7 +332,7 @@ static void reg_regdb_search(struct work_struct *work)
+ 	const struct ieee80211_regdomain *curdom, *regdom;
+ 	int i, r;
+ 
+-	spin_lock(&reg_regdb_search_lock);
++	mutex_lock(&reg_regdb_search_mutex);
+ 	while (!list_empty(&reg_regdb_search_list)) {
+ 		request = list_first_entry(&reg_regdb_search_list,
+ 					   struct reg_regdb_search_request,
+@@ -346,18 +346,16 @@ static void reg_regdb_search(struct work_struct *work)
+ 				r = reg_copy_regd(&regdom, curdom);
+ 				if (r)
+ 					break;
+-				spin_unlock(&reg_regdb_search_lock);
+ 				mutex_lock(&cfg80211_mutex);
+ 				set_regdom(regdom);
+ 				mutex_unlock(&cfg80211_mutex);
+-				spin_lock(&reg_regdb_search_lock);
+ 				break;
+ 			}
+ 		}
+ 
+ 		kfree(request);
+ 	}
+-	spin_unlock(&reg_regdb_search_lock);
++	mutex_unlock(&reg_regdb_search_mutex);
+ }
+ 
+ static DECLARE_WORK(reg_regdb_work, reg_regdb_search);
+@@ -375,9 +373,9 @@ static void reg_regdb_query(const char *alpha2)
+ 
+ 	memcpy(request->alpha2, alpha2, 2);
+ 
+-	spin_lock(&reg_regdb_search_lock);
++	mutex_lock(&reg_regdb_search_mutex);
+ 	list_add_tail(&request->list, &reg_regdb_search_list);
+-	spin_unlock(&reg_regdb_search_lock);
++	mutex_unlock(&reg_regdb_search_mutex);
+ 
+ 	schedule_work(&reg_regdb_work);
+ }
+-- 
+1.6.2.5
 
