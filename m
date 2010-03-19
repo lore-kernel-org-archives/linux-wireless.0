@@ -1,145 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22727 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753764Ab0CYUpE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 16:45:04 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 21/22] iwlwifi: change spin_lock to spin_lock_irqsave
-Date: Thu, 25 Mar 2010 13:44:49 -0700
-Message-Id: <1269549890-19195-22-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
-References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49677 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710Ab0CSTPQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Mar 2010 15:15:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>, stable@kernel.org
+Subject: [PATCH] ssb: do not read SPROM if it does not exist
+Date: Fri, 19 Mar 2010 15:08:07 -0400
+Message-Id: <1269025687-9817-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <4BA266FB.1080507@lwfinger.net>
+References: <4BA266FB.1080507@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Attempting to read registers that don't exist on the SSB bus can cause
+hangs on some boxes.  At least some b43 devices are 'in the wild' that
+don't have SPROMs at all.  When the SSB bus support loads, it attempts
+to read these (non-existant) SPROMs and causes hard hangs on the box --
+no console output, etc.
 
-Use spin_lock_irqsave() in interrupt handler to disable interrupts locally
-and provide the spinlock on SMP. This covers both interrupt and SMP
-concurrency.
+This patch adds some intelligence to determine whether or not the SPROM
+is present before attempting to read it.  This avoids those hard hangs
+on those devices with no SPROM attached to their SSB bus.  The
+SSB-attached devices (e.g. b43, et al.) won't work, but at least the box
+will survive to test further patches. :-)
 
-With this changes, also fix the sparse warning issues.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>
+Cc: stable@kernel.org
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-ict.c |   14 ++++++++------
- drivers/net/wireless/iwlwifi/iwl-core.c    |    7 ++++---
- 2 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/ssb/pci.c                         |    3 +++
+ drivers/ssb/scan.c                        |    4 ++++
+ drivers/ssb/sprom.c                       |   22 ++++++++++++++++++++++
+ include/linux/ssb/ssb.h                   |    3 +++
+ include/linux/ssb/ssb_driver_chipcommon.h |   15 +++++++++++++++
+ 5 files changed, 47 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ict.c b/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-index 4c5395e..a273e37 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-@@ -141,13 +141,14 @@ static irqreturn_t iwl_isr(int irq, void *data)
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index 9e50896..2f7b16d 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -620,6 +620,9 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 	int err = -ENOMEM;
+ 	u16 *buf;
+ 
++	if (!ssb_is_sprom_available(bus))
++		return -ENODEV;
++
+ 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+ 	if (!buf)
+ 		goto out;
+diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
+index 0d6c028..3a8d0b9 100644
+--- a/drivers/ssb/scan.c
++++ b/drivers/ssb/scan.c
+@@ -306,6 +306,10 @@ int ssb_bus_scan(struct ssb_bus *bus,
+ 		}
+ 		tmp = scan_read32(bus, 0, SSB_CHIPCO_CAP);
+ 		bus->chipco.capabilities = tmp;
++		if (bus->chip_rev >= 11) {
++			tmp = scan_read32(bus, 0, SSB_CHIPCO_CHIPSTAT);
++			bus->chipco.status = tmp;
++		}
+ 	} else {
+ 		if (bus->bustype == SSB_BUSTYPE_PCI) {
+ 			bus->chip_id = pcidev_to_chipid(bus->host_pci);
+diff --git a/drivers/ssb/sprom.c b/drivers/ssb/sprom.c
+index d0e6762..4d44de4 100644
+--- a/drivers/ssb/sprom.c
++++ b/drivers/ssb/sprom.c
+@@ -175,3 +175,25 @@ const struct ssb_sprom *ssb_get_fallback_sprom(void)
  {
- 	struct iwl_priv *priv = data;
- 	u32 inta, inta_mask;
-+	unsigned long flags;
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	u32 inta_fh;
- #endif
- 	if (!priv)
- 		return IRQ_NONE;
- 
--	spin_lock(&priv->lock);
-+	spin_lock_irqsave(&priv->lock, flags);
- 
- 	/* Disable (but don't clear!) interrupts here to avoid
- 	 *    back-to-back ISRs and sporadic interrupts from our NIC.
-@@ -190,7 +191,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
- 		iwl_enable_interrupts(priv);
- 
-  unplugged:
--	spin_unlock(&priv->lock);
-+	spin_unlock_irqrestore(&priv->lock, flags);
- 	return IRQ_HANDLED;
- 
-  none:
-@@ -199,7 +200,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
- 	if (test_bit(STATUS_INT_ENABLED, &priv->status) && !priv->_agn.inta)
- 		iwl_enable_interrupts(priv);
- 
--	spin_unlock(&priv->lock);
-+	spin_unlock_irqrestore(&priv->lock, flags);
- 	return IRQ_NONE;
+ 	return fallback_sprom;
  }
++
++bool ssb_is_sprom_available(struct ssb_bus *bus)
++{
++	/* status register only exists on chip_rev >= 11 */
++	if (bus->chip_rev < 11)
++		return true;
++
++	switch (bus->chip_id) {
++	case 0x4312:
++		return SSB_CHIPCO_CHST_4312_SPROM_PRESENT(bus->chipco.status);
++	case 0x4322:
++		return SSB_CHIPCO_CHST_4322_SPROM_PRESENT(bus->chipco.status);
++	case 0x4325:
++		return SSB_CHIPCO_CHST_4325_SPROM_PRESENT(bus->chipco.status);
++	default:
++		break;
++	}
++	if (bus->chip_rev >= 31)
++		return bus->chipco.capabilities & SSB_CHIPCO_CAP_SPROM;
++
++	return true;
++}
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 24f9885..3b4da23 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -394,6 +394,9 @@ extern int ssb_bus_sdiobus_register(struct ssb_bus *bus,
  
-@@ -216,6 +217,7 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
- 	struct iwl_priv *priv = data;
- 	u32 inta, inta_mask;
- 	u32 val = 0;
-+	unsigned long flags;
+ extern void ssb_bus_unregister(struct ssb_bus *bus);
  
- 	if (!priv)
- 		return IRQ_NONE;
-@@ -226,7 +228,7 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
- 	if (!priv->_agn.use_ict)
- 		return iwl_isr(irq, data);
++/* Does the device have an SPROM? */
++extern bool ssb_is_sprom_available(struct ssb_bus *bus);
++
+ /* Set a fallback SPROM.
+  * See kdoc at the function definition for complete documentation. */
+ extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
+diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
+index 4e27acf..4e5726d 100644
+--- a/include/linux/ssb/ssb_driver_chipcommon.h
++++ b/include/linux/ssb/ssb_driver_chipcommon.h
+@@ -30,6 +30,7 @@
+ #define   SSB_CHIPCO_CAP_UARTCLK_INT	0x00000008	/* UARTs are driven by internal divided clock */
+ #define  SSB_CHIPCO_CAP_UARTGPIO	0x00000020	/* UARTs on GPIO 15-12 */
+ #define  SSB_CHIPCO_CAP_EXTBUS		0x000000C0	/* External buses present */
++#define  SSB_CHIPCO_CAP_SPROM		0x40000000	/* SPROM present */
+ #define  SSB_CHIPCO_CAP_FLASHT		0x00000700	/* Flash Type */
+ #define   SSB_CHIPCO_FLASHT_NONE	0x00000000	/* No flash */
+ #define   SSB_CHIPCO_FLASHT_STSER	0x00000100	/* ST serial flash */
+@@ -385,6 +386,7 @@
  
--	spin_lock(&priv->lock);
-+	spin_lock_irqsave(&priv->lock, flags);
  
- 	/* Disable (but don't clear!) interrupts here to avoid
- 	 * back-to-back ISRs and sporadic interrupts from our NIC.
-@@ -290,7 +292,7 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
- 		iwl_enable_interrupts(priv);
- 	}
+ /** Chip specific Chip-Status register contents. */
++#define SSB_CHIPCO_CHST_4322_SPROM_EXISTS	0x00000040 /* SPROM present */
+ #define SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL	0x00000003
+ #define SSB_CHIPCO_CHST_4325_DEFCIS_SEL		0 /* OTP is powered up, use def. CIS, no SPROM */
+ #define SSB_CHIPCO_CHST_4325_SPROM_SEL		1 /* OTP is powered up, SPROM is present */
+@@ -398,6 +400,18 @@
+ #define SSB_CHIPCO_CHST_4325_RCAL_VALUE_SHIFT	4
+ #define SSB_CHIPCO_CHST_4325_PMUTOP_2B 		0x00000200 /* 1 for 2b, 0 for to 2a */
  
--	spin_unlock(&priv->lock);
-+	spin_unlock_irqrestore(&priv->lock, flags);
- 	return IRQ_HANDLED;
++/** Macros to determine SPROM presence based on Chip-Status register. */
++#define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
++	((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_OTP_SEL)
++#define SSB_CHIPCO_CHST_4322_SPROM_PRESENT(status) \
++	(status & SSB_CHIPCO_CHST_4322_SPROM_EXISTS)
++#define SSB_CHIPCO_CHST_4325_SPROM_PRESENT(status) \
++	(((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_DEFCIS_SEL) && \
++	 ((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_OTP_SEL))
++
  
-  none:
-@@ -300,6 +302,6 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
- 	if (test_bit(STATUS_INT_ENABLED, &priv->status) && !priv->_agn.inta)
- 		iwl_enable_interrupts(priv);
  
--	spin_unlock(&priv->lock);
-+	spin_unlock_irqrestore(&priv->lock, flags);
- 	return IRQ_NONE;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d152198..9e48352 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1531,10 +1531,11 @@ irqreturn_t iwl_isr_legacy(int irq, void *data)
- 	struct iwl_priv *priv = data;
- 	u32 inta, inta_mask;
- 	u32 inta_fh;
-+	unsigned long flags;
- 	if (!priv)
- 		return IRQ_NONE;
- 
--	spin_lock(&priv->lock);
-+	spin_lock_irqsave(&priv->lock, flags);
- 
- 	/* Disable (but don't clear!) interrupts here to avoid
- 	 *    back-to-back ISRs and sporadic interrupts from our NIC.
-@@ -1572,7 +1573,7 @@ irqreturn_t iwl_isr_legacy(int irq, void *data)
- 		tasklet_schedule(&priv->irq_tasklet);
- 
-  unplugged:
--	spin_unlock(&priv->lock);
-+	spin_unlock_irqrestore(&priv->lock, flags);
- 	return IRQ_HANDLED;
- 
-  none:
-@@ -1580,7 +1581,7 @@ irqreturn_t iwl_isr_legacy(int irq, void *data)
- 	/* only Re-enable if diabled by irq */
- 	if (test_bit(STATUS_INT_ENABLED, &priv->status))
- 		iwl_enable_interrupts(priv);
--	spin_unlock(&priv->lock);
-+	spin_unlock_irqrestore(&priv->lock, flags);
- 	return IRQ_NONE;
- }
- EXPORT_SYMBOL(iwl_isr_legacy);
+ /** Clockcontrol masks and values **/
+@@ -564,6 +578,7 @@ struct ssb_chipcommon_pmu {
+ struct ssb_chipcommon {
+ 	struct ssb_device *dev;
+ 	u32 capabilities;
++	u32 status;
+ 	/* Fast Powerup Delay constant */
+ 	u16 fast_pwrup_delay;
+ 	struct ssb_chipcommon_pmu pmu;
 -- 
-1.6.3.3
+1.6.2.5
 
