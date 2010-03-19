@@ -1,36 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:6745 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844Ab0CSJtp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 05:49:45 -0400
-From: Holger Schurig <holgerschurig@gmail.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: Re: [PATCH 1/1] mac80211: Add support connection monitor in hardware
-Date: Fri, 19 Mar 2010 10:51:09 +0100
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <1268975693-4329-1-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1268975693-4329-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from bu3sch.de ([62.75.166.246]:52419 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751224Ab0CSHhC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Mar 2010 03:37:02 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: RFC: A workaround for BCM43XX devices with no on-board SPROM
+Date: Fri, 19 Mar 2010 08:36:58 +0100
+Cc: bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <4BA266FB.1080507@lwfinger.net> <201003182031.25013.mb@bu3sch.de> <4BA29D49.80707@lwfinger.net>
+In-Reply-To: <4BA29D49.80707@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201003191051.09596.holgerschurig@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <201003190836.58688.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> The wl1271 has a feature which handles the connection monitor logic
-> in hardware, basically sending periodically nullfunc frames and reporting
-> to the host if AP is lost, after attempting to recover by sending
-> probe-requests to the AP.
+On Thursday 18 March 2010 22:38:17 Larry Finger wrote:
+> On 03/18/2010 02:31 PM, Michael Buesch wrote:
+> > On Thursday 18 March 2010 18:46:35 Larry Finger wrote:
+> >> (1) Modify b43-fwcutter to take data from an existing SPROM,
+> > 
+> > Why not extend the ssb-sprom tool? I don't think this has anything to do with
+> > firmware, except that we (ab)use the firmware loading mechanism of the kernel
+> > for loading the blob into the kernel.
+> 
+> It has nothing to do with firmware, but the existing fwcutter has all the parts
+> to generate files in the firmware directory,
 
-Hmm, do you really need to make it configurable?
+Everything needed to "generate a file in the firmware directory" are the open()
+write() and close() syscalls.
 
-* works the wl1271 firmware better with this set?
-* or better when unset?
-* or is it a "depends on" type answer?
+> > 
+> >> I have chosen to implement this in
+> >> fwcutter rather than ssb_sprom because the ordinary user will not have access to
+> >> ssb_sprom;
+> > 
+> > Huh? ssb-sprom is GPL software. I have no problem relicensing it under BSD or
+> > even something more liberal. I don't see a problem for "ordinary users" here.
+> 
+> It has nothing to do with the license. My distro, openSUSE, packages fwcutter
+> along with a script that uses wget to download the Broadcom drivers and extract
+> firmware for both b43 and b43legacy. The average user only has to execute that
+> script. Of course, the package could include both fwcutter and ssb_sprom
+> programs, but that would make a bigger change to the openSUSE package than just
+> a patch to fwcutter. I suspect that other distros use similar packages.
+> 
+> > Well, but that version won't do anything on the SPROM, too.
+> 
+> Yes, but if fwcutter were modified, it could write the virtual SPROM file.
 
-As far as I understood you, it works better if the firmware detects the 
-connection loss and when mac80211 doesn't interfere. If this understanding is 
-true, then configuring this via nl80211 seems to be the wrong thing. Instead, 
-you should tell mac80211 about your wishes when registering your driver 
-against mac80211.
+I think it really is abuse of fwcutter.
+What if you don't want any proprietary firmware at all, but still want an SPROM image?
+What about distros that do _not_ automatically use fwcutter to put proprietary fw in place
+for legal reasons? (Which most likely is the majority of distributions).
+
+Why create yet another dependency on fwcutter. I thought the long term plan was to get rid
+of proprietary firmware and fwcutter?
+
+Is it really such a big deal for a distribution to include yet another tiny opensource
+package? If that really is a problem for a distribution, they should just completely
+stop doing their distro.
+
+-- 
+Greetings, Michael.
