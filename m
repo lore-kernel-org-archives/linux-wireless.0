@@ -1,78 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:46262 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329Ab0CTWeQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Mar 2010 18:34:16 -0400
-Received: by bwz1 with SMTP id 1so926324bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Mar 2010 15:34:14 -0700 (PDT)
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCHv3 0/2] mac80211: cfg80211: Roam trigger support
-References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
-	<20100317132236.GC2990@tuxdriver.com> <87aau4dcfm.fsf@purkki.valot.fi>
-	<20100319145636.GB9552@tuxdriver.com>
-	<20100320001520.GA26605@jm.kir.nu>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 21 Mar 2010 00:34:10 +0200
-In-Reply-To: <20100320001520.GA26605@jm.kir.nu> (Jouni Malinen's message of "Fri\, 19 Mar 2010 17\:15\:20 -0700")
-Message-ID: <87pr2ybp25.fsf@purkki.valot.fi>
+Received: from mx1.redhat.com ([209.132.183.28]:57900 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309Ab0CSK6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Mar 2010 06:58:21 -0400
+Date: Fri, 19 Mar 2010 11:56:13 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [RFC PATCH 1/2] mac80211: add interface for disabling QoS
+Message-ID: <20100319105612.GA4915@dhcp-lab-161.englab.brq.redhat.com>
+References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com> <20100310152024.GB2969@dhcp-lab-161.englab.brq.redhat.com> <1268265597.4192.3.camel@jlt3.sipsolutions.net> <20100311095656.GB4682@dhcp-lab-161.englab.brq.redhat.com> <1268319960.4413.1.camel@jlt3.sipsolutions.net> <20100316145114.GA2496@dhcp-lab-161.englab.brq.redhat.com> <1268774282.4054.1.camel@jlt3.sipsolutions.net> <20100317092612.GB3726@dhcp-lab-161.englab.brq.redhat.com> <1268841106.5989.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1268841106.5989.1.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jouni Malinen <j@w1.fi> writes:
+Add BSS_CHANGE_QOS_DISABLED flag to pass to drivers when want to disable
+QoS (aka WMM, WME).
 
-> On Fri, Mar 19, 2010 at 10:56:37AM -0400, John W. Linville wrote:
->
->> If you can make wpa_supplicant scan less then I am sold! :-)
->
-> I would assume it is not really wpa_supplicant that is triggering too
-> many scans for your liking, but NetworkManager..
+When AP do not provide QoS parameters, we should assume that it not
+supporting QoS and we should not send QoS frames to it.
 
-Yes, I also believe that's the case.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/mlme.c    |    2 +-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
-> The goal here (at least from my view point) is to actually make
-> wpa_supplicant itself trigger scans more frequently ;-).
-
-Heh, that's the finnish, pessimistic, way of answering to John's
-comment :) But as John is from US, we also have to use some optimism
-in the answer to not make him too nervous ;)
-
-So the aim is to to scan more when the connection is bad. But if the
-connection quality is good enough, wpa_supplicant would not scan at
-all. So in some cases scanning is more frequent and in some cases
-background scan is completely disabled.
-
-The ultimate goal is to reduce the background scan whenever we can,
-for example when connection is good or there's very little or no
-traffic at all. But we are nowhere near that yet.
-
-> wpa_supplicant already has a notification function just waiting to be
-> called from somewhere when a beacon is lost of signal strength has
-> changed.. That somewhere is supposed to be the driver event handler when
-> it receives one of these new roam trigger events. At that point,
-> wpa_supplicant can then figure out if it should start scanning more
-> frequently to find a better BSS.
-
-Very nice.
-
-> I would hope that this feature will make NetworkManager eventually
-> stop doing its constant scans
-
-I also hope that this will happen. I think the current setup is just
-one big layering violation. After the wifi connection is established,
-NetworkManager (nor Connection Manager) should not issue a scan unless
-requested by the user.
-
-> (or well, if it doesn't, I will provide an option in for
-> wpa_supplicant to ignore D-Bus requests for new scans.. ;-).
-
-That's also one way to do it. But let's hope that we can find a better
-solution.
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 45d7d44..11a192d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -144,6 +144,7 @@ struct ieee80211_low_level_stats {
+  *	new beacon (beaconing modes)
+  * @BSS_CHANGED_BEACON_ENABLED: Beaconing should be
+  *	enabled/disabled (beaconing modes)
++ * @BSS_CHANGED_QOS_DISABLED: QoS should be disabled
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -156,6 +157,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_BSSID		= 1<<7,
+ 	BSS_CHANGED_BEACON		= 1<<8,
+ 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
++	BSS_CHANGED_QOS_DISABLED	= 1<<10,
+ };
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index be5f723..64be5f4 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1130,7 +1130,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 		ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
+ 					 elems.wmm_param_len);
+ 	else
+-		ieee80211_set_wmm_default(sdata);
++		changed |= BSS_CHANGED_QOS_DISABLED;
+ 
+ 	local->oper_channel = wk->chan;
+ 
 -- 
-Kalle Valo
+1.6.2.5
+
