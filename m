@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33535 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753706Ab0CGKU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Mar 2010 05:20:56 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Gus Wirth <gwirth79@gmail.com>
-Subject: [PATCH 2/2] compat: backport device_{lock,trylock,unlock}
-Date: Sun,  7 Mar 2010 11:20:41 +0100
-Message-Id: <1267957241-5578-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1267957241-5578-1-git-send-email-hauke@hauke-m.de>
-References: <1267957241-5578-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.perches.com ([173.55.12.10]:1846 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752954Ab0CSB3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 21:29:44 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Geoff Levand <geoffrey.levand@am.sony.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pavel Roskin <proski@gnu.org>,
+	David Gibson <hermes@gibson.dropbear.id.au>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	"David S. Miller" <davem@davemloft.net>, linuxppc-dev@ozlabs.org,
+	cbe-oss-dev@ozlabs.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net
+Subject: [PATCH v3 0/9] wireless: Use macros from wireless.h
+Date: Thu, 18 Mar 2010 18:29:31 -0700
+Message-Id: <cover.1268961559.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes build of ar9170.
+Create a IW_HANDLER macro for iw_handler array entries in wireless.h
+Use the wireless.h macros in various wireless files
+Use starting index define SIOCIWFIRST where appropriate 
+Remove local #defines of IW_IOCTL
+Remove STD_IW_HANDLER macro in orinoco, use IW_HANDLER instead
 
-CC: Gus Wirth <gwirth79@gmail.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.34.h |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
+Joe Perches (9):
+  include/linux/wireless.h: Add IW_HANDLER macro to initialize array entry
+  wireless.h: Use SIOCIWFIRST not SIOCSIWCOMMIT for range check
+  include/net/iw_handler.h: Use SIOCIWFIRST not SIOCSIWCOMMIT in comment
+  net/wireless/wext_core.c: Use IW_IOCTL_IDX macro
+  net/wireless/wext-core.c: Use IW_EVENT_IDX macro
+  drivers/net/wireless: Use IW_HANDLER macro
+  drivers/net: Remove local #define IW_IOCTL, use IW_HANDLER
+  orinoco/wext.c: Remove local #define STD_IW_HANDLER
+  drivers/net/wireless/ray_cs.c: Use iw_handler function prototypes
 
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index b5d1903..d189bee 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -139,6 +139,22 @@ do {								\
- #endif
- /* source: include/linux/netdevice.h */
- 
-+
-+static inline void device_lock(struct device *dev)
-+{
-+	down(&dev->sem);
-+}
-+
-+static inline int device_trylock(struct device *dev)
-+{
-+	return down_trylock(&dev->sem);
-+}
-+
-+static inline void device_unlock(struct device *dev)
-+{
-+	up(&dev->sem);
-+}
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
- 
- #endif /* LINUX_26_34_COMPAT_H */
--- 
-1.6.3.3
-
+ drivers/net/ps3_gelic_wireless.c       |   35 +++---
+ drivers/net/wireless/ipw2x00/ipw2200.c |   83 ++++++-------
+ drivers/net/wireless/orinoco/wext.c    |   94 +++++++-------
+ drivers/net/wireless/ray_cs.c          |  212 +++++++++++++++-----------------
+ drivers/net/wireless/wl3501_cs.c       |   52 ++++----
+ include/linux/wireless.h               |    4 +-
+ include/net/iw_handler.h               |    2 +-
+ net/wireless/wext-core.c               |  134 ++++++++++----------
+ 8 files changed, 298 insertions(+), 318 deletions(-)
