@@ -1,93 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:65354 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754796Ab0CIMWx convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:38363 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329Ab0CSIG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 07:22:53 -0500
-Received: by ewy8 with SMTP id 8so655952ewy.28
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 04:22:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20100309075610.30616.82140.stgit@void>
-References: <20100309075124.30616.40896.stgit@void>
-	 <20100309075610.30616.82140.stgit@void>
-Date: Tue, 9 Mar 2010 14:22:51 +0200
-Message-ID: <40f31dec1003090422m557092b2ybc471f74e7530f95@mail.gmail.com>
-Subject: Re: [PATCH 11/13] ath5k: read eeprom IQ calibration values correctly
-	for G mode
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 19 Mar 2010 04:06:26 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o2J86Cbx019305
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 10:06:23 +0200
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: luciano.coelho@nokia.com
+Subject: [RFC PATCHv5 2/2] mac80211: Add support for connection quality monitoring
+Date: Fri, 19 Mar 2010 10:03:21 +0200
+Message-Id: <1268985801-25225-3-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1268985801-25225-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1268985801-25225-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/9 Bruno Randolf <br1@einfach.org>:
-> we read the IQ correction values (i_cal and q_cal) for G mode from a wrong
-> location (the same shifts as for A mode is applied which is incorrect). use
-> correct locations, matching the docs and HAL sources.
->
-> also we should write IQ correction only when we have that information in the
-> EEPROM, starting from version 4. also write it in the same way as we do in the
-> periodic recalibration (enable last), just to be sure.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath5k/eeprom.c |    4 ++--
->  drivers/net/wireless/ath/ath5k/reset.c  |   15 +++++++++------
->  2 files changed, 11 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-> index 6a3f4da..10b5226 100644
-> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
-> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-> @@ -429,8 +429,8 @@ static int ath5k_eeprom_read_modes(struct ath5k_hw *ah, u32 *offset,
->                        ee->ee_margin_tx_rx[mode] = (val >> 8) & 0x3f;
->
->                AR5K_EEPROM_READ(o++, val);
-> -               ee->ee_i_cal[mode] = (val >> 8) & 0x3f;
-> -               ee->ee_q_cal[mode] = (val >> 3) & 0x1f;
-> +               ee->ee_i_cal[mode] = (val >> 5) & 0x3f;
-> +               ee->ee_q_cal[mode] = val & 0x1f;
->
->                if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_2) {
->                        AR5K_EEPROM_READ(o++, val);
-> diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-> index 6d9a1e8..e9e69dc 100644
-> --- a/drivers/net/wireless/ath/ath5k/reset.c
-> +++ b/drivers/net/wireless/ath/ath5k/reset.c
-> @@ -851,12 +851,15 @@ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
->                                AR5K_PHY_OFDM_SELFCORR_CYPWR_THR1,
->                                AR5K_INIT_CYCRSSI_THR1);
->
-> -       /* I/Q correction
-> -        * TODO: Per channel i/q infos ? */
-> -       AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ,
-> -               AR5K_PHY_IQ_CORR_ENABLE |
-> -               (ee->ee_i_cal[ee_mode] << AR5K_PHY_IQ_CORR_Q_I_COFF_S) |
-> -               ee->ee_q_cal[ee_mode]);
-> +       /* I/Q correction (set enable bit last to match HAL sources) */
-> +       /* TODO: Per channel i/q infos ? */
-> +       if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_4_0) {
-> +               AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_I_COFF,
-> +                           ee->ee_i_cal[ee_mode]);
-> +               AR5K_REG_WRITE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_Q_Q_COFF,
-> +                           ee->ee_q_cal[ee_mode]);
-> +               AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_IQ, AR5K_PHY_IQ_CORR_ENABLE);
-> +       }
->
->        /* Heavy clipping -disable for now */
->        if (ah->ah_ee_version >= AR5K_EEPROM_VERSION_5_1)
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Add support for the set_cqm_config op. This op function configures the
+requested connection quality monitor rssi threshold and rssi hysteresis
+values to the hardware  if the hardware supports
+IEEE80211_HW_SUPPORTS_CQM.
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+For unsupporting hardware, currently -EOPNOTSUPP is returned, so the mac80211
+is currently not doing connection quality monitoring on the host. This could be
+added later, if needed.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ include/net/mac80211.h |   30 ++++++++++++++++++++++++++++++
+ net/mac80211/cfg.c     |   27 +++++++++++++++++++++++++++
+ net/mac80211/mlme.c    |   10 ++++++++++
+ 3 files changed, 67 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 936bc41..5af4365 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -144,6 +144,7 @@ struct ieee80211_low_level_stats {
+  *	new beacon (beaconing modes)
+  * @BSS_CHANGED_BEACON_ENABLED: Beaconing should be
+  *	enabled/disabled (beaconing modes)
++ * @BSS_CHANGED_CQM: Connection quality monitor config changed
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -156,6 +157,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_BSSID		= 1<<7,
+ 	BSS_CHANGED_BEACON		= 1<<8,
+ 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
++	BSS_CHANGED_CQM			= 1<<10,
+ };
+ 
+ /**
+@@ -185,6 +187,9 @@ enum ieee80211_bss_change {
+  * @enable_beacon: whether beaconing should be enabled or not
+  * @ht_operation_mode: HT operation mode (like in &struct ieee80211_ht_info).
+  *	This field is only valid when the channel type is one of the HT types.
++ * @cqm_rssi_thold: Connection quality monitor RSSI threshold, a zero value
++ *	implies disabled
++ * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -202,6 +207,8 @@ struct ieee80211_bss_conf {
+ 	u64 timestamp;
+ 	u32 basic_rates;
+ 	u16 ht_operation_mode;
++	s32 cqm_rssi_thold;
++	u8 cqm_rssi_hyst;
+ };
+ 
+ /**
+@@ -954,6 +961,11 @@ enum ieee80211_tkip_key_type {
+  *	Hardware can provide ack status reports of Tx frames to
+  *	the stack.
+  *
++ * @IEEE80211_HW_SUPPORTS_CQM:
++ *	Hardware can do connection quality monitoring - i.e. it can monitor
++ *	connection quality related parameters, such as the RSSI level and
++ *	provide notifications if configured trigger levels are reached.
++ *
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -975,6 +987,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
+ 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+ 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
++	IEEE80211_HW_SUPPORTS_CQM			= 1<<19,
+ };
+ 
+ /**
+@@ -2370,6 +2383,23 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+  */
+ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+ 
++/**
++ * ieee80211_cqm_notify - inform a configured connection quality monitoring
++ *	threshold triggered
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @rssi_event: the RSSI trigger event type, if any
++ * @gfp: context flags
++ *
++ * When the IEEE80211_HW_SUPPORTS_CQM is set, and a connection quality
++ * monitoring is configured for specific quality related parameters,
++ * the driver will inform whenever any monitored parameter reaches its
++ * threshold. Currently only RSSI events are supported.
++ */
++void ieee80211_cqm_notify(struct ieee80211_vif *vif,
++			  enum nl80211_cqm_rssi_threshold_event rssi_event,
++			  gfp_t gfp);
++
+ /* Rate control API */
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b7116ef..95f422c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1402,6 +1402,32 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++static int ieee80211_set_cqm_config(struct wiphy *wiphy,
++				    struct net_device *dev,
++				    s32 rssi_thold, u8 rssi_hyst)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
++	struct ieee80211_vif *vif = &sdata->vif;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
++
++	if (vif->type != NL80211_IFTYPE_STATION)
++		return -EOPNOTSUPP;
++
++	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_CQM))
++		return -EOPNOTSUPP;
++
++	if (rssi_thold == bss_conf->cqm_rssi_thold &&
++	    rssi_hyst == bss_conf->cqm_rssi_hyst)
++		return 0;
++
++	bss_conf->cqm_rssi_thold = rssi_thold;
++	bss_conf->cqm_rssi_hyst = rssi_hyst;
++
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
++	return 0;
++}
++
+ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				      struct net_device *dev,
+ 				      const u8 *addr,
+@@ -1506,4 +1532,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.remain_on_channel = ieee80211_remain_on_channel,
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.action = ieee80211_action,
++	.set_cqm_config = ieee80211_set_cqm_config,
+ };
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index be5f723..68ba5d9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2135,3 +2135,13 @@ int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
+ 	*cookie = (unsigned long) skb;
+ 	return 0;
+ }
++
++void ieee80211_cqm_notify(struct ieee80211_vif *vif,
++			  enum nl80211_cqm_rssi_threshold_event rssi_event,
++			  gfp_t gfp)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	cfg80211_cqm_notify(sdata->dev, rssi_event, gfp);
++}
++EXPORT_SYMBOL(ieee80211_cqm_notify);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.3.3
+
