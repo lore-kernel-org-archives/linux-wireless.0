@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:34894 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754507Ab0C2XBb (ORCPT
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:54171 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013Ab0CSRml (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 19:01:31 -0400
-Received: by mail-pw0-f46.google.com with SMTP id 5so7149816pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 16:01:31 -0700 (PDT)
-Message-ID: <4BB13147.9020002@lwfinger.net>
-Date: Mon, 29 Mar 2010 18:01:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 19 Mar 2010 13:42:41 -0400
+Received: by ywh36 with SMTP id 36so720278ywh.4
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 10:42:40 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10A0F.1030608@lwfinger.net> <20100329204822.GL4984@tuxdriver.com> <20100329205558.GM4984@tuxdriver.com> <4BB11B8E.1020506@lwfinger.net> <4BB12148.7080309@googlemail.com>
-In-Reply-To: <4BB12148.7080309@googlemail.com>
+In-Reply-To: <1269018604.2446.1779.camel@rchatre-DESK>
+References: <f39b508c1003170613g5a8754a2kc9e15075c16f499b@mail.gmail.com>
+	 <1268978712.2446.1757.camel@rchatre-DESK>
+	 <f39b508c1003190949m91f4070i4d8d19929f8d6787@mail.gmail.com>
+	 <1269018604.2446.1779.camel@rchatre-DESK>
+Date: Fri, 19 Mar 2010 12:42:39 -0500
+Message-ID: <f39b508c1003191042v23587b50iea5217a877eb9423@mail.gmail.com>
+Subject: Re: Re:
+From: Vasil Lalov <vasil.lalov@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-René and John,
+Reinette,
 
-What output does this patch yield?
+Thanks a lot for directing me to the right place. I will open up a new
+bugreport right away!
+Have a good weekend!
 
-
-Index: wireless-testing/drivers/ssb/sprom.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/sprom.c
-+++ wireless-testing/drivers/ssb/sprom.c
-@@ -182,6 +182,11 @@ bool ssb_is_sprom_available(struct ssb_b
- 	if (bus->chipco.dev->id.revision < 11)
- 		return true;
-
-+	printk(KERN_INFO "ssb: chip_id 0x%x, status 0x%x\n", bus->chip_id,
-+			  bus->chipco.status);
-+	printk(KERN_INFO "ssb: cc rev 0x%x, cc capab 0x%x\n",
-+			  bus->chipco.dev->id.revision,
-+			  bus->chipco.capabilities);
- 	switch (bus->chip_id) {
- 	case 0x4312:
- 		return SSB_CHIPCO_CHST_4312_SPROM_PRESENT(bus->chipco.status);
+Vasil
+===
+Vasil Lalov
+Sr. Systems Administrator
+Chicago Public Library
 
 
+On Fri, Mar 19, 2010 at 12:10 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Fri, 2010-03-19 at 09:49 -0700, Vasil Lalov wrote:
+>> Thanks for responding to this. I also noticed other things. It seems
+>> that this Microcode SW error occurs because the wifi card is
+>> overheating. When used in n-mode and there is a large file transfer,
+>> the temperature of the card rises to over 62C. Soon after this, the
+>> microcode error occurs and the card gets disassociated.
+>>
+>> Doing more research on the power vs temperature problem, I discovered
+>> that other users are seeing this as well. Some have solved their
+>> problem by enabling the power management for the wifi card by issuing
+>
+> I am not familiar with these workarounds. Could you please submit a new
+> bug at http://bugzilla.intellinuxwireless.org/ or add your information
+> to a bug in this system if you find one that is related?
+>
+> Reinette
+>
+>
+>
+>
