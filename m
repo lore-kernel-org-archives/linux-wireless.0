@@ -1,116 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:32245 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933904Ab0COGZM (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59358 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013Ab0CSUWu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Mar 2010 02:25:12 -0400
-Subject: Re: [RFC PATCH 1/2] cfg80211: Add roaming trigger support to
- nl80211
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268395213.4828.27.camel@jlt3.sipsolutions.net>
-References: <1268393671-5498-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268393671-5498-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268395213.4828.27.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 15 Mar 2010 08:22:12 +0200
-Message-ID: <1268634132.10120.523.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Fri, 19 Mar 2010 16:22:50 -0400
+Date: Fri, 19 Mar 2010 16:21:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>, stable@kernel.org
+Subject: Re: [PATCH] ssb: do not read SPROM if it does not exist
+Message-ID: <20100319202120.GD9552@tuxdriver.com>
+References: <4BA266FB.1080507@lwfinger.net> <1269025687-9817-1-git-send-email-linville@tuxdriver.com> <201003192041.47211.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201003192041.47211.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-03-12 at 13:00 +0100, ext Johannes Berg wrote:
-> On Fri, 2010-03-12 at 13:34 +0200, Juuso Oikarinen wrote:
-> > Add support for basic configuration of a roaming RSSI trigger to the nl80211
-> > interface, and basic support for notifying about trigger events.
+On Fri, Mar 19, 2010 at 08:41:47PM +0100, Michael Buesch wrote:
+> On Friday 19 March 2010 20:08:07 John W. Linville wrote:
+> > +	switch (bus->chip_id) {
+> > +	case 0x4312:
+> > +		return SSB_CHIPCO_CHST_4312_SPROM_PRESENT(bus->chipco.status);
 > 
-> Cool.
-> 
-> > +	NL80211_ATTR_RTRIG_RSSI_STATE,
-> > +	NL80211_ATTR_RTRIG_RSSI_THOLD,
-> > +	NL80211_ATTR_RTRIG_RSSI_HYST,
-> > +	NL80211_ATTR_RTRIG_LEVEL,
-> 
-> IMHO we should have one NL80211_ATTR_ROAM_TRIGGER_CONFIG or something
-> like that which nests NL80211_RTRIG_ATTR_* from a separate attribute
-> namespace (note the transposition to tell which namespace they belong
-> to) so it's easier to understand when extended.
-> 
-> > +enum nl80211_rtrig_rssi_state {
-> > +	NL80211_RTRIG_RSSI_DISABLED,
-> > +	NL80211_RTRIG_RSSI_ENABLED,
-> > +};
-> 
-> Shouldn't _STATE be implicitly enabled when you give the required
-> attributes? Missing docstrings too.
-> 
-> Also overall I'm not sure this should be called roam_trigger at all. It
-> will eventually trigger roaming in userspace, but I think the actual
-> feature it implements in the kernel/device side is better called
-> something like "connection quality monitoring".
+> Not sure why we want to hide the logic in defines. But I don't care much, either.
 
-These are good comments. I'll try to clean up accordingly.
+To me it just seems clearer than a bunch of long and ugly bit
+operations that differ in the details but are logically accomplishing
+the same thing.
+ 
+> > +	case 0x4322:
+> > +		return SSB_CHIPCO_CHST_4322_SPROM_PRESENT(bus->chipco.status);
+> > +	case 0x4325:
+> > +		return SSB_CHIPCO_CHST_4325_SPROM_PRESENT(bus->chipco.status);
+> > +	default:
+> > +		break;
+> > +	}
+> > +	if (bus->chip_rev >= 31)
+> 
+> This check is wrong.
+> You need to check the chipcommon core revision. Not the chip revision.
 
-> > +/**
-> > + * enum ieee80211_roam_trigger_level - supported frequency bands
-> 
-> ??
-> 
-> > + * @IEEE80211_ROAM_TRIGGER_LOW: current RSSI level is below the threshold
-> > + * @IEEE80211_ROAM_TRIGGER_HIGH: current RSSI level is above the threshold
-> > + */
-> 
+I'm sorry, I had trouble figuring-out what you meant (since chip_rev
+comes from a chipcommon register).  I think you mean this:
+
+-       if (bus->chip_rev >= 31)
++       if (bus->chipco.dev->id.revision >= 31)
+
+Is that right?
+
+John
+
+> > +		return bus->chipco.capabilities & SSB_CHIPCO_CAP_SPROM;
 > > +
-> > +enum ieee80211_roam_trigger_level {
-> > +	IEEE80211_ROAM_TRIGGER_LEVEL_LOW,
-> > +	IEEE80211_ROAM_TRIGGER_LEVEL_HIGH,
-> > +};
-> 
-> You should just reuse the nl80211 enum.
-> 
-> > diff --git a/net/wireless/core.c b/net/wireless/core.c
-> > index 7fdb940..c8156d6 100644
-> > --- a/net/wireless/core.c
-> > +++ b/net/wireless/core.c
-> > @@ -713,6 +713,18 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
-> >  				wdev->ps = false;
-> >  			}
+> > +	return true;
+> > +}
+> > diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+> > index 24f9885..3b4da23 100644
+> > --- a/include/linux/ssb/ssb.h
+> > +++ b/include/linux/ssb/ssb.h
+> > @@ -394,6 +394,9 @@ extern int ssb_bus_sdiobus_register(struct ssb_bus *bus,
 > >  
-> > +		wdev->rtrig_rssi = false;
-> > +		wdev->rtrig_rssi_thold = -75;
-> > +		wdev->rtrig_rssi_hyst = 2;
-> > +		if (rdev->ops->set_roam_trigger)
-> > +			if (rdev->ops->set_roam_trigger(wdev->wiphy, dev,
-> > +							wdev->rtrig_rssi,
-> > +							wdev->rtrig_rssi_thold,
-> > +							wdev->rtrig_rssi_hyst)) {
-> > +				/* assume this means it's off */
-> > +				wdev->rtrig_rssi = false;
-> > +			}
+> >  extern void ssb_bus_unregister(struct ssb_bus *bus);
+> >  
+> > +/* Does the device have an SPROM? */
+> > +extern bool ssb_is_sprom_available(struct ssb_bus *bus);
+> > +
+> >  /* Set a fallback SPROM.
+> >   * See kdoc at the function definition for complete documentation. */
+> >  extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
+> > diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
+> > index 4e27acf..4e5726d 100644
+> > --- a/include/linux/ssb/ssb_driver_chipcommon.h
+> > +++ b/include/linux/ssb/ssb_driver_chipcommon.h
+> > @@ -30,6 +30,7 @@
+> >  #define   SSB_CHIPCO_CAP_UARTCLK_INT	0x00000008	/* UARTs are driven by internal divided clock */
+> >  #define  SSB_CHIPCO_CAP_UARTGPIO	0x00000020	/* UARTs on GPIO 15-12 */
+> >  #define  SSB_CHIPCO_CAP_EXTBUS		0x000000C0	/* External buses present */
+> > +#define  SSB_CHIPCO_CAP_SPROM		0x40000000	/* SPROM present */
+> >  #define  SSB_CHIPCO_CAP_FLASHT		0x00000700	/* Flash Type */
 > 
-> I'm not sure I agree this should be enabled by default ... it needs
-> software listening to it anyway so that software can just enable it.
-> 
-> Also, you don't need to keep track of rtrig_rssi etc. in the wdev since
-> you never read those variables again, unless you want to add code to
-> export them again when the interface configuration is dumped out.
+> Probably keep ordering of capabilities correct.
 
-It's not actually being "enabled" here - actually it's being explicitly
-disabled. But you're right, that probably is not necessary either, so
-revisit this and come up with a RFCv2
+Oops, sorry...
 
-> Either way, it's a good start, thanks for doing this work.
-
-Thanks for the feedback.
-
--Juuso
-
-> johannes
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
