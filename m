@@ -1,140 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:64389 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752568Ab0CQGCU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 02:02:20 -0400
-Subject: Re: [RFC PATCHv2 1/2] cfg80211: Add connection quality monitoring
- support to nl80211
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268776278.8918.8.camel@jlt3.sipsolutions.net>
-References: <1268657751-1042-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268657751-1042-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268776278.8918.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 07:58:38 +0200
-Message-ID: <1268805518.10120.598.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:41167 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752808Ab0CSVOQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Mar 2010 17:14:16 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Trieu 'Andrew' Nguyen <trieux.t.nguyen@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 7/9] iwlwifi: move plcp check to separated function
+Date: Fri, 19 Mar 2010 14:14:09 -0700
+Message-Id: <1269033251-17545-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1269033251-17545-1-git-send-email-reinette.chatre@intel.com>
+References: <1269033251-17545-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-16 at 22:51 +0100, ext Johannes Berg wrote:
-> On Mon, 2010-03-15 at 14:55 +0200, Juuso Oikarinen wrote:
-> 
-> > + * @NL80211_ATTR_CQM: connection quality monitor configuration in a
-> > + *	nested attribute with %NL80211_ATTR_CQM_* sub-attributes.
-> > + *
-> >   * @NL80211_ATTR_MAX: highest attribute number currently defined
-> >   * @__NL80211_ATTR_AFTER_LAST: internal use
-> >   */
-> > @@ -842,6 +851,8 @@ enum nl80211_attrs {
-> >  
-> >  	NL80211_ATTR_PS_STATE,
-> >  
-> > +	NL80211_ATTR_CQM,
-> > +
-> >  	/* add attributes here, update the policy in nl80211.c */
-> >  
-> >  	__NL80211_ATTR_AFTER_LAST,
-> > @@ -1583,4 +1594,29 @@ enum nl80211_ps_state {
-> >  	NL80211_PS_ENABLED,
-> >  };
-> >  
-> > +/**
-> > + * enum nl80211_attr_cqm - connection quality monitor attributes
-> > + * @__NL80211_ATTR_CQM_INVALID: invalid
-> > + * @NL80211_ATTR_CQM_RSSI_THOLD: RSSI threshold in dBm
-> > + * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm
-> 
-> You really like abbreviations? I think it wouldn't hurt to make these
-> more verbose :)
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-You know, I used to always write things fully open, which I always got
-complaints for. It seems I'm now closing on the opposite ;)
+Move the plcp error checking into stand alone function and pointed by ops
+to accommodate devices not needing this recovery.
 
-To me CQM sounds like a nice snappy name for the feature ;)
-"CONNECTION_QUALITY_MONITOR" is obviously too long, so I quess a
-compromise option would be to use "CONN_QUAL_MON" or something.
+Signed-off-by: Trieu 'Andrew' Nguyen <trieux.t.nguyen@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    2 +
+ drivers/net/wireless/iwlwifi/iwl-core.h |    5 +++
+ drivers/net/wireless/iwlwifi/iwl-rx.c   |   58 +++++++++++++++++++------------
+ 6 files changed, 47 insertions(+), 22 deletions(-)
 
-If there is no hard opposition, I would like to stick with CQM.
-Obviously, I'll revisit those docs for v3.
-
-> > + * @NL80211_ATTR_CQM_RSSI_LEVEL: Current level in relation to threshold
-> > + * @__NL80211_ATTR_CQM_AFTER_LAST: internal
-> > + * @NL80211_ATTR_CQM_MAX: highest key attribute
-> > + */
-> > +enum nl80211_attr_cqm {
-> > +	__NL80211_ATTR_CQM_INVALID,
-> > +	NL80211_ATTR_CQM_RSSI_THOLD,
-> > +	NL80211_ATTR_CQM_RSSI_HYST,
-> > +	NL80211_ATTR_CQM_RSSI_LEVEL,
-> > +
-> > +	/* keep last */
-> > +	__NL80211_ATTR_CQM_AFTER_LAST,
-> > +	NL80211_ATTR_CQM_MAX = __NL80211_ATTR_CQM_AFTER_LAST - 1
-> > +};
-> > +
-> > +enum nl80211_cqm_level {
-> 
-> Docs? But then again, see further down.
-> 
-> > diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> > index 3d134a1..5f48472 100644
-> > --- a/include/net/cfg80211.h
-> > +++ b/include/net/cfg80211.h
-> > @@ -1007,6 +1007,7 @@ struct cfg80211_pmksa {
-> >   *	RSN IE. It allows for faster roaming between WPA2 BSSIDs.
-> >   * @del_pmksa: Delete a cached PMKID.
-> >   * @flush_pmksa: Flush all cached PMKIDs.
-> > + * @set_cqm_config: Configure cqm RSSI notification threshold.
-> 
-> abbreviations in the method are one thing, but in the docs?
-
-I'll need to revisit all these docs for v3.
-
-> > +/**
-> > + * cfg80211_cqm_notify - notification of a connection quality monitoring event
-> > + * @dev: network device
-> > + * @rssi_level: current level of the RSSI
-> > + * @gfp: context flags
-> > + *
-> > + * This function is called, when a configured connection quality monitoring
-> > + * event occurs.
-> > + */
-> > +void cfg80211_cqm_notify(struct net_device *dev,
-> > +			 enum nl80211_cqm_level rssi_level, gfp_t gfp);
-> 
-> I think you should just pass the RSSI value instead of this odd level.
-> If you can't do that, then at least rename cqm_level to
-> cqm_rssi_threshold_reached or something?
-
-I'll rename the enum for v3.
-
-> > +static struct nla_policy
-> > +nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX+1] __read_mostly = {
-> > +	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U8 },
-> > +	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U8 },
-> > +	[NL80211_ATTR_CQM_RSSI_LEVEL] = { .type = NLA_U32 },
-> > +};
-> 
-> Using a u8 for RSSI isn't really a great thing to do, I think. Can't we
-> just use s32 (aka u32)?
-
-I get these sensations every now and then that I should for some reason
-save lots of memory, for no good reason, and then I end up using awkward
-data types for some values. I'll change to s32.
-
-
-Thanks for the review! I'm still trying to adapt to the ways and
-conventions of these modules, but I'll get there.
-
-> johannes
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 5a9cb70..c6d6a0c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -213,6 +213,7 @@ static struct iwl_lib_ops iwl1000_lib = {
+ 	 },
+ 	.add_bcast_station = iwl_add_bcast_station,
+ 	.recover_from_tx_stall = iwl_bg_monitor_recover,
++	.recover_from_statistics = iwl_recover_from_statistics,
+ };
+ 
+ static const struct iwl_ops iwl1000_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index acca89a..5efd60a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2221,6 +2221,7 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 		.set_ct_kill = iwl4965_set_ct_threshold,
+ 	},
+ 	.add_bcast_station = iwl_add_bcast_station,
++	.recover_from_statistics = iwl_recover_from_statistics,
+ };
+ 
+ static const struct iwl_ops iwl4965_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index a01b3c5..75f2a51 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1500,6 +1500,7 @@ struct iwl_lib_ops iwl5000_lib = {
+ 	 },
+ 	.add_bcast_station = iwl_add_bcast_station,
+ 	.recover_from_tx_stall = iwl_bg_monitor_recover,
++	.recover_from_statistics = iwl_recover_from_statistics,
+ };
+ 
+ static struct iwl_lib_ops iwl5150_lib = {
+@@ -1555,6 +1556,7 @@ static struct iwl_lib_ops iwl5150_lib = {
+ 	 },
+ 	.add_bcast_station = iwl_add_bcast_station,
+ 	.recover_from_tx_stall = iwl_bg_monitor_recover,
++	.recover_from_statistics = iwl_recover_from_statistics,
+ };
+ 
+ static const struct iwl_ops iwl5000_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 4fbc38c..b1f0e5c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -279,6 +279,7 @@ static struct iwl_lib_ops iwl6000_lib = {
+ 	 },
+ 	.add_bcast_station = iwl_add_bcast_station,
+ 	.recover_from_tx_stall = iwl_bg_monitor_recover,
++	.recover_from_statistics = iwl_recover_from_statistics,
+ };
+ 
+ static const struct iwl_ops iwl6000_ops = {
+@@ -345,6 +346,7 @@ static struct iwl_lib_ops iwl6050_lib = {
+ 	 },
+ 	.add_bcast_station = iwl_add_bcast_station,
+ 	.recover_from_tx_stall = iwl_bg_monitor_recover,
++	.recover_from_statistics = iwl_recover_from_statistics,
+ };
+ 
+ static const struct iwl_ops iwl6050_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index c4cd1de..4251afb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -193,6 +193,9 @@ struct iwl_lib_ops {
+ 	void (*add_bcast_station)(struct iwl_priv *priv);
+ 	/* recover from tx queue stall */
+ 	void (*recover_from_tx_stall)(unsigned long data);
++	/* recover from errors showed in statistics */
++	void (*recover_from_statistics)(struct iwl_priv *priv,
++					struct iwl_rx_packet *pkt);
+ };
+ 
+ struct iwl_led_ops {
+@@ -434,6 +437,8 @@ void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
+ 			       struct iwl_rx_mem_buffer *rxb);
+ void iwl_rx_spectrum_measure_notif(struct iwl_priv *priv,
+ 					  struct iwl_rx_mem_buffer *rxb);
++void iwl_recover_from_statistics(struct iwl_priv *priv,
++				 struct iwl_rx_packet *pkt);
+ void iwl_rx_statistics(struct iwl_priv *priv,
+ 			      struct iwl_rx_mem_buffer *rxb);
+ void iwl_reply_statistics(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 8116aa0..d368b8d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -617,28 +617,18 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+ #define REG_RECALIB_PERIOD (60)
+ 
+ #define PLCP_MSG "plcp_err exceeded %u, %u, %u, %u, %u, %d, %u mSecs\n"
+-void iwl_rx_statistics(struct iwl_priv *priv,
+-			      struct iwl_rx_mem_buffer *rxb)
++/*
++ * This function checks for plcp error.
++ * - When the plcp error is exceeding the thresholds, it will reset the radio
++ * to improve the throughput.
++ */
++void iwl_recover_from_statistics(struct iwl_priv *priv,
++				   struct iwl_rx_packet *pkt)
+ {
+-	int change;
+-	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	int combined_plcp_delta;
+ 	unsigned int plcp_msec;
+ 	unsigned long plcp_received_jiffies;
+ 
+-	IWL_DEBUG_RX(priv, "Statistics notification received (%d vs %d).\n",
+-		     (int)sizeof(priv->statistics),
+-		     le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK);
+-
+-	change = ((priv->statistics.general.temperature !=
+-		   pkt->u.stats.general.temperature) ||
+-		  ((priv->statistics.flag &
+-		    STATISTICS_REPLY_FLG_HT40_MODE_MSK) !=
+-		   (pkt->u.stats.flag & STATISTICS_REPLY_FLG_HT40_MODE_MSK)));
+-
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-	iwl_accumulative_statistics(priv, (__le32 *)&pkt->u.stats);
+-#endif
+ 	/*
+ 	 * check for plcp_err and trigger radio reset if it exceeds
+ 	 * the plcp error threshold plcp_delta.
+@@ -659,11 +649,11 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 			le32_to_cpu(priv->statistics.rx.ofdm_ht.plcp_err));
+ 
+ 		if ((combined_plcp_delta > 0) &&
+-			((combined_plcp_delta * 100) / plcp_msec) >
++		    ((combined_plcp_delta * 100) / plcp_msec) >
+ 			priv->cfg->plcp_delta_threshold) {
+ 			/*
+-			 * if plcp_err exceed the threshold, the following
+-			 * data is printed in csv format:
++			 * if plcp_err exceed the threshold,
++			 * the following data is printed in csv format:
+ 			 *    Text: plcp_err exceeded %d,
+ 			 *    Received ofdm.plcp_err,
+ 			 *    Current ofdm.plcp_err,
+@@ -678,9 +668,8 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 				le32_to_cpu(priv->statistics.rx.ofdm.plcp_err),
+ 				le32_to_cpu(pkt->u.stats.rx.ofdm_ht.plcp_err),
+ 				le32_to_cpu(
+-					priv->statistics.rx.ofdm_ht.plcp_err),
++				  priv->statistics.rx.ofdm_ht.plcp_err),
+ 				combined_plcp_delta, plcp_msec);
+-
+ 			/*
+ 			 * Reset the RF radio due to the high plcp
+ 			 * error rate
+@@ -688,6 +677,31 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 			iwl_force_reset(priv, IWL_RF_RESET);
+ 		}
+ 	}
++}
++EXPORT_SYMBOL(iwl_recover_from_statistics);
++
++void iwl_rx_statistics(struct iwl_priv *priv,
++			      struct iwl_rx_mem_buffer *rxb)
++{
++	int change;
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++
++
++	IWL_DEBUG_RX(priv, "Statistics notification received (%d vs %d).\n",
++		     (int)sizeof(priv->statistics),
++		     le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK);
++
++	change = ((priv->statistics.general.temperature !=
++		   pkt->u.stats.general.temperature) ||
++		  ((priv->statistics.flag &
++		    STATISTICS_REPLY_FLG_HT40_MODE_MSK) !=
++		   (pkt->u.stats.flag & STATISTICS_REPLY_FLG_HT40_MODE_MSK)));
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++	iwl_accumulative_statistics(priv, (__le32 *)&pkt->u.stats);
++#endif
++	if (priv->cfg->ops->lib->recover_from_statistics)
++		priv->cfg->ops->lib->recover_from_statistics(priv, pkt);
+ 
+ 	memcpy(&priv->statistics, &pkt->u.stats, sizeof(priv->statistics));
+ 
+-- 
+1.6.3.3
 
