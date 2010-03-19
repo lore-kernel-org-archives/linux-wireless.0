@@ -1,108 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:55710 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633Ab0CMQvs (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:65429 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152Ab0CSQtf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Mar 2010 11:51:48 -0500
-Received: from [212.123.130.47] (helo=[10.0.0.8])
-	by smtp-out1.tiscali.nl with esmtp (Exim)
-	(envelope-from <thijsvanderkraan@telfort.nl>)
-	id 1NqUH6-0003JY-7G
-	for linux-wireless@vger.kernel.org; Sat, 13 Mar 2010 17:33:16 +0100
-Subject: 
-From: Thijs van der Kraan <thijsvanderkraan@telfort.nl>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 13 Mar 2010 17:33:14 +0100
-Message-ID: <1268497994.2475.12.camel@desktop>
-Mime-Version: 1.0
+	Fri, 19 Mar 2010 12:49:35 -0400
+Received: by gyg8 with SMTP id 8so1634353gyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 09:49:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1268978712.2446.1757.camel@rchatre-DESK>
+References: <f39b508c1003170613g5a8754a2kc9e15075c16f499b@mail.gmail.com>
+	 <1268978712.2446.1757.camel@rchatre-DESK>
+Date: Fri, 19 Mar 2010 11:49:34 -0500
+Message-ID: <f39b508c1003190949m91f4070i4d8d19929f8d6787@mail.gmail.com>
+Subject: Re:
+From: Vasil Lalov <vasil.lalov@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The zd1211rw does not work with the Shuttle PN15G (D-Link Corp. WL54).
-After the driver fails it also break the device for my windows XP
-install.
-To get it back in working order I have to physically re-plug it while
-windows is running, this is pretty annoying as the PN15G is meant to be,
-and is, built inside my shuttle box.
+Reinett,
 
-I tried another device that uses the same driver, the ZyAIR G-220, and
-it works like a charm.
+Thanks for responding to this. I also noticed other things. It seems
+that this Microcode SW error occurs because the wifi card is
+overheating. When used in n-mode and there is a large file transfer,
+the temperature of the card rises to over 62C. Soon after this, the
+microcode error occurs and the card gets disassociated.
 
-- Is there a way to get the Shuttle PN15G working ?
-- Can prevent the driver from breaking my device, so it will remain
-working under windows XP.
+Doing more research on the power vs temperature problem, I discovered
+that other users are seeing this as well. Some have solved their
+problem by enabling the power management for the wifi card by issuing
+
+iwconfig wlan0 power on
+
+Others, completely disabled the power management and forced a fixed,
+lower power level by issuing
+
+ echo 8 > /sys/bus/pci/drivers/iwlagn/0000\:06\:00.0/power_level
+
+Also, what I have noticed is that if I have my laptop very very close
+to the Access Point (1-3 feet) then this error is more likely to
+happen. If I move the laptop further away, say more than 15-20 feet,
+this error stops occurring so frequently.
+
+Unfortunately, I cannot upgrade to 2.6.33 kernel as it is currently
+not available for my distribution and I am reluctant to recompile my
+own kernel.
+
+Vasil
+
+===
+Vasil Lalov
+Sr. Systems Manager
+Chicago Public Library
 
 
-Thijs van de Kraan
-
-
-lsusb:
----------------
-Bus 001 Device 004: ID 0586:3401 ZyXEL Communications Corp. ZyAIR G-220
-Bus 001 Device 003: ID 07b8:6001 D-Link Corp. WL54
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 004 Device 002: ID 04fc:05d8 Sunplus Technology Co., Ltd 
-Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
----------------
-
-dmesg (Shuttle PN15G):
----------------
-[    9.419022] zd1211rw 1-8:1.0: phy0
-[    9.419050] usbcore: registered new interface driver zd1211rw
-[   11.618783] usb 1-8: firmware: requesting zd1211/zd1211b_ub
-[   11.979913] usb 1-8: firmware version 0x4810 and device bootcode
-version 0x4721 differ
-[   11.979919] usb 1-8: firmware: requesting zd1211/zd1211b_ur
-[   12.184918] usb 1-8: firmware: requesting zd1211/zd1211b_uphr
-[   12.261522] zd1211rw 1-8:1.0: RF2959 is currently not supported for
-ZD1211B devices
-[   12.263744] eth0: link down
-[   12.263950] ADDRCONF(NETDEV_UP): eth0: link is not ready
-[   14.491044] usb 1-8: firmware: requesting zd1211/zd1211b_ub
-[   14.496834] usb 1-8: firmware version 0x4810 and device bootcode
-version 0x4721 differ
-[   14.496841] usb 1-8: firmware: requesting zd1211/zd1211b_ur
-[   15.526035] usb 1-8: USB control request for firmware upload failed.
-Error number -110
-[   15.526049] zd1211rw 1-8:1.0: couldn't load firmware. Error number
--110
-
-dmesg (ZyAIR G-220):
----------------
-
-[  283.920025] usb 1-4: new high speed USB device using ehci_hcd and
-address 4
-[  284.070953] usb 1-4: configuration #1 chosen from 1 choice
-[  284.200081] usb 1-4: reset high speed USB device using ehci_hcd and
-address 4
-[  284.351553] phy1: Selected rate control algorithm 'minstrel'
-[  284.352966] zd1211rw 1-4:1.0: phy1
-[  284.387607] usb 1-4: firmware: requesting zd1211/zd1211_ub
-[  284.422786] usb 1-4: firmware version 0x4330 and device bootcode
-version 0x4810 differ
-[  284.422796] usb 1-4: firmware: requesting zd1211/zd1211_ur
-[  284.446550] usb 1-4: firmware: requesting zd1211/zd1211_uphr
-[  284.528039] zd1211rw 1-4:1.0: firmware version 4605
-[  284.568044] zd1211rw 1-4:1.0: zd1211 chip 0586:3401 v4810 high
-00-13-49 AL2230_RF pa0 -----
-[  284.570691] cfg80211: Calling CRDA for country: DE
-[  284.574176] cfg80211: Regulatory domain changed to country: DE
-[  284.574184] 	(start_freq - end_freq @ bandwidth), (max_antenna_gain,
-max_eirp)
-[  284.574190] 	(2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[  284.574195] 	(5150000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[  284.574200] 	(5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
-[  284.589627] ADDRCONF(NETDEV_UP): wlan1: link is not ready
-[  291.145078] wlan1: authenticate with AP 00:21:29:8b:3a:49
-[  291.146703] wlan1: authenticated
-[  291.146708] wlan1: associate with AP 00:21:29:8b:3a:49
-[  291.148944] wlan1: RX AssocResp from 00:21:29:8b:3a:49 (capab=0x411
-status=0 aid=2)
-[  291.148950] wlan1: associated
-[  291.149928] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
-[  301.720021] wlan1: no IPv6 routers present
-
+On Fri, Mar 19, 2010 at 1:05 AM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Wed, 2010-03-17 at 06:13 -0700, Vasil Lalov wrote:
+>
+>> The error messages in dmesg:
+>>
+>> iwlagn 0000:0c:00.0: Microcode SW error detected.  Restarting 0x2000000.
+>> [40595.037808] iwlagn 0000:0c:00.0: Start IWL Error Log Dump:
+>> [40595.037814] iwlagn 0000:0c:00.0: Status: 0x000212E4, count: 5
+>> [40595.037945] iwlagn 0000:0c:00.0: Desc
+>> Time       data1      data2      line
+>> [40595.037954] iwlagn 0000:0c:00.0: NMI_INTERRUPT_WDG            (#04)
+>> 3570070946 0x00000002 0x07030000 3664
+>
+> [...]
+>
+>> [40595.101312] iwlagn 0000:0c:00.0: Stopping AGG while state not ON or starting
+>> [40595.101318] iwlagn 0000:0c:00.0: queue number out of range: 0, must
+>> be 10 to 19
+>> [40595.101340] iwlagn 0000:0c:00.0: Stopping AGG while state not ON or starting
+>> [40595.101343] iwlagn 0000:0c:00.0: queue number out of range: 0, must
+>> be 10 to 19
+>
+> This looks similar to https://bugzilla.kernel.org/show_bug.cgi?id=15374
+> - could you please update your kernel to 2.6.33 and try the patches
+> attached to that bug report?
+>
+> Reinette
+>
+>
+>
