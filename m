@@ -1,168 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:38530 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754971Ab0C1SZZ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46780 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154Ab0CSUmN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 14:25:25 -0400
-Received: by ywh36 with SMTP id 36so2918459ywh.4
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Mar 2010 11:25:24 -0700 (PDT)
-Message-ID: <4BAF9F11.6050802@lwfinger.net>
-Date: Sun, 28 Mar 2010 13:25:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Nicolas_de_Peslo=FCan?= <nicolas.2p.debian@free.fr>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Calvin Walton <calvin.walton@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>	<1269377903.21181.8.camel@nayuki> <4BAA1EA3.9060803@lwfinger.net>	<201003242021.39502.mb@bu3sch.de> <4BAC2E36.8000900@lwfinger.net> <4BAF8E62.4060902@free.fr>
-In-Reply-To: <4BAF8E62.4060902@free.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 19 Mar 2010 16:42:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>, stable@kernel.org
+Subject: [PATCH v3] ssb: do not read SPROM if it does not exist
+Date: Fri, 19 Mar 2010 16:41:49 -0400
+Message-Id: <1269031309-23297-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1269030785-5347-1-git-send-email-linville@tuxdriver.com>
+References: <1269030785-5347-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/2010 12:14 PM, Nicolas de Pesloüan wrote:
-> Larry Finger wrote:
->> On 03/24/2010 02:21 PM, Michael Buesch wrote:
->>> On Wednesday 24 March 2010 15:16:03 Larry Finger wrote:
->>>> I have modified ssb to supply a MAC address of 80:80:80:80:80:80,
->>>> rather than
->>> What about also setting the local-assignment bit for this temporary
->>> address?
->>>
->>>> The one remaining problem is that the interface has already been
->>>> renamed before
->>>> 60-persistent-b43-mac.rules is processed. In my case, the interface
->>>> is wlan13,
->>>> not wlan0. After I manually modified 60-..., then the new address is
->>>> applied.
->>>> I'm still working on this problem.
->>> Well, udev scripts are processed in alphabetical order. Can't you
->>> simply run
->>> the persistent mac rules before the persistent ifname rules?
->>
->> I finally figured out the problem I was having. The address attribute
->> was not
->> being changed by the "ifconfig" call that changed the hardware
->> address. The fix
->> is to create a new environment when the hardware address and lock out
->> the rule
->> generation process when that value is detected. The new code for
->> /lib/udev/rules.d/65-persistent-b43-mac-generator.rules is as follows
->> (Note:
->> These files are line-wrapped here.):
->>
->> #=======================================
->> #
->> # Rules file to assign a unique, permanent address to BCM43XX devices
->> without
->> # an SPROM.
->> #
->> # Copyright (c) 2010 by Calvin Walton <calvin.walton@gmail.com>
->> # Copyright (c) 2010 by Larry Finger <Larry.Finger@lwfinger.net>
->>
->> # skip this code if action is not add, i.e. change or remove
->>
->> ACTION!="add", GOTO="persistent_b43_mac_generator_end"
->>
->> # Use the value of the MAC_CHANGED environment variable to see if the
->> address
->> # has already been changed.
->>
->> ENV{MAC_CHANGED}=="yes", GOTO="persistent_b43_mac_generator_end"
->>
->> # Call script to get a random address - if this device previously
->> encountered,
->> # the address will already have been changed.
->>
->> SUBSYSTEM=="net", ATTR{address}=="82:82:82:82:82:82",
->> IMPORT{program}="write_persistent_b43_mac"
->>
->> # Apply the new hardware address returned by the script
->>
->> SUBSYSTEM=="net", ATTR{address}=="82:82:82:82:82:82",
->> RUN+="/sbin/ifconfig
->> $env{INTERFACE} hw ether $env{MACADDRESS_NEW}"
-> 
-> Why do you use ifconfig hw ether instead of ip link set address ?
-> 
->> LABEL="persistent_b43_mac_generator_end"
->> #=======================================
->>
->> The code for /lib/udev/write_persistent_b43_mac is as follows:
->>
->> #=======================================
->> #!/bin/bash
->>
->> # Script to Generate a random MAC address for a BCM43XX device without
->> # an SPROM.
->> #
->> # Copyright (c) 2010 by Calvin Walton <calvin.walton@gmail.com>
->> # Copyright (c) 2010 by Larry Finger <Larry.Finger@lwfinger.net>
->>
->> # Use /dev/urandom to generate the last 5 bytes of the address.
->> # Make the first byte 2 to avoid generating a multicast address and to
->> set
->> #  the locally administered address bit.
->>
->> MACADDRESS=$(/bin/dd if=/dev/urandom bs=1 count=5 2>/dev/null |
->> /usr/bin/od -tx1
->> | /usr/bin/head -1 | \
->> /usr/bin/cut -d' ' -f2- | /usr/bin/awk '{ print
->> "02:"$1":"$2":"$3":"$4":"$5 }')
-> 
-> A suggest the following :
-> 
-> - 6 bytes of randomness and force lower half of first byte to 2 if the
-> value does not have bit #2 set.
-> - sed, instead of head|cut|awk
-> 
-> MACADDRESS=$(/bin/dd if=/dev/random bs=1 count=6 2>/dev/null |
-> /usr/bin/od -tx1 |
->   sed -ne '1{;s/0000000 //;s/^\(.\)[014589cd]/\12/;y/ /:/;p}'
+Attempting to read registers that don't exist on the SSB bus can cause
+hangs on some boxes.  At least some b43 devices are 'in the wild' that
+don't have SPROMs at all.  When the SSB bus support loads, it attempts
+to read these (non-existant) SPROMs and causes hard hangs on the box --
+no console output, etc.
 
-It also needs to be even as an odd value would be a broadcast address. Using
-only sed instead of head|cut|awk does have merit and the randomness is increased
-by 6 bits. It will take me a while to understand the sed here. Regular
-expressions are not my thing.
+This patch adds some intelligence to determine whether or not the SPROM
+is present before attempting to read it.  This avoids those hard hangs
+on those devices with no SPROM attached to their SSB bus.  The
+SSB-attached devices (e.g. b43, et al.) won't work, but at least the box
+will survive to test further patches. :-)
 
->> # Define the output rules file
->> RULES_FILE='/etc/udev/rules.d/60-persistent-b43-mac.rules'
->>
->> . /lib/udev/rule_generator.functions
->>
->> # Prevent concurrent processes from modifying the file at the same time.
->> lock_rules_file
->>
->> # Check if the rules file is writeable.
->> choose_rules_file
->>
->> # The rule should apply for all wlan devices -s some other wireless
->> driver might
->> # be loaded first - change wlanNN to wlan*
->> GEN_PATH=$(echo $DEVPATH | /usr/bin/sed s/wlan[0-9]*/wlan*/)
-> 
-> sed should be quoted here : /usr/bin/sed -e 's/wlan[0-9]*/wlan*/'
-> Else, it might be fun if you happen to have a file called s/wlan7/wlan15
-> in current directory.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>
+Cc: stable@kernel.org
+---
+Version 3, add missing semi-colon... :-(
+Version 2, check the correct place for ChipCommon core revision... :-)
 
-OK - I see your point. As the current directory is /lib/udev, the presence of
-such a file is unlikely, but better to protect against the problem.
+ drivers/ssb/pci.c                         |    3 +++
+ drivers/ssb/scan.c                        |    4 ++++
+ drivers/ssb/sprom.c                       |   22 ++++++++++++++++++++++
+ include/linux/ssb/ssb.h                   |    3 +++
+ include/linux/ssb/ssb_driver_chipcommon.h |   15 +++++++++++++++
+ 5 files changed, 47 insertions(+), 0 deletions(-)
 
->> # Output new rule
->> echo "SUBSYSTEM==\"net\", DEVPATH==\"$GEN_PATH\",
->> ATTR{address}==\"82:82:82:82:82:82\", ENV{MAC_CHANGED}=\"yes\",
->> RUN+=\"/sbin/ifconfig \$env{INTERFACE} hw ether $MACADDRESS\"" >>
->> $RULES_FILE
-> 
-> If DEVPATH is "generic" (wlan*), how would you distinguish between two
-> broadcom NIC present in the system, both without an SPROM ?
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index 9e50896..2f7b16d 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -620,6 +620,9 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 	int err = -ENOMEM;
+ 	u16 *buf;
+ 
++	if (!ssb_is_sprom_available(bus))
++		return -ENODEV;
++
+ 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+ 	if (!buf)
+ 		goto out;
+diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
+index 0d6c028..6d51895 100644
+--- a/drivers/ssb/scan.c
++++ b/drivers/ssb/scan.c
+@@ -306,6 +306,10 @@ int ssb_bus_scan(struct ssb_bus *bus,
+ 		}
+ 		tmp = scan_read32(bus, 0, SSB_CHIPCO_CAP);
+ 		bus->chipco.capabilities = tmp;
++		if (bus->chipco.dev->id.revision >= 11) {
++			tmp = scan_read32(bus, 0, SSB_CHIPCO_CHIPSTAT);
++			bus->chipco.status = tmp;
++		}
+ 	} else {
+ 		if (bus->bustype == SSB_BUSTYPE_PCI) {
+ 			bus->chip_id = pcidev_to_chipid(bus->host_pci);
+diff --git a/drivers/ssb/sprom.c b/drivers/ssb/sprom.c
+index d0e6762..55eb9b0 100644
+--- a/drivers/ssb/sprom.c
++++ b/drivers/ssb/sprom.c
+@@ -175,3 +175,25 @@ const struct ssb_sprom *ssb_get_fallback_sprom(void)
+ {
+ 	return fallback_sprom;
+ }
++
++bool ssb_is_sprom_available(struct ssb_bus *bus)
++{
++	/* status register only exists on chipcomon rev >= 11 */
++	if (bus->chipco.dev->id.revision < 11)
++		return true;
++
++	switch (bus->chip_id) {
++	case 0x4312:
++		return SSB_CHIPCO_CHST_4312_SPROM_PRESENT(bus->chipco.status);
++	case 0x4322:
++		return SSB_CHIPCO_CHST_4322_SPROM_PRESENT(bus->chipco.status);
++	case 0x4325:
++		return SSB_CHIPCO_CHST_4325_SPROM_PRESENT(bus->chipco.status);
++	default:
++		break;
++	}
++	if (bus->chipco.dev->id.revision >= 31)
++		return bus->chipco.capabilities & SSB_CHIPCO_CAP_SPROM;
++
++	return true;
++}
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 24f9885..3b4da23 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -394,6 +394,9 @@ extern int ssb_bus_sdiobus_register(struct ssb_bus *bus,
+ 
+ extern void ssb_bus_unregister(struct ssb_bus *bus);
+ 
++/* Does the device have an SPROM? */
++extern bool ssb_is_sprom_available(struct ssb_bus *bus);
++
+ /* Set a fallback SPROM.
+  * See kdoc at the function definition for complete documentation. */
+ extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
+diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
+index 4e27acf..2cdf249 100644
+--- a/include/linux/ssb/ssb_driver_chipcommon.h
++++ b/include/linux/ssb/ssb_driver_chipcommon.h
+@@ -53,6 +53,7 @@
+ #define  SSB_CHIPCO_CAP_64BIT		0x08000000	/* 64-bit Backplane */
+ #define  SSB_CHIPCO_CAP_PMU		0x10000000	/* PMU available (rev >= 20) */
+ #define  SSB_CHIPCO_CAP_ECI		0x20000000	/* ECI available (rev >= 20) */
++#define  SSB_CHIPCO_CAP_SPROM		0x40000000	/* SPROM present */
+ #define SSB_CHIPCO_CORECTL		0x0008
+ #define  SSB_CHIPCO_CORECTL_UARTCLK0	0x00000001	/* Drive UART with internal clock */
+ #define	 SSB_CHIPCO_CORECTL_SE		0x00000002	/* sync clk out enable (corerev >= 3) */
+@@ -385,6 +386,7 @@
+ 
+ 
+ /** Chip specific Chip-Status register contents. */
++#define SSB_CHIPCO_CHST_4322_SPROM_EXISTS	0x00000040 /* SPROM present */
+ #define SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL	0x00000003
+ #define SSB_CHIPCO_CHST_4325_DEFCIS_SEL		0 /* OTP is powered up, use def. CIS, no SPROM */
+ #define SSB_CHIPCO_CHST_4325_SPROM_SEL		1 /* OTP is powered up, SPROM is present */
+@@ -398,6 +400,18 @@
+ #define SSB_CHIPCO_CHST_4325_RCAL_VALUE_SHIFT	4
+ #define SSB_CHIPCO_CHST_4325_PMUTOP_2B 		0x00000200 /* 1 for 2b, 0 for to 2a */
+ 
++/** Macros to determine SPROM presence based on Chip-Status register. */
++#define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
++	((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_OTP_SEL)
++#define SSB_CHIPCO_CHST_4322_SPROM_PRESENT(status) \
++	(status & SSB_CHIPCO_CHST_4322_SPROM_EXISTS)
++#define SSB_CHIPCO_CHST_4325_SPROM_PRESENT(status) \
++	(((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_DEFCIS_SEL) && \
++	 ((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_OTP_SEL))
++
+ 
+ 
+ /** Clockcontrol masks and values **/
+@@ -564,6 +578,7 @@ struct ssb_chipcommon_pmu {
+ struct ssb_chipcommon {
+ 	struct ssb_device *dev;
+ 	u32 capabilities;
++	u32 status;
+ 	/* Fast Powerup Delay constant */
+ 	u16 fast_pwrup_delay;
+ 	struct ssb_chipcommon_pmu pmu;
+-- 
+1.6.2.5
 
-That is covered by the /devices/pci0000:00/0000:00:0d.0/0000:04:00.0/... part of
-DEVPATH. A second device on the same bridge would have ...04:01.0... and a
-device on a different bridge would change some other part of the string. The
-change to wlan* handles the case where the BCM43XX device is discovered first
-with some configuration, and second when another device is plugged in at
-discovery time.
-
-Larry
