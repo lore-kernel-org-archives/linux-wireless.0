@@ -1,76 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:40139 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755019Ab0CCArd (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:33658 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635Ab0CSSkm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 19:47:33 -0500
-Date: Wed, 03 Mar 2010 09:47:31 +0900
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Subject: Re: [PATCH] rfkill bug fixed in rfkill_set_sw_state
-In-reply-to: <20100302125003.f7919c53.akpm@linux-foundation.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Reply-to: jh80.chung@samsung.com
-Message-id: <4B8DB1A3.9060902@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; format=flowed; charset=ISO-8859-1
-References: <000301cab69f$ec61ad00$c5250700$%chung@samsung.com>
- <20100302125003.f7919c53.akpm@linux-foundation.org>
+	Fri, 19 Mar 2010 14:40:42 -0400
+Received: by bwz1 with SMTP id 1so300469bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 11:40:40 -0700 (PDT)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	bcm43xx devel <Bcm43xx-dev@lists.berlios.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RFC: A workaround for BCM43XX devices with no on-board SPROM
+References: <4BA266FB.1080507@lwfinger.net>
+	<1268945580.4005.15.camel@jlt3.sipsolutions.net>
+	<4BA296BA.7000502@lwfinger.net>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 19 Mar 2010 20:40:38 +0200
+In-Reply-To: <4BA296BA.7000502@lwfinger.net> (Larry Finger's message of "Thu\, 18 Mar 2010 16\:10\:18 -0500")
+Message-ID: <87634scfyx.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok Next time, i will add sutatble cc's scripts/get_maintainer.pl. thanks..
-> Suitable cc's (from scripts/get_maintainer.pl) added.
->
-> On Fri, 26 Feb 2010 13:55:31 +0900
-> _________<jh80.chung@samsung.com>  wrote:
->
->    
->> Don___t work expected operation in __rfkill_set_sw_state.
->> when rfkill initialized. Rfkill___s blocked&  unblocked is operating on the
->> contrary.
->>
->> Signed-off-by: Jaehoon Chung<jh80.chung@samsung.com>
->>
->> ---
->>   net/rfkill/core.c |    2 +-
->>   1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
->> index c224cb2..dcc2d38 100644
->> --- a/net/rfkill/core.c
->> +++ b/net/rfkill/core.c
->> @@ -488,7 +488,7 @@ static void __rfkill_set_sw_state(struct rfkill
->> *rfkill, bool blocked)
->>   	if (rfkill->state&  RFKILL_BLOCK_SW_SETCALL)
->>   		bit = RFKILL_BLOCK_SW_PREV;
->>
->> -	if (blocked)
->> +	if (!blocked)
->>   		rfkill->state |= bit;
->>   	else
->>   		rfkill->state&= ~bit;
->>      
-> Are you sure?  What problems were you observing with the existing code?
-> Please fully describe your hardware and the driver's behaviour.
->
-> The current code _looks_ OK to me.  If bool `blocked' is true, we set
-> the RFKILL_BLOCK_SW bit?
->    
-I implemented the wlan driver using rfkill.
-In my source code, the wlan driver initalized to 
-RFKLL_USESR_STATE_UNBLOCKED..
-if that is correct, maybe do working the unblocked...but not work 
-"unblocked"
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-below code is unblock's operation..right?
-rfkill_init_sw_state(wlan, RFKILL_USER_STATE_UNBLOCKED);
+> It comes from the SPROM, which is missing in the devices in
+> question. Broadcrap wanted to save a few pennies.
 
-but, do not operate unblocked.
-please check that source code..
+It's just only about the cost, it's also about the size. Most probably
+in the future there will be even more designs like this. In the
+embedded side there has been such devices for few years now.
 
-thanks for your comment, Andrew.
-
+-- 
+Kalle Valo
