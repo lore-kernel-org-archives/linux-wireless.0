@@ -1,93 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f176.google.com ([209.85.223.176]:65009 "EHLO
-	mail-iw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756330Ab0CXOQI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 10:16:08 -0400
-Received: by iwn6 with SMTP id 6so2684751iwn.4
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 07:16:07 -0700 (PDT)
-Message-ID: <4BAA1EA3.9060803@lwfinger.net>
-Date: Wed, 24 Mar 2010 09:16:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Calvin Walton <calvin.walton@gmail.com>
-CC: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>	 <201003222325.35994.mb@bu3sch.de> <4BA80118.1070801@lwfinger.net>	 <201003230952.56207.mb@bu3sch.de>  <4BA8CF6C.2050701@lwfinger.net> <1269377903.21181.8.camel@nayuki>
-In-Reply-To: <1269377903.21181.8.camel@nayuki>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.perches.com ([173.55.12.10]:1885 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753251Ab0CSB3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Mar 2010 21:29:49 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>,
+	David Gibson <hermes@gibson.dropbear.id.au>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: [PATCH v3 8/9] orinoco/wext.c: Remove local #define STD_IW_HANDLER
+Date: Thu, 18 Mar 2010 18:29:39 -0700
+Message-Id: <d71351dbdd9b827b376351213012c134e7c7ddf7.1268961559.git.joe@perches.com>
+In-Reply-To: <cover.1268961559.git.joe@perches.com>
+References: <cover.1268961559.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/23/2010 03:58 PM, Calvin Walton wrote:
-> 
-> I will warn you that the following is rather untested, as I don't have
-> any of the affected hardware (or any b43 devices at all, actually), but
-> something along these lines should work. There's no syntax errors, at
-> least :)
-> 
-> --- /lib/udev/rules.d/65-persistent-b43-mac-generator.rules
-> 
-> ACTION!="add" GOTO="persistent_b43_mac_generator_end"
-> 
-> SUBSYSTEM=="net", DRIVERS=="b43", ATTR{address}=="ff:ff:ff:ff:ff:ff", IMPORT{program}="write_persistent_b43_mac"
-> 
-> SUBSYSTEM=="net", ENV{MACADDRESS_NEW}=="?*", RUN+="ifconfig $env{INTERFACE} hw ether $env{MACADDRESS_NEW}"
-> 
-> LABEL="persistent_b43_mac_generator_end"
-> 
-> --- /lib/udev/write_persistent_b43_mac (chmod +x)
-> 
-> #!/bin/bash
-> 
-> # This mac address generation function could be replaced with something better
-> MACADDRESS=$(dd if=/dev/urandom bs=1 count=6 2>/dev/null | od -tx1 | head -1 | cut -d' ' -f2- | awk '{ print $1":"$2":"$3":"$4":"$5":"$6 }')
-> 
-> RULES_FILE='/etc/udev/rules.d/60-persistent-b43-mac.rules'
-> 
-> . /lib64/udev/rule_generator.functions
-> 
-> lock_rules_file
-> 
-> choose_rules_file
-> 
-> echo "DEVPATH==\"$DEVPATH\", DRIVERS==\"b43\", ATTR{address}==\"ff:ff:ff:ff:ff:ff\", RUN+=\"ifconfig $INTERFACE hw ether $MACADDRESS\"" >> $RULES_FILE
-> 
-> echo "MACADDRESS_NEW=$MACADDRESS"
-> 
-> unlock_rules_file
-> 
-> ---
-> 
-> A new file "/etc/udev/rules.d/60-persistent-b43-mac.rules" will be
-> created, which will contain the the saved mac address and bypass the
-> generating script on future boots.
-> 
-> This should probably be run by the udev maintainers, but is a start,
-> anyways.
+Use IW_HANDLER from wireless.h instead
 
-Thanks for the really good start.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/orinoco/wext.c |   94 +++++++++++++++++------------------
+ 1 files changed, 46 insertions(+), 48 deletions(-)
 
-The above routines have a minor problem in that using a random value for the
-first byte of the MAC address runs the risk of having the multicast bit set. By
-fixing the first one to a multiple of 4, that problem is avoided.
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index 31ca241..29f9bc0 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -1505,46 +1505,44 @@ static const struct iw_priv_args orinoco_privtab[] = {
+  * Structures to export the Wireless Handlers
+  */
+ 
+-#define STD_IW_HANDLER(id, func) \
+-	[IW_IOCTL_IDX(id)] = (iw_handler) func
+ static const iw_handler	orinoco_handler[] = {
+-	STD_IW_HANDLER(SIOCSIWCOMMIT,	orinoco_ioctl_commit),
+-	STD_IW_HANDLER(SIOCGIWNAME,	cfg80211_wext_giwname),
+-	STD_IW_HANDLER(SIOCSIWFREQ,	orinoco_ioctl_setfreq),
+-	STD_IW_HANDLER(SIOCGIWFREQ,	orinoco_ioctl_getfreq),
+-	STD_IW_HANDLER(SIOCSIWMODE,	cfg80211_wext_siwmode),
+-	STD_IW_HANDLER(SIOCGIWMODE,	cfg80211_wext_giwmode),
+-	STD_IW_HANDLER(SIOCSIWSENS,	orinoco_ioctl_setsens),
+-	STD_IW_HANDLER(SIOCGIWSENS,	orinoco_ioctl_getsens),
+-	STD_IW_HANDLER(SIOCGIWRANGE,	cfg80211_wext_giwrange),
+-	STD_IW_HANDLER(SIOCSIWSPY,	iw_handler_set_spy),
+-	STD_IW_HANDLER(SIOCGIWSPY,	iw_handler_get_spy),
+-	STD_IW_HANDLER(SIOCSIWTHRSPY,	iw_handler_set_thrspy),
+-	STD_IW_HANDLER(SIOCGIWTHRSPY,	iw_handler_get_thrspy),
+-	STD_IW_HANDLER(SIOCSIWAP,	orinoco_ioctl_setwap),
+-	STD_IW_HANDLER(SIOCGIWAP,	orinoco_ioctl_getwap),
+-	STD_IW_HANDLER(SIOCSIWSCAN,	cfg80211_wext_siwscan),
+-	STD_IW_HANDLER(SIOCGIWSCAN,	cfg80211_wext_giwscan),
+-	STD_IW_HANDLER(SIOCSIWESSID,	orinoco_ioctl_setessid),
+-	STD_IW_HANDLER(SIOCGIWESSID,	orinoco_ioctl_getessid),
+-	STD_IW_HANDLER(SIOCSIWRATE,	orinoco_ioctl_setrate),
+-	STD_IW_HANDLER(SIOCGIWRATE,	orinoco_ioctl_getrate),
+-	STD_IW_HANDLER(SIOCSIWRTS,	orinoco_ioctl_setrts),
+-	STD_IW_HANDLER(SIOCGIWRTS,	orinoco_ioctl_getrts),
+-	STD_IW_HANDLER(SIOCSIWFRAG,	orinoco_ioctl_setfrag),
+-	STD_IW_HANDLER(SIOCGIWFRAG,	orinoco_ioctl_getfrag),
+-	STD_IW_HANDLER(SIOCGIWRETRY,	orinoco_ioctl_getretry),
+-	STD_IW_HANDLER(SIOCSIWENCODE,	orinoco_ioctl_setiwencode),
+-	STD_IW_HANDLER(SIOCGIWENCODE,	orinoco_ioctl_getiwencode),
+-	STD_IW_HANDLER(SIOCSIWPOWER,	orinoco_ioctl_setpower),
+-	STD_IW_HANDLER(SIOCGIWPOWER,	orinoco_ioctl_getpower),
+-	STD_IW_HANDLER(SIOCSIWGENIE,	orinoco_ioctl_set_genie),
+-	STD_IW_HANDLER(SIOCGIWGENIE,	orinoco_ioctl_get_genie),
+-	STD_IW_HANDLER(SIOCSIWMLME,	orinoco_ioctl_set_mlme),
+-	STD_IW_HANDLER(SIOCSIWAUTH,	orinoco_ioctl_set_auth),
+-	STD_IW_HANDLER(SIOCGIWAUTH,	orinoco_ioctl_get_auth),
+-	STD_IW_HANDLER(SIOCSIWENCODEEXT, orinoco_ioctl_set_encodeext),
+-	STD_IW_HANDLER(SIOCGIWENCODEEXT, orinoco_ioctl_get_encodeext),
++	IW_HANDLER(SIOCSIWCOMMIT,	(iw_handler)orinoco_ioctl_commit),
++	IW_HANDLER(SIOCGIWNAME,		(iw_handler)cfg80211_wext_giwname),
++	IW_HANDLER(SIOCSIWFREQ,		(iw_handler)orinoco_ioctl_setfreq),
++	IW_HANDLER(SIOCGIWFREQ,		(iw_handler)orinoco_ioctl_getfreq),
++	IW_HANDLER(SIOCSIWMODE,		(iw_handler)cfg80211_wext_siwmode),
++	IW_HANDLER(SIOCGIWMODE,		(iw_handler)cfg80211_wext_giwmode),
++	IW_HANDLER(SIOCSIWSENS,		(iw_handler)orinoco_ioctl_setsens),
++	IW_HANDLER(SIOCGIWSENS,		(iw_handler)orinoco_ioctl_getsens),
++	IW_HANDLER(SIOCGIWRANGE,	(iw_handler)cfg80211_wext_giwrange),
++	IW_HANDLER(SIOCSIWSPY,		iw_handler_set_spy),
++	IW_HANDLER(SIOCGIWSPY,		iw_handler_get_spy),
++	IW_HANDLER(SIOCSIWTHRSPY,	iw_handler_set_thrspy),
++	IW_HANDLER(SIOCGIWTHRSPY,	iw_handler_get_thrspy),
++	IW_HANDLER(SIOCSIWAP,		(iw_handler)orinoco_ioctl_setwap),
++	IW_HANDLER(SIOCGIWAP,		(iw_handler)orinoco_ioctl_getwap),
++	IW_HANDLER(SIOCSIWSCAN,		(iw_handler)cfg80211_wext_siwscan),
++	IW_HANDLER(SIOCGIWSCAN,		(iw_handler)cfg80211_wext_giwscan),
++	IW_HANDLER(SIOCSIWESSID,	(iw_handler)orinoco_ioctl_setessid),
++	IW_HANDLER(SIOCGIWESSID,	(iw_handler)orinoco_ioctl_getessid),
++	IW_HANDLER(SIOCSIWRATE,		(iw_handler)orinoco_ioctl_setrate),
++	IW_HANDLER(SIOCGIWRATE,		(iw_handler)orinoco_ioctl_getrate),
++	IW_HANDLER(SIOCSIWRTS,		(iw_handler)orinoco_ioctl_setrts),
++	IW_HANDLER(SIOCGIWRTS,		(iw_handler)orinoco_ioctl_getrts),
++	IW_HANDLER(SIOCSIWFRAG,		(iw_handler)orinoco_ioctl_setfrag),
++	IW_HANDLER(SIOCGIWFRAG,		(iw_handler)orinoco_ioctl_getfrag),
++	IW_HANDLER(SIOCGIWRETRY,	(iw_handler)orinoco_ioctl_getretry),
++	IW_HANDLER(SIOCSIWENCODE,	(iw_handler)orinoco_ioctl_setiwencode),
++	IW_HANDLER(SIOCGIWENCODE,	(iw_handler)orinoco_ioctl_getiwencode),
++	IW_HANDLER(SIOCSIWPOWER,	(iw_handler)orinoco_ioctl_setpower),
++	IW_HANDLER(SIOCGIWPOWER,	(iw_handler)orinoco_ioctl_getpower),
++	IW_HANDLER(SIOCSIWGENIE,	orinoco_ioctl_set_genie),
++	IW_HANDLER(SIOCGIWGENIE,	orinoco_ioctl_get_genie),
++	IW_HANDLER(SIOCSIWMLME,		orinoco_ioctl_set_mlme),
++	IW_HANDLER(SIOCSIWAUTH,		orinoco_ioctl_set_auth),
++	IW_HANDLER(SIOCGIWAUTH,		orinoco_ioctl_get_auth),
++	IW_HANDLER(SIOCSIWENCODEEXT,	orinoco_ioctl_set_encodeext),
++	IW_HANDLER(SIOCGIWENCODEEXT,	orinoco_ioctl_get_encodeext),
+ };
+ 
+ 
+@@ -1552,15 +1550,15 @@ static const iw_handler	orinoco_handler[] = {
+   Added typecasting since we no longer use iwreq_data -- Moustafa
+  */
+ static const iw_handler	orinoco_private_handler[] = {
+-	[0] = (iw_handler) orinoco_ioctl_reset,
+-	[1] = (iw_handler) orinoco_ioctl_reset,
+-	[2] = (iw_handler) orinoco_ioctl_setport3,
+-	[3] = (iw_handler) orinoco_ioctl_getport3,
+-	[4] = (iw_handler) orinoco_ioctl_setpreamble,
+-	[5] = (iw_handler) orinoco_ioctl_getpreamble,
+-	[6] = (iw_handler) orinoco_ioctl_setibssport,
+-	[7] = (iw_handler) orinoco_ioctl_getibssport,
+-	[9] = (iw_handler) orinoco_ioctl_getrid,
++	[0] = (iw_handler)orinoco_ioctl_reset,
++	[1] = (iw_handler)orinoco_ioctl_reset,
++	[2] = (iw_handler)orinoco_ioctl_setport3,
++	[3] = (iw_handler)orinoco_ioctl_getport3,
++	[4] = (iw_handler)orinoco_ioctl_setpreamble,
++	[5] = (iw_handler)orinoco_ioctl_getpreamble,
++	[6] = (iw_handler)orinoco_ioctl_setibssport,
++	[7] = (iw_handler)orinoco_ioctl_getibssport,
++	[9] = (iw_handler)orinoco_ioctl_getrid,
+ };
+ 
+ const struct iw_handler_def orinoco_handler_def = {
+-- 
+1.7.0.14.g7e948
 
-A second minor problem is that the full path must be given for all standard
-utilities, otherwise they are assumed to be in /lib/udev. Thus all references to
-"ifconfig" were replaced by "/sbin/ifconfig". I hope all distros put ifconfig in
-/sbin.
-
-I have modified ssb to supply a MAC address of 80:80:80:80:80:80, rather than
-FF:FF:FF:FF:FF:FF. This way the interface can come up even though the new udev
-routines are not available. When b43 detects that address, it will log a message
-describing why the udev routines are needed, and how to obtain them.
-
-The one remaining problem is that the interface has already been renamed before
-60-persistent-b43-mac.rules is processed. In my case, the interface is wlan13,
-not wlan0. After I manually modified 60-..., then the new address is applied.
-I'm still working on this problem.
-
-Thanks again for the help.
-
-Larry
