@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:18484 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800Ab0CEVfg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 16:35:36 -0500
-Subject: Re: KEY_RFKILL not found on kernel 2.6.30
-From: Pavel Roskin <proski@gnu.org>
-To: Keith Bannister <k.bannister@ieee.org>
+Received: from mail-ew0-f216.google.com ([209.85.219.216]:40474 "EHLO
+	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354Ab0CTPAH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Mar 2010 11:00:07 -0400
+Received: by ewy8 with SMTP id 8so257871ewy.28
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Mar 2010 08:00:05 -0700 (PDT)
+MIME-Version: 1.0
+From: Matteo Croce <technoboy85@gmail.com>
+Date: Sat, 20 Mar 2010 15:59:45 +0100
+Message-ID: <40101cc31003200759u447b625ct6f48aa6003593dac@mail.gmail.com>
+Subject: Compat wireless with kernel 2.6.33
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <e44ae5e1003032058g2cf1b5a1lcf62e8919dddea58@mail.gmail.com>
-References: <e44ae5e1003032058g2cf1b5a1lcf62e8919dddea58@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 05 Mar 2010 16:35:26 -0500
-Message-Id: <1267824926.3068.12.camel@mj>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-03-04 at 15:58 +1100, Keith Bannister wrote:
+This patch allows compat wireless to compile with a kernel >= 2.6.33
 
-> /home/keith/wireless/compat-wireless-2010-03-03/net/rfkill/input.c:219:
-> error: ‘KEY_RFKILL’ undeclared (first use in this function)
+Index: compat-wireless-2010-03-19/scripts/gen-compat-autoconf.sh
+===================================================================
+--- compat-wireless-2010-03-19.orig/scripts/gen-compat-autoconf.sh	2010-03-20
+15:26:22.604720545 +0100
++++ compat-wireless-2010-03-19/scripts/gen-compat-autoconf.sh	2010-03-20
+15:27:49.212236531 +0100
+@@ -145,7 +145,11 @@
+ kernel_version_req $OLDEST_KERNEL_SUPPORTED
 
-The same happens on Linux 2.6.26.  I've just sent a patch for that.
-Sorry, I should have credited you as the original reporter.
+ # Handle core kernel wireless depenencies here
++echo '#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33)'
++define_config_req CONFIG_CFG80211_WEXT
++echo '#else'
+ define_config_req CONFIG_WIRELESS_EXT
++echo '#endif'
 
-> Any Ideas?
+ # For each CONFIG_FOO=x option
+ for i in $(grep '^CONFIG_' $COMPAT_CONFIG); do
 
-Please apply this patch to compat-wireless:
-
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 9559f21..70e5f98 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -49,6 +49,8 @@ static inline void compat_release_firmware(const struct firmware *fw)
- }
- #endif
- 
-+#define KEY_RFKILL		247	/* Key that controls all radios */
-+
- #define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
- /* source: include/linux/if.h */
- 
 
 -- 
-Regards,
-Pavel Roskin
+Matteo Croce
+OpenWrt developer
+  _______                     ________        __
+ |       |.-----.-----.-----.|  |  |  |.----.|  |_
+ |   -   ||  _  |  -__|     ||  |  |  ||   _||   _|
+ |_______||   __|_____|__|__||________||__|  |____|
+          |__| W I R E L E S S   F R E E D O M
+ KAMIKAZE (bleeding edge) ------------------
+  * 10 oz Vodka       Shake well with ice and strain
+  * 10 oz Triple sec  mixture into 10 shot glasses.
+  * 10 oz lime juice  Salute!
+ ---------------------------------------------------
