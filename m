@@ -1,116 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:12725 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752006Ab0CYFtG (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:46262 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752329Ab0CTWeQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 01:49:06 -0400
-Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0347876143
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 14:49:03 +0900 (JST)
-Subject: [PATCH 00/10] ANI for ath5k
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
-	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com
-Date: Thu, 25 Mar 2010 14:48:58 +0900
-Message-ID: <20100325054603.10697.48915.stgit@tt-desk>
+	Sat, 20 Mar 2010 18:34:16 -0400
+Received: by bwz1 with SMTP id 1so926324bwz.21
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Mar 2010 15:34:14 -0700 (PDT)
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCHv3 0/2] mac80211: cfg80211: Roam trigger support
+References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
+	<20100317132236.GC2990@tuxdriver.com> <87aau4dcfm.fsf@purkki.valot.fi>
+	<20100319145636.GB9552@tuxdriver.com>
+	<20100320001520.GA26605@jm.kir.nu>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 21 Mar 2010 00:34:10 +0200
+In-Reply-To: <20100320001520.GA26605@jm.kir.nu> (Jouni Malinen's message of "Fri\, 19 Mar 2010 17\:15\:20 -0700")
+Message-ID: <87pr2ybp25.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is ANI for ath5k. I have looked ath both the HAL and ath9k sources, while
-implementing this, so the basic algorithm is the same. A notable difference is
-that i do everything in a tasklet, while ath9k and HAL do larger parts in the
-interrupt handler. Also i have only one routine for raising immunity, while
-ath9k/HAL have separate triggers for CCK and OFDM errors.
+Jouni Malinen <j@w1.fi> writes:
 
-Notes/Questions:
+> On Fri, Mar 19, 2010 at 10:56:37AM -0400, John W. Linville wrote:
+>
+>> If you can make wpa_supplicant scan less then I am sold! :-)
+>
+> I would assume it is not really wpa_supplicant that is triggering too
+> many scans for your liking, but NetworkManager..
 
-- HAL and ath9k use ANI status per channel. This might be useful if we often
-  change channel, but this is not the case, as far as i can see. Any other
-  reason for that?
+Yes, I also believe that's the case.
 
-- HAL and ath9k use only different 2 values in a 5 value array of noise
-  immunity levels (making it essentially an on/off setting) while there are 5
-  levels mentioned in the ANI documents. I guess there must be a reason for
-  this - No?
+> The goal here (at least from my view point) is to actually make
+> wpa_supplicant itself trigger scans more frequently ;-).
 
-- Why is CCK weak signal detection never used (neither turned on or off)?
+Heh, that's the finnish, pessimistic, way of answering to John's
+comment :) But as John is from US, we also have to use some optimism
+in the answer to not make him too nervous ;)
 
-- There is some confusion which initial values to use. The HAL uses all 0 and
-  ofdm weak signal detection enabled. ath9k has all 0 for AP mode (including
-  ofdm weak sig off), while using ofdm weak sig on and a spur level of 7 for
-  STA mode.
+So the aim is to to scan more when the connection is bad. But if the
+connection quality is good enough, wpa_supplicant would not scan at
+all. So in some cases scanning is more frequent and in some cases
+background scan is completely disabled.
 
-- Also there is some inconsistency about which parameters to control in AP
-  mode: ath9k only use spur and firstep in 2GHz bands and no ANI control at all
-  in 5GHz!? the HAL uses noise and spur in both bands, but no fir control. for
-  now, i use noise, spur and fir in AP mode.
+The ultimate goal is to reduce the background scan whenever we can,
+for example when connection is good or there's very little or no
+traffic at all. But we are nowhere near that yet.
 
-- In some situations it is good to be able to manually control sesitivity (e.g.
-  tuning long-distance links; not trusting the ANI algo in general ;)), so i
-  would like to export ANI controls to userspace. Right now this is possible
-  thru debugfs, but this is just for testing. How should the ANI settings be
-  controlled properly? iw? configs? sysfs? What's the interface of choice
-  nowadays?
+> wpa_supplicant already has a notification function just waiting to be
+> called from somewhere when a beacon is lost of signal strength has
+> changed.. That somewhere is supposed to be the driver event handler when
+> it receives one of these new roam trigger events. At that point,
+> wpa_supplicant can then figure out if it should start scanning more
+> frequently to find a better BSS.
 
-TODO / Ideas:
+Very nice.
 
-- Improve beacon averaging algorithm for IBSS: Maybe we should keep track of
-  the average RSSI on a per-node basis and use the minimum of those in order
-  not to loose far away nodes? The other option would be to limit the
-  parameters we control similar to AP mode.
- 
-- Older HW (srev < 0x59) use rx filter and reports phy errors as they appear in
-  the rx descriptors. All is in place for this to work, but i never saw the
-  "right" errors (OFDM and CCK timing), even though i'm pretty sure i should get
-  them. This needs to be tested and debugged more, but i have to focus on newer
-  hardware now.
+> I would hope that this feature will make NetworkManager eventually
+> stop doing its constant scans
 
-- Maybe we could compare the "busy time" to the "listen time" and this way
-  recognize if we have many false detects (- this is how i originally found out
-  that i need to work on ANI).
+I also hope that this will happen. I think the current setup is just
+one big layering violation. After the wifi connection is established,
+NetworkManager (nor Connection Manager) should not issue a scan unless
+requested by the user.
 
-I hope that this will solve thruput problems! For me it nearly doubled thruput
-in a noisy 2Ghz band. :)
+> (or well, if it doesn't, I will provide an option in for
+> wpa_supplicant to ignore D-Bus requests for new scans.. ;-).
 
-bruno
-
----
-
-Bruno Randolf (10):
-      ath5k: remove static calibration interval variable
-      ath5k: remove the use of SWI interrupt
-      ath5k: optimize ath5k_hw_calibration_poll
-      ath5k: move ath5k_hw_calibration_poll to base.c
-      ath5k: keep beacon RSSI average
-      ath5k: initialize default noise floor
-      ath5k: simplify MIB counters
-      ath5k: update phy errors codes
-      ath5k: add capability flag for phyerror counters
-      ath5k: Adaptive Noise Immunity (ANI) Implementation
-
-
- drivers/net/wireless/ath/ath5k/Makefile |    1 
- drivers/net/wireless/ath/ath5k/ani.c    |  741 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath5k/ani.h    |  104 ++++
- drivers/net/wireless/ath/ath5k/ath5k.h  |   68 ++-
- drivers/net/wireless/ath/ath5k/attach.c |    2 
- drivers/net/wireless/ath/ath5k/base.c   |   97 +++-
- drivers/net/wireless/ath/ath5k/base.h   |   20 +
- drivers/net/wireless/ath/ath5k/caps.c   |    6 
- drivers/net/wireless/ath/ath5k/debug.c  |  170 +++++++
- drivers/net/wireless/ath/ath5k/debug.h  |    2 
- drivers/net/wireless/ath/ath5k/desc.c   |    1 
- drivers/net/wireless/ath/ath5k/desc.h   |   35 +
- drivers/net/wireless/ath/ath5k/pcu.c    |   40 +-
- drivers/net/wireless/ath/ath5k/phy.c    |   22 -
- drivers/net/wireless/ath/ath5k/reg.h    |   36 +-
- 15 files changed, 1237 insertions(+), 108 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath5k/ani.c
- create mode 100644 drivers/net/wireless/ath/ath5k/ani.h
+That's also one way to do it. But let's hope that we can find a better
+solution.
 
 -- 
-Signature
+Kalle Valo
