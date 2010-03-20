@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55370 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752660Ab0CSVOO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 17:14:14 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/9] iwlwifi updates for 2.6.35
-Date: Fri, 19 Mar 2010 14:14:02 -0700
-Message-Id: <1269033251-17545-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-fx0-f213.google.com ([209.85.220.213]:50083 "EHLO
+	mail-fx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305Ab0CTUC1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Mar 2010 16:02:27 -0400
+Received: by fxm5 with SMTP id 5so329609fxm.29
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Mar 2010 13:02:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201003201207.11218.randolf.bruno@gmail.com>
+References: <4BA24A12.4030208@gmail.com>
+	 <a0b9368788449213d36b75dccd97c6a6@localhost>
+	 <201003201144.24471.randolf.bruno@gmail.com>
+	 <201003201207.11218.randolf.bruno@gmail.com>
+Date: Sat, 20 Mar 2010 21:02:25 +0100
+Message-ID: <f74418681003201302g3ed2902bp230a1ce93d165831@mail.gmail.com>
+Subject: Re: [PATCH V2] mac80211: Revise,pending queue depth in
+	ieee80211_local data structure
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	randolf.bruno@googlemail.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include two new features in this series. The driver is now better able
-to deal with problems on the device and in the environment. We are now able
-to detect if a queue (TX or command) is stuck and will restart the firmware
-when this occurs. Also, we now keep track of ACK count ratios and BA
-timeout retries ... if this information indicates an issue the firmware
-will be reset. The third trigger we use for stability checking, PLCP
-counts, remains as an RF reset will be performed if an issue arises here.
+> On Saturday 20 March 2010 11:44:24 Bruno Randolf wrote:
+>> i think i'm hitting the same bug, but not sure (i will try to check next
+>> week). this is easy to reproduce, but you need 4 (at least 3) machines:
+>>
+>> setup 2 wireless cards, talking to each other (i use IBSS) on different
+>> machines. then setup routing like this:
+>>
+>> [1] - [WL1] - [WL2] - [2]
+>>
+>> now send more UDP traffic than the wireless link can handle (iperf -u -b
+>> 50M for example) between [1] and [2]. watch the free memory get less and
+>> less at [WL1] until it chrashes.
+>
+> forgot to add: [1] and [2] are connected by ethernet to [WL1/2]...
+> (obviously?)
+>
+> bruno
+>
 
-The driver now supports the mac80211 station addition and removal
-callbacks.
+Hi,
 
-These patches are also available from wireless-next-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+I tested the same network configuration used by bruno:
 
-Ben M Cahill (1):
-  iwlagn: Add Flow-handler (FH) register dump for 4965.
+PC1<--ethernet cable-->Device1<--wireless link-->Device2<--ethernet cable-->PC2
 
-Johannes Berg (1):
-  iwlwifi: sta_id cannot be invalid in rs_initialize_lq
+but I injected packets using a VAP in monitor mode on both wireless devices.
+I used UDP iperf traffic (50Mbps) from PC1 to PC2 as data stream. I
+agree with bruno,
+I think the main aspect of the test is to transmit a traffic steam
+that the wireless link is not
+able to handle. In order to trigger the crash, if the device is EDCA
+capable, I suggest to use the
+Best Effort hardware queue (skb->priority=3, AC_queue=2 in the
+ieee80211_select_queue()) for all
+data packets.
 
-Reinette Chatre (2):
-  iwlwifi: only add broadcast station once
-  iwlwifi: implement new mac80211 station add/remove calls
+Regards
 
-Shanyu Zhao (1):
-  iwlwifi: clean up driver names for 1000/5000/6000
-
-Wey-Yi Guy (4):
-  iwlwifi: Recover TX flow stall due to stuck queue
-  iwlwifi: move plcp check to separated function
-  iwlwifi: Recover TX flow failure
-  iwlwifi: code cleanup for connectivity recovery
-
- drivers/net/wireless/iwlwifi/iwl-1000.c     |    9 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |   83 +++--
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   22 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    5 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c     |   28 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c     |   24 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |  124 +++---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h   |    7 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |  154 ++++---
- drivers/net/wireless/iwlwifi/iwl-core.c     |  102 +++++-
- drivers/net/wireless/iwlwifi/iwl-core.h     |   19 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   23 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c       |  153 ++++++--
- drivers/net/wireless/iwlwifi/iwl-sta.c      |  630 ++++++++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-sta.h      |   20 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    2 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   72 +++-
- 18 files changed, 985 insertions(+), 493 deletions(-)
-
+Lorenzo
