@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40913 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755072Ab0C3RJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 13:09:45 -0400
-Subject: Re: [PATCH] net/wireless/libertas: do not call wiphy_unregister()
- w/o wiphy_register()
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Daniel Mack <daniel@caiaq.de>, libertas-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201003301259.23973.hs4233@mail.mn-solutions.de>
-References: <1269875658-3324-1-git-send-email-daniel@caiaq.de>
-	 <201003301149.13462.hs4233@mail.mn-solutions.de>
-	 <20100330105029.GO30801@buzzloop.caiaq.de>
-	 <201003301259.23973.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Mar 2010 10:04:33 -0700
-Message-ID: <1269968673.3019.37.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-yx0-f182.google.com ([209.85.210.182]:34327 "EHLO
+	mail-yx0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752652Ab0CTCo3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Mar 2010 22:44:29 -0400
+Received: by yxe12 with SMTP id 12so880648yxe.33
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 19:44:28 -0700 (PDT)
+From: Bruno Randolf <randolf.bruno@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH V2] mac80211: Revise,pending queue depth in ieee80211_local data structure
+Date: Sat, 20 Mar 2010 11:44:24 +0900
+Cc: "lorenzo.bianconi83@gmail.com" <lorenzo.bianconi@fluidmesh.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Tony Huang <ht6100@gmail.com>
+References: <4BA24A12.4030208@gmail.com> <4BA344FB.1090500@gmail.com> <a0b9368788449213d36b75dccd97c6a6@localhost>
+In-Reply-To: <a0b9368788449213d36b75dccd97c6a6@localhost>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201003201144.24471.randolf.bruno@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-30 at 12:59 +0200, Holger Schurig wrote:
-> > I don't get your point. The patch I submitted fixes an Ooops in the
-> > driver, due to wrong handling of an API. What does that have to do with
-> > principle discussions about the frameworks in use?
+On Saturday 20 March 2010 03:49:27 Johannes Berg wrote:
+> On Fri, 19 Mar 2010 10:33:47 +0100, "lorenzo.bianconi83@gmail.com"
 > 
-> I asked if there is a better method, and you said that you would test a better 
-> solution. That means that someone else should make a better solution.
+> >>  	if (!skb_queue_empty(&local->pending[queue]))
+> >>  	
+> >>  		tasklet_schedule(&local->tx_pending_tasklet);
+> >> 
+> >> -
+> >> -	rcu_read_lock();
+> >> -	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+> >> -		netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
+> >> -	rcu_read_unlock();
 > 
-> I just pointed out that I won't be the one who creates the better solution, 
-> because for fundamental reasons I don't see the libertas+cfg80211 approach 
-> going forward. That issue has nothing to do with you or your patch, so please 
-> don't feel offended or confused.
+> That's obviously wrong, need to move the code to the else branch of the
+> above if instead.
+> 
+> > I tested the patch on kernel 2.6.32.7 with compat-wireless-2010-03-03
+> 
+> but
+> 
+> > it seems that the problem is not solved. If I set the lowest priority
+> 
+> queue
+> 
+> > (Backgreound), the system will crash for an out of memory panic. During
+> 
+> the
+> 
+> > tests I carried out, I transmit 50Mbps UDP traffic.
+> 
+> How are you generating traffic? I just dumped like 2Gbps traffic at it
+> and everything works just fine. I verified queues are stopped and started
+> properly.
 
-Fine; just rip out the mesh code and do the vanilla cfg80211 conversion
-for infra & adhoc, and we'll add the mesh code back later.  I don't have
-time to do the cfg80211 bits, neither do the OLPC guys (AFAIK), so lets
-take advantage of your willingness to do this and just move the driver
-forward.
+i think i'm hitting the same bug, but not sure (i will try to check next 
+week). this is easy to reproduce, but you need 4 (at least 3) machines:
 
-Dan
+setup 2 wireless cards, talking to each other (i use IBSS) on different 
+machines. then setup routing like this:
 
-> 
-> Basically, I neither ack nor nak you patch. Given that it fixes an oops the 
-> patch should go in, and probably to stable at well. I just gave a hint, to 
-> make you think if you could come up with something better.
-> 
-> 
-> 
-> BTW, testing/fixing of failure paths in libertas as well as simplifying the 
-> call sequence of functions during initialisation could be quite useful.
-> 
-> _______________________________________________
-> libertas-dev mailing list
-> libertas-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/libertas-dev
+[1] - [WL1] - [WL2] - [2]
 
+now send more UDP traffic than the wireless link can handle (iperf -u -b 50M 
+for example) between [1] and [2]. watch the free memory get less and less at 
+[WL1] until it chrashes.
 
+bruno
