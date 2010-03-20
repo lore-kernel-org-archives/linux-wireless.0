@@ -1,65 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38345 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755233Ab0CQQTS (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:49586 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752210Ab0CTB2q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 12:19:18 -0400
-Subject: Re: [RFC PATCHv3 2/2] mac80211: Add support for connection quality
- monitoring
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1268830877-5162-3-git-send-email-juuso.oikarinen@nokia.com>
-References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268830877-5162-3-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 09:19:18 -0700
-Message-ID: <1268842758.5989.17.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 19 Mar 2010 21:28:46 -0400
+Received: by wyb38 with SMTP id 38so1776353wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 18:28:45 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+Date: Sat, 20 Mar 2010 02:28:44 +0100
+Message-ID: <2d0a357f1003191828g2d133a06qd8902785ae015cd0@mail.gmail.com>
+Subject: [ath9k_htc] Wrong kernel config parameters in wiki?
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: wireless <linux-wireless@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-17 at 15:01 +0200, Juuso Oikarinen wrote:
+Hi,
 
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -599,6 +599,7 @@ enum ieee80211_conf_flags {
->   * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
->   * @IEEE80211_CONF_CHANGE_IDLE: Idle flag changed
->   * @IEEE80211_CONF_CHANGE_SMPS: Spatial multiplexing powersave mode changed
-> + * @IEEE80211_CONF_CHANGE_CQM: Connection quality monitor config changed
->   */
->  enum ieee80211_conf_changed {
->  	IEEE80211_CONF_CHANGE_SMPS		= BIT(1),
-> @@ -609,6 +610,7 @@ enum ieee80211_conf_changed {
->  	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
->  	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
->  	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
-> +	IEEE80211_CONF_CHANGE_CQM		= BIT(9),
->  };
->  
->  /**
-> @@ -662,6 +664,9 @@ enum ieee80211_smps_mode {
->   *    frame, called "dot11ShortRetryLimit" in 802.11, but actually means the
->   *    number of transmissions not the number of retries
->   *
-> + * @cqm_rssi_thold: Connection quality monitor RSSI threshold
-> + * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
-> + *
->   * @smps_mode: spatial multiplexing powersave mode; note that
->   *	%IEEE80211_SMPS_STATIC is used when the device is not
->   *	configured for an HT channel
-> @@ -676,6 +681,9 @@ struct ieee80211_conf {
->  
->  	u8 long_frame_max_tx_count, short_frame_max_tx_count;
->  
-> +	s32 cqm_rssi_thold;
-> +	u8 cqm_rssi_hyst;
+a person asked on IRC about ath9k_htc support.
 
-You probably don't care all that much, but I have a feeling this should
-be part of the per-BSS data not the global configuration data, since
-especially when we do it in software we could have to deal with multiple
-virtual interfaces.
+First question:
+Has the patch from [1] already entered one of the wireless-* GIT repositories?
 
-johannes
+I could apply the ath9k_htc patch against 2.6.34-rc1-git9.
 
+The kernel config parameters in wiki [2] seems to be wrong to me:
+
+CONFIG_ATH=m
+CONFIG_ATH9K_HW=m
+CONFIG_ATH9K_HTC=m
+
+Checking here:
+
+$ grep CONFIG_ATH .config
+CONFIG_ATH_COMMON=m
+# CONFIG_ATH_DEBUG is not set
+CONFIG_ATH5K=m
+# CONFIG_ATH5K_DEBUG is not set
+CONFIG_ATH9K_HW=m
+CONFIG_ATH9K_COMMON=m
+CONFIG_ATH9K=m
+# CONFIG_ATH9K_DEBUGFS is not set
+CONFIG_ATH9K_HTC=m
+# CONFIG_ATH9K_HTC_DEBUGFS is not set
+
+Should CONFIG_ATH=m be replaced by one/both of these ones?
+
+$ grep CONFIG_ATH .config | grep COMMON
+CONFIG_ATH_COMMON=m
+CONFIG_ATH9K_COMMON=m
+
+File drivers/net/wireless/ath/ath9k/Kconfig says:
+...
+config ATH9K_HTC
+       tristate "Atheros HTC based wireless cards support"
+       depends on USB && MAC80211
+       select ATH9K_HW
+       select MAC80211_LEDS
+       select LEDS_CLASS
+       select NEW_LEDS
+       ---help---
+	 Support for Atheros HTC based cards.
+	 Chipsets supported: AR9271
+
+	 For more information: http://wireless.kernel.org/en/users/Drivers/ath9k_htc
+
+	 The built module will be ath9k_htc.
+...
+
+Maybe the confusion results from drivers/net/wireless/ath/Kconfig:
+
+menuconfig ATH_COMMON
+	tristate "Atheros Wireless Cards"
+...
+
+IMHO setting CONFIG_ATH9K_HW=m and CONFIG_ATH9K_HTC=m should be enough.
+
+Who can clarify?
+
+Thanks in advance.
+
+Kind Regards,
+- Sedat -
+
+References:
+------------------
+[1] https://patchwork.kernel.org/patch/82299/
+[2] http://wireless.kernel.org/en/users/Drivers/ath9k_htc#Configuring_your_kernel
+[3] http://wireless.kernel.org/en/users/Drivers/ath9k_htc
