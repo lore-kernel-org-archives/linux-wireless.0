@@ -1,69 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:39844 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932943Ab0CaJIm (ORCPT
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:37520 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752364Ab0CTWfZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 05:08:42 -0400
-Date: Wed, 31 Mar 2010 11:08:36 +0200
-From: Daniel Mack <daniel@caiaq.de>
-To: =?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Subject: Re: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit
- transfers
-Message-ID: <20100331090836.GA30801@buzzloop.caiaq.de>
-References: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
- <x2ve2d7436a1003310207t16a7d1d6r7853de2dfa647c6c@mail.gmail.com>
+	Sat, 20 Mar 2010 18:35:25 -0400
+Received: by qyk9 with SMTP id 9so2536269qyk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Mar 2010 15:35:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <x2ve2d7436a1003310207t16a7d1d6r7853de2dfa647c6c@mail.gmail.com>
+In-Reply-To: <cdc21431003201534i5a10c871m1a76aba4f254345f@mail.gmail.com>
+References: <cdc21431003201534i5a10c871m1a76aba4f254345f@mail.gmail.com>
+Date: Sat, 20 Mar 2010 17:35:23 -0500
+Message-ID: <cdc21431003201535g40854df4ged9afd948660be19@mail.gmail.com>
+Subject: Re: Automated way of swipping in and out modules?
+From: Rakesh Kumar <gopchandani@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 31, 2010 at 11:07:06AM +0200, Michał Mirosław wrote:
-> 2010/3/30 Daniel Mack <daniel@caiaq.de>:
-> [...]
-> > @@ -1022,6 +1025,27 @@ static int if_sdio_probe(struct sdio_func *func,
-> >        if (ret)
-> >                goto disable;
-> >
-> > +       /* For 1-bit transfers, we need to enable the interrupt flags in
-> > +        * the CCCR register. Temporarily set the function number to 0
-> > +        * for that. */
-> > +       if ((host->caps & MMC_CAP_SDIO_IRQ) &&
-> > +           (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-> > +               unsigned int num = func->num;
-> > +               u8 reg;
-> > +
-> > +               func->num = 0;
-> > +               reg = sdio_readb(func, SDIO_CCCR_IF, &ret);
-> > +               if (ret)
-> > +                       goto release_int;
-> > +
-> > +               reg |= SDIO_BUS_ECSI | SDIO_BUS_SCSI;
-> > +               sdio_writeb(func, reg, SDIO_CCCR_IF, &ret);
-> > +               if (ret)
-> > +                       goto release_int;
-> > +
-> > +               func->num = num;
-> > +       }
-> > +
-> >        card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
-> >        if (ret)
-> >                goto release_int;
-> 
-> You should probably just use mmc_io_rw_direct() in this case instead
-> of abusing func->num.
-
-Hmm, that function isn't exported, and I didn't want to change this. You
-say you'd prefer that? I can cook up something that does it, no problem.
-
-
-Daniel
+> Hello Folks,
+> So I have been hacking at cfg80211 and everytime I modify it, I have to rmmod all the dependent modules' tree on the top of it and then insert my newly modified module using insmod and then modprobe all the previously installed, dependent modules.
+> I was wondering if there is a faster way, which I am not aware of, to do this besides writing an script? If you have a working script, I would appreciate that too. :)
+> --
+> Rakesh
