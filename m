@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:51997 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752521Ab0CVXxU (ORCPT
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:63289 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751361Ab0CTSwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 19:53:20 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so1368236qwh.37
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 16:53:20 -0700 (PDT)
-Message-ID: <4BA80118.1070801@lwfinger.net>
-Date: Mon, 22 Mar 2010 18:45:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 20 Mar 2010 14:52:07 -0400
+From: Stefan Monnier <monnier@iro.umontreal.ca>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwl3945 and power saving
+Message-ID: <jwv8w9mddyn.fsf-monnier+inbox@gnu.org>
+References: <jwvwrxbimib.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+	<1268804105.2446.620.camel@rchatre-DESK>
+	<jwvr5niiw6r.fsf-monnier+gmane.linux.kernel.wireless.general@gnu.org>
+	<1269017296.2446.1777.camel@rchatre-DESK>
+	<jwvd3z010ar.fsf-monnier+inbox@gnu.org>
+	<1269036564.2446.1887.camel@rchatre-DESK>
+Date: Sat, 20 Mar 2010 14:52:03 -0400
+In-Reply-To: <1269036564.2446.1887.camel@rchatre-DESK> (reinette chatre's
+	message of "Fri, 19 Mar 2010 15:09:24 -0700")
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Calvin Walton <calvin.walton@gmail.com>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <1269239303.12836.17.camel@ayu> <4BA7E79C.9070100@lwfinger.net> <201003222325.35994.mb@bu3sch.de>
-In-Reply-To: <201003222325.35994.mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael,
+>> Aha!  That's very interesting, then.  So, given that the previous naive
+>> power-saving implementation worked well for me (and I presume other
+>> users as well), would it be possible to use/provide that old naive
+>> technique for 3945 and 4965?
+> We could look into this. Could you please submit a request for this
+> change to http://bugzilla.intellinuxwireless.org/ ?
 
-Would the following be sufficient?
+Done.
 
-(1) The utility /bin/dbus-uuidgen is used to create a file
-/lib/firmware/ssb/mac_address. The command to create this file if it does not
-exist could be added to the scripts that use fwcutter.
+> If there is a need for this then I think what can be done here is either
+> use the current debugfs "sleep_level_override" or maybe some new one to
+> get to the old behavior. Currently modifying this value will be ignored
+> if power saving is marked as broken, as is done for 3945. I wonder if we
+> can modify it such that user can change this setting even if power
+> saving is marked as broken. This is maybe something you can try out.
 
-(2) In drivers/ssb/pci.c, the firmware loading process reads the file, then
-modifies it using the bus address.
+Thanks, I'm going to take a look at it,
 
-I think this process would create a persistent MAC address that is unique within
-the box, with a small probability of being duplicated on another machine.
 
-Larry
-
+        Stefan
