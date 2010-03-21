@@ -1,34 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47115 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753631Ab0C2U4V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:56:21 -0400
-Date: Mon, 29 Mar 2010 16:55:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?iso-8859-1?Q?Ren=E9?= Bolldorf <xsecute@googlemail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-Message-ID: <20100329205558.GM4984@tuxdriver.com>
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10A0F.1030608@lwfinger.net> <20100329204822.GL4984@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33171 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751193Ab0CUIqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Mar 2010 04:46:19 -0400
+Received: from int-mx08.intmail.prod.int.phx2.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.21])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o2L8kIb3019958
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Sun, 21 Mar 2010 04:46:19 -0400
+Received: from localhost.localdomain (vpn1-6-219.ams2.redhat.com [10.36.6.219])
+	by int-mx08.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o2L8kGOY000384
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Sun, 21 Mar 2010 04:46:18 -0400
+Message-ID: <4BA5DD22.2070404@redhat.com>
+Date: Sun, 21 Mar 2010 09:47:30 +0100
+From: Hans de Goede <hdegoede@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20100329204822.GL4984@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: PATCH: add new usb id to p54usb
+Content-Type: multipart/mixed;
+ boundary="------------030608070304090206060106"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 04:48:22PM -0400, John W. Linville wrote:
-> On Mon, Mar 29, 2010 at 03:14:07PM -0500, Larry Finger wrote:
-> 
-> > Could you please apply my little test patch and send me the contents of the
-> > chipcommon status register in your netbook?
-> 
-> Mine looks like yours, "chip_id 0x4312, status 0x12"...
+This is a multi-part message in MIME format.
+--------------030608070304090206060106
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I guess I misread the earlier messages -- mine looks like René's, not yours.
+Hi,
 
-John
+The attached patch adds support for the Thomson Speedtouch 120g to the
+p54usb driver (only thing needed is adding the USB ID). A friend of
+mine happened to have one of these and gave it to me, so I can
+confirm that it works once the USB ID is added.
+
+Regards,
+
+Hans
+
+--------------030608070304090206060106
+Content-Type: text/plain;
+ name="0002-Add-USB-ID-for-Thomson-SpeedTouch-120g-to-p54usb-id-.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0002-Add-USB-ID-for-Thomson-SpeedTouch-120g-to-p54usb-id-.pa";
+ filename*1="tch"
+
+>From f69c319b3321524e384408e7fec7dd691519419f Mon Sep 17 00:00:00 2001
+From: Hans de Goede <hdegoede@redhat.com>
+Date: Wed, 17 Mar 2010 14:37:16 +0100
+Subject: [PATCH 2/2] Add USB ID for Thomson SpeedTouch 120g to p54usb id table
+
+Thanks to Chris Chabot for giving his old wireless usb dongle to me
+to test it under Linux.
+
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/net/wireless/p54/p54usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index b3c4fbd..e3cfc00 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -35,6 +35,7 @@ MODULE_FIRMWARE("isl3887usb");
+ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	/* Version 1 devices (pci chip + net2280) */
+ 	{USB_DEVICE(0x0506, 0x0a11)},	/* 3COM 3CRWE254G72 */
++	{USB_DEVICE(0x06b9, 0x0120)},	/* Thomson SpeedTouch 120g */
+ 	{USB_DEVICE(0x0707, 0xee06)},	/* SMC 2862W-G */
+ 	{USB_DEVICE(0x07aa, 0x001c)},	/* Corega CG-WLUSB2GT */
+ 	{USB_DEVICE(0x083a, 0x4501)},	/* Accton 802.11g WN4501 USB */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0
+
+
+--------------030608070304090206060106--
