@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:11397 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752939Ab0CJFWG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 00:22:06 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 10/24] iwlwifi: remove IBSS channel sanity check
-Date: Tue,  9 Mar 2010 21:21:38 -0800
-Message-Id: <1268198512-6572-11-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
-References: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f211.google.com ([209.85.218.211]:43827 "EHLO
+	mail-bw0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636Ab0CUTtZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Mar 2010 15:49:25 -0400
+Date: Sun, 21 Mar 2010 20:49:14 +0100
+From: Frederic Weisbecker <fweisbec@gmail.com>
+To: Denis Silakov <silakov@ispras.ru>
+Cc: Till Kamppeter <till.kamppeter@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	lsb-discuss@lists.linux-foundation.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Arnaldo Carvalho de Melo <acme@redhat.com>,
+	Paul Mackerras <paulus@samba.org>,
+	Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [lsb-discuss] Linux wireless GSoC 2010 project ideas
+Message-ID: <20100321194909.GB5214@nowhere>
+References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com> <20100128231545.GH18683@nowhere> <43e72e891001281523s56707279x896ab059e6d4e530@mail.gmail.com> <4B62231F.5080104@gmail.com> <20100309224347.GD5058@nowhere> <4B9A026D.1030806@gmail.com> <4B9A0B87.9010001@ispras.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4B9A0B87.9010001@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Mar 12, 2010 at 12:38:15PM +0300, Denis Silakov wrote:
+> Added this item to '2010 GSoC Kernel work' page:
+> 
+> https://www.linuxfoundation.org/collaborate/workgroups/gsoc/2010-gsoc-kernel-work
 
-mac80211 will always enforce using a channel
-that the driver allowed for IBSS use.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+Before asking the Portland State University as Greg suggested, is there
+someone who would like to mentor this project?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 8e8f528..4365e85 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2436,15 +2436,6 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 			goto set_ch_out;
- 		}
+Thanks.
+
  
--		if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
--			!is_channel_ibss(ch_info)) {
--			IWL_ERR(priv, "channel %d in band %d not "
--				"IBSS channel\n",
--				conf->channel->hw_value, conf->channel->band);
--			ret = -EINVAL;
--			goto set_ch_out;
--		}
--
- 		spin_lock_irqsave(&priv->lock, flags);
- 
- 		/* Configure HT40 channels */
--- 
-1.6.3.3
+> On 03/12/10 11:59, Till Kamppeter wrote:
+> > Can someone post this project idea on the ideas list today (marking that 
+> > it comes from a student). This could support our application as 
+> > mentoring organization.
+> >
+> >     Till
+> >   
+> 
+> -- 
+> Regards,
+> Denis.
+> 
 
