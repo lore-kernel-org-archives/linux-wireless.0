@@ -1,51 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57298 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342Ab0CCUPr (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:65106 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751989Ab0CUXWt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 15:15:47 -0500
-Date: Wed, 3 Mar 2010 15:14:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: matthieu castet <castet.matthieu@free.fr>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	Jose Alonso <joalonsof@gmail.com>
-Subject: Re: [PATCH] airo : Print of firmware version
-Message-ID: <20100303201411.GF23920@tuxdriver.com>
-References: <4B8A80EE.6000102@free.fr>
+	Sun, 21 Mar 2010 19:22:49 -0400
+Date: Sun, 21 Mar 2010 18:22:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] ssb: Implement virtual SPROM on disk
+Message-ID: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B8A80EE.6000102@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 28, 2010 at 03:42:54PM +0100, matthieu castet wrote:
-> For the firmware version 5.30.17 the log file shows:
-> Firmware version 5.30.11
->
-> The variable softSubVer is binary.
->
->
-> Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
-> Signed-off-by: Jose Alonso <joalonsof@gmail.com>
+Some recent BCM43XX devices lack an on-board SPROM. The pertinent data
+from the SPROM could be included in the kernel; however, this presents
+a problem in the generation of a unique, reproducible MAC address. The
+solution has been to create a utility that generates a virtual SPROM
+image with a random MAC address. This image is stored in the firmware
+area, and loaded using the asyncronous firmware load facility.
 
-> Index: airo.c
-> ===================================================================
-> --- 1/drivers/net/wireless/airo.c	(r?vision 47)
-> +++ 2/drivers/net/wireless/airo.c	(r?vision 48)
-> @@ -2993,7 +2993,7 @@
->  	ai->wep_capable = (cap_rid.softCap & cpu_to_le16(0x02)) ? 1 : 0;
->  	ai->max_wep_idx = (cap_rid.softCap & cpu_to_le16(0x80)) ? 3 : 0;
->  
-> -	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
-> +	airo_print_info(dev->name, "Firmware version %x.%x.%02d",
->  	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
->  	                (le16_to_cpu(cap_rid.softVer) & 0xFF),
->  	                le16_to_cpu(cap_rid.softSubVer));
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Why should the last segment be in decimal form if the other two
-segments of the version number are in hexadecimal form?
+Michael,
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I think this patch eliminates the need for the fallback sprom code; however,
+I have not touched that facility yet.
+
+Larry
+---
+V2 - make virstual SPROM loading asynchronous.
+
+Index: wireless-testing/drivers/ssb/pci.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pci.c
++++ wireless-testing/drivers/ssb/pci.c
+@@ -19,6 +19,7 @@
+ #include <linux/ssb/ssb_regs.h>
+ #include <linux/pci.h>
+ #include <linux/delay.h>
++#include <linux/firmware.h>
+ 
+ #include "ssb_private.h"
+ 
+@@ -613,6 +614,53 @@ static int sprom_extract(struct ssb_bus
+ 	return 0;
+ }
+ 
++static void ssb_vsprom_load_failed(void)
++{
++	printk(KERN_ERR "ssb: The BCM43XX device does not have an "
++	       "SPROM built in, and the virtual SPROM file is not"
++	       " available.\n");
++	printk(KERN_ERR "ssb: Please go to "
++	       "http://wireless.kernel.org/en/users/Drivers/b43 "
++	       "and download the utility to create the file.\n");
++}
++
++static void ssb_get_vsprom(const struct firmware *fw, void *context)
++{
++	/* Second part of asynchronous firmware load */
++	int i;
++	u16 *buf;
++	size_t size = SSB_SPROMSIZE_WORDS_R4;
++	struct ssb_bus *bus = context;
++
++	if (!fw) {
++		ssb_vsprom_load_failed();
++		return;
++	}
++	buf = kcalloc(size, sizeof(u16), GFP_KERNEL);
++	if (!buf) {
++		printk(KERN_ERR "ssb: no memory for virtual sprom\n");
++		goto out;
++	}
++	if (fw->size != size * 2) {
++		printk(KERN_ERR "ssb: The virtual SPROM file has the wrong"
++		       " size\n");
++		goto out_free;
++	}
++	for (i = 0; i < size; i++)
++		buf[i] = fw->data[2 * i + 1] << 8 | fw->data[2 * i];
++	if(sprom_check_crc(buf, size)) {
++		printk(KERN_ERR "ssb: Invalid CRC for virtual SPROM\n");
++		goto out_free;
++	}
++	sprom_extract(bus, &bus->sprom, buf, size);
++	printk(KERN_DEBUG "ssb: revision %d\n", bus->sprom.revision);
++
++out_free:
++	kfree(buf);
++out:
++	release_firmware(fw);
++}
++
+ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 			     struct ssb_sprom *sprom)
+ {
+@@ -620,8 +668,17 @@ static int ssb_pci_sprom_get(struct ssb_
+ 	int err = -ENOMEM;
+ 	u16 *buf;
+ 
+-	if (!ssb_is_sprom_available(bus))
+-		return -ENODEV;
++	if (!ssb_is_sprom_available(bus)) {
++		/* This device has no SPROM. Try for a virtual version */
++		err = request_firmware_nowait(THIS_MODULE,
++			FW_ACTION_HOTPLUG, "ssb/vsprom_image",
++			&bus->host_pci->dev, GFP_KERNEL, bus, ssb_get_vsprom);
++		if (err) {
++			ssb_vsprom_load_failed();
++			return err;
++		}
++		return 0;
++	}
+ 
+ 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+ 	if (!buf)
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -4858,7 +4858,17 @@ static int b43_one_core_attach(struct ss
+ static void b43_sprom_fixup(struct ssb_bus *bus)
+ {
+ 	struct pci_dev *pdev;
++	int i;
+ 
++	/* The sprom contents may be loaded asynchronously. Check that the
++	 * revision is set before proceeding */
++	for (i = 0; i < 1000; i++) {
++		if (bus->sprom.revision)
++			break;
++		msleep(1);
++	}
++	if (i == 1000)
++		printk(KERN_INFO "b43: No sprom image loaded\n");
+ 	/* boardflags workarounds */
+ 	if (bus->boardinfo.vendor == SSB_BOARDVENDOR_DELL &&
+ 	    bus->chip_id == 0x4301 && bus->boardinfo.rev == 0x74)
