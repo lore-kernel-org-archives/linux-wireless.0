@@ -1,113 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:53403 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932482Ab0CLK2t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 05:28:49 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so470437fgg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Mar 2010 02:28:47 -0800 (PST)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/4 v2] wl1251: make local symbols static
-Date: Fri, 12 Mar 2010 12:28:41 +0200
-Message-Id: <1268389721-3375-1-git-send-email-notasas@gmail.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:42724 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752623Ab0CUKrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Mar 2010 06:47:08 -0400
+From: Kel Modderman <kel@otaku42.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] crda: do not embed crypto data when USE_OPENSSL=1
+Date: Sun, 21 Mar 2010 20:46:52 +1000
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <201003050008.51066.kel@otaku42.de> <201003060059.42588.kel@otaku42.de> <1268035735.3819.17.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1268035735.3819.17.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201003212046.52337.kel@otaku42.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make local functions and data static, also constify
-some structures. While at it, clean up unneeded includes.
+On Monday 08 March 2010 18:08:55 Johannes Berg wrote:
+> On Sat, 2010-03-06 at 00:59 +1000, Kel Modderman wrote:
+> 
+> > I am obviously having hard time clearly communicating what I think is wrong,
+> 
+> Yes.
+> 
+> > so attached is 2 files demonstrating the problem with step by step reproducible
+> > commands with output. regdb-upgrade-does-not-work.txt shows the current
+> > behaviour which must be improved, regdb-upgrade-does-work.txt shows
+> > the behaviour with my patch applied. The patch which was used is also attached.
+> 
+> That isn't helping, we don't want to do your work of digging through :)
+> 
+> The building-in keys code should NOT be removed, it should be possible
+> to build in keys AND use external keys (and I still think the external
+> key code should be optional since it is _quite_ different from internal
+> keys).
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>
+I'd prefer to use external keys only. If the correct paths are searched I
+don't see any need to embed the pubkey data into binary.
+
+> 
+> What exactly happens when you build in keys and use external ones? The
+> code I originally wrote should try to validate the database using all
+> available keys, it seems like that was broken and you're trying to fix
+> the symptom rather than the cause.
+> 
+
+I fucked up the subject and got two issues all mixed up. The issue which is
+most important is that crda should search PUBKEY_DIR (eg. /lib/crda/pubkeys)
+as well as the so called RUNTIME_PUBKEY_DIR (/etc/wireless-regdb/pubkeys)
+because when wireless-regdb is updated it will install any new custom pubkeys
+to PUBKEY_DIR and crda is still able to verify the new regulatory.bin after
+loading the new pubkey at runtime. Attached a new patch.
+
+Thanks, Kel.
+
+--- a/Makefile
++++ b/Makefile
+@@ -30,7 +30,8 @@ all: all_noverify verify
+ all_noverify: crda intersect regdbdump
+ 
+ ifeq ($(USE_OPENSSL),1)
+-CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
++CFLAGS += -DPUBKEY_DIR=\"$(PUBKEY_DIR)\" -DRUNTIME_PUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\"
++CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
+ LDLIBS += `pkg-config --libs openssl`
+ 
+ reglib.o: keys-ssl.c
+--- a/reglib.c
++++ b/reglib.c
+@@ -38,6 +38,40 @@ void *crda_get_file_ptr(__u8 *db, int db
+ 	return (void *)(db + p);
+ }
+ 
++#ifdef USE_OPENSSL
++static int crda_pubkeydir_verification(const char *dir, __u8 *hash, __u8 *db,
++				       int dblen, int siglen)
++{
++	RSA *rsa;
++	DIR *pubkey_dir;
++	struct dirent *nextfile;
++	FILE *keyfile;
++	char filename[PATH_MAX];
++	int retv = 0;
++
++	if ((pubkey_dir = opendir(dir))) {
++		while (!retv && (nextfile = readdir(pubkey_dir))) {
++			snprintf(filename, PATH_MAX, "%s/%s", dir,
++				nextfile->d_name);
++			if ((keyfile = fopen(filename, "rb"))) {
++				rsa = PEM_read_RSA_PUBKEY(keyfile,
++					NULL, NULL, NULL);
++				if (rsa)
++					retv = RSA_verify(NID_sha1, hash,
++						SHA_DIGEST_LENGTH,
++						db + dblen, siglen,
++						rsa) == 1;
++				RSA_free(rsa);
++				fclose(keyfile);
++			}
++		}
++		closedir(pubkey_dir);
++	}
++
++	return retv;
++}
++#endif
++
+ /*
+  * Checks the validity of the signature found on the regulatory
+  * database against the array 'keys'. Returns 1 if there exists
+@@ -51,10 +85,6 @@ int crda_verify_db_signature(__u8 *db, i
+ 	__u8 hash[SHA_DIGEST_LENGTH];
+ 	unsigned int i;
+ 	int ok = 0;
+-	DIR *pubkey_dir;
+-	struct dirent *nextfile;
+-	FILE *keyfile;
+-	char filename[PATH_MAX];
+ 
+ 	if (SHA1(db, dblen, hash) != hash) {
+ 		fprintf(stderr, "Failed to calculate SHA1 sum.\n");
+@@ -78,22 +108,12 @@ int crda_verify_db_signature(__u8 *db, i
+ 		rsa->n = NULL;
+ 		RSA_free(rsa);
+ 	}
+-	if (!ok && (pubkey_dir = opendir(PUBKEY_DIR))) {
+-		while (!ok && (nextfile = readdir(pubkey_dir))) {
+-			snprintf(filename, PATH_MAX, "%s/%s", PUBKEY_DIR,
+-				nextfile->d_name);
+-			if ((keyfile = fopen(filename, "rb"))) {
+-				rsa = PEM_read_RSA_PUBKEY(keyfile,
+-					NULL, NULL, NULL);
+-				if (rsa)
+-					ok = RSA_verify(NID_sha1, hash, SHA_DIGEST_LENGTH,
+-						db + dblen, siglen, rsa) == 1;
+-				RSA_free(rsa);
+-				fclose(keyfile);
+-			}
+-		}
+-		closedir(pubkey_dir);
+-	}
++	if (!ok)
++		ok = crda_pubkeydir_verification(PUBKEY_DIR, hash, db,
++						 dblen, siglen);
++	if (!ok)
++		ok = crda_pubkeydir_verification(RUNTIME_PUBKEY_DIR, hash, db,
++						 dblen, siglen);
+ #endif
+ 
+ #ifdef USE_GCRYPT
 ---
-John, I haven't added you to 'To:' when sent patches 2-4 of this
-series as SubmittingPatches requires (sent to the mailing list
-only), let me know in case I need to resend them.
-
- drivers/net/wireless/wl12xx/wl1251_sdio.c |   24 +++++++++---------------
- 1 files changed, 9 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-index 9423f22..cfca232 100644
---- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -20,20 +20,11 @@
-  * Copyright (C) 2009 Bob Copeland (me@bobcopeland.com)
-  */
- #include <linux/module.h>
--#include <linux/crc7.h>
- #include <linux/mod_devicetable.h>
--#include <linux/irq.h>
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
--#include <linux/platform_device.h>
- 
- #include "wl1251.h"
--#include "wl12xx_80211.h"
--#include "wl1251_reg.h"
--#include "wl1251_ps.h"
--#include "wl1251_io.h"
--#include "wl1251_tx.h"
--#include "wl1251_debugfs.h"
- 
- #ifndef SDIO_VENDOR_ID_TI
- #define SDIO_VENDOR_ID_TI		0x104c
-@@ -65,7 +56,8 @@ static const struct sdio_device_id wl1251_devices[] = {
- MODULE_DEVICE_TABLE(sdio, wl1251_devices);
- 
- 
--void wl1251_sdio_read(struct wl1251 *wl, int addr, void *buf, size_t len)
-+static void wl1251_sdio_read(struct wl1251 *wl, int addr,
-+			     void *buf, size_t len)
- {
- 	int ret;
- 	struct sdio_func *func = wl_to_func(wl);
-@@ -77,7 +69,8 @@ void wl1251_sdio_read(struct wl1251 *wl, int addr, void *buf, size_t len)
- 	sdio_release_host(func);
- }
- 
--void wl1251_sdio_write(struct wl1251 *wl, int addr, void *buf, size_t len)
-+static void wl1251_sdio_write(struct wl1251 *wl, int addr,
-+			      void *buf, size_t len)
- {
- 	int ret;
- 	struct sdio_func *func = wl_to_func(wl);
-@@ -89,7 +82,7 @@ void wl1251_sdio_write(struct wl1251 *wl, int addr, void *buf, size_t len)
- 	sdio_release_host(func);
- }
- 
--void wl1251_sdio_reset(struct wl1251 *wl)
-+static void wl1251_sdio_reset(struct wl1251 *wl)
- {
- }
- 
-@@ -111,11 +104,11 @@ static void wl1251_sdio_disable_irq(struct wl1251 *wl)
- 	sdio_release_host(func);
- }
- 
--void wl1251_sdio_set_power(bool enable)
-+static void wl1251_sdio_set_power(bool enable)
- {
- }
- 
--struct wl1251_if_operations wl1251_sdio_ops = {
-+static const struct wl1251_if_operations wl1251_sdio_ops = {
- 	.read = wl1251_sdio_read,
- 	.write = wl1251_sdio_write,
- 	.reset = wl1251_sdio_reset,
-@@ -123,7 +116,8 @@ struct wl1251_if_operations wl1251_sdio_ops = {
- 	.disable_irq = wl1251_sdio_disable_irq,
- };
- 
--int wl1251_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
-+static int wl1251_sdio_probe(struct sdio_func *func,
-+			     const struct sdio_device_id *id)
- {
- 	int ret;
- 	struct wl1251 *wl;
--- 
-1.6.3.3
-
