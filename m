@@ -1,43 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:47653 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753068Ab0CZGPT (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:50400 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752802Ab0CUAOx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 02:15:19 -0400
-Received: by bwz1 with SMTP id 1so1524585bwz.21
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 23:15:17 -0700 (PDT)
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville\@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: support paged rx SKBs
-References: <1269399463-5244-1-git-send-email-yi.zhu@intel.com>
-	<87eij8c3ld.fsf@purkki.valot.fi> <1269575877.4043.203.camel@debian>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 26 Mar 2010 08:15:14 +0200
-In-Reply-To: <1269575877.4043.203.camel@debian> (Zhu Yi's message of "Fri\, 26 Mar 2010 11\:57\:57 +0800")
-Message-ID: <87k4sz38y5.fsf@purkki.valot.fi>
+	Sat, 20 Mar 2010 20:14:53 -0400
+Date: Sat, 20 Mar 2010 19:14:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] ssb: Implement virtual SPROM on disk
+Message-ID: <4ba564fb.PfAZePu8tStyxs44%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi <yi.zhu@intel.com> writes:
+Some recent BCM43XX devices lack an on-board SPROM. The pertinent data
+from the SPROM could be included in the kernel; however, this presents
+a problem in the generation of a unique, reproducible MAC address. The
+solution has been to create a utility that generates a virtual SPROM
+image with a random MAC address. This image is stored in the firmware
+area, and loaded using the asyncronous firmware load facility.
 
->> I think ieee80211_rx{_irqsafe} documentation should now mention that
->> paged skbs are supported. Better to make this suppot explicit for the
->> driver authors.
->
-> Good idea it should be documented somewhere (after the patch is
-> accepted). Maybe the developer wiki page?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I was thinking to add it to include/net/mac80211.h. Better to have all
-documentation in one place.
+Michael,
 
-> For the code itself, I think Linux drivers can always assume the
-> network stacks support paged buffers.
+I think this patch eliminates the need for the fallback sprom code; however,
+I have not touched that facility yet.
 
-But this wasn't true with mac80211 before your patch, right? So now
-it's better to state this clearly in mac80211 documentation.
+Larry
+---
 
--- 
-Kalle Valo
+Index: wireless-testing/drivers/ssb/pci.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pci.c
++++ wireless-testing/drivers/ssb/pci.c
+@@ -19,6 +19,7 @@
+ #include <linux/ssb/ssb_regs.h>
+ #include <linux/pci.h>
+ #include <linux/delay.h>
++#include <linux/firmware.h>
+ 
+ #include "ssb_private.h"
+ 
+@@ -613,6 +614,39 @@ static int sprom_extract(struct ssb_bus
+ 	return 0;
+ }
+ 
++static int ssb_get_vsprom(struct device *dev, u16 *buf, size_t size)
++{
++	/* Use the firmware load facility to get the disk image of an SPROM */
++	const struct firmware *blob;
++	int err;
++	int i;
++
++	err = request_firmware(&blob, "ssb/vsprom_image", dev);
++	if (err) {
++		printk(KERN_ERR "ssb: The BCM43XX device does not have an "
++		       "SPROM built in, and the virtual SPROM file is not"
++		       " available.\n");
++		printk(KERN_ERR "ssb: Please go to "
++		       "http://wireless.kernel.org/en/users/Drivers/b43 "
++		       "and download the utility to create the file.\n");
++		return err;
++	}
++	if (blob->size != size * 2) {
++		printk(KERN_ERR "ssb: The virtual SPROM file has the wrong"
++		       " size\n");
++		return -ENOENT;
++	}
++	for (i = 0; i < size; i++)
++		buf[i] = blob->data[2 * i + 1] << 8 | blob->data[2 * i];
++	err = sprom_check_crc(buf, size);
++	if (err) {
++		printk(KERN_ERR "ssb: Invalid CRC for virtual SPROM\n");
++		return err;
++	}
++
++	return 0;
++}
++
+ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 			     struct ssb_sprom *sprom)
+ {
+@@ -620,8 +654,18 @@ static int ssb_pci_sprom_get(struct ssb_
+ 	int err = -ENOMEM;
+ 	u16 *buf;
+ 
+-	if (!ssb_is_sprom_available(bus))
+-		return -ENODEV;
++	if (!ssb_is_sprom_available(bus)) {
++		buf = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
++			      GFP_KERNEL);
++		if (!buf)
++			return -ENOMEM;
++		bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
++		if (ssb_get_vsprom(&bus->host_pci->dev, buf, bus->sprom_size)) {
++			err = -ENODEV;
++			goto out_free;
++		}
++		goto extract;
++	}
+ 
+ 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+ 	if (!buf)
+@@ -653,6 +697,7 @@ static int ssb_pci_sprom_get(struct ssb_
+ 				   " SPROM CRC (corrupt SPROM)\n");
+ 		}
+ 	}
++extract:
+ 	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
+ 
+ out_free:
