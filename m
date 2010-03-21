@@ -1,40 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:38849 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932430Ab0CLKCj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 05:02:39 -0500
-Received: by fg-out-1718.google.com with SMTP id 16so461215fgg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Mar 2010 02:02:36 -0800 (PST)
+Received: from bu3sch.de ([62.75.166.246]:52032 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751342Ab0CUJkg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Mar 2010 05:40:36 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] ssb: Implement virtual SPROM on disk
+Date: Sun, 21 Mar 2010 10:40:30 +0100
+Cc: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <4ba564fb.PfAZePu8tStyxs44%Larry.Finger@lwfinger.net>
+In-Reply-To: <4ba564fb.PfAZePu8tStyxs44%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <87zl2ecanr.fsf@purkki.valot.fi>
-References: <1268322276-16640-1-git-send-email-notasas@gmail.com>
-	 <87zl2ecanr.fsf@purkki.valot.fi>
-Date: Fri, 12 Mar 2010 12:02:36 +0200
-Message-ID: <6ed0b2681003120202j693b756s6aaaf365008434ae@mail.gmail.com>
-Subject: Re: [PATCH 1/4] wl1251: make local symbols static
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003211040.31118.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 12, 2010 at 8:32 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Grazvydas Ignotas <notasas@gmail.com> writes:
->
->> Make local functions and data static, also constify
->> some structures. While at it, clean up unneeded includes.
->>
->> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
->> Cc: Bob Copeland <me@bobcopeland.com>
->
-> Thanks. Looks good, but...
->
->> -#include <linux/mod_devicetable.h>
->
-> ...this is needed for struct sdio_device_id AFAICS. If you can send a
-> new version which keeps that include, you'll have my acked-by.
+On Sunday 21 March 2010 01:14:51 Larry Finger wrote:
+> Some recent BCM43XX devices lack an on-board SPROM. The pertinent data
+> from the SPROM could be included in the kernel; however, this presents
+> a problem in the generation of a unique, reproducible MAC address. The
+> solution has been to create a utility that generates a virtual SPROM
+> image with a random MAC address. This image is stored in the firmware
+> area, and loaded using the asyncronous firmware load facility.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> Michael,
+> 
+> I think this patch eliminates the need for the fallback sprom code; however,
+> I have not touched that facility yet.
+> 
+> Larry
+> ---
+> 
+> Index: wireless-testing/drivers/ssb/pci.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/ssb/pci.c
+> +++ wireless-testing/drivers/ssb/pci.c
+> @@ -19,6 +19,7 @@
+>  #include <linux/ssb/ssb_regs.h>
+>  #include <linux/pci.h>
+>  #include <linux/delay.h>
+> +#include <linux/firmware.h>
+>  
+>  #include "ssb_private.h"
+>  
+> @@ -613,6 +614,39 @@ static int sprom_extract(struct ssb_bus
+>  	return 0;
+>  }
+>  
+> +static int ssb_get_vsprom(struct device *dev, u16 *buf, size_t size)
+> +{
+> +	/* Use the firmware load facility to get the disk image of an SPROM */
+> +	const struct firmware *blob;
+> +	int err;
+> +	int i;
+> +
+> +	err = request_firmware(&blob, "ssb/vsprom_image", dev);
 
-That one comes through linux/mmc/sdio_func.h , but I'll add it back
-for completeness and resend, thanks.
+Well, this has the problem every synchronous firmware fetching mechanism has:
+bootup with builtin module.
+I think it should be done asynchronously.
+
+> +	if (err) {
+> +		printk(KERN_ERR "ssb: The BCM43XX device does not have an "
+> +		       "SPROM built in, and the virtual SPROM file is not"
+> +		       " available.\n");
+> +		printk(KERN_ERR "ssb: Please go to "
+> +		       "http://wireless.kernel.org/en/users/Drivers/b43 "
+> +		       "and download the utility to create the file.\n");
+> +		return err;
+> +	}
+> +	if (blob->size != size * 2) {
+> +		printk(KERN_ERR "ssb: The virtual SPROM file has the wrong"
+> +		       " size\n");
+> +		return -ENOENT;
+> +	}
+> +	for (i = 0; i < size; i++)
+> +		buf[i] = blob->data[2 * i + 1] << 8 | blob->data[2 * i];
+> +	err = sprom_check_crc(buf, size);
+> +	if (err) {
+> +		printk(KERN_ERR "ssb: Invalid CRC for virtual SPROM\n");
+> +		return err;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static int ssb_pci_sprom_get(struct ssb_bus *bus,
+>  			     struct ssb_sprom *sprom)
+>  {
+> @@ -620,8 +654,18 @@ static int ssb_pci_sprom_get(struct ssb_
+>  	int err = -ENOMEM;
+>  	u16 *buf;
+>  
+> -	if (!ssb_is_sprom_available(bus))
+> -		return -ENODEV;
+> +	if (!ssb_is_sprom_available(bus)) {
+> +		buf = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
+> +			      GFP_KERNEL);
+> +		if (!buf)
+> +			return -ENOMEM;
+> +		bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
+> +		if (ssb_get_vsprom(&bus->host_pci->dev, buf, bus->sprom_size)) {
+> +			err = -ENODEV;
+> +			goto out_free;
+> +		}
+> +		goto extract;
+> +	}
+>  
+>  	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+>  	if (!buf)
+> @@ -653,6 +697,7 @@ static int ssb_pci_sprom_get(struct ssb_
+>  				   " SPROM CRC (corrupt SPROM)\n");
+>  		}
+>  	}
+> +extract:
+>  	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
+>  
+>  out_free:
+> 
+> 
+
+-- 
+Greetings, Michael.
