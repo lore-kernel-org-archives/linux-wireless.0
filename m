@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41905 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754029Ab0CHPAq (ORCPT
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:62225 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538Ab0CVG23 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 10:00:46 -0500
-Date: Mon, 8 Mar 2010 09:47:03 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-wireless@vger.kernel.org, cbe-oss-dev@lists.ozlabs.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ps3_gelic_wireless: fix format warning
-Message-ID: <20100308144702.GA20622@tuxdriver.com>
-References: <201003022006.o22K6QqH019931@hera.kernel.org> <10f740e81003072233j1f9f6a0fr633e1fc65f4e5a5a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <10f740e81003072233j1f9f6a0fr633e1fc65f4e5a5a@mail.gmail.com>
+	Mon, 22 Mar 2010 02:28:29 -0400
+Received: by qyk9 with SMTP id 9so3042223qyk.1
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Mar 2010 23:28:28 -0700 (PDT)
+Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
+From: Calvin Walton <calvin.walton@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>
+References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 22 Mar 2010 02:28:23 -0400
+Message-ID: <1269239303.12836.17.camel@ayu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 08, 2010 at 07:33:27AM +0100, Geert Uytterhoeven wrote:
-> On Tue, Mar 2, 2010 at 21:06, Linux Kernel Mailing List
-> <linux-kernel@vger.kernel.org> wrote:
-> > Gitweb:     http://git.kernel.org/linus/c6c97bdaa3307d0811f14c99c38c63a8dae36e1f
-> > Commit:     c6c97bdaa3307d0811f14c99c38c63a8dae36e1f
-> > Parent:     d3a571971e5af241074947fc80f6284677f6e014
-> > Author:     John W. Linville <linville@tuxdriver.com>
-> > AuthorDate: Mon Feb 1 09:55:56 2010 -0500
-> > Committer:  John W. Linville <linville@tuxdriver.com>
-> > CommitDate: Mon Feb 1 09:55:56 2010 -0500
-> >
-> >    ps3_gelic_wireless: fix format warning
-> >
-> >    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> >  drivers/net/ps3_gelic_wireless.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/net/ps3_gelic_wireless.c b/drivers/net/ps3_gelic_wireless.c
-> > index d520e9e..448c5b6 100644
-> > --- a/drivers/net/ps3_gelic_wireless.c
-> > +++ b/drivers/net/ps3_gelic_wireless.c
-> > @@ -1449,7 +1449,7 @@ static int gelic_wl_start_scan(struct gelic_wl_info *wl, int always_scan,
-> >        void *buf = NULL;
-> >        size_t len;
-> >
-> > -       pr_debug("%s: <- always=%d essid_len=%d\n", __func__,
-> > +       pr_debug("%s: <- always=%d essid_len=%z\n", __func__,
-> 
-> `z' is just a modifier for a (missing) type, so this should be `%zu'.
+Hi,
 
-Ugh...yes, correct.  I'll fix it.
+On Sat, 2010-03-20 at 19:14 -0500, Larry Finger wrote:
+Some recent BCM43XX devices lack an on-board SPROM. The pertinent data
+> from the SPROM could be included in the kernel; however, this presents
+> a problem in the generation of a unique, reproducible MAC address. The
+> solution has been to create a utility that generates a virtual SPROM
+> image with a random MAC address. This image is stored in the firmware
+> area, and loaded using the asyncronous firmware load facility.
 
-Thanks!
+I'm curious, how would this firmware-loading scheme deal with having
+multiple cards of this type installed? This seems like an unusual
+situation, but it looks like this patch will cause all of the cards to
+start up with the same MAC address due to the fixed filename.
 
-John
+Instead of using a firmware file to load in the MAC address, might it be
+possible to move the persistent MAC setting to a simple udev rule which
+generates a persistent MAC address, saves it, then sets it each boot
+using a command like "ip link set wlan0 address XX:XX:XX:XX:XX:XX" ?
+
+This would remove the need to have this "fake" firmware file available
+at boot, provided that the driver can handle leaving the address
+unconfigured until userspace gets around to setting it. As well, it
+could be written to work with multiple cards easily, saving a different
+MAC for each.
+
+Some thoughts for your consideration,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Calvin Walton <calvin.walton@gmail.com>
+
