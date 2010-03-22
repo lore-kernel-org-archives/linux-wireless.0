@@ -1,391 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:46974 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932154Ab0CaUx5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 16:53:57 -0400
-Received: by ewy20 with SMTP id 20so161600ewy.1
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Mar 2010 13:53:55 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] ssb: Use relative offsets for SPROM
-Date: Wed, 31 Mar 2010 22:54:18 +0200
-Message-Id: <1270068859-6185-2-git-send-email-zajec5@gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:36347 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755189Ab0CVVB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Mar 2010 17:01:56 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 15551] New: wifi doesn't work after resume from s2ram on ThinkPad T61
+Date: Mon, 22 Mar 2010 22:04:47 +0100
+Cc: bugzilla-daemon@bugzilla.kernel.org,
+	bugme-daemon@bugzilla.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alex.vizor@gmail.com
+References: <bug-15551-10286@http.bugzilla.kernel.org/> <20100322125656.24ce2c11.akpm@linux-foundation.org>
+In-Reply-To: <20100322125656.24ce2c11.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003222204.47169.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/pci.c            |    2 +-
- include/linux/ssb/ssb_regs.h |  196 +++++++++++++++++++++---------------------
- 2 files changed, 99 insertions(+), 99 deletions(-)
+On Monday 22 March 2010, Andrew Morton wrote:
+> On Tue, 16 Mar 2010 22:03:53 GMT
+> bugzilla-daemon@bugzilla.kernel.org wrote:
+> 
+> > http://bugzilla.kernel.org/show_bug.cgi?id=15551
+> 
+> This'll be a post-2.6.33 regression.
+> 
+> >            Summary: wifi doesn't work after resume from s2ram on ThinkPad
+> >                     T61
+> >            Product: Networking
+> >            Version: 2.5
+> >     Kernel Version: 2.6.34-rc1
+> >           Platform: All
+> >         OS/Version: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P1
+> >          Component: Wireless
+> >         AssignedTo: networking_wireless@kernel-bugs.osdl.org
+> >         ReportedBy: alex.vizor@gmail.com
+> >         Regression: Yes
+> > 
+> > 
+> > Created an attachment (id=25561)
+> >  --> (http://bugzilla.kernel.org/attachment.cgi?id=25561)
+> > dmesg
+> > 
+> > Hi. I caught this after several resumes from s2ram, from s2disk it works ok.
+> > 
+> > I attached my dmesg. Please inform me if I can do the report more useful.
+> > 
+> 
+> This:
+> 
+> : [22456.252166] s2ram: page allocation failure. order:4, mode:0x4010
+> : [22456.252172] Pid: 23558, comm: s2ram Not tainted 2.6.34-rc1 #1
+> : [22456.252175] Call Trace:
+> : [22456.252187]  [<ffffffff810b8dc9>] __alloc_pages_nodemask+0x565/0x60c
+> : [22456.252195]  [<ffffffff810de879>] alloc_pages_current+0x90/0x99
+> : [22456.252201]  [<ffffffff810b7a9e>] __get_free_pages+0x9/0x46
+> : [22456.252221]  [<ffffffffa03b4bdd>] iwl_tx_queue_init+0xf2/0x2a1 [iwlcore]
+> : [22456.252227]  [<ffffffffa03b4f12>] iwl_txq_ctx_reset+0x186/0x20c [iwlcore]
+> : [22456.252233]  [<ffffffffa03ae41c>] iwl_hw_nic_init+0x124/0x139 [iwlcore]
+> 
+> Rafael, this is fallout from 452aa6999e6703ffbddd7f6ea124d3968915f3e3
+> ("mm/pm: force GFP_NOIO during suspend/hibernation and resume"). 
+> Wireless was previously doing this stupidly-large allocation with
+> GFP_KERNEL.  But I think the above change is what flipped it to
+> __GFP_WAIT, which caused the page allocator to go into lame-and-sucky
+> mode, so the allocation failed.
 
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 5bb1278..3f556d6 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -167,7 +167,7 @@ err_pci:
- }
- 
- /* Get the word-offset for a SSB_SPROM_XXX define. */
--#define SPOFF(offset)	(((offset) - SSB_SPROM_BASE1) / sizeof(u16))
-+#define SPOFF(offset)	((offset) / sizeof(u16))
- /* Helper to extract some _offset, which is one of the SSB_SPROM_XXX defines. */
- #define SPEX16(_outvar, _offset, _mask, _shift)	\
- 	out->_outvar = ((in[SPOFF(_offset)] & (_mask)) >> (_shift))
-diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
-index b8be23c..8990e30 100644
---- a/include/linux/ssb/ssb_regs.h
-+++ b/include/linux/ssb/ssb_regs.h
-@@ -172,25 +172,25 @@
- #define SSB_SPROMSIZE_BYTES_R4		(SSB_SPROMSIZE_WORDS_R4 * sizeof(u16))
- #define SSB_SPROM_BASE1			0x1000
- #define SSB_SPROM_BASE31		0x0800
--#define SSB_SPROM_REVISION		0x107E
-+#define SSB_SPROM_REVISION		0x007E
- #define  SSB_SPROM_REVISION_REV		0x00FF	/* SPROM Revision number */
- #define  SSB_SPROM_REVISION_CRC		0xFF00	/* SPROM CRC8 value */
- #define  SSB_SPROM_REVISION_CRC_SHIFT	8
- 
- /* SPROM Revision 1 */
--#define SSB_SPROM1_SPID			0x1004	/* Subsystem Product ID for PCI */
--#define SSB_SPROM1_SVID			0x1006	/* Subsystem Vendor ID for PCI */
--#define SSB_SPROM1_PID			0x1008	/* Product ID for PCI */
--#define SSB_SPROM1_IL0MAC		0x1048	/* 6 bytes MAC address for 802.11b/g */
--#define SSB_SPROM1_ET0MAC		0x104E	/* 6 bytes MAC address for Ethernet */
--#define SSB_SPROM1_ET1MAC		0x1054	/* 6 bytes MAC address for 802.11a */
--#define SSB_SPROM1_ETHPHY		0x105A	/* Ethernet PHY settings */
-+#define SSB_SPROM1_SPID			0x0004	/* Subsystem Product ID for PCI */
-+#define SSB_SPROM1_SVID			0x0006	/* Subsystem Vendor ID for PCI */
-+#define SSB_SPROM1_PID			0x0008	/* Product ID for PCI */
-+#define SSB_SPROM1_IL0MAC		0x0048	/* 6 bytes MAC address for 802.11b/g */
-+#define SSB_SPROM1_ET0MAC		0x004E	/* 6 bytes MAC address for Ethernet */
-+#define SSB_SPROM1_ET1MAC		0x0054	/* 6 bytes MAC address for 802.11a */
-+#define SSB_SPROM1_ETHPHY		0x005A	/* Ethernet PHY settings */
- #define  SSB_SPROM1_ETHPHY_ET0A		0x001F	/* MII Address for enet0 */
- #define  SSB_SPROM1_ETHPHY_ET1A		0x03E0	/* MII Address for enet1 */
- #define  SSB_SPROM1_ETHPHY_ET1A_SHIFT	5
- #define  SSB_SPROM1_ETHPHY_ET0M		(1<<14)	/* MDIO for enet0 */
- #define  SSB_SPROM1_ETHPHY_ET1M		(1<<15)	/* MDIO for enet1 */
--#define SSB_SPROM1_BINF			0x105C	/* Board info */
-+#define SSB_SPROM1_BINF			0x005C	/* Board info */
- #define  SSB_SPROM1_BINF_BREV		0x00FF	/* Board Revision */
- #define  SSB_SPROM1_BINF_CCODE		0x0F00	/* Country Code */
- #define  SSB_SPROM1_BINF_CCODE_SHIFT	8
-@@ -198,63 +198,63 @@
- #define  SSB_SPROM1_BINF_ANTBG_SHIFT	12
- #define  SSB_SPROM1_BINF_ANTA		0xC000	/* Available A-PHY antennas */
- #define  SSB_SPROM1_BINF_ANTA_SHIFT	14
--#define SSB_SPROM1_PA0B0		0x105E
--#define SSB_SPROM1_PA0B1		0x1060
--#define SSB_SPROM1_PA0B2		0x1062
--#define SSB_SPROM1_GPIOA		0x1064	/* General Purpose IO pins 0 and 1 */
-+#define SSB_SPROM1_PA0B0		0x005E
-+#define SSB_SPROM1_PA0B1		0x0060
-+#define SSB_SPROM1_PA0B2		0x0062
-+#define SSB_SPROM1_GPIOA		0x0064	/* General Purpose IO pins 0 and 1 */
- #define  SSB_SPROM1_GPIOA_P0		0x00FF	/* Pin 0 */
- #define  SSB_SPROM1_GPIOA_P1		0xFF00	/* Pin 1 */
- #define  SSB_SPROM1_GPIOA_P1_SHIFT	8
--#define SSB_SPROM1_GPIOB		0x1066	/* General Purpuse IO pins 2 and 3 */
-+#define SSB_SPROM1_GPIOB		0x0066	/* General Purpuse IO pins 2 and 3 */
- #define  SSB_SPROM1_GPIOB_P2		0x00FF	/* Pin 2 */
- #define  SSB_SPROM1_GPIOB_P3		0xFF00	/* Pin 3 */
- #define  SSB_SPROM1_GPIOB_P3_SHIFT	8
--#define SSB_SPROM1_MAXPWR		0x1068	/* Power Amplifier Max Power */
-+#define SSB_SPROM1_MAXPWR		0x0068	/* Power Amplifier Max Power */
- #define  SSB_SPROM1_MAXPWR_BG		0x00FF	/* B-PHY and G-PHY (in dBm Q5.2) */
- #define  SSB_SPROM1_MAXPWR_A		0xFF00	/* A-PHY (in dBm Q5.2) */
- #define  SSB_SPROM1_MAXPWR_A_SHIFT	8
--#define SSB_SPROM1_PA1B0		0x106A
--#define SSB_SPROM1_PA1B1		0x106C
--#define SSB_SPROM1_PA1B2		0x106E
--#define SSB_SPROM1_ITSSI		0x1070	/* Idle TSSI Target */
-+#define SSB_SPROM1_PA1B0		0x006A
-+#define SSB_SPROM1_PA1B1		0x006C
-+#define SSB_SPROM1_PA1B2		0x006E
-+#define SSB_SPROM1_ITSSI		0x0070	/* Idle TSSI Target */
- #define  SSB_SPROM1_ITSSI_BG		0x00FF	/* B-PHY and G-PHY*/
- #define  SSB_SPROM1_ITSSI_A		0xFF00	/* A-PHY */
- #define  SSB_SPROM1_ITSSI_A_SHIFT	8
--#define SSB_SPROM1_BFLLO		0x1072	/* Boardflags (low 16 bits) */
--#define SSB_SPROM1_AGAIN		0x1074	/* Antenna Gain (in dBm Q5.2) */
-+#define SSB_SPROM1_BFLLO		0x0072	/* Boardflags (low 16 bits) */
-+#define SSB_SPROM1_AGAIN		0x0074	/* Antenna Gain (in dBm Q5.2) */
- #define  SSB_SPROM1_AGAIN_BG		0x00FF	/* B-PHY and G-PHY */
- #define  SSB_SPROM1_AGAIN_BG_SHIFT	0
- #define  SSB_SPROM1_AGAIN_A		0xFF00	/* A-PHY */
- #define  SSB_SPROM1_AGAIN_A_SHIFT	8
- 
- /* SPROM Revision 2 (inherits from rev 1) */
--#define SSB_SPROM2_BFLHI		0x1038	/* Boardflags (high 16 bits) */
--#define SSB_SPROM2_MAXP_A		0x103A	/* A-PHY Max Power */
-+#define SSB_SPROM2_BFLHI		0x0038	/* Boardflags (high 16 bits) */
-+#define SSB_SPROM2_MAXP_A		0x003A	/* A-PHY Max Power */
- #define  SSB_SPROM2_MAXP_A_HI		0x00FF	/* Max Power High */
- #define  SSB_SPROM2_MAXP_A_LO		0xFF00	/* Max Power Low */
- #define  SSB_SPROM2_MAXP_A_LO_SHIFT	8
--#define SSB_SPROM2_PA1LOB0		0x103C	/* A-PHY PowerAmplifier Low Settings */
--#define SSB_SPROM2_PA1LOB1		0x103E	/* A-PHY PowerAmplifier Low Settings */
--#define SSB_SPROM2_PA1LOB2		0x1040	/* A-PHY PowerAmplifier Low Settings */
--#define SSB_SPROM2_PA1HIB0		0x1042	/* A-PHY PowerAmplifier High Settings */
--#define SSB_SPROM2_PA1HIB1		0x1044	/* A-PHY PowerAmplifier High Settings */
--#define SSB_SPROM2_PA1HIB2		0x1046	/* A-PHY PowerAmplifier High Settings */
--#define SSB_SPROM2_OPO			0x1078	/* OFDM Power Offset from CCK Level */
-+#define SSB_SPROM2_PA1LOB0		0x003C	/* A-PHY PowerAmplifier Low Settings */
-+#define SSB_SPROM2_PA1LOB1		0x003E	/* A-PHY PowerAmplifier Low Settings */
-+#define SSB_SPROM2_PA1LOB2		0x0040	/* A-PHY PowerAmplifier Low Settings */
-+#define SSB_SPROM2_PA1HIB0		0x0042	/* A-PHY PowerAmplifier High Settings */
-+#define SSB_SPROM2_PA1HIB1		0x0044	/* A-PHY PowerAmplifier High Settings */
-+#define SSB_SPROM2_PA1HIB2		0x0046	/* A-PHY PowerAmplifier High Settings */
-+#define SSB_SPROM2_OPO			0x0078	/* OFDM Power Offset from CCK Level */
- #define  SSB_SPROM2_OPO_VALUE		0x00FF
- #define  SSB_SPROM2_OPO_UNUSED		0xFF00
--#define SSB_SPROM2_CCODE		0x107C	/* Two char Country Code */
-+#define SSB_SPROM2_CCODE		0x007C	/* Two char Country Code */
- 
- /* SPROM Revision 3 (inherits most data from rev 2) */
--#define SSB_SPROM3_IL0MAC		0x104A	/* 6 bytes MAC address for 802.11b/g */
--#define SSB_SPROM3_OFDMAPO		0x102C	/* A-PHY OFDM Mid Power Offset (4 bytes, BigEndian) */
--#define SSB_SPROM3_OFDMALPO		0x1030	/* A-PHY OFDM Low Power Offset (4 bytes, BigEndian) */
--#define SSB_SPROM3_OFDMAHPO		0x1034	/* A-PHY OFDM High Power Offset (4 bytes, BigEndian) */
--#define SSB_SPROM3_GPIOLDC		0x1042	/* GPIO LED Powersave Duty Cycle (4 bytes, BigEndian) */
-+#define SSB_SPROM3_IL0MAC		0x004A	/* 6 bytes MAC address for 802.11b/g */
-+#define SSB_SPROM3_OFDMAPO		0x002C	/* A-PHY OFDM Mid Power Offset (4 bytes, BigEndian) */
-+#define SSB_SPROM3_OFDMALPO		0x0030	/* A-PHY OFDM Low Power Offset (4 bytes, BigEndian) */
-+#define SSB_SPROM3_OFDMAHPO		0x0034	/* A-PHY OFDM High Power Offset (4 bytes, BigEndian) */
-+#define SSB_SPROM3_GPIOLDC		0x0042	/* GPIO LED Powersave Duty Cycle (4 bytes, BigEndian) */
- #define  SSB_SPROM3_GPIOLDC_OFF		0x0000FF00	/* Off Count */
- #define  SSB_SPROM3_GPIOLDC_OFF_SHIFT	8
- #define  SSB_SPROM3_GPIOLDC_ON		0x00FF0000	/* On Count */
- #define  SSB_SPROM3_GPIOLDC_ON_SHIFT	16
--#define SSB_SPROM3_CCKPO		0x1078	/* CCK Power Offset */
-+#define SSB_SPROM3_CCKPO		0x0078	/* CCK Power Offset */
- #define  SSB_SPROM3_CCKPO_1M		0x000F	/* 1M Rate PO */
- #define  SSB_SPROM3_CCKPO_2M		0x00F0	/* 2M Rate PO */
- #define  SSB_SPROM3_CCKPO_2M_SHIFT	4
-@@ -265,100 +265,100 @@
- #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
- 
- /* SPROM Revision 4 */
--#define SSB_SPROM4_IL0MAC		0x104C	/* 6 byte MAC address for a/b/g/n */
--#define SSB_SPROM4_ETHPHY		0x105A	/* Ethernet PHY settings ?? */
-+#define SSB_SPROM4_IL0MAC		0x004C	/* 6 byte MAC address for a/b/g/n */
-+#define SSB_SPROM4_ETHPHY		0x005A	/* Ethernet PHY settings ?? */
- #define  SSB_SPROM4_ETHPHY_ET0A		0x001F	/* MII Address for enet0 */
- #define  SSB_SPROM4_ETHPHY_ET1A		0x03E0	/* MII Address for enet1 */
- #define  SSB_SPROM4_ETHPHY_ET1A_SHIFT	5
- #define  SSB_SPROM4_ETHPHY_ET0M		(1<<14)	/* MDIO for enet0 */
- #define  SSB_SPROM4_ETHPHY_ET1M		(1<<15)	/* MDIO for enet1 */
--#define SSB_SPROM4_CCODE		0x1052	/* Country Code (2 bytes) */
--#define SSB_SPROM4_ANTAVAIL		0x105D  /* Antenna available bitfields */
-+#define SSB_SPROM4_CCODE		0x0052	/* Country Code (2 bytes) */
-+#define SSB_SPROM4_ANTAVAIL		0x005D  /* Antenna available bitfields */
- #define SSB_SPROM4_ANTAVAIL_A		0x00FF	/* A-PHY bitfield */
- #define SSB_SPROM4_ANTAVAIL_A_SHIFT	0
- #define SSB_SPROM4_ANTAVAIL_BG		0xFF00	/* B-PHY and G-PHY bitfield */
- #define SSB_SPROM4_ANTAVAIL_BG_SHIFT	8
--#define SSB_SPROM4_BFLLO		0x1044	/* Boardflags (low 16 bits) */
--#define SSB_SPROM4_AGAIN01		0x105E	/* Antenna Gain (in dBm Q5.2) */
-+#define SSB_SPROM4_BFLLO		0x0044	/* Boardflags (low 16 bits) */
-+#define SSB_SPROM4_AGAIN01		0x005E	/* Antenna Gain (in dBm Q5.2) */
- #define  SSB_SPROM4_AGAIN0		0x00FF	/* Antenna 0 */
- #define  SSB_SPROM4_AGAIN0_SHIFT	0
- #define  SSB_SPROM4_AGAIN1		0xFF00	/* Antenna 1 */
- #define  SSB_SPROM4_AGAIN1_SHIFT	8
--#define SSB_SPROM4_AGAIN23		0x1060
-+#define SSB_SPROM4_AGAIN23		0x0060
- #define  SSB_SPROM4_AGAIN2		0x00FF	/* Antenna 2 */
- #define  SSB_SPROM4_AGAIN2_SHIFT	0
- #define  SSB_SPROM4_AGAIN3		0xFF00	/* Antenna 3 */
- #define  SSB_SPROM4_AGAIN3_SHIFT	8
--#define SSB_SPROM4_BFLHI		0x1046  /* Board Flags Hi */
--#define SSB_SPROM4_MAXP_BG		0x1080  /* Max Power BG in path 1 */
-+#define SSB_SPROM4_BFLHI		0x0046  /* Board Flags Hi */
-+#define SSB_SPROM4_MAXP_BG		0x0080  /* Max Power BG in path 1 */
- #define  SSB_SPROM4_MAXP_BG_MASK	0x00FF  /* Mask for Max Power BG */
- #define  SSB_SPROM4_ITSSI_BG		0xFF00	/* Mask for path 1 itssi_bg */
- #define  SSB_SPROM4_ITSSI_BG_SHIFT	8
--#define SSB_SPROM4_MAXP_A		0x108A  /* Max Power A in path 1 */
-+#define SSB_SPROM4_MAXP_A		0x008A  /* Max Power A in path 1 */
- #define  SSB_SPROM4_MAXP_A_MASK		0x00FF  /* Mask for Max Power A */
- #define  SSB_SPROM4_ITSSI_A		0xFF00	/* Mask for path 1 itssi_a */
- #define  SSB_SPROM4_ITSSI_A_SHIFT	8
--#define SSB_SPROM4_GPIOA		0x1056	/* Gen. Purpose IO # 0 and 1 */
-+#define SSB_SPROM4_GPIOA		0x0056	/* Gen. Purpose IO # 0 and 1 */
- #define  SSB_SPROM4_GPIOA_P0		0x00FF	/* Pin 0 */
- #define  SSB_SPROM4_GPIOA_P1		0xFF00	/* Pin 1 */
- #define  SSB_SPROM4_GPIOA_P1_SHIFT	8
--#define SSB_SPROM4_GPIOB		0x1058	/* Gen. Purpose IO # 2 and 3 */
-+#define SSB_SPROM4_GPIOB		0x0058	/* Gen. Purpose IO # 2 and 3 */
- #define  SSB_SPROM4_GPIOB_P2		0x00FF	/* Pin 2 */
- #define  SSB_SPROM4_GPIOB_P3		0xFF00	/* Pin 3 */
- #define  SSB_SPROM4_GPIOB_P3_SHIFT	8
--#define SSB_SPROM4_PA0B0		0x1082	/* The paXbY locations are */
--#define SSB_SPROM4_PA0B1		0x1084	/*   only guesses */
--#define SSB_SPROM4_PA0B2		0x1086
--#define SSB_SPROM4_PA1B0		0x108E
--#define SSB_SPROM4_PA1B1		0x1090
--#define SSB_SPROM4_PA1B2		0x1092
-+#define SSB_SPROM4_PA0B0		0x0082	/* The paXbY locations are */
-+#define SSB_SPROM4_PA0B1		0x0084	/*   only guesses */
-+#define SSB_SPROM4_PA0B2		0x0086
-+#define SSB_SPROM4_PA1B0		0x008E
-+#define SSB_SPROM4_PA1B1		0x0090
-+#define SSB_SPROM4_PA1B2		0x0092
- 
- /* SPROM Revision 5 (inherits most data from rev 4) */
--#define SSB_SPROM5_BFLLO		0x104A	/* Boardflags (low 16 bits) */
--#define SSB_SPROM5_BFLHI		0x104C  /* Board Flags Hi */
--#define SSB_SPROM5_IL0MAC		0x1052	/* 6 byte MAC address for a/b/g/n */
--#define SSB_SPROM5_CCODE		0x1044	/* Country Code (2 bytes) */
--#define SSB_SPROM5_GPIOA		0x1076	/* Gen. Purpose IO # 0 and 1 */
-+#define SSB_SPROM5_BFLLO		0x004A	/* Boardflags (low 16 bits) */
-+#define SSB_SPROM5_BFLHI		0x004C  /* Board Flags Hi */
-+#define SSB_SPROM5_IL0MAC		0x0052	/* 6 byte MAC address for a/b/g/n */
-+#define SSB_SPROM5_CCODE		0x0044	/* Country Code (2 bytes) */
-+#define SSB_SPROM5_GPIOA		0x0076	/* Gen. Purpose IO # 0 and 1 */
- #define  SSB_SPROM5_GPIOA_P0		0x00FF	/* Pin 0 */
- #define  SSB_SPROM5_GPIOA_P1		0xFF00	/* Pin 1 */
- #define  SSB_SPROM5_GPIOA_P1_SHIFT	8
--#define SSB_SPROM5_GPIOB		0x1078	/* Gen. Purpose IO # 2 and 3 */
-+#define SSB_SPROM5_GPIOB		0x0078	/* Gen. Purpose IO # 2 and 3 */
- #define  SSB_SPROM5_GPIOB_P2		0x00FF	/* Pin 2 */
- #define  SSB_SPROM5_GPIOB_P3		0xFF00	/* Pin 3 */
- #define  SSB_SPROM5_GPIOB_P3_SHIFT	8
- 
- /* SPROM Revision 8 */
--#define SSB_SPROM8_BOARDREV		0x1082	/* Board revision */
--#define SSB_SPROM8_BFLLO		0x1084	/* Board flags (bits 0-15) */
--#define SSB_SPROM8_BFLHI		0x1086	/* Board flags (bits 16-31) */
--#define SSB_SPROM8_BFL2LO		0x1088	/* Board flags (bits 32-47) */
--#define SSB_SPROM8_BFL2HI		0x108A	/* Board flags (bits 48-63) */
--#define SSB_SPROM8_IL0MAC		0x108C	/* 6 byte MAC address */
--#define SSB_SPROM8_CCODE		0x1092	/* 2 byte country code */
--#define SSB_SPROM8_ANTAVAIL		0x109C  /* Antenna available bitfields*/
-+#define SSB_SPROM8_BOARDREV		0x0082	/* Board revision */
-+#define SSB_SPROM8_BFLLO		0x0084	/* Board flags (bits 0-15) */
-+#define SSB_SPROM8_BFLHI		0x0086	/* Board flags (bits 16-31) */
-+#define SSB_SPROM8_BFL2LO		0x0088	/* Board flags (bits 32-47) */
-+#define SSB_SPROM8_BFL2HI		0x008A	/* Board flags (bits 48-63) */
-+#define SSB_SPROM8_IL0MAC		0x008C	/* 6 byte MAC address */
-+#define SSB_SPROM8_CCODE		0x0092	/* 2 byte country code */
-+#define SSB_SPROM8_ANTAVAIL		0x009C  /* Antenna available bitfields*/
- #define SSB_SPROM8_ANTAVAIL_A		0xFF00	/* A-PHY bitfield */
- #define SSB_SPROM8_ANTAVAIL_A_SHIFT	8
- #define SSB_SPROM8_ANTAVAIL_BG		0x00FF	/* B-PHY and G-PHY bitfield */
- #define SSB_SPROM8_ANTAVAIL_BG_SHIFT	0
--#define SSB_SPROM8_AGAIN01		0x109E	/* Antenna Gain (in dBm Q5.2) */
-+#define SSB_SPROM8_AGAIN01		0x009E	/* Antenna Gain (in dBm Q5.2) */
- #define  SSB_SPROM8_AGAIN0		0x00FF	/* Antenna 0 */
- #define  SSB_SPROM8_AGAIN0_SHIFT	0
- #define  SSB_SPROM8_AGAIN1		0xFF00	/* Antenna 1 */
- #define  SSB_SPROM8_AGAIN1_SHIFT	8
--#define SSB_SPROM8_AGAIN23		0x10A0
-+#define SSB_SPROM8_AGAIN23		0x00A0
- #define  SSB_SPROM8_AGAIN2		0x00FF	/* Antenna 2 */
- #define  SSB_SPROM8_AGAIN2_SHIFT	0
- #define  SSB_SPROM8_AGAIN3		0xFF00	/* Antenna 3 */
- #define  SSB_SPROM8_AGAIN3_SHIFT	8
--#define SSB_SPROM8_GPIOA		0x1096	/*Gen. Purpose IO # 0 and 1 */
-+#define SSB_SPROM8_GPIOA		0x0096	/*Gen. Purpose IO # 0 and 1 */
- #define  SSB_SPROM8_GPIOA_P0		0x00FF	/* Pin 0 */
- #define  SSB_SPROM8_GPIOA_P1		0xFF00	/* Pin 1 */
- #define  SSB_SPROM8_GPIOA_P1_SHIFT	8
--#define SSB_SPROM8_GPIOB		0x1098	/* Gen. Purpose IO # 2 and 3 */
-+#define SSB_SPROM8_GPIOB		0x0098	/* Gen. Purpose IO # 2 and 3 */
- #define  SSB_SPROM8_GPIOB_P2		0x00FF	/* Pin 2 */
- #define  SSB_SPROM8_GPIOB_P3		0xFF00	/* Pin 3 */
- #define  SSB_SPROM8_GPIOB_P3_SHIFT	8
--#define SSB_SPROM8_RSSIPARM2G		0x10A4	/* RSSI params for 2GHz */
-+#define SSB_SPROM8_RSSIPARM2G		0x00A4	/* RSSI params for 2GHz */
- #define  SSB_SPROM8_RSSISMF2G		0x000F
- #define  SSB_SPROM8_RSSISMC2G		0x00F0
- #define  SSB_SPROM8_RSSISMC2G_SHIFT	4
-@@ -366,7 +366,7 @@
- #define  SSB_SPROM8_RSSISAV2G_SHIFT	8
- #define  SSB_SPROM8_BXA2G		0x1800
- #define  SSB_SPROM8_BXA2G_SHIFT		11
--#define SSB_SPROM8_RSSIPARM5G		0x10A6	/* RSSI params for 5GHz */
-+#define SSB_SPROM8_RSSIPARM5G		0x00A6	/* RSSI params for 5GHz */
- #define  SSB_SPROM8_RSSISMF5G		0x000F
- #define  SSB_SPROM8_RSSISMC5G		0x00F0
- #define  SSB_SPROM8_RSSISMC5G_SHIFT	4
-@@ -374,47 +374,47 @@
- #define  SSB_SPROM8_RSSISAV5G_SHIFT	8
- #define  SSB_SPROM8_BXA5G		0x1800
- #define  SSB_SPROM8_BXA5G_SHIFT		11
--#define SSB_SPROM8_TRI25G		0x10A8	/* TX isolation 2.4&5.3GHz */
-+#define SSB_SPROM8_TRI25G		0x00A8	/* TX isolation 2.4&5.3GHz */
- #define  SSB_SPROM8_TRI2G		0x00FF	/* TX isolation 2.4GHz */
- #define  SSB_SPROM8_TRI5G		0xFF00	/* TX isolation 5.3GHz */
- #define  SSB_SPROM8_TRI5G_SHIFT		8
--#define SSB_SPROM8_TRI5GHL		0x10AA	/* TX isolation 5.2/5.8GHz */
-+#define SSB_SPROM8_TRI5GHL		0x00AA	/* TX isolation 5.2/5.8GHz */
- #define  SSB_SPROM8_TRI5GL		0x00FF	/* TX isolation 5.2GHz */
- #define  SSB_SPROM8_TRI5GH		0xFF00	/* TX isolation 5.8GHz */
- #define  SSB_SPROM8_TRI5GH_SHIFT	8
--#define SSB_SPROM8_RXPO			0x10AC  /* RX power offsets */
-+#define SSB_SPROM8_RXPO			0x00AC  /* RX power offsets */
- #define  SSB_SPROM8_RXPO2G		0x00FF	/* 2GHz RX power offset */
- #define  SSB_SPROM8_RXPO5G		0xFF00	/* 5GHz RX power offset */
- #define  SSB_SPROM8_RXPO5G_SHIFT	8
--#define SSB_SPROM8_MAXP_BG		0x10C0  /* Max Power 2GHz in path 1 */
-+#define SSB_SPROM8_MAXP_BG		0x00C0  /* Max Power 2GHz in path 1 */
- #define  SSB_SPROM8_MAXP_BG_MASK	0x00FF  /* Mask for Max Power 2GHz */
- #define  SSB_SPROM8_ITSSI_BG		0xFF00	/* Mask for path 1 itssi_bg */
- #define  SSB_SPROM8_ITSSI_BG_SHIFT	8
--#define SSB_SPROM8_PA0B0		0x10C2	/* 2GHz power amp settings */
--#define SSB_SPROM8_PA0B1		0x10C4
--#define SSB_SPROM8_PA0B2		0x10C6
--#define SSB_SPROM8_MAXP_A		0x10C8  /* Max Power 5.3GHz */
-+#define SSB_SPROM8_PA0B0		0x00C2	/* 2GHz power amp settings */
-+#define SSB_SPROM8_PA0B1		0x00C4
-+#define SSB_SPROM8_PA0B2		0x00C6
-+#define SSB_SPROM8_MAXP_A		0x00C8  /* Max Power 5.3GHz */
- #define  SSB_SPROM8_MAXP_A_MASK		0x00FF  /* Mask for Max Power 5.3GHz */
- #define  SSB_SPROM8_ITSSI_A		0xFF00	/* Mask for path 1 itssi_a */
- #define  SSB_SPROM8_ITSSI_A_SHIFT	8
--#define SSB_SPROM8_MAXP_AHL		0x10CA  /* Max Power 5.2/5.8GHz */
-+#define SSB_SPROM8_MAXP_AHL		0x00CA  /* Max Power 5.2/5.8GHz */
- #define  SSB_SPROM8_MAXP_AH_MASK	0x00FF  /* Mask for Max Power 5.8GHz */
- #define  SSB_SPROM8_MAXP_AL_MASK	0xFF00  /* Mask for Max Power 5.2GHz */
- #define  SSB_SPROM8_MAXP_AL_SHIFT	8
--#define SSB_SPROM8_PA1B0		0x10CC	/* 5.3GHz power amp settings */
--#define SSB_SPROM8_PA1B1		0x10CE
--#define SSB_SPROM8_PA1B2		0x10D0
--#define SSB_SPROM8_PA1LOB0		0x10D2	/* 5.2GHz power amp settings */
--#define SSB_SPROM8_PA1LOB1		0x10D4
--#define SSB_SPROM8_PA1LOB2		0x10D6
--#define SSB_SPROM8_PA1HIB0		0x10D8	/* 5.8GHz power amp settings */
--#define SSB_SPROM8_PA1HIB1		0x10DA
--#define SSB_SPROM8_PA1HIB2		0x10DC
--#define SSB_SPROM8_CCK2GPO		0x1140	/* CCK power offset */
--#define SSB_SPROM8_OFDM2GPO		0x1142	/* 2.4GHz OFDM power offset */
--#define SSB_SPROM8_OFDM5GPO		0x1146	/* 5.3GHz OFDM power offset */
--#define SSB_SPROM8_OFDM5GLPO		0x114A	/* 5.2GHz OFDM power offset */
--#define SSB_SPROM8_OFDM5GHPO		0x114E	/* 5.8GHz OFDM power offset */
-+#define SSB_SPROM8_PA1B0		0x00CC	/* 5.3GHz power amp settings */
-+#define SSB_SPROM8_PA1B1		0x00CE
-+#define SSB_SPROM8_PA1B2		0x00D0
-+#define SSB_SPROM8_PA1LOB0		0x00D2	/* 5.2GHz power amp settings */
-+#define SSB_SPROM8_PA1LOB1		0x00D4
-+#define SSB_SPROM8_PA1LOB2		0x00D6
-+#define SSB_SPROM8_PA1HIB0		0x00D8	/* 5.8GHz power amp settings */
-+#define SSB_SPROM8_PA1HIB1		0x00DA
-+#define SSB_SPROM8_PA1HIB2		0x00DC
-+#define SSB_SPROM8_CCK2GPO		0x0140	/* CCK power offset */
-+#define SSB_SPROM8_OFDM2GPO		0x0142	/* 2.4GHz OFDM power offset */
-+#define SSB_SPROM8_OFDM5GPO		0x0146	/* 5.3GHz OFDM power offset */
-+#define SSB_SPROM8_OFDM5GLPO		0x014A	/* 5.2GHz OFDM power offset */
-+#define SSB_SPROM8_OFDM5GHPO		0x014E	/* 5.8GHz OFDM power offset */
- 
- /* Values for SSB_SPROM1_BINF_CCODE */
- enum {
--- 
-1.6.4.2
+Well, technically the problem is in the driver.  It shouldn't do anything like
+this during suspend/resume.  I'll try to figure out how to fix this at minimal cost.
 
+> (btw, that was a bug - 452aa6999e6703ffbddd7f6ea124d3968915f3e3 should
+> have cleared the __GFP_WAIT bit too).
+
+Hmm, should it?  That would make all allocations GFP_ATOMIC and is this what
+we really want?
+
+Rafael
