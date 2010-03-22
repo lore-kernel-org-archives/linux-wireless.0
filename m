@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46422 "EHLO ds10.nbd.name"
+Received: from bu3sch.de ([62.75.166.246]:60350 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965803Ab0COXxJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Mar 2010 19:53:09 -0400
-Message-ID: <4B9EC85B.8070800@openwrt.org>
-Date: Tue, 16 Mar 2010 00:52:59 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752475Ab0CVW2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Mar 2010 18:28:42 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
+Date: Mon, 22 Mar 2010 23:28:40 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Calvin Walton <calvin.walton@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <201003222255.00366.mb@bu3sch.de> <4BA7ED0A.9060804@lwfinger.net>
+In-Reply-To: <4BA7ED0A.9060804@lwfinger.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
-References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com> <20100315214338.GB4000@tux> <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com> <20100315234909.GA2662@tux>
-In-Reply-To: <20100315234909.GA2662@tux>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003222328.40703.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-03-16 12:49 AM, Luis R. Rodriguez wrote:
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 00570fb..867cfaf 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -807,6 +804,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
->  		acktimeout += 64 - sifstime - ah->slottime;
->  
->  	ath9k_hw_setslottime(ah, slottime);
-> +
-> +	if (AR_SREV_9271(ah))
-> +		return;
-> +
->  	ath9k_hw_set_ack_timeout(ah, acktimeout);
->  	ath9k_hw_set_cts_timeout(ah, acktimeout);
->  	if (ah->globaltxtimeout != (u32) -1)
+On Monday 22 March 2010 23:19:54 Larry Finger wrote:
+> On 03/22/2010 04:55 PM, Michael Buesch wrote:
+> > 
+> > I don't see a problem for udev to distinguish the cards. It can do it merely on
+> > the bus-ID. That's unique. Yeah, it might change if you change the hardware.
+> > But do we care? I say no, because you cannot actually change the hardware in real life
+> > for any of these devices. And even if you could reorder the devices on the bus or whatever.
+> > What would happen? The card would get a new MAC address. That's all. That's acceptable.
+> > 
+> > The kernel would (for example) just set the mac address to all-ones. Udev would
+> > notice this (invalid) mac address and reassign a new persistent one to the device. It then
+> > stores the address on the harddisk.
+> 
+> What ensures that this persistent name would be unique?
 
-Why leave out the ACK/CTS timeout setting? How does the hw handle ACK
-and CTS timeouts?
+The same mechanism that ensures that an UUID is unique: A good random number generator.
 
-- Felix
+> > In fact, if we implement a mechanism in the kernel, we have _exactly_ the same problem.
+> > However, currently Larry's patches just ignore that problem and assume that there's only
+> > one card in the system anyway.
+> 
+> As I said in a posting a few minutes ago, that problem is solved.
+
+Well. You distinguish by bus-ID, right? That's exactly the thing that udev does.
+
+-- 
+Greetings, Michael.
