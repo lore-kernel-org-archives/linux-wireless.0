@@ -1,49 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:35695 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263Ab0CTKJt (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:21412 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752137Ab0CVGAW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Mar 2010 06:09:49 -0400
-Received: by wwe15 with SMTP id 15so2298871wwe.19
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Mar 2010 03:09:47 -0700 (PDT)
-Message-ID: <4BA49EE2.8000902@gmail.com>
-Date: Sat, 20 Mar 2010 10:09:38 +0000
-From: Dave <kilroyd@googlemail.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: correct typos in "unavailable upon resume"
- warning
-References: <1268854418-6662-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1268854418-6662-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 22 Mar 2010 02:00:22 -0400
+Subject: Re: [RFC PATCHv5 1/2] cfg80211: Add connection quality monitoring
+ support to nl80211
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Coelho Luciano (Nokia-D/Helsinki)" <Luciano.Coelho@nokia.com>
+In-Reply-To: <1269103686.4652.3.camel@jlt3.sipsolutions.net>
+References: <1268985801-25225-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1268985801-25225-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1269103686.4652.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 22 Mar 2010 07:57:14 +0200
+Message-ID: <1269237434.10120.734.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  net/mac80211/util.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+On Sat, 2010-03-20 at 17:48 +0100, ext Johannes Berg wrote:
+> On Fri, 2010-03-19 at 10:03 +0200, Juuso Oikarinen wrote:
 > 
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index c453226..a9d9098 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -1097,8 +1097,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
->  		 */
->  		res = drv_start(local);
->  		if (res) {
-> -			WARN(local->suspended, "Harware became unavailable "
-> -			     "upon resume. This is could be a software issue"
-> +			WARN(local->suspended, "Hardware became unavailable "
-> +			     "upon resume. This is could be a software issue "
+> > + * @NL80211_CMD_SET_CQM: Connection quality monitor configuration and
+> > + *      notification. This command is used both as a command (to configure
+> > + *      a trigger level) and as an event (to indicate the configured level was
+> > + *      reached.) Setting zero threshold disables the feature.
+> 
+> I've been thinking about this for a while, and I think I finally decided
+> that I'd prefer another command number for the event. SET doesn't seem
+> to match the event very well at all.
 
-                                                ^^
+I'll change this. The reason I have it this way now is just that I
+noticed that sharing the ID's is a common way to do it in existing code.
 
-As long as you're addressing that line, you probably want to lose the
-'is'. Or the 'could be'.
+> > +/**
+> > + * enum nl80211_cqm_rssi_threshold_event - RSSI threshold event
+> > + * @NL80211_CQM_RSSI_THRESHOLD_EVENT_NONE - No RSSI threshold event occurred
+> 
+> What is none intended for? If it's for any of the other possible future
+> enhancements, I'd think in that case we just leave out the attribute?
 
->  			     "prior to suspend or a hardware issue\n");
->  			return res;
->  		}
+Yes, thinking back, this was a bad idea. I'll take it out ;)
+
+> > +static struct nla_policy
+> > +nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX + 1] __read_mostly = {
+> > +	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U32 },
+> > +	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U8 },
+> 
+> Now I'm confused. Not that I think we'll ever need a hysteresis value
+> larger than that, but isn't that a little inconsistent?
+
+As per your preference, I'll change this. I personally don't seem to get
+over my old habit of always feeling the urge to save some bits ;)
+
+Thanks for your comments.
+
+-Juuso
+
+> johannes
+> 
+
+
