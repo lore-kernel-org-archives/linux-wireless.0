@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:61358 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755115Ab0C3SG6 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:40792 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754483Ab0CVNkt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 14:06:58 -0400
-Received: by pwi5 with SMTP id 5so7986031pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 11:06:57 -0700 (PDT)
-Message-ID: <4BB23DBD.8080904@lwfinger.net>
-Date: Tue, 30 Mar 2010 13:06:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 22 Mar 2010 09:40:49 -0400
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [RFC][PATCH][WIP] b43: N-PHY: set band width
-References: <1269971657-4663-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1269971657-4663-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20100322115244.GA10368@zooey>
+References: <20100322115244.GA10368@zooey>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 22 Mar 2010 14:40:27 +0100
+Message-ID: <69e28c911003220640t77d01dccod8232ea007257a5f@mail.gmail.com>
+Subject: Re: [PATCH] drivers/net/wireless/b43/main.c:4351: Fixed coding style
+To: Daniel Ngu <daniel.dy.ngu@gmail.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2010 12:54 PM, Rafa≈Ç Mi≈Çecki wrote:
+On Mon, Mar 22, 2010 at 12:52 PM, Daniel Ngu <daniel.dy.ngu@gmail.com> wrote:
+> WARNING: braces {} are not necessary for any arm of this statement
+>
+> Signed-off-by: Daniel Ngu <daniel.dy.ngu@gmail.com>
 > ---
-> I've problem with deciding how to keep some data needed by band width setting
-> code. Generally these band width-related routines are considered "common", to
-> be used by more than just N-PHY. So probably the most /correct/ way should be
-> to add some variables like maccontrol, wake_override, clk and other to struct
-> b43_phy which is shared between all PHYs. However we would not use these vars
-> in anything except N-PHY, so we would just waste users memory.
-> 
-> Could you help me decide correct way to handle this?
+> †drivers/net/wireless/b43/main.c | † †5 ++---
+> †1 files changed, 2 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index 1521b1e..14cf3bd 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -4348,11 +4348,10 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+> † † † †b43_set_phytxctl_defaults(dev);
+>
+> † † † †/* Minimum Contention Window */
+> - † † † if (phy->type == B43_PHYTYPE_B) {
+> + † † † if (phy->type == B43_PHYTYPE_B)
+> † † † † † † † †b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MINCONT, 0x1F);
+> - † † † } else {
+> + † † † else
+> † † † † † † † †b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MINCONT, 0xF);
+> - † † † }
+> † † † †/* Maximum Contention Window */
+> † † † †b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MAXCONT, 0x3FF);
+>
+> --
+> 1.5.6.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at †http://vger.kernel.org/majordomo-info.html
+>
 
-I have not done the RE yet, but the SSLPN PHY is multi-band and will likely need
-all the band width parameters needed by the N PHY. I would vote for putting them
-in a "common" struct.
+Actually I believe the entire PHYTYPE_B brahcn could be removed, as we
+no longer have B-PHY support in b43 anyway. But consult Michael about
+this.
 
-Larry
+--
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
