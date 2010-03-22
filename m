@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:41200 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750719Ab0CENeD convert rfc822-to-8bit (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:17415 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995Ab0CVIn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 08:34:03 -0500
-Received: by gwb15 with SMTP id 15so1806341gwb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Mar 2010 05:34:01 -0800 (PST)
+	Mon, 22 Mar 2010 04:43:58 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so1115389qwh.37
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 01:43:58 -0700 (PDT)
+From: Steven Wheeler <stevenwheel@gmail.com>
+To: "'Pavel Roskin'" <proski@gnu.org>
+Cc: <linux-wireless@vger.kernel.org>
+References: <002a01cac969$b726e8d0$2574ba70$@com> <1269232531.18891.6.camel@mj>
+In-Reply-To: <1269232531.18891.6.camel@mj>
+Subject: RE: Problems with Netgear WG511v1 PCMCIA
+Date: Mon, 22 Mar 2010 03:43:55 -0500
+Message-ID: <000001cac99b$cf9ff140$6edfd3c0$@com>
 MIME-Version: 1.0
-In-Reply-To: <20100305063255.29522.83920.stgit@void>
-References: <20100305063255.29522.83920.stgit@void>
-Date: Fri, 5 Mar 2010 08:26:44 -0500
-Message-ID: <b6c5339f1003050526r12b21c8awdd4ea5e0fcd72425@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath5k: fix I/Q calibration (for real)
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, 8an@praha12.net,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 5, 2010 at 1:32 AM, Bruno Randolf <br1@einfach.org> wrote:
-> I/Q calibration was completely broken, resulting in a high number of CRC errors
-> on received packets. before i could see around 10% to 20% CRC errors, with this
-> patch they are between 0% and 3%.
+Sorry, meant to include it: Kernel is 2.6.27.7
 
-Er, ouch.  This is definitely stable material -- can
-you add cc to stable@kernel.org?
+I thought about trying the prism54 driver but was unable to download the
+firmware from the links in the P54 site.
+No matter what I did I kept getting the html page back as a text file to be
+saved, very weird.
 
-> -       i_coff = ((-iq_corr) / i_coffd);
-> -
-> -       /* Boundary check */
-> +       i_coff = (-iq_corr) / i_coffd;
-> +       /* Boundary check (signed 6 bit) */
+-----Original Message-----
+From: Pavel Roskin [mailto:proski@gnu.org] 
+Sent: Sunday, March 21, 2010 11:36 PM
+To: Steven Wheeler
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Problems with Netgear WG511v1 PCMCIA
 
+On Sun, 2010-03-21 at 21:45 -0500, Steven Wheeler wrote:
+> I am attempting to resurrect my old Toshiba Portege 3110CT laptop
+> Installed Slackware 12.2 on it and all is working well except for my
+> WG511v1.
 
->        if (i_coff > 31)
->                i_coff = 31;
-> -       if (i_coff < -32)
-> +       else if (i_coff < -32)
->                i_coff = -32;
+Sorry for being blunt, but please don't expect anyone who is busy
+hacking wireless drivers to pull Slackware 12.1 and see what kernel
+version it has.
 
-Can't we just do
+> I have reached my knowledge limit and if anyone has a suggestion to try I
+> would appreciate it.  I am really hoping I can use this card since money
+is
+> tight right now
 
-i_coff &= 0x3f;
+Understood.
 
+> Mar 21 21:29:01 PopsLT kernel: p54: unknown eeprom code : 0x1
+> Mar 21 21:29:01 PopsLT kernel: p54: unknown eeprom code : 0x3
 
-Boundary check */
-> +       q_coff = (i_pwr / q_coffd) - 128;
-> +       /* Boundary check (signed 5 bit) */
->        if (q_coff > 15)
->                q_coff = 15;
+If I remember correctly, it's harmless.
 
-q_coff &= 0x1f;
+Since you are using a softmac driver, and you kernel is likely old, you
+have basically two options.
 
-... and then these are equivalent to the masks we
-already use in WRITE_BITS, right?
+1) Try the fullmac driver (prism54).
+2) Try compat-wireless.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Regards,
+Pavel Roskin
+
