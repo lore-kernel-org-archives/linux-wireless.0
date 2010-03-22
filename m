@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:60068 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754475Ab0C3Vuf (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41268 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754688Ab0CVRRl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 17:50:35 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, <users@rt2x00.serialmonkey.com>,
-	<linux-wireless@vger.kernel.org>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 0/4] rt2x00: Powersave fixes.
-Date: Tue, 30 Mar 2010 23:50:22 +0200
-Message-Id: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
+	Mon, 22 Mar 2010 13:17:41 -0400
+Date: Mon, 22 Mar 2010 10:12:38 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
+cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.34-rc2: Reported regressions from 2.6.33
+In-Reply-To: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera>
+Message-ID: <alpine.LFD.2.00.1003221012270.18017@i5.linux-foundation.org>
+References: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following 4 patches fix powersave behavior of rt2x00.
-The first patch fixes the rt2500usb powersave issues found lately.
-The second on enables powersave for rt2500usb again, now it is fixed.
-The third and fourth are ongoing work to bring the other PCI drivers
-in a better shape.
 
-All patches are against wireless-2.6.
+On Sun, 21 Mar 2010, Rafael J. Wysocki wrote:
+> 
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15495
+> Subject		: Flood of SELinux denials on polkitd
+> Submitter	: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
+> Date		: 2010-03-09 16:47 (13 days old)
 
-The patch series is also available via:
+Fixed by commit 3836a03d978e68b0ae00d3589089343c998cd4ff ("anon_inodes: 
+mark the anon inode private"), I'm pretty sure.
 
-	git://git.gwingerde.nl/rt2x00-2.6.git
-
-Gertjan van Wingerde (4):
-  rt2x00: Disable auto wakeup before waking up device.
-  rt2x00: Enable powersaving by default again on rt2500usb.
-  rt2x00: Add wakeup interrupt handler to rt61pci.
-  rt2x00: Add wakeup interrupt handler to rt2800pci.
-
- drivers/net/wireless/rt2x00/rt2400pci.c |    4 ++++
- drivers/net/wireless/rt2x00/rt2500pci.c |    4 ++++
- drivers/net/wireless/rt2x00/rt2500usb.c |    9 ++++-----
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
- drivers/net/wireless/rt2x00/rt2800pci.c |   11 +++++++++++
- drivers/net/wireless/rt2x00/rt61pci.c   |   14 ++++++++++++++
- drivers/net/wireless/rt2x00/rt73usb.c   |    6 +++---
- 7 files changed, 42 insertions(+), 10 deletions(-)
-
+		Linus
