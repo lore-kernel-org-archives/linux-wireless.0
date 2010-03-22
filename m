@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:59135 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754899Ab0CBUD0 convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:11130 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756490Ab0CVV4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 15:03:26 -0500
-Received: by fxm19 with SMTP id 19so708129fxm.21
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Mar 2010 12:03:24 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] rt2x00: fix rt2800pci compilation with SoC
-Date: Tue, 2 Mar 2010 21:03:20 +0100
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
-References: <201003021634.50077.helmut.schaa@googlemail.com> <4B8D62CC.9040005@gmail.com> <20100302194533.GC16620@tuxdriver.com>
-In-Reply-To: <20100302194533.GC16620@tuxdriver.com>
+	Mon, 22 Mar 2010 17:56:49 -0400
+Received: by ey-out-2122.google.com with SMTP id d26so523128eyd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 14:56:48 -0700 (PDT)
+Message-ID: <4BA7E79C.9070100@lwfinger.net>
+Date: Mon, 22 Mar 2010 16:56:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003022103.20426.helmut.schaa@googlemail.com>
+To: Calvin Walton <calvin.walton@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
+References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <1269239303.12836.17.camel@ayu>
+In-Reply-To: <1269239303.12836.17.camel@ayu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag 02 März 2010 schrieb John W. Linville:
-> On Tue, Mar 02, 2010 at 08:11:08PM +0100, Gertjan van Wingerde wrote:
-> > On 03/02/10 16:34, Helmut Schaa wrote:
-> > > Compiling rt2800pci with CONFIG_RT2800PCI_SOC fails with "... rt2880pci.c:
-> > > error: incompatible type for argument 2 of 'rt2x00soc_probe'".
-> > > 
-> > > Fix this by using &rt2800pci_ops instead of rt2800pci_ops.
-> > > 
-> > > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> > > ---
-> > 
-> > Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> > 
-> > John, this is probably one that should go to wireless-2.6.
+On 03/22/2010 01:28 AM, Calvin Walton wrote:
 > 
-> I agree, which is why I fixed the whitespace damage and applied it...grrr...
+> I'm curious, how would this firmware-loading scheme deal with having
+> multiple cards of this type installed? This seems like an unusual
+> situation, but it looks like this patch will cause all of the cards to
+> start up with the same MAC address due to the fixed filename.
 
-Oops, sorry John.
+I have a workaround for this problem based on the bus address of the device.
 
-Thank you,
-Helmut
+> Instead of using a firmware file to load in the MAC address, might it be
+> possible to move the persistent MAC setting to a simple udev rule which
+> generates a persistent MAC address, saves it, then sets it each boot
+> using a command like "ip link set wlan0 address XX:XX:XX:XX:XX:XX" ?
+> 
+> This would remove the need to have this "fake" firmware file available
+> at boot, provided that the driver can handle leaving the address
+> unconfigured until userspace gets around to setting it. As well, it
+> could be written to work with multiple cards easily, saving a different
+> MAC for each.
+
+Does anyone have any suggestions on what characteristic could be used to
+generate a unique MAC address for a box in a udev rule? Unless someone proposes
+a workable solution, I will push V3 of my patch with the bus address change
+noted above.
+
+Larry
