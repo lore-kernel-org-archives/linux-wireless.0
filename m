@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:21697 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754435Ab0CVPrx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35766 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755382Ab0CVSMj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 11:47:53 -0400
-Received: by fg-out-1718.google.com with SMTP id l26so522505fgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 08:47:51 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Steven Wheeler <stevenwheel@gmail.com>
-Subject: Re: Problems with Netgear WG511v1 PCMCIA
-Date: Mon, 22 Mar 2010 16:47:42 +0100
-Cc: "'Pavel Roskin'" <proski@gnu.org>, linux-wireless@vger.kernel.org
-References: <002a01cac969$b726e8d0$2574ba70$@com> <1269232531.18891.6.camel@mj> <000001cac99b$cf9ff140$6edfd3c0$@com>
-In-Reply-To: <000001cac99b$cf9ff140$6edfd3c0$@com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003221647.43357.chunkeey@googlemail.com>
+	Mon, 22 Mar 2010 14:12:39 -0400
+Subject: Re: [PATCH V2] mac80211: Revise,pending queue depth in
+ ieee80211_local data structure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <randolf.bruno@googlemail.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201003211101.16481.randolf.bruno@gmail.com>
+References: <4BA24A12.4030208@gmail.com>
+	 <f74418681003201302g3ed2902bp230a1ce93d165831@mail.gmail.com>
+	 <1269117605.4611.0.camel@jlt3.sipsolutions.net>
+	 <201003211101.16481.randolf.bruno@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 22 Mar 2010 11:12:44 -0700
+Message-ID: <1269281564.7645.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 March 2010 09:43:55 Steven Wheeler wrote:
-> Sorry, meant to include it: Kernel is 2.6.27.7
-that's ancient.
+On Sun, 2010-03-21 at 11:01 +0900, Bruno Randolf wrote:
+> On Sunday 21 March 2010 05:40:05 Johannes Berg wrote:
+> > On Sat, 2010-03-20 at 21:02 +0100, Lorenzo Bianconi wrote:
+> > > >> setup 2 wireless cards, talking to each other (i use IBSS) on
+> > > >> different
+> > > 
+> > > >> machines. then setup routing like this:
+> > > PC1<--ethernet cable-->Device1<--wireless link-->Device2<--ethernet
+> > > cable-->PC2
+> > 
+> > I'm not really sure how this scenario differs from injecting traffic
+> > locally, but I'll try to reproduce.
+> 
+> if you generate traffic locally it's enough to stop the queues, this will 
+> cause userspace to stop generating traffic. in the forwarding case (which we 
+> are talking about) stopping the queues will not stop the sender to send 
+> traffic, thus we have to start dropping packets at some point. 
 
-you should give compat-wireless a try:
-http://linuxwireless.org/en/users/Download
-and keep your finger crossed...
+So I tried this scenario, and I see the queues stopping, and traffic
+being dropped quite as you'd want it. Even the race condition that I
+noticed didn't ever trigger.
 
-> I thought about trying the prism54 driver but was unable to download the
-> firmware from the links in the P54 site.
-> No matter what I did I kept getting the html page back as a text file to be
-> saved, very weird.
+Please make sure you're using a kernel recent enough to include the
+fixes, maybe try compat-wireless.
 
-First things first, are you really sure you got an WG511v1 and not the v1.02?
-Take a look at: http://daemonizer.de/prism54/wg511/ there you'll see
-several pictures of different WG511 versions.
+johannes
 
-I can give you a working link, but first I need to know if this is a genuine
-v1.
-
-Regards,
-	Chr
