@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47345 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753150Ab0CKVdB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 16:33:01 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/5] compat-wireless: various patches
-Date: Thu, 11 Mar 2010 22:32:40 +0100
-Message-Id: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+Received: from lo.gmane.org ([80.91.229.12]:40115 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755917Ab0CVTkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Mar 2010 15:40:12 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1NtnTp-0000GY-EF
+	for linux-wireless@vger.kernel.org; Mon, 22 Mar 2010 20:40:05 +0100
+Received: from p54A74390.dip.t-dialin.net ([84.167.67.144])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 20:40:05 +0100
+Received: from m1kes by p54A74390.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 20:40:05 +0100
+To: linux-wireless@vger.kernel.org
+From: Michael Stahn <m1kes@web.de>
+Subject: Re: [Proposal]TX flags
+Date: Mon, 22 Mar 2010 19:32:21 +0000 (UTC)
+Message-ID: <loom.20100322T194108-874@post.gmane.org>
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds orinoco driver and fixes some build and load problems of
-recent comapt-wireless.
+Regarding to this proposal I suggest this additional Radiotap feature
+to be standardised:
 
-This series was compile tested with kernel 2.6.27 to 2.6.34
-For kernel older than 2.6.27 qdisc_all_tx_empty must be backported.
+- Duration field shall not be recalculated ("No-Dur").
 
-Hauke Mehrtens (5):
-  compat-wireless: rename {free,alloc}_ieee80211 to {free,alloc}_libipw
-  compat-wireless: add orinoco to compat-wireless
-  compat-wireless: fix building of iwmc3200wifi
-  compat-wireless: remove some uneeded header files
-  compat-wireless: update config symbols
+The approbiate mask for the Radiotap-Header would be 0x0020.
+The No-Dur flag is used when sending frames from the userspace
+to indicate that the frame already has its duration time
+preconfigured and should not be recalculated by low-level.
+This is useful for testing porpuses or tools like
+aireplay which trust on the "send out what you put in"-behaviour,
+especialliy on RTS-Frames, where duration-fields are reset to 0.
+If fragmentation is set (Bit 1, mask 0x08), duration-recalculation
+should be done after all because this would imply the given
+duration is reused for every subsequent fragment and there
+isn't an easy way to set different durations for all of them.
 
- config.mk                         |   29 ++++++-
- patches/01-netdev.patch           |   73 +++++++++++++----
- patches/02-ksize.patch            |   25 ++++++
- patches/13-trace.patch            |   19 +++++
- patches/23-ipw.patch              |  161 +++++++++++++++++++++++++++++++++++++
- patches/24-pcmcia.patch           |   14 +++
- patches/99-change-makefiles.patch |    8 +-
- scripts/admin-update.sh           |    5 +-
- 8 files changed, 306 insertions(+), 28 deletions(-)
- create mode 100644 patches/23-ipw.patch
- create mode 100644 patches/24-pcmcia.patch
 
-Hauke Mehrtens (2):
-  compat: update bitops.h
-  compat: backport PCMCIA_DEVICE_PROD_ID3
-
- include/linux/bitops.h        |   33 ++++++++++++++++++++++++++++++---
- include/linux/compat-2.6.34.h |    7 +++++++
- 2 files changed, 37 insertions(+), 3 deletions(-)
-
+--Michael Stahn
 
