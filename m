@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:48807 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753923Ab0CZVQ2 (ORCPT
+Received: from mail-fx0-f223.google.com ([209.85.220.223]:42774 "EHLO
+	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753168Ab0CVRHy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 17:16:28 -0400
-Received: by pva18 with SMTP id 18so1675735pva.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 14:16:27 -0700 (PDT)
+	Mon, 22 Mar 2010 13:07:54 -0400
+Received: by fxm23 with SMTP id 23so944688fxm.21
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 10:07:52 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Steven Wheeler <stevenwheel@gmail.com>
+Subject: Re: Problems with Netgear WG511v1 PCMCIA
+Date: Mon, 22 Mar 2010 18:07:45 +0100
+Cc: "'Pavel Roskin'" <proski@gnu.org>, linux-wireless@vger.kernel.org
+References: <002a01cac969$b726e8d0$2574ba70$@com> <201003221647.43357.chunkeey@googlemail.com> <000001cac9de$00a868c0$01f93a40$@com>
+In-Reply-To: <000001cac9de$00a868c0$01f93a40$@com>
 MIME-Version: 1.0
-In-Reply-To: <1269637855.4342.157.camel@jlt3.sipsolutions.net>
-References: <20100324120645.5b43757c.nledovskih@mail.ru>
-	 <445f43ac1003241816p2d00b79br224a155b605ce7ac@mail.gmail.com>
-	 <445f43ac1003261114h55918152rd76be84c97716c99@mail.gmail.com>
-	 <1269637855.4342.157.camel@jlt3.sipsolutions.net>
-Date: Fri, 26 Mar 2010 14:16:26 -0700
-Message-ID: <445f43ac1003261416g357f4fe1qf36de3b0c2fec46d@mail.gmail.com>
-Subject: Re: Mesh mode broken since 2.6.34-rc1
-From: Javier Cardona <javier@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?KOI8-R?B?7MXEz9fTy8nIIO7Jy8/Mwcog98HMxdLYxdfJ3g==?=
-	<nledovskih@mail.ru>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	devel@lists.open80211s.org,
-	"Porsch, Marco" <marco.porsch@siemens.com>,
-	Steve deRosier <steve@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=US-ASCII
+Message-Id: <201003221807.45672.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+On Monday 22 March 2010 17:37:44 Steven Wheeler wrote:
+> OK, from the pictures it appears to be the WG511 V2 or V3, the front and
+> back labeling matches the label positions in the V3 pic
+> But, an lspci shows that it has the isl3890 chipset
+It almost certainly isn't a ISL3890. Because they only
+featured in (dual band) APs and early evaluation/development boards.
+(But as things usually go, some could have ended up in customer products...)
 
-> The proper fix will probably be to make
-> ieee80211_rx_h_action() aware of the frames that mesh/mlme wants to
-> handle it and not reject then.
+>From my stash of p54pci hardware only one manufacture bothered to fix the
+Chip and PCI ID... (Zcom XG-603). Netgear on the other hand managed to ship
+WG511v2 batchs with broken rssi<->dbm conversion parameters.
+Therefore, don't be surprised if you see some odd signal readings.
 
-Thanks, Johannes.  We are working on a patch along these lines.  No
-need to trouble yourself except for reviewing it when we send it.
+(Note: This bug does not affect range or performance.
+Rhe conversion is done in the driver and so far the dBm signal is
+only a indicator for the user about signal strength...)
+ 
+> I just downloaded the latest kernel (2.6.33.1), will build this afternoon
+> I already have the P%$ firmware for kernels above 2.6.28, so I can test
+> Will update later
 
-Cheers,
+here is the link: (also has fullmac firmwares)
+http://daemonizer.de/prism54/prism54-fw/
 
-Javier
-
-
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Regards,
+	Chr
