@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:63748 "EHLO mail.atheros.com"
+Received: from fep02.xtra.co.nz ([210.54.141.244]:16700 "EHLO fep02.xtra.co.nz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751513Ab0CVFBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 01:01:20 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 21 Mar 2010 22:01:20 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1752561Ab0CVMOQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Mar 2010 08:14:16 -0400
+Date: Tue, 23 Mar 2010 00:52:44 +1300
+From: Daniel Ngu <daniel.dy.ngu@gmail.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers/net/wireless/b43/main.c:4351: Fixed coding style
+Message-ID: <20100322115244.GA10368@zooey>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19366.65089.541041.18060@gargle.gargle.HOWL>
-Date: Mon, 22 Mar 2010 10:51:05 +0530
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [ath9k_htc] Wrong kernel config parameters in wiki?
-In-Reply-To: <2d0a357f1003191828g2d133a06qd8902785ae015cd0@mail.gmail.com>
-References: <2d0a357f1003191828g2d133a06qd8902785ae015cd0@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sedat Dilek wrote:
-> Hi,
-> 
-> a person asked on IRC about ath9k_htc support.
-> 
-> First question:
-> Has the patch from [1] already entered one of the wireless-* GIT repositories?
+WARNING: braces {} are not necessary for any arm of this statement
 
-Nope, the driver has not been merged yet.
-A revised series (12 patches) was submitted.
-They should be available on patchwork.
+Signed-off-by: Daniel Ngu <daniel.dy.ngu@gmail.com>
+---
+ drivers/net/wireless/b43/main.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-> I could apply the ath9k_htc patch against 2.6.34-rc1-git9.
-> 
-> The kernel config parameters in wiki [2] seems to be wrong to me:
-> 
-> CONFIG_ATH=m
-> CONFIG_ATH9K_HW=m
-> CONFIG_ATH9K_HTC=m
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 1521b1e..14cf3bd 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4348,11 +4348,10 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 	b43_set_phytxctl_defaults(dev);
+ 
+ 	/* Minimum Contention Window */
+-	if (phy->type == B43_PHYTYPE_B) {
++	if (phy->type == B43_PHYTYPE_B)
+ 		b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MINCONT, 0x1F);
+-	} else {
++	else
+ 		b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MINCONT, 0xF);
+-	}
+ 	/* Maximum Contention Window */
+ 	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MAXCONT, 0x3FF);
+ 
+-- 
+1.5.6.5
 
-Yep, they are wrong and are fixed now.
-
-Sujith
