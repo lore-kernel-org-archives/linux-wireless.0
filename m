@@ -1,113 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:35949 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897Ab0CRKMe (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45245 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755966Ab0CVT6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 06:12:34 -0400
-Received: by fxm19 with SMTP id 19so1930625fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 03:12:33 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 18 Mar 2010 11:12:32 +0100
-Message-ID: <f74418681003180312k30dd39adtd00bd427cb88a710@mail.gmail.com>
-Subject: pending queue depth in ieee80211_local data structure
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 22 Mar 2010 15:58:07 -0400
+Date: Mon, 22 Mar 2010 12:56:56 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: bugzilla-daemon@bugzilla.kernel.org,
+	bugme-daemon@bugzilla.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alex.vizor@gmail.com
+Subject: Re: [Bugme-new] [Bug 15551] New: wifi doesn't work after resume
+ from s2ram on ThinkPad T61
+Message-Id: <20100322125656.24ce2c11.akpm@linux-foundation.org>
+In-Reply-To: <bug-15551-10286@http.bugzilla.kernel.org/>
+References: <bug-15551-10286@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Tue, 16 Mar 2010 22:03:53 GMT
+bugzilla-daemon@bugzilla.kernel.org wrote:
 
-I noticed a possible issue in the pending queue management of the
-ieee80211_local data structure.
-In particular, there is no control of the queue depth and this could
-cause a memory overflow.
-In the test I carried out this happen when I use a low priority queue
-(e.g. Backgreound queue) and
-I transmit a data stream that exceeds the channel capacity (e.g.
-50Mbps@MCS 3, 800ns GI and 20MHz
-channel width). I wrote this patch in order to fix the issue.
+> http://bugzilla.kernel.org/show_bug.cgi?id=15551
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+This'll be a post-2.6.33 regression.
 
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -703,6 +703,8 @@
- 	struct work_struct sta_finish_work;
- 	int sta_generation;
+>            Summary: wifi doesn't work after resume from s2ram on ThinkPad
+>                     T61
+>            Product: Networking
+>            Version: 2.5
+>     Kernel Version: 2.6.34-rc1
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Wireless
+>         AssignedTo: networking_wireless@kernel-bugs.osdl.org
+>         ReportedBy: alex.vizor@gmail.com
+>         Regression: Yes
+> 
+> 
+> Created an attachment (id=25561)
+>  --> (http://bugzilla.kernel.org/attachment.cgi?id=25561)
+> dmesg
+> 
+> Hi. I caught this after several resumes from s2ram, from s2disk it works ok.
+> 
+> I attached my dmesg. Please inform me if I can do the report more useful.
+> 
 
-+	/* Pending buffer dimension */
-+	#define PENDING_BUF	512
- 	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
- 	struct tasklet_struct tx_pending_tasklet;
+This:
 
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1399,13 +1399,15 @@
- 		skb = tx.skb;
+: [22456.252166] s2ram: page allocation failure. order:4, mode:0x4010
+: [22456.252172] Pid: 23558, comm: s2ram Not tainted 2.6.34-rc1 #1
+: [22456.252175] Call Trace:
+: [22456.252187]  [<ffffffff810b8dc9>] __alloc_pages_nodemask+0x565/0x60c
+: [22456.252195]  [<ffffffff810de879>] alloc_pages_current+0x90/0x99
+: [22456.252201]  [<ffffffff810b7a9e>] __get_free_pages+0x9/0x46
+: [22456.252221]  [<ffffffffa03b4bdd>] iwl_tx_queue_init+0xf2/0x2a1 [iwlcore]
+: [22456.252227]  [<ffffffffa03b4f12>] iwl_txq_ctx_reset+0x186/0x20c [iwlcore]
+: [22456.252233]  [<ffffffffa03ae41c>] iwl_hw_nic_init+0x124/0x139 [iwlcore]
 
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--
-+		
- 		if (local->queue_stop_reasons[queue] ||
- 		    !skb_queue_empty(&local->pending[queue])) {
- 			/*
--			 * if queue is stopped, queue up frames for later
--			 * transmission from the tasklet
-+			 * if queue is stopped and there is enough space in the queue,
-+			 * queue up frames for later transmission from the tasklet
- 			 */
-+			if (skb_queue_len(&local->pending[queue]) >= PENDING_BUF)
-+				goto drop;
- 			do {
- 				next = skb->next;
- 				skb->next = NULL;
-@@ -2028,8 +2030,12 @@
- 						flags);
+Rafael, this is fallout from 452aa6999e6703ffbddd7f6ea124d3968915f3e3
+("mm/pm: force GFP_NOIO during suspend/hibernation and resume"). 
+Wireless was previously doing this stupidly-large allocation with
+GFP_KERNEL.  But I think the above change is what flipped it to
+__GFP_WAIT, which caused the page allocator to go into lame-and-sucky
+mode, so the allocation failed.
 
- 			txok = ieee80211_tx_pending_skb(local, skb);
--			if (!txok)
--				__skb_queue_head(&local->pending[i], skb);
-+			if (!txok) {
-+				if (skb_queue_len(&local->pending[i]) < PENDING_BUF)
-+					__skb_queue_head(&local->pending[i], skb);
-+				else
-+					kfree_skb(skb);
-+			}
- 			spin_lock_irqsave(&local->queue_stop_reason_lock,
- 					  flags);
- 			if (!txok)
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -383,7 +383,10 @@
+(btw, that was a bug - 452aa6999e6703ffbddd7f6ea124d3968915f3e3 should
+have cleared the __GFP_WAIT bit too).
 
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
--	__skb_queue_tail(&local->pending[queue], skb);
-+	if (skb_queue_len(&local->pending[queue]) < PENDING_BUF)
-+		__skb_queue_tail(&local->pending[queue], skb);
-+	else
-+		kfree_skb(skb);	
- 	__ieee80211_wake_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- }
-@@ -409,9 +412,12 @@
- 			continue;
- 		}
-
--		ret++;
- 		queue = skb_get_queue_mapping(skb);
--		__skb_queue_tail(&local->pending[queue], skb);
-+		if (skb_queue_len(&local->pending[queue]) < PENDING_BUF) {
-+			ret++;
-+			__skb_queue_tail(&local->pending[queue], skb);
-+		} else
-+			kfree_skb(skb);
- 	}
-
- 	for (i = 0; i < hw->queues; i++)
-
-
-Regards
-
-Lorenzo
