@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:50059 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051Ab0C3TnA (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63365 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab0CVIFR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 15:43:00 -0400
-Received: by ewy20 with SMTP id 20so1615609ewy.1
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 12:42:59 -0700 (PDT)
+	Mon, 22 Mar 2010 04:05:17 -0400
+Received: by wyb38 with SMTP id 38so2335921wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 01:05:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4BB25383.8040405@gmail.com>
-References: <4BB25383.8040405@gmail.com>
-Date: Tue, 30 Mar 2010 20:42:59 +0100
-Message-ID: <880c1631003301242r5492a2f8ucd4b83f7d607bf89@mail.gmail.com>
-Subject: Re: [rt2x00-users] FW RT307x/RT309x
-From: Luis Correia <buga@loide.net>
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <19366.65089.541041.18060@gargle.gargle.HOWL>
+References: <2d0a357f1003191828g2d133a06qd8902785ae015cd0@mail.gmail.com>
+	 <19366.65089.541041.18060@gargle.gargle.HOWL>
+Date: Mon, 22 Mar 2010 09:05:15 +0100
+Message-ID: <2d0a357f1003220105uaafb04aq86459c822ad313b7@mail.gmail.com>
+Subject: Re: [ath9k_htc] Wrong kernel config parameters in wiki?
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xose,
-
-On Tue, Mar 30, 2010 at 20:39, Xose Vazquez Perez
-<xose.vazquez@gmail.com> wrote:
-> Luis Correia wrote:
->
->> Sorry, you can do whatever you want, but I, representing the rt2x00
->> team cannot back you up in this.
+On Mon, Mar 22, 2010 at 6:21 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Sedat Dilek wrote:
+>> Hi,
 >>
->> The distributions surely aren't getting the firmware files from source
->> code, when they are available with a clear license in the
->> manufacturer's website.
+>> a person asked on IRC about ath9k_htc support.
 >>
->> We also do not condone any (mis)use of those firmware files.
->> However support will only be given to people using firmware obtained
->> from Ralink.
+>> First question:
+>> Has the patch from [1] already entered one of the wireless-* GIT repositories?
 >
-> those file of fw are inside source code, and directly downloaded from ralink !
-> http://www.ralinktech.com/support.php?s=2
->
-> And ALL ralink fw licenses are the _same_. Source code, web and zip_files
-> have the same text.
+> Nope, the driver has not been merged yet.
+> A revised series (12 patches) was submitted.
+> They should be available on patchwork.
 >
 
-No,   you   are   wrong.
+New patchset from [1] applies cleanly against 2.6.34-rc2.
 
-The source code is GPL, the firmware files are not.
+>> I could apply the ath9k_htc patch against 2.6.34-rc1-git9.
+>>
+>> The kernel config parameters in wiki [2] seems to be wrong to me:
+>>
+>> CONFIG_ATH=m
+>> CONFIG_ATH9K_HW=m
+>> CONFIG_ATH9K_HTC=m
+>
+> Yep, they are wrong and are fixed now.
+>
 
-For me this is the last time I'll write about this.
+The correct kernel config parameters are (only for documentation purposes):
 
+CONFIG_ATH_COMMON=m
+CONFIG_ATH9K_HW=m
+CONFIG_ATH9K_COMMON=m
+CONFIG_ATH9K_HTC=m
 
+Thanks for the informations.
 
-Luis Correia
-rt2x00 project admin
+--
+Sedat
+
+[1] https://patchwork.kernel.org/patch/{86517..86528}/ (12 patches)
