@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:28466 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932457Ab0CXUei (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 16:34:38 -0400
-Subject: Re: [PATCH 4/7] wireless/iwlwifi: remove trailing space in messages
-From: reinette chatre <reinette.chatre@intel.com>
-To: Frans Pop <elendil@planet.nl>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-In-Reply-To: <201003242128.18710.elendil@planet.nl>
-References: <201003241927.12434.elendil@planet.nl>
-	 <1269456395-15343-4-git-send-email-elendil@planet.nl>
-	 <1269461933.2446.3208.camel@rchatre-DESK>
-	 <201003242128.18710.elendil@planet.nl>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Mar 2010 13:34:35 -0700
-Message-ID: <1269462875.2446.3209.camel@rchatre-DESK>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53712
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755401Ab0CWBPi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Mar 2010 21:15:38 -0400
+Date: Mon, 22 Mar 2010 18:16:00 -0700 (PDT)
+Message-Id: <20100322.181600.133424106.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-03-19
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100319204507.GF9552@tuxdriver.com>
+References: <20100319204507.GF9552@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-24 at 13:28 -0700, Frans Pop wrote:
-> On Wednesday 24 March 2010, reinette chatre wrote:
-> > Since this patch touches so many things, would it be possible to base
-> > your patch on
-> > git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-> > instead?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 19 Mar 2010 16:45:08 -0400
+
+> Here is the first big dump of wireless bit for the 2.6.35 cycle...
 > 
-> Sure. Which branch?
+> Included are the usual driver updates, etc.  In particular, the Intel
+> and Nokia guys have been busy as usual. :-)
 
-master
+Pulled, I'll push out to kernel.org after some build smoke
+tests.
 
-Thank you very much
-
-Reinette
-
-
-
+Thanks!
