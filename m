@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:45406 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753438Ab0C2SLw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47800 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302Ab0CWNpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 14:11:52 -0400
-Received: by bwz1 with SMTP id 1so3787371bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 11:11:51 -0700 (PDT)
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH V2 1/2] mac80211: support paged rx SKBs
-References: <1269852146-11727-1-git-send-email-yi.zhu@intel.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 29 Mar 2010 21:11:48 +0300
-In-Reply-To: <1269852146-11727-1-git-send-email-yi.zhu@intel.com> (Zhu Yi's message of "Mon\, 29 Mar 2010 16\:42\:25 +0800")
-Message-ID: <878w9bknff.fsf@purkki.valot.fi>
+	Tue, 23 Mar 2010 09:45:15 -0400
+Date: Tue, 23 Mar 2010 09:20:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Coelho Luciano (Nokia-D/Helsinki)" <Luciano.Coelho@nokia.com>
+Subject: Re: [PATCH 2/2] mac80211: Add support for connection quality
+	monitoring
+Message-ID: <20100323132045.GB30785@tuxdriver.com>
+References: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com> <1269327754-995-3-git-send-email-juuso.oikarinen@nokia.com> <1269328436.11714.56.camel@localhost.localdomain> <1269329862.10120.768.camel@wimaxnb.nmp.nokia.com> <1269346493.11714.64.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1269346493.11714.64.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zhu Yi <yi.zhu@intel.com> writes:
+On Tue, Mar 23, 2010 at 05:14:53AM -0700, Marcel Holtmann wrote:
+> Hi Juuso,
+> 
+> > > > Add support for the set_cqm_config op. This op function configures the
+> > > > requested connection quality monitor rssi threshold and rssi hysteresis
+> > > > values to the hardware  if the hardware supports
+> > > > IEEE80211_HW_SUPPORTS_CQM.
+> > > > 
+> > > > For unsupporting hardware, currently -EOPNOTSUPP is returned, so the mac80211
+> > > > is currently not doing connection quality monitoring on the host. This could be
+> > > > added later, if needed.
+> > > 
+> > > I think you mean "For unsupported hardware, ..." ;)
+> > 
+> > I guess you could phrase it like this as well. Do you think this is a
+> > problem, i.e. do you want me to resubmit a fixed patch?
+> 
+> you can leave this up to John actually. He could also fix this on the
+> fly when it applies the patch. However if he wants you to re-submit you
+> might have to do it ;)
 
-> Mac80211 drivers can now pass paged SKBs to mac80211 via
-> ieee80211_rx{_irqsafe}. The implementation currently use
-> skb_linearize() in a few places i.e. management frame
-> handling, software decryption, defragmentation and A-MSDU
-> process. We will optimize them one by one later.
+I'll take care of it -- this is what I live to do. :-)
 
-[...]
-
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1822,7 +1822,10 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw);
->   * ieee80211_rx - receive frame
->   *
->   * Use this function to hand received frames to mac80211. The receive
-> - * buffer in @skb must start with an IEEE 802.11 header.
-> + * buffer in @skb must start with an IEEE 802.11 header. In case of a
-> + * paged @skb is used, the driver is recommended to put the ieee80211
-> + * header of the frame on the linear part of the @skb to avoid memory
-> + * allocation and/or memcpy by the stack.
-
-This is much better now. Thank you.
-
+John
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
