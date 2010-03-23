@@ -1,180 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46906 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353Ab0CKB2c (ORCPT
+Received: from thoth.sbs.de ([192.35.17.2]:18279 "EHLO thoth.sbs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753956Ab0CWRKm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 20:28:32 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 10/14] ath9k_hw: add helpers for writing phy errors counts
-Date: Wed, 10 Mar 2010 20:28:27 -0500
-Message-Id: <1268270911-24568-11-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 23 Mar 2010 13:10:42 -0400
+Received: from mail3.siemens.de (localhost [127.0.0.1])
+	by thoth.sbs.de (8.12.11.20060308/8.12.11) with ESMTP id o2NHAeH6010302
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Mar 2010 18:10:40 +0100
+Received: from DEMCHP99ET3MSX.ww902.siemens.net ([139.25.131.243])
+	by mail3.siemens.de (8.12.11.20060308/8.12.11) with ESMTP id o2NHAeEg031708
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Mar 2010 18:10:40 +0100
+From: "Porsch, Marco" <marco.porsch@siemens.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 23 Mar 2010 18:06:03 +0100
+Subject: Re: Mesh mode broken in compat-wireless?
+Message-ID: <7F2FE3504A6CB54497542A539E401A7B9A0C4297@DEMCHP99E15MSX.ww902.siemens.net>
+References: <7F2FE3504A6CB54497542A539E401A7B9A0C4294@DEMCHP99E15MSX.ww902.siemens.net>
+In-Reply-To: <7F2FE3504A6CB54497542A539E401A7B9A0C4294@DEMCHP99E15MSX.ww902.siemens.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hardware phy error counter are updated through the ANI
-code, provide a few helpers which make the access to hardware
-easier to abstract.
+> Hello list,
+> 
+> since compat-wireless-2010-03-03 (and the previous) mesh mode does not work for me anymore.
+> The problem is, that peering links do not establish between mesh points. The peering status changes between LISTEN, OPN_SNT and HOLDING, but does not reach ESTAB.
+> Using patched wireshark I can see lots of malformed packets in response to peer link management frames.
+> I upgraded all my nodes to the same version. But the problem is the same with just one node on the newer version.
+> 
+> I am using latest OpenWrt with ye olde compat-wireless-2010-03-03 (no new version included until now). Driver is ath9k, hardware is Netgear WNDR3700.
+> 
+> The mesh configuration should be fine, sine with compat-wireless-2010-02-02 everything was ok.
+> 
+> I could not try this with standard hardware, so at first it would be interesting, if this is a general problem or just OpenWrt specific.
+> 
+> 
+> Regards
+> 
+> Marco
 
-Extend the documentation of the phy error counts and masks.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |  104 +++++++++++++++++++++++++++++-----
- 1 files changed, 89 insertions(+), 15 deletions(-)
+Realizing there is a debug output switch for peer link management, I enabled it and recorded following outputs:
+(using two PHYs and mesh interfaces on each node)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 08deda3..52852fc 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -243,6 +243,79 @@ static void ath9k_hw_update_phy_err_masks(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
- }
- 
-+static void ath9k_hw_update_phy_err1_count(struct ath_hw *ah,
-+					   u32 err_count,
-+					   bool reset_mask)
-+{
-+	REG_WRITE(ah, AR_PHY_ERR_1, err_count);
-+
-+	if (reset_mask)
-+		REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
-+}
-+
-+static void ath9k_hw_update_phy_err2_count(struct ath_hw *ah,
-+					   u32 err_count,
-+					   bool reset_mask)
-+{
-+	REG_WRITE(ah, AR_PHY_ERR_2, err_count);
-+
-+	if (reset_mask)
-+		REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+}
-+
-+/**
-+ * ath9k_hw_update_phy_err_count - update phy error counts
-+ *
-+ * @ah: atheros hardware structure
-+ * @phy_err_count1: number of OFDM PHY timing errors to set
-+ * @phy_err_count2: number of CCK PHY timing errors to set
-+ * @reset_masks: whether or not the masks for each counter
-+ *	type should be reset to default values
-+ *
-+ * The hardware keeps track of different types of PHY errors
-+ * depending on specific programmed mask for OFDM and CCK. The
-+ * registers are used as follows:
-+ *
-+ *   - 0x8124 Filtered OFDM Frames Count
-+ *   - 0x8128 Filtered CCK Frames Count
-+ *   - 0x812C Phy Error1 Count
-+ *   - 0x8130 Phy Error1 Count Mask
-+ *   - 0x8134 Phy Error2 Count
-+ *   - 0x8138 Phy Error2 Count Mask
-+ *
-+ *
-+ * The Filtered OFDM Frames Count count OFDM data frames which
-+ * were filtered.
-+ *
-+ * The Filtered CCK Frames Count count CCK data frames which
-+ * were filtered.
-+ *
-+ * The Phy Error1 and Phy Error2 Count will count any phy error
-+ * which matches the respective mask (Phy Error1 and Phy Error2
-+ * Count Mask).  The bits of 32-bit masks correspond to the first
-+ * 32 encoded values of the error.  Setting multiple bits in the
-+ * mask will provide an ORing function to provide flexibility in
-+ * counting.  For examples if we set the mask bits to 0xFF0000FF:
-+ * then all phy errors from 0-7 and 24-31 will be counted.
-+ *
-+ * The 4 counters will use the PCI MIB control signals.  The PCI
-+ * MIB freeze register will hold all the values of these registers.
-+ * PCI MIB clear will zero out all the values of these registers.
-+ * PCI MIB force will force increment of all the registers each
-+ * cycle.  These 4 counters will saturate at the highest value and
-+ * are writable.  If the upper two bits of these counters are 'b11
-+ * then the pcu_mib_threshold will be asserted and an interrupt
-+ * will be generated.
-+ */
-+static void ath9k_hw_update_phy_err_count(struct ath_hw *ah,
-+					  u32 phy_err_count1,
-+					  u32 phy_err_count2,
-+					  bool reset_masks)
-+{
-+	ath9k_hw_update_phy_err1_count(ah, phy_err_count1, reset_masks);
-+	ath9k_hw_update_phy_err2_count(ah, phy_err_count2, reset_masks);
-+}
-+
- static void ath9k_ani_restart(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
-@@ -274,9 +347,11 @@ static void ath9k_ani_restart(struct ath_hw *ah)
- 		  "Writing ofdmbase=%u   cckbase=%u\n",
- 		  aniState->ofdmPhyErrBase,
- 		  aniState->cckPhyErrBase);
--	REG_WRITE(ah, AR_PHY_ERR_1, aniState->ofdmPhyErrBase);
--	REG_WRITE(ah, AR_PHY_ERR_2, aniState->cckPhyErrBase);
--	ath9k_hw_update_phy_err_masks(ah);
-+
-+	ath9k_hw_update_phy_err_count(ah,
-+				      aniState->ofdmPhyErrBase,
-+				      aniState->cckPhyErrBase,
-+				      true);
- 
- 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
- 
-@@ -590,10 +665,9 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah,
- 				  "counter value to 0x%x\n",
- 				  phyCnt1,
- 				  aniState->ofdmPhyErrBase);
--			REG_WRITE(ah, AR_PHY_ERR_1,
--				  aniState->ofdmPhyErrBase);
--			REG_WRITE(ah, AR_PHY_ERR_MASK_1,
--				  AR_PHY_ERR_OFDM_TIMING);
-+			ath9k_hw_update_phy_err1_count(ah,
-+						       aniState->ofdmPhyErrBase,
-+						       true);
- 		}
- 		if (phyCnt2 < aniState->cckPhyErrBase) {
- 			ath_print(common, ATH_DBG_ANI,
-@@ -601,10 +675,9 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah,
- 				  "counter value to 0x%x\n",
- 				  phyCnt2,
- 				  aniState->cckPhyErrBase);
--			REG_WRITE(ah, AR_PHY_ERR_2,
--				  aniState->cckPhyErrBase);
--			REG_WRITE(ah, AR_PHY_ERR_MASK_2,
--				  AR_PHY_ERR_CCK_TIMING);
-+			ath9k_hw_update_phy_err2_count(ah,
-+						       aniState->cckPhyErrBase,
-+						       true);
- 		}
- 		return;
- 	}
-@@ -818,8 +891,10 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
- 	ath_print(common, ATH_DBG_ANI, "Setting cckErrBase = 0x%08x\n",
- 		  ah->ani[0].cckPhyErrBase);
- 
--	REG_WRITE(ah, AR_PHY_ERR_1, ah->ani[0].ofdmPhyErrBase);
--	REG_WRITE(ah, AR_PHY_ERR_2, ah->ani[0].cckPhyErrBase);
-+	ath9k_hw_update_phy_err_count(ah,
-+				      ah->ani[0].ofdmPhyErrBase,
-+				      ah->ani[0].cckPhyErrBase,
-+				      false);
- 	ath9k_enable_mib_counters(ah);
- 
- 	ah->aniperiod = ATH9K_ANI_PERIOD;
-@@ -832,6 +907,5 @@ void ath9k_hw_ani_disable(struct ath_hw *ah)
- 	ath_print(ath9k_hw_common(ah), ATH_DBG_ANI, "Disabling ANI\n");
- 
- 	ath9k_hw_disable_mib_counters(ah);
--	REG_WRITE(ah, AR_PHY_ERR_1, 0);
--	REG_WRITE(ah, AR_PHY_ERR_2, 0);
-+	ath9k_hw_update_phy_err_count(ah, 0, 0, false);
- }
--- 
-1.6.3.3
-
+[   41.900000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   42.000000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 5
+[   42.060000] Mesh plink: starting establishment with xX:xx:xX:xX:xX:xX
+[   42.100000] Mesh plink: starting establishment with xx:xx:xx:xx:xx:xx
+[   42.160000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 1
+[   42.160000] Mesh plink for xX:xx:xX:xX:xX:xX (retry, timeout): 0 100
+[   42.200000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   42.200000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 0 100
+[   42.350000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 1
+[   42.350000] Mesh plink for xX:xx:xX:xX:xX:xX (retry, timeout): 1 193
+[   42.390000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   42.390000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 1 197
+[   42.630000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 1
+[   42.630000] Mesh plink for xX:xx:xX:xX:xX:xX (retry, timeout): 2 282
+[   42.720000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   42.720000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 2 338
+[   43.090000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 1
+[   43.120000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   43.190000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 5
+[   43.220000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 5
+[   44.150000] Mesh plink: starting establishment with xx:xx:xx:xx:xx:xx
+[   44.250000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   44.250000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 0 100
+[   44.380000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   44.380000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 1 136
+[   44.550000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   44.550000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 2 172
+[   44.800000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   44.900000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 5
+[   45.130000] Mesh plink: starting establishment with xX:xx:xX:xX:xX:xX
+[   45.170000] Mesh plink: starting establishment with xx:xx:xx:xx:xx:xx
+[   45.230000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 1
+[   45.230000] Mesh plink for xX:xx:xX:xX:xX:xX (retry, timeout): 0 100
+[   45.270000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   45.270000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 0 100
+[   45.370000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   45.370000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 1 107
+[   45.380000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 1
+[   45.380000] Mesh plink for xX:xx:xX:xX:xX:xX (retry, timeout): 1 151
+[   45.480000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   45.480000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 2 111
+[   45.590000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   45.670000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 1
+[   45.670000] Mesh plink for xX:xx:xX:xX:xX:xX (retry, timeout): 2 298
+[   45.690000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 5
+[   46.060000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 1
+[   46.160000] Mesh plink timer for xX:xx:xX:xX:xX:xX fired on state 5
+[   46.190000] Mesh plink: starting establishment with xx:xx:xx:xx:xx:xx
+[   46.290000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   46.290000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 0 100
+[   46.460000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   46.460000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 1 178
+[   46.730000] Mesh plink timer for xx:xx:xx:xx:xx:xx fired on state 1
+[   46.730000] Mesh plink for xx:xx:xx:xx:xx:xx (retry, timeout): 2 270
