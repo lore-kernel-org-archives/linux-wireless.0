@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:54733 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408Ab0CBHnw (ORCPT
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:38658 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752192Ab0CWOZw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 02:43:52 -0500
-Received: by pva4 with SMTP id 4so797362pva.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 23:43:52 -0800 (PST)
+	Tue, 23 Mar 2010 10:25:52 -0400
+Received: by qyk9 with SMTP id 9so821654qyk.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Mar 2010 07:25:51 -0700 (PDT)
+Message-ID: <4BA8CF6C.2050701@lwfinger.net>
+Date: Tue, 23 Mar 2010 09:25:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <19340.37002.731064.872605@gargle.gargle.HOWL>
-References: <19336.46643.733555.555640@gargle.gargle.HOWL>
-	<20100302002759.GH8069@bombadil.infradead.org> <19340.37002.731064.872605@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 1 Mar 2010 23:43:32 -0800
-Message-ID: <43e72e891003012343l655bacc1i57ebe9ca55262878@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath9k_htc: Add ath9k_htc driver
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de,
+	Calvin Walton <calvin.walton@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
+References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <201003222325.35994.mb@bu3sch.de> <4BA80118.1070801@lwfinger.net> <201003230952.56207.mb@bu3sch.de>
+In-Reply-To: <201003230952.56207.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 1, 2010 at 8:14 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> Luis R. Rodriguez wrote:
->> Apart from that there's one long term objective which I noticed
->> was removed from my initial implementation approach. On this driver
->> the the hif/htc code linked all together while I had these separated.
->> The reason for separation was in the future different buses would be
->> supported and so a different HIF transport would be required. The
->> typical HTC Atheros driver tends to bundle HTC together and re-build
->> HTC for a new driver sort of how you've used lib.o for ath9k and
->> ath9k_htc only that each htc.o would be modified to suit each new
->> driver and firmware API. I think that's pointless and gross and tried
->> to work on a way HTC can exist as a registrar, sharing all things HTC
->> that are possible. Consider PCI support for a device similar to AR9271
->> with, say a AR9280 MAC and radios. In such a case (and very possible)
->> we'd need an HIF PCI added, so you will need to eventually address
->> separation anyway.
->
-> I am not sure what your original approach was - but a new bus implementation
-> would just be a hif_bleh.c.
+On 03/23/2010 03:52 AM, Michael Buesch wrote:
+> On Tuesday 23 March 2010 00:45:28 Larry Finger wrote:
+>> (2) In drivers/ssb/pci.c, the firmware loading process reads the file, then
+>> modifies it using the bus address.
+> 
+> No. You don't need firmware loading at all.
+> udev can just set the mac address through the standard ioctl calls.
+> Just like how ifconfig and ip can do.
 
-Right, only I just had these as separate modules. I suppose its not
-important to have these as independent modules, you either want USB
-HIF linked in or not, same was with PCI.
+Will someone please write me udev rule(s) that do the following:
 
-> HTC would remain unchanged for the most part.
-> Well almost, except if credit distribution is required, it would be added to HTC.
->
-> Or am I missing something ?
+1. Detect a MAC address of FF:FF:FF:FF:FF:FF
+2. If this is the first time for this bus address, then generate a random MAC
+address with the bus address encoded in it.
+3. Preserve the address for future reloads
+4. Load the saved address into the device.
+5. Do the above with only standard external commands - no new programs
 
-My modular approach most things were I had hope the AR6003 driver
-could also make use of the HTC/HIF framework, they would just register
-a ath9k_hif_sdio module, register itself to HTC, and use a separate
-hardware family mac80211 core driver for ar6k devices. After review of
-the current AR6003 driver architecture later on though I found out
-this was not possible, but for future mobile device I do have hope its
-possible, just as well as sharing a common ath9k_hw.
+My skills with udev are not up to the task.
 
-We can cross that bridge if and when get to it though.
+I now have code running that uses the firmware load facility to read a
+file created by /bin/dbus-uuidgen to create a MAC address that will satisfy the
+requirements. If the file is needed but not available, then the user is prompted
+with the commands needed to create it.
 
-  Luis
+Larry
