@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f212.google.com ([209.85.218.212]:48998 "EHLO
-	mail-bw0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754722Ab0CCG5o (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:42148 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493Ab0CWMPC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 01:57:44 -0500
-Subject: Re: [net-2.6 PATCH] af_packet: move strict addr_len check right
- before dev_[mc/unicast]_[add/del]
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Jiri Pirko <jpirko@redhat.com>
-Cc: netdev@vger.kernel.org, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, tcpdump-workers@lists.tcpdump.org,
-	proski@gnu.org
-In-Reply-To: <20100303064001.GB2648@psychotron.redhat.com>
-References: <1267578048.14049.11.camel@mj>
-	 <20100303064001.GB2648@psychotron.redhat.com>
+	Tue, 23 Mar 2010 08:15:02 -0400
+Subject: Re: [PATCH 2/2] mac80211: Add support for connection quality
+ monitoring
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Coelho Luciano (Nokia-D/Helsinki)" <Luciano.Coelho@nokia.com>
+In-Reply-To: <1269329862.10120.768.camel@wimaxnb.nmp.nokia.com>
+References: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1269327754-995-3-git-send-email-juuso.oikarinen@nokia.com>
+	 <1269328436.11714.56.camel@localhost.localdomain>
+	 <1269329862.10120.768.camel@wimaxnb.nmp.nokia.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 03 Mar 2010 07:57:39 +0100
-Message-ID: <1267599459.2839.91.camel@edumazet-laptop>
+Date: Tue, 23 Mar 2010 05:14:53 -0700
+Message-ID: <1269346493.11714.64.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mercredi 03 mars 2010 à 07:40 +0100, Jiri Pirko a écrit :
-> Subject: [net-2.6 PATCH] af_packet: move strict addr_len check right before dev_[mc/unicast]_[add/del]
-> 
-> My previous patch 914c8ad2d18b62ad1420f518c0cab0b0b90ab308 incorrectly changed
-> the length check in packet_mc_add to be more strict. The problem is that
-> userspace is not filling this field (and it stays zeroed) in case of setting
-> PACKET_MR_PROMISC or PACKET_MR_ALLMULTI. So move the strict check to the point
-> in path where the addr_len must be set correctly.
-> 
-> Signed-off-by: Jiri Pirko <jpirko@redhat.com>
-> 
+Hi Juuso,
 
-I am not sure it solves Pavel Roskin concern, but some credit should be
-given to him :)
+> > > Add support for the set_cqm_config op. This op function configures the
+> > > requested connection quality monitor rssi threshold and rssi hysteresis
+> > > values to the hardware  if the hardware supports
+> > > IEEE80211_HW_SUPPORTS_CQM.
+> > > 
+> > > For unsupporting hardware, currently -EOPNOTSUPP is returned, so the mac80211
+> > > is currently not doing connection quality monitoring on the host. This could be
+> > > added later, if needed.
+> > 
+> > I think you mean "For unsupported hardware, ..." ;)
+> 
+> I guess you could phrase it like this as well. Do you think this is a
+> problem, i.e. do you want me to resubmit a fixed patch?
 
-Reported-by: Pavel Roskin <proski@gnu.org>
+you can leave this up to John actually. He could also fix this on the
+fly when it applies the patch. However if he wants you to re-submit you
+might have to do it ;)
 
-Thanks
+Regards
+
+Marcel
 
 
