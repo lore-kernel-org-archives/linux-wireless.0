@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60404 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127Ab0CEBjI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 20:39:08 -0500
-Date: Thu, 4 Mar 2010 20:37:22 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kel Modderman <kel@otaku42.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] crda: do not embed crypto data when USE_OPENSSL=1
-Message-ID: <20100305013721.GA3255@tuxdriver.com>
-References: <201003050008.51066.kel@otaku42.de>
- <20100304153128.GB2910@tuxdriver.com>
- <201003051027.03091.kel@otaku42.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201003051027.03091.kel@otaku42.de>
+Received: from mx1.redhat.com ([209.132.183.28]:31173 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751072Ab0CWMtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Mar 2010 08:49:13 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/2] iwlwifi: implement disabling/enabling QoS
+Date: Tue, 23 Mar 2010 13:46:57 +0100
+Message-Id: <1269348417-4081-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1269348417-4081-1-git-send-email-sgruszka@redhat.com>
+References: <1269348417-4081-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 05, 2010 at 10:27:03AM +1000, Kel Modderman wrote:
-> On Friday 05 March 2010 01:31:28 John W. Linville wrote:
-> > On Fri, Mar 05, 2010 at 12:08:50AM +1000, Kel Modderman wrote:
-> > > When USE_OPENSSL=1 do not embed crypto data into binary, use the PUBKEY_DIR
-> > > variable just as it is when USE_GCRYPT=1 and just load certs from PUBKEY_DIR
-> > > for signature verification at runtime. Remove ssl support from
-> > > utils/key2pub.py.
-> > > 
-> > > This allows wireless-regdb to be built from source and upgraded independently
-> > > of crda and is _crucial_ for distributions who want to build their own
-> > > regulatory.bin.
-> > 
-> > I don't understand -- isn't this possible already?
-> 
-> No.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-Perhaps you could use a few more words?  It seems to me that what
-limits you is the policies of some distributions.  Certainly crda
-and wireless-regdb can be maintained separately so long as the key
-doesn't change between builds or with alternate keys installed in
-the proper locations.  Am I missing something?
-
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 112149e..f1729ca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2410,6 +2410,15 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 		priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
+ 	}
+ 
++	if (changes & BSS_CHANGED_QOS) {
++		unsigned long flags;
++
++		spin_lock_irqsave(&priv->lock, flags);
++		priv->qos_data.qos_active = bss_conf->qos_disabled ? 0 : 1;
++		iwl_activate_qos(priv, 1);
++		spin_unlock_irqrestore(&priv->lock, flags);
++	}
++
+ 	if (changes & BSS_CHANGED_BEACON_INT) {
+ 		priv->beacon_int = bss_conf->beacon_int;
+ 		/* TODO: in AP mode, do something to make this take effect */
 -- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+1.6.6
+
