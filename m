@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52343 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756302Ab0CCTak (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:41396 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755094Ab0CWAmU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 14:30:40 -0500
-Date: Wed, 3 Mar 2010 14:29:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current
-	wireless-testing
-Message-ID: <20100303192946.GC23920@tuxdriver.com>
-References: <201002281534.11656.helmut.schaa@googlemail.com> <201003022047.10196.helmut.schaa@googlemail.com> <1267640304.15761.121.camel@rchatre-DESK> <201003032008.47379.helmut.schaa@googlemail.com>
+	Mon, 22 Mar 2010 20:42:20 -0400
+Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-074054936
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Mar 2010 09:42:18 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Michael Stahn <m1kes@web.de>
+Subject: Re: [Proposal]TX flags
+Date: Tue, 23 Mar 2010 09:42:15 +0900
+Cc: linux-wireless@vger.kernel.org
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com> <loom.20100322T194108-874@post.gmane.org>
+In-Reply-To: <loom.20100322T194108-874@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201003032008.47379.helmut.schaa@googlemail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003230942.15718.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 03, 2010 at 08:08:47PM +0100, Helmut Schaa wrote:
-> Am Mittwoch 03 März 2010 schrieb reinette chatre:
-
-> > $ iw reg get
-> > country 00:
-> > 	(2402 - 2472 @ 40), (3, 20)
-> > 	(2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
-> > 	(2474 - 2494 @ 20), (3, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
-> > 	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-> > 	(5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
+On Tuesday 23 March 2010 04:32:21 Michael Stahn wrote:
+> Regarding to this proposal I suggest this additional Radiotap feature
+> to be standardised:
 > 
-> Oops, that's what I get:
+> - Duration field shall not be recalculated ("No-Dur").
 > 
-> country 00:
->         (2402 - 2472 @ 40), (3, 20)
-> 
-> Luis, is the world reg domain encoded in cfg80211 or in the regdb? Maybe
-> the regdb is too old or something like that?
+> The approbiate mask for the Radiotap-Header would be 0x0020.
+> The No-Dur flag is used when sending frames from the userspace
+> to indicate that the frame already has its duration time
+> preconfigured and should not be recalculated by low-level.
+> This is useful for testing porpuses or tools like
+> aireplay which trust on the "send out what you put in"-behaviour,
+> especialliy on RTS-Frames, where duration-fields are reset to 0.
+> If fragmentation is set (Bit 1, mask 0x08), duration-recalculation
+> should be done after all because this would imply the given
+> duration is reused for every subsequent fragment and there
+> isn't an easy way to set different durations for all of them.
 
-Should be both -- start w/ the one encoded in the kernel and request
-an update from userland if it is available.
+similar to this we would also need to be able to specify that the beacon TSF 
+should not be overwritten. maybe a general flag like "do not change" would do?
 
-Hth!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+bruno
