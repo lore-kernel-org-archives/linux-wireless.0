@@ -1,74 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:42274 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753550Ab0CQIV6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 04:21:58 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Weird wireless/wpa_supplicant screw-up.
-In-Reply-To: Your message of "Tue, 16 Mar 2010 20:22:30 PDT."
-             <1268796150.7068.6.camel@jlt3.sipsolutions.net>
-From: Valdis.Kletnieks@vt.edu
-References: <7197.1268086939@localhost> <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost> <1268449749.4880.2.camel@jlt3.sipsolutions.net> <12262.1268795213@localhost>
-            <1268796150.7068.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1268814093_4069P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Wed, 17 Mar 2010 04:21:33 -0400
-Message-ID: <27228.1268814093@localhost>
+Received: from bu3sch.de ([62.75.166.246]:48894 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752822Ab0CWWCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Mar 2010 18:02:50 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Calvin Walton <calvin.walton@gmail.com>
+Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
+Date: Tue, 23 Mar 2010 23:02:45 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <4BA8CF6C.2050701@lwfinger.net> <1269377903.21181.8.camel@nayuki>
+In-Reply-To: <1269377903.21181.8.camel@nayuki>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201003232302.45875.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1268814093_4069P
-Content-Type: text/plain; charset=us-ascii
-
-On Tue, 16 Mar 2010 20:22:30 PDT, Johannes Berg said:
-> On Tue, 2010-03-16 at 23:06 -0400, Valdis.Kletnieks@vt.edu wrote:
-
-> > If a TX key has been set anyplace, what allows me
-> > to verify that it was in fact set?
+On Tuesday 23 March 2010 21:58:22 Calvin Walton wrote:
+> On Tue, 2010-03-23 at 09:25 -0500, Larry Finger wrote:
+> > Will someone please write me udev rule(s) that do the following:
+> > 
+> > 1. Detect a MAC address of FF:FF:FF:FF:FF:FF
+> > 2. If this is the first time for this bus address, then generate a random MAC
+> > address with the bus address encoded in it.
+> > 3. Preserve the address for future reloads
+> > 4. Load the saved address into the device.
+> > 5. Do the above with only standard external commands - no new programs
+> > 
+> > My skills with udev are not up to the task.
 > 
-> Nothing. Blame it on wext and on the fact that nobody cares.
+> I will warn you that the following is rather untested, as I don't have
+> any of the affected hardware (or any b43 devices at all, actually), but
+> something along these lines should work. There's no syntax errors, at
+> least :)
+> 
+> --- /lib/udev/rules.d/65-persistent-b43-mac-generator.rules
+> 
+> ACTION!="add" GOTO="persistent_b43_mac_generator_end"
+> 
+> SUBSYSTEM=="net", DRIVERS=="b43", ATTR{address}=="ff:ff:ff:ff:ff:ff", IMPORT{program}="write_persistent_b43_mac"
+> 
+> SUBSYSTEM=="net", ENV{MACADDRESS_NEW}=="?*", RUN+="ifconfig $env{INTERFACE} hw ether $env{MACADDRESS_NEW}"
+> 
+> LABEL="persistent_b43_mac_generator_end"
+> 
+> --- /lib/udev/write_persistent_b43_mac (chmod +x)
+> 
+> #!/bin/bash
+> 
+> # This mac address generation function could be replaced with something better
+> MACADDRESS=$(dd if=/dev/urandom bs=1 count=6 2>/dev/null | od -tx1 | head -1 | cut -d' ' -f2- | awk '{ print $1":"$2":"$3":"$4":"$5":"$6 }')
+> 
+> RULES_FILE='/etc/udev/rules.d/60-persistent-b43-mac.rules'
+> 
+> . /lib64/udev/rule_generator.functions
+> 
+> lock_rules_file
+> 
+> choose_rules_file
+> 
+> echo "DEVPATH==\"$DEVPATH\", DRIVERS==\"b43\", ATTR{address}==\"ff:ff:ff:ff:ff:ff\", RUN+=\"ifconfig $INTERFACE hw ether $MACADDRESS\"" >> $RULES_FILE
+> 
+> echo "MACADDRESS_NEW=$MACADDRESS"
+> 
+> unlock_rules_file
+> 
+> ---
+> 
+> A new file "/etc/udev/rules.d/60-persistent-b43-mac.rules" will be
+> created, which will contain the the saved mac address and bypass the
+> generating script on future boots.
+> 
+> This should probably be run by the udev maintainers, but is a start,
+> anyways.
+> 
+> 
 
-Pretty fucking fundemental thing to not care about, being able to tell whether
-or not your connection is in fact encrypted or not. But I guess you expect
-users to be all-knowing and magically know that even though iwconfig says
-'Encryption key: off' that in fact their connection is encrypted (unless of
-course it's off because it's not encrypted), and how to troubleshoot the
-difference between "not encrypted" and "lying about not being encrypted" when
-the utilities in wireless-tools provide the same output in both cases.
+Thanks a lot for this proof of concept. This looks very nice.
 
-Unfortunately, I'm a stupid idiot, and when I'm trying to get wpa_supplicant
-working and hitting various unrelated certificate issues, resolve those,
-finally get wpa_supplicant to say it connected, but then I type 'iwconfig'
-and it *still* says "Encryption key: off", I'm unable to make the leap of
-logic and say "AHA! It's encrypted now", and I start trying to find what I
-still have to fix so it will say it's encrypted.
-
-Sorry for bothering you and wasting your time.
-
-> problem is, if there is one. If your actual problem is just that iwlist
-> reports what you think is wrong information (which is just incomplete,
-> it doesn't show the PTK) then that's nothing I actually care about
-> fixing.
-
-The problem is a combination of things - (a) iwlist and iwconfig report no
-crypto and (b) there doesn't seem to be any *other* way for userspace to find
-out that in fact you have an encrypted WPA2 connection.
-
-
---==_Exmh_1268814093_4069P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFLoJENcC3lWbTT17ARAsxYAKDjRLnZWhj1c2zZV1D/gE1H40kfaQCgm00D
-6O3y8QKZrwEJkoSbT+uKXiY=
-=UzQ0
------END PGP SIGNATURE-----
-
---==_Exmh_1268814093_4069P--
-
+-- 
+Greetings, Michael.
