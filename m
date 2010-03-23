@@ -1,101 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from home.einfach.org ([80.86.92.145]:53679 "EHLO home.einfach.org"
+Received: from mx1.redhat.com ([209.132.183.28]:62640 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751337Ab0CBBSI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 20:18:08 -0500
-From: Bruno Randolf <bruno@einfach.org>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Subject: Re: [ath5k-devel] [PATCH 1/5] ath5k: fix injection in monitor mode
-Date: Tue, 2 Mar 2010 10:17:33 +0900
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-References: <20100301115903.13996.95024.stgit@void> <201003012154.55633.bruno@einfach.org> <4B8C3118.30705@free.fr>
-In-Reply-To: <4B8C3118.30705@free.fr>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003021017.34636.bruno@einfach.org>
+	id S1751072Ab0CWMtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Mar 2010 08:49:11 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/2] mac80211: add interface for disabling/enabling QoS
+Date: Tue, 23 Mar 2010 13:46:56 +0100
+Message-Id: <1269348417-4081-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 02 March 2010 06:26:48 Benoit PAPILLAULT wrote:
-> Bruno Randolf a écrit :
-> > please ignore this one, sorry ;(
-> > 
-> > bruno
-> 
-> This one is cool & needed for testing IBSS merges. I have pretty much
-> the same in my tree.
+Add BSS_CHANGE_QOS and bss_conf->qos_disabled flags to pass to drivers
+when want to disable QoS (aka WMM, WME).
 
-yes - only sc->opmode is never set. i'll come up with a patch to fix that. 
+When AP do not provide QoS parameters, we should assume that it not
+supporting QoS and we should not send QoS frames to it.
 
-bruno
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ include/net/mac80211.h |    4 ++++
+ net/mac80211/mlme.c    |    6 ++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 45d7d44..0315ffc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -144,6 +144,7 @@ struct ieee80211_low_level_stats {
+  *	new beacon (beaconing modes)
+  * @BSS_CHANGED_BEACON_ENABLED: Beaconing should be
+  *	enabled/disabled (beaconing modes)
++ * @BSS_CHANGED_QOS: QoS should be enabled/disabled
+  */
+ enum ieee80211_bss_change {
+ 	BSS_CHANGED_ASSOC		= 1<<0,
+@@ -156,6 +157,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_BSSID		= 1<<7,
+ 	BSS_CHANGED_BEACON		= 1<<8,
+ 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
++	BSS_CHANGED_QOS			= 1<<10,
+ };
+ 
+ /**
+@@ -183,6 +185,7 @@ enum ieee80211_bss_change {
+  *	the current band.
+  * @bssid: The BSSID for this BSS
+  * @enable_beacon: whether beaconing should be enabled or not
++ * @qos_disabled: whether QoS (aka WMM) should be disabled or not
+  * @ht_operation_mode: HT operation mode (like in &struct ieee80211_ht_info).
+  *	This field is only valid when the channel type is one of the HT types.
+  */
+@@ -196,6 +199,7 @@ struct ieee80211_bss_conf {
+ 	bool use_short_preamble;
+ 	bool use_short_slot;
+ 	bool enable_beacon;
++	bool qos_disabled;
+ 	u8 dtim_period;
+ 	u16 beacon_int;
+ 	u16 assoc_capability;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index be5f723..8bd2b05 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1129,8 +1129,10 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 	if (elems.wmm_param)
+ 		ieee80211_sta_wmm_params(local, ifmgd, elems.wmm_param,
+ 					 elems.wmm_param_len);
+-	else
+-		ieee80211_set_wmm_default(sdata);
++	else {
++		changed |= BSS_CHANGED_QOS;
++		bss_conf->qos_disabled = true;
++	}
+ 
+ 	local->oper_channel = wk->chan;
+ 
+-- 
+1.6.6
 
-> Regards,
-> Benoit
-> 
-> > On Monday 01 March 2010 20:59:03 Bruno Randolf wrote:
-> >> injected frames have to use AR5K_PKT_TYPE_NORMAL, otherwise the hardware
-> >> thinks it can mess with the contents of the frame - e.g. update the TSF
-> >> of an injected beacon. injected frames should be sent as they are
-> >> provided.
-> >> 
-> >> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> >> ---
-> >> 
-> >>  drivers/net/wireless/ath/ath5k/base.c |   11 ++++++++++-
-> >>  1 files changed, 10 insertions(+), 1 deletions(-)
-> >> 
-> >> diff --git a/drivers/net/wireless/ath/ath5k/base.c
-> >> b/drivers/net/wireless/ath/ath5k/base.c index 2468c64..904d7f0 100644
-> >> --- a/drivers/net/wireless/ath/ath5k/base.c
-> >> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> >> @@ -1285,6 +1285,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
-> >> ath5k_buf *bf, u16 cts_rate = 0;
-> >> 
-> >>  	u16 duration = 0;
-> >>  	u8 rc_flags;
-> >> 
-> >> +	enum ath5k_pkt_type pkt_type;
-> >> 
-> >>  	flags = AR5K_TXDESC_INTREQ | AR5K_TXDESC_CLRDMASK;
-> >> 
-> >> @@ -1322,9 +1323,17 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
-> >> ath5k_buf *bf, duration =
-> >> le16_to_cpu(ieee80211_ctstoself_duration(sc->hw,
-> >> 
-> >>  			sc->vif, pktlen, info));
-> >>  	
-> >>  	}
-> >> 
-> >> +
-> >> +	/* we don't want the hardware to mess with injected frames in monitor
-> >> +	 * mode (e.g. update TSF in beacons) */
-> >> +	if (sc->opmode == NL80211_IFTYPE_MONITOR)
-> >> +		pkt_type = AR5K_PKT_TYPE_NORMAL;
-> >> +	else
-> >> +		pkt_type = get_hw_packet_type(skb);
-> >> +
-> >> 
-> >>  	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
-> >>  	
-> >>  		ieee80211_get_hdrlen_from_skb(skb),
-> >> 
-> >> -		get_hw_packet_type(skb),
-> >> +		pkt_type,
-> >> 
-> >>  		(sc->power_level * 2),
-> >>  		hw_rate,
-> >>  		info->control.rates[0].count, keyidx, ah->ah_tx_ant, flags,
-> >> 
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe
-> >> linux-wireless" in the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > _______________________________________________
-> > ath5k-devel mailing list
-> > ath5k-devel@lists.ath5k.org
-> > https://lists.ath5k.org/mailman/listinfo/ath5k-devel
