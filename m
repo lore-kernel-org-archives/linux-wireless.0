@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:63657 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755122Ab0CXIOd (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:32156 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754549Ab0CWHFs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 04:14:33 -0400
+	Tue, 23 Mar 2010 03:05:48 -0400
 From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org, luciano.coelho@nokia.com
-Subject: [PATCH 1/1] cfg80211: Improve connection quality maintenance docs in nl80211.h
-Date: Wed, 24 Mar 2010 10:11:14 +0200
-Message-Id: <1269418274-11365-1-git-send-email-juuso.oikarinen@nokia.com>
+Subject: [PATCH 0/2] mac80211: cfg80211: Roam trigger support
+Date: Tue, 23 Mar 2010 09:02:32 +0200
+Message-Id: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In nl80211.h, be a little more elaborate in the docs for the definitions
-NL80211_ATTR_CQM_RSSI_THOLD and NL80211_ATTR_CQM_RSSI_HYST.
+To implement good performance WLAN roaming, it is not sufficient to start
+scanning for other available AP's only after the currently serving association
+is lost.
 
-Reported-by: Luis R. Rodriguez <mcgrof@gmail.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- include/linux/nl80211.h |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+The entity controlling the roaming will need to get indication of a
+deteriorating WLAN connection in order to start preparing for roaming already
+before the serving association is lost. This way, it can roam to a better AP
+perhaps even before the serving association becomes too bad in quality.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 8994759..daf6a34 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1600,8 +1600,12 @@ enum nl80211_ps_state {
- /**
-  * enum nl80211_attr_cqm - connection quality monitor attributes
-  * @__NL80211_ATTR_CQM_INVALID: invalid
-- * @NL80211_ATTR_CQM_RSSI_THOLD: RSSI threshold in dBm (zero to disable)
-- * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm
-+ * @NL80211_ATTR_CQM_RSSI_THOLD: RSSI threshold in dBm. This value specifies
-+ *	the threshold for the RSSI level at which an event will be sent. Zero
-+ *	to disable.
-+ * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm. This value specifies
-+ *	the minimum amount the RSSI level must change after an event before a
-+ *	new event may be issued (to reduce effects of RSSI oscillation).
-  * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event
-  * @__NL80211_ATTR_CQM_AFTER_LAST: internal
-  * @NL80211_ATTR_CQM_MAX: highest key attribute
--- 
-1.6.3.3
+These patches propose an implementation facilitating this using a simple RSSI
+threshold and hysteresis approach.
+
+These patches add a nl80211 interface for simply configuring a rssi threshold
+and hysteresis value to facilitate very basic connection quality monitoring.
+
+For the triggering, these patches currently rely on HW support, host based
+triggering is not implemented, but could be added later if needed.
+
+These patches have been tested with the wl1271 driver.
+
+Juuso Oikarinen (2):
+  cfg80211: Add connection quality monitoring support to nl80211
+  mac80211: Add support for connection quality monitoring
+
+ include/linux/nl80211.h |   46 ++++++++++++++++
+ include/net/cfg80211.h  |   19 +++++++
+ include/net/mac80211.h  |   29 ++++++++++
+ net/mac80211/cfg.c      |   27 ++++++++++
+ net/mac80211/mlme.c     |   15 +++++
+ net/wireless/mlme.c     |   13 +++++
+ net/wireless/nl80211.c  |  131 +++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    6 ++
+ 8 files changed, 286 insertions(+), 0 deletions(-)
 
