@@ -1,244 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:57207 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198Ab0CSFRx (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:50706 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932784Ab0CXS7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 01:17:53 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/1] mac80211: Add support connection monitor in hardware
-Date: Fri, 19 Mar 2010 07:14:53 +0200
-Message-Id: <1268975693-4329-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 24 Mar 2010 14:59:20 -0400
+From: Frans Pop <elendil@planet.nl>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Frans Pop <elendil@planet.nl>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: [PATCH 5/7] wireless/prism54: remove trailing space in messages
+Date: Wed, 24 Mar 2010 19:46:33 +0100
+Message-Id: <1269456395-15343-5-git-send-email-elendil@planet.nl>
+In-Reply-To: <201003241927.12434.elendil@planet.nl>
+References: <201003241927.12434.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is based on a RFC patch by Kalle Valo.
-
-The wl1271 has a feature which handles the connection monitor logic
-in hardware, basically sending periodically nullfunc frames and reporting
-to the host if AP is lost, after attempting to recover by sending
-probe-requests to the AP.
-
-Add support to mac80211 by adding a new flag IEEE80211_HW_CONNECTION_MONITOR
-which prevents conn_mon_timer from triggering during idle periods, and
-prevents sending probe-requests to the AP if beacon-loss is indicated by the
-hardware.
-
-Cc: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Frans Pop <elendil@planet.nl>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
 ---
- include/net/mac80211.h     |   24 +++++++++++++++-
- net/mac80211/ieee80211_i.h |    4 +-
- net/mac80211/iface.c       |    2 +-
- net/mac80211/mlme.c        |   64 +++++++++++++++++++++++++++++++++++++++-----
- 4 files changed, 82 insertions(+), 12 deletions(-)
+ drivers/net/wireless/p54/txrx.c           |    2 +-
+ drivers/net/wireless/prism54/islpci_dev.c |   16 ++++++++--------
+ drivers/net/wireless/prism54/islpci_eth.c |    8 ++++----
+ drivers/net/wireless/prism54/islpci_mgt.c |    8 ++++----
+ drivers/net/wireless/prism54/oid_mgt.c    |    2 +-
+ 5 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 936bc41..d14226f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -954,6 +954,11 @@ enum ieee80211_tkip_key_type {
-  *	Hardware can provide ack status reports of Tx frames to
-  *	the stack.
-  *
-+ * @IEEE80211_HW_CONNECTION_MONITOR:
-+ *      The hardware performs its own connection monitoring, including
-+ *      periodic keep-alives to the AP and probing the AP on beacon loss.
-+ *      When this flag is set, signaling beacon-loss will cause an immediate
-+ *      change to disassociated state.
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -975,6 +980,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
- 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
- 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
-+	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
- };
+diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
+index 6605799..2ceff54 100644
+--- a/drivers/net/wireless/p54/txrx.c
++++ b/drivers/net/wireless/p54/txrx.c
+@@ -38,7 +38,7 @@ static void p54_dump_tx_queue(struct p54_common *priv)
+ 	u32 largest_hole = 0, free;
  
- /**
-@@ -2364,12 +2370,26 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
-  *
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  *
-- * When beacon filtering is enabled with IEEE80211_HW_BEACON_FILTERING and
-- * IEEE80211_CONF_PS is set, the driver needs to inform whenever the
-+ * When beacon filtering is enabled with %IEEE80211_HW_BEACON_FILTERING and
-+ * %IEEE80211_CONF_PS is set, the driver needs to inform whenever the
-  * hardware is not receiving beacons with this function.
-  */
- void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+ 	spin_lock_irqsave(&priv->tx_queue.lock, flags);
+-	printk(KERN_DEBUG "%s: / --- tx queue dump (%d entries) --- \n",
++	printk(KERN_DEBUG "%s: / --- tx queue dump (%d entries) ---\n",
+ 	       wiphy_name(priv->hw->wiphy), skb_queue_len(&priv->tx_queue));
  
-+/**
-+ * ieee80211_connection_loss - inform hardware has lost connection to the AP
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ *
-+ * When beacon filtering is enabled with %IEEE80211_HW_BEACON_FILTERING, and
-+ * %IEEE80211_CONF_PS and %IEEE80211_HW_CONNECTION_MONITOR are set, the driver
-+ * needs to inform if the connection to the AP has been lost.
-+ *
-+ * This function will cause immediate change to disassociated state,
-+ * without connection recovery attempts.
-+ */
-+void ieee80211_connection_loss(struct ieee80211_vif *vif);
-+
- /* Rate control API */
+ 	prev_addr = priv->rx_start;
+diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
+index a3ba353..7c82e43 100644
+--- a/drivers/net/wireless/prism54/islpci_dev.c
++++ b/drivers/net/wireless/prism54/islpci_dev.c
+@@ -227,14 +227,14 @@ islpci_interrupt(int irq, void *config)
  
- /**
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b841264..ab369e2 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -327,7 +327,7 @@ struct ieee80211_if_managed {
- 	struct work_struct work;
- 	struct work_struct monitor_work;
- 	struct work_struct chswitch_work;
--	struct work_struct beacon_loss_work;
-+	struct work_struct beacon_connection_loss_work;
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+ 		DEBUG(SHOW_FUNCTION_CALLS,
+-		      "IRQ: Identification register 0x%p 0x%x \n", device, reg);
++		      "IRQ: Identification register 0x%p 0x%x\n", device, reg);
+ #endif
  
- 	unsigned long probe_timeout;
- 	int probe_send_count;
-@@ -1156,7 +1156,7 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 			     int powersave);
- void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
- 			     struct ieee80211_hdr *hdr);
--void ieee80211_beacon_loss_work(struct work_struct *work);
-+void ieee80211_beacon_connection_loss_work(struct work_struct *work);
+ 		/* check for each bit in the register separately */
+ 		if (reg & ISL38XX_INT_IDENT_UPDATE) {
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+ 			/* Queue has been updated */
+-			DEBUG(SHOW_TRACING, "IRQ: Update flag \n");
++			DEBUG(SHOW_TRACING, "IRQ: Update flag\n");
  
- void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
- 				     enum queue_stop_reason reason);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index d5571b9..b4ec59a 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -486,7 +486,7 @@ static int ieee80211_stop(struct net_device *dev)
- 		cancel_work_sync(&sdata->u.mgd.work);
- 		cancel_work_sync(&sdata->u.mgd.chswitch_work);
- 		cancel_work_sync(&sdata->u.mgd.monitor_work);
--		cancel_work_sync(&sdata->u.mgd.beacon_loss_work);
-+		cancel_work_sync(&sdata->u.mgd.beacon_connection_loss_work);
+ 			DEBUG(SHOW_QUEUE_INDEXES,
+ 			      "CB drv Qs: [%i][%i][%i][%i][%i][%i]\n",
+@@ -300,7 +300,7 @@ islpci_interrupt(int irq, void *config)
+ 						ISL38XX_CB_RX_DATA_LQ) != 0) {
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+ 				DEBUG(SHOW_TRACING,
+-				      "Received frame in Data Low Queue \n");
++				      "Received frame in Data Low Queue\n");
+ #endif
+ 				islpci_eth_receive(priv);
+ 			}
+@@ -325,7 +325,7 @@ islpci_interrupt(int irq, void *config)
+ 			/* Device has been initialized */
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+ 			DEBUG(SHOW_TRACING,
+-			      "IRQ: Init flag, device initialized \n");
++			      "IRQ: Init flag, device initialized\n");
+ #endif
+ 			wake_up(&priv->reset_done);
+ 		}
+@@ -333,7 +333,7 @@ islpci_interrupt(int irq, void *config)
+ 		if (reg & ISL38XX_INT_IDENT_SLEEP) {
+ 			/* Device intends to move to powersave state */
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-			DEBUG(SHOW_TRACING, "IRQ: Sleep flag \n");
++			DEBUG(SHOW_TRACING, "IRQ: Sleep flag\n");
+ #endif
+ 			isl38xx_handle_sleep_request(priv->control_block,
+ 						     &powerstate,
+@@ -343,7 +343,7 @@ islpci_interrupt(int irq, void *config)
+ 		if (reg & ISL38XX_INT_IDENT_WAKEUP) {
+ 			/* Device has been woken up to active state */
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-			DEBUG(SHOW_TRACING, "IRQ: Wakeup flag \n");
++			DEBUG(SHOW_TRACING, "IRQ: Wakeup flag\n");
+ #endif
  
- 		/*
- 		 * When we get here, the interface is marked down.
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index be5f723..6b43a0a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -854,6 +854,9 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
- 	if (is_multicast_ether_addr(hdr->addr1))
- 		return;
+ 			isl38xx_handle_wakeup(priv->control_block,
+@@ -634,7 +634,7 @@ islpci_alloc_memory(islpci_private *priv)
+ 	      ioremap(pci_resource_start(priv->pdev, 0),
+ 		      ISL38XX_PCI_MEM_SIZE))) {
+ 		/* error in remapping the PCI device memory address range */
+-		printk(KERN_ERR "PCI memory remapping failed \n");
++		printk(KERN_ERR "PCI memory remapping failed\n");
+ 		return -1;
+ 	}
  
-+	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
-+		return;
-+
- 	mod_timer(&sdata->u.mgd.conn_mon_timer,
- 		  round_jiffies_up(jiffies + IEEE80211_CONNECTION_IDLE_TIME));
- }
-@@ -931,23 +934,68 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	mutex_unlock(&ifmgd->mtx);
- }
+@@ -901,7 +901,7 @@ islpci_setup(struct pci_dev *pdev)
  
--void ieee80211_beacon_loss_work(struct work_struct *work)
-+static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct ieee80211_local *local = sdata->local;
-+	u8 bssid[ETH_ALEN];
-+
-+	mutex_lock(&ifmgd->mtx);
-+	if (!ifmgd->associated) {
-+		mutex_unlock(&ifmgd->mtx);
-+		return;
-+	}
-+
-+	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
-+
-+	printk(KERN_DEBUG "Connection to AP %pM lost.\n", bssid);
-+
-+	ieee80211_set_disassoc(sdata);
-+	ieee80211_recalc_idle(local);
-+	mutex_unlock(&ifmgd->mtx);
-+	/*
-+	 * must be outside lock due to cfg80211,
-+	 * but that's not a problem.
-+	 */
-+	ieee80211_send_deauth_disassoc(sdata, bssid,
-+				       IEEE80211_STYPE_DEAUTH,
-+				       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
-+				       NULL);
-+}
-+
-+void ieee80211_beacon_connection_loss_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
- 		container_of(work, struct ieee80211_sub_if_data,
--			     u.mgd.beacon_loss_work);
-+			     u.mgd.beacon_connection_loss_work);
+ 	if (register_netdev(ndev)) {
+ 		DEBUG(SHOW_ERROR_MESSAGES,
+-		      "ERROR: register_netdev() failed \n");
++		      "ERROR: register_netdev() failed\n");
+ 		goto do_islpci_free_memory;
+ 	}
  
--	ieee80211_mgd_probe_ap(sdata, true);
-+	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
-+		__ieee80211_connection_loss(sdata);
-+	else
-+		ieee80211_mgd_probe_ap(sdata, true);
- }
+diff --git a/drivers/net/wireless/prism54/islpci_eth.c b/drivers/net/wireless/prism54/islpci_eth.c
+index 872b647..af9e7fb 100644
+--- a/drivers/net/wireless/prism54/islpci_eth.c
++++ b/drivers/net/wireless/prism54/islpci_eth.c
+@@ -89,7 +89,7 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
+ 	u32 curr_frag;
  
- void ieee80211_beacon_loss(struct ieee80211_vif *vif)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_hw *hw = &sdata->local->hw;
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_transmit \n");
++	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_transmit\n");
+ #endif
  
--	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.beacon_loss_work);
-+	WARN_ON(hw->flags & IEEE80211_HW_CONNECTION_MONITOR);
-+	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
- }
- EXPORT_SYMBOL(ieee80211_beacon_loss);
+ 	/* lock the driver code */
+@@ -140,7 +140,7 @@ islpci_eth_transmit(struct sk_buff *skb, struct net_device *ndev)
+ 			}
  
-+void ieee80211_connection_loss(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_hw *hw = &sdata->local->hw;
-+
-+	WARN_ON(!(hw->flags & IEEE80211_HW_CONNECTION_MONITOR));
-+	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
-+}
-+EXPORT_SYMBOL(ieee80211_connection_loss);
-+
-+
- static enum rx_mgmt_action __must_check
- ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
- 			 struct ieee80211_mgmt *mgmt, size_t len)
-@@ -1637,7 +1685,8 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
- 	if (local->quiescing)
- 		return;
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-			DEBUG(SHOW_TRACING, "memmove %p %p %i \n", skb->data,
++			DEBUG(SHOW_TRACING, "memmove %p %p %i\n", skb->data,
+ 			      src, skb->len);
+ #endif
+ 		} else {
+@@ -319,7 +319,7 @@ islpci_eth_receive(islpci_private *priv)
+ 	int discard = 0;
  
--	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.beacon_loss_work);
-+	ieee80211_queue_work(&sdata->local->hw,
-+			     &sdata->u.mgd.beacon_connection_loss_work);
- }
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_receive \n");
++	DEBUG(SHOW_FUNCTION_CALLS, "islpci_eth_receive\n");
+ #endif
  
- static void ieee80211_sta_conn_mon_timer(unsigned long data)
-@@ -1689,7 +1738,7 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
- 	 */
+ 	/* the device has written an Ethernet frame in the data area
+@@ -431,7 +431,7 @@ islpci_eth_receive(islpci_private *priv)
+ 		skb = dev_alloc_skb(MAX_FRAGMENT_SIZE_RX + 2);
+ 		if (unlikely(skb == NULL)) {
+ 			/* error allocating an sk_buff structure elements */
+-			DEBUG(SHOW_ERROR_MESSAGES, "Error allocating skb \n");
++			DEBUG(SHOW_ERROR_MESSAGES, "Error allocating skb\n");
+ 			break;
+ 		}
+ 		skb_reserve(skb, (4 - (long) skb->data) & 0x03);
+diff --git a/drivers/net/wireless/prism54/islpci_mgt.c b/drivers/net/wireless/prism54/islpci_mgt.c
+index 69d2f88..89b0278 100644
+--- a/drivers/net/wireless/prism54/islpci_mgt.c
++++ b/drivers/net/wireless/prism54/islpci_mgt.c
+@@ -113,7 +113,7 @@ islpci_mgmt_rx_fill(struct net_device *ndev)
+ 	u32 curr = le32_to_cpu(cb->driver_curr_frag[ISL38XX_CB_RX_MGMTQ]);
  
- 	cancel_work_sync(&ifmgd->work);
--	cancel_work_sync(&ifmgd->beacon_loss_work);
-+	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
- 	if (del_timer_sync(&ifmgd->timer))
- 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-	DEBUG(SHOW_FUNCTION_CALLS, "islpci_mgmt_rx_fill \n");
++	DEBUG(SHOW_FUNCTION_CALLS, "islpci_mgmt_rx_fill\n");
+ #endif
  
-@@ -1723,7 +1772,8 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
- 	INIT_WORK(&ifmgd->monitor_work, ieee80211_sta_monitor_work);
- 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
--	INIT_WORK(&ifmgd->beacon_loss_work, ieee80211_beacon_loss_work);
-+	INIT_WORK(&ifmgd->beacon_connection_loss_work,
-+		  ieee80211_beacon_connection_loss_work);
- 	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
- 		    (unsigned long) sdata);
- 	setup_timer(&ifmgd->bcn_mon_timer, ieee80211_sta_bcn_mon_timer,
+ 	while (curr - priv->index_mgmt_rx < ISL38XX_CB_MGMT_QSIZE) {
+@@ -211,7 +211,7 @@ islpci_mgt_transmit(struct net_device *ndev, int operation, unsigned long oid,
+ 	{
+ 		pimfor_header_t *h = buf.mem;
+ 		DEBUG(SHOW_PIMFOR_FRAMES,
+-		      "PIMFOR: op %i, oid 0x%08lx, device %i, flags 0x%x length 0x%x \n",
++		      "PIMFOR: op %i, oid 0x%08lx, device %i, flags 0x%x length 0x%x\n",
+ 		      h->operation, oid, h->device_id, h->flags, length);
+ 
+ 		/* display the buffer contents for debugging */
+@@ -279,7 +279,7 @@ islpci_mgt_receive(struct net_device *ndev)
+ 	u32 curr_frag;
+ 
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-	DEBUG(SHOW_FUNCTION_CALLS, "islpci_mgt_receive \n");
++	DEBUG(SHOW_FUNCTION_CALLS, "islpci_mgt_receive\n");
+ #endif
+ 
+ 	/* Only once per interrupt, determine fragment range to
+@@ -338,7 +338,7 @@ islpci_mgt_receive(struct net_device *ndev)
+ 
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+ 		DEBUG(SHOW_PIMFOR_FRAMES,
+-		      "PIMFOR: op %i, oid 0x%08x, device %i, flags 0x%x length 0x%x \n",
++		      "PIMFOR: op %i, oid 0x%08x, device %i, flags 0x%x length 0x%x\n",
+ 		      header->operation, header->oid, header->device_id,
+ 		      header->flags, header->length);
+ 
+diff --git a/drivers/net/wireless/prism54/oid_mgt.c b/drivers/net/wireless/prism54/oid_mgt.c
+index 1187e61..07df70a 100644
+--- a/drivers/net/wireless/prism54/oid_mgt.c
++++ b/drivers/net/wireless/prism54/oid_mgt.c
+@@ -819,7 +819,7 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
+ 			k = snprintf(str, PRIV_STR_SIZE, "nr=%u\n", list->nr);
+ 			for (i = 0; i < list->nr; i++)
+ 				k += snprintf(str + k, PRIV_STR_SIZE - k,
+-					      "bss[%u] : \nage=%u\nchannel=%u\n"
++					      "bss[%u] :\nage=%u\nchannel=%u\n"
+ 					      "capinfo=0x%X\nrates=0x%X\n"
+ 					      "basic_rates=0x%X\n",
+ 					      i, list->bsslist[i].age,
 -- 
-1.6.3.3
+1.6.6.1
 
