@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:25547 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752053Ab0CYVK7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 17:10:59 -0400
-Subject: Re: [PATCH 21/22] iwlwifi: change spin_lock to spin_lock_irqsave
-From: Pavel Roskin <proski@gnu.org>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-In-Reply-To: <1269549890-19195-22-git-send-email-reinette.chatre@intel.com>
-References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
-	 <1269549890-19195-22-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Thu, 25 Mar 2010 17:10:57 -0400
-Message-Id: <1269551457.2626.12.camel@mj>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43460 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772Ab0CXXkf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 19:40:35 -0400
+Date: Wed, 24 Mar 2010 19:38:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
+Message-ID: <20100324233832.GB32563@tuxdriver.com>
+References: <4BAA73D2.1000301@oracle.com>
+ <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
+ <1269466426.6935.8.camel@jlt3.sipsolutions.net>
+ <1269466948.2446.3216.camel@rchatre-DESK>
+ <20100324223719.GA32563@tuxdriver.com>
+ <1269470489.2446.3217.camel@rchatre-DESK>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1269470489.2446.3217.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-03-25 at 13:44 -0700, Reinette Chatre wrote:
-> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> 
-> Use spin_lock_irqsave() in interrupt handler to disable interrupts locally
-> and provide the spinlock on SMP. This covers both interrupt and SMP
-> concurrency.
-> 
-> With this changes, also fix the sparse warning issues.
+On Wed, Mar 24, 2010 at 03:41:29PM -0700, reinette chatre wrote:
 
-As far as I understand, spin_lock_irqsave() is superfluous in interrupt
-handlers, since interrupt handlers are run with interrupts disabled.
+> I am very sorry, here is the correct link:
+> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1
 
-I wonder if you hit the problem that my patch should fix:
-https://patchwork.kernel.org/patch/84441/
+FWIW, that one misses the definition of iwl_good_ack_health in iwl-core.h.
 
-Basically, sparse diagnostics for not fully preemptible SMP kernels is
-so bogus that it should be ignored completely.
+I already put the other one in wireless-next-2.6.  I'll just resolve
+the conflict when I pull your tree.
 
+Thanks,
+
+John
 -- 
-Regards,
-Pavel Roskin
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
