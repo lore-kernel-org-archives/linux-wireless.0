@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:61190 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964955Ab0COQfw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36774 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750955Ab0CXVdl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Mar 2010 12:35:52 -0400
-Received: by ewy8 with SMTP id 8so1160136ewy.28
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 09:35:50 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH] rt2x00: fix warning when building rt2800pci with just soc support
-Date: Mon, 15 Mar 2010 17:35:46 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201003151722.26406.helmut.schaa@googlemail.com>
-In-Reply-To: <201003151722.26406.helmut.schaa@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201003151735.46646.IvDoorn@gmail.com>
+	Wed, 24 Mar 2010 17:33:41 -0400
+Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
+References: <4BAA73D2.1000301@oracle.com>
+	 <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Mar 2010 14:33:46 -0700
+Message-ID: <1269466426.6935.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 15 March 2010, Helmut Schaa wrote:
-> Fix compile warning "rt2800pci.c:1248: warning: 'rt2800pci_device_table'
-> defined but not used" when building rt2800pci with only soc support
-> (without pci).
+On Wed, 2010-03-24 at 17:23 -0400, John W. Linville wrote:
+> drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
+> drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
 > 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
+> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 > ---
-> Nothing important, had the patch in my tree and just noticed that I didn't
-> send it out yet.
-> 
->  drivers/net/wireless/rt2x00/rt2800pci.c |    2 ++
+>  drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
 >  1 files changed, 2 insertions(+), 0 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 10fafd0..0104906 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -1184,6 +1184,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
->  /*
->   * RT2800pci module information.
->   */
-> +#ifdef CONFIG_RT2800PCI_PCI
->  static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
->  	{ PCI_DEVICE(0x1814, 0x0601), PCI_DEVICE_DATA(&rt2800pci_ops) },
->  	{ PCI_DEVICE(0x1814, 0x0681), PCI_DEVICE_DATA(&rt2800pci_ops) },
-> @@ -1211,6 +1212,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
->  #endif
->  	{ 0, }
->  };
-> +#endif /* CONFIG_RT2800PCI_PCI */
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> index b6a64d8..2fa30df 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> @@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+>  #define BA_TIMEOUT_CNT (5)
+>  #define BA_TIMEOUT_MAX (16)
 >  
->  MODULE_AUTHOR(DRV_PROJECT);
->  MODULE_VERSION(DRV_VERSION);
+> +#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
+>  /**
+>   * iwl_good_ack_health - checks for ACK count ratios, BA timeout
+> retries.
 
+I thought we had a patch moving it?
+
+johannes
 
