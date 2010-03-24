@@ -1,79 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:11397 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53259 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753254Ab0CJFWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 00:22:07 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 19/24] iwlwifi: remove needlessly exported symbols
-Date: Tue,  9 Mar 2010 21:21:47 -0800
-Message-Id: <1268198512-6572-20-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
-References: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
+	id S1756079Ab0CXM6G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 08:58:06 -0400
+Date: Wed, 24 Mar 2010 14:00:34 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: Re: [PATCH 1/2] mac80211: support paged rx SKBs
+Message-ID: <20100324140034.6a6d91c9@dhcp-lab-109.englab.brq.redhat.com>
+In-Reply-To: <1269399463-5244-1-git-send-email-yi.zhu@intel.com>
+References: <1269399463-5244-1-git-send-email-yi.zhu@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Wed, 24 Mar 2010 10:57:42 +0800
+Zhu Yi <yi.zhu@intel.com> wrote:
 
-iwl_apm_stop_master and iwl_internal_short_hw_scan
-are only used within iwlcore and thus do not need to be exported.
+> Mac80211 drivers can now pass paged SKBs to mac80211 via
+> ieee80211_rx{_irqsafe}. The implementation currently use
+> skb_linearize() in a few places i.e. management frame handling,
+> software decryption, defragmentation and A-MSDU process. 
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
- drivers/net/wireless/iwlwifi/iwl-scan.c |    1 -
- 3 files changed, 1 insertions(+), 4 deletions(-)
+What benefits this gives? Only driver which need non linear skbs
+is iwliwifi and nicely handle that by itself. I do not see any 
+other potential users for that. Can we wait for some other
+users before put that feature into mac stack?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index a962fb3..ec435e5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1356,7 +1356,7 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_irq_handle_error);
- 
--int iwl_apm_stop_master(struct iwl_priv *priv)
-+static int iwl_apm_stop_master(struct iwl_priv *priv)
- {
- 	int ret = 0;
- 
-@@ -1372,7 +1372,6 @@ int iwl_apm_stop_master(struct iwl_priv *priv)
- 
- 	return ret;
- }
--EXPORT_SYMBOL(iwl_apm_stop_master);
- 
- void iwl_apm_stop(struct iwl_priv *priv)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index bec00c7..aced12f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -675,7 +675,6 @@ extern void iwl_rx_reply_rx_phy(struct iwl_priv *priv,
- void iwl_rx_reply_compressed_ba(struct iwl_priv *priv,
- 					   struct iwl_rx_mem_buffer *rxb);
- void iwl_apm_stop(struct iwl_priv *priv);
--int iwl_apm_stop_master(struct iwl_priv *priv);
- int iwl_apm_init(struct iwl_priv *priv);
- 
- void iwl_setup_rxon_timing(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index dd9ff2e..ccad04c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -580,7 +580,6 @@ int iwl_internal_short_hw_scan(struct iwl_priv *priv)
- out:
- 	return ret;
- }
--EXPORT_SYMBOL(iwl_internal_short_hw_scan);
- 
- #define IWL_SCAN_CHECK_WATCHDOG (7 * HZ)
- 
--- 
-1.6.3.3
+Stanislaw
 
