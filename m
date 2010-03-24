@@ -1,50 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:55574 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750798Ab0CAPal (ORCPT
+Received: from mail-iw0-f176.google.com ([209.85.223.176]:65009 "EHLO
+	mail-iw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756330Ab0CXOQI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 10:30:41 -0500
-Received: by wwa36 with SMTP id 36so1356905wwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 07:30:40 -0800 (PST)
+	Wed, 24 Mar 2010 10:16:08 -0400
+Received: by iwn6 with SMTP id 6so2684751iwn.4
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 07:16:07 -0700 (PDT)
+Message-ID: <4BAA1EA3.9060803@lwfinger.net>
+Date: Wed, 24 Mar 2010 09:16:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Mon, 1 Mar 2010 10:30:40 -0500
-Message-ID: <6b5e31691003010730ie73ff4cld32e3a9d38def7d0@mail.gmail.com>
-Subject: [PATCH] ath5k: fixing retries in ath5k_hw_setup_4word_tx_desc
-From: Andrew Blaich <ablaich@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Calvin Walton <calvin.walton@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
+References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>	 <201003222325.35994.mb@bu3sch.de> <4BA80118.1070801@lwfinger.net>	 <201003230952.56207.mb@bu3sch.de>  <4BA8CF6C.2050701@lwfinger.net> <1269377903.21181.8.camel@nayuki>
+In-Reply-To: <1269377903.21181.8.camel@nayuki>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This Patch:
+On 03/23/2010 03:58 PM, Calvin Walton wrote:
+> 
+> I will warn you that the following is rather untested, as I don't have
+> any of the affected hardware (or any b43 devices at all, actually), but
+> something along these lines should work. There's no syntax errors, at
+> least :)
+> 
+> --- /lib/udev/rules.d/65-persistent-b43-mac-generator.rules
+> 
+> ACTION!="add" GOTO="persistent_b43_mac_generator_end"
+> 
+> SUBSYSTEM=="net", DRIVERS=="b43", ATTR{address}=="ff:ff:ff:ff:ff:ff", IMPORT{program}="write_persistent_b43_mac"
+> 
+> SUBSYSTEM=="net", ENV{MACADDRESS_NEW}=="?*", RUN+="ifconfig $env{INTERFACE} hw ether $env{MACADDRESS_NEW}"
+> 
+> LABEL="persistent_b43_mac_generator_end"
+> 
+> --- /lib/udev/write_persistent_b43_mac (chmod +x)
+> 
+> #!/bin/bash
+> 
+> # This mac address generation function could be replaced with something better
+> MACADDRESS=$(dd if=/dev/urandom bs=1 count=6 2>/dev/null | od -tx1 | head -1 | cut -d' ' -f2- | awk '{ print $1":"$2":"$3":"$4":"$5":"$6 }')
+> 
+> RULES_FILE='/etc/udev/rules.d/60-persistent-b43-mac.rules'
+> 
+> . /lib64/udev/rule_generator.functions
+> 
+> lock_rules_file
+> 
+> choose_rules_file
+> 
+> echo "DEVPATH==\"$DEVPATH\", DRIVERS==\"b43\", ATTR{address}==\"ff:ff:ff:ff:ff:ff\", RUN+=\"ifconfig $INTERFACE hw ether $MACADDRESS\"" >> $RULES_FILE
+> 
+> echo "MACADDRESS_NEW=$MACADDRESS"
+> 
+> unlock_rules_file
+> 
+> ---
+> 
+> A new file "/etc/udev/rules.d/60-persistent-b43-mac.rules" will be
+> created, which will contain the the saved mac address and bypass the
+> generating script on future boots.
+> 
+> This should probably be run by the udev maintainers, but is a start,
+> anyways.
 
-The rate control algorithm, default is Minstrel for ath5k, determines
-the number of retries to use for each rate.  However, there exists in
-ath5k_hw_setup_4word_tx_desc (which is called for AR5212 like devices)
-a set number of retries defined by AR5K_TUNE_HWTXTRIES.  The set
-number of tries is added to the tx_tries0 variable setup by the rate
-control algorithm.  This changes the number of retries the rate
-control algorithm considers necessary.  By removing the
-AR5K_TUNE_HWTXTRIES from the retry calculation the rate control
-algorithm is given control over the number of retries.
+Thanks for the really good start.
 
+The above routines have a minor problem in that using a random value for the
+first byte of the MAC address runs the risk of having the multicast bit set. By
+fixing the first one to a multiple of 4, that problem is avoided.
 
-Signed-off-by:: Andrew Blaich <ablaich@gmail.com>
----
-diff --git a/drivers/net/wireless/ath/ath5k/desc.c
-b/drivers/net/wireless/ath/ath5k/desc.c
-index dc30a2b..c18d8d4 100644
---- a/drivers/net/wireless/ath/ath5k/desc.c
-+++ b/drivers/net/wireless/ath/ath5k/desc.c
-@@ -229,7 +229,7 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
- 		AR5K_REG_SM(antenna_mode, AR5K_4W_TX_DESC_CTL0_ANT_MODE_XMIT);
- 	tx_ctl->tx_control_1 |= AR5K_REG_SM(type,
- 					AR5K_4W_TX_DESC_CTL1_FRAME_TYPE);
--	tx_ctl->tx_control_2 = AR5K_REG_SM(tx_tries0 + AR5K_TUNE_HWTXTRIES,
-+	tx_ctl->tx_control_2 = AR5K_REG_SM(tx_tries0,
- 					AR5K_4W_TX_DESC_CTL2_XMIT_TRIES0);
- 	tx_ctl->tx_control_3 = tx_rate0 & AR5K_4W_TX_DESC_CTL3_XMIT_RATE0;
+A second minor problem is that the full path must be given for all standard
+utilities, otherwise they are assumed to be in /lib/udev. Thus all references to
+"ifconfig" were replaced by "/sbin/ifconfig". I hope all distros put ifconfig in
+/sbin.
+
+I have modified ssb to supply a MAC address of 80:80:80:80:80:80, rather than
+FF:FF:FF:FF:FF:FF. This way the interface can come up even though the new udev
+routines are not available. When b43 detects that address, it will log a message
+describing why the udev routines are needed, and how to obtain them.
+
+The one remaining problem is that the interface has already been renamed before
+60-persistent-b43-mac.rules is processed. In my case, the interface is wlan13,
+not wlan0. After I manually modified 60-..., then the new address is applied.
+I'm still working on this problem.
+
+Thanks again for the help.
+
+Larry
