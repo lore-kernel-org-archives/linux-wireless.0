@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml106.kpnxchange.com ([195.121.3.10]:57499 "EHLO
-	CPSMTPM-EML106.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754800Ab0C1Q4Q (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39547 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753589Ab0CXVaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 12:56:16 -0400
-Message-ID: <4BAF8A2E.2010306@gmail.com>
-Date: Sun, 28 Mar 2010 18:56:14 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	IvDoorn@gmail.com
-Subject: Re: [PATCH 3/3] wireless: rt2x00: rt2800pci: new id
-References: <1269791285-8678-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1269791285-8678-1-git-send-email-xose.vazquez@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 24 Mar 2010 17:30:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: linux-next@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
+Date: Wed, 24 Mar 2010 17:23:19 -0400
+Message-Id: <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <4BAA73D2.1000301@oracle.com>
+References: <4BAA73D2.1000301@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/10 17:48, Xose Vazquez Perez wrote:
-> Taken from latest ralink linux driver, it's a RT3593 PCI/PCIe.
-> 
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
+drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index b1f5643..ce7e88e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -1212,6 +1212,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
->  	{ PCI_DEVICE(0x1814, 0x3062), PCI_DEVICE_DATA(&rt2800pci_ops) },
->  	{ PCI_DEVICE(0x1814, 0x3562), PCI_DEVICE_DATA(&rt2800pci_ops) },
->  	{ PCI_DEVICE(0x1814, 0x3592), PCI_DEVICE_DATA(&rt2800pci_ops) },
-> +	{ PCI_DEVICE(0x1814, 0x3593), PCI_DEVICE_DATA(&rt2800pci_ops) },
->  #endif
->  	{ 0, }
->  };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index b6a64d8..2fa30df 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+ #define BA_TIMEOUT_CNT (5)
+ #define BA_TIMEOUT_MAX (16)
+ 
++#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
+ /**
+  * iwl_good_ack_health - checks for ACK count ratios, BA timeout retries.
+  *
+@@ -670,6 +671,7 @@ bool iwl_good_ack_health(struct iwl_priv *priv,
+ 	return rc;
+ }
+ EXPORT_SYMBOL(iwl_good_ack_health);
++#endif
+ 
+ /**
+  * iwl_good_plcp_health - checks for plcp error.
+-- 
+1.6.2.5
 
