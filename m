@@ -1,73 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:49393 "EHLO vs166246.vserver.de"
+Received: from mga01.intel.com ([192.55.52.88]:38566 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695Ab0CAAXD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2010 19:23:03 -0500
-From: Michael Buesch <mb@bu3sch.de>
-To: Nathan Schulte <reklipz@gmail.com>
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-Date: Mon, 1 Mar 2010 01:22:50 +0100
-Cc: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <69e28c911002281503l7259c897hafa26171adeaf0b1@mail.gmail.com> <a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com>
-In-Reply-To: <a221c0101002281538p717a3b5v16b14d251cdcc1dc@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201003010122.51341.mb@bu3sch.de>
+	id S1752066Ab0CXWla (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 18:41:30 -0400
+Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+In-Reply-To: <20100324223719.GA32563@tuxdriver.com>
+References: <4BAA73D2.1000301@oracle.com>
+	 <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
+	 <1269466426.6935.8.camel@jlt3.sipsolutions.net>
+	 <1269466948.2446.3216.camel@rchatre-DESK>
+	 <20100324223719.GA32563@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Mar 2010 15:41:29 -0700
+Message-ID: <1269470489.2446.3217.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 01 March 2010 00:38:16 Nathan Schulte wrote:
-> 2010/2/28 Gábor Stefanik <netrolller.3d@gmail.com>:
-> > The latest patch, which is a partial success according to some
-> > testers, writes to core 1 (PCI-E) instead of core 0 (ChipCommon).
-> Then either I am misinterpreting the logs, or the last patch in this
-> thread is not the patch you are referring to.
+On Wed, 2010-03-24 at 15:37 -0700, John W. Linville wrote:
+> On Wed, Mar 24, 2010 at 02:42:28PM -0700, reinette chatre wrote:
+> > On Wed, 2010-03-24 at 14:33 -0700, Johannes Berg wrote:
+> > > On Wed, 2010-03-24 at 17:23 -0400, John W. Linville wrote:
+> > > > drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
+> > > > drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
+> > > > 
+> > > > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> > > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > > ---
+> > > >  drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
+> > > >  1 files changed, 2 insertions(+), 0 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > > > index b6a64d8..2fa30df 100644
+> > > > --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > > > +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > > > @@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+> > > >  #define BA_TIMEOUT_CNT (5)
+> > > >  #define BA_TIMEOUT_MAX (16)
+> > > >  
+> > > > +#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
+> > > >  /**
+> > > >   * iwl_good_ack_health - checks for ACK count ratios, BA timeout
+> > > > retries.
+> > > 
+> > > I thought we had a patch moving it?
+> > > 
+> > 
+> > We do, but it has not been pushed upstream yet. 
+> > 
+> > John, I'd prefer
+> > http://viggo.jf.intel.com/~wifi/repos.git/?p=iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1 
+> > 
+> > Should we push it upstream asap or can it wait until our next series
+> > goes out after all our validation cycles pass?
 > 
-> A successful write/read to PCI config register 0x80 indicates that any
-> following MMIO read/writes will be done on that core, correct?
-> 
-> With the lpphy-test.patch you posted earlier, I see the following
-> output from b43:
-> Wrote 0x18003000 to pos 0x80
-> Read 0x18003000 from pos 0x80
-> MAP 1 0xf4000000 0xffffc900225b8000 0x4000 0x0 0
-> [snip some mmio read/writes and some PCI config read/writes]
-> Wrote 0x18000000 to pos 0x80
-> Read 0x18000000 from pos 0x80
-> R 4 1 0xf400280a 0x6dbe 0x0 0
-> W 4 1 0xf400280a 0xedbe 0x0 0
-> 
-> This first maps core 3, does some read/writes with it, then maps core
-> 0, and sets bit 0x8000, correct?
-> 
-> Also, is the address space limited to the 4k range?  wl maps core 1,
-> but sets bit 0x8000 at address 0x280a, which when added to 0x18001000
-> is 0x1800380a, right in the PCIE cores address space (for address
-> 0x100a).
+> I can't see that link.  How does the patch differ?
 
-Well, you are confusing address spaces here.
+I am very sorry, here is the correct link:
+http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1
 
-On a PCI based SSB device all host-side MMIO transfers go into
-the PCI device's address space first. The core-switching moves the window of
-the SSB address space that is mapped into 0-0xFFF of the PCI address space.
-So if you write to anything above 0xFFF on the PCI device, the write will
-not (directly) map to the SSB bus or any device on it.
-On the PCI device there is more stuff mapped on top of the SSB sliding
-window. For example the SPROM is mapped right on top of it.
+Reinette
 
-So it might be the case that on a PCI-E device the PCI-E-core's registers
-are permanently mapped into 0x2000 of the PCI address apace. This is to
-avoid sliding the SSB address space window when accessing the PCI-E core.
-This can have several reasons: For one speed (unlikely) and for another
-to avoid concurrency and ugly races when we need to access the PCI-E core
-while the wireless core is already running and generating interrupts.
-Note that this is a GUESS, but it would make sense to me.
-It would be cool if somebody could compare more registers of the PCI-E
-core using the sliding window and the 0x2000 + reg method to check my theory.
 
--- 
-Greetings, Michael.
