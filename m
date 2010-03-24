@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:35655 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752620Ab0CZAx5 (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:50705 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932781Ab0CXS7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 20:53:57 -0400
-Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0189404835
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 09:53:55 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath5k-devel] [PATCH 00/10] ANI for ath5k
-Date: Fri, 26 Mar 2010 09:53:48 +0900
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	"bob@bobcopeland.com" <bob@bobcopeland.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20100325054603.10697.48915.stgit@tt-desk> <201003260927.57491.br1@einfach.org> <20100326004431.GA2385@tux>
-In-Reply-To: <20100326004431.GA2385@tux>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003260953.49021.br1@einfach.org>
+	Wed, 24 Mar 2010 14:59:20 -0400
+From: Frans Pop <elendil@planet.nl>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Frans Pop <elendil@planet.nl>,
+	Corey Thomas <coreythomas@charter.net>
+Subject: [PATCH 6/7] wireless/raylink: remove trailing space in messages
+Date: Wed, 24 Mar 2010 19:46:34 +0100
+Message-Id: <1269456395-15343-6-git-send-email-elendil@planet.nl>
+In-Reply-To: <201003241927.12434.elendil@planet.nl>
+References: <201003241927.12434.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 26 March 2010 09:44:31 Luis R. Rodriguez wrote:
-> > as well, we all agree that there should be userland controls. the
-> > questions is just about the interface to use.
-> 
-> ANI is specific to Atheros cards so debugfs would do it. If we want to
-> have a more rigit API we could use a configfs entry for ath9k.
+Signed-off-by: Frans Pop <elendil@planet.nl>
+Cc: Corey Thomas <coreythomas@charter.net>
+---
+ drivers/net/wireless/ray_cs.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-debugfs definetly is the wrong place! users might compile the module with 
-debugging disabled (for performance reasons, e.g.).
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 84c530a..8d173cc 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -556,7 +556,7 @@ static int ray_init(struct net_device *dev)
+ 	local->fw_ver = local->startup_res.firmware_version[0];
+ 	local->fw_bld = local->startup_res.firmware_version[1];
+ 	local->fw_var = local->startup_res.firmware_version[2];
+-	dev_dbg(&link->dev, "ray_init firmware version %d.%d \n", local->fw_ver,
++	dev_dbg(&link->dev, "ray_init firmware version %d.%d\n", local->fw_ver,
+ 	      local->fw_bld);
+ 
+ 	local->tib_length = 0x20;
+@@ -2252,7 +2252,7 @@ static void rx_data(struct net_device *dev, struct rcs __iomem *prcs,
+ 			    (dev->mtu + RX_MAC_HEADER_LENGTH + ETH_HLEN +
+ 			     FCS_LEN)) {
+ 				pr_debug(
+-				      "ray_cs invalid packet length %d received \n",
++				      "ray_cs invalid packet length %d received\n",
+ 				      rx_len);
+ 				return;
+ 			}
+@@ -2263,7 +2263,7 @@ static void rx_data(struct net_device *dev, struct rcs __iomem *prcs,
+ 			    (dev->mtu + RX_MAC_HEADER_LENGTH + ETH_HLEN +
+ 			     FCS_LEN)) {
+ 				pr_debug(
+-				      "ray_cs invalid packet length %d received \n",
++				      "ray_cs invalid packet length %d received\n",
+ 				      rx_len);
+ 				return;
+ 			}
+@@ -2771,11 +2771,11 @@ static int ray_cs_proc_show(struct seq_file *m, void *v)
+ 			seq_printf(m, "Hop dwell            = %d Kus\n",
+ 				   pfh->dwell_time[0] +
+ 				   256 * pfh->dwell_time[1]);
+-			seq_printf(m, "Hop set              = %d \n",
++			seq_printf(m, "Hop set              = %d\n",
+ 				   pfh->hop_set);
+-			seq_printf(m, "Hop pattern          = %d \n",
++			seq_printf(m, "Hop pattern          = %d\n",
+ 				   pfh->hop_pattern);
+-			seq_printf(m, "Hop index            = %d \n",
++			seq_printf(m, "Hop index            = %d\n",
+ 				   pfh->hop_index);
+ 			p += p[1] + 2;
+ 		} else {
+-- 
+1.6.6.1
 
-are you sure about configfs? as far as i read about it it's for the dynamic 
-creation of kernel objects, which is not what we are doing here. or did the 
-rules change in the mean time?
-
-bruno
