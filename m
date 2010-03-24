@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:65378 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933449Ab0CKSCV (ORCPT
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:64535 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752016Ab0CXUmv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 13:02:21 -0500
-Received: by pvb32 with SMTP id 32so115460pvb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Mar 2010 10:02:21 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <43e72e891003101544g46b1731fu9bb3dc1329b7d591@mail.gmail.com>
-References: <19336.46643.733555.555640@gargle.gargle.HOWL>
-	<20100310201609.GB3093@tuxdriver.com> <43e72e891003101544g46b1731fu9bb3dc1329b7d591@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 11 Mar 2010 10:02:01 -0800
-Message-ID: <43e72e891003111002l6076c21x6e8b4e291cfb44e8@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath9k_htc: Add ath9k_htc driver
+	Wed, 24 Mar 2010 16:42:51 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Sujith <Sujith.Manoharan@atheros.com>,
-	linux-wireless@vger.kernel.org, Vasanth.Thiagarajan@atheros.com,
-	Senthilkumar.Balasubramanian@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 0/2] Two small fixes for rt2x00.
+Date: Wed, 24 Mar 2010 21:42:35 +0100
+Message-Id: <1269463357-32563-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 10, 2010 at 3:44 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+John,
 
-> Hope that helps you assess whether or not this is 2.6.34 material.
+These are two small fixes for rt2x00 that accumulated in my tree.
+Both are generated against wireless-2.6, but should apply to
+wireless-next-2.6, so apply to the tree you feel most appropriate
+for this.
 
-John, sorry for this mess, this should be easier for you to decide. We
-have decided to drop this series and we will resubmit an even more
-cleaner patch series with better commit log entries *and* with Power
-Save support and proper suspend/resume. I hope that in the next
-iteration it will be clearer how this new driver patch for ath9k_htc
-does not create an impact on the existing ath9k driver.
+The patches can also be pulled from:
 
-  Luis
+	git://git.gwingerde.nl/rt2x00-2.6
+
+Gertjan van Wingerde (2):
+  rt2x00: Fix typo in RF register programming of rt2800.
+  rt2x00: Disable powersaving by default in rt2500usb.
+
+ drivers/net/wireless/rt2x00/rt2500usb.c |    5 +++++
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
