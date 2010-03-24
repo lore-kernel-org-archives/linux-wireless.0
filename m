@@ -1,52 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54473 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750696Ab0CAIAZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 03:00:25 -0500
-Date: Mon, 1 Mar 2010 09:59:53 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Bjarke Istrup Pedersen <gurligebis@gentoo.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Problem with bridges and wireless NIC's
-Message-ID: <20100301075953.GA32038@jm.kir.nu>
-References: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:19845 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754209Ab0CXCxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Mar 2010 22:53:43 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 1/2] mac80211: support paged rx SKBs
+Date: Wed, 24 Mar 2010 10:57:42 +0800
+Message-Id: <1269399463-5244-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 28, 2010 at 11:58:10PM +0100, Bjarke Istrup Pedersen wrote:
+Mac80211 drivers can now pass paged SKBs to mac80211 via
+ieee80211_rx{_irqsafe}. The implementation currently use
+skb_linearize() in a few places i.e. management frame handling,
+software decryption, defragmentation and A-MSDU process. We can
+optimize them one by one later.
 
-> There is a problem when trying to create a bridge containing a normal
-> NIC and a wireless NIC, and using hostapd.
-> 
-> The problem is, that it is not possible to create a bridge containing
-> a wireless NIC, if it hasn't been setup first.
-> 
-> Does anyone have a solution for this?
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/rx.c   |   35 +++++++++++++++++++++++++++++++----
+ net/wireless/util.c |    6 +++++-
+ 2 files changed, 36 insertions(+), 5 deletions(-)
 
-How about first creating the br0, then starting hostapd, and finally
-adding wlan0 into br0?
-
-> (The commit that introduced this problem is
-> ad4bb6f8883a13bb0f65b194dae36c62a02ac779 , reverting it solves the
-> problem).
-
-I don't know whether I would call that a solution, but well..
-
-> For more info, please have a look at this bug report:
-> http://bugs.gentoo.org/show_bug.cgi?id=298824
-
-I'm not sure whether I understood the description correctly, but this
-sounds like a limitation in the way the network setup is done. Forcing
-br0 to be created with wlan0 before wlan0 has been configured is not
-going to work. I would consider removing wlan0 from the static
-configuration of br0 and just creating br0 with eth0 with the setup
-scripts and allowing hostapd to add wlan0 into br0 once the interface
-has been configured properly (support for this was added in hostapd
-0.7.1).
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 1da57c8..063aa84 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -38,7 +38,7 @@ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
+ {
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS) {
+ 		if (likely(skb->len > FCS_LEN))
+-			skb_trim(skb, skb->len - FCS_LEN);
++			__pskb_trim(skb, skb->len - FCS_LEN);
+ 		else {
+ 			/* driver bug */
+ 			WARN_ON(1);
+@@ -227,6 +227,11 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
+ 		present_fcs_len = FCS_LEN;
  
++	if (!pskb_may_pull(origskb, sizeof(struct ieee80211_hdr))) {
++		dev_kfree_skb(origskb);
++		return NULL;
++	}
++
+ 	if (!local->monitors) {
+ 		if (should_drop_frame(origskb, present_fcs_len)) {
+ 			dev_kfree_skb(origskb);
+@@ -931,6 +936,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_MONITOR;
+ 	}
+ 
++	if (skb_linearize(rx->skb))
++		return RX_DROP_MONITOR;
++
+ 	/* Check for weak IVs if possible */
+ 	if (rx->sta && rx->key->conf.alg == ALG_WEP &&
+ 	    ieee80211_is_data(hdr->frame_control) &&
+@@ -1231,6 +1239,9 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	}
+ 	I802_DEBUG_INC(rx->local->rx_handlers_fragments);
+ 
++	if (skb_linearize(rx->skb))
++		return RX_DROP_MONITOR;
++
+ 	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
+ 
+ 	if (frag == 0) {
+@@ -1588,6 +1599,9 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 	skb->dev = dev;
+ 	__skb_queue_head_init(&frame_list);
+ 
++	if (skb_linearize(skb))
++		return RX_DROP_MONITOR;
++
+ 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
+ 				 rx->sdata->vif.type,
+ 				 rx->local->hw.extra_tx_headroom);
+@@ -2357,29 +2371,42 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_hdr *hdr;
++	__le16 fc;
+ 	struct ieee80211_rx_data rx;
+ 	int prepares;
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+ 	struct sta_info *sta, *tmp;
+ 	bool found_sta = false;
++	int err = 0;
+ 
+-	hdr = (struct ieee80211_hdr *)skb->data;
++	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
+ 	memset(&rx, 0, sizeof(rx));
+ 	rx.skb = skb;
+ 	rx.local = local;
+ 
+-	if (ieee80211_is_data(hdr->frame_control) || ieee80211_is_mgmt(hdr->frame_control))
++	if (ieee80211_is_data(fc) || ieee80211_is_mgmt(fc))
+ 		local->dot11ReceivedFragmentCount++;
+ 
+ 	if (unlikely(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
+ 		     test_bit(SCAN_OFF_CHANNEL, &local->scanning)))
+ 		rx.flags |= IEEE80211_RX_IN_SCAN;
+ 
++	if (ieee80211_is_mgmt(fc))
++		err = skb_linearize(skb);
++	else
++		err = !pskb_may_pull(skb, ieee80211_hdrlen(fc));
++
++	if (err) {
++		dev_kfree_skb(skb);
++		return;
++	}
++
++	hdr = (struct ieee80211_hdr *)skb->data;
+ 	ieee80211_parse_qos(&rx);
+ 	ieee80211_verify_alignment(&rx);
+ 
+-	if (ieee80211_is_data(hdr->frame_control)) {
++	if (ieee80211_is_data(fc)) {
+ 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
+ 			rx.sta = sta;
+ 			found_sta = true;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index be2ab8c..1764043 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -314,6 +314,10 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 	memcpy(dst, ieee80211_get_DA(hdr), ETH_ALEN);
+ 	memcpy(src, ieee80211_get_SA(hdr), ETH_ALEN);
+ 
++	if (iftype == NL80211_IFTYPE_MESH_POINT &&
++	    !pskb_may_pull(skb, hdrlen + sizeof(struct ieee80211s_hdr)))
++		return -1;
++
+ 	switch (hdr->frame_control &
+ 		cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+ 	case cpu_to_le16(IEEE80211_FCTL_TODS):
+@@ -357,7 +361,7 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 		break;
+ 	}
+ 
+-	if (unlikely(skb->len - hdrlen < 8))
++	if (!pskb_may_pull(skb, hdrlen + 8))
+ 		return -1;
+ 
+ 	payload = skb->data + hdrlen;
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.0.4
+
