@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39243
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756485Ab0CKT1g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 14:27:36 -0500
-Date: Thu, 11 Mar 2010 11:27:54 -0800 (PST)
-Message-Id: <20100311.112754.142886660.davem@davemloft.net>
-To: philipp_subx@redfish-solutions.com
-Cc: dunc@lemonia.org, kalle.valo@iki.fi, kaber@trash.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4B9942A7.40205@redfish-solutions.com>
-References: <87my01m0zm.fsf@purkki.valot.fi>
-	<4B5EF5DF.2070005@lemonia.org>
-	<4B9942A7.40205@redfish-solutions.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bu3sch.de ([62.75.166.246]:36026 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932831Ab0CXTVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 15:21:43 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
+Date: Wed, 24 Mar 2010 20:21:39 +0100
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Calvin Walton <calvin.walton@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <1269377903.21181.8.camel@nayuki> <4BAA1EA3.9060803@lwfinger.net>
+In-Reply-To: <4BAA1EA3.9060803@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003242021.39502.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Date: Thu, 11 Mar 2010 12:21:11 -0700
+On Wednesday 24 March 2010 15:16:03 Larry Finger wrote:
+> I have modified ssb to supply a MAC address of 80:80:80:80:80:80, rather than
 
-> And yes, there will always be misbehaving users.  They are a fact of
-> life.  That doesn't mean we should lobotomize the network.  We don't
-> have an authentication mechanism on ICMP Redirects or Source-Quench,
+What about also setting the local-assignment bit for this temporary address?
 
-Which is why most networks block those packets from the outside.
+> The one remaining problem is that the interface has already been renamed before
+> 60-persistent-b43-mac.rules is processed. In my case, the interface is wlan13,
+> not wlan0. After I manually modified 60-..., then the new address is applied.
+> I'm still working on this problem.
 
-> Nor is ARP authenticated.
+Well, udev scripts are processed in alphabetical order. Can't you simply run
+the persistent mac rules before the persistent ifname rules?
 
-Which is why people control who can plug into their physical
-network.
-
-None of the things you are saying support the idea of having
-applications decide what the DSCP marking should be.
+-- 
+Greetings, Michael.
