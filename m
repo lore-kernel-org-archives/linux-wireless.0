@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:59450 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754026Ab0C1LzM (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53119 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208Ab0CXWjX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 07:55:12 -0400
-Date: Sun, 28 Mar 2010 14:55:00 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] iwlwifi: range checking issue
-Message-ID: <20100328115500.GX5069@bicker>
+	Wed, 24 Mar 2010 18:39:23 -0400
+Date: Wed, 24 Mar 2010 18:37:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
+Message-ID: <20100324223719.GA32563@tuxdriver.com>
+References: <4BAA73D2.1000301@oracle.com>
+ <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
+ <1269466426.6935.8.camel@jlt3.sipsolutions.net>
+ <1269466948.2446.3216.camel@rchatre-DESK>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1269466948.2446.3216.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IWL_RATE_COUNT is 13 and IWL_RATE_COUNT_LEGACY is 12.
+On Wed, Mar 24, 2010 at 02:42:28PM -0700, reinette chatre wrote:
+> On Wed, 2010-03-24 at 14:33 -0700, Johannes Berg wrote:
+> > On Wed, 2010-03-24 at 17:23 -0400, John W. Linville wrote:
+> > > drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
+> > > drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
+> > > 
+> > > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > ---
+> > >  drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
+> > >  1 files changed, 2 insertions(+), 0 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > > index b6a64d8..2fa30df 100644
+> > > --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > > +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > > @@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+> > >  #define BA_TIMEOUT_CNT (5)
+> > >  #define BA_TIMEOUT_MAX (16)
+> > >  
+> > > +#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
+> > >  /**
+> > >   * iwl_good_ack_health - checks for ACK count ratios, BA timeout
+> > > retries.
+> > 
+> > I thought we had a patch moving it?
+> > 
+> 
+> We do, but it has not been pushed upstream yet. 
+> 
+> John, I'd prefer
+> http://viggo.jf.intel.com/~wifi/repos.git/?p=iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1 
+> 
+> Should we push it upstream asap or can it wait until our next series
+> goes out after all our validation cycles pass?
 
-IWL_RATE_COUNT_LEGACY is the right one here because iwl3945_rates
-doesn't support 60M and also that's how "rates" is defined in
-iwlcore_init_geos() from drivers/net/wireless/iwlwifi/iwl-core.c.
+I can't see that link.  How does the patch differ?
 
-        rates = kzalloc((sizeof(struct ieee80211_rate) * IWL_RATE_COUNT_LEGACY),
-                        GFP_KERNEL);
-
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 54daa38..7d3806a 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1955,7 +1955,7 @@ static void iwl3945_init_hw_rates(struct iwl_priv *priv,
- {
- 	int i;
- 
--	for (i = 0; i < IWL_RATE_COUNT; i++) {
-+	for (i = 0; i < IWL_RATE_COUNT_LEGACY; i++) {
- 		rates[i].bitrate = iwl3945_rates[i].ieee * 5;
- 		rates[i].hw_value = i; /* Rate scaling will work on indexes */
- 		rates[i].hw_value_short = i;
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
