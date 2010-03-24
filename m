@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.jacobs-university.de ([212.201.44.23]:55187 "EHLO
-	hermes.jacobs-university.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753845Ab0CEAfe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 19:35:34 -0500
-Received: from localhost (demetrius4.jacobs-university.de [212.201.44.49])
-	by hermes.jacobs-university.de (Postfix) with ESMTP id 2E881C000D
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Mar 2010 01:25:42 +0100 (CET)
-Received: from hermes.jacobs-university.de ([212.201.44.23])
-	by localhost (demetrius4.jacobs-university.de [212.201.44.32]) (amavisd-new, port 10024)
-	with ESMTP id GDjPJAMbcXit for <linux-wireless@vger.kernel.org>;
-	Fri,  5 Mar 2010 01:25:41 +0100 (CET)
-Received: from exchange.jacobs-university.de (SHUBCAS02.jacobs.jacobs-university.de [10.70.0.123])
-	(using TLSv1 with cipher AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by hermes.jacobs-university.de (Postfix) with ESMTPS id 7E5ACC0002
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Mar 2010 01:25:41 +0100 (CET)
-Message-ID: <4B9024DE.308@jacobs-university.de>
-Date: Thu, 4 Mar 2010 22:23:42 +0100
-From: Darko Makreshanski <d.makreshanski@jacobs-university.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Mesh support for gumstix's wireless (Marvell 88W8385 wireless chip
- with CF interface)
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:49934 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750760Ab0CXPr6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 11:47:58 -0400
+Subject: Re: [PATCH 2/2] iwlwifi: implement disabling/enabling QoS
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1269364886.9689.4.camel@jlt3.sipsolutions.net>
+References: <1269348417-4081-1-git-send-email-sgruszka@redhat.com>
+	 <1269348417-4081-2-git-send-email-sgruszka@redhat.com>
+	 <1269364886.9689.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Wed, 24 Mar 2010 09:44:28 -0700
+Message-Id: <1269449068.22705.7.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+Hi Stanislaw,
+ 
+On Tue, 2010-03-23 at 10:21 -0700, Johannes Berg wrote:
+> On Tue, 2010-03-23 at 13:46 +0100, Stanislaw Gruszka wrote:
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> 
+> This really could use "more" text as to why etc.
+> 
+> > +	if (changes & BSS_CHANGED_QOS) {
+> > +		unsigned long flags;
+> > +
+> > +		spin_lock_irqsave(&priv->lock, flags);
+> > +		priv->qos_data.qos_active = bss_conf->qos_disabled ? 0 : 1;
+> > +		iwl_activate_qos(priv, 1);
+> > +		spin_unlock_irqrestore(&priv->lock, flags);
+> > +	}
+> 
+> This seems alright, but we really need to revisit that since there's a
+> lot of odd logic in iwlwifi that makes some sense based on this now but
+> could probably be simplified now. I'll close with Wey-Yi, she worked on
+> QoS here at some point I think.
+> 
+If I understand correctly, the current implementation has problem, by
+just calling iwl_activate_qos(), it did not have the AC setup correctly,
+take a look at the iwl_reset_qos(), it is the only place initialize the
+table, for STA mode, QoS is de-active by default. iwl_activate_qos()
+only change the qos flag, but did not re-initialize the table to proper
+value. 
 
-I would like to ask a quick question to anybody that is familiar in this 
-area.
+Thanks
+Wey
 
-I would like to know if I can use a mesh networking with the wifi chip 
-used for gumstix (88W8385 with most probably CF interface).
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I am aware that the XO (OLPC) laptops have a Marvell 88W8388 chip (with 
-USB interface) which is used with the libertas_tf driver, has support 
-for mesh networking through open80211s.
-
-Couple of things that I have found out:
-
-1. on the linux-wireless website it is stated that libertas_tf driver 
-supports only 88W8388 driver and libertas driver supports both 88W8385 
-and 88W8388
-2. also at linux-wireless it is also stated that both libertas_tf and 
-libertas are supported for mesh networking
-3. on the open80211s website at the drivers page only the libertas_tf is 
-present.
-4. i have read somewhere that the libertas driver is not based on the 
-mac80211 layer, so it cannot work with open80211s.
-
-What I would like to ask:
-
-1. will mesh networking work with the 88W8385 chip on gumstix with the 
-libertas driver?
-2. if yes, is it open80211s or something else?
-3. if not, is it possible to make the libertas_tf driver work with this 
-chip?
-
-Best regards,
-Darko
