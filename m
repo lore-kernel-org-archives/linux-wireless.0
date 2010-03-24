@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:53745 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756486Ab0CCUFO convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:52739 "EHLO
+	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756822Ab0CXUmx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 15:05:14 -0500
-Received: by bwz1 with SMTP id 1so234473bwz.21
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 12:05:13 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+	Wed, 24 Mar 2010 16:42:53 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ipw3945-devel] iwl4965: 11a channels disabled in current wireless-testing
-Date: Wed, 3 Mar 2010 21:05:08 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-References: <201002281534.11656.helmut.schaa@googlemail.com> <201003032008.47379.helmut.schaa@googlemail.com> <20100303192946.GC23920@tuxdriver.com>
-In-Reply-To: <20100303192946.GC23920@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003032105.08938.helmut.schaa@googlemail.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 1/2] rt2x00: Fix typo in RF register programming of rt2800.
+Date: Wed, 24 Mar 2010 21:42:36 +0100
+Message-Id: <1269463357-32563-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1269463357-32563-1-git-send-email-gwingerde@gmail.com>
+References: <1269463357-32563-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch 03 März 2010 schrieb John W. Linville:
-> On Wed, Mar 03, 2010 at 08:08:47PM +0100, Helmut Schaa wrote:
-> > Am Mittwoch 03 März 2010 schrieb reinette chatre:
-> 
-> > > $ iw reg get
-> > > country 00:
-> > > 	(2402 - 2472 @ 40), (3, 20)
-> > > 	(2457 - 2482 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS
-> > > 	(2474 - 2494 @ 20), (3, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
-> > > 	(5170 - 5250 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-> > > 	(5735 - 5835 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-> > 
-> > Oops, that's what I get:
-> > 
-> > country 00:
-> >         (2402 - 2472 @ 40), (3, 20)
-> > 
-> > Luis, is the world reg domain encoded in cfg80211 or in the regdb? Maybe
-> > the regdb is too old or something like that?
-> 
-> Should be both -- start w/ the one encoded in the kernel and request
-> an update from userland if it is available.
-> 
-> Hth!
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-It does indeed. I moved crda out of the way so that it cannot get called
-anymore and after loading cfg80211, mac80211 and iwlagn I had all the
-channels set up the same way as Reinette (and that is how I expected it to
-be).
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 18d4d8e..326fce7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -812,9 +812,9 @@ static void rt2800_config_channel_rt3x(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_rfcsr_write(rt2x00dev, 24,
+ 			      rt2x00dev->calibration[conf_is_ht40(conf)]);
+ 
+-	rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
++	rt2800_rfcsr_read(rt2x00dev, 7, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
+-	rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
++	rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
+ }
+ 
+ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+-- 
+1.7.0.1
 
-So I guess it's my regdb that's outdated.
-
-Thanks,
-Helmut
