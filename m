@@ -1,85 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18225 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:45632 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753353Ab0CCPyt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 10:54:49 -0500
-Date: Wed, 3 Mar 2010 16:54:34 +0100
-From: Jiri Pirko <jpirko@redhat.com>
-To: "Frank W. Miller" <frankwmiller@frankwmiller.net>
-Cc: tcpdump-workers@lists.tcpdump.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [tcpdump-workers] Current wireless-testing breaks libpcap:
- mr_alen should be set
-Message-ID: <20100303155434.GI2961@psychotron.lab.eng.brq.redhat.com>
-References: <1267578048.14049.11.camel@mj>
- <A5B3F074CA554D3E95CFD349116E4D5B@FrankWMillerPC>
+	id S1750955Ab0CXHwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 03:52:16 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 00:52:16 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <A5B3F074CA554D3E95CFD349116E4D5B@FrankWMillerPC>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19369.51549.75537.268703@gargle.gargle.HOWL>
+Date: Wed, 24 Mar 2010 13:42:13 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k_htc: Fix symbol collision with ath9k
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wed, Mar 03, 2010 at 04:31:07PM CET, frankwmiller@frankwmiller.net wrote:
->
->Would this be preventing pcap_inject() from working say in kernel 2.6.31
->(stock FC12 kernel)?
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |   22 +++++++++++-----------
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   16 ++++++++--------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   14 +++++++-------
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    4 ++--
+ 4 files changed, 28 insertions(+), 28 deletions(-)
 
-Nope. The patch went in just recently.
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index ab09fe3..7770649 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -41,7 +41,7 @@
+ 	((((u32)(_h)) << 22) | (((u32)(_l)) >> 10))
+ 
+ extern struct ieee80211_ops ath9k_htc_ops;
+-extern int modparam_nohwcrypt;
++extern int htc_modparam_nohwcrypt;
+ 
+ enum htc_phymode {
+ 	HTC_MODE_AUTO		= 0,
+@@ -408,8 +408,8 @@ void ath9k_tx_cleanup(struct ath9k_htc_priv *priv);
+ bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
+ 			 enum ath9k_tx_queue_subtype qtype);
+ int get_hw_qnum(u16 queue, int *hwq_map);
+-int ath_txq_update(struct ath9k_htc_priv *priv, int qnum,
+-		   struct ath9k_tx_queue_info *qinfo);
++int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
++		       struct ath9k_tx_queue_info *qinfo);
+ 
+ int ath9k_rx_init(struct ath9k_htc_priv *priv);
+ void ath9k_rx_cleanup(struct ath9k_htc_priv *priv);
+@@ -427,15 +427,15 @@ void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug);
+ int ath9k_htc_resume(struct htc_target *htc_handle);
+ #endif
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-int ath9k_debug_create_root(void);
+-void ath9k_debug_remove_root(void);
+-int ath9k_init_debug(struct ath_hw *ah);
+-void ath9k_exit_debug(struct ath_hw *ah);
++int ath9k_htc_debug_create_root(void);
++void ath9k_htc_debug_remove_root(void);
++int ath9k_htc_init_debug(struct ath_hw *ah);
++void ath9k_htc_exit_debug(struct ath_hw *ah);
+ #else
+-static inline int ath9k_debug_create_root(void) { return 0; };
+-static inline void ath9k_debug_remove_root(void) {};
+-static inline int ath9k_init_debug(struct ath_hw *ah) { return 0; };
+-static inline void ath9k_exit_debug(struct ath_hw *ah) {};
++static inline int ath9k_htc_debug_create_root(void) { return 0; };
++static inline void ath9k_htc_debug_remove_root(void) {};
++static inline int ath9k_htc_init_debug(struct ath_hw *ah) { return 0; };
++static inline void ath9k_htc_exit_debug(struct ath_hw *ah) {};
+ #endif /* CONFIG_ATH9K_HTC_DEBUGFS */
+ 
+ #endif /* HTC_H */
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a653dec..10c8760 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -24,8 +24,8 @@ static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
+ module_param_named(debug, ath9k_debug, uint, 0);
+ MODULE_PARM_DESC(debug, "Debugging mask");
+ 
+-int modparam_nohwcrypt;
+-module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
++int htc_modparam_nohwcrypt;
++module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, 0444);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
+ 
+ #define CHAN2G(_freq, _idx)  { \
+@@ -93,7 +93,7 @@ static int ath9k_htc_wait_for_target(struct ath9k_htc_priv *priv)
+ 
+ static void ath9k_deinit_priv(struct ath9k_htc_priv *priv)
+ {
+-	ath9k_exit_debug(priv->ah);
++	ath9k_htc_exit_debug(priv->ah);
+ 	ath9k_hw_deinit(priv->ah);
+ 	tasklet_kill(&priv->wmi_tasklet);
+ 	tasklet_kill(&priv->rx_tasklet);
+@@ -474,7 +474,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv, u16 devid)
+ 		goto err_hw;
+ 	}
+ 
+-	ret = ath9k_init_debug(ah);
++	ret = ath9k_htc_init_debug(ah);
+ 	if (ret) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to create debugfs files\n");
+@@ -492,7 +492,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv, u16 devid)
+ 	return 0;
+ 
+ err_queues:
+-	ath9k_exit_debug(ah);
++	ath9k_htc_exit_debug(ah);
+ err_debug:
+ 	ath9k_hw_deinit(ah);
+ err_hw:
+@@ -678,7 +678,7 @@ static int __init ath9k_htc_init(void)
+ {
+ 	int error;
+ 
+-	error = ath9k_debug_create_root();
++	error = ath9k_htc_debug_create_root();
+ 	if (error < 0) {
+ 		printk(KERN_ERR
+ 			"ath9k_htc: Unable to create debugfs root: %d\n",
+@@ -698,7 +698,7 @@ static int __init ath9k_htc_init(void)
+ 	return 0;
+ 
+ err_usb:
+-	ath9k_debug_remove_root();
++	ath9k_htc_debug_remove_root();
+ err_dbg:
+ 	return error;
+ }
+@@ -707,7 +707,7 @@ module_init(ath9k_htc_init);
+ static void __exit ath9k_htc_exit(void)
+ {
+ 	ath9k_hif_usb_exit();
+-	ath9k_debug_remove_root();
++	ath9k_htc_debug_remove_root();
+ 	printk(KERN_INFO "ath9k_htc: Driver unloaded\n");
+ }
+ module_exit(ath9k_htc_exit);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 3184a2a..20a2c13 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -595,7 +595,7 @@ static const struct file_operations fops_recv = {
+ 	.owner = THIS_MODULE
+ };
+ 
+-int ath9k_init_debug(struct ath_hw *ah)
++int ath9k_htc_init_debug(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+@@ -630,11 +630,11 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 	return 0;
+ 
+ err:
+-	ath9k_exit_debug(ah);
++	ath9k_htc_exit_debug(ah);
+ 	return -ENOMEM;
+ }
+ 
+-void ath9k_exit_debug(struct ath_hw *ah)
++void ath9k_htc_exit_debug(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+@@ -645,7 +645,7 @@ void ath9k_exit_debug(struct ath_hw *ah)
+ 	debugfs_remove(priv->debug.debugfs_phy);
+ }
+ 
+-int ath9k_debug_create_root(void)
++int ath9k_htc_debug_create_root(void)
+ {
+ 	ath9k_debugfs_root = debugfs_create_dir(KBUILD_MODNAME, NULL);
+ 	if (!ath9k_debugfs_root)
+@@ -654,7 +654,7 @@ int ath9k_debug_create_root(void)
+ 	return 0;
+ }
+ 
+-void ath9k_debug_remove_root(void)
++void ath9k_htc_debug_remove_root(void)
+ {
+ 	debugfs_remove(ath9k_debugfs_root);
+ 	ath9k_debugfs_root = NULL;
+@@ -1358,7 +1358,7 @@ static int ath9k_htc_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		  queue, qnum, params->aifs, params->cw_min,
+ 		  params->cw_max, params->txop);
+ 
+-	ret = ath_txq_update(priv, qnum, &qi);
++	ret = ath_htc_txq_update(priv, qnum, &qi);
+ 	if (ret)
+ 		ath_print(common, ATH_DBG_FATAL, "TXQ Update failed\n");
+ 
+@@ -1377,7 +1377,7 @@ static int ath9k_htc_set_key(struct ieee80211_hw *hw,
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	int ret = 0;
+ 
+-	if (modparam_nohwcrypt)
++	if (htc_modparam_nohwcrypt)
+ 		return -ENOSPC;
+ 
+ 	mutex_lock(&priv->mutex);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index dba22d3..ac66cf0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -36,8 +36,8 @@ int get_hw_qnum(u16 queue, int *hwq_map)
+ 	}
+ }
+ 
+-int ath_txq_update(struct ath9k_htc_priv *priv, int qnum,
+-		   struct ath9k_tx_queue_info *qinfo)
++int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
++		       struct ath9k_tx_queue_info *qinfo)
+ {
+ 	struct ath_hw *ah = priv->ah;
+ 	int error = 0;
+-- 
+1.7.0.3
 
->
->Thanks,
->FM
->
->
->> -----Original Message-----
->> From: tcpdump-workers-owner@lists.tcpdump.org [mailto:tcpdump-workers-
->> owner@lists.tcpdump.org] On Behalf Of Pavel Roskin
->> Sent: Tuesday, March 02, 2010 6:01 PM
->> To: linux-wireless@vger.kernel.org; netdev@vger.kernel.org; tcpdump-
->> workers@lists.tcpdump.org
->> Cc: Jiri Pirko
->> Subject: [tcpdump-workers] Current wireless-testing breaks libpcap:
->> mr_alen should be set
->> 
->> Hello!
->> 
->> The current wireless-testing appears to have some non-wireless bits from
->> the upcoming Linux 2.6.34.  As a result, libpcap and all capture
->> programs that use it are broken.
->> 
->> This patch to libpcap helps:
->> 
->> --- a/pcap-linux.c
->> +++ b/pcap-linux.c
->> @@ -1563,6 +1563,7 @@ live_open_new(pcap_t *handle, const char
->>  			memset(&mr, 0, sizeof(mr));
->>  			mr.mr_ifindex = handle->md.ifindex;
->>  			mr.mr_type    = PACKET_MR_PROMISC;
->> +			mr.mr_alen    = 6;
->>  			if (setsockopt(sock_fd, SOL_PACKET,
->>  				PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) ==
->-1)
->>  			{
->> 
->> libpcap git doesn't have the fix yet.
->> 
->> The breakage must be coming from the commit 914c8ad2 by Jiri Pirko to
->> net/packet/af_packet.c
->> 
->> I think it's very unhelpful to introduce patches that break significant
->> userspace functionality without giving the affected programs an advance
->> warning.
->> 
->> Also, pulling bleeding edge stuff into wireless-testing before rc1
->> appears to be either a mistake or a bad decision.
->> 
->> Sorry for cross-post, but it's an urgent issue.  Repliers are encouraged
->> to trim the recipient list as necessary.
->> 
->> --
->> Regards,
->> Pavel Roskin
->> -
->> This is the tcpdump-workers list.
->> Visit https://cod.sandelman.ca/ to unsubscribe.
->
