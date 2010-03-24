@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15811 "EHLO mail.atheros.com"
+Received: from mga02.intel.com ([134.134.136.20]:39658 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754519Ab0CWUxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 16:53:48 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Mar 2010 13:53:48 -0700
-Date: Tue, 23 Mar 2010 13:53:46 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	id S1750783Ab0CXVma (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 17:42:30 -0400
+Subject: Re: [PATCH] iwlwifi: fix build error for CONFIG_IWLAGN=n
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH v2 00/20] ath9k_hw: ar93xx initial abstraction work
-Message-ID: <20100323205346.GC3325@tux>
-References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
- <43e72e891003171532x5e9893dfmfc1fb469a638d76e@mail.gmail.com>
- <43e72e891003171550i27531f3bl4e4692494ec36b8@mail.gmail.com>
- <43e72e891003171853v7458802bgafcf060d75e240a7@mail.gmail.com>
- <20100323204401.GA3067@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20100323204401.GA3067@tuxdriver.com>
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+In-Reply-To: <1269466426.6935.8.camel@jlt3.sipsolutions.net>
+References: <4BAA73D2.1000301@oracle.com>
+	 <1269465799-19060-1-git-send-email-linville@tuxdriver.com>
+	 <1269466426.6935.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Mar 2010 14:42:28 -0700
+Message-ID: <1269466948.2446.3216.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 23, 2010 at 01:44:01PM -0700, John W. Linville wrote:
-> On Wed, Mar 17, 2010 at 06:53:06PM -0700, Luis R. Rodriguez wrote:
-> > On Wed, Mar 17, 2010 at 3:50 PM, Luis R. Rodriguez
-> > <lrodriguez@atheros.com> wrote:
-> > > On Wed, Mar 17, 2010 at 3:32 PM, Luis R. Rodriguez
-> > > <lrodriguez@atheros.com> wrote:
-> > >> On Wed, Mar 17, 2010 at 3:27 PM, Luis R. Rodriguez
-> > >> <lrodriguez@atheros.com> wrote:
-> > >>> Here's what I have so far, this is rebased on top of Senthil's patches
-> > >>> for ath9k_htc posted today. Just tested it on my AR9280, it doesn't
-> > >>> break anything.
-> > >>
-> > >> BTW the new ath9k_htc series + this series can be downloaded in one file from:
-> > >>
-> > >> http://bombadil.infradead.org/~mcgrof/tmp/all-ar93xx-03-17-v3.patch
-> > >
-> > > bleh, I did not use -M here... let me resend with that for the renames.
+On Wed, 2010-03-24 at 14:33 -0700, Johannes Berg wrote:
+> On Wed, 2010-03-24 at 17:23 -0400, John W. Linville wrote:
+> > drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_good_ack_health':
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:647: error: 'struct iwl_priv' has no member named '_agn'
 > > 
-> > On second thought John -- please hold off on merging these new ar93xx
-> > abstraction patches, we are trying to mathematically prove if ar9002
-> > register definitions are the same as the ar9003 ones and if so well
-> > this is all pointless :D
+> > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  drivers/net/wireless/iwlwifi/iwl-rx.c |    2 ++
+> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > index b6a64d8..2fa30df 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+> > @@ -621,6 +621,7 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+> >  #define BA_TIMEOUT_CNT (5)
+> >  #define BA_TIMEOUT_MAX (16)
+> >  
+> > +#if defined(CONFIG_IWLAGN) || defined(CONFIG_IWLAGN_MODULE)
+> >  /**
+> >   * iwl_good_ack_health - checks for ACK count ratios, BA timeout
+> > retries.
 > 
-> Did this get resolved?
+> I thought we had a patch moving it?
+> 
 
-Yeah but we're just holding off on them for now, we'll send patch bombs
-next week I think. But please do take the ath9k_htc stuff.
+We do, but it has not been pushed upstream yet. 
 
-  Luis
+John, I'd prefer
+http://viggo.jf.intel.com/~wifi/repos.git/?p=iwlwifi-2.6.git;a=commit;h=bc745eb7d28285f3b437c00253bf01ef501eb3f1 
+
+Should we push it upstream asap or can it wait until our next series
+goes out after all our validation cycles pass?
+
+Reinette
+
+
