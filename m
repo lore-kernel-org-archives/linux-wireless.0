@@ -1,34 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18794 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750885Ab0CARqz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 12:46:55 -0500
-Subject: Re: iwl4965: 11a channels disabled in current wireless-testing
-From: reinette chatre <reinette.chatre@intel.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <201002281534.11656.helmut.schaa@googlemail.com>
-References: <201002281534.11656.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 01 Mar 2010 09:46:55 -0800
-Message-ID: <1267465615.2253.159.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from Cpsmtpm-eml106.kpnxchange.com ([195.121.3.10]:63127 "EHLO
+	CPSMTPM-EML106.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932177Ab0CXS1N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 14:27:13 -0400
+To: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 00/07] net: remove trailing spaces in messages
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Corey Thomas <coreythomas@charter.net>,
+	libertas-dev@lists.infradead.org
+From: Frans Pop <elendil@planet.nl>
+Date: Wed, 24 Mar 2010 19:27:09 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201003241927.12434.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-02-28 at 06:34 -0800, Helmut Schaa wrote:
-> have there been any recent changes to the regulatory stuff, especially
-> in conjunction with iwlagn?
-> 
-> Because with wireless-testing I get all 11a channels disabled by default
-> and the same for channels 12 & 13 in the g-band.
+This is the third patchset to remove trailing spaces in kernel messages. 
+Patches in this set cover wireless code.
 
-This could be related to a change in the default regulatory domain. It
-used to be US, but now it is world, which is more restrictive. You can
-modify your regulatory domain using "iw reg set <domain>"
+Note that the last patch for libertas changes a debugfs header and not 
+actually a message.
 
-Reinette
+Patches have been rebased against current net-next.
 
+Benefits are:
+- general cleanup and consistency
+- minor reduction in kernel size and user's log file size
+- reduced annoyance for people writing logcheck rules
 
+Shortstat:
+ 30 files changed, 124 insertions(+), 124 deletions(-)
+
+Frans Pop (7):
+      wireless: remove trailing space in messages
+      wireless/ath: remove trailing space in messages
+      wireless/ipw2x00: remove trailing space in messages
+      wireless/iwlwifi: remove trailing space in messages
+      wireless/prism54: remove trailing space in messages
+      wireless/raylink: remove trailing space in messages
+      wireless/libertas: remove trailing space in debugfs header
+
+Cheers,
+FJP
