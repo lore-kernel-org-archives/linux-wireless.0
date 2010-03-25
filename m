@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f185.google.com ([209.85.210.185]:48107 "EHLO
-	mail-yx0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752070Ab0CEEJ3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 23:09:29 -0500
-Received: by yxe15 with SMTP id 15so1853455yxe.25
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Mar 2010 20:09:29 -0800 (PST)
-Message-ID: <4B9083F6.5080503@lwfinger.net>
-Date: Thu, 04 Mar 2010 22:09:26 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Gus Wirth <gwirth79@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8187 coverage class
-References: <4B906A81.6090703@gmail.com>
-In-Reply-To: <4B906A81.6090703@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:40732 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752235Ab0CYUoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 16:44:34 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org
+Subject: [PATCH 2/3] iwlwifi: counting number of tfds can be free for 4965
+Date: Thu, 25 Mar 2010 13:44:28 -0700
+Message-Id: <1269549869-19162-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1269549869-19162-1-git-send-email-reinette.chatre@intel.com>
+References: <1269549869-19162-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/04/2010 08:20 PM, Gus Wirth wrote:
-> I'm trying to implement a first go at getting coverage class working for
-> a Realtek RTL8187L chip similar to the way it is in ath5k. I know I need
-> to change the ack timeout and the slot times but I can't quite decipher
-> the register use. I can see some hints in the function rtl8187_conf_erp
-> but that doesn't seem enough.
-> 
-> It seems that the values for SLOT, DIFS and EIFS aren't directly
-> converted to microseconds, so I'm not sure how those values were arrived at.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Those values come from the vendor driver where they are not explained. The
-difference between short and long slot values may be instructive.
+Forget one hunk in 4965 during "iwlwifi: error checking for number of tfds
+in queue" patch.
 
-Larry
+Reported-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+CC: stable@kernel.org
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 1bd2cd8..83c52a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2041,16 +2041,14 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 				   tx_resp->failure_frame);
+ 
+ 		freed = iwl_tx_queue_reclaim(priv, txq_id, index);
+-		if (qc && likely(sta_id != IWL_INVALID_STATION))
+-			priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
++		iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
+ 
+ 		if (priv->mac80211_registered &&
+ 		    (iwl_queue_space(&txq->q) > txq->q.low_mark))
+ 			iwl_wake_queue(priv, txq_id);
+ 	}
+ 
+-	if (qc && likely(sta_id != IWL_INVALID_STATION))
+-		iwl_txq_check_empty(priv, sta_id, tid, txq_id);
++	iwl_txq_check_empty(priv, sta_id, tid, txq_id);
+ 
+ 	if (iwl_check_bits(status, TX_ABORT_REQUIRED_MSK))
+ 		IWL_ERR(priv, "TODO:  Implement Tx ABORT REQUIRED!!!\n");
+-- 
+1.6.3.3
+
