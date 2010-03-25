@@ -1,91 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:35399 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933489Ab0CMKYt (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:14808 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752506Ab0CYFtV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Mar 2010 05:24:49 -0500
-Received: by bwz1 with SMTP id 1so1697297bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Mar 2010 02:24:48 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Jan Martinek <honza@dp.fce.vutbr.cz>
-Subject: Re: ISL3890, master mode, prism54 -> p54pci regression
-Date: Sat, 13 Mar 2010 11:26:57 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <4B9B43B0.1030801@dp.fce.vutbr.cz>
-In-Reply-To: <4B9B43B0.1030801@dp.fce.vutbr.cz>
+	Thu, 25 Mar 2010 01:49:21 -0400
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0296346159
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 14:49:19 +0900 (JST)
+Subject: [PATCH 03/10] ath5k: optimize ath5k_hw_calibration_poll
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
+	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com
+Date: Thu, 25 Mar 2010 14:49:14 +0900
+Message-ID: <20100325054914.10697.73582.stgit@tt-desk>
+In-Reply-To: <20100325054603.10697.48915.stgit@tt-desk>
+References: <20100325054603.10697.48915.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201003131126.57729.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 13 March 2010 08:50:08 Jan Martinek wrote:
-> Hello,
-> 
-> I have been using prism54 driver and my PCI wireless card was working in 
-> Master mode. After upgrade to kernel-2.6.32 there is no prism54 driver 
-> so I switched to p54pci. The problem is that I cannot set the Master 
-> mode anymore, I get this error:
-> 
-> # iwconfig wlan0 mode master
-> Error for wireless request "Set Mode" (8B06) :
->      SET failed on device wlan0 ; Invalid argument.
-> 
-> This is my wireless card:
-> 
-> 03:05.0 Network controller: Intersil Corporation ISL3890 [Prism GT/Prism 
-> Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
-> 
-> this is my kernel version: kernel-2.6.32.9-70.fc12.x86_64
-> And here is what I found in dmesg:
-> 
-> cfg80211: World regulatory domain updated:
-> 	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> 	(2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> 	(2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> 	(2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> 	(5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> 	(5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> p54pci 0000:03:05.0: PCI INT A -> GSI 20 (level, low) -> IRQ 20
-> p54pci 0000:03:05.0: firmware: requesting isl3886pci
-> phy0: p54 detected a LM86 firmware
-> p54: rx_mtu reduced from 3240 to 2376
-> phy0: FW rev 2.13.12.0 - Softmac protocol 5.9
-> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-> phy0: hwaddr 00:60:b3:1c:41:e5, MAC:isl3890 RF:Frisbee
-> phy0: Selected rate control algorithm 'minstrel'
-> Registered led device: p54-phy0::assoc
-> Registered led device: p54-phy0::tx
-> Registered led device: p54-phy0::rx
-> Registered led device: p54-phy0::radio
-> p54pci 0000:03:05.0: is registered as 'phy0'
-> cfg80211: Calling CRDA for country: CZ
-> cfg80211: Regulatory domain changed to country: CZ
-> 	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> 	(2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> 	(5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2301 mBm)
-> 	(5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2301 mBm)
-> 	(5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 3000 mBm)
-> 
-> Is there any possibility to set the master mode?
+Optimize ath5k_hw_calibration_poll() since it is called on every singe
+interrupt.
 
-The mac80211 stack _outsourced_ most of the 802.11 management code,
-so it can't operate in master mode all by itself.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    2 +-
+ drivers/net/wireless/ath/ath5k/phy.c   |   20 ++++++--------------
+ 2 files changed, 7 insertions(+), 15 deletions(-)
 
-Therefore you'll need hostapd.
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index d84ccde..3f56d9e 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1100,7 +1100,7 @@ struct ath5k_hw {
+ 	s32			ah_noise_floor;
+ 
+ 	/* Calibration timestamp */
+-	unsigned long		ah_cal_tstamp;
++	unsigned long		ah_cal_next_full;
+ 
+ 	/* Calibration mask */
+ 	u8			ah_cal_mask;
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index cbdc511..60241ad 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1105,22 +1105,14 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
+ void
+ ath5k_hw_calibration_poll(struct ath5k_hw *ah)
+ {
+-	/* Calibration interval in jiffies */
+-	unsigned long cal_intval;
+-
+-	cal_intval = msecs_to_jiffies(ATH5K_TUNE_CALIBRATION_INTERVAL_FULL);
+-
+-	/* Initialize timestamp if needed */
+-	if (!ah->ah_cal_tstamp)
+-		ah->ah_cal_tstamp = jiffies;
+-
+-	/* For now we always do full calibration
+-	 * Mark software interrupt mask and fire software
+-	 * interrupt (bit gets auto-cleared) */
+-	if (time_is_before_eq_jiffies(ah->ah_cal_tstamp + cal_intval)) {
+-		ah->ah_cal_tstamp = jiffies;
++	if (time_is_before_eq_jiffies(ah->ah_cal_next_full)) {
++		ah->ah_cal_next_full = jiffies +
++			msecs_to_jiffies(ATH5K_TUNE_CALIBRATION_INTERVAL_FULL);
+ 		tasklet_schedule(&ah->ah_sc->calib);
+ 	}
++	/* we could use SWI to generate enough interrupts to meet our
++	 * calibration interval requirements, if necessary:
++	 * AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI); */
+ }
+ 
+ static int sign_extend(int val, const int nbits)
 
-We have an up-to-date wiki entry (+ some WPA(2) examples):
-http://wireless.kernel.org/en/users/Documentation/hostapd
-
-
-BTW: There are also back-ports of the mac80211-stack (+ drivers)
-(aka compat-wireless). So, if you run into weird AP problems,
-you know where to look for updates.
-
-http://linuxwireless.org/en/users/Download
-
-Regards,
-	Chr
-
-PS: What card do you have? Is it a Z-Com XG-600?
