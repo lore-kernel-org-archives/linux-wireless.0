@@ -1,102 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26850 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753132Ab0CQV1V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 17:27:21 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 14:27:21 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 09/12] ath9k_hw: always set the core clock for AR9271
-Date: Wed, 17 Mar 2010 14:25:22 +0530
-Message-ID: <1268816125-16173-10-git-send-email-senthilkumar@atheros.com>
-In-Reply-To: <1268816125-16173-9-git-send-email-senthilkumar@atheros.com>
-References: <1268816125-16173-1-git-send-email-senthilkumar@atheros.com>
- <1268816125-16173-2-git-send-email-senthilkumar@atheros.com>
- <1268816125-16173-3-git-send-email-senthilkumar@atheros.com>
- <1268816125-16173-4-git-send-email-senthilkumar@atheros.com>
- <1268816125-16173-5-git-send-email-senthilkumar@atheros.com>
- <1268816125-16173-6-git-send-email-senthilkumar@atheros.com>
- <1268816125-16173-7-git-send-email-senthilkumar@atheros.com>
- <1268816125-16173-8-git-send-email-senthilkumar@atheros.com>
- <1268816125-16173-9-git-send-email-senthilkumar@atheros.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:59635 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754329Ab0CYBQV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 21:16:21 -0400
+Received: by pva18 with SMTP id 18so516697pva.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 18:16:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20100324120645.5b43757c.nledovskih@mail.ru>
+References: <20100324120645.5b43757c.nledovskih@mail.ru>
+Date: Wed, 24 Mar 2010 18:16:19 -0700
+Message-ID: <445f43ac1003241816p2d00b79br224a155b605ce7ac@mail.gmail.com>
+Subject: Re: Mesh mode broken since 2.6.34-rc1
+From: Javier Cardona <javier@cozybit.com>
+To: =?KOI8-R?B?7MXEz9fTy8nIIO7Jy8/Mwcog98HMxdLYxdfJ3g==?=
+	<nledovskih@mail.ru>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	devel@lists.open80211s.org,
+	"Porsch, Marco" <marco.porsch@siemens.com>,
+	"steve.derosier" <steve.derosier@gmail.com>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith <Sujith.Manoharan@atheros.com>
+Nick,
 
-When initializing the PLL on AR9271 we always need
-to set the core clock to 117MHz. While at it remove
-the baud rate settings for the serial device on the
-AR9271, the default settings work well unless you
-want to customize it.
+2010/3/24 Ледовских Николай Валерьевич <nledovskih@mail.ru>:
+> Mesh mode does not work any more. I have some x86 MPs with 2.6.33.1, which work fine.
+> But there are establishment problems with 2.6.34-rc1.
+> The peering status changes between LISTEN, OPN_SNT and HOLDING, but does not reach ESTAB.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   34 ++--------------------------------
- 1 files changed, 2 insertions(+), 32 deletions(-)
+Yes, confirmed on our testbed that wireless-testing commit
+60b341b778cc2929df16c0a504c91621b3c6a4ad is good.  We'll investigate.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 023c38b..5bc5f5f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1006,22 +1006,6 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_TXOP_12_15, 0xFFFFFFFF);
- }
- 
--static void ath9k_hw_change_target_baud(struct ath_hw *ah, u32 freq, u32 baud)
--{
--	u32 lcr;
--	u32 baud_divider = freq * 1000 * 1000 / 16 / baud;
--
--	lcr = REG_READ(ah , 0x5100c);
--	lcr |= 0x80;
--
--	REG_WRITE(ah, 0x5100c, lcr);
--	REG_WRITE(ah, 0x51004, (baud_divider >> 8));
--	REG_WRITE(ah, 0x51000, (baud_divider & 0xff));
--
--	lcr &= ~0x80;
--	REG_WRITE(ah, 0x5100c, lcr);
--}
--
- static void ath9k_hw_init_pll(struct ath_hw *ah,
- 			      struct ath9k_channel *chan)
- {
-@@ -1087,22 +1071,8 @@ static void ath9k_hw_init_pll(struct ath_hw *ah,
- 
- 	/* Switch the core clock for ar9271 to 117Mhz */
- 	if (AR_SREV_9271(ah)) {
--		if ((pll == 0x142c) || (pll == 0x2850) ) {
--			udelay(500);
--			/* set CLKOBS to output AHB clock */
--			REG_WRITE(ah, 0x7020, 0xe);
--			/*
--			 * 0x304: 117Mhz, ahb_ratio: 1x1
--			 * 0x306: 40Mhz, ahb_ratio: 1x1
--			 */
--			REG_WRITE(ah, 0x50040, 0x304);
--			/*
--			 * makes adjustments for the baud dividor to keep the
--			 * targetted baud rate based on the used core clock.
--			 */
--			ath9k_hw_change_target_baud(ah, AR9271_CORE_CLOCK,
--						    AR9271_TARGET_BAUD_RATE);
--		}
-+		udelay(500);
-+		REG_WRITE(ah, 0x50040, 0x304);
- 	}
- 
- 	udelay(RTC_PLL_SETTLE_DELAY);
+Thanks,
+
+Javier
+
+
 -- 
-1.6.4.2
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
