@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:47319 "EHLO sh.osrg.net"
+Received: from mga14.intel.com ([143.182.124.37]:40732 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755609Ab0C2CEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 22:04:24 -0400
-Date: Mon, 29 Mar 2010 11:04:04 +0900
-To: ben@decadent.org.uk
-Cc: fujita.tomonori@lab.ntt.co.jp, bzolnier@gmail.com, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rt28xx: Make PCI_{MAP,UNMAP}_SINGLE type-safe
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-In-Reply-To: <1269827928.8653.307.camel@localhost>
-References: <1269822285.8653.251.camel@localhost>
-	<20100329105129Y.fujita.tomonori@lab.ntt.co.jp>
-	<1269827928.8653.307.camel@localhost>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Message-Id: <20100329110339P.fujita.tomonori@lab.ntt.co.jp>
+	id S1751746Ab0CYUod (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 16:44:33 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/3] iwlwifi fixes for 2.6.34 and stable
+Date: Thu, 25 Mar 2010 13:44:26 -0700
+Message-Id: <1269549869-19162-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 29 Mar 2010 02:58:48 +0100
-Ben Hutchings <ben@decadent.org.uk> wrote:
+We include three fixes. iwlwifi's regulatory information was not handled
+correctly due to a regression introduced a long time ago by "cfg80211: convert bools into
+flags". A recent patch "iwlwifi: error checking for number of tfds in
+queue" that was included as a fix missed some hunks, which are
+corrected here. The third patch fixes an issue with high CPU utilization
+due to a high number of interrupts per second that are not cleared
+properly.
 
-> On Mon, 2010-03-29 at 10:52 +0900, FUJITA Tomonori wrote:
-> > On Mon, 29 Mar 2010 01:24:45 +0100
-> > Ben Hutchings <ben@decadent.org.uk> wrote:
-> > 
-> > > To avoid recurrence of bugs such as <http://bugs.debian.org/575726>,
-> > > change the type of the first parameter to linux_pci_{map,unmap}_single()
-> > > from void * to struct rt_rtmp_adapter *.  Also do not define the macros
-> > > PCI_{MAP,UNMAP}_SINGLE() when building the rt2870sta driver; they are
-> > > not used and if they were that would be a bug.
-> > > 
-> > > Signed-off-by: Ben Hutchings <ben@decadent.org.uk> 
-> > > ---
-> > >  drivers/staging/rt2860/rt_linux.h    |   14 +++++---------
-> > >  drivers/staging/rt2860/rt_pci_rbus.c |   12 ++++--------
-> > >  2 files changed, 9 insertions(+), 17 deletions(-)
-> > 
-> > I think using dma_map_single directly instead of inventing a wrapper
-> > function make the code more readable.
-> 
-> These functions are not quite simple wrappers, unfortunately.  So while
-> I think that is worth doing it is a separate change.
+These patches are also available from wireless-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-Well, the current wrapper functions looks terrible. Needs to fix them
-before moving the driver out of the staging anyway, I think.
+Reinette Chatre (1):
+  iwlwifi: fix regulatory
+
+Shanyu Zhao (1):
+  iwlwifi: clear unattended interrupts in tasklet
+
+Wey-Yi Guy (1):
+  iwlwifi: counting number of tfds can be free for 4965
+
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    6 ++----
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   12 ++++++++++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 3 files changed, 13 insertions(+), 7 deletions(-)
+
