@@ -1,72 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757759Ab0CaQhq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 12:37:46 -0400
-Subject: Re: [PATCH 1/2 v3] mac80211: Handle mesh action frames in
- ieee80211_rx_h_action
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, Steve Derosier <steve@cozybit.com>,
-	devel@lists.open80211s.org
-In-Reply-To: <1269885621-10257-1-git-send-email-javier@cozybit.com>
-References: <1269844239.4131.3.camel@jlt3.sipsolutions.net>
-	 <1269885621-10257-1-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Mar 2010 18:37:41 +0200
-Message-ID: <1270053461.16210.40.camel@jlt3.sipsolutions.net>
+Received: from lo.gmane.org ([80.91.229.12]:60668 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754329Ab0CYBWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Mar 2010 21:22:34 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1NubmK-0002k3-0U
+	for linux-wireless@vger.kernel.org; Thu, 25 Mar 2010 02:22:32 +0100
+Received: from p54A77B8A.dip.t-dialin.net ([84.167.123.138])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 02:22:32 +0100
+Received: from m1kes by p54A77B8A.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 02:22:32 +0100
+To: linux-wireless@vger.kernel.org
+From: Michael Stahn <m1kes@web.de>
+Subject: Re: [Proposal]TX flags
+Date: Thu, 25 Mar 2010 01:22:16 +0000 (UTC)
+Message-ID: <loom.20100325T020952-729@post.gmane.org>
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>  <201003230942.15718.br1@einfach.org> <loom.20100323T162144-640@post.gmane.org>  <201003242015.21409.br1@einfach.org> <1269459825.2631.115.camel@mj> <69e28c911003241326l6e747113t606f50f61eb435b4@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-03-29 at 11:00 -0700, Javier Cardona wrote:
-> This fixes the problem introduced in commit
-> 8404080568613d93ad7cf0a16dfb68 which broke mesh peer link establishment.
+> > Maybe we could create a socket option that would put a _socket_ into a
+> > cooked monitor mode?  A "monitor mode socket" would accept and transmit
+> > packets with radiotap and 802.11 headers and receive the packets that
+> > the interface already receives, also with radiotap and 802.11 headers.
+> > That interface could be optimized for use with hostapd and other similar
+> > programs.  The driver could fill some data from the interface settings.
+> >
+> > The monitor mode, on the other hand, could be optimized for the
+> > "hardcore" stuff when the driver interferes as little as possible.  Then
+> > no special flags would be needed to pass the frame as is.
+> >
+> > --
+> > Regards,
+> > Pavel Roskin
+> >
 > 
-> changes:
-> v2 	Added missing break (Johannes)
-> v3 	Broke original patch into two (Johannes)
+> I don't think that is needed, as we already support multiple monitor
+> interfaces (including a situation where some are cooked, others are
+> raw).
 > 
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
 
-Cc: stable@kernel.org
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+well after all.. for everyone who's interested I made a quick fix
+considering the duration-problem. Perhaps on 2.6.34 there'll be
+a stable/standardised solution for all those tx-packet-manipulation-stuff.
+This is pretty much the same solution as on sequence-numbering..
 
-> ---
->  net/mac80211/mesh.c |    3 ---
->  net/mac80211/rx.c   |    5 +++++
->  2 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-> index 61080c5..7a6bebc 100644
-> --- a/net/mac80211/mesh.c
-> +++ b/net/mac80211/mesh.c
-> @@ -749,9 +749,6 @@ ieee80211_mesh_rx_mgmt(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
->  
->  	switch (fc & IEEE80211_FCTL_STYPE) {
->  	case IEEE80211_STYPE_ACTION:
-> -		if (skb->len < IEEE80211_MIN_ACTION_SIZE)
-> -			return RX_DROP_MONITOR;
-> -		/* fall through */
->  	case IEEE80211_STYPE_PROBE_RESP:
->  	case IEEE80211_STYPE_BEACON:
->  		skb_queue_tail(&ifmsh->skb_queue, skb);
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 1da57c8..1e03972 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1964,6 +1964,11 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
->  			goto handled;
->  		}
->  		break;
-> +	case MESH_PLINK_CATEGORY:
-> +	case MESH_PATH_SEL_CATEGORY:
-> +		if (ieee80211_vif_is_mesh(&sdata->vif))
-> +			return ieee80211_mesh_rx_mgmt(sdata, rx->skb);
-> +		break;
->  	}
->  
->  	/*
+---
+ net/mac80211/tx.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index cbe53ed..8abf015 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -969,11 +969,18 @@ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
+ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data *tx)
+ {
++       struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+        struct sk_buff *skb = tx->skb;
+        struct ieee80211_hdr *hdr;
+        int next_len;
+        bool group_addr;
+ 
++       /*
++        * Packet injection may want to control duration time.
++        */
++       if (unlikely(info->control.vif->type == NL80211_IFTYPE_MONITOR))
++               return TX_CONTINUE;
++
+        do {
+                hdr = (void *) skb->data;
+                if (unlikely(ieee80211_is_pspoll(hdr->frame_control)))
+-- 
+1.6.4.4
 
 
