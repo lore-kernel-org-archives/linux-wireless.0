@@ -1,43 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49924 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899Ab0C3Cz7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 22:55:59 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 19:55:59 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-fx0-f223.google.com ([209.85.220.223]:63446 "EHLO
+	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab0CYUdU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 16:33:20 -0400
+Received: by fxm23 with SMTP id 23so1540706fxm.21
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 13:33:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19377.27899.218290.647143@gargle.gargle.HOWL>
-Date: Tue, 30 Mar 2010 08:46:11 +0530
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 7/7] ath9k_htc: Fix TKIP encryption
-In-Reply-To: <201003291629.02639.chunkeey@googlemail.com>
-References: <19376.33506.672695.950934@gargle.gargle.HOWL>
-	<201003291629.02639.chunkeey@googlemail.com>
+In-Reply-To: <loom.20100325T020952-729@post.gmane.org>
+References: <69e28c910904141733m72ce521ap8f1865bec991fff7@mail.gmail.com>
+	<201003230942.15718.br1@einfach.org> <loom.20100323T162144-640@post.gmane.org>
+	<201003242015.21409.br1@einfach.org> <1269459825.2631.115.camel@mj>
+	<69e28c911003241326l6e747113t606f50f61eb435b4@mail.gmail.com>
+	<loom.20100325T020952-729@post.gmane.org>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 25 Mar 2010 21:32:57 +0100
+Message-ID: <69e28c911003251332k279cd3b8jdf8da464bf0011b4@mail.gmail.com>
+Subject: Re: [Proposal]TX flags
+To: Michael Stahn <m1kes@web.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> On Monday 29 March 2010 12:37:22 Sujith wrote:
-> > The FCS has to be stripped before the packet
-> > is given to mac80211. Also, remove a redundant
-> > assignment of skb length and include the FCS_LEN
-> > when checking padding.
-> > 
-> > Fixing this issue makes TKIP work.
-> > 
-> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> > ---
-> you don't need to strip the FCS, mac80211 can do that if necessary.
-> (Or not, if you want to operate a network sniffer)
-> 
+On Thu, Mar 25, 2010 at 2:22 AM, Michael Stahn <m1kes@web.de> wrote:
+>> > Maybe we could create a socket option that would put a _socket_ into a
+>> > cooked monitor mode?  A "monitor mode socket" would accept and transmit
+>> > packets with radiotap and 802.11 headers and receive the packets that
+>> > the interface already receives, also with radiotap and 802.11 headers.
+>> > That interface could be optimized for use with hostapd and other similar
+>> > programs.  The driver could fill some data from the interface settings.
+>> >
+>> > The monitor mode, on the other hand, could be optimized for the
+>> > "hardcore" stuff when the driver interferes as little as possible.  Then
+>> > no special flags would be needed to pass the frame as is.
+>> >
+>> > --
+>> > Regards,
+>> > Pavel Roskin
+>> >
+>>
+>> I don't think that is needed, as we already support multiple monitor
+>> interfaces (including a situation where some are cooked, others are
+>> raw).
+>>
+>
+> well after all.. for everyone who's interested I made a quick fix
+> considering the duration-problem. Perhaps on 2.6.34 there'll be
+> a stable/standardised solution for all those tx-packet-manipulation-stuff.
+> This is pretty much the same solution as on sequence-numbering..
+>
+> ---
+>  net/mac80211/tx.c |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index cbe53ed..8abf015 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -969,11 +969,18 @@ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
+>  static ieee80211_tx_result debug_noinline
+>  ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data *tx)
+>  {
+> +       struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+>        struct sk_buff *skb = tx->skb;
+>        struct ieee80211_hdr *hdr;
+>        int next_len;
+>        bool group_addr;
+>
+> +       /*
+> +        * Packet injection may want to control duration time.
+> +        */
+> +       if (unlikely(info->control.vif->type == NL80211_IFTYPE_MONITOR))
 
-I was aware of the flag - but there was some confusion about
-whether the target FW strips the FCS or not. And it looks like it doesn't.
-I'll send a modified patch, thanks for the review.
+if(unlikely(info->flags & IEEE80211_TX_CTL_INJECTED) is better. Also,
+check the cooked flag!
 
-Sujith
+> +               return TX_CONTINUE;
+> +
+>        do {
+>                hdr = (void *) skb->data;
+>                if (unlikely(ieee80211_is_pspoll(hdr->frame_control)))
+> --
+> 1.6.4.4
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
