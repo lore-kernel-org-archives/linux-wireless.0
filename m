@@ -1,68 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:53215 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357Ab0C3Q2t (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:43978 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752623Ab0CYFts (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 12:28:49 -0400
-Received: by pwi5 with SMTP id 5so7883615pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 09:28:49 -0700 (PDT)
+	Thu, 25 Mar 2010 01:49:48 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0443436186
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 14:49:46 +0900 (JST)
+Subject: [PATCH 08/10] ath5k: update phy errors codes
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
+	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com
+Date: Thu, 25 Mar 2010 14:49:42 +0900
+Message-ID: <20100325054942.10697.65242.stgit@tt-desk>
+In-Reply-To: <20100325054603.10697.48915.stgit@tt-desk>
+References: <20100325054603.10697.48915.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <m3r5n2qbo0.fsf@intrepid.localdomain>
-References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
-	<m3eij3ym5k.fsf@intrepid.localdomain> <43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
-	<m339zizz4o.fsf@intrepid.localdomain> <43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
-	<m3y6hayhv1.fsf@intrepid.localdomain> <43e72e891003291500w632cb789r6860dae9ccdf744c@mail.gmail.com>
-	<m3r5n2qbo0.fsf@intrepid.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 30 Mar 2010 09:28:28 -0700
-Message-ID: <43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 30, 2010 at 4:41 AM, Krzysztof Halasa <khc@pm.waw.pl> wrote:
-> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
->
->>> So what exactly do I change? Can the regulatory.bin change the default
->>> country?
->>
->> Huh?
->>
->>> Remember I need to be compliant to the US freq sets as well - when the
->>> regdomain is set to US. IOW I can't allow the user operating the device
->>> to set e.g. channel 12 when the user selects country=US (so there is a
->>> big difference between country 0=US and the real country=US).
->>
->> Huh?
->
-> Not sure what do you mean. Are my expectations unrealistic?
->
->>> But the driver says:
->>> ath: EEPROM regdomain: 0x0
->>> ath: EEPROM indicates default country code should be used
->>> ath: doing EEPROM country->regdmn map search
->>> ath: country maps to regdmn code: 0x3a
->>> ath: Country alpha2 being used: US
->>> ath: Regpair used: 0x3a
->>>
->>> At least for the driver 0 doesn't mean US, it means "default country".
->>> Perhaps the meaning of "default country" depends on maybe location of
->>> the hw and/or sw manufacturer?
->>
->> I just pointed to some documentation for you which indicated 0x0 means
->> "US".
->
-> Yes, but the meaning depends on the POV. What is important to me is what
-> does that mean to a) the software I use, b) the hardware I use (cards).
-> The driver doesn't say 0=US, perhaps it should? Then things would be
-> very different.
+Update PHY error codes from the HAL, and keep them in statistics for debugging
+via the 'frameerrors' file. This will also be used by ANI.
 
-My point was that this is not something meant to be interpreted by
-anyone for what "default country" means, the documentation I pointed
-out clearly states that 0x0 is designed to mean to match the "US" by
-Atheros hardware as per hardware documentation provided to ODMs.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c  |    2 ++
+ drivers/net/wireless/ath/ath5k/base.h  |    1 +
+ drivers/net/wireless/ath/ath5k/debug.c |    8 +++++++
+ drivers/net/wireless/ath/ath5k/desc.h  |   35 ++++++++++++++++++++++++--------
+ 4 files changed, 37 insertions(+), 9 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index ea33b99..a1c0dcb 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1940,6 +1940,8 @@ ath5k_tasklet_rx(unsigned long data)
+ 				sc->stats.rxerr_fifo++;
+ 			if (rs.rs_status & AR5K_RXERR_PHY) {
+ 				sc->stats.rxerr_phy++;
++				if (rs.rs_phyerr > 0 && rs.rs_phyerr < 32)
++					sc->stats.rxerr_phy_code[rs.rs_phyerr]++;
+ 				goto next;
+ 			}
+ 			if (rs.rs_status & AR5K_RXERR_DECRYPT) {
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index fe5dae5..a572a48 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -116,6 +116,7 @@ struct ath5k_statistics {
+ 	unsigned int tx_all_count;	/* all TX frames, including errors */
+ 	unsigned int rxerr_crc;
+ 	unsigned int rxerr_phy;
++	unsigned int rxerr_phy_code[32];
+ 	unsigned int rxerr_fifo;
+ 	unsigned int rxerr_decrypt;
+ 	unsigned int rxerr_mic;
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index bccd4a7..90247dc 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -474,6 +474,7 @@ static ssize_t read_file_frameerrors(struct file *file, char __user *user_buf,
+ 	struct ath5k_statistics *st = &sc->stats;
+ 	char buf[700];
+ 	unsigned int len = 0;
++	int i;
+ 
+ 	len += snprintf(buf+len, sizeof(buf)-len,
+ 			"RX\n---------------------\n");
+@@ -485,6 +486,13 @@ static ssize_t read_file_frameerrors(struct file *file, char __user *user_buf,
+ 			st->rxerr_phy,
+ 			st->rx_all_count > 0 ?
+ 				st->rxerr_phy*100/st->rx_all_count : 0);
++	for (i = 0; i < 32; i++) {
++		if (st->rxerr_phy_code[i])
++			len += snprintf(buf+len, sizeof(buf)-len,
++				" phy_err[%d]\t%d\n",
++				i, st->rxerr_phy_code[i]);
++	}
++
+ 	len += snprintf(buf+len, sizeof(buf)-len, "FIFO\t%d\t(%d%%)\n",
+ 			st->rxerr_fifo,
+ 			st->rx_all_count > 0 ?
+diff --git a/drivers/net/wireless/ath/ath5k/desc.h b/drivers/net/wireless/ath/ath5k/desc.h
+index 56158c8..64538fb 100644
+--- a/drivers/net/wireless/ath/ath5k/desc.h
++++ b/drivers/net/wireless/ath/ath5k/desc.h
+@@ -112,15 +112,32 @@ struct ath5k_hw_rx_error {
+ #define AR5K_RX_DESC_ERROR1_PHY_ERROR_CODE	0x0000ff00
+ #define AR5K_RX_DESC_ERROR1_PHY_ERROR_CODE_S	8
+ 
+-/* PHY Error codes */
+-#define AR5K_DESC_RX_PHY_ERROR_NONE		0x00
+-#define AR5K_DESC_RX_PHY_ERROR_TIMING		0x20
+-#define AR5K_DESC_RX_PHY_ERROR_PARITY		0x40
+-#define AR5K_DESC_RX_PHY_ERROR_RATE		0x60
+-#define AR5K_DESC_RX_PHY_ERROR_LENGTH		0x80
+-#define AR5K_DESC_RX_PHY_ERROR_64QAM		0xa0
+-#define AR5K_DESC_RX_PHY_ERROR_SERVICE		0xc0
+-#define AR5K_DESC_RX_PHY_ERROR_TRANSMITOVR	0xe0
++/**
++ * enum ath5k_phy_error_code - PHY Error codes
++ */
++enum ath5k_phy_error_code {
++	AR5K_RX_PHY_ERROR_UNDERRUN		= 0,	/* Transmit underrun */
++	AR5K_RX_PHY_ERROR_TIMING		= 1,	/* Timing error */
++	AR5K_RX_PHY_ERROR_PARITY		= 2,	/* Illegal parity */
++	AR5K_RX_PHY_ERROR_RATE			= 3,	/* Illegal rate */
++	AR5K_RX_PHY_ERROR_LENGTH		= 4,	/* Illegal length */
++	AR5K_RX_PHY_ERROR_RADAR			= 5,	/* Radar detect */
++	AR5K_RX_PHY_ERROR_SERVICE		= 6,	/* Illegal service */
++	AR5K_RX_PHY_ERROR_TOR			= 7,	/* Transmit override receive */
++	/* these are specific to the 5212 */
++	AR5K_RX_PHY_ERROR_OFDM_TIMING		= 17,
++	AR5K_RX_PHY_ERROR_OFDM_SIGNAL_PARITY	= 18,
++	AR5K_RX_PHY_ERROR_OFDM_RATE_ILLEGAL	= 19,
++	AR5K_RX_PHY_ERROR_OFDM_LENGTH_ILLEGAL	= 20,
++	AR5K_RX_PHY_ERROR_OFDM_POWER_DROP	= 21,
++	AR5K_RX_PHY_ERROR_OFDM_SERVICE		= 22,
++	AR5K_RX_PHY_ERROR_OFDM_RESTART		= 23,
++	AR5K_RX_PHY_ERROR_CCK_TIMING		= 25,
++	AR5K_RX_PHY_ERROR_CCK_HEADER_CRC	= 26,
++	AR5K_RX_PHY_ERROR_CCK_RATE_ILLEGAL	= 27,
++	AR5K_RX_PHY_ERROR_CCK_SERVICE		= 30,
++	AR5K_RX_PHY_ERROR_CCK_RESTART		= 31,
++};
+ 
+ /*
+  * 5210/5211 hardware 2-word TX control descriptor
+
