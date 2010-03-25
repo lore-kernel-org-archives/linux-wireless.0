@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:39747 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752084Ab0CaF1z (ORCPT
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:49971 "EHLO
+	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053Ab0CYVKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 01:27:55 -0400
-Subject: Re: [PATCH] iw: Add support for connection quality monitor
- configuation
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1270013023.4710.0.camel@jlt3.sipsolutions.net>
-References: <1269582379-10253-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1269583649.4581.4.camel@jlt3.sipsolutions.net>
-	 <1269584079.10120.889.camel@wimaxnb.nmp.nokia.com>
-	 <1269584501.4581.5.camel@jlt3.sipsolutions.net>
-	 <1270011208.10120.906.camel@wimaxnb.nmp.nokia.com>
-	 <1270013023.4710.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Mar 2010 08:24:29 +0300
-Message-ID: <1270013069.10120.907.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 25 Mar 2010 17:10:20 -0400
+Date: Fri, 26 Mar 2010 10:10:55 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Bruno Randolf <br1@einfach.org>
+cc: linville@tuxdriver.com, bob@bobcopeland.com,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH 00/10] ANI for ath5k
+In-Reply-To: <20100325054603.10697.48915.stgit@tt-desk>
+Message-ID: <alpine.DEB.2.00.1003261001530.24989@kauri.acheron.indranet.co.nz>
+References: <20100325054603.10697.48915.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-31 at 07:23 +0200, ext Johannes Berg wrote:
-> On Wed, 2010-03-31 at 07:53 +0300, Juuso Oikarinen wrote:
-> 
-> > > Hmm, yes, maybe. In that case you'd want leaving them out meaning no
-> > > change I guess. I'll give it another thought, but now I need to get
-> > > sleep and you won't hear from me again until I'm home on like Sunday :)
-> > 
-> > Have you reached any conclusions on this matter? To get this support
-> > into iw would help my work greatly ;)
-> 
-> Sorry. Let's just leave it this way, the no change thing convinced me I
-> think :) I'll go apply your patch.
+Hi,
+On Thu, 25 Mar 2010, Bruno Randolf wrote:
+> This is ANI for ath5k.
+Fantastic!!
+  I have used your initial ani patch set here, and it did help througput 
+etc.
+>
+> - Improve beacon averaging algorithm for IBSS: Maybe we should keep track of
+>  the average RSSI on a per-node basis and use the minimum of those in order
+>  not to loose far away nodes? The other option would be to limit the
+>  parameters we control similar to AP mode.
 
-Thanks!
+We have talked about this before. I thought that we agreed 
+that adhoc nodes may
+   a)be activated at any time
+   b)be positioned at an unknown distance apart
 
--Juuso
+it therefore makes no sense to average the RSSI over the current nodes.
+If all the current nodes in the network are close by, the ani algorithm 
+will wind the sensitivity down. Consequently, if a remote node is 
+started, it will not be able to connect. Yet, the remote node should 
+have been able to connect as the slot times etc were long enough, 
+and the link budget is fine...
 
-> johannes
-> 
+So yes, the only way to 
+> - Improve beacon averaging algorithm for IBSS:
+is to turn ani off. which means the issue you raised else where of 
+providing reasonable userland controls (not via debugfs) becomes 
+important.
 
 
+Derek.
+
+---
+Derek Smithies Ph.D. 
+IndraNet Technologies Ltd. 
+ph +64 3 365 6485 
+Web: http://www.indranet-technologies.com/
+
+"How did you make it work??"
+       "Oh, the usual, get everything right".
