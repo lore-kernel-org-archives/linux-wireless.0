@@ -1,66 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:21412 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137Ab0CVGAW (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:48285 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752506Ab0CYFtP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 02:00:22 -0400
-Subject: Re: [RFC PATCHv5 1/2] cfg80211: Add connection quality monitoring
- support to nl80211
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho Luciano (Nokia-D/Helsinki)" <Luciano.Coelho@nokia.com>
-In-Reply-To: <1269103686.4652.3.camel@jlt3.sipsolutions.net>
-References: <1268985801-25225-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268985801-25225-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1269103686.4652.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 22 Mar 2010 07:57:14 +0200
-Message-ID: <1269237434.10120.734.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 25 Mar 2010 01:49:15 -0400
+Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0813496154
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 14:49:14 +0900 (JST)
+Subject: [PATCH 02/10] ath5k: remove the use of SWI interrupt
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
+	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com
+Date: Thu, 25 Mar 2010 14:49:09 +0900
+Message-ID: <20100325054909.10697.16867.stgit@tt-desk>
+In-Reply-To: <20100325054603.10697.48915.stgit@tt-desk>
+References: <20100325054603.10697.48915.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-03-20 at 17:48 +0100, ext Johannes Berg wrote:
-> On Fri, 2010-03-19 at 10:03 +0200, Juuso Oikarinen wrote:
-> 
-> > + * @NL80211_CMD_SET_CQM: Connection quality monitor configuration and
-> > + *      notification. This command is used both as a command (to configure
-> > + *      a trigger level) and as an event (to indicate the configured level was
-> > + *      reached.) Setting zero threshold disables the feature.
-> 
-> I've been thinking about this for a while, and I think I finally decided
-> that I'd prefer another command number for the event. SET doesn't seem
-> to match the event very well at all.
+We don't need to generate a software interrupt (SWI) just to schedule a tasklet
+- we can just schedule the tasklet directly.
 
-I'll change this. The reason I have it this way now is just that I
-noticed that sharing the ID's is a common way to do it in existing code.
+Rename constants, names, etc to reflect the fact that we don't use SWI any more.
 
-> > +/**
-> > + * enum nl80211_cqm_rssi_threshold_event - RSSI threshold event
-> > + * @NL80211_CQM_RSSI_THRESHOLD_EVENT_NONE - No RSSI threshold event occurred
-> 
-> What is none intended for? If it's for any of the other possible future
-> enhancements, I'd think in that case we just leave out the attribute?
+Also move the flag handling into the tasklet and prepare it to behave correctly
+when there are multiple flags present.
 
-Yes, thinking back, this was a bad idea. I'll take it out ;)
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |   12 ++++++------
+ drivers/net/wireless/ath/ath5k/base.c  |   11 +++--------
+ drivers/net/wireless/ath/ath5k/phy.c   |    3 +--
+ 3 files changed, 10 insertions(+), 16 deletions(-)
 
-> > +static struct nla_policy
-> > +nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX + 1] __read_mostly = {
-> > +	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U32 },
-> > +	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U8 },
-> 
-> Now I'm confused. Not that I think we'll ever need a hysteresis value
-> larger than that, but isn't that a little inconsistent?
-
-As per your preference, I'll change this. I personally don't seem to get
-over my old habit of always feeling the urge to save some bits ;)
-
-Thanks for your comments.
-
--Juuso
-
-> johannes
-> 
-
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index a3019ee..d84ccde 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -890,10 +890,10 @@ enum ath5k_int {
+ 	AR5K_INT_NOCARD	= 0xffffffff
+ };
+ 
+-/* Software interrupts used for calibration */
+-enum ath5k_software_interrupt {
+-	AR5K_SWI_FULL_CALIBRATION = 0x01,
+-	AR5K_SWI_SHORT_CALIBRATION = 0x02,
++/* mask which calibration is active at the moment */
++enum ath5k_calibration_mask {
++	AR5K_CALIBRATION_FULL = 0x01,
++	AR5K_CALIBRATION_SHORT = 0x02,
+ };
+ 
+ /*
+@@ -1102,8 +1102,8 @@ struct ath5k_hw {
+ 	/* Calibration timestamp */
+ 	unsigned long		ah_cal_tstamp;
+ 
+-	/* Software interrupt mask */
+-	u8			ah_swi_mask;
++	/* Calibration mask */
++	u8			ah_cal_mask;
+ 
+ 	/*
+ 	 * Function pointers
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 39d5800..539a6d5 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2507,7 +2507,7 @@ ath5k_init(struct ath5k_softc *sc)
+ 	sc->curband = &sc->sbands[sc->curchan->band];
+ 	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
+ 		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+-		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_SWI;
++		AR5K_INT_FATAL | AR5K_INT_GLOBAL;
+ 	ret = ath5k_reset(sc, NULL);
+ 	if (ret)
+ 		goto done;
+@@ -2673,9 +2673,6 @@ ath5k_intr(int irq, void *dev_id)
+ 			if (status & AR5K_INT_BMISS) {
+ 				/* TODO */
+ 			}
+-			if (status & AR5K_INT_SWI) {
+-				tasklet_schedule(&sc->calib);
+-			}
+ 			if (status & AR5K_INT_MIB) {
+ 				/*
+ 				 * These stats are also used for ANI i think
+@@ -2716,8 +2713,7 @@ ath5k_tasklet_calibrate(unsigned long data)
+ 	struct ath5k_hw *ah = sc->ah;
+ 
+ 	/* Only full calibration for now */
+-	if (ah->ah_swi_mask != AR5K_SWI_FULL_CALIBRATION)
+-		return;
++	ah->ah_cal_mask |= AR5K_CALIBRATION_FULL;
+ 
+ 	/* Stop queues so that calibration
+ 	 * doesn't interfere with tx */
+@@ -2740,11 +2736,10 @@ ath5k_tasklet_calibrate(unsigned long data)
+ 			ieee80211_frequency_to_channel(
+ 				sc->curchan->center_freq));
+ 
+-	ah->ah_swi_mask = 0;
+-
+ 	/* Wake queues */
+ 	ieee80211_wake_queues(sc->hw);
+ 
++	ah->ah_cal_mask &= ~AR5K_CALIBRATION_FULL;
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 07f59b1..cbdc511 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1119,8 +1119,7 @@ ath5k_hw_calibration_poll(struct ath5k_hw *ah)
+ 	 * interrupt (bit gets auto-cleared) */
+ 	if (time_is_before_eq_jiffies(ah->ah_cal_tstamp + cal_intval)) {
+ 		ah->ah_cal_tstamp = jiffies;
+-		ah->ah_swi_mask = AR5K_SWI_FULL_CALIBRATION;
+-		AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI);
++		tasklet_schedule(&ah->ah_sc->calib);
+ 	}
+ }
+ 
 
