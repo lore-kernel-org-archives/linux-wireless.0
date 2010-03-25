@@ -1,54 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:32138 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752653Ab0C3GlT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 02:41:19 -0400
-From: Holger Schurig <holgerschurig@gmail.com>
-To: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-Date: Tue, 30 Mar 2010 08:42:18 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com> <m3y6hayhv1.fsf@intrepid.localdomain>
-In-Reply-To: <m3y6hayhv1.fsf@intrepid.localdomain>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003300842.18335.holgerschurig@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:22722 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752594Ab0CYUox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 16:44:53 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/22] iwlwifi: iwl_good_ack_health() only apply to AGN device
+Date: Thu, 25 Mar 2010 13:44:30 -0700
+Message-Id: <1269549890-19195-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
+References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> But the driver says:
-> ath: EEPROM regdomain: 0x0
-> ath: EEPROM indicates default country code should be used
-> ath: doing EEPROM country->regdmn map search
-> ath: country maps to regdmn code: 0x3a
-> ath: Country alpha2 being used: US
-> ath: Regpair used: 0x3a
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I ignored all this bullshit an US rules that won't apply to germany anyway. So 
-I simply added a patch to my devices kernel that overwrote the EEPROM 
-regdomain. That's way cheaper than to reprogram each device.
+iwl_good_ack_health() check for expected and actual ack count which only
+apply to aggregation mode. Move the function to iwlagn module.
 
-Some people live in a wishful world where they think that every manufacturer 
-reads all docs of the chipset producer and where only the correctly programmed 
-cards submerge in the correct markets.
+Reported-by: Chantry Xavier <chantry.xavier@gmail.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   54 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h |    2 +
+ drivers/net/wireless/iwlwifi/iwl-rx.c  |   55 --------------------------------
+ 3 files changed, 56 insertions(+), 55 deletions(-)
 
-Creating my won regdomain bin with my own signature was way too much for me.
-
-
-> If the driver said "EEPROM regdomain: 0x0 = US" I'd return the cards to
-> the manufacturer, simple (realistically they'd fix the EEPROM instead).
-
-And the supplies has this card form some chinese source and can't get them to 
-get reprogrammed. Also returning a bunch of 250 cards is quite an 
-administrative hassle, not to say that during that time you cannot produce 250 
-devices, because you're then short of supply (substitute "250" with any number 
-you like).
-
-Really, country stuff in EEPROM is b......t, and I'm simply ignoring this 
-concept --- for my specific usage domain.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e69e625..680e897 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1417,6 +1417,60 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
+ 		iwl_enable_interrupts(priv);
+ }
+ 
++/* the threshold ratio of actual_ack_cnt to expected_ack_cnt in percent */
++#define ACK_CNT_RATIO (50)
++#define BA_TIMEOUT_CNT (5)
++#define BA_TIMEOUT_MAX (16)
++
++/**
++ * iwl_good_ack_health - checks for ACK count ratios, BA timeout retries.
++ *
++ * When the ACK count ratio is 0 and aggregated BA timeout retries exceeding
++ * the BA_TIMEOUT_MAX, reload firmware and bring system back to normal
++ * operation state.
++ */
++bool iwl_good_ack_health(struct iwl_priv *priv,
++				struct iwl_rx_packet *pkt)
++{
++	bool rc = true;
++	int actual_ack_cnt_delta, expected_ack_cnt_delta;
++	int ba_timeout_delta;
++
++	actual_ack_cnt_delta =
++		le32_to_cpu(pkt->u.stats.tx.actual_ack_cnt) -
++		le32_to_cpu(priv->statistics.tx.actual_ack_cnt);
++	expected_ack_cnt_delta =
++		le32_to_cpu(pkt->u.stats.tx.expected_ack_cnt) -
++		le32_to_cpu(priv->statistics.tx.expected_ack_cnt);
++	ba_timeout_delta =
++		le32_to_cpu(pkt->u.stats.tx.agg.ba_timeout) -
++		le32_to_cpu(priv->statistics.tx.agg.ba_timeout);
++	if ((priv->_agn.agg_tids_count > 0) &&
++	    (expected_ack_cnt_delta > 0) &&
++	    (((actual_ack_cnt_delta * 100) / expected_ack_cnt_delta)
++		< ACK_CNT_RATIO) &&
++	    (ba_timeout_delta > BA_TIMEOUT_CNT)) {
++		IWL_DEBUG_RADIO(priv, "actual_ack_cnt delta = %d,"
++				" expected_ack_cnt = %d\n",
++				actual_ack_cnt_delta, expected_ack_cnt_delta);
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++		IWL_DEBUG_RADIO(priv, "rx_detected_cnt delta = %d\n",
++				priv->delta_statistics.tx.rx_detected_cnt);
++		IWL_DEBUG_RADIO(priv,
++				"ack_or_ba_timeout_collision delta = %d\n",
++				priv->delta_statistics.tx.
++				ack_or_ba_timeout_collision);
++#endif
++		IWL_DEBUG_RADIO(priv, "agg ba_timeout delta = %d\n",
++				ba_timeout_delta);
++		if (!actual_ack_cnt_delta &&
++		    (ba_timeout_delta >= BA_TIMEOUT_MAX))
++			rc = false;
++	}
++	return rc;
++}
++
+ 
+ /******************************************************************************
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 26eeb58..42c291b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -70,5 +70,7 @@ void iwl_disable_ict(struct iwl_priv *priv);
+ int iwl_alloc_isr_ict(struct iwl_priv *priv);
+ void iwl_free_isr_ict(struct iwl_priv *priv);
+ irqreturn_t iwl_isr_ict(int irq, void *data);
++bool iwl_good_ack_health(struct iwl_priv *priv,
++			 struct iwl_rx_packet *pkt);
+ 
+ #endif /* __iwl_agn_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index b6a64d8..de453f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -616,61 +616,6 @@ static void iwl_accumulative_statistics(struct iwl_priv *priv,
+ 
+ #define REG_RECALIB_PERIOD (60)
+ 
+-/* the threshold ratio of actual_ack_cnt to expected_ack_cnt in percent */
+-#define ACK_CNT_RATIO (50)
+-#define BA_TIMEOUT_CNT (5)
+-#define BA_TIMEOUT_MAX (16)
+-
+-/**
+- * iwl_good_ack_health - checks for ACK count ratios, BA timeout retries.
+- *
+- * When the ACK count ratio is 0 and aggregated BA timeout retries exceeding
+- * the BA_TIMEOUT_MAX, reload firmware and bring system back to normal
+- * operation state.
+- */
+-bool iwl_good_ack_health(struct iwl_priv *priv,
+-				struct iwl_rx_packet *pkt)
+-{
+-	bool rc = true;
+-	int actual_ack_cnt_delta, expected_ack_cnt_delta;
+-	int ba_timeout_delta;
+-
+-	actual_ack_cnt_delta =
+-		le32_to_cpu(pkt->u.stats.tx.actual_ack_cnt) -
+-		le32_to_cpu(priv->statistics.tx.actual_ack_cnt);
+-	expected_ack_cnt_delta =
+-		le32_to_cpu(pkt->u.stats.tx.expected_ack_cnt) -
+-		le32_to_cpu(priv->statistics.tx.expected_ack_cnt);
+-	ba_timeout_delta =
+-		le32_to_cpu(pkt->u.stats.tx.agg.ba_timeout) -
+-		le32_to_cpu(priv->statistics.tx.agg.ba_timeout);
+-	if ((priv->_agn.agg_tids_count > 0) &&
+-	    (expected_ack_cnt_delta > 0) &&
+-	    (((actual_ack_cnt_delta * 100) / expected_ack_cnt_delta)
+-		< ACK_CNT_RATIO) &&
+-	    (ba_timeout_delta > BA_TIMEOUT_CNT)) {
+-		IWL_DEBUG_RADIO(priv, "actual_ack_cnt delta = %d,"
+-				" expected_ack_cnt = %d\n",
+-				actual_ack_cnt_delta, expected_ack_cnt_delta);
+-
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-		IWL_DEBUG_RADIO(priv, "rx_detected_cnt delta = %d\n",
+-				priv->delta_statistics.tx.rx_detected_cnt);
+-		IWL_DEBUG_RADIO(priv,
+-				"ack_or_ba_timeout_collision delta = %d\n",
+-				priv->delta_statistics.tx.
+-				ack_or_ba_timeout_collision);
+-#endif
+-		IWL_DEBUG_RADIO(priv, "agg ba_timeout delta = %d\n",
+-				ba_timeout_delta);
+-		if (!actual_ack_cnt_delta &&
+-		    (ba_timeout_delta >= BA_TIMEOUT_MAX))
+-			rc = false;
+-	}
+-	return rc;
+-}
+-EXPORT_SYMBOL(iwl_good_ack_health);
+-
+ /**
+  * iwl_good_plcp_health - checks for plcp error.
+  *
 -- 
-http://www.holgerschurig.de
+1.6.3.3
+
