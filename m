@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:45541 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751467Ab0CAXhh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 18:37:37 -0500
-MIME-Version: 1.0
-In-Reply-To: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-References: <43e72e891002241618w10d5c45ar9303f074d0228217@mail.gmail.com>
-Date: Tue, 2 Mar 2010 01:37:34 +0200
-Message-ID: <40f31dec1003011537m1611ffecnd7af66d27d67a81a@mail.gmail.com>
-Subject: Re: 802.11 development process - extended documentation
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:22725 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753732Ab0CYUpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 16:45:00 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 17/22] iwlwifi: add missing email address information
+Date: Thu, 25 Mar 2010 13:44:45 -0700
+Message-Id: <1269549890-19195-18-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
+References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/2/25 Luis R. Rodriguez <mcgrof@gmail.com>:
-> I've extended our 802.11 development process into a new section on our
-> 802.11 wiki. I often get asked how this works from different parts of
-> the company here at Atheros so figured it'd be easier to illustrate
-> this as best as possible and share it.
->
-> http://wireless.kernel.org/en/developers/process
->
-> Hope it does justice, John if you see any mistakes feel free to edit.
-> If the diagram seems fishy let me know what I can fix.
->
->  Luis
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Thanks a lot Luis ;-)
+Add missing contact email address to iwl-5000.c
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index aaf7e51..5ca4517 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -19,6 +19,7 @@
+  * file called LICENSE.
+  *
+  * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
+  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+  *
+  *****************************************************************************/
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.3.3
+
