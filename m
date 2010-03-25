@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56807.mail.re3.yahoo.com ([66.196.97.81]:39589 "HELO
-	web56807.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752275Ab0CYQ0l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 12:26:41 -0400
-Message-ID: <733969.9491.qm@web56807.mail.re3.yahoo.com>
-Date: Thu, 25 Mar 2010 09:20:00 -0700 (PDT)
-From: Golden <goldenstranger@yahoo.com>
-Subject: firmware_loading_store: vmap() failed, broken firmware with kernles .27 - .30 
-To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:22725 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753960Ab0CYUpB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 16:45:01 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 20/22] iwlwifi: remove "\n" from module parameter description
+Date: Thu, 25 Mar 2010 13:44:48 -0700
+Message-Id: <1269549890-19195-21-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
+References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recent compat-wireless releases break firmware loading under slightly older kernels. The bug occurs as tested by me with 2.6.27 and 2.6.30, it does not appear on kernels 2.6.31 and up.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-The error log from zd1211rw:
+Remove the "\n" from following module parameter description:
+ - enable wifi/bluetooth co-exist
+ - led mode: 0=blinking, 1=On(RF On)/Off(RF Off), (default 0)
+to be consistence with the rest of iwlagn/iwlcore module parameters format.
 
-usbcore: registered new interface driver zd1211rw
-usb 5-1: firmware: requesting zd1211/zd1211b_ub
-compat_firmware 5-1: firmware_loading_store: vmap() failed
-usb 5-1: Could not load firmware file zd1211/zd1211b_ub. Error number -2
-zd1211rw 5-1:1.0: couldn't load firmware. Error number -2
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-The error log from b43:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 6fe7853..d152198 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -65,7 +65,7 @@ MODULE_LICENSE("GPL");
+  */
+ static bool bt_coex_active = true;
+ module_param(bt_coex_active, bool, S_IRUGO);
+-MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist\n");
++MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
+ 
+ static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
+ 	{COEX_CU_UNASSOC_IDLE_RP, COEX_CU_UNASSOC_IDLE_WP,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index a6f9c91..db5bfcb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -46,7 +46,7 @@
+ static int led_mode;
+ module_param(led_mode, int, S_IRUGO);
+ MODULE_PARM_DESC(led_mode, "led mode: 0=blinking, 1=On(RF On)/Off(RF Off), "
+-			   "(default 0)\n");
++			   "(default 0)");
+ 
+ 
+ static const struct {
+-- 
+1.6.3.3
 
-Broadcom 43xx driver loaded [ Features: PMNLS, Firmware-ID: FW13 ]
-b43 ssb0:0: firmware: requesting b43/ucode5.fw
-compat_firmware ssb0:0: firmware_loading_store: vmap() failed
-b43 ssb0:0: firmware: requesting b43-open/ucode5.fw
-compat_firmware ssb0:0: firmware_loading_store: unexpected value (0)
-b43-phy0 ERROR: Firmware file "b43/ucode5.fw" not found
-b43-phy0 ERROR: Firmware file "b43-open/ucode5.fw" not found
-b43-phy0 ERROR: You must go to http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware and download the correct firmware for this driver version. Please carefully read all instructions on this website.
-
-To be noted, that compat-wireless releases from December 2009 work fine as well as the kernel's default drivers, every other release from January till now /March/ breaks the firmware loading process, thus the drivers.
-
-If I missed any relevant information, please let me know. 
-
-
-      
