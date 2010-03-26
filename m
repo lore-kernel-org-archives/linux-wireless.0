@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:54171 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013Ab0CSRml (ORCPT
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:52390 "EHLO
+	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597Ab0CZBVP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 13:42:41 -0400
-Received: by ywh36 with SMTP id 36so720278ywh.4
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 10:42:40 -0700 (PDT)
+	Thu, 25 Mar 2010 21:21:15 -0400
+Date: Fri, 26 Mar 2010 14:21:50 +1300 (NZDT)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Bruno Randolf <br1@einfach.org>
+cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"bob@bobcopeland.com" <bob@bobcopeland.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] [PATCH 00/10] ANI for ath5k
+In-Reply-To: <201003260927.57491.br1@einfach.org>
+Message-ID: <alpine.DEB.2.00.1003261416120.24989@kauri.acheron.indranet.co.nz>
+References: <20100325054603.10697.48915.stgit@tt-desk> <alpine.DEB.2.00.1003261001530.24989@kauri.acheron.indranet.co.nz> <20100325211311.GG7651@tux> <201003260927.57491.br1@einfach.org>
 MIME-Version: 1.0
-In-Reply-To: <1269018604.2446.1779.camel@rchatre-DESK>
-References: <f39b508c1003170613g5a8754a2kc9e15075c16f499b@mail.gmail.com>
-	 <1268978712.2446.1757.camel@rchatre-DESK>
-	 <f39b508c1003190949m91f4070i4d8d19929f8d6787@mail.gmail.com>
-	 <1269018604.2446.1779.camel@rchatre-DESK>
-Date: Fri, 19 Mar 2010 12:42:39 -0500
-Message-ID: <f39b508c1003191042v23587b50iea5217a877eb9423@mail.gmail.com>
-Subject: Re: Re:
-From: Vasil Lalov <vasil.lalov@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reinette,
 
-Thanks a lot for directing me to the right place. I will open up a new
-bugreport right away!
-Have a good weekend!
+On Fri, 26 Mar 2010, Bruno Randolf wrote:
 
-Vasil
-===
-Vasil Lalov
-Sr. Systems Administrator
-Chicago Public Library
-
-
-On Fri, Mar 19, 2010 at 12:10 PM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> On Fri, 2010-03-19 at 09:49 -0700, Vasil Lalov wrote:
->> Thanks for responding to this. I also noticed other things. It seems
->> that this Microcode SW error occurs because the wifi card is
->> overheating. When used in n-mode and there is a large file transfer,
->> the temperature of the card rises to over 62C. Soon after this, the
->> microcode error occurs and the card gets disassociated.
+>>>> - Improve beacon averaging algorithm for IBSS:
+>>> is to turn ani off. which means the issue you raised else where of
+>>> providing reasonable userland controls (not via debugfs) becomes
+>>> important.
 >>
->> Doing more research on the power vs temperature problem, I discovered
->> that other users are seeing this as well. Some have solved their
->> problem by enabling the power management for the wifi card by issuing
+>> If ANI helps IBSS so much then why not just default to turning it
+>> off within the driver?
 >
-> I am not familiar with these workarounds. Could you please submit a new
-> bug at http://bugzilla.intellinuxwireless.org/ or add your information
-> to a bug in this system if you find one that is related?
+> i would say in most standard cases, IBSS nodes are close together or at a
+> similar distance, so it does make sense to use ANI by default.
+Nope - I disagree. You have made a dangerous assumption, to asume
+that
+   IBSS node are close together or at a similar distance
+
+if you have a network of ibss nodes, and then look at the rate tables of 
+the different nodes (minstrel is great here - it gives a fair and accurte 
+represetation of the best rate possible to other nodes) you see there is 
+some variation in the optimal rates between nodes.Which suggests that 
+using some automatic ani algorithm in an ibss network will foreever lower 
+performance for those nodes at the edge of the network.
+
 >
-> Reinette
->
->
->
->
+> as well, we all agree that there should be userland controls. the questions is
+> just about the interface to use.
+
+Definately - need userland controls. The default for IBSS should have 
+ANI off. If the user wants to "futz" with it, they can. With ANI off for 
+IBSS, you ensure that on startup, the network has the greatest chance of 
+working.
+
+Derek.
+-- 
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
+
+"How did you make it work??"
+       "Oh, the usual, get everything right".
