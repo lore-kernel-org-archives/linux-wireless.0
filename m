@@ -1,189 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Viola.Opus1.COM ([192.245.12.8]:2928 "EHLO Viola.Opus1.COM"
+Received: from mga02.intel.com ([134.134.136.20]:25731 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754047Ab0CXC0c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 22:26:32 -0400
-Received: from [10.1.1.4] ([204.17.38.236]) by Opus1.COM (PMDF V6.5-b2 #9830) with ESMTPSA id <01NL3JMRFLBW9H7BD5@Opus1.COM> for linux-wireless@vger.kernel.org; Tue, 23 Mar 2010 18:25:05 -0700 (MST)
-Date: Tue, 23 Mar 2010 18:25:02 -0700
-From: Ehud Gavron <gavron@wetwork.net>
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-In-reply-to: <201003222325.35994.mb@bu3sch.de>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Calvin Walton <calvin.walton@gmail.com>,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Message-id: <4BA969EE.8000809@wetwork.net>
-MIME-version: 1.0
-Content-type: multipart/signed; boundary=------------ms010601090803080401030305; micalg=sha1; protocol="application/x-pkcs7-signature"
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <1269239303.12836.17.camel@ayu> <4BA7E79C.9070100@lwfinger.net> <201003222325.35994.mb@bu3sch.de>
+	id S1753229Ab0CZCsR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 22:48:17 -0400
+Subject: Re: [ipw3945-devel] [PATCH 21/22] iwlwifi: change spin_lock to
+ spin_lock_irqsave
+From: Zhu Yi <yi.zhu@intel.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1269551457.2626.12.camel@mj>
+References: <1269549890-19195-1-git-send-email-reinette.chatre@intel.com>
+	 <1269549890-19195-22-git-send-email-reinette.chatre@intel.com>
+	 <1269551457.2626.12.camel@mj>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Mar 2010 10:49:02 +0800
+Message-ID: <1269571742.4043.161.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+On Fri, 2010-03-26 at 05:10 +0800, Pavel Roskin wrote:
+> As far as I understand, spin_lock_irqsave() is superfluous in
+> interrupt handlers, since interrupt handlers are run with interrupts
+> disabled.
 
---------------ms010601090803080401030305
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+spin_lock_irqsave is required if multiple interrupts are used, i.e.
+MSI-X. IOAPIC only guarantees the same interrupt line is disabled during
+the isr.
 
+Thanks,
+-yi
 
-
-Michael Buesch wrote:
-> On Monday 22 March 2010 22:56:44 Larry Finger wrote:
->   
->> Does anyone have any suggestions on what characteristic could be used to
->> generate a unique MAC address for a box in a udev rule?
->>     
->
-> /dev/urandom
->
-> Yeah, there's the chance of clashes. In practice there won't be any clashes,
-> however. If you think there's a real risk, you should start playing
-> the lottery tomorrow. You'll immediately win a million dollars so you don't have
-> to worry about those questions anymore. ;)
->
-> In fact, I think the risk for mac clashes is not really reduced by generating the mac
-> address from serial numbers, whatever, etc...
->
->   
-DEC used the L3 address to encode a new MAC at the time the [L3] address was
-set (DECnet v4).  The advantage was they didn't need to use the equivalent
-of ARP.  Of course this is a violation of strict layer separation.
-
-Octet1-Octet3 - Broadcom assigned MAC IDs.  I found the following:
-00-05-B5
-00-10-18
-00-1B-E9
-18-C0-86
-
-Octet4-octet6 - Lowest three octets of the unixtime.
-
-
-Advantages: for the local area network all TZ settings should be the same,
-so the MAC addresses *will* be different.  Beyond the first router that 
-won't
-matter.  Also for the same machine different interfaces are GUARANTEED
-to have different MAC addresses.
-
-For two machines to have the same MAC they would have to be booted at
-(same time x processing factor) such that the B43 initialization will 
-result
-in the same MAC address.  I'd like to think those odds are even lower than
-your lottery.
-
-A million dollars?  
-http://www.active-domain.com/resources/million-dollar-domains.htm
-Yeah got the t-shirt.
-
-
-E
-
-
---------------ms010601090803080401030305
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIQ6DCC
-BIowggNyoAMCAQICECf06hH0eobEbp27bqkXBwcwDQYJKoZIhvcNAQEFBQAwbzELMAkGA1UE
-BhMCU0UxFDASBgNVBAoTC0FkZFRydXN0IEFCMSYwJAYDVQQLEx1BZGRUcnVzdCBFeHRlcm5h
-bCBUVFAgTmV0d29yazEiMCAGA1UEAxMZQWRkVHJ1c3QgRXh0ZXJuYWwgQ0EgUm9vdDAeFw0w
-NTA2MDcwODA5MTBaFw0yMDA1MzAxMDQ4MzhaMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMC
-VVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5l
-dHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVRO
-LVVTRVJGaXJzdC1DbGllbnQgQXV0aGVudGljYXRpb24gYW5kIEVtYWlsMIIBIjANBgkqhkiG
-9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsjmFpPJ9q0E7YkY3rs3BYHW8OWX5ShpHornMSMxqmNVN
-NRm5pELlzkniii8efNIxB8dOtINknS4p1aJkxIW9hVE1eaROaJB7HHqkkqgX8pgV8pPMyaQy
-lbsMTzC9mKALi+VuG6JG+ni8om+rWV6lL8/K2m2qL+usobNqqrcuZzWLeeEeaYji5kbNoKXq
-vgvOdjp6Dpvq/NonWz1zHyLmSGHGTPNpsaguG7bUMSAsvIKKjqQOpdeJQ/wWWq8dcdcRWdq6
-hw2v+vPhwvCkxWeM1tZUOt4KpLoDd7NlyP0e03RiqhjKaJMeoYV+9Udly/hNVyh00jT/MLbu
-9mIwFIws6wIDAQABo4HhMIHeMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1QaMB0G
-A1UdDgQWBBSJgmd9xJ0mcABLtFBIfN49rgRufTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/
-BAUwAwEB/zB7BgNVHR8EdDByMDigNqA0hjJodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9BZGRU
-cnVzdEV4dGVybmFsQ0FSb290LmNybDA2oDSgMoYwaHR0cDovL2NybC5jb21vZG8ubmV0L0Fk
-ZFRydXN0RXh0ZXJuYWxDQVJvb3QuY3JsMA0GCSqGSIb3DQEBBQUAA4IBAQAZ2IkRbyispgCi
-54fBm5AD236hEv0e8+LwAamUVEJrmgnEoG3XkJIEA2Z5Q3H8+G+v23ZF4jcaPd3kWQR4rBz0
-g0bzes9bhHIt5UbBuhgRKfPLSXmHPLptBZ2kbWhPrXIUNqi5sf2/z3/wpGqUNVCPz4FtVbHd
-WTBK322gnGQfSXzvNrv042n0+DmPWq1LhTq3Du3Tzw1EovsEv+QvcI4l+1pUBrPQxLxtjftz
-Mizpm4QkLdZ/kXpoAlAfDj9N6cz1u2fo3BwuO/xOzf4CjuOoEwqlJkRl6RDyTVKnrtw+ymsy
-XEFs/vVdoOr/0fqbhlhtPZZH5f4ulQTCAMyOofK7MIIGKTCCBRGgAwIBAgIQHLGVGyneD1Y+
-FHwNv6cLdTANBgkqhkiG9w0BAQUFADCBrjELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAlVUMRcw
-FQYDVQQHEw5TYWx0IExha2UgQ2l0eTEeMBwGA1UEChMVVGhlIFVTRVJUUlVTVCBOZXR3b3Jr
-MSEwHwYDVQQLExhodHRwOi8vd3d3LnVzZXJ0cnVzdC5jb20xNjA0BgNVBAMTLVVUTi1VU0VS
-Rmlyc3QtQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBFbWFpbDAeFw0wOTEwMjkwMDAwMDBa
-Fw0xMDEwMjkyMzU5NTlaMIHZMTUwMwYDVQQLEyxDb21vZG8gVHJ1c3QgTmV0d29yayAtIFBF
-UlNPTkEgTk9UIFZBTElEQVRFRDFGMEQGA1UECxM9VGVybXMgYW5kIENvbmRpdGlvbnMgb2Yg
-dXNlOiBodHRwOi8vd3d3LmNvbW9kby5uZXQvcmVwb3NpdG9yeTEfMB0GA1UECxMWKGMpMjAw
-MyBDb21vZG8gTGltaXRlZDEUMBIGA1UEAxMLRWh1ZCBHYXZyb24xITAfBgkqhkiG9w0BCQEW
-EmdhdnJvbkB3ZXR3b3JrLm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALl3
-sttaXIpRqjgDgjxBmXdq6WWCbkkXsG9sS2ePO6u6byAg1oHLrtQ/hKuluuOaOAKDEmG84aFb
-szuYOpcDJ3AJTcZJ5kByDWmZpzV7ZYO7NjLbDwdrkmjMPekMccakfWqerjFiBur+0OIRXwQZ
-4/thW4+CQiqn6bYQq6tOYKZgeELO0oza1Sh4w9QQcRmynwsBOk8ZMY7vlD5zeJr1D4aSL8Wt
-2CMXttzJRkNsMpyWamk8ZjmuhUBtkjuAoy1Y9g3um8PSB9xIiwBNatMqHWaLqyyPwA+eDYQ4
-dnnLcH6RzzylpPcWj40G9OW0WLqtZzfEG7JrAvA76YVL3Sy8LGkCAwEAAaOCAhQwggIQMB8G
-A1UdIwQYMBaAFImCZ33EnSZwAEu0UEh83j2uBG59MB0GA1UdDgQWBBRZy+uewxXtEdEq4iYZ
-lojjTbR7sTAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEF
-BQcDBAYLKwYBBAGyMQEDBQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYB
-BAGyMQECAQEBMCswKQYIKwYBBQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BT
-MIGlBgNVHR8EgZ0wgZowTKBKoEiGRmh0dHA6Ly9jcmwuY29tb2RvY2EuY29tL1VUTi1VU0VS
-Rmlyc3QtQ2xpZW50QXV0aGVudGljYXRpb25hbmRFbWFpbC5jcmwwSqBIoEaGRGh0dHA6Ly9j
-cmwuY29tb2RvLm5ldC9VVE4tVVNFUkZpcnN0LUNsaWVudEF1dGhlbnRpY2F0aW9uYW5kRW1h
-aWwuY3JsMGwGCCsGAQUFBwEBBGAwXjA2BggrBgEFBQcwAoYqaHR0cDovL2NydC5jb21vZG9j
-YS5jb20vVVROQUFBQ2xpZW50Q0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21v
-ZG9jYS5jb20wHQYDVR0RBBYwFIESZ2F2cm9uQHdldHdvcmsubmV0MA0GCSqGSIb3DQEBBQUA
-A4IBAQBwr7rs/IQQYPte4nt/Cw6zJsQognWiWKiMdshXreVbby+F8VXeEbCwQplf1Sjljoqq
-zHguRVQxKSsimqEByDAJQ7MjZhZGUWUMedYXwQibAp8aszOEmXHlYCwIB0dx4ixPxmVXk/0n
-zODzID6A6yq0+JhV6X8+MjEz/+rPYBOY9NOJztsv3Q0VwszM5MXUg6jfF3PPnxjZCvaRRkq6
-AtXjWn8Rnv2A3XQNNrumkTNFqn1wgXkFBdX5TruMlbB5ei/VfkQCKkL3rPWt85UAigMRrC57
-JkKhcOebRzseiG76oYqlYvC+9OV6sJmJMB9eRKt1AmENnUIEE8D8QaoaO9lUMIIGKTCCBRGg
-AwIBAgIQHLGVGyneD1Y+FHwNv6cLdTANBgkqhkiG9w0BAQUFADCBrjELMAkGA1UEBhMCVVMx
-CzAJBgNVBAgTAlVUMRcwFQYDVQQHEw5TYWx0IExha2UgQ2l0eTEeMBwGA1UEChMVVGhlIFVT
-RVJUUlVTVCBOZXR3b3JrMSEwHwYDVQQLExhodHRwOi8vd3d3LnVzZXJ0cnVzdC5jb20xNjA0
-BgNVBAMTLVVUTi1VU0VSRmlyc3QtQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBFbWFpbDAe
-Fw0wOTEwMjkwMDAwMDBaFw0xMDEwMjkyMzU5NTlaMIHZMTUwMwYDVQQLEyxDb21vZG8gVHJ1
-c3QgTmV0d29yayAtIFBFUlNPTkEgTk9UIFZBTElEQVRFRDFGMEQGA1UECxM9VGVybXMgYW5k
-IENvbmRpdGlvbnMgb2YgdXNlOiBodHRwOi8vd3d3LmNvbW9kby5uZXQvcmVwb3NpdG9yeTEf
-MB0GA1UECxMWKGMpMjAwMyBDb21vZG8gTGltaXRlZDEUMBIGA1UEAxMLRWh1ZCBHYXZyb24x
-ITAfBgkqhkiG9w0BCQEWEmdhdnJvbkB3ZXR3b3JrLm5ldDCCASIwDQYJKoZIhvcNAQEBBQAD
-ggEPADCCAQoCggEBALl3sttaXIpRqjgDgjxBmXdq6WWCbkkXsG9sS2ePO6u6byAg1oHLrtQ/
-hKuluuOaOAKDEmG84aFbszuYOpcDJ3AJTcZJ5kByDWmZpzV7ZYO7NjLbDwdrkmjMPekMccak
-fWqerjFiBur+0OIRXwQZ4/thW4+CQiqn6bYQq6tOYKZgeELO0oza1Sh4w9QQcRmynwsBOk8Z
-MY7vlD5zeJr1D4aSL8Wt2CMXttzJRkNsMpyWamk8ZjmuhUBtkjuAoy1Y9g3um8PSB9xIiwBN
-atMqHWaLqyyPwA+eDYQ4dnnLcH6RzzylpPcWj40G9OW0WLqtZzfEG7JrAvA76YVL3Sy8LGkC
-AwEAAaOCAhQwggIQMB8GA1UdIwQYMBaAFImCZ33EnSZwAEu0UEh83j2uBG59MB0GA1UdDgQW
-BBRZy+uewxXtEdEq4iYZlojjTbR7sTAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAg
-BgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQEDBQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYG
-A1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYBBQUHAgEWHWh0dHBzOi8vc2VjdXJl
-LmNvbW9kby5uZXQvQ1BTMIGlBgNVHR8EgZ0wgZowTKBKoEiGRmh0dHA6Ly9jcmwuY29tb2Rv
-Y2EuY29tL1VUTi1VU0VSRmlyc3QtQ2xpZW50QXV0aGVudGljYXRpb25hbmRFbWFpbC5jcmww
-SqBIoEaGRGh0dHA6Ly9jcmwuY29tb2RvLm5ldC9VVE4tVVNFUkZpcnN0LUNsaWVudEF1dGhl
-bnRpY2F0aW9uYW5kRW1haWwuY3JsMGwGCCsGAQUFBwEBBGAwXjA2BggrBgEFBQcwAoYqaHR0
-cDovL2NydC5jb21vZG9jYS5jb20vVVROQUFBQ2xpZW50Q0EuY3J0MCQGCCsGAQUFBzABhhho
-dHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHQYDVR0RBBYwFIESZ2F2cm9uQHdldHdvcmsubmV0
-MA0GCSqGSIb3DQEBBQUAA4IBAQBwr7rs/IQQYPte4nt/Cw6zJsQognWiWKiMdshXreVbby+F
-8VXeEbCwQplf1SjljoqqzHguRVQxKSsimqEByDAJQ7MjZhZGUWUMedYXwQibAp8aszOEmXHl
-YCwIB0dx4ixPxmVXk/0nzODzID6A6yq0+JhV6X8+MjEz/+rPYBOY9NOJztsv3Q0VwszM5MXU
-g6jfF3PPnxjZCvaRRkq6AtXjWn8Rnv2A3XQNNrumkTNFqn1wgXkFBdX5TruMlbB5ei/VfkQC
-KkL3rPWt85UAigMRrC57JkKhcOebRzseiG76oYqlYvC+9OV6sJmJMB9eRKt1AmENnUIEE8D8
-QaoaO9lUMYIEXTCCBFkCAQEwgcMwga4xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJVVDEXMBUG
-A1UEBxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoTFVRoZSBVU0VSVFJVU1QgTmV0d29yazEh
-MB8GA1UECxMYaHR0cDovL3d3dy51c2VydHJ1c3QuY29tMTYwNAYDVQQDEy1VVE4tVVNFUkZp
-cnN0LUNsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQgRW1haWwCEByxlRsp3g9WPhR8Db+nC3Uw
-CQYFKw4DAhoFAKCCAm4wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUx
-DxcNMTAwMzI0MDEyNTAyWjAjBgkqhkiG9w0BCQQxFgQUeOtgc/PNg+Ro2YbB8meHuObr92ww
-XwYJKoZIhvcNAQkPMVIwUDALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwIC
-AgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEoMIHUBgkrBgEEAYI3
-EAQxgcYwgcMwga4xCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJVVDEXMBUGA1UEBxMOU2FsdCBM
-YWtlIENpdHkxHjAcBgNVBAoTFVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8GA1UECxMYaHR0
-cDovL3d3dy51c2VydHJ1c3QuY29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0LUNsaWVudCBB
-dXRoZW50aWNhdGlvbiBhbmQgRW1haWwCEByxlRsp3g9WPhR8Db+nC3UwgdYGCyqGSIb3DQEJ
-EAILMYHGoIHDMIGuMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQg
-TGFrZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0
-dHA6Ly93d3cudXNlcnRydXN0LmNvbTE2MDQGA1UEAxMtVVROLVVTRVJGaXJzdC1DbGllbnQg
-QXV0aGVudGljYXRpb24gYW5kIEVtYWlsAhAcsZUbKd4PVj4UfA2/pwt1MA0GCSqGSIb3DQEB
-AQUABIIBABovbCrpTr5I9ZLzLMsuAlxLd2Zj/6e0g1Uw6gMy5TZskn6ud8RZ5ilXg7PrkXcY
-jZId5XyaXnWugFuPkKJiCZc9scdUNZ6wGXKL+mr9ZAmStgrQImPnS+wgryNdvU8luhsEum+6
-mg17J7xvULmQbQRGqpt6IJCKWW6T0z1xD5wkCOdzC8AAJb2wCv1lkWlLM4EqKnbIpd8RZjPV
-da4H0usSPxC4apTt4C4NwqHFsdc+U47LkQevuYR3f7TdmIhLuSARXaFSiaK7iVy+0OiOm9EQ
-POzzqEJx9apdrdbysvjS1PsYq+DSpu+rceL5v2s5wH2+TvVRnj3Da7lWnqy2lOUAAAAAAAA=
---------------ms010601090803080401030305--
