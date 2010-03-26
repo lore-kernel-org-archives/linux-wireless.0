@@ -1,83 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48629 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751307Ab0CAVVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 16:21:42 -0500
-Message-ID: <4B8C2FE4.2020202@openwrt.org>
-Date: Mon, 01 Mar 2010 22:21:40 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:47653 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753068Ab0CZGPT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Mar 2010 02:15:19 -0400
+Received: by bwz1 with SMTP id 1so1524585bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 23:15:17 -0700 (PDT)
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "linville\@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: support paged rx SKBs
+References: <1269399463-5244-1-git-send-email-yi.zhu@intel.com>
+	<87eij8c3ld.fsf@purkki.valot.fi> <1269575877.4043.203.camel@debian>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 26 Mar 2010 08:15:14 +0200
+In-Reply-To: <1269575877.4043.203.camel@debian> (Zhu Yi's message of "Fri\, 26 Mar 2010 11\:57\:57 +0800")
+Message-ID: <87k4sz38y5.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/2] minstrel: make the rate control ops reusable from another
- rc implementation
-References: <4B8C2EF2.4050908@openwrt.org>
-In-Reply-To: <4B8C2EF2.4050908@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes it possible to reuse the minstrel rate control ops
-from another rate control module. This is useful in preparing for the
-new 802.11n implementation of minstrel, which will reuse the old code
-for legacy stations.
+Zhu Yi <yi.zhu@intel.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -85,7 +85,13 @@ struct minstrel_debugfs_info {
- 	char buf[];
- };
- 
-+extern struct rate_control_ops mac80211_minstrel;
- void minstrel_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir);
- void minstrel_remove_sta_debugfs(void *priv, void *priv_sta);
- 
-+/* debugfs */
-+int minstrel_stats_open(struct inode *inode, struct file *file);
-+ssize_t minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos);
-+int minstrel_stats_release(struct inode *inode, struct file *file);
-+
- #endif
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -541,7 +541,7 @@ minstrel_free(void *priv)
- 	kfree(priv);
- }
- 
--static struct rate_control_ops mac80211_minstrel = {
-+struct rate_control_ops mac80211_minstrel = {
- 	.name = "minstrel",
- 	.tx_status = minstrel_tx_status,
- 	.get_rate = minstrel_get_rate,
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -52,7 +52,7 @@
- #include <net/mac80211.h>
- #include "rc80211_minstrel.h"
- 
--static int
-+int
- minstrel_stats_open(struct inode *inode, struct file *file)
- {
- 	struct minstrel_sta_info *mi = inode->i_private;
-@@ -100,7 +100,7 @@ minstrel_stats_open(struct inode *inode,
- 	return 0;
- }
- 
--static ssize_t
-+ssize_t
- minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos)
- {
- 	struct minstrel_debugfs_info *ms;
-@@ -109,7 +109,7 @@ minstrel_stats_read(struct file *file, c
- 	return simple_read_from_buffer(buf, len, ppos, ms->buf, ms->len);
- }
- 
--static int
-+int
- minstrel_stats_release(struct inode *inode, struct file *file)
- {
- 	kfree(file->private_data);
+>> I think ieee80211_rx{_irqsafe} documentation should now mention that
+>> paged skbs are supported. Better to make this suppot explicit for the
+>> driver authors.
+>
+> Good idea it should be documented somewhere (after the patch is
+> accepted). Maybe the developer wiki page?
 
+I was thinking to add it to include/net/mac80211.h. Better to have all
+documentation in one place.
+
+> For the code itself, I think Linux drivers can always assume the
+> network stacks support paged buffers.
+
+But this wasn't true with mac80211 before your patch, right? So now
+it's better to state this clearly in mac80211 documentation.
+
+-- 
+Kalle Valo
