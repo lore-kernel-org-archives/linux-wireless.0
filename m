@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48848 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753516Ab0C1Wsn (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:48807 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753923Ab0CZVQ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Mar 2010 18:48:43 -0400
-Date: Sun, 28 Mar 2010 15:48:29 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	luciano.coelho@nokia.com
-Subject: Re: [PATCH 0/2] mac80211: cfg80211: Roam trigger support
-Message-ID: <20100328224829.GA22722@jm.kir.nu>
-References: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com>
- <1269499567.5041.0.camel@jlt3.sipsolutions.net>
- <20100328194332.GA384@jm.kir.nu>
+	Fri, 26 Mar 2010 17:16:28 -0400
+Received: by pva18 with SMTP id 18so1675735pva.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 14:16:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100328194332.GA384@jm.kir.nu>
+In-Reply-To: <1269637855.4342.157.camel@jlt3.sipsolutions.net>
+References: <20100324120645.5b43757c.nledovskih@mail.ru>
+	 <445f43ac1003241816p2d00b79br224a155b605ce7ac@mail.gmail.com>
+	 <445f43ac1003261114h55918152rd76be84c97716c99@mail.gmail.com>
+	 <1269637855.4342.157.camel@jlt3.sipsolutions.net>
+Date: Fri, 26 Mar 2010 14:16:26 -0700
+Message-ID: <445f43ac1003261416g357f4fe1qf36de3b0c2fec46d@mail.gmail.com>
+Subject: Re: Mesh mode broken since 2.6.34-rc1
+From: Javier Cardona <javier@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?KOI8-R?B?7MXEz9fTy8nIIO7Jy8/Mwcog98HMxdLYxdfJ3g==?=
+	<nledovskih@mail.ru>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	devel@lists.open80211s.org,
+	"Porsch, Marco" <marco.porsch@siemens.com>,
+	Steve deRosier <steve@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 28, 2010 at 12:43:32PM -0700, Jouni Malinen wrote:
-> On Wed, Mar 24, 2010 at 11:46:07PM -0700, Johannes Berg wrote:
-> > So this is merged, anyone want to implement it in mac80211 so we can
-> > start playing with it? I won't get around to it for quite a while.
-> 
-> How about something like this? Based on a very brief test (walk 10
-> meters toward the AP and then back ;-) this seems to be doing more or
-> less what I expect the feature should do.
+Johannes,
 
-And for those interested in playing more with this, I added support for
-using the new signal strength threshold with the bgscan_simple module in
-wpa_supplicant. This seemed to provide reasonable behavior in an office
-environment with multiple APs and some overlapping coverage area in a
-test with ath9k. I used following wpa_supplicant configuration option
-for this particular test:
-bgscan="simple:30:-50:300"
+> The proper fix will probably be to make
+> ieee80211_rx_h_action() aware of the frames that mesh/mlme wants to
+> handle it and not reject then.
 
-This uses background scan interval of 30 seconds if signal strength is
-below -50 dBm and 300 seconds if above. A new scan is triggered
-immediately if the signal strength drops below the threshold (or if it
-drops further 4 dB and it has been more than 10 seconds from the
-previous scan). Furthermore, I had manually configured the list of known
-channels that the APs here are using (scan_freq parameter).
+Thanks, Johannes.  We are working on a patch along these lines.  No
+need to trouble yourself except for reviewing it when we send it.
 
-The connection did not die at any point (based on a continuous ping) and
-roaming behavior seemed reasonable, i.e., signal strength did not drop
-below -65 dBm or so before the new AP was already found. Background
-scans are also quite tolerable when the frequency list is limited and
-even more so, when remaining in the same location where the signal
-strength remains above the threshold. That 300 second interval could
-also be made much higher if it is desirable to avoid more or less all
-background scans since the immediate scan triggered by signal strength
-drop by itself should cover most use cases.
+Cheers,
+
+Javier
+
+
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
