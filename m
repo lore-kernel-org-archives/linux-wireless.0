@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:61375 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755474Ab0CVRph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 13:45:37 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 10:45:37 -0700
-Date: Mon, 22 Mar 2010 10:45:35 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Jiri Moravec <jim.lkml@gmail.com>
-CC: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	<linux-wireless@vger.kernel.org>, <nbd@openwrt.org>
-Subject: Re: [ath5k-devel] can't add ath5k into bridge on kernel >=2.6.33
-Message-ID: <20100322174535.GD4786@tux>
-References: <ho3rf1$g7v$1@dough.gmane.org>
- <1269153545.8038.8.camel@mj>
- <4BA64633.2050702@gmail.com>
- <1269223392.2656.16.camel@mj>
- <ho80v2$u3b$1@dough.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <ho80v2$u3b$1@dough.gmane.org>
+Received: from smtp.nokia.com ([192.100.105.134]:30656 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753232Ab0CZKxy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Mar 2010 06:53:54 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/24] wl1271: bunch of patches from our internal tree wk12
+Date: Fri, 26 Mar 2010 12:53:09 +0200
+Message-Id: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 22, 2010 at 08:05:05AM -0700, Jiri Moravec wrote:
-> On 22.3.2010 03:03, Pavel Roskin wrote:
-> > On Sun, 2010-03-21 at 09:15 -0700, Gus Wirth wrote:
-> >> On 03/20/2010 11:39 PM, Pavel Roskin wrote:
-> > 
-> >>> Bridging doesn't work on the station side anyway because the 802.11
-> >>> header has three addresses (except when WDS is used) omitting the
-> >>> address that would be needed for a station to send or receive a packet
-> >>> on behalf of another system.
-> >>
-> >> But there are ways around that. For example, there is a patch called
-> >> arpnat that affects ebtables, used by projects like Gargoyle router that
-> >> does for MAC addresses that IP masquerading does for IP addresses.
-> >>
-> >> As such, it is very useful to have a node in managed (station) mode be
-> >> able to be part of a bridge, as it allows the creation of an essentially
-> >> transparent connection.
-> > 
-> > As it stands now, it's more common that users without that patch try to
-> > use bridging on the station side.  When/if arpnat is applied to the
-> > kernel, the check for managed mode interfaces will need to be revised.
-> > 
-> Hi
-> On some openwrt pages about Gargoyle and arpnat I found link to Felix Fietkau's patch
-> which was finally accepted to vanilla as commit 9bc383de37090ba7ca3ff32a12c9d809dc5867f0.
-> From this point there is probably support for 4addr mode (STATION/AP_VLAN), but what
-> is probably missing is athk5 support for it. Am I correct? Can somebody clarify this?
+Hi John,
 
-I only recently got to pick Felix's brain about this. From what I gathered
-essentially what you need:
+Here are 25 more patches for wl1271 which are still pending in our internal
+tree.  Please apply. :)
 
-  * on the STA add the 4-address flag, for now this requires using the iw add 4addr flag, iw should
-    support a change command but I don't think we have it yet on iw.
-  * on the AP/STA side have support for this feature on the kernel/hostapd side (git versions will do)
-  * on hostapd use the wds_sta flag
-  * Add the STA WDS'd interface to the bridge, everything will take care of itself after that
+Cheers,
+Luca.
 
-So the STA with 4-address frame support will allow the bridging layer to send
-802.3 frames to through the STA interface, it will send it to the AP,
-the AP with support for this will detect it and create a local interface
-for the "peer" for sending future frames to it.
+Juuso Oikarinen (17):
+  wl1271: Clean up RX rate reporting
+  wl1271: Add TX rate reporting
+  wl1271: Fix memory leaks in SPI initialization
+  wl1271: Fix memory leak in scan command handling
+  wl1271: Configure clock-request drive mode to open-drain
+  wl1271: Fix memory leak in cmd_data_path
+  wl1271: Update busyword checking mechanism
+  wl1271: Remove device MAC-address randomization
+  wl1271: Disable connection monitoring while not associated
+  wl1271: Fix ad-hoc mode handling
+  wl1271: Update beacon interval properly for ad-hoc
+  wl1271: Fix memory leak in firmware crash scenario
+  wl1271: Configure probe-request template when associated
+  wl1271: Disconnect if PSM entry fails
+  wl1271: Configure HW connection monitor
+  wl1271: Add keep-alive frame template support
+  wl1271: Enable hardware keep alive messages
 
-If someone can add this to the wiki:
+Luciano Coelho (4):
+  wl1271: fix wl1271_spi driver name
+  wl1271: wait for join command complete event
+  wl1271: wait for disconnect command complete event
+  wl1271: remove deprecated usage of RX status noise
 
-http://wireless.kernel.org/en/users/Documentation/hostapd
+Saravanan Dhanabal (1):
+  wl1271: Fix msleep() delay while waiting for completion
 
-it would be appreciated.
+Teemu Paasikivi (2):
+  wl1271: Warnings caused by wrong format specifiers fixed
+  wl1271: Removed checking of PSM from handling BSS_LOST_EVENT
 
-  Luis
+ drivers/net/wireless/wl12xx/wl1271.h       |   14 +-
+ drivers/net/wireless/wl12xx/wl1271_acx.c   |   73 ++++++++++-
+ drivers/net/wireless/wl12xx/wl1271_acx.h   |   33 +++++-
+ drivers/net/wireless/wl12xx/wl1271_boot.c  |   14 ++-
+ drivers/net/wireless/wl12xx/wl1271_boot.h  |    7 +-
+ drivers/net/wireless/wl12xx/wl1271_cmd.c   |   93 +++++++++++--
+ drivers/net/wireless/wl12xx/wl1271_cmd.h   |    9 +-
+ drivers/net/wireless/wl12xx/wl1271_conf.h  |   35 +++++
+ drivers/net/wireless/wl12xx/wl1271_event.c |   40 +-----
+ drivers/net/wireless/wl12xx/wl1271_init.c  |   46 +++++--
+ drivers/net/wireless/wl12xx/wl1271_main.c  |  198 ++++++++++++++++++++++++----
+ drivers/net/wireless/wl12xx/wl1271_rx.c    |   83 +-----------
+ drivers/net/wireless/wl12xx/wl1271_rx.h    |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_sdio.c  |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_spi.c   |   71 ++++-------
+ drivers/net/wireless/wl12xx/wl1271_tx.c    |   37 +++--
+ drivers/net/wireless/wl12xx/wl1271_tx.h    |    1 +
+ 17 files changed, 513 insertions(+), 247 deletions(-)
+
