@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:65491 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932184Ab0CLJ5O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 04:57:14 -0500
-Message-ID: <4B9A0FF4.2030705@gmail.com>
-Date: Fri, 12 Mar 2010 10:57:08 +0100
-From: Till Kamppeter <till.kamppeter@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:11957 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868Ab0CZAoc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 20:44:32 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Mar 2010 17:44:32 -0700
+Date: Thu, 25 Mar 2010 17:44:31 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bruno Randolf <br1@einfach.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	"bob@bobcopeland.com" <bob@bobcopeland.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] [PATCH 00/10] ANI for ath5k
+Message-ID: <20100326004431.GA2385@tux>
+References: <20100325054603.10697.48915.stgit@tt-desk>
+ <alpine.DEB.2.00.1003261001530.24989@kauri.acheron.indranet.co.nz>
+ <20100325211311.GG7651@tux>
+ <201003260927.57491.br1@einfach.org>
 MIME-Version: 1.0
-To: Denis Silakov <silakov@ispras.ru>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	lsb-discuss@lists.linux-foundation.org,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>
-Subject: Re: [lsb-discuss] Linux wireless GSoC 2010 project ideas
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com>	<20100128231545.GH18683@nowhere>	<43e72e891001281523s56707279x896ab059e6d4e530@mail.gmail.com>	<4B62231F.5080104@gmail.com> <20100309224347.GD5058@nowhere> <4B9A026D.1030806@gmail.com> <4B9A0B87.9010001@ispras.ru>
-In-Reply-To: <4B9A0B87.9010001@ispras.ru>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201003260927.57491.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for adding it.
+On Thu, Mar 25, 2010 at 05:27:57PM -0700, Bruno Randolf wrote:
+> On Friday 26 March 2010 06:13:11 Luis R. Rodriguez wrote:
+> > > > - Improve beacon averaging algorithm for IBSS: Maybe we should keep
+> > > > track of
+> > > > 
+> > > >  the average RSSI on a per-node basis and use the minimum of those in
+> > > >  order not to loose far away nodes? The other option would be to limit
+> > > >  the parameters we control similar to AP mode.
+> > > 
+> > > We have talked about this before. I thought that we agreed
+> > > that adhoc nodes may
+> > > 
+> > >    a)be activated at any time
+> > >    b)be positioned at an unknown distance apart
+> > > 
+> > > it therefore makes no sense to average the RSSI over the current nodes.
+> > > If all the current nodes in the network are close by, the ani algorithm
+> > > will wind the sensitivity down. Consequently, if a remote node is
+> > > started, it will not be able to connect. Yet, the remote node should
+> > > have been able to connect as the slot times etc were long enough,
+> > > and the link budget is fine...
+> 
+> i'm not sure how big the effect of ANI is - would it really shut the remote 
+> node out completely? or would just performance degrade? also beacons are sent 
+> at the lowest rate, so they will travel far. this needs to be tested! it 
+> doesnt make sense to discuss this based on hypothetical assumptions.
+> 
+> > > So yes, the only way to
+> > > 
+> > > > - Improve beacon averaging algorithm for IBSS:
+> > > is to turn ani off. which means the issue you raised else where of
+> > > providing reasonable userland controls (not via debugfs) becomes
+> > > important.
+> > 
+> > If ANI helps IBSS so much then why not just default to turning it
+> > off within the driver?
+> 
+> i would say in most standard cases, IBSS nodes are close together or at a 
+> similar distance, so it does make sense to use ANI by default.
+> 
+> as well, we all agree that there should be userland controls. the questions is 
+> just about the interface to use.
 
-    Till
+ANI is specific to Atheros cards so debugfs would do it. If we want to
+have a more rigit API we could use a configfs entry for ath9k.
 
-On 03/12/2010 10:38 AM, Denis Silakov wrote:
-> Added this item to '2010 GSoC Kernel work' page:
->
-> https://www.linuxfoundation.org/collaborate/workgroups/gsoc/2010-gsoc-kernel-work
->
-> On 03/12/10 11:59, Till Kamppeter wrote:
->> Can someone post this project idea on the ideas list today (marking that
->> it comes from a student). This could support our application as
->> mentoring organization.
->>
->>      Till
->>
->
-
+  Luis
