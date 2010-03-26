@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:52713 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755595Ab0C3GgX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33171 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883Ab0CZGVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 02:36:23 -0400
-Date: Mon, 29 Mar 2010 23:36:15 -0700
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix dropping of unprotected robust multicast
- frames
-Message-ID: <20100330063615.GD4953@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 26 Mar 2010 02:21:54 -0400
+Subject: Re: [PATCH] iw: Add support for connection quality monitor
+ configuation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1269584079.10120.889.camel@wimaxnb.nmp.nokia.com>
+References: <1269582379-10253-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1269583649.4581.4.camel@jlt3.sipsolutions.net>
+	 <1269584079.10120.889.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 25 Mar 2010 23:21:41 -0700
+Message-ID: <1269584501.4581.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When selecting the RX key for group-addressed robust management
-frames, we do not actually select any BIP key if the frame is
-unprotected (since we cannot find the key index from MMIE). This
-results in the drop_unencrypted check in failing to drop the frame. It
-is enough to verify that we have a STA entry for the transmitter and
-that MFP is enabled for that STA; we do not need to check rx->key
-here. This fixes BIP processing for unprotected, group-addressed,
-robust management frames.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+> > > +	NLA_PUT_U32(cqm, NL80211_ATTR_CQM_RSSI_THOLD, thold);
+> > > +	NLA_PUT_U32(cqm, NL80211_ATTR_CQM_RSSI_HYST, hyst);
+> > 
+> > Hmm. guess I missed that in the kernel side review, but should we change
+> > the API so that leaving them out means disabling?
+> 
+> Heh, yep, the kernel part does not disable this if these are left out. 
+> 
+> Actually, I can think of one downside to the approach you propose: when
+> this gets extended, there will be multiple different cqm parameters, and
+> they would have to be always configured simultaneously, otherwise some
+> of the configurations would end up disabled. At least with iw, that
+> would be somewhat awkward?
 
----
- net/mac80211/rx.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Hmm, yes, maybe. In that case you'd want leaving them out meaning no
+change I guess. I'll give it another thought, but now I need to get
+sleep and you won't hear from me again until I'm home on like Sunday :)
 
---- wireless-testing.orig/net/mac80211/rx.c	2010-03-29 23:32:20.000000000 -0700
-+++ wireless-testing/net/mac80211/rx.c	2010-03-29 23:35:35.000000000 -0700
-@@ -1413,8 +1413,7 @@ ieee80211_drop_unencrypted_mgmt(struct i
- 			return -EACCES;
- 		/* BIP does not use Protected field, so need to check MMIE */
- 		if (unlikely(ieee80211_is_multicast_robust_mgmt_frame(rx->skb) &&
--			     ieee80211_get_mmie_keyidx(rx->skb) < 0 &&
--			     rx->key))
-+			     ieee80211_get_mmie_keyidx(rx->skb) < 0))
- 			return -EACCES;
- 		/*
- 		 * When using MFP, Action frames are not allowed prior to
+johannes
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
