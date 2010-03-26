@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33350 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751356Ab0CANSH (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:24372 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753232Ab0CZKx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 08:18:07 -0500
-Date: Mon, 1 Mar 2010 15:18:01 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Bjarke Istrup Pedersen <gurligebis@gentoo.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Problem with bridges and wireless NIC's
-Message-ID: <20100301131801.GA3449@jm.kir.nu>
-References: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
- <20100301075953.GA32038@jm.kir.nu>
- <9c30dffe1003010012l5b3a912fma5655e630b83ce9f@mail.gmail.com>
- <20100301105329.GA2684@jm.kir.nu>
- <9c30dffe1003010340r20a179c6hd2d5e7eeeba8d106@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9c30dffe1003010340r20a179c6hd2d5e7eeeba8d106@mail.gmail.com>
+	Fri, 26 Mar 2010 06:53:58 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 05/24] wl1271: Fix memory leak in scan command handling
+Date: Fri, 26 Mar 2010 12:53:14 +0200
+Message-Id: <1269600813-32145-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 01, 2010 at 12:40:14PM +0100, Bjarke Istrup Pedersen wrote:
-> Okay, so the best thing to do, is to advise people to reverse the
-> patch if the need 0.6.x, or use 0.7.x - right?
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-I don't think I would recommend people to reverse the commit that made
-kernel reject invalid wlan0 mode in the bridge in general. It should be
-possible to reorder network configuration to work with it and if really
-not, reverting that change is reasonable only for a device that works as
-an AP and uses bridging. Alternatively, whoever needs hostapd 0.6.x for
-whatever reason could obviously also backport the hostapd patch for
-bridge setup.
+This patch fixes a memory leak in the scan command handling code.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@iki.fi>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index d005729..dbed060 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -665,6 +665,7 @@ int wl1271_cmd_scan(struct wl1271 *wl, const u8 *ssid, size_t ssid_len,
+ 
+ out:
+ 	kfree(params);
++	kfree(trigger);
+ 	return ret;
+ }
+ 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.3.3
+
