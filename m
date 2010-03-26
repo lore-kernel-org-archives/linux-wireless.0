@@ -1,53 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:33995 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755831Ab0C3TG2 convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:21992 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753398Ab0CZKx5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 15:06:28 -0400
-Received: by ewy20 with SMTP id 20so1583118ewy.1
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 12:06:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1269975753.4938.8.camel@mj>
-References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>
-	 <4BB2328D.9010503@lwfinger.net>
-	 <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
-	 <4BB23953.9010104@lwfinger.net> <1269975753.4938.8.camel@mj>
-Date: Tue, 30 Mar 2010 21:06:27 +0200
-Message-ID: <b170af451003301206p593cbe3ew582823c75dc06f11@mail.gmail.com>
-Subject: Re: Broadcom card totally not visible for system (lspci)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 26 Mar 2010 06:53:57 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 03/24] wl1271: Add TX rate reporting
+Date: Fri, 26 Mar 2010 12:53:12 +0200
+Message-Id: <1269600813-32145-4-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/30 Pavel Roskin <proski@gnu.org>:
-> On Tue, 2010-03-30 at 12:48 -0500, Larry Finger wrote:
->> On 03/30/2010 12:31 PM, Rafał Miłecki wrote:
->> >
->> > Is this possible it's disabled in BIOS by default and needs execution
->> > of some ACPI command or sth to make it work?
->> >
->> > Yeah, trying to find some other reason than faulty WiFi... It's weird
->> > it was working fine "before a moment" on Windows.
->>
->> Winblows can fiddle with the "Wake-on-LAN" setting in the BIOS, but AFAIK, the
->> BCM4306 does not have this capability. If the BIOS has that setting, it should
->> be turned off.
->
-> Perhaps it's a crazy idea, but what if the Ethernet device and the WiFi
-> device are connected to the same SSB bus, an thus sharing the PCI ID?
->
-> Is there the full kernel log?  In particular, the lines containing "ssb"
-> would be interesting.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-You mean dmesg, don't you? I've attached it, but it was stopped by b43
-ML. You can see dmesg on marc archive for linux-wireless:
-http://marc.info/?l=linux-wireless&m=126996817625998&w=2
+Add reporting of the used TX rate to mac80211 in the tx_status.
 
-Unfortunately I don't have dmesg from some more-debugging kernel.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    1 +
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |   27 +++++++++++++++------------
+ drivers/net/wireless/wl12xx/wl1271_tx.h   |    1 +
+ 3 files changed, 17 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 49779e5..8645030 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2127,6 +2127,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
+ 
+ 	wl->hw->queues = 4;
++	wl->hw->max_rates = 1;
+ 
+ 	SET_IEEE80211_DEV(wl->hw, wl1271_wl_to_dev(wl));
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index 6d109df..5712489 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -304,6 +304,8 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 	struct ieee80211_tx_info *info;
+ 	struct sk_buff *skb;
+ 	int id = result->id;
++	int rate = -1;
++	u8 retries = 0;
+ 
+ 	/* check for id legality */
+ 	if (unlikely(id >= ACX_TX_DESCRIPTORS || wl->tx_frames[id] == NULL)) {
+@@ -314,19 +316,22 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 	skb = wl->tx_frames[id];
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+-	/* update packet status */
+-	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+-		if (result->status == TX_SUCCESS)
++	/* update the TX status info */
++	if (result->status == TX_SUCCESS) {
++		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
+-		if (result->status & TX_RETRY_EXCEEDED) {
+-			/* FIXME */
+-			/* info->status.excessive_retries = 1; */
+-			wl->stats.excessive_retries++;
+-		}
++		rate = wl1271_rate_to_idx(wl, result->rate_class_index);
++		retries = result->ack_failures;
++	} else if (result->status == TX_RETRY_EXCEEDED) {
++		wl->stats.excessive_retries++;
++		retries = result->ack_failures;
+ 	}
+ 
+-	/* FIXME */
+-	/* info->status.retry_count = result->ack_failures; */
++	info->status.rates[0].idx = rate;
++	info->status.rates[0].count = retries;
++	info->status.rates[0].flags = 0;
++	info->status.ack_signal = -1;
++
+ 	wl->stats.retry_count += result->ack_failures;
+ 
+ 	/* update security sequence number */
+@@ -350,8 +355,6 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 		     result->id, skb, result->ack_failures,
+ 		     result->rate_class_index, result->status);
+ 
+-	/* FIXME: do we need to tell the stack about the used rate? */
+-
+ 	/* return the packet to the stack */
+ 	ieee80211_tx_status(wl->hw, skb);
+ 	wl->tx_frames[result->id] = NULL;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
+index 5e6c27a..b03c95d 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
+@@ -159,5 +159,6 @@ static inline int wl1271_tx_ac_to_tid(int ac)
+ void wl1271_tx_work(struct work_struct *work);
+ void wl1271_tx_complete(struct wl1271 *wl);
+ void wl1271_tx_flush(struct wl1271 *wl);
++u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate);
+ 
+ #endif
 -- 
-Rafał
+1.6.3.3
+
