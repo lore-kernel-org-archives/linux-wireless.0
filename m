@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:39388 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857Ab0CLB4x convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:30708 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753486Ab0CZKyK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 20:56:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <43e72e891003111722n4b4d5b6crf764dfe357ff8965@mail.gmail.com>
-References: <43e72e891003111722n4b4d5b6crf764dfe357ff8965@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 12 Mar 2010 02:56:31 +0100
-Message-ID: <69e28c911003111756h224ef6a9x622c979232b6698b@mail.gmail.com>
-Subject: Re: cfg80211 conversion of all drivers
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: devel@linuxdriverproject.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 26 Mar 2010 06:54:10 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 18/24] wl1271: Fix memory leak in firmware crash scenario
+Date: Fri, 26 Mar 2010 12:53:27 +0200
+Message-Id: <1269600813-32145-19-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 12, 2010 at 2:22 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> Staging developers, if you would like to get your hands wet with some
-> 802.11 work, there are some 802.11 drivers which need conversion to
-> cfg80211. The list is here:
->
-> http://wireless.kernel.org/en/developers/todo-list/cfg80211-conversion
->
-> Takers are greatly appreciated.
->
-> Thanks,
->
->  Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-May I ask you why hostap is "to be killed"? What is the alternative?
+The driver tx-queue flush operation leaks broadcast-frames. This leak occurs
+if the driver is shut down while there are frames in TX buffers (such as in
+a firmware crash scenario.) Fix the leak.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_tx.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index 5712489..66b48b7 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -426,8 +426,10 @@ void wl1271_tx_flush(struct wl1271 *wl)
+ 
+ 		wl1271_debug(DEBUG_TX, "flushing skb 0x%p", skb);
+ 
+-		if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS))
+-				continue;
++		if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
++			kfree_skb(skb);
++			continue;
++		}
+ 
+ 		ieee80211_tx_status(wl->hw, skb);
+ 	}
+@@ -437,8 +439,10 @@ void wl1271_tx_flush(struct wl1271 *wl)
+ 			skb = wl->tx_frames[i];
+ 			info = IEEE80211_SKB_CB(skb);
+ 
+-			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS))
++			if (!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)) {
++				kfree_skb(skb);
+ 				continue;
++			}
+ 
+ 			ieee80211_tx_status(wl->hw, skb);
+ 			wl->tx_frames[i] = NULL;
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
