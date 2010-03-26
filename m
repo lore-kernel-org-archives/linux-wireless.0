@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:51020 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932446Ab0CXSqh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 14:46:37 -0400
-From: Frans Pop <elendil@planet.nl>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Frans Pop <elendil@planet.nl>, libertas-dev@lists.infradead.org
-Subject: [PATCH 7/7] wireless/libertas: remove trailing space in debugfs header
-Date: Wed, 24 Mar 2010 19:46:35 +0100
-Message-Id: <1269456395-15343-7-git-send-email-elendil@planet.nl>
-In-Reply-To: <201003241927.12434.elendil@planet.nl>
-References: <201003241927.12434.elendil@planet.nl>
+Received: from mga02.intel.com ([134.134.136.20]:54274 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751572Ab0CZICo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Mar 2010 04:02:44 -0400
+Subject: Re: [PATCH 1/2] mac80211: support paged rx SKBs
+From: Zhu Yi <yi.zhu@intel.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87k4sz38y5.fsf@purkki.valot.fi>
+References: <1269399463-5244-1-git-send-email-yi.zhu@intel.com>
+	 <87eij8c3ld.fsf@purkki.valot.fi> <1269575877.4043.203.camel@debian>
+	 <87k4sz38y5.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Mar 2010 16:03:29 +0800
+Message-ID: <1269590609.4043.214.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Frans Pop <elendil@planet.nl>
-Cc: libertas-dev@lists.infradead.org
----
- drivers/net/wireless/libertas/debugfs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Fri, 2010-03-26 at 14:15 +0800, Kalle Valo wrote:
+> 
+> I was thinking to add it to include/net/mac80211.h. Better to have all
+> documentation in one place. 
 
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index 587b0cb..9c3c2f8 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -74,7 +74,7 @@ static ssize_t lbs_getscantable(struct file *file, char __user *userbuf,
- 		return -ENOMEM;
- 
- 	pos += snprintf(buf+pos, len-pos,
--		"# | ch  | rssi |       bssid       |   cap    | Qual | SSID \n");
-+		"# | ch  | rssi |       bssid       |   cap    | Qual | SSID\n");
- 
- 	mutex_lock(&priv->lock);
- 	list_for_each_entry (iter_bss, &priv->network_list, list) {
--- 
-1.6.6.1
+OK. I'll send out V2.
+
+Thanks,
+-yi
 
