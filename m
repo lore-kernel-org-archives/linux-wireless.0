@@ -1,117 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:50400 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802Ab0CUAOx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Mar 2010 20:14:53 -0400
-Date: Sat, 20 Mar 2010 19:14:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Michael Buesch <mb@bu3sch.de>,
-	John W Linville <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] ssb: Implement virtual SPROM on disk
-Message-ID: <4ba564fb.PfAZePu8tStyxs44%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtp3.epfl.ch ([128.178.224.226]:60975 "HELO smtp3.epfl.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753338Ab0CZKvU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Mar 2010 06:51:20 -0400
+From: Valentin Longchamp <valentin.longchamp@epfl.ch>
+To: chunkeey@web.de, linux-wireless@vger.kernel.org
+Cc: Valentin Longchamp <valentin.longchamp@epfl.ch>
+Subject: [PATCH] setup correct int pipe type in ar9170_usb_exec_cmd
+Date: Fri, 26 Mar 2010 11:44:33 +0100
+Message-Id: <1269600273-7974-1-git-send-email-valentin.longchamp@epfl.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some recent BCM43XX devices lack an on-board SPROM. The pertinent data
-from the SPROM could be included in the kernel; however, this presents
-a problem in the generation of a unique, reproducible MAC address. The
-solution has been to create a utility that generates a virtual SPROM
-image with a random MAC address. This image is stored in the firmware
-area, and loaded using the asyncronous firmware load facility.
+An int urb is constructed but we fill it in with a bulk pipe type.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Commit f661c6f8c67bd55e93348f160d590ff9edf08904 implemented a pipe type
+check when CONFIG_USB_DEBUG is enabled. The check failed for all the ar9170
+usb transfers and the driver could not configure the wifi dongle.
+
+This went unnoticed until now because most people don't have
+CONFIG_USB_DEBUG enabled.
+
+Signed-off-by: Valentin Longchamp <valentin.longchamp@epfl.ch>
 ---
+ drivers/net/wireless/ath/ar9170/usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Michael,
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index 4e30197..dbde2de 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -416,7 +416,7 @@ static int ar9170_usb_exec_cmd(struct ar9170 *ar, enum ar9170_cmd cmd,
+ 	spin_unlock_irqrestore(&aru->common.cmdlock, flags);
+ 
+ 	usb_fill_int_urb(urb, aru->udev,
+-			 usb_sndbulkpipe(aru->udev, AR9170_EP_CMD),
++			 usb_sndintpipe(aru->udev, AR9170_EP_CMD),
+ 			 aru->common.cmdbuf, plen + 4,
+ 			 ar9170_usb_tx_urb_complete, NULL, 1);
+ 
+-- 
+1.6.3.3
 
-I think this patch eliminates the need for the fallback sprom code; however,
-I have not touched that facility yet.
-
-Larry
----
-
-Index: wireless-testing/drivers/ssb/pci.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pci.c
-+++ wireless-testing/drivers/ssb/pci.c
-@@ -19,6 +19,7 @@
- #include <linux/ssb/ssb_regs.h>
- #include <linux/pci.h>
- #include <linux/delay.h>
-+#include <linux/firmware.h>
- 
- #include "ssb_private.h"
- 
-@@ -613,6 +614,39 @@ static int sprom_extract(struct ssb_bus
- 	return 0;
- }
- 
-+static int ssb_get_vsprom(struct device *dev, u16 *buf, size_t size)
-+{
-+	/* Use the firmware load facility to get the disk image of an SPROM */
-+	const struct firmware *blob;
-+	int err;
-+	int i;
-+
-+	err = request_firmware(&blob, "ssb/vsprom_image", dev);
-+	if (err) {
-+		printk(KERN_ERR "ssb: The BCM43XX device does not have an "
-+		       "SPROM built in, and the virtual SPROM file is not"
-+		       " available.\n");
-+		printk(KERN_ERR "ssb: Please go to "
-+		       "http://wireless.kernel.org/en/users/Drivers/b43 "
-+		       "and download the utility to create the file.\n");
-+		return err;
-+	}
-+	if (blob->size != size * 2) {
-+		printk(KERN_ERR "ssb: The virtual SPROM file has the wrong"
-+		       " size\n");
-+		return -ENOENT;
-+	}
-+	for (i = 0; i < size; i++)
-+		buf[i] = blob->data[2 * i + 1] << 8 | blob->data[2 * i];
-+	err = sprom_check_crc(buf, size);
-+	if (err) {
-+		printk(KERN_ERR "ssb: Invalid CRC for virtual SPROM\n");
-+		return err;
-+	}
-+
-+	return 0;
-+}
-+
- static int ssb_pci_sprom_get(struct ssb_bus *bus,
- 			     struct ssb_sprom *sprom)
- {
-@@ -620,8 +654,18 @@ static int ssb_pci_sprom_get(struct ssb_
- 	int err = -ENOMEM;
- 	u16 *buf;
- 
--	if (!ssb_is_sprom_available(bus))
--		return -ENODEV;
-+	if (!ssb_is_sprom_available(bus)) {
-+		buf = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
-+			      GFP_KERNEL);
-+		if (!buf)
-+			return -ENOMEM;
-+		bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
-+		if (ssb_get_vsprom(&bus->host_pci->dev, buf, bus->sprom_size)) {
-+			err = -ENODEV;
-+			goto out_free;
-+		}
-+		goto extract;
-+	}
- 
- 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
- 	if (!buf)
-@@ -653,6 +697,7 @@ static int ssb_pci_sprom_get(struct ssb_
- 				   " SPROM CRC (corrupt SPROM)\n");
- 		}
- 	}
-+extract:
- 	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
- 
- out_free:
