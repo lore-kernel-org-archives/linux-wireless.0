@@ -1,88 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:51880 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752327Ab0CAW6P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 17:58:15 -0500
-Message-ID: <4B8C4685.8020202@openwrt.org>
-Date: Mon, 01 Mar 2010 23:58:13 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46323 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709Ab0CZN2h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Mar 2010 09:28:37 -0400
+Date: Fri, 26 Mar 2010 09:26:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/24] wl1271: bunch of patches from our internal tree
+ wk12
+Message-ID: <20100326132632.GD15128@tuxdriver.com>
+References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+ <20100326130215.GA15128@tuxdriver.com>
+ <1269609195.22348.13.camel@powerslave>
 MIME-Version: 1.0
-To: Derek Smithies <derek@indranet.co.nz>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
-References: <4B8C3A21.2050105@openwrt.org> <alpine.DEB.2.00.1003021122550.14059@kauri.acheron.indranet.co.nz>
-In-Reply-To: <alpine.DEB.2.00.1003021122550.14059@kauri.acheron.indranet.co.nz>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1269609195.22348.13.camel@powerslave>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-03-01 11:38 PM, Derek Smithies wrote:
-> Hi,
->   Great work on getting this far - it was a huge undertaking.
+On Fri, Mar 26, 2010 at 03:13:15PM +0200, Luciano Coelho wrote:
+> On Fri, 2010-03-26 at 14:02 +0100, ext John W. Linville wrote:
+> > On Fri, Mar 26, 2010 at 12:53:09PM +0200, Luciano Coelho wrote:
+> > 
+> > > Here are 25 more patches for wl1271 which are still pending in our internal
+> > > tree.  Please apply. :)
+> > 
+> > Are we catching-up?  Or will these dumps continue indefinitely?
 > 
->   Ok, before diving into the code, can we take a quick moment to think on 
-> this. I wonder if you can answer the following questions:
+> Now we have finally caught up! Sorry for the mess, but we haven't been
+> sending patches for a while and they really got delayed.
 > 
-> a)Minstrel worked hard at using information that is good and reliable: -
->     which is the record of what rates worked, and what rates failed.
->   Minstrel avoids using things like RSSI (which is not reliable)
-Yes, I still rely purely on tx status feedback, no RSSI voodoo.
+> The idea from now on is to send them weekly (still in patch-sets), but
+> not so many at once.  We review and test our patches internally before
+> sending upstream, that's why we have to send them in batches.
 
-> b)You have stated in previous emails that with 802.11n there are too many
->   rates for minstrels random sampling technique.
+Apparently Nokia, Intel, and maybe Atheros need to form some sort of
+support group -- Patch-hoarder's Anonymous... :-)
+
+> I'm currently reconsidering this process and trying to figure out how we
+> can do things in a simpler way.  We are already doing all our mac80211
+> work upstream, but for the driver we haven't found a good solution yet.
 > 
-> What is the approach taken in 802.11n & minstrel? I remember some comment 
-> about dividing the 802.11n rate set up into groups, and then minstrel does 
-> its thing within the rates of each group. - Do I have the idea here?
-The previous comments were based on faulty tx status feedback because of
-an ath9k issue that I resolved in a previous patch. The current
-implementation still does random sampling, with one exception: each
-sampling attempt goes to a different MCS group.
-Other than that, I split up the MCS rates into groups mainly because
-it's easier to deal with and allows me to calculate raw transmit
-durations at compile time.
+> Would you prefer to pull stuff from a git tree instead of applying the
+> patches?
 
-I did add some small special cases though. For instance if the code
-detects that the current transmit rate is failing really quickly on a
-multi-stream rate, it falls back to the max_tp_rate of a single-stream
-group, while leaving around enough feedback for EWMA.
-This reduces the strength of the throughput drop when I disconnect one
-antenna (which kills off pretty much all of the dual-stream rates
-immediately).
+It doesn't make a great deal of difference to me.  I have been pulling
+from Intel for a little while now, and that has worked-out fairly
+well from my perspective.  But, applying patchbombs is usually easy
+so long as there hasn't been lots of other activity in the driver.
+So, whatever is convenient for you is probably acceptable to me.
 
-> Where have you tested 802.11n & minstrel?
-Only at home. I just finished ironing out most of the important bugs
-today, so this hasn't seen any significant long-term testing yet.
+Hth!
 
-> Does 802.11n&minstrel pass the basic test
->    a) put two nodes on the desk - rate is high
->    b) move one of the nodes (or remove antenna) - rate should drop
->    c) move nodes back to the configuration of a)
->              -rate should go high again
-Yes, this was my primary test. I also did some tests with removing both
-antennas and moving the laptop away and back again.
-
-I also did quite a few tests switching back and forth between
-minstrel_ht and the ath9k rate control to compare them as accurately as
-possible. In HT40, rate adaptation with minstrel is usually a little
-slower (only a minor difference here, probably caused by the much larger
-search space), but it's able to deal with sources of interference (e.g.
-Bluetooth) a lot better.
-It also reacts much faster to problems with spatial multiplexing, and
-seems to get a better average throughput in HT20 in my tests.
-
-> Does 802.11n&minstrel work well with time?
-> In other words, is the throughput 10 hours later the same as at the start 
-> of the test?
-If I force it to single-stream mode, then it seems to be just as
-reliable at sticking to a specific rate as the legacy implementation.
-
-With dual-stream rates it's hard to tell, because the reliability of
-rates varies quickly, even if the positions is fixed. I do not see any
-*significant* variations in throughput though.
-
-- Felix
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
