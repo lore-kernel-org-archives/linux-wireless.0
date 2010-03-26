@@ -1,51 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46910 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751421Ab0CKB2c (ORCPT
+Received: from cp-out9.libero.it ([212.52.84.109]:41847 "EHLO
+	cp-out9.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753847Ab0CZN6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 20:28:32 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 12/14] ath9k_hw: add documentation for the TPC register
-Date: Wed, 10 Mar 2010 20:28:29 -0500
-Message-Id: <1268270911-24568-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 26 Mar 2010 09:58:14 -0400
+Received: from [192.168.1.253] (151.54.198.201) by cp-out9.libero.it (8.5.107)
+        id 4BAA01410049CB50 for linux-wireless@vger.kernel.org; Fri, 26 Mar 2010 14:58:13 +0100
+Message-ID: <4BACBD71.9040107@users.sourceforge.net>
+Date: Fri, 26 Mar 2010 14:58:09 +0100
+From: "Daniele C." <legolas558@users.sourceforge.net>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Memory leaks from swapper, wpa_supplicant, glxgears
+Content-Type: multipart/mixed;
+ boundary="------------080604010803020304070506"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/reg.h |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+This is a multi-part message in MIME format.
+--------------080604010803020304070506
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 198e41d..ce94e99 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1435,6 +1435,20 @@ enum {
- #define AR_SLEEP2_BEACON_TIMEOUT    0xFFE00000
- #define AR_SLEEP2_BEACON_TIMEOUT_S  21
- 
-+/*
-+ * 0x80e8   Transmit Power Control
-+ * (Int Addr: 0x3A, Access: R/W, Clock: system clk)
-+ * TPC             21:0    'h3F    bit 5:0:   ACK_PWR
-+ *                                'h3F    bit 13:8:  CTS_PWR
-+ *                                'h3F    bit 21:16: CHIRP_PWR
-+ * Transmit Power Control Description:
-+ *
-+ * The 6 bit transmit power control sent from the MAC to the baseband
-+ * is typically controlled by using the transmit descriptor field.  But
-+ * self generated response frames such as ACK, CTS, and chirp which
-+ * do not have a transmit descriptor use the values in the transmit power
-+ * control register instead.
-+ */
- #define AR_TPC                 0x80e8
- #define AR_TPC_ACK             0x0000003f
- #define AR_TPC_ACK_S           0x00
--- 
-1.6.3.3
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
+Hello there,
+
+I have enabled CONFIG_KMEMLEAK and I am finding some memory leakage apparently caused by "swapper" process; I have also had leaks from glxgears and wpa_supplicant, but they can be triggered only once (e.g. restarting wpa_supplicant does not trigger more leaks).
+
+The swapper leaks seem to be an incremental decimal string, starting from "0" to "10", while the wpa_supplicant leaks were the AP ESSID (not in attached report).
+
+Best regards,
+- -- 
+  Daniele C.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQEcBAEBAgAGBQJLrL1xAAoJEON28As9epPApycIAJpEURXnySLJS7P8NvTSs42e
+G+2iajFLSAyyQdnKlWI41+ciSe5XsYFtag8xpgS2qPvLcwmEEMo95sUrMQExtw6h
+hre4O/T0N6W4x86rEvefAwMn73nYDGoV2fcx5GHpfmyyc7Mm8+gNPzcoAicLSjh4
+MRqny9S/AyBIhGBh3nobldDiFzCvD4WmNZM0jPcNCZwQZfO7FJnjXwwEU9epjM/9
+4+HaVk8lt4gNrSNIx9yPN2oqNxyZBv5ySs6l8ukr0cozLSq0MrzMjlwnwB+FfQqg
+cmcTHYPA16FNu5Y4CoYXm8DlLj1RVFuNGlyy6WQpc7eRuiZeO9MpJOFSFZPHdlA=
+=VSaD
+-----END PGP SIGNATURE-----
+
+--------------080604010803020304070506
+Content-Type: text/plain;
+ name="swapper_memleaks.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="swapper_memleaks.txt"
+
+dW5yZWZlcmVuY2VkIG9iamVjdCAweGRmMGE2NTQwIChzaXplIDE5Mik6CiAgY29tbSAic3dh
+cHBlciIsIHBpZCAxLCBqaWZmaWVzIDQyOTQ2Njc4NDEgKGFnZSA4NzcuMzM1cykKICBoZXgg
+ZHVtcCAoZmlyc3QgMzIgYnl0ZXMpOgogICAgMDAgMDAgMDAgMjAgZmYgZmYgYmYgZmUgZjAg
+OWQgMTIgZGYgMDAgMDIgMDAgMDAgIC4uLiAuLi4uLi4uLi4uLi4KICAgIDY4IDY1IDBhIGRm
+IDZjIDY1IDBhIGRmIDAwIDAwIDAwIDAwIDIwIGE5IDBjIGMxICBoZS4ubGUuLi4uLi4gLi4u
+CiAgYmFja3RyYWNlOgogICAgWzxmZmZmZmZmZj5dIDB4ZmZmZmZmZmYKdW5yZWZlcmVuY2Vk
+IG9iamVjdCAweGRmMTI5ZGYwIChzaXplIDE2KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEs
+IGppZmZpZXMgNDI5NDY2Nzg0MSAoYWdlIDg3Ny4zMzVzKQogIGhleCBkdW1wIChmaXJzdCAx
+NiBieXRlcyk6CiAgICA1MCA0MyA0OSAyMCA0MiA3NSA3MyAyMCAzMCAzMCAzMCAzMCAzYSAz
+MCAzMCAwMCAgUENJIEJ1cyAwMDAwOjAwLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+
+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZjI0MjA0MCAoc2l6ZSAxNik6
+CiAgY29tbSAic3dhcHBlciIsIHBpZCAxLCBqaWZmaWVzIDQyOTQ2NjgxOTMgKGFnZSA4NzYu
+OTg1cykKICBoZXggZHVtcCAoZmlyc3QgMTYgYnl0ZXMpOgogICAgNzAgNmUgNzAgMjAgMzAg
+MzAgM2EgMzAgMzQgMDAgMDAgMDAgZmYgZmYgZmYgZmYgIHBucCAwMDowNC4uLi4uLi4KICBi
+YWNrdHJhY2U6CiAgICBbPGZmZmZmZmZmPl0gMHhmZmZmZmZmZgp1bnJlZmVyZW5jZWQgb2Jq
+ZWN0IDB4ZGYyMWEyYTAgKHNpemUgMzIpOgogIGNvbW0gInN3YXBwZXIiLCBwaWQgMSwgamlm
+ZmllcyA0Mjk0NjY4MTkzIChhZ2UgODc2Ljk4NXMpCiAgaGV4IGR1bXAgKGZpcnN0IDMyIGJ5
+dGVzKToKICAgIDAwIDAwIGMxIGZlIGZmIGZmIGMxIGZlIDQwIDIwIDI0IGRmIDAwIDAwIDAw
+IDAwICAuLi4uLi4uLkAgJC4uLi4uCiAgICBiYyBmOCA1YSBjMSAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAgLi5aLi4uLi4uLi4uLi4uLgogIGJhY2t0cmFjZToKICAg
+IFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODIz
+MCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIz
+MSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDMwIDAw
+IGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICAwLi4uLi4uLgog
+IGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBv
+YmplY3QgMHhkZGMxODI0MCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGpp
+ZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5
+dGVzKToKICAgIDMxIDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAg
+ICAgICAxLi4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZm
+CnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODI1MCAoc2l6ZSA4KToKICBjb21tICJzd2Fw
+cGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBk
+dW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDMyIDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAg
+ICAgICAgICAgICAgICAgICAgICAyLi4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZm
+ZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODI2MCAoc2l6ZSA4
+KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3
+My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDMzIDAwIGMxIGRkIDAw
+IDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICAzLi4uLi4uLgogIGJhY2t0cmFj
+ZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhk
+ZGMxODI3MCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5
+NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAg
+IDM0IDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICA0Li4u
+Li4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJl
+bmNlZCBvYmplY3QgMHhkZGMxODI4MCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlk
+IDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJz
+dCA4IGJ5dGVzKToKICAgIDM1IDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAg
+ICAgICAgICAgICA1Li4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZm
+ZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODI5MCAoc2l6ZSA4KToKICBjb21t
+ICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQog
+IGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDM2IDAwIGMxIGRkIDAwIDAwIDAwIDAw
+ICAgICAgICAgICAgICAgICAgICAgICAgICA2Li4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8
+ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODJhMCAo
+c2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAo
+YWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDM3IDAwIGMx
+IGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICA3Li4uLi4uLgogIGJh
+Y2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmpl
+Y3QgMHhkZGMxODJiMCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZp
+ZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVz
+KToKICAgIDM4IDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAg
+ICA4Li4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVu
+cmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODJjMCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVy
+IiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1w
+IChmaXJzdCA4IGJ5dGVzKToKICAgIDM5IDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAg
+ICAgICAgICAgICAgICAgICA5Li4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+
+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODJkMCAoc2l6ZSA4KToK
+ICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45
+NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDMxIDMwIDAwIGRkIDAwIDAw
+IDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICAxMC4uLi4uLgogIGJhY2t0cmFjZToK
+ICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCg==
+--------------080604010803020304070506--
