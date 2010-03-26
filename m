@@ -1,197 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47355 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754122Ab0CKVdE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 16:33:04 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/5] compat-wireless: rename {free,alloc}_ieee80211 to {free,alloc}_libipw
-Date: Thu, 11 Mar 2010 22:32:42 +0100
-Message-Id: <1268343167-2961-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
-References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:35655 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752620Ab0CZAx5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 20:53:57 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0189404835
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 09:53:55 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [ath5k-devel] [PATCH 00/10] ANI for ath5k
+Date: Fri, 26 Mar 2010 09:53:48 +0900
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	"bob@bobcopeland.com" <bob@bobcopeland.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20100325054603.10697.48915.stgit@tt-desk> <201003260927.57491.br1@einfach.org> <20100326004431.GA2385@tux>
+In-Reply-To: <20100326004431.GA2385@tux>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003260953.49021.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-{free,alloc}_ieee80211 are also defined by ieee80211 module for example
-used on kernel 2.6.26. Without this patch ipwlib will not load on this
-kernel, because of a duplicate symbol.
+On Friday 26 March 2010 09:44:31 Luis R. Rodriguez wrote:
+> > as well, we all agree that there should be userland controls. the
+> > questions is just about the interface to use.
+> 
+> ANI is specific to Atheros cards so debugfs would do it. If we want to
+> have a more rigit API we could use a configfs entry for ath9k.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/23-ipw.patch |  161 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 161 insertions(+), 0 deletions(-)
- create mode 100644 patches/23-ipw.patch
+debugfs definetly is the wrong place! users might compile the module with 
+debugging disabled (for performance reasons, e.g.).
 
-diff --git a/patches/23-ipw.patch b/patches/23-ipw.patch
-new file mode 100644
-index 0000000..179ad39
---- /dev/null
-+++ b/patches/23-ipw.patch
-@@ -0,0 +1,161 @@
-+rename {free,alloc}_ieee80211 to {free,alloc}_libipw
-+
-+{free,alloc}_ieee80211 are also defined by ieee80211 module for example
-+used on kernel 2.6.26. Without this patch ipwlib will not load on this
-+kernel, because of a duplicate symbol.
-+
-+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
-++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-+@@ -6114,7 +6114,7 @@ static struct net_device *ipw2100_alloc_
-+ 	struct ipw2100_priv *priv;
-+ 	struct net_device *dev;
-+ 
-+-	dev = alloc_ieee80211(sizeof(struct ipw2100_priv), 0);
-++	dev = alloc_libipw(sizeof(struct ipw2100_priv), 0);
-+ 	if (!dev)
-+ 		return NULL;
-+ 	priv = libipw_priv(dev);
-+@@ -6440,7 +6440,7 @@ static int ipw2100_pci_init_one(struct p
-+ 		sysfs_remove_group(&pci_dev->dev.kobj,
-+ 				   &ipw2100_attribute_group);
-+ 
-+-		free_ieee80211(dev, 0);
-++		free_libipw(dev, 0);
-+ 		pci_set_drvdata(pci_dev, NULL);
-+ 	}
-+ 
-+@@ -6498,10 +6498,10 @@ static void __devexit ipw2100_pci_remove
-+ 		if (dev->base_addr)
-+ 			iounmap((void __iomem *)dev->base_addr);
-+ 
-+-		/* wiphy_unregister needs to be here, before free_ieee80211 */
-++		/* wiphy_unregister needs to be here, before free_libipw */
-+ 		wiphy_unregister(priv->ieee->wdev.wiphy);
-+ 		kfree(priv->ieee->bg_band.channels);
-+-		free_ieee80211(dev, 0);
-++		free_libipw(dev, 0);
-+ 	}
-+ 
-+ 	pci_release_regions(pci_dev);
-+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
-++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-+@@ -11668,7 +11668,7 @@ static int ipw_prom_alloc(struct ipw_pri
-+ 	if (priv->prom_net_dev)
-+ 		return -EPERM;
-+ 
-+-	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv), 1);
-++	priv->prom_net_dev = alloc_libipw(sizeof(struct ipw_prom_priv), 1);
-+ 	if (priv->prom_net_dev == NULL)
-+ 		return -ENOMEM;
-+ 
-+@@ -11693,7 +11693,7 @@ static int ipw_prom_alloc(struct ipw_pri
-+ 
-+ 	rc = register_netdev(priv->prom_net_dev);
-+ 	if (rc) {
-+-		free_ieee80211(priv->prom_net_dev, 1);
-++		free_libipw(priv->prom_net_dev, 1);
-+ 		priv->prom_net_dev = NULL;
-+ 		return rc;
-+ 	}
-+@@ -11707,7 +11707,7 @@ static void ipw_prom_free(struct ipw_pri
-+ 		return;
-+ 
-+ 	unregister_netdev(priv->prom_net_dev);
-+-	free_ieee80211(priv->prom_net_dev, 1);
-++	free_libipw(priv->prom_net_dev, 1);
-+ 
-+ 	priv->prom_net_dev = NULL;
-+ }
-+@@ -11737,7 +11737,7 @@ static int __devinit ipw_pci_probe(struc
-+ 	struct ipw_priv *priv;
-+ 	int i;
-+ 
-+-	net_dev = alloc_ieee80211(sizeof(struct ipw_priv), 0);
-++	net_dev = alloc_libipw(sizeof(struct ipw_priv), 0);
-+ 	if (net_dev == NULL) {
-+ 		err = -ENOMEM;
-+ 		goto out;
-+@@ -11757,7 +11757,7 @@ static int __devinit ipw_pci_probe(struc
-+ 	mutex_init(&priv->mutex);
-+ 	if (pci_enable_device(pdev)) {
-+ 		err = -ENODEV;
-+-		goto out_free_ieee80211;
-++		goto out_free_libipw;
-+ 	}
-+ 
-+ 	pci_set_master(pdev);
-+@@ -11892,8 +11892,8 @@ static int __devinit ipw_pci_probe(struc
-+       out_pci_disable_device:
-+ 	pci_disable_device(pdev);
-+ 	pci_set_drvdata(pdev, NULL);
-+-      out_free_ieee80211:
-+-	free_ieee80211(priv->net_dev, 0);
-++      out_free_libipw:
-++	free_libipw(priv->net_dev, 0);
-+       out:
-+ 	return err;
-+ }
-+@@ -11960,11 +11960,11 @@ static void __devexit ipw_pci_remove(str
-+ 	pci_release_regions(pdev);
-+ 	pci_disable_device(pdev);
-+ 	pci_set_drvdata(pdev, NULL);
-+-	/* wiphy_unregister needs to be here, before free_ieee80211 */
-++	/* wiphy_unregister needs to be here, before free_libipw */
-+ 	wiphy_unregister(priv->ieee->wdev.wiphy);
-+ 	kfree(priv->ieee->a_band.channels);
-+ 	kfree(priv->ieee->bg_band.channels);
-+-	free_ieee80211(priv->net_dev, 0);
-++	free_libipw(priv->net_dev, 0);
-+ 	free_firmware();
-+ }
-+ 
-+--- a/drivers/net/wireless/ipw2x00/libipw.h
-++++ b/drivers/net/wireless/ipw2x00/libipw.h
-+@@ -905,7 +905,7 @@ struct libipw_device {
-+ 				       struct libipw_reassoc_request * req);
-+ 
-+ 	/* This must be the last item so that it points to the data
-+-	 * allocated beyond this structure by alloc_ieee80211 */
-++	 * allocated beyond this structure by alloc_libipw */
-+ 	u8 priv[0];
-+ };
-+ 
-+@@ -1018,8 +1018,8 @@ static inline int libipw_is_cck_rate(u8 
-+ }
-+ 
-+ /* ieee80211.c */
-+-extern void free_ieee80211(struct net_device *dev, int monitor);
-+-extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
-++extern void free_libipw(struct net_device *dev, int monitor);
-++extern struct net_device *alloc_libipw(int sizeof_priv, int monitor);
-+ extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
-+ 
-+ extern void libipw_networks_age(struct libipw_device *ieee,
-+--- a/drivers/net/wireless/ipw2x00/libipw_module.c
-++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
-+@@ -140,7 +140,7 @@ int libipw_change_mtu(struct net_device 
-+ }
-+ EXPORT_SYMBOL(libipw_change_mtu);
-+ 
-+-struct net_device *alloc_ieee80211(int sizeof_priv, int monitor)
-++struct net_device *alloc_libipw(int sizeof_priv, int monitor)
-+ {
-+ 	struct libipw_device *ieee;
-+ 	struct net_device *dev;
-+@@ -227,7 +227,7 @@ failed:
-+ 	return NULL;
-+ }
-+ 
-+-void free_ieee80211(struct net_device *dev, int monitor)
-++void free_libipw(struct net_device *dev, int monitor)
-+ {
-+ 	struct libipw_device *ieee = netdev_priv(dev);
-+ 
-+@@ -336,5 +336,5 @@ MODULE_PARM_DESC(debug, "debug output ma
-+ module_exit(libipw_exit);
-+ module_init(libipw_init);
-+ 
-+-EXPORT_SYMBOL(alloc_ieee80211);
-+-EXPORT_SYMBOL(free_ieee80211);
-++EXPORT_SYMBOL(alloc_libipw);
-++EXPORT_SYMBOL(free_libipw);
--- 
-1.6.3.3
+are you sure about configfs? as far as i read about it it's for the dynamic 
+creation of kernel objects, which is not what we are doing here. or did the 
+rules change in the mean time?
 
+bruno
