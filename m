@@ -1,99 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41127 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756154Ab0CQW2Q (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:22026 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752128Ab0CZKyH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 18:28:16 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Fri, 26 Mar 2010 06:54:07 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 20/20] ath9k_hw: remove wrapper ath9k_hw_write_regs()
-Date: Wed, 17 Mar 2010 18:28:13 -0400
-Message-Id: <1268864893-11428-21-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
-References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 13/24] wl1271: remove deprecated usage of RX status noise
+Date: Fri, 26 Mar 2010 12:53:22 +0200
+Message-Id: <1269600813-32145-14-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is used only once by ath9k_hw_process_ini() to
-write an array of phy registers through REG_WRITE_ARRAY(),
-but we already call REG_WRITE_ARRAY() multiple times
-on the same caller so just remove this pointless wrapper.
-We'll eventually just move the ath9k_hw_process_ini()
-caller as an callback to abstract away between different
-hardware families.
+The noise element in the ieee80211_rx_status struct has been deprecated in
+commit "mac80211: deprecate RX status noise".  Remove the usage of this
+element from wl1271_rx.c to avoid warnings.
 
-Although this change is subtle I should note that this
-does change the delay pattern on writing the next series
-of registers. REG_WRITE_ARRAY() uses a counter for each
-register write and does a udelay(1) every 64 writes. By
-removing this call it means that the counter is processed
-for all the iniBB_RfGain registers and is incremented
-on ath9k_hw_process_ini(), before this the after the call
-ath9k_hw_write_regs() was made the register counter was
-kept at the same index number prior to the call.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  |    2 +-
- drivers/net/wireless/ath/ath9k/phy.c |   15 ---------------
- drivers/net/wireless/ath/ath9k/phy.h |    3 ---
- 3 files changed, 1 insertions(+), 19 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_rx.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9093235..2013b7e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1072,7 +1072,7 @@ static int ath9k_hw_process_ini(struct ath_hw *ah,
- 					modesIndex, regWrites);
- 	}
+diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
+index a1a7953..ca44270 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
+@@ -59,13 +59,6 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 	 */
+ 	status->signal = desc->rssi;
  
--	ath9k_hw_write_regs(ah, freqIndex, regWrites);
-+	REG_WRITE_ARRAY(&ah->iniBB_RfGain, freqIndex, regWrites);
- 
- 	if (AR_SREV_9280_20(ah) && IS_CHAN_A_5MHZ_SPACED(chan)) {
- 		REG_WRITE_ARRAY(&ah->iniModesAdditional, modesIndex,
-diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
-index c3b5939..02d40df 100644
---- a/drivers/net/wireless/ath/ath9k/phy.c
-+++ b/drivers/net/wireless/ath/ath9k/phy.c
-@@ -42,21 +42,6 @@
- #include "hw.h"
- 
- /**
-- * ath9k_hw_write_regs - ??
-- *
-- * @ah: atheros hardware structure
-- * @freqIndex:
-- * @regWrites:
-- *
-- * Used for both the chipsets with an external AR2133/AR5133 radios and
-- * single-chip devices.
-- */
--void ath9k_hw_write_regs(struct ath_hw *ah, u32 freqIndex, int regWrites)
--{
--	REG_WRITE_ARRAY(&ah->iniBB_RfGain, freqIndex, regWrites);
--}
+-	/*
+-	 * FIXME: In wl1251, the SNR should be divided by two.  In wl1271 we
+-	 * need to divide by two for now, but TI has been discussing about
+-	 * changing it.  This needs to be rechecked.
+-	 */
+-	status->noise = desc->rssi - (desc->snr >> 1);
 -
--/**
-  * ath9k_hw_ar9280_set_channel - set channel on single-chip device
-  * @ah: atheros hardware structure
-  * @chan:
-diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
-index 0999a49..dc2b915 100644
---- a/drivers/net/wireless/ath/ath9k/phy.h
-+++ b/drivers/net/wireless/ath/ath9k/phy.h
-@@ -17,9 +17,6 @@
- #ifndef PHY_H
- #define PHY_H
+ 	status->freq = ieee80211_channel_to_frequency(desc->channel);
  
--/* Common between single chip and non single-chip solutions */
--void ath9k_hw_write_regs(struct ath_hw *ah, u32 freqIndex, int regWrites);
--
- /* Single chip radio settings */
- int ath9k_hw_ar9280_set_channel(struct ath_hw *ah, struct ath9k_channel *chan);
- void ath9k_hw_9280_spur_mitigate(struct ath_hw *ah, struct ath9k_channel *chan);
+ 	if (desc->flags & WL1271_RX_DESC_ENCRYPT_MASK) {
 -- 
 1.6.3.3
 
