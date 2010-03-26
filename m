@@ -1,61 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42546 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315Ab0CaINj (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:30750 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753676Ab0CZKye (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 04:13:39 -0400
-Subject: Re: [PATCH V2] mac80211: Revise,pending queue depth in
- ieee80211_local data structure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201003311712.12301.br1@einfach.org>
-References: <4BA24A12.4030208@gmail.com>
-	 <201003211101.16481.randolf.bruno@gmail.com>
-	 <1269281564.7645.1.camel@jlt3.sipsolutions.net>
-	 <201003311712.12301.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Mar 2010 10:13:37 +0200
-Message-ID: <1270023217.16210.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 26 Mar 2010 06:54:34 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 06/24] wl1271: Configure clock-request drive mode to open-drain
+Date: Fri, 26 Mar 2010 12:53:15 +0200
+Message-Id: <1269600813-32145-7-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-31 at 17:12 +0900, Bruno Randolf wrote:
-> On Tuesday 23 March 2010 03:12:44 you wrote:
-> > On Sun, 2010-03-21 at 11:01 +0900, Bruno Randolf wrote:
-> > > On Sunday 21 March 2010 05:40:05 Johannes Berg wrote:
-> > > > On Sat, 2010-03-20 at 21:02 +0100, Lorenzo Bianconi wrote:
-> > > > > >> setup 2 wireless cards, talking to each other (i use IBSS) on
-> > > > > >> different
-> > > > > 
-> > > > > >> machines. then setup routing like this:
-> > > > > PC1<--ethernet cable-->Device1<--wireless link-->Device2<--ethernet
-> > > > > cable-->PC2
-> > > > 
-> > > > I'm not really sure how this scenario differs from injecting traffic
-> > > > locally, but I'll try to reproduce.
-> > > 
-> > > if you generate traffic locally it's enough to stop the queues, this will
-> > > cause userspace to stop generating traffic. in the forwarding case (which
-> > > we are talking about) stopping the queues will not stop the sender to
-> > > send traffic, thus we have to start dropping packets at some point.
-> > 
-> > So I tried this scenario, and I see the queues stopping, and traffic
-> > being dropped quite as you'd want it. Even the race condition that I
-> > noticed didn't ever trigger.
-> > 
-> > Please make sure you're using a kernel recent enough to include the
-> > fixes, maybe try compat-wireless.
-> 
-> so it must be an ath5k bug then... lorenzo's description just resembled my 
-> case so much, that i thought it could be the same bug. sorry to have bothered 
-> you with this...
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-I don't think there's any way this can be a driver bug, assuming it
-stops the queues properly, which it has to unless it comes up with its
-own queueing scheme...
+This patch configures the wl1271 chipset clock-request line to be
+driver in open-drain mode instead of push-pull.
 
-johannes
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    8 ++++++--
+ drivers/net/wireless/wl12xx/wl1271_boot.h |    7 +++++--
+ 2 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index 41c6aff..4195298 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -451,11 +451,15 @@ int wl1271_boot(struct wl1271 *wl)
+ 
+ 	if (REF_CLOCK != 0) {
+ 		u16 val;
+-		/* Set clock type */
++		/* Set clock type (open drain) */
+ 		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
+ 		val &= FREF_CLK_TYPE_BITS;
+-		val |= CLK_REQ_PRCM;
+ 		wl1271_top_reg_write(wl, OCP_REG_CLK_TYPE, val);
++
++		/* Set clock pull mode (no pull) */
++		val = wl1271_top_reg_read(wl, OCP_REG_CLK_PULL);
++		val |= NO_PULL;
++		wl1271_top_reg_write(wl, OCP_REG_CLK_PULL, val);
+ 	} else {
+ 		u16 val;
+ 		/* Set clock polarity */
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.h b/drivers/net/wireless/wl12xx/wl1271_boot.h
+index 412443e..95ecc52 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.h
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.h
+@@ -53,10 +53,13 @@ struct wl1271_static_data {
+ #define OCP_REG_POLARITY     0x0064
+ #define OCP_REG_CLK_TYPE     0x0448
+ #define OCP_REG_CLK_POLARITY 0x0cb2
++#define OCP_REG_CLK_PULL     0x0cb4
+ 
+-#define CMD_MBOX_ADDRESS 0x407B4
+ 
+-#define POLARITY_LOW BIT(1)
++#define CMD_MBOX_ADDRESS     0x407B4
++
++#define POLARITY_LOW         BIT(1)
++#define NO_PULL              (BIT(14) | BIT(15))
+ 
+ #define FREF_CLK_TYPE_BITS     0xfffffe7f
+ #define CLK_REQ_PRCM           0x100
+-- 
+1.6.3.3
 
