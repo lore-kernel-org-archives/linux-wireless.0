@@ -1,31 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:40512 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751555Ab0CCQmD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 11:42:03 -0500
-Received: by fxm19 with SMTP id 19so1731079fxm.21
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Mar 2010 08:42:02 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: Re: Export rt2x00soc_probe from rt2x00soc
-Date: Wed, 3 Mar 2010 17:41:39 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-References: <201003031738.49706.helmut.schaa@googlemail.com>
-In-Reply-To: <201003031738.49706.helmut.schaa@googlemail.com>
+Received: from mail.atheros.com ([12.36.123.2]:13883 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751899Ab0CZBGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 21:06:35 -0400
+Date: Thu, 25 Mar 2010 18:06:34 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bruno Randolf <br1@einfach.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	"bob@bobcopeland.com" <bob@bobcopeland.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<johannes@sipsolutions.net>, <linville@tuxdriver.com>,
+	<nbd@openwrt.org>, <linux-kernel@vger.kernel.org>,
+	Joel Becker <joel.becker@oracle.com>, <greg@kroah.com>
+Subject: Re: [ath5k-devel] [PATCH 00/10] ANI for ath5k
+Message-ID: <20100326010634.GB2385@tux>
+References: <20100325054603.10697.48915.stgit@tt-desk>
+ <201003260927.57491.br1@einfach.org>
+ <20100326004431.GA2385@tux>
+ <201003260953.49021.br1@einfach.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003031741.39958.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201003260953.49021.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch 03 März 2010 schrieb Helmut Schaa:
-> This time without whitespace damage John ... hopefully ;)
+Adding a few more people for wider review on this.
 
-But this time without a [PATCH] in the header. I shouldn't send patches in
-the evening anymore. Will resend in a minute.
+On Thu, Mar 25, 2010 at 05:53:48PM -0700, Bruno Randolf wrote:
+> On Friday 26 March 2010 09:44:31 Luis R. Rodriguez wrote:
+> > > as well, we all agree that there should be userland controls. the
+> > > questions is just about the interface to use.
+> > 
+> > ANI is specific to Atheros cards so debugfs would do it. If we want to
+> > have a more rigit API we could use a configfs entry for ath9k.
+> 
+> debugfs definetly is the wrong place! users might compile the module with 
+> debugging disabled (for performance reasons, e.g.).
+> 
+> are you sure about configfs? as far as i read about it it's for the dynamic 
+> creation of kernel objects, which is not what we are doing here. or did the 
+> rules change in the mean time?
 
-Helmut
+I intended on writing a file system API for 802.11 management a while
+ago through configfs, the only reason why I put it aside is our focus
+was to get a netlink based API done. I think its reasonable to use
+it for configuration of specific devices parameters though given that
+we don't have a private API through nl80211.
+
+  Luis
