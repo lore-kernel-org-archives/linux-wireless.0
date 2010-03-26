@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from goliath.siemens.de ([192.35.17.28]:24650 "EHLO
-	goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973Ab0C2Nl6 (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:13858 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751396Ab0CZASg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 09:41:58 -0400
-Message-ID: <4BB0ADFA.8010205@siemens.com>
-Date: Mon, 29 Mar 2010 15:41:14 +0200
-From: Marco Porsch <marco.porsch@siemens.com>
+	Thu, 25 Mar 2010 20:18:36 -0400
+Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0912972714
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 09:18:34 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [PATCH 10/10] ath5k: Adaptive Noise Immunity (ANI) Implementation
+Date: Fri, 26 Mar 2010 09:18:28 +0900
+Cc: linux-wireless@vger.kernel.org
+References: <20100325054603.10697.48915.stgit@tt-desk> <20100325054952.10697.41515.stgit@tt-desk> <loom.20100325T115111-300@post.gmane.org>
+In-Reply-To: <loom.20100325T115111-300@post.gmane.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iw station del broken?
-References: <4BB0A16A.7080400@siemens.com>	 <1269867487.4131.28.camel@jlt3.sipsolutions.net>	 <4BB0A5B1.9090003@siemens.com> <1269868155.4131.29.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1269868155.4131.29.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003260918.28079.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg schrieb:
-> On Mon, 2010-03-29 at 15:05 +0200, Marco Porsch wrote:
->   
->> Johannes Berg schrieb:
->>     
->>> On Mon, 2010-03-29 at 14:47 +0200, Marco Porsch wrote:
->>>   
->>>       
->>>> Hi list,
->>>>
->>>> is it just me or is 'iw dev <devname> station del <MAC address>' broken?
->>>>     
->>>>         
->>> No ... we decided a while ago that station manipulation in mesh was too
->>> hard to support and removed it.
->>>
->>> What's the use case anyway?
->>>
->>> johannes
->>>   
->>>       
->> The use case is that, if I have some mesh points in a single room or one 
->> a small floor, I can simply give them a topology by removing the links 
->> between the STA, I do not wish to be directly connected.
->> Removing the links means 'iw dev <devname> set mesh_param 
->> mesh_auto_open_plinks 0', which blocks building up new peering links, 
->> and then removing some links with 'station del'.
->>     
->
-> Can't you just do that before it gets discovered?
->
-> I'm not really happy with the mesh API anyway ...
->
-> johannes
->
->   
-That makes any scripting impossible, because it would mean a fine timing 
-between the ifup on the stations. Also I think you can't build complex 
-topologies this way.
-The alternative iw dev <devname> mpath set <destination MAC address> 
-next_hop <next hop MAC address> is not useful (if it is still included 
-though ^^) because it sets paths hard. Means that these paths are not 
-changed, even if they are broken.
+On Thursday 25 March 2010 19:59:11 Joerg Pommnitz wrote:
+> Bruno Randolf <br1@...> writes:
+> > +/* debugfs: ani */
+> > +
+> > +static ssize_t read_file_ani(struct file *file, char __user *user_buf,
+> > +				   size_t count, loff_t *ppos)
+> > +{
+> > +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> 
+> ...
+> 
+> > +}
+> 
+> I would prefer a machine readable solution, e.g. individual files
+> in an ANI directory with one value each.
+> 
+> > +static ssize_t write_file_ani(struct file *file,
+> > +				 const char __user *userbuf,
+> > +				 size_t count, loff_t *ppos)
+> > +{
+> 
+> ...
+> 
+> > +	return count;
+> > +}
+> 
+> Same as above: instead of a catch all with magic configuration words, use
+> individual files with at least guessable values (e.g. 0/1 for
+> enable/disable of individual features).
 
-Well, you're the maintainer. Your choice.
+yes i agree with you and i mentioned this in my introdution message [PATCH 
+0/0]. these are just debug files...
 
-By the way: which was the last version with 'station del' in mesh 
-intact? Which codeparts would have to be exchanged if i'd like to use 
-this further? Only iw and nl80211?
+my question is which interface to use?
+
+ iw? - probably not generic enough, allthough something like "sensitivity" 
+could be useful to other drivers too?
+
+ sysfs? configfs? - what is the interface of choice nowadays? ;)
+
+bruno
