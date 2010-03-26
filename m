@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from katherina.student.utwente.nl ([130.89.168.160]:38991 "EHLO
-	katherina.student.utwente.nl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755655Ab0CaRll (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57801 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772Ab0CZRZ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 13:41:41 -0400
-Date: Wed, 31 Mar 2010 19:41:38 +0200
-From: Matthijs Kooijman <matthijs@stdin.nl>
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] [RFC] rt2500pci: fix powersaving
-Message-ID: <20100331174138.GE21160@katherina.student.utwente.nl>
-References: <201003290956.54234.linux@rainbow-software.org>
- <201003301433.55355.linux@rainbow-software.org>
- <20100330125620.GA2173@katherina.student.utwente.nl>
- <201003302209.23334.linux@rainbow-software.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8vCeF2GUdMpe9ZbK"
-In-Reply-To: <201003302209.23334.linux@rainbow-software.org>
+	Fri, 26 Mar 2010 13:25:57 -0400
+Subject: Re: [PATCH 1/2] mac80211: explicitly disable/enable QoS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>, wey-yi.w.guy@intel.com
+In-Reply-To: <1269621992-5034-1-git-send-email-sgruszka@redhat.com>
+References: <1269621992-5034-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Mar 2010 10:26:03 -0700
+Message-ID: <1269624363.4342.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2010-03-26 at 17:46 +0100, Stanislaw Gruszka wrote:
 
---8vCeF2GUdMpe9ZbK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+> + * QIEEE80211_CONF_QOS: Enable 802.11e QoS also know as WMM (Wireless
+      ^ typo
 
-Hi Ondrej,
+> +
+> +	/* activate new settings */
+> +	if (wmm_on)
+> +		local->hw.conf.flags |=	IEEE80211_CONF_QOS;
+> +	else
+> +		local->hw.conf.flags &=	~IEEE80211_CONF_QOS;
+> +
+> +	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
 
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 1 (-16).
-I've been running with your patches (applied to 2.6.32.7) for a day of normal
-work, and the steady stream of these errors has stopped. During the entire
-day, I've seen the error once, perhaps a corner case here or there?
+Ok, fair enough, we need to think this through in the multi-vif case
+anyway.
+ 
+>  void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+> @@ -816,7 +824,7 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+>  	else
+>  		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
+>  
+> -	ieee80211_set_wmm_default(sdata);
+> +	ieee80211_set_wmm_default(sdata, true);
 
-Overall, I have the feeling that connectivity is a bit more unstable with
-these two patches, however. On a few occasions, my SSH connections would hang
-for a bit. Sometimes pinging would be ok (and sometimes it wouldn't), so I
-haven't quite figured out if these problems were actually caused by the
-driver, or some other cause). Once I seemd to solve the problem by turning off
-powersaving, but that might have been a coincidence. Other times the problems
-went away by themselves.
+Shouldn't that be false though?
 
-Is there anything else I can do at the moment I'm seeing connection problems?
-Make a register dump or check some command?
+johannes
 
-I'll do some more testing, tonight on another (probably more stable)
-connection.
-
-Gr.
-
-Matthijs
-
---8vCeF2GUdMpe9ZbK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkuziVIACgkQz0nQ5oovr7zHaACfWdorn1rQDXr7NAY13AcjDcsG
-8xkAn1oiM0FF2GPGDAuh8YEwbZ6Bc+Vi
-=pfCH
------END PGP SIGNATURE-----
-
---8vCeF2GUdMpe9ZbK--
