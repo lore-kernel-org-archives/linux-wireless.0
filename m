@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:30702 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128Ab0CZKyK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:54:10 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/24] wl1271: fix wl1271_spi driver name
-Date: Fri, 26 Mar 2010 12:53:10 +0200
-Message-Id: <1269600813-32145-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mga11.intel.com ([192.55.52.93]:16241 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754083Ab0CZD5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Mar 2010 23:57:12 -0400
+Subject: Re: [PATCH 1/2] mac80211: support paged rx SKBs
+From: Zhu Yi <yi.zhu@intel.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87eij8c3ld.fsf@purkki.valot.fi>
+References: <1269399463-5244-1-git-send-email-yi.zhu@intel.com>
+	 <87eij8c3ld.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Mar 2010 11:57:57 +0800
+Message-ID: <1269575877.4043.203.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When forward porting some patches to upstream, there was a mistake and the
-wl1271_spi driver name remained, erroneously, as "wl1271".  This patch fixes
-that.
+On Thu, 2010-03-25 at 14:33 +0800, Kalle Valo wrote:
+> Zhu Yi <yi.zhu@intel.com> writes:
+> 
+> > Mac80211 drivers can now pass paged SKBs to mac80211 via
+> > ieee80211_rx{_irqsafe}. The implementation currently use
+> > skb_linearize() in a few places i.e. management frame handling,
+> > software decryption, defragmentation and A-MSDU process. We can
+> > optimize them one by one later.
+> 
+> I think ieee80211_rx{_irqsafe} documentation should now mention that
+> paged skbs are supported. Better to make this suppot explicit for the
+> driver authors.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_spi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Good idea it should be documented somewhere (after the patch is
+accepted). Maybe the developer wiki page? For the code itself, I think
+Linux drivers can always assume the network stacks support paged
+buffers. In case some stack doesn't support paged buffer, it should do
+skb_linearize() itself in the very beginning of its rcv handling (e.g.
+sctp_rcv, tipc_recv_msg, etc).
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index f44b05a..db6c9f5 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -442,7 +442,7 @@ static int __devexit wl1271_remove(struct spi_device *spi)
- 
- static struct spi_driver wl1271_spi_driver = {
- 	.driver = {
--		.name		= "wl1271",
-+		.name		= "wl1271_spi",
- 		.bus		= &spi_bus_type,
- 		.owner		= THIS_MODULE,
- 	},
--- 
-1.6.3.3
+Thanks,
+-yi
 
