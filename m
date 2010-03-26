@@ -1,72 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32819 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754060Ab0CDQGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 11:06:41 -0500
-Subject: Re: [PATCH] airo : Print of firmware version
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jose Alonso <joalonsof@gmail.com>,
-	matthieu castet <castet.matthieu@free.fr>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100304022012.GA1994@tuxdriver.com>
-References: <4B8A80EE.6000102@free.fr>
-	 <20100303201411.GF23920@tuxdriver.com> <1267657973.6254.11.camel@laptop>
-	 <20100304022012.GA1994@tuxdriver.com>
+Received: from smtp.nokia.com ([192.100.122.233]:35450 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722Ab0CZNNa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Mar 2010 09:13:30 -0400
+Subject: Re: [PATCH 00/24] wl1271: bunch of patches from our internal tree
+ wk12
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "ext John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100326130215.GA15128@tuxdriver.com>
+References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	 <20100326130215.GA15128@tuxdriver.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Mar 2010 08:06:55 -0800
-Message-ID: <1267718815.22699.6.camel@localhost.localdomain>
+Date: Fri, 26 Mar 2010 15:13:15 +0200
+Message-ID: <1269609195.22348.13.camel@powerslave>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-03 at 21:20 -0500, John W. Linville wrote:
-> On Wed, Mar 03, 2010 at 08:12:53PM -0300, Jose Alonso wrote:
-> > On Wed, 2010-03-03 at 15:14 -0500, John W. Linville wrote:
-> > > On Sun, Feb 28, 2010 at 03:42:54PM +0100, matthieu castet wrote:
-> > > > For the firmware version 5.30.17 the log file shows:
-> > > > Firmware version 5.30.11
-> > > >
-> > > > The variable softSubVer is binary.
-> > > >
-> > > >
-> > > > Signed-off-by: Matthieu CASTET <castet.matthieu@free.fr>
-> > > > Signed-off-by: Jose Alonso <joalonsof@gmail.com>
-> > > 
-> > > > Index: airo.c
-> > > > ===================================================================
-> > > > --- 1/drivers/net/wireless/airo.c	(r?vision 47)
-> > > > +++ 2/drivers/net/wireless/airo.c	(r?vision 48)
-> > > > @@ -2993,7 +2993,7 @@
-> > > >  	ai->wep_capable = (cap_rid.softCap & cpu_to_le16(0x02)) ? 1 : 0;
-> > > >  	ai->max_wep_idx = (cap_rid.softCap & cpu_to_le16(0x80)) ? 3 : 0;
-> > > >  
-> > > > -	airo_print_info(dev->name, "Firmware version %x.%x.%02x",
-> > > > +	airo_print_info(dev->name, "Firmware version %x.%x.%02d",
-> > > >  	                ((le16_to_cpu(cap_rid.softVer) >> 8) & 0xF),
-> > > >  	                (le16_to_cpu(cap_rid.softVer) & 0xFF),
-> > > >  	                le16_to_cpu(cap_rid.softSubVer));
-> > > 
-> > > Why should the last segment be in decimal form if the other two
-> > > segments of the version number are in hexadecimal form?
-> > 
-> > The airo.c shows the usage of hexadecimal and binary form:
-> > 
-> >         /* Test for WPA support */
-> >         /* Only firmware versions 5.30.17 or better can do WPA */
-> >         if (le16_to_cpu(cap_rid.softVer) > 0x530
-> >          || (le16_to_cpu(cap_rid.softVer) == 0x530
-> >               && le16_to_cpu(cap_rid.softSubVer) >= 17)) {
-> >                 airo_print_info(ai->dev->name, "WPA supported.");
+On Fri, 2010-03-26 at 14:02 +0100, ext John W. Linville wrote:
+> On Fri, Mar 26, 2010 at 12:53:09PM +0200, Luciano Coelho wrote:
 > 
-> Alright, but that could be an argument for changing the comment.
-> Probably too much to ask, but is there some authoritative source for
-> this busted numbering scheme?
+> > Here are 25 more patches for wl1271 which are still pending in our internal
+> > tree.  Please apply. :)
+> 
+> Are we catching-up?  Or will these dumps continue indefinitely?
 
-Not really, you flash a certain known version of firmware onto the
-device in Windows, then see what Linux supports.  I'll see if I can
-check my card out and see what I come up with.
+Now we have finally caught up! Sorry for the mess, but we haven't been
+sending patches for a while and they really got delayed.
 
-Dan
+The idea from now on is to send them weekly (still in patch-sets), but
+not so many at once.  We review and test our patches internally before
+sending upstream, that's why we have to send them in batches.
 
+I'm currently reconsidering this process and trying to figure out how we
+can do things in a simpler way.  We are already doing all our mac80211
+work upstream, but for the driver we haven't found a good solution yet.
+
+Would you prefer to pull stuff from a git tree instead of applying the
+patches?
+
+-- 
+Cheers,
+Luca.
 
