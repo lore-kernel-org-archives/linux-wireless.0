@@ -1,85 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41105 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756141Ab0CQW2P (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:45470 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753448Ab0CZNhr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 18:28:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 09/20] ath9k_hw: Use a helper for setting phy error masks
-Date: Wed, 17 Mar 2010 18:28:02 -0400
-Message-Id: <1268864893-11428-10-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
-References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 26 Mar 2010 09:37:47 -0400
+Subject: Re: [PATCH 00/24] wl1271: bunch of patches from our internal tree
+ wk12
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "ext John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100326132632.GD15128@tuxdriver.com>
+References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	 <20100326130215.GA15128@tuxdriver.com>
+	 <1269609195.22348.13.camel@powerslave>
+	 <20100326132632.GD15128@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Mar 2010 15:37:13 +0200
+Message-ID: <1269610633.22348.29.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The phy error masks are used consistently on ani.c so
-define a common helper for this. We will later use this to
-further abstract direct hardware reads/writes depending on
-the chipset. While at it, add some sort of explanation as
-to what these masks are for.
+On Fri, 2010-03-26 at 14:26 +0100, ext John W. Linville wrote:
+> On Fri, Mar 26, 2010 at 03:13:15PM +0200, Luciano Coelho wrote:
+> > On Fri, 2010-03-26 at 14:02 +0100, ext John W. Linville wrote:
+> > > On Fri, Mar 26, 2010 at 12:53:09PM +0200, Luciano Coelho wrote:
+> > > 
+> > > > Here are 25 more patches for wl1271 which are still pending in our internal
+> > > > tree.  Please apply. :)
+> > > 
+> > > Are we catching-up?  Or will these dumps continue indefinitely?
+> > 
+> > Now we have finally caught up! Sorry for the mess, but we haven't been
+> > sending patches for a while and they really got delayed.
+> > 
+> > The idea from now on is to send them weekly (still in patch-sets), but
+> > not so many at once.  We review and test our patches internally before
+> > sending upstream, that's why we have to send them in batches.
+> 
+> Apparently Nokia, Intel, and maybe Atheros need to form some sort of
+> support group -- Patch-hoarder's Anonymous... :-)
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |   21 +++++++++++++++------
- 1 files changed, 15 insertions(+), 6 deletions(-)
+LOL!
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 2a0cd64..08deda3 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -231,6 +231,18 @@ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
- 	stats->beacons += REG_READ(ah, AR_BEACON_CNT);
- }
- 
-+/*
-+ * These masks are used by the hardware to know which
-+ * type of phy errors to include on their error counts.
-+ * We use one counter for OFDM phy timing errors and the
-+ * other for CCK phy timing errors only.
-+ */
-+static void ath9k_hw_update_phy_err_masks(struct ath_hw *ah)
-+{
-+	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
-+	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+}
-+
- static void ath9k_ani_restart(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
-@@ -264,8 +276,7 @@ static void ath9k_ani_restart(struct ath_hw *ah)
- 		  aniState->cckPhyErrBase);
- 	REG_WRITE(ah, AR_PHY_ERR_1, aniState->ofdmPhyErrBase);
- 	REG_WRITE(ah, AR_PHY_ERR_2, aniState->cckPhyErrBase);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+	ath9k_hw_update_phy_err_masks(ah);
- 
- 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
- 
-@@ -540,8 +551,7 @@ void ath9k_ani_reset(struct ath_hw *ah)
- 	ath9k_hw_setrxfilter(ah, ath9k_hw_getrxfilter(ah) &
- 			     ~ATH9K_RX_FILTER_PHYERR);
- 	ath9k_ani_restart(ah);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+	ath9k_hw_update_phy_err_masks(ah);
- }
- 
- void ath9k_hw_ani_monitor(struct ath_hw *ah,
-@@ -644,8 +654,7 @@ void ath9k_enable_mib_counters(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_MIBC,
- 		  ~(AR_MIBC_COW | AR_MIBC_FMC | AR_MIBC_CMC | AR_MIBC_MCS)
- 		  & 0x0f);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_1, AR_PHY_ERR_OFDM_TIMING);
--	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-+	ath9k_hw_update_phy_err_masks(ah);
- }
- 
- /* Freeze the MIB counters, get the stats and then clear them */
+
+> > I'm currently reconsidering this process and trying to figure out how we
+> > can do things in a simpler way.  We are already doing all our mac80211
+> > work upstream, but for the driver we haven't found a good solution yet.
+> > 
+> > Would you prefer to pull stuff from a git tree instead of applying the
+> > patches?
+> 
+> It doesn't make a great deal of difference to me.  I have been pulling
+> from Intel for a little while now, and that has worked-out fairly
+> well from my perspective.  But, applying patchbombs is usually easy
+> so long as there hasn't been lots of other activity in the driver.
+> So, whatever is convenient for you is probably acceptable to me.
+
+Good that this hasn't been causing too much extra work for you.  If you
+have any trouble applying the patches I send, just let me know and I'll
+fix it.
+
+I think the main drawback of sending patchbombs is that we don't get
+good reviews from the community.  Nobody wants to dig into a so many
+patches at once, so it would probably be much better to have the patches
+sent one-by-one (or in relevant sets).  Unfortunately, we still have
+many internal rounds before we're satisfied with the patches.  But I'll
+see if we can change that.
+
+Tfyh! :)
+
+
 -- 
-1.6.3.3
+Cheers,
+Luca.
 
