@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:32156 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754549Ab0CWHFs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 03:05:48 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, luciano.coelho@nokia.com
-Subject: [PATCH 0/2] mac80211: cfg80211: Roam trigger support
-Date: Tue, 23 Mar 2010 09:02:32 +0200
-Message-Id: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from lo.gmane.org ([80.91.229.12]:59475 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752912Ab0C0MZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Mar 2010 08:25:09 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1NvV4Z-00084C-Nu
+	for linux-wireless@vger.kernel.org; Sat, 27 Mar 2010 13:25:03 +0100
+Received: from pc10.km-lan-2.netvisio.net ([pc10.km-lan-2.netvisio.net])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Mar 2010 13:25:03 +0100
+Received: from goldenstranger by pc10.km-lan-2.netvisio.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Mar 2010 13:25:03 +0100
+To: linux-wireless@vger.kernel.org
+From: Golden <goldenstranger@yahoo.com>
+Subject: Re: =?utf-8?b?ZmlybXdhcmVfbG9hZGluZ19zdG9yZTo=?= vmap() failed, broken firmware with kernles .27 - .30
+Date: Sat, 27 Mar 2010 12:22:06 +0000 (UTC)
+Message-ID: <loom.20100327T131226-160@post.gmane.org>
+References: <733969.9491.qm@web56807.mail.re3.yahoo.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To implement good performance WLAN roaming, it is not sufficient to start
-scanning for other available AP's only after the currently serving association
-is lost.
+The bug, as mentioned above is present in 2.6.30 as well, though with a slightly
+different error message, but the with same result - failure.
 
-The entity controlling the roaming will need to get indication of a
-deteriorating WLAN connection in order to start preparing for roaming already
-before the serving association is lost. This way, it can roam to a better AP
-perhaps even before the serving association becomes too bad in quality.
+With latest compat-wiereless versions installed, when the zd1211 dongle is
+plugged, an wlanX interface is being initialized, but when 'ifconfig wlanX up'
+is issued, the cursor hangs for about 1 minute and driver fails to load the
+firmware, despite the fact that the fw is installed and working with the default
+kernel drivers and drivers from compat-wireless from December.
 
-These patches propose an implementation facilitating this using a simple RSSI
-threshold and hysteresis approach.
+LOG:
 
-These patches add a nl80211 interface for simply configuring a rssi threshold
-and hysteresis value to facilitate very basic connection quality monitoring.
+zd1211rw 5-1:1.0: phy1
+usb 5-1: firmware: requesting zd1211/zd1211b_ub
+usb 5-1: Could not load firmware file zd1211/zd1211b_ub. Error number -2
+zd1211rw 5-1:1.0: couldn't load firmware. Error number -2 
 
-For the triggering, these patches currently rely on HW support, host based
-triggering is not implemented, but could be added later if needed.
 
-These patches have been tested with the wl1271 driver.
 
-Juuso Oikarinen (2):
-  cfg80211: Add connection quality monitoring support to nl80211
-  mac80211: Add support for connection quality monitoring
-
- include/linux/nl80211.h |   46 ++++++++++++++++
- include/net/cfg80211.h  |   19 +++++++
- include/net/mac80211.h  |   29 ++++++++++
- net/mac80211/cfg.c      |   27 ++++++++++
- net/mac80211/mlme.c     |   15 +++++
- net/wireless/mlme.c     |   13 +++++
- net/wireless/nl80211.c  |  131 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    6 ++
- 8 files changed, 286 insertions(+), 0 deletions(-)
 
