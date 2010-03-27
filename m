@@ -1,81 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fbr02.csee.onr.siteprotect.com ([64.26.60.146]:44694 "EHLO
-	fbr02.csee.onr.siteprotect.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752573Ab0CCPcx (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.24]:1611 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753262Ab0C0BL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 10:32:53 -0500
-From: "Frank W. Miller" <frankwmiller@frankwmiller.net>
-To: <tcpdump-workers@lists.tcpdump.org>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Cc: "'Jiri Pirko'" <jpirko@redhat.com>
-References: <1267578048.14049.11.camel@mj>
-In-Reply-To: <1267578048.14049.11.camel@mj>
-Subject: RE: [tcpdump-workers] Current wireless-testing breaks libpcap: mr_alen should be set
-Date: Wed, 3 Mar 2010 08:31:07 -0700
-Message-ID: <A5B3F074CA554D3E95CFD349116E4D5B@FrankWMillerPC>
+	Fri, 26 Mar 2010 21:11:28 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so2747570qwh.37
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Mar 2010 18:11:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+In-Reply-To: <1269553955-5858-1-git-send-email-gopchandani@gmail.com>
+References: <1269553955-5858-1-git-send-email-gopchandani@gmail.com>
+Date: Fri, 26 Mar 2010 20:11:27 -0500
+Message-ID: <cdc21431003261811s1ad5a4c0pe3df5c4b43517e5e@mail.gmail.com>
+Subject: Re: [PATCH] Changes for implementing NL80211_CMD_SET_TX_BITRATE_MASK
+	for legacy rates for now.
+From: Rakesh Kumar <gopchandani@gmail.com>
+To: johannes@sipsolutions.net
+Cc: rakesh.illini@gmail.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Would this be preventing pcap_inject() from working say in kernel 2.6.31
-(stock FC12 kernel)?
-
-Thanks,
-FM
-
-
-> -----Original Message-----
-> From: tcpdump-workers-owner@lists.tcpdump.org [mailto:tcpdump-workers-
-> owner@lists.tcpdump.org] On Behalf Of Pavel Roskin
-> Sent: Tuesday, March 02, 2010 6:01 PM
-> To: linux-wireless@vger.kernel.org; netdev@vger.kernel.org; tcpdump-
-> workers@lists.tcpdump.org
-> Cc: Jiri Pirko
-> Subject: [tcpdump-workers] Current wireless-testing breaks libpcap:
-> mr_alen should be set
-> 
-> Hello!
-> 
-> The current wireless-testing appears to have some non-wireless bits from
-> the upcoming Linux 2.6.34.  As a result, libpcap and all capture
-> programs that use it are broken.
-> 
-> This patch to libpcap helps:
-> 
-> --- a/pcap-linux.c
-> +++ b/pcap-linux.c
-> @@ -1563,6 +1563,7 @@ live_open_new(pcap_t *handle, const char
->  			memset(&mr, 0, sizeof(mr));
->  			mr.mr_ifindex = handle->md.ifindex;
->  			mr.mr_type    = PACKET_MR_PROMISC;
-> +			mr.mr_alen    = 6;
->  			if (setsockopt(sock_fd, SOL_PACKET,
->  				PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) ==
--1)
->  			{
-> 
-> libpcap git doesn't have the fix yet.
-> 
-> The breakage must be coming from the commit 914c8ad2 by Jiri Pirko to
-> net/packet/af_packet.c
-> 
-> I think it's very unhelpful to introduce patches that break significant
-> userspace functionality without giving the affected programs an advance
-> warning.
-> 
-> Also, pulling bleeding edge stuff into wireless-testing before rc1
-> appears to be either a mistake or a bad decision.
-> 
-> Sorry for cross-post, but it's an urgent issue.  Repliers are encouraged
-> to trim the recipient list as necessary.
-> 
-> --
-> Regards,
-> Pavel Roskin
-> -
-> This is the tcpdump-workers list.
-> Visit https://cod.sandelman.ca/ to unsubscribe.
-
+YW55IGNvbW1lbnRzPwoKT24gVGh1LCBNYXIgMjUsIDIwMTAgYXQgNDo1MiBQTSwgUmFrZXNoIDxn
+b3BjaGFuZGFuaUBnbWFpbC5jb20+IHdyb3RlOgo+Cj4gRnJvbTogUmFrZXNoIDxyYWtlc2hAcGlu
+ZWFwcGxlLihub25lKT4KPgo+IC0tLQo+IMKgbWFzay5jIHwgwqAgODIgKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwo+IMKgMSBm
+aWxlcyBjaGFuZ2VkLCA4MiBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQo+IMKgY3JlYXRl
+IG1vZGUgMTAwNzU1IG1hc2suYwo+Cj4gZGlmZiAtLWdpdCBhL21hc2suYyBiL21hc2suYwo+IG5l
+dyBmaWxlIG1vZGUgMTAwNzU1Cj4gaW5kZXggMDAwMDAwMC4uYTE4NGI2Nwo+IC0tLSAvZGV2L251
+bGwKPiArKysgYi9tYXNrLmMKPiBAQCAtMCwwICsxLDgyIEBACj4gKyNpbmNsdWRlIDxuZXQvaWYu
+aD4KPiArI2luY2x1ZGUgPGVycm5vLmg+Cj4gKyNpbmNsdWRlIDxzdHJpbmcuaD4KPiArI2luY2x1
+ZGUgPGN0eXBlLmg+Cj4gKyNpbmNsdWRlIDxzdGRib29sLmg+Cj4gKwo+ICsjaW5jbHVkZSA8bmV0
+bGluay9nZW5sL2dlbmwuaD4KPiArI2luY2x1ZGUgPG5ldGxpbmsvZ2VubC9mYW1pbHkuaD4KPiAr
+I2luY2x1ZGUgPG5ldGxpbmsvZ2VubC9jdHJsLmg+Cj4gKyNpbmNsdWRlIDxuZXRsaW5rL21zZy5o
+Pgo+ICsjaW5jbHVkZSA8bmV0bGluay9hdHRyLmg+Cj4gKwo+ICsjaW5jbHVkZSAibmw4MDIxMS5o
+Igo+ICsjaW5jbHVkZSAiaXcuaCIKPiArCj4gKwo+ICtzdGF0aWMgaW50IGhhbmRsZV9tYXNrKHN0
+cnVjdCBubDgwMjExX3N0YXRlICpzdGF0ZSwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgc3RydWN0IG5sX2NiICpjYiwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgc3RydWN0IG5sX21zZyAqbXNnLAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqBpbnQgYXJnYywgY2hhciAqKmFyZ3YpCj4gK3sKPiArIMKgIMKgIMKgIF9fdTggaW5wdXRfbGVn
+YWN5X3JhdGVzWzMyXTsKPiArIMKgIMKgIMKgIHN0cnVjdCBubGF0dHIgKm5sX3JhdGVzLCAqbmxf
+cmF0ZTsKPiArCj4gKyDCoCDCoCDCoCBjaGFyICplcHRyOwo+ICsgwqAgwqAgwqAgaW50IGVyciA9
+IC1FTk9CVUZTOwo+ICsgwqAgwqAgwqAgaW50IGksbGVnYWN5X3JhdGVfY291bnRlcj0wOwo+ICsK
+PiArIMKgIMKgIMKgIGVudW0gewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgTk9ORSwKPiArIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIExFR0FDWSwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIE1DUywK
+PiArIMKgIMKgIMKgIH0gcGFyc2UgPSBOT05FOwo+ICsgwqAgwqAgwqAgYm9vbCBoYXZlX2xlZ2Fj
+eSxoYXZlX21jczsKPiArIMKgIMKgIMKgIGZvciAoaSA9IDA7IGkgPCBhcmdjOyBpKyspIHsKPiAr
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChzdHJjbXAoYXJndltpXSwgImxlZ2FjeSIpID09IDAp
+IHsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHBhcnNlID0gTEVHQUNZOwo+
+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaGF2ZV9sZWdhY3kgPSB0cnVlOwo+
+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY29udGludWU7Cj4gKyDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCB9Cj4gKwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAoc3RyY21w
+KGFyZ3ZbaV0sICJtY3MiKSA9PSAwKSB7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoHBhcnNlID0gTUNTOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqBoYXZlX21jcyA9IHRydWU7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oGNvbnRpbnVlOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB9Cj4gKwo+ICsgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgc3dpdGNoIChwYXJzZSkgewo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2Fz
+ZSBOT05FOgo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2FzZSBMRUdBQ1k6Cj4gKyDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpbnB1dF9sZWdhY3lfcmF0ZXNbbGVnYWN5X3JhdGVf
+Y291bnRlcl0gPSBzdHJ0b3VsKGFyZ3ZbaV0sICZlcHRyLCAxMCk7Cj4gKyDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCBsZWdhY3lfcmF0ZV9jb3VudGVyKys7Cj4gKyDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBicmVhazsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNh
+c2UgTUNTOgo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLy9OTEFfUFVUKHNz
+aWRzLCBpLCBzdHJsZW4oYXJndltpXSksIGFyZ3ZbaV0pOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgYnJlYWs7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9Cj4gKyDCoCDC
+oCDCoCB9Cj4gKyDCoCDCoCDCoCBlcnIgPSAwOwo+ICsKPiArLy8gTmVzdGluZyBvZiBhdHRyaWJ1
+dGUgYmVnaW5zCj4gKwo+ICsgwqAgwqAgwqAgbmxfcmF0ZXMgPSBubGFfbmVzdF9zdGFydChtc2cs
+IE5MODAyMTFfQVRUUl9UWF9SQVRFUyk7Cj4gKyDCoCDCoCDCoCBpZiAoIW5sX3JhdGVzKQo+ICsg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgZ290byBubGFfcHV0X2ZhaWx1cmU7Cj4gKyDCoCDCoCDCoCBp
+bnQgYmFuZCA9IDA7Cj4gKyDCoCDCoCDCoCBubF9yYXRlID0gbmxhX25lc3Rfc3RhcnQobXNnLGJh
+bmQpOwo+ICsgwqAgwqAgwqAgaWYgKCFubF9yYXRlKQo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+Z290byBubGFfcHV0X2ZhaWx1cmU7Cj4gKwo+ICsgwqAgwqAgwqAgbmxhX3B1dChtc2csIE5MODAy
+MTFfVFhSQVRFX0xFR0FDWSwgbGVnYWN5X3JhdGVfY291bnRlciwgaW5wdXRfbGVnYWN5X3JhdGVz
+KTsKPiArCj4gKyDCoCDCoCDCoCBubGFfbmVzdF9lbmQobXNnLG5sX3JhdGUpOwo+ICsgwqAgwqAg
+wqAgbmxhX25lc3RfZW5kKG1zZyxubF9yYXRlcyk7Cj4gKwo+ICsvL05lc3Rpbmcgb2YgYXR0cmli
+dXRlIGVuZHMuCj4gKyBubGFfcHV0X2ZhaWx1cmU6Cj4gKyDCoCDCoCDCoCByZXR1cm4gZXJyOwo+
+ICt9Cj4gK0NPTU1BTkQoc2V0LCBtYXNrLCAiW2xlZ2FjeSA8bGVnYWN5IHJhdGUgaW4gTWJwcyBt
+dWx0aXBsaWVkIGJ5IDIsIGUuZy4gMTEgZm9yIDUuNSBNYnBzPipdIiwKPiArIMKgIMKgIMKgIE5M
+ODAyMTFfQ01EX1NFVF9UWF9CSVRSQVRFX01BU0ssIDAsIENJQl9ORVRERVYsIGhhbmRsZV9tYXNr
+LAo+ICsgwqAgwqAgwqAgwqAiU2V0cyB1cCB0aGUgc3BlY2lmaWVkIHJhdGUgbWFza3MgZm9yIGRp
+ZmZlcmVudCBiYW5kcy4iKTsKPiAtLQo+IDEuNi4zLjMKPgo=
