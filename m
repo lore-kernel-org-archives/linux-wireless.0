@@ -1,33 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f217.google.com ([209.85.217.217]:48350 "EHLO
-	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751637Ab0C2Xna (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:59956 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754610Ab0C1NxQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 19:43:30 -0400
-Received: by gxk9 with SMTP id 9so1983337gxk.8
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 16:43:30 -0700 (PDT)
-Message-ID: <4BB13B1C.2010608@lwfinger.net>
-Date: Mon, 29 Mar 2010 18:43:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10A0F.1030608@lwfinger.net> <20100329204822.GL4984@tuxdriver.com> <20100329205558.GM4984@tuxdriver.com> <4BB11B8E.1020506@lwfinger.net> <4BB12148.7080309@googlemail.com> <4BB13147.9020002@lwfinger.net> <4BB135EC.1070502@googlemail.com>
-In-Reply-To: <4BB135EC.1070502@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 28 Mar 2010 09:53:16 -0400
+Received: by bwz1 with SMTP id 1so2930995bwz.21
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Mar 2010 06:53:14 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
+	IvDoorn@gmail.com, Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH] wireless: rt2x00: rt2800usb: identify ids-chips
+Date: Sun, 28 Mar 2010 15:52:43 +0200
+Message-Id: <1269784363-6077-1-git-send-email-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/29/2010 06:21 PM, René Bolldorf wrote:
-> 
-> ssb: chip_id 0x4312, status 0x12
-> ssb: cc rev 0x16, cc capab 0x18600000
-> 
-> And my system completely hangs after this... :(
+Taken from ralink linux drivers:
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0B05,0x1784)}, /* Asus 3072 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x13D3,0x3305)}, /* AzureWave 3070*/
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x07D1,0x3C16)}, /* D-Link 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x203D,0x14A9)}, /* Encore 3070*/
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9707)}, /* EnGenius 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9708)}, /* EnGenius 3071 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9709)}, /* EnGenius 3072 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x04BB,0x0947)}, /* I-O DATA 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x04BB,0x0948)}, /* I-O DATA 3072 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3822)}, /* MSI 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3821)}, /* Ralink 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3870)}, /* MSI 3070*/
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3871)}, /* MSI 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x821A)}, /* Ralink 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x822A)}, /* MSI 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x870A)}, /* MSI 3070*/
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x871A)}, /* MSI 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x899A)}, /* MSI 3070*/
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x20B8,0x8888)}, /* PARA INDUSTRIAL 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DF6,0x0048)}, /* Sitecom 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DF6,0x0047)}, /* Sitecom 3071 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x083A,0xA701)}, /* SMC 3070 */
+RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x083A,0xA702)}, /* SMC 3072 */
 
-Nothing in that patch should make it hang. Has that happened before?
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   52 +++++++++++++++----------------
+ 1 files changed, 25 insertions(+), 27 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index d27d7d5..a1691b8 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -905,8 +905,11 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x07b8, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* AirTies */
+ 	{ USB_DEVICE(0x1eda, 0x2310), USB_DEVICE_DATA(&rt2800usb_ops) },
++	/* ASUS */
++	{ USB_DEVICE(0x0b05, 0x1784), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* AzureWave */
+ 	{ USB_DEVICE(0x13d3, 0x3273), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x13d3, 0x3305), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Conceptronic */
+ 	{ USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Corega */
+@@ -916,20 +919,38 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x07d1, 0x3c0d), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c0e), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Edimax */
+ 	{ USB_DEVICE(0x7392, 0x7711), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Encore */
+ 	{ USB_DEVICE(0x203d, 0x1480), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x203d, 0x14a9), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* EnGenius */
+ 	{ USB_DEVICE(0x1740, 0x9703), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1740, 0x9705), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1740, 0x9706), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Gigabyte */
+ 	{ USB_DEVICE(0x1044, 0x800d), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* I-O DATA */
+ 	{ USB_DEVICE(0x04bb, 0x0945), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* MSI */
+ 	{ USB_DEVICE(0x0db0, 0x3820), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x3821), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x3822), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x3870), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x3871), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x821a), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x822a), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x870a), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x871a), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x899a), USB_DEVICE_DATA(&rt2800usb_ops) },
++	/* Para */
++	{ USB_DEVICE(0x20b8, 0x8888), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Pegatron */
+ 	{ USB_DEVICE(0x1d4d, 0x000c), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1d4d, 0x000e), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -945,8 +966,12 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Sitecom */
+ 	{ USB_DEVICE(0x0df6, 0x003e), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0df6, 0x0047), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0df6, 0x0048), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0x7511), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x083a, 0xa701), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x083a, 0xa702), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Zinwell */
+ 	{ USB_DEVICE(0x5a57, 0x0283), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x5a57, 0x5257), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -990,13 +1015,11 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* ASUS */
+ 	{ USB_DEVICE(0x0b05, 0x1760), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0b05, 0x1761), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0b05, 0x1784), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0b05, 0x1790), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1761, 0x0b05), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* AzureWave */
+ 	{ USB_DEVICE(0x13d3, 0x3262), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x13d3, 0x3284), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x13d3, 0x3305), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Belkin */
+ 	{ USB_DEVICE(0x050d, 0x825a), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Buffalo */
+@@ -1015,14 +1038,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x07d1, 0x3c0b), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c13), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c15), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Encore */
+ 	{ USB_DEVICE(0x203d, 0x14a1), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x203d, 0x14a9), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	/* EnGenius */
+-	{ USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Gemtek */
+ 	{ USB_DEVICE(0x15a9, 0x0010), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Gigabyte */
+@@ -1030,9 +1047,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* Hawking */
+ 	{ USB_DEVICE(0x0e66, 0x0009), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0e66, 0x000b), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	/* I-O DATA */
+-	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* LevelOne */
+ 	{ USB_DEVICE(0x1740, 0x0605), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1740, 0x0615), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -1042,20 +1056,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Motorola */
+ 	{ USB_DEVICE(0x100d, 0x9032), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	/* MSI */
+-	{ USB_DEVICE(0x0db0, 0x3821), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0db0, 0x3822), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0db0, 0x3870), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0db0, 0x3871), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0db0, 0x821a), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0db0, 0x822a), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0db0, 0x870a), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0db0, 0x871a), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0db0, 0x899a), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Ovislink */
+ 	{ USB_DEVICE(0x1b75, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	/* Para */
+-	{ USB_DEVICE(0x20b8, 0x8888), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Pegatron */
+ 	{ USB_DEVICE(0x05a6, 0x0101), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1d4d, 0x0002), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -1069,14 +1071,10 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0df6, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x003d), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x0040), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0df6, 0x0047), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0df6, 0x0048), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x004a), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x004d), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0xa512), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x083a, 0xa701), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x083a, 0xa702), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x083a, 0xc522), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x083a, 0xd522), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Sweex */
+-- 
+1.6.6.1
 
