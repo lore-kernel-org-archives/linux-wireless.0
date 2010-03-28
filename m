@@ -1,366 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:45563 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989Ab0CCH0j convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f223.google.com ([209.85.220.223]:39343 "EHLO
+	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755314Ab0C1WxS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 02:26:39 -0500
-Message-ID: <20100303092637.83386rwh7y4t3fnk@hayate.sektori.org>
-Date: Wed, 03 Mar 2010 09:26:37 +0200
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] rndis_wlan: Implement cfg80211 PMKSA API
-References: <20100302223825.2794.13615.stgit@fate.lan>
-	<20100302223841.2794.92692.stgit@fate.lan>
-In-Reply-To: <20100302223841.2794.92692.stgit@fate.lan>
+	Sun, 28 Mar 2010 18:53:18 -0400
+Received: by mail-fx0-f223.google.com with SMTP id 23so424568fxm.21
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Mar 2010 15:53:17 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/5] b43: N-PHY: use b43_phy_n_sfo_cfg rather than duplicating same fields
+Date: Mon, 29 Mar 2010 00:53:13 +0200
+Message-Id: <1269816796-26820-3-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1269816796-26820-2-git-send-email-zajec5@gmail.com>
+References: <1269816796-26820-2-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c       |    6 +++---
+ drivers/net/wireless/b43/tables_nphy.c |   12 ++++++------
+ drivers/net/wireless/b43/tables_nphy.h |   15 +++++----------
+ 3 files changed, 14 insertions(+), 19 deletions(-)
 
-Please ignore these patches, I didn't pull latest wireless-testing  
-before sending these. These patches still devdbg/devwarn, instead of  
-new netdev_dbg/etc. Sorry.
-
--Jussi
-
-Quoting "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>:
-
-> Add support for cfg80211 set_pmksa/del_pmksa/flush_pmksa. Updating PMKID
-> entry list is done on driver side since NDIS API requires full list update.
->
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> ---
->
->  drivers/net/wireless/rndis_wlan.c |  271  
-> +++++++++++++++++++++++++++++++++++++
->  1 files changed, 271 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> b/drivers/net/wireless/rndis_wlan.c
-> index 4054b70..65f5236 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -372,6 +372,18 @@ struct ndis_80211_capability {
->  	struct ndis_80211_auth_encr_pair auth_encr_pair[0];
->  } __attribute__((packed));
->
-> +struct ndis_80211_bssid_info {
-> +	u8 bssid[6];
-> +	u8 padding[2];
-> +	u8 pmkid[16];
-> +};
-> +
-> +struct ndis_80211_pmkid {
-> +	__le32 length;
-> +	__le32 bssid_info_count;
-> +	struct ndis_80211_bssid_info bssid_info[0];
-> +};
-> +
->  /*
->   *  private data
->   */
-> @@ -542,6 +554,14 @@ static int rndis_get_station(struct wiphy  
-> *wiphy, struct net_device *dev,
->  static int rndis_dump_station(struct wiphy *wiphy, struct net_device *dev,
->  			       int idx, u8 *mac, struct station_info *sinfo);
->
-> +static int rndis_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-> +				struct cfg80211_pmksa *pmksa);
-> +
-> +static int rndis_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-> +				struct cfg80211_pmksa *pmksa);
-> +
-> +static int rndis_flush_pmksa(struct wiphy *wiphy, struct net_device  
-> *netdev);
-> +
->  static struct cfg80211_ops rndis_config_ops = {
->  	.change_virtual_intf = rndis_change_virtual_intf,
->  	.scan = rndis_scan,
-> @@ -558,6 +578,9 @@ static struct cfg80211_ops rndis_config_ops = {
->  	.set_default_key = rndis_set_default_key,
->  	.get_station = rndis_get_station,
->  	.dump_station = rndis_dump_station,
-> +	.set_pmksa = rndis_set_pmksa,
-> +	.del_pmksa = rndis_del_pmksa,
-> +	.flush_pmksa = rndis_flush_pmksa,
->  };
->
->  static void *rndis_wiphy_privid = &rndis_wiphy_privid;
-> @@ -1565,6 +1588,190 @@ static void set_multicast_list(struct usbnet *usbdev)
->  						le32_to_cpu(filter), ret);
->  }
->
-> +#ifdef DEBUG
-> +static void debug_print_pmkids(struct usbnet *usbdev,
-> +				struct ndis_80211_pmkid *pmkids,
-> +				const char *func_str)
-> +{
-> +	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-> +	int i, len, count, max_pmkids;
-> +
-> +	max_pmkids = priv->wdev.wiphy->max_num_pmkids;
-> +	len = le32_to_cpu(pmkids->length);
-> +	count = le32_to_cpu(pmkids->bssid_info_count);
-> +
-> +	devdbg(usbdev, "%s: %d PMKIDs", func_str, count);
-> +
-> +	if (count > max_pmkids)
-> +		count = max_pmkids;
-> +
-> +	for (i = 0; i < count; i++) {
-> +		u32 *tmp = (u32 *)pmkids->bssid_info[i].pmkid;
-> +
-> +		devdbg(usbdev, "%s:  bssid: %pM, pmkid: %08X:%08X:%08X:%08X",
-> +				func_str, pmkids->bssid_info[i].bssid,
-> +				cpu_to_be32(tmp[0]), cpu_to_be32(tmp[1]),
-> +				cpu_to_be32(tmp[2]), cpu_to_be32(tmp[3]));
-> +	}
-> +}
-> +#else
-> +static void debug_print_pmkids(struct usbnet *usbdev,
-> +				struct ndis_80211_pmkid *pmkids,
-> +				const char *func_str)
-> +{
-> +	return;
-> +}
-> +#endif
-> +
-> +static struct ndis_80211_pmkid *get_device_pmkids(struct usbnet *usbdev)
-> +{
-> +	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-> +	struct ndis_80211_pmkid *pmkids;
-> +	int len, ret, max_pmkids;
-> +
-> +	max_pmkids = priv->wdev.wiphy->max_num_pmkids;
-> +	len = sizeof(*pmkids) + max_pmkids * sizeof(pmkids->bssid_info[0]);
-> +
-> +	pmkids = kzalloc(len, GFP_KERNEL);
-> +	if (!pmkids)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	pmkids->length = cpu_to_le32(len);
-> +	pmkids->bssid_info_count = cpu_to_le32(max_pmkids);
-> +
-> +	ret = rndis_query_oid(usbdev, OID_802_11_PMKID, pmkids, &len);
-> +	if (ret < 0) {
-> +		devdbg(usbdev, "get_device_pmkids(): OID_802_11_PMKID(%d, %d)"
-> +				" -> %d", len, max_pmkids, ret);
-> +
-> +		kfree(pmkids);
-> +		return ERR_PTR(ret);
-> +	}
-> +
-> +	if (le32_to_cpu(pmkids->bssid_info_count) > max_pmkids)
-> +		pmkids->bssid_info_count = cpu_to_le32(max_pmkids);
-> +
-> +	debug_print_pmkids(usbdev, pmkids, "get_device_pmkids()");
-> +
-> +	return pmkids;
-> +}
-> +
-> +static int set_device_pmkids(struct usbnet *usbdev,
-> +				struct ndis_80211_pmkid *pmkids)
-> +{
-> +	int ret, len, num_pmkids;
-> +
-> +	num_pmkids = le32_to_cpu(pmkids->bssid_info_count);
-> +	len = sizeof(*pmkids) + num_pmkids * sizeof(pmkids->bssid_info[0]);
-> +	pmkids->length = cpu_to_le32(len);
-> +
-> +	debug_print_pmkids(usbdev, pmkids, "set_device_pmkids()");
-> +
-> +	ret = rndis_set_oid(usbdev, OID_802_11_PMKID, pmkids,
-> +						le32_to_cpu(pmkids->length));
-> +	if (ret < 0) {
-> +		devdbg(usbdev, "set_device_pmkids(): OID_802_11_PMKID(%d, %d)"
-> +				" -> %d", len, num_pmkids, ret);
-> +	}
-> +
-> +	kfree(pmkids);
-> +	return ret;
-> +}
-> +
-> +static struct ndis_80211_pmkid *remove_pmkid(struct usbnet *usbdev,
-> +						struct ndis_80211_pmkid *pmkids,
-> +						struct cfg80211_pmksa *pmksa,
-> +						int max_pmkids)
-> +{
-> +	int i, len, count, newlen, err;
-> +
-> +	len = le32_to_cpu(pmkids->length);
-> +	count = le32_to_cpu(pmkids->bssid_info_count);
-> +
-> +	if (count > max_pmkids)
-> +		count = max_pmkids;
-> +
-> +	for (i = 0; i < count; i++)
-> +		if (!compare_ether_addr(pmkids->bssid_info[i].bssid,
-> +							pmksa->bssid))
-> +			break;
-> +
-> +	/* pmkid not found */
-> +	if (i == count) {
-> +		devdbg(usbdev, "remove_pmkid(): bssid not found (%pM)",
-> +								pmksa->bssid);
-> +		err = -ENOENT;
-> +		goto error;
-> +	}
-> +
-> +	for (; i + 1 < count; i++)
-> +		pmkids->bssid_info[i] = pmkids->bssid_info[i + 1];
-> +
-> +	count--;
-> +	newlen = sizeof(*pmkids) + count * sizeof(pmkids->bssid_info[0]);
-> +
-> +	pmkids->length = cpu_to_le32(newlen);
-> +	pmkids->bssid_info_count = cpu_to_le32(count);
-> +
-> +	return pmkids;
-> +error:
-> +	kfree(pmkids);
-> +	return ERR_PTR(err);
-> +}
-> +
-> +static struct ndis_80211_pmkid *update_pmkid(struct usbnet *usbdev,
-> +						struct ndis_80211_pmkid *pmkids,
-> +						struct cfg80211_pmksa *pmksa,
-> +						int max_pmkids)
-> +{
-> +	int i, err, len, count, newlen;
-> +
-> +	len = le32_to_cpu(pmkids->length);
-> +	count = le32_to_cpu(pmkids->bssid_info_count);
-> +
-> +	if (count > max_pmkids)
-> +		count = max_pmkids;
-> +
-> +	/* update with new pmkid */
-> +	for (i = 0; i < count; i++) {
-> +		if (compare_ether_addr(pmkids->bssid_info[i].bssid,
-> +							pmksa->bssid))
-> +			continue;
-> +
-> +		memcpy(pmkids->bssid_info[i].pmkid, pmksa->pmkid,
-> +								WLAN_PMKID_LEN);
-> +
-> +		return pmkids;
-> +	}
-> +
-> +	/* out of space, return error */
-> +	if (i == max_pmkids) {
-> +		devdbg(usbdev, "update_pmkid(): out of space");
-> +		err = -ENOSPC;
-> +		goto error;
-> +	}
-> +
-> +	/* add new pmkid */
-> +	newlen = sizeof(*pmkids) + (count + 1) * sizeof(pmkids->bssid_info[0]);
-> +
-> +	pmkids = krealloc(pmkids, newlen, GFP_KERNEL);
-> +	if (!pmkids) {
-> +		err = -ENOMEM;
-> +		goto error;
-> +	}
-> +
-> +	pmkids->length = cpu_to_le32(newlen);
-> +	pmkids->bssid_info_count = cpu_to_le32(count + 1);
-> +
-> +	memcpy(pmkids->bssid_info[count].bssid, pmksa->bssid, ETH_ALEN);
-> +	memcpy(pmkids->bssid_info[count].pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
-> +
-> +	return pmkids;
-> +error:
-> +	kfree(pmkids);
-> +	return ERR_PTR(err);
-> +}
-> +
->  /*
->   * cfg80211 ops
->   */
-> @@ -2164,6 +2371,70 @@ static int rndis_dump_station(struct wiphy  
-> *wiphy, struct net_device *dev,
->  	return 0;
->  }
->
-> +static int rndis_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-> +				struct cfg80211_pmksa *pmksa)
-> +{
-> +	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
-> +	struct usbnet *usbdev = priv->usbdev;
-> +	struct ndis_80211_pmkid *pmkids;
-> +
-> +	devdbg(usbdev, "rndis_set_pmksa()");
-> +
-> +	pmkids = get_device_pmkids(usbdev);
-> +	if (IS_ERR(pmkids)) {
-> +		/* couldn't read PMKID cache from device */
-> +		return PTR_ERR(pmkids);
-> +	}
-> +
-> +	pmkids = update_pmkid(usbdev, pmkids, pmksa, wiphy->max_num_pmkids);
-> +	if (IS_ERR(pmkids)) {
-> +		/* not found, list full, etc */
-> +		return PTR_ERR(pmkids);
-> +	}
-> +
-> +	return set_device_pmkids(usbdev, pmkids);
-> +}
-> +
-> +static int rndis_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-> +				struct cfg80211_pmksa *pmksa)
-> +{
-> +	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
-> +	struct usbnet *usbdev = priv->usbdev;
-> +	struct ndis_80211_pmkid *pmkids;
-> +
-> +	devdbg(usbdev, "rndis_del_pmksa()");
-> +
-> +	pmkids = get_device_pmkids(usbdev);
-> +	if (IS_ERR(pmkids)) {
-> +		/* Couldn't read PMKID cache from device */
-> +		return PTR_ERR(pmkids);
-> +	}
-> +
-> +	pmkids = remove_pmkid(usbdev, pmkids, pmksa, wiphy->max_num_pmkids);
-> +	if (IS_ERR(pmkids)) {
-> +		/* not found, etc */
-> +		return PTR_ERR(pmkids);
-> +	}
-> +
-> +	return set_device_pmkids(usbdev, pmkids);
-> +}
-> +
-> +static int rndis_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
-> +{
-> +	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
-> +	struct usbnet *usbdev = priv->usbdev;
-> +	struct ndis_80211_pmkid pmkid;
-> +
-> +	devdbg(usbdev, "rndis_flush_pmksa()");
-> +
-> +	memset(&pmkid, 0, sizeof(pmkid));
-> +
-> +	pmkid.length = cpu_to_le32(sizeof(pmkid));
-> +	pmkid.bssid_info_count = cpu_to_le32(0);
-> +
-> +	return rndis_set_oid(usbdev, OID_802_11_PMKID, &pmkid, sizeof(pmkid));
-> +}
-> +
->  /*
->   * workers, indication handlers, device poller
->   */
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 0586667..052119b 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -141,7 +141,7 @@ static void b43_chantab_radio_upload(struct b43_wldev *dev,
+ }
+ 
+ static void b43_chantab_phy_upload(struct b43_wldev *dev,
+-				   const struct b43_nphy_channeltab_entry *e)
++				   const struct b43_phy_n_sfo_cfg *e)
+ {
+ 	b43_phy_write(dev, B43_NPHY_BW1A, e->phy_bw1a);
+ 	b43_phy_write(dev, B43_NPHY_BW2, e->phy_bw2);
+@@ -3270,7 +3270,7 @@ int b43_phy_initn(struct b43_wldev *dev)
+ 
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
+ static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
+-				const struct b43_nphy_channeltab_entry *e,
++				const struct b43_phy_n_sfo_cfg *e,
+ 				struct b43_chanspec chanspec)
+ {
+ 	struct b43_phy *phy = &dev->phy;
+@@ -3373,7 +3373,7 @@ static int b43_nphy_set_chanspec(struct b43_wldev *dev,
+ 		tmp = (chanspec.b_freq == 1) ? 0x0020 : 0x0050;
+ 		b43_radio_maskset(dev, B2055_MASTER1, 0xFF8F, tmp);
+ 		b43_radio_2055_setup(dev, tabent);
+-		b43_nphy_chanspec_setup(dev, tabent, chanspec);
++		b43_nphy_chanspec_setup(dev, &(tabent->phy_regs), chanspec);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index a00d509..237426d 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -318,12 +318,12 @@ void b2055_upload_inittab(struct b43_wldev *dev,
+ 	.radio_c2_tx_mxbgtrim	= r21
+ 
+ #define PHYREGS(r0, r1, r2, r3, r4, r5)	\
+-	.phy_bw1a	= r0,		\
+-	.phy_bw2	= r1,		\
+-	.phy_bw3	= r2,		\
+-	.phy_bw4	= r3,		\
+-	.phy_bw5	= r4,		\
+-	.phy_bw6	= r5
++	.phy_regs.phy_bw1a	= r0,	\
++	.phy_regs.phy_bw2	= r1,	\
++	.phy_regs.phy_bw3	= r2,	\
++	.phy_regs.phy_bw4	= r3,	\
++	.phy_regs.phy_bw5	= r4,	\
++	.phy_regs.phy_bw6	= r5
+ 
+ static const struct b43_nphy_channeltab_entry b43_nphy_channeltab[] = {
+   {	.channel		= 184,
+diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
+index b23036f..84dea35 100644
+--- a/drivers/net/wireless/b43/tables_nphy.h
++++ b/drivers/net/wireless/b43/tables_nphy.h
+@@ -16,6 +16,10 @@ struct b43_phy_n_sfo_cfg {
+ struct b43_nphy_channeltab_entry {
+ 	/* The channel number */
+ 	u8 channel;
++	/* The channel frequency in MHz */
++	u16 freq;
++	/* An unknown value */
++	u16 unk2;
+ 	/* Radio register values on channelswitch */
+ 	u8 radio_pll_ref;
+ 	u8 radio_rf_pllmod0;
+@@ -40,16 +44,7 @@ struct b43_nphy_channeltab_entry {
+ 	u8 radio_c2_tx_pgapadtn;
+ 	u8 radio_c2_tx_mxbgtrim;
+ 	/* PHY register values on channelswitch */
+-	u16 phy_bw1a;
+-	u16 phy_bw2;
+-	u16 phy_bw3;
+-	u16 phy_bw4;
+-	u16 phy_bw5;
+-	u16 phy_bw6;
+-	/* The channel frequency in MHz */
+-	u16 freq;
+-	/* An unknown value */
+-	u16 unk2;
++	struct b43_phy_n_sfo_cfg phy_regs;
+ };
+ 
+ 
+-- 
+1.6.4.2
 
