@@ -1,84 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:39879 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754351Ab0CWU6a (ORCPT
+Received: from mail-fx0-f223.google.com ([209.85.220.223]:39343 "EHLO
+	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755314Ab0C1Wx2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 16:58:30 -0400
-Received: by bwz1 with SMTP id 1so2269822bwz.21
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Mar 2010 13:58:28 -0700 (PDT)
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-From: Calvin Walton <calvin.walton@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4BA8CF6C.2050701@lwfinger.net>
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net>
-	 <201003222325.35994.mb@bu3sch.de> <4BA80118.1070801@lwfinger.net>
-	 <201003230952.56207.mb@bu3sch.de>  <4BA8CF6C.2050701@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 23 Mar 2010 16:58:22 -0400
-Message-ID: <1269377903.21181.8.camel@nayuki>
-Mime-Version: 1.0
+	Sun, 28 Mar 2010 18:53:28 -0400
+Received: by mail-fx0-f223.google.com with SMTP id 23so424568fxm.21
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Mar 2010 15:53:28 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/5] b43: N-PHY: find table entry earlier for setting chanspec
+Date: Mon, 29 Mar 2010 00:53:14 +0200
+Message-Id: <1269816796-26820-4-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1269816796-26820-2-git-send-email-zajec5@gmail.com>
+References: <1269816796-26820-2-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-23 at 09:25 -0500, Larry Finger wrote:
-> Will someone please write me udev rule(s) that do the following:
-> 
-> 1. Detect a MAC address of FF:FF:FF:FF:FF:FF
-> 2. If this is the first time for this bus address, then generate a random MAC
-> address with the bus address encoded in it.
-> 3. Preserve the address for future reloads
-> 4. Load the saved address into the device.
-> 5. Do the above with only standard external commands - no new programs
-> 
-> My skills with udev are not up to the task.
+We do not want to partially change chanspec just to find out there is not
+entry in table for given channel.
 
-I will warn you that the following is rather untested, as I don't have
-any of the affected hardware (or any b43 devices at all, actually), but
-something along these lines should work. There's no syntax errors, at
-least :)
-
---- /lib/udev/rules.d/65-persistent-b43-mac-generator.rules
-
-ACTION!="add" GOTO="persistent_b43_mac_generator_end"
-
-SUBSYSTEM=="net", DRIVERS=="b43", ATTR{address}=="ff:ff:ff:ff:ff:ff", IMPORT{program}="write_persistent_b43_mac"
-
-SUBSYSTEM=="net", ENV{MACADDRESS_NEW}=="?*", RUN+="ifconfig $env{INTERFACE} hw ether $env{MACADDRESS_NEW}"
-
-LABEL="persistent_b43_mac_generator_end"
-
---- /lib/udev/write_persistent_b43_mac (chmod +x)
-
-#!/bin/bash
-
-# This mac address generation function could be replaced with something better
-MACADDRESS=$(dd if=/dev/urandom bs=1 count=6 2>/dev/null | od -tx1 | head -1 | cut -d' ' -f2- | awk '{ print $1":"$2":"$3":"$4":"$5":"$6 }')
-
-RULES_FILE='/etc/udev/rules.d/60-persistent-b43-mac.rules'
-
-. /lib64/udev/rule_generator.functions
-
-lock_rules_file
-
-choose_rules_file
-
-echo "DEVPATH==\"$DEVPATH\", DRIVERS==\"b43\", ATTR{address}==\"ff:ff:ff:ff:ff:ff\", RUN+=\"ifconfig $INTERFACE hw ether $MACADDRESS\"" >> $RULES_FILE
-
-echo "MACADDRESS_NEW=$MACADDRESS"
-
-unlock_rules_file
-
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
+ drivers/net/wireless/b43/phy_n.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-A new file "/etc/udev/rules.d/60-persistent-b43-mac.rules" will be
-created, which will contain the the saved mac address and bypass the
-generating script on future boots.
-
-This should probably be run by the udev maintainers, but is a start,
-anyways.
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 052119b..d9e47ba 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -3343,6 +3343,10 @@ static int b43_nphy_set_chanspec(struct b43_wldev *dev,
+ 
+ 	if (dev->phy.rev >= 3) {
+ 		/* TODO */
++	} else {
++		tabent = b43_nphy_get_chantabent(dev, channel);
++		if (!tabent)
++			return -ESRCH;
+ 	}
+ 
+ 	nphy->radio_chanspec = chanspec;
+@@ -3366,10 +3370,6 @@ static int b43_nphy_set_chanspec(struct b43_wldev *dev,
+ 		/* TODO: PHY Radio2056 Setup (chan_info_ptr[i]) */
+ 		/* TODO: N PHY Chanspec Setup (chan_info_ptr[i]) */
+ 	} else {
+-		tabent = b43_nphy_get_chantabent(dev, channel);
+-		if (!tabent)
+-			return -ESRCH;
+-
+ 		tmp = (chanspec.b_freq == 1) ? 0x0020 : 0x0050;
+ 		b43_radio_maskset(dev, B2055_MASTER1, 0xFF8F, tmp);
+ 		b43_radio_2055_setup(dev, tabent);
 -- 
-Calvin Walton <calvin.walton@gmail.com>
+1.6.4.2
 
