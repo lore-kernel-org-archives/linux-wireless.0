@@ -1,95 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:37861 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751159Ab0CAJRx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 04:17:53 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 01:17:53 -0800
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19339.35510.140938.273448@gargle.gargle.HOWL>
-Date: Mon, 1 Mar 2010 15:06:54 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 7/7] ath9k: Use rate processing from library
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:55592 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754848Ab0C1SDF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Mar 2010 14:03:05 -0400
+Received: by bwz1 with SMTP id 1so3034615bwz.21
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Mar 2010 11:03:02 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
+	IvDoorn@gmail.com, Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH 4/4] wireless: rt2x00: rt2800usb: new ids
+Date: Sun, 28 Mar 2010 20:02:41 +0200
+Message-Id: <1269799361-12257-1-git-send-email-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A common routine can be used for processing
-rate information, between ath9k and ath9k_htc.
+Taken from latest ralink linux driver(RT3070_LinuxSTA_V2.3.0.1_20100208)
+All of them are RT3070 devices.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |   47 +++------------------------------
- 1 files changed, 4 insertions(+), 43 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index a6d347f..a54c6ca 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -469,47 +469,6 @@ static void ath_rx_send_to_mac80211(struct ieee80211_hw *hw,
- 		ieee80211_rx(hw, skb);
- }
- 
--static u8 ath9k_processrate(struct ath_common *common,
--			    struct ieee80211_hw *hw,
--			    struct ath_rx_status *rx_stats,
--			    struct ieee80211_rx_status *rxs,
--			    struct sk_buff *skb)
--{
--	struct ieee80211_supported_band *sband;
--	enum ieee80211_band band;
--	unsigned int i = 0;
--
--	band = hw->conf.channel->band;
--	sband = hw->wiphy->bands[band];
--
--	if (rx_stats->rs_rate & 0x80) {
--		/* HT rate */
--		rxs->flag |= RX_FLAG_HT;
--		if (rx_stats->rs_flags & ATH9K_RX_2040)
--			rxs->flag |= RX_FLAG_40MHZ;
--		if (rx_stats->rs_flags & ATH9K_RX_GI)
--			rxs->flag |= RX_FLAG_SHORT_GI;
--		return rx_stats->rs_rate & 0x7f;
--	}
--
--	for (i = 0; i < sband->n_bitrates; i++) {
--		if (sband->bitrates[i].hw_value == rx_stats->rs_rate)
--			return i;
--		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
--			rxs->flag |= RX_FLAG_SHORTPRE;
--			return i;
--		}
--	}
--
--	/* No valid hardware bitrate found -- we should not get here */
--	ath_print(common, ATH_DBG_XMIT, "unsupported hw bitrate detected "
--		  "0x%02x using 1 Mbit\n", rx_stats->rs_rate);
--	if ((common->debug_mask & ATH_DBG_XMIT))
--		print_hex_dump_bytes("", DUMP_PREFIX_NONE, skb->data, skb->len);
--
--        return 0;
--}
--
- static void ath9k_process_rssi(struct ath_common *common,
- 			       struct ieee80211_hw *hw,
- 			       struct sk_buff *skb,
-@@ -646,8 +605,10 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 
- 	ath9k_process_rssi(common, hw, skb, rx_stats);
- 
--	rx_status->rate_idx = ath9k_processrate(common, hw,
--						rx_stats, rx_status, skb);
-+	ath9k_process_rate(hw, rx_status,
-+			   rx_stats->rs_rate,
-+			   rx_stats->rs_flags);
-+
- 	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index c1cc15d..03a85f7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -910,6 +910,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	/* AzureWave */
+ 	{ USB_DEVICE(0x13d3, 0x3273), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x13d3, 0x3305), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x13d3, 0x3307), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x13d3, 0x3321), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Conceptronic */
+ 	{ USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Corega */
+@@ -920,6 +922,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x07d1, 0x3c0e), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
++	/* Draytek */
++	{ USB_DEVICE(0x07fa, 0x7712), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Edimax */
+ 	{ USB_DEVICE(0x7392, 0x7711), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Encore */
+@@ -938,6 +942,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x04bb, 0x0945), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
++	/* Logitec */
++	{ USB_DEVICE(0x0789, 0x0166), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* MSI */
+ 	{ USB_DEVICE(0x0db0, 0x3820), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x3821), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -946,8 +952,12 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0db0, 0x3871), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x821a), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x822a), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x822b), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x822c), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x870a), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x871a), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x871b), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0db0, 0x871c), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0db0, 0x899a), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Para */
+ 	{ USB_DEVICE(0x20b8, 0x8888), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -972,6 +982,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x083a, 0x7511), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x083a, 0xa701), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x083a, 0xa702), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x083a, 0xa703), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Zinwell */
+ 	{ USB_DEVICE(0x5a57, 0x0283), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x5a57, 0x5257), USB_DEVICE_DATA(&rt2800usb_ops) },
 -- 
-1.7.0.1
+1.6.6.1
 
