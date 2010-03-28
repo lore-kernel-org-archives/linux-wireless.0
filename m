@@ -1,147 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1872 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752987Ab0CSB3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 21:29:48 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v3 6/9] drivers/net/wireless: Use IW_HANDLER macro
-Date: Thu, 18 Mar 2010 18:29:37 -0700
-Message-Id: <7ddce96249c2e7016a59f99e3e2860f948a2a330.1268961559.git.joe@perches.com>
-In-Reply-To: <cover.1268961559.git.joe@perches.com>
-References: <cover.1268961559.git.joe@perches.com>
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:49294 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754783Ab0C1Qyl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Mar 2010 12:54:41 -0400
+Message-ID: <4BAF89CE.5020403@gmail.com>
+Date: Sun, 28 Mar 2010 18:54:38 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	IvDoorn@gmail.com
+Subject: Re: [PATCH] wireless: rt2x00: rt2800usb: identify ids-chips
+References: <1269784363-6077-1-git-send-email-xose.vazquez@gmail.com>
+In-Reply-To: <1269784363-6077-1-git-send-email-xose.vazquez@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert direct uses of [ (foo - SIOCIWFIRST) , fn)
+On 03/28/10 15:52, Xose Vazquez Perez wrote:
+> Taken from ralink linux drivers:
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0B05,0x1784)}, /* Asus 3072 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x13D3,0x3305)}, /* AzureWave 3070*/
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x07D1,0x3C16)}, /* D-Link 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x203D,0x14A9)}, /* Encore 3070*/
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9707)}, /* EnGenius 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9708)}, /* EnGenius 3071 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x1740,0x9709)}, /* EnGenius 3072 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x04BB,0x0947)}, /* I-O DATA 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x04BB,0x0948)}, /* I-O DATA 3072 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3822)}, /* MSI 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3821)}, /* Ralink 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3870)}, /* MSI 3070*/
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x3871)}, /* MSI 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x821A)}, /* Ralink 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x822A)}, /* MSI 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x870A)}, /* MSI 3070*/
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x871A)}, /* MSI 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DB0,0x899A)}, /* MSI 3070*/
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x20B8,0x8888)}, /* PARA INDUSTRIAL 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DF6,0x0048)}, /* Sitecom 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x0DF6,0x0047)}, /* Sitecom 3071 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x083A,0xA701)}, /* SMC 3070 */
+> RT3070_LinuxSTA_V2.3.0.1_20100208/common/rtusb_dev_id.c:        {USB_DEVICE(0x083A,0xA702)}, /* SMC 3072 */
+> 
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ray_cs.c    |   40 ++++++++++++++--------------
- drivers/net/wireless/wl3501_cs.c |   52 +++++++++++++++++++-------------------
- 2 files changed, 46 insertions(+), 46 deletions(-)
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 84c530a..a42ee01 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -1531,28 +1531,28 @@ static iw_stats *ray_get_wireless_stats(struct net_device *dev)
-  */
- 
- static const iw_handler ray_handler[] = {
--	[SIOCSIWCOMMIT - SIOCIWFIRST] = (iw_handler) ray_commit,
--	[SIOCGIWNAME - SIOCIWFIRST] = (iw_handler) ray_get_name,
--	[SIOCSIWFREQ - SIOCIWFIRST] = (iw_handler) ray_set_freq,
--	[SIOCGIWFREQ - SIOCIWFIRST] = (iw_handler) ray_get_freq,
--	[SIOCSIWMODE - SIOCIWFIRST] = (iw_handler) ray_set_mode,
--	[SIOCGIWMODE - SIOCIWFIRST] = (iw_handler) ray_get_mode,
--	[SIOCGIWRANGE - SIOCIWFIRST] = (iw_handler) ray_get_range,
-+	IW_HANDLER(SIOCSIWCOMMIT, (iw_handler)ray_commit),
-+	IW_HANDLER(SIOCGIWNAME, (iw_handler)ray_get_name),
-+	IW_HANDLER(SIOCSIWFREQ, (iw_handler)ray_set_freq),
-+	IW_HANDLER(SIOCGIWFREQ, (iw_handler)ray_get_freq),
-+	IW_HANDLER(SIOCSIWMODE, (iw_handler)ray_set_mode),
-+	IW_HANDLER(SIOCGIWMODE, (iw_handler)ray_get_mode),
-+	IW_HANDLER(SIOCGIWRANGE, (iw_handler)ray_get_range),
- #ifdef WIRELESS_SPY
--	[SIOCSIWSPY - SIOCIWFIRST] = (iw_handler) iw_handler_set_spy,
--	[SIOCGIWSPY - SIOCIWFIRST] = (iw_handler) iw_handler_get_spy,
--	[SIOCSIWTHRSPY - SIOCIWFIRST] = (iw_handler) iw_handler_set_thrspy,
--	[SIOCGIWTHRSPY - SIOCIWFIRST] = (iw_handler) iw_handler_get_thrspy,
-+	IW_HANDLER(SIOCSIWSPY, iw_handler_set_spy),
-+	IW_HANDLER(SIOCGIWSPY, iw_handler_get_spy),
-+	IW_HANDLER(SIOCSIWTHRSPY, iw_handler_set_thrspy),
-+	IW_HANDLER(SIOCGIWTHRSPY, iw_handler_get_thrspy),
- #endif /* WIRELESS_SPY */
--	[SIOCGIWAP - SIOCIWFIRST] = (iw_handler) ray_get_wap,
--	[SIOCSIWESSID - SIOCIWFIRST] = (iw_handler) ray_set_essid,
--	[SIOCGIWESSID - SIOCIWFIRST] = (iw_handler) ray_get_essid,
--	[SIOCSIWRATE - SIOCIWFIRST] = (iw_handler) ray_set_rate,
--	[SIOCGIWRATE - SIOCIWFIRST] = (iw_handler) ray_get_rate,
--	[SIOCSIWRTS - SIOCIWFIRST] = (iw_handler) ray_set_rts,
--	[SIOCGIWRTS - SIOCIWFIRST] = (iw_handler) ray_get_rts,
--	[SIOCSIWFRAG - SIOCIWFIRST] = (iw_handler) ray_set_frag,
--	[SIOCGIWFRAG - SIOCIWFIRST] = (iw_handler) ray_get_frag,
-+	IW_HANDLER(SIOCGIWAP, (iw_handler)ray_get_wap),
-+	IW_HANDLER(SIOCSIWESSID, (iw_handler)ray_set_essid),
-+	IW_HANDLER(SIOCGIWESSID, (iw_handler)ray_get_essid),
-+	IW_HANDLER(SIOCSIWRATE, (iw_handler)ray_set_rate),
-+	IW_HANDLER(SIOCGIWRATE, (iw_handler)ray_get_rate),
-+	IW_HANDLER(SIOCSIWRTS, (iw_handler)ray_set_rts),
-+	IW_HANDLER(SIOCGIWRTS, (iw_handler)ray_get_rts),
-+	IW_HANDLER(SIOCSIWFRAG, (iw_handler)ray_set_frag),
-+	IW_HANDLER(SIOCGIWFRAG, (iw_handler)ray_get_frag),
- };
- 
- #define SIOCSIPFRAMING	SIOCIWFIRSTPRIV	/* Set framing mode */
-diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
-index 7b9621d..65dd502 100644
---- a/drivers/net/wireless/wl3501_cs.c
-+++ b/drivers/net/wireless/wl3501_cs.c
-@@ -1834,32 +1834,32 @@ out:
- }
- 
- static const iw_handler	wl3501_handler[] = {
--	[SIOCGIWNAME	- SIOCIWFIRST] = wl3501_get_name,
--	[SIOCSIWFREQ	- SIOCIWFIRST] = wl3501_set_freq,
--	[SIOCGIWFREQ	- SIOCIWFIRST] = wl3501_get_freq,
--	[SIOCSIWMODE	- SIOCIWFIRST] = wl3501_set_mode,
--	[SIOCGIWMODE	- SIOCIWFIRST] = wl3501_get_mode,
--	[SIOCGIWSENS	- SIOCIWFIRST] = wl3501_get_sens,
--	[SIOCGIWRANGE	- SIOCIWFIRST] = wl3501_get_range,
--	[SIOCSIWSPY	- SIOCIWFIRST] = iw_handler_set_spy,
--	[SIOCGIWSPY	- SIOCIWFIRST] = iw_handler_get_spy,
--	[SIOCSIWTHRSPY	- SIOCIWFIRST] = iw_handler_set_thrspy,
--	[SIOCGIWTHRSPY	- SIOCIWFIRST] = iw_handler_get_thrspy,
--	[SIOCSIWAP	- SIOCIWFIRST] = wl3501_set_wap,
--	[SIOCGIWAP	- SIOCIWFIRST] = wl3501_get_wap,
--	[SIOCSIWSCAN	- SIOCIWFIRST] = wl3501_set_scan,
--	[SIOCGIWSCAN	- SIOCIWFIRST] = wl3501_get_scan,
--	[SIOCSIWESSID	- SIOCIWFIRST] = wl3501_set_essid,
--	[SIOCGIWESSID	- SIOCIWFIRST] = wl3501_get_essid,
--	[SIOCSIWNICKN	- SIOCIWFIRST] = wl3501_set_nick,
--	[SIOCGIWNICKN	- SIOCIWFIRST] = wl3501_get_nick,
--	[SIOCGIWRATE	- SIOCIWFIRST] = wl3501_get_rate,
--	[SIOCGIWRTS	- SIOCIWFIRST] = wl3501_get_rts_threshold,
--	[SIOCGIWFRAG	- SIOCIWFIRST] = wl3501_get_frag_threshold,
--	[SIOCGIWTXPOW	- SIOCIWFIRST] = wl3501_get_txpow,
--	[SIOCGIWRETRY	- SIOCIWFIRST] = wl3501_get_retry,
--	[SIOCGIWENCODE	- SIOCIWFIRST] = wl3501_get_encode,
--	[SIOCGIWPOWER	- SIOCIWFIRST] = wl3501_get_power,
-+	IW_HANDLER(SIOCGIWNAME, wl3501_get_name),
-+	IW_HANDLER(SIOCSIWFREQ, wl3501_set_freq),
-+	IW_HANDLER(SIOCGIWFREQ, wl3501_get_freq),
-+	IW_HANDLER(SIOCSIWMODE, wl3501_set_mode),
-+	IW_HANDLER(SIOCGIWMODE, wl3501_get_mode),
-+	IW_HANDLER(SIOCGIWSENS, wl3501_get_sens),
-+	IW_HANDLER(SIOCGIWRANGE, wl3501_get_range),
-+	IW_HANDLER(SIOCSIWSPY, iw_handler_set_spy),
-+	IW_HANDLER(SIOCGIWSPY, iw_handler_get_spy),
-+	IW_HANDLER(SIOCSIWTHRSPY, iw_handler_set_thrspy),
-+	IW_HANDLER(SIOCGIWTHRSPY, iw_handler_get_thrspy),
-+	IW_HANDLER(SIOCSIWAP, wl3501_set_wap),
-+	IW_HANDLER(SIOCGIWAP, wl3501_get_wap),
-+	IW_HANDLER(SIOCSIWSCAN, wl3501_set_scan),
-+	IW_HANDLER(SIOCGIWSCAN, wl3501_get_scan),
-+	IW_HANDLER(SIOCSIWESSID, wl3501_set_essid),
-+	IW_HANDLER(SIOCGIWESSID, wl3501_get_essid),
-+	IW_HANDLER(SIOCSIWNICKN, wl3501_set_nick),
-+	IW_HANDLER(SIOCGIWNICKN, wl3501_get_nick),
-+	IW_HANDLER(SIOCGIWRATE, wl3501_get_rate),
-+	IW_HANDLER(SIOCGIWRTS, wl3501_get_rts_threshold),
-+	IW_HANDLER(SIOCGIWFRAG, wl3501_get_frag_threshold),
-+	IW_HANDLER(SIOCGIWTXPOW, wl3501_get_txpow),
-+	IW_HANDLER(SIOCGIWRETRY, wl3501_get_retry),
-+	IW_HANDLER(SIOCGIWENCODE, wl3501_get_encode),
-+	IW_HANDLER(SIOCGIWPOWER, wl3501_get_power),
- };
- 
- static const struct iw_handler_def wl3501_handler_def = {
--- 
-1.7.0.14.g7e948
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |   52 +++++++++++++++----------------
+>  1 files changed, 25 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index d27d7d5..a1691b8 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -905,8 +905,11 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x07b8, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* AirTies */
+>  	{ USB_DEVICE(0x1eda, 0x2310), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	/* ASUS */
+> +	{ USB_DEVICE(0x0b05, 0x1784), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* AzureWave */
+>  	{ USB_DEVICE(0x13d3, 0x3273), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x13d3, 0x3305), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Conceptronic */
+>  	{ USB_DEVICE(0x14b2, 0x3c12), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Corega */
+> @@ -916,20 +919,38 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x07d1, 0x3c0d), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x07d1, 0x3c0e), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x07d1, 0x3c0f), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Edimax */
+>  	{ USB_DEVICE(0x7392, 0x7711), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Encore */
+>  	{ USB_DEVICE(0x203d, 0x1480), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x203d, 0x14a9), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* EnGenius */
+>  	{ USB_DEVICE(0x1740, 0x9703), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x1740, 0x9705), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x1740, 0x9706), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Gigabyte */
+>  	{ USB_DEVICE(0x1044, 0x800d), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* I-O DATA */
+>  	{ USB_DEVICE(0x04bb, 0x0945), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* MSI */
+>  	{ USB_DEVICE(0x0db0, 0x3820), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x3821), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x3822), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x3870), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x3871), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x821a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x822a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x870a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x871a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0db0, 0x899a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	/* Para */
+> +	{ USB_DEVICE(0x20b8, 0x8888), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Pegatron */
+>  	{ USB_DEVICE(0x1d4d, 0x000c), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x1d4d, 0x000e), USB_DEVICE_DATA(&rt2800usb_ops) },
+> @@ -945,8 +966,12 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	/* Sitecom */
+>  	{ USB_DEVICE(0x0df6, 0x003e), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0df6, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0df6, 0x0047), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x0df6, 0x0048), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* SMC */
+>  	{ USB_DEVICE(0x083a, 0x7511), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x083a, 0xa701), USB_DEVICE_DATA(&rt2800usb_ops) },
+> +	{ USB_DEVICE(0x083a, 0xa702), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Zinwell */
+>  	{ USB_DEVICE(0x5a57, 0x0283), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x5a57, 0x5257), USB_DEVICE_DATA(&rt2800usb_ops) },
+> @@ -990,13 +1015,11 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	/* ASUS */
+>  	{ USB_DEVICE(0x0b05, 0x1760), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0b05, 0x1761), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0b05, 0x1784), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0b05, 0x1790), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x1761, 0x0b05), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* AzureWave */
+>  	{ USB_DEVICE(0x13d3, 0x3262), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x13d3, 0x3284), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x13d3, 0x3305), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Belkin */
+>  	{ USB_DEVICE(0x050d, 0x825a), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Buffalo */
+> @@ -1015,14 +1038,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x07d1, 0x3c0b), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x07d1, 0x3c13), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x07d1, 0x3c15), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x07d1, 0x3c16), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Encore */
+>  	{ USB_DEVICE(0x203d, 0x14a1), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x203d, 0x14a9), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	/* EnGenius */
+> -	{ USB_DEVICE(0x1740, 0x9707), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x1740, 0x9708), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x1740, 0x9709), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Gemtek */
+>  	{ USB_DEVICE(0x15a9, 0x0010), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Gigabyte */
+> @@ -1030,9 +1047,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	/* Hawking */
+>  	{ USB_DEVICE(0x0e66, 0x0009), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0e66, 0x000b), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	/* I-O DATA */
+> -	{ USB_DEVICE(0x04bb, 0x0947), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x04bb, 0x0948), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* LevelOne */
+>  	{ USB_DEVICE(0x1740, 0x0605), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x1740, 0x0615), USB_DEVICE_DATA(&rt2800usb_ops) },
+> @@ -1042,20 +1056,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x1737, 0x0079), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Motorola */
+>  	{ USB_DEVICE(0x100d, 0x9032), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	/* MSI */
+> -	{ USB_DEVICE(0x0db0, 0x3821), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0db0, 0x3822), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0db0, 0x3870), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0db0, 0x3871), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0db0, 0x821a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0db0, 0x822a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0db0, 0x870a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0db0, 0x871a), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0db0, 0x899a), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Ovislink */
+>  	{ USB_DEVICE(0x1b75, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	/* Para */
+> -	{ USB_DEVICE(0x20b8, 0x8888), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Pegatron */
+>  	{ USB_DEVICE(0x05a6, 0x0101), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x1d4d, 0x0002), USB_DEVICE_DATA(&rt2800usb_ops) },
+> @@ -1069,14 +1071,10 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x0df6, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0df6, 0x003d), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0df6, 0x0040), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0df6, 0x0047), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x0df6, 0x0048), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0df6, 0x004a), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x0df6, 0x004d), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* SMC */
+>  	{ USB_DEVICE(0x083a, 0xa512), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x083a, 0xa701), USB_DEVICE_DATA(&rt2800usb_ops) },
+> -	{ USB_DEVICE(0x083a, 0xa702), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x083a, 0xc522), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	{ USB_DEVICE(0x083a, 0xd522), USB_DEVICE_DATA(&rt2800usb_ops) },
+>  	/* Sweex */
 
