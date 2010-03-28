@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34346 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754075Ab0CERax convert rfc822-to-8bit (ORCPT
+Received: from Cpsmtpm-eml106.kpnxchange.com ([195.121.3.10]:57499 "EHLO
+	CPSMTPM-EML106.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754800Ab0C1Q4Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 12:30:53 -0500
-Received: by gyg10 with SMTP id 10so3018gyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Mar 2010 09:30:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201003051744.22521.helmut.schaa@googlemail.com>
-References: <201003051744.22521.helmut.schaa@googlemail.com>
-Date: Fri, 5 Mar 2010 18:30:52 +0100
-Message-ID: <14add3d11003050930q65b90d11pc5d17eeb15ad4709@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: remove KSEG1ADDR define from rt2x00soc.h
+	Sun, 28 Mar 2010 12:56:16 -0400
+Message-ID: <4BAF8A2E.2010306@gmail.com>
+Date: Sun, 28 Mar 2010 18:56:14 +0200
 From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>, linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	IvDoorn@gmail.com
+Subject: Re: [PATCH 3/3] wireless: rt2x00: rt2800pci: new id
+References: <1269791285-8678-1-git-send-email-xose.vazquez@gmail.com>
+In-Reply-To: <1269791285-8678-1-git-send-email-xose.vazquez@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 5, 2010 at 5:44 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Remove the KSEG1ADDR define from rt2x00soc.h as it redefines and covers the
-> correct one from the arch/mips/include/asm/addrspace.h. Otherwise the driver
-> oopses on the target platform (Ralink rt3050 board).
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
+On 03/28/10 17:48, Xose Vazquez Perez wrote:
+> Taken from latest ralink linux driver, it's a RT3593 PCI/PCIe.
+> 
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
 Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
->
->  drivers/net/wireless/rt2x00/rt2x00soc.h |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00soc.h b/drivers/net/wireless/rt2x00/rt2x00soc.h
-> index 4739edf..474cbfc 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00soc.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00soc.h
-> @@ -26,8 +26,6 @@
->  #ifndef RT2X00SOC_H
->  #define RT2X00SOC_H
->
-> -#define KSEG1ADDR(__ptr) __ptr
-> -
->  /*
->  * SoC driver handlers.
->  */
-> --
-> 1.6.0.2
->
->
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index b1f5643..ce7e88e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -1212,6 +1212,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+>  	{ PCI_DEVICE(0x1814, 0x3062), PCI_DEVICE_DATA(&rt2800pci_ops) },
+>  	{ PCI_DEVICE(0x1814, 0x3562), PCI_DEVICE_DATA(&rt2800pci_ops) },
+>  	{ PCI_DEVICE(0x1814, 0x3592), PCI_DEVICE_DATA(&rt2800pci_ops) },
+> +	{ PCI_DEVICE(0x1814, 0x3593), PCI_DEVICE_DATA(&rt2800pci_ops) },
+>  #endif
+>  	{ 0, }
+>  };
+
