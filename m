@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f202.google.com ([209.85.223.202]:42079 "EHLO
-	mail-iw0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751584Ab0CGRVo convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59667 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752742Ab0C2TXU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Mar 2010 12:21:44 -0500
-Received: by iwn40 with SMTP id 40so217361iwn.1
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Mar 2010 09:21:43 -0800 (PST)
+	Mon, 29 Mar 2010 15:23:20 -0400
+Received: by pwi5 with SMTP id 5so6925629pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 12:23:20 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1267857349.2243.158.camel@localhost.localdomain>
-References: <4B9024DE.308@jacobs-university.de>
-	 <c1545bb51003041638v28e5fe9me336735fc940e1ea@mail.gmail.com>
-	 <1267857349.2243.158.camel@localhost.localdomain>
-Date: Sun, 7 Mar 2010 09:21:43 -0800
-Message-ID: <c1545bb51003070921r7d9bd1a5v3a43d3034ab56219@mail.gmail.com>
-Subject: Re: Mesh support for gumstix's wireless (Marvell 88W8385 wireless
-	chip with CF interface)
-From: Andrey Yurovsky <yurovsky@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Darko Makreshanski <d.makreshanski@jacobs-university.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <m3eij3ym5k.fsf@intrepid.localdomain>
+References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
+	<m3eij3ym5k.fsf@intrepid.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 29 Mar 2010 12:22:59 -0700
+Message-ID: <43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 5, 2010 at 10:35 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Thu, 2010-03-04 at 16:38 -0800, Andrey Yurovsky wrote:
->> On Thu, Mar 4, 2010 at 1:23 PM, Darko Makreshanski
->> <d.makreshanski@jacobs-university.de> wrote:
->> > 1. will mesh networking work with the 88W8385 chip on gumstix with the
->> > libertas driver?
->>
->> No.  The OLPC uses an 88w8288 with in-firmware mesh on the USB
->> variant.  That firmware won't run on other chips.
+On Mon, Mar 29, 2010 at 12:15 PM, Krzysztof Halasa <khc@pm.waw.pl> wrote:
+> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
 >
-> I assume you mean 88w8388 :)
-
-Yes, sorry about the typo. The '2' and '3' keys are, of course, right
-next to each other ; )
-
->> > 3. if not, is it possible to make the libertas_tf driver work with this
->> > chip?
+>> I've documented this specific case here:
 >>
->> No.  That driver only supports the 88w8388 USB variant with special
->> firmware.  Your chip is a full-MAC device and therefore cannot use the
->> mac80211 mesh stack (and there isn't a special firmware to make it do
->> something else).
+>> http://wireless.kernel.org/en/users/Drivers/ath/#The_0x0_regulatory_domain
+>
+> Thanks.
+>
+> I'm not sure how the modified regulatory.bin could work, though:
+> I really don't want to use restricted frequencies etc. when the
+> regulatory domain is set to US (i.e. when operating in USA), I only want
+> to use the extra channels etc. when in e.g. Europe.
 
-By the way, you could try using the USB host on your Gumstix board
-with the rt2x00 or zd1211rw cards, those are soft-MAC and at least
-used to work with mesh mode.
+I agree with that wishful thinking, however current legislation does
+now allow for dynamic enabling of frequencies on devices certified
+under part 15 rules. We can likely work towards changing the
+legislation for this but that's something I haven't seen many
+companies willing to lobby for. We'd need a big company to help with
+this lobby.
 
-  -Andrey
+> IOW I should be able
+> to iw reg set US and get the US freqs only.
+>
+> A driver modification to ignore the default restrictions (while obeying
+> the regulatory.bin, on a 0-country cards only, of course) - that would
+> work.
+
+And it would also make our drivers break regulatory rules. We're not
+going to do that on Linux because proving that we can be responsible
+is in fact what does allow us to get proper vendor support for 802.11
+drivers.
+
+See:
+
+http://wireless.kernel.org/en/developers/Regulatory/statement
+
+  Luis
