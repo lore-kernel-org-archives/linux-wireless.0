@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:60091 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751588Ab0C3TlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 15:41:20 -0400
-Subject: Re: Broadcom card totally not visible for system (lspci)
-From: Pavel Roskin <proski@gnu.org>
-To: =?iso-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <b170af451003301206p593cbe3ew582823c75dc06f11@mail.gmail.com>
-References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>
-	 <4BB2328D.9010503@lwfinger.net>
-	 <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
-	 <4BB23953.9010104@lwfinger.net> <1269975753.4938.8.camel@mj>
-	 <b170af451003301206p593cbe3ew582823c75dc06f11@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Mar 2010 15:41:19 -0400
-Message-Id: <1269978079.4938.21.camel@mj>
-Mime-Version: 1.0
+Received: from mail-fx0-f223.google.com ([209.85.220.223]:34742 "EHLO
+	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527Ab0C2VxW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 17:53:22 -0400
+Received: by fxm23 with SMTP id 23so1261851fxm.21
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 14:53:21 -0700 (PDT)
+Message-ID: <4BB12148.7080309@googlemail.com>
+Date: Mon, 29 Mar 2010 23:53:12 +0200
+From: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] No SPROM available!
+References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10A0F.1030608@lwfinger.net> <20100329204822.GL4984@tuxdriver.com> <20100329205558.GM4984@tuxdriver.com> <4BB11B8E.1020506@lwfinger.net>
+In-Reply-To: <4BB11B8E.1020506@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-30 at 21:06 +0200, Rafał Miłecki wrote:
+On 03/29/10 23:28, Larry Finger wrote:
+> On 03/29/2010 03:55 PM, John W. Linville wrote:
+>> On Mon, Mar 29, 2010 at 04:48:22PM -0400, John W. Linville wrote:
+>>> On Mon, Mar 29, 2010 at 03:14:07PM -0500, Larry Finger wrote:
+>>>
+>>>> Could you please apply my little test patch and send me the contents of the
+>>>> chipcommon status register in your netbook?
+>>>
+>>> Mine looks like yours, "chip_id 0x4312, status 0x12"...
+>>
+>> I guess I misread the earlier messages -- mine looks like Ren�'s, not yours.
+>
+> Bummer. To answer your previous message, the Broadcom driver is very clear that
+> 0x2 set in the chipcommon status for a BCM4312 means no SPROM; however, Ren�'s
+> device contradicts that conclusion. There must be some other test that I have
+> missed.
+>
+> Ren�: For your information, this test was added because attempting to read the
+> SPROM in John's computer locks the processor - he has to power off. I did
+> reverse engineering on the Broadcom driver and found their workaround when no
+> SPROM is present. The patch in question matches their code, and allows John's
+> machine to continue. There is a second, pending patch that works with some udev
+> rules to create a virtual SPROM image and assign a unique MAC address. With this
+> patch applied, your machine would still work. The only change is that you would
+> be assigned a random MAC address.
+>
+> I will likely need some additional test prints to see if I can find a test that
+> recognizes that Ren�'s machine has an SPROMs and that John's does not.
+>
+> Larry
 
-> You mean dmesg, don't you?
-
-Yes.
-
->  I've attached it, but it was stopped by b43
-> ML. You can see dmesg on marc archive for linux-wireless:
-> http://marc.info/?l=linux-wireless&m=126996817625998&w=2
-> 
-> Unfortunately I don't have dmesg from some more-debugging kernel.
-
-Indeed, there is no list of SSB devices.  The current kernels will
-output that list even if CONFIG_SSB_DEBUG is disabled, but older kernels
-required CONFIG_SSB_DEBUG for that.
-
-Installing compat-wireless should help.  Also, ask the user to run
-"modprobe b43".  It might just work.
-
--- 
-Regards,
-Pavel Roskin
+Ok, if I can help you, write me. I will help you testing patches and 
+give you certain information if you need.
