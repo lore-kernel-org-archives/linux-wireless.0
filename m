@@ -1,63 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:61331 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754263Ab0C3RTO (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:35704 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752661Ab0C2VAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 13:19:14 -0400
-Received: by pzk32 with SMTP id 32so4767272pzk.4
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 10:19:13 -0700 (PDT)
-Message-ID: <4BB2328D.9010503@lwfinger.net>
-Date: Tue, 30 Mar 2010 12:19:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 29 Mar 2010 17:00:16 -0400
+Received: by ewy20 with SMTP id 20so908431ewy.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 14:00:14 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2500usb: fix powersaving random failures
+Date: Mon, 29 Mar 2010 23:00:11 +0200
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ondrej Zary <linux@rainbow-software.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <201003290956.54234.linux@rainbow-software.org> <4BB103B9.8040100@gmail.com>
+In-Reply-To: <4BB103B9.8040100@gmail.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Broadcom card totally not visible for system (lspci)
-References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>
-In-Reply-To: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201003292300.12013.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2010 11:56 AM, Rafał Miłecki wrote:
-> I've some polish user that has Medion (???) notebook with "BCM4306KFB
-> HS00328 P20 702910 M2" (citation from spec).
+On Monday 29 March 2010, Gertjan van Wingerde wrote:
+> On 03/29/10 09:56, Ondrej Zary wrote:
+> > This patch seems to fix random powersaving failure where the device state is
+> > stuck at 1 (STATE_SLEEP) and does not change to 3 (STATE_AWAKE), resulting in
+> > to associate and these error messages:
+> > phy0 -> rt2500usb_set_device_state: Error - Device failed to enter state 3 (-16).
+> > No probe response from AP xx:xx:xx:xx:xx:xx after 500ms, disconnecting.
+> > 
+> > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 > 
-> This card worked fine in Windows and few days ago user decided to
-> install openSUSE 11.2 (2.6.31.12). AFAIK he removed Windows and has
-> openSUSE now only.
+> Thanks. This looks good, but I'll rehash it against the latest state of affairs of rt2x00,
+> so that the disabling of powersaving is undone at the same time.
 > 
-> The problem is that system does not detect his WiFi card at all. lspci shows:
-> 00:00.0 Host bridge: ATI Technologies Inc AGP Bridge [IGP 320M] (rev 13)
-> 00:01.0 PCI bridge: ATI Technologies Inc PCI Bridge [IGP 320M] (rev 01)
-> 00:07.0 ISA bridge: ALi Corporation M1533/M1535/M1543 PCI to ISA
-> Bridge [Aladdin IV/V/V+]
-> 00:08.0 Multimedia audio controller: ALi Corporation M5451 PCI AC-Link
-> Controller Audio Device (rev 02)
-> 00:09.0 Modem: ALi Corporation M5457 AC'97 Modem Controller
-> 00:0a.0 CardBus bridge: Texas Instruments PCI4410 PC card Cardbus
-> Controller (rev 02)
-> 00:0a.1 FireWire (IEEE 1394): Texas Instruments PCI4410 FireWire
-> Controller (rev 02)
-> 00:0d.0 USB Controller: NEC Corporation USB (rev 43)
-> 00:0d.1 USB Controller: NEC Corporation USB (rev 43)
-> 00:0d.2 USB Controller: NEC Corporation USB 2.0 (rev 04)
-> 00:0e.0 Ethernet controller: Broadcom Corporation BCM4401 100Base-T (rev 01)
-> 00:10.0 IDE interface: ALi Corporation M5229 IDE (rev c4)
-> 00:11.0 Bridge: ALi Corporation M7101 Power Management Controller [PMU]
-> 01:05.0 VGA compatible controller: ATI Technologies Inc Radeon Mobility U1
+> John, I'll send you the rehashed patch tomorrow.
+
+Is this change interesting for the other drivers as well?
+Anyway, this one gets my Ack:
+
+Acked-By: Ivo van Doorn <IvDoorn@gmail.com>
+
+> ---
+> Gertjan.
 > 
-> Do you have any ideas what may this be?
+> > 
+> > --- linux-2.6.34-rc2-orig/drivers/net/wireless/rt2x00/rt2500usb.c	2010-03-20 02:17:57.000000000 +0100
+> > +++ linux-2.6.34-rc2/drivers/net/wireless/rt2x00/rt2500usb.c	2010-03-29 09:38:02.000000000 +0200
+> > @@ -648,6 +648,10 @@
+> >  
+> >  		rt2x00_set_field16(&reg, MAC_CSR18_AUTO_WAKE, 1);
+> >  		rt2500usb_register_write(rt2x00dev, MAC_CSR18, reg);
+> > +	} else {
+> > +		rt2500usb_register_read(rt2x00dev, MAC_CSR18, &reg);
+> > +		rt2x00_set_field16(&reg, MAC_CSR18_AUTO_WAKE, 0);
+> > +		rt2500usb_register_write(rt2x00dev, MAC_CSR18, reg);
+> >  	}
+> >  
+> >  	rt2x00dev->ops->lib->set_device_state(rt2x00dev, state);
+> > 
+> 
+> 
+> _______________________________________________
+> users mailing list
+> users@rt2x00.serialmonkey.com
+> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+> 
 
-There are only two reasons for lspci not to list the device:
-
-(1) It is disabled in the BIOS.
-
-(2) It is defective or not plugged in.
-
-No. 1 is checked in the BIOS setup when booting. If nothing found there, and
-re-seating the board does not help, then it is time for a new card.
-
-If some device is not seen in lspci or lsusb, then it does not exist for the
-operating system.
 
