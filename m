@@ -1,93 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:45293 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751Ab0CCKRT (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:55669 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772Ab0C2VY6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 05:17:19 -0500
-Date: Wed, 03 Mar 2010 19:14:52 +0900
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Subject: Re: [PATCH] rfkill bug fixed in rfkill_set_sw_state
-In-reply-to: <4B8E2DCD.6020308@tuffmail.co.uk>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Reply-to: jh80.chung@samsung.com
-Message-id: <4B8E369C.4080701@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; format=flowed; charset=ISO-8859-1
-References: <000301cab69f$ec61ad00$c5250700$%chung@samsung.com>
- <20100302125003.f7919c53.akpm@linux-foundation.org>
- <4B8DB1A3.9060902@samsung.com> <4B8E2DCD.6020308@tuffmail.co.uk>
+	Mon, 29 Mar 2010 17:24:58 -0400
+Received: by bwz1 with SMTP id 1so3925817bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 14:24:56 -0700 (PDT)
+Message-ID: <4BB11AA4.3010108@gmail.com>
+Date: Mon, 29 Mar 2010 23:24:52 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+Subject: FW RT307x/RT309x
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alan Jenkins wrote:
-> Jaehoon Chung wrote:
->> Ok Next time, i will add sutatble cc's scripts/get_maintainer.pl. 
->> thanks..
->>> Suitable cc's (from scripts/get_maintainer.pl) added.
->>>
->>> On Fri, 26 Feb 2010 13:55:31 +0900
->>> _________<jh80.chung@samsung.com>  wrote:
->>>
->>>> Don___t work expected operation in __rfkill_set_sw_state.
->>>> when rfkill initialized. Rfkill___s blocked&  unblocked is 
->>>> operating on the
->>>> contrary.
->>>>
->>>> Signed-off-by: Jaehoon Chung<jh80.chung@samsung.com>
->>>>
->>>> ---
->>>>   net/rfkill/core.c |    2 +-
->>>>   1 files changed, 1 insertions(+), 1 deletions(-)
->>>>
->>>> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
->>>> index c224cb2..dcc2d38 100644
->>>> --- a/net/rfkill/core.c
->>>> +++ b/net/rfkill/core.c
->>>> @@ -488,7 +488,7 @@ static void __rfkill_set_sw_state(struct rfkill
->>>> *rfkill, bool blocked)
->>>>       if (rfkill->state&  RFKILL_BLOCK_SW_SETCALL)
->>>>           bit = RFKILL_BLOCK_SW_PREV;
->>>>
->>>> -    if (blocked)
->>>> +    if (!blocked)
->>>>           rfkill->state |= bit;
->>>>       else
->>>>           rfkill->state&= ~bit;
->>> Are you sure?  What problems were you observing with the existing code?
->>> Please fully describe your hardware and the driver's behaviour.
->>>
->>> The current code _looks_ OK to me.  If bool `blocked' is true, we set
->>> the RFKILL_BLOCK_SW bit?
->> I implemented the wlan driver using rfkill.
->> In my source code, the wlan driver initalized to 
->> RFKLL_USESR_STATE_UNBLOCKED..
->> if that is correct, maybe do working the unblocked...but not work 
->> "unblocked"
->>
->> below code is unblock's operation..right?
->> rfkill_init_sw_state(wlan, RFKILL_USER_STATE_UNBLOCKED);
->>
->> but, do not operate unblocked.
->> please check that source code..
->
-> I see the problem :).  The hint is in the _USER_ - those constants are 
-> not for use by drivers.  You want this instead:
->
-> rfkill_init_sw_state(wlan, false);
->
-> (assuming you really want init_sw_state().  Please do check that your 
-> device state is persistent, as described by the comment in rfkill.h).
->
-> Regards
-> Alan
->
+hi,
 
-Oh...i checked the comment in rfkill.h. i didn't see that comment.
-thanks for your opinion..:)
+to make the RT307x and RT309x chips work, the drivers
+rt2800usb and rt2800pci need to load rt307x.bin and
+rt3090.bin respectively. 
 
-Regards
-Jaehoon Chung
+FW is here:http://git.decadent.org.uk/gitweb?p=linux-firmware.git;a=tree
+
+-- 
+«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
+que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
+impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
+que no sienta mi derecho y dé pecho a mi valor.»
