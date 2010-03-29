@@ -1,125 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out9.libero.it ([212.52.84.109]:41847 "EHLO
-	cp-out9.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753847Ab0CZN6O (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:65380 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014Ab0C2XK1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 09:58:14 -0400
-Received: from [192.168.1.253] (151.54.198.201) by cp-out9.libero.it (8.5.107)
-        id 4BAA01410049CB50 for linux-wireless@vger.kernel.org; Fri, 26 Mar 2010 14:58:13 +0100
-Message-ID: <4BACBD71.9040107@users.sourceforge.net>
-Date: Fri, 26 Mar 2010 14:58:09 +0100
-From: "Daniele C." <legolas558@users.sourceforge.net>
+	Mon, 29 Mar 2010 19:10:27 -0400
+Received: by pwi5 with SMTP id 5so7159412pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 16:10:26 -0700 (PDT)
+Message-ID: <4BB1335F.7030306@lwfinger.net>
+Date: Mon, 29 Mar 2010 18:10:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Memory leaks from swapper, wpa_supplicant, glxgears
-Content-Type: multipart/mixed;
- boundary="------------080604010803020304070506"
+To: Philippe De Muyter <phdm@macqel.be>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
+References: <20100329201236.GA9587@frolo.macqel>
+In-Reply-To: <20100329201236.GA9587@frolo.macqel>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------080604010803020304070506
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+On 03/29/2010 03:12 PM, Philippe De Muyter wrote:
+> Hello wireless-linux experts,
+> 
+> I have installed yesterday the last opensuse 11.3 rc4 on a
+> hp pavilion dv6-1300sb laptop which is has a
+> 
+> 02:00.0 Network controller [0280]: Broadcom Corporation BCM4312 802.11b/g LP-PHY [14e4:4315] (rev 01)
+> 
+> as wireless chip.
+> 
+> I needed to install such a bleeding edge distro because opensuse 11.2 does
+> not have the lp_phy driver yet.
+> 
+> with dmesg, I see :
+> 
+> [   21.818415] b43 ssb0:0: firmware: requesting b43/ucode15.fw
+> [   21.820519] b43 ssb0:0: firmware: requesting b43/lp0initvals15.fw
+> [   21.823084] b43 ssb0:0: firmware: requesting b43/lp0bsinitvals15.fw
+> [   21.975380] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+> [   22.076456] b43-phy0: Radio hardware status changed to DISABLED
+> [   22.077743] b43-phy0: Radio turned on by software
+> [   22.077747] b43-phy0: The hardware RF-kill button still turns the radio physically off. Press the button to turn it on.
+> [   22.078413] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> 
+> this is confirmed by rfkill :
+> 
+> 0: phy0: Wireless LAN
+>         Soft blocked: no
+>         Hard blocked: yes
+> 
+> BUT, I DON'T SEE A HARDWARE RF-KILL button;  I only see a red-lighted wireless
+> symbol, which is also a touch-key; in console mode, when I touch this
+> touch-key I get a message asking me to
+> 
+> 	'setkey e014 <keycode>'
+> 
+> I have already seen this symbol being blue-lighted in the first seconds of
+> linux booting, but I don't know what changes this color or if this has
+> an effect on the 'hardware' RF-kill button.  In the BIOS there is no option
+> to enable or disable the wireless interface.
+> 
+> Any hint ?
+> 
+> Thanks already for the good work so far
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Is the module hp-wmi loaded? That module is designed to implement all of the
+special keys for HP laptops.
 
-Hello there,
-
-I have enabled CONFIG_KMEMLEAK and I am finding some memory leakage apparently caused by "swapper" process; I have also had leaks from glxgears and wpa_supplicant, but they can be triggered only once (e.g. restarting wpa_supplicant does not trigger more leaks).
-
-The swapper leaks seem to be an incremental decimal string, starting from "0" to "10", while the wpa_supplicant leaks were the AP ESSID (not in attached report).
-
-Best regards,
-- -- 
-  Daniele C.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQEcBAEBAgAGBQJLrL1xAAoJEON28As9epPApycIAJpEURXnySLJS7P8NvTSs42e
-G+2iajFLSAyyQdnKlWI41+ciSe5XsYFtag8xpgS2qPvLcwmEEMo95sUrMQExtw6h
-hre4O/T0N6W4x86rEvefAwMn73nYDGoV2fcx5GHpfmyyc7Mm8+gNPzcoAicLSjh4
-MRqny9S/AyBIhGBh3nobldDiFzCvD4WmNZM0jPcNCZwQZfO7FJnjXwwEU9epjM/9
-4+HaVk8lt4gNrSNIx9yPN2oqNxyZBv5ySs6l8ukr0cozLSq0MrzMjlwnwB+FfQqg
-cmcTHYPA16FNu5Y4CoYXm8DlLj1RVFuNGlyy6WQpc7eRuiZeO9MpJOFSFZPHdlA=
-=VSaD
------END PGP SIGNATURE-----
-
---------------080604010803020304070506
-Content-Type: text/plain;
- name="swapper_memleaks.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="swapper_memleaks.txt"
-
-dW5yZWZlcmVuY2VkIG9iamVjdCAweGRmMGE2NTQwIChzaXplIDE5Mik6CiAgY29tbSAic3dh
-cHBlciIsIHBpZCAxLCBqaWZmaWVzIDQyOTQ2Njc4NDEgKGFnZSA4NzcuMzM1cykKICBoZXgg
-ZHVtcCAoZmlyc3QgMzIgYnl0ZXMpOgogICAgMDAgMDAgMDAgMjAgZmYgZmYgYmYgZmUgZjAg
-OWQgMTIgZGYgMDAgMDIgMDAgMDAgIC4uLiAuLi4uLi4uLi4uLi4KICAgIDY4IDY1IDBhIGRm
-IDZjIDY1IDBhIGRmIDAwIDAwIDAwIDAwIDIwIGE5IDBjIGMxICBoZS4ubGUuLi4uLi4gLi4u
-CiAgYmFja3RyYWNlOgogICAgWzxmZmZmZmZmZj5dIDB4ZmZmZmZmZmYKdW5yZWZlcmVuY2Vk
-IG9iamVjdCAweGRmMTI5ZGYwIChzaXplIDE2KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEs
-IGppZmZpZXMgNDI5NDY2Nzg0MSAoYWdlIDg3Ny4zMzVzKQogIGhleCBkdW1wIChmaXJzdCAx
-NiBieXRlcyk6CiAgICA1MCA0MyA0OSAyMCA0MiA3NSA3MyAyMCAzMCAzMCAzMCAzMCAzYSAz
-MCAzMCAwMCAgUENJIEJ1cyAwMDAwOjAwLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+
-XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZjI0MjA0MCAoc2l6ZSAxNik6
-CiAgY29tbSAic3dhcHBlciIsIHBpZCAxLCBqaWZmaWVzIDQyOTQ2NjgxOTMgKGFnZSA4NzYu
-OTg1cykKICBoZXggZHVtcCAoZmlyc3QgMTYgYnl0ZXMpOgogICAgNzAgNmUgNzAgMjAgMzAg
-MzAgM2EgMzAgMzQgMDAgMDAgMDAgZmYgZmYgZmYgZmYgIHBucCAwMDowNC4uLi4uLi4KICBi
-YWNrdHJhY2U6CiAgICBbPGZmZmZmZmZmPl0gMHhmZmZmZmZmZgp1bnJlZmVyZW5jZWQgb2Jq
-ZWN0IDB4ZGYyMWEyYTAgKHNpemUgMzIpOgogIGNvbW0gInN3YXBwZXIiLCBwaWQgMSwgamlm
-ZmllcyA0Mjk0NjY4MTkzIChhZ2UgODc2Ljk4NXMpCiAgaGV4IGR1bXAgKGZpcnN0IDMyIGJ5
-dGVzKToKICAgIDAwIDAwIGMxIGZlIGZmIGZmIGMxIGZlIDQwIDIwIDI0IGRmIDAwIDAwIDAw
-IDAwICAuLi4uLi4uLkAgJC4uLi4uCiAgICBiYyBmOCA1YSBjMSAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAgLi5aLi4uLi4uLi4uLi4uLgogIGJhY2t0cmFjZToKICAg
-IFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODIz
-MCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIz
-MSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDMwIDAw
-IGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICAwLi4uLi4uLgog
-IGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBv
-YmplY3QgMHhkZGMxODI0MCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGpp
-ZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5
-dGVzKToKICAgIDMxIDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAg
-ICAgICAxLi4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZm
-CnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODI1MCAoc2l6ZSA4KToKICBjb21tICJzd2Fw
-cGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBk
-dW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDMyIDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAg
-ICAgICAgICAgICAgICAgICAgICAyLi4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZm
-ZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODI2MCAoc2l6ZSA4
-KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3
-My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDMzIDAwIGMxIGRkIDAw
-IDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICAzLi4uLi4uLgogIGJhY2t0cmFj
-ZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhk
-ZGMxODI3MCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5
-NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAg
-IDM0IDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICA0Li4u
-Li4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJl
-bmNlZCBvYmplY3QgMHhkZGMxODI4MCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlk
-IDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJz
-dCA4IGJ5dGVzKToKICAgIDM1IDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAg
-ICAgICAgICAgICA1Li4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZm
-ZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODI5MCAoc2l6ZSA4KToKICBjb21t
-ICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQog
-IGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDM2IDAwIGMxIGRkIDAwIDAwIDAwIDAw
-ICAgICAgICAgICAgICAgICAgICAgICAgICA2Li4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8
-ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODJhMCAo
-c2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAo
-YWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDM3IDAwIGMx
-IGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICA3Li4uLi4uLgogIGJh
-Y2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmpl
-Y3QgMHhkZGMxODJiMCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZp
-ZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVz
-KToKICAgIDM4IDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAg
-ICA4Li4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCnVu
-cmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODJjMCAoc2l6ZSA4KToKICBjb21tICJzd2FwcGVy
-IiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45NTJzKQogIGhleCBkdW1w
-IChmaXJzdCA4IGJ5dGVzKToKICAgIDM5IDAwIGMxIGRkIDAwIDAwIDAwIDAwICAgICAgICAg
-ICAgICAgICAgICAgICAgICA5Li4uLi4uLgogIGJhY2t0cmFjZToKICAgIFs8ZmZmZmZmZmY+
-XSAweGZmZmZmZmZmCnVucmVmZXJlbmNlZCBvYmplY3QgMHhkZGMxODJkMCAoc2l6ZSA4KToK
-ICBjb21tICJzd2FwcGVyIiwgcGlkIDEsIGppZmZpZXMgNDI5NDY3MTIzMSAoYWdlIDg3My45
-NTJzKQogIGhleCBkdW1wIChmaXJzdCA4IGJ5dGVzKToKICAgIDMxIDMwIDAwIGRkIDAwIDAw
-IDAwIDAwICAgICAgICAgICAgICAgICAgICAgICAgICAxMC4uLi4uLgogIGJhY2t0cmFjZToK
-ICAgIFs8ZmZmZmZmZmY+XSAweGZmZmZmZmZmCg==
---------------080604010803020304070506--
+Larry
