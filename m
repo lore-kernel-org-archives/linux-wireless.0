@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:56995 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932683Ab0CLVUg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 16:20:36 -0500
-Date: Fri, 12 Mar 2010 13:20:26 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Florian Mickler <florian@mickler.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
-Message-ID: <20100312212025.GA17712@core.coreip.homeip.net>
-References: <1268416988-24862-1-git-send-email-florian@mickler.org>
- <1268416988-24862-2-git-send-email-florian@mickler.org>
- <1268416988-24862-3-git-send-email-florian@mickler.org>
- <20100312182209.GB8736@core.coreip.homeip.net>
- <20100312215743.7671d173@schatten.dmk.lab>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100312215743.7671d173@schatten.dmk.lab>
+Received: from sh.osrg.net ([192.16.179.4]:50129 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753237Ab0C2BwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Mar 2010 21:52:25 -0400
+Date: Mon, 29 Mar 2010 10:52:02 +0900
+To: ben@decadent.org.uk
+Cc: bzolnier@gmail.com, gregkh@suse.de, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rt28xx: Make PCI_{MAP,UNMAP}_SINGLE type-safe
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1269822285.8653.251.camel@localhost>
+References: <alpine.DEB.2.00.1003282040480.4731@ernie.pinecrest>
+	<1269821357.8653.231.camel@localhost>
+	<1269822285.8653.251.camel@localhost>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Message-Id: <20100329105129Y.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 12, 2010 at 09:57:43PM +0100, Florian Mickler wrote:
-> On Fri, 12 Mar 2010 10:22:09 -0800
-> Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
-> 
-> > On Fri, Mar 12, 2010 at 07:03:08PM +0100, florian@mickler.org wrote:
-> > >  
-> > > +static ssize_t rfkill_hard_show(struct device *dev,
-> > > +				 struct device_attribute *attr,
-> > > +				 char *buf)
-> > > +{
-> > > +	struct rfkill *rfkill = to_rfkill(dev);
-> > > +	unsigned long flags;
-> > > +	u32 state;
-> > > +
-> > > +	spin_lock_irqsave(&rfkill->lock, flags);
-> > > +	state = rfkill->state;
-> > > +	spin_unlock_irqrestore(&rfkill->lock, flags);
-> > 
-> > Why exactly is this lock needed?
-> 
-> The rfkill state is updated from multiple contexts... Am I overlooking
-> smth obvious here?
-> 
+On Mon, 29 Mar 2010 01:24:45 +0100
+Ben Hutchings <ben@decadent.org.uk> wrote:
 
-You are not updating but reading... Are you concerned about seeing
-a partial write to u32? It does not happen.
+> To avoid recurrence of bugs such as <http://bugs.debian.org/575726>,
+> change the type of the first parameter to linux_pci_{map,unmap}_single()
+> from void * to struct rt_rtmp_adapter *.  Also do not define the macros
+> PCI_{MAP,UNMAP}_SINGLE() when building the rt2870sta driver; they are
+> not used and if they were that would be a bug.
+> 
+> Signed-off-by: Ben Hutchings <ben@decadent.org.uk> 
+> ---
+>  drivers/staging/rt2860/rt_linux.h    |   14 +++++---------
+>  drivers/staging/rt2860/rt_pci_rbus.c |   12 ++++--------
+>  2 files changed, 9 insertions(+), 17 deletions(-)
 
--- 
-Dmitry
+I think using dma_map_single directly instead of inventing a wrapper
+function make the code more readable.
