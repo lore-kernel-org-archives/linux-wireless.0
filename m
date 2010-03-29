@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3554 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:65009 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753012Ab0C2QNw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 12:13:52 -0400
-Subject: Re: [patch] iwlwifi: range checking issue
-From: reinette chatre <reinette.chatre@intel.com>
-To: "Zhu, Yi" <yi.zhu@intel.com>
-Cc: Dan Carpenter <error27@gmail.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-In-Reply-To: <1269828072.4043.247.camel@debian>
-References: <20100328115500.GX5069@bicker>
-	 <1269828072.4043.247.camel@debian>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Mar 2010 09:13:51 -0700
-Message-ID: <1269879231.2446.3410.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1751784Ab0C2ITf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 04:19:35 -0400
+Date: Mon, 29 Mar 2010 09:17:33 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>, wey-yi.w.guy@intel.com
+Subject: Re: [PATCH 1/2] mac80211: explicitly disable/enable QoS
+Message-ID: <20100329071733.GB2732@dhcp-lab-161.englab.brq.redhat.com>
+References: <1269621992-5034-1-git-send-email-sgruszka@redhat.com> <1269624363.4342.2.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1269624363.4342.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-03-28 at 19:01 -0700, Zhu, Yi wrote:
-> On Sun, 2010-03-28 at 19:55 +0800, Dan Carpenter wrote:
-> > IWL_RATE_COUNT is 13 and IWL_RATE_COUNT_LEGACY is 12.
-> > 
-> > IWL_RATE_COUNT_LEGACY is the right one here because iwl3945_rates
-> > doesn't support 60M and also that's how "rates" is defined in
-> > iwlcore_init_geos() from drivers/net/wireless/iwlwifi/iwl-core.c.
-> > 
-> >         rates = kzalloc((sizeof(struct ieee80211_rate) * IWL_RATE_COUNT_LEGACY),
-> >                         GFP_KERNEL);
-> > 
-> > Signed-off-by: Dan Carpenter <error27@gmail.com>
+On Fri, Mar 26, 2010 at 10:26:03AM -0700, Johannes Berg wrote:
+> >  void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+> > @@ -816,7 +824,7 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+> >  	else
+> >  		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
+> >  
+> > -	ieee80211_set_wmm_default(sdata);
+> > +	ieee80211_set_wmm_default(sdata, true);
 > 
-> Acked-by: Zhu Yi <yi.zhu@intel.com>
+> Shouldn't that be false though?
 
-Great catch. Since this is a fix for a buffer overflow ... could you
-please pass it on to stable also?
+I think so, I did like that just to not change old behaviour (on iwlwifi).
 
-Thank you
+But I think also, that all ieee80211_set_wmm_default function calls
+should be with false, in other words, we should disable QoS in
+ieee80211_set_wmm_default().
 
-Reinette
+What is your opinion?
 
+Stanislaw
