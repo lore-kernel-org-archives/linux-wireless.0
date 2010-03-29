@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay007.isp.belgacom.be ([195.238.6.173]:23173 "EHLO
-	mailrelay007.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754857Ab0C3UAp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 16:00:45 -0400
-Date: Tue, 30 Mar 2010 22:00:39 +0200
-From: Philippe De Muyter <phdm@macqel.be>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
-Message-ID: <20100330200039.GA26538@frolo.macqel>
-References: <20100329201236.GA9587@frolo.macqel> <4BB1335F.7030306@lwfinger.net> <20100330073401.GA13675@frolo.macqel> <1269967657.3019.16.camel@localhost.localdomain> <20100330171139.GA28367@srcf.ucam.org> <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100330193129.GA31847@srcf.ucam.org>
+Received: from mx1.redhat.com ([209.132.183.28]:4530 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755365Ab0C2LU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 07:20:59 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<wey-yi.w.guy@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 3/3] mac80211: enable QoS explicitly in AP mode
+Date: Mon, 29 Mar 2010 12:18:36 +0200
+Message-Id: <1269857916-4440-3-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1269857916-4440-2-git-send-email-sgruszka@redhat.com>
+References: <1269857916-4440-1-git-send-email-sgruszka@redhat.com>
+ <1269857916-4440-2-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 30, 2010 at 08:31:29PM +0100, Matthew Garrett wrote:
-> On Tue, Mar 30, 2010 at 09:26:29PM +0200, Philippe De Muyter wrote:
-> 
-> > I must also add that I currently cannot boot without acpi=off
+Enable QoS explicitly, when user space AP program will setup a QoS
+queues. Currently this is not needed as iwlwifi not work in AP mode
+and no other driver implement enable/disable QoS.
 
-I shoudl have written ; linux does not boot without acpi=off, and the messages
-I get with ignore_loglevel debug do never stop at the same place.  Do you know
-how to reliably find where the apci problem is.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+v1 -> v2:
+ - add this patch  
 
-I noticed this message :
+ net/mac80211/cfg.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-ACPI: I/O resource 0000:00:1f.3 [0x8000-0x801f] conflicts with ACPI region SMBI [0x8000-0x800f] (copied by hand)
-
-but linux seems to continue to boot past that.
-
-> 
-> That's your bug, then.
-
-Any hint on what I can do to diagnose more what the problem(s) is/are ?
-
-Philippe
-
-PS: without acpi=off, the led is blue, but I have no linux :(
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b7116ef..b88c7e4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1136,6 +1136,10 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
+ 
++	/* enable WMM or activate new settings */
++	local->hw.conf.flags |= IEEE80211_CONF_QOS;
++	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
++
+ 	return 0;
+ }
+ 
 -- 
-Philippe De Muyter  phdm at macqel dot be  Tel +32 27029044
-Macq Electronique SA  rue de l'Aeronef 2  B-1140 Bruxelles  Fax +32 27029077
+1.6.2.5
+
