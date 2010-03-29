@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:35739 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752773Ab0CSJWP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 05:22:15 -0400
-Received: by wwe15 with SMTP id 15so1667850wwe.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Mar 2010 02:22:14 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:50331 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755066Ab0C2KRK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 06:17:10 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 03:17:10 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <6cf6b73e1003180811w5c577652i308b4d4e06b6011a@mail.gmail.com>
-References: <6cf6b73e1003141144l5a549309xfc627fa7cb7bf817@mail.gmail.com>
-	 <1268758859.2446.595.camel@rchatre-DESK>
-	 <20100318142419.GA3904@dhcp-lab-161.englab.brq.redhat.com>
-	 <6cf6b73e1003180811w5c577652i308b4d4e06b6011a@mail.gmail.com>
-Date: Fri, 19 Mar 2010 10:22:14 +0100
-Message-ID: <2d0a357f1003190222x27dcf885k9eff60c65492fc07@mail.gmail.com>
-Subject: Re: [PATCH] iwlwifi: Silence tfds_in_queue message
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Adel Gadllah <adel.gadllah@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	Greg KH <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19376.33504.681983.192941@gargle.gargle.HOWL>
+Date: Mon, 29 Mar 2010 16:07:20 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/7] ath9k_htc: Initialize HW opmode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Not setting the opmode properly during initialization
+results in the firmware sending up a bunch of packets
+before add_interface() has been called, for the first
+interface.
 
-only to clarify:
-There is no need for "iwlwifi: Silence tfds_in_queue message" patch
-from wireless-2.6 GIT?
-I mean "[2.6.32] iwlwifi: fix nfreed--" is enough for solving the
-mentionned problem?
+This patch fixes the issue by setting the initial mode
+to 'managed'.
 
-Kind Regards,
-- Sedat -
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-On Thu, Mar 18, 2010 at 4:11 PM, Adel Gadllah <adel.gadllah@gmail.com> wrote:
-> 2010/3/18 Stanislaw Gruszka <sgruszka@redhat.com>:
->> On Tue, Mar 16, 2010 at 10:00:59AM -0700, reinette chatre wrote:
->>> On Sun, 2010-03-14 at 11:44 -0700, Adel Gadllah wrote:
->>> > From 83bf3f1dba41e3dccdef4fecfccb094559568342 Mon Sep 17 00:00:00 2001
->>> > From: Adel Gadllah <adel.gadllah@gmail.com>
->>> > Date: Sun, 14 Mar 2010 19:16:25 +0100
->>> > Subject: [PATCH] iwlwifi: Silence tfds_in_queue message
->>> >
->>> > Commit a239a8b47cc0e5e6d7416a89f340beac06d5edaa introduced a
->>> > noisy message, that fills up the log very fast.
->>> >
->>> > The error seems not to be fatal (the connection is stable and
->>> > performance is ok), so make it IWL_DEBUG_TX rather than IWL_ERR.
->>> >
->>> > Cc: Reinette Chatre <reinette.chatre@intel.com>
->>> > Cc: John W. Linville <linville@tuxdriver.com>
->>> > Cc: stable@kernel.org
->>> >
->>> > Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
->>>
->>> Acked-by: Reinette Chatre <reinette.chatre@intel.com>
->>
->> Actually I would like to NACK the patch.
->>
->> We did mistake during backporting to 2.6.32 . In iwl_tx_queue_reclaim()
->> we make make double nfreed--. I don't know how we miss that :(
->>
->> Greg please take patch from the next email if Adel conform that
->> it fix the issue.
->
-> Yeah not sure that making it a debug message is a bad idea though (but
-> even if we want that it doesn't matter much for stable).
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 3206eb0..d8779b9 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -421,6 +421,7 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
+ 		memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 
+ 	priv->op_flags |= OP_TXAGGR;
++	priv->ah->opmode = NL80211_IFTYPE_STATION;
+ }
+ 
+ static int ath9k_init_priv(struct ath9k_htc_priv *priv, u16 devid)
+-- 
+1.7.0.3
+
