@@ -1,62 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from alcalazamora.dti2.net ([81.24.162.8]:2942 "EHLO
-	alcalazamora.dti2.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753884Ab0CIAjn (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:41601 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755438Ab0C2AJ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 19:39:43 -0500
-Received: from [172.16.16.6] ([81.24.161.20])
-	(authenticated user jorge@dti2.net)
-	by alcalazamora.dti2.net (alcalazamora.dti2.net [81.24.162.8])
-	(MDaemon PRO v10.1.2)
-	with ESMTP id md50007896949.msg
-	for <linux-wireless@vger.kernel.org>; Tue, 09 Mar 2010 01:33:39 +0100
-Message-ID: <4B959761.80003@dti2.net>
-Date: Tue, 09 Mar 2010 01:33:37 +0100
-From: "Jorge Boncompte [DTI2]" <jorge@dti2.net>
-MIME-Version: 1.0
-To: br1@einfach.org
-CC: me@bobcopeland.com, linville@tuxdriver.com, 8an@praha12.net,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com, benoit.papillault@free.fr
-Subject: Re: [PATCH v2] ath5k: fix I/Q calibration (for real)
-References: <20100308025841.7460.69949.stgit@void> <4B94F183.2080002@dti2.net> <201003090924.35470.br1@einfach.org>
-In-Reply-To: <201003090924.35470.br1@einfach.org>
-Content-Type: text/plain; charset=UTF-8
-Reply-To: jorge@dti2.net
+	Sun, 28 Mar 2010 20:09:29 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: stable@kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Halton <johnhalton@gmail.com>, 575726@bugs.debian.org
+In-Reply-To: <alpine.DEB.2.00.1003282040480.4731@ernie.pinecrest>
+References: <alpine.DEB.2.00.1003282040480.4731@ernie.pinecrest>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SN3QLJ45FfnfRugWJ4+m"
+Date: Mon, 29 Mar 2010 01:09:17 +0100
+Message-ID: <1269821357.8653.231.camel@localhost>
+Mime-Version: 1.0
+Subject: [PATCH] rt2860sta: Fix argument to linux_pci_unmap_single()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El 09/03/2010 1:24, Bruno Randolf escribió:
-> On Monday 08 March 2010 21:45:55 Jorge Boncompte [DTI2] wrote:
->> El 08/03/2010 3:59, Bruno Randolf escribió:
->>> 4.) we can't use ENABLE_BITS when we want to write a number (the number
->>> can contain zeros). also always write the correction values first and
->>> set ENABLE bit last, like the HAL does.
->>
->> 	Hi Bruno,
->>
->> 	does not ath5k_hw_commit_eeprom_settings() have the same problem 
-> described
->> above when committing the IQ values from the EEPROM? legacy-hal does
->> differently too.
-> 
-> yes, but i have fixed that in the second patch of this series:
-> 
-> [PATCH 2/3] ath5k: read eeprom IQ calibration values correctly for G mode
-> 
-> i forgot to mention that in the changelog.
 
-	Sorry, did not noticed that your first submission had 3 patches.
+--=-SN3QLJ45FfnfRugWJ4+m
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
--- 
-==============================================================
-Jorge Boncompte - Ingenieria y Gestion de RED
-DTI2 - Desarrollo de la Tecnologia de las Comunicaciones
---------------------------------------------------------------
-C/ Abogado Enriquez Barrios, 5   14004 CORDOBA (SPAIN)
-Tlf: +34 957 761395 / FAX: +34 957 450380
-==============================================================
-- Sin pistachos no hay Rock & Roll...
-- Without wicker a basket cannot be made.
-==============================================================
+John Halton wrote in <http://bugs.debian.org/575726>:
+> Whenever wpa_supplicant is deactivated (whether by killing the process or=
+=20
+> during a normal shutdown) I am getting a kerneloops that prevents the=20
+> computer from completing shutdown. Here is the relevant syslog output:
 
+The backtrace points to an incorrect call from RTMPFreeTxRxRingMemory()
+into linux_pci_unmap_single().  This appears to have been fixed in Linux
+2.6.33 by this change:
+
+commit ca97b8388838ee9ea4b4bad04948f8f7f8a607a3
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Tue Sep 22 20:44:07 2009 +0200
+
+    Staging: rt28x0: updates from vendor's V2.1.0.0 drivers
+
+For stable-2.6.32, just fix this one function call.
+
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/staging/rt2860/common/2860_rtmp_init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/staging/rt2860/common/2860_rtmp_init.c b/drivers/stagi=
+ng/rt2860/common/2860_rtmp_init.c
+index 0bc0fb9..98b0f8e 100644
+--- a/drivers/staging/rt2860/common/2860_rtmp_init.c
++++ b/drivers/staging/rt2860/common/2860_rtmp_init.c
+@@ -716,7 +716,7 @@ VOID RTMPFreeTxRxRingMemory(
+ 	{
+ 		if ((pAd->RxRing.Cell[index].DmaBuf.AllocVa) && (pAd->RxRing.Cell[index]=
+.pNdisPacket))
+ 		{
+-			PCI_UNMAP_SINGLE(pObj->pci_dev, pAd->RxRing.Cell[index].DmaBuf.AllocPa,=
+ pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
++			PCI_UNMAP_SINGLE(pAd, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRi=
+ng.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
+ 			RELEASE_NDIS_PACKET(pAd, pAd->RxRing.Cell[index].pNdisPacket, NDIS_STAT=
+US_SUCCESS);
+ 		}
+ 	}
+--=20
+1.7.0.3
+
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-SN3QLJ45FfnfRugWJ4+m
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUAS6/vpue/yOyVhhEJAQIkPQ//Ttmy1wwBOMHWY8kZ/YuIyX81JDknxhMJ
+tEaCMREJYdTcPcTOoUadIPadRnP5PMPMa/yh9hp9c+WX1d1LRU6324g73v29hnqx
+Jp2qhwTttFsOLCmsLv1UdGoiSeealtBbW+ERGTZr7tRM7TEAeOI6WCBjfaAnf1Fy
+8JREss88lZWXD/rK8jz537uglxbW7iQvVPCpbFPQA5VneCddzGM6q687rMLeIoST
+SymvO5XwzetMaRQ129Jq4bLUXDRwoTbQhj+/Jq8GnrPL12DzzuKC8u4JHtXSIt2e
+ILua5IpBl7B3UrG7sIi0104X8RYpZOE34rmwV3K+fb+8z0Mb9XoyfFG+2mB50WD4
+2QXJ3npdti7RbFTnK7yERkd7corCRDzO8vNWQLkgyZ7BNS03L4Au8Spf9bBe6kWS
+nHM+530J94ORqkwEoFA3RSy2GnfFIWKrQ8/B++V7yavsFxlSWeWuwDYC0BtkxiwC
+iapGC7wjW44vJXN/BfZ6XGBcR/YfK80kl54maJgVgnIwSCWdNgJE2BZNmDKaqX1Q
+wZw1f7ERHWbdcWwEDXkhKUcW8HZWZkamch15s+vY/7pfk8lyT5t4nzB3HJwcgrjf
+R1sk3UVbB5KlWhZ3aUkdqWD9528JIK3z1I4RLaX9xYv7+E2eKhqjgInzqEHqoCUO
+TiXuhxHqpVI=
+=NxJn
+-----END PGP SIGNATURE-----
+
+--=-SN3QLJ45FfnfRugWJ4+m--
