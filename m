@@ -1,228 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:39222 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000Ab0CRLgA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 07:36:00 -0400
-Received: by fxm19 with SMTP id 19so1996190fxm.21
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Mar 2010 04:35:58 -0700 (PDT)
+Received: from kroah.org ([198.145.64.141]:42146 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753954Ab0C2Ulo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 16:41:44 -0400
+Subject: patch rt2860sta-fix-argument-to-linux_pci_unmap_single.patch added to 2.6.32-stable tree
+To: ben@decadent.org.uk, bzolnier@gmail.com, gregkh@suse.de,
+	johnhalton@gmail.com, linux-wireless@vger.kernel.org
+Cc: <stable@kernel.org>, <stable-commits@vger.kernel.org>
+From: <gregkh@suse.de>
+Date: Mon, 29 Mar 2010 13:41:57 -0700
+In-Reply-To: <1269821357.8653.231.camel@localhost>
+Message-ID: <12698953171603@site>
 MIME-Version: 1.0
-In-Reply-To: <201003181944.32081.br1@einfach.org>
-References: <f74418681003180312k30dd39adtd00bd427cb88a710@mail.gmail.com>
-	 <201003181944.32081.br1@einfach.org>
-Date: Thu, 18 Mar 2010 12:35:57 +0100
-Message-ID: <f74418681003180435v3b762257q89c636d834897a5f@mail.gmail.com>
-Subject: Re: pending queue depth in ieee80211_local data structure
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: br1@einfach.org, ht6100@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ANSI_X3.4-1968
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Thursday 18 March 2010 19:12:32 Lorenzo Bianconi wrote:
->> Hi all,
->>
->> I noticed a possible issue in the pending queue management of the
->> ieee80211_local data structure.
->> In particular, there is no control of the queue depth and this could
->> cause a memory overflow.
->> In the test I carried out this happen when I use a low priority queue
->> (e.g. Backgreound queue) and
->> I transmit a data stream that exceeds the channel capacity (e.g.
->> 50Mbps@MCS 3, 800ns GI and 20MHz
->> channel width). I wrote this patch in order to fix the issue.
->
-> i think, i noticed the same issue: sending a UDP stream which is higher than
-> the possible bandwidth will eventually cause an out of memory panic.
->
-> bruno
->
->> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
->>
->> --- a/net/mac80211/ieee80211_i.h
->> +++ b/net/mac80211/ieee80211_i.h
->> @@ -703,6 +703,8 @@
->>       struct work_struct sta_finish_work;
->>       int sta_generation;
->>
->> +     /* Pending buffer dimension */
->> +     #define PENDING_BUF     512
->>       struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
->>       struct tasklet_struct tx_pending_tasklet;
->>
->> --- a/net/mac80211/tx.c
->> +++ b/net/mac80211/tx.c
->> @@ -1399,13 +1399,15 @@
->>               skb = tx.skb;
->>
->>               spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
->> -
->> +
->>               if (local->queue_stop_reasons[queue] ||
->>                   !skb_queue_empty(&local->pending[queue])) {
->>                       /*
->> -                      * if queue is stopped, queue up frames for later
->> -                      * transmission from the tasklet
->> +                      * if queue is stopped and there is enough space in
-> the queue,
->> +                      * queue up frames for later transmission from the
-> tasklet
->>                        */
->> +                     if (skb_queue_len(&local->pending[queue]) >=
-> PENDING_BUF)
->> +                             goto drop;
->>                       do {
->>                               next = skb->next;
->>                               skb->next = NULL;
->> @@ -2028,8 +2030,12 @@
->>                                               flags);
->>
->>                       txok = ieee80211_tx_pending_skb(local, skb);
->> -                     if (!txok)
->> -                             __skb_queue_head(&local->pending[i], skb);
->> +                     if (!txok) {
->> +                             if (skb_queue_len(&local->pending[i]) <
-> PENDING_BUF)
->> +                                     __skb_queue_head(&local->pending[i],
-> skb);
->> +                             else
->> +                                     kfree_skb(skb);
->> +                     }
->>                       spin_lock_irqsave(&local->queue_stop_reason_lock,
->>                                         flags);
->>                       if (!txok)
->> --- a/net/mac80211/util.c
->> +++ b/net/mac80211/util.c
->> @@ -383,7 +383,10 @@
->>
->>       spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
->>       __ieee80211_stop_queue(hw, queue,
-> IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
->> -     __skb_queue_tail(&local->pending[queue], skb);
->> +     if (skb_queue_len(&local->pending[queue]) < PENDING_BUF)
->> +             __skb_queue_tail(&local->pending[queue], skb);
->> +     else
->> +             kfree_skb(skb);
->>       __ieee80211_wake_queue(hw, queue,
-> IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
->>       spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
->>  }
->> @@ -409,9 +412,12 @@
->>                       continue;
->>               }
->>
->> -             ret++;
->>               queue = skb_get_queue_mapping(skb);
->> -             __skb_queue_tail(&local->pending[queue], skb);
->> +             if (skb_queue_len(&local->pending[queue]) < PENDING_BUF) {
->> +                     ret++;
->> +                     __skb_queue_tail(&local->pending[queue], skb);
->> +             } else
->> +                     kfree_skb(skb);
->>       }
->>
->>       for (i = 0; i < hw->queues; i++)
->>
->>
->> Regards
->>
->> Lorenzo
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-Hi all,
+This is a note to let you know that we have just queued up the patch titled
 
-I pasted the first version of the patch where I missed to unlock the
-spinlock in the  ieee80211_tx().
-This is the last version of the patch.
+    Subject: rt2860sta: Fix argument to linux_pci_unmap_single()
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+to the 2.6.32-stable tree.  Its filename is
 
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -708,6 +708,8 @@
- 	struct work_struct sta_finish_work;
- 	int sta_generation;
+    rt2860sta-fix-argument-to-linux_pci_unmap_single.patch
 
-+	/* Pending buffer dimension */
-+	#define PENDING_BUF	512
- 	struct sk_buff_head pending[IEEE80211_MAX_QUEUES];
- 	struct tasklet_struct tx_pending_tasklet;
+A git repo of this tree can be found at 
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1449,14 +1449,18 @@
- 		skb = tx.skb;
 
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--
-+		
- 		if (local->queue_stop_reasons[queue] ||
- 		    !skb_queue_empty(&local->pending[queue])) {
- 			/*
--			 * if queue is stopped, queue up frames for later
--			 * transmission from the tasklet
-+			 * if queue is stopped and there is enough space in the queue,
-+			 * queue up frames for later transmission from the tasklet
- 			 */
--			do {
-+			if (skb_queue_len(&local->pending[queue]) >= PENDING_BUF) {
-+				spin_unlock_irqrestore(&local->queue_stop_reason_lock,
-+							flags);
-+				goto drop;
-+			} do {
- 				next = skb->next;
- 				skb->next = NULL;
- 				if (unlikely(txpending))
-@@ -2074,8 +2078,12 @@
- 						flags);
+>From ben@decadent.org.uk  Mon Mar 29 13:35:12 2010
+From: Ben Hutchings <ben@decadent.org.uk>
+Date: Mon, 29 Mar 2010 01:09:17 +0100
+Subject: rt2860sta: Fix argument to linux_pci_unmap_single()
+To: stable@kernel.org
+Cc: 575726@bugs.debian.org, linux-wireless <linux-wireless@vger.kernel.org>, John Halton <johnhalton@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Message-ID: <1269821357.8653.231.camel@localhost>
 
- 			txok = ieee80211_tx_pending_skb(local, skb);
--			if (!txok)
--				__skb_queue_head(&local->pending[i], skb);
-+			if (!txok) {
-+				if (skb_queue_len(&local->pending[i]) < PENDING_BUF)
-+					__skb_queue_head(&local->pending[i], skb);
-+				else
-+					kfree_skb(skb);
-+			}
- 			spin_lock_irqsave(&local->queue_stop_reason_lock,
- 					  flags);
- 			if (!txok)
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -383,7 +383,10 @@
+From: Ben Hutchings <ben@decadent.org.uk>
 
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
--	__skb_queue_tail(&local->pending[queue], skb);
-+	if (skb_queue_len(&local->pending[queue]) < PENDING_BUF)
-+		__skb_queue_tail(&local->pending[queue], skb);
-+	else
-+		kfree_skb(skb);	
- 	__ieee80211_wake_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- }
-@@ -409,9 +412,12 @@
- 			continue;
+John Halton wrote in <http://bugs.debian.org/575726>:
+> Whenever wpa_supplicant is deactivated (whether by killing the process or
+> during a normal shutdown) I am getting a kerneloops that prevents the
+> computer from completing shutdown. Here is the relevant syslog output:
+
+The backtrace points to an incorrect call from RTMPFreeTxRxRingMemory()
+into linux_pci_unmap_single().  This appears to have been fixed in Linux
+2.6.33 by this change:
+
+commit ca97b8388838ee9ea4b4bad04948f8f7f8a607a3
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Tue Sep 22 20:44:07 2009 +0200
+
+    Staging: rt28x0: updates from vendor's V2.1.0.0 drivers
+
+For stable-2.6.32, just fix this one function call.
+
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/staging/rt2860/common/2860_rtmp_init.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/staging/rt2860/common/2860_rtmp_init.c
++++ b/drivers/staging/rt2860/common/2860_rtmp_init.c
+@@ -716,7 +716,7 @@ VOID RTMPFreeTxRxRingMemory(
+ 	{
+ 		if ((pAd->RxRing.Cell[index].DmaBuf.AllocVa) && (pAd->RxRing.Cell[index].pNdisPacket))
+ 		{
+-			PCI_UNMAP_SINGLE(pObj->pci_dev, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
++			PCI_UNMAP_SINGLE(pAd, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
+ 			RELEASE_NDIS_PACKET(pAd, pAd->RxRing.Cell[index].pNdisPacket, NDIS_STATUS_SUCCESS);
  		}
-
--		ret++;
- 		queue = skb_get_queue_mapping(skb);
--		__skb_queue_tail(&local->pending[queue], skb);
-+		if (skb_queue_len(&local->pending[queue]) < PENDING_BUF) {
-+			ret++;
-+			__skb_queue_tail(&local->pending[queue], skb);
-+		} else
-+			kfree_skb(skb);
  	}
 
- 	for (i = 0; i < hw->queues; i++)
 
-Regards.
+Patches currently in stable-queue which might be from ben@decadent.org.uk are
 
-Lorenzo
