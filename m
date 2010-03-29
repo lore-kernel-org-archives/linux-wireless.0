@@ -1,32 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:62422 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753576Ab0CHT0R (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:60451 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531Ab0C2Ueq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Mar 2010 14:26:17 -0500
-Received: by vws9 with SMTP id 9so2927956vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Mar 2010 11:26:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1267957241-5578-2-git-send-email-hauke@hauke-m.de>
-References: <1267957241-5578-1-git-send-email-hauke@hauke-m.de>
-	<1267957241-5578-2-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 8 Mar 2010 11:25:56 -0800
-Message-ID: <43e72e891003081125ge6f41c8s4979bc8f71779cb0@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat: backport device_{lock,trylock,unlock}
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Gus Wirth <gwirth79@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 29 Mar 2010 16:34:46 -0400
+From: Luis de Bethencourt <luisbg@ubuntu.com>
+To: linville@tuxdriver.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Luis de Bethencourt <luisbg@openshine.com>,
+	Luis de Bethencourt <luisbg@ubuntu.com>
+Subject: [PATCH] Net: wireless: ath: fix macros coding style issue in hw.c
+Date: Mon, 29 Mar 2010 21:34:39 +0100
+Message-Id: <1269894879-13884-1-git-send-email-luisbg@ubuntu.com>
+In-Reply-To: <ath/hw.c>
+References: <ath/hw.c>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 7, 2010 at 2:20 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This fixes build of ar9170.
->
-> CC: Gus Wirth <gwirth79@gmail.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+From: Luis de Bethencourt <luisbg@openshine.com>
 
-Thanks applied both patches!
+This is a patch to the ath/hw.c file that fixes up a warning about
+macros found by the checkpatch.pl tool, that said that complex values
+should be enclosed in parenthesis.
 
-  Luis
+Signed-off-by: Luis de Bethencourt <luisbg@ubuntu.com>
+---
+ drivers/net/wireless/ath/hw.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
+index ecc9eb0..a8f81ea 100644
+--- a/drivers/net/wireless/ath/hw.c
++++ b/drivers/net/wireless/ath/hw.c
+@@ -19,8 +19,8 @@
+ #include "ath.h"
+ #include "reg.h"
+ 
+-#define REG_READ	common->ops->read
+-#define REG_WRITE	common->ops->write
++#define REG_READ	(common->ops->read)
++#define REG_WRITE	(common->ops->write)
+ 
+ /**
+  * ath_hw_set_bssid_mask - filter out bssids we listen
+-- 
+1.6.3.3
+
