@@ -1,72 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f200.google.com ([209.85.222.200]:58980 "EHLO
-	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965811Ab0CPAJZ convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f223.google.com ([209.85.220.223]:41539 "EHLO
+	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab0C2Xpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Mar 2010 20:09:25 -0400
-Received: by pzk38 with SMTP id 38so2601420pzk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Mar 2010 17:09:24 -0700 (PDT)
+	Mon, 29 Mar 2010 19:45:39 -0400
+Received: by fxm23 with SMTP id 23so1311528fxm.21
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 16:45:38 -0700 (PDT)
+Message-ID: <4BB13B98.9030009@googlemail.com>
+Date: Tue, 30 Mar 2010 01:45:28 +0200
+From: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <4B9ECB3E.3010802@openwrt.org>
-References: <1268459216-22372-1-git-send-email-lrodriguez@atheros.com>
-	<20100315214338.GB4000@tux> <43e72e891003151625t795b8ecdr2ce2e6927e8632a4@mail.gmail.com>
-	<20100315234909.GA2662@tux> <4B9EC85B.8070800@openwrt.org>
-	<43e72e891003151655i7dc051d0lc1da26267e9c706@mail.gmail.com>
-	<4B9ECB3E.3010802@openwrt.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 15 Mar 2010 17:09:04 -0700
-Message-ID: <43e72e891003151709r42745e27q6e42c131d202a4cb@mail.gmail.com>
-Subject: Re: [PATCH v3 00/12] ath9k_hw: complete support for AR9271
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] No SPROM available!
+References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10A0F.1030608@lwfinger.net> <20100329204822.GL4984@tuxdriver.com> <20100329205558.GM4984@tuxdriver.com> <4BB11B8E.1020506@lwfinger.net> <4BB12148.7080309@googlemail.com> <4BB13147.9020002@lwfinger.net> <4BB135EC.1070502@googlemail.com> <4BB13B1C.2010608@lwfinger.net>
+In-Reply-To: <4BB13B1C.2010608@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 15, 2010 at 5:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2010-03-16 12:55 AM, Luis R. Rodriguez wrote:
->> On Mon, Mar 15, 2010 at 4:52 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->>> On 2010-03-16 12:49 AM, Luis R. Rodriguez wrote:
->>>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
->>>> index 00570fb..867cfaf 100644
->>>> --- a/drivers/net/wireless/ath/ath9k/hw.c
->>>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
->>>> @@ -807,6 +804,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
->>>>               acktimeout += 64 - sifstime - ah->slottime;
->>>>
->>>>       ath9k_hw_setslottime(ah, slottime);
->>>> +
->>>> +     if (AR_SREV_9271(ah))
->>>> +             return;
->>>> +
->>>>       ath9k_hw_set_ack_timeout(ah, acktimeout);
->>>>       ath9k_hw_set_cts_timeout(ah, acktimeout);
->>>>       if (ah->globaltxtimeout != (u32) -1)
->>>
->>> Why leave out the ACK/CTS timeout setting? How does the hw handle ACK
->>> and CTS timeouts?
+On 03/30/10 01:43, Larry Finger wrote:
+> On 03/29/2010 06:21 PM, René Bolldorf wrote:
 >>
->> Right, so that's why I originally removed this hunk completely, I was
->> under the impression you latest fix would have addressed any issues
->> but it does not, we get association time outs. I think we'll have to
->> review this further in order to support coverage class.
-> Are you sure the slot time was set properly by the callback?
+>> ssb: chip_id 0x4312, status 0x12
+>> ssb: cc rev 0x16, cc capab 0x18600000
+>>
+>> And my system completely hangs after this... :(
+>
+> Nothing in that patch should make it hang. Has that happened before?
+>
+> Larry
+>
 
-Well ath9k_htc did not have it implemented, I just added the code for
-it, you know what.. I did not test modifying the ACK/CTS timeout *and*
-with the new slot time code I added to ath9k_htc, let me try that.
-
-> Can you
-> print out the values that it's setting?
-
-Yeah, 20 upon initial association and then I see another setting for 9.
-
-> The initvals for 9271 don't
-> really look all that different.
-
-Indeed, odd... this should work with the fudge factor you added.
-
-  Luis
+Nope. And the file was patched right.
