@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35258 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753655Ab0CLBEa (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:34894 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754507Ab0C2XBb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 20:04:30 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linux-wireless@vger.kernel.org, stable@kernel.org
-Cc: linux-kernel@vger.kernel.org, linville@tuxdriver.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [FYI] cfg80211: cfg80211: fix suspend/resume case when world roaming
-Date: Thu, 11 Mar 2010 20:04:30 -0500
-Message-Id: <1268355870-1496-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 29 Mar 2010 19:01:31 -0400
+Received: by mail-pw0-f46.google.com with SMTP id 5so7149816pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 16:01:31 -0700 (PDT)
+Message-ID: <4BB13147.9020002@lwfinger.net>
+Date: Mon, 29 Mar 2010 18:01:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] No SPROM available!
+References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10A0F.1030608@lwfinger.net> <20100329204822.GL4984@tuxdriver.com> <20100329205558.GM4984@tuxdriver.com> <4BB11B8E.1020506@lwfinger.net> <4BB12148.7080309@googlemail.com>
+In-Reply-To: <4BB12148.7080309@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a heads up to distribution maintainers, for 2.6.33 has an issue
-with suspend and resume and world roaming when you move from one AP
-with one set of regulatory settings to another. The issue happens when for
-example if a user from JP travels to the US and connects to an AP
-which disables channel 13, they suspend and go home, and resume
-channel 13 will still be disabled. This has been fixed on 2.6.34
-but the fix was rather large for propagating to stable but if you do
-wnat the fix I have backported them for you.
+René and John,
 
-These patches have been baking on wireless-testing, linux-next, and
-now upstream 2.6.34-rc1 for a while now. You can find them here:
+What output does this patch yield?
 
-http://kernel.org/pub/linux/kernel/people/mcgrof/patches/cfg80211/2010-03/reg-fixes-33/02-suspend-resume-regulatory/
 
-Luis R. Rodriguez (2):
-  cfg80211: avoid flushing the global workqueue for core reg hints
-  cfg80211: add regulatory hint disconnect support
+Index: wireless-testing/drivers/ssb/sprom.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/sprom.c
++++ wireless-testing/drivers/ssb/sprom.c
+@@ -182,6 +182,11 @@ bool ssb_is_sprom_available(struct ssb_b
+ 	if (bus->chipco.dev->id.revision < 11)
+ 		return true;
 
- include/net/regulatory.h |    1 +
- net/wireless/reg.c       |  162 ++++++++++++++++++++++++++++++++++++++++++++--
- net/wireless/reg.h       |   18 +++++
- net/wireless/sme.c       |   40 +++++++++++
- 4 files changed, 215 insertions(+), 6 deletions(-)
++	printk(KERN_INFO "ssb: chip_id 0x%x, status 0x%x\n", bus->chip_id,
++			  bus->chipco.status);
++	printk(KERN_INFO "ssb: cc rev 0x%x, cc capab 0x%x\n",
++			  bus->chipco.dev->id.revision,
++			  bus->chipco.capabilities);
+ 	switch (bus->chip_id) {
+ 	case 0x4312:
+ 		return SSB_CHIPCO_CHST_4312_SPROM_PRESENT(bus->chipco.status);
+
 
