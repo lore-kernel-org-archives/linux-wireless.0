@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:42031 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280Ab0CRFWy (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:45406 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753438Ab0C2SLw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 01:22:54 -0400
-Subject: Re: [RFC PATCHv3 1/2] cfg80211: Add connection quality monitoring
- support to nl80211
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268842663.5989.15.camel@jlt3.sipsolutions.net>
-References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268830877-5162-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268842663.5989.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Mar 2010 07:19:55 +0200
-Message-ID: <1268889595.10120.660.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Mon, 29 Mar 2010 14:11:52 -0400
+Received: by bwz1 with SMTP id 1so3787371bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 11:11:51 -0700 (PDT)
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH V2 1/2] mac80211: support paged rx SKBs
+References: <1269852146-11727-1-git-send-email-yi.zhu@intel.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 29 Mar 2010 21:11:48 +0300
+In-Reply-To: <1269852146-11727-1-git-send-email-yi.zhu@intel.com> (Zhu Yi's message of "Mon\, 29 Mar 2010 16\:42\:25 +0800")
+Message-ID: <878w9bknff.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-17 at 17:17 +0100, ext Johannes Berg wrote:
-> On Wed, 2010-03-17 at 15:01 +0200, Juuso Oikarinen wrote:
-> 
-> > +/**
-> > + * enum nl80211_cqm_state - current state in relation to set threshold
-> > + * @NL80211_CQM_STATE_ABOVE: the level is above the configured threshold
-> > + * @NL80211_CQM_STATE_BELOW: the level is below the configured threshold
-> > + */
-> > +enum nl80211_cqm_state {
-> > +	NL80211_CQM_STATE_ABOVE,
-> > +	NL80211_CQM_STATE_BELOW,
-> > +};
-> 
-> Thoughts about removing this and just exporting the actual (smoothed?)
-> RSSI instead in the event? Or do you simply not get that from the hw?
+Zhu Yi <yi.zhu@intel.com> writes:
 
-On the wl1271 we actually do get the value that triggered the event, but
-on the wl1251, for instance, we do not get it. On the wl1271 we get to
-decide the above/below on the host based on the reading, but the wl1251
-will just tell the host that now the RSSI went below, and now it just
-went above.
+> Mac80211 drivers can now pass paged SKBs to mac80211 via
+> ieee80211_rx{_irqsafe}. The implementation currently use
+> skb_linearize() in a few places i.e. management frame
+> handling, software decryption, defragmentation and A-MSDU
+> process. We will optimize them one by one later.
 
-Our thinking is that the above/below information is sufficient to make a
-decisions about roaming. Adding the literal value will give trouble with
-HW not supporting it.
+[...]
 
-If you feel the actual value of the RSSI would be important, we could
-add it as an optional field to the notifcation in addition to the
-above/below.
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -1822,7 +1822,10 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw);
+>   * ieee80211_rx - receive frame
+>   *
+>   * Use this function to hand received frames to mac80211. The receive
+> - * buffer in @skb must start with an IEEE 802.11 header.
+> + * buffer in @skb must start with an IEEE 802.11 header. In case of a
+> + * paged @skb is used, the driver is recommended to put the ieee80211
+> + * header of the frame on the linear part of the @skb to avoid memory
+> + * allocation and/or memcpy by the stack.
 
--Juuso
+This is much better now. Thank you.
 
-> johannes
-> 
-
-
+-- 
+Kalle Valo
