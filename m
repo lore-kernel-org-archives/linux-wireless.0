@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:20336 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756151Ab0CJDyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 22:54:15 -0500
-Subject: [PATCH 2/2] compat-wireless: disable wl12xx if crc7 is not available
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-From: Pavel Roskin <proski@gnu.org>
-Date: Tue, 09 Mar 2010 22:54:14 -0500
-Message-ID: <20100310035414.28564.10870.stgit@mj.roinet.com>
-In-Reply-To: <20100310035408.28564.65912.stgit@mj.roinet.com>
-References: <20100310035408.28564.65912.stgit@mj.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:33017 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754278Ab0C2XM4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 19:12:56 -0400
+From: Luis de Bethencourt <luisbg@ubuntu.com>
+To: linville@tuxdriver.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Luis de Bethencourt <luisbg@ubuntu.com>
+Subject: [PATCH 2/2] ath: fix macros coding style issue in regd.c
+Date: Tue, 30 Mar 2010 00:12:19 +0100
+Message-Id: <1269904339-15599-1-git-send-email-luisbg@ubuntu.com>
+In-Reply-To: <regd.c>
+References: <regd.c>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- config.mk |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+This is a patch to the ath/regd.c file that fixes up three warnings
+about macros found by the checkpatch.pl tool, these said that
+complex values should be enclosed in parenthesis.
 
-diff --git a/config.mk b/config.mk
-index e5be3fd..990eac6 100644
---- a/config.mk
-+++ b/config.mk
-@@ -447,9 +447,11 @@ CONFIG_P54_LEDS=y
- CONFIG_ATH_COMMON=m
- # CONFIG_ATH_DEBUG=y
+Signed-off-by: Luis de Bethencourt <luisbg@ubuntu.com>
+---
+ drivers/net/wireless/ath/regd.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 04abd1f..971edc4 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -45,15 +45,16 @@
+ #define ATH9K_5GHZ_5725_5850	REG_RULE(5725-10, 5850+10, 40, 0, 30,\
+ 				NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
  
-+ifneq ($(CONFIG_CRC7),)
- CONFIG_WL12XX=y
- CONFIG_WL1251=m
- CONFIG_WL1271=m
-+endif
+-#define ATH9K_2GHZ_ALL		ATH9K_2GHZ_CH01_11, \
++#define ATH9K_2GHZ_ALL		(ATH9K_2GHZ_CH01_11, \
+ 				ATH9K_2GHZ_CH12_13, \
+-				ATH9K_2GHZ_CH14
++				ATH9K_2GHZ_CH14)
++
++#define ATH9K_5GHZ_ALL		(ATH9K_5GHZ_5150_5350, \
++				ATH9K_5GHZ_5470_5850)
  
- ifdef CONFIG_COMPAT_KERNEL_27
- CONFIG_LIBERTAS=n
+-#define ATH9K_5GHZ_ALL		ATH9K_5GHZ_5150_5350, \
+-				ATH9K_5GHZ_5470_5850
+ /* This one skips what we call "mid band" */
+-#define ATH9K_5GHZ_NO_MIDBAND	ATH9K_5GHZ_5150_5350, \
+-				ATH9K_5GHZ_5725_5850
++#define ATH9K_5GHZ_NO_MIDBAND	(ATH9K_5GHZ_5150_5350, \
++				ATH9K_5GHZ_5725_5850)
+ 
+ /* Can be used for:
+  * 0x60, 0x61, 0x62 */
+-- 
+1.6.3.3
+
