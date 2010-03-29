@@ -1,87 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f223.google.com ([209.85.220.223]:50822 "EHLO
-	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156Ab0C2UT4 (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:34377 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631Ab0C2T5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 16:19:56 -0400
-Received: by fxm23 with SMTP id 23so1194924fxm.21
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 13:19:54 -0700 (PDT)
-Message-ID: <4BB10B62.9070408@googlemail.com>
-Date: Mon, 29 Mar 2010 22:19:46 +0200
-From: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>
+	Mon, 29 Mar 2010 15:57:10 -0400
+Received: by pwi5 with SMTP id 5so6961114pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 12:57:10 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG] No SPROM available!
-References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com>
-In-Reply-To: <20100329194745.GH4984@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <m339zizz4o.fsf@intrepid.localdomain>
+References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
+	<m3eij3ym5k.fsf@intrepid.localdomain> <43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
+	<m339zizz4o.fsf@intrepid.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 29 Mar 2010 12:56:50 -0700
+Message-ID: <43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/29/10 21:47, John W. Linville wrote:
-> On Mon, Mar 29, 2010 at 09:35:44PM +0200, René Bolldorf wrote:
->> On 03/29/10 21:20, Larry Finger wrote:
->>> Ren�,
->>>
->>> When you have a wireless problem, please post it to
->>> linux-wireless@vger.kernel.org. The Linux Kernel Mailing List may or may not be
->>> appropriate.
->>>
->>> To help in diagnosing your problem, please apply this patch and post the output
->>> line that it produces. On my system, it shows
->>>
->>> ssb: chip_id 0x4312, status 0x10
->>>
->> and on my: ssb: chip_id 0x4312, status 0x12
->>> Please also post the output of 'lspci -nnv | grep 14e4'.
->> Yep:
->> 01:00.0 Network controller [0280]: Broadcom Corporation BCM4312
->> 802.11b/g [14e4:4315] (rev 01)
+On Mon, Mar 29, 2010 at 12:49 PM, Krzysztof Halasa <khc@pm.waw.pl> wrote:
+> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
 >
-> OK, I'm new to the thread -- what exactly is the issue?  Was your
-> device working previously?
+>>> I'm not sure how the modified regulatory.bin could work, though:
+>>> I really don't want to use restricted frequencies etc. when the
+>>> regulatory domain is set to US (i.e. when operating in USA), I only want
+>>> to use the extra channels etc. when in e.g. Europe.
+>>
+>> I agree with that wishful thinking, however current legislation does
+>> now allow for dynamic enabling of frequencies on devices certified
+>> under part 15 rules. We can likely work towards changing the
+>> legislation for this but that's something I haven't seen many
+>> companies willing to lobby for. We'd need a big company to help with
+>> this lobby.
 >
-> John
+> But... isn't the modifying of the regulatory.bin (the US part of it)
+> to include channels valid in e.g. Europe breaking the (US) rules?
 
-The problem is since commit fcb54b0bf7d3fe730c2b72e224bc616e358f24cb, my 
-b43 (4312)
-device doesn't work because i get the message "No SPROM available" and 
-then the device get's disabled.
+Not if you sign off on it, which is exactly why the whole singing
+thing was invented. You would do this if say, you sell an AP and you
+verify and tested regulatory compliance against a different regulatory
+region.
 
-My colleague have the same problem. I have made a patch for that but it 
-seems thats not work for all 4312 devices. I and my colleage have the 
-same netbook for testing purposes so the patch work while we have the 
-same chip status.
+> I'm
+> not asking you for a legal advice binding Atheros as the manufacturer in
+> the USA, I'm asking how to enable the user to be technically compliant
+> here in Europe where the hardware is sold, and also in the USA if the
+> user gets there and sets the regdomain (and elsewhere in the world, in
+> fact).
 
-The problem is I think: Larry had written his output is ssb: chip_id 
-0x4312, status 0x10, he have a different chip status.
-What to do? Any ideas?
+The only way to be legally compliant is if the vendor who you bought
+the device from got regulatory testing for the device. That's all. Its
+not cheap to do this work, so its also likely a reason why legislation
+does not address this yet, and why SDR certification seems to be a
+pain in the ass and no one I know is doing it these days.
 
-=============
+IMHO the easy way to address this in legislation is simply to say that
+if the user changes some regulatory components the liability passes on
+to them. That would take care of the legal issues AFAICT. But we're
+not there yet.
 
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h 
-b/include/linux/ssb/ssb_driver_chipcommon.h
-index 2cdf249..1e0b9cd 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -386,6 +386,7 @@
+> Modifying regulatory.bin doesn't seem to help here, does it?
+>
+>>> A driver modification to ignore the default restrictions (while obeying
+>>> the regulatory.bin, on a 0-country cards only, of course) - that would
+>>> work.
+>>
+>> And it would also make our drivers break regulatory rules. We're not
+>> going to do that on Linux because proving that we can be responsible
+>> is in fact what does allow us to get proper vendor support for 802.11
+>> drivers.
+>
+> I'm not asking you to do that, I only need to know if it's the correct
+> (and only?) way of fixing this problem (while still providing
+> compliance of the whole device). Fortunately I'm not responsible for the
+> legalities.
+>
+>
+> The other thing is the meaning of country=0 in case of Mikrotik cards
+> (and maybe others). Perhaps they should get them back. I wonder if
+> their drivers break the FCC rules, allowing "0" (=US) cards to use
+> channels restricted in the US.
 
+country code programmed to 0 is defined by Atheros documentation to be
+in the "US". Mikrotek likely does their own testing for what they
+allow, vendors who sell APs or hardware for APs have to anyway, as
+Atheros does not do this for those customers.
 
-  /** Chip specific Chip-Status register contents. */
-+#define SSB_CHIPCO_CHST_4312_SPROM_EXISTS	0x00000025
-  #define SSB_CHIPCO_CHST_4322_SPROM_EXISTS	0x00000040 /* SPROM present */
-  #define SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL	0x00000003
-  #define SSB_CHIPCO_CHST_4325_DEFCIS_SEL		0 /* OTP is powered up, use 
-def. CIS, no SPROM */
-@@ -403,7 +404,7 @@
-  /** Macros to determine SPROM presence based on Chip-Status register. */
-  #define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
-  	((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
--		SSB_CHIPCO_CHST_4325_OTP_SEL)
-+		SSB_CHIPCO_CHST_4312_SPROM_EXISTS)
-  #define SSB_CHIPCO_CHST_4322_SPROM_PRESENT(status) \
-  	(status & SSB_CHIPCO_CHST_4322_SPROM_EXISTS)
-  #define SSB_CHIPCO_CHST_4325_SPROM_PRESENT(status) \
-so my won't work then.
+  Luis
