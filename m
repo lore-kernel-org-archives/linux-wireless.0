@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52702 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753081Ab0CWRWq (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47115 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753631Ab0C2U4V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 13:22:46 -0400
-Subject: Re: [PATCH 1/2] mac80211: add interface for disabling/enabling QoS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1269364795.9689.2.camel@jlt3.sipsolutions.net>
-References: <1269348417-4081-1-git-send-email-sgruszka@redhat.com>
-	 <1269364795.9689.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 23 Mar 2010 10:22:50 -0700
-Message-ID: <1269364970.9689.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 29 Mar 2010 16:56:21 -0400
+Date: Mon, 29 Mar 2010 16:55:59 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?iso-8859-1?Q?Ren=E9?= Bolldorf <xsecute@googlemail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] No SPROM available!
+Message-ID: <20100329205558.GM4984@tuxdriver.com>
+References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com> <4BB10A0F.1030608@lwfinger.net> <20100329204822.GL4984@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20100329204822.GL4984@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-23 at 10:19 -0700, Johannes Berg wrote:
-> On Tue, 2010-03-23 at 13:46 +0100, Stanislaw Gruszka wrote:
+On Mon, Mar 29, 2010 at 04:48:22PM -0400, John W. Linville wrote:
+> On Mon, Mar 29, 2010 at 03:14:07PM -0500, Larry Finger wrote:
 > 
-> > + * @qos_disabled: whether QoS (aka WMM) should be disabled or not
+> > Could you please apply my little test patch and send me the contents of the
+> > chipcommon status register in your netbook?
 > 
-> Why "disabled" btw, and not enabled? Everything else is usually done in
-> a positive sense here, I'd say.
-> 
-> Also, the default would now be enabled, and I think this needs more work
-> for AP mode. You're implementing generic API, don't fall into the trap
-> of thinking it's only for iwlwifi's special case. So at least there it
-> should be enabled if the hw supports it and the change flag should be
-> set at least once.
-> 
-> Also, your code sends a weird signal to hw that doesn't support QoS, it
-> actually enables qos for it ...
+> Mine looks like yours, "chip_id 0x4312, status 0x12"...
 
-Also, you probably should set the flag again and set qos_disabled = true
-(or qos_enabled = false, which would imho be better) when
-disassociating.
+I guess I misread the earlier messages -- mine looks like René's, not yours.
 
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
