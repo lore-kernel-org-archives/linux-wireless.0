@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:39887 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752798Ab0CQGHu (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2411 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755632Ab0C2CFu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 02:07:50 -0400
-Subject: Re: [RFC PATCHv2 0/2] mac80211: cfg80211: Roam trigger support
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268776349.8918.9.camel@jlt3.sipsolutions.net>
-References: <1268657751-1042-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268776349.8918.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 08:02:52 +0200
-Message-ID: <1268805772.10120.603.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Sun, 28 Mar 2010 22:05:50 -0400
+Date: Sun, 28 Mar 2010 22:02:12 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH 10/10] ath5k: Adaptive Noise Immunity
+	(ANI) Implementation
+Message-ID: <20100329020212.GA27628@hash.localnet>
+References: <20100325054603.10697.48915.stgit@tt-desk> <20100325054952.10697.41515.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100325054952.10697.41515.stgit@tt-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-16 at 22:52 +0100, ext Johannes Berg wrote:
-> On Mon, 2010-03-15 at 14:55 +0200, Juuso Oikarinen wrote:
-> > To implement good performance WLAN roaming, it is not sufficient to start
-> > scanning for other available AP's only after the currently serving association
-> > is lost.
-> > 
-> > The entity controlling the roaming will need to get indication of a
-> > deteriorating WLAN connection in order to start preparing for roaming already
-> > before the serving association is lost. This way, it can roam to a better AP
-> > perhaps even before the serving association becomes too bad in quality.
-> > 
-> > These patches propose an implementation facilitating this using a simple RSSI
-> > threshold and hysteresis approach.
-> > 
-> > These patches add a nl80211 interface for simply configuring a rssi threshold
-> > and hysteresis value to facilitate very basic connection quality monitoring.
-> > 
-> > For the triggering, these patches currently rely on HW support, host based
-> > triggering is not implemented, but could be added later if needed.
-> 
-> I'm curious. How does the HW/firmware do this?
+On Thu, Mar 25, 2010 at 02:49:52PM +0900, Bruno Randolf wrote:
+> +	} else if (strncmp(buf, "noise-low", 8) == 0) {
+> +		ath5k_ani_set_noise_immunity_level(sc->ah, 0);
+> +	} else if (strncmp(buf, "noise-high", 9) == 0) {
 
-> In my testing on some hw, the beacon RSSI fluctuated wildly, so you'd
-> have to set the hysteresis pretty high.
+The number of characters here is off-by-one.
 
-The HW/firmware can be configured with parameters related to averaging,
-which will smoothen the worst of the fluctuation at least between single
-frames.
+I also tried setting noise-high while in auto mode, but then the ani
+debug file still showed the values at 0, is that to be expected?
 
-Still, there is the WLAN tendency of a very steep RSSI curve, so we'll
-probably end up with a relatively high hysteresis. Figuring out good
-values for the config is still to-be-done.
+On my hardware in my location, I don't really notice much of a difference
+with/without ANI, but I definitely don't get any MIB storms, so it
+gets my thumbs up.  I can post my ani file if you're interested.
 
--Juuso
-
-> johannes
-> 
-
+-- 
+Bob Copeland %% www.bobcopeland.com
 
