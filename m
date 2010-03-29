@@ -1,61 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:42480 "EHLO mx01.d-labs.de"
+Received: from mga11.intel.com ([192.55.52.93]:58634 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934212Ab0CLSSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 13:18:37 -0500
-Date: Fri, 12 Mar 2010 19:18:19 +0100
-From: Florian Mickler <florian@mickler.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Marcel Holtmann" <marcel@holtmann.org>,
-	"Henrique de Moraes Holschuh" <hmh@hmh.eng.br>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	"Randy Dunlap" <rdunlap@xenotime.net>,
-	"Alan Jenkins" <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
-Subject: Re: [PATCH 0/2]  rfkill sysfs ABI
-Message-ID: <20100312191819.73ac4700@schatten.dmk.lab>
-In-Reply-To: <1268416988-24862-1-git-send-email-florian@mickler.org>
-References: <1268416988-24862-1-git-send-email-florian@mickler.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751829Ab0C2Je1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 05:34:27 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH V3 1/2] mac80211: support paged rx SKBs
+Date: Mon, 29 Mar 2010 17:35:07 +0800
+Message-Id: <1269855307-22250-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 12 Mar 2010 19:03:06 +0100
-florian@mickler.org wrote:
+Mac80211 drivers can now pass paged SKBs to mac80211 via
+ieee80211_rx{_irqsafe}. The implementation currently use
+skb_linearize() in a few places i.e. management frame
+handling, software decryption, defragmentation and A-MSDU
+process. We will optimize them one by one later.
 
-> Hi all!
-> 
-> The first patch moves the rfkill sysfs ABI Documentation to Documentation/ABI
-> and deprecates the state and claim file. 
-> 
-> The second patch creates a replacement for the state file. Instead of exporting
-> some made-up state we just export the state of the 2 kill lines. 
-> 
-> The first patch should probably go into 2.6.34, as to warn users 
-> (if there are any) early about this removal. 
-> If there is no intent to remove the broken files, the feature-removal-schedule hunk 
-> should probably be skipped. 
-> 
-> Cheers,
-> Flo
-> 
-> p.s.: first discussion of this: http://lkml.org/lkml/2010/2/22/127
-> 
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+---
+V2: add comments for paged skb support
+    fix pskb_may_pull size for ieee80211 and mesh header
+    use RX_DROP_UNUSABLE instead of RX_DROP_MONITOR
+V3: fix mesh copy by using skb_copy_bits
 
-Hi,
+ include/net/mac80211.h |    5 ++++-
+ net/mac80211/rx.c      |   36 ++++++++++++++++++++++++++++++++----
+ net/wireless/util.c    |   24 ++++++++++++++++++------
+ 3 files changed, 54 insertions(+), 11 deletions(-)
 
-sorry! I just realised that you already have the blocked_sw / blocked_hw one's
-queued. 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1a8f50a..ecaae10 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1822,7 +1822,10 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw);
+  * ieee80211_rx - receive frame
+  *
+  * Use this function to hand received frames to mac80211. The receive
+- * buffer in @skb must start with an IEEE 802.11 header.
++ * buffer in @skb must start with an IEEE 802.11 header. In case of a
++ * paged @skb is used, the driver is recommended to put the ieee80211
++ * header of the frame on the linear part of the @skb to avoid memory
++ * allocation and/or memcpy by the stack.
+  *
+  * This function may not be called in IRQ context. Calls to this function
+  * for a single hardware must be synchronized against each other. Calls to
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 1da57c8..11ed5aa 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -38,7 +38,7 @@ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
+ {
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS) {
+ 		if (likely(skb->len > FCS_LEN))
+-			skb_trim(skb, skb->len - FCS_LEN);
++			__pskb_trim(skb, skb->len - FCS_LEN);
+ 		else {
+ 			/* driver bug */
+ 			WARN_ON(1);
+@@ -227,6 +227,12 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
+ 		present_fcs_len = FCS_LEN;
+ 
++	/* make sure hdr->frame_control is on the linear part */
++	if (!pskb_may_pull(origskb, 2)) {
++		dev_kfree_skb(origskb);
++		return NULL;
++	}
++
+ 	if (!local->monitors) {
+ 		if (should_drop_frame(origskb, present_fcs_len)) {
+ 			dev_kfree_skb(origskb);
+@@ -931,6 +937,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_MONITOR;
+ 	}
+ 
++	if (skb_linearize(rx->skb))
++		return RX_DROP_UNUSABLE;
++
+ 	/* Check for weak IVs if possible */
+ 	if (rx->sta && rx->key->conf.alg == ALG_WEP &&
+ 	    ieee80211_is_data(hdr->frame_control) &&
+@@ -1231,6 +1240,9 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	}
+ 	I802_DEBUG_INC(rx->local->rx_handlers_fragments);
+ 
++	if (skb_linearize(rx->skb))
++		return RX_DROP_UNUSABLE;
++
+ 	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
+ 
+ 	if (frag == 0) {
+@@ -1588,6 +1600,9 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 	skb->dev = dev;
+ 	__skb_queue_head_init(&frame_list);
+ 
++	if (skb_linearize(skb))
++		return RX_DROP_UNUSABLE;
++
+ 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
+ 				 rx->sdata->vif.type,
+ 				 rx->local->hw.extra_tx_headroom);
+@@ -2357,29 +2372,42 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_hdr *hdr;
++	__le16 fc;
+ 	struct ieee80211_rx_data rx;
+ 	int prepares;
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+ 	struct sta_info *sta, *tmp;
+ 	bool found_sta = false;
++	int err = 0;
+ 
+-	hdr = (struct ieee80211_hdr *)skb->data;
++	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
+ 	memset(&rx, 0, sizeof(rx));
+ 	rx.skb = skb;
+ 	rx.local = local;
+ 
+-	if (ieee80211_is_data(hdr->frame_control) || ieee80211_is_mgmt(hdr->frame_control))
++	if (ieee80211_is_data(fc) || ieee80211_is_mgmt(fc))
+ 		local->dot11ReceivedFragmentCount++;
+ 
+ 	if (unlikely(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
+ 		     test_bit(SCAN_OFF_CHANNEL, &local->scanning)))
+ 		rx.flags |= IEEE80211_RX_IN_SCAN;
+ 
++	if (ieee80211_is_mgmt(fc))
++		err = skb_linearize(skb);
++	else
++		err = !pskb_may_pull(skb, ieee80211_hdrlen(fc));
++
++	if (err) {
++		dev_kfree_skb(skb);
++		return;
++	}
++
++	hdr = (struct ieee80211_hdr *)skb->data;
+ 	ieee80211_parse_qos(&rx);
+ 	ieee80211_verify_alignment(&rx);
+ 
+-	if (ieee80211_is_data(hdr->frame_control)) {
++	if (ieee80211_is_data(fc)) {
+ 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
+ 			rx.sta = sta;
+ 			found_sta = true;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index be2ab8c..7acb81b 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -330,11 +330,18 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
+ 			struct ieee80211s_hdr *meshdr =
+ 				(struct ieee80211s_hdr *) (skb->data + hdrlen);
+-			hdrlen += ieee80211_get_mesh_hdrlen(meshdr);
++			/* make sure meshdr->flags is on the linear part */
++			if (!pskb_may_pull(skb, hdrlen + 1))
++				return -1;
+ 			if (meshdr->flags & MESH_FLAGS_AE_A5_A6) {
+-				memcpy(dst, meshdr->eaddr1, ETH_ALEN);
+-				memcpy(src, meshdr->eaddr2, ETH_ALEN);
++				skb_copy_bits(skb, hdrlen +
++					offsetof(struct ieee80211s_hdr, eaddr1),
++				       	dst, ETH_ALEN);
++				skb_copy_bits(skb, hdrlen +
++					offsetof(struct ieee80211s_hdr, eaddr2),
++				        src, ETH_ALEN);
+ 			}
++			hdrlen += ieee80211_get_mesh_hdrlen(meshdr);
+ 		}
+ 		break;
+ 	case cpu_to_le16(IEEE80211_FCTL_FROMDS):
+@@ -346,9 +353,14 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
+ 			struct ieee80211s_hdr *meshdr =
+ 				(struct ieee80211s_hdr *) (skb->data + hdrlen);
+-			hdrlen += ieee80211_get_mesh_hdrlen(meshdr);
++			/* make sure meshdr->flags is on the linear part */
++			if (!pskb_may_pull(skb, hdrlen + 1))
++				return -1;
+ 			if (meshdr->flags & MESH_FLAGS_AE_A4)
+-				memcpy(src, meshdr->eaddr1, ETH_ALEN);
++				skb_copy_bits(skb, hdrlen +
++					offsetof(struct ieee80211s_hdr, eaddr1),
++					src, ETH_ALEN);
++			hdrlen += ieee80211_get_mesh_hdrlen(meshdr);
+ 		}
+ 		break;
+ 	case cpu_to_le16(0):
+@@ -357,7 +369,7 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 		break;
+ 	}
+ 
+-	if (unlikely(skb->len - hdrlen < 8))
++	if (!pskb_may_pull(skb, hdrlen + 8))
+ 		return -1;
+ 
+ 	payload = skb->data + hdrlen;
+-- 
+1.6.3.3
 
-This just changes the name of blocked_sw and blocked_hw to "soft" and
-"hard". 
-
-I don't know what you wanna do. I'm fine with blocked_hw and
-blocked_sw as it's referenced as such (hw/sw) in the code, but Marcel
-wanted to get away from the "hard blocked by hardware" notation, as it
-suggests that the transmitter could only be blocked by hardware...
-
-cheers,
-Flo
