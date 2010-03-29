@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41245 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025Ab0CQAxi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58410 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752560Ab0C2UPI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 20:53:38 -0400
-Subject: Re: [RFC] mac80211,iwlwifi: disabling qos queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <20100316145114.GA2496@dhcp-lab-161.englab.brq.redhat.com>
-References: <20100309132113.GA2462@dhcp-lab-161.englab.brq.redhat.com>
-	 <20100310152024.GB2969@dhcp-lab-161.englab.brq.redhat.com>
-	 <1268265597.4192.3.camel@jlt3.sipsolutions.net>
-	 <20100311095656.GB4682@dhcp-lab-161.englab.brq.redhat.com>
-	 <1268319960.4413.1.camel@jlt3.sipsolutions.net>
-	 <20100316145114.GA2496@dhcp-lab-161.englab.brq.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 16 Mar 2010 14:18:02 -0700
-Message-ID: <1268774282.4054.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 29 Mar 2010 16:15:08 -0400
+Date: Mon, 29 Mar 2010 16:04:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?Ren=E9?= Bolldorf <xsecute@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] No SPROM available!
+Message-ID: <20100329200417.GI4984@tuxdriver.com>
+References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20100329194745.GH4984@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> > > I looked at this on the air. Everything is fine until device send QoS
-> > > NULL frame (even with default parameters: normal ACK, TXOP request). 
-> > > Then AP send two strange Probe Response frames and Disassociate frame
-> > > with "Micheal MIC failure" error.
-> > 
-> > So here's good information, why did you not mention that before? :)
-> > 
-> > Yeah I guess in some sense this code dates back in mac80211 to where it
-> > assumed that the driver wasn't sending frames. I'll give it a thought,
-> > but I'm at a conference right now.
+On Mon, Mar 29, 2010 at 03:47:46PM -0400, John W. Linville wrote:
+> On Mon, Mar 29, 2010 at 09:35:44PM +0200, René Bolldorf wrote:
+> > On 03/29/10 21:20, Larry Finger wrote:
+> >> Ren�,
+> >>
+> >> When you have a wireless problem, please post it to
+> >> linux-wireless@vger.kernel.org. The Linux Kernel Mailing List may or may not be
+> >> appropriate.
+> >>
+> >> To help in diagnosing your problem, please apply this patch and post the output
+> >> line that it produces. On my system, it shows
+> >>
+> >> ssb: chip_id 0x4312, status 0x10
+> >>
+> > and on my: ssb: chip_id 0x4312, status 0x12
+> >> Please also post the output of 'lspci -nnv | grep 14e4'.
+> > Yep:
+> > 01:00.0 Network controller [0280]: Broadcom Corporation BCM4312  
+> > 802.11b/g [14e4:4315] (rev 01)
 > 
-> May I proceed with my patches or do you have a better idea how to solve
-> issue?
+> OK, I'm new to the thread -- what exactly is the issue?  Was your
+> device working previously?
 
-Sorry ... I had given this some thought and then got distracted ...
-still had it unread but no time to reply. What I finally realised is
-that we set the information per queue, and even the userspace API is
-built that way, so we really need to have a separate configuration to
-enable/disable QoS. Maybe a BSS config flag would be appropriate?
+Sorry, didn't see the original post on LKML.
 
-johannes
+The patch you posted looks to me like it is just as likely to break
+someone else as it is to fix things for you. :-(
 
+Larry, can you provide some guidance based on the other info René
+has provided?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
