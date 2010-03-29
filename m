@@ -1,48 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.polymtl.ca ([132.207.4.11]:47517 "EHLO smtp.polymtl.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751427Ab0CBWu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 17:50:58 -0500
-Message-ID: <4B8D9649.8020907@polymtl.ca>
-Date: Tue, 02 Mar 2010 17:50:49 -0500
-From: William Bourque <william.bourque@polymtl.ca>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:62817 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631Ab0C2WBI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 18:01:08 -0400
+Received: by pwi5 with SMTP id 5so7088573pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 15:01:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: LP-PHY Fatal DMA error 0x00000800 on non-ULV Core 2 Duo?!?!!??!
-References: <69e28c911002260708g45d3c0f7u6abf13b1babe549f@mail.gmail.com> <201003022257.51878.mb@bu3sch.de> <4B8D906C.9020102@polymtl.ca> <201003022329.58627.mb@bu3sch.de>
-In-Reply-To: <201003022329.58627.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <m3y6hayhv1.fsf@intrepid.localdomain>
+References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
+	<m3eij3ym5k.fsf@intrepid.localdomain> <43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
+	<m339zizz4o.fsf@intrepid.localdomain> <43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
+	<m3y6hayhv1.fsf@intrepid.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 29 Mar 2010 15:00:47 -0700
+Message-ID: <43e72e891003291500w632cb789r6860dae9ccdf744c@mail.gmail.com>
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 29, 2010 at 1:48 PM, Krzysztof Halasa <khc@pm.waw.pl> wrote:
+> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
+>
+>>> But... isn't the modifying of the regulatory.bin (the US part of it)
+>>> to include channels valid in e.g. Europe breaking the (US) rules?
+>>
+>> Not if you sign off on it, which is exactly why the whole singing
+>> thing was invented. You would do this if say, you sell an AP and you
+>> verify and tested regulatory compliance against a different regulatory
+>> region.
+>
+> So what exactly do I change? Can the regulatory.bin change the default
+> country?
 
-Michael Buesch wrote:
-> On Tuesday 02 March 2010 23:25:48 William Bourque wrote:
->> So if I get this right, this code is responsible of handling the b43
->> devices, as well as several other PCI-E devices, correct?
-> 
-> Nah, this is a broadcom specific thing of the on-chip SSB bus.
-> 
-Ok, sorry then :)
+Huh?
 
->> Because now that you mention this, the wired network card (Marvel Yukon,
->> with sky2 drivers) on this netbook also have a tons of issue (doesn't
->> show in lspci on a clean boot, oops the kernel if network cable is
->> unplugged while in use, fails to load if the module is ever unloaded, ... )
->> I thought it was unrelated but from your comment, I feel like this could
->> be linked to the same PCI-E bugs as well.
-> 
-> Uh, well. Are you sure your hardware is OK then?
-> 
-I sure hope so. The laptop is very new and I never had trouble with it,
-but to tell the truth, it is a refurbished model so can't say for sure.
+> Remember I need to be compliant to the US freq sets as well - when the
+> regdomain is set to US. IOW I can't allow the user operating the device
+> to set e.g. channel 12 when the user selects country=US (so there is a
+> big difference between country 0=US and the real country=US).
 
-I think the hardware is fine but there is _very weird_ stuff about the
-laptop... I feel like their ACPI implemention is nowhere near standard
-and that might cause the problems. It's like everything on this laptop
-is under a very agressive power management that bypass the OS and
-confuse drivers. But again, it's just a feeling, I don't really have
-much facts that back up this theory ;)
+Huh?
 
-- William
+>> country code programmed to 0 is defined by Atheros documentation to be
+>> in the "US".
+>
+> But the driver says:
+> ath: EEPROM regdomain: 0x0
+> ath: EEPROM indicates default country code should be used
+> ath: doing EEPROM country->regdmn map search
+> ath: country maps to regdmn code: 0x3a
+> ath: Country alpha2 being used: US
+> ath: Regpair used: 0x3a
+>
+> At least for the driver 0 doesn't mean US, it means "default country".
+> Perhaps the meaning of "default country" depends on maybe location of
+> the hw and/or sw manufacturer?
+
+I just pointed to some documentation for you which indicated 0x0 means "US".
+
+> Then maybe what I really need to do is substituting "EU" as the default
+> country and enforcing EU restrictions, even when the country selected by
+> the user is outside EU (e.g. enforcing EU+US in US)?
+> And when the user gets a card with country=US (not 0), the EU
+> restictions would be dropped (when physically in USA)?
+>
+> I think this all reduces to the meaning of country=0 for cards sold (in
+> this case) in Europe (and maybe manufactured here).
+>
+>
+> If the driver said "EEPROM regdomain: 0x0 = US" I'd return the cards to
+> the manufacturer, simple (realistically they'd fix the EEPROM instead).
+
+Whatever works for you. I'm telling you what Atheros supports on its
+documentation, if an ODM does something wacky, that's on them.
+
+  Luis
