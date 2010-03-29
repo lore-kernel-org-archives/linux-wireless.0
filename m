@@ -1,122 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38136 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752139Ab0C3SiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 14:38:08 -0400
-Subject: Re: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit
- transfers
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Mack <daniel@caiaq.de>
-Cc: linux-kernel@vger.kernel.org,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org,
-	David Brownell <dbrownell@users.sourceforge.net>
-In-Reply-To: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
-References: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Mar 2010 11:37:39 -0700
-Message-ID: <1269974259.3019.52.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.105.134]:18851 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753237Ab0C2VQk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 17:16:40 -0400
+From: <ext-saravanan.dhanabal@nokia.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Date: Mon, 29 Mar 2010 23:15:55 +0200
+Subject: RE: [PATCH] mac80211: Reschedule dynamic power save timer after
+	wakeup
+Message-ID: <04BB8F4F2843A24294353CA037CA5B58568D26B541@NOK-EUMSG-01.mgdnok.nokia.com>
+References: <1268753462-18094-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
+ <1268775761.8918.0.camel@jlt3.sipsolutions.net>
+ <04BB8F4F2843A24294353CA037CA5B58568D26B52F@NOK-EUMSG-01.mgdnok.nokia.com>
+ <1268841668.5989.3.camel@jlt3.sipsolutions.net>,<20100329175506.GE4984@tuxdriver.com>
+In-Reply-To: <20100329175506.GE4984@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-30 at 19:38 +0200, Daniel Mack wrote:
-> When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
-> However, the 8686 will only drive this line when the ECSI and SCSI bits
-> are set in the CCCR_IF register.
+Sorry for the delay, we were checking this in driver also. 
 
-While this looks fine enough to me, I don't have enough knowledge of the
-SDIO stack to know whether or not this would be considered a layering
-violation or not.  Given that I don't think there's an active maintainer
-for the SDIO subsystem though, I'd say it's fine enough for me...
+The issue was due to a delay in workqueue scheduling,  caused by msleep() inside driver. Because of this, 
+last transmission happens long after the dynamic power save timer is scheduled. So, the difference 
+between last transmission time and the time it goes to sleep is less than the defined PSM timeout period.
 
-Any thoughts David since it appears to be at least somewhat SPI related?
+I think that this patch might be considered as a workaround for such delays caused by driver as long as it not creating
+any other issues.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+saravanan.
 
-> Thanks to Alagu Sankar for pointing me in the right direction.
-> 
-> Signed-off-by: Daniel Mack <daniel@caiaq.de>
-> Cc: Alagu Sankar <alagusankar@embwise.com>
-> Cc: Volker Ernst <volker.ernst@txtr.com>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Cc: libertas-dev@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: linux-mmc@vger.kernel.org
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |   24 ++++++++++++++++++++++++
->  include/linux/mmc/sdio.h                |    2 ++
->  2 files changed, 26 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 7a73f62..d3170f2 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -34,6 +34,8 @@
->  #include <linux/mmc/card.h>
->  #include <linux/mmc/sdio_func.h>
->  #include <linux/mmc/sdio_ids.h>
-> +#include <linux/mmc/sdio.h>
-> +#include <linux/mmc/host.h>
->  
->  #include "host.h"
->  #include "decl.h"
-> @@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
->  	int ret, i;
->  	unsigned int model;
->  	struct if_sdio_packet *packet;
-> +	struct mmc_host *host = func->card->host;
->  
->  	lbs_deb_enter(LBS_DEB_SDIO);
->  
-> @@ -1022,6 +1025,27 @@ static int if_sdio_probe(struct sdio_func *func,
->  	if (ret)
->  		goto disable;
->  
-> +	/* For 1-bit transfers, we need to enable the interrupt flags in
-> +	 * the CCCR register. Temporarily set the function number to 0
-> +	 * for that. */
-> +	if ((host->caps & MMC_CAP_SDIO_IRQ) &&
-> +	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-> +		unsigned int num = func->num;
-> +		u8 reg;
-> +
-> +		func->num = 0;
-> +		reg = sdio_readb(func, SDIO_CCCR_IF, &ret);
-> +		if (ret)
-> +			goto release_int;
-> +
-> +		reg |= SDIO_BUS_ECSI | SDIO_BUS_SCSI;
-> +		sdio_writeb(func, reg, SDIO_CCCR_IF, &ret);
-> +		if (ret)
-> +			goto release_int;
-> +
-> +		func->num = num;
-> +	}
-> +
->  	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
->  	if (ret)
->  		goto release_int;
-> diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
-> index 0ebaef5..329a8fa 100644
-> --- a/include/linux/mmc/sdio.h
-> +++ b/include/linux/mmc/sdio.h
-> @@ -94,6 +94,8 @@
->  
->  #define  SDIO_BUS_WIDTH_1BIT	0x00
->  #define  SDIO_BUS_WIDTH_4BIT	0x02
-> +#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
-> +#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
->  
->  #define  SDIO_BUS_ASYNC_INT	0x20
->  
+________________________________________
+From: ext John W. Linville [linville@tuxdriver.com]
+Sent: Monday, March 29, 2010 8:55 PM
+To: Johannes Berg
+Cc: Dhanabal Saravanan (EXT-Sasken/Tampere); linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Reschedule dynamic power save timer after        wakeup
 
+On Wed, Mar 17, 2010 at 09:01:08AM -0700, Johannes Berg wrote:
+> On Wed, 2010-03-17 at 12:09 +0100, ext-saravanan.dhanabal@nokia.com
+> wrote:
+> > In worst case it takes up to that much,  though the average is less but still significant.
+>
+> > On Tue, 2010-03-16 at 11:31 -0400, Saravanan Dhanabal wrote:
+> > > After last transmission, the device goes to sleep earlier
+> > > than the configured dynamic power save timeout. If timeout
+> > > is set to 400ms, device enters into sleep mode at around
+> > > 330ms since from last TX.
+>
+> I still don't think I understand this patch. Why would you be interested
+> in the exact timing rather than the time since the transmission? I
+> mean ... why does it go to sleep _earlier_?
 
+Any further comments on this one?
+
+John
+--
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
