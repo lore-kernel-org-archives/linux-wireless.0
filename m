@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:35552 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752560Ab0C2V5m (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:44439 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751138Ab0C2FbM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 17:57:42 -0400
-Received: by pwi5 with SMTP id 5so7084756pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 14:57:41 -0700 (PDT)
+	Mon, 29 Mar 2010 01:31:12 -0400
+Date: Sun, 28 Mar 2010 22:29:52 -0700
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Fix robust management frame handling (MFP)
+Message-ID: <20100329052952.GA26019@jm.kir.nu>
 MIME-Version: 1.0
-In-Reply-To: <201003292204.37467.chunkeey@googlemail.com>
-References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
-	<m339zizz4o.fsf@intrepid.localdomain> <201003292204.37467.chunkeey@googlemail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 29 Mar 2010 14:57:21 -0700
-Message-ID: <43e72e891003291457m60bbc5adm6b004ebda05ab1b2@mail.gmail.com>
-Subject: Re: CRDA and ath5k with no country code in EEPROM
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Krzysztof Halasa <khc@pm.waw.pl>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 1:04 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Monday 29 March 2010 21:49:59 Krzysztof Halasa wrote:
->> The other thing is the meaning of country=0 in case of Mikrotik cards
->> (and maybe others). Perhaps they should get them back. I wonder if
->> their drivers break the FCC rules, allowing "0" (=US) cards to use
->> channels restricted in the US.
->
-> why should they? You can _easily_ edit the whole eeprom content
-> and change the country code to your heart's delight.
->
-> Just get a _tool_ called: ath_info and read the instructions how to use it.
-> If you have doubts, you can also connect eeprom (24c16) to a i2c-bus and
-> reprogram it, it's as simple as that....
+Commit e34e09401ee9888dd662b2fca5d607794a56daf2 incorrectly removed
+use of ieee80211_has_protected() from the management frame case and in
+practice, made this validation drop all Action frames when MFP is
+enabled. This should have only been done for frames with Protected
+field set to zero.
 
-I'll note this is out of the scope of what is supported, so if you
-muck with ath_info you're on your own.
+Signed-off-by: Jouni Malinen <j@w1.fi>
+Cc: stable@kernel.org
 
-  Luis
+---
+ net/mac80211/rx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/mac80211/rx.c	2010-03-28 22:14:33.000000000 -0700
++++ wireless-testing/net/mac80211/rx.c	2010-03-28 22:26:33.000000000 -0700
+@@ -1404,7 +1404,8 @@ ieee80211_drop_unencrypted_mgmt(struct i
+ 		return res;
+ 
+ 	if (rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP)) {
+-		if (unlikely(ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
++		if (unlikely(!ieee80211_has_protected(fc) &&
++			     ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
+ 			     rx->key))
+ 			return -EACCES;
+ 		/* BIP does not use Protected field, so need to check MMIE */
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
