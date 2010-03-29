@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46015 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753535Ab0CGEX7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Mar 2010 23:23:59 -0500
-From: Malte Gell <malte.gell@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: iwconfig link quality only up to 70%
-Date: Sun, 7 Mar 2010 05:23:55 +0100
-References: <201003070455.55312.malte.gell@gmx.de> <4B9327F4.1010109@lwfinger.net>
-In-Reply-To: <4B9327F4.1010109@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:5691 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752017Ab0C2OGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 10:06:37 -0400
+Date: Mon, 29 Mar 2010 14:08:33 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>, wey-yi.w.guy@intel.com
+Subject: Re: [PATCH v2 3/3] mac80211: enable QoS explicitly in AP mode
+Message-ID: <20100329120832.GA2593@dhcp-lab-161.englab.brq.redhat.com>
+References: <1269857916-4440-1-git-send-email-sgruszka@redhat.com> <1269857916-4440-2-git-send-email-sgruszka@redhat.com> <1269857916-4440-3-git-send-email-sgruszka@redhat.com> <1269868568.4131.31.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201003070523.55526.malte.gell@gmx.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1269868568.4131.31.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 29, 2010 at 03:16:08PM +0200, Johannes Berg wrote:
+> On Mon, 2010-03-29 at 12:18 +0200, Stanislaw Gruszka wrote:
+> > Enable QoS explicitly, when user space AP program will setup a QoS
+> > queues. Currently this is not needed as iwlwifi not work in AP mode
+> > and no other driver implement enable/disable QoS.
+> 
+> Shouldn't this be part of patch 1?
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote
+This part is not really needed to make anything works. Moreover
+can break things. Even it is untested. So I did it separately.
 
-> On 03/06/2010 09:55 PM, Malte Gell wrote:
-> > Hello,
-> >
-> > When i check the link quality iwconfig says "Link Quality=63/70".
-> >
-> > I wonder, why does it stop at 70%? Why doesn't it say "63/100"?
-> >
-> > I use Linux kernel 2.6.32 on openSUSE 11.1 with a Fritz! WLAN N stick. I
-> > know, not a big issue, I am just curious.
- 
-> It does not stop at 70%. In fact 63/70 == 90%. As all these signal and
->  quality numbers are purely arbitrary, they can be normalized in any way
->  you want. 
+> Does IBSS/mesh support QoS?
 
-Ok, I understand.
+It is described in specification, at least for IBSS.
+Does we support it - no.
 
->  In a number of the Realtek vendor drivers, there is a comment
->  "For Netgear case, they want good-looking singal strength".
-
-:-)
+Stanislaw
