@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47362 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753150Ab0CKVdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 16:33:05 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: backport PCMCIA_DEVICE_PROD_ID3
-Date: Thu, 11 Mar 2010 22:32:43 +0100
-Message-Id: <1268343167-2961-4-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
-References: <1268343167-2961-1-git-send-email-hauke@hauke-m.de>
+Received: from goliath.siemens.de ([192.35.17.28]:24650 "EHLO
+	goliath.siemens.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750973Ab0C2Nl6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 09:41:58 -0400
+Message-ID: <4BB0ADFA.8010205@siemens.com>
+Date: Mon, 29 Mar 2010 15:41:14 +0200
+From: Marco Porsch <marco.porsch@siemens.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iw station del broken?
+References: <4BB0A16A.7080400@siemens.com>	 <1269867487.4131.28.camel@jlt3.sipsolutions.net>	 <4BB0A5B1.9090003@siemens.com> <1269868155.4131.29.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1269868155.4131.29.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.34.h |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Johannes Berg schrieb:
+> On Mon, 2010-03-29 at 15:05 +0200, Marco Porsch wrote:
+>   
+>> Johannes Berg schrieb:
+>>     
+>>> On Mon, 2010-03-29 at 14:47 +0200, Marco Porsch wrote:
+>>>   
+>>>       
+>>>> Hi list,
+>>>>
+>>>> is it just me or is 'iw dev <devname> station del <MAC address>' broken?
+>>>>     
+>>>>         
+>>> No ... we decided a while ago that station manipulation in mesh was too
+>>> hard to support and removed it.
+>>>
+>>> What's the use case anyway?
+>>>
+>>> johannes
+>>>   
+>>>       
+>> The use case is that, if I have some mesh points in a single room or one 
+>> a small floor, I can simply give them a topology by removing the links 
+>> between the STA, I do not wish to be directly connected.
+>> Removing the links means 'iw dev <devname> set mesh_param 
+>> mesh_auto_open_plinks 0', which blocks building up new peering links, 
+>> and then removing some links with 'station del'.
+>>     
+>
+> Can't you just do that before it gets discovered?
+>
+> I'm not really happy with the mesh API anyway ...
+>
+> johannes
+>
+>   
+That makes any scripting impossible, because it would mean a fine timing 
+between the ifup on the stations. Also I think you can't build complex 
+topologies this way.
+The alternative iw dev <devname> mpath set <destination MAC address> 
+next_hop <next hop MAC address> is not useful (if it is still included 
+though ^^) because it sets paths hard. Means that these paths are not 
+changed, even if they are broken.
 
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index d189bee..1cb3e06 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -155,6 +155,13 @@ static inline void device_unlock(struct device *dev)
- 	up(&dev->sem);
- }
- 
-+#if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
-+#define PCMCIA_DEVICE_PROD_ID3(v3, vh3) { \
-+	.match_flags = PCMCIA_DEV_ID_MATCH_PROD_ID3, \
-+	.prod_id = { NULL, NULL, (v3), NULL },  \
-+	.prod_id_hash = { 0, 0, (vh3), 0 }, }
-+#endif
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
- 
- #endif /* LINUX_26_34_COMPAT_H */
--- 
-1.6.3.3
+Well, you're the maintainer. Your choice.
 
+By the way: which was the last version with 'station del' in mesh 
+intact? Which codeparts would have to be exchanged if i'd like to use 
+this further? Only iw and nl80211?
