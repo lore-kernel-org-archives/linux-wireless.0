@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41915 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750998Ab0CAKxf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39319 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955Ab0C2OXi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 05:53:35 -0500
-Date: Mon, 1 Mar 2010 12:53:29 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Bjarke Istrup Pedersen <gurligebis@gentoo.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Problem with bridges and wireless NIC's
-Message-ID: <20100301105329.GA2684@jm.kir.nu>
-References: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
- <20100301075953.GA32038@jm.kir.nu>
- <9c30dffe1003010012l5b3a912fma5655e630b83ce9f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9c30dffe1003010012l5b3a912fma5655e630b83ce9f@mail.gmail.com>
+	Mon, 29 Mar 2010 10:23:38 -0400
+Subject: Re: [PATCH v2 3/3] mac80211: enable QoS explicitly in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>, wey-yi.w.guy@intel.com
+In-Reply-To: <20100329122425.GB2593@dhcp-lab-161.englab.brq.redhat.com>
+References: <1269857916-4440-1-git-send-email-sgruszka@redhat.com>
+	 <1269857916-4440-2-git-send-email-sgruszka@redhat.com>
+	 <1269857916-4440-3-git-send-email-sgruszka@redhat.com>
+	 <1269868568.4131.31.camel@jlt3.sipsolutions.net>
+	 <20100329120832.GA2593@dhcp-lab-161.englab.brq.redhat.com>
+	 <1269871956.4131.39.camel@jlt3.sipsolutions.net>
+	 <20100329122425.GB2593@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Mar 2010 16:23:31 +0200
+Message-ID: <1269872611.4131.40.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 01, 2010 at 09:12:48AM +0100, Bjarke Istrup Pedersen wrote:
-> That sounds interresting, is there any chance that that functionality
-> can be added to the 0.6.x branch too? (I'm maintaining hostapd in
-> Gentoo, but cannot stabilize a 0.7.x build, due to it being a
-> development branch)
+On Mon, 2010-03-29 at 14:24 +0200, Stanislaw Gruszka wrote:
+> On Mon, Mar 29, 2010 at 04:12:36PM +0200, Johannes Berg wrote:
+> > > > Shouldn't this be part of patch 1?
+> > > 
+> > > This part is not really needed to make anything works. Moreover
+> > > can break things. Even it is untested. So I did it separately.
+> > 
+> > But without it QoS-AP breaks.
+> 
+> Other drivers than iwlwifi, not implement IEEE80211_CONF_QOS so patch
+> does no change for them - queues are initialized as it was before.
+>    
+> Only think that can break without patch is AP for iwlwifi, but AP
+> not work for iwlwifi anyway, no?
 
-While it might be relatively simple to port the bridge setup code into
-0.6.x, I'm not that keen on doing it for this particular reason. I'm
-recommending 0.7.x branch for all AP functionality with nl80211-based
-driver interface and as such, do not really want to promote use of 0.6.x
-versions for this.
+Good point.
 
-I started working on porting the driver_nl80211.c changes into the 0.6.x
-branch, but that turned up to take way too much effort compared to what
-the potential benefit would be. As such, I do not plan on continuing on
-this direction and you should be prepared to quite a bit of additional
-work on porting non-trivial fixes from hostapd 0.7.x yourself if you
-plan on using hostapd 0.6.x in Gentoo with mac80211/nl80211-based
-drivers.
+johannes
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
