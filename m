@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:38778 "EHLO vs166246.vserver.de"
+Received: from kroah.org ([198.145.64.141]:45061 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751837Ab0CWIw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Mar 2010 04:52:59 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-Date: Tue, 23 Mar 2010 09:52:56 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Calvin Walton <calvin.walton@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <201003222325.35994.mb@bu3sch.de> <4BA80118.1070801@lwfinger.net>
-In-Reply-To: <4BA80118.1070801@lwfinger.net>
+	id S1754453Ab0C2W5d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 18:57:33 -0400
+Date: Mon, 29 Mar 2010 15:55:28 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [stable] [PATCH 0/2] ath9k: few stable interrupt fixes
+Message-ID: <20100329225528.GC11919@kroah.com>
+References: <1268344558-13835-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003230952.56207.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1268344558-13835-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 23 March 2010 00:45:28 Larry Finger wrote:
-> (2) In drivers/ssb/pci.c, the firmware loading process reads the file, then
-> modifies it using the bus address.
+On Thu, Mar 11, 2010 at 04:55:56PM -0500, Luis R. Rodriguez wrote:
+> Here's a few stable IRQ fixes for ath9k which have already
+> been merged upstream. We forgot to add the stable tag on them
+> so sending these out manually.
+> 
+> The patches in this series apply to the latest 2.6.33.y but for
+> your convenience I have also backported the patches to the latest
+> 2.6.32.y kernel.
+> 
+> The 2.6.33.y patches can be found here:
+> 
+> http://kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2010-03/33-fixes/01-ath9k-irq/
+> 
+> The 2.6.32.y patches can be found here:
+> 
+> http://kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2010-03/32-fixes/01-ath9k-irq/
 
-No. You don't need firmware loading at all.
-udev can just set the mac address through the standard ioctl calls.
-Just like how ifconfig and ip can do.
+Thanks, both sets are now queued up.
 
--- 
-Greetings, Michael.
+greg k-h
