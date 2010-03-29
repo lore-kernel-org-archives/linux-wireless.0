@@ -1,73 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f223.google.com ([209.85.220.223]:36089 "EHLO
-	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755956Ab0CXMNR convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f182.google.com ([209.85.223.182]:36129 "EHLO
+	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156Ab0C2UOM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 08:13:17 -0400
-Received: by fxm23 with SMTP id 23so3014201fxm.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Mar 2010 05:13:15 -0700 (PDT)
+	Mon, 29 Mar 2010 16:14:12 -0400
+Received: by iwn12 with SMTP id 12so943053iwn.21
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 13:14:11 -0700 (PDT)
+Message-ID: <4BB10A0F.1030608@lwfinger.net>
+Date: Mon, 29 Mar 2010 15:14:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <69e28c911003240511l52ff05fdx38d1610ce9609bc5@mail.gmail.com>
-References: <33a0299c1003240143l23ecb9d4j8978ea585c50a0a2@mail.gmail.com>
-	<69e28c911003240511l52ff05fdx38d1610ce9609bc5@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 24 Mar 2010 13:12:55 +0100
-Message-ID: <69e28c911003240512q3e23d653ye2ca50fabd724846@mail.gmail.com>
-Subject: Re: ath9k: packets sent twice 1Mbps & 54Mbps
-To: Anthony <lazugau@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] No SPROM available!
+References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com> <20100329194745.GH4984@tuxdriver.com>
+In-Reply-To: <20100329194745.GH4984@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/24 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Wed, Mar 24, 2010 at 9:43 AM, Anthony <lazugau@gmail.com> wrote:
->> Hi all,
->> I'm using:
->> Ubuntu 9.10
->> Atheros card with ath9k
->> compat-wireless latest stable version
->> ad-hoc 802.11g with 2 nodes (same hardware & software configuration)
->>
->> I tried to inject packets using mac80211 (similar way as in packetspammer)
->> Radiotap header contains only Flag=0 & Rate=1Mbps (total size = 14 bytes)
->> However when I use wireshark to capture traffic, I discovered that
->> each frame was sent twice:
->> first time with 14 bytes radiotap header
->> second time with 13 bytes of radiotap header (Rate omitted), so 54Mbps here.
->
-> Are you sure it is not the AP relaying the packet?
+On 03/29/2010 02:47 PM, John W. Linville wrote:
+> On Mon, Mar 29, 2010 at 09:35:44PM +0200, RenÃ© Bolldorf wrote:
+>> On 03/29/10 21:20, Larry Finger wrote:
+>>> Renï¿½,
+>>>
+>>> When you have a wireless problem, please post it to
+>>> linux-wireless@vger.kernel.org. The Linux Kernel Mailing List may or may not be
+>>> appropriate.
+>>>
+>>> To help in diagnosing your problem, please apply this patch and post the output
+>>> line that it produces. On my system, it shows
+>>>
+>>> ssb: chip_id 0x4312, status 0x10
+>>>
+>> and on my: ssb: chip_id 0x4312, status 0x12
+>>> Please also post the output of 'lspci -nnv | grep 14e4'.
+>> Yep:
+>> 01:00.0 Network controller [0280]: Broadcom Corporation BCM4312  
+>> 802.11b/g [14e4:4315] (rev 01)
+> 
+> OK, I'm new to the thread -- what exactly is the issue?  Was your
+> device working previously?
 
-Sorry, I had a blonde moment and didn't notice that you are using adhoc.
+Yes. He originally posted only to LKML
+(http://marc.info/?l=linux-kernel&m=126988911025280&w=2), where he posted
 
->
->>
->> Is this a problem of ath9k or a default feature of 802.11 ???
->>
->> Another question: if I set the FCS flag to send frame with all zeros
->> FCS, the receiver reported frame as bad FCS, but still deliver it to
->> upper layer. Why? I think the frame should be discarded ? I want to
->> simulate broken phy link by jamming FCS. Is there any alternative way
->> ?
->>
->> Hope some one can help.
->>
->> Thank you.
->>
->> Anthony
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
+=========================
+since commit fcb54b0bf7d3fe730c2b72e224bc616e358f24cb, my b43 (4312)
+device doesn't work.
 
+But the device have a sprom. Maybe the chip-status register check is wrong?
 
++/** Macros to determine SPROM presence based on Chip-Status register. */
++#define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
++       ((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++               SSB_CHIPCO_CHST_4325_OTP_SEL)
+=======================================
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+I just happened to do one of my infrequent scans of LKML, and happened to see
+it. In a follow-up, he proposes a patch that would fail on your system and leave
+it locked up..
+
+I rechecked the Broadcom driver, and stick by my specs that you used for your patch.
+
+Could you please apply my little test patch and send me the contents of the
+chipcommon status register in your netbook?
+
+Thanks,
+
+Larry
