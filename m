@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60350 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752475Ab0CVW2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 18:28:42 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH V2] ssb: Implement virtual SPROM on disk
-Date: Mon, 22 Mar 2010 23:28:40 +0100
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Calvin Walton <calvin.walton@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <4ba6aa45.z5Wso1NMth9eMeFG%Larry.Finger@lwfinger.net> <201003222255.00366.mb@bu3sch.de> <4BA7ED0A.9060804@lwfinger.net>
-In-Reply-To: <4BA7ED0A.9060804@lwfinger.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43802 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755056Ab0C2RPN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 13:15:13 -0400
+Date: Mon, 29 Mar 2010 13:06:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ralph Benzinger <t1@endlos.net>
+Cc: linux-wireless@vger.kernel.org, malattia@linux.it,
+	platform-driver-x86@vger.kernel.org
+Subject: Re: Problems with hardware radio kill switch on Sony Vaio notebook
+Message-ID: <20100329170604.GC4984@tuxdriver.com>
+References: <20100329152721.GC6445@endlos.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201003222328.40703.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100329152721.GC6445@endlos.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 March 2010 23:19:54 Larry Finger wrote:
-> On 03/22/2010 04:55 PM, Michael Buesch wrote:
-> > 
-> > I don't see a problem for udev to distinguish the cards. It can do it merely on
-> > the bus-ID. That's unique. Yeah, it might change if you change the hardware.
-> > But do we care? I say no, because you cannot actually change the hardware in real life
-> > for any of these devices. And even if you could reorder the devices on the bus or whatever.
-> > What would happen? The card would get a new MAC address. That's all. That's acceptable.
-> > 
-> > The kernel would (for example) just set the mac address to all-ones. Udev would
-> > notice this (invalid) mac address and reassign a new persistent one to the device. It then
-> > stores the address on the harddisk.
+On Mon, Mar 29, 2010 at 05:27:21PM +0200, Ralph Benzinger wrote:
+
+> My Sony Vaio VPC-Y11S1E notebook has an Atheros AR9285 chip, which is
+> supported just fine by ath9k.  The notebook also has a physical radio
+> kill switch at the front that can be slid into one of two positions.
+> Alas, the rfkill tool shows wlan0 as "hard blocked: yes" for either
+> switch position.  Consequently, txpower is off, and wireless
+> networking cannot be activated.
 > 
-> What ensures that this persistent name would be unique?
+> Could you kindly indicate which part of the kernel would be
+> responsible for handling the radio kill switches -- cfg80211, ath9k,
+> sony-laptop, ...?  Are there any known fixes or workarounds?  I'm
+> using Kubuntu 9.10 with their stock kernel 2.6.31 and the wireless
+> backports modules right now, but tests with Kubuntu 10.4 Beta and
+> 2.6.32 failed as well.
 
-The same mechanism that ensures that an UUID is unique: A good random number generator.
+Generally, sony-laptop would be responsible for correctly reporting
+the rfkill switch state.
 
-> > In fact, if we implement a mechanism in the kernel, we have _exactly_ the same problem.
-> > However, currently Larry's patches just ignore that problem and assume that there's only
-> > one card in the system anyway.
-> 
-> As I said in a posting a few minutes ago, that problem is solved.
+Hth!
 
-Well. You distinguish by bus-ID, right? That's exactly the thing that udev does.
-
+John
 -- 
-Greetings, Michael.
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
