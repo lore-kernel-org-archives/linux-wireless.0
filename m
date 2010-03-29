@@ -1,54 +1,292 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46885 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727Ab0C2G1b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 02:27:31 -0400
-Subject: Re: [PATCH 0/2] mac80211: cfg80211: Roam trigger support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	luciano.coelho@nokia.com
-In-Reply-To: <20100328194332.GA384@jm.kir.nu>
-References: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1269499567.5041.0.camel@jlt3.sipsolutions.net>
-	 <20100328194332.GA384@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Mar 2010 08:27:15 +0200
-Message-ID: <1269844035.4131.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:50326 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754941Ab0C2KRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 06:17:05 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 03:17:05 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19376.33499.869673.520949@gargle.gargle.HOWL>
+Date: Mon, 29 Mar 2010 16:07:15 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/7] ath9k_htc: Simplify RX URB management
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-03-28 at 12:43 -0700, Jouni Malinen wrote:
+This patch introduces the usage of URB anchors,
+thus reducing a large amount of code dealing with
+URB maintenance within the driver. The RX callback now
+takes care of freeing the SKB associated with each URB.
 
-> +	/*
-> +	 * Weighted average of the signal strength from Beacon frames in the
-> +	 * current BSS. This is in units of 1/16 of the signal unit to maintain
-> +	 * accuracy and to speed up calculations, i.e., the value need to be
-> +	 * devided by 16 to get the actual value.
-> +	 */
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |  125 +++++++++++------------------
+ drivers/net/wireless/ath/ath9k/hif_usb.h |    7 +-
+ 2 files changed, 50 insertions(+), 82 deletions(-)
 
-divided ;)
-Ok I wouldn't have noticed if evolution didn't have spell checking...
-
-> +		if (sig < thold &&
-> +		    (last_event == 0 || sig < last_event - hyst)) {
-> +			ifmgd->last_cqm_event_signal = sig;
-> +			ieee80211_cqm_rssi_notify(
-> +				&sdata->vif,
-> +				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-> +				GFP_ATOMIC);
-> +		} else if (sig > thold &&
-> +			   (last_event == 0 || sig > last_event + hyst)) {
-> +			ifmgd->last_cqm_event_signal = sig;
-> +			ieee80211_cqm_rssi_notify(
-> +				&sdata->vif,
-> +				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-> +				GFP_ATOMIC);
-
-No need for GFP_ATOMIC, GFP_KERNEL should be fine, I think.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index fc4f6e8..e584a29 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -299,6 +299,8 @@ static int hif_usb_send(void *hif_handle, u8 pipe_id, struct sk_buff *skb,
+ 		ret = hif_usb_send_regout(hif_dev, skb);
+ 		break;
+ 	default:
++		dev_err(&hif_dev->udev->dev,
++			"ath9k_htc: Invalid TX pipe: %d\n", pipe_id);
+ 		ret = -EINVAL;
+ 		break;
+ 	}
+@@ -408,14 +410,11 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 			}
+ 		} else {
+ 			RX_STAT_INC(skb_dropped);
+-			dev_kfree_skb_any(skb);
+ 			return;
+ 		}
+ 	}
+ 
+ err:
+-	dev_kfree_skb_any(skb);
+-
+ 	for (i = 0; i < pool_index; i++) {
+ 		ath9k_htc_rx_msg(hif_dev->htc_handle, skb_pool[i],
+ 				 skb_pool[i]->len, USB_WLAN_RX_PIPE);
+@@ -426,11 +425,13 @@ err:
+ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+ {
+ 	struct sk_buff *skb = (struct sk_buff *) urb->context;
+-	struct sk_buff *nskb;
+ 	struct hif_device_usb *hif_dev = (struct hif_device_usb *)
+ 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
+ 	int ret;
+ 
++	if (!skb)
++		return;
++
+ 	if (!hif_dev)
+ 		goto free;
+ 
+@@ -448,34 +449,19 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+ 
+ 	if (likely(urb->actual_length != 0)) {
+ 		skb_put(skb, urb->actual_length);
+-
+-		nskb = __dev_alloc_skb(MAX_RX_BUF_SIZE, GFP_ATOMIC);
+-		if (!nskb)
+-			goto resubmit;
+-
+-		usb_fill_bulk_urb(urb, hif_dev->udev,
+-				  usb_rcvbulkpipe(hif_dev->udev,
+-						  USB_WLAN_RX_PIPE),
+-				  nskb->data, MAX_RX_BUF_SIZE,
+-				  ath9k_hif_usb_rx_cb, nskb);
+-
+-		ret = usb_submit_urb(urb, GFP_ATOMIC);
+-		if (ret) {
+-			dev_kfree_skb_any(nskb);
+-			goto free;
+-		}
+-
+ 		ath9k_hif_usb_rx_stream(hif_dev, skb);
+-		return;
+ 	}
+ 
+ resubmit:
+ 	skb_reset_tail_pointer(skb);
+ 	skb_trim(skb, 0);
+ 
++	usb_anchor_urb(urb, &hif_dev->rx_submitted);
+ 	ret = usb_submit_urb(urb, GFP_ATOMIC);
+-	if (ret)
++	if (ret) {
++		usb_unanchor_urb(urb);
+ 		goto free;
++	}
+ 
+ 	return;
+ free:
+@@ -490,6 +476,9 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
+ 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
+ 	int ret;
+ 
++	if (!skb)
++		return;
++
+ 	if (!hif_dev)
+ 		goto free;
+ 
+@@ -540,6 +529,7 @@ resubmit:
+ 	return;
+ free:
+ 	dev_kfree_skb_any(skb);
++	urb->context = NULL;
+ }
+ 
+ static void ath9k_hif_usb_dealloc_tx_urbs(struct hif_device_usb *hif_dev)
+@@ -609,78 +599,59 @@ err:
+ 	return -ENOMEM;
+ }
+ 
+-static void ath9k_hif_usb_dealloc_rx_skbs(struct hif_device_usb *hif_dev)
+-{
+-	int i;
+-
+-	for (i = 0; i < MAX_RX_URB_NUM; i++) {
+-		if (hif_dev->wlan_rx_data_urb[i]) {
+-			if (hif_dev->wlan_rx_data_urb[i]->transfer_buffer)
+-				dev_kfree_skb_any((void *)
+-					  hif_dev->wlan_rx_data_urb[i]->context);
+-		}
+-	}
+-}
+-
+ static void ath9k_hif_usb_dealloc_rx_urbs(struct hif_device_usb *hif_dev)
+ {
+-	int i;
+-
+-	for (i = 0; i < MAX_RX_URB_NUM; i++) {
+-		if (hif_dev->wlan_rx_data_urb[i]) {
+-			usb_kill_urb(hif_dev->wlan_rx_data_urb[i]);
+-			usb_free_urb(hif_dev->wlan_rx_data_urb[i]);
+-			hif_dev->wlan_rx_data_urb[i] = NULL;
+-		}
+-	}
+-}
+-
+-static int ath9k_hif_usb_prep_rx_urb(struct hif_device_usb *hif_dev,
+-				     struct urb *urb)
+-{
+-	struct sk_buff *skb;
+-
+-	skb = __dev_alloc_skb(MAX_RX_BUF_SIZE, GFP_KERNEL);
+-	if (!skb)
+-		return -ENOMEM;
+-
+-	usb_fill_bulk_urb(urb, hif_dev->udev,
+-			  usb_rcvbulkpipe(hif_dev->udev, USB_WLAN_RX_PIPE),
+-			  skb->data, MAX_RX_BUF_SIZE,
+-			  ath9k_hif_usb_rx_cb, skb);
+-	return 0;
++	usb_kill_anchored_urbs(&hif_dev->rx_submitted);
+ }
+ 
+ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
+ {
++	struct urb *urb = NULL;
++	struct sk_buff *skb = NULL;
+ 	int i, ret;
+ 
++	init_usb_anchor(&hif_dev->rx_submitted);
++
+ 	for (i = 0; i < MAX_RX_URB_NUM; i++) {
+ 
+ 		/* Allocate URB */
+-		hif_dev->wlan_rx_data_urb[i] = usb_alloc_urb(0, GFP_KERNEL);
+-		if (hif_dev->wlan_rx_data_urb[i] == NULL) {
++		urb = usb_alloc_urb(0, GFP_KERNEL);
++		if (urb == NULL) {
+ 			ret = -ENOMEM;
+-			goto err_rx_urb;
++			goto err_urb;
+ 		}
+ 
+ 		/* Allocate buffer */
+-		ret = ath9k_hif_usb_prep_rx_urb(hif_dev,
+-						hif_dev->wlan_rx_data_urb[i]);
+-		if (ret)
+-			goto err_rx_urb;
++		skb = __dev_alloc_skb(MAX_RX_BUF_SIZE, GFP_KERNEL);
++		if (!skb) {
++			ret = -ENOMEM;
++			goto err_skb;
++		}
+ 
+-		/* Submit URB */
+-		ret = usb_submit_urb(hif_dev->wlan_rx_data_urb[i], GFP_KERNEL);
+-		if (ret)
+-			goto err_rx_urb;
++		usb_fill_bulk_urb(urb, hif_dev->udev,
++				  usb_rcvbulkpipe(hif_dev->udev,
++						  USB_WLAN_RX_PIPE),
++				  skb->data, MAX_RX_BUF_SIZE,
++				  ath9k_hif_usb_rx_cb, skb);
+ 
++		/* Anchor URB */
++		usb_anchor_urb(urb, &hif_dev->rx_submitted);
++
++		/* Submit URB */
++		ret = usb_submit_urb(urb, GFP_KERNEL);
++		if (ret) {
++			usb_unanchor_urb(urb);
++			goto err_submit;
++		}
+ 	}
+ 
+ 	return 0;
+ 
+-err_rx_urb:
+-	ath9k_hif_usb_dealloc_rx_skbs(hif_dev);
++err_submit:
++	dev_kfree_skb_any(skb);
++err_skb:
++	usb_free_urb(urb);
++err_urb:
+ 	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
+ 	return ret;
+ }
+@@ -689,6 +660,8 @@ static void ath9k_hif_usb_dealloc_reg_in_urb(struct hif_device_usb *hif_dev)
+ {
+ 	if (hif_dev->reg_in_urb) {
+ 		usb_kill_urb(hif_dev->reg_in_urb);
++		if (hif_dev->reg_in_urb->context)
++			dev_kfree_skb_any((void *)hif_dev->reg_in_urb->context);
+ 		usb_free_urb(hif_dev->reg_in_urb);
+ 		hif_dev->reg_in_urb = NULL;
+ 	}
+@@ -712,12 +685,10 @@ static int ath9k_hif_usb_alloc_reg_in_urb(struct hif_device_usb *hif_dev)
+ 			 ath9k_hif_usb_reg_in_cb, skb, 1);
+ 
+ 	if (usb_submit_urb(hif_dev->reg_in_urb, GFP_KERNEL) != 0)
+-		goto err_skb;
++		goto err;
+ 
+ 	return 0;
+ 
+-err_skb:
+-	dev_kfree_skb_any(skb);
+ err:
+ 	ath9k_hif_usb_dealloc_reg_in_urb(hif_dev);
+ 	return -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 7cc3762..ea9257b 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -85,18 +85,15 @@ struct hif_device_usb {
+ 	struct usb_interface *interface;
+ 	const struct firmware *firmware;
+ 	struct htc_target *htc_handle;
+-	u8 flags;
+-
+ 	struct hif_usb_tx tx;
+-
+-	struct urb *wlan_rx_data_urb[MAX_RX_URB_NUM];
+ 	struct urb *reg_in_urb;
+-
++	struct usb_anchor rx_submitted;
+ 	struct sk_buff *remain_skb;
+ 	int rx_remain_len;
+ 	int rx_pkt_len;
+ 	int rx_transfer_len;
+ 	int rx_pad_len;
++	u8 flags; /* HIF_USB_* */
+ };
+ 
+ int ath9k_hif_usb_init(void);
+-- 
+1.7.0.3
 
