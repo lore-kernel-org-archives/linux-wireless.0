@@ -1,109 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f176.google.com ([209.85.223.176]:50909 "EHLO
-	mail-iw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753480Ab0CMJ4B (ORCPT
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:50120 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753078Ab0C2TrH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Mar 2010 04:56:01 -0500
-Date: Sat, 13 Mar 2010 01:55:54 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Florian Mickler <florian@mickler.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Valdis.Kletnieks@vt.edu
-Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
-Message-ID: <20100313095554.GA16038@core.coreip.homeip.net>
-References: <1268416988-24862-1-git-send-email-florian@mickler.org>
- <1268416988-24862-2-git-send-email-florian@mickler.org>
- <1268416988-24862-3-git-send-email-florian@mickler.org>
- <20100312182209.GB8736@core.coreip.homeip.net>
- <20100312215743.7671d173@schatten.dmk.lab>
- <20100312212025.GA17712@core.coreip.homeip.net>
- <20100312233925.74effc7d@schatten.dmk.lab>
- <20100312224828.GA18618@core.coreip.homeip.net>
- <20100313104128.79aa2846@schatten.dmk.lab>
+	Mon, 29 Mar 2010 15:47:07 -0400
+Message-ID: <4BB103B9.8040100@gmail.com>
+Date: Mon, 29 Mar 2010 21:47:05 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100313104128.79aa2846@schatten.dmk.lab>
+To: Ondrej Zary <linux@rainbow-software.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2500usb: fix powersaving random failures
+References: <201003290956.54234.linux@rainbow-software.org>
+In-Reply-To: <201003290956.54234.linux@rainbow-software.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 13, 2010 at 10:41:28AM +0100, Florian Mickler wrote:
-> On Fri, 12 Mar 2010 14:48:28 -0800
-> Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
+On 03/29/10 09:56, Ondrej Zary wrote:
+> This patch seems to fix random powersaving failure where the device state is
+> stuck at 1 (STATE_SLEEP) and does not change to 3 (STATE_AWAKE), resulting in
+> to associate and these error messages:
+> phy0 -> rt2500usb_set_device_state: Error - Device failed to enter state 3 (-16).
+> No probe response from AP xx:xx:xx:xx:xx:xx after 500ms, disconnecting.
 > 
-> > On Fri, Mar 12, 2010 at 11:39:25PM +0100, Florian Mickler wrote:
-> > > On Fri, 12 Mar 2010 13:20:26 -0800
-> > > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
-> > > 
-> > > > On Fri, Mar 12, 2010 at 09:57:43PM +0100, Florian Mickler wrote:
-> > > > > On Fri, 12 Mar 2010 10:22:09 -0800
-> > > > > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
-> > > > > 
-> > > > > > On Fri, Mar 12, 2010 at 07:03:08PM +0100, florian@mickler.org wrote:
-> > > > > > >  
-> > > > > > > +static ssize_t rfkill_hard_show(struct device *dev,
-> > > > > > > +				 struct device_attribute *attr,
-> > > > > > > +				 char *buf)
-> > > > > > > +{
-> > > > > > > +	struct rfkill *rfkill = to_rfkill(dev);
-> > > > > > > +	unsigned long flags;
-> > > > > > > +	u32 state;
-> > > > > > > +
-> > > > > > > +	spin_lock_irqsave(&rfkill->lock, flags);
-> > > > > > > +	state = rfkill->state;
-> > > > > > > +	spin_unlock_irqrestore(&rfkill->lock, flags);
-> > > > > > 
-> > > > > > Why exactly is this lock needed?
-> > > > > 
-> > > > > The rfkill state is updated from multiple contexts... Am I overlooking
-> > > > > smth obvious here?
-> > > > > 
-> > > > 
-> > > > You are not updating but reading... Are you concerned about seeing
-> > > > a partial write to u32? It does not happen.
-> > > > 
-> > > Hm.. You shure? On every arch that supports wireless drivers? 
-> > > 
-> > > I've just copied that code from the old sysfs state-file handler.
-> > > So I assumed that reading partial updated state can happen... Also I
-> > > just searched a little but did not find anything, cause i didn't know
-> > > where to look. Who garantees this? Is it a gcc thing? 
-> > > 
-> > 
-> > None of the arches would do byte-by-byte writes to a u32, they'd write
-> > dword at once. Also, even if they could, you are interested in a single
-> > flag (bit). You do realize that once you leave spinlock whatever you
-> > fetched is stale data and may not be trusted?
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+
+Thanks. This looks good, but I'll rehash it against the latest state of affairs of rt2x00,
+so that the disabling of powersaving is undone at the same time.
+
+John, I'll send you the rehashed patch tomorrow.
+
+---
+Gertjan.
+
 > 
-> On Fri, 12 Mar 2010 18:48:19 -0500
-> Valdis.Kletnieks@vt.edu wrote:
-> > If a u32 load or store from memory isn't atomic, the Linux kernel is screwed
-> > anyhow.  Hint - imagine if every 32-bit reference had to be treated the way
-> > we currently treat 64-bit references on a 32-bit system.
-> 
-> 
-> i presume, there is no way any digital device could write _one bit_
-> partial :) 
-> so this _may_ actually be safe *g* 
+> --- linux-2.6.34-rc2-orig/drivers/net/wireless/rt2x00/rt2500usb.c	2010-03-20 02:17:57.000000000 +0100
+> +++ linux-2.6.34-rc2/drivers/net/wireless/rt2x00/rt2500usb.c	2010-03-29 09:38:02.000000000 +0200
+> @@ -648,6 +648,10 @@
 >  
-> how about the write in the _store() function? there we
-> read,update and write back the whole 32 bit which then potentially
-> overwrites some other flag concurrently set by an driver interrupt on
-> another cpu? i think the lock there is needed.
->
+>  		rt2x00_set_field16(&reg, MAC_CSR18_AUTO_WAKE, 1);
+>  		rt2500usb_register_write(rt2x00dev, MAC_CSR18, reg);
+> +	} else {
+> +		rt2500usb_register_read(rt2x00dev, MAC_CSR18, &reg);
+> +		rt2x00_set_field16(&reg, MAC_CSR18_AUTO_WAKE, 0);
+> +		rt2500usb_register_write(rt2x00dev, MAC_CSR18, reg);
+>  	}
+>  
+>  	rt2x00dev->ops->lib->set_device_state(rt2x00dev, state);
+> 
 
-Well, right now it is mutex so it will not protect if something happens
-in interrupt context. Takeing the global rfkill mutex seems pretty heavy
-but there does not seem to be a per-device mutex. There also some
-muching with spinlock inside rfkill_set_state but it is dropped when we
-actually carry out the operation. I am afraid the locking in rfkill
-needs some reviewing...
-
--- 
-Dmitry
