@@ -1,93 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:57553 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848Ab0CBWrE (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:44701 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754197Ab0C2FcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 17:47:04 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 1/4] rndis_wlan: copy only useful data from rndis_command
-	respond
-To: "John W. Linville" <linville@tuxdriver.com>
+	Mon, 29 Mar 2010 01:32:22 -0400
+Date: Sun, 28 Mar 2010 22:31:15 -0700
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 03 Mar 2010 00:38:25 +0200
-Message-ID: <20100302223825.2794.13615.stgit@fate.lan>
+Subject: [PATCH] mac80211: Fix drop_unencrypted for MFP with hwaccel
+Message-ID: <20100329053115.GB26019@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rndis_query_oid() uses full output buffer size to copy response buffer
-from rndis_command()/device. This doesn't cause problems as response buffer
-is sized based on output buffer but does copy extra unset bytes.
-So change rndis_query_oid() so that only meaningful bytes are being copied.
+Commit bef5d1c70d132145c0fc75b3586a19841a9a82e4 split
+ieee80211_drop_unencrypted() into separate functions that are used for
+Data and Management frames. However, it did not handle the
+RX_FLAG_DECRYPTED correctly for Management frames:
+ieee80211_drop_unencrypted() can only return 0 for Management frames,
+so there is no point in calling it here. Instead, just check the
+status->flag directly.
 
-Also in case of malfunctioning device/cable/etc returned data offset from
-device might be wrong so bound check memory access correctly, so add
-checks for this.
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
+ net/mac80211/rx.c |   11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
- drivers/net/wireless/rndis_wlan.c |   33 +++++++++++++++++++++++++++++----
- 1 files changed, 29 insertions(+), 4 deletions(-)
+--- wireless-testing.orig/net/mac80211/rx.c	2010-03-28 22:26:33.000000000 -0700
++++ wireless-testing/net/mac80211/rx.c	2010-03-28 22:26:42.000000000 -0700
+@@ -1396,12 +1396,15 @@ static int
+ ieee80211_drop_unencrypted_mgmt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
++	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+ 	__le16 fc = hdr->frame_control;
+-	int res;
+ 
+-	res = ieee80211_drop_unencrypted(rx, fc);
+-	if (unlikely(res))
+-		return res;
++	/*
++	 * Pass through unencrypted frames if the hardware has
++	 * decrypted them already.
++	 */
++	if (status->flag & RX_FLAG_DECRYPTED)
++		return 0;
+ 
+ 	if (rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP)) {
+ 		if (unlikely(!ieee80211_has_protected(fc) &&
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 305c106..b275713 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -704,6 +704,7 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
- 		struct rndis_query_c	*get_c;
- 	} u;
- 	int ret, buflen;
-+	int resplen, respoffs, copylen;
- 
- 	buflen = *len + sizeof(*u.get);
- 	if (buflen < CONTROL_BUFFER_SIZE)
-@@ -733,11 +734,34 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
- 			le32_to_cpu(u.get_c->status));
- 
- 	if (ret == 0) {
--		memcpy(data, u.buf + le32_to_cpu(u.get_c->offset) + 8, *len);
-+		resplen = le32_to_cpu(u.get_c->len);
-+		respoffs = le32_to_cpu(u.get_c->offset) + 8;
- 
--		ret = le32_to_cpu(u.get_c->len);
--		if (ret > *len)
--			*len = ret;
-+		if (respoffs > buflen) {
-+			/* Device returned data offset outside buffer, error. */
-+			devdbg(dev, "rndis_query_oid(%s): received invalid "
-+				"data offset: %d > %d", oid_to_string(oid),
-+				respoffs, buflen);
-+
-+			ret = -EINVAL;
-+			goto exit_unlock;
-+		}
-+
-+		if ((resplen + respoffs) > buflen) {
-+			/* Device would have returned more data if buffer would
-+			 * have been big enough. Copy just the bits that we got.
-+			 */
-+			copylen = buflen - respoffs;
-+		} else {
-+			copylen = resplen;
-+		}
-+
-+		if (copylen > *len)
-+			copylen = *len;
-+
-+		memcpy(data, u.buf + respoffs, copylen);
-+
-+		*len = resplen;
- 
- 		ret = rndis_error_status(u.get_c->status);
- 		if (ret < 0)
-@@ -746,6 +770,7 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
- 				le32_to_cpu(u.get_c->status), ret);
- 	}
- 
-+exit_unlock:
- 	mutex_unlock(&priv->command_lock);
- 
- 	if (u.buf != priv->command_buffer)
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
