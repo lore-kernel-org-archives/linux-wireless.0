@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:44723 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757209Ab0CaJHI convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47995 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300Ab0C2UAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 05:07:08 -0400
+	Mon, 29 Mar 2010 16:00:10 -0400
+Date: Mon, 29 Mar 2010 15:47:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?Ren=E9?= Bolldorf <xsecute@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] No SPROM available!
+Message-ID: <20100329194745.GH4984@tuxdriver.com>
+References: <4BB0FD96.5020402@lwfinger.net> <4BB10110.9090202@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
-References: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
-Date: Wed, 31 Mar 2010 11:07:06 +0200
-Message-ID: <x2ve2d7436a1003310207t16a7d1d6r7853de2dfa647c6c@mail.gmail.com>
-Subject: Re: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit transfers
-From: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
-To: Daniel Mack <daniel@caiaq.de>
-Cc: linux-kernel@vger.kernel.org,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4BB10110.9090202@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/30 Daniel Mack <daniel@caiaq.de>:
-[...]
-> @@ -1022,6 +1025,27 @@ static int if_sdio_probe(struct sdio_func *func,
->        if (ret)
->                goto disable;
->
-> +       /* For 1-bit transfers, we need to enable the interrupt flags in
-> +        * the CCCR register. Temporarily set the function number to 0
-> +        * for that. */
-> +       if ((host->caps & MMC_CAP_SDIO_IRQ) &&
-> +           (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-> +               unsigned int num = func->num;
-> +               u8 reg;
-> +
-> +               func->num = 0;
-> +               reg = sdio_readb(func, SDIO_CCCR_IF, &ret);
-> +               if (ret)
-> +                       goto release_int;
-> +
-> +               reg |= SDIO_BUS_ECSI | SDIO_BUS_SCSI;
-> +               sdio_writeb(func, reg, SDIO_CCCR_IF, &ret);
-> +               if (ret)
-> +                       goto release_int;
-> +
-> +               func->num = num;
-> +       }
-> +
->        card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
->        if (ret)
->                goto release_int;
+On Mon, Mar 29, 2010 at 09:35:44PM +0200, RenÃ© Bolldorf wrote:
+> On 03/29/10 21:20, Larry Finger wrote:
+>> Renï¿½,
+>>
+>> When you have a wireless problem, please post it to
+>> linux-wireless@vger.kernel.org. The Linux Kernel Mailing List may or may not be
+>> appropriate.
+>>
+>> To help in diagnosing your problem, please apply this patch and post the output
+>> line that it produces. On my system, it shows
+>>
+>> ssb: chip_id 0x4312, status 0x10
+>>
+> and on my: ssb: chip_id 0x4312, status 0x12
+>> Please also post the output of 'lspci -nnv | grep 14e4'.
+> Yep:
+> 01:00.0 Network controller [0280]: Broadcom Corporation BCM4312  
+> 802.11b/g [14e4:4315] (rev 01)
 
-You should probably just use mmc_io_rw_direct() in this case instead
-of abusing func->num.
+OK, I'm new to the thread -- what exactly is the issue?  Was your
+device working previously?
 
-Best Regards,
-Micha³ Miros³aw
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
