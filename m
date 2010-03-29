@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:17415 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995Ab0CVIn6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Mar 2010 04:43:58 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so1115389qwh.37
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Mar 2010 01:43:58 -0700 (PDT)
-From: Steven Wheeler <stevenwheel@gmail.com>
-To: "'Pavel Roskin'" <proski@gnu.org>
-Cc: <linux-wireless@vger.kernel.org>
-References: <002a01cac969$b726e8d0$2574ba70$@com> <1269232531.18891.6.camel@mj>
-In-Reply-To: <1269232531.18891.6.camel@mj>
-Subject: RE: Problems with Netgear WG511v1 PCMCIA
-Date: Mon, 22 Mar 2010 03:43:55 -0500
-Message-ID: <000001cac99b$cf9ff140$6edfd3c0$@com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Received: from sh.osrg.net ([192.16.179.4]:47319 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755609Ab0C2CEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Mar 2010 22:04:24 -0400
+Date: Mon, 29 Mar 2010 11:04:04 +0900
+To: ben@decadent.org.uk
+Cc: fujita.tomonori@lab.ntt.co.jp, bzolnier@gmail.com, gregkh@suse.de,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rt28xx: Make PCI_{MAP,UNMAP}_SINGLE type-safe
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <1269827928.8653.307.camel@localhost>
+References: <1269822285.8653.251.camel@localhost>
+	<20100329105129Y.fujita.tomonori@lab.ntt.co.jp>
+	<1269827928.8653.307.camel@localhost>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Message-Id: <20100329110339P.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, meant to include it: Kernel is 2.6.27.7
+On Mon, 29 Mar 2010 02:58:48 +0100
+Ben Hutchings <ben@decadent.org.uk> wrote:
 
-I thought about trying the prism54 driver but was unable to download the
-firmware from the links in the P54 site.
-No matter what I did I kept getting the html page back as a text file to be
-saved, very weird.
+> On Mon, 2010-03-29 at 10:52 +0900, FUJITA Tomonori wrote:
+> > On Mon, 29 Mar 2010 01:24:45 +0100
+> > Ben Hutchings <ben@decadent.org.uk> wrote:
+> > 
+> > > To avoid recurrence of bugs such as <http://bugs.debian.org/575726>,
+> > > change the type of the first parameter to linux_pci_{map,unmap}_single()
+> > > from void * to struct rt_rtmp_adapter *.  Also do not define the macros
+> > > PCI_{MAP,UNMAP}_SINGLE() when building the rt2870sta driver; they are
+> > > not used and if they were that would be a bug.
+> > > 
+> > > Signed-off-by: Ben Hutchings <ben@decadent.org.uk> 
+> > > ---
+> > >  drivers/staging/rt2860/rt_linux.h    |   14 +++++---------
+> > >  drivers/staging/rt2860/rt_pci_rbus.c |   12 ++++--------
+> > >  2 files changed, 9 insertions(+), 17 deletions(-)
+> > 
+> > I think using dma_map_single directly instead of inventing a wrapper
+> > function make the code more readable.
+> 
+> These functions are not quite simple wrappers, unfortunately.  So while
+> I think that is worth doing it is a separate change.
 
------Original Message-----
-From: Pavel Roskin [mailto:proski@gnu.org] 
-Sent: Sunday, March 21, 2010 11:36 PM
-To: Steven Wheeler
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Problems with Netgear WG511v1 PCMCIA
-
-On Sun, 2010-03-21 at 21:45 -0500, Steven Wheeler wrote:
-> I am attempting to resurrect my old Toshiba Portege 3110CT laptop
-> Installed Slackware 12.2 on it and all is working well except for my
-> WG511v1.
-
-Sorry for being blunt, but please don't expect anyone who is busy
-hacking wireless drivers to pull Slackware 12.1 and see what kernel
-version it has.
-
-> I have reached my knowledge limit and if anyone has a suggestion to try I
-> would appreciate it.  I am really hoping I can use this card since money
-is
-> tight right now
-
-Understood.
-
-> Mar 21 21:29:01 PopsLT kernel: p54: unknown eeprom code : 0x1
-> Mar 21 21:29:01 PopsLT kernel: p54: unknown eeprom code : 0x3
-
-If I remember correctly, it's harmless.
-
-Since you are using a softmac driver, and you kernel is likely old, you
-have basically two options.
-
-1) Try the fullmac driver (prism54).
-2) Try compat-wireless.
-
--- 
-Regards,
-Pavel Roskin
-
+Well, the current wrapper functions looks terrible. Needs to fix them
+before moving the driver out of the staging anyway, I think.
