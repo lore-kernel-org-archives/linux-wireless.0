@@ -1,41 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:40732 "EHLO mga14.intel.com"
+Received: from khc.piap.pl ([195.187.100.11]:33855 "EHLO khc.piap.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751746Ab0CYUod (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 16:44:33 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/3] iwlwifi fixes for 2.6.34 and stable
-Date: Thu, 25 Mar 2010 13:44:26 -0700
-Message-Id: <1269549869-19162-1-git-send-email-reinette.chatre@intel.com>
+	id S1751300Ab0C2TuC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 15:50:02 -0400
+From: Krzysztof Halasa <khc@pm.waw.pl>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+References: <m3tys0tbhk.fsf@intrepid.localdomain>
+	<43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
+	<m3eij3ym5k.fsf@intrepid.localdomain>
+	<43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
+Date: Mon, 29 Mar 2010 21:49:59 +0200
+In-Reply-To: <43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Mon, 29 Mar 2010 12:22:59 -0700")
+Message-ID: <m339zizz4o.fsf@intrepid.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include three fixes. iwlwifi's regulatory information was not handled
-correctly due to a regression introduced a long time ago by "cfg80211: convert bools into
-flags". A recent patch "iwlwifi: error checking for number of tfds in
-queue" that was included as a fix missed some hunks, which are
-corrected here. The third patch fixes an issue with high CPU utilization
-due to a high number of interrupts per second that are not cleared
-properly.
+"Luis R. Rodriguez" <mcgrof@gmail.com> writes:
 
-These patches are also available from wireless-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+>> I'm not sure how the modified regulatory.bin could work, though:
+>> I really don't want to use restricted frequencies etc. when the
+>> regulatory domain is set to US (i.e. when operating in USA), I only want
+>> to use the extra channels etc. when in e.g. Europe.
+>
+> I agree with that wishful thinking, however current legislation does
+> now allow for dynamic enabling of frequencies on devices certified
+> under part 15 rules. We can likely work towards changing the
+> legislation for this but that's something I haven't seen many
+> companies willing to lobby for. We'd need a big company to help with
+> this lobby.
 
-Reinette Chatre (1):
-  iwlwifi: fix regulatory
+But... isn't the modifying of the regulatory.bin (the US part of it)
+to include channels valid in e.g. Europe breaking the (US) rules? I'm
+not asking you for a legal advice binding Atheros as the manufacturer in
+the USA, I'm asking how to enable the user to be technically compliant
+here in Europe where the hardware is sold, and also in the USA if the
+user gets there and sets the regdomain (and elsewhere in the world, in
+fact).
 
-Shanyu Zhao (1):
-  iwlwifi: clear unattended interrupts in tasklet
+Modifying regulatory.bin doesn't seem to help here, does it?
 
-Wey-Yi Guy (1):
-  iwlwifi: counting number of tfds can be free for 4965
+>> A driver modification to ignore the default restrictions (while obeying
+>> the regulatory.bin, on a 0-country cards only, of course) - that would
+>> work.
+>
+> And it would also make our drivers break regulatory rules. We're not
+> going to do that on Linux because proving that we can be responsible
+> is in fact what does allow us to get proper vendor support for 802.11
+> drivers.
 
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    6 ++----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   12 ++++++++++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 3 files changed, 13 insertions(+), 7 deletions(-)
+I'm not asking you to do that, I only need to know if it's the correct
+(and only?) way of fixing this problem (while still providing
+compliance of the whole device). Fortunately I'm not responsible for the
+legalities.
 
+
+The other thing is the meaning of country=0 in case of Mikrotik cards
+(and maybe others). Perhaps they should get them back. I wonder if
+their drivers break the FCC rules, allowing "0" (=US) cards to use
+channels restricted in the US.
+-- 
+Krzysztof Halasa
