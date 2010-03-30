@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41257 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846Ab0CQAyR (ORCPT
+Received: from mailrelay007.isp.belgacom.be ([195.238.6.173]:59637 "EHLO
+	mailrelay007.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754405Ab0C3UnM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 20:54:17 -0400
-Subject: Re: [RFC] cfg80211: Add local-state-change-only
- auth/deauth/disassoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100313195335.GA2420@jm.kir.nu>
-References: <20100313195335.GA2420@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 16 Mar 2010 15:18:14 -0700
-Message-ID: <1268777894.8918.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 30 Mar 2010 16:43:12 -0400
+Date: Tue, 30 Mar 2010 22:43:04 +0200
+From: Philippe De Muyter <phdm@macqel.be>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
+Message-ID: <20100330204304.GB26538@frolo.macqel>
+References: <20100329201236.GA9587@frolo.macqel> <4BB1335F.7030306@lwfinger.net> <20100330073401.GA13675@frolo.macqel> <1269967657.3019.16.camel@localhost.localdomain> <20100330171139.GA28367@srcf.ucam.org> <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org> <20100330200039.GA26538@frolo.macqel> <20100330200642.GA32654@srcf.ucam.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100330200642.GA32654@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-03-13 at 21:53 +0200, Jouni Malinen wrote:
-> cfg80211 is quite strict on allowing authentication and association
-> commands only in certain states. In order to meet these requirements,
-> user space applications may need to clear authentication or
-> association state in some cases. Currently, this can be done with
-> deauth/disassoc command, but that ends up sending out Deauthentication
-> or Disassociation frame unnecessarily. Add a new nl80211 attribute to
-> allow this sending of the frame be skipped, but with all other
-> deauth/disassoc operations being completed.
+On Tue, Mar 30, 2010 at 09:06:42PM +0100, Matthew Garrett wrote:
+> On Tue, Mar 30, 2010 at 10:00:39PM +0200, Philippe De Muyter wrote:
+> 
+> > ACPI: I/O resource 0000:00:1f.3 [0x8000-0x801f] conflicts with ACPI region SMBI [0x8000-0x800f] (copied by hand)
+> 
+> That's harmless. It just indicates that ACPI is telling us not to drive 
+> your SMBus controller directly.
+> 
+> > > 
+> > > That's your bug, then.
+> > 
+> > Any hint on what I can do to diagnose more what the problem(s) is/are ?
+> 
+> Best plan would be to post a complete description of the problem to 
+> linux-acpi@vger.kernel.org.
 
-Just a thought ...
+Thanks
 
-mac80211 no longer maintains auth state at all when the auth is not in
-process, so should we, instead of passing this all through mac80211,
-make it cfg80211-only? Ok that doesn't work for the assoc part, but for
-auth it should?
+I will do that
 
-johannes
-
-
+Philippe
