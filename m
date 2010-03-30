@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:22870 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754816Ab0CXGSA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38522 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753990Ab0C3FdS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Mar 2010 02:18:00 -0400
-Subject: Re: [PATCH 1/2] cfg80211: Add connection quality monitoring
- support to nl80211
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: "ext Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho Luciano (Nokia-D/Helsinki)" <Luciano.Coelho@nokia.com>
-In-Reply-To: <43e72e891003230923r60522440vff7c1db26300ca91@mail.gmail.com>
-References: <1269327754-995-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1269327754-995-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <43e72e891003230923r60522440vff7c1db26300ca91@mail.gmail.com>
+	Tue, 30 Mar 2010 01:33:18 -0400
+Subject: RE: [PATCH] mac80211: Reschedule dynamic power save timer after
+ wakeup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: ext-saravanan.dhanabal@nokia.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <04BB8F4F2843A24294353CA037CA5B58568D26B541@NOK-EUMSG-01.mgdnok.nokia.com>
+References: <1268753462-18094-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
+	 <1268775761.8918.0.camel@jlt3.sipsolutions.net>
+	 <04BB8F4F2843A24294353CA037CA5B58568D26B52F@NOK-EUMSG-01.mgdnok.nokia.com>
+	 <1268841668.5989.3.camel@jlt3.sipsolutions.net>
+	 ,<20100329175506.GE4984@tuxdriver.com>
+	 <04BB8F4F2843A24294353CA037CA5B58568D26B541@NOK-EUMSG-01.mgdnok.nokia.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Mar 2010 08:14:40 +0200
-Message-ID: <1269411280.10120.806.camel@wimaxnb.nmp.nokia.com>
+Date: Tue, 30 Mar 2010 07:33:12 +0200
+Message-ID: <1269927192.3927.4.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-23 at 17:23 +0100, ext Luis R. Rodriguez wrote:
-> On Tue, Mar 23, 2010 at 12:02 AM, Juuso Oikarinen
-> <juuso.oikarinen@nokia.com> wrote:
+On Mon, 2010-03-29 at 23:15 +0200, ext-saravanan.dhanabal@nokia.com
+wrote:
+> Sorry for the delay, we were checking this in driver also. 
 > 
-> > + * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm
+> The issue was due to a delay in workqueue scheduling,  caused by
+> msleep() inside driver. Because of this, 
+> last transmission happens long after the dynamic power save timer is
+> scheduled. So, the difference 
+> between last transmission time and the time it goes to sleep is less
+> than the defined PSM timeout period.
 > 
-> I still don't get what this particular value is for, despite this kdoc entry.
-> 
->   Luis
+> I think that this patch might be considered as a workaround for such
+> delays caused by driver as long as it not creating
+> any other issues.
 
-I will submit one more patch to elaborate this doc further.
+At the very least that needs to be very clearly documented in the patch,
+but I'm not convinced we should be adding it. Why does the driver need
+the delay, and could it maybe do it after TX? And if the driver sleeps
+during the TX path how can it possibly get good performance??
 
-In the meanwhile, to explain it here, this value defines the minimum
-value the RSSI level must change before the RSSI event can be issued
-again, to limit the effect of a RSSI value that is oscillating around
-the configured threshold.
-
--Juuso
+johannes
 
