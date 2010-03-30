@@ -1,89 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f188.google.com ([209.85.216.188]:55386 "EHLO
-	mail-px0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab0CAPN0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 10:13:26 -0500
-Received: by pxi26 with SMTP id 26so902229pxi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Mar 2010 07:13:25 -0800 (PST)
-Date: Mon, 1 Mar 2010 23:13:29 +0800
-From: Ming Lei <tom.leiming@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:7856 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753907Ab0C3TCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 15:02:35 -0400
+Subject: Re: Broadcom card totally not visible for system (lspci)
+From: Pavel Roskin <proski@gnu.org>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH] ath9k: decrease size of ath9k.ko
-Message-ID: <20100301231329.64e3dd3b@tom-lei>
-In-Reply-To: <4B89E0D7.9020103@lwfinger.net>
-References: <1267289803-6795-1-git-send-email-tom.leiming@gmail.com>
-	<4B89520D.1000209@lwfinger.net>
-	<d82e647a1002271852j20006c27i92d1f7a99e032f2d@mail.gmail.com>
-	<4B89E0D7.9020103@lwfinger.net>
+Cc: =?iso-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <4BB23953.9010104@lwfinger.net>
+References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>
+	 <4BB2328D.9010503@lwfinger.net>
+	 <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
+	 <4BB23953.9010104@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Mar 2010 15:02:33 -0400
+Message-Id: <1269975753.4938.8.camel@mj>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
->From e74b075cdb143d45be9b371ee8a8e2dcfc15ab34 Mon Sep 17 00:00:00 2001
-From: Ming Lei <tom.leiming@gmail.com>
-Date: Sat, 27 Feb 2010 23:50:54 +0800
-Subject: [PATCH] ath9k: decrease size of ath9k.ko
-
-The patch defines the fields of 'valid_single_stream' and 'valid' in
-struct ath_rate_table as char type, so decrease the size of ath9k.ko
-about 2KB.
-
-old ath9k.ko
-[tom@tom-lei ath9k]$ size ath9k.ko
-   text    data     bss     dec     hex filename
-  69344    3080     168   72592   11b90 ath9k.ko
-
-new ath9k.ko
-[tom@tom-lei ath9k]$ size ath9k.ko
-   text    data     bss     dec     hex filename
-  67304    3080     168   70552   11398 ath9k.ko
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
-
-This version takes Larry's suggestion to define 'valid_single_stream'
-and 'valid' as u8 instead of char.
-
----
- drivers/net/wireless/ath/ath9k/rc.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
-index 4f6d6fd..aeaaa88 100644
---- a/drivers/net/wireless/ath/ath9k/rc.h
-+++ b/drivers/net/wireless/ath/ath9k/rc.h
-@@ -110,8 +110,8 @@ struct ath_rate_table {
- 	int rate_cnt;
- 	int mcs_start;
- 	struct {
--		int valid;
--		int valid_single_stream;
-+		u8 valid;
-+		u8 valid_single_stream;
- 		u8 phy;
- 		u32 ratekbps;
- 		u32 user_ratekbps;
--- 
-1.6.2.5
-
-
-
-On Sat, 27 Feb 2010 21:19:51 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> On 02/27/2010 08:52 PM, Ming Lei wrote:
-> > 2010/2/28 Larry Finger <Larry.Finger@lwfinger.net>:
-> >> On 02/27/2010 10:56 AM, tom.leiming@gmail.com wrote:
-> >>> From: Ming Lei <tom.leiming@gmail.com>
+On Tue, 2010-03-30 at 12:48 -0500, Larry Finger wrote:
+> On 03/30/2010 12:31 PM, Rafał Miłecki wrote:
 > > 
-> > Either 'char' or 'u8' is OK, since both has one-byte size, isn't it?
+> > Is this possible it's disabled in BIOS by default and needs execution
+> > of some ACPI command or sth to make it work?
+> > 
+> > Yeah, trying to find some other reason than faulty WiFi... It's weird
+> > it was working fine "before a moment" on Windows.
 > 
-> It wasn't the size, but the content implied by the type.
+> Winblows can fiddle with the "Wake-on-LAN" setting in the BIOS, but AFAIK, the
+> BCM4306 does not have this capability. If the BIOS has that setting, it should
+> be turned off.
 
+Perhaps it's a crazy idea, but what if the Ethernet device and the WiFi
+device are connected to the same SSB bus, an thus sharing the PCI ID?
+
+Is there the full kernel log?  In particular, the lines containing "ssb"
+would be interesting.
+
+-- 
+Regards,
+Pavel Roskin
