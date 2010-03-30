@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:53236 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932299Ab0CJXxd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 18:53:33 -0500
-Received: by pwj5 with SMTP id 5so537699pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Mar 2010 15:53:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1268213691-2497-1-git-send-email-senthilkumar@atheros.com>
-References: <1268213691-2497-1-git-send-email-senthilkumar@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 10 Mar 2010 15:53:12 -0800
-Message-ID: <43e72e891003101553i339dbeb7keb6fa4cc69c16c84@mail.gmail.com>
-Subject: Re: [PATCH 1/3] Support for AR9271 chipset.
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:40913 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755072Ab0C3RJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 13:09:45 -0400
+Subject: Re: [PATCH] net/wireless/libertas: do not call wiphy_unregister()
+ w/o wiphy_register()
+From: Dan Williams <dcbw@redhat.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Daniel Mack <daniel@caiaq.de>, libertas-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <201003301259.23973.hs4233@mail.mn-solutions.de>
+References: <1269875658-3324-1-git-send-email-daniel@caiaq.de>
+	 <201003301149.13462.hs4233@mail.mn-solutions.de>
+	 <20100330105029.GO30801@buzzloop.caiaq.de>
+	 <201003301259.23973.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Mar 2010 10:04:33 -0700
+Message-ID: <1269968673.3019.37.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 10, 2010 at 1:34 AM, Senthil Balasubramanian
-<senthilkumar@atheros.com> wrote:
-> From: Sujith <Sujith.Manoharan@atheros.com>
->
-> Features:
->
->  * Station mode
->  * IBSS mode
->  * Monitor mode
->  * Legacy support
->  * HT support
->  * TX/RX 11n Aggregation
->  * HW encryption
->  * LED
->
-> For more information: http://wireless.kernel.org/en/users/Drivers/ath9k_htc
->
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+On Tue, 2010-03-30 at 12:59 +0200, Holger Schurig wrote:
+> > I don't get your point. The patch I submitted fixes an Ooops in the
+> > driver, due to wrong handling of an API. What does that have to do with
+> > principle discussions about the frameworks in use?
+> 
+> I asked if there is a better method, and you said that you would test a better 
+> solution. That means that someone else should make a better solution.
+> 
+> I just pointed out that I won't be the one who creates the better solution, 
+> because for fundamental reasons I don't see the libertas+cfg80211 approach 
+> going forward. That issue has nothing to do with you or your patch, so please 
+> don't feel offended or confused.
 
-The common stuff was stuffed into common.[ch] but yet ath9k was not
-made to use it. That is fine if it makes this easier for inclusion
-into 2.6.34, if it won't get into 2.6.34 I'd prefer that a separate
-patch be created to stuff the common stuff into common.[ch], make
-ath9k use it, and then make ath9k_htc use it, through this patch.
+Fine; just rip out the mesh code and do the vanilla cfg80211 conversion
+for infra & adhoc, and we'll add the mesh code back later.  I don't have
+time to do the cfg80211 bits, neither do the OLPC guys (AFAIK), so lets
+take advantage of your willingness to do this and just move the driver
+forward.
 
-John can decide :D
+Dan
 
-  Luis
+> 
+> Basically, I neither ack nor nak you patch. Given that it fixes an oops the 
+> patch should go in, and probably to stable at well. I just gave a hint, to 
+> make you think if you could come up with something better.
+> 
+> 
+> 
+> BTW, testing/fixing of failure paths in libertas as well as simplifying the 
+> call sequence of functions during initialisation could be quite useful.
+> 
+> _______________________________________________
+> libertas-dev mailing list
+> libertas-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/libertas-dev
+
+
