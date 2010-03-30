@@ -1,57 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:57683 "EHLO
-	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755393Ab0CDU3J (ORCPT
+Received: from buzzloop.caiaq.de ([212.112.241.133]:55007 "EHLO
+	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531Ab0C3Rjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 15:29:09 -0500
-Message-ID: <4B901811.2030708@gmail.com>
-Date: Thu, 04 Mar 2010 21:29:05 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Luis Correia <luis.f.correia@gmail.com>
-CC: =?ISO-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: Linux 2.6.33 + Edimax EW-7318Ug?
-References: <4B8F5228.4080001@freemail.hu> <efe7343f1003032339x32bd512et9eebe0518546cfee@mail.gmail.com>
-In-Reply-To: <efe7343f1003032339x32bd512et9eebe0518546cfee@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 30 Mar 2010 13:39:43 -0400
+From: Daniel Mack <daniel@caiaq.de>
+To: linux-kernel@vger.kernel.org
+Cc: Daniel Mack <daniel@caiaq.de>,
+	Alagu Sankar <alagusankar@embwise.com>,
+	Volker Ernst <volker.ernst@txtr.com>,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Subject: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit transfers
+Date: Tue, 30 Mar 2010 19:38:53 +0200
+Message-Id: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/04/10 08:39, Luis Correia wrote:
-> Hi!
-> 
-> 2010/3/4 Németh Márton <nm127@freemail.hu>:
->> Hi,
->>
->> I'm new to the Edimax EW-7318Ug ( http://www.edimax.com/en/produce_detail.php?pd_id=3&pl1_id=1&pl2_id=44 )
->> device. I could find out so far that there are different drivers for Linux
->> which can be used with this device. I think this device have the RT73 chip.
->>
->> I tried Linux kernel 2.6.33, compiled with CONFIG_RT2X00=m and CONFIG_RT2X00_DEBUG=y
->> (the full kernel config is attached). I copied the rt73.bin from
->> http://www.edimax.com/images/Image/driver/Linux%20driver/Wireless/USB%20adaptor/2008_0506_RT73_Linux_STA_Drv1.1.0.1.tar.zip
->> to /lib/firmware/rt73.bin .
-> 
-> While I'm not 100% sure, this may be one of those devices thas has
-> it's ID in both rt2500usb and rt73usb.
-> 
-> Besides prying it open to see which is the actual chip used, there is
-> little we can do, software side, to be sure of which exact driver
-> should be used.
-> 
-> But to be honest, I can't really recall which exact driver ID conflict.
-> 
+When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
+However, the 8686 will only drive this line when the ECSI and SCSI bits
+are set in the CCCR_IF register.
 
-By the looks of it (at the Edimax website) this is a true rt73 device. And that seems
-to be supported by the dmesg output posted by Németh, where the loading of the rt2500usb
-driver fails.
+Thanks to Alagu Sankar for pointing me in the right direction.
 
-Németh, can you blacklist the auto-loading of the rt2500usb device (see
-http://www.cyberciti.biz/tips/avoid-linux-kernel-module-driver-autoloading.html for how
-to do this)?
-
+Signed-off-by: Daniel Mack <daniel@caiaq.de>
+Cc: Alagu Sankar <alagusankar@embwise.com>
+Cc: Volker Ernst <volker.ernst@txtr.com>
+Cc: Dan Williams <dcbw@redhat.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-mmc@vger.kernel.org
 ---
-Gertjan.
+ drivers/net/wireless/libertas/if_sdio.c |   24 ++++++++++++++++++++++++
+ include/linux/mmc/sdio.h                |    2 ++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 7a73f62..d3170f2 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -34,6 +34,8 @@
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
++#include <linux/mmc/sdio.h>
++#include <linux/mmc/host.h>
+ 
+ #include "host.h"
+ #include "decl.h"
+@@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	int ret, i;
+ 	unsigned int model;
+ 	struct if_sdio_packet *packet;
++	struct mmc_host *host = func->card->host;
+ 
+ 	lbs_deb_enter(LBS_DEB_SDIO);
+ 
+@@ -1022,6 +1025,27 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	if (ret)
+ 		goto disable;
+ 
++	/* For 1-bit transfers, we need to enable the interrupt flags in
++	 * the CCCR register. Temporarily set the function number to 0
++	 * for that. */
++	if ((host->caps & MMC_CAP_SDIO_IRQ) &&
++	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
++		unsigned int num = func->num;
++		u8 reg;
++
++		func->num = 0;
++		reg = sdio_readb(func, SDIO_CCCR_IF, &ret);
++		if (ret)
++			goto release_int;
++
++		reg |= SDIO_BUS_ECSI | SDIO_BUS_SCSI;
++		sdio_writeb(func, reg, SDIO_CCCR_IF, &ret);
++		if (ret)
++			goto release_int;
++
++		func->num = num;
++	}
++
+ 	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+ 	if (ret)
+ 		goto release_int;
+diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
+index 0ebaef5..329a8fa 100644
+--- a/include/linux/mmc/sdio.h
++++ b/include/linux/mmc/sdio.h
+@@ -94,6 +94,8 @@
+ 
+ #define  SDIO_BUS_WIDTH_1BIT	0x00
+ #define  SDIO_BUS_WIDTH_4BIT	0x02
++#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
++#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
+ 
+ #define  SDIO_BUS_ASYNC_INT	0x20
+ 
+-- 
+1.7.0
+
