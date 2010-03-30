@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m-04.th.seeweb.it ([217.64.195.227]:39302 "EHLO
-	m-04.th.seeweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755485Ab0CEUOO (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:36757 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753976Ab0C3LtY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 15:14:14 -0500
-Message-ID: <4B9165FE.1080502@users.sourceforge.net>
-Date: Fri, 05 Mar 2010 21:13:50 +0100
-From: "Daniele C." <legolas558@users.sourceforge.net>
+	Tue, 30 Mar 2010 07:49:24 -0400
+From: <ext-saravanan.dhanabal@nokia.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Date: Tue, 30 Mar 2010 13:48:03 +0200
+Subject: RE: [PATCH] mac80211: Reschedule dynamic power save timer after
+ wakeup
+Message-ID: <04BB8F4F2843A24294353CA037CA5B5857D5ABFF60@NOK-EUMSG-01.mgdnok.nokia.com>
+References: <1268753462-18094-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
+	 <1268775761.8918.0.camel@jlt3.sipsolutions.net>
+	 <04BB8F4F2843A24294353CA037CA5B58568D26B52F@NOK-EUMSG-01.mgdnok.nokia.com>
+	 <1268841668.5989.3.camel@jlt3.sipsolutions.net>
+	 ,<20100329175506.GE4984@tuxdriver.com>
+	 <04BB8F4F2843A24294353CA037CA5B58568D26B541@NOK-EUMSG-01.mgdnok.nokia.com>,<1269927192.3927.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1269927192.3927.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: Re: rt2870 (staging kernel driver) crashes fatally
-References: <4B8E20CF.50109@users.sourceforge.net> <3ace41891003031814r73d3b615x99d29e9cad1fd9c4@mail.gmail.com> <4B8F1C7F.7050305@lwfinger.net> <201003051722.42437.IvDoorn@gmail.com>
-In-Reply-To: <201003051722.42437.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+I agree that this is totally a driver issue. When sending the patch
+we did not notice that. We tried some workaround inside driver, but 
+still causes around 10-15ms variation, probably due to ELP wakeup delay.
 
-- -------- Original Message  --------
-Subject: Re: rt2870 (staging kernel driver) crashes fatally
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Fri Mar 05 2010 17:22:41 GMT+0100 (CET)
+I guess this patch could be ignored at the moment. Thanks.
 
-> On Thursday 04 March 2010, Larry Finger wrote:
->> On 03/03/2010 08:14 PM, Hin-Tak Leung wrote:
->>> You appear to have two issues - (1) the driver doesn't
->>> hibernate/resume well, (2) there is some bad memory leak which causes
->>> your system to run out of memory.
->>>
->>> You did not mention issue (1) - that you were hibernating and resuming
->>> (and expecting it to work, which it does not). For the latter, you
->>> probably need to track down where the memory is leaking in the driver,
->>> which is probably easier than tracking down the hibernate/resume
->>> issue.
->>>
->>> Good luck with tracking down the memory leak. (you do understand that
->>> staging drivers are DIY - i.e. you try it only if you are willing to
->>> look into fixing it yourself - I hope )
->>
->> By generating your own kernel with MEMLEAK enabled, you should be able to see
->> which data blob is being leaked. If you post that info, someone on this list
->> should be able to help you find the cause.
-> 
-> Actually the rt2x00-users list is not intended for the Ralink staging drivers.
-> You have to use the staging mailing list: devel@driverdev.osuosl.org
-> 
-Yes, they refused my message but didn't tell anything about the staging mailing list which I couldn't find either and I am now reading from you. Many thanks for pointing this out.
+saravanan d.
+________________________________________
+From: ext Johannes Berg [johannes@sipsolutions.net]
+Sent: Tuesday, March 30, 2010 8:33 AM
+To: Dhanabal Saravanan (EXT-Sasken/Tampere)
+Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
+Subject: RE: [PATCH] mac80211: Reschedule dynamic power save timer after wakeup
 
-I am now running with MEMLEAK enabled, as soon as I will make a new "hammering session" I'll grab the debug data and post another message.
+On Mon, 2010-03-29 at 23:15 +0200, ext-saravanan.dhanabal@nokia.com
+wrote:
+> Sorry for the delay, we were checking this in driver also.
+>
+> The issue was due to a delay in workqueue scheduling,  caused by
+> msleep() inside driver. Because of this,
+> last transmission happens long after the dynamic power save timer is
+> scheduled. So, the difference
+> between last transmission time and the time it goes to sleep is less
+> than the defined PSM timeout period.
+>
+> I think that this patch might be considered as a workaround for such
+> delays caused by driver as long as it not creating
+> any other issues.
 
-Best regards,
-- --
-  Daniele
+At the very least that needs to be very clearly documented in the patch,
+but I'm not convinced we should be adding it. Why does the driver need
+the delay, and could it maybe do it after TX? And if the driver sleeps
+during the TX path how can it possibly get good performance??
 
-> Ivo
-> 
+johannes
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQEcBAEBAgAGBQJLkWX+AAoJEON28As9epPAI9AH/j6nspsStdgsO4AigPVlQRrb
-tc7VOTmv+EwuydntCERrlFGx20sNYfKcBtyt7WHg3TWQnMr7ISgCK4fB+YDvWExb
-gS4+4n7u6AgDMPkrL3tr4PBvCFQJksGPh8epaB9InRv8JnBTmhwv287Ng7PiXY6h
-P0YYmcxIgQ2F9BPA5PHJ3+Y2PqIQl+2cur95rp3Q7EUESwyHSeDqQnC1l9k50FsM
-M6tGyTMBYUZDHEncdu6wpDipfnTQ9gUD0j4XUlfmRhVmedJ4DTknySMOup1dgNPz
-Y1UMYhyvjkibeAEcep2KAShMwEfapyUf01gaGMsRxecvexQwC1YsekGJ1/pbCBs=
-=6LbC
------END PGP SIGNATURE-----
