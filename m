@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43800 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659Ab0CUCBX (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:61358 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755115Ab0C3SG6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Mar 2010 22:01:23 -0400
-Received: by gyg8 with SMTP id 8so2130338gyg.19
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Mar 2010 19:01:22 -0700 (PDT)
-From: Bruno Randolf <randolf.bruno@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH V2] mac80211: Revise,pending queue depth in ieee80211_local data structure
-Date: Sun, 21 Mar 2010 11:01:16 +0900
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	randolf.bruno@googlemail.com, linux-wireless@vger.kernel.org
-References: <4BA24A12.4030208@gmail.com> <f74418681003201302g3ed2902bp230a1ce93d165831@mail.gmail.com> <1269117605.4611.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1269117605.4611.0.camel@jlt3.sipsolutions.net>
+	Tue, 30 Mar 2010 14:06:58 -0400
+Received: by pwi5 with SMTP id 5so7986031pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 11:06:57 -0700 (PDT)
+Message-ID: <4BB23DBD.8080904@lwfinger.net>
+Date: Tue, 30 Mar 2010 13:06:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201003211101.16481.randolf.bruno@gmail.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [RFC][PATCH][WIP] b43: N-PHY: set band width
+References: <1269971657-4663-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1269971657-4663-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 21 March 2010 05:40:05 Johannes Berg wrote:
-> On Sat, 2010-03-20 at 21:02 +0100, Lorenzo Bianconi wrote:
-> > >> setup 2 wireless cards, talking to each other (i use IBSS) on
-> > >> different
-> > 
-> > >> machines. then setup routing like this:
-> > PC1<--ethernet cable-->Device1<--wireless link-->Device2<--ethernet
-> > cable-->PC2
+On 03/30/2010 12:54 PM, Rafał Miłecki wrote:
+> ---
+> I've problem with deciding how to keep some data needed by band width setting
+> code. Generally these band width-related routines are considered "common", to
+> be used by more than just N-PHY. So probably the most /correct/ way should be
+> to add some variables like maccontrol, wake_override, clk and other to struct
+> b43_phy which is shared between all PHYs. However we would not use these vars
+> in anything except N-PHY, so we would just waste users memory.
 > 
-> I'm not really sure how this scenario differs from injecting traffic
-> locally, but I'll try to reproduce.
+> Could you help me decide correct way to handle this?
 
-if you generate traffic locally it's enough to stop the queues, this will 
-cause userspace to stop generating traffic. in the forwarding case (which we 
-are talking about) stopping the queues will not stop the sender to send 
-traffic, thus we have to start dropping packets at some point. 
+I have not done the RE yet, but the SSLPN PHY is multi-band and will likely need
+all the band width parameters needed by the N PHY. I would vote for putting them
+in a "common" struct.
 
-bruno
+Larry
