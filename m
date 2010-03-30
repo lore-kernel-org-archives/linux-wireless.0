@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plexity.net ([206.123.115.38]:54122 "EHLO plexity.net"
+Received: from kroah.org ([198.145.64.141]:45397 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750880Ab0CCSxS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Mar 2010 13:53:18 -0500
-Date: Wed, 3 Mar 2010 10:52:31 -0800
-From: Deepak Saxena <dsaxena@plexity.net>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: dsaxena@laptop.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, Nicolas Pitre <nico@marvell.com>
-Subject: Re: [PATCH] libertas: add auto auth mode feature
-Message-ID: <20100303185231.GA14009@plexity.net>
-Reply-To: dsaxena@plexity.net
-References: <1267146996-3725-1-git-send-email-bzhao@marvell.com> <1267225266.14995.7.camel@localhost.localdomain> <20100301195948.GA19200@plexity.net> <201003021302.10039.holgerschurig@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201003021302.10039.holgerschurig@gmail.com>
+	id S932303Ab0C3XSp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 19:18:45 -0400
+Message-Id: <20100330225657.012198937@linux.site>
+Date: Tue, 30 Mar 2010 15:56:06 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	575726@bugs.debian.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	John Halton <johnhalton@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Subject: [088/116] rt2860sta: Fix argument to linux_pci_unmap_single()
+In-Reply-To: <20100330230600.GA28802@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mar 02 2010, at 13:02, Holger Schurig was caught saying:
-> > support is an option our community would be happy with. However, I also
-> > don't want to end up with a libertas fork (all our mesh patches are
-> > currently upstream and not forkd off)
-> 
-> Oh, sorry for being misinformed and spreading this misinformation. I had some 
-> read-only variables in the mainline libertas driver (for example  
-> mesh_autostart_enabled get's never written to) and heard that this is a 
-> remnant, and that the real implementation in in the OLPC tree.
+2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
-That is definitely a remnant of old work and our tree seems to have the
-same read-only issues.
+------------------
 
-> Therefore I thought that you're sticking to some older kernel, and not 
-> following mainline linux at all.
+From: Ben Hutchings <ben@decadent.org.uk>
 
-We're currently on 2.6.31, which I guess is somewhat  pre-historic by 
-kernel development standards. We do have some patches to Libertas which 
-were co-developed along with Marvell to fix some bugs we've discovered
-during the XO-1.5 ramp up process and unfortunately we were on a really 
-tight release schedule and not all of those have been pushed upstream, 
-including some changes to the SDIO stack that were needed for proper
-suspend/resume support on the gen 2 laptops. I'll be working on moving 
-our kernel up to a newer version and will send up any patches that
-we need merged and will also work with our users to figure out what
-to do about mesh testing.
+John Halton wrote in <http://bugs.debian.org/575726>:
+> Whenever wpa_supplicant is deactivated (whether by killing the process or
+> during a normal shutdown) I am getting a kerneloops that prevents the
+> computer from completing shutdown. Here is the relevant syslog output:
 
-~Deepak
+The backtrace points to an incorrect call from RTMPFreeTxRxRingMemory()
+into linux_pci_unmap_single().  This appears to have been fixed in Linux
+2.6.33 by this change:
 
--- 
-"People think all we need to fix our predicament is a free source of
-energy, but I think we need to change out behaviour. More energy would
-just deplete the Earth's lifeblood faster." - Janine Benyius
+commit ca97b8388838ee9ea4b4bad04948f8f7f8a607a3
+Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Date:   Tue Sep 22 20:44:07 2009 +0200
+
+    Staging: rt28x0: updates from vendor's V2.1.0.0 drivers
+
+For stable-2.6.32, just fix this one function call.
+
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/staging/rt2860/common/2860_rtmp_init.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/staging/rt2860/common/2860_rtmp_init.c
++++ b/drivers/staging/rt2860/common/2860_rtmp_init.c
+@@ -716,7 +716,7 @@ VOID RTMPFreeTxRxRingMemory(
+ 	{
+ 		if ((pAd->RxRing.Cell[index].DmaBuf.AllocVa) && (pAd->RxRing.Cell[index].pNdisPacket))
+ 		{
+-			PCI_UNMAP_SINGLE(pObj->pci_dev, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
++			PCI_UNMAP_SINGLE(pAd, pAd->RxRing.Cell[index].DmaBuf.AllocPa, pAd->RxRing.Cell[index].DmaBuf.AllocSize, PCI_DMA_FROMDEVICE);
+ 			RELEASE_NDIS_PACKET(pAd, pAd->RxRing.Cell[index].pNdisPacket, NDIS_STATUS_SUCCESS);
+ 		}
+ 	}
+
+
