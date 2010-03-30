@@ -1,82 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:46007 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754869Ab0CDQ1O (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:42010 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754754Ab0C3RI3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 11:27:14 -0500
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 2/4] rndis_wlan: remove unused variables from priv structure
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 04 Mar 2010 18:27:12 +0200
-Message-ID: <20100304162707.2609.33783.stgit@fate.lan>
-In-Reply-To: <20100304162657.2609.64867.stgit@fate.lan>
-References: <20100304162657.2609.64867.stgit@fate.lan>
+	Tue, 30 Mar 2010 13:08:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20100330165645.GB25095@tux>
+References: <1269963873-2070-1-git-send-email-luisbg@ubuntu.com>
+	 <20100330165645.GB25095@tux>
+Date: Tue, 30 Mar 2010 18:08:26 +0100
+Message-ID: <506b70dc1003301008r7079b9c7u96249c28d67a5bdd@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ath: fix code readability in regd.c
+From: Luis de Bethencourt <luisbg@ubuntu.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some variables were left unused after cfg80211 conversion. Remove those and related deadcode.
+On Tue, Mar 30, 2010 at 5:56 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Mar 30, 2010 at 08:44:33AM -0700, Luis de Bethencourt wrote:
+>> This is a patch to the ath/regd.c file that fixes two code
+>> readability issues. A space between to separate two defines
+>> and the indentation inside the ath_redg_is_eeprom_valid
+>> function.
+>
+> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>
+> You can drop netdev and linux-kernel from future linux-wireless e-mails
+> like this one.
+>
+>  Luis
+>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+OK. Will do.
 
- drivers/net/wireless/rndis_wlan.c |   14 --------------
- 1 files changed, 0 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index a4f70de..15bae0a 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -476,13 +476,7 @@ struct rndis_wlan_private {
- 	/* encryption stuff */
- 	int  encr_tx_key_index;
- 	struct rndis_wlan_encr_key encr_keys[4];
--	enum nl80211_auth_type wpa_auth_type;
- 	int  wpa_version;
--	int  wpa_keymgmt;
--	int  wpa_ie_len;
--	u8  *wpa_ie;
--	int  wpa_cipher_pair;
--	int  wpa_cipher_group;
- 
- 	u8 command_buffer[COMMAND_BUFFER_SIZE];
- };
-@@ -1116,8 +1110,6 @@ static int set_auth_mode(struct usbnet *usbdev, u32 wpa_version,
- 	}
- 
- 	priv->wpa_version = wpa_version;
--	priv->wpa_auth_type = auth_type;
--	priv->wpa_keymgmt = keymgmt;
- 
- 	return 0;
- }
-@@ -1142,7 +1134,6 @@ static int set_priv_filter(struct usbnet *usbdev)
- 
- static int set_encr_mode(struct usbnet *usbdev, int pairwise, int groupwise)
- {
--	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
- 	__le32 tmp;
- 	int encr_mode, ret;
- 
-@@ -1171,8 +1162,6 @@ static int set_encr_mode(struct usbnet *usbdev, int pairwise, int groupwise)
- 		return ret;
- 	}
- 
--	priv->wpa_cipher_pair = pairwise;
--	priv->wpa_cipher_group = groupwise;
- 	return 0;
- }
- 
-@@ -2871,9 +2860,6 @@ static void rndis_wlan_unbind(struct usbnet *usbdev, struct usb_interface *intf)
- 	flush_workqueue(priv->workqueue);
- 	destroy_workqueue(priv->workqueue);
- 
--	if (priv && priv->wpa_ie_len)
--		kfree(priv->wpa_ie);
--
- 	rndis_unbind(usbdev, intf);
- 
- 	wiphy_unregister(priv->wdev.wiphy);
-
+Luis
