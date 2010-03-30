@@ -1,72 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:35704 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661Ab0C2VAQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45998 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754807Ab0C3RaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 17:00:16 -0400
-Received: by ewy20 with SMTP id 20so908431ewy.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 14:00:14 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2500usb: fix powersaving random failures
-Date: Mon, 29 Mar 2010 23:00:11 +0200
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ondrej Zary <linux@rainbow-software.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <201003290956.54234.linux@rainbow-software.org> <4BB103B9.8040100@gmail.com>
-In-Reply-To: <4BB103B9.8040100@gmail.com>
+	Tue, 30 Mar 2010 13:30:12 -0400
+Date: Tue, 30 Mar 2010 13:20:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Daniel Mack <daniel@caiaq.de>,
+	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net/wireless/libertas: do not call wiphy_unregister()
+	w/o wiphy_register()
+Message-ID: <20100330172008.GD13120@tuxdriver.com>
+References: <1269875658-3324-1-git-send-email-daniel@caiaq.de> <201003301149.13462.hs4233@mail.mn-solutions.de> <20100330105029.GO30801@buzzloop.caiaq.de> <201003301259.23973.hs4233@mail.mn-solutions.de> <1269968673.3019.37.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201003292300.12013.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1269968673.3019.37.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 29 March 2010, Gertjan van Wingerde wrote:
-> On 03/29/10 09:56, Ondrej Zary wrote:
-> > This patch seems to fix random powersaving failure where the device state is
-> > stuck at 1 (STATE_SLEEP) and does not change to 3 (STATE_AWAKE), resulting in
-> > to associate and these error messages:
-> > phy0 -> rt2500usb_set_device_state: Error - Device failed to enter state 3 (-16).
-> > No probe response from AP xx:xx:xx:xx:xx:xx after 500ms, disconnecting.
+On Tue, Mar 30, 2010 at 10:04:33AM -0700, Dan Williams wrote:
+> On Tue, 2010-03-30 at 12:59 +0200, Holger Schurig wrote:
+> > > I don't get your point. The patch I submitted fixes an Ooops in the
+> > > driver, due to wrong handling of an API. What does that have to do with
+> > > principle discussions about the frameworks in use?
 > > 
-> > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> 
-> Thanks. This looks good, but I'll rehash it against the latest state of affairs of rt2x00,
-> so that the disabling of powersaving is undone at the same time.
-> 
-> John, I'll send you the rehashed patch tomorrow.
-
-Is this change interesting for the other drivers as well?
-Anyway, this one gets my Ack:
-
-Acked-By: Ivo van Doorn <IvDoorn@gmail.com>
-
-> ---
-> Gertjan.
-> 
+> > I asked if there is a better method, and you said that you would test a better 
+> > solution. That means that someone else should make a better solution.
 > > 
-> > --- linux-2.6.34-rc2-orig/drivers/net/wireless/rt2x00/rt2500usb.c	2010-03-20 02:17:57.000000000 +0100
-> > +++ linux-2.6.34-rc2/drivers/net/wireless/rt2x00/rt2500usb.c	2010-03-29 09:38:02.000000000 +0200
-> > @@ -648,6 +648,10 @@
-> >  
-> >  		rt2x00_set_field16(&reg, MAC_CSR18_AUTO_WAKE, 1);
-> >  		rt2500usb_register_write(rt2x00dev, MAC_CSR18, reg);
-> > +	} else {
-> > +		rt2500usb_register_read(rt2x00dev, MAC_CSR18, &reg);
-> > +		rt2x00_set_field16(&reg, MAC_CSR18_AUTO_WAKE, 0);
-> > +		rt2500usb_register_write(rt2x00dev, MAC_CSR18, reg);
-> >  	}
-> >  
-> >  	rt2x00dev->ops->lib->set_device_state(rt2x00dev, state);
-> > 
+> > I just pointed out that I won't be the one who creates the better solution, 
+> > because for fundamental reasons I don't see the libertas+cfg80211 approach 
+> > going forward. That issue has nothing to do with you or your patch, so please 
+> > don't feel offended or confused.
 > 
-> 
-> _______________________________________________
-> users mailing list
-> users@rt2x00.serialmonkey.com
-> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
-> 
+> Fine; just rip out the mesh code and do the vanilla cfg80211 conversion
+> for infra & adhoc, and we'll add the mesh code back later.  I don't have
+> time to do the cfg80211 bits, neither do the OLPC guys (AFAIK), so lets
+> take advantage of your willingness to do this and just move the driver
+> forward.
 
+Someone post a feature removal patch, please?
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
