@@ -1,89 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:17055 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752792Ab0CKHQe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Mar 2010 02:16:34 -0500
-Subject: Re: question about ath9k/hw.c,mac.c
-From: Pavel Roskin <proski@gnu.org>
-To: Julia Lawall <julia@diku.dk>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <Pine.LNX.4.64.1003101325500.24684@ask.diku.dk>
-References: <Pine.LNX.4.64.1003101325500.24684@ask.diku.dk>
-Content-Type: text/plain
-Date: Thu, 11 Mar 2010 02:16:32 -0500
-Message-Id: <1268291792.6951.34.camel@mj>
-Mime-Version: 1.0
+Received: from mx51.mymxserver.com ([85.199.173.110]:19305 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756026Ab0C3K6X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 06:58:23 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Daniel Mack <daniel@caiaq.de>
+Subject: Re: [PATCH] net/wireless/libertas: do not call wiphy_unregister() w/o wiphy_register()
+Date: Tue, 30 Mar 2010 12:59:23 +0200
+Cc: linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+References: <1269875658-3324-1-git-send-email-daniel@caiaq.de> <201003301149.13462.hs4233@mail.mn-solutions.de> <20100330105029.GO30801@buzzloop.caiaq.de>
+In-Reply-To: <20100330105029.GO30801@buzzloop.caiaq.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003301259.23973.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-10 at 13:36 +0100, Julia Lawall wrote:
+> I don't get your point. The patch I submitted fixes an Ooops in the
+> driver, due to wrong handling of an API. What does that have to do with
+> principle discussions about the frameworks in use?
 
-> mac.c contains the following code:
-> 
-> omask = ath9k_hw_set_interrupts(ah, ah->mask_reg & ~ATH9K_INT_GLOBAL);
-...
-> Is it correct that the call to ath9k_hw_set_interrupts is masking out what 
-> appears to be the flag AR_IMR_RXINTM?
+I asked if there is a better method, and you said that you would test a better 
+solution. That means that someone else should make a better solution.
 
-Thank you for asking this question!
+I just pointed out that I won't be the one who creates the better solution, 
+because for fundamental reasons I don't see the libertas+cfg80211 approach 
+going forward. That issue has nothing to do with you or your patch, so please 
+don't feel offended or confused.
 
-I checked the code, and I see several cases when
-ath9k_hw_set_interrupts() is called with constants beginning with
-"ATH9K_INT_" in the second argument.
 
-On the other hand, the use of ah->mask_reg appears to be inconsistent
-across the code.  Sometimes it's used with "ATH9K_INT_", sometimes with
-"AR_IMR_".
+Basically, I neither ack nor nak you patch. Given that it fixes an oops the 
+patch should go in, and probably to stable at well. I just gave a hint, to 
+make you think if you could come up with something better.
 
-While at that, using enum ath9k_int appears to be a bad idea, especially
-for storing values that don't fit int, such as ATH9K_INT_GLOBAL.  If the
-goal is to use sparse to check for errors, I would use bitwise types
-like gfp_t.  Perhaps sparse could be patched to allow mutually
-incompatible bitwise types.
 
-My guess is that ath9k_hw_init_interrupt_masks() should be using a local
-variable instead of ah->mask_reg:
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1fb14ed..97cc35f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1134,23 +1134,23 @@ static void ath9k_hw_init_chain_masks(struct ath_hw *ah)
- static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 					  enum nl80211_iftype opmode)
- {
--	ah->mask_reg = AR_IMR_TXERR |
-+	u32 imr_mask = AR_IMR_TXERR |
- 		AR_IMR_TXURN |
- 		AR_IMR_RXERR |
- 		AR_IMR_RXORN |
- 		AR_IMR_BCNMISC;
- 
- 	if (ah->config.rx_intr_mitigation)
--		ah->mask_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
-+		imr_mask |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
- 	else
--		ah->mask_reg |= AR_IMR_RXOK;
-+		imr_mask |= AR_IMR_RXOK;
- 
--	ah->mask_reg |= AR_IMR_TXOK;
-+	imr_mask |= AR_IMR_TXOK;
- 
- 	if (opmode == NL80211_IFTYPE_AP)
--		ah->mask_reg |= AR_IMR_MIB;
-+		imr_mask |= AR_IMR_MIB;
- 
--	REG_WRITE(ah, AR_IMR, ah->mask_reg);
-+	REG_WRITE(ah, AR_IMR, imr_mask);
- 	ah->imrs2_reg |= AR_IMR_S2_GTT;
- 	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
- 
-
--- 
-Regards,
-Pavel Roskin
+BTW, testing/fixing of failure paths in libertas as well as simplifying the 
+call sequence of functions during initialisation could be quite useful.
