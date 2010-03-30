@@ -1,31 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail10.dslextreme.com ([66.51.199.98]:59991 "HELO
-	mail10.dslextreme.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754093Ab0CEC1a (ORCPT
+Received: from mail-pz0-f186.google.com ([209.85.222.186]:52348 "EHLO
+	mail-pz0-f186.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755937Ab0C3Swk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 21:27:30 -0500
-Message-ID: <4B906A81.6090703@gmail.com>
-Date: Thu, 04 Mar 2010 18:20:49 -0800
-From: Gus Wirth <gwirth79@gmail.com>
+	Tue, 30 Mar 2010 14:52:40 -0400
+Received: by pzk16 with SMTP id 16so7775244pzk.22
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 11:52:39 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: RTL8187 coverage class
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <201003302049.24231.chunkeey@googlemail.com>
+References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
+	<m3wrwtoekv.fsf@intrepid.localdomain> <201003302049.24231.chunkeey@googlemail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 30 Mar 2010 11:52:19 -0700
+Message-ID: <43e72e891003301152l1b0c4c02n706545d51b8d44c9@mail.gmail.com>
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Krzysztof Halasa <khc@pm.waw.pl>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm trying to implement a first go at getting coverage class working for
-a Realtek RTL8187L chip similar to the way it is in ath5k. I know I need
-to change the ack timeout and the slot times but I can't quite decipher
-the register use. I can see some hints in the function rtl8187_conf_erp
-but that doesn't seem enough.
+On Tue, Mar 30, 2010 at 11:49 AM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Tuesday 30 March 2010 20:21:36 Krzysztof Halasa wrote:
+>> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
+>>
+>> > My point was that this is not something meant to be interpreted by
+>> > anyone for what "default country" means, the documentation I pointed
+>> > out clearly states that 0x0 is designed to mean to match the "US" by
+>> > Atheros hardware as per hardware documentation provided to ODMs.
+>>
+>> I understand this, but the reality is that I have to work with hardware
+>> and software, not with the docs provided by Atheros to some other
+>> parties.
+>>
+>> Software (the official Atheros driver, to be precise) says 0 isn't
+>> exactly US.
+>> Hardware (card) manufacturer says 0 isn't US.
+>
+> Are you sure, you (or the hw manufacturer for that matter) didn't confuse
+> the country code with regdomain code?
+>
+> because while they have more or less the same function, they do have different
+> mappings. The 0x00 country code is reserved for the FCC (US), while the 0x00
+> regdomain code is a described as "debug" with supposedly no limitations?!
 
-It seems that the values for SLOT, DIFS and EIFS aren't directly
-converted to microseconds, so I'm not sure how those values were arrived at.
+That debug regulatory domain is not a valid regulatory domain
+supported in the field, it was a debug hack. It is simply not a
+regulatory domain which ODMs / OEMs calibrate their cards for.
 
-I want to start by just hard coding some different initial values to
-allow for testing. My test device right now is an Alfa AWUS036H which is
-a high power USB (500mW claimed)  RTL8187L and testing at a range of
-about 2 kilometers, making the coverage class=5.
-
-Gus
+  Luis
