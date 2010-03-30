@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49389 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752990Ab0CYH2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Mar 2010 03:28:25 -0400
-Date: Thu, 25 Mar 2010 08:26:27 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: support paged rx SKBs
-Message-ID: <20100325072627.GA2562@dhcp-lab-161.englab.brq.redhat.com>
-References: <1269399463-5244-1-git-send-email-yi.zhu@intel.com> <20100324140034.6a6d91c9@dhcp-lab-109.englab.brq.redhat.com> <1269447362.6935.2.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1269447362.6935.2.camel@jlt3.sipsolutions.net>
+Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:61283 "EHLO
+	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753938Ab0C3Vuf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 17:50:35 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, <users@rt2x00.serialmonkey.com>,
+	<linux-wireless@vger.kernel.org>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 4/4] rt2x00: Add wakeup interrupt handler to rt2800pci.
+Date: Tue, 30 Mar 2010 23:50:26 +0200
+Message-Id: <1269985826-17438-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
+References: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 24, 2010 at 09:16:02AM -0700, Johannes Berg wrote:
-> > > Mac80211 drivers can now pass paged SKBs to mac80211 via
-> > > ieee80211_rx{_irqsafe}. The implementation currently use
-> > > skb_linearize() in a few places i.e. management frame handling,
-> > > software decryption, defragmentation and A-MSDU process. 
-> > 
-> > What benefits this gives? Only driver which need non linear skbs
-> > is iwliwifi and nicely handle that by itself. I do not see any 
-> > other potential users for that. Can we wait for some other
-> > users before put that feature into mac stack?
-> 
-> Hell no. We will get more users, and even putting it into the stack now
-> gives us the benefit of being able to improve it
+This is needed to wake up the device automatically for receiving beacons,
+and is required for proper powersave handling.
 
-But wait, isn't that all just workaround for bad performing allocator,
-what should be fixed in proper place not in mac80211 nor iwlwifi. What
-for exactly this is needed, concretes please - that is not described in
-patch changelog.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
->  -- iwlwifi doesn't
-> "nicely" handle it after all
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 91cce2d..357873c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1006,6 +1006,14 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 	}
+ }
+ 
++static void rt2800pci_wakeup(struct rt2x00_dev *rt2x00dev)
++{
++	struct ieee80211_conf conf = { .flags = 0 };
++	struct rt2x00lib_conf libconf = { .conf = &conf };
++
++	rt2800_config(rt2x00dev, &libconf, IEEE80211_CONF_CHANGE_PS);
++}
++
+ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+ {
+ 	struct rt2x00_dev *rt2x00dev = dev_instance;
+@@ -1030,6 +1038,9 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
+ 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS))
+ 		rt2800pci_txdone(rt2x00dev);
+ 
++	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AUTO_WAKEUP))
++		rt2800pci_wakeup(rt2x00dev);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+1.7.0.3
 
-Oh well, at least now we have no more bugs with that (I hope).
-
-Stanislaw
