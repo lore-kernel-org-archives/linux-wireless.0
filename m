@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:36555 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753558Ab0CBH6w (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.24]:11968 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475Ab0C3NOs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Mar 2010 02:58:52 -0500
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0351416730
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Mar 2010 16:58:50 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-Subject: [PATCH 4/4] ath5k: remove ah_gpio_npins
-To: linville@tuxdriver.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 02 Mar 2010 16:58:48 +0900
-Message-ID: <20100302075848.20555.55385.stgit@void>
-In-Reply-To: <20100302075526.20555.14622.stgit@void>
-References: <20100302075526.20555.14622.stgit@void>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 30 Mar 2010 09:14:48 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so3718260qwh.37
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 06:14:47 -0700 (PDT)
+Message-ID: <4bb1f940.47c2f10a.3469.609b@mx.google.com>
+Date: Tue, 30 Mar 2010 06:14:40 -0700 (PDT)
+From: Ben Gamari <bgamari.foss@gmail.com>
+Subject: Re: Another AR5008 hang
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1269928986.3927.5.camel@jlt3.sipsolutions.net>
+References: <4bb0e2da.04c2f10a.32b2.11ae@mx.google.com>
+	<1269928986.3927.5.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-it's never used and we have a newer implementation in gpio.c.
+On Tue, 30 Mar 2010 08:03:06 +0200, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2010-03-29 at 10:26 -0700, Ben Gamari wrote:
+> > New (2.6.33 and greater) kernels seem to result in a selective hang on my
+> > machine directly only seconds after association with an 802.11N access point
+> > (hosted with hostapd and another ar5008). I've included dmesg output for a
+> > failure event, including back traces of hung processes. What ath9k.debug flags
+> > would be most helpful for tracing this further?
+> 
+> None, I would think, this seems to be a lockup between
+> modprobe/stop_machine and some rtnl things, but I have no idea why that
+> would happen. Do you have lockdep enabled? And if you do, please disable
+> RCU lockdep as it typically gives you a warning and then turns off
+> lockdep...
+> 
+Thank you very much for your response. I do not currently have lockdep enabled,
+but I'm building a new kernel as we speak. Thanks again,
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
-
- drivers/net/wireless/ath/ath5k/ath5k.h |    2 --
- drivers/net/wireless/ath/ath5k/caps.c  |    3 ---
- 2 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 54f35ae..7721d7d 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1068,8 +1068,6 @@ struct ath5k_hw {
- 	u8			ah_def_ant;
- 	bool			ah_software_retry;
- 
--	int			ah_gpio_npins;
--
- 	struct ath5k_capabilities ah_capabilities;
- 
- 	struct ath5k_txq_info	ah_txq[AR5K_NUM_TX_QUEUES];
-diff --git a/drivers/net/wireless/ath/ath5k/caps.c b/drivers/net/wireless/ath/ath5k/caps.c
-index 367a6c7..e618e71 100644
---- a/drivers/net/wireless/ath/ath5k/caps.c
-+++ b/drivers/net/wireless/ath/ath5k/caps.c
-@@ -102,9 +102,6 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
- 		}
- 	}
- 
--	/* GPIO */
--	ah->ah_gpio_npins = AR5K_NUM_GPIO;
--
- 	/* Set number of supported TX queues */
- 	if (ah->ah_version == AR5K_AR5210)
- 		ah->ah_capabilities.cap_queues.q_tx_num =
-
+- Ben
