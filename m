@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33492 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752197Ab0CQCNq (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:53792 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688Ab0C3WHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 22:13:46 -0400
-Date: Tue, 16 Mar 2010 19:13:38 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] cfg80211: Add local-state-change-only
- auth/deauth/disassoc
-Message-ID: <20100317021338.GA5654@jm.kir.nu>
-References: <20100313195335.GA2420@jm.kir.nu>
- <1268777894.8918.13.camel@jlt3.sipsolutions.net>
+	Tue, 30 Mar 2010 18:07:34 -0400
+Received: by pwi5 with SMTP id 5so8208887pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 15:07:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1268777894.8918.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <m3mxxpo8h6.fsf@intrepid.localdomain>
+References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
+	<m3wrwtoekv.fsf@intrepid.localdomain> <201003302049.24231.chunkeey@googlemail.com>
+	<m3mxxpo8h6.fsf@intrepid.localdomain>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 30 Mar 2010 15:07:14 -0700
+Message-ID: <n2r43e72e891003301507wb3359afcvd2e3656bc70e431c@mail.gmail.com>
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 16, 2010 at 03:18:14PM -0700, Johannes Berg wrote:
-> mac80211 no longer maintains auth state at all when the auth is not in
-> process, so should we, instead of passing this all through mac80211,
-> make it cfg80211-only? Ok that doesn't work for the assoc part, but for
-> auth it should?
+On Tue, Mar 30, 2010 at 1:33 PM, Krzysztof Halasa <khc@pm.waw.pl> wrote:
 
-I thought about that a bit when going through the needed changes and the
-question of what to do with key configuration before association.. If we
-want to enable that optimization, we will likely need to notify mac80211
-somehow and this auth part could indeed be that notification. Or did you
-have some other ways in mind for getting keys configured
-pre-association?
+> Then again: does the regdomain = 0 means "US" or "default country" (or
+> something completely different), according to Atheros' docs?
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+As per Atheros documentation 0x0 means "US". I've already provided
+links for you. I'm sending this from an Atheros e-mail address, not
+sure if this helps get this through to you or not.
+
+ Luis
