@@ -1,62 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:53933 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128Ab0CPN0F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 09:26:05 -0400
-Message-ID: <4B9F86E9.2030702@gmail.com>
-Date: Tue, 16 Mar 2010 14:26:01 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: regd: sleeping in atomic
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:38136 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752139Ab0C3SiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 14:38:08 -0400
+Subject: Re: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit
+ transfers
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Mack <daniel@caiaq.de>
+Cc: linux-kernel@vger.kernel.org,
+	Alagu Sankar <alagusankar@embwise.com>,
+	Volker Ernst <volker.ernst@txtr.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org,
+	David Brownell <dbrownell@users.sourceforge.net>
+In-Reply-To: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
+References: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Mar 2010 11:37:39 -0700
+Message-ID: <1269974259.3019.52.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, 2010-03-30 at 19:38 +0200, Daniel Mack wrote:
+> When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
+> However, the 8686 will only drive this line when the ECSI and SCSI bits
+> are set in the CCCR_IF register.
 
-Stanse found an atomic error in reg_copy_regd:
+While this looks fine enough to me, I don't have enough knowledge of the
+SDIO stack to know whether or not this would be considered a layering
+violation or not.  Given that I don't think there's an active maintainer
+for the SDIO subsystem though, I'd say it's fine enough for me...
 
-static int reg_copy_regd(const struct ieee80211_regdomain **dst_regd,
-                          const struct ieee80211_regdomain *src_regd)
-{
-         struct ieee80211_regdomain *regd;
-         int size_of_regd = 0;
-         unsigned int i;
+Any thoughts David since it appears to be at least somewhat SPI related?
 
-         size_of_regd = sizeof(struct ieee80211_regdomain) +
-           ((src_regd->n_reg_rules + 1) * sizeof(struct 
-ieee80211_reg_rule));
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-         regd = kzalloc(size_of_regd, GFP_KERNEL);       <---- here
+> Thanks to Alagu Sankar for pointing me in the right direction.
+> 
+> Signed-off-by: Daniel Mack <daniel@caiaq.de>
+> Cc: Alagu Sankar <alagusankar@embwise.com>
+> Cc: Volker Ernst <volker.ernst@txtr.com>
+> Cc: Dan Williams <dcbw@redhat.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: libertas-dev@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: linux-mmc@vger.kernel.org
+> ---
+>  drivers/net/wireless/libertas/if_sdio.c |   24 ++++++++++++++++++++++++
+>  include/linux/mmc/sdio.h                |    2 ++
+>  2 files changed, 26 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> index 7a73f62..d3170f2 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -34,6 +34,8 @@
+>  #include <linux/mmc/card.h>
+>  #include <linux/mmc/sdio_func.h>
+>  #include <linux/mmc/sdio_ids.h>
+> +#include <linux/mmc/sdio.h>
+> +#include <linux/mmc/host.h>
+>  
+>  #include "host.h"
+>  #include "decl.h"
+> @@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
+>  	int ret, i;
+>  	unsigned int model;
+>  	struct if_sdio_packet *packet;
+> +	struct mmc_host *host = func->card->host;
+>  
+>  	lbs_deb_enter(LBS_DEB_SDIO);
+>  
+> @@ -1022,6 +1025,27 @@ static int if_sdio_probe(struct sdio_func *func,
+>  	if (ret)
+>  		goto disable;
+>  
+> +	/* For 1-bit transfers, we need to enable the interrupt flags in
+> +	 * the CCCR register. Temporarily set the function number to 0
+> +	 * for that. */
+> +	if ((host->caps & MMC_CAP_SDIO_IRQ) &&
+> +	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
+> +		unsigned int num = func->num;
+> +		u8 reg;
+> +
+> +		func->num = 0;
+> +		reg = sdio_readb(func, SDIO_CCCR_IF, &ret);
+> +		if (ret)
+> +			goto release_int;
+> +
+> +		reg |= SDIO_BUS_ECSI | SDIO_BUS_SCSI;
+> +		sdio_writeb(func, reg, SDIO_CCCR_IF, &ret);
+> +		if (ret)
+> +			goto release_int;
+> +
+> +		func->num = num;
+> +	}
+> +
+>  	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+>  	if (ret)
+>  		goto release_int;
+> diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
+> index 0ebaef5..329a8fa 100644
+> --- a/include/linux/mmc/sdio.h
+> +++ b/include/linux/mmc/sdio.h
+> @@ -94,6 +94,8 @@
+>  
+>  #define  SDIO_BUS_WIDTH_1BIT	0x00
+>  #define  SDIO_BUS_WIDTH_4BIT	0x02
+> +#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
+> +#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
+>  
+>  #define  SDIO_BUS_ASYNC_INT	0x20
+>  
 
-Called from:
 
-static void reg_regdb_search(struct work_struct *work)
-{
-         spin_lock(&reg_regdb_search_lock);
-         while (!list_empty(&reg_regdb_search_list)) {
-...
-                 for (i=0; i<reg_regdb_size; i++) {
-                         curdom = reg_regdb[i];
-
-                         if (!memcmp(request->alpha2, curdom->alpha2, 2)) {
-                                 r = reg_copy_regd(&regdom, curdom);
-...
-         spin_unlock(&reg_regdb_search_lock);
-}
-
-Whole error temporarily available at:
-http://decibel.fi.muni.cz/~xslaby/stanse/error.cgi?db=34-rc&id=578
-
-It is introduced by 3b377ea9d4efc94dc52fe41b4dfdb463635ab298.
-
-Do you plan to extend it somehow or may the spinlock be converted to 
-mutex? If not how much may size_of_regd be -- can we safely switch to 
-GFP_ATOMIC?
-
--- 
-js
