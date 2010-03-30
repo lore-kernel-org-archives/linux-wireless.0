@@ -1,128 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41115 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756146Ab0CQW2P (ORCPT
+Received: from katherina.student.utwente.nl ([130.89.168.160]:59012 "EHLO
+	katherina.student.utwente.nl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754405Ab0C3Ucn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 18:28:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 14/20] ath9k_hw: add a helper for retrieving the MIB cycle counters
-Date: Wed, 17 Mar 2010 18:28:07 -0400
-Message-Id: <1268864893-11428-15-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
-References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 30 Mar 2010 16:32:43 -0400
+Date: Tue, 30 Mar 2010 22:32:40 +0200
+From: Matthijs Kooijman <matthijs@stdin.nl>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] [RFC] rt2500pci: fix powersaving
+Message-ID: <20100330203239.GA21160@katherina.student.utwente.nl>
+References: <201003290956.54234.linux@rainbow-software.org>
+ <201003301433.55355.linux@rainbow-software.org>
+ <20100330125620.GA2173@katherina.student.utwente.nl>
+ <201003302209.23334.linux@rainbow-software.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gBBFr7Ir9EOA20Yy"
+In-Reply-To: <201003302209.23334.linux@rainbow-software.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helper can be abstracted on each hardware family. While at it
-document the registers involved, used to profile the MAC baseband
-for Adaptive Noise Immunity (ANI).
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |   67 ++++++++++++++++++++++++++++++++--
- 1 files changed, 64 insertions(+), 3 deletions(-)
+--gBBFr7Ir9EOA20Yy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 71bf201..02db5c5 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -14,6 +14,13 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+/*
-+ * Adaptive Noise Immunity
-+ *
-+ * Used to monitor your environment and adjust the MAC baseband accordingly to
-+ * help with RX. ANI is extremely useful in environments with noise.
-+ */
-+
- #include "hw.h"
- 
- static int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
-@@ -324,6 +331,18 @@ static void ath9k_hw_get_phy_err_count(struct ath_hw *ah,
- 	*phy_err_count2 = REG_READ(ah, AR_PHY_ERR_2);
- }
- 
-+static void ath9k_hw_get_mib_cycle_counters(struct ath_hw *ah,
-+					    u32 *rx_clear_count,
-+					    u32 *rx_frame_count,
-+					    u32 *tx_frame_count,
-+					    u32 *cycle_count)
-+{
-+	*rx_clear_count = REG_READ(ah, AR_RCCNT);
-+	*rx_frame_count = REG_READ(ah, AR_RFCNT);
-+	*tx_frame_count = REG_READ(ah, AR_TFCNT);
-+	*cycle_count = REG_READ(ah, AR_CCCNT);
-+}
-+
- static void ath9k_ani_restart(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
-@@ -530,15 +549,57 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
- 	}
- }
- 
-+/**
-+ * ath9k_hw_ani_get_listen_time - profile the MAC baseband for ANI
-+ *
-+ * @ah: atheros hardware structure
-+ *
-+ * This uses the Baseband Interface MIB Counters:
-+ *
-+ * 0x80ec - Transmit Frame Counter
-+ * 0x80f0 - Receive Frame Counter
-+ * 0x80f4 - Receive Clear Counter
-+ * 0x80f8 - Cycle Counter
-+ *
-+ * for profiling of the MAC baseband and adjusting it accordingly.
-+ *
-+ * The baseband interface MIB counters are used to provide software a
-+ * means of profiling the behavior at the MAC baseband interface for
-+ * performance analysis.  These counters are based on the system clock
-+ * domain which turns off during sleep.  The transmit frame counter
-+ * counts the number of cycles the tx_frame signal is active.  The
-+ * receive frame counter counts the number of cycles the rx_frame signal
-+ * is active.  The receive clear counter counts the number of cycles the
-+ * rx_clear signal is "NOT" active.  The cycle counter counts the number of
-+ * clock cycles.  There are registers which controls the behaviour of
-+ * these counters.  The PCI MIB freeze register will hold all the
-+ * values of these registers.  PCI MIB clear will zero out all the
-+ * values of these registers.  PCI MIB force will force increment of
-+ * all the registers each cycle.  These register do not roll over or
-+ * saturate but rather use a time weighted average to maintain the
-+ * ratios of these MIB counter registers.  When the cycle counter
-+ * register reaches 32'hFFFFFFFF, all the registers shift their
-+ * values right by 1.  So the new cycle counter register will be
-+ * 32'h7FFFFFFF.  Writes are allowed to verify correct averaging
-+ * behaviour.
-+ *
-+ * The saturate cycle cnt bit if set in the DIAG_SW (0x8048) will
-+ * cause the cycle counter register (0x80F8) to saturate instead
-+ * of shifting to the right by 1 every time the count reaches
-+ * 0xFFFFFFFF.
-+ */
- static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
- 	u32 txFrameCount, rxFrameCount, cycleCount;
-+	u32 rx_clear_count; /* not actually used */
- 	int32_t listenTime;
- 
--	txFrameCount = REG_READ(ah, AR_TFCNT);
--	rxFrameCount = REG_READ(ah, AR_RFCNT);
--	cycleCount = REG_READ(ah, AR_CCCNT);
-+	ath9k_hw_get_mib_cycle_counters(ah,
-+					&rx_clear_count,
-+					&rxFrameCount,
-+					&txFrameCount,
-+					&cycleCount);
- 
- 	aniState = ah->curani;
- 	if (aniState->cycleCount == 0 || aniState->cycleCount > cycleCount) {
--- 
-1.6.3.3
+Hi Ondrej,
 
+do you need testing of your patches? If so, let me know and I'll give them a
+go.
+
+Gr.
+
+Matthijs
+
+--gBBFr7Ir9EOA20Yy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkuyX+cACgkQz0nQ5oovr7w0wACfXI0tGVy83fuWyMA5J/Ot3MXV
+NZYAoMD9SU7VK9X6SWRzfbyznBmMgIUs
+=avC7
+-----END PGP SIGNATURE-----
+
+--gBBFr7Ir9EOA20Yy--
