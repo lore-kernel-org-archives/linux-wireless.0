@@ -1,93 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1472 "EHLO mga11.intel.com"
+Received: from kroah.org ([198.145.64.141]:51766 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752618Ab0CJFWF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 00:22:05 -0500
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 08/24] iwlwifi: remove never-changing priv->rates_mask variable
-Date: Tue,  9 Mar 2010 21:21:36 -0800
-Message-Id: <1268198512-6572-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
-References: <1268198512-6572-1-git-send-email-reinette.chatre@intel.com>
+	id S932102Ab0C3XRc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 19:17:32 -0400
+Message-Id: <20100330225605.139131792@linux.site>
+Date: Tue, 30 Mar 2010 15:54:52 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mb@bu3sch.de, ath5k-devel@venema.h4ckr.net,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Luis Rodriguez <lrodriguez@atheros.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+Subject: [014/116] ath5k: dont use external sleep clock in AP mode
+In-Reply-To: <20100330230600.GA28802@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
-It's always just IWL_RATES_MASK.
+------------------
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+From: Bob Copeland <me@bobcopeland.com>
+
+commit 5d6ce628f986d1a3c523cbb0a5a52095c48cc332 upstream
+
+When using the external sleep clock in AP mode, the
+TSF increments too quickly, causing beacon interval
+to be much lower than it is supposed to be, resulting
+in lots of beacon-not-ready interrupts.
+
+This fixes http://bugzilla.kernel.org/show_bug.cgi?id=14802.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: Luis Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    5 ++---
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 --
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++---
- 3 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath5k/reset.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d0fab87..e7e4bf7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2103,8 +2103,8 @@ static void iwl_alive_start(struct iwl_priv *priv)
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1382,8 +1382,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah,
+ 	 * Set clocks to 32KHz operation and use an
+ 	 * external 32KHz crystal when sleeping if one
+ 	 * exists */
+-	if (ah->ah_version == AR5K_AR5212)
+-			ath5k_hw_set_sleep_clock(ah, true);
++	if (ah->ah_version == AR5K_AR5212 &&
++	    ah->ah_op_mode != NL80211_IFTYPE_AP)
++		ath5k_hw_set_sleep_clock(ah, true);
  
- 	ieee80211_wake_queues(priv->hw);
- 
--	priv->active_rate = priv->rates_mask;
--	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
-+	priv->active_rate = IWL_RATES_MASK;
-+	priv->active_rate_basic = IWL_RATES_MASK & IWL_BASIC_RATES_MASK;
- 
- 	/* Configure Tx antenna selection based on H/W config */
- 	if (priv->cfg->ops->hcmd->set_tx_ant)
-@@ -3392,7 +3392,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 	priv->qos_data.qos_active = 0;
- 	priv->qos_data.qos_cap.val = 0;
- 
--	priv->rates_mask = IWL_RATES_MASK;
- 	/* Set the tx_power_user_lmt to the lowest power level
- 	 * this value will get overwritten by channel max power avg
- 	 * from eeprom */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index c277e4e..4d6558f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1217,8 +1217,6 @@ struct iwl_priv {
- #endif
- 
- 	/* context information */
--	u16 rates_mask;
--
- 	u8 bssid[ETH_ALEN];
- 	u16 rts_threshold;
- 	u8 mac_addr[ETH_ALEN];
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 2b2c96b..b2b0505 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2508,8 +2508,8 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
- 
- 	ieee80211_wake_queues(priv->hw);
- 
--	priv->active_rate = priv->rates_mask;
--	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
-+	priv->active_rate = IWL_RATES_MASK;
-+	priv->active_rate_basic = IWL_RATES_MASK & IWL_BASIC_RATES_MASK;
- 
- 	iwl_power_update_mode(priv, true);
- 
-@@ -3855,7 +3855,6 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
- 	priv->qos_data.qos_active = 0;
- 	priv->qos_data.qos_cap.val = 0;
- 
--	priv->rates_mask = IWL_RATES_MASK;
- 	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
- 
- 	if (eeprom->version < EEPROM_3945_EEPROM_VERSION) {
--- 
-1.6.3.3
+ 	/*
+ 	 * Disable beacons and reset the register
+
 
