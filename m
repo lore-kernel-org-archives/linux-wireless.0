@@ -1,102 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay02.digicable.hu ([92.249.128.188]:38930 "EHLO
-	relay02.digicable.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753868Ab0CEGtk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 01:49:40 -0500
-Message-ID: <4B90A97C.5050703@freemail.hu>
-Date: Fri, 05 Mar 2010 07:49:32 +0100
-From: =?ISO-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>
+Received: from khc.piap.pl ([195.187.100.11]:41278 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754576Ab0C3UNy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 16:13:54 -0400
+From: Krzysztof Halasa <khc@pm.waw.pl>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+References: <m3tys0tbhk.fsf@intrepid.localdomain>
+	<m3eij3ym5k.fsf@intrepid.localdomain>
+	<43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
+	<m339zizz4o.fsf@intrepid.localdomain>
+	<43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
+	<m3y6hayhv1.fsf@intrepid.localdomain>
+	<43e72e891003291500w632cb789r6860dae9ccdf744c@mail.gmail.com>
+	<m3r5n2qbo0.fsf@intrepid.localdomain>
+	<43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
+	<m3wrwtoekv.fsf@intrepid.localdomain>
+	<43e72e891003301140p850093aya4ea6e1951e7ab9c@mail.gmail.com>
+Date: Tue, 30 Mar 2010 22:13:51 +0200
+In-Reply-To: <43e72e891003301140p850093aya4ea6e1951e7ab9c@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Tue, 30 Mar 2010 11:40:08 -0700")
+Message-ID: <m3r5n1o9ds.fsf@intrepid.localdomain>
 MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: Luis Correia <luis.f.correia@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-Subject: Re: Linux 2.6.33 + Edimax EW-7318Ug?
-References: <4B8F5228.4080001@freemail.hu> <efe7343f1003032339x32bd512et9eebe0518546cfee@mail.gmail.com> <4B901811.2030708@gmail.com>
-In-Reply-To: <4B901811.2030708@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gertjan van Wingerde wrote:
-> On 03/04/10 08:39, Luis Correia wrote:
->> Hi!
->>
->> 2010/3/4 Németh Márton <nm127@freemail.hu>:
->>> Hi,
->>>
->>> I'm new to the Edimax EW-7318Ug ( http://www.edimax.com/en/produce_detail.php?pd_id=3&pl1_id=1&pl2_id=44 )
->>> device. I could find out so far that there are different drivers for Linux
->>> which can be used with this device. I think this device have the RT73 chip.
->>>
->>> I tried Linux kernel 2.6.33, compiled with CONFIG_RT2X00=m and CONFIG_RT2X00_DEBUG=y
->>> (the full kernel config is attached). I copied the rt73.bin from
->>> http://www.edimax.com/images/Image/driver/Linux%20driver/Wireless/USB%20adaptor/2008_0506_RT73_Linux_STA_Drv1.1.0.1.tar.zip
->>> to /lib/firmware/rt73.bin .
->> While I'm not 100% sure, this may be one of those devices thas has
->> it's ID in both rt2500usb and rt73usb.
->>
->> Besides prying it open to see which is the actual chip used, there is
->> little we can do, software side, to be sure of which exact driver
->> should be used.
->>
->> But to be honest, I can't really recall which exact driver ID conflict.
->>
-> 
-> By the looks of it (at the Edimax website) this is a true rt73 device. And that seems
-> to be supported by the dmesg output posted by Németh, where the loading of the rt2500usb
-> driver fails.
-> 
-> Németh, can you blacklist the auto-loading of the rt2500usb device (see
-> http://www.cyberciti.biz/tips/avoid-linux-kernel-module-driver-autoloading.html for how
-> to do this)?
+"Luis R. Rodriguez" <mcgrof@gmail.com> writes:
 
-After I blacklisted the rt2500usb in /etc/modprobe.d/blacklist.conf, I rebooted the system
-and I get the following messages in dmesg when I plug the device:
+>> Software (the official Atheros driver, to be precise) says 0 isn't
+>> exactly US.
+>> Hardware (card) manufacturer says 0 isn't US.
+>
+> Would it make you happy if I send a patch to clarify that?
 
-[   31.500242] usb 1-4: new high speed USB device using ehci_hcd and address 5
-[   31.772166] usb 1-4: New USB device found, idVendor=148f, idProduct=2573
-[   31.772188] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
-[   31.772204] usb 1-4: Product: 802.11 bg WLAN
-[   31.772216] usb 1-4: Manufacturer: Ralink
-[   31.972449] cfg80211: Using static regulatory domain info
-[   31.972462] cfg80211: Regulatory domain: 00
-[   31.972472]     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-[   31.972483]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-[   31.972494]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (600 mBi, 2000 mBm)
-[   31.972505]     (2474000 KHz - 2494000 KHz @ 20000 KHz), (600 mBi, 2000 mBm)
-[   31.972516]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-[   31.972527]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-[   31.973352] cfg80211: Calling CRDA to update world regulatory domain
-[   32.594920] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
-[   32.594939] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
-[   32.594955] phy0 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET A: 0x0000
-[   32.597348] phy0 -> rt2x00_print_chip: Info - Chipset detected - rt: 1300, rf: 0002, rev: 0002573a.
-[   32.661727] phy0: Selected rate control algorithm 'minstrel'
-[   32.678361] Registered led device: rt73usb-phy0::radio
-[   32.684644] Registered led device: rt73usb-phy0::assoc
-[   32.686278] Registered led device: rt73usb-phy0::quality
-[   32.687991] usbcore: registered new interface driver rt73usb
+That would fix a good part of the problem, yes. TIA.
 
-Then I try to bring up the device before searching wireless networks:
+> I've indicated that your card is already working as it was designed.
 
-# ifconfig wlan0 up
-SIOCSIFFLAGS: Unknown error 132
+But that's not the case.
 
-I tried to run "strace ifconfig wlan0 up":
+The Atheros _chips_ are probably working as designed. The card(s) does
+not, since it was designed for European market, and its designer
+confirms this. Yet, by default, this card (+ driver) enables channels
+which should be disabled in Europe, and disables others, which should be
+available.
 
-ioctl(4, SIOCGIFFLAGS, {ifr_name="wlan0", ifr_flags=IFF_BROADCAST|IFF_MULTICAST}) = 0
-ioctl(4, SIOCSIFFLAGS, {ifr_name="wlan0", ???}) = -1 ERFKILL (Unknown error 132)
+This is caused by interaction between two pieces - the driver and the
+card. Most probably each one of them, alone, is not at fault.
 
-So I recognised that the radio LED was switched off on the Eee PC 901 which I could
-turn on with Fn+F2. At this point both the internal and the Edimax EW-7318Ug started
-to work. I could disable the internal wlan driver with the command "rmmod rt2860sta"
-temporary to see if everything works fine.
+> The EEPROM is not something that was designed for end users to modify.
 
-Thank you for your help!
+Though I'm not end user, I will leave it for others to modify, no
+problem. I only need a proof (such as the driver printing "US") it
+should be modified.
 
-Regards,
+> Who programmed your EEPROM choose that for a reason, and only they and
+> as per Atheros's documentation would know what the goal was,
 
-	Márton Németh
+and those who were told about it. The stated goal is known, and I assume
+the calibration data is available as well (I don't have these cards
+physically ATM).
+
+> If you want to muck with the EEPROM/code for regulatory compliance
+> that is up to you and that is simply not supported due to a few
+> things. One of them is calibration data which may or not be available
+> for the region you would choose blindly. Properly enabling users to
+> change their regulatory domain at their own whim really requires more
+> involvement, sure you'd be able to use some additional channels but it
+> by no means would mean that they are in compliance or that the EIRP
+> you use hits the actual desired target. The important part really is
+> compliance.
+
+Precisely. To be compliant I have to restrict usage to a specific set of
+frequencies. Unfortunately it's a different set than the one in US.
+
+> The regulatory code on for the Atheros drivers enables usage only of
+> the channels dictated by the EEPROM and what we in software match that
+> EEPROM code to tables in software. This is by design. The Linux
+> regulatory framework allows you to further restrict the device further
+> but for Atheros cards if you change countries you will not get new
+> channels if your original programmed regulatory domain does not allow
+> for it.
+
+Yes, and it fits the needs nicely - if the card manufacturer's idea
+about meaning of the EEPROM matches the driver.
+-- 
+Krzysztof Halasa
