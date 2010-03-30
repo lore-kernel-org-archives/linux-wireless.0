@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41111 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756144Ab0CQW2P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 18:28:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 12/20] ath9k_hw: add documentation for the TPC register
-Date: Wed, 17 Mar 2010 18:28:05 -0400
-Message-Id: <1268864893-11428-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
-References: <1268864893-11428-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:49960 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755200Ab0C3C6Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Mar 2010 22:58:16 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Mar 2010 19:58:16 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19377.28036.56183.487318@gargle.gargle.HOWL>
+Date: Tue, 30 Mar 2010 08:48:27 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k_htc: Fix TKIP encryption
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/reg.h |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+Set IEEE80211_HW_RX_INCLUDES_FCS to indicate that
+the FCS is present in RX frames. Also, remove a redundant
+assignment of skb length and include the FCS_LEN
+when checking padding.
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 198e41d..ce94e99 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1435,6 +1435,20 @@ enum {
- #define AR_SLEEP2_BEACON_TIMEOUT    0xFFE00000
- #define AR_SLEEP2_BEACON_TIMEOUT_S  21
+Fixing this issue makes TKIP work.
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    3 +--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index d8779b9..90cfd90 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -513,7 +513,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
+ 		IEEE80211_HW_AMPDU_AGGREGATION |
+ 		IEEE80211_HW_SPECTRUM_MGMT |
+-		IEEE80211_HW_HAS_RATE_CONTROL;
++		IEEE80211_HW_HAS_RATE_CONTROL |
++		IEEE80211_HW_RX_INCLUDES_FCS;
  
-+/*
-+ * 0x80e8   Transmit Power Control
-+ * (Int Addr: 0x3A, Access: R/W, Clock: system clk)
-+ * TPC             21:0    'h3F    bit 5:0:   ACK_PWR
-+ *                                'h3F    bit 13:8:  CTS_PWR
-+ *                                'h3F    bit 21:16: CHIRP_PWR
-+ * Transmit Power Control Description:
-+ *
-+ * The 6 bit transmit power control sent from the MAC to the baseband
-+ * is typically controlled by using the transmit descriptor field.  But
-+ * self generated response frames such as ACK, CTS, and chirp which
-+ * do not have a transmit descriptor use the values in the transmit power
-+ * control register instead.
-+ */
- #define AR_TPC                 0x80e8
- #define AR_TPC_ACK             0x0000003f
- #define AR_TPC_ACK_S           0x00
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_STATION) |
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index befe574..f1e3d83 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -450,7 +450,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 	padpos = ath9k_cmn_padpos(fc);
+ 
+ 	padsize = padpos & 3;
+-	if (padsize && skb->len >= padpos+padsize) {
++	if (padsize && skb->len >= padpos+padsize+FCS_LEN) {
+ 		memmove(skb->data + padsize, skb->data, padpos);
+ 		skb_pull(skb, padsize);
+ 	}
+@@ -646,7 +646,6 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
+ 	spin_lock(&priv->rx.rxbuflock);
+ 	memcpy(&rxbuf->rxstatus, rxstatus, HTC_RX_FRAME_HEADER_SIZE);
+ 	skb_pull(skb, HTC_RX_FRAME_HEADER_SIZE);
+-	skb->len = rxstatus->rs_datalen;
+ 	rxbuf->skb = skb;
+ 	rxbuf->in_process = true;
+ 	spin_unlock(&priv->rx.rxbuflock);
 -- 
-1.6.3.3
+1.7.0.3
 
