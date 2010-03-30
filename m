@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42092 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753677Ab0CQQFR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 12:05:17 -0400
-Subject: Re: [RFC PATCHv2 0/2] mac80211: cfg80211: Roam trigger support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1268805772.10120.603.camel@wimaxnb.nmp.nokia.com>
-References: <1268657751-1042-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268776349.8918.9.camel@jlt3.sipsolutions.net>
-	 <1268805772.10120.603.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 09:05:16 -0700
-Message-ID: <1268841917.5989.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from khc.piap.pl ([195.187.100.11]:60098 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751409Ab0C3SVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 14:21:39 -0400
+From: Krzysztof Halasa <khc@pm.waw.pl>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+References: <m3tys0tbhk.fsf@intrepid.localdomain>
+	<43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
+	<m3eij3ym5k.fsf@intrepid.localdomain>
+	<43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
+	<m339zizz4o.fsf@intrepid.localdomain>
+	<43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
+	<m3y6hayhv1.fsf@intrepid.localdomain>
+	<43e72e891003291500w632cb789r6860dae9ccdf744c@mail.gmail.com>
+	<m3r5n2qbo0.fsf@intrepid.localdomain>
+	<43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
+Date: Tue, 30 Mar 2010 20:21:36 +0200
+In-Reply-To: <43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Tue, 30 Mar 2010 09:28:28 -0700")
+Message-ID: <m3wrwtoekv.fsf@intrepid.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-17 at 08:02 +0200, Juuso Oikarinen wrote:
+"Luis R. Rodriguez" <mcgrof@gmail.com> writes:
 
-> > I'm curious. How does the HW/firmware do this?
-> 
-> > In my testing on some hw, the beacon RSSI fluctuated wildly, so you'd
-> > have to set the hysteresis pretty high.
-> 
-> The HW/firmware can be configured with parameters related to averaging,
-> which will smoothen the worst of the fluctuation at least between single
-> frames.
+> My point was that this is not something meant to be interpreted by
+> anyone for what "default country" means, the documentation I pointed
+> out clearly states that 0x0 is designed to mean to match the "US" by
+> Atheros hardware as per hardware documentation provided to ODMs.
 
-Ok, cool. Thanks for taking the time to answer :)
+I understand this, but the reality is that I have to work with hardware
+and software, not with the docs provided by Atheros to some other
+parties.
 
-> Still, there is the WLAN tendency of a very steep RSSI curve, so we'll
-> probably end up with a relatively high hysteresis. Figuring out good
-> values for the config is still to-be-done.
+Software (the official Atheros driver, to be precise) says 0 isn't
+exactly US.
+Hardware (card) manufacturer says 0 isn't US.
 
-Right. And it will be a tradeoff between roaming decision speed and
-battery life.
+What do you think can I do?
 
-johannes
+I obviously would go the regulatory.bin way, if it was possible. But
+I think regulatory.bin simply describes frequencies etc. valid in
+different countries, and if the file contains correct data (and it seems
+it does), there is nothing I can "fix" there.
 
+For now I think the best I can do is to add
+CONFIG_*80211_DEFAULT_COUNTRY (with default = "US"), and to treat 0 as
+this DEFAULT_COUNTRY. This way I don't enable users to disobey the rules
+(more than they're already able, since they can patch and recompile
+anyway), and at the same time I don't put the (inappropriate for many
+people) default country in the sources.
+-- 
+Krzysztof Halasa
