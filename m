@@ -1,62 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:56125 "EHLO
-	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754094Ab0C3Vug (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41993 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753591Ab0C3CAe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Mar 2010 17:50:36 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, <users@rt2x00.serialmonkey.com>,
-	<linux-wireless@vger.kernel.org>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 3/4] rt2x00: Add wakeup interrupt handler to rt61pci.
-Date: Tue, 30 Mar 2010 23:50:25 +0200
-Message-Id: <1269985826-17438-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
-References: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
+	Mon, 29 Mar 2010 22:00:34 -0400
+Date: Mon, 29 Mar 2010 19:00:25 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC] mac80211: Send deauth/disassoc prior to dropping STA entry
+Message-ID: <20100330020025.GA18080@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed to wake up the device automatically for receiving beacons,
-and is required for proper powersave handling.
+Does this look fine or would there be better solution for reordering
+disconnections calls in a way that would allow us to maintain the keys
+needed to protect the deauth/disassoc frame?
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+When management frame protection (IEEE 802.11w) is used, the
+deauthentication and disassociation frames must be protected whenever
+the encryption keys are configured. We were removing the STA entry and
+with it, the keys, just before actually sending out these frames which
+meant that the frames went out unprotected. The AP will drop them in
+such a case. Fix this by reordering the operations a bit so that
+sta_info_destroy_addr() gets called only after
+ieee80211_send_deauth_disassoc().
+
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+
 ---
- drivers/net/wireless/rt2x00/rt61pci.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ net/mac80211/mlme.c |   23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index e2da928..ac69dbe 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2117,6 +2117,14 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 	}
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-03-29 18:51:05.000000000 -0700
++++ wireless-testing/net/mac80211/mlme.c	2010-03-29 18:52:25.000000000 -0700
+@@ -778,7 +778,8 @@ static void ieee80211_set_associated(str
+ 	netif_carrier_on(sdata->dev);
  }
  
-+static void rt61pci_wakeup(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct ieee80211_conf conf = { .flags = 0 };
-+	struct rt2x00lib_conf libconf = { .conf = &conf };
-+
-+	rt61pci_config(rt2x00dev, &libconf, IEEE80211_CONF_CHANGE_PS);
-+}
-+
- static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
+-static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
++				   int remove_sta)
  {
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
-@@ -2164,6 +2172,12 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
- 		rt2x00pci_register_write(rt2x00dev,
- 					 M2H_CMD_DONE_CSR, 0xffffffff);
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -851,7 +852,8 @@ static void ieee80211_set_disassoc(struc
+ 	changed |= BSS_CHANGED_BSSID;
+ 	ieee80211_bss_info_change_notify(sdata, changed);
  
-+	/*
-+	 * 4 - MCU Autowakeup interrupt.
-+	 */
-+	if (rt2x00_get_field32(reg_mcu, MCU_INT_SOURCE_CSR_TWAKEUP))
-+		rt61pci_wakeup(rt2x00dev);
-+
- 	return IRQ_HANDLED;
+-	sta_info_destroy_addr(sdata, bssid);
++	if (remove_sta)
++		sta_info_destroy_addr(sdata, bssid);
  }
  
--- 
-1.7.0.3
+ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+@@ -964,7 +966,7 @@ static void __ieee80211_connection_loss(
+ 
+ 	printk(KERN_DEBUG "Connection to AP %pM lost.\n", bssid);
+ 
+-	ieee80211_set_disassoc(sdata);
++	ieee80211_set_disassoc(sdata, 1);
+ 	ieee80211_recalc_idle(local);
+ 	mutex_unlock(&ifmgd->mtx);
+ 	/*
+@@ -1030,7 +1032,7 @@ ieee80211_rx_mgmt_deauth(struct ieee8021
+ 	printk(KERN_DEBUG "%s: deauthenticated from %pM (Reason: %u)\n",
+ 			sdata->name, bssid, reason_code);
+ 
+-	ieee80211_set_disassoc(sdata);
++	ieee80211_set_disassoc(sdata, 1);
+ 	ieee80211_recalc_idle(sdata->local);
+ 
+ 	return RX_MGMT_CFG80211_DEAUTH;
+@@ -1060,7 +1062,7 @@ ieee80211_rx_mgmt_disassoc(struct ieee80
+ 	printk(KERN_DEBUG "%s: disassociated from %pM (Reason: %u)\n",
+ 			sdata->name, mgmt->sa, reason_code);
+ 
+-	ieee80211_set_disassoc(sdata);
++	ieee80211_set_disassoc(sdata, 1);
+ 	ieee80211_recalc_idle(sdata->local);
+ 	return RX_MGMT_CFG80211_DISASSOC;
+ }
+@@ -1708,7 +1710,7 @@ static void ieee80211_sta_work(struct wo
+ 			printk(KERN_DEBUG "No probe response from AP %pM"
+ 				" after %dms, disconnecting.\n",
+ 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
+-			ieee80211_set_disassoc(sdata);
++			ieee80211_set_disassoc(sdata, 1);
+ 			ieee80211_recalc_idle(local);
+ 			mutex_unlock(&ifmgd->mtx);
+ 			/*
+@@ -2010,7 +2012,7 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 		}
+ 
+ 		/* Trying to reassociate - clear previous association state */
+-		ieee80211_set_disassoc(sdata);
++		ieee80211_set_disassoc(sdata, 1);
+ 	}
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+@@ -2114,7 +2116,7 @@ int ieee80211_mgd_deauth(struct ieee8021
+ 
+ 	if (ifmgd->associated == req->bss) {
+ 		bssid = req->bss->bssid;
+-		ieee80211_set_disassoc(sdata);
++		ieee80211_set_disassoc(sdata, 1);
+ 		mutex_unlock(&ifmgd->mtx);
+ 	} else {
+ 		bool not_auth_yet = false;
+@@ -2171,6 +2173,7 @@ int ieee80211_mgd_disassoc(struct ieee80
+ 			   void *cookie)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	u8 bssid[ETH_ALEN];
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+@@ -2188,13 +2191,15 @@ int ieee80211_mgd_disassoc(struct ieee80
+ 	printk(KERN_DEBUG "%s: disassociating from %pM by local choice (reason=%d)\n",
+ 	       sdata->name, req->bss->bssid, req->reason_code);
+ 
+-	ieee80211_set_disassoc(sdata);
++	memcpy(bssid, req->bss->bssid, ETH_ALEN);
++	ieee80211_set_disassoc(sdata, 0);
+ 
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+ 	ieee80211_send_deauth_disassoc(sdata, req->bss->bssid,
+ 			IEEE80211_STYPE_DISASSOC, req->reason_code,
+ 			cookie);
++	sta_info_destroy_addr(sdata, bssid);
+ 
+ 	ieee80211_recalc_idle(sdata->local);
+ 
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
