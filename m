@@ -1,128 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46914 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751770Ab0CKB2c (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:53215 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357Ab0C3Q2t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Mar 2010 20:28:32 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 14/14] ath9k_hw: add a helper for retrieving the MIB cycle counters
-Date: Wed, 10 Mar 2010 20:28:31 -0500
-Message-Id: <1268270911-24568-15-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
-References: <1268270911-24568-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 30 Mar 2010 12:28:49 -0400
+Received: by pwi5 with SMTP id 5so7883615pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 09:28:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <m3r5n2qbo0.fsf@intrepid.localdomain>
+References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003281645m1da47a1en882df4432733977d@mail.gmail.com>
+	<m3eij3ym5k.fsf@intrepid.localdomain> <43e72e891003291222n5e72a0a5m31dddf2bbf6e06ab@mail.gmail.com>
+	<m339zizz4o.fsf@intrepid.localdomain> <43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com>
+	<m3y6hayhv1.fsf@intrepid.localdomain> <43e72e891003291500w632cb789r6860dae9ccdf744c@mail.gmail.com>
+	<m3r5n2qbo0.fsf@intrepid.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 30 Mar 2010 09:28:28 -0700
+Message-ID: <43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helper can be abstracted on each hardware family. While at it
-document the registers involved, used to profile the MAC baseband
-for Adaptive Noise Immunity (ANI).
+On Tue, Mar 30, 2010 at 4:41 AM, Krzysztof Halasa <khc@pm.waw.pl> wrote:
+> "Luis R. Rodriguez" <mcgrof@gmail.com> writes:
+>
+>>> So what exactly do I change? Can the regulatory.bin change the default
+>>> country?
+>>
+>> Huh?
+>>
+>>> Remember I need to be compliant to the US freq sets as well - when the
+>>> regdomain is set to US. IOW I can't allow the user operating the device
+>>> to set e.g. channel 12 when the user selects country=US (so there is a
+>>> big difference between country 0=US and the real country=US).
+>>
+>> Huh?
+>
+> Not sure what do you mean. Are my expectations unrealistic?
+>
+>>> But the driver says:
+>>> ath: EEPROM regdomain: 0x0
+>>> ath: EEPROM indicates default country code should be used
+>>> ath: doing EEPROM country->regdmn map search
+>>> ath: country maps to regdmn code: 0x3a
+>>> ath: Country alpha2 being used: US
+>>> ath: Regpair used: 0x3a
+>>>
+>>> At least for the driver 0 doesn't mean US, it means "default country".
+>>> Perhaps the meaning of "default country" depends on maybe location of
+>>> the hw and/or sw manufacturer?
+>>
+>> I just pointed to some documentation for you which indicated 0x0 means
+>> "US".
+>
+> Yes, but the meaning depends on the POV. What is important to me is what
+> does that mean to a) the software I use, b) the hardware I use (cards).
+> The driver doesn't say 0=US, perhaps it should? Then things would be
+> very different.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |   67 ++++++++++++++++++++++++++++++++--
- 1 files changed, 64 insertions(+), 3 deletions(-)
+My point was that this is not something meant to be interpreted by
+anyone for what "default country" means, the documentation I pointed
+out clearly states that 0x0 is designed to mean to match the "US" by
+Atheros hardware as per hardware documentation provided to ODMs.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 71bf201..02db5c5 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -14,6 +14,13 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+/*
-+ * Adaptive Noise Immunity
-+ *
-+ * Used to monitor your environment and adjust the MAC baseband accordingly to
-+ * help with RX. ANI is extremely useful in environments with noise.
-+ */
-+
- #include "hw.h"
- 
- static int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
-@@ -324,6 +331,18 @@ static void ath9k_hw_get_phy_err_count(struct ath_hw *ah,
- 	*phy_err_count2 = REG_READ(ah, AR_PHY_ERR_2);
- }
- 
-+static void ath9k_hw_get_mib_cycle_counters(struct ath_hw *ah,
-+					    u32 *rx_clear_count,
-+					    u32 *rx_frame_count,
-+					    u32 *tx_frame_count,
-+					    u32 *cycle_count)
-+{
-+	*rx_clear_count = REG_READ(ah, AR_RCCNT);
-+	*rx_frame_count = REG_READ(ah, AR_RFCNT);
-+	*tx_frame_count = REG_READ(ah, AR_TFCNT);
-+	*cycle_count = REG_READ(ah, AR_CCCNT);
-+}
-+
- static void ath9k_ani_restart(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
-@@ -530,15 +549,57 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
- 	}
- }
- 
-+/**
-+ * ath9k_hw_ani_get_listen_time - profile the MAC baseband for ANI
-+ *
-+ * @ah: atheros hardware structure
-+ *
-+ * This uses the Baseband Interface MIB Counters:
-+ *
-+ * 0x80ec - Transmit Frame Counter
-+ * 0x80f0 - Receive Frame Counter
-+ * 0x80f4 - Receive Clear Counter
-+ * 0x80f8 - Cycle Counter
-+ *
-+ * for profiling of the MAC baseband and adjusting it accordingly.
-+ *
-+ * The baseband interface MIB counters are used to provide software a
-+ * means of profiling the behavior at the MAC baseband interface for
-+ * performance analysis.  These counters are based on the system clock
-+ * domain which turns off during sleep.  The transmit frame counter
-+ * counts the number of cycles the tx_frame signal is active.  The
-+ * receive frame counter counts the number of cycles the rx_frame signal
-+ * is active.  The receive clear counter counts the number of cycles the
-+ * rx_clear signal is "NOT" active.  The cycle counter counts the number of
-+ * clock cycles.  There are registers which controls the behaviour of
-+ * these counters.  The PCI MIB freeze register will hold all the
-+ * values of these registers.  PCI MIB clear will zero out all the
-+ * values of these registers.  PCI MIB force will force increment of
-+ * all the registers each cycle.  These register do not roll over or
-+ * saturate but rather use a time weighted average to maintain the
-+ * ratios of these MIB counter registers.  When the cycle counter
-+ * register reaches 32'hFFFFFFFF, all the registers shift their
-+ * values right by 1.  So the new cycle counter register will be
-+ * 32'h7FFFFFFF.  Writes are allowed to verify correct averaging
-+ * behaviour.
-+ *
-+ * The saturate cycle cnt bit if set in the DIAG_SW (0x8048) will
-+ * cause the cycle counter register (0x80F8) to saturate instead
-+ * of shifting to the right by 1 every time the count reaches
-+ * 0xFFFFFFFF.
-+ */
- static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
- 	u32 txFrameCount, rxFrameCount, cycleCount;
-+	u32 rx_clear_count; /* not actually used */
- 	int32_t listenTime;
- 
--	txFrameCount = REG_READ(ah, AR_TFCNT);
--	rxFrameCount = REG_READ(ah, AR_RFCNT);
--	cycleCount = REG_READ(ah, AR_CCCNT);
-+	ath9k_hw_get_mib_cycle_counters(ah,
-+					&rx_clear_count,
-+					&rxFrameCount,
-+					&txFrameCount,
-+					&cycleCount);
- 
- 	aniState = ah->curani;
- 	if (aniState->cycleCount == 0 || aniState->cycleCount > cycleCount) {
--- 
-1.6.3.3
-
+  Luis
