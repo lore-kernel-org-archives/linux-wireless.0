@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38353 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:47572 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755290Ab0CQQUW (ORCPT
+	with ESMTP id S1752447Ab0C3T3b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 12:20:22 -0400
-Subject: Re: [RFC PATCHv3 2/2] mac80211: Add support for connection quality
- monitoring
+	Tue, 30 Mar 2010 15:29:31 -0400
+Subject: Re: Broadcom card totally not visible for system (lspci)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1268830877-5162-3-git-send-email-juuso.oikarinen@nokia.com>
-References: <1268830877-5162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1268830877-5162-3-git-send-email-juuso.oikarinen@nokia.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1269975753.4938.8.camel@mj>
+References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>
+	 <4BB2328D.9010503@lwfinger.net>
+	 <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
+	 <4BB23953.9010104@lwfinger.net>  <1269975753.4938.8.camel@mj>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Mar 2010 09:20:21 -0700
-Message-ID: <1268842821.5989.18.camel@jlt3.sipsolutions.net>
+Date: Tue, 30 Mar 2010 21:29:23 +0200
+Message-ID: <1269977363.3927.26.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-17 at 15:01 +0200, Juuso Oikarinen wrote:
+On Tue, 2010-03-30 at 15:02 -0400, Pavel Roskin wrote:
+> On Tue, 2010-03-30 at 12:48 -0500, Larry Finger wrote:
+> > On 03/30/2010 12:31 PM, Rafał Miłecki wrote:
+> > > 
+> > > Is this possible it's disabled in BIOS by default and needs execution
+> > > of some ACPI command or sth to make it work?
+> > > 
+> > > Yeah, trying to find some other reason than faulty WiFi... It's weird
+> > > it was working fine "before a moment" on Windows.
+> > 
+> > Winblows can fiddle with the "Wake-on-LAN" setting in the BIOS, but AFAIK, the
+> > BCM4306 does not have this capability. If the BIOS has that setting, it should
+> > be turned off.
+> 
+> Perhaps it's a crazy idea, but what if the Ethernet device and the WiFi
+> device are connected to the same SSB bus, an thus sharing the PCI ID?
 
-> +void ieee80211_cqm_notify(struct ieee80211_vif *vif,
-> +			  enum nl80211_cqm_state rssi_state)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> +
-> +	cfg80211_cqm_notify(sdata->dev, rssi_state, GFP_KERNEL);
-> +}
-> +EXPORT_SYMBOL(ieee80211_cqm_notify);
-
-How do you know GFP_KERNEL is OK? The driver might call this from an
-interrupt? Seems better to me to ask the driver for the allocation flags
-too.
+Should be fine, actually, since b43 binds the 802.11 ssb core.
 
 johannes
 
