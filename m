@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3.epfl.ch ([128.178.224.226]:60975 "HELO smtp3.epfl.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753338Ab0CZKvU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:51:20 -0400
-From: Valentin Longchamp <valentin.longchamp@epfl.ch>
-To: chunkeey@web.de, linux-wireless@vger.kernel.org
-Cc: Valentin Longchamp <valentin.longchamp@epfl.ch>
-Subject: [PATCH] setup correct int pipe type in ar9170_usb_exec_cmd
-Date: Fri, 26 Mar 2010 11:44:33 +0100
-Message-Id: <1269600273-7974-1-git-send-email-valentin.longchamp@epfl.ch>
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:33995 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755831Ab0C3TG2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 15:06:28 -0400
+Received: by ewy20 with SMTP id 20so1583118ewy.1
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 12:06:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1269975753.4938.8.camel@mj>
+References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>
+	 <4BB2328D.9010503@lwfinger.net>
+	 <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
+	 <4BB23953.9010104@lwfinger.net> <1269975753.4938.8.camel@mj>
+Date: Tue, 30 Mar 2010 21:06:27 +0200
+Message-ID: <b170af451003301206p593cbe3ew582823c75dc06f11@mail.gmail.com>
+Subject: Re: Broadcom card totally not visible for system (lspci)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An int urb is constructed but we fill it in with a bulk pipe type.
+2010/3/30 Pavel Roskin <proski@gnu.org>:
+> On Tue, 2010-03-30 at 12:48 -0500, Larry Finger wrote:
+>> On 03/30/2010 12:31 PM, Rafał Miłecki wrote:
+>> >
+>> > Is this possible it's disabled in BIOS by default and needs execution
+>> > of some ACPI command or sth to make it work?
+>> >
+>> > Yeah, trying to find some other reason than faulty WiFi... It's weird
+>> > it was working fine "before a moment" on Windows.
+>>
+>> Winblows can fiddle with the "Wake-on-LAN" setting in the BIOS, but AFAIK, the
+>> BCM4306 does not have this capability. If the BIOS has that setting, it should
+>> be turned off.
+>
+> Perhaps it's a crazy idea, but what if the Ethernet device and the WiFi
+> device are connected to the same SSB bus, an thus sharing the PCI ID?
+>
+> Is there the full kernel log?  In particular, the lines containing "ssb"
+> would be interesting.
 
-Commit f661c6f8c67bd55e93348f160d590ff9edf08904 implemented a pipe type
-check when CONFIG_USB_DEBUG is enabled. The check failed for all the ar9170
-usb transfers and the driver could not configure the wifi dongle.
+You mean dmesg, don't you? I've attached it, but it was stopped by b43
+ML. You can see dmesg on marc archive for linux-wireless:
+http://marc.info/?l=linux-wireless&m=126996817625998&w=2
 
-This went unnoticed until now because most people don't have
-CONFIG_USB_DEBUG enabled.
+Unfortunately I don't have dmesg from some more-debugging kernel.
 
-Signed-off-by: Valentin Longchamp <valentin.longchamp@epfl.ch>
----
- drivers/net/wireless/ath/ar9170/usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-index 4e30197..dbde2de 100644
---- a/drivers/net/wireless/ath/ar9170/usb.c
-+++ b/drivers/net/wireless/ath/ar9170/usb.c
-@@ -416,7 +416,7 @@ static int ar9170_usb_exec_cmd(struct ar9170 *ar, enum ar9170_cmd cmd,
- 	spin_unlock_irqrestore(&aru->common.cmdlock, flags);
- 
- 	usb_fill_int_urb(urb, aru->udev,
--			 usb_sndbulkpipe(aru->udev, AR9170_EP_CMD),
-+			 usb_sndintpipe(aru->udev, AR9170_EP_CMD),
- 			 aru->common.cmdbuf, plen + 4,
- 			 ar9170_usb_tx_urb_complete, NULL, 1);
- 
 -- 
-1.6.3.3
-
+Rafał
