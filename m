@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48199 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab0CQDPq (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:32138 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752653Ab0C3GlT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 23:15:46 -0400
-Date: Tue, 16 Mar 2010 22:56:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] wireless: convert reg_regdb_search_lock to mutex
-Message-ID: <20100317025656.GA9058@tuxdriver.com>
-References: <4B9F86E9.2030702@gmail.com> <1268768940-5654-1-git-send-email-linville@tuxdriver.com> <20100316100337.GA1732@senthil-lnx.users.atheros.com> <20100317002416.GA2095@tuxdriver.com> <20100316122449.GA17826@senthil-lnx.users.atheros.com>
+	Tue, 30 Mar 2010 02:41:19 -0400
+From: Holger Schurig <holgerschurig@gmail.com>
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+Date: Tue, 30 Mar 2010 08:42:18 +0200
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <m3tys0tbhk.fsf@intrepid.localdomain> <43e72e891003291256t7f53dcfck5f8c8cf94128eeb3@mail.gmail.com> <m3y6hayhv1.fsf@intrepid.localdomain>
+In-Reply-To: <m3y6hayhv1.fsf@intrepid.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100316122449.GA17826@senthil-lnx.users.atheros.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201003300842.18335.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 16, 2010 at 05:54:50PM +0530, Senthil Balasubramanian wrote:
-> On Wed, Mar 17, 2010 at 05:54:16AM +0530, John W. Linville wrote:
-> > On Tue, Mar 16, 2010 at 03:33:38PM +0530, Senthil Balasubramanian wrote:
-> > > On Wed, Mar 17, 2010 at 01:19:00AM +0530, John W. Linville wrote:
-> > > > Stanse discovered that kmalloc can be called with GFP_KERNEL while
-> > > This commit log is confusing. It Should be "Stanse discovered kmalloc
-> > > was called with GFP_KERNEL". Obviously kmalloc with GFP_KERNEL shouldn't
-> > > be used while holding a spinlock.
-> > > > holding this spinlock.  It can be a mutex instead.
-> > 
-> > Not half so confusing as your criticism... :-)
-> sorry! if my mail wasn't proper. I didn't meant to blame/criticize.
-> I was confused when I read the commit log and so I replied.
-> > 
-> > Are you objecting to "can be" instead of "was"?
-> I am not objecting anything...
+> But the driver says:
+> ath: EEPROM regdomain: 0x0
+> ath: EEPROM indicates default country code should be used
+> ath: doing EEPROM country->regdmn map search
+> ath: country maps to regdmn code: 0x3a
+> ath: Country alpha2 being used: US
+> ath: Regpair used: 0x3a
 
-Criticism is fine -- I just don't understand what you were saying or
-what you think I should have said in the commit log.
+I ignored all this bullshit an US rules that won't apply to germany anyway. So 
+I simply added a patch to my devices kernel that overwrote the EEPROM 
+regdomain. That's way cheaper than to reprogram each device.
 
-John
+Some people live in a wishful world where they think that every manufacturer 
+reads all docs of the chipset producer and where only the correctly programmed 
+cards submerge in the correct markets.
+
+Creating my won regdomain bin with my own signature was way too much for me.
+
+
+> If the driver said "EEPROM regdomain: 0x0 = US" I'd return the cards to
+> the manufacturer, simple (realistically they'd fix the EEPROM instead).
+
+And the supplies has this card form some chinese source and can't get them to 
+get reprogrammed. Also returning a bunch of 250 cards is quite an 
+administrative hassle, not to say that during that time you cannot produce 250 
+devices, because you're then short of supply (substitute "250" with any number 
+you like).
+
+Really, country stuff in EEPROM is b......t, and I'm simply ignoring this 
+concept --- for my specific usage domain.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+http://www.holgerschurig.de
