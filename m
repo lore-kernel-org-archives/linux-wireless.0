@@ -1,63 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:38733 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752226Ab0CIHz1 (ORCPT
+Received: from mail1-out1.atlantis.sk ([80.94.52.55]:39207 "EHLO
+	mail.atlantis.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752993Ab0C3VgL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 02:55:27 -0500
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0898431324
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Mar 2010 16:55:24 +0900 (JST)
-Subject: [PATCH 02/13] ath5k: use fixed antenna for tx descriptors
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 09 Mar 2010 16:55:23 +0900
-Message-ID: <20100309075523.30616.63612.stgit@void>
-In-Reply-To: <20100309075124.30616.40896.stgit@void>
-References: <20100309075124.30616.40896.stgit@void>
+	Tue, 30 Mar 2010 17:36:11 -0400
+From: Ondrej Zary <linux@rainbow-software.org>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [rt2x00-users] [PATCH] [RFC] rt2500pci: fix powersaving
+Date: Tue, 30 Mar 2010 23:35:59 +0200
+Cc: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org
+References: <201003290956.54234.linux@rainbow-software.org> <201003302209.23334.linux@rainbow-software.org> <4BB266E9.2010404@gmail.com>
+In-Reply-To: <4BB266E9.2010404@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201003302336.01897.linux@rainbow-software.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-when using a fixed antenna we should use the antenna number in all tx
-descriptors, otherwise the hardware will sometimes send the frame out on the
-other antenna. it seems like the hardware does not always respect the default
-antenna and diversity settings (esp.  AR5K_STA_ID1_DEFAULT_ANTENNA).
+On Tuesday 30 March 2010 23:02:33 Gertjan van Wingerde wrote:
+> On 03/30/10 22:09, Ondrej Zary wrote:
+> > On Tuesday 30 March 2010, Matthijs Kooijman wrote:
+> >> Hi all,
+> >>
+> >>> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter
+> >>> state 1 (-16).
+> >>
+> >> I'm seeing this one on my rt2500pci as well (and also works ok
+> >> otherwise).
+> >
+> > OK, so let's try to fix it.
+> >
+> > The first patch below fixes this problem. And reveals two other problems.
+> > Now the device has problems entering states 3 and 4 (remains stuck in
+> > state 1) - the driver seems to not like this and oopses.
+> > The second patch fixes the "stuck state 1" problem (same fix as in
+> > rt2500usb). The oops does not appear anymore with the second patch - but
+> > I think that it should be fixed anyway separately.
+> > (I'm testing this with "while true; do ifdown wlan0; ifup wlan0; done")
+>
+> Thanks again for your hard and persistent work on this.
+>
+> > oops removed
+> >
+> >
+> > ---
+> > linux-2.6.34-rc2-orig/drivers/net/wireless/rt2x00/rt2500pci.c	2010-03-20
+> > 02:17:57.000000000 +0100 +++
+> > linux-2.6.34-rc2/drivers/net/wireless/rt2x00/rt2500pci.c	2010-03-30
+> > 15:04:50.000000000 +0200 @@ -1079,7 +1079,7 @@
+> >  static int rt2500pci_set_state(struct rt2x00_dev *rt2x00dev,
+> >  			       enum dev_state state)
+> >  {
+> > -	u32 reg;
+> > +	u32 reg, reg2;
+> >  	unsigned int i;
+> >  	char put_to_sleep;
+> >  	char bbp_state;
+> > @@ -1100,11 +1100,12 @@
+> >  	 * device has entered the correct state.
+> >  	 */
+> >  	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+> > -		rt2x00pci_register_read(rt2x00dev, PWRCSR1, &reg);
+> > -		bbp_state = rt2x00_get_field32(reg, PWRCSR1_BBP_CURR_STATE);
+> > -		rf_state = rt2x00_get_field32(reg, PWRCSR1_RF_CURR_STATE);
+> > +		rt2x00pci_register_read(rt2x00dev, PWRCSR1, &reg2);
+> > +		bbp_state = rt2x00_get_field32(reg2, PWRCSR1_BBP_CURR_STATE);
+> > +		rf_state = rt2x00_get_field32(reg2, PWRCSR1_RF_CURR_STATE);
+> >  		if (bbp_state == state && rf_state == state)
+> >  			return 0;
+> > +		rt2x00pci_register_write(rt2x00dev, PWRCSR1, reg);
+> >  		msleep(10);
+> >  	}
+>
+> Hmmm, checking the old legacy Ralink rt2500 driver it shows that the legacy
+> driver never waits and checks whether the device has come in the right
+> power state. What does happen to the stability of the connection if you
+> simply remove this entire for-loop?
 
-also i would like to note that antenna diversity does not always work correctly
-on 5414 (at least) when only one antenna is connected: for example all frames
-might be received on antenna A but still the HW tries to send on antenna B some
-times, causing packet loss.
+It works without the loop - But I suspect that the device never enters 
+STATE_SLEEP. With the loop present, it needs 3 loop passes to enter 
+STATE_SLEEP (with that register write added). It never enters STATE_SLEEP 
+without that added register write (I took it from rt2500usb) and that's why 
+the error message was printed in log.
 
-this is both verified with the antenna statistics output of the previous patch
-and a spectrum analyzer.
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/phy.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 72474c0..ffe253a 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1873,7 +1873,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
- 		break;
- 	case AR5K_ANTMODE_FIXED_A:
- 		def_ant = 1;
--		tx_ant = 0;
-+		tx_ant = 1;
- 		use_def_for_tx = true;
- 		update_def_on_tx = false;
- 		use_def_for_rts = true;
-@@ -1882,7 +1882,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
- 		break;
- 	case AR5K_ANTMODE_FIXED_B:
- 		def_ant = 2;
--		tx_ant = 0;
-+		tx_ant = 2;
- 		use_def_for_tx = true;
- 		update_def_on_tx = false;
- 		use_def_for_rts = true;
-
+-- 
+Ondrej Zary
