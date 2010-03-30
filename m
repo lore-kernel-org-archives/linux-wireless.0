@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1802 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752903Ab0CRGVv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 02:21:51 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Pavel Roskin <proski@gnu.org>,
-	David Gibson <hermes@gibson.dropbear.id.au>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: [PATCH v2 6/7] orinoco/wext.c: Remove local #define STD_IW_HANDLER
-Date: Wed, 17 Mar 2010 23:21:39 -0700
-Message-Id: <02e23cb16a0d61f38e4550ae4e1f3eb5f8d4ab9d.1268892664.git.joe@perches.com>
-In-Reply-To: <cover.1268892663.git.joe@perches.com>
-References: <cover.1268892663.git.joe@perches.com>
+Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:60068 "EHLO
+	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754475Ab0C3Vuf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 17:50:35 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, <users@rt2x00.serialmonkey.com>,
+	<linux-wireless@vger.kernel.org>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 0/4] rt2x00: Powersave fixes.
+Date: Tue, 30 Mar 2010 23:50:22 +0200
+Message-Id: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's been copied into wireless.h, so this one isn't necessary
+The following 4 patches fix powersave behavior of rt2x00.
+The first patch fixes the rt2500usb powersave issues found lately.
+The second on enables powersave for rt2500usb again, now it is fixed.
+The third and fourth are ongoing work to bring the other PCI drivers
+in a better shape.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/orinoco/wext.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+All patches are against wireless-2.6.
 
-diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
-index 31ca241..069c333 100644
---- a/drivers/net/wireless/orinoco/wext.c
-+++ b/drivers/net/wireless/orinoco/wext.c
-@@ -1505,8 +1505,6 @@ static const struct iw_priv_args orinoco_privtab[] = {
-  * Structures to export the Wireless Handlers
-  */
- 
--#define STD_IW_HANDLER(id, func) \
--	[IW_IOCTL_IDX(id)] = (iw_handler) func
- static const iw_handler	orinoco_handler[] = {
- 	STD_IW_HANDLER(SIOCSIWCOMMIT,	orinoco_ioctl_commit),
- 	STD_IW_HANDLER(SIOCGIWNAME,	cfg80211_wext_giwname),
--- 
-1.7.0.14.g7e948
+The patch series is also available via:
+
+	git://git.gwingerde.nl/rt2x00-2.6.git
+
+Gertjan van Wingerde (4):
+  rt2x00: Disable auto wakeup before waking up device.
+  rt2x00: Enable powersaving by default again on rt2500usb.
+  rt2x00: Add wakeup interrupt handler to rt61pci.
+  rt2x00: Add wakeup interrupt handler to rt2800pci.
+
+ drivers/net/wireless/rt2x00/rt2400pci.c |    4 ++++
+ drivers/net/wireless/rt2x00/rt2500pci.c |    4 ++++
+ drivers/net/wireless/rt2x00/rt2500usb.c |    9 ++++-----
+ drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+ drivers/net/wireless/rt2x00/rt2800pci.c |   11 +++++++++++
+ drivers/net/wireless/rt2x00/rt61pci.c   |   14 ++++++++++++++
+ drivers/net/wireless/rt2x00/rt73usb.c   |    6 +++---
+ 7 files changed, 42 insertions(+), 10 deletions(-)
 
