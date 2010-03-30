@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:44616 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727Ab0CIWn5 (ORCPT
+Received: from buzzloop.caiaq.de ([212.112.241.133]:58923 "EHLO
+	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752546Ab0C3Sku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Mar 2010 17:43:57 -0500
-Date: Tue, 9 Mar 2010 23:43:52 +0100
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	lsb-discuss@lists.linux-foundation.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@elte.hu>
-Subject: Re: Linux wireless GSoC 2010 project ideas
-Message-ID: <20100309224347.GD5058@nowhere>
-References: <43e72e891001281338u5f05307ble5360c3dac6ab9a2@mail.gmail.com> <20100128231545.GH18683@nowhere> <43e72e891001281523s56707279x896ab059e6d4e530@mail.gmail.com> <4B62231F.5080104@gmail.com>
+	Tue, 30 Mar 2010 14:40:50 -0400
+Date: Tue, 30 Mar 2010 20:40:46 +0200
+From: Daniel Mack <daniel@caiaq.de>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	Alagu Sankar <alagusankar@embwise.com>,
+	Volker Ernst <volker.ernst@txtr.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org,
+	David Brownell <dbrownell@users.sourceforge.net>
+Subject: Re: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit
+ transfers
+Message-ID: <20100330184046.GY30801@buzzloop.caiaq.de>
+References: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
+ <1269974259.3019.52.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4B62231F.5080104@gmail.com>
+In-Reply-To: <1269974259.3019.52.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 29, 2010 at 12:51:59AM +0100, Till Kamppeter wrote:
-> No problem for students to suggest topics. We are not restricted to  
-> wireless in terms of kernel. We support kernel projects in general.
->
-> Please give your suggestion as answer to this e-mail, doing "Reply to  
-> all", as I am not a kernel export, the other participants of this thread  
-> should have a look at the student's project ideas and help finding 
-> mentors.
->
->    Till
+On Tue, Mar 30, 2010 at 11:37:39AM -0700, Dan Williams wrote:
+> On Tue, 2010-03-30 at 19:38 +0200, Daniel Mack wrote:
+> > When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
+> > However, the 8686 will only drive this line when the ECSI and SCSI bits
+> > are set in the CCCR_IF register.
+> 
+> While this looks fine enough to me, I don't have enough knowledge of the
+> SDIO stack to know whether or not this would be considered a layering
+> violation or not.  Given that I don't think there's an active maintainer
+> for the SDIO subsystem though, I'd say it's fine enough for me...
+> 
+> Any thoughts David since it appears to be at least somewhat SPI related?
 
+I believe that these bits in question are just abused in this case. The
+device is not in SPI mode, so according to the specs, the bits shouldn't
+make any difference. This makes me think that this is specific to
+libertas, and doesn't belong in any lower level.
 
+> Acked-by: Dan Williams <dcbw@redhat.com>
 
-Ok, I hope it's not too late.
-Here is one subject that I would like to apply for:
+Thanks!
 
-
-= Improving tracing in perf events / ftrace =
-
-
-Using trace events under perf events is still a young feature
-and needs various improvements.
-
-- Syscall events can carry only raw values and addresses.
-We need to make them "aware" of strings and structures contents
-from userspace.
-
-- Make function / function graph tracers usable by perf
-
-- Optimize tracing fast-path
-
-- Improve perf tools to better handle trace events scalability
-
-- Provide new perf tools that exploit trace events (scheduler
-  migration analysis, etc...)
-
-- Implement a per context excluding (eg: exclude irqs, exclude functions, etc...)
-
-- There are always things to do there.
-
-
-Of course, each of these elements require a lot of work,
-so not all of them can be done in two months, and some
-of them can be started already before the summer.
+Daniel
 
