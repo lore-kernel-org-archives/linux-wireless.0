@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50422 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752601Ab0CDN3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Mar 2010 08:29:46 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 04 Mar 2010 05:29:46 -0800
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH] ar9170: Fix illegal kfree_skb
-Date: Thu, 4 Mar 2010 18:58:33 +0530
-Message-ID: <1267709313-2222-1-git-send-email-senthilkumar@atheros.com>
+Received: from mail-iw0-f182.google.com ([209.85.223.182]:47101 "EHLO
+	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357Ab0C3PX6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 11:23:58 -0400
+Received: by iwn12 with SMTP id 12so1407483iwn.21
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 08:23:55 -0700 (PDT)
+Message-ID: <4BB21787.4040501@lwfinger.net>
+Date: Tue, 30 Mar 2010 10:23:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Your netbook
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ar9170/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+John,
 
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index f4650fc..d47450a 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -2517,7 +2517,7 @@ void *ar9170_alloc(size_t priv_size)
- 
- 	skb = __dev_alloc_skb(AR9170_MAX_RX_BUFFER_SIZE, GFP_KERNEL);
- 	if (!skb)
--		goto err_nomem;
-+		goto err_out;
- 
- 	hw = ieee80211_alloc_hw(priv_size, &ar9170_ops);
- 	if (!hw)
-@@ -2574,6 +2574,7 @@ void *ar9170_alloc(size_t priv_size)
- 
- err_nomem:
- 	kfree_skb(skb);
-+err_out:
- 	return ERR_PTR(-ENOMEM);
- }
- 
--- 
-1.7.0.1
+If possible, I would like you to do one more test on that troublesome netbook.
+Please build a kernel with CONFIG_MMIOTRACE=y and build the Broadcom wl driver
+for it. Starting with wl unloaded, issue the following commands (as root):
+
+echo 10000 > /sys/kernel/debug/tracing/buffer_size_kb
+echo mmiotrace > /sys/kernel/debug/tracing/current_tracer
+cat /sys/kernel/debug/tracing/trace_pipe > wl_dump.txt &
+modprobe -v wl
+
+After the wireless network device gets created, etc., then
+
+echo nop > /sys/kernel/debug/tracing/current_tracer
+sleep 1
+killproc cat
+
+and send me the file wl_dump.txt. With it, I will be able to see if the Broadcom
+driver is actually finding an SPROM that b43 is missing.
+
+Thanks,
+
+Larry
+
 
