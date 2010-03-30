@@ -1,55 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:22270 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753734Ab0CZKym (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:37654 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753981Ab0C3RsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 06:54:42 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 07/24] wl1271: Warnings caused by wrong format specifiers fixed
-Date: Fri, 26 Mar 2010 12:53:16 +0200
-Message-Id: <1269600813-32145-8-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
-References: <1269600813-32145-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 30 Mar 2010 13:48:06 -0400
+Received: by mail-vw0-f46.google.com with SMTP id 20so895732vws.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 10:48:05 -0700 (PDT)
+Message-ID: <4BB23953.9010104@lwfinger.net>
+Date: Tue, 30 Mar 2010 12:48:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: Broadcom card totally not visible for system (lspci)
+References: <b170af451003300956r7fbd7812jdb40d125aeaf1b32@mail.gmail.com>	 <4BB2328D.9010503@lwfinger.net> <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
+In-Reply-To: <b170af451003301031yd06f559j85fd30417af32113@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+On 03/30/2010 12:31 PM, Rafał Miłecki wrote:
+> 
+> Is this possible it's disabled in BIOS by default and needs execution
+> of some ACPI command or sth to make it work?
+> 
+> Yeah, trying to find some other reason than faulty WiFi... It's weird
+> it was working fine "before a moment" on Windows.
 
-There were wrong format specifiers in wl1271_sdio.c in some debug
-outputs. This has been causing warnings on some platforms.
+Winblows can fiddle with the "Wake-on-LAN" setting in the BIOS, but AFAIK, the
+BCM4306 does not have this capability. If the BIOS has that setting, it should
+be turned off.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 3c03de7..abfe75b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -117,7 +117,7 @@ static void wl1271_sdio_raw_read(struct wl1271 *wl, int addr, void *buf,
- 		else
- 			ret = sdio_memcpy_fromio(func, buf, addr, len);
- 
--		wl1271_debug(DEBUG_SDIO, "sdio read 53 addr 0x%x, %d bytes",
-+		wl1271_debug(DEBUG_SDIO, "sdio read 53 addr 0x%x, %zu bytes",
- 			     addr, len);
- 		wl1271_dump_ascii(DEBUG_SDIO, "data: ", buf, len);
- 	}
-@@ -138,7 +138,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 		wl1271_debug(DEBUG_SDIO, "sdio write 52 addr 0x%x, byte 0x%02x",
- 			     addr, ((u8 *)buf)[0]);
- 	} else {
--		wl1271_debug(DEBUG_SDIO, "sdio write 53 addr 0x%x, %d bytes",
-+		wl1271_debug(DEBUG_SDIO, "sdio write 53 addr 0x%x, %zu bytes",
- 			     addr, len);
- 		wl1271_dump_ascii(DEBUG_SDIO, "data: ", buf, len);
- 
--- 
-1.6.3.3
+Larry
 
