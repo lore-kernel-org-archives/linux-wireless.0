@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58776 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755630Ab0CaFXq (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:52713 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755595Ab0C3GgX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 01:23:46 -0400
-Subject: Re: [PATCH] iw: Add support for connection quality monitor
- configuation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1270011208.10120.906.camel@wimaxnb.nmp.nokia.com>
-References: <1269582379-10253-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1269583649.4581.4.camel@jlt3.sipsolutions.net>
-	 <1269584079.10120.889.camel@wimaxnb.nmp.nokia.com>
-	 <1269584501.4581.5.camel@jlt3.sipsolutions.net>
-	 <1270011208.10120.906.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Mar 2010 07:23:43 +0200
-Message-ID: <1270013023.4710.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 30 Mar 2010 02:36:23 -0400
+Date: Mon, 29 Mar 2010 23:36:15 -0700
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Fix dropping of unprotected robust multicast
+ frames
+Message-ID: <20100330063615.GD4953@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-03-31 at 07:53 +0300, Juuso Oikarinen wrote:
+When selecting the RX key for group-addressed robust management
+frames, we do not actually select any BIP key if the frame is
+unprotected (since we cannot find the key index from MMIE). This
+results in the drop_unencrypted check in failing to drop the frame. It
+is enough to verify that we have a STA entry for the transmitter and
+that MFP is enabled for that STA; we do not need to check rx->key
+here. This fixes BIP processing for unprotected, group-addressed,
+robust management frames.
 
-> > Hmm, yes, maybe. In that case you'd want leaving them out meaning no
-> > change I guess. I'll give it another thought, but now I need to get
-> > sleep and you won't hear from me again until I'm home on like Sunday :)
-> 
-> Have you reached any conclusions on this matter? To get this support
-> into iw would help my work greatly ;)
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-Sorry. Let's just leave it this way, the no change thing convinced me I
-think :) I'll go apply your patch.
+---
+ net/mac80211/rx.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-johannes
+--- wireless-testing.orig/net/mac80211/rx.c	2010-03-29 23:32:20.000000000 -0700
++++ wireless-testing/net/mac80211/rx.c	2010-03-29 23:35:35.000000000 -0700
+@@ -1413,8 +1413,7 @@ ieee80211_drop_unencrypted_mgmt(struct i
+ 			return -EACCES;
+ 		/* BIP does not use Protected field, so need to check MMIE */
+ 		if (unlikely(ieee80211_is_multicast_robust_mgmt_frame(rx->skb) &&
+-			     ieee80211_get_mmie_keyidx(rx->skb) < 0 &&
+-			     rx->key))
++			     ieee80211_get_mmie_keyidx(rx->skb) < 0))
+ 			return -EACCES;
+ 		/*
+ 		 * When using MFP, Action frames are not allowed prior to
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
