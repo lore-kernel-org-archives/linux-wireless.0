@@ -1,58 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:52794 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159Ab0CALkP convert rfc822-to-8bit (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:49024 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272Ab0C3Vaq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Mar 2010 06:40:15 -0500
+	Tue, 30 Mar 2010 17:30:46 -0400
+Received: by gwaa18 with SMTP id a18so4945039gwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Mar 2010 14:30:45 -0700 (PDT)
+Message-ID: <4BB26D82.6020805@lwfinger.net>
+Date: Tue, 30 Mar 2010 16:30:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20100301105329.GA2684@jm.kir.nu>
-References: <9c30dffe1002281458w5705378fj52f36c5d352593fb@mail.gmail.com>
-	 <20100301075953.GA32038@jm.kir.nu>
-	 <9c30dffe1003010012l5b3a912fma5655e630b83ce9f@mail.gmail.com>
-	 <20100301105329.GA2684@jm.kir.nu>
-Date: Mon, 1 Mar 2010 12:40:14 +0100
-Message-ID: <9c30dffe1003010340r20a179c6hd2d5e7eeeba8d106@mail.gmail.com>
-Subject: Re: Problem with bridges and wireless NIC's
-From: Bjarke Istrup Pedersen <gurligebis@gentoo.org>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Your netbook
+References: <4BB21787.4040501@lwfinger.net> <20100330202848.GO13120@tuxdriver.com>
+In-Reply-To: <20100330202848.GO13120@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/3/1 Jouni Malinen <j@w1.fi>:
-> On Mon, Mar 01, 2010 at 09:12:48AM +0100, Bjarke Istrup Pedersen wrote:
->> That sounds interresting, is there any chance that that functionality
->> can be added to the 0.6.x branch too? (I'm maintaining hostapd in
->> Gentoo, but cannot stabilize a 0.7.x build, due to it being a
->> development branch)
->
-> While it might be relatively simple to port the bridge setup code into
-> 0.6.x, I'm not that keen on doing it for this particular reason. I'm
-> recommending 0.7.x branch for all AP functionality with nl80211-based
-> driver interface and as such, do not really want to promote use of 0.6.x
-> versions for this.
->
-> I started working on porting the driver_nl80211.c changes into the 0.6.x
-> branch, but that turned up to take way too much effort compared to what
-> the potential benefit would be. As such, I do not plan on continuing on
-> this direction and you should be prepared to quite a bit of additional
-> work on porting non-trivial fixes from hostapd 0.7.x yourself if you
-> plan on using hostapd 0.6.x in Gentoo with mac80211/nl80211-based
-> drivers.
->
-> --
-> Jouni Malinen                                            PGP id EFC895FA
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+On 03/30/2010 03:28 PM, John W. Linville wrote:
+> On Tue, Mar 30, 2010 at 10:23:51AM -0500, Larry Finger wrote:
+> 
+>> If possible, I would like you to do one more test on that troublesome netbook.
+>> Please build a kernel with CONFIG_MMIOTRACE=y and build the Broadcom wl driver
+>> for it. Starting with wl unloaded, issue the following commands (as root):
+>>
+>> echo 10000 > /sys/kernel/debug/tracing/buffer_size_kb
+>> echo mmiotrace > /sys/kernel/debug/tracing/current_tracer
+>> cat /sys/kernel/debug/tracing/trace_pipe > wl_dump.txt &
+>> modprobe -v wl
+>>
+>> After the wireless network device gets created, etc., then
+>>
+>> echo nop > /sys/kernel/debug/tracing/current_tracer
+>> sleep 1
+>> killproc cat
+>>
+>> and send me the file wl_dump.txt. With it, I will be able to see if the Broadcom
+>> driver is actually finding an SPROM that b43 is missing.
+> 
+> Done:
+> 
+> 	http://www.kernel.org/pub/linux/kernel/people/linville/ssb-debug/wl_dump.txt.gz
+> 
+> Hth!
 
-Okay, so the best thing to do, is to advise people to reverse the
-patch if the need 0.6.x, or use 0.7.x - right?
-If so, thats fine with me :-)
+It has already. The clue was in the fragment I sent you earlier. Every other
+BCM43XX card that we have seen had its SPROM starting at offset 0x1000 relative
+to the start of the MMIO mapping. Yours is at 0x0800! I would have hoped for an
+"incorrect CRC" message, but we got the hang instead. I now have to find the
+hidden flag that lets us know about the different location. I wonder what else
+has moved.
 
-Best regards,
-Bjarke Istrup Pedersen
+As a warning to users of wl. I tried to run it from the 2.6.34-rc3 on Linus's
+tree. Broadcom (I really like the other variation of that name!) has not (yet)
+discovered the change in the DMA API in 2.6.34. As a result, I got a few "tries
+to free DMA memory it has not allocated" warnings followed by a lot of other
+stuff concluding in a kernel panic - the first I've had for a long time. Note: I
+will not be debugging this problem. I have enough to do already.
+
+Larry
