@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57987 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756984Ab0CLQas (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:39747 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084Ab0CaF1z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Mar 2010 11:30:48 -0500
-Date: Fri, 12 Mar 2010 11:20:41 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Janne Tanskanen <jannejt@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rt2500pci master mode and hostapd
-Message-ID: <20100312162040.GA17689@tuxdriver.com>
-References: <4ADF4285.7010405@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4ADF4285.7010405@gmail.com>
+	Wed, 31 Mar 2010 01:27:55 -0400
+Subject: Re: [PATCH] iw: Add support for connection quality monitor
+ configuation
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1270013023.4710.0.camel@jlt3.sipsolutions.net>
+References: <1269582379-10253-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1269583649.4581.4.camel@jlt3.sipsolutions.net>
+	 <1269584079.10120.889.camel@wimaxnb.nmp.nokia.com>
+	 <1269584501.4581.5.camel@jlt3.sipsolutions.net>
+	 <1270011208.10120.906.camel@wimaxnb.nmp.nokia.com>
+	 <1270013023.4710.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 31 Mar 2010 08:24:29 +0300
+Message-ID: <1270013069.10120.907.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 21, 2009 at 08:19:01PM +0300, Janne Tanskanen wrote:
-> Hi! I build a wireless access point using a-link wl54pc (pcmcia card,  
-> rt2500pci module) and hostapd 0.6.9 with kernel version 2.6.32-rc5.  
-> Problem is that even tho hostapd starts and iwconfig shows wlan0 in  
-> master mode, other computers cant find the wireless network.
->
-> I found a working patch from here:  
-> http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?p=32632#p32632 and  
-> all works now with it applied to vanilla kernel. Just wanted to post  
-> this to the mailing list and ask why it's not added to mainline rt2x00  
-> kernel tree yet? Patch on forum is from May, almost half year ago.  
-> Hopefully it'll be included to mainline kernel asap.
-
-This is an old one -- sorry if no one got back to you sooner!
-It looks to me like the equivalent of the patch you cited is available
-in 2.6.34-rc1 (if not before) -- look for DRIVER_REQUIRE_DMA and
-rt2x00queue_align_frame.  There were some changes between 2.6.32-rc5
-and now, but I'm not sure if they affect things for your or not.
-
-Could you try 2.6.34-rc1 and see if things are working for you?
+On Wed, 2010-03-31 at 07:23 +0200, ext Johannes Berg wrote:
+> On Wed, 2010-03-31 at 07:53 +0300, Juuso Oikarinen wrote:
+> 
+> > > Hmm, yes, maybe. In that case you'd want leaving them out meaning no
+> > > change I guess. I'll give it another thought, but now I need to get
+> > > sleep and you won't hear from me again until I'm home on like Sunday :)
+> > 
+> > Have you reached any conclusions on this matter? To get this support
+> > into iw would help my work greatly ;)
+> 
+> Sorry. Let's just leave it this way, the no change thing convinced me I
+> think :) I'll go apply your patch.
 
 Thanks!
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+-Juuso
+
+> johannes
+> 
+
+
