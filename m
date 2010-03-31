@@ -1,169 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46780 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154Ab0CSUmN (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:44073 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932154Ab0CaUyB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Mar 2010 16:42:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>, stable@kernel.org
-Subject: [PATCH v3] ssb: do not read SPROM if it does not exist
-Date: Fri, 19 Mar 2010 16:41:49 -0400
-Message-Id: <1269031309-23297-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1269030785-5347-1-git-send-email-linville@tuxdriver.com>
-References: <1269030785-5347-1-git-send-email-linville@tuxdriver.com>
+	Wed, 31 Mar 2010 16:54:01 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so171921eyd.5
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Mar 2010 13:53:59 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] ssb: Fix order of definitions and some text space indents
+Date: Wed, 31 Mar 2010 22:54:19 +0200
+Message-Id: <1270068859-6185-3-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1270068859-6185-2-git-send-email-zajec5@gmail.com>
+References: <1270068859-6185-2-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Attempting to read registers that don't exist on the SSB bus can cause
-hangs on some boxes.  At least some b43 devices are 'in the wild' that
-don't have SPROMs at all.  When the SSB bus support loads, it attempts
-to read these (non-existant) SPROMs and causes hard hangs on the box --
-no console output, etc.
-
-This patch adds some intelligence to determine whether or not the SPROM
-is present before attempting to read it.  This avoids those hard hangs
-on those devices with no SPROM attached to their SSB bus.  The
-SSB-attached devices (e.g. b43, et al.) won't work, but at least the box
-will survive to test further patches. :-)
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: stable@kernel.org
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-Version 3, add missing semi-colon... :-(
-Version 2, check the correct place for ChipCommon core revision... :-)
+ include/linux/ssb/ssb_regs.h |   58 +++++++++++++++++++++---------------------
+ 1 files changed, 29 insertions(+), 29 deletions(-)
 
- drivers/ssb/pci.c                         |    3 +++
- drivers/ssb/scan.c                        |    4 ++++
- drivers/ssb/sprom.c                       |   22 ++++++++++++++++++++++
- include/linux/ssb/ssb.h                   |    3 +++
- include/linux/ssb/ssb_driver_chipcommon.h |   15 +++++++++++++++
- 5 files changed, 47 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 9e50896..2f7b16d 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -620,6 +620,9 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
- 	int err = -ENOMEM;
- 	u16 *buf;
+diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
+index 8990e30..a6d5225 100644
+--- a/include/linux/ssb/ssb_regs.h
++++ b/include/linux/ssb/ssb_regs.h
+@@ -245,7 +245,6 @@
+ #define SSB_SPROM2_CCODE		0x007C	/* Two char Country Code */
  
-+	if (!ssb_is_sprom_available(bus))
-+		return -ENODEV;
-+
- 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
- 	if (!buf)
- 		goto out;
-diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
-index 0d6c028..6d51895 100644
---- a/drivers/ssb/scan.c
-+++ b/drivers/ssb/scan.c
-@@ -306,6 +306,10 @@ int ssb_bus_scan(struct ssb_bus *bus,
- 		}
- 		tmp = scan_read32(bus, 0, SSB_CHIPCO_CAP);
- 		bus->chipco.capabilities = tmp;
-+		if (bus->chipco.dev->id.revision >= 11) {
-+			tmp = scan_read32(bus, 0, SSB_CHIPCO_CHIPSTAT);
-+			bus->chipco.status = tmp;
-+		}
- 	} else {
- 		if (bus->bustype == SSB_BUSTYPE_PCI) {
- 			bus->chip_id = pcidev_to_chipid(bus->host_pci);
-diff --git a/drivers/ssb/sprom.c b/drivers/ssb/sprom.c
-index d0e6762..55eb9b0 100644
---- a/drivers/ssb/sprom.c
-+++ b/drivers/ssb/sprom.c
-@@ -175,3 +175,25 @@ const struct ssb_sprom *ssb_get_fallback_sprom(void)
- {
- 	return fallback_sprom;
- }
-+
-+bool ssb_is_sprom_available(struct ssb_bus *bus)
-+{
-+	/* status register only exists on chipcomon rev >= 11 */
-+	if (bus->chipco.dev->id.revision < 11)
-+		return true;
-+
-+	switch (bus->chip_id) {
-+	case 0x4312:
-+		return SSB_CHIPCO_CHST_4312_SPROM_PRESENT(bus->chipco.status);
-+	case 0x4322:
-+		return SSB_CHIPCO_CHST_4322_SPROM_PRESENT(bus->chipco.status);
-+	case 0x4325:
-+		return SSB_CHIPCO_CHST_4325_SPROM_PRESENT(bus->chipco.status);
-+	default:
-+		break;
-+	}
-+	if (bus->chipco.dev->id.revision >= 31)
-+		return bus->chipco.capabilities & SSB_CHIPCO_CAP_SPROM;
-+
-+	return true;
-+}
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 24f9885..3b4da23 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -394,6 +394,9 @@ extern int ssb_bus_sdiobus_register(struct ssb_bus *bus,
+ /* SPROM Revision 3 (inherits most data from rev 2) */
+-#define SSB_SPROM3_IL0MAC		0x004A	/* 6 bytes MAC address for 802.11b/g */
+ #define SSB_SPROM3_OFDMAPO		0x002C	/* A-PHY OFDM Mid Power Offset (4 bytes, BigEndian) */
+ #define SSB_SPROM3_OFDMALPO		0x0030	/* A-PHY OFDM Low Power Offset (4 bytes, BigEndian) */
+ #define SSB_SPROM3_OFDMAHPO		0x0034	/* A-PHY OFDM High Power Offset (4 bytes, BigEndian) */
+@@ -254,6 +253,7 @@
+ #define  SSB_SPROM3_GPIOLDC_OFF_SHIFT	8
+ #define  SSB_SPROM3_GPIOLDC_ON		0x00FF0000	/* On Count */
+ #define  SSB_SPROM3_GPIOLDC_ON_SHIFT	16
++#define SSB_SPROM3_IL0MAC		0x004A	/* 6 bytes MAC address for 802.11b/g */
+ #define SSB_SPROM3_CCKPO		0x0078	/* CCK Power Offset */
+ #define  SSB_SPROM3_CCKPO_1M		0x000F	/* 1M Rate PO */
+ #define  SSB_SPROM3_CCKPO_2M		0x00F0	/* 2M Rate PO */
+@@ -265,20 +265,29 @@
+ #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
  
- extern void ssb_bus_unregister(struct ssb_bus *bus);
+ /* SPROM Revision 4 */
++#define SSB_SPROM4_BFLLO		0x0044	/* Boardflags (low 16 bits) */
++#define SSB_SPROM4_BFLHI		0x0046  /* Board Flags Hi */
+ #define SSB_SPROM4_IL0MAC		0x004C	/* 6 byte MAC address for a/b/g/n */
++#define SSB_SPROM4_CCODE		0x0052	/* Country Code (2 bytes) */
++#define SSB_SPROM4_GPIOA		0x0056	/* Gen. Purpose IO # 0 and 1 */
++#define  SSB_SPROM4_GPIOA_P0		0x00FF	/* Pin 0 */
++#define  SSB_SPROM4_GPIOA_P1		0xFF00	/* Pin 1 */
++#define  SSB_SPROM4_GPIOA_P1_SHIFT	8
++#define SSB_SPROM4_GPIOB		0x0058	/* Gen. Purpose IO # 2 and 3 */
++#define  SSB_SPROM4_GPIOB_P2		0x00FF	/* Pin 2 */
++#define  SSB_SPROM4_GPIOB_P3		0xFF00	/* Pin 3 */
++#define  SSB_SPROM4_GPIOB_P3_SHIFT	8
+ #define SSB_SPROM4_ETHPHY		0x005A	/* Ethernet PHY settings ?? */
+ #define  SSB_SPROM4_ETHPHY_ET0A		0x001F	/* MII Address for enet0 */
+ #define  SSB_SPROM4_ETHPHY_ET1A		0x03E0	/* MII Address for enet1 */
+ #define  SSB_SPROM4_ETHPHY_ET1A_SHIFT	5
+ #define  SSB_SPROM4_ETHPHY_ET0M		(1<<14)	/* MDIO for enet0 */
+ #define  SSB_SPROM4_ETHPHY_ET1M		(1<<15)	/* MDIO for enet1 */
+-#define SSB_SPROM4_CCODE		0x0052	/* Country Code (2 bytes) */
+ #define SSB_SPROM4_ANTAVAIL		0x005D  /* Antenna available bitfields */
+-#define SSB_SPROM4_ANTAVAIL_A		0x00FF	/* A-PHY bitfield */
+-#define SSB_SPROM4_ANTAVAIL_A_SHIFT	0
+-#define SSB_SPROM4_ANTAVAIL_BG		0xFF00	/* B-PHY and G-PHY bitfield */
+-#define SSB_SPROM4_ANTAVAIL_BG_SHIFT	8
+-#define SSB_SPROM4_BFLLO		0x0044	/* Boardflags (low 16 bits) */
++#define  SSB_SPROM4_ANTAVAIL_A		0x00FF	/* A-PHY bitfield */
++#define  SSB_SPROM4_ANTAVAIL_A_SHIFT	0
++#define  SSB_SPROM4_ANTAVAIL_BG		0xFF00	/* B-PHY and G-PHY bitfield */
++#define  SSB_SPROM4_ANTAVAIL_BG_SHIFT	8
+ #define SSB_SPROM4_AGAIN01		0x005E	/* Antenna Gain (in dBm Q5.2) */
+ #define  SSB_SPROM4_AGAIN0		0x00FF	/* Antenna 0 */
+ #define  SSB_SPROM4_AGAIN0_SHIFT	0
+@@ -289,7 +298,6 @@
+ #define  SSB_SPROM4_AGAIN2_SHIFT	0
+ #define  SSB_SPROM4_AGAIN3		0xFF00	/* Antenna 3 */
+ #define  SSB_SPROM4_AGAIN3_SHIFT	8
+-#define SSB_SPROM4_BFLHI		0x0046  /* Board Flags Hi */
+ #define SSB_SPROM4_MAXP_BG		0x0080  /* Max Power BG in path 1 */
+ #define  SSB_SPROM4_MAXP_BG_MASK	0x00FF  /* Mask for Max Power BG */
+ #define  SSB_SPROM4_ITSSI_BG		0xFF00	/* Mask for path 1 itssi_bg */
+@@ -298,14 +306,6 @@
+ #define  SSB_SPROM4_MAXP_A_MASK		0x00FF  /* Mask for Max Power A */
+ #define  SSB_SPROM4_ITSSI_A		0xFF00	/* Mask for path 1 itssi_a */
+ #define  SSB_SPROM4_ITSSI_A_SHIFT	8
+-#define SSB_SPROM4_GPIOA		0x0056	/* Gen. Purpose IO # 0 and 1 */
+-#define  SSB_SPROM4_GPIOA_P0		0x00FF	/* Pin 0 */
+-#define  SSB_SPROM4_GPIOA_P1		0xFF00	/* Pin 1 */
+-#define  SSB_SPROM4_GPIOA_P1_SHIFT	8
+-#define SSB_SPROM4_GPIOB		0x0058	/* Gen. Purpose IO # 2 and 3 */
+-#define  SSB_SPROM4_GPIOB_P2		0x00FF	/* Pin 2 */
+-#define  SSB_SPROM4_GPIOB_P3		0xFF00	/* Pin 3 */
+-#define  SSB_SPROM4_GPIOB_P3_SHIFT	8
+ #define SSB_SPROM4_PA0B0		0x0082	/* The paXbY locations are */
+ #define SSB_SPROM4_PA0B1		0x0084	/*   only guesses */
+ #define SSB_SPROM4_PA0B2		0x0086
+@@ -314,10 +314,10 @@
+ #define SSB_SPROM4_PA1B2		0x0092
  
-+/* Does the device have an SPROM? */
-+extern bool ssb_is_sprom_available(struct ssb_bus *bus);
-+
- /* Set a fallback SPROM.
-  * See kdoc at the function definition for complete documentation. */
- extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index 4e27acf..2cdf249 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -53,6 +53,7 @@
- #define  SSB_CHIPCO_CAP_64BIT		0x08000000	/* 64-bit Backplane */
- #define  SSB_CHIPCO_CAP_PMU		0x10000000	/* PMU available (rev >= 20) */
- #define  SSB_CHIPCO_CAP_ECI		0x20000000	/* ECI available (rev >= 20) */
-+#define  SSB_CHIPCO_CAP_SPROM		0x40000000	/* SPROM present */
- #define SSB_CHIPCO_CORECTL		0x0008
- #define  SSB_CHIPCO_CORECTL_UARTCLK0	0x00000001	/* Drive UART with internal clock */
- #define	 SSB_CHIPCO_CORECTL_SE		0x00000002	/* sync clk out enable (corerev >= 3) */
-@@ -385,6 +386,7 @@
- 
- 
- /** Chip specific Chip-Status register contents. */
-+#define SSB_CHIPCO_CHST_4322_SPROM_EXISTS	0x00000040 /* SPROM present */
- #define SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL	0x00000003
- #define SSB_CHIPCO_CHST_4325_DEFCIS_SEL		0 /* OTP is powered up, use def. CIS, no SPROM */
- #define SSB_CHIPCO_CHST_4325_SPROM_SEL		1 /* OTP is powered up, SPROM is present */
-@@ -398,6 +400,18 @@
- #define SSB_CHIPCO_CHST_4325_RCAL_VALUE_SHIFT	4
- #define SSB_CHIPCO_CHST_4325_PMUTOP_2B 		0x00000200 /* 1 for 2b, 0 for to 2a */
- 
-+/** Macros to determine SPROM presence based on Chip-Status register. */
-+#define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
-+	((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_OTP_SEL)
-+#define SSB_CHIPCO_CHST_4322_SPROM_PRESENT(status) \
-+	(status & SSB_CHIPCO_CHST_4322_SPROM_EXISTS)
-+#define SSB_CHIPCO_CHST_4325_SPROM_PRESENT(status) \
-+	(((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_DEFCIS_SEL) && \
-+	 ((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
-+		SSB_CHIPCO_CHST_4325_OTP_SEL))
-+
- 
- 
- /** Clockcontrol masks and values **/
-@@ -564,6 +578,7 @@ struct ssb_chipcommon_pmu {
- struct ssb_chipcommon {
- 	struct ssb_device *dev;
- 	u32 capabilities;
-+	u32 status;
- 	/* Fast Powerup Delay constant */
- 	u16 fast_pwrup_delay;
- 	struct ssb_chipcommon_pmu pmu;
+ /* SPROM Revision 5 (inherits most data from rev 4) */
++#define SSB_SPROM5_CCODE		0x0044	/* Country Code (2 bytes) */
+ #define SSB_SPROM5_BFLLO		0x004A	/* Boardflags (low 16 bits) */
+ #define SSB_SPROM5_BFLHI		0x004C  /* Board Flags Hi */
+ #define SSB_SPROM5_IL0MAC		0x0052	/* 6 byte MAC address for a/b/g/n */
+-#define SSB_SPROM5_CCODE		0x0044	/* Country Code (2 bytes) */
+ #define SSB_SPROM5_GPIOA		0x0076	/* Gen. Purpose IO # 0 and 1 */
+ #define  SSB_SPROM5_GPIOA_P0		0x00FF	/* Pin 0 */
+ #define  SSB_SPROM5_GPIOA_P1		0xFF00	/* Pin 1 */
+@@ -335,11 +335,19 @@
+ #define SSB_SPROM8_BFL2HI		0x008A	/* Board flags (bits 48-63) */
+ #define SSB_SPROM8_IL0MAC		0x008C	/* 6 byte MAC address */
+ #define SSB_SPROM8_CCODE		0x0092	/* 2 byte country code */
++#define SSB_SPROM8_GPIOA		0x0096	/*Gen. Purpose IO # 0 and 1 */
++#define  SSB_SPROM8_GPIOA_P0		0x00FF	/* Pin 0 */
++#define  SSB_SPROM8_GPIOA_P1		0xFF00	/* Pin 1 */
++#define  SSB_SPROM8_GPIOA_P1_SHIFT	8
++#define SSB_SPROM8_GPIOB		0x0098	/* Gen. Purpose IO # 2 and 3 */
++#define  SSB_SPROM8_GPIOB_P2		0x00FF	/* Pin 2 */
++#define  SSB_SPROM8_GPIOB_P3		0xFF00	/* Pin 3 */
++#define  SSB_SPROM8_GPIOB_P3_SHIFT	8
+ #define SSB_SPROM8_ANTAVAIL		0x009C  /* Antenna available bitfields*/
+-#define SSB_SPROM8_ANTAVAIL_A		0xFF00	/* A-PHY bitfield */
+-#define SSB_SPROM8_ANTAVAIL_A_SHIFT	8
+-#define SSB_SPROM8_ANTAVAIL_BG		0x00FF	/* B-PHY and G-PHY bitfield */
+-#define SSB_SPROM8_ANTAVAIL_BG_SHIFT	0
++#define  SSB_SPROM8_ANTAVAIL_A		0xFF00	/* A-PHY bitfield */
++#define  SSB_SPROM8_ANTAVAIL_A_SHIFT	8
++#define  SSB_SPROM8_ANTAVAIL_BG		0x00FF	/* B-PHY and G-PHY bitfield */
++#define  SSB_SPROM8_ANTAVAIL_BG_SHIFT	0
+ #define SSB_SPROM8_AGAIN01		0x009E	/* Antenna Gain (in dBm Q5.2) */
+ #define  SSB_SPROM8_AGAIN0		0x00FF	/* Antenna 0 */
+ #define  SSB_SPROM8_AGAIN0_SHIFT	0
+@@ -350,14 +358,6 @@
+ #define  SSB_SPROM8_AGAIN2_SHIFT	0
+ #define  SSB_SPROM8_AGAIN3		0xFF00	/* Antenna 3 */
+ #define  SSB_SPROM8_AGAIN3_SHIFT	8
+-#define SSB_SPROM8_GPIOA		0x0096	/*Gen. Purpose IO # 0 and 1 */
+-#define  SSB_SPROM8_GPIOA_P0		0x00FF	/* Pin 0 */
+-#define  SSB_SPROM8_GPIOA_P1		0xFF00	/* Pin 1 */
+-#define  SSB_SPROM8_GPIOA_P1_SHIFT	8
+-#define SSB_SPROM8_GPIOB		0x0098	/* Gen. Purpose IO # 2 and 3 */
+-#define  SSB_SPROM8_GPIOB_P2		0x00FF	/* Pin 2 */
+-#define  SSB_SPROM8_GPIOB_P3		0xFF00	/* Pin 3 */
+-#define  SSB_SPROM8_GPIOB_P3_SHIFT	8
+ #define SSB_SPROM8_RSSIPARM2G		0x00A4	/* RSSI params for 2GHz */
+ #define  SSB_SPROM8_RSSISMF2G		0x000F
+ #define  SSB_SPROM8_RSSISMC2G		0x00F0
 -- 
-1.6.2.5
+1.6.4.2
 
