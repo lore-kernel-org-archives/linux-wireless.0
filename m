@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1774 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752471Ab0CRGVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 02:21:44 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
+Received: from buzzloop.caiaq.de ([212.112.241.133]:39844 "EHLO
+	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932943Ab0CaJIm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Mar 2010 05:08:42 -0400
+Date: Wed, 31 Mar 2010 11:08:36 +0200
+From: Daniel Mack <daniel@caiaq.de>
+To: =?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Alagu Sankar <alagusankar@embwise.com>,
+	Volker Ernst <volker.ernst@txtr.com>,
+	Dan Williams <dcbw@redhat.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/7] wireless.h: Add STD_IW_HANDLER macro
-Date: Wed, 17 Mar 2010 23:21:34 -0700
-Message-Id: <0475f4511eedbcca7fe4e8b7fb8a457aa81358dc.1268892664.git.joe@perches.com>
-In-Reply-To: <cover.1268892663.git.joe@perches.com>
-References: <cover.1268892663.git.joe@perches.com>
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Subject: Re: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit
+ transfers
+Message-ID: <20100331090836.GA30801@buzzloop.caiaq.de>
+References: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
+ <x2ve2d7436a1003310207t16a7d1d6r7853de2dfa647c6c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <x2ve2d7436a1003310207t16a7d1d6r7853de2dfa647c6c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Copied from orinoco, initialize a iw_handler array entry
+On Wed, Mar 31, 2010 at 11:07:06AM +0200, Michał Mirosław wrote:
+> 2010/3/30 Daniel Mack <daniel@caiaq.de>:
+> [...]
+> > @@ -1022,6 +1025,27 @@ static int if_sdio_probe(struct sdio_func *func,
+> >        if (ret)
+> >                goto disable;
+> >
+> > +       /* For 1-bit transfers, we need to enable the interrupt flags in
+> > +        * the CCCR register. Temporarily set the function number to 0
+> > +        * for that. */
+> > +       if ((host->caps & MMC_CAP_SDIO_IRQ) &&
+> > +           (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
+> > +               unsigned int num = func->num;
+> > +               u8 reg;
+> > +
+> > +               func->num = 0;
+> > +               reg = sdio_readb(func, SDIO_CCCR_IF, &ret);
+> > +               if (ret)
+> > +                       goto release_int;
+> > +
+> > +               reg |= SDIO_BUS_ECSI | SDIO_BUS_SCSI;
+> > +               sdio_writeb(func, reg, SDIO_CCCR_IF, &ret);
+> > +               if (ret)
+> > +                       goto release_int;
+> > +
+> > +               func->num = num;
+> > +       }
+> > +
+> >        card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+> >        if (ret)
+> >                goto release_int;
+> 
+> You should probably just use mmc_io_rw_direct() in this case instead
+> of abusing func->num.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- include/linux/wireless.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Hmm, that function isn't exported, and I didn't want to change this. You
+say you'd prefer that? I can cook up something that does it, no problem.
 
-diff --git a/include/linux/wireless.h b/include/linux/wireless.h
-index 5b4c6c7..ad9f8d5 100644
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -346,6 +346,8 @@
- #define SIOCIWFIRST	0x8B00
- #define SIOCIWLAST	SIOCIWLASTPRIV		/* 0x8BFF */
- #define IW_IOCTL_IDX(cmd)	((cmd) - SIOCIWFIRST)
-+#define STD_IW_HANDLER(id, func) \
-+	[IW_IOCTL_IDX(id)] = (iw_handler) func
- 
- /* Odd : get (world access), even : set (root access) */
- #define IW_IS_SET(cmd)	(!((cmd) & 0x1))
--- 
-1.7.0.14.g7e948
 
+Daniel
