@@ -1,98 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:39232 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934123Ab0CMJlb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Mar 2010 04:41:31 -0500
-Date: Sat, 13 Mar 2010 10:41:28 +0100
-From: Florian Mickler <florian@mickler.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	Valdis.Kletnieks@vt.edu
-Subject: Re: [PATCH 2/2] enhance sysfs rfkill interface
-Message-ID: <20100313104128.79aa2846@schatten.dmk.lab>
-In-Reply-To: <20100312224828.GA18618@core.coreip.homeip.net>
-References: <1268416988-24862-1-git-send-email-florian@mickler.org>
-	<1268416988-24862-2-git-send-email-florian@mickler.org>
-	<1268416988-24862-3-git-send-email-florian@mickler.org>
-	<20100312182209.GB8736@core.coreip.homeip.net>
-	<20100312215743.7671d173@schatten.dmk.lab>
-	<20100312212025.GA17712@core.coreip.homeip.net>
-	<20100312233925.74effc7d@schatten.dmk.lab>
-	<20100312224828.GA18618@core.coreip.homeip.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:35144 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754755Ab0CaOIZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Mar 2010 10:08:25 -0400
+Received: by bwz1 with SMTP id 1so100619bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Mar 2010 07:08:23 -0700 (PDT)
+From: Luis de Bethencourt <luisbg@ubuntu.com>
+To: linville@tuxdriver.com, lrodriguez@atheros.com, jal2@gmx.de,
+	johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Luis de Bethencourt <luisbg@dharma.ireland.sun.com>,
+	Luis de Bethencourt <luisbg@ubuntu.com>
+Subject: [PATCH 3/3] ath: fix coding style/readability in ath/ar9170
+Date: Wed, 31 Mar 2010 15:07:48 +0100
+Message-Id: <1270044468-28486-1-git-send-email-luisbg@ubuntu.com>
+In-Reply-To: <ath/9170/>
+References: <ath/9170/>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 12 Mar 2010 14:48:28 -0800
-Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
+From: Luis de Bethencourt <luisbg@dharma.ireland.sun.com>
 
-> On Fri, Mar 12, 2010 at 11:39:25PM +0100, Florian Mickler wrote:
-> > On Fri, 12 Mar 2010 13:20:26 -0800
-> > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
-> > 
-> > > On Fri, Mar 12, 2010 at 09:57:43PM +0100, Florian Mickler wrote:
-> > > > On Fri, 12 Mar 2010 10:22:09 -0800
-> > > > Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
-> > > > 
-> > > > > On Fri, Mar 12, 2010 at 07:03:08PM +0100, florian@mickler.org wrote:
-> > > > > >  
-> > > > > > +static ssize_t rfkill_hard_show(struct device *dev,
-> > > > > > +				 struct device_attribute *attr,
-> > > > > > +				 char *buf)
-> > > > > > +{
-> > > > > > +	struct rfkill *rfkill = to_rfkill(dev);
-> > > > > > +	unsigned long flags;
-> > > > > > +	u32 state;
-> > > > > > +
-> > > > > > +	spin_lock_irqsave(&rfkill->lock, flags);
-> > > > > > +	state = rfkill->state;
-> > > > > > +	spin_unlock_irqrestore(&rfkill->lock, flags);
-> > > > > 
-> > > > > Why exactly is this lock needed?
-> > > > 
-> > > > The rfkill state is updated from multiple contexts... Am I overlooking
-> > > > smth obvious here?
-> > > > 
-> > > 
-> > > You are not updating but reading... Are you concerned about seeing
-> > > a partial write to u32? It does not happen.
-> > > 
-> > Hm.. You shure? On every arch that supports wireless drivers? 
-> > 
-> > I've just copied that code from the old sysfs state-file handler.
-> > So I assumed that reading partial updated state can happen... Also I
-> > just searched a little but did not find anything, cause i didn't know
-> > where to look. Who garantees this? Is it a gcc thing? 
-> > 
-> 
-> None of the arches would do byte-by-byte writes to a u32, they'd write
-> dword at once. Also, even if they could, you are interested in a single
-> flag (bit). You do realize that once you leave spinlock whatever you
-> fetched is stale data and may not be trusted?
+This is a patch to files in ath/ar9170 that fixes a set of warnings
+found by checkpatch.pl tool. A line over 80 characters, a few empty
+spaces before tab and a few empty characters before a new line.
 
-On Fri, 12 Mar 2010 18:48:19 -0500
-Valdis.Kletnieks@vt.edu wrote:
-> If a u32 load or store from memory isn't atomic, the Linux kernel is screwed
-> anyhow.  Hint - imagine if every 32-bit reference had to be treated the way
-> we currently treat 64-bit references on a 32-bit system.
+Signed-off-by: Luis de Bethencourt <luisbg@ubuntu.com>
+---
+ drivers/net/wireless/ath/ar9170/cmd.h    |    2 +-
+ drivers/net/wireless/ath/ar9170/eeprom.h |    4 ++--
+ drivers/net/wireless/ath/ar9170/main.c   |   11 ++++++-----
+ 3 files changed, 9 insertions(+), 8 deletions(-)
 
-
-i presume, there is no way any digital device could write _one bit_
-partial :) 
-so this _may_ actually be safe *g* 
+diff --git a/drivers/net/wireless/ath/ar9170/cmd.h b/drivers/net/wireless/ath/ar9170/cmd.h
+index 826c45e..ec8134b 100644
+--- a/drivers/net/wireless/ath/ar9170/cmd.h
++++ b/drivers/net/wireless/ath/ar9170/cmd.h
+@@ -79,7 +79,7 @@ __regwrite_out :							\
+ 	if (__nreg) {							\
+ 		if (IS_ACCEPTING_CMD(__ar))				\
+ 			__err = ar->exec_cmd(__ar, AR9170_CMD_WREG,	\
+-					     8 * __nreg, 		\
++					     8 * __nreg,		\
+ 					     (u8 *) &__ar->cmdbuf[1],	\
+ 					     0, NULL);			\
+ 		__nreg = 0;						\
+diff --git a/drivers/net/wireless/ath/ar9170/eeprom.h b/drivers/net/wireless/ath/ar9170/eeprom.h
+index d2c8cc8..6c46638 100644
+--- a/drivers/net/wireless/ath/ar9170/eeprom.h
++++ b/drivers/net/wireless/ath/ar9170/eeprom.h
+@@ -127,8 +127,8 @@ struct ar9170_eeprom {
+ 	__le16	checksum;
+ 	__le16	version;
+ 	u8	operating_flags;
+-#define AR9170_OPFLAG_5GHZ 		1
+-#define AR9170_OPFLAG_2GHZ 		2
++#define AR9170_OPFLAG_5GHZ		1
++#define AR9170_OPFLAG_2GHZ		2
+ 	u8	misc;
+ 	__le16	reg_domain[2];
+ 	u8	mac_address[6];
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 257c734..3de4592 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -235,7 +235,7 @@ static void __ar9170_dump_txqueue(struct ar9170 *ar,
+ 	       wiphy_name(ar->hw->wiphy), skb_queue_len(queue));
  
-how about the write in the _store() function? there we
-read,update and write back the whole 32 bit which then potentially
-overwrites some other flag concurrently set by an driver interrupt on
-another cpu? i think the lock there is needed.
+ 	skb_queue_walk(queue, skb) {
+-		printk(KERN_DEBUG "index:%d => \n", i++);
++		printk(KERN_DEBUG "index:%d =>\n", i++);
+ 		ar9170_print_txheader(ar, skb);
+ 	}
+ 	if (i != skb_queue_len(queue))
+@@ -280,7 +280,7 @@ static void ar9170_dump_tx_status_ampdu(struct ar9170 *ar)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&ar->tx_status_ampdu.lock, flags);
+-	printk(KERN_DEBUG "%s: A-MPDU tx_status queue => \n",
++	printk(KERN_DEBUG "%s: A-MPDU tx_status queue =>\n",
+ 	       wiphy_name(ar->hw->wiphy));
+ 	__ar9170_dump_txqueue(ar, &ar->tx_status_ampdu);
+ 	spin_unlock_irqrestore(&ar->tx_status_ampdu.lock, flags);
+@@ -307,7 +307,7 @@ static void ar9170_recycle_expired(struct ar9170 *ar,
+ 		if (time_is_before_jiffies(arinfo->timeout)) {
+ #ifdef AR9170_QUEUE_DEBUG
+ 			printk(KERN_DEBUG "%s: [%ld > %ld] frame expired => "
+-			       "recycle \n", wiphy_name(ar->hw->wiphy),
++			       "recycle\n", wiphy_name(ar->hw->wiphy),
+ 			       jiffies, arinfo->timeout);
+ 			ar9170_print_txheader(ar, skb);
+ #endif /* AR9170_QUEUE_DEBUG */
+@@ -688,7 +688,8 @@ void ar9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len)
+ 
+ 	/* firmware debug */
+ 	case 0xca:
+-		printk(KERN_DEBUG "ar9170 FW: %.*s\n", len - 4, (char *)buf + 4);
++		printk(KERN_DEBUG "ar9170 FW: %.*s\n", len - 4,
++				(char *)buf + 4);
+ 		break;
+ 	case 0xcb:
+ 		len -= 4;
+@@ -1727,7 +1728,7 @@ static void ar9170_tx(struct ar9170 *ar)
+ 			printk(KERN_DEBUG "%s: queue %d full\n",
+ 			       wiphy_name(ar->hw->wiphy), i);
+ 
+-			printk(KERN_DEBUG "%s: stuck frames: ===> \n",
++			printk(KERN_DEBUG "%s: stuck frames: ===>\n",
+ 			       wiphy_name(ar->hw->wiphy));
+ 			ar9170_dump_txqueue(ar, &ar->tx_pending[i]);
+ 			ar9170_dump_txqueue(ar, &ar->tx_status[i]);
+-- 
+1.6.3.3
 
-cheers,
-Flo
