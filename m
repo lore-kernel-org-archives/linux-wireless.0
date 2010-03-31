@@ -1,376 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43986 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751555Ab0CZQwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Mar 2010 12:52:16 -0400
-Subject: Re: [PATCH 2/2] iwlwifi: manage QoS by mac stack
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1269621992-5034-2-git-send-email-sgruszka@redhat.com>
-References: <1269621992-5034-1-git-send-email-sgruszka@redhat.com>
-	 <1269621992-5034-2-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Fri, 26 Mar 2010 10:48:45 -0700
-Message-Id: <1269625725.3023.0.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:49944 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756203Ab0CaTjM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Mar 2010 15:39:12 -0400
+Received: by ewy20 with SMTP id 20so143142ewy.1
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Mar 2010 12:39:10 -0700 (PDT)
+From: "John W. Linville" <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH V3] ssb: do not read SPROM if it does not exist
+Date: Wed, 31 Mar 2010 21:39:35 +0200
+Message-Id: <1270064375-3138-2-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Attempting to read registers that don't exist on the SSB bus can cause
+hangs on some boxes.  At least some b43 devices are 'in the wild' that
+don't have SPROMs at all.  When the SSB bus support loads, it attempts
+to read these (non-existant) SPROMs and causes hard hangs on the box --
+no console output, etc.
 
-On Fri, 2010-03-26 at 09:46 -0700, Stanislaw Gruszka wrote:
-> We activate/deactivate QoS and setup default queue parameters in iwlwifi
-> driver. Mac stack do the same, so we do not need repeat that work here.
-> Stack also will tell when disable QoS, this will fix driver when working
-> with older APs, that do not have QoS implemented.
-> 
-> Patch make "force = true" in iwl_active_qos() assuming we always want
-> to do with QoS what mac stack wish.
-> 
-> Patch also remove unused qos_cap bits, do not initialize qos_active = 0,
-> as we have it initialized to zero by kzalloc. 
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |   15 ---
->  drivers/net/wireless/iwlwifi/iwl-core.c     |  141 +++------------------------
->  drivers/net/wireless/iwlwifi/iwl-core.h     |    3 +-
->  drivers/net/wireless/iwlwifi/iwl-dev.h      |   21 ----
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 --
->  5 files changed, 17 insertions(+), 170 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index 818367b..a912586 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -2506,7 +2506,6 @@ void iwl_post_associate(struct iwl_priv *priv)
->  {
->  	struct ieee80211_conf *conf = NULL;
->  	int ret = 0;
-> -	unsigned long flags;
->  
->  	if (priv->iw_mode == NL80211_IFTYPE_AP) {
->  		IWL_ERR(priv, "%s Should not be called in AP mode\n", __func__);
-> @@ -2591,10 +2590,6 @@ void iwl_post_associate(struct iwl_priv *priv)
->  	if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
->  		priv->assoc_station_added = 1;
->  
-> -	spin_lock_irqsave(&priv->lock, flags);
-> -	iwl_activate_qos(priv, 0);
-> -	spin_unlock_irqrestore(&priv->lock, flags);
-> -
->  	/* the chain noise calibration will enabled PM upon completion
->  	 * If chain noise has already been run, then we need to enable
->  	 * power management here */
-> @@ -2771,7 +2766,6 @@ static int iwl_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->  void iwl_config_ap(struct iwl_priv *priv)
->  {
->  	int ret = 0;
-> -	unsigned long flags;
->  
->  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->  		return;
-> @@ -2823,10 +2817,6 @@ void iwl_config_ap(struct iwl_priv *priv)
->  		/* restore RXON assoc */
->  		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
->  		iwlcore_commit_rxon(priv);
-> -		iwl_reset_qos(priv);
-> -		spin_lock_irqsave(&priv->lock, flags);
-> -		iwl_activate_qos(priv, 1);
-> -		spin_unlock_irqrestore(&priv->lock, flags);
->  		iwl_add_bcast_station(priv);
->  	}
->  	iwl_send_beacon_cmd(priv);
-> @@ -3386,11 +3376,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
->  
->  	iwl_init_scan_params(priv);
->  
-> -	iwl_reset_qos(priv);
-> -
-> -	priv->qos_data.qos_active = 0;
-> -	priv->qos_data.qos_cap.val = 0;
-> -
->  	priv->rates_mask = IWL_RATES_MASK;
->  	/* Set the tx_power_user_lmt to the lowest power level
->  	 * this value will get overwritten by channel max power avg
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-> index 112149e..1043b28 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-> @@ -321,17 +321,13 @@ EXPORT_SYMBOL(iwl_hw_nic_init);
->  /*
->   * QoS  support
->  */
-> -void iwl_activate_qos(struct iwl_priv *priv, u8 force)
-> +void iwl_activate_qos(struct iwl_priv *priv)
->  {
->  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
->  		return;
->  
->  	priv->qos_data.def_qos_parm.qos_flags = 0;
->  
-> -	if (priv->qos_data.qos_cap.q_AP.queue_request &&
-> -	    !priv->qos_data.qos_cap.q_AP.txop_request)
-> -		priv->qos_data.def_qos_parm.qos_flags |=
-> -			QOS_PARAM_FLG_TXOP_TYPE_MSK;
->  	if (priv->qos_data.qos_active)
->  		priv->qos_data.def_qos_parm.qos_flags |=
->  			QOS_PARAM_FLG_UPDATE_EDCA_MSK;
-> @@ -339,119 +335,16 @@ void iwl_activate_qos(struct iwl_priv *priv, u8 force)
->  	if (priv->current_ht_config.is_ht)
->  		priv->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
->  
-> -	if (force || iwl_is_associated(priv)) {
-> -		IWL_DEBUG_QOS(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
-> -				priv->qos_data.qos_active,
-> -				priv->qos_data.def_qos_parm.qos_flags);
-> +	IWL_DEBUG_QOS(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
-> +		      priv->qos_data.qos_active,
-> +		      priv->qos_data.def_qos_parm.qos_flags);
->  
-> -		iwl_send_cmd_pdu_async(priv, REPLY_QOS_PARAM,
-> -				       sizeof(struct iwl_qosparam_cmd),
-> -				       &priv->qos_data.def_qos_parm, NULL);
-> -	}
-> +	iwl_send_cmd_pdu_async(priv, REPLY_QOS_PARAM,
-> +			       sizeof(struct iwl_qosparam_cmd),
-> +			       &priv->qos_data.def_qos_parm, NULL);
->  }
->  EXPORT_SYMBOL(iwl_activate_qos);
->  
-> -/*
-> - * AC        CWmin         CW max      AIFSN      TXOP Limit    TXOP Limit
-> - *                                              (802.11b)      (802.11a/g)
-> - * AC_BK      15            1023        7           0               0
-> - * AC_BE      15            1023        3           0               0
-> - * AC_VI       7              15        2          6.016ms       3.008ms
-> - * AC_VO       3               7        2          3.264ms       1.504ms
-> - */
-> -void iwl_reset_qos(struct iwl_priv *priv)
-> -{
-> -	u16 cw_min = 15;
-> -	u16 cw_max = 1023;
-> -	u8 aifs = 2;
-> -	bool is_legacy = false;
-> -	unsigned long flags;
-> -	int i;
-> -
-> -	spin_lock_irqsave(&priv->lock, flags);
-> -	/* QoS always active in AP and ADHOC mode
-> -	 * In STA mode wait for association
-> -	 */
-> -	if (priv->iw_mode == NL80211_IFTYPE_ADHOC ||
-> -	    priv->iw_mode == NL80211_IFTYPE_AP)
-> -		priv->qos_data.qos_active = 1;
-> -	else
-> -		priv->qos_data.qos_active = 0;
-> -
-> -	/* check for legacy mode */
-> -	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC &&
-> -	    (priv->active_rate & IWL_OFDM_RATES_MASK) == 0) ||
-> -	    (priv->iw_mode == NL80211_IFTYPE_STATION &&
-> -	    (priv->staging_rxon.flags & RXON_FLG_SHORT_SLOT_MSK) == 0)) {
-> -		cw_min = 31;
-> -		is_legacy = 1;
-> -	}
-> -
-> -	if (priv->qos_data.qos_active)
-> -		aifs = 3;
-> -
-> -	/* AC_BE */
-> -	priv->qos_data.def_qos_parm.ac[0].cw_min = cpu_to_le16(cw_min);
-> -	priv->qos_data.def_qos_parm.ac[0].cw_max = cpu_to_le16(cw_max);
-> -	priv->qos_data.def_qos_parm.ac[0].aifsn = aifs;
-> -	priv->qos_data.def_qos_parm.ac[0].edca_txop = 0;
-> -	priv->qos_data.def_qos_parm.ac[0].reserved1 = 0;
-> -
-> -	if (priv->qos_data.qos_active) {
-> -		/* AC_BK */
-> -		i = 1;
-> -		priv->qos_data.def_qos_parm.ac[i].cw_min = cpu_to_le16(cw_min);
-> -		priv->qos_data.def_qos_parm.ac[i].cw_max = cpu_to_le16(cw_max);
-> -		priv->qos_data.def_qos_parm.ac[i].aifsn = 7;
-> -		priv->qos_data.def_qos_parm.ac[i].edca_txop = 0;
-> -		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
-> -
-> -		/* AC_VI */
-> -		i = 2;
-> -		priv->qos_data.def_qos_parm.ac[i].cw_min =
-> -			cpu_to_le16((cw_min + 1) / 2 - 1);
-> -		priv->qos_data.def_qos_parm.ac[i].cw_max =
-> -			cpu_to_le16(cw_min);
-> -		priv->qos_data.def_qos_parm.ac[i].aifsn = 2;
-> -		if (is_legacy)
-> -			priv->qos_data.def_qos_parm.ac[i].edca_txop =
-> -				cpu_to_le16(6016);
-> -		else
-> -			priv->qos_data.def_qos_parm.ac[i].edca_txop =
-> -				cpu_to_le16(3008);
-> -		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
-> -
-> -		/* AC_VO */
-> -		i = 3;
-> -		priv->qos_data.def_qos_parm.ac[i].cw_min =
-> -			cpu_to_le16((cw_min + 1) / 4 - 1);
-> -		priv->qos_data.def_qos_parm.ac[i].cw_max =
-> -			cpu_to_le16((cw_min + 1) / 2 - 1);
-> -		priv->qos_data.def_qos_parm.ac[i].aifsn = 2;
-> -		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
-> -		if (is_legacy)
-> -			priv->qos_data.def_qos_parm.ac[i].edca_txop =
-> -				cpu_to_le16(3264);
-> -		else
-> -			priv->qos_data.def_qos_parm.ac[i].edca_txop =
-> -				cpu_to_le16(1504);
-> -	} else {
-> -		for (i = 1; i < 4; i++) {
-> -			priv->qos_data.def_qos_parm.ac[i].cw_min =
-> -				cpu_to_le16(cw_min);
-> -			priv->qos_data.def_qos_parm.ac[i].cw_max =
-> -				cpu_to_le16(cw_max);
-> -			priv->qos_data.def_qos_parm.ac[i].aifsn = aifs;
-> -			priv->qos_data.def_qos_parm.ac[i].edca_txop = 0;
-> -			priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
-> -		}
-> -	}
-> -	IWL_DEBUG_QOS(priv, "set QoS to default \n");
-> -
-> -	spin_unlock_irqrestore(&priv->lock, flags);
-> -}
-> -EXPORT_SYMBOL(iwl_reset_qos);
-> -
->  #define MAX_BIT_RATE_40_MHZ 150 /* Mbps */
->  #define MAX_BIT_RATE_20_MHZ 72 /* Mbps */
->  static void iwlcore_init_ht_hw_capab(const struct iwl_priv *priv,
-> @@ -2302,12 +2195,6 @@ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
->  			cpu_to_le16((params->txop * 32));
->  
->  	priv->qos_data.def_qos_parm.ac[q].reserved1 = 0;
-> -	priv->qos_data.qos_active = 1;
-> -
-> -	if (priv->iw_mode == NL80211_IFTYPE_AP)
-> -		iwl_activate_qos(priv, 1);
-> -	else if (priv->assoc_id && iwl_is_associated(priv))
-> -		iwl_activate_qos(priv, 0);
->  
->  	spin_unlock_irqrestore(&priv->lock, flags);
->  
-> @@ -2583,11 +2470,8 @@ int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
->  	IWL_DEBUG_MAC80211(priv, "leave\n");
->  	spin_unlock_irqrestore(&priv->lock, flags);
->  
-> -	iwl_reset_qos(priv);
-> -
->  	priv->cfg->ops->lib->post_associate(priv);
->  
-> -
->  	return 0;
->  }
->  EXPORT_SYMBOL(iwl_mac_beacon_update);
-> @@ -2829,6 +2713,15 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
->  		iwl_set_tx_power(priv, conf->power_level, false);
->  	}
->  
-> +	if (changed & IEEE80211_CONF_CHANGE_QOS) {
-> +		bool qos_active = !!(conf->flags & IEEE80211_CONF_QOS);
-> +
-> +		spin_lock_irqsave(&priv->lock, flags);
-> +		priv->qos_data.qos_active = qos_active;
-> +		iwl_activate_qos(priv);
-> +		spin_unlock_irqrestore(&priv->lock, flags);
-> +	}
-> +
->  	if (!iwl_is_ready(priv)) {
->  		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
->  		goto out;
-> @@ -2863,8 +2756,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
->  	memset(&priv->current_ht_config, 0, sizeof(struct iwl_ht_config));
->  	spin_unlock_irqrestore(&priv->lock, flags);
->  
-> -	iwl_reset_qos(priv);
-> -
->  	spin_lock_irqsave(&priv->lock, flags);
->  	priv->assoc_id = 0;
->  	priv->assoc_capability = 0;
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-> index 4ef7739..da7c449 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-> @@ -304,8 +304,7 @@ struct iwl_cfg {
->  struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg,
->  		struct ieee80211_ops *hw_ops);
->  void iwl_hw_detect(struct iwl_priv *priv);
-> -void iwl_reset_qos(struct iwl_priv *priv);
-> -void iwl_activate_qos(struct iwl_priv *priv, u8 force);
-> +void iwl_activate_qos(struct iwl_priv *priv);
->  int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
->  		    const struct ieee80211_tx_queue_params *params);
->  void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, int hw_decrypt);
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-> index 6054c5f..5da9d57 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-> @@ -519,30 +519,9 @@ struct iwl_ht_config {
->  	u8 non_GF_STA_present;
->  };
->  
-> -union iwl_qos_capabity {
-> -	struct {
-> -		u8 edca_count:4;	/* bit 0-3 */
-> -		u8 q_ack:1;		/* bit 4 */
-> -		u8 queue_request:1;	/* bit 5 */
-> -		u8 txop_request:1;	/* bit 6 */
-> -		u8 reserved:1;		/* bit 7 */
-> -	} q_AP;
-> -	struct {
-> -		u8 acvo_APSD:1;		/* bit 0 */
-> -		u8 acvi_APSD:1;		/* bit 1 */
-> -		u8 ac_bk_APSD:1;	/* bit 2 */
-> -		u8 ac_be_APSD:1;	/* bit 3 */
-> -		u8 q_ack:1;		/* bit 4 */
-> -		u8 max_len:2;		/* bit 5-6 */
-> -		u8 more_data_ack:1;	/* bit 7 */
-> -	} q_STA;
-> -	u8 val;
-> -};
-> -
->  /* QoS structures */
->  struct iwl_qos_info {
->  	int qos_active;
-> -	union iwl_qos_capabity qos_cap;
->  	struct iwl_qosparam_cmd def_qos_parm;
->  };
->  
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 54daa38..21e855a 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -3150,8 +3150,6 @@ void iwl3945_post_associate(struct iwl_priv *priv)
->  		break;
->  	}
->  
-> -	iwl_activate_qos(priv, 0);
-> -
->  	/* we have just associated, don't start scan too early */
->  	priv->next_scan_jiffies = jiffies + IWL_DELAY_NEXT_SCAN;
->  }
-> @@ -3859,11 +3857,6 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
->  	priv->iw_mode = NL80211_IFTYPE_STATION;
->  	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
->  
-> -	iwl_reset_qos(priv);
-> -
-> -	priv->qos_data.qos_active = 0;
-> -	priv->qos_data.qos_cap.val = 0;
-> -
->  	priv->rates_mask = IWL_RATES_MASK;
->  	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
->  
-it is much simple now, thanks
+This patch adds some intelligence to determine whether or not the SPROM
+is present before attempting to read it.  This avoids those hard hangs
+on those devices with no SPROM attached to their SSB bus.  The
+SSB-attached devices (e.g. b43, et al.) won't work, but at least the box
+will survive to test further patches. :-)
 
-Wey
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>
+---
+V2: adapt to updated specs, drop some warning-causing braces
+V3: updated specs again, drop PCMCIA part
+
+OK, so hopefully we have it figured out now.
+
+However I have no idea what PCMCIA tuples are. Do we need similar check for
+some PCMCIA code?
+
+I feel badly pretending to be John. Did I really get your tip correct, Larry?
+---
+ drivers/ssb/driver_chipcommon.c           |    2 ++
+ drivers/ssb/pci.c                         |    5 +++++
+ drivers/ssb/sprom.c                       |   14 ++++++++++++++
+ include/linux/ssb/ssb.h                   |    3 +++
+ include/linux/ssb/ssb_driver_chipcommon.h |   15 +++++++++++++++
+ 5 files changed, 39 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ssb/driver_chipcommon.c b/drivers/ssb/driver_chipcommon.c
+index 59c3c0f..59ae76b 100644
+--- a/drivers/ssb/driver_chipcommon.c
++++ b/drivers/ssb/driver_chipcommon.c
+@@ -233,6 +233,8 @@ void ssb_chipcommon_init(struct ssb_chipcommon *cc)
+ {
+ 	if (!cc->dev)
+ 		return; /* We don't have a ChipCommon */
++	if (cc->dev->id.revision >= 11)
++		cc->status = chipco_read32(cc, SSB_CHIPCO_CHIPSTAT);
+ 	ssb_pmu_init(cc);
+ 	chipco_powercontrol_init(cc);
+ 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_FAST);
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index 9e50896..a4b2b99 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -620,6 +620,11 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 	int err = -ENOMEM;
+ 	u16 *buf;
+ 
++	if (!ssb_is_sprom_available(bus)) {
++		ssb_printk(KERN_ERR PFX "No SPROM available!\n");
++		return -ENODEV;
++	}
++
+ 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+ 	if (!buf)
+ 		goto out;
+diff --git a/drivers/ssb/sprom.c b/drivers/ssb/sprom.c
+index d0e6762..83bc088 100644
+--- a/drivers/ssb/sprom.c
++++ b/drivers/ssb/sprom.c
+@@ -175,3 +175,17 @@ const struct ssb_sprom *ssb_get_fallback_sprom(void)
+ {
+ 	return fallback_sprom;
+ }
++
++/* http://bcm-v4.sipsolutions.net/802.11/IsSpromAvailable */
++bool ssb_is_sprom_available(struct ssb_bus *bus)
++{
++	/* status register only exists on chipcomon rev >= 11 and we need check
++	   for >= 31 only */
++	/* this routine differs from specs as we do not access SPROM directly
++	   on PCMCIA */
++	if (bus->bustype == SSB_BUSTYPE_PCI &&
++	    bus->chipco.dev->id.revision >= 31)
++		return bus->chipco.capabilities & SSB_CHIPCO_CAP_SPROM;
++
++	return true;
++}
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 24f9885..3b4da23 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -394,6 +394,9 @@ extern int ssb_bus_sdiobus_register(struct ssb_bus *bus,
+ 
+ extern void ssb_bus_unregister(struct ssb_bus *bus);
+ 
++/* Does the device have an SPROM? */
++extern bool ssb_is_sprom_available(struct ssb_bus *bus);
++
+ /* Set a fallback SPROM.
+  * See kdoc at the function definition for complete documentation. */
+ extern int ssb_arch_set_fallback_sprom(const struct ssb_sprom *sprom);
+diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
+index 4e27acf..2cdf249 100644
+--- a/include/linux/ssb/ssb_driver_chipcommon.h
++++ b/include/linux/ssb/ssb_driver_chipcommon.h
+@@ -53,6 +53,7 @@
+ #define  SSB_CHIPCO_CAP_64BIT		0x08000000	/* 64-bit Backplane */
+ #define  SSB_CHIPCO_CAP_PMU		0x10000000	/* PMU available (rev >= 20) */
+ #define  SSB_CHIPCO_CAP_ECI		0x20000000	/* ECI available (rev >= 20) */
++#define  SSB_CHIPCO_CAP_SPROM		0x40000000	/* SPROM present */
+ #define SSB_CHIPCO_CORECTL		0x0008
+ #define  SSB_CHIPCO_CORECTL_UARTCLK0	0x00000001	/* Drive UART with internal clock */
+ #define	 SSB_CHIPCO_CORECTL_SE		0x00000002	/* sync clk out enable (corerev >= 3) */
+@@ -385,6 +386,7 @@
+ 
+ 
+ /** Chip specific Chip-Status register contents. */
++#define SSB_CHIPCO_CHST_4322_SPROM_EXISTS	0x00000040 /* SPROM present */
+ #define SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL	0x00000003
+ #define SSB_CHIPCO_CHST_4325_DEFCIS_SEL		0 /* OTP is powered up, use def. CIS, no SPROM */
+ #define SSB_CHIPCO_CHST_4325_SPROM_SEL		1 /* OTP is powered up, SPROM is present */
+@@ -398,6 +400,18 @@
+ #define SSB_CHIPCO_CHST_4325_RCAL_VALUE_SHIFT	4
+ #define SSB_CHIPCO_CHST_4325_PMUTOP_2B 		0x00000200 /* 1 for 2b, 0 for to 2a */
+ 
++/** Macros to determine SPROM presence based on Chip-Status register. */
++#define SSB_CHIPCO_CHST_4312_SPROM_PRESENT(status) \
++	((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_OTP_SEL)
++#define SSB_CHIPCO_CHST_4322_SPROM_PRESENT(status) \
++	(status & SSB_CHIPCO_CHST_4322_SPROM_EXISTS)
++#define SSB_CHIPCO_CHST_4325_SPROM_PRESENT(status) \
++	(((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_DEFCIS_SEL) && \
++	 ((status & SSB_CHIPCO_CHST_4325_SPROM_OTP_SEL) != \
++		SSB_CHIPCO_CHST_4325_OTP_SEL))
++
+ 
+ 
+ /** Clockcontrol masks and values **/
+@@ -564,6 +578,7 @@ struct ssb_chipcommon_pmu {
+ struct ssb_chipcommon {
+ 	struct ssb_device *dev;
+ 	u32 capabilities;
++	u32 status;
+ 	/* Fast Powerup Delay constant */
+ 	u16 fast_pwrup_delay;
+ 	struct ssb_chipcommon_pmu pmu;
+-- 
+1.6.4.2
 
