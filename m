@@ -1,64 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:32417 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752572Ab0CEGdJ (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:61341 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751285Ab0CaSqi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Mar 2010 01:33:09 -0500
-Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-029126788
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Mar 2010 15:33:08 +0900 (JST)
-Subject: [PATCH 3/3] ath5k: IQ calibration for AR5211 is slightly different
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: 8an@praha12.net, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, mickflemm@gmail.com
-Date: Fri, 05 Mar 2010 15:33:06 +0900
-Message-ID: <20100305063306.29522.89859.stgit@void>
-In-Reply-To: <20100305063255.29522.83920.stgit@void>
-References: <20100305063255.29522.83920.stgit@void>
+	Wed, 31 Mar 2010 14:46:38 -0400
+Message-ID: <4BB3988C.40902@gmail.com>
+Date: Wed, 31 Mar 2010 20:46:36 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Ondrej Zary <linux@rainbow-software.org>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] [RFC] rt2500pci: fix powersaving
+References: <201003290956.54234.linux@rainbow-software.org> <201003301433.55355.linux@rainbow-software.org> <20100330125620.GA2173@katherina.student.utwente.nl> <201003302209.23334.linux@rainbow-software.org> <20100331174138.GE21160@katherina.student.utwente.nl> <4BB396B4.8090005@gmail.com>
+In-Reply-To: <4BB396B4.8090005@gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------070101090101000206070904"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-according to the HAL sources the calculation of the Q value is slightly
-different for AR5211 chips.
+This is a multi-part message in MIME format.
+--------------070101090101000206070904
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-i couldn't test this since IQ calibration never finishes on older parts. this
-is a different problem...
+On 03/31/10 20:38, Gertjan van Wingerde wrote:
+> On 03/31/10 19:41, Matthijs Kooijman wrote:
+>> Hi Ondrej,
+>>
+>>> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 1 (-16).
+>> I've been running with your patches (applied to 2.6.32.7) for a day of normal
+>> work, and the steady stream of these errors has stopped. During the entire
+>> day, I've seen the error once, perhaps a corner case here or there?
+>>
+>> Overall, I have the feeling that connectivity is a bit more unstable with
+>> these two patches, however. On a few occasions, my SSH connections would hang
+>> for a bit. Sometimes pinging would be ok (and sometimes it wouldn't), so I
+>> haven't quite figured out if these problems were actually caused by the
+>> driver, or some other cause). Once I seemd to solve the problem by turning off
+>> powersaving, but that might have been a coincidence. Other times the problems
+>> went away by themselves.
+>>
+>> Is there anything else I can do at the moment I'm seeing connection problems?
+>> Make a register dump or check some command?
+>>
+>> I'll do some more testing, tonight on another (probably more stable)
+>> connection.
+> 
+> Could you try the attached patch on top of Ondrej's?
+> 
+> The legacy Ralink drivers do not go to sleep when there are still active entries
+> in the TX queues. This patch mimics that behavior by refusing to go to sleep if
+> there still are active entries in any of the TX queues.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Sorry, I got confused on which driver we were working on. Find attached the correct
+patch, now for the rt2500pci driver instead of the rt2500usb driver.
+
 ---
- drivers/net/wireless/ath/ath5k/phy.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+Gertjan
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 4977d22..b474d51 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1399,7 +1399,11 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
- 	}
+--------------070101090101000206070904
+Content-Type: text/plain;
+ name="patch2"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="patch2"
+
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index b0c9502..a0441fa 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -558,9 +558,17 @@ static void rt2500pci_config_ps(struct rt2x00_dev *rt2x00dev,
+ 	enum dev_state state =
+ 	    (libconf->conf->flags & IEEE80211_CONF_PS) ?
+ 		STATE_SLEEP : STATE_AWAKE;
++	struct data_queue *queue;
+ 	u32 reg;
  
- 	i_coffd = ((i_pwr >> 1) + (q_pwr >> 1)) >> 7;
--	q_coffd = q_pwr >> 7;
+ 	if (state == STATE_SLEEP) {
++		/*
++		 * Don't go to sleep when the TX queues are not empty.
++		 */
++		tx_queue_for_each(rt2x00dev, queue)
++			if (!rt2x00queue_empty(queue))
++				return;
 +
-+	if (ah->ah_version == AR5K_AR5211)
-+		q_coffd = q_pwr >> 6;
-+	else
-+		q_coffd = q_pwr >> 7;
- 
- 	/* protect against divide by 0 and loss of sign bits */
- 	if (i_coffd == 0 || q_coffd < 2)
-@@ -1412,7 +1416,10 @@ static int ath5k_hw_rf511x_calibrate(struct ath5k_hw *ah,
- 	else if (i_coff < -32)
- 		i_coff = -32;
- 
--	q_coff = (i_pwr / q_coffd) - 128;
-+	if (ah->ah_version == AR5K_AR5211)
-+		q_coff = (i_pwr / q_coffd) - 64;
-+	else
-+		q_coff = (i_pwr / q_coffd) - 128;
- 	/* Boundary check (signed 5 bit) */
- 	if (q_coff > 15)
- 		q_coff = 15;
+ 		rt2x00pci_register_read(rt2x00dev, CSR20, &reg);
+ 		rt2x00_set_field32(&reg, CSR20_DELAY_AFTER_TBCN,
+ 				   (rt2x00dev->beacon_int - 20) * 16);
 
+--------------070101090101000206070904--
