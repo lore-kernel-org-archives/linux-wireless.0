@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65000 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750821Ab0CFGfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Mar 2010 01:35:24 -0500
-Subject: Re: Mesh support for gumstix's wireless (Marvell 88W8385 wireless
- chip with CF interface)
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Yurovsky <yurovsky@gmail.com>
-Cc: Darko Makreshanski <d.makreshanski@jacobs-university.de>,
+Received: from he.sipsolutions.net ([78.46.109.217]:42546 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932315Ab0CaINj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Mar 2010 04:13:39 -0400
+Subject: Re: [PATCH V2] mac80211: Revise,pending queue depth in
+ ieee80211_local data structure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <c1545bb51003041638v28e5fe9me336735fc940e1ea@mail.gmail.com>
-References: <4B9024DE.308@jacobs-university.de>
-	 <c1545bb51003041638v28e5fe9me336735fc940e1ea@mail.gmail.com>
+In-Reply-To: <201003311712.12301.br1@einfach.org>
+References: <4BA24A12.4030208@gmail.com>
+	 <201003211101.16481.randolf.bruno@gmail.com>
+	 <1269281564.7645.1.camel@jlt3.sipsolutions.net>
+	 <201003311712.12301.br1@einfach.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 05 Mar 2010 22:35:49 -0800
-Message-ID: <1267857349.2243.158.camel@localhost.localdomain>
+Date: Wed, 31 Mar 2010 10:13:37 +0200
+Message-ID: <1270023217.16210.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-03-04 at 16:38 -0800, Andrey Yurovsky wrote:
-> On Thu, Mar 4, 2010 at 1:23 PM, Darko Makreshanski
-> <d.makreshanski@jacobs-university.de> wrote:
-> > 1. will mesh networking work with the 88W8385 chip on gumstix with the
-> > libertas driver?
+On Wed, 2010-03-31 at 17:12 +0900, Bruno Randolf wrote:
+> On Tuesday 23 March 2010 03:12:44 you wrote:
+> > On Sun, 2010-03-21 at 11:01 +0900, Bruno Randolf wrote:
+> > > On Sunday 21 March 2010 05:40:05 Johannes Berg wrote:
+> > > > On Sat, 2010-03-20 at 21:02 +0100, Lorenzo Bianconi wrote:
+> > > > > >> setup 2 wireless cards, talking to each other (i use IBSS) on
+> > > > > >> different
+> > > > > 
+> > > > > >> machines. then setup routing like this:
+> > > > > PC1<--ethernet cable-->Device1<--wireless link-->Device2<--ethernet
+> > > > > cable-->PC2
+> > > > 
+> > > > I'm not really sure how this scenario differs from injecting traffic
+> > > > locally, but I'll try to reproduce.
+> > > 
+> > > if you generate traffic locally it's enough to stop the queues, this will
+> > > cause userspace to stop generating traffic. in the forwarding case (which
+> > > we are talking about) stopping the queues will not stop the sender to
+> > > send traffic, thus we have to start dropping packets at some point.
+> > 
+> > So I tried this scenario, and I see the queues stopping, and traffic
+> > being dropped quite as you'd want it. Even the race condition that I
+> > noticed didn't ever trigger.
+> > 
+> > Please make sure you're using a kernel recent enough to include the
+> > fixes, maybe try compat-wireless.
 > 
-> No.  The OLPC uses an 88w8288 with in-firmware mesh on the USB
-> variant.  That firmware won't run on other chips.
+> so it must be an ath5k bug then... lorenzo's description just resembled my 
+> case so much, that i thought it could be the same bug. sorry to have bothered 
+> you with this...
 
-I assume you mean 88w8388 :)
+I don't think there's any way this can be a driver bug, assuming it
+stops the queues properly, which it has to unless it comes up with its
+own queueing scheme...
 
-Dan
-
-> > 3. if not, is it possible to make the libertas_tf driver work with this
-> > chip?
-> 
-> No.  That driver only supports the 88w8388 USB variant with special
-> firmware.  Your chip is a full-MAC device and therefore cannot use the
-> mac80211 mesh stack (and there isn't a special firmware to make it do
-> something else).
-> 
->   -Andrey
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+johannes
 
