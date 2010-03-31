@@ -1,97 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:45055 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753490Ab0C2POp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Mar 2010 11:14:45 -0400
-From: Daniel Mack <daniel@caiaq.de>
-To: linux-kernel@vger.kernel.org
-Cc: Daniel Mack <daniel@caiaq.de>, Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH] net/wireless/libertas: do not call wiphy_unregister() w/o wiphy_register()
-Date: Mon, 29 Mar 2010 17:14:18 +0200
-Message-Id: <1269875658-3324-1-git-send-email-daniel@caiaq.de>
+Received: from khc.piap.pl ([195.187.100.11]:48596 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756551Ab0CaA0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Mar 2010 20:26:19 -0400
+From: Krzysztof Halasa <khc@pm.waw.pl>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: CRDA and ath5k with no country code in EEPROM
+References: <m3tys0tbhk.fsf@intrepid.localdomain>
+	<43e72e891003300928qdd70de4vc7585d7e19d36dca@mail.gmail.com>
+	<m3wrwtoekv.fsf@intrepid.localdomain>
+	<201003302049.24231.chunkeey@googlemail.com>
+	<m3mxxpo8h6.fsf@intrepid.localdomain>
+	<n2r43e72e891003301507wb3359afcvd2e3656bc70e431c@mail.gmail.com>
+Date: Wed, 31 Mar 2010 02:26:15 +0200
+In-Reply-To: <n2r43e72e891003301507wb3359afcvd2e3656bc70e431c@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Tue, 30 Mar 2010 15:07:14 -0700")
+Message-ID: <m3634dnxp4.fsf@intrepid.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The libertas driver calls wiphy_unregister() without a prior
-wiphy_register() when a devices fails initialization. Fix this by
-introducing a private flag.
+"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 
-[    9.310000] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+>> Then again: does the regdomain = 0 means "US" or "default country" (or
+>> something completely different), according to Atheros' docs?
+>
+> As per Atheros documentation 0x0 means "US". I've already provided
+> links for you. I'm sending this from an Atheros e-mail address, not
+> sure if this helps get this through to you or not.
 
-[...]
+Why are you writing like this? Christian noted there is a difference
+between regdomain and country, and you (sort of) confirmed it. This
+doesn't seem to be that black and white as you say it is, and it has
+nothing to do with you working for Atheros.
 
-[    9.330000] [<c0311310>] (wiphy_unregister+0xfc/0x19c) from [<bf00c9ec>] (lbs_cfg_free+0x70/0x9c [libertas])
-[    9.330000] [<bf00c9ec>] (lbs_cfg_free+0x70/0x9c [libertas]) from [<bf014fdc>] (lbs_remove_card+0x180/0x210 [libertas])
-[    9.330000] [<bf014fdc>] (lbs_remove_card+0x180/0x210 [libertas]) from [<bf035394>] (if_sdio_probe+0xdc4/0xef4 [libertas_sdio])
-[    9.330000] [<bf035394>] (if_sdio_probe+0xdc4/0xef4 [libertas_sdio]) from [<c0230d14>] (sdio_bus_probe+0xd4/0xf0)
-[    9.330000] [<c0230d14>] (sdio_bus_probe+0xd4/0xf0) from [<c01a6034>] (driver_probe_device+0xa4/0x174)
-[    9.330000] [<c01a6034>] (driver_probe_device+0xa4/0x174) from [<c01a6164>] (__driver_attach+0x60/0x84)
-[    9.330000] [<c01a6164>] (__driver_attach+0x60/0x84) from [<c01a5854>] (bus_for_each_dev+0x4c/0x8c)
-[    9.330000] [<c01a5854>] (bus_for_each_dev+0x4c/0x8c) from [<c01a50e4>] (bus_add_driver+0xa0/0x228)
-[    9.330000] [<c01a50e4>] (bus_add_driver+0xa0/0x228) from [<c01a6470>] (driver_register+0xc0/0x150)
-[    9.330000] [<c01a6470>] (driver_register+0xc0/0x150) from [<bf03a06c>] (if_sdio_init_module+0x6c/0x108 [libertas_sdio])
-[    9.330000] [<bf03a06c>] (if_sdio_init_module+0x6c/0x108 [libertas_sdio]) from [<c00263ac>] (do_one_initcall+0x5c/0x1bc)
-[    9.330000] [<c00263ac>] (do_one_initcall+0x5c/0x1bc) from [<c0069f80>] (sys_init_module+0xc0/0x1f0)
-[    9.330000] [<c0069f80>] (sys_init_module+0xc0/0x1f0) from [<c0026f00>] (ret_fast_syscall+0x0/0x30)
+BTW is this documentation publicly available? Or perhaps the fragment
+listing the possible regdomains? Are the docs limited to specific chips
+only? Did the previous versions of the docs, if any, differ in this
+matter?
 
-Signed-off-by: Daniel Mack <daniel@caiaq.de>
-Cc: Dan Williams <dcbw@redhat.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- drivers/net/wireless/libertas/cfg.c |    8 ++++++--
- drivers/net/wireless/libertas/dev.h |    1 +
- 2 files changed, 7 insertions(+), 2 deletions(-)
+Obviously I'm not saying the following has any authority, and I assume
+it may have changed:
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 4396dcc..82ebe14 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -172,6 +172,8 @@ int lbs_cfg_register(struct lbs_private *priv)
- 	if (ret < 0)
- 		lbs_pr_err("cannot register wiphy device\n");
- 
-+	priv->wiphy_registered = true;
-+
- 	ret = register_netdev(priv->dev);
- 	if (ret)
- 		lbs_pr_err("cannot register network device\n");
-@@ -190,9 +192,11 @@ void lbs_cfg_free(struct lbs_private *priv)
- 	if (!wdev)
- 		return;
- 
--	if (wdev->wiphy) {
-+	if (priv->wiphy_registered)
- 		wiphy_unregister(wdev->wiphy);
-+
-+	if (wdev->wiphy)
- 		wiphy_free(wdev->wiphy);
--	}
-+
- 	kfree(wdev);
- }
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 6977ee8..6875e14 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -36,6 +36,7 @@ struct lbs_private {
- 
- 	/* CFG80211 */
- 	struct wireless_dev *wdev;
-+	bool wiphy_registered;
- 
- 	/* Mesh */
- 	struct net_device *mesh_dev; /* Virtual device */
+http://madwifi-project.org/wiki/UserDocs/CountryCode
+
+This is a preliminary list of regdomains for people who want to play
+with changing their regdomain using the ar5k utility
+
+ 0x00 (wildcarded)
+ 0x10 (FCC)
+ 0x20 (DOC)
+ 0x30 (ETSI)
+ 0x31 (Spain)
+ 0x32 (France)
+ 0x37 (South Africa)
+ 0x40 (MKK-Japan)
+ 0xFF (debug)
+ Most "universal/worldwide" cards use zero as the value, some 0xFF
+
+I don't know what the binary HAL did, but this regdomain thing is at
+least confusing, not only for me, but apparently also for card
+manufacturers with access to the current (and maybe previous) Atheros
+docs (and no, this isn't only about Mikrotik).
+
+Unfortunately this confusion makes it easy for the following to not
+happen (though probably only outside USA):
+
+    * Average users should not accidentally fail to comply with
+      regulations if at all possible;
+    * The Linux kernel should offer necessary and reasonable regulatory
+      enforcement mechanisms in order to facilitate implementation of a
+      broad variety of regulatory policies;
+    * Options to disable or circumvent regulatory enforcement should not
+      be included in kernels from any public source; and,
+    * It is unacceptable for either distributions or community
+      developers to knowingly violate the principles stated above.
+
+You also wrote:
+
+> My point was that this is not something meant to be interpreted by
+> anyone for what "default country" means, the documentation I pointed
+> out clearly states that 0x0 is designed to mean to match the "US" by
+> Atheros hardware as per hardware documentation provided to ODMs.
+
+Is the documentation you pointed out more verbose than the following?
+http://wireless.kernel.org/en/users/Drivers/ath/#The_0x0_regulatory_domain
+
+> So be aware, 0x0 will always map to the US. If the manufacturer did
+> not intend to do that they can provide their own regulatory.bin to
+> customers where they can map "US" to their own defined regulatory
+> domain.
+
+Could you please show some short example how to do that, according to
+the four rules?
+
+Do you mean changing the mapping regdomain 0 -> "US" to another country,
+or simply overriding the following:
+
+country US:
+        (2402 - 2472 @ 40), (3, 27)
+        (5170 - 5250 @ 40), (3, 17)
+        (5250 - 5330 @ 40), (3, 20), DFS
+        (5490 - 5600 @ 40), (3, 20), DFS
+        (5650 - 5710 @ 40), (3, 20), DFS
+        (5735 - 5835 @ 40), (3, 30)
+
+(IOW, including frequencies which are not legal in US under the "country
+US", thus violating the 4 and other rules)?
+
+Still confused,
 -- 
-1.7.0
+Krzysztof Halasa
 
+(and yes, changing anything in the EEPROM is trivial for me - am I wrong
+that I wish this cleared without doing this?).
