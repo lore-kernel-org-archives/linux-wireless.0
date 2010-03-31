@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53408 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754915Ab0CQN5W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Mar 2010 09:57:22 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Mar 2010 06:57:22 -0700
-Date: Wed, 17 Mar 2010 06:56:00 +0530
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] wireless: convert reg_regdb_search_lock to mutex
-Message-ID: <20100317012559.GD2210@senthil-lnx.colubris.lan>
-References: <4B9F86E9.2030702@gmail.com>
- <1268768940-5654-1-git-send-email-linville@tuxdriver.com>
- <20100316100337.GA1732@senthil-lnx.users.atheros.com>
- <20100317002416.GA2095@tuxdriver.com>
- <20100316122449.GA17826@senthil-lnx.users.atheros.com>
- <20100317025656.GA9058@tuxdriver.com>
- <1268796275.7068.8.camel@jlt3.sipsolutions.net>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:39939 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755091Ab0CaRmd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Mar 2010 13:42:33 -0400
+Received: by bwz1 with SMTP id 1so268587bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Mar 2010 10:42:32 -0700 (PDT)
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Lorna =?utf-8?Q?Gonz=C3=A1lez?= <lorna.glez@gmx.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Power Save for ath9k
+References: <20100330155834.56510@gmx.net>
+	<43e72e891003300925s59def37exd515374c34ca73f@mail.gmail.com>
+	<20100330171040.56500@gmx.net>
+	<43e72e891003301102i5e8ba846le9e9e76d5e1d4215@mail.gmail.com>
+	<20100331083822.203290@gmx.net>
+	<g2o43e72e891003310858ld1ba635fh67342202ddd76f97@mail.gmail.com>
+	<u2g43e72e891003310908hd796bee1w45f9d5d2364be41d@mail.gmail.com>
+	<20100331162442.274220@gmx.net>
+	<o2x43e72e891003310932ucfb1783aj10674bb09ab3306@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 31 Mar 2010 20:42:29 +0300
+In-Reply-To: <o2x43e72e891003310932ucfb1783aj10674bb09ab3306@mail.gmail.com> (Luis R. Rodriguez's message of "Wed\, 31 Mar 2010 09\:32\:02 -0700")
+Message-ID: <87aatojsl6.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1268796275.7068.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 17, 2010 at 08:54:35AM +0530, Johannes Berg wrote:
-> On Tue, 2010-03-16 at 22:56 -0400, John W. Linville wrote:
-> > On Tue, Mar 16, 2010 at 05:54:50PM +0530, Senthil Balasubramanian wrote:
-> > > On Wed, Mar 17, 2010 at 05:54:16AM +0530, John W. Linville wrote:
-> > > > On Tue, Mar 16, 2010 at 03:33:38PM +0530, Senthil Balasubramanian wrote:
-> > > > > On Wed, Mar 17, 2010 at 01:19:00AM +0530, John W. Linville wrote:
-> > > > > > Stanse discovered that kmalloc can be called with GFP_KERNEL while
-> > > > > This commit log is confusing. It Should be "Stanse discovered kmalloc
-> > > > > was called with GFP_KERNEL". Obviously kmalloc with GFP_KERNEL shouldn't
-> > > > > be used while holding a spinlock.
-> > > > > > holding this spinlock.  It can be a mutex instead.
-> > > > 
-> > > > Not half so confusing as your criticism... :-)
-> > > sorry! if my mail wasn't proper. I didn't meant to blame/criticize.
-> > > I was confused when I read the commit log and so I replied.
-> > > > 
-> > > > Are you objecting to "can be" instead of "was"?
-> > > I am not objecting anything...
-> > 
-> > Criticism is fine -- I just don't understand what you were saying or
-> > what you think I should have said in the commit log.
-> 
-> English at work ... let me guess:
-Yes. I basically misread the commit log and understood like GFP_KENREL is allowed
-while holding a spinlock. So I replied.
+"Luis R. Rodriguez" <mcgrof@gmail.com> writes:
 
-Sorry! for the unnecessary noise.. here... Please ignore my comment.
-> 
-> For John: "can" == "it could happen that"
-> For Senthil: "can" == "may"
-> 
-> (when really you may NOT do GFP_KERNEL allocations in atomic context)
-> 
-> johannes
-> 
+>> I have an Atheros AR928X and today I install the linux version 2.6.34 and iw 0.9.19. but still does not work.
+>>
+>> when I use iw phy phy1 info I get:
+>> Capabilities: SM Power Save disabled
+>> I can set power on/off but no period or timeout.
+>
+> Not sure what this period thing is, can't make it out from the man page.
+>
+>        power  Used to manipulate power management scheme parameters and mode.
+>               To  set  the  period between wake ups, enter period
+> `value'.
+
+Most probably it means how many beacons will be skipped by staying
+asleep.
+
+-- 
+Kalle Valo
