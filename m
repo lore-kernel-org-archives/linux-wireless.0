@@ -1,40 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:64349 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752702Ab0DKVof (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 17:44:35 -0400
-Message-ID: <4BC242BD.7060405@gmail.com>
-Date: Sun, 11 Apr 2010 23:44:29 +0200
-From: Till Kamppeter <till.kamppeter@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:37705 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756220Ab0CaWFa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Mar 2010 18:05:30 -0400
+Subject: [PATCH 1/3] ath9k: rename symbols in enum ath9k_internal_frame_type
+ to avoid confusion
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Wed, 31 Mar 2010 18:05:25 -0400
+Message-ID: <20100331220525.2920.14907.stgit@mj.roinet.com>
 MIME-Version: 1.0
-To: Theodore Ts'o <tytso@mit.edu>, Greg KH <greg@kroah.com>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Witold Sowa <witold.sowa@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Google Summer of Code 2010 - Assigned all unassigned kernel applications
- to Grant Likely
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To assure that we do not loose any good application, I have now assigned 
-all remaining mentor-less applications to Grant Likely as mentor. I will 
-remove or change these assignments as soon as someone of you tells me.
+Symbols starting with "ATH9K_INT" are also used for interrupt mask.
 
-Please have at least a quick look of these applications make sense (I am 
-not a kernel guy) and give negative scores to the bad ones. At least I 
-could see that none of them is spam, so nothing to mark ineligible.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ drivers/net/wireless/ath/ath9k/rc.h      |    6 +++---
+ drivers/net/wireless/ath/ath9k/virtual.c |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c    |    6 +++---
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-Also propose mentors for these applications, Grant is most probably not 
-the perfect mentor for all of them and also does not want to mentor six 
-students. Grant is for now the only kernel guy who registered as a 
-mentor at the Linux Foundation.
-
-Grant, sorry for assigning six students to you, it is only temporary.
-
-    Till
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index 36083dd..3d8d40c 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -176,9 +176,9 @@ struct ath_rate_priv {
+ #define ATH_TX_INFO_UNDERRUN		(1 << 4)
+ 
+ enum ath9k_internal_frame_type {
+-	ATH9K_NOT_INTERNAL,
+-	ATH9K_INT_PAUSE,
+-	ATH9K_INT_UNPAUSE
++	ATH9K_IFT_NOT_INTERNAL,
++	ATH9K_IFT_PAUSE,
++	ATH9K_IFT_UNPAUSE
+ };
+ 
+ int ath_rate_control_register(void);
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index a43fbf8..e95aaa3 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -218,7 +218,7 @@ static int ath9k_send_nullfunc(struct ath_wiphy *aphy,
+ 
+ 	memset(&txctl, 0, sizeof(struct ath_tx_control));
+ 	txctl.txq = &sc->tx.txq[sc->tx.hwq_map[ATH9K_WME_AC_VO]];
+-	txctl.frame_type = ps ? ATH9K_INT_PAUSE : ATH9K_INT_UNPAUSE;
++	txctl.frame_type = ps ? ATH9K_IFT_PAUSE : ATH9K_IFT_UNPAUSE;
+ 
+ 	if (ath_tx_start(aphy->hw, skb, &txctl) != 0)
+ 		goto exit;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index f378838..02df4cb 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1574,12 +1574,12 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
+ 
+ 	tx_info->pad[0] = 0;
+ 	switch (txctl->frame_type) {
+-	case ATH9K_NOT_INTERNAL:
++	case ATH9K_IFT_NOT_INTERNAL:
+ 		break;
+-	case ATH9K_INT_PAUSE:
++	case ATH9K_IFT_PAUSE:
+ 		tx_info->pad[0] |= ATH_TX_INFO_FRAME_TYPE_PAUSE;
+ 		/* fall through */
+-	case ATH9K_INT_UNPAUSE:
++	case ATH9K_IFT_UNPAUSE:
+ 		tx_info->pad[0] |= ATH_TX_INFO_FRAME_TYPE_INTERNAL;
+ 		break;
+ 	}
