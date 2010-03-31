@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37374 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab0CQDWk (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:29362 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751570Ab0CaE5u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Mar 2010 23:22:40 -0400
-Subject: Re: Weird wireless/wpa_supplicant screw-up.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Valdis.Kletnieks@vt.edu
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <12262.1268795213@localhost>
-References: <7197.1268086939@localhost>
-	 <1268392481.4828.7.camel@jlt3.sipsolutions.net> <5220.1268430568@localhost>
-	 <1268449749.4880.2.camel@jlt3.sipsolutions.net>
-	 <12262.1268795213@localhost>
+	Wed, 31 Mar 2010 00:57:50 -0400
+Subject: Re: [PATCH] iw: Add support for connection quality monitor
+ configuation
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1269584501.4581.5.camel@jlt3.sipsolutions.net>
+References: <1269582379-10253-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1269583649.4581.4.camel@jlt3.sipsolutions.net>
+	 <1269584079.10120.889.camel@wimaxnb.nmp.nokia.com>
+	 <1269584501.4581.5.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 16 Mar 2010 20:22:30 -0700
-Message-ID: <1268796150.7068.6.camel@jlt3.sipsolutions.net>
+Date: Wed, 31 Mar 2010 07:53:28 +0300
+Message-ID: <1270011208.10120.906.camel@wimaxnb.nmp.nokia.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-03-16 at 23:06 -0400, Valdis.Kletnieks@vt.edu wrote:
-> On Fri, 12 Mar 2010 19:09:09 PST, Johannes Berg said:
-> > No ... look at _all_ that it produces.
+Hi,
+
+On Fri, 2010-03-26 at 07:21 +0100, ext Johannes Berg wrote:
+> > > > +	NLA_PUT_U32(cqm, NL80211_ATTR_CQM_RSSI_THOLD, thold);
+> > > > +	NLA_PUT_U32(cqm, NL80211_ATTR_CQM_RSSI_HYST, hyst);
+> > > 
+> > > Hmm. guess I missed that in the kernel side review, but should we change
+> > > the API so that leaving them out means disabling?
 > > 
-> > [   98.592575] In giwencode idx=0 keys=ffff88001b304000 cipher=0
-> > [   98.592580] And we're going home...
-> > *****
-> > [   98.592633] In giwencode idx=1 keys=ffff88001b304000 cipher=fac04
-> > *****
-> > [   98.592749] In giwencode idx=2 keys=ffff88001b304000 cipher=0
-> > [   98.592751] And we're going home...
-> > [   98.592803] In giwencode idx=3 keys=ffff88001b304000 cipher=0
-> > [   98.592805] And we're going home...
-> > [   98.592856] In giwencode idx=0 keys=ffff88001b304000 cipher=0
-> > [   98.592859] And we're going home...
+> > Heh, yep, the kernel part does not disable this if these are left out. 
 > > 
-> > See? It reports one key which is the RX-only group key which is
-> > absolutely correct.
+> > Actually, I can think of one downside to the approach you propose: when
+> > this gets extended, there will be multiple different cqm parameters, and
+> > they would have to be always configured simultaneously, otherwise some
+> > of the configurations would end up disabled. At least with iw, that
+> > would be somewhat awkward?
 > 
-> It matches what 'iwlist keys' reports, but I remain unconvinced of
-> its "correctness".  
+> Hmm, yes, maybe. In that case you'd want leaving them out meaning no
+> change I guess. I'll give it another thought, but now I need to get
+> sleep and you won't hear from me again until I'm home on like Sunday :)
 
-That's your problem then, not mine. It's correct in how wext operates.
-If you want to know why, you'll have to understand the distinction
-between PTK and GTK and how wext operates with them.
+Have you reached any conclusions on this matter? To get this support
+into iw would help my work greatly ;)
 
-> If a TX key has been set anyplace, what allows me
-> to verify that it was in fact set?
+-Juuso
 
-Nothing. Blame it on wext and on the fact that nobody cares.
-
-> > > So the root cause has something to do with params[idx].cipher being unset.
-> > 
-> > Not at all.
+> johannes
 > 
-> I was referring to the root cause of why 'iwlist keys' wasn't reporting
-> anything for the other 3 key slots.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Right ... all of that is completely correct. See above about PTK and
-GTK ... You seem to not be interested in telling me what your actual
-problem is, if there is one. If your actual problem is just that iwlist
-reports what you think is wrong information (which is just incomplete,
-it doesn't show the PTK) then that's nothing I actually care about
-fixing.
-
-> I'll point out that until fairly recently 'iwconfig' *did* report a
-> key for WPA2, so this looks like a regression on somebody's part.
-
-I'm sure it did not.
-
-johannes
 
