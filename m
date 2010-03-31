@@ -1,98 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1867 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754288Ab0CSB3r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Mar 2010 21:29:47 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Richard Kennedy <richard@rsk.demon.co.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:55817 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756251Ab0CaIXW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Mar 2010 04:23:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
+References: <1269970733-24681-1-git-send-email-daniel@caiaq.de>
+Date: Wed, 31 Mar 2010 13:53:21 +0530
+Message-ID: <y2q703729f11003310123w505134f8y61efb0c9f7168a30@mail.gmail.com>
+Subject: Re: [PATCH] libertas/sdio: set ECSI and SCSI bits for 1-bit transfers
+From: Alagu Sankar Vellaichamy <alagusankar@gmail.com>
+To: Daniel Mack <daniel@caiaq.de>
+Cc: linux-kernel@vger.kernel.org, Volker Ernst <volker.ernst@txtr.com>,
+	Dan Williams <dcbw@redhat.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v3 5/9] net/wireless/wext-core.c: Use IW_EVENT_IDX macro
-Date: Thu, 18 Mar 2010 18:29:36 -0700
-Message-Id: <4f2b84da3f0f6845cb3ee5c5479532dce9a05982.1268961559.git.joe@perches.com>
-In-Reply-To: <cover.1268961559.git.joe@perches.com>
-References: <cover.1268961559.git.joe@perches.com>
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's a wireless.h macro for this, might as well use it.
+SCSI is read-only.  We ideally should be checking this bit and then
+set the ECSI accordingly, rather than setting both ECSI and SCSI.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- net/wireless/wext-core.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+- Alagu Sankar
 
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index dbde22b..bfcbeee 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -261,44 +261,44 @@ static const unsigned standard_ioctl_num = ARRAY_SIZE(standard_ioctl);
-  * we know about.
-  */
- static const struct iw_ioctl_description standard_event[] = {
--	[IWEVTXDROP	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVTXDROP)] = {
- 		.header_type	= IW_HEADER_TYPE_ADDR,
- 	},
--	[IWEVQUAL	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVQUAL)] = {
- 		.header_type	= IW_HEADER_TYPE_QUAL,
- 	},
--	[IWEVCUSTOM	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVCUSTOM)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_CUSTOM_MAX,
- 	},
--	[IWEVREGISTERED	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVREGISTERED)] = {
- 		.header_type	= IW_HEADER_TYPE_ADDR,
- 	},
--	[IWEVEXPIRED	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVEXPIRED)] = {
- 		.header_type	= IW_HEADER_TYPE_ADDR,
- 	},
--	[IWEVGENIE	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVGENIE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_GENERIC_IE_MAX,
- 	},
--	[IWEVMICHAELMICFAILURE	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVMICHAELMICFAILURE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= sizeof(struct iw_michaelmicfailure),
- 	},
--	[IWEVASSOCREQIE	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVASSOCREQIE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_GENERIC_IE_MAX,
- 	},
--	[IWEVASSOCRESPIE	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVASSOCRESPIE)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_GENERIC_IE_MAX,
- 	},
--	[IWEVPMKIDCAND	- IWEVFIRST] = {
-+	[IW_EVENT_IDX(IWEVPMKIDCAND)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= sizeof(struct iw_pmkid_cand),
-@@ -453,7 +453,7 @@ void wireless_send_event(struct net_device *	dev,
- 		if (cmd_index < standard_ioctl_num)
- 			descr = &(standard_ioctl[cmd_index]);
- 	} else {
--		cmd_index = cmd - IWEVFIRST;
-+		cmd_index = IW_EVENT_IDX(cmd);
- 		if (cmd_index < standard_event_num)
- 			descr = &(standard_event[cmd_index]);
- 	}
--- 
-1.7.0.14.g7e948
-
+On Tue, Mar 30, 2010 at 11:08 PM, Daniel Mack <daniel@caiaq.de> wrote:
+> When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
+> However, the 8686 will only drive this line when the ECSI and SCSI bits
+> are set in the CCCR_IF register.
+>
+> Thanks to Alagu Sankar for pointing me in the right direction.
+>
+> Signed-off-by: Daniel Mack <daniel@caiaq.de>
+> Cc: Alagu Sankar <alagusankar@embwise.com>
+> Cc: Volker Ernst <volker.ernst@txtr.com>
+> Cc: Dan Williams <dcbw@redhat.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: libertas-dev@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: linux-mmc@vger.kernel.org
+> ---
+>  drivers/net/wireless/libertas/if_sdio.c |   24 ++++++++++++++++++++++++
+>  include/linux/mmc/sdio.h                |    2 ++
+>  2 files changed, 26 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> index 7a73f62..d3170f2 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -34,6 +34,8 @@
+>  #include <linux/mmc/card.h>
+>  #include <linux/mmc/sdio_func.h>
+>  #include <linux/mmc/sdio_ids.h>
+> +#include <linux/mmc/sdio.h>
+> +#include <linux/mmc/host.h>
+>
+>  #include "host.h"
+>  #include "decl.h"
+> @@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
+>        int ret, i;
+>        unsigned int model;
+>        struct if_sdio_packet *packet;
+> +       struct mmc_host *host = func->card->host;
+>
+>        lbs_deb_enter(LBS_DEB_SDIO);
+>
+> @@ -1022,6 +1025,27 @@ static int if_sdio_probe(struct sdio_func *func,
+>        if (ret)
+>                goto disable;
+>
+> +       /* For 1-bit transfers, we need to enable the interrupt flags in
+> +        * the CCCR register. Temporarily set the function number to 0
+> +        * for that. */
+> +       if ((host->caps & MMC_CAP_SDIO_IRQ) &&
+> +           (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
+> +               unsigned int num = func->num;
+> +               u8 reg;
+> +
+> +               func->num = 0;
+> +               reg = sdio_readb(func, SDIO_CCCR_IF, &ret);
+> +               if (ret)
+> +                       goto release_int;
+> +
+> +               reg |= SDIO_BUS_ECSI | SDIO_BUS_SCSI;
+> +               sdio_writeb(func, reg, SDIO_CCCR_IF, &ret);
+> +               if (ret)
+> +                       goto release_int;
+> +
+> +               func->num = num;
+> +       }
+> +
+>        card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+>        if (ret)
+>                goto release_int;
+> diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
+> index 0ebaef5..329a8fa 100644
+> --- a/include/linux/mmc/sdio.h
+> +++ b/include/linux/mmc/sdio.h
+> @@ -94,6 +94,8 @@
+>
+>  #define  SDIO_BUS_WIDTH_1BIT   0x00
+>  #define  SDIO_BUS_WIDTH_4BIT   0x02
+> +#define  SDIO_BUS_ECSI         0x20    /* Enable continuous SPI interrupt */
+> +#define  SDIO_BUS_SCSI         0x40    /* Support continuous SPI interrupt */
+>
+>  #define  SDIO_BUS_ASYNC_INT    0x20
+>
+> --
+> 1.7.0
+>
+>
