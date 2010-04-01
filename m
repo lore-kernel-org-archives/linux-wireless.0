@@ -1,21 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:32181 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756706Ab0DOU2m (ORCPT
+Received: from mail-ew0-f222.google.com ([209.85.219.222]:41006 "EHLO
+	mail-ew0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316Ab0DAVKr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 16:28:42 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so586734qwh.37
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 13:28:41 -0700 (PDT)
-Message-ID: <4BC776F4.80600@gmail.com>
-Date: Thu, 15 Apr 2010 16:28:36 -0400
-From: Eric Siegel <nticompass@gmail.com>
+	Thu, 1 Apr 2010 17:10:47 -0400
+Received: by ewy22 with SMTP id 22so473548ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 14:10:46 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	Myhailo Danylenko <isbear@ukrpost.net>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: fix copy&paste typo
+Date: Thu,  1 Apr 2010 23:11:10 +0200
+Message-Id: <1270156270-7550-2-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Compiling ar9170 on 2.6.30
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was trying to compile ar9170 from today's tarball, and I got a compile
-error.
-ar9170/main.c:2060: error: expected ë;í before ëmchashí
+Reported-by: Myhailo Danylenko <isbear@ukrpost.net>
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 6fd140a..2ae2445 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -2790,7 +2790,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+ 			}
+ 			b43_ntab_write_bulk(dev, B43_NTAB16(15, 88), 4,
+ 						buffer);
+-			b43_ntab_write_bulk(dev, B43_NTAB16(15, 101), 2,
++			b43_ntab_read_bulk(dev, B43_NTAB16(15, 101), 2,
+ 						buffer);
+ 			b43_ntab_write_bulk(dev, B43_NTAB16(15, 85), 2,
+ 						buffer);
+-- 
+1.6.4.2
+
