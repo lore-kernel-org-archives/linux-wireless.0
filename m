@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:49540 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754005Ab0DNGpo (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:38878 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316Ab0DAUQp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 02:45:44 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: kalle.valo@iki.fi
-Subject: [RFC PATCH 0/2] mac80211: cfg80211: dynamic ps timeout based on pm-qos
-Date: Wed, 14 Apr 2010 09:41:02 +0300
-Message-Id: <1271227264-26868-1-git-send-email-juuso.oikarinen@nokia.com>
+	Thu, 1 Apr 2010 16:16:45 -0400
+Received: by bwz1 with SMTP id 1so1135500bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 13:16:44 -0700 (PDT)
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH V2] Remove MCU requests for SoC platforms
+References: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com>
+	<201004011451.44204.IvDoorn@gmail.com>
+	<h2iefe7343f1004010558ze63465bcm5e3bd10e702dea66@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 01 Apr 2010 23:16:39 +0300
+In-Reply-To: <h2iefe7343f1004010558ze63465bcm5e3bd10e702dea66@mail.gmail.com> (Luis Correia's message of "Thu\, 1 Apr 2010 13\:58\:02 +0100")
+Message-ID: <87bpe3hqs8.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches propose a way to adjust the dynamic ps timeout in the mac80211
-based on the pm-qos network latency value. This allows user space to influence
-the level of power saving performed by the mac80211.
+Luis Correia <luis.f.correia@gmail.com> writes:
 
-These patches will the current 100ms timeout for the default network
-latency value (2000s), so that for non-adjusted pm-qos the functionality will
-remain as it is currently. Dynamic ps is disabled for any larger latency
-values, and a timeout of 300s is used for latency values smaller than 50ms.
+> The ralink SoC platforms do not have an MCU.
 
-As wext still has an interface to adjust the dynamic ps timeout from userspace,
-the wext configuration will override the above, to remain backwards
-compatible.
+Please add a prefix to the title to specify the component. Something
+like this:
 
-Comments are appreciated.
+rtx2x00: remove MCU requests for SoC platforms
 
-
-Juuso Oikarinen (2):
-  mac80211: Determine dynamic PS timeout based on ps-qos network
-    latency
-  cfg80211: Remove default dynamic PS timeout value
-
- include/net/mac80211.h |    5 ++++-
- net/mac80211/cfg.c     |    4 ++--
- net/mac80211/main.c    |    2 ++
- net/mac80211/mlme.c    |   12 ++++++++++++
- net/wireless/core.c    |    3 ++-
- 5 files changed, 22 insertions(+), 4 deletions(-)
-
+-- 
+Kalle Valo
