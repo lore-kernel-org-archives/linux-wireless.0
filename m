@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f200.google.com ([209.85.221.200]:49309 "EHLO
-	mail-qy0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755075Ab0DCRA7 convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:48556 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753966Ab0DAMsw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 13:00:59 -0400
-Received: by qyk38 with SMTP id 38so1306989qyk.5
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 10:00:58 -0700 (PDT)
+	Thu, 1 Apr 2010 08:48:52 -0400
+Received: by wwb17 with SMTP id 17so740738wwb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 05:48:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4BB773A9.2070703@lwfinger.net>
-References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
-	 <4BB7660A.3030900@lwfinger.net>
-	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
-	 <4BB773A9.2070703@lwfinger.net>
-Date: Sat, 3 Apr 2010 14:00:58 -0300
-Message-ID: <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
-Subject: Re: RTL 8187b - naughty behaviour
-From: Rogerio Luz Coelho <rogluz.news@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+From: Luis Correia <luis.f.correia@gmail.com>
+Date: Thu, 1 Apr 2010 13:48:30 +0100
+Message-ID: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com>
+Subject: [PATCH] Remove MCU requests for SoC platforms
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
->>
->> I have a MS-Win7 instalation on this Laptop and it works 100% even at
->> longer distances than you report,even with walls in between.
->>
->> Will do the tcpperf test as soon as I get home. There are other with
->> the same problem with my exact chip here in Brasil , that is because
->> one of our leading Laptop vendors uses this config.
->
-> What is the exact make and model of the device? It might be difficult
-> for me to get one in the US, but one of the rtl8187 developers lives in
-> Brazil. He should be able to find one.
->
+The ralink SoC platforms do not have an MCU.
 
-It´s a POSITIVO R430L - Core 2 Duo 4GB RAM
+Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
+---
 
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c	2010-03-26
+18:25:50.000000000 +0000
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c	2010-04-01
+13:05:18.249747122 +0100
+@@ -221,9 +221,9 @@
+ 	u32 reg;
 
->> Does it matter that the USB port used in this setting is a connected
->> to a USB HUB and then to the mother board?
->
-> Is the hub passive, or is it powered? If the hub is good and not
-> underpowered, it should be OK.
->
->> More details and tests will come your way in a day or two ... will
->> reinstall Mandriva 2010 and do some tests with older kernels.
->
-> If you can download an openSUSE 11.2 Live CD and burn it, you would not
-> even have to do an installation. That one has a 2.6.31 kernel.
->
-> Larry
+ 	/*
+-	 * SOC devices don't support MCU requests.
++	 * some devices don't support MCU requests.
+ 	 */
+-	if (rt2x00_is_soc(rt2x00dev))
++	if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
+ 		return;
 
-Will do that for sure
+ 	mutex_lock(&rt2x00dev->csr_mutex);
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c	2010-03-26
+18:25:50.000000000 +0000
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c	2010-04-01
+13:04:42.453621607 +0100
+@@ -59,6 +59,12 @@
+ {
+ 	unsigned int i;
+ 	u32 reg;
++	
++	/*
++	 * some devices don't support MCU requests.
++	 */
++	if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
++		return;
 
-Rogerio
+ 	for (i = 0; i < 200; i++) {
+ 		rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
+@@ -1100,8 +1106,10 @@
+ 	/*
+ 	 * This device requires firmware and MCU access.
+ 	 */
+-	if (!rt2x00_is_soc(rt2x00dev))
++	if (!rt2x00_is_soc(rt2x00dev)) {
+ 		__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
++		__set_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags);
++	}
+ 	__set_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags);
+ 	__set_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags);
+ 	if (!modparam_nohwcrypt)
+--- a/drivers/net/wireless/rt2x00/rt2x00.h	2010-03-26 18:25:50.000000000 +0000
++++ b/drivers/net/wireless/rt2x00/rt2x00.h	2010-04-01 13:01:26.812694036 +0100
+@@ -631,6 +631,7 @@
+ 	 * Driver requirements
+ 	 */
+ 	DRIVER_REQUIRE_FIRMWARE,
++	DRIVER_REQUIRE_MCU,
+ 	DRIVER_REQUIRE_BEACON_GUARD,
+ 	DRIVER_REQUIRE_ATIM_QUEUE,
+ 	DRIVER_REQUIRE_DMA,
