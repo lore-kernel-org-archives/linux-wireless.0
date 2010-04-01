@@ -1,143 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:53095 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752206Ab0DCHtk (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48267 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753634Ab0DATLn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 03:49:40 -0400
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH 5/7] net/wireless: switch lib80211_crypt_wep from arc4 to arc4blk
-Date: Sat,  3 Apr 2010 09:49:27 +0200
-Message-Id: <1270280969-11357-6-git-send-email-sebastian@breakpoint.cc>
-In-Reply-To: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
+	Thu, 1 Apr 2010 15:11:43 -0400
+Received: by wyb39 with SMTP id 39so672795wyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 12:11:42 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <201004012059.35748.mb@bu3sch.de>
+References: <201004012059.35748.mb@bu3sch.de>
+Date: Thu, 1 Apr 2010 21:11:41 +0200
+Message-ID: <t2z2d0a357f1004011211mcab2fau167ac67550a0c958@mail.gmail.com>
+Subject: =?UTF-8?Q?Re=3A_=5BPATCH=5D_Implement_IEEE_802=2E11=C3=BC?=
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ecb(arc4) is getting replaced by arc4 which is a blkcipher by itself. The
-required selects are now pulled in by LIB80211_CRYPT_WEP instead of
-selecting it by every driver. Since there is no dependency on ecb and arc4
-therr are removed from the idividual driver.
+That's UN*TR*Ü* (TR == Turkey|Turkish, Ü == UE)! (see [1]).
 
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- drivers/net/wireless/hostap/Kconfig  |    3 ---
- drivers/net/wireless/ipw2x00/Kconfig |    3 ---
- net/wireless/Kconfig                 |    2 ++
- net/wireless/lib80211_crypt_wep.c    |   11 +++++++----
- 4 files changed, 9 insertions(+), 10 deletions(-)
+- Sedat -
 
-diff --git a/drivers/net/wireless/hostap/Kconfig b/drivers/net/wireless/hostap/Kconfig
-index 287d827..dab2c6b 100644
---- a/drivers/net/wireless/hostap/Kconfig
-+++ b/drivers/net/wireless/hostap/Kconfig
-@@ -4,11 +4,8 @@ config HOSTAP
- 	select WEXT_SPY
- 	select WEXT_PRIV
- 	select CRYPTO
--	select CRYPTO_ARC4
--	select CRYPTO_ECB
- 	select CRYPTO_AES
- 	select CRYPTO_MICHAEL_MIC
--	select CRYPTO_ECB
- 	select CRC32
- 	select LIB80211
- 	select LIB80211_CRYPT_WEP
-diff --git a/drivers/net/wireless/ipw2x00/Kconfig b/drivers/net/wireless/ipw2x00/Kconfig
-index 2715b10..6fe1995 100644
---- a/drivers/net/wireless/ipw2x00/Kconfig
-+++ b/drivers/net/wireless/ipw2x00/Kconfig
-@@ -158,11 +158,8 @@ config LIBIPW
- 	select WIRELESS_EXT
- 	select WEXT_SPY
- 	select CRYPTO
--	select CRYPTO_ARC4
--	select CRYPTO_ECB
- 	select CRYPTO_AES
- 	select CRYPTO_MICHAEL_MIC
--	select CRYPTO_ECB
- 	select CRC32
- 	select LIB80211
- 	select LIB80211_CRYPT_WEP
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 119f1eb..267eb42 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -141,6 +141,8 @@ config LIB80211
- 	  you want this built into your kernel.
- 
- config LIB80211_CRYPT_WEP
-+	select CRYPTO
-+	select CRYPTO_ARC4BLK
- 	tristate
- 
- config LIB80211_CRYPT_CCMP
-diff --git a/net/wireless/lib80211_crypt_wep.c b/net/wireless/lib80211_crypt_wep.c
-index 6d41e05..3759e46 100644
---- a/net/wireless/lib80211_crypt_wep.c
-+++ b/net/wireless/lib80211_crypt_wep.c
-@@ -23,6 +23,7 @@
- #include <net/lib80211.h>
- 
- #include <linux/crypto.h>
-+#include <crypto/arc4.h>
- #include <linux/crc32.h>
- 
- MODULE_AUTHOR("Jouni Malinen");
-@@ -48,7 +49,7 @@ static void *lib80211_wep_init(int keyidx)
- 		goto fail;
- 	priv->key_idx = keyidx;
- 
--	priv->tx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	priv->tx_tfm = crypto_alloc_blkcipher("arc4", 0, CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(priv->tx_tfm)) {
- 		printk(KERN_DEBUG "lib80211_crypt_wep: could not allocate "
- 		       "crypto API arc4\n");
-@@ -56,7 +57,7 @@ static void *lib80211_wep_init(int keyidx)
- 		goto fail;
- 	}
- 
--	priv->rx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	priv->rx_tfm = crypto_alloc_blkcipher("arc4", 0, CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(priv->rx_tfm)) {
- 		printk(KERN_DEBUG "lib80211_crypt_wep: could not allocate "
- 		       "crypto API arc4\n");
-@@ -139,6 +140,7 @@ static int lib80211_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- {
- 	struct lib80211_wep_data *wep = priv;
- 	struct blkcipher_desc desc = { .tfm = wep->tx_tfm };
-+	struct arc4_iv *iv = crypto_blkcipher_crt(wep->tx_tfm)->iv;
- 	u32 crc, klen, len;
- 	u8 *pos, *icv;
- 	struct scatterlist sg;
-@@ -170,7 +172,7 @@ static int lib80211_wep_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	icv[2] = crc >> 16;
- 	icv[3] = crc >> 24;
- 
--	crypto_blkcipher_setkey(wep->tx_tfm, key, klen);
-+	arc4_setup_iv(iv, key, klen);
- 	sg_init_one(&sg, pos, len + 4);
- 	return crypto_blkcipher_encrypt(&desc, &sg, &sg, len + 4);
- }
-@@ -186,6 +188,7 @@ static int lib80211_wep_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- {
- 	struct lib80211_wep_data *wep = priv;
- 	struct blkcipher_desc desc = { .tfm = wep->rx_tfm };
-+	struct arc4_iv *iv = crypto_blkcipher_crt(wep->rx_tfm)->iv;
- 	u32 crc, klen, plen;
- 	u8 key[WEP_KEY_LEN + 3];
- 	u8 keyidx, *pos, icv[4];
-@@ -210,7 +213,7 @@ static int lib80211_wep_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	/* Apply RC4 to data and compute CRC32 over decrypted data */
- 	plen = skb->len - hdr_len - 8;
- 
--	crypto_blkcipher_setkey(wep->rx_tfm, key, klen);
-+	arc4_setup_iv(iv, key, klen);
- 	sg_init_one(&sg, pos, plen + 4);
- 	if (crypto_blkcipher_decrypt(&desc, &sg, &sg, plen + 4))
- 		return -7;
--- 
-1.6.6
+P.S.:
+[1] http://www.glueckswand.de/bilder/humor.gif
+Translation: Turkish Wheel  of  Fortune: I buy an "Ü" -> Bing, bing, bing, ...
+[2] http://xkcd.com/ (Disable JavaScript first)
 
+On Thu, Apr 1, 2010 at 8:59 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> Hi John,
+>
+> This patch implements IEEE 802.11ü. The official standard for German
+> extensions to the IEEE 802.11 wireless standard.
+>
+> These extensions include:
+> * LHSEC (Lederhosen-security): Just barely protects the important parts.
+>  Leaves everything else fully exposed to the public, no matter how
+>  harmful it is.
+> * SAU (Stubborn authentication): The AP won't let you in. No matter what.
+>  This is an advanced security feature.
+> * BEER (drink-a-lot-of-beer-routing): Will route packets from STAs to randomly
+>  chosen APs. It will do this excessively until all APs banned the STA.
+> * SRAD (strict radio): This feature will open a popup window for every to be sent
+>  packet on the desktop. This window will contain an application form that has
+>  to be filled out and sent to the next administration office via snailmail. Upon
+>  successful approval by the administration, the packet is officially certified
+>  to go "on air" within a well defined timeframe.
+>  This is an advanced security feature.
+>
+>
+> Index: wireless-testing/net/mac80211/Kconfig
+> ===================================================================
+> --- wireless-testing.orig/net/mac80211/Kconfig  2010-04-01 20:43:20.000000000 +0200
+> +++ wireless-testing/net/mac80211/Kconfig       2010-04-01 20:56:29.000000000 +0200
+> @@ -226,3 +226,9 @@ config MAC80211_DRIVER_API_TRACER
+>          trace.
+>
+>          If unsure, say N.
+> +
+> +config MAC80211_80211UE_SUPPORT
+> +       bool "Support for 802.11ü"
+> +       depends on GERMAN_PASSPORT
+> +       help
+> +         Say Y here, if you want to enab
+> <CONNECTION INTERRUPTED>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
