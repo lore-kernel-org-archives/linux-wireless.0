@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:37970 "EHLO purkki.valot.fi"
+Received: from cantor.suse.de ([195.135.220.2]:55946 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750776Ab0DMRFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 13:05:31 -0400
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl1251: read default MAC address from EEPROM when available
-References: <1271110884-18545-1-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 13 Apr 2010 20:05:29 +0300
-In-Reply-To: <1271110884-18545-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Tue\, 13 Apr 2010 01\:21\:24 +0300")
-Message-ID: <87fx2znuzq.fsf@purkki.valot.fi>
+	id S1755223Ab0DAQwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Apr 2010 12:52:30 -0400
+Date: Thu, 1 Apr 2010 09:51:44 -0700
+From: Greg KH <gregkh@suse.de>
+To: Daniel Mack <daniel@caiaq.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	AKML <linux-arm-kernel@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Sven Neumann <s.neumann@raumfeld.com>
+Subject: Re: Memory corruption with 2.6.32.10, but not with 2.6.34-rc3
+Message-ID: <20100401165144.GB1138@suse.de>
+References: <20100401132156.GJ30807@buzzloop.caiaq.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100401132156.GJ30807@buzzloop.caiaq.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+On Thu, Apr 01, 2010 at 03:21:56PM +0200, Daniel Mack wrote:
+> 
+> I can cherry-pick things if anyone pin-points something and run
+> lont-time tests again. Any pointer appreciated.
 
-> Some wl1251 hardware configurations (like in WG7210 module) have
-> EEPROM attached where NVS data is kept, which includes MAC address.
->
-> In such configurations, let's read default MAC address from EEPROM,
-> instead of using random one.
+Oh, how about running 'git bisect' to try to find the solution?  Just
+remember to reverse 'good' and 'bad' for when you tell git bisect what
+the results are.
 
-This also looks good, just one comment:
+thanks,
 
-> +static int wl1251_read_eeprom_byte(struct wl1251 *wl, off_t offset, u8 *data)
-> +{
-> +	unsigned long timeout;
-> +
-> +	wl1251_reg_write32(wl, EE_ADDR, offset);
-> +	wl1251_reg_write32(wl, EE_CTL, EE_CTL_READ);
-> +
-> +	/* EE_CTL_READ clears when data is ready */
-> +	timeout = jiffies + msecs_to_jiffies(100);
-> +	while (1) {
-> +		if (!(wl1251_reg_read32(wl, EE_CTL) & EE_CTL_READ))
-> +			break;
-> +
-> +		if (time_after(jiffies, timeout))
-> +			return -ETIMEDOUT;
-> +
-> +		udelay(200);
-> +	}
-
-Is the udelay() really needed here? In my opinion msleep(), for
-example with a value of 5 ms, would be nicer from system point of
-view. It doesn't matter if this function takes few milliseconds
-longer, because this is called only in op_start(). What do you think?
-
--- 
-Kalle Valo
+greg k-h
