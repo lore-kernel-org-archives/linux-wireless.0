@@ -1,28 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f204.google.com ([209.85.222.204]:53226 "EHLO
-	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756730Ab0DODny (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:59557 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754199Ab0DAVoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:43:54 -0400
-Received: by pzk42 with SMTP id 42so771618pzk.4
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 20:43:54 -0700 (PDT)
+	Thu, 1 Apr 2010 17:44:12 -0400
+Message-ID: <4BB513AA.8020209@gmail.com>
+Date: Thu, 01 Apr 2010 23:44:10 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 14 Apr 2010 20:36:33 -0700
-Message-ID: <h2k43e72e891004142036ne0cf90e5z4d56af343199762@mail.gmail.com>
-Subject: Re: [PATCH v2 00/97] ath9k: add AR9003 support
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: Luis Correia <buga@loide.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH V3] rt2x00: remove MCU requests for SoC platforms
+References: <k2g880c1631004011414z59ce4547j1bcea7ad5aff7229@mail.gmail.com>
+In-Reply-To: <k2g880c1631004011414z59ce4547j1bcea7ad5aff7229@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oh and the all-in-one git am'able series patch and its respective sha1sum:
+Luis,
 
-http://bombadil.infradead.org/~mcgrof/tmp/all-04-14-v4.patch -
-cc876f28fb2d9d0dcbaed05e4a7cd003420d20cb
+On 04/01/10 23:14, Luis Correia wrote:
+> The ralink SoC platforms do not have an MCU.
+> 
+> Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
 
-  Luis
+I know Ivo already acked the v2 version of the patch, but isn't the
+addition of a driver flag a bit overkill?
+
+We have the test on whether the platform is SOC w.r.t. MCU requests
+in 2 places, and both of them are in rt2800 code. I do not really see
+a need to clutter the global rt2x00 space with a rt2800 specific flag,
+which is only used in rt2800 code.
+
+> ---
+> 
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c   2010-03-26
+> 18:25:50.000000000 +0000
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c   2010-04-01
+> 13:05:18.249747122 +0100
+> @@ -221,9 +221,9 @@
+>        u32 reg;
+> 
+>        /*
+> -        * SOC devices don't support MCU requests.
+> +        * some devices don't support MCU requests.
+>         */
+> -       if (rt2x00_is_soc(rt2x00dev))
+> +       if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
+>                return;
+> 
+>        mutex_lock(&rt2x00dev->csr_mutex);
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c   2010-03-26
+> 18:25:50.000000000 +0000
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c   2010-04-01
+> 13:04:42.453621607 +0100
+> @@ -59,6 +59,12 @@
+>  {
+>        unsigned int i;
+>        u32 reg;
+> +
+> +       /*
+> +        * some devices don't support MCU requests.
+> +        */
+> +       if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
+> +               return;
+> 
+>        for (i = 0; i < 200; i++) {
+>                rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
+
+So, the minimal patch would be simply this change to rt2800pci, and to have it
+test for SoC (via rt2x00_is_soc).
+
+> @@ -1098,10 +1104,12 @@
+>        __set_bit(DRIVER_SUPPORT_CONTROL_FILTER_PSPOLL, &rt2x00dev->flags);
+> 
+>        /*
+> -        * This device requires firmware.
+> +        * This device requires firmware and MCU access.
+>         */
+> -       if (!rt2x00_is_soc(rt2x00dev))
+> +       if (!rt2x00_is_soc(rt2x00dev)) {
+>                __set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
+> +               __set_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags);
+> +       }
+>        __set_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags);
+>        __set_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags);
+>        if (!modparam_nohwcrypt)
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h      2010-03-26
+> 18:25:50.000000000 +0000
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h      2010-04-01
+> 13:01:26.812694036 +0100
+> @@ -631,6 +631,7 @@
+>         * Driver requirements
+>         */
+>        DRIVER_REQUIRE_FIRMWARE,
+> +       DRIVER_REQUIRE_MCU,
+>        DRIVER_REQUIRE_BEACON_GUARD,
+>        DRIVER_REQUIRE_ATIM_QUEUE,
+>        DRIVER_REQUIRE_DMA,
+
+If we choose to have the flag anyways:
+>From a naming point of view, this name is aligned with the other flags.
+However, from a usage point of view it would be better to have a flag
+DRIVER_NO_MCU, so we don't have to have the negative tests above, and
+have no tests at all that determine if MCU is allowed.
+
+---
+Gertjan.
