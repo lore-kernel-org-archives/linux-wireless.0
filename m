@@ -1,65 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50526 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755227Ab0DWEx6 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:39591 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756161Ab0DAMvr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 00:53:58 -0400
-Subject: Re: [PATCH] mac80211: Fix sta->last_tx_rate setting with no-op
- rate control devices
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: "ext Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <v2k43e72e891004220928lb5acefbch8397c6a9a56047b5@mail.gmail.com>
-References: <1271921268-7512-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <v2k43e72e891004220928lb5acefbch8397c6a9a56047b5@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Apr 2010 07:51:28 +0300
-Message-ID: <1271998288.6205.10127.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 1 Apr 2010 08:51:47 -0400
+Received: by ey-out-2122.google.com with SMTP id d26so75111eyd.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 05:51:46 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Subject: Re: [PATCH] Remove MCU requests for SoC platforms
+Date: Thu, 1 Apr 2010 14:51:43 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+References: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com>
+In-Reply-To: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201004011451.44204.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-On Thu, 2010-04-22 at 18:28 +0200, ext Luis R. Rodriguez wrote:
-> On Thu, Apr 22, 2010 at 12:27 AM, Juuso Oikarinen
-> <juuso.oikarinen@nokia.com> wrote:
-> > The sta->last_tx_rate is traditionally updated just before transmitting a
-> > frame based on information from the rate control algorithm. However, for
-> > hardware drivers with IEEE80211_HW_HAS_RATE_CONTROL this is not performed,
-> > as the rate control algorithm is not executed, and because the used rate is
-> > not known before the frame has actually been transmitted.
-> >
-> > This causes atleast a fixed 1Mb/s to be reported to user space. A few other
-> > instances of code also rely on this information.
-> >
-> > Fix this by setting the sta->last_tx_rate in tx_status handling. There, look
-> > for last rates entry set by the driver, and use that as value for
-> > sta->last_tx_rate.
-> >
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> But the actual rate used is not known, or is it? In those cases would
-> it not be better to inform userspace that the information is not
-> available?
+> @@ -1100,8 +1106,10 @@
+>  	/*
+>  	 * This device requires firmware and MCU access.
+>  	 */
 
-The point here is to set the last_tx_rate with the actual used rate, as
-reported by the hardware (and reported to mac80211 by the driver.)
+You manually edited your patch didn't you? :P
+This doesn't apply since you changed the comment line.
 
-In case of hardware rate control, mac80211 sets the skb's
-info->status.rates array to rates indexes "-1".
-
-The driver sets the rate actually used to transmit the frame into the
-same array before calling tx_status, along with retry etc info, and
-mac80211 then uses this info to update the sta->last_tx_rate.
-
-So by all means, the actual rate is getting set. Opposite to host
-rate-control, the sta->last_tx_rate field is just updated right after
-transmitting the frame, instead of just before.
-
--Juuso
-
->   Luis
-
+Ivo
 
