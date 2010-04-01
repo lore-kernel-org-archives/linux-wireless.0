@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:34487 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163Ab0DSHf6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 03:35:58 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 39so2304576wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 00:35:58 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
+Received: from mail.gmx.net ([213.165.64.20]:49604 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752159Ab0DAEtA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Apr 2010 00:49:00 -0400
+Content-Type: text/plain; charset="us-ascii"
+Date: Thu, 01 Apr 2010 06:48:55 +0200
+From: "Peter Littmann" <peter.littmann@gmx.de>
+Message-ID: <20100401044855.33430@gmx.net>
+MIME-Version: 1.0
+Subject: rfkill from bleeding edge compat-wireless detects the Hard Status of
+ my rt2500usb wrong
 To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC 5/5] orinoco_usb: avoid in_atomic
-Date: Mon, 19 Apr 2010 08:35:22 +0100
-Message-Id: <1271662522-29119-6-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1271662522-29119-1-git-send-email-kilroyd@googlemail.com>
-References: <1271662522-29119-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We expect to be either in process contect or soft interrupt context. So
-use in_softirq instead.
+Hi,
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/orinoco_usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I have Ubuntu 9.10 with kernel 2.6.31-21-generic which shows my rt2500usb as Soft blocked after startup. So I do rfkill wifi and it is detecting two wlan-networks. But I can not get a IP-address and static IP also does'nt work (get no answer on my ping).
 
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index eaec04e..1abc303 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -701,7 +701,7 @@ static void ezusb_req_ctx_wait(struct ezusb_priv *upriv,
- 	case EZUSB_CTX_REQ_SUBMITTED:
- 	case EZUSB_CTX_REQ_COMPLETE:
- 	case EZUSB_CTX_RESP_RECEIVED:
--		if (in_atomic()) {
-+		if (in_softirq()) {
- 			/* If we get called from a timer, timeout timers don't
- 			 * get the chance to run themselves. So we make sure
- 			 * that we don't sleep for ever */
+So I decided to install compat-wireless-2010-03-28 from bleeding edge and the result of rfkill list changed:
+
+0: hci0: Bluetooth
+	Soft blocked: no
+	Hard blocked: no
+1: phy0: Wireless LAN
+	Soft blocked: no
+	Hard blocked: yes
+
+dmesg:
+[   25.025224] phy0: Selected rate control algorithm 'minstrel'
+[   25.026713] Registered led device: rt2500usb-phy0::radio
+[   25.026753] Registered led device: rt2500usb-phy0::quality
+[   25.028106] usbcore: registered new interface driver rt2500usb
+[   25.284020] phy0: device now idle
+[   25.301595] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+
+Could you please suggest something to get it work?
+What else informations do you need to assist me?
+
+There is no switch on my pc for enabling/disabling it and it runs under Win XP and FreeBSD.
+
+Thanks
+Bye
+
+Peter
 -- 
-1.6.4.4
-
+Sicherer, schneller und einfacher. Die aktuellen Internet-Browser -
+jetzt kostenlos herunterladen! http://portal.gmx.net/de/go/atbrowser
