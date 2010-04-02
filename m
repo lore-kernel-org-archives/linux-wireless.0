@@ -1,72 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40195 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985Ab0DTQAT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 12:00:19 -0400
-Date: Tue, 20 Apr 2010 11:45:44 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Wiktor Zajas <w.zajas@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] ath9k_htc: add the 0cf3:1006 TL-WN422G v2 device
- ID now
-Message-ID: <20100420154543.GA6472@tuxdriver.com>
-References: <43e72e891003281632x17f6d1d9i82640d96baa84096@mail.gmail.com>
- <c13c21871003281831u74976d85lb3d4ece2d59c1f86@mail.gmail.com>
- <43e72e891003281929hfff3821p65a9c42f15d9f6db@mail.gmail.com>
- <c13c21871003281948y40edee0bi36c185b9dfaf4036@mail.gmail.com>
- <43e72e891003282006l266141ehb78a2f4d46db76d6@mail.gmail.com>
- <c13c21871003282118s80d7c8era5585af4a3377bc3@mail.gmail.com>
- <c13c21871003282131x1ebaaee8h74f737c797b71b84@mail.gmail.com>
- <19376.15678.641255.41127@gargle.gargle.HOWL>
- <20100329214009.804ec23f.wzajas@gmail.com>
- <20100329222008.GA2852@tux>
+Received: from web56804.mail.re3.yahoo.com ([66.196.97.78]:21603 "HELO
+	web56804.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757392Ab0DBGnA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Apr 2010 02:43:00 -0400
+Message-ID: <336206.19355.qm@web56804.mail.re3.yahoo.com>
+Date: Thu, 1 Apr 2010 23:42:59 -0700 (PDT)
+From: Golden <goldenstranger@yahoo.com>
+Subject: Re: firmware_loading_store: vmap() failed, broken firmware with kernles .27 - .30
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100329222008.GA2852@tux>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 03:20:08PM -0700, Luis R. Rodriguez wrote:
-> On Mon, Mar 29, 2010 at 12:40:09PM -0700, Wiktor Zajas wrote:
-> > Thanks so much for this driver, it's working flawlessly. Only one minor problem
-> > was "Michael MIC failure detected", changing to AES helped.
+> I realize that it's an important issue, but I don't have
+> time to look
+> for a solution right now.  I did my part by confirming
+> the problem on an
+> 2.6.28.10 kernel.  I don't see it on other kernels,
+> but since it's a
+> race condition, I cannot say definitely that the same
+> condition cannot
+> happen on another system running a newer kernel.
 > 
-> Not sure if Sujith's patch posted yesterday would fix this.
-> 
-> > I don't know if what I've done is correct, in order to recognize my card
-> > (TL-WN422G v2) I've added "ATH9K_FW_USB_DEV(0x1006, "ar9271.fw")," to
-> > "ath9k_hif_usb_ids[]", and changed "#define AR9271_USB 0x9271" to
-> > "#define AR9271_USB 0x1006", is this the right thing to do ?
-> 
-> Sort of, try this patch:
-> 
-> From: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Subject: [PATCH] ath9k_htc: add the 0cf3:1006 TL-WN422G v2 device ID
-> 
-> Reported-by: Wiktor Zajas <w.zajas@gmail.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hif_usb.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-> index fc4f6e8..a7664e4 100644
-> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-> @@ -21,6 +21,7 @@
->  
->  static struct usb_device_id ath9k_hif_usb_ids[] = {
->  	ATH9K_FW_USB_DEV(0x9271, "ar9271.fw"),
-> +	ATH9K_FW_USB_DEV(0x1006, "ar9271.fw"), /* TL-WN422G v2 */
->  	{ },
->  };
+> -- 
+> Regards,
+> Pavel Roskin
 
-Any feedback on this?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Interesting scenario we have here. I confirm the race condition in 2.6.27 and 2.6.30, it appears to be gone in 2.6.31 /Ubuntu 9.10/, it appears to be present in Ubuntu 10.04 /2.6.32/ beta and then it disappears again in 2.6.33 /don't know about .34rc/.
+
+Here's a bug report back from February pertaining to 2.6.32:
+https://bugzilla.kernel.org/show_bug.cgi?id=15294
+
+
+
+      
