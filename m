@@ -1,145 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50641 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:29646 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932588Ab0DPVwn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:52:43 -0400
+	id S1754396Ab0DBUjA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Apr 2010 16:39:00 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 09/21] iwlwifi: bring up 6000 Series 2x2 AGN Gen2 adapters
-Date: Fri, 16 Apr 2010 14:52:26 -0700
-Message-Id: <1271454758-14351-10-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
-References: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 7/7] iwlwifi: avoid Tx queue memory allocation in interface down
+Date: Fri,  2 Apr 2010 13:38:54 -0700
+Message-Id: <1270240734-12825-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
+References: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+From: Zhu Yi <yi.zhu@intel.com>
 
-This patch is to bring up 6000 Series 2x2 AGN Gen2 adapters.
-Seperate various version numbers from 6000 Series definitions;
-Add module firmware declaration for the new adapters;
-Add additional device IDs and subsystem IDs;
+We used to free all the Tx queues memory when interface is brought
+down and reallocate them again in interface up. This requires
+order-4 allocation for txq->cmd[]. In situations like s2ram, this
+usually leads to allocation failure in the memory subsystem. The
+patch fixed this problem by allocating the Tx queues memory only at
+the first time. Later iwl_down/iwl_up only initialize but don't
+free and reallocate them. The memory is freed at the device removal
+time. BTW, we have already done this for the Rx queue.
 
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This fixed bug https://bugzilla.kernel.org/show_bug.cgi?id=15551
+
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c   |   20 +++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    7 ++++++-
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    4 ++++
- 4 files changed, 24 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   11 +++++---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c  |   39 ++++++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-agn.h     |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    2 +
+ drivers/net/wireless/iwlwifi/iwl-tx.c      |   20 ++++++++++++++
+ 5 files changed, 60 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index f5d0665..63d27e3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -51,13 +51,14 @@
- /* Highest firmware API version supported */
- #define IWL6000_UCODE_API_MAX 4
- #define IWL6050_UCODE_API_MAX 4
-+#define IWL6000G2_UCODE_API_MAX 4
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 49e20f1..c7f5e36 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -505,10 +505,13 @@ int iwlagn_hw_nic_init(struct iwl_priv *priv)
  
- /* Lowest firmware API version supported */
- #define IWL6000_UCODE_API_MIN 4
- #define IWL6050_UCODE_API_MIN 4
-+#define IWL6000G2_UCODE_API_MIN 4
+ 	spin_unlock_irqrestore(&priv->lock, flags);
  
- #define IWL6000_FW_PRE "iwlwifi-6000-"
--#define IWL6000_G2_FW_PRE "iwlwifi-6005-"
- #define _IWL6000_MODULE_FIRMWARE(api) IWL6000_FW_PRE #api ".ucode"
- #define IWL6000_MODULE_FIRMWARE(api) _IWL6000_MODULE_FIRMWARE(api)
+-	/* Allocate and init all Tx and Command queues */
+-	ret = iwlagn_txq_ctx_reset(priv);
+-	if (ret)
+-		return ret;
++	/* Allocate or reset and init all Tx and Command queues */
++	if (!priv->txq) {
++		ret = iwlagn_txq_ctx_alloc(priv);
++		if (ret)
++			return ret;
++	} else
++		iwlagn_txq_ctx_reset(priv);
  
-@@ -65,6 +66,10 @@
- #define _IWL6050_MODULE_FIRMWARE(api) IWL6050_FW_PRE #api ".ucode"
- #define IWL6050_MODULE_FIRMWARE(api) _IWL6050_MODULE_FIRMWARE(api)
+ 	set_bit(STATUS_INIT, &priv->status);
  
-+#define IWL6000G2_FW_PRE "iwlwifi-6005-"
-+#define _IWL6000G2_MODULE_FIRMWARE(api) IWL6000G2_FW_PRE #api ".ucode"
-+#define IWL6000G2_MODULE_FIRMWARE(api) _IWL6000G2_MODULE_FIRMWARE(api)
-+
- static void iwl6000_set_ct_threshold(struct iwl_priv *priv)
- {
- 	/* want Celsius */
-@@ -363,16 +368,16 @@ static const struct iwl_ops iwl6050_ops = {
- /*
-  * "i": Internal configuration, use internal Power Amplifier
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index a76e143..3077eac 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -809,8 +809,7 @@ void iwlagn_hw_txq_ctx_free(struct iwl_priv *priv)
+ 
+ 	/* Tx queues */
+ 	if (priv->txq) {
+-		for (txq_id = 0; txq_id < priv->hw_params.max_txq_num;
+-		     txq_id++)
++		for (txq_id = 0; txq_id < priv->hw_params.max_txq_num; txq_id++)
+ 			if (txq_id == IWL_CMD_QUEUE_NUM)
+ 				iwl_cmd_queue_free(priv);
+ 			else
+@@ -825,15 +824,15 @@ void iwlagn_hw_txq_ctx_free(struct iwl_priv *priv)
+ }
+ 
+ /**
+- * iwlagn_txq_ctx_reset - Reset TX queue context
+- * Destroys all DMA structures and initialize them again
++ * iwlagn_txq_ctx_alloc - allocate TX queue context
++ * Allocate all Tx DMA structures and initialize them
+  *
+  * @param priv
+  * @return error code
   */
--struct iwl_cfg iwl6000i_g2_2agn_cfg = {
-+struct iwl_cfg iwl6000g2i_2agn_cfg = {
- 	.name = "6000 Series 2x2 AGN Gen2",
--	.fw_name_pre = IWL6000_G2_FW_PRE,
--	.ucode_api_max = IWL6000_UCODE_API_MAX,
--	.ucode_api_min = IWL6000_UCODE_API_MIN,
-+	.fw_name_pre = IWL6000G2_FW_PRE,
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
--	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
--	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.num_of_queues = IWLAGN_NUM_QUEUES,
- 	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
- 	.mod_params = &iwlagn_mod_params,
-@@ -600,3 +605,4 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+-int iwlagn_txq_ctx_reset(struct iwl_priv *priv)
++int iwlagn_txq_ctx_alloc(struct iwl_priv *priv)
+ {
+-	int ret = 0;
++	int ret;
+ 	int txq_id, slots_num;
+ 	unsigned long flags;
  
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL6000G2_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3199818..e788722 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3835,7 +3835,12 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x4238, 0x1111, iwl6000_3agn_cfg)},
- 	{IWL_PCI_DEVICE(0x4239, 0x1311, iwl6000i_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x4239, 0x1316, iwl6000i_2abg_cfg)},
--	{IWL_PCI_DEVICE(0x0082, 0x1201, iwl6000i_g2_2agn_cfg)},
+@@ -891,8 +890,31 @@ int iwlagn_txq_ctx_reset(struct iwl_priv *priv)
+ 	return ret;
+ }
+ 
++void iwlagn_txq_ctx_reset(struct iwl_priv *priv)
++{
++	int txq_id, slots_num;
++	unsigned long flags;
 +
-+/* 6x00 Series Gen2 */
-+	{IWL_PCI_DEVICE(0x0082, 0x1201, iwl6000g2i_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1301, iwl6000g2i_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1321, iwl6000g2i_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6000g2i_2agn_cfg)},
- 
- /* 6x50 WiFi/WiMax Series */
- 	{IWL_PCI_DEVICE(0x0087, 0x1301, iwl6050_2agn_cfg)},
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index dc9d8ae..ff4b47c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -58,7 +58,7 @@ extern struct iwl_cfg iwl5100_abg_cfg;
- extern struct iwl_cfg iwl5150_agn_cfg;
- extern struct iwl_cfg iwl5150_abg_cfg;
- extern struct iwl_cfg iwl6000i_2agn_cfg;
--extern struct iwl_cfg iwl6000i_g2_2agn_cfg;
-+extern struct iwl_cfg iwl6000g2i_2agn_cfg;
- extern struct iwl_cfg iwl6000i_2abg_cfg;
- extern struct iwl_cfg iwl6000i_2bg_cfg;
- extern struct iwl_cfg iwl6000_3agn_cfg;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 9977d5e..95aa202 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -276,6 +276,10 @@ struct iwl_eeprom_enhanced_txpwr {
- #define EEPROM_6050_TX_POWER_VERSION    (4)
- #define EEPROM_6050_EEPROM_VERSION	(0x532)
- 
-+/* 6x00g2 Specific */
-+#define EEPROM_6000G2_TX_POWER_VERSION    (6)
-+#define EEPROM_6000G2_EEPROM_VERSION	(0x709)
++	spin_lock_irqsave(&priv->lock, flags);
 +
- /* OTP */
- /* lower blocks contain EEPROM image and calibration data */
- #define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
++	/* Turn off all Tx DMA fifos */
++	priv->cfg->ops->lib->txq_set_sched(priv, 0);
++
++	/* Tell NIC where to find the "keep warm" buffer */
++	iwl_write_direct32(priv, FH_KW_MEM_ADDR_REG, priv->kw.dma >> 4);
++
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	/* Alloc and init all Tx queues, including the command queue (#4) */
++	for (txq_id = 0; txq_id < priv->hw_params.max_txq_num; txq_id++) {
++		slots_num = txq_id == IWL_CMD_QUEUE_NUM ?
++			    TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
++		iwl_tx_queue_reset(priv, &priv->txq[txq_id], slots_num, txq_id);
++	}
++}
++
+ /**
+- * iwlagn_txq_ctx_stop - Stop all Tx DMA channels, free Tx queue memory
++ * iwlagn_txq_ctx_stop - Stop all Tx DMA channels
+  */
+ void iwlagn_txq_ctx_stop(struct iwl_priv *priv)
+ {
+@@ -912,9 +934,6 @@ void iwlagn_txq_ctx_stop(struct iwl_priv *priv)
+ 				    1000);
+ 	}
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	/* Deallocate memory for all Tx queues */
+-	iwlagn_hw_txq_ctx_free(priv);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 5ad1405..bcd423e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -143,7 +143,8 @@ void iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 				struct iwl_rx_mem_buffer *rxb);
+ int iwlagn_tx_queue_reclaim(struct iwl_priv *priv, int txq_id, int index);
+ void iwlagn_hw_txq_ctx_free(struct iwl_priv *priv);
+-int iwlagn_txq_ctx_reset(struct iwl_priv *priv);
++int iwlagn_txq_ctx_alloc(struct iwl_priv *priv);
++void iwlagn_txq_ctx_reset(struct iwl_priv *priv);
+ void iwlagn_txq_ctx_stop(struct iwl_priv *priv);
+ 
+ #endif /* __iwl_agn_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index bc04b43..10f9572 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -458,6 +458,8 @@ void iwl_free_tfds_in_queue(struct iwl_priv *priv,
+ void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq);
+ int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+ 		      int slots_num, u32 txq_id);
++void iwl_tx_queue_reset(struct iwl_priv *priv, struct iwl_tx_queue *txq,
++			int slots_num, u32 txq_id);
+ void iwl_tx_queue_free(struct iwl_priv *priv, int txq_id);
+ /*****************************************************
+  * TX power
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 65090d3..4dd6e52 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -370,6 +370,26 @@ out_free_arrays:
+ }
+ EXPORT_SYMBOL(iwl_tx_queue_init);
+ 
++void iwl_tx_queue_reset(struct iwl_priv *priv, struct iwl_tx_queue *txq,
++			int slots_num, u32 txq_id)
++{
++	int actual_slots = slots_num;
++
++	if (txq_id == IWL_CMD_QUEUE_NUM)
++		actual_slots++;
++
++	memset(txq->meta, 0, sizeof(struct iwl_cmd_meta) * actual_slots);
++
++	txq->need_update = 0;
++
++	/* Initialize queue's high/low-water marks, and head/tail indexes */
++	iwl_queue_init(priv, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
++
++	/* Tell device where to find queue */
++	priv->cfg->ops->lib->txq_init(priv, txq);
++}
++EXPORT_SYMBOL(iwl_tx_queue_reset);
++
+ /*************** HOST COMMAND QUEUE FUNCTIONS   *****/
+ 
+ /**
 -- 
 1.6.3.3
 
