@@ -1,163 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33021 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757437Ab0DOVjr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:47 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga11.intel.com ([192.55.52.93]:29646 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754099Ab0DBUi6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Apr 2010 16:38:58 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v3 88/97] ath9k: Setup appropriate tx desc for regular dma and edma
-Date: Thu, 15 Apr 2010 17:39:33 -0400
-Message-Id: <1271367582-992-89-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/7] iwlwifi: merge module parameters into single place
+Date: Fri,  2 Apr 2010 13:38:48 -0700
+Message-Id: <1270240734-12825-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
+References: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Module parameters used to be defined in both iwl-5000.c and iwl-4965.c,
+after the code re-structure, merge into iwl-agn.c for easy to read and
+maintenance.
+
+Number of module parameters are deprecated after this merge. These are also
+scheduled for removal by 2.6.40.
+
+The current supported parameters are:
+
+ parm: debug50:50XX debug output mask (deprecated) (uint)
+ parm: debug:debug output mask (uint)
+ parm: swcrypto50:using crypto in software (default 0 [hardware])
+(deprecated) (bool)
+ parm: swcrypto:using crypto in software (default 0 [hardware]) (int)
+ parm: queues_num50:number of hw queues in 50xx series (deprecated)
+(int)
+ parm: queues_num:number of hw queues. (int)
+ parm: 11n_disable50:disable 50XX 11n functionality (deprecated) (int)
+ parm: 11n_disable:disable 11n functionality (int)
+ parm: amsdu_size_8K50:enable 8K amsdu size in 50XX series (deprecated)
+(int)
+ parm: amsdu_size_8K:enable 8K amsdu size (int)
+ parm: fw_restart50:restart firmware in case of error (deprecated) (int)
+ parm: fw_restart:restart firmware in case of error (int)
+ parm: disable_hw_scan:disable hardware scanning (default 0) (int)
+
+Remove "antenna" module parameter, it is not being used in "agn" driver.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/init.c  |   26 ++++++++++++++++----------
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |    4 ++--
- 4 files changed, 20 insertions(+), 14 deletions(-)
+ Documentation/feature-removal-schedule.txt |   11 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |   29 +--------------------------
+ drivers/net/wireless/iwlwifi/iwl-5000.c    |   13 ------------
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |   30 ++++++++++++++++++++++++++++
+ 4 files changed, 42 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a11d830..f67be52 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -123,7 +123,7 @@ struct ath_descdma {
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index a841e79..4e78611 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -545,3 +545,14 @@ Why:	udev fully replaces this special file system that only contains CAPI
+ 	NCCI TTY device nodes. User space (pppdcapiplugin) works without
+ 	noticing the difference.
+ Who:	Jan Kiszka <jan.kiszka@web.de>
++
++----------------------------
++
++What:	iwlwifi 50XX module parameters
++When:	2.6.40
++Why:	The "..50" modules parameters were used to configure 5000 series and
++	up devices; different set of module parameters also available for 4965
++	with same functionalities. Consolidate both set into single place
++	in drivers/net/wireless/iwlwifi/iwl-agn.c
++
++Who:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 1808c97..083983a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -61,14 +61,6 @@ static int iwl4965_hw_get_temperature(struct iwl_priv *priv);
+ #define _IWL4965_MODULE_FIRMWARE(api) IWL4965_FW_PRE #api ".ucode"
+ #define IWL4965_MODULE_FIRMWARE(api) _IWL4965_MODULE_FIRMWARE(api)
  
- int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		      struct list_head *head, const char *name,
--		      int nbuf, int ndesc);
-+		      int nbuf, int ndesc, bool is_tx);
- void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
- 			 struct list_head *head);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 9779646..299ec05 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -235,31 +235,37 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- */
- int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		      struct list_head *head, const char *name,
--		      int nbuf, int ndesc)
-+		      int nbuf, int ndesc, bool is_tx)
+-
+-/* module parameters */
+-static struct iwl_mod_params iwl4965_mod_params = {
+-	.amsdu_size_8K = 1,
+-	.restart_fw = 1,
+-	/* the rest are 0 by default */
+-};
+-
+ /* check contents of special bootstrap uCode SRAM */
+ static int iwl4965_verify_bsm(struct iwl_priv *priv)
  {
- #define	DS2PHYS(_dd, _ds)						\
- 	((_dd)->dd_desc_paddr + ((caddr_t)(_ds) - (caddr_t)(_dd)->dd_desc))
- #define ATH_DESC_4KB_BOUND_CHECK(_daddr) ((((_daddr) & 0xFFF) > 0xF7F) ? 1 : 0)
- #define ATH_DESC_4KB_BOUND_NUM_SKIPPED(_len) ((_len) / 4096)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_desc *ds;
-+	u8 *ds;
- 	struct ath_buf *bf;
--	int i, bsize, error;
-+	int i, bsize, error, desc_len;
+@@ -2245,7 +2237,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.ops = &iwl4965_ops,
+ 	.num_of_queues = IWL49_NUM_QUEUES,
+ 	.num_of_ampdu_queues = IWL49_NUM_AMPDU_QUEUES,
+-	.mod_params = &iwl4965_mod_params,
++	.mod_params = &iwlagn_mod_params,
+ 	.valid_tx_ant = ANT_AB,
+ 	.valid_rx_ant = ANT_ABC,
+ 	.pll_cfg_val = 0,
+@@ -2265,22 +2257,3 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ /* Module firmware */
+ MODULE_FIRMWARE(IWL4965_MODULE_FIRMWARE(IWL4965_UCODE_API_MAX));
  
- 	ath_print(common, ATH_DBG_CONFIG, "%s DMA: %u buffers %u desc/buf\n",
- 		  name, nbuf, ndesc);
+-module_param_named(antenna, iwl4965_mod_params.antenna, int, S_IRUGO);
+-MODULE_PARM_DESC(antenna, "select antenna (1=Main, 2=Aux, default 0 [both])");
+-module_param_named(swcrypto, iwl4965_mod_params.sw_crypto, int, S_IRUGO);
+-MODULE_PARM_DESC(swcrypto, "using crypto in software (default 0 [hardware])");
+-module_param_named(
+-	disable_hw_scan, iwl4965_mod_params.disable_hw_scan, int, S_IRUGO);
+-MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
+-
+-module_param_named(queues_num, iwl4965_mod_params.num_of_queues, int, S_IRUGO);
+-MODULE_PARM_DESC(queues_num, "number of hw queues.");
+-/* 11n */
+-module_param_named(11n_disable, iwl4965_mod_params.disable_11n, int, S_IRUGO);
+-MODULE_PARM_DESC(11n_disable, "disable 11n functionality");
+-module_param_named(amsdu_size_8K, iwl4965_mod_params.amsdu_size_8K,
+-		   int, S_IRUGO);
+-MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
+-
+-module_param_named(fw_restart4965, iwl4965_mod_params.restart_fw, int, S_IRUGO);
+-MODULE_PARM_DESC(fw_restart4965, "restart firmware in case of error");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 5ca4517..ecc302e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -585,16 +585,3 @@ struct iwl_cfg iwl5150_abg_cfg = {
  
- 	INIT_LIST_HEAD(head);
-+
-+	if (is_tx)
-+		desc_len = sc->sc_ah->caps.tx_desc_len;
-+	else
-+		desc_len = sizeof(struct ath_desc);
-+
- 	/* ath_desc must be a multiple of DWORDs */
--	if ((sizeof(struct ath_desc) % 4) != 0) {
-+	if ((desc_len % 4) != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "ath_desc not DWORD aligned\n");
--		BUG_ON((sizeof(struct ath_desc) % 4) != 0);
-+		BUG_ON((desc_len % 4) != 0);
- 		error = -ENOMEM;
- 		goto fail;
- 	}
+ MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL5150_MODULE_FIRMWARE(IWL5150_UCODE_API_MAX));
+-
+-module_param_named(swcrypto50, iwlagn_mod_params.sw_crypto, bool, S_IRUGO);
+-MODULE_PARM_DESC(swcrypto50,
+-		  "using software crypto engine (default 0 [hardware])\n");
+-module_param_named(queues_num50, iwlagn_mod_params.num_of_queues, int, S_IRUGO);
+-MODULE_PARM_DESC(queues_num50, "number of hw queues in 50xx series");
+-module_param_named(11n_disable50, iwlagn_mod_params.disable_11n, int, S_IRUGO);
+-MODULE_PARM_DESC(11n_disable50, "disable 50XX 11n functionality");
+-module_param_named(amsdu_size_8K50, iwlagn_mod_params.amsdu_size_8K,
+-		   int, S_IRUGO);
+-MODULE_PARM_DESC(amsdu_size_8K50, "enable 8K amsdu size in 50XX series");
+-module_param_named(fw_restart50, iwlagn_mod_params.restart_fw, int, S_IRUGO);
+-MODULE_PARM_DESC(fw_restart50, "restart firmware in case of error");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index b431e92..8262f43 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3921,3 +3921,33 @@ module_param_named(debug, iwl_debug_level, uint, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(debug, "debug output mask");
+ #endif
  
--	dd->dd_desc_len = sizeof(struct ath_desc) * nbuf * ndesc;
-+	dd->dd_desc_len = desc_len * nbuf * ndesc;
- 
- 	/*
- 	 * Need additional DMA memory because we can't use
-@@ -272,7 +278,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		u32 dma_len;
- 
- 		while (ndesc_skipped) {
--			dma_len = ndesc_skipped * sizeof(struct ath_desc);
-+			dma_len = ndesc_skipped * desc_len;
- 			dd->dd_desc_len += dma_len;
- 
- 			ndesc_skipped = ATH_DESC_4KB_BOUND_NUM_SKIPPED(dma_len);
-@@ -286,7 +292,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		error = -ENOMEM;
- 		goto fail;
- 	}
--	ds = dd->dd_desc;
-+	ds = (u8 *) dd->dd_desc;
- 	ath_print(common, ATH_DBG_CONFIG, "%s DMA map: %p (%u) -> %llx (%u)\n",
- 		  name, ds, (u32) dd->dd_desc_len,
- 		  ito64(dd->dd_desc_paddr), /*XXX*/(u32) dd->dd_desc_len);
-@@ -300,7 +306,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 	}
- 	dd->dd_bufptr = bf;
- 
--	for (i = 0; i < nbuf; i++, bf++, ds += ndesc) {
-+	for (i = 0; i < nbuf; i++, bf++, ds += (desc_len * ndesc)) {
- 		bf->bf_desc = ds;
- 		bf->bf_daddr = DS2PHYS(dd, ds);
- 
-@@ -316,7 +322,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 				       ((caddr_t) dd->dd_desc +
- 					dd->dd_desc_len));
- 
--				ds += ndesc;
-+				ds += (desc_len * ndesc);
- 				bf->bf_desc = ds;
- 				bf->bf_daddr = DS2PHYS(dd, ds);
- 			}
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index cb4995c..ac60c4e 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -325,7 +325,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 		/* Initialize rx descriptors */
- 
- 		error = ath_descdma_setup(sc, &sc->rx.rxdma, &sc->rx.rxbuf,
--				"rx", nbufs, 1);
-+				"rx", nbufs, 1, 0);
- 		if (error != 0) {
- 			ath_print(common, ATH_DBG_FATAL,
- 				  "failed to allocate rx descriptors: %d\n",
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 7dae199..c32da05 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2152,7 +2152,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
- 	spin_lock_init(&sc->tx.txbuflock);
- 
- 	error = ath_descdma_setup(sc, &sc->tx.txdma, &sc->tx.txbuf,
--				  "tx", nbufs, 1);
-+				  "tx", nbufs, 1, 1);
- 	if (error != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to allocate tx descriptors: %d\n", error);
-@@ -2160,7 +2160,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
- 	}
- 
- 	error = ath_descdma_setup(sc, &sc->beacon.bdma, &sc->beacon.bbuf,
--				  "beacon", ATH_BCBUF, 1);
-+				  "beacon", ATH_BCBUF, 1, 0);
- 	if (error != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to allocate beacon descriptors: %d\n", error);
++module_param_named(swcrypto50, iwlagn_mod_params.sw_crypto, bool, S_IRUGO);
++MODULE_PARM_DESC(swcrypto50,
++		 "using crypto in software (default 0 [hardware]) (deprecated)");
++module_param_named(swcrypto, iwlagn_mod_params.sw_crypto, int, S_IRUGO);
++MODULE_PARM_DESC(swcrypto, "using crypto in software (default 0 [hardware])");
++module_param_named(queues_num50,
++		   iwlagn_mod_params.num_of_queues, int, S_IRUGO);
++MODULE_PARM_DESC(queues_num50,
++		 "number of hw queues in 50xx series (deprecated)");
++module_param_named(queues_num, iwlagn_mod_params.num_of_queues, int, S_IRUGO);
++MODULE_PARM_DESC(queues_num, "number of hw queues.");
++module_param_named(11n_disable50, iwlagn_mod_params.disable_11n, int, S_IRUGO);
++MODULE_PARM_DESC(11n_disable50, "disable 50XX 11n functionality (deprecated)");
++module_param_named(11n_disable, iwlagn_mod_params.disable_11n, int, S_IRUGO);
++MODULE_PARM_DESC(11n_disable, "disable 11n functionality");
++module_param_named(amsdu_size_8K50, iwlagn_mod_params.amsdu_size_8K,
++		   int, S_IRUGO);
++MODULE_PARM_DESC(amsdu_size_8K50,
++		 "enable 8K amsdu size in 50XX series (deprecated)");
++module_param_named(amsdu_size_8K, iwlagn_mod_params.amsdu_size_8K,
++		   int, S_IRUGO);
++MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
++module_param_named(fw_restart50, iwlagn_mod_params.restart_fw, int, S_IRUGO);
++MODULE_PARM_DESC(fw_restart50,
++		 "restart firmware in case of error (deprecated)");
++module_param_named(fw_restart, iwlagn_mod_params.restart_fw, int, S_IRUGO);
++MODULE_PARM_DESC(fw_restart, "restart firmware in case of error");
++module_param_named(
++	disable_hw_scan, iwlagn_mod_params.disable_hw_scan, int, S_IRUGO);
++MODULE_PARM_DESC(disable_hw_scan, "disable hardware scanning (default 0)");
 -- 
 1.6.3.3
 
