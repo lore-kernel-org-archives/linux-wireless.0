@@ -1,29 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:58493 "EHLO vs166246.vserver.de"
+Received: from mga11.intel.com ([192.55.52.93]:29646 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753994Ab0DSPxr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 11:53:47 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: Request for releasing b43-fwcutter
-Date: Mon, 19 Apr 2010 17:53:44 +0200
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <k2kb170af451004190754udb8e9960h8a3cfe703566e76f@mail.gmail.com> (sfid-20100419_145430_626218_57E06F79)
-In-Reply-To: <k2kb170af451004190754udb8e9960h8a3cfe703566e76f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201004191753.44213.mb@bu3sch.de>
+	id S1754209Ab0DBUi6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Apr 2010 16:38:58 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/7] iwlwifi: remove irrelevant comments
+Date: Fri,  2 Apr 2010 13:38:49 -0700
+Message-Id: <1270240734-12825-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
+References: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 19 April 2010 16:54:23 Rafał Miłecki wrote:
-> Could you consider releasing new version of b43-fwcutter, as we
-> already have LP-PHY support in kernel, please? AFAIK ppl need to use
-> git version currently to extract firmware.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Good idea. I released b43-fwcutter-013.
+Removing irrelevant comments from iwl-agn.c
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8262f43..8b66010 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -83,13 +83,6 @@ MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS("iwl4965");
+ 
+-/*************** STATION TABLE MANAGEMENT ****
+- * mac80211 should be examined to determine if sta_info is duplicating
+- * the functionality provided here
+- */
+-
+-/**************************************************************/
+-
+ /**
+  * iwl_commit_rxon - commit staging_rxon to hardware
+  *
 -- 
-Greetings, Michael.
+1.6.3.3
+
