@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48032 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:37744 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755094Ab0D0RPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 13:15:03 -0400
-From: <shanyu.zhao@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Shanyu Zhao <shanyu.zhao@intel.com>
-Subject: [PATCH 1/1] mac80211: fix rts threshold check
-Date: Tue, 27 Apr 2010 11:15:12 -0700
-Message-Id: <1272392112-28301-1-git-send-email-shanyu.zhao@intel.com>
+	id S1754152Ab0DBUi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Apr 2010 16:38:59 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/7] iwlwifi: clear rxq->queue in queue reset
+Date: Fri,  2 Apr 2010 13:38:50 -0700
+Message-Id: <1270240734-12825-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
+References: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+From: Zhu Yi <yi.zhu@intel.com>
 
-Currently whenever rts thresold is set, every packet will use RTS
-protection no matter its size exceeds the threshold or not. This is
-due to a bug in the rts threshold check.
-	if (len > tx->local->hw.wiphy->rts_threshold) {
-		txrc.rts = rts = true;
-	}
-Basically it is comparing an int (len) and a u32 (rts_threshold),
-and the variable len is assigned as:
-	len = min_t(int, tx->skb->len + FCS_LEN,
-			 tx->local->hw.wiphy->frag_threshold);
-However, when frag_threshold is "-1", len is always "-1", which is
-0xffffffff therefore rts is always set to true.
+In iwl_rx_queue_reset(), we didn't clear the rxq->queue[]. This might
+cause the same rxb appears on multiple places in rxq->queue. Although
+this won't cause any problem because of the read and write pointers
+protection in rxq, we'd better clear it to avoid misleading.
 
-CC: stable@kernel.org
-
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/tx.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e2aa972..f3841f4 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -593,7 +593,8 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	struct ieee80211_hdr *hdr = (void *)tx->skb->data;
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rate *rate;
--	int i, len;
-+	int i;
-+	u32 len;
- 	bool inval = false, rts = false, short_preamble = false;
- 	struct ieee80211_tx_rate_control txrc;
- 	u32 sta_flags;
-@@ -602,7 +603,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 1d2e84c..6fe1d93 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -403,6 +403,9 @@ void iwlagn_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+ 		list_add_tail(&rxq->pool[i].list, &rxq->rx_used);
+ 	}
  
- 	sband = tx->local->hw.wiphy->bands[tx->channel->band];
++	for (i = 0; i < RX_QUEUE_SIZE; i++)
++		rxq->queue[i] = NULL;
++
+ 	/* Set us so that we have processed and used all buffers, but have
+ 	 * not restocked the Rx queue with fresh buffers */
+ 	rxq->read = rxq->write = 0;
+@@ -538,11 +541,13 @@ void iwlagn_rx_queue_restock(struct iwl_priv *priv)
+ 	struct list_head *element;
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	unsigned long flags;
+-	int write;
  
--	len = min_t(int, tx->skb->len + FCS_LEN,
-+	len = min_t(u32, tx->skb->len + FCS_LEN,
- 			 tx->local->hw.wiphy->frag_threshold);
+ 	spin_lock_irqsave(&rxq->lock, flags);
+-	write = rxq->write & ~0x7;
+ 	while ((iwl_rx_queue_space(rxq) > 0) && (rxq->free_count)) {
++		/* The overwritten rxb must be a used one */
++		rxb = rxq->queue[rxq->write];
++		BUG_ON(rxb && rxb->page);
++
+ 		/* Get next free Rx buffer, remove from free list */
+ 		element = rxq->rx_free.next;
+ 		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
+@@ -635,6 +640,7 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
  
- 	/* set up the tx rate control struct we give the RC algo */
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 
++		BUG_ON(rxb->page);
+ 		rxb->page = page;
+ 		/* Get physical address of the RB */
+ 		rxb->page_dma = pci_map_page(priv->pci_dev, page, 0,
 -- 
-1.6.0.4
+1.6.3.3
 
