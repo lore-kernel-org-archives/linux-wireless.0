@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:49620 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755733Ab0DNVSN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 17:18:13 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2403678fgg.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 14:18:12 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 15 Apr 2010 01:17:46 +0400
-Message-ID: <g2kd01f95791004141417i66f279bbhc64274eb679fc6f5@mail.gmail.com>
-Subject: compat wireless doesn't compile
-From: Andrey Semyonov <gatekeeper.mail@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=KOI8-R
+Received: from mga11.intel.com ([192.55.52.93]:29646 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754302Ab0DBUi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Apr 2010 16:38:59 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/7] iwlwifi: deprecate "iwl4965" alias support
+Date: Fri,  2 Apr 2010 13:38:51 -0700
+Message-Id: <1270240734-12825-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
+References: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I get this when trying to compile current drivers:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
+Internal alias support has been present in module-init-tools for some
+time, the MODULE_ALIAS("iwl4965") boilerplate aliases can be removed.
 
-/usr/local/src/compat-wireless-2010-04-14# make
-make -C /lib/modules/2.6.32-19-generic/build
-M=/usr/local/src/compat-wireless-2010-04-14 modules
-make[1]: Вход в каталог `/usr/src/linux-headers-2.6.32-19-generic'
-  CC [M]  /usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.o
-/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.c: In
-function 'ieee80211_alloc_hw':
-/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.c:394:
-error: implicit declaration of function '__hw_addr_init'
-make[3]: *** [/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.o]
-Ошибка 1
-make[2]: *** [/usr/local/src/compat-wireless-2010-04-14/net/mac80211] Ошибка 2
-make[1]: *** [_module_/usr/local/src/compat-wireless-2010-04-14] Ошибка 2
-make[1]: Выход из каталога `/usr/src/linux-headers-2.6.32-19-generic'
-make: *** [modules] Ошибка 2
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ Documentation/feature-removal-schedule.txt |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-The driver selected is b43. System is Ubuntu 10.04 beta2.
+diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
+index 4e78611..d46944f 100644
+--- a/Documentation/feature-removal-schedule.txt
++++ b/Documentation/feature-removal-schedule.txt
+@@ -556,3 +556,15 @@ Why:	The "..50" modules parameters were used to configure 5000 series and
+ 	in drivers/net/wireless/iwlwifi/iwl-agn.c
+ 
+ Who:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
++
++----------------------------
++
++What:	iwl4965 alias support
++When:	2.6.40
++Why:	Internal alias support has been present in module-init-tools for some
++	time, the MODULE_ALIAS("iwl4965") boilerplate aliases can be removed
++	with no impact.
++
++Who:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
++
++----------------------------
+-- 
+1.6.3.3
+
