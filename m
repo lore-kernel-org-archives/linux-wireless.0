@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46724 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933198Ab0DHT1k (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:33846 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223Ab0DBMjJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:40 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 015/102] ath9k_hw: move init config and default after chip is up
-Date: Thu,  8 Apr 2010 15:26:11 -0400
-Message-Id: <1270754858-26266-16-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 2 Apr 2010 08:39:09 -0400
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh04-2.mail.saunalahti.fi (Postfix) with SMTP id EC5C013B9C6
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Apr 2010 15:31:47 +0300 (EEST)
+Received: from potku.valot.fi (a91-155-131-184.elisa-laajakaista.fi [91.155.131.184])
+	by emh02.mail.saunalahti.fi (Postfix) with ESMTP id DF1762BD43
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Apr 2010 15:31:46 +0300 (EEST)
+From: Kalle Valo <kvalo@adurom.com>
+Subject: [PATCH] wl1251: use DRIVER_NAME macro in wl1251_spi_driver
+To: linux-wireless@vger.kernel.org
+Date: Fri, 02 Apr 2010 15:31:46 +0300
+Message-ID: <20100402123146.2594.6044.stgit@potku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows us to add SREV checks on these helpers.
+Better use the macro for consistency, the content is the same anyway.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 655da06..5c267aa 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -881,15 +881,15 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int r = 0;
+ drivers/net/wireless/wl12xx/wl1251_spi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+index 9cc8c32..df2ff8b 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+@@ -309,7 +309,7 @@ static int __devexit wl1251_spi_remove(struct spi_device *spi)
  
--	ath9k_hw_init_defaults(ah);
--	ath9k_hw_init_config(ah);
--
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Couldn't reset chip\n");
- 		return -EIO;
- 	}
- 
-+	ath9k_hw_init_defaults(ah);
-+	ath9k_hw_init_config(ah);
-+
- 	ath9k_hw_attach_ops(ah);
- 
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
--- 
-1.6.3.3
+ static struct spi_driver wl1251_spi_driver = {
+ 	.driver = {
+-		.name		= "wl1251",
++		.name		= DRIVER_NAME,
+ 		.bus		= &spi_bus_type,
+ 		.owner		= THIS_MODULE,
+ 	},
 
