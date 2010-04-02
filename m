@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:34310 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932417Ab0DPVe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:34:59 -0400
-Subject: Re: [PATCH 2/2] iwmc3200wifi: check sparse endianness annotations
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <1271451466.8043.0.camel@jlt3.sipsolutions.net>
-References: <1271381324-21044-1-git-send-email-yi.zhu@intel.com>
-	 <1271381324-21044-2-git-send-email-yi.zhu@intel.com>
-	 <1271451350.16507.2.camel@mj>
-	 <1271451466.8043.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Fri, 16 Apr 2010 17:34:58 -0400
-Message-Id: <1271453698.16507.26.camel@mj>
-Mime-Version: 1.0
+Received: from mail-pz0-f176.google.com ([209.85.222.176]:41485 "EHLO
+	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755369Ab0DBRgz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Apr 2010 13:36:55 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 2 Apr 2010 10:36:34 -0700
+Message-ID: <j2m43e72e891004021036j8304f62byc2ec08415b3e6ce7@mail.gmail.com>
+Subject: Pending patches for 802.11 not marked stable or which requires a
+	manual backport
+To: Greg KH <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	stable-review@linux.kernel.org, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-04-16 at 22:57 +0200, Johannes Berg wrote:
+It is no coincidence that the 802.11 subsystem now has had no
+regressions for 2.6.33 and 2.6.34 (thanks to Rafael for keeping track
+of these). I don't think its that we haven't been doing a lot of
+development, instead I think a lot of it has to do with the fact that
+we have been aggressively engaged with stable after we were slapped
+about this at our last wireless summit. There's a few patches which I
+realize still do fall through the crack or due to time we haven't yet
+backported. I have been subscribed the stable-review list [1] for a
+few kernel releases and I think the process for review for stable is a
+bit overwhelming and I can only thank you so much for the great work
+you guys do at juggling all these patches together.
 
-> We've done it on other drivers -- we can't do it for all of the kernel
-> because that would drown people in warnings, but for those drivers that
-> _should_ be clean it ought to be fine to add it by default.
+The main reason I see some patches still fall through the cracks is
+due to some patches not being marked stable on the commit log entry or
+the patch requiring some manual backport for the latest stable or for
+other older stable series. To aid with this for the 802.11 subsystem
+I've created a wiki page we can use for this purpose:
 
-Oh, I see, there are several precedents.
+http://wireless.kernel.org/en/developers/stable-pending
 
-That said, there are not many warnings added by __CHECK_ENDIAN__.  In my
-x86_64 configuration, sparse produces 2316 lines of output without
-__CHECK_ENDIAN__ and 3526 lines with __CHECK_ENDIAN__, a 52% increase.
-That's hardly "drowning".
+If you are either a user or developer and you feel a patch is
+important for stable which meet the above criteria please be sure to
+mark it there. Help with manual backports are also appreciated as we
+sometimes cannot address these due to time.
 
-Also, the warnings about endianess are perhaps the most useful of all
-sparse warnings.
+[1] http://linux.kernel.org/mailman/listinfo/stable-review
 
--- 
-Regards,
-Pavel Roskin
+ Luis
