@@ -1,99 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46835 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933244Ab0DHT1p (ORCPT
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:61660 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753835Ab0DCOIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 041/102] ath9k: Remove ATH9K_TX_SW_ABORTED and introduce a bool for this purpose
-Date: Thu,  8 Apr 2010 15:26:37 -0400
-Message-Id: <1270754858-26266-42-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 3 Apr 2010 10:08:51 -0400
+Message-ID: <4BB74BEC.4000703@gmail.com>
+Date: Sat, 03 Apr 2010 16:08:44 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Luis Correia <luis.f.correia@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH V4] rt2x00: remove MCU requests for SoC platforms
+References: <k2g880c1631004011414z59ce4547j1bcea7ad5aff7229@mail.gmail.com> 	<t2qefe7343f1004030447i9d6f290fvd7dd317c63b5b61@mail.gmail.com> <l2mefe7343f1004030449refb18c80l3a81242338a8a4a7@mail.gmail.com> <4BB745E8.6030205@gmail.com>
+In-Reply-To: <4BB745E8.6030205@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+On 04/03/10 15:43, Gertjan van Wingerde wrote:
+> On 04/03/10 13:49, Luis Correia wrote:
+>> The ralink SoC platforms do not have an MCU.
+>>
+>> Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
+> 
+> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> 
+>> ---
+>>
+>> Removed flag usage as per Gertjan suggestion.
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c
+>> b/drivers/net/wireless/rt2x00/rt2800pci.c
+>> index ce7e88e..1df2d44 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+>> @@ -60,6 +60,12 @@ static void rt2800pci_mcu_status(struct rt2x00_dev
+>> *rt2x00dev, const u8 token)
+>>        unsigned int i;
+>>        u32 reg;
+>>
+>> +       /*
+>> +        * SOC devices don't support MCU requests.
+>> +        */
+>> +       if (rt2x00_is_soc(rt2x00dev))
+>> +               return;
+>> +
+>>        for (i = 0; i < 200; i++) {
+>>                rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
+>>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+John,
+
+This patch seems to be word-wrapped and white-space damaged. I fixed it up
+and applied it to my tree.
+
+If you want you can pull from git://git.gwingerde.nl/rt2x00-next-2.6 to
+get the fixed up patch.
+
 ---
- drivers/net/wireless/ath/ath9k/common.h |    1 +
- drivers/net/wireless/ath/ath9k/mac.h    |    1 -
- drivers/net/wireless/ath/ath9k/xmit.c   |   11 +++++------
- 3 files changed, 6 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index 1a87283..5fd7fe1 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -82,6 +82,7 @@ struct ath_buf {
- 	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
- 	bool bf_stale;
- 	bool bf_isnullfunc;
-+	bool bf_tx_aborted;
- 	u16 bf_flags;
- 	struct ath_buf_state bf_state;
- 	dma_addr_t bf_dmacontext;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index f2f4ad2..99f81eb 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -86,7 +86,6 @@
- #define ATH9K_TX_DESC_CFG_ERR      0x04
- #define ATH9K_TX_DATA_UNDERRUN     0x08
- #define ATH9K_TX_DELIM_UNDERRUN    0x10
--#define ATH9K_TX_SW_ABORTED        0x40
- #define ATH9K_TX_SW_FILTERED       0x80
- 
- /* 64 bytes */
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 4bc52f4..f6da511 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -358,8 +358,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			/* transmit completion */
- 			acked_cnt++;
- 		} else {
--			if (!(tid->state & AGGR_CLEANUP) &&
--			    ts->ts_flags != ATH9K_TX_SW_ABORTED) {
-+			if (!(tid->state & AGGR_CLEANUP) && !bf_last->bf_tx_aborted) {
- 				if (bf->bf_retries < ATH_MAX_SW_RETRIES) {
- 					ath_tx_set_retry(sc, txq, bf);
- 					txpending = 1;
-@@ -1036,9 +1035,6 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
- 	struct ath_tx_status ts;
- 
- 	memset(&ts, 0, sizeof(ts));
--	if (!retry_tx)
--		ts.ts_flags = ATH9K_TX_SW_ABORTED;
--
- 	INIT_LIST_HEAD(&bf_head);
- 
- 	for (;;) {
-@@ -1063,6 +1059,9 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
- 		}
- 
- 		lastbf = bf->bf_lastbf;
-+		if (!retry_tx)
-+			lastbf->bf_tx_aborted = true;
-+
- 
- 		/* remove ath_buf's of the same mpdu from txq */
- 		list_cut_position(&bf_head, &txq->axq_q, &lastbf->list);
-@@ -1897,7 +1896,7 @@ static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
- 	int nbad = 0;
- 	int isaggr = 0;
- 
--	if (ts->ts_flags == ATH9K_TX_SW_ABORTED)
-+	if (bf->bf_tx_aborted)
- 		return 0;
- 
- 	isaggr = bf_isaggr(bf);
--- 
-1.6.3.3
-
+Gertjan.
