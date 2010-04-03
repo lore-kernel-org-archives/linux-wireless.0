@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46705 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933150Ab0DHT1j (ORCPT
+Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:64483 "EHLO
+	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751236Ab0DCSwZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 006/102] ath9k_hw: add support for GPIO differences on AR9003
-Date: Thu,  8 Apr 2010 15:26:02 -0400
-Message-Id: <1270754858-26266-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 3 Apr 2010 14:52:25 -0400
+Message-ID: <4BB78E67.8090609@gmail.com>
+Date: Sat, 03 Apr 2010 20:52:23 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Luis Correia <buga@loide.net>
+CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [rt2x00-users] FW RT307x/RT309x
+References: <4BB25383.8040405@gmail.com>	 <880c1631003301242r5492a2f8ucd4b83f7d607bf89@mail.gmail.com> <y2k880c1631004030510t132c763bgc9af3061ffabdfeb@mail.gmail.com>
+In-Reply-To: <y2k880c1631004030510t132c763bgc9af3061ffabdfeb@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On 04/03/10 14:10, Luis Correia wrote:
+> Hi all,
+> 
+> here is an update, Ralink has released new firmware files, no need to
+> go on 'ripping stuff out of code'.
+> 
+> ---
+> Firmware RT28XX/RT30XX PCI/mPCI/PCIe/CardBus series
+> (RT2760/RT2790/RT2860/RT2890/RT3060/RT3062/RT3562/RT2860/RT2760/RT2890/RT2790/RT3090)
+> 
+> http://www.ralinktech.com/license_us.php?n=2&p=1&t=U0wyRnpjMlYwY3k4eU1ERXdMekF6THpNeEwyUnZkMjVzYjJGa01UWTBNamsyTVRBNE1pNTZhWEE5UFQxU1ZESTROakJmUm1seWJYZGhjbVZmVmpJMkM%3D
+> ---
+> Firmware RT28XX/RT30XX USB series
+> (RT2870/RT2770/RT3572/RT3070)
+> 
+> http://www.ralinktech.com/license_us.php?n=2&p=1&t=U0wyRnpjMlYwY3k4eU1ERXdMekF6THpNeEwyUnZkMjVzYjJGa01UWXpPRGs1T0Rnek5pNTZhWEE5UFQxU1ZESTROekJmUm1seWJYZGhjbVZmVmpJeUM%3D
+> ---
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Thanks for checking Luis. So we can leave everything as it is right now, as there are
+no different names for the firmware.
+
+Now to convince the staging people that they have done the wrong thing by creating rt3070.bin, etc. :-(
+
 ---
- drivers/net/wireless/ath/ath9k/hw.c  |    4 +++-
- drivers/net/wireless/ath/ath9k/reg.h |    1 +
- 2 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2f82da5..8f3b602 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3490,7 +3490,9 @@ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
- 	if (gpio >= ah->caps.num_gpio_pins)
- 		return 0xffffffff;
- 
--	if (AR_SREV_9271(ah))
-+	if (AR_SREV_9300_20_OR_LATER(ah))
-+		return MS_REG_READ(AR9300, gpio) != 0;
-+	else if (AR_SREV_9271(ah))
- 		return MS_REG_READ(AR9271, gpio) != 0;
- 	else if (AR_SREV_9287_10_OR_LATER(ah))
- 		return MS_REG_READ(AR9287, gpio) != 0;
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index d56b4ea..d524891 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -954,6 +954,7 @@ enum {
- #define AR9285_NUM_GPIO                          12
- #define AR9287_NUM_GPIO                          11
- #define AR9271_NUM_GPIO                          16
-+#define AR9300_NUM_GPIO                          17
- 
- #define AR_GPIO_IN_OUT                           0x4048
- #define AR_GPIO_IN_VAL                           0x0FFFC000
--- 
-1.6.3.3
-
+Gertjan.
