@@ -1,50 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:59236 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753872Ab0DYULI (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:53107 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752482Ab0DCHtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Apr 2010 16:11:08 -0400
-Received: by pwj9 with SMTP id 9so7893083pwj.19
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Apr 2010 13:11:08 -0700 (PDT)
-Message-ID: <4BD4A1D8.8000203@lwfinger.net>
-Date: Sun, 25 Apr 2010 15:11:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Philippe De Muyter <phdm@macqel.be>
-CC: Matthew Garrett <mjg@redhat.com>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
-References: <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org> <20100419115329.GA5306@frolo.macqel> <20100419145107.GB8017@srcf.ucam.org> <20100419150050.GA28290@frolo.macqel> <20100419150627.GA10680@srcf.ucam.org> <20100424054210.GA23836@frolo.macqel> <20100424152107.GA13417@srcf.ucam.org> <20100424195630.GA15053@frolo.macqel> <20100424200218.GA16084@srcf.ucam.org> <20100425195058.GA12916@frolo.macqel>
-In-Reply-To: <20100425195058.GA12916@frolo.macqel>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 3 Apr 2010 03:49:41 -0400
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	<linux-ppp@vger.kernel.org>
+Subject: [PATCH 7/7] net/ppp_mppe: convert from arc4 to arc4blk
+Date: Sat,  3 Apr 2010 09:49:29 +0200
+Message-Id: <1270280969-11357-8-git-send-email-sebastian@breakpoint.cc>
+In-Reply-To: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
+References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/25/2010 02:50 PM, Philippe De Muyter wrote:
-> Hello Matthew,
-> 
-> On Sat, Apr 24, 2010 at 09:02:18PM +0100, Matthew Garrett wrote:
->> On Sat, Apr 24, 2010 at 09:56:30PM +0200, Philippe De Muyter wrote:
->>> On Sat, Apr 24, 2010 at 04:21:07PM +0100, Matthew Garrett wrote:
->>>> Does this laptop also have bluetooth?
->>>
->>> No
->>
->> Hm. I have no idea why hitting the key doesn't change the colour then, 
->> I'm afraid. On the other hand, it sounds like things are working now? 
->> The only thing I can suggest is attempting to clear the CMOS data in the 
->> BIOS menu and see if that changes things.
-> 
-> Just some more info :
-> 
-> when I power-on this laptop, the wifi led is red.  The wifi led stays
-> red while in the bios and in grub and during the very start of linux boot.
-> It becomes blue simultaneously with the displaying of the following message :
-> 
-> 	ACPI: Core revision 20100121
+ecb(arc4) is getting replaced by arc4 which is a blkcipher by itself
 
-This makes it clear that b43 is not controlling that LED as the change
-to blue on my system only occurs after the interface comes up under the
-control of ifup or NetworkManager.
+Cc: <linux-ppp@vger.kernel.org>
+Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ drivers/net/Kconfig    |    3 +--
+ drivers/net/ppp_mppe.c |   12 ++++++------
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
-Larry
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index dd9a09c..4b5dd86 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -3075,8 +3075,7 @@ config PPP_MPPE
+        depends on PPP && EXPERIMENTAL
+        select CRYPTO
+        select CRYPTO_SHA1
+-       select CRYPTO_ARC4
+-       select CRYPTO_ECB
++       select CRYPTO_ARC4BLK
+        ---help---
+          Support for the MPPE Encryption protocol, as employed by the
+ 	 Microsoft Point-to-Point Tunneling Protocol.
+diff --git a/drivers/net/ppp_mppe.c b/drivers/net/ppp_mppe.c
+index 6d1a1b8..4deaf70 100644
+--- a/drivers/net/ppp_mppe.c
++++ b/drivers/net/ppp_mppe.c
+@@ -42,7 +42,6 @@
+  *                    MOD_DEC_USAGE_COUNT/MOD_INC_USAGE_COUNT which are
+  *                    deprecated in 2.6
+  */
+-
+ #include <linux/err.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+@@ -55,6 +54,7 @@
+ #include <linux/ppp_defs.h>
+ #include <linux/ppp-comp.h>
+ #include <linux/scatterlist.h>
++#include <crypto/arc4.h>
+ 
+ #include "ppp_mppe.h"
+ 
+@@ -162,11 +162,11 @@ static void mppe_rekey(struct ppp_mppe_state * state, int initial_key)
+ {
+ 	struct scatterlist sg_in[1], sg_out[1];
+ 	struct blkcipher_desc desc = { .tfm = state->arc4 };
++	struct arc4_iv *iv = crypto_blkcipher_crt(state->arc4)->iv;
+ 
+ 	get_new_key_from_sha(state);
+ 	if (!initial_key) {
+-		crypto_blkcipher_setkey(state->arc4, state->sha1_digest,
+-					state->keylen);
++		arc4_setup_iv(iv, state->sha1_digest, state->keylen);
+ 		sg_init_table(sg_in, 1);
+ 		sg_init_table(sg_out, 1);
+ 		setup_sg(sg_in, state->sha1_digest, state->keylen);
+@@ -184,7 +184,7 @@ static void mppe_rekey(struct ppp_mppe_state * state, int initial_key)
+ 		state->session_key[1] = 0x26;
+ 		state->session_key[2] = 0x9e;
+ 	}
+-	crypto_blkcipher_setkey(state->arc4, state->session_key, state->keylen);
++	arc4_setup_iv(iv, state->session_key, state->keylen);
+ }
+ 
+ /*
+@@ -204,7 +204,7 @@ static void *mppe_alloc(unsigned char *options, int optlen)
+ 		goto out;
+ 
+ 
+-	state->arc4 = crypto_alloc_blkcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
++	state->arc4 = crypto_alloc_blkcipher("arc4", 0, CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(state->arc4)) {
+ 		state->arc4 = NULL;
+ 		goto out_free;
+@@ -712,7 +712,7 @@ static struct compressor ppp_mppe = {
+ static int __init ppp_mppe_init(void)
+ {
+ 	int answer;
+-	if (!(crypto_has_blkcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC) &&
++	if (!(crypto_has_blkcipher("arc4", 0, CRYPTO_ALG_ASYNC) &&
+ 	      crypto_has_hash("sha1", 0, CRYPTO_ALG_ASYNC)))
+ 		return -ENODEV;
+ 
+-- 
+1.6.6
+
