@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:3213 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751974Ab0DIFiR (ORCPT
+Received: from mail-qy0-f200.google.com ([209.85.221.200]:49309 "EHLO
+	mail-qy0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755075Ab0DCRA7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 01:38:17 -0400
-Message-ID: <4BBEBD47.9010405@gmail.com>
-Date: Fri, 09 Apr 2010 07:38:15 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sat, 3 Apr 2010 13:00:59 -0400
+Received: by qyk38 with SMTP id 38so1306989qyk.5
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 10:00:58 -0700 (PDT)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	'Luis Correia' <luis.f.correia@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
- driver.
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-4-git-send-email-gwingerde@gmail.com> <4BBE5879.8000304@openwrt.org> <4BBEB6E1.70300@gmail.com>
-In-Reply-To: <4BBEB6E1.70300@gmail.com>
+In-Reply-To: <4BB773A9.2070703@lwfinger.net>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	 <4BB7660A.3030900@lwfinger.net>
+	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	 <4BB773A9.2070703@lwfinger.net>
+Date: Sat, 3 Apr 2010 14:00:58 -0300
+Message-ID: <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
+Subject: Re: RTL 8187b - naughty behaviour
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/10 07:10, Gertjan van Wingerde wrote:
-> On 04/09/10 00:28, Felix Fietkau wrote:
->> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
->>> Only include definitions for RT chipsets that are also used inside the
->>> Ralink vendor drivers.
->>>
->>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>> ---
->>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
->>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
->>>  2 files changed, 3 insertions(+), 17 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> index 394c8e4..4bc7e09 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
->>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
->>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
->>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
->>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
->>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
->>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
->>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
->>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
->>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
->>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
->>>  	}
->>>  
->>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
->>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
->>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
->>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
->>> -	}
->>> -
->> Why are you removing support for RT3052? IMHO those writes were
->> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
-> 
-> That is because I have not been able to find them in any of the Ralink vendor drivers.
-> Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
-> as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
-> RT2872 devices, but even for them I haven't found these BBP initializations.
-> That's why I removed this part.
-> 
-> I have no problem re-instating this if I can find some evidence that these devices
-> actually exist.
-> 
+2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
+>>
+>> I have a MS-Win7 instalation on this Laptop and it works 100% even at
+>> longer distances than you report,even with walls in between.
+>>
+>> Will do the tcpperf test as soon as I get home. There are other with
+>> the same problem with my exact chip here in Brasil , that is because
+>> one of our leading Laptop vendors uses this config.
+>
+> What is the exact make and model of the device? It might be difficult
+> for me to get one in the US, but one of the rtl8187 developers lives in
+> Brazil. He should be able to find one.
+>
 
-Hold on, I seem to have found something here. And there are more things to be set, according
-to the code I found. However, that code is unclear with respect to how the chip identifies
-itself.
+It´s a POSITIVO R430L - Core 2 Duo 4GB RAM
 
-Is it possible for you to found out on you RT3052 WiSoC how the chip identifies itself
-(i.e. what is the contents of the MAC_CSR0 register)?
 
-Helmut, Luis, I know you guys have been experimenting with WiSoC devices as well, what kind
-of devices do you have, and how do these identify themselves?
+>> Does it matter that the USB port used in this setting is a connected
+>> to a USB HUB and then to the mother board?
+>
+> Is the hub passive, or is it powered? If the hub is good and not
+> underpowered, it should be OK.
+>
+>> More details and tests will come your way in a day or two ... will
+>> reinstall Mandriva 2010 and do some tests with older kernels.
+>
+> If you can download an openSUSE 11.2 Live CD and burn it, you would not
+> even have to do an installation. That one has a 2.6.31 kernel.
+>
+> Larry
 
----
-Gertjan
+Will do that for sure
 
+Rogerio
