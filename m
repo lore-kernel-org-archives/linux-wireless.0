@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43133 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753616Ab0DVDn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Apr 2010 23:43:58 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 20:43:58 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from qw-out-2122.google.com ([74.125.92.25]:47449 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755075Ab0DCRwu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Apr 2010 13:52:50 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so988444qwh.37
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 10:52:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19407.50660.739033.942199@gargle.gargle.HOWL>
-Date: Thu, 22 Apr 2010 09:13:32 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 7/9] ath9k_htc: Use USB reboot
+In-Reply-To: <4BB77C03.7040209@lwfinger.net>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	 <4BB7660A.3030900@lwfinger.net>
+	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	 <4BB773A9.2070703@lwfinger.net>
+	 <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
+	 <r2n917a57cb1004031004l392de507x6e655440d2509d0@mail.gmail.com>
+	 <4BB77C03.7040209@lwfinger.net>
+Date: Sat, 3 Apr 2010 14:52:49 -0300
+Message-ID: <t2t917a57cb1004031052l7b87006ft89540918bbff7c08@mail.gmail.com>
+Subject: Re: RTL 8187b - naughty behaviour
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So, apparently there is a USB reboot command
-that the target accepts. Using this instead of
-usb_reset_device() fixes the issue of "descriptor read error"
-that pops up on repeated load/unload.
+2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 04/03/2010 12:04 PM, Rogerio Luz Coelho wrote:
+>> 2010/4/3 Rogerio Luz Coelho <rogluz.news@gmail.com>:
+>>> 2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
+>>>> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
+>>>>>
+>>>>> I have a MS-Win7 instalation on this Laptop and it works 100% even at
+>>>>> longer distances than you report,even with walls in between.
+>>>>>
+>>>>> Will do the tcpperf test as soon as I get home. There are other with
+>>>>> the same problem with my exact chip here in Brasil , that is because
+>>>>> one of our leading Laptop vendors uses this config.
+>>>>
+>>>> What is the exact make and model of the device? It might be difficult
+>>>> for me to get one in the US, but one of the rtl8187 developers lives in
+>>>> Brazil. He should be able to find one.
+>>>>
+>>>
+>>> It愀 a POSITIVO R430L - Core 2 Duo 4GB RAM
+>
+> This sounds like a computer model. Does the RTL8187B have a separate
+> make/model?
+>
+>>>>> Does it matter that the USB port used in this setting is a connected
+>>>>> to a USB HUB and then to the mother board?
+>>>>
+>>>> Is the hub passive, or is it powered? If the hub is good and not
+>>>> underpowered, it should be OK.
+>>
+>> Have no idea ... how do I find this out?
+>
+> Does it have a +5 V power cord connected to the mains? If so, it is
+> powered. If not, it is passive and all devices that are plugged get
+> their power from the computer port. If the hub is internal, then it is
+> likely powered.
+>
+> Larry
+>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
+Inernal ... powered then
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index cee5feb..ce13e08 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -889,6 +889,17 @@ err_alloc:
- 	return ret;
- }
- 
-+static void ath9k_hif_usb_reboot(struct usb_device *udev)
-+{
-+	u32 cmd = 0xffffffff;
-+	int ret;
-+
-+	ret = usb_bulk_msg(udev, usb_sndbulkpipe(udev, USB_REG_OUT_PIPE),
-+			   &cmd, sizeof(cmd), NULL, HZ);
-+	if (ret)
-+		dev_err(&udev->dev, "ath9k_htc: USB reboot failed\n");
-+}
-+
- static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- {
- 	struct usb_device *udev = interface_to_usbdev(interface);
-@@ -903,7 +914,7 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- 	}
- 
- 	if (hif_dev->flags & HIF_USB_START)
--		usb_reset_device(udev);
-+		ath9k_hif_usb_reboot(udev);
- 
- 	kfree(hif_dev);
- 	dev_info(&udev->dev, "ath9k_htc: USB layer deinitialized\n");
--- 
-1.7.0.5
-
+Rogerio
