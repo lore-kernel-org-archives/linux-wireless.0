@@ -1,243 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:53105 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752417Ab0DCHtl (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:52578 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058Ab0DCVwc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 03:49:41 -0400
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	<linux-ppp@vger.kernel.org>
-Subject: [PATCH 2/7] crypto: add blkcipher implementation of ARC4
-Date: Sat,  3 Apr 2010 09:49:24 +0200
-Message-Id: <1270280969-11357-3-git-send-email-sebastian@breakpoint.cc>
-In-Reply-To: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
+	Sat, 3 Apr 2010 17:52:32 -0400
+Received: by pva18 with SMTP id 18so1266548pva.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 14:52:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <m2k43e72e891004012305ge1843cd8q7776683697b62490@mail.gmail.com>
+References: <m2p43e72e891004012145s2f344f7fo9b12044e9b895c06@mail.gmail.com>
+	<t2t43e72e891004012201xc3e1d823sb20e2b1d9a5460cd@mail.gmail.com>
+	<g2o43e72e891004012204n7e6988eax83e94c236d9ce5ba@mail.gmail.com>
+	<m2k43e72e891004012305ge1843cd8q7776683697b62490@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 3 Apr 2010 14:52:12 -0700
+Message-ID: <k2j43e72e891004031452w4e8f8732zc73ba1b08579878f@mail.gmail.com>
+Subject: Re: iwlagn unexpected AddBA Req
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a pure blkcipher implementation of ARC4. The internal state is
-saved within an IV which is supplied by the user. The goal is that the
-cipher does not change its internal state now, only the iv changes during
-encryption.
+On Thu, Apr 1, 2010 at 11:05 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Apr 1, 2010 at 10:04 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Thu, Apr 1, 2010 at 10:01 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>> On Thu, Apr 1, 2010 at 9:45 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>> [  117.491303] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
+>>>> [  178.467383] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
+>>>> [  239.447236] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
+>>>>
+>>>> I get a lof of these at spurious times against my WRT610N using
+>>>> today's wireless-testing on iwlagn.
+>>>
+>>> Here's a very simply way to reproduce this -- I ping my AP and keep
+>>> only that connection alive. I see this come up every minute. I see the
+>>> MCS rate fluctuate between 7 and 15 @ HT40 Short GI, and also 6
+>>> Mbit/s. This is on 5 GHz.
+>>
+>> OK I don't think this is coincidence this happens exactly every minute
+>> + 1 second:
+>>
+>> Apr  1 21:50:01 tux kernel: [  788.234773] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:51:02 tux kernel: [  849.212426] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:52:03 tux kernel: [  910.188457] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:53:04 tux kernel: [  971.163480] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:54:05 tux kernel: [ 1032.143746] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:55:06 tux kernel: [ 1093.151574] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:56:07 tux kernel: [ 1154.158165] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:57:08 tux kernel: [ 1215.163516] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:58:09 tux kernel: [ 1276.171801] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 21:59:10 tux kernel: [ 1337.177613] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 22:00:11 tux kernel: [ 1398.186640] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 22:01:12 tux kernel: [ 1459.193255] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 22:02:13 tux kernel: [ 1520.199135] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>> Apr  1 22:03:14 tux kernel: [ 1581.204850] unexpected AddBA Req from
+>> 00:22:6b:56:fd:e9 on tid 0
+>
+> Hm, I had a feeling this was firmware related so I just downloaded the
+> latest, turns out I have the latest:
+>
+> mcgrof@tux ~/Downloads/firmware/iwlwifi-4965-ucode-228.61.2.24 $ ls
+> iwlwifi-4965-2.ucode  LICENSE.iwlwifi-4965-ucode  README.iwlwifi-4965-ucode
+> mcgrof@tux ~/Downloads/firmware/iwlwifi-4965-ucode-228.61.2.24 $ sudo
+> cp iwlwifi-4965-2.ucode /lib/firmware/^C
+> mcgrof@tux ~/Downloads/firmware/iwlwifi-4965-ucode-228.61.2.24 $
+> sha1sum iwlwifi-4965-2.ucode
+> 86b4ff04133b2b44412833234dc1dfbb502a4b7a  iwlwifi-4965-2.ucode
+> mcgrof@tux ~/Downloads/firmware/iwlwifi-4965-ucode-228.61.2.24 $
+> sha1sum /lib/firmware/iwlwifi-4965-2.ucode
+> 86b4ff04133b2b44412833234dc1dfbb502a4b7a  /lib/firmware/iwlwifi-4965-2.ucode
+>
+> Apr  1 22:45:06 tux kernel: [    4.975607] iwlagn 0000:03:00.0: irq 32
+> for MSI/MSI-X
+> Apr  1 22:45:06 tux kernel: [    4.976734] iwlagn 0000:03:00.0:
+> firmware: requesting iwlwifi-4965-2.ucode
+> Apr  1 22:45:06 tux kernel: [    5.008333] iwlagn 0000:03:00.0: loaded
+> firmware version 228.61.2.24
+>
+> Sometimes, I get into a loop where I just get these:
+>
+> 1270187820.132338: wlan14 (phy #0): deauth 00:22:6b:56:fd:e9 ->
+> 00:21:5c:02:1f:db reason 15: 4-way handshake timeout
+>
+> I get this against 2.4 GHz and 5 Ghz, the 2 GHz band is configured to
+> be 802.11g only. 5 GHz is configured for HT40 5 GHz only.
 
-Cc: <linux-ppp@vger.kernel.org>
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- crypto/Kconfig   |   13 +++++
- crypto/Makefile  |    1 +
- crypto/arc4blk.c |  150 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- crypto/testmgr.h |    3 +-
- 4 files changed, 166 insertions(+), 1 deletions(-)
- create mode 100644 crypto/arc4blk.c
+Today I also got some firmware crashes:
 
-diff --git a/crypto/Kconfig b/crypto/Kconfig
-index 81c185a..be9add2 100644
---- a/crypto/Kconfig
-+++ b/crypto/Kconfig
-@@ -570,6 +570,19 @@ config CRYPTO_ARC4
- 	  WEP, but it should not be for other purposes because of the
- 	  weakness of the algorithm.
- 
-+config CRYPTO_ARC4BLK
-+	tristate "ARC4 cipher algorithm (alternative implemenation)"
-+	select CRYPTO_BLKCIPHER
-+	help
-+	  ARC4 cipher algorithm. This is an alternative ARC4 implementation which
-+	  will replace the other ARC4 implementation once all in-kernel users are
-+	  converted.
-+
-+	  ARC4 is a stream cipher using keys ranging from 8 bits to 2048
-+	  bits in length.  This algorithm is required for driver-based
-+	  WEP, but it should not be for other purposes because of the
-+	  weakness of the algorithm.
-+
- config CRYPTO_BLOWFISH
- 	tristate "Blowfish cipher algorithm"
- 	select CRYPTO_ALGAPI
-diff --git a/crypto/Makefile b/crypto/Makefile
-index 1f15112..11300e3 100644
---- a/crypto/Makefile
-+++ b/crypto/Makefile
-@@ -68,6 +68,7 @@ obj-$(CONFIG_CRYPTO_CAMELLIA) += camellia.o
- obj-$(CONFIG_CRYPTO_CAST5) += cast5.o
- obj-$(CONFIG_CRYPTO_CAST6) += cast6.o
- obj-$(CONFIG_CRYPTO_ARC4) += arc4cip.o
-+obj-$(CONFIG_CRYPTO_ARC4BLK) += arc4blk.o
- obj-$(CONFIG_CRYPTO_TEA) += tea.o
- obj-$(CONFIG_CRYPTO_KHAZAD) += khazad.o
- obj-$(CONFIG_CRYPTO_ANUBIS) += anubis.o
-diff --git a/crypto/arc4blk.c b/crypto/arc4blk.c
-new file mode 100644
-index 0000000..bdf938a
---- /dev/null
-+++ b/crypto/arc4blk.c
-@@ -0,0 +1,150 @@
-+/*
-+ * Cryptographic API
-+ *
-+ * ARC4 Cipher Algorithm
-+ *
-+ * Jon Oberheide <jon@oberheide.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ */
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <crypto/algapi.h>
-+#include <crypto/arc4.h>
-+
-+#define ARC4_MIN_KEY_SIZE	1
-+#define ARC4_MAX_KEY_SIZE	256
-+#define ARC4_BLOCK_SIZE		1
-+
-+static int arc4_set_key(struct crypto_tfm *tfm, const u8 *in_key,
-+			unsigned int key_len)
-+{
-+	/*
-+	 * ARC4 is special: The user should supply an IV as struct arc4_iv and
-+	 * fill either the key or the iv.
-+	 */
-+	return 0;
-+}
-+
-+static void arc4_key_to_iv(const u8 *in_key, u32 key_len, struct arc4_iv *iv)
-+{
-+	int i, j = 0, k = 0;
-+
-+	iv->iv.x = 1;
-+	iv->iv.y = 0;
-+
-+	for (i = 0; i < 256; i++)
-+		iv->iv.S[i] = i;
-+
-+	for (i = 0; i < 256; i++)
-+	{
-+		u8 a = iv->iv.S[i];
-+		j = (j + in_key[k] + a) & 0xff;
-+		iv->iv.S[i] = iv->iv.S[j];
-+		iv->iv.S[j] = a;
-+		if (++k >= key_len)
-+			k = 0;
-+	}
-+}
-+
-+static void arc4_ivsetup(struct arc4_iv *iv)
-+{
-+	struct arc4_iv tmp_iv;
-+
-+	if (iv->type == ARC4_TYPE_IV)
-+		return;
-+
-+	memcpy(&tmp_iv, iv, sizeof(tmp_iv));
-+	arc4_key_to_iv(tmp_iv.key.key, tmp_iv.key.key_len, iv);
-+	iv->type = ARC4_TYPE_IV;
-+}
-+
-+static int arc4_crypt(struct blkcipher_desc *desc, struct scatterlist *dst,
-+		struct scatterlist *src, unsigned int nbytes)
-+{
-+	struct blkcipher_walk walk;
-+	struct arc4_iv *aiv;
-+	u8 *S;
-+	u8 x;
-+	u8 y;
-+	u8 a, b;
-+	int ret;
-+
-+	blkcipher_walk_init(&walk, dst, src, nbytes);
-+	ret = blkcipher_walk_virt(desc, &walk);
-+	if (ret)
-+		return ret;
-+
-+	aiv = (struct arc4_iv *)walk.iv;
-+	arc4_ivsetup(aiv);
-+
-+	S = aiv->iv.S;
-+	x = aiv->iv.x;
-+	y = aiv->iv.y;
-+
-+	while (walk.nbytes) {
-+		u8 *in = walk.src.virt.addr;
-+		u8 *out = walk.dst.virt.addr;
-+		u32 i;
-+
-+		for (i = 0; i < walk.nbytes; i++) {
-+			a = S[x];
-+			y = (y + a) & 0xff;
-+			b = S[y];
-+			S[x] = b;
-+			S[y] = a;
-+			x = (x + 1) & 0xff;
-+			*out = *in ^ S[(a + b) & 0xff];
-+
-+			in++;
-+			out++;
-+		}
-+		ret = blkcipher_walk_done(desc, &walk, 0);
-+		WARN_ON(ret < 0);
-+	}
-+
-+	aiv->iv.x = x;
-+	aiv->iv.y = y;
-+	return ret;
-+}
-+
-+static struct crypto_alg arc4_alg = {
-+	.cra_name		=	"arc4",
-+	.cra_priority		=	100,
-+	.cra_flags		=	CRYPTO_ALG_TYPE_BLKCIPHER,
-+	.cra_blocksize		=	ARC4_BLOCK_SIZE,
-+	.cra_ctxsize		=	0,
-+	.cra_type		=	&crypto_blkcipher_type,
-+	.cra_alignmask		=	3,
-+	.cra_module		=	THIS_MODULE,
-+	.cra_list		=	LIST_HEAD_INIT(arc4_alg.cra_list),
-+	.cra_u			=	{ .blkcipher = {
-+	.min_keysize		=	0,
-+	.max_keysize		=	0,
-+	.ivsize			=	sizeof(struct arc4_iv),
-+	.setkey			=	arc4_set_key,
-+	.encrypt		=	arc4_crypt,
-+	.decrypt		=	arc4_crypt } }
-+};
-+
-+static int __init arc4_init(void)
-+{
-+	return crypto_register_alg(&arc4_alg);
-+}
-+
-+static void __exit arc4_exit(void)
-+{
-+	crypto_unregister_alg(&arc4_alg);
-+}
-+
-+module_init(arc4_init);
-+module_exit(arc4_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("ARC4 Cipher Algorithm");
-+MODULE_AUTHOR("Jon Oberheide <jon@oberheide.org>");
-+MODULE_ALIAS("arc4");
-diff --git a/crypto/testmgr.h b/crypto/testmgr.h
-index fb76517..423cf86 100644
---- a/crypto/testmgr.h
-+++ b/crypto/testmgr.h
-@@ -24,7 +24,8 @@
- #define MAX_TAP			8
- 
- #define MAX_KEYLEN		56
--#define MAX_IVLEN		32
-+/* sizeof arc4_iv */
-+#define MAX_IVLEN		260
- 
- struct hash_testvec {
- 	/* only used with keyed hash algorithms */
--- 
-1.6.6
+[74421.540175] No probe response from AP 00:22:6b:56:fd:e9 after
+500ms, disconnecting.
+[74421.542633] iwlagn 0000:03:00.0: Microcode SW error detected.
+Restarting 0x2000000.
+[74421.542811] iwlagn 0000:03:00.0: Start IWL Error Log Dump:
+[74421.542930] iwlagn 0000:03:00.0: Status: 0x000213E4, count: 5
+[74421.543215] iwlagn 0000:03:00.0: Desc
+Time       data1      data2      line
+[74421.543356] iwlagn 0000:03:00.0: SYSASSERT                    (#05)
+0000001863 0x00000001 0x00000000 1384
+[74421.543494] iwlagn 0000:03:00.0: blink1  blink2  ilink1  ilink2
+[74421.543615] iwlagn 0000:03:00.0: 0x0217A 0x021C2 0x006DE 0x00000
+[74421.543735] iwlagn 0000:03:00.0: FH register values:
+[74421.543890] iwlagn 0000:03:00.0:
+FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X03c6a400
+[74421.544061] iwlagn 0000:03:00.0:
+FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0016fb80
+[74421.544233] iwlagn 0000:03:00.0:
+FH_RSCSR_CHNL0_WPTR: 0X00000008
+[74421.544404] iwlagn 0000:03:00.0:
+FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819004
+[74421.544574] iwlagn 0000:03:00.0:
+FH_MEM_RSSR_SHARED_CTRL_REG: 0X0000003c
+[74421.544743] iwlagn 0000:03:00.0:
+FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+[74421.544914] iwlagn 0000:03:00.0:
+FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+[74421.545080] iwlagn 0000:03:00.0:
+FH_TSSR_TX_STATUS_REG: 0X07ff0002
+[74421.545251] iwlagn 0000:03:00.0:
+FH_TSSR_TX_ERROR_REG: 0X00000000
+[74421.545469] iwlagn 0000:03:00.0: Start IWL Event Log Dump: display
+last 20 entries
+[74421.545645] iwlagn 0000:03:00.0: EVT_LOGT:0000000267:0x0218001c:0218
+[74421.545798] iwlagn 0000:03:00.0: EVT_LOGT:0000000269:0x00000021:0217
+[74421.545950] iwlagn 0000:03:00.0: EVT_LOGT:0000000272:0x0219001c:0218
+[74421.546100] iwlagn 0000:03:00.0: EVT_LOGT:0000000274:0x00000021:0217
+[74421.546251] iwlagn 0000:03:00.0: EVT_LOGT:0000000276:0x021a001c:0218
+[74421.546403] iwlagn 0000:03:00.0: EVT_LOGT:0000000278:0x00000021:0217
+[74421.546556] iwlagn 0000:03:00.0: EVT_LOGT:0000000281:0x021b001c:0218
+[74421.546706] iwlagn 0000:03:00.0: EVT_LOGT:0000000283:0x00000021:0217
+[74421.546857] iwlagn 0000:03:00.0: EVT_LOGT:0000000286:0x021c001c:0218
+[74421.547007] iwlagn 0000:03:00.0: EVT_LOGT:0000000288:0x00000021:0217
+[74421.547158] iwlagn 0000:03:00.0: EVT_LOGT:0000000291:0x021d001c:0218
+[74421.547307] iwlagn 0000:03:00.0: EVT_LOGT:0000000292:0x00000021:0217
+[74421.547460] iwlagn 0000:03:00.0: EVT_LOGT:0000000295:0x021e001c:0218
+[74421.547611] iwlagn 0000:03:00.0: EVT_LOGT:0000000297:0x00000021:0217
+[74421.547762] iwlagn 0000:03:00.0: EVT_LOGT:0000000300:0x021f001c:0218
+[74421.547913] iwlagn 0000:03:00.0: EVT_LOGT:0000000302:0x00000021:0217
+[74421.548060] iwlagn 0000:03:00.0: EVT_LOGT:0000000305:0x0220001c:0218
+[74421.548212] iwlagn 0000:03:00.0: EVT_LOGT:0000000306:0x00000021:0217
+[74421.548363] iwlagn 0000:03:00.0: EVT_LOGT:0000001862:0x0473004e:0401
+[74421.548513] iwlagn 0000:03:00.0: EVT_LOGT:0000001866:0x00000000:0125
+[74421.548669] iwlagn 0000:03:00.0: Command REPLY_ADD_STA failed: FW Error
+[74421.548794] iwlagn 0000:03:00.0: Adding station 00:22:6b:56:fd:e9 failed.
+[74422.040173] iwlagn 0000:03:00.0: Error sending
+REPLY_TX_LINK_QUALITY_CMD: time out after 500ms.
+[74422.540164] iwlagn 0000:03:00.0: Error sending REPLY_ADD_STA: time
+out after 500ms.
+[74422.540310] iwlagn 0000:03:00.0: Adding station ff:ff:ff:ff:ff:ff failed.
 
+  Luis
