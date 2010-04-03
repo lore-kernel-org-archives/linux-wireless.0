@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42257 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752602Ab0DVJHq (ORCPT
+Received: from mail-qy0-f200.google.com ([209.85.221.200]:44868 "EHLO
+	mail-qy0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755075Ab0DCRES convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 05:07:46 -0400
-Subject: Re: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based
- on ps-qos network latency
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1271926547.6205.8870.camel@wimaxnb.nmp.nokia.com>
-References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271688177.23671.1.camel@jlt3.sipsolutions.net>
-	 <1271740120.6205.5733.camel@wimaxnb.nmp.nokia.com>
-	 <1271925939.3605.7.camel@jlt3.sipsolutions.net>
-	 <1271926547.6205.8870.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Apr 2010 11:07:36 +0200
-Message-ID: <1271927257.3605.18.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 3 Apr 2010 13:04:18 -0400
+Received: by qyk38 with SMTP id 38so1308334qyk.5
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 10:04:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	 <4BB7660A.3030900@lwfinger.net>
+	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	 <4BB773A9.2070703@lwfinger.net>
+	 <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
+Date: Sat, 3 Apr 2010 14:04:17 -0300
+Message-ID: <r2n917a57cb1004031004l392de507x6e655440d2509d0@mail.gmail.com>
+Subject: Re: RTL 8187b - naughty behaviour
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-22 at 11:55 +0300, Juuso Oikarinen wrote:
+2010/4/3 Rogerio Luz Coelho <rogluz.news@gmail.com>:
+> 2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
+>> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
+>>>
+>>> I have a MS-Win7 instalation on this Laptop and it works 100% even at
+>>> longer distances than you report,even with walls in between.
+>>>
+>>> Will do the tcpperf test as soon as I get home. There are other with
+>>> the same problem with my exact chip here in Brasil , that is because
+>>> one of our leading Laptop vendors uses this config.
+>>
+>> What is the exact make and model of the device? It might be difficult
+>> for me to get one in the US, but one of the rtl8187 developers lives in
+>> Brazil. He should be able to find one.
+>>
+>
+> It´s a POSITIVO R430L - Core 2 Duo 4GB RAM
+>
+>
+>>> Does it matter that the USB port used in this setting is a connected
+>>> to a USB HUB and then to the mother board?
+>>
+>> Is the hub passive, or is it powered? If the hub is good and not
+>> underpowered, it should be OK.
 
-> > > Well you have to see where I'm coming from - I must come up with a way
-> > > to tune the dynamic ps timeout value from user-space in a way that is
-> > > agreeable with others, and that is somewhat future-proof.
-> > 
-> > Well I personally think that's your first mistake ;)
-> > 
-> > Why does userspace care about the dynamic PS timeout value to start
-> > with? All it should care about is the latency with which it can react to
-> > network packets, no?
-> > 
-> > > That said, obviously the network latency should be tuned as, well, the
-> > > expected network latency. In this phase though, there are no other
-> > > parameters affected by the network latency, so the result is quite
-> > > obvious - your fear will realise itself ;)
-> > 
-> > But there are, like the max sleep period in # of beacons.
-> 
-> Yeah, okay there is. You probably noticed I posted a version of the
-> patches with "saner" latency-values for this reason.
+Have no idea ... how do I find this out?
 
-Still I think you should say why you need to actually tune the PS
-timeout value directly? I can't see how your high-level design says "set
-dynamic PS timeout to 100ms" rather than "make sure that while the user
-is operating the device, there's no delay of more than 50ms" or
-something like that?
-
-johannes
-
+Rogerio
