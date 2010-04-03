@@ -1,99 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:23325 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752159Ab0DAEiH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 00:38:07 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 31 Mar 2010 21:38:07 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19380.10220.955466.246781@gargle.gargle.HOWL>
-Date: Thu, 1 Apr 2010 10:28:20 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] ath: Add a bus type field
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:53101 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752379Ab0DCHtk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Apr 2010 03:49:40 -0400
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: [PATCH 4/7] net/wireless: switch lib80211_crypt_tkip from arc4 to arc4blk
+Date: Sat,  3 Apr 2010 09:49:26 +0200
+Message-Id: <1270280969-11357-5-git-send-email-sebastian@breakpoint.cc>
+In-Reply-To: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
+References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be used to store the bus types ( AHB/PCI/USB ).
+ecb(arc4) is getting replaced by arc4 which is a blkcipher by itself. The
+required selects are now pulled in by LIB80211_CRYPT_TKIP instead of
+selecting it by every driver.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 ---
- drivers/net/wireless/ath/ath.h                |   13 ++++++++++---
- drivers/net/wireless/ath/ath9k/ahb.c          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    1 +
- drivers/net/wireless/ath/ath9k/pci.c          |    1 +
- 4 files changed, 13 insertions(+), 3 deletions(-)
+ net/wireless/Kconfig               |    2 ++
+ net/wireless/lib80211_crypt_tkip.c |   11 +++++++----
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 71fc960..1fbf6b1 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -48,6 +48,12 @@ enum ath_device_state {
- 	ATH_HW_INITIALIZED,
- };
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 90e93a5..119f1eb 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -147,6 +147,8 @@ config LIB80211_CRYPT_CCMP
+ 	tristate
  
-+enum ath_bus_type {
-+	ATH_PCI,
-+	ATH_AHB,
-+	ATH_USB,
-+};
-+
- struct reg_dmn_pair_mapping {
- 	u16 regDmnEnum;
- 	u16 reg_5ghz_ctl;
-@@ -73,9 +79,10 @@ struct ath_ops {
- struct ath_common;
+ config LIB80211_CRYPT_TKIP
++	select CRYPTO
++	select CRYPTO_ARC4BLK
+ 	tristate
  
- struct ath_bus_ops {
--	void		(*read_cachesize)(struct ath_common *common, int *csz);
--	bool		(*eeprom_read)(struct ath_common *common, u32 off, u16 *data);
--	void		(*bt_coex_prep)(struct ath_common *common);
-+	enum ath_bus_type ath_bus_type;
-+	void (*read_cachesize)(struct ath_common *common, int *csz);
-+	bool (*eeprom_read)(struct ath_common *common, u32 off, u16 *data);
-+	void (*bt_coex_prep)(struct ath_common *common);
- };
+ config LIB80211_DEBUG
+diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
+index c362873..089f84f 100644
+--- a/net/wireless/lib80211_crypt_tkip.c
++++ b/net/wireless/lib80211_crypt_tkip.c
+@@ -28,6 +28,7 @@
+ #include <net/iw_handler.h>
  
- struct ath_common {
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index ca4994f..85fdd26 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -47,6 +47,7 @@ static bool ath_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
+ #include <linux/crypto.h>
++#include <crypto/arc4.h>
+ #include <linux/crc32.h>
+ 
+ #include <net/lib80211.h>
+@@ -94,7 +95,7 @@ static void *lib80211_tkip_init(int key_idx)
+ 
+ 	priv->key_idx = key_idx;
+ 
+-	priv->tx_tfm_arc4 = crypto_alloc_blkcipher("ecb(arc4)", 0,
++	priv->tx_tfm_arc4 = crypto_alloc_blkcipher("arc4", 0,
+ 						CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->tx_tfm_arc4)) {
+ 		printk(KERN_DEBUG "lib80211_crypt_tkip: could not allocate "
+@@ -112,7 +113,7 @@ static void *lib80211_tkip_init(int key_idx)
+ 		goto fail;
+ 	}
+ 
+-	priv->rx_tfm_arc4 = crypto_alloc_blkcipher("ecb(arc4)", 0,
++	priv->rx_tfm_arc4 = crypto_alloc_blkcipher("arc4", 0,
+ 						CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->rx_tfm_arc4)) {
+ 		printk(KERN_DEBUG "lib80211_crypt_tkip: could not allocate "
+@@ -360,6 +361,7 @@ static int lib80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
+ {
+ 	struct lib80211_tkip_data *tkey = priv;
+ 	struct blkcipher_desc desc = { .tfm = tkey->tx_tfm_arc4 };
++	struct arc4_iv *iv = crypto_blkcipher_crt(tkey->tx_tfm_arc4)->iv;
+ 	int len;
+ 	u8 rc4key[16], *pos, *icv;
+ 	u32 crc;
+@@ -392,7 +394,7 @@ static int lib80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
+ 	icv[2] = crc >> 16;
+ 	icv[3] = crc >> 24;
+ 
+-	crypto_blkcipher_setkey(tkey->tx_tfm_arc4, rc4key, 16);
++	arc4_setup_iv(iv, rc4key, 16);
+ 	sg_init_one(&sg, pos, len + 4);
+ 	return crypto_blkcipher_encrypt(&desc, &sg, &sg, len + 4);
  }
+@@ -414,6 +416,7 @@ static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
+ {
+ 	struct lib80211_tkip_data *tkey = priv;
+ 	struct blkcipher_desc desc = { .tfm = tkey->rx_tfm_arc4 };
++	struct arc4_iv *iv = crypto_blkcipher_crt(tkey->rx_tfm_arc4)->iv;
+ 	u8 rc4key[16];
+ 	u8 keyidx, *pos;
+ 	u32 iv32;
+@@ -485,7 +488,7 @@ static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
  
- static struct ath_bus_ops ath_ahb_bus_ops  = {
-+	.ath_bus_type = ATH_AHB,
- 	.read_cachesize = ath_ahb_read_cachesize,
- 	.eeprom_read = ath_ahb_eeprom_read,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 90cfd90..e268d45 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -287,6 +287,7 @@ static bool ath_usb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- }
+ 	plen = skb->len - hdr_len - 12;
  
- static const struct ath_bus_ops ath9k_usb_bus_ops = {
-+	.ath_bus_type = ATH_USB,
- 	.read_cachesize = ath_usb_read_cachesize,
- 	.eeprom_read = ath_usb_eeprom_read,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 9441c67..1ec836c 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -88,6 +88,7 @@ static void ath_pci_bt_coex_prep(struct ath_common *common)
- }
- 
- static const struct ath_bus_ops ath_pci_bus_ops = {
-+	.ath_bus_type = ATH_PCI,
- 	.read_cachesize = ath_pci_read_cachesize,
- 	.eeprom_read = ath_pci_eeprom_read,
- 	.bt_coex_prep = ath_pci_bt_coex_prep,
+-	crypto_blkcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
++	arc4_setup_iv(iv, rc4key, 16);
+ 	sg_init_one(&sg, pos, plen + 4);
+ 	if (crypto_blkcipher_decrypt(&desc, &sg, &sg, plen + 4)) {
+ 		if (net_ratelimit()) {
 -- 
-1.7.0.3
+1.6.6
 
