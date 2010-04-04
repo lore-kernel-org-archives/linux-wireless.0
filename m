@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:4457 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758629Ab0DPVTI (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:35648 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753988Ab0DDAUg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:19:08 -0400
-Message-ID: <4BC8D44A.2040903@gmail.com>
-Date: Fri, 16 Apr 2010 23:19:06 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sat, 3 Apr 2010 20:20:36 -0400
+Received: by wwb17 with SMTP id 17so1937084wwb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 17:20:34 -0700 (PDT)
 MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] wireless: rt2x00: rt2800usb: delete Allwin devices
-References: <1271413005-2509-1-git-send-email-xose.vazquez@gmail.com> <u2ja32f33a41004160417jfcf1db3bw62d464405fead085@mail.gmail.com> <20100416134326.GD8554@tuxdriver.com>
-In-Reply-To: <20100416134326.GD8554@tuxdriver.com>
+In-Reply-To: <4BB773A9.2070703@lwfinger.net>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	 <4BB7660A.3030900@lwfinger.net>
+	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	 <4BB773A9.2070703@lwfinger.net>
+Date: Sun, 4 Apr 2010 01:20:34 +0100
+Message-ID: <u2o3ace41891004031720ha68d9367m4be78c2a5d850f89@mail.gmail.com>
+Subject: Re: RTL 8187b - naughty behaviour
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Rogerio Luz Coelho <rogluz.news@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/10 15:43, John W. Linville wrote:
-> On Fri, Apr 16, 2010 at 01:17:07PM +0200, Ivo Van Doorn wrote:
->> On Fri, Apr 16, 2010 at 12:16 PM, Xose Vazquez Perez
->> <xose.vazquez@gmail.com> wrote:
->>> Common sense says:
->>> (0x8516, 0x2070) is RT2070
->>> (0x8516, 0x2770) is RT2770
->>> (0x8516, 0x2870) is RT2870
->>> [...]
->>>
->>> but Allwin doesn't sell USB dongles nor PCI boards, only voip-routers
->>> http://www.allwin.com.tw/eng/modules/tinyd0/content/index.php?id=1
->>
->> But how about the case where the company name is wrong and the ID's are valid?
->> That means we only should update the comment, rather then deleting the ID's.
-> 
-> Or the case where someone ports Linux to those voip routers...
+On Sat, Apr 3, 2010 at 5:58 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+<snipped>
+> What is the exact make and model of the device? It might be difficult
+> for me to get one in the US, but one of the rtl8187 developers lives in
+> Brazil. He should be able to find one.
 
-And finally, these devices are still mentioned in the Ralink windows driver,
-so we must assume that they actually exist.
+Herton might be able to get the exact model/etc from Brazil so it is
+worth providing the vendor details.
 
-However, the common sense approach may be appropriate, so moving these devices
-to the correct section does seem okay.
-
----
-Gertjan.
+I am also wondering if it would help changing the rate-changing
+algorithm, seeing as Minstrel became the default around 2.6.32, and
+there has been a couple of reports about minstrel not working as well
+as pid for weak APs. (
+https://bugzilla.kernel.org/show_bug.cgi?id=14168 )
