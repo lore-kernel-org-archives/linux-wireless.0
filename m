@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 30.mail-out.ovh.net ([213.186.62.213]:59331 "HELO
-	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753603Ab0DIUiI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 16:38:08 -0400
-Message-ID: <4BBF902B.7040504@free.fr>
-Date: Fri, 09 Apr 2010 22:38:03 +0200
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Received: from nbd.name ([88.198.39.176]:57212 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753167Ab0DDSHX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Apr 2010 14:07:23 -0400
+Message-ID: <4BB8D54F.7060906@openwrt.org>
+Date: Sun, 04 Apr 2010 11:07:11 -0700
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Joerg Pommnitz <pommnitz@yahoo.com>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ath9k-devel] ath9k/mac80211 and 802.11n in IBSS mode
-References: <382964.83589.qm@web51407.mail.re2.yahoo.com> <1270822655.3870.21.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1270822655.3870.21.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Max Filippov <jcmvbkbc@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix ieee80211_meshconf_ie::meshconf_cap type
+ to be u16
+References: <1270375964-23668-1-git-send-email-jcmvbkbc@gmail.com>
+In-Reply-To: <1270375964-23668-1-git-send-email-jcmvbkbc@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg a écrit :
-> On Fri, 2010-04-09 at 03:03 -0700, Joerg Pommnitz wrote:
->   
->> Hello all,
->> the Atheros Windows drivers provide an option to enable 802.11n mode
->> for IBSS networks. I did not find any information in this regard for
->> mac80211 based drivers. So, is this supported and how would I enable
->> this feature? And, btw. what exactly would this mean?
->>     
->
-> Benoit was working on this, but his last patchset missed the ability to
-> actually configure this when requesting an IBSS join.
->
-> johannes
->   
-Exactly :-). I need to dig into iw source code and understand a bit of 
-nl80211 before...
-There was some problem with rate control as well that might be fixed by 
-minstrel_ht as well.
+On 2010-04-04 3:12 AM, Max Filippov wrote:
+> According to the current 802.11s draft mesh capability field
+> is 16 bits wide.
+> 
+> Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+> ---
+>  include/linux/ieee80211.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> index 1998495..910b4bc 100644
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -604,7 +604,7 @@ struct ieee80211_meshconf_ie {
+>  	u8 meshconf_synch;
+>  	u8 meshconf_auth;
+>  	u8 meshconf_form;
+> -	u8 meshconf_cap;
+> +	u16 meshconf_cap;
+Shouldn't that be __le16? You probably also have to add le16_to_cpu in
+the place that accesses this field, otherwise this introduces an endian bug.
 
-Regards,
-Benoit
-
+- Felix
