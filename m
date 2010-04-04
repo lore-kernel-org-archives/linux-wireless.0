@@ -1,54 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46842 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343Ab0DTGNq (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:42216 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751599Ab0DDTuH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 02:13:46 -0400
-Subject: Re: Google Summer of Code 2010 - Please resolve duplicates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Greg KH <greg@kroah.com>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Witold Sowa <witold.sowa@gmail.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-In-Reply-To: <4BCCB176.3060206@gmail.com>
-References: <4BCCB176.3060206@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Apr 2010 08:13:38 +0200
-Message-ID: <1271744018.3578.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 4 Apr 2010 15:50:07 -0400
+Received: by fxm27 with SMTP id 27so588024fxm.28
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Apr 2010 12:50:06 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@openwrt.org>, Max Filippov <jcmvbkbc@gmail.com>
+Subject: [PATCH] mac80211: fix ieee80211_meshconf_ie::meshconf_cap type to be __le16
+Date: Sun,  4 Apr 2010 23:50:01 +0400
+Message-Id: <1270410601-9177-1-git-send-email-jcmvbkbc@gmail.com>
+In-Reply-To: <201004042339.35467.jcmvbkbc@gmail.com>
+References: <201004042339.35467.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-19 at 12:39 -0700, Till Kamppeter wrote:
+According to the current 802.11s draft mesh capability field
+is 16 bits wide.
 
-> two students who applied for your projects have applied also for another 
-> organization's project and they got accepted by us and by the other 
-> organization.
+Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+---
+ include/linux/ieee80211.h |    2 +-
+ net/mac80211/mesh.c       |   25 ++++++++++++++-----------
+ 2 files changed, 15 insertions(+), 12 deletions(-)
 
-I'm confused. How do I figure out which ones?
-
-> Until Wednesday Google wants these situation to be resolved until 
-> Wednesday April 21, 17:00 UTC. Please contact the students and/or the 
-> organization to agree on one of the project for each student.
-> 
-> In addition, the ranking of the students (to decide who actually gets 
-> our slots) and the mentor assignments have to be finalized by the same 
-> date and time.
-> 
-> Duplicates not be resolved until then will be resolved on an IRC meeting 
-> on Wednesday April 21 at 19:00 UTC. The meeting takes place in the #gsoc 
-> channel on Freenode.
-> 
-> Please mail me if a mentor needs to be (re)assigned.
-
-Oh wow so I wasn't paying attention much after the initial ranking.
-
-I'm certainly not qualified to mentor the ACL project, would somebody
-else do that?
-
-johannes
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 1998495..6e8d436 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -604,7 +604,7 @@ struct ieee80211_meshconf_ie {
+ 	u8 meshconf_synch;
+ 	u8 meshconf_auth;
+ 	u8 meshconf_form;
+-	u8 meshconf_cap;
++	__le16 meshconf_cap;
+ } __attribute__ ((packed));
+ 
+ /**
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 61080c5..fead4af 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -99,7 +99,7 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie)
+ {
+ 	return (ie->mesh_config->meshconf_cap &
+-	    MESHCONF_CAPAB_ACCEPT_PLINKS) != 0;
++	    cpu_to_le16(MESHCONF_CAPAB_ACCEPT_PLINKS)) != 0;
+ }
+ 
+ /**
+@@ -216,6 +216,7 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
++	struct ieee80211_meshconf_ie *meshconf;
+ 	u8 *pos;
+ 	int len, i, rate;
+ 	u8 neighbors;
+@@ -259,33 +260,35 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 	*pos++ = WLAN_EID_MESH_CONFIG;
+ 	*pos++ = sizeof(struct ieee80211_meshconf_ie);
+ 
++	meshconf = (struct ieee80211_meshconf_ie *)pos;
++	pos += sizeof(struct ieee80211_meshconf_ie);
++
+ 	/* Active path selection protocol ID */
+-	*pos++ = sdata->u.mesh.mesh_pp_id;
++	meshconf->meshconf_psel = sdata->u.mesh.mesh_pp_id;
+ 
+ 	/* Active path selection metric ID   */
+-	*pos++ = sdata->u.mesh.mesh_pm_id;
++	meshconf->meshconf_pmetric = sdata->u.mesh.mesh_pm_id;
+ 
+ 	/* Congestion control mode identifier */
+-	*pos++ = sdata->u.mesh.mesh_cc_id;
++	meshconf->meshconf_congest = sdata->u.mesh.mesh_cc_id;
+ 
+ 	/* Synchronization protocol identifier */
+-	*pos++ = sdata->u.mesh.mesh_sp_id;
++	meshconf->meshconf_synch = sdata->u.mesh.mesh_sp_id;
+ 
+ 	/* Authentication Protocol identifier */
+-	*pos++ = sdata->u.mesh.mesh_auth_id;
++	meshconf->meshconf_auth = sdata->u.mesh.mesh_auth_id;
+ 
+ 	/* Mesh Formation Info - number of neighbors */
+ 	neighbors = atomic_read(&sdata->u.mesh.mshstats.estab_plinks);
+ 	/* Number of neighbor mesh STAs or 15 whichever is smaller */
+ 	neighbors = (neighbors > 15) ? 15 : neighbors;
+-	*pos++ = neighbors << 1;
++	meshconf->meshconf_form = neighbors << 1;
+ 
+ 	/* Mesh capability */
+ 	sdata->u.mesh.accepting_plinks = mesh_plink_availables(sdata);
+-	*pos = MESHCONF_CAPAB_FORWARDING;
+-	*pos++ |= sdata->u.mesh.accepting_plinks ?
+-	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
+-	*pos++ = 0x00;
++	meshconf->meshconf_cap = cpu_to_le16(MESHCONF_CAPAB_FORWARDING);
++	meshconf->meshconf_cap |= sdata->u.mesh.accepting_plinks ?
++	    cpu_to_le16(MESHCONF_CAPAB_ACCEPT_PLINKS) : 0x00;
+ 
+ 	return;
+ }
+-- 
+1.6.2.5
 
