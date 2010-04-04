@@ -1,30 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:47503 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752331Ab0DRSCw (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:62913 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090Ab0DDTjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Apr 2010 14:02:52 -0400
-Received: by gwaa18 with SMTP id a18so80273gwa.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Apr 2010 11:02:49 -0700 (PDT)
+	Sun, 4 Apr 2010 15:39:41 -0400
+Received: by fxm27 with SMTP id 27so583943fxm.28
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Apr 2010 12:39:39 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH] mac80211: fix ieee80211_meshconf_ie::meshconf_cap type to be u16
+Date: Sun, 4 Apr 2010 23:39:33 +0400
+Cc: linux-wireless@vger.kernel.org
+References: <1270375964-23668-1-git-send-email-jcmvbkbc@gmail.com> <4BB8D54F.7060906@openwrt.org>
+In-Reply-To: <4BB8D54F.7060906@openwrt.org>
 MIME-Version: 1.0
-From: =?ISO-8859-1?Q?Jo=E3o_Neto?= <joao.gsneto@gmail.com>
-Date: Sun, 18 Apr 2010 15:02:26 -0300
-Message-ID: <m2y58f5e62a1004181102gd58a214at3419e7a4b96c099c@mail.gmail.com>
-Subject: 3dsp shared a USB Wifi Dongle Source Code
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201004042339.35467.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+> On 2010-04-04 3:12 AM, Max Filippov wrote:
+> > According to the current 802.11s draft mesh capability field
+> > is 16 bits wide.
+> > 
+> > Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
+> > ---
+> >  include/linux/ieee80211.h |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> > index 1998495..910b4bc 100644
+> > --- a/include/linux/ieee80211.h
+> > +++ b/include/linux/ieee80211.h
+> > @@ -604,7 +604,7 @@ struct ieee80211_meshconf_ie {
+> >  	u8 meshconf_synch;
+> >  	u8 meshconf_auth;
+> >  	u8 meshconf_form;
+> > -	u8 meshconf_cap;
+> > +	u16 meshconf_cap;
+> Shouldn't that be __le16? You probably also have to add le16_to_cpu in
+> the place that accesses this field, otherwise this introduces an endian bug.
 
-Recently 3dsp has shared the source code of your Wifi and Bluetooth USB card:
+You're right, __le16. Will fix the way it's filled in mesh_mgmt_ies_add
+and tested in mesh_peer_accepts_plinks and resend.
 
-
-ftp://3dsp_lpkt_usb:m4rt9s@3dsp.com.cn/
-
-in the folder "Open Source"
-
---
-Joao Neto - Web Developer | PHP Zend Certified Engineer
-@joao_neto | http://www.joaoneto.blog.br
+Thanks.
+-- Max
