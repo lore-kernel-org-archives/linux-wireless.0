@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55079 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757086Ab0DODa6 (ORCPT
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:52637 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752188Ab0DEAxQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:58 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 15/97] ath9k_hw: move init config and default after chip is up
-Date: Wed, 14 Apr 2010 23:29:29 -0400
-Message-Id: <1271302251-9075-16-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 4 Apr 2010 20:53:16 -0400
+Received: by qyk9 with SMTP id 9so548903qyk.1
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Apr 2010 17:53:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <u2o3ace41891004031720ha68d9367m4be78c2a5d850f89@mail.gmail.com>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	 <4BB7660A.3030900@lwfinger.net>
+	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	 <4BB773A9.2070703@lwfinger.net>
+	 <u2o3ace41891004031720ha68d9367m4be78c2a5d850f89@mail.gmail.com>
+Date: Sun, 4 Apr 2010 21:53:15 -0300
+Message-ID: <w2v917a57cb1004041753ne6ba8c03i5b927e52a107457a@mail.gmail.com>
+Subject: Re: RTL 8187b - naughty behaviour
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows us to add SREV checks on these helpers.
+2010/4/3 Hin-Tak Leung <hintak.leung@gmail.com>:
+> On Sat, Apr 3, 2010 at 5:58 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> <snipped>
+>> What is the exact make and model of the device? It might be difficult
+>> for me to get one in the US, but one of the rtl8187 developers lives in
+>> Brazil. He should be able to find one.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+I think I sent it, but if I didn't it is a
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 5dc7041..7127166 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -410,8 +410,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 	ah->hw_version.subvendorid = 0;
- 
- 	ah->ah_flags = 0;
--	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
--		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 	if (!AR_SREV_9100(ah))
- 		ah->ah_flags = AH_USE_EEPROM;
- 
-@@ -874,8 +872,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int r = 0;
- 
--	ath9k_hw_init_defaults(ah);
--	ath9k_hw_init_config(ah);
-+	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
-+		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
- 		ath_print(common, ATH_DBG_FATAL,
-@@ -883,6 +881,9 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 		return -EIO;
- 	}
- 
-+	ath9k_hw_init_defaults(ah);
-+	ath9k_hw_init_config(ah);
-+
- 	ath9k_hw_attach_ops(ah);
- 
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
--- 
-1.6.3.3
+Positivo Premium R430L Core 2 Duo 4GB machine
 
+Rogerio
+
+
+> Herton might be able to get the exact model/etc from Brazil so it is
+> worth providing the vendor details.
+>
+> I am also wondering if it would help changing the rate-changing
+> algorithm, seeing as Minstrel became the default around 2.6.32, and
+> there has been a couple of reports about minstrel not working as well
+> as pid for weak APs. (
+> https://bugzilla.kernel.org/show_bug.cgi?id=14168 )
+>
