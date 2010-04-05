@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:50168 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648Ab0DSTjt (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:57349 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab0DEKQF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 15:39:49 -0400
-Message-ID: <4BCCB176.3060206@gmail.com>
-Date: Mon, 19 Apr 2010 12:39:34 -0700
-From: Till Kamppeter <till.kamppeter@gmail.com>
+	Mon, 5 Apr 2010 06:16:05 -0400
+Received: from smtp08.web.de (fmsmtp08.dlan.cinetic.de [172.20.5.216])
+	by fmmailgate03.web.de (Postfix) with ESMTP id E4A3014B9610D
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Apr 2010 12:16:01 +0200 (CEST)
+Received: from [84.56.181.66] (helo=pinguin.localnet)
+	by smtp08.web.de with asmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.110 #4)
+	id 1NyjLd-0000F6-00
+	for linux-wireless@vger.kernel.org; Mon, 05 Apr 2010 12:16:01 +0200
+From: Jens Westemeier <Jens_Westemeier@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: prism54 -> p54pci transition not working
+Date: Mon, 5 Apr 2010 12:16:01 +0200
+References: <4B6F15D1.3050307@iperbole.bo.it> <201002082004.20641.Jens_Westemeier@web.de>
+In-Reply-To: <201002082004.20641.Jens_Westemeier@web.de>
 MIME-Version: 1.0
-To: Theodore Ts'o <tytso@mit.edu>, Greg KH <greg@kroah.com>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Witold Sowa <witold.sowa@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Google Summer of Code 2010 - Please resolve duplicates
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201004051216.01359.Jens_Westemeier@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello,
 
-two students who applied for your projects have applied also for another 
-organization's project and they got accepted by us and by the other 
-organization.
+I have a SMC 2802 card, working with Win XP and prism54, now I want to go to 
+the p54pci driver.
 
-Until Wednesday Google wants these situation to be resolved until 
-Wednesday April 21, 17:00 UTC. Please contact the students and/or the 
-organization to agree on one of the project for each student.
+lspci gives:
 
-In addition, the ranking of the students (to decide who actually gets 
-our slots) and the mentor assignments have to be finalized by the same 
-date and time.
+Network controller: Intersil Corporation ISL3890 [Prism GT/Prism 
+Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
 
-Duplicates not be resolved until then will be resolved on an IRC meeting 
-on Wednesday April 21 at 19:00 UTC. The meeting takes place in the #gsoc 
-channel on Freenode.
+modprobe p54pci gives in /var/log/messages:
 
-Please mail me if a mentor needs to be (re)assigned.
+p54pci 0000:05:01.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+p54pci 0000:05:01.0: firmware: requesting isl3886pci
+phy2: p54 detected a LM86 firmware
+p54: rx_mtu reduced from 3240 to 2376
+phy2: FW rev 2.17.2.0 - Softmac protocol 7.6
+phy2: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy2: device does not respond!
+p54pci 0000:05:01.0: PCI INT A disabled
+p54pci: probe of 0000:05:01.0 failed with error -16
 
-    Till
+I have a 2.6.31.12-0.2-desktop 64 bit kernel from OpenSUSE 11.2 and tried with 
+all flavours of fw.
 
+In the notes I have found, that old SMC 2802 cards (without eeprom) are not 
+supported. How can I check that I have such a card? Will this card been 
+supported (soon)?
 
-
-----------------------------------------------------------------------
-
-Hi all,
-
-I have opened the duplicate information for students to all of your
-orgs. If you view your student proposals now the ones that are ranked
-to be accepted that are duplicated with another org will be marked in
-red. If you click on the proposal you will see the contact information
-for the other organization(s)'s admins near the bottom of the
-proposal.
-
-You must also have a mentor assigned to all the students in your top N
-slots by now. If you do not have a mentor assigned to them the
-duplicate detection script will not pick them up and we may have
-duplicates we don't know about. That is bad, please fix that if its
-the case.
-
-Please try to resolve as many of these duplicate situations via email
-in the next two days as possible - contact your fellow organizations,
-be clear with each other about who is taking the student, and then
-rank the student up if you are accepting him/her or mark the student
-ineligible with a public comment that you have marked it ineligible
-because of a duplicate situation if you are not taking the student.
-
-The deadline for changing rankings is 17:00UTC on Wednesday, April 21.
-All duplicates that have not been resolved by 17:00 UTC will be taken
-to the IRC meeting at 19:00 UTC.
-
-Cheers,
-Carol
-
+Greetings, Jens.
