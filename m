@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:44001 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387Ab0DTAZY convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:63924 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752965Ab0DEBu0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 20:25:24 -0400
-Received: by vws5 with SMTP id 5so2554988vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 17:25:23 -0700 (PDT)
+	Sun, 4 Apr 2010 21:50:26 -0400
+Received: by fxm27 with SMTP id 27so703961fxm.28
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Apr 2010 18:50:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1271707616-4150-1-git-send-email-hauke@hauke-m.de>
-References: <4BCCA1D9.30208@hauke-m.de> <1271707616-4150-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 19 Apr 2010 17:25:03 -0700
-Message-ID: <i2o43e72e891004191725waa5246e8v591601921b4ec109@mail.gmail.com>
-Subject: Re: [PATCH v2] compat: backport convert multicast list to list_head.
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	proski@gnu.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <w2v917a57cb1004041753ne6ba8c03i5b927e52a107457a@mail.gmail.com>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	<4BB7660A.3030900@lwfinger.net> <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	<4BB773A9.2070703@lwfinger.net> <u2o3ace41891004031720ha68d9367m4be78c2a5d850f89@mail.gmail.com>
+	<w2v917a57cb1004041753ne6ba8c03i5b927e52a107457a@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 5 Apr 2010 03:50:04 +0200
+Message-ID: <m2j69e28c911004041850p6c0f9b41l2604ab6f13fa9e1e@mail.gmail.com>
+Subject: Re: RTL 8187b - naughty behaviour
+To: Rogerio Luz Coelho <rogluz.news@gmail.com>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 19, 2010 at 1:06 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+On Mon, Apr 5, 2010 at 2:53 AM, Rogerio Luz Coelho
+<rogluz.news@gmail.com> wrote:
+> 2010/4/3 Hin-Tak Leung <hintak.leung@gmail.com>:
+>> On Sat, Apr 3, 2010 at 5:58 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> <snipped>
+>>> What is the exact make and model of the device? It might be difficult
+>>> for me to get one in the US, but one of the rtl8187 developers lives in
+>>> Brazil. He should be able to find one.
 >
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  include/linux/compat-2.6.35.h |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
+> I think I sent it, but if I didn't it is a
 >
-> diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-> index 964e8dc..4d3483a 100644
-> --- a/include/linux/compat-2.6.35.h
-> +++ b/include/linux/compat-2.6.35.h
-> @@ -4,6 +4,7 @@
->  #include <linux/version.h>
+> Positivo Premium R430L Core 2 Duo 4GB machine
 >
->  #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
-> +#include <linux/etherdevice.h>
+> Rogerio
+
+No, that is your computer. What Hin-Tak is asking for is the wireless
+adapter's model.
+
 >
->  #define IW_HANDLER(id, func)                   \
->        [IW_IOCTL_IDX(id)] = func
-> @@ -11,6 +12,8 @@
->  #define  SDIO_BUS_ECSI         0x20    /* Enable continuous SPI interrupt */
->  #define  SDIO_BUS_SCSI         0x40    /* Support continuous SPI interrupt */
 >
-> +#define netdev_hw_addr dev_mc_list
-> +
->  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
+>> Herton might be able to get the exact model/etc from Brazil so it is
+>> worth providing the vendor details.
+>>
+>> I am also wondering if it would help changing the rate-changing
+>> algorithm, seeing as Minstrel became the default around 2.6.32, and
+>> there has been a couple of reports about minstrel not working as well
+>> as pid for weak APs. (
+>> https://bugzilla.kernel.org/show_bug.cgi?id=14168 )
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at �http://vger.kernel.org/majordomo-info.html
 >
->  #endif /* LINUX_26_35_COMPAT_H */
 
-Lets go with this approach for now, and if it bites us in the ass we
-now not to do that again :)
 
-BTW Thanks so much for all these patches, I'm merging them now, I
-counted 6, 3 for compat, 3 for compat-wireless, if I missed anything
-please let me know. Going to force out a new tarball now.
 
-compat:
-
-    compat: backport convert multicast list to list_head.
-    compat: Add linux/version.h include before using it.
-    compat: Add definitions needed for libertas sdio driver.
-
-compat-wireless:
-
-    compat-wireless: include net and trace includes form compat
-    compat-wireless: Remove use of sdio quirks attribute
-    compat-wireless: backport convert multicast list to list_head.
-
-  Luis
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
