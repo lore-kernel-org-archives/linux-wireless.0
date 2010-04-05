@@ -1,184 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54868 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756923Ab0DODaz (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59150 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750960Ab0DEHiN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:55 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 56/97] ath9k_hw: add the AR9003 ar9003_hw_init_cal callback
-Date: Wed, 14 Apr 2010 23:30:10 -0400
-Message-Id: <1271302251-9075-57-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 5 Apr 2010 03:38:13 -0400
+Date: Mon, 5 Apr 2010 10:38:01 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Max Filippov <jcmvbkbc@gmail.com>
+Cc: =?utf-8?B?0JvQtdC00L7QstGB0LrQuNGFINCd0LjQutC+0LvQsNC5INCS0LDQu9C10YA=?=
+	 =?utf-8?B?0YzQtdCy0LjRhw==?= <nledovskih@mail.ru>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix ieee80211_meshconf_ie::meshconf_cap type
+ to be u16
+Message-ID: <20100405073801.GA28792@jm.kir.nu>
+References: <1270375964-23668-1-git-send-email-jcmvbkbc@gmail.com>
+ <20100404234549.9fba2292.nledovskih@mail.ru>
+ <201004042359.52494.jcmvbkbc@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201004042359.52494.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |  145 ++++++++++++++++++++++++-
- 1 files changed, 144 insertions(+), 1 deletions(-)
+On Sun, Apr 04, 2010 at 11:59:52PM +0400, Max Filippov wrote:
+> > On Sun,  4 Apr 2010 14:12:44 +0400
+> > Max Filippov <jcmvbkbc@gmail.com> wrote:
+> > 
+> > > According to the current 802.11s draft mesh capability field
+> > > is 16 bits wide.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 6a72677..00e4cb8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -40,9 +40,152 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	return false;
- }
- 
-+static void ar9003_hw_iqcal_collect(struct ath_hw *ah)
-+{
-+	int i;
-+
-+	/* Accumulate IQ cal measures for active chains */
-+	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+		ah->totalPowerMeasI[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
-+		ah->totalPowerMeasQ[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
-+		ah->totalIqCorrMeas[i] +=
-+			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
-+		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
-+			  "%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
-+			  ah->cal_samples, i, ah->totalPowerMeasI[i],
-+			  ah->totalPowerMeasQ[i],
-+			  ah->totalIqCorrMeas[i]);
-+	}
-+}
-+
-+static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 powerMeasQ, powerMeasI, iqCorrMeas;
-+	u32 qCoffDenom, iCoffDenom;
-+	int32_t qCoff, iCoff;
-+	int iqCorrNeg, i;
-+	const u_int32_t offset_array[3] = {
-+		AR_PHY_RX_IQCAL_CORR_B0,
-+		AR_PHY_RX_IQCAL_CORR_B1,
-+		AR_PHY_RX_IQCAL_CORR_B2,
-+	};
-+
-+	for (i = 0; i < numChains; i++) {
-+		powerMeasI = ah->totalPowerMeasI[i];
-+		powerMeasQ = ah->totalPowerMeasQ[i];
-+		iqCorrMeas = ah->totalIqCorrMeas[i];
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Starting IQ Cal and Correction for Chain %d\n",
-+			  i);
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Orignal: Chn %diq_corr_meas = 0x%08x\n",
-+			  i, ah->totalIqCorrMeas[i]);
-+
-+		iqCorrNeg = 0;
-+
-+		if (iqCorrMeas > 0x80000000) {
-+			iqCorrMeas = (0xffffffff - iqCorrMeas) + 1;
-+			iqCorrNeg = 1;
-+		}
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_i = 0x%08x\n", i, powerMeasI);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_q = 0x%08x\n", i, powerMeasQ);
-+		ath_print(common, ATH_DBG_CALIBRATE, "iqCorrNeg is 0x%08x\n",
-+			  iqCorrNeg);
-+
-+		iCoffDenom = (powerMeasI / 2 + powerMeasQ / 2) / 256;
-+		qCoffDenom = powerMeasQ / 64;
-+
-+		if ((iCoffDenom != 0) && (qCoffDenom != 0)) {
-+			iCoff = iqCorrMeas / iCoffDenom;
-+			qCoff = powerMeasI / qCoffDenom - 64;
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d iCoff = 0x%08x\n", i, iCoff);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d qCoff = 0x%08x\n", i, qCoff);
-+
-+			/* Force bounds on iCoff */
-+			if (iCoff >= 63)
-+				iCoff = 63;
-+			else if (iCoff <= -63)
-+				iCoff = -63;
-+
-+			/* Negate iCoff if iqCorrNeg == 0 */
-+			if (iqCorrNeg == 0x0)
-+				iCoff = -iCoff;
-+
-+			/* Force bounds on qCoff */
-+			if (qCoff >= 63)
-+				qCoff = 63;
-+			else if (qCoff <= -63)
-+				qCoff = -63;
-+
-+			iCoff = iCoff & 0x7f;
-+			qCoff = qCoff & 0x7f;
-+
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
-+				  i, iCoff, qCoff);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Register offset (0x%04x) "
-+				  "before update = 0x%x\n",
-+				  offset_array[i],
-+				  REG_READ(ah, offset_array[i]));
-+
-+			REG_RMW_FIELD(ah, offset_array[i],
-+				      AR_PHY_RX_IQCAL_CORR_IQCORR_Q_I_COFF,
-+				      iCoff);
-+			REG_RMW_FIELD(ah, offset_array[i],
-+				      AR_PHY_RX_IQCAL_CORR_IQCORR_Q_Q_COFF,
-+				      qCoff);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Register offset (0x%04x) QI COFF "
-+				  "(bitfields 0x%08x) after update = 0x%x\n",
-+				  offset_array[i],
-+				  AR_PHY_RX_IQCAL_CORR_IQCORR_Q_I_COFF,
-+				  REG_READ(ah, offset_array[i]));
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Register offset (0x%04x) QQ COFF "
-+				  "(bitfields 0x%08x) after update = 0x%x\n",
-+				  offset_array[i],
-+				  AR_PHY_RX_IQCAL_CORR_IQCORR_Q_Q_COFF,
-+				  REG_READ(ah, offset_array[i]));
-+
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "IQ Cal and Correction done for Chain %d\n",
-+				  i);
-+		}
-+	}
-+
-+	REG_SET_BIT(ah, AR_PHY_RX_IQCAL_CORR_B0,
-+		    AR_PHY_RX_IQCAL_CORR_IQCORR_ENABLE);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "IQ Cal and Correction (offset 0x%04x) enabled "
-+		  "(bit position 0x%08x). New Value 0x%08x\n",
-+		  (unsigned) (AR_PHY_RX_IQCAL_CORR_B0),
-+		  AR_PHY_RX_IQCAL_CORR_IQCORR_ENABLE,
-+		  REG_READ(ah, AR_PHY_RX_IQCAL_CORR_B0));
-+}
-+
-+static const struct ath9k_percal_data iq_cal_single_sample = {
-+	IQ_MISMATCH_CAL,
-+	MIN_CAL_SAMPLES,
-+	PER_MAX_LOG_COUNT,
-+	ar9003_hw_iqcal_collect,
-+	ar9003_hw_iqcalibrate
-+};
-+
- static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
- {
--	/* TODO */
-+	ah->iq_caldata.calData = &iq_cal_single_sample;
-+	ah->supp_cals = IQ_MISMATCH_CAL;
- }
- 
- static bool ar9003_hw_iscal_supported(struct ath_hw *ah,
+This does not match with the latest 802.11s draft. Please also specify
+the draft version in the commit message to make this easier to notice.
+802.11s is still a moving target and unless we have a clearly specified
+older version of the draft that we try to follow, I don't see much point
+in updating this field based on some older version (D4.0) when the field
+has already changed since then (D5.0).
+
+> > > -	u8 meshconf_cap;
+> > > +	u16 meshconf_cap;
+
+> My reference is 802.11s-D4.01, it says (7.3.2.95.1):
+
+That is not the latest draft. IEEE P802.11s/D5.0 7.3.2.96.1 shows the
+Mesh Capability to be a one octet field.
+
+> Element id: 1 octet,
+> Length: 1 octet,
+> Active path selection protocol identifier: 1 octet,
+> Active path selection metric identifier: 1 octet,
+> Congestion control mode identifier: 1 octet,
+> Synchronization protocol identifier: 1 octet,
+> Authentication protocol identifier: 1 octet,
+> Mesh formation info: 1 octet,
+> Mesh capability: 2 octets.
+> 
+> The length field is set to 8.
+
+Length is still 8, but there is a new field (Mesh Peering Protocol
+Identifier) before Mesh Formation Info (and Mesh capability is 1 octet).
+
 -- 
-1.6.3.3
-
+Jouni Malinen                                            PGP id EFC895FA
