@@ -1,93 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46970 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933285Ab0DHT1s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 079/102] ath9k_hw: Update ath9k_hw_set_dma for AR9300
-Date: Thu,  8 Apr 2010 15:27:15 -0400
-Message-Id: <1270754858-26266-80-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:30615 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752221Ab0DEJSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Apr 2010 05:18:22 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Apr 2010 02:18:22 -0700
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] ath9k_htc: Configure the beacon timers once the scan is completed.
+Date: Mon, 5 Apr 2010 14:48:06 +0530
+Message-ID: <1270459086-2504-3-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1270459086-2504-2-git-send-email-vnatarajan@atheros.com>
+References: <1270459086-2504-1-git-send-email-vnatarajan@atheros.com>
+ <1270459086-2504-2-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  |   18 +++++++++++++++---
- drivers/net/wireless/ath/ath9k/reg.h |    6 ++++++
- 2 files changed, 21 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h            |   12 +++++-
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   41 ++++++++++++++++-------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    6 ++-
+ 3 files changed, 43 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index c728346..1c625c0 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -832,13 +832,16 @@ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan)
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 0160e83..78213fc 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -309,6 +309,14 @@ struct ath_led {
+ 	int brightness;
+ };
  
- static inline void ath9k_hw_set_dma(struct ath_hw *ah)
++struct htc_beacon_config {
++	u16 beacon_interval;
++	u16 listen_interval;
++	u16 dtim_period;
++	u16 bmiss_timeout;
++	u8 dtim_count;
++};
++
+ #define OP_INVALID        BIT(0)
+ #define OP_SCANNING       BIT(1)
+ #define OP_FULL_RESET     BIT(2)
+@@ -353,6 +361,7 @@ struct ath9k_htc_priv {
+ 	spinlock_t tx_lock;
+ 
+ 	struct ieee80211_vif *vif;
++	struct htc_beacon_config cur_beacon_conf;
+ 	unsigned int rxfilter;
+ 	struct tasklet_struct wmi_tasklet;
+ 	struct tasklet_struct rx_tasklet;
+@@ -394,8 +403,7 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
+ }
+ 
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+-			     struct ieee80211_vif *vif,
+-			     struct ieee80211_bss_conf *bss_conf);
++			     struct ieee80211_vif *vif);
+ void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending);
+ void ath9k_htc_beacon_update(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 25f5b53..5e21f4d 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -19,7 +19,7 @@
+ #define FUDGE 2
+ 
+ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+-					struct ieee80211_bss_conf *bss_conf)
++					struct htc_beacon_config *bss_conf)
  {
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 regval;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ath9k_beacon_state bs;
+@@ -34,8 +34,8 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 
+ 	memset(&bs, 0, sizeof(bs));
+ 
+-	intval = bss_conf->beacon_int & ATH9K_BEACON_PERIOD;
+-	bmiss_timeout = (ATH_DEFAULT_BMISS_LIMIT * bss_conf->beacon_int);
++	intval = bss_conf->beacon_interval & ATH9K_BEACON_PERIOD;
++	bmiss_timeout = (ATH_DEFAULT_BMISS_LIMIT * bss_conf->beacon_interval);
  
  	/*
- 	 * set AHB_MODE not to do cacheline prefetches
- 	*/
--	regval = REG_READ(ah, AR_AHB_MODE);
--	REG_WRITE(ah, AR_AHB_MODE, regval | AR_AHB_PREFETCH_RD_EN);
-+	if (!AR_SREV_9300_20_OR_LATER(ah)) {
-+		regval = REG_READ(ah, AR_AHB_MODE);
-+		REG_WRITE(ah, AR_AHB_MODE, regval | AR_AHB_PREFETCH_RD_EN);
-+	}
+ 	 * Setup dtim and cfp parameters according to
+@@ -138,7 +138,7 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ }
  
- 	/*
- 	 * let mac dma reads be in 128 byte chunks
-@@ -851,7 +854,8 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- 	 * The initial value depends on whether aggregation is enabled, and is
- 	 * adjusted whenever underruns are detected.
- 	 */
--	REG_RMW_FIELD(ah, AR_TXCFG, AR_FTRIG, ah->tx_trig_level);
-+	if (!AR_SREV_9300_20_OR_LATER(ah))
-+		REG_RMW_FIELD(ah, AR_TXCFG, AR_FTRIG, ah->tx_trig_level);
+ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+-					  struct ieee80211_bss_conf *bss_conf)
++					  struct htc_beacon_config *bss_conf)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	enum ath9k_int imask = 0;
+@@ -146,7 +146,7 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+ 	int ret;
+ 	u8 cmd_rsp;
  
- 	/*
- 	 * let mac dma writes be in 128 byte chunks
-@@ -864,6 +868,14 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- 	 */
- 	REG_WRITE(ah, AR_RXFIFO_CFG, 0x200);
+-	intval = bss_conf->beacon_int & ATH9K_BEACON_PERIOD;
++	intval = bss_conf->beacon_interval & ATH9K_BEACON_PERIOD;
+ 	nexttbtt = intval;
+ 	intval |= ATH9K_BEACON_ENA;
+ 	if (priv->op_flags & OP_ENABLE_BEACON)
+@@ -154,7 +154,7 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
  
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		REG_RMW_FIELD(ah, AR_RXBP_THRESH, AR_RXBP_THRESH_HP, 0x1);
-+		REG_RMW_FIELD(ah, AR_RXBP_THRESH, AR_RXBP_THRESH_LP, 0x1);
+ 	ath_print(common, ATH_DBG_BEACON,
+ 		  "IBSS Beacon config, intval: %d, imask: 0x%x\n",
+-		  bss_conf->beacon_int, imask);
++		  bss_conf->beacon_interval, imask);
+ 
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+ 	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
+@@ -239,18 +239,35 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending)
+ 	spin_unlock_bh(&priv->beacon_lock);
+ }
+ 
 +
-+		ath9k_hw_set_rx_bufsize(ah, common->rx_bufsize -
-+			ah->caps.rx_status_len);
-+	}
+ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+-			     struct ieee80211_vif *vif,
+-			     struct ieee80211_bss_conf *bss_conf)
++			     struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+-
+-	switch (vif->type) {
++	enum nl80211_iftype iftype;
++	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
 +
- 	/*
- 	 * reduce the number of usable entries in PCU TXBUF to avoid
- 	 * wrap around issues.
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 12f1621..2ca478c 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -39,6 +39,12 @@
- #define AR_CFG_PCI_MASTER_REQ_Q_THRESH         0x00060000
- #define AR_CFG_PCI_MASTER_REQ_Q_THRESH_S       17
++	if (vif) {
++		struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
++		iftype = vif->type;
++		cur_conf->beacon_interval = bss_conf->beacon_int;
++		cur_conf->dtim_period = bss_conf->dtim_period;
++		cur_conf->listen_interval = 1;
++		cur_conf->dtim_count = 1;
++		cur_conf->bmiss_timeout =
++			ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
++	} else
++		iftype = priv->ah->opmode;
++
++	if (cur_conf->beacon_interval == 0)
++		cur_conf->beacon_interval = 100;
++
++	switch (iftype) {
+ 	case NL80211_IFTYPE_STATION:
+-		ath9k_htc_beacon_config_sta(priv, bss_conf);
++		ath9k_htc_beacon_config_sta(priv, cur_conf);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+-		ath9k_htc_beacon_config_adhoc(priv, bss_conf);
++		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
+ 		break;
+ 	default:
+ 		ath_print(common, ATH_DBG_CONFIG,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index e04452f..eb7722b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1549,7 +1549,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	    ((changed & BSS_CHANGED_BEACON_ENABLED) &&
+ 	    bss_conf->enable_beacon)) {
+ 		priv->op_flags |= OP_ENABLE_BEACON;
+-		ath9k_htc_beacon_config(priv, vif, bss_conf);
++		ath9k_htc_beacon_config(priv, vif);
+ 	}
  
-+#define AR_RXBP_THRESH       0x0018
-+#define AR_RXBP_THRESH_HP    0x0000000f
-+#define AR_RXBP_THRESH_HP_S  0
-+#define AR_RXBP_THRESH_LP    0x00003f00
-+#define AR_RXBP_THRESH_LP_S  8
-+
- #define AR_MIRT              0x0020
- #define AR_MIRT_VAL          0x0000ffff
- #define AR_MIRT_VAL_S        16
+ 	if (changed & BSS_CHANGED_BEACON)
+@@ -1558,7 +1558,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) &&
+ 	    !bss_conf->enable_beacon) {
+ 		priv->op_flags &= ~OP_ENABLE_BEACON;
+-		ath9k_htc_beacon_config(priv, vif, bss_conf);
++		ath9k_htc_beacon_config(priv, vif);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
+@@ -1686,6 +1686,8 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+ 	priv->op_flags &= ~OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 	priv->op_flags |= OP_FULL_RESET;
++	if (priv->op_flags & OP_ASSOCIATED)
++		ath9k_htc_beacon_config(priv, NULL);
+ 	ath_start_ani(priv);
+ 	mutex_unlock(&priv->mutex);
+ 	ath9k_htc_ps_restore(priv);
 -- 
-1.6.3.3
+1.7.0.3
 
