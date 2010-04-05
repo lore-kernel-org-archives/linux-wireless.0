@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:58079 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933823Ab0DHXxi (ORCPT
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:47269 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735Ab0DELAA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 19:53:38 -0400
-Received: by gyg13 with SMTP id 13so1469397gyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 16:53:37 -0700 (PDT)
+	Mon, 5 Apr 2010 07:00:00 -0400
+Date: Mon, 5 Apr 2010 12:59:57 +0200
+From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
+	<u.kleine-koenig@pengutronix.de>
+To: Daniel Mack <daniel@caiaq.de>
+Cc: Greg KH <gregkh@suse.de>, Sven Neumann <s.neumann@raumfeld.com>,
+	linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	AKML <linux-arm-kernel@lists.infradead.org>
+Subject: Re: Memory corruption with 2.6.32.10, but not with 2.6.34-rc3
+Message-ID: <20100405105957.GA2302@pengutronix.de>
+References: <20100401132156.GJ30807@buzzloop.caiaq.de> <20100401165144.GB1138@suse.de> <20100401165857.GN30801@buzzloop.caiaq.de>
 MIME-Version: 1.0
-In-Reply-To: <201004090032.53842.IvDoorn@gmail.com>
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
-	<1270763437-29526-5-git-send-email-gwingerde@gmail.com> <201004090032.53842.IvDoorn@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 9 Apr 2010 09:53:17 +1000
-Message-ID: <j2p646765f41004081653vcb4e0178k374a203da36a9f1@mail.gmail.com>
-Subject: Re: [PATCH 4/9] rt2x00: Remove rt2800 version constants.
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20100401165857.GN30801@buzzloop.caiaq.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 9, 2010 at 08:32, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Thursday 08 April 2010, Gertjan van Wingerde wrote:
->> The rt2800 version constants are inconsistent, and the version number don't
->> mean a lot of things anyway. Use the literal values in the code instead of
->> some sort of fabricated version name macro.
->>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->
-> Perhaps a more elegant way of using and defining needs to be found.
-> But at least the defined show what the purpose for the values is
-> rather then having magical values spread around the code.
+On Thu, Apr 01, 2010 at 06:58:57PM +0200, Daniel Mack wrote:
+> On Thu, Apr 01, 2010 at 09:51:44AM -0700, Greg KH wrote:
+> > On Thu, Apr 01, 2010 at 03:21:56PM +0200, Daniel Mack wrote:
+> > > 
+> > > I can cherry-pick things if anyone pin-points something and run
+> > > lont-time tests again. Any pointer appreciated.
+> > 
+> > Oh, how about running 'git bisect' to try to find the solution?  Just
+> > remember to reverse 'good' and 'bad' for when you tell git bisect what
+> > the results are.
+> 
+> Jep, I thought about that of course. But unfortunately, the platform
+> got merged mainline in the middle of that time window which makes
+> bisecting tricky. And worse than that - every test run take around half
+> a day at least :(
+What you can do is backport the platform-support on top of rev initially
+marked good (in a branch named say foo) and when asked for testing do:
 
-Maybe something like:
+	git merge --no-commit foo
+	<test>
+	git reset --hard
+	git bisect {good|bad}
 
-#define RTDEV_IS_RT2883_R1(dev) (rt2x00_rt(dev, RT2883) && \
-                                                   rt2x00_rev(dev) < 0x0300)
+Assuming the platform-support got in in one go (and you shouldn't test
+in the middle, which you can simply skip), the merge should always work
+just fine.
 
-Thanks,
+Best regards
+Uwe
 
 -- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+Pengutronix e.K.                           | Uwe Kleine-König            |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
