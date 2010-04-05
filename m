@@ -1,61 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4856 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771Ab0DHEAR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45727 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755289Ab0DERPJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 00:00:17 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	br1@einfach.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/4] ath5k: clean up queue manipulation
-Date: Wed,  7 Apr 2010 23:55:57 -0400
-Message-Id: <1270698959-7844-3-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
-References: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
+	Mon, 5 Apr 2010 13:15:09 -0400
+Date: Mon, 5 Apr 2010 13:13:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/7] net/wireless: switch lib80211_crypt_wep from arc4
+	to arc4blk
+Message-ID: <20100405171336.GB29596@tuxdriver.com>
+References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc> <1270280969-11357-6-git-send-email-sebastian@breakpoint.cc>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1270280969-11357-6-git-send-email-sebastian@breakpoint.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Review spotted a couple of strange invocations to
-ieee80211_wake_queues that could potentially cause problems:
+On Sat, Apr 03, 2010 at 09:49:27AM +0200, Sebastian Andrzej Siewior wrote:
+> ecb(arc4) is getting replaced by arc4 which is a blkcipher by itself. The
+> required selects are now pulled in by LIB80211_CRYPT_WEP instead of
+> selecting it by every driver. Since there is no dependency on ecb and arc4
+> therr are removed from the idividual driver.
+> 
+> Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
 
- - queues are awakened in the calibration tasklet before
-   phy calibration, and then again after calibration
+Fine by me...
 
- - queues are awakened inside reset when we're trying to
-   drain the ath5k transmit queues, and again after
-   reset is completed (in callers to ath5k_reset_wake).
-
-In both cases the first wake is unnecessary, so remove it.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/base.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a1c0dcb..1e10439 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1633,7 +1633,6 @@ ath5k_txq_cleanup(struct ath5k_softc *sc)
- 					sc->txqs[i].link);
- 			}
- 	}
--	ieee80211_wake_queues(sc->hw); /* XXX move to callers */
- 
- 	for (i = 0; i < ARRAY_SIZE(sc->txqs); i++)
- 		if (sc->txqs[i].setup)
-@@ -2761,7 +2760,7 @@ ath5k_tasklet_calibrate(unsigned long data)
- 		 * to load new gain values.
- 		 */
- 		ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "calibration, resetting\n");
--		ath5k_reset_wake(sc);
-+		ath5k_reset(sc, sc->curchan);
- 	}
- 	if (ath5k_hw_phy_calibrate(ah, sc->curchan))
- 		ATH5K_ERR(sc, "calibration of channel %u failed\n",
+John
 -- 
-1.6.3.3
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
