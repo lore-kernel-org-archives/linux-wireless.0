@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:64089 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753194Ab0DTSEK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47121 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab0DFJWo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 14:04:10 -0400
-Received: by ewy20 with SMTP id 20so2134220ewy.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Apr 2010 11:04:09 -0700 (PDT)
-Message-ID: <4BCDEC94.2080202@lwfinger.net>
-Date: Tue, 20 Apr 2010 13:04:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-CC: "Bernhard M. Wiedemann" <bernhardout@lsmod.de>
-Subject: Problem with AR5001 on eeepc900A after disable with RFKILL switch
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 6 Apr 2010 05:22:44 -0400
+Message-Id: <20100406092141.471834625@sipsolutions.net>
+Date: Tue, 06 Apr 2010 11:18:44 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/7] mac80211: remove irq disabling for sta lock
+References: <20100406091841.549805267@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This problem is reported at
-https://bugzilla.novell.com/show_bug.cgi?id=595586.
+All other places except one in the TX path, which
+has BHs disabled, and it also cannot be locked from
+interrupts so disabling IRQs is not necessary.
 
-Although not mentioned in the bug report, the kernel is 2.6.33.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-The initial part of the report is as follows:
-
-======================================================================
-
-After disabling WLAN on Asus eeepc 900A using rfkill button (Fn+F2) it
-does not get back into a working state without a reboot.
-
-Reproducible: Always
-
-Steps to Reproduce:
-1. boot up eeepc900A with WLAN enabled
-2. press Fn+F2 (rfkill button) to disable WLAN
-3. press Fn+F2 again to enable WLAN
-Actual Results:
-
------
-1. lspci before rfkill
-01:00.0 Ethernet controller: Atheros Communications AR8121/AR8113/AR8114
-Gigabit or Fast Ethernet (rev b0)
-02:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless
-Network Adapter (rev 01)
------
-2. lspci after rfkill
-01:00.0 Ethernet controller: Attansic Technology Corp. Atheros
-AR8121/AR8113/AR8114 PCI-E Ethernet Controller (rev b0)
-02:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless
-Network Adapter (rev ff)
-
-======================================================================
-
-The curious thing is that the lspci output is different for both the
-wired and wireless cards.
-
-Any ideas on why setting rfkill should change data in this way?
-
-Thanks,
-
-Larry
-
-
+--- wireless-testing.orig/net/mac80211/tx.c	2010-04-06 09:07:30.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2010-04-06 09:08:22.000000000 +0200
+@@ -1144,13 +1144,12 @@ ieee80211_tx_prepare(struct ieee80211_su
+ 
+ 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
+ 	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
+-		unsigned long flags;
+ 		struct tid_ampdu_tx *tid_tx;
+ 
+ 		qc = ieee80211_get_qos_ctl(hdr);
+ 		tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
+ 
+-		spin_lock_irqsave(&tx->sta->lock, flags);
++		spin_lock(&tx->sta->lock);
+ 		/*
+ 		 * XXX: This spinlock could be fairly expensive, but see the
+ 		 *	comment in agg-tx.c:ieee80211_agg_tx_operational().
+@@ -1175,7 +1174,7 @@ ieee80211_tx_prepare(struct ieee80211_su
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 			__skb_queue_tail(&tid_tx->pending, skb);
+ 		}
+-		spin_unlock_irqrestore(&tx->sta->lock, flags);
++		spin_unlock(&tx->sta->lock);
+ 
+ 		if (unlikely(queued))
+ 			return TX_QUEUED;
 
 
