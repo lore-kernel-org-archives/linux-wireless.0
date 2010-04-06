@@ -1,53 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-92-33-14-100.sme.bredbandsbolaget.se ([92.33.14.100]:18978
-	"EHLO mailhost.lundinova.se" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757882Ab0DPKwr (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:55428 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757706Ab0DFXed (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 06:52:47 -0400
-From: Johan Hovold <johan.hovold@lundinova.se>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: Tor Krill <tor@excito.com>,
-	Johan Hovold <johan.hovold@lundinova.se>
-Subject: [RFC][PATCH 6/6] ath9k: clear mic error flag on encrypted frames
-Date: Fri, 16 Apr 2010 12:52:15 +0200
-Message-Id: <1271415135-18317-6-git-send-email-johan.hovold@lundinova.se>
-In-Reply-To: <20100416104850.GA13329@lundinova.se>
-References: <20100416104850.GA13329@lundinova.se>
+	Tue, 6 Apr 2010 19:34:33 -0400
+Received: by pva18 with SMTP id 18so336650pva.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 16:34:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100406224115.2937.89309.stgit@mj.roinet.com>
+References: <20100406224109.2937.65315.stgit@mj.roinet.com>
+	<20100406224115.2937.89309.stgit@mj.roinet.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 6 Apr 2010 16:34:12 -0700
+Message-ID: <k2y43e72e891004061634g742c152cy9cee161d613ba2eb@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat: add stub headers linux/tracepoint.h and
+	trace/define_trace.h
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It does not make sense to forward MIC-errors on non-decrypted frames.
+On Tue, Apr 6, 2010 at 3:41 PM, Pavel Roskin <proski@gnu.org> wrote:
+> This should make 13-trace.patch in compat-wireless unnecessary.
 
-Signed-off-by: Johan Hovold <johan.hovold@lundinova.se>
----
+Thanks! Applied both.
 
- drivers/net/wireless/ath/ath9k/common.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 1623af1..6efb388 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -255,11 +255,15 @@ void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
- 
- 	keyix = rx_stats->rs_keyix;
- 
--	if (ieee80211_has_protected(fc) && !decrypt_error &&
--		!(rx_stats->rs_flags & ATH9K_RX_DECRYPT_BUSY) &&
--		!(rx_stats->rs_flags & ATH9K_RX_KEY_MISS)) {
--		if (keyix != ATH9K_RXKEYIX_INVALID)
-+	if (ieee80211_has_protected(fc)) {
-+		if (!decrypt_error &&
-+		    !(rx_stats->rs_flags & ATH9K_RX_DECRYPT_BUSY) &&
-+		    !(rx_stats->rs_flags & ATH9K_RX_KEY_MISS) &&
-+		    keyix != ATH9K_RXKEYIX_INVALID) {
- 			rxs->flag |= RX_FLAG_DECRYPTED;
-+		}
-+		if (!(rxs->flag & RX_FLAG_DECRYPTED))
-+			rxs->flag &= ~RX_FLAG_MMIC_ERROR;
- 	}
- 	if (ah->sw_mgmt_crypto &&
- 	    (rxs->flag & RX_FLAG_DECRYPTED) &&
--- 
-1.7.0.3
-
+ Luis
