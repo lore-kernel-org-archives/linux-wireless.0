@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39342 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754184Ab0DZTEm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40987 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134Ab0DFJGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 15:04:42 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 12/13] ath9k_hw: fix noisefloor timeout handling on AR9003
-Date: Mon, 26 Apr 2010 15:04:40 -0400
-Message-Id: <1272308681-32396-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
-References: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 6 Apr 2010 05:06:10 -0400
+Subject: Re: [PATCH] mac80211: check whether scan is in progress before
+ queueing scan_work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Apr 2010 11:06:05 +0200
+Message-ID: <1270544765.3929.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Tue, 2010-04-06 at 11:54 +0300, Teemu Paasikivi wrote:
+> As scan_work is queued from work_work it needs to be checked if scan
+> has been started during execution of work_work. Otherwise, when hw
+> scan is used, the stack gets error about hw being busy with ongoing
+> scan.
 
-When the noisefloor calibration times out, do not load -50 into
-the registers, since this might cause rx issues. Instead, leave
-enough time for the noise floor calibration to complete until
-the next check.
+Does that mean we ask the driver to scan twice? And your particular
+driver returns busy?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+>  This causes the stack to abort scan without notifying the driver
+> about it. This leads to a situation where the hw is scanning and the stack
+> thinks it's not. Then when the scan finishes, the stack will complain by
+> warnings.
+> 
+> Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+> ---
+>  net/mac80211/work.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+> index 1e1ea30..7bd8670 100644
+> --- a/net/mac80211/work.c
+> +++ b/net/mac80211/work.c
+> @@ -919,11 +919,16 @@ static void ieee80211_work_work(struct work_struct *work)
+>  		run_again(local, jiffies + HZ/2);
+>  	}
+>  
+> -	if (list_empty(&local->work_list) && local->scan_req)
+> +	mutex_lock(&local->scan_mtx);
+> +
+> +	if (list_empty(&local->work_list) && local->scan_req &&
+> +	    !local->scanning)
+>  		ieee80211_queue_delayed_work(&local->hw,
+>  					     &local->scan_work,
+>  					     round_jiffies_relative(0));
+>  
+> +	mutex_unlock(&local->scan_mtx);
+> +
+>  	mutex_unlock(&local->work_mtx);
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 806f4a5..80431a2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1093,6 +1093,7 @@ static void ar9003_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 		ath_print(common, ATH_DBG_ANY, "Timeout while waiting for nf "
- 			  "to load: AR_PHY_AGC_CONTROL=0x%x\n",
- 			  REG_READ(ah, AR_PHY_AGC_CONTROL));
-+		return;
- 	}
- 
- 	/*
--- 
-1.6.3.3
+That really doesn't look right ... at all.
+
+johannes
 
