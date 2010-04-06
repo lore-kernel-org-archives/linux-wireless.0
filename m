@@ -1,85 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65010 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755385Ab0DWE6f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 00:58:35 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:35 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19409.10466.817378.966047@gargle.gargle.HOWL>
-Date: Fri, 23 Apr 2010 10:28:10 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/11] ath9k_htc: Handle device unplug properly
+Received: from he.sipsolutions.net ([78.46.109.217]:47114 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751228Ab0DFJWj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Apr 2010 05:22:39 -0400
+Message-Id: <20100406091841.549805267@sipsolutions.net>
+Date: Tue, 06 Apr 2010 11:18:41 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/7] mac80211 fixes
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the USB device has been unplugged, there is
-no point in trying to send commands to the target.
-Fix this by denying all WMI commands in such a case.
+Here are a few mac80211 fixes, I'll let you decide
+which trees to add them to. The first one is only
+relevant for -34 and should probably be applied there
+to avoid all the warnings.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++++++++
- drivers/net/wireless/ath/ath9k/wmi.c          |    3 +++
- 3 files changed, 12 insertions(+), 0 deletions(-)
+The other ones in theory apply to some previous
+versions, but nobody seems to have run into any
+of the problems, and they are quite unlikely to
+actually happen due to the way the code is otherwise
+structured and the amount of code in there. I
+was reluctant to add stable tags to all of them
+for that reason since they're quite big.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index c765ff4..b771e20 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -329,6 +329,7 @@ struct htc_beacon_config {
- #define OP_ASSOCIATED     BIT(8)
- #define OP_ENABLE_BEACON  BIT(9)
- #define OP_LED_DEINIT     BIT(10)
-+#define OP_UNPLUGGED      BIT(11)
- 
- struct ath9k_htc_priv {
- 	struct device *dev;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a861896..701f2ef 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -744,6 +744,9 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 	if (ret)
- 		goto err_init;
- 
-+	/* The device may have been unplugged earlier. */
-+	priv->op_flags &= ~OP_UNPLUGGED;
-+
- 	ret = ath9k_init_device(priv, devid);
- 	if (ret)
- 		goto err_init;
-@@ -760,6 +763,11 @@ err_free:
- void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
- {
- 	if (htc_handle->drv_priv) {
-+
-+		/* Check if the device has been yanked out. */
-+		if (hotunplug)
-+			htc_handle->drv_priv->op_flags |= OP_UNPLUGGED;
-+
- 		ath9k_deinit_device(htc_handle->drv_priv);
- 		ath9k_deinit_wmi(htc_handle->drv_priv);
- 		ieee80211_free_hw(htc_handle->drv_priv->hw);
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index dc6c6fc..c688545 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -276,6 +276,9 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 	int time_left, ret = 0;
- 	unsigned long flags;
- 
-+	if (wmi->drv_priv->op_flags & OP_UNPLUGGED)
-+		return 0;
-+
- 	if (!wmi)
- 		return -EINVAL;
- 
--- 
-1.7.0.5
+johannes
 
