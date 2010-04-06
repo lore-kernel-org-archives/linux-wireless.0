@@ -1,42 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.211.194]:34205 "EHLO
-	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515Ab0DTMn3 (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41597 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751371Ab0DFPEF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 08:43:29 -0400
+	Tue, 6 Apr 2010 11:04:05 -0400
+Date: Tue, 6 Apr 2010 18:03:57 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iw: Parse some common WPS attributes
+Message-ID: <20100406150357.GA26375@jm.kir.nu>
 MIME-Version: 1.0
-In-Reply-To: <4BCCB176.3060206@gmail.com>
-References: <4BCCB176.3060206@gmail.com>
-From: Grant Likely <grant.likely@secretlab.ca>
-Date: Tue, 20 Apr 2010 06:43:09 -0600
-Message-ID: <i2wfa686aa41004200543gfbb71c98m9a70120fe1cbc8b9@mail.gmail.com>
-Subject: Re: Google Summer of Code 2010 - Please resolve duplicates
-To: Till Kamppeter <till.kamppeter@gmail.com>,
-	Rik van Riel <riel@redhat.com>
-Cc: "Theodore Ts'o" <tytso@mit.edu>, Greg KH <greg@kroah.com>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Witold Sowa <witold.sowa@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 19, 2010 at 1:39 PM, Till Kamppeter
-<till.kamppeter@gmail.com> wrote:
-> Please mail me if a mentor needs to be (re)assigned.
+Make iw scan result output a bit more readable for WPS APs by parsing
+some of the commonly used attributes instead of showing them as unknown
+TLVs with a hex dump.
+---
+diff --git a/scan.c b/scan.c
+index c0287c4..09b1047 100644
+--- a/scan.c
++++ b/scan.c
+@@ -683,6 +683,26 @@ static void print_wifi_wmm(const uint8_t type, uint8_t len, const uint8_t *data)
+ 	printf("\n");
+ }
+ 
++static const char * wifi_wps_dev_passwd_id(uint16_t id)
++{
++	switch (id) {
++	case 0:
++		return "Default (PIN)";
++	case 1:
++		return "User-specified";
++	case 2:
++		return "Machine-specified";
++	case 3:
++		return "Rekey";
++	case 4:
++		return "PushButton";
++	case 5:
++		return "Registrar-specified";
++	default:
++		return "??";
++	}
++}
++
+ static void print_wifi_wps(const uint8_t type, uint8_t len, const uint8_t *data)
+ {
+ 	bool first = true;
+@@ -703,6 +723,19 @@ static void print_wifi_wps(const uint8_t type, uint8_t len, const uint8_t *data)
+ 			tab_on_first(&first);
+ 			printf("\t * Device name: %.*s\n", sublen, data + 4);
+ 			break;
++		case 0x1012: {
++			uint16_t id;
++			tab_on_first(&first);
++			if (sublen != 2) {
++				printf("\t * Device Password ID: (invalid "
++				       "length %d)\n", sublen);
++				break;
++			}
++			id = data[4] << 8 | data[5];
++			printf("\t * Device Password ID: %u (%s)\n",
++			       id, wifi_wps_dev_passwd_id(id));
++			break;
++		}
+ 		case 0x1021:
+ 			tab_on_first(&first);
+ 			printf("\t * Manufacturer: %.*s\n", sublen, data + 4);
+@@ -711,17 +744,69 @@ static void print_wifi_wps(const uint8_t type, uint8_t len, const uint8_t *data)
+ 			tab_on_first(&first);
+ 			printf("\t * Model: %.*s\n", sublen, data + 4);
+ 			break;
++		case 0x1024:
++			tab_on_first(&first);
++			printf("\t * Model Number: %.*s\n", sublen, data + 4);
++			break;
++		case 0x103b: {
++			__u8 val = data[4];
++			tab_on_first(&first);
++			printf("\t * Response Type: %d%s\n",
++			       val, val == 3 ? " (AP)" : "");
++			break;
++		}
++		case 0x103c: {
++			__u8 val = data[4];
++			tab_on_first(&first);
++			printf("\t * RF Bands: 0x%x\n", val);
++			break;
++		}
++		case 0x1041: {
++			__u8 val = data[4];
++			tab_on_first(&first);
++			printf("\t * Selected Registrar: 0x%x\n", val);
++			break;
++		}
++		case 0x1042:
++			tab_on_first(&first);
++			printf("\t * Serial Number: %.*s\n", sublen, data + 4);
++			break;
++		case 0x1044: {
++			__u8 val = data[4];
++			tab_on_first(&first);
++			printf("\t * Wi-Fi Protected Setup State: %d%s%s\n",
++			       val,
++			       val == 1 ? " (Unconfigured)" : "",
++			       val == 2 ? " (Configured)" : "");
++			break;
++		}
++		case 0x1054: {
++			tab_on_first(&first);
++			if (sublen != 8) {
++				printf("\t * Primary Device Type: (invalid "
++				       "length %d)\n", sublen);
++				break;
++			}
++			printf("\t * Primary Device Type: "
++			       "%u-%02x%02x%02x%02x-%u\n",
++			       data[4] << 8 | data[5],
++			       data[6], data[7], data[8], data[9],
++			       data[10] << 8 | data[11]);
++			break;
++		}
+ 		case 0x1057: {
+ 			__u8 val = data[4];
+ 			tab_on_first(&first);
+ 			printf("\t * AP setup locked: 0x%.2x\n", val);
+ 			break;
+ 		}
+-		case 0x1008: {
++		case 0x1008:
++		case 0x1053: {
+ 			__u16 meth = (data[4] << 8) + data[5];
+ 			bool comma = false;
+ 			tab_on_first(&first);
+-			printf("\t * Config methods:");
++			printf("\t * %sConfig methods:",
++			       subtype == 0x1053 ? "Selected Registrar ": "");
+ #define T(bit, name) do {		\
+ 	if (meth & (1<<bit)) {		\
+ 		if (comma)		\
 
-Nitin Gupta has 2 proposals on the table (one pending acceptance, and
-one rejection).  I'm assigned as mentor on both of them, but I'm
-certainly not qualified.  Rik van Riel has expressed a willingness to
-mentor Nitin.  Rik, are you willing to take on a second student, or
-can you suggest somebody to mentor Nitin?
-
-Alex Lorca's Locator/ID Separation Protocol project is pending
-acceptance, but it has not been reviewed by anyone working in the area
-of network routing.  Again, I'm not qualified to mentor this project
-and I do not know who to suggest.
-
-g.
+-- 
+Jouni Malinen                                            PGP id EFC895FA
