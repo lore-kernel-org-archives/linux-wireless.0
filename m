@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48287 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312Ab0D1N7U (ORCPT
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:55028 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753402Ab0DFTw3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 09:59:20 -0400
-Subject: Re: [PATCH 2/2] mac80211: fix supported rates IE if AP doesn't
- give us it's rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20100428155755.75f1dc5a@dhcp-lab-109.englab.brq.redhat.com>
-References: <1272460624-3611-1-git-send-email-sgruszka@redhat.com>
-	 <1272460624-3611-2-git-send-email-sgruszka@redhat.com>
-	 <1272461964.3565.21.camel@jlt3.sipsolutions.net>
-	 <20100428155755.75f1dc5a@dhcp-lab-109.englab.brq.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 28 Apr 2010 15:59:17 +0200
-Message-ID: <1272463157.3565.22.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 6 Apr 2010 15:52:29 -0400
+Message-ID: <4BBB90F6.8060406@gmail.com>
+Date: Tue, 06 Apr 2010 21:52:22 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, users@rt2x00.serialmonkey.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/4] rt2x00: Powersave fixes.
+References: <1269985826-17438-1-git-send-email-gwingerde@gmail.com> <20100406193409.GA3017@tuxdriver.com>
+In-Reply-To: <20100406193409.GA3017@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-04-28 at 15:57 +0200, Stanislaw Gruszka wrote:
-> On Wed, 28 Apr 2010 15:39:24 +0200
-> Johannes Berg <johannes@sipsolutions.net> wrote:
+On 04/06/10 21:34, John W. Linville wrote:
+> On Tue, Mar 30, 2010 at 11:50:22PM +0200, Gertjan van Wingerde wrote:
+>> The following 4 patches fix powersave behavior of rt2x00.
+>> The first patch fixes the rt2500usb powersave issues found lately.
+>> The second on enables powersave for rt2500usb again, now it is fixed.
+>> The third and fourth are ongoing work to bring the other PCI drivers
+>> in a better shape.
+>>
+>> All patches are against wireless-2.6.
+>>
+>> The patch series is also available via:
+>>
+>> 	git://git.gwingerde.nl/rt2x00-2.6.git
+>>
+>> Gertjan van Wingerde (4):
+>>   rt2x00: Disable auto wakeup before waking up device.
+>>   rt2x00: Enable powersaving by default again on rt2500usb.
+>>   rt2x00: Add wakeup interrupt handler to rt61pci.
+>>   rt2x00: Add wakeup interrupt handler to rt2800pci.
 > 
-> > Could you add a comment about what AP this is
+> I don't have any objection to these patches, but they don't
+> seem appropriate for 2.6.34 to me.  As such, basing them on
+> wireless-next-2.6 seems more appropriate.
 > 
-> Bug reporter don't know what AP it is. He fail to connect
-> to wireless network at school.
-> https://bugzilla.redhat.com/show_bug.cgi?id=558002
-
-Ah bugger.
-
-> >, and that it's a
-> > workaround please?
+> Any objection to me applying them for 2.6.35?
 > 
-> I don't think this is workaround. For me this is right behavior
-> and fix for workaround introduced in commit
-> 36d16ae73becc5978fe22866e9ab66b509211afe "mac80211: fix association
-> with some APs"
 
-Oh yeah so it's a workaround for a workaround. Oh well. Can we still
-have a comment about it in the else branch?
+You're the boss ;-)
 
-johannes
+No, no objections from my side. We already disabled powersaving in 2.6.34,
+so we should be covered for that release.
 
+Note that patch 2 then won't apply to wireless-next-2.6, as the patch
+that disables powersaving is only in wireless-2.6.
+
+How do you want to handle applying patch 2 from the series; how do we
+synchronize?
+
+---
+Gertjan.
