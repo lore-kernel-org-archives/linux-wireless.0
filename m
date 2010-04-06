@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42399 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671Ab0DZLyJ (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:34869 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756836Ab0DFV0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 07:54:09 -0400
-Subject: Re: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based
- on ps-qos network latency
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1271928576.6205.8919.camel@wimaxnb.nmp.nokia.com>
-References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271688177.23671.1.camel@jlt3.sipsolutions.net>
-	 <1271740120.6205.5733.camel@wimaxnb.nmp.nokia.com>
-	 <1271925939.3605.7.camel@jlt3.sipsolutions.net>
-	 <1271926547.6205.8870.camel@wimaxnb.nmp.nokia.com>
-	 <1271927257.3605.18.camel@jlt3.sipsolutions.net>
-	 <1271928576.6205.8919.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Apr 2010 13:54:05 +0200
-Message-ID: <1272282845.3619.25.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 6 Apr 2010 17:26:53 -0400
+Received: by ewy20 with SMTP id 20so210121ewy.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 14:26:51 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 0/4] rt2x00: Powersave fixes.
+Date: Tue, 6 Apr 2010 23:26:48 +0200
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <1269985826-17438-1-git-send-email-gwingerde@gmail.com> <20100406193409.GA3017@tuxdriver.com> <4BBB90F6.8060406@gmail.com>
+In-Reply-To: <4BBB90F6.8060406@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201004062326.48463.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-22 at 12:29 +0300, Juuso Oikarinen wrote:
-
-> > Still I think you should say why you need to actually tune the PS
-> > timeout value directly? I can't see how your high-level design says "set
-> > dynamic PS timeout to 100ms" rather than "make sure that while the user
-> > is operating the device, there's no delay of more than 50ms" or
-> > something like that?
+On Tuesday 06 April 2010, Gertjan van Wingerde wrote:
+> On 04/06/10 21:34, John W. Linville wrote:
+> > On Tue, Mar 30, 2010 at 11:50:22PM +0200, Gertjan van Wingerde wrote:
+> >> The following 4 patches fix powersave behavior of rt2x00.
+> >> The first patch fixes the rt2500usb powersave issues found lately.
+> >> The second on enables powersave for rt2500usb again, now it is fixed.
+> >> The third and fourth are ongoing work to bring the other PCI drivers
+> >> in a better shape.
+> >>
+> >> All patches are against wireless-2.6.
+> >>
+> >> The patch series is also available via:
+> >>
+> >> 	git://git.gwingerde.nl/rt2x00-2.6.git
+> >>
+> >> Gertjan van Wingerde (4):
+> >>   rt2x00: Disable auto wakeup before waking up device.
+> >>   rt2x00: Enable powersaving by default again on rt2500usb.
+> >>   rt2x00: Add wakeup interrupt handler to rt61pci.
+> >>   rt2x00: Add wakeup interrupt handler to rt2800pci.
+> > 
+> > I don't have any objection to these patches, but they don't
+> > seem appropriate for 2.6.34 to me.  As such, basing them on
+> > wireless-next-2.6 seems more appropriate.
+> > 
+> > Any objection to me applying them for 2.6.35?
+> > 
 > 
-> You're partly right asking this. The high-level design obviously does
-> not know about dynamic PS timeouts. It seems you're mainly looking at
-> this from the angle of the network latency itself - i.e. network
-> performance. My primary angle currently is power consumption.
+> You're the boss ;-)
 > 
-> IMHO both angles are correct. The if the user sets a tight
-> network-latency requirement, the value can be used to tune things so
-> that the requirement can be met. If they set a loose requirement, it can
-> be used as a signal to do more aggressive power saving, which often
-> means reduced latency.
-
-Well I would argue that if the user requires a certain network latency,
-that should take precedence. The user is unlikely to be thinking in
-terms of "I want my battery to last that long"; rather they want to last
-it as long as possible given their quality of service demand
-constraints?
-
-> While the mechanism I'm proposing here is rather crude, it does save
-> power when the user-space loosens their latency requirement. The values
-> chosen for the dynamic ps-timeout bear no direct relation to user space
-> requirements. They are simply values that we have found to give decent
-> results in typical AP configurations.
+> No, no objections from my side. We already disabled powersaving in 2.6.34,
+> so we should be covered for that release.
 > 
-> The ps_timeout could be calculated based on the latency too, I guess.
-> I'm just not aware of any simple formula to do this.
+> Note that patch 2 then won't apply to wireless-next-2.6, as the patch
+> that disables powersaving is only in wireless-2.6.
+> 
+> How do you want to handle applying patch 2 from the series; how do we
+> synchronize?
 
-But you did just base it on that?
+John, not sure how important you consider it, but please note that the first 2 patches would fix:
+https://bugzilla.kernel.org/show_bug.cgi?id=15699
 
-It just seems to me that you're putting the power consumption
-requirements after the quality of service demands, which would seem
-wrong?
-
-johannes
-
+Ivo
