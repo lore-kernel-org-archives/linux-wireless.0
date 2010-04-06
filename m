@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:57510 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756048Ab0DGXGJ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37317 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498Ab0DFK2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 19:06:09 -0400
-Date: Thu, 8 Apr 2010 00:06:07 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.34-rc3-git6: Reported regressions from 2.6.33
-Message-ID: <20100407230607.GM30031@ZenIV.linux.org.uk>
-References: <6Pphclm24fK.A.lSF.qsPvLB@chimera>
- <alpine.LFD.2.00.1004071444440.3586@i5.linux-foundation.org>
- <20100407221941.GL30031@ZenIV.linux.org.uk>
- <alpine.LFD.2.00.1004071521500.3586@i5.linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.2.00.1004071521500.3586@i5.linux-foundation.org>
+	Tue, 6 Apr 2010 06:28:03 -0400
+Subject: Re: [PATCH] mac80211: check whether scan is in progress before
+ queueing scan_work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1270549017.7150.28.camel@paavo-desktop>
+References: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1270544765.3929.2.camel@jlt3.sipsolutions.net>
+	 <1270549017.7150.28.camel@paavo-desktop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Apr 2010 12:27:57 +0200
+Message-ID: <1270549677.3929.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 07, 2010 at 03:22:20PM -0700, Linus Torvalds wrote:
-> 
-> 
-> On Wed, 7 Apr 2010, Al Viro wrote:
+On Tue, 2010-04-06 at 13:16 +0300, Teemu Paasikivi wrote:
+> On Tue, 2010-04-06 at 11:06 +0200, ext Johannes Berg wrote:
+> > On Tue, 2010-04-06 at 11:54 +0300, Teemu Paasikivi wrote:
+> > > As scan_work is queued from work_work it needs to be checked if scan
+> > > has been started during execution of work_work. Otherwise, when hw
+> > > scan is used, the stack gets error about hw being busy with ongoing
+> > > scan.
 > > 
-> > No, it's not the same thing; the fix is to have nfs ->d_revalidate()
-> > return an error on failing open attempt (in insane codepath that has
-> > ->d_revalidate() handling open()).  Confirmed to work by reporter...
+> > Does that mean we ask the driver to scan twice? And your particular
+> > driver returns busy?
+> > 
 > 
-> Ok, can you do the proper changelog description and sign-offs etc?
+> Yes. There seems to be a possibility, that when ieee80211_work_work is
+> being executed, __ieee80211_start_scan gets called and it starts a hw
+> scan, and also sets local->hw_scan_req etc. (because it looks like
+> there's some holes in use of scan_mtx). Result is that work_work queues
+> ieee80211_scan_work and when it is executed, as there's already
+> hw_scan_req set, it will try to start hw scan again. And as the driver
+> used returns busy, scan_work will call ieee80211_scan_completed function
+> which leaves the driver (hw more precisely) scanning and the stack
+> thinking that it is not anymore scanning.
+> 
+> Obviously this kind of situation doesn't happen very often in normal
+> use, but it can be caused quite easily by associating to access points
+> in a loop while running scan in another loop.
 
-[PATCH] Have nfs ->d_revalidate() report errors properly
+Makes some sense. Ignore my other email(s), I looked at this in more
+detail now.
 
-	If nfs atomic open implementation ends up doing open request from
-->d_revalidate() codepath and gets an error from server, return that error
-to caller explicitly and don't bother with lookup_instantiate_filp() at all.
-->d_revalidate() can return an error itself just fine...
+It would appear that we need to fix some of the locking here,
+potentially simply using a single mutex for both work and scan?
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
-diff --git a/fs/nfs/nfs4proc.c b/fs/nfs/nfs4proc.c
-index d79a7b3..fe0cd9e 100644
---- a/fs/nfs/nfs4proc.c
-+++ b/fs/nfs/nfs4proc.c
-@@ -2068,8 +2068,7 @@ nfs4_open_revalidate(struct inode *dir, struct dentry *dentry, int openflags, st
- 			case -EDQUOT:
- 			case -ENOSPC:
- 			case -EROFS:
--				lookup_instantiate_filp(nd, (struct dentry *)state, NULL);
--				return 1;
-+				return PTR_ERR(state);
- 			default:
- 				goto out_drop;
- 		}
+johannes
+
