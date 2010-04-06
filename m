@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:58530 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953Ab0DKQzo (ORCPT
+Received: from helcar.apana.org.au ([209.40.204.226]:59835 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756077Ab0DFAjv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 12:55:44 -0400
-Received: by ewy20 with SMTP id 20so1707665ewy.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2010 09:55:42 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 4/9] rt2x00: Refactor rt2800 version constants.
-Date: Sun, 11 Apr 2010 18:55:40 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270989075-2267-5-git-send-email-gwingerde@gmail.com>
+	Mon, 5 Apr 2010 20:39:51 -0400
+Date: Tue, 6 Apr 2010 08:39:39 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Convert arc4 from a cipher into a block cipher
+Message-ID: <20100406003939.GA21130@gondor.apana.org.au>
+References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc> <1270499625.28743.37.camel@mj>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201004111855.40831.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1270499625.28743.37.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 11 April 2010, Gertjan van Wingerde wrote:
-> The rt2800 version constants are inconsistent, and the version number don't
-> mean a lot of things anyway. Refactor the constants to have some more
-> meaningful names, and introduce and use some new helpers to check these
-> chipset revisions. At the same time rename to revision, as they are more
-> revision numbers rather than version numbers.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Mon, Apr 05, 2010 at 04:33:45PM -0400, Pavel Roskin wrote:
+>
+> Are you trying to speed up arc4?  Or you want to simplify the code?  Or
+> maybe you are trying to make arc4 unsuitable for anything other than WEP
+> and TKIP?  The later should be fine, actually, considering the known
+> security issues.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+No the point is to make arc4 compliant with the crypto API by
+being reentrant.
 
+Functionality-wise there is no difference.
+
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
