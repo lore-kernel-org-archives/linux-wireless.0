@@ -1,140 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:39538 "EHLO ds10.nbd.name"
+Received: from mail.atheros.com ([12.36.123.2]:22583 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754020Ab0DRPyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Apr 2010 11:54:54 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2/9] ath9k: clean up tx buffer handling
-Date: Sun, 18 Apr 2010 16:56:35 +0200
-Message-Id: <1271602602-8538-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
-References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+	id S1751828Ab0DFJho (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Apr 2010 05:37:44 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 02:37:44 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19387.1463.310224.890658@gargle.gargle.HOWL>
+Date: Tue, 6 Apr 2010 15:28:15 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/5] ath9k_htc: Fix module unloading issue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |   67 ++++++++++++++++-----------------
- 1 files changed, 32 insertions(+), 35 deletions(-)
+The maximum number of packets in a single buffer in
+stream mode is 10. The driver currently uses 8 - which
+caused stack corruption, in the absence of any kind
+of OOB checking.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index cac178a..fcbb4a8 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -261,19 +261,40 @@ static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
- 	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_RETRY);
- }
- 
--static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
-+static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
+Fixing this to the correct value of 10 fixes the module
+unload issue.
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    2 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 4528df4..69bef1d 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -324,7 +324,7 @@ static struct ath9k_htc_hif hif_usb = {
+ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 				    struct sk_buff *skb)
  {
--	struct ath_buf *tbf;
-+	struct ath_buf *bf = NULL;
+-	struct sk_buff *nskb, *skb_pool[8];
++	struct sk_buff *nskb, *skb_pool[MAX_PKT_NUM_IN_TRANSFER];
+ 	int index = 0, i = 0, chk_idx, len = skb->len;
+ 	int rx_remain_len = 0, rx_pkt_len = 0;
+ 	u16 pkt_len, pkt_tag, pool_index = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index ed9708c..179cea4 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -34,6 +34,7 @@
  
- 	spin_lock_bh(&sc->tx.txbuflock);
--	if (WARN_ON(list_empty(&sc->tx.txbuf))) {
-+
-+	if (unlikely(list_empty(&sc->tx.txbuf))) {
- 		spin_unlock_bh(&sc->tx.txbuflock);
- 		return NULL;
- 	}
--	tbf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
--	list_del(&tbf->list);
-+
-+	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
-+	list_del(&bf->list);
-+
- 	spin_unlock_bh(&sc->tx.txbuflock);
+ #define MAX_RX_URB_NUM  8
+ #define MAX_RX_BUF_SIZE 16384
++#define MAX_PKT_NUM_IN_TRANSFER 10
  
-+	return bf;
-+}
-+
-+static void ath_tx_return_buffer(struct ath_softc *sc, struct ath_buf *bf)
-+{
-+	spin_lock_bh(&sc->tx.txbuflock);
-+	list_add_tail(&bf->list, &sc->tx.txbuf);
-+	spin_unlock_bh(&sc->tx.txbuflock);
-+}
-+
-+static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
-+{
-+	struct ath_buf *tbf;
-+
-+	tbf = ath_tx_get_buffer(sc);
-+	if (WARN_ON(!tbf))
-+		return NULL;
-+
- 	ATH_TXBUF_RESET(tbf);
- 
- 	tbf->aphy = bf->aphy;
-@@ -1081,9 +1102,7 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
- 				list_del(&bf->list);
- 				spin_unlock_bh(&txq->axq_lock);
- 
--				spin_lock_bh(&sc->tx.txbuflock);
--				list_add_tail(&bf->list, &sc->tx.txbuf);
--				spin_unlock_bh(&sc->tx.txbuflock);
-+				ath_tx_return_buffer(sc, bf);
- 				continue;
- 			}
- 		}
-@@ -1325,25 +1344,6 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 	txq->axq_depth++;
- }
- 
--static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
--{
--	struct ath_buf *bf = NULL;
--
--	spin_lock_bh(&sc->tx.txbuflock);
--
--	if (unlikely(list_empty(&sc->tx.txbuf))) {
--		spin_unlock_bh(&sc->tx.txbuflock);
--		return NULL;
--	}
--
--	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
--	list_del(&bf->list);
--
--	spin_unlock_bh(&sc->tx.txbuflock);
--
--	return bf;
--}
--
- static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
- 			      struct list_head *bf_head,
- 			      struct ath_tx_control *txctl)
-@@ -1825,9 +1825,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		}
- 		spin_unlock_bh(&txq->axq_lock);
- 
--		spin_lock_bh(&sc->tx.txbuflock);
--		list_add_tail(&bf->list, &sc->tx.txbuf);
--		spin_unlock_bh(&sc->tx.txbuflock);
-+		ath_tx_return_buffer(sc, bf);
- 
- 		return r;
- 	}
-@@ -2141,13 +2139,12 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		txq->axq_depth--;
- 		txok = !(ts.ts_status & ATH9K_TXERR_MASK);
- 		txq->axq_tx_inprogress = false;
-+		if (bf_held)
-+			list_del(&bf_held->list);
- 		spin_unlock_bh(&txq->axq_lock);
- 
--		if (bf_held) {
--			spin_lock_bh(&sc->tx.txbuflock);
--			list_move_tail(&bf_held->list, &sc->tx.txbuf);
--			spin_unlock_bh(&sc->tx.txbuflock);
--		}
-+		if (bf_held)
-+			ath_tx_return_buffer(sc, bf_held);
- 
- 		if (!bf_isampdu(bf)) {
- 			/*
+ #define MAX_REG_OUT_URB_NUM  1
+ #define MAX_REG_OUT_BUF_NUM  8
 -- 
-1.6.4.2
+1.7.0.3
 
