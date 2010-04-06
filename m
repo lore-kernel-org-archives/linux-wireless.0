@@ -1,373 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22985 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754884Ab0DPG0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 02:26:49 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:26:49 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19400.769.142679.327917@gargle.gargle.HOWL>
-Date: Fri, 16 Apr 2010 11:56:09 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/10] ath9k_htc: Fix sparse endian warnings
+Received: from buzzloop.caiaq.de ([212.112.241.133]:52096 "EHLO
+	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134Ab0DFIxA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Apr 2010 04:53:00 -0400
+From: Daniel Mack <daniel@caiaq.de>
+To: linux-kernel@vger.kernel.org
+Cc: Daniel Mack <daniel@caiaq.de>,
+	Alagu Sankar <alagusankar@embwise.com>,
+	Volker Ernst <volker.ernst@txtr.com>,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Subject: [PATCH] libertas/sdio: 8686: set ECSI bit for 1-bit transfers
+Date: Tue,  6 Apr 2010 10:52:44 +0200
+Message-Id: <1270543964-18130-1-git-send-email-daniel@caiaq.de>
+In-Reply-To: <1270521759.24724.6.camel@localhost.localdomain>
+References: <1270521759.24724.6.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a bunch of endian issues that
-were exposed by sparse. It's a miracle that the driver
-worked at all till now.
+When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
+However, the 8686 will only drive this line when the ECSI bit is set in
+the CCCR_IF register.
 
-The Lord be praised.
+Thanks to Alagu Sankar for pointing me in the right direction.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Daniel Mack <daniel@caiaq.de>
+Cc: Alagu Sankar <alagusankar@embwise.com>
+Cc: Volker Ernst <volker.ernst@txtr.com>
+Cc: Dan Williams <dcbw@redhat.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-mmc@vger.kernel.org
 ---
- drivers/net/wireless/ath/ath9k/htc.h            |   18 ++++++++--------
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    6 +++-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   14 +++++++-----
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   11 ++-------
- drivers/net/wireless/ath/ath9k/htc_hst.c        |    8 +++---
- drivers/net/wireless/ath/ath9k/htc_hst.h        |   24 +++++++++++-----------
- drivers/net/wireless/ath/ath9k/mac.h            |   10 ++++----
- drivers/net/wireless/ath/ath9k/wmi.c            |    2 +-
- drivers/net/wireless/ath/ath9k/wmi.h            |   10 ++++----
- 9 files changed, 51 insertions(+), 52 deletions(-)
+ drivers/net/wireless/libertas/if_sdio.c |   22 ++++++++++++++++++++++
+ include/linux/mmc/sdio.h                |    2 ++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 6a4614a..c765ff4 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -124,13 +124,13 @@ struct ath9k_htc_cap_target {
- struct ath9k_htc_target_vif {
- 	u8 index;
- 	u8 des_bssid[ETH_ALEN];
--	enum htc_opmode opmode;
-+	__be32 opmode;
- 	u8 myaddr[ETH_ALEN];
- 	u8 bssid[ETH_ALEN];
- 	u32 flags;
- 	u32 flags_ext;
- 	u16 ps_sta;
--	u16 rtsthreshold;
-+	__be16 rtsthreshold;
- 	u8 ath_cap;
- 	u8 node;
- 	s8 mcast_rate;
-@@ -151,7 +151,7 @@ struct ath9k_htc_target_sta {
- 	u8 sta_index;
- 	u8 vif_index;
- 	u8 vif_sta;
--	u16 flags; /* ATH_HTC_STA_* */
-+	__be16 flags; /* ATH_HTC_STA_* */
- 	u16 htcap;
- 	u8 valid;
- 	u16 capinfo;
-@@ -191,16 +191,16 @@ struct ath9k_htc_rate {
- struct ath9k_htc_target_rate {
- 	u8 sta_index;
- 	u8 isnew;
--	u32 capflags;
-+	__be32 capflags;
- 	struct ath9k_htc_rate rates;
- };
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 7a73f62..33206a9 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -34,6 +34,8 @@
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
++#include <linux/mmc/sdio.h>
++#include <linux/mmc/host.h>
  
- struct ath9k_htc_target_stats {
--	u32 tx_shortretry;
--	u32 tx_longretry;
--	u32 tx_xretries;
--	u32 ht_txunaggr_xretry;
--	u32 ht_tx_xretries;
-+	__be32 tx_shortretry;
-+	__be32 tx_longretry;
-+	__be32 tx_xretries;
-+	__be32 ht_txunaggr_xretry;
-+	__be32 ht_tx_xretries;
- } __packed;
+ #include "host.h"
+ #include "decl.h"
+@@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	int ret, i;
+ 	unsigned int model;
+ 	struct if_sdio_packet *packet;
++	struct mmc_host *host = func->card->host;
  
- struct ath9k_htc_vif {
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index d104028..7cb55f5 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -26,7 +26,8 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- 	enum ath9k_int imask = 0;
- 	int dtimperiod, dtimcount, sleepduration;
- 	int cfpperiod, cfpcount, bmiss_timeout;
--	u32 nexttbtt = 0, intval, tsftu, htc_imask = 0;
-+	u32 nexttbtt = 0, intval, tsftu;
-+	__be32 htc_imask = 0;
- 	u64 tsf;
- 	int num_beacons, offset, dtim_dec_count, cfp_dec_count;
- 	int ret;
-@@ -142,7 +143,8 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	enum ath9k_int imask = 0;
--	u32 nexttbtt, intval, htc_imask = 0;
-+	u32 nexttbtt, intval;
-+	__be32 htc_imask = 0;
- 	int ret;
- 	u8 cmd_rsp;
+ 	lbs_deb_enter(LBS_DEB_SDIO);
  
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 081f445..ec7bcc8 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -125,7 +125,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 	bool fastcc = true;
- 	struct ieee80211_channel *channel = hw->conf.channel;
- 	enum htc_phymode mode;
--	u16 htc_mode;
-+	__be16 htc_mode;
- 	u8 cmd_rsp;
- 	int ret;
+@@ -1022,6 +1025,25 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	if (ret)
+ 		goto disable;
  
-@@ -378,7 +378,7 @@ static int ath9k_htc_init_rate(struct ath9k_htc_priv *priv,
- 	priv->tgt_rate.sta_index = ista->index;
- 	priv->tgt_rate.isnew = 1;
- 	trate = priv->tgt_rate;
--	priv->tgt_rate.capflags = caps;
-+	priv->tgt_rate.capflags = cpu_to_be32(caps);
- 	trate.capflags = cpu_to_be32(caps);
++	/* For 1-bit transfers to the 8686 model, we need to enable the
++	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
++	 * bit to allow access to non-vendor registers. */
++	if ((card->model == IF_SDIO_MODEL_8686) &&
++	    (host->caps & MMC_CAP_SDIO_IRQ) &&
++	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
++		u8 reg;
++
++		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
++		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
++		if (ret)
++			goto release_int;
++
++		reg |= SDIO_BUS_ECSI;
++		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
++		if (ret)
++			goto release_int;
++	}
++
+ 	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+ 	if (ret)
+ 		goto release_int;
+diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
+index 0ebaef5..329a8fa 100644
+--- a/include/linux/mmc/sdio.h
++++ b/include/linux/mmc/sdio.h
+@@ -94,6 +94,8 @@
  
- 	WMI_CMD_BUF(WMI_RC_RATE_UPDATE_CMDID, &trate);
-@@ -426,6 +426,7 @@ static void ath9k_htc_rc_update(struct ath9k_htc_priv *priv, bool is_cw40)
- 	struct ath9k_htc_target_rate trate;
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	int ret;
-+	u32 caps = be32_to_cpu(priv->tgt_rate.capflags);
- 	u8 cmd_rsp;
+ #define  SDIO_BUS_WIDTH_1BIT	0x00
+ #define  SDIO_BUS_WIDTH_4BIT	0x02
++#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
++#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
  
- 	memset(&trate, 0, sizeof(trate));
-@@ -433,11 +434,12 @@ static void ath9k_htc_rc_update(struct ath9k_htc_priv *priv, bool is_cw40)
- 	trate = priv->tgt_rate;
+ #define  SDIO_BUS_ASYNC_INT	0x20
  
- 	if (is_cw40)
--		priv->tgt_rate.capflags |= WLAN_RC_40_FLAG;
-+		caps |= WLAN_RC_40_FLAG;
- 	else
--		priv->tgt_rate.capflags &= ~WLAN_RC_40_FLAG;
-+		caps &= ~WLAN_RC_40_FLAG;
- 
--	trate.capflags = cpu_to_be32(priv->tgt_rate.capflags);
-+	priv->tgt_rate.capflags = cpu_to_be32(caps);
-+	trate.capflags = cpu_to_be32(caps);
- 
- 	WMI_CMD_BUF(WMI_RC_RATE_UPDATE_CMDID, &trate);
- 	if (ret) {
-@@ -1104,7 +1106,7 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
- 	struct ath9k_channel *init_channel;
- 	int ret = 0;
- 	enum htc_phymode mode;
--	u16 htc_mode;
-+	__be16 htc_mode;
- 	u8 cmd_rsp;
- 
- 	ath_print(common, ATH_DBG_CONFIG,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 0a7cb30..2c3c510 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -530,7 +530,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
- 			priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
- 	}
- 
--	rx_status->mactime = rxbuf->rxstatus.rs_tstamp;
-+	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
- 	rx_status->signal =  rxbuf->rxstatus.rs_rssi + ATH_DEFAULT_NOISE_FLOOR;
-@@ -634,13 +634,8 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
- 
- 	rxstatus = (struct ath_htc_rx_status *)skb->data;
- 
--	rxstatus->rs_tstamp = be64_to_cpu(rxstatus->rs_tstamp);
--	rxstatus->rs_datalen = be16_to_cpu(rxstatus->rs_datalen);
--	rxstatus->evm0 = be32_to_cpu(rxstatus->evm0);
--	rxstatus->evm1 = be32_to_cpu(rxstatus->evm1);
--	rxstatus->evm2 = be32_to_cpu(rxstatus->evm2);
--
--	if (rxstatus->rs_datalen - (len - HTC_RX_FRAME_HEADER_SIZE) != 0) {
-+	if (be16_to_cpu(rxstatus->rs_datalen) -
-+	    (len - HTC_RX_FRAME_HEADER_SIZE) != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Corrupted RX data len, dropping "
- 			  "(epid: %d, dlen: %d, skblen: %d)\n",
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 587d98e..f2dca25 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -368,7 +368,7 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 	struct htc_frame_hdr *htc_hdr;
- 	enum htc_endpoint_id epid;
- 	struct htc_endpoint *endpoint;
--	u16 *msg_id;
-+	__be16 *msg_id;
- 
- 	if (!htc_handle || !skb)
- 		return;
-@@ -388,14 +388,14 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 
- 		/* Handle trailer */
- 		if (htc_hdr->flags & HTC_FLAGS_RECV_TRAILER) {
--			if (be32_to_cpu(*(u32 *) skb->data) == 0x00C60000)
-+			if (be32_to_cpu(*(__be32 *) skb->data) == 0x00C60000)
- 				/* Move past the Watchdog pattern */
- 				htc_hdr = (struct htc_frame_hdr *)(skb->data + 4);
- 		}
- 
- 		/* Get the message ID */
--		msg_id = (u16 *) ((void *) htc_hdr +
--					   sizeof(struct htc_frame_hdr));
-+		msg_id = (__be16 *) ((void *) htc_hdr +
-+				     sizeof(struct htc_frame_hdr));
- 
- 		/* Now process HTC messages */
- 		switch (be16_to_cpu(*msg_id)) {
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index cd7048f..ea50ab0 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -59,20 +59,20 @@ enum htc_endpoint_id {
- struct htc_frame_hdr {
- 	u8 endpoint_id;
- 	u8 flags;
--	u16 payload_len;
-+	__be16 payload_len;
- 	u8 control[4];
- } __packed;
- 
- struct htc_ready_msg {
--	u16 message_id;
--	u16 credits;
--	u16 credit_size;
-+	__be16 message_id;
-+	__be16 credits;
-+	__be16 credit_size;
- 	u8 max_endpoints;
- 	u8 pad;
- } __packed;
- 
- struct htc_config_pipe_msg {
--	u16 message_id;
-+	__be16 message_id;
- 	u8 pipe_id;
- 	u8 credits;
- } __packed;
-@@ -192,9 +192,9 @@ enum htc_service_group_ids{
- #define WMI_DATA_BK_SVC   MAKE_SERVICE_ID(WMI_SERVICE_GROUP, 8)
- 
- struct htc_conn_svc_msg {
--	u16 msg_id;
--	u16 service_id;
--	u16 con_flags;
-+	__be16 msg_id;
-+	__be16 service_id;
-+	__be16 con_flags;
- 	u8 dl_pipeid;
- 	u8 ul_pipeid;
- 	u8 svc_meta_len;
-@@ -209,17 +209,17 @@ struct htc_conn_svc_msg {
- #define HTC_SERVICE_NO_MORE_EP   4
- 
- struct htc_conn_svc_rspmsg {
--	u16 msg_id;
--	u16 service_id;
-+	__be16 msg_id;
-+	__be16 service_id;
- 	u8 status;
- 	u8 endpoint_id;
--	u16 max_msg_len;
-+	__be16 max_msg_len;
- 	u8 svc_meta_len;
- 	u8 pad;
- } __packed;
- 
- struct htc_comp_msg {
--	u16 msg_id;
-+	__be16 msg_id;
- } __packed;
- 
- int htc_init(struct htc_target *target);
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 68eb8d0..66d0d5e 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -155,8 +155,8 @@ struct ath_rx_status {
- };
- 
- struct ath_htc_rx_status {
--	u64 rs_tstamp;
--	u16 rs_datalen;
-+	__be64 rs_tstamp;
-+	__be16 rs_datalen;
- 	u8 rs_status;
- 	u8 rs_phyerr;
- 	int8_t rs_rssi;
-@@ -175,9 +175,9 @@ struct ath_htc_rx_status {
- 	u8 rs_num_delims;
- 	u8 rs_flags;
- 	u8 rs_dummy;
--	u32 evm0;
--	u32 evm1;
--	u32 evm2;
-+	__be32 evm0;
-+	__be32 evm1;
-+	__be32 evm2;
- };
- 
- #define ATH9K_RXERR_CRC           0x01
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index afbf63d..dc6c6fc 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -129,7 +129,7 @@ void ath9k_wmi_tasklet(unsigned long data)
- 	void *wmi_event;
- 	unsigned long flags;
- #ifdef CONFIG_ATH9K_HTC_DEBUGFS
--	u32 txrate;
-+	__be32 txrate;
- #endif
- 
- 	spin_lock_irqsave(&priv->wmi->wmi_lock, flags);
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 6113571..167e15c 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -19,7 +19,7 @@
- 
- 
- struct wmi_event_txrate {
--	u32 txrate;
-+	__be32 txrate;
- 	struct {
- 		u8 rssi_thresh;
- 		u8 per;
-@@ -27,8 +27,8 @@ struct wmi_event_txrate {
- } __packed;
- 
- struct wmi_cmd_hdr {
--	u16 command_id;
--	u16 seq_no;
-+	__be16 command_id;
-+	__be16 seq_no;
- } __packed;
- 
- struct wmi_swba {
-@@ -87,8 +87,8 @@ enum wmi_event_id {
- #define MAX_CMD_NUMBER 62
- 
- struct register_write {
--	u32 reg;
--	u32 val;
-+	__be32 reg;
-+	__be32 val;
- };
- 
- struct wmi {
 -- 
-1.7.0.5
+1.7.0.3
 
