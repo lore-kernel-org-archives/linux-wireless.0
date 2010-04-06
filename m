@@ -1,131 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f223.google.com ([209.85.220.223]:53451 "EHLO
-	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755660Ab0DIThu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59471 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368Ab0DFJIE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 15:37:50 -0400
-Received: by fxm23 with SMTP id 23so3059091fxm.21
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Apr 2010 12:37:48 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54pci: prevent stuck rx-ring on slow system
-Cc: linville@tuxdriver.com
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 9 Apr 2010 21:37:38 +0200
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004092137.39285.chunkeey@googlemail.com>
+	Tue, 6 Apr 2010 05:08:04 -0400
+Subject: Re: [PATCH] mac80211: check whether scan is in progress before
+ queueing scan_work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1270544765.3929.2.camel@jlt3.sipsolutions.net>
+References: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1270544765.3929.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Apr 2010 11:08:00 +0200
+Message-ID: <1270544880.3929.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Quintin Pitts <geek4linux@gmail.com>
+On Tue, 2010-04-06 at 11:06 +0200, Johannes Berg wrote:
 
-This patch fixes an old problem, which - under certain
-circumstances - could cause the device to become
-unresponsive. 
+> > -	if (list_empty(&local->work_list) && local->scan_req)
+> > +	mutex_lock(&local->scan_mtx);
+> > +
+> > +	if (list_empty(&local->work_list) && local->scan_req &&
+> > +	    !local->scanning)
+> >  		ieee80211_queue_delayed_work(&local->hw,
+> >  					     &local->scan_work,
+> >  					     round_jiffies_relative(0));
+> >  
+> > +	mutex_unlock(&local->scan_mtx);
+> > +
+> >  	mutex_unlock(&local->work_mtx);
+> 
+> That really doesn't look right ... at all.
 
-most of p54pci's rx-ring management is implemented in just
-two distinct standalone functions. p54p_check_rx_ring takes
-care of processing incoming data, while p54p_refill_rx_ring
-tries to replenish all depleted communication buffers.
+Oops, confused the two locks.
 
-This has always worked fine on my fast machine, but
-now I know there is a hidden race...
+Still though, wouldn't the scan work simply not do anything?
 
-The most likely candidate here is ring_control->device_idx.
-Quintin Pitts had already analyzed the culprit and posted
-a patch back in Oct 2009. But sadly, no one's picked up on this.
-( https://patchwork.kernel.org/patch/53079/ [2 & 3] ).
-This patch does the same way, except that it also prioritize
-rx data processing, simply because tx routines *can* wait.
+johannes
 
-Reported-by: Sean Young <sean@mess.org>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=11386
-Reported-by: Quintin Pitts <geek4linux@gmail.com>
-Signed-off-by: Quintin Pitts <geek4linux@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-John,
-
-It's been nearly a week and no complains or regressions
-have been reported. Therefore I think it is now save to
-finally merge this patch... Preferably into -next, so
-bug #11386 can be closed for 2.6.34 release.
-
-Regards,
-	Chr
----
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index ed4bdff..aa29663 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -131,7 +131,7 @@ static int p54p_upload_firmware(struct ieee80211_hw *dev)
- 
- static void p54p_refill_rx_ring(struct ieee80211_hw *dev,
- 	int ring_index, struct p54p_desc *ring, u32 ring_limit,
--	struct sk_buff **rx_buf)
-+	struct sk_buff **rx_buf, u32 index)
- {
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
-@@ -139,7 +139,7 @@ static void p54p_refill_rx_ring(struct ieee80211_hw *dev,
- 
- 	idx = le32_to_cpu(ring_control->host_idx[ring_index]);
- 	limit = idx;
--	limit -= le32_to_cpu(ring_control->device_idx[ring_index]);
-+	limit -= le32_to_cpu(index);
- 	limit = ring_limit - limit;
- 
- 	i = idx % ring_limit;
-@@ -231,7 +231,7 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
- 		i %= ring_limit;
- 	}
- 
--	p54p_refill_rx_ring(dev, ring_index, ring, ring_limit, rx_buf);
-+	p54p_refill_rx_ring(dev, ring_index, ring, ring_limit, rx_buf, *index);
- }
- 
- static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
-@@ -276,14 +276,6 @@ static void p54p_tasklet(unsigned long dev_id)
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
- 
--	p54p_check_tx_ring(dev, &priv->tx_idx_mgmt, 3, ring_control->tx_mgmt,
--			   ARRAY_SIZE(ring_control->tx_mgmt),
--			   priv->tx_buf_mgmt);
--
--	p54p_check_tx_ring(dev, &priv->tx_idx_data, 1, ring_control->tx_data,
--			   ARRAY_SIZE(ring_control->tx_data),
--			   priv->tx_buf_data);
--
- 	p54p_check_rx_ring(dev, &priv->rx_idx_mgmt, 2, ring_control->rx_mgmt,
- 		ARRAY_SIZE(ring_control->rx_mgmt), priv->rx_buf_mgmt);
- 
-@@ -292,6 +284,14 @@ static void p54p_tasklet(unsigned long dev_id)
- 
- 	wmb();
- 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
-+
-+	p54p_check_tx_ring(dev, &priv->tx_idx_mgmt, 3, ring_control->tx_mgmt,
-+			   ARRAY_SIZE(ring_control->tx_mgmt),
-+			   priv->tx_buf_mgmt);
-+
-+	p54p_check_tx_ring(dev, &priv->tx_idx_data, 1, ring_control->tx_data,
-+			   ARRAY_SIZE(ring_control->tx_data),
-+			   priv->tx_buf_data);
- }
- 
- static irqreturn_t p54p_interrupt(int irq, void *dev_id)
-@@ -444,10 +444,10 @@ static int p54p_open(struct ieee80211_hw *dev)
- 	priv->rx_idx_mgmt = priv->tx_idx_mgmt = 0;
- 
- 	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
--		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
-+		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data, 0);
- 
- 	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
--		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
-+		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt, 0);
- 
- 	P54P_WRITE(ring_control_base, cpu_to_le32(priv->ring_control_dma));
- 	P54P_READ(ring_control_base);
