@@ -1,177 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:17339 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756704Ab0DIUJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 16:09:37 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/12] iwlwifi: make WEP key restoring explicit
-Date: Fri,  9 Apr 2010 13:09:19 -0700
-Message-Id: <1270843769-30017-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1270843769-30017-1-git-send-email-reinette.chatre@intel.com>
-References: <1270843769-30017-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35566 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755649Ab0DFUpO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Apr 2010 16:45:14 -0400
+Date: Tue, 6 Apr 2010 16:44:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Luis Correia <luis.f.correia@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH V4] rt2x00: remove MCU requests for SoC platforms
+Message-ID: <20100406204445.GB3017@tuxdriver.com>
+References: <k2g880c1631004011414z59ce4547j1bcea7ad5aff7229@mail.gmail.com> <t2qefe7343f1004030447i9d6f290fvd7dd317c63b5b61@mail.gmail.com> <l2mefe7343f1004030449refb18c80l3a81242338a8a4a7@mail.gmail.com> <4BB745E8.6030205@gmail.com> <4BB74BEC.4000703@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4BB74BEC.4000703@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, Apr 03, 2010 at 04:08:44PM +0200, Gertjan van Wingerde wrote:
+> On 04/03/10 15:43, Gertjan van Wingerde wrote:
+> > On 04/03/10 13:49, Luis Correia wrote:
+> >> The ralink SoC platforms do not have an MCU.
+> >>
+> >> Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
+> > 
+> > Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-The firmware clears default WEP keys on
-transitions to !associated, so we need
-to restore them just like stations. This
-is rather implicit as part of sending a
-station right now, which is odd. Make it
-explicit instead and only for agn since
-3945 doesn't use hw crypto for WEP.
+> This patch seems to be word-wrapped and white-space damaged. I fixed it up
+> and applied it to my tree.
+> 
+> If you want you can pull from git://git.gwingerde.nl/rt2x00-next-2.6 to
+> get the fixed up patch.
 
-Due to that, iwl_send_static_wepkey_cmd
-is now only used in iwl-sta.c and can be
-static.
+Thanks!
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   25 ++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-dev.h |    1 -
- drivers/net/wireless/iwlwifi/iwl-sta.c |   14 +++++++++-----
- drivers/net/wireless/iwlwifi/iwl-sta.h |    2 +-
- 4 files changed, 20 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 978604f..8a3b0ed 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -158,6 +158,11 @@ int iwl_commit_rxon(struct iwl_priv *priv)
- 		}
- 		iwl_clear_ucode_stations(priv, false);
- 		iwl_restore_stations(priv);
-+		ret = iwl_restore_default_wep_keys(priv);
-+		if (ret) {
-+			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
-+			return ret;
-+		}
- 	}
- 
- 	IWL_DEBUG_INFO(priv, "Sending RXON\n"
-@@ -185,6 +190,11 @@ int iwl_commit_rxon(struct iwl_priv *priv)
- 		memcpy(active_rxon, &priv->staging_rxon, sizeof(*active_rxon));
- 		iwl_clear_ucode_stations(priv, false);
- 		iwl_restore_stations(priv);
-+		ret = iwl_restore_default_wep_keys(priv);
-+		if (ret) {
-+			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
-+			return ret;
-+		}
- 	}
- 
- 	priv->start_calib = 0;
-@@ -3030,19 +3040,6 @@ static void iwl_mac_sta_notify(struct ieee80211_hw *hw,
- 	}
- }
- 
--/**
-- * iwl_restore_wepkeys - Restore WEP keys to device
-- */
--static void iwl_restore_wepkeys(struct iwl_priv *priv)
--{
--	mutex_lock(&priv->mutex);
--	if (priv->iw_mode == NL80211_IFTYPE_STATION &&
--	    priv->default_wep_key &&
--	    iwl_send_static_wepkey_cmd(priv, 0))
--		IWL_ERR(priv, "Could not send WEP static key\n");
--	mutex_unlock(&priv->mutex);
--}
--
- static int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif,
- 			      struct ieee80211_sta *sta)
-@@ -3069,8 +3066,6 @@ static int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
- 		return ret;
- 	}
- 
--	iwl_restore_wepkeys(priv);
--
- 	/* Initialize rate scaling */
- 	IWL_DEBUG_INFO(priv, "Initializing rate scaling for station %pM\n",
- 		       sta->addr);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 4319bda..95c2bc3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1167,7 +1167,6 @@ struct iwl_priv {
- 	int num_stations;
- 	struct iwl_station_entry stations[IWL_STATION_COUNT];
- 	struct iwl_wep_key wep_keys[WEP_KEYS_MAX]; /* protected by mutex */
--	u8 default_wep_key;
- 	u8 key_mapping_key;
- 	unsigned long ucode_key_table;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index e34ac03..be3d222 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -759,7 +759,7 @@ int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_get_free_ucode_key_index);
- 
--int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
-+static int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
- {
- 	int i, not_empty = 0;
- 	u8 buff[sizeof(struct iwl_wep_cmd) +
-@@ -803,7 +803,14 @@ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
- 	else
- 		return 0;
- }
--EXPORT_SYMBOL(iwl_send_static_wepkey_cmd);
-+
-+int iwl_restore_default_wep_keys(struct iwl_priv *priv)
-+{
-+	WARN_ON(!mutex_is_locked(&priv->mutex));
-+
-+	return iwl_send_static_wepkey_cmd(priv, 0);
-+}
-+EXPORT_SYMBOL(iwl_restore_default_wep_keys);
- 
- int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 			       struct ieee80211_key_conf *keyconf)
-@@ -819,7 +826,6 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 		IWL_ERR(priv, "index %d not used in uCode key table.\n",
- 			  keyconf->keyidx);
- 
--	priv->default_wep_key--;
- 	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
- 	if (iwl_is_rfkill(priv)) {
- 		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
-@@ -851,8 +857,6 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
- 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
- 	priv->stations[IWL_AP_ID].keyinfo.alg = ALG_WEP;
- 
--	priv->default_wep_key++;
--
- 	if (test_and_set_bit(keyconf->keyidx, &priv->ucode_key_table))
- 		IWL_ERR(priv, "index %d already used in uCode key table.\n",
- 			  keyconf->keyidx);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 87a3499..42cd2f4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -44,11 +44,11 @@
-  */
- u8 iwl_find_station(struct iwl_priv *priv, const u8 *bssid);
- 
--int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty);
- int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 			       struct ieee80211_key_conf *key);
- int iwl_set_default_wep_key(struct iwl_priv *priv,
- 			    struct ieee80211_key_conf *key);
-+int iwl_restore_default_wep_keys(struct iwl_priv *priv);
- int iwl_set_dynamic_key(struct iwl_priv *priv,
- 			struct ieee80211_key_conf *key, u8 sta_id);
- int iwl_remove_dynamic_key(struct iwl_priv *priv,
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
