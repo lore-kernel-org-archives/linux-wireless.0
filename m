@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:15279 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932693Ab0DGQb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 12:31:56 -0400
-Subject: Re: [PATCH v2] crypto: add blkcipher implementation of ARC4
-From: Pavel Roskin <proski@gnu.org>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-ppp@vger.kernel.org
-In-Reply-To: <20100407082959.GC6619@Chamillionaire.breakpoint.cc>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
-	 <1270280969-11357-3-git-send-email-sebastian@breakpoint.cc>
-	 <20100405084209.GA16788@gondor.apana.org.au>
-	 <20100405170406.GA24215@Chamillionaire.breakpoint.cc>
-	 <1270621195.31184.45.camel@mj>
-	 <20100407082959.GC6619@Chamillionaire.breakpoint.cc>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Apr 2010 12:31:54 -0400
-Message-Id: <1270657914.12126.9.camel@mj>
-Mime-Version: 1.0
+Received: from zeniv.linux.org.uk ([195.92.253.2]:57510 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756048Ab0DGXGJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Apr 2010 19:06:09 -0400
+Date: Thu, 8 Apr 2010 00:06:07 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.34-rc3-git6: Reported regressions from 2.6.33
+Message-ID: <20100407230607.GM30031@ZenIV.linux.org.uk>
+References: <6Pphclm24fK.A.lSF.qsPvLB@chimera>
+ <alpine.LFD.2.00.1004071444440.3586@i5.linux-foundation.org>
+ <20100407221941.GL30031@ZenIV.linux.org.uk>
+ <alpine.LFD.2.00.1004071521500.3586@i5.linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LFD.2.00.1004071521500.3586@i5.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-04-07 at 10:29 +0200, Sebastian Andrzej Siewior wrote:
-> * Pavel Roskin | 2010-04-07 02:19:55 [-0400]:
+On Wed, Apr 07, 2010 at 03:22:20PM -0700, Linus Torvalds wrote:
 > 
-> >On Mon, 2010-04-05 at 19:04 +0200, Sebastian Andrzej Siewior wrote:
-> >
-> >> +module_init(arc4_init);
-> >> +module_exit(arc4_exit);
-> >
-> >I'm feelings uneasy about using the same module init/exit functions
-> >names in arc4blk.c and arc4cip.c.
-> >
-> >Even though it doesn't break for me on x86_64 (whether I'm compiling
-> >modules or a solid kernel), and even though the potential name conflict
-> Take a look at
-> - sd_mod_init
-> - via_init
-> - watchdog_init
 > 
-> just to name a few. There is no conflict because those functions are not
-> global. The only problem you have is in the backtrace since you can't
-> distinguish them.
+> On Wed, 7 Apr 2010, Al Viro wrote:
+> > 
+> > No, it's not the same thing; the fix is to have nfs ->d_revalidate()
+> > return an error on failing open attempt (in insane codepath that has
+> > ->d_revalidate() handling open()).  Confirmed to work by reporter...
+> 
+> Ok, can you do the proper changelog description and sign-offs etc?
 
-Touché :-)
+[PATCH] Have nfs ->d_revalidate() report errors properly
 
--- 
-Regards,
-Pavel Roskin
+	If nfs atomic open implementation ends up doing open request from
+->d_revalidate() codepath and gets an error from server, return that error
+to caller explicitly and don't bother with lookup_instantiate_filp() at all.
+->d_revalidate() can return an error itself just fine...
+
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+diff --git a/fs/nfs/nfs4proc.c b/fs/nfs/nfs4proc.c
+index d79a7b3..fe0cd9e 100644
+--- a/fs/nfs/nfs4proc.c
++++ b/fs/nfs/nfs4proc.c
+@@ -2068,8 +2068,7 @@ nfs4_open_revalidate(struct inode *dir, struct dentry *dentry, int openflags, st
+ 			case -EDQUOT:
+ 			case -ENOSPC:
+ 			case -EROFS:
+-				lookup_instantiate_filp(nd, (struct dentry *)state, NULL);
+-				return 1;
++				return PTR_ERR(state);
+ 			default:
+ 				goto out_drop;
+ 		}
