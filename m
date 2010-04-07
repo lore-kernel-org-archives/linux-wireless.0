@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56807.mail.re3.yahoo.com ([66.196.97.81]:39780 "HELO
-	web56807.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754701Ab0DVPRz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 11:17:55 -0400
-Message-ID: <235843.31139.qm@web56807.mail.re3.yahoo.com>
-Date: Thu, 22 Apr 2010 08:17:52 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1271944442-9214-1-git-send-email-notasas@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:48561 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756799Ab0DGJ07 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Apr 2010 05:26:59 -0400
+Subject: [PATCH] mac80211: fix paged RX crypto
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Apr 2010 11:26:56 +0200
+Message-ID: <1270632416.3858.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I reported this nearly a month ago here: http://comments.gmane.org/gmane.linux.kernel.wireless.general/48401
+From: Johannes Berg <johannes.berg@intel.com>
 
-Had a chance to test your patch and everything's fine now. This bug has been existent since January. Great job!
+WEP crypto was broken, but upon finding the problem
+it is evident that other things were broken by the
+paged RX patch as well.
 
+To fix it, for now move the linearising in front.
+This means that we linearise all frames, which is
+not at all what we want, but at least it fixes the
+problem for now.
 
-Walter.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/mac80211/rx.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
---- On Thu, 4/22/10, Grazvydas Ignotas <notasas@gmail.com> wrote:
-
-> From: Grazvydas Ignotas <notasas@gmail.com>
-> Subject: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
-> To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-> Cc: linux-wireless@vger.kernel.org, "Grazvydas Ignotas" <notasas@gmail.com>
-> Date: Thursday, April 22, 2010, 9:54 AM
-> Missing uevent_suppress is causing
-> two uevents instead of one, which is
-> confusing udev and sometimes causing firmware load to fail
-> due to race
-> condition, so let's add it.
-> 
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
-> ---
->  compat/compat_firmware_class.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
-> 
-> diff --git a/compat/compat_firmware_class.c
-> b/compat/compat_firmware_class.c
-> index ce937a3..54ee8b9 100644
-> --- a/compat/compat_firmware_class.c
-> +++ b/compat/compat_firmware_class.c
-> @@ -432,6 +432,8 @@ static int fw_register_device(struct
-> device **dev_p, const char *fw_name,
->      dev_set_drvdata(f_dev, fw_priv);
->  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
->      dev_set_uevent_suppress(f_dev, 1);
-> +#else
-> +    f_dev->uevent_suppress = 1;
->  #endif
->      retval = device_register(f_dev);
->      if (retval) {
-> @@ -479,9 +481,11 @@ static int fw_setup_device(struct
-> firmware *fw, struct device **dev_p,
->          goto error_unreg;
->      }
->  
-> -#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
->      if (uevent)
-> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
->         
-> dev_set_uevent_suppress(f_dev, 0);
-> +#else
-> +       
-> f_dev->uevent_suppress = 0;
->  #endif
->      *dev_p = f_dev;
->      goto out;
-> -- 
-> 1.7.0.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+--- wireless-testing.orig/net/mac80211/rx.c	2010-04-07 11:19:30.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-04-07 11:20:05.000000000 +0200
+@@ -820,7 +820,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_
+ {
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct ieee80211_hdr *hdr;
+ 	int keyidx;
+ 	int hdrlen;
+ 	ieee80211_rx_result result = RX_DROP_UNUSABLE;
+@@ -861,6 +861,11 @@ ieee80211_rx_h_decrypt(struct ieee80211_
+ 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
+ 		return RX_CONTINUE;
+ 
++	if (skb_linearize(rx->skb))
++		return RX_DROP_UNUSABLE;
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++
+ 	/* start without a key */
+ 	rx->key = NULL;
+ 
+@@ -944,9 +949,6 @@ ieee80211_rx_h_decrypt(struct ieee80211_
+ 		return RX_DROP_MONITOR;
+ 	}
+ 
+-	if (skb_linearize(rx->skb))
+-		return RX_DROP_UNUSABLE;
+-
+ 	/* Check for weak IVs if possible */
+ 	if (rx->sta && rx->key->conf.alg == ALG_WEP &&
+ 	    ieee80211_is_data(hdr->frame_control) &&
 
 
-      
