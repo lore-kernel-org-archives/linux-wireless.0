@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55974 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752973Ab0DRNgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Apr 2010 09:36:52 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wireless: include net and trace includes form compat.
-Date: Sun, 18 Apr 2010 15:36:24 +0200
-Message-Id: <1271597784-4811-4-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1271597784-4811-1-git-send-email-hauke@hauke-m.de>
-References: <1271597784-4811-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.atheros.com ([12.36.123.2]:28700 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750823Ab0DGEkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Apr 2010 00:40:07 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 21:40:07 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19388.4470.438422.209224@gargle.gargle.HOWL>
+Date: Wed, 7 Apr 2010 10:30:38 +0530
+To: Ming Lei <tom.leiming@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/5] ath9k_htc: Protect RX stream variables
+In-Reply-To: <p2od82e647a1004060618vc8b95400hbaf1cfaecc2defd3@mail.gmail.com>
+References: <19387.1459.438884.832345@gargle.gargle.HOWL>
+	<p2od82e647a1004060618vc8b95400hbaf1cfaecc2defd3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The includes form the net and trace directory of compat were not copyed.
-This broke compilation on older kernels that needed some files in these
-directories from compat.
+Ming Lei wrote:
+> 2010/4/6 Sujith <Sujith.Manoharan@atheros.com>:
+> > Use a spin lock to prevent concurrent access
+> > to variables dealing with RX stream mode handling.
+> 
+> which variables are needed to be protected?
+> 
+> It seems hif_dev->rx_transfer_len, hif_dev->remain_skb
+> and hif_dev->rx_pkt_len are only accessed in ath9k_hif_usb_rx_stream,
+> which is only called in hard irq(urb->complete) context and now is
+> serialized strictly, so the protection is useless, isn't it?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- scripts/admin-update.sh |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+On a SMP machine, the RX callback can run on two CPUs, in this case,
+appropriate protection is needed between the two hard-irq handlers.
 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 36cdfac..39fafb2 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -116,6 +116,7 @@ DRIVER_FILES="$DRIVER_FILES mwl8k.c"
- mkdir -p include/linux/ include/net/ include/linux/usb \
- 	include/linux/unaligned \
- 	include/linux/spi \
-+	include/trace \
- 	net/mac80211/ net/wireless/ \
- 	net/rfkill/ \
- 	drivers/ssb/ \
-@@ -233,6 +234,8 @@ cp $GIT_COMPAT_TREE/compat/Makefile $COMPAT/
- cp -a $GIT_COMPAT_TREE/udev/ .
- cp -a $GIT_COMPAT_TREE/scripts/ $COMPAT/
- cp -a $GIT_COMPAT_TREE/include/linux/* include/linux/
-+cp -a $GIT_COMPAT_TREE/include/net/* include/net/
-+cp -a $GIT_COMPAT_TREE/include/trace/* include/trace/
- rm -f $COMPAT/*.mod.c
- 
- # Refresh patches using quilt
--- 
-1.6.3.3
+> > Currently, no protection is implemented - which
+> > causes problems in RX.
+> 
+> which problems? Could you describe them in detail?
 
+The RX stream position-hooks would get mangled up if two
+IRQ handlers access them without any kind of protection.
+This corrupts the stream data - causing data loss.
+
+Sujith
