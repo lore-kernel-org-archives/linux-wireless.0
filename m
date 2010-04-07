@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:43837 "EHLO purkki.valot.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753400Ab0DPGKZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 02:10:25 -0400
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC PATCHv2 1/2] mac80211: Determine dynamic PS timeout based on ps-qos network latency
-References: <1271228079-27321-1-git-send-email-juuso.oikarinen@nokia.com>
-	<1271228079-27321-2-git-send-email-juuso.oikarinen@nokia.com>
-	<87eiigm0vu.fsf@purkki.valot.fi>
-	<1271395747.6205.23.camel@wimaxnb.nmp.nokia.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Fri, 16 Apr 2010 09:10:23 +0300
-In-Reply-To: <1271395747.6205.23.camel@wimaxnb.nmp.nokia.com> (Juuso Oikarinen's message of "Fri\, 16 Apr 2010 08\:29\:07 +0300")
-Message-ID: <87aat4lygg.fsf@purkki.valot.fi>
+Received: from helcar.apana.org.au ([209.40.204.226]:60039 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932237Ab0DGAbN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Apr 2010 20:31:13 -0400
+Date: Wed, 7 Apr 2010 08:31:09 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-ppp@vger.kernel.org
+Subject: Re: [PATCH v2] crypto: add blkcipher implementation of ARC4
+Message-ID: <20100407003109.GA27617@gondor.apana.org.au>
+References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc> <1270280969-11357-3-git-send-email-sebastian@breakpoint.cc> <20100405084209.GA16788@gondor.apana.org.au> <20100405170406.GA24215@Chamillionaire.breakpoint.cc> <20100406124412.GA24488@gondor.apana.org.au> <20100406203002.GA1842@Chamillionaire.breakpoint.cc>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100406203002.GA1842@Chamillionaire.breakpoint.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
-
-> Hi,
-
-Moi,
-
->> > +		timeout = local->hw.conf.dynamic_ps_forced_timeout;
->> > +		if (timeout < 0) {
->> > +			if (latency <= 50000)
->> > +				timeout = 300;
->> > +			else if (latency <= 2000000000)
->> > +				timeout = 100;
->> > +			else
->> > +				timeout = 0;
->> > +		}
->> > +		local->hw.conf.dynamic_ps_timeout = timeout;
->> 
->> What will be the timeout value when there are no pm_qos requirements
->> from user space applications? Do you know what will be the default
->> latency value in that case?
+On Tue, Apr 06, 2010 at 10:30:02PM +0200, Sebastian Andrzej Siewior wrote:
 >
-> Yes, the default value is 2000000000 (2000 seconds, ugh.) Hence the
-> value in the if statement for 100ms.
+> Good point. All arc4 users don't care about return value of setkey so I
+> think that I just change void to int add the check for the valid key
+> length.
 
-Ah, now I understand better.
+Actually, how about getting arc4_setup_iv to do all the legwork
+and turn it into a real IV? Then we don't need any checks on the
+data path.
 
-And ugh indeed, having a default of 2000 seconds for latency is very
-awkward. I would have preferred to have a magic value denoting (like
--1 or something) that user space doesn't care. But I guess we have to
-live with this :/
+> While we are here, the .setkey() callback could be removed, couldn't it?
+> It returns 0 even it is doing nothing what looks kinda wrong. However it
+> shouldn't be called at all since min/max key is 0. Any objections on
+> that?
 
-Maybe at some point we can talk with QoS framework about this.
+I'm pretty sure testmgr will call setkey even for keylen == 0, no?
 
->> I'm mostly worried about timeout 0 case, for example I suspect ath9k
->> is broken with that value.
->> 
->> Also does this patch change the default value of dynamic ps timeout?
->> 
->
-> No, the current default does not change. As the default value for the
-> latency is 2000s, we will, by default, get a timeout of 100ms.
-
-Excellent. Thank you for explaining these.
-
->From my point of view these patches look good and I have nothing to
-complain. 
-
-(I hope Juuso didn't hit his head when falling off from his chair when
-reading this.)
-
+Thanks,
 -- 
-Kalle Valo
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
