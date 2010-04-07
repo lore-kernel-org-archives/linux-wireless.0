@@ -1,155 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f179.google.com ([209.85.221.179]:65097 "EHLO
-	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753619Ab0D1JBg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 05:01:36 -0400
-Date: Wed, 28 Apr 2010 11:01:15 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Samuel Ortiz <samuel.ortiz@intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Alexey Dobriyan <adobriyan@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] iwl: cleanup: remove unneeded error handling
-Message-ID: <20100428090115.GF29093@bicker>
+Received: from c60.cesmail.net ([216.154.195.49]:34604 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751313Ab0DGFa5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Apr 2010 01:30:57 -0400
+Subject: [PATCH 2/4] compat-wireless: remove 13-trace.patch,
+ it's handled in compat now
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+From: Pavel Roskin <proski@gnu.org>
+Date: Wed, 07 Apr 2010 01:30:56 -0400
+Message-ID: <20100407053056.23575.12200.stgit@mj.roinet.com>
+In-Reply-To: <20100407053051.23575.94594.stgit@mj.roinet.com>
+References: <20100407053051.23575.94594.stgit@mj.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is just a cleanup and doesn't change how the code works.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ patches/13-trace.patch |   63 ------------------------------------------------
+ 1 files changed, 0 insertions(+), 63 deletions(-)
+ delete mode 100644 patches/13-trace.patch
 
-debugfs_create_dir() and debugfs_create_file() return an error pointer 
-(-ENODEV) if CONFIG_DEBUG_FS is not enabled, otherwise if an error occurs
-they return NULL.  This is how they are implemented and what it says in 
-the DebugFS documentation.  DebugFS can not be compiled as a module.  
-
-As a result, we only need to check for error pointers and particularly 
--ENODEV one time to know that DebugFS is enabled.  This patch keeps the 
-first check for error pointers and removes the rest. 
-
-The other reason for this patch, is that it silences some Smatch warnings.
-Smatch sees the condition "(result != -ENODEV)" and assumes that it's 
-possible for "result" to equal -ENODEV.  If it were possible it would lead
-to an error pointer dereference.  But since it's not, we can just remove
-the check.
-
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/net/wireless/iwmc3200wifi/debugfs.c b/drivers/net/wireless/iwmc3200wifi/debugfs.c
-index cbb81be..10eeeeb 100644
---- a/drivers/net/wireless/iwmc3200wifi/debugfs.c
-+++ b/drivers/net/wireless/iwmc3200wifi/debugfs.c
-@@ -438,40 +438,10 @@ int iwm_debugfs_init(struct iwm_priv *iwm)
- 	snprintf(devdir, sizeof(devdir), "%s", wiphy_name(iwm_to_wiphy(iwm)));
- 
- 	iwm->dbg.devdir = debugfs_create_dir(devdir, iwm->dbg.rootdir);
--	result = PTR_ERR(iwm->dbg.devdir);
--	if (IS_ERR(iwm->dbg.devdir) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create devdir: %d\n", result);
--		goto error;
--	}
+diff --git a/patches/13-trace.patch b/patches/13-trace.patch
+deleted file mode 100644
+index e3fee40..0000000
+--- a/patches/13-trace.patch
++++ /dev/null
+@@ -1,63 +0,0 @@
+-Older kernels do not have trace/define_trace.h [1] and if there
+-is something there that we can backport we will define it
+-in or compat headers.
 -
- 	iwm->dbg.dbgdir = debugfs_create_dir("debug", iwm->dbg.devdir);
--	result = PTR_ERR(iwm->dbg.dbgdir);
--	if (IS_ERR(iwm->dbg.dbgdir) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create dbgdir: %d\n", result);
--		goto error;
--	}
+-[1] http://lxr.linux.no/#linux+v2.6.31/include/trace/define_trace.h
 -
- 	iwm->dbg.rxdir = debugfs_create_dir("rx", iwm->dbg.devdir);
--	result = PTR_ERR(iwm->dbg.rxdir);
--	if (IS_ERR(iwm->dbg.rxdir) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create rx dir: %d\n", result);
--		goto error;
--	}
--
- 	iwm->dbg.txdir = debugfs_create_dir("tx", iwm->dbg.devdir);
--	result = PTR_ERR(iwm->dbg.txdir);
--	if (IS_ERR(iwm->dbg.txdir) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create tx dir: %d\n", result);
--		goto error;
--	}
--
- 	iwm->dbg.busdir = debugfs_create_dir("bus", iwm->dbg.devdir);
--	result = PTR_ERR(iwm->dbg.busdir);
--	if (IS_ERR(iwm->dbg.busdir) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create bus dir: %d\n", result);
--		goto error;
--	}
--
- 	if (iwm->bus_ops->debugfs_init) {
- 		result = iwm->bus_ops->debugfs_init(iwm, iwm->dbg.busdir);
- 		if (result < 0) {
-@@ -480,27 +450,15 @@ int iwm_debugfs_init(struct iwm_priv *iwm)
- 		}
- 	}
- 
--
- 	iwm->dbg.dbg_level = IWM_DL_NONE;
- 	iwm->dbg.dbg_level_dentry =
- 		debugfs_create_file("level", 0200, iwm->dbg.dbgdir, iwm,
- 				    &fops_iwm_dbg_level);
--	result = PTR_ERR(iwm->dbg.dbg_level_dentry);
--	if (IS_ERR(iwm->dbg.dbg_level_dentry) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create dbg_level: %d\n", result);
--		goto error;
--	}
--
- 
- 	iwm->dbg.dbg_modules = IWM_DM_DEFAULT;
- 	iwm->dbg.dbg_modules_dentry =
- 		debugfs_create_file("modules", 0200, iwm->dbg.dbgdir, iwm,
- 				    &fops_iwm_dbg_modules);
--	result = PTR_ERR(iwm->dbg.dbg_modules_dentry);
--	if (IS_ERR(iwm->dbg.dbg_modules_dentry) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create dbg_modules: %d\n", result);
--		goto error;
--	}
- 
- 	for (i = 0; i < __IWM_DM_NR; i++)
- 		add_dbg_module(iwm->dbg, iwm_debug_module[i].name,
-@@ -509,39 +467,18 @@ int iwm_debugfs_init(struct iwm_priv *iwm)
- 	iwm->dbg.txq_dentry = debugfs_create_file("queues", 0200,
- 						  iwm->dbg.txdir, iwm,
- 						  &iwm_debugfs_txq_fops);
--	result = PTR_ERR(iwm->dbg.txq_dentry);
--	if (IS_ERR(iwm->dbg.txq_dentry) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create tx queue: %d\n", result);
--		goto error;
--	}
- 
- 	iwm->dbg.tx_credit_dentry = debugfs_create_file("credits", 0200,
- 						   iwm->dbg.txdir, iwm,
- 						   &iwm_debugfs_tx_credit_fops);
--	result = PTR_ERR(iwm->dbg.tx_credit_dentry);
--	if (IS_ERR(iwm->dbg.tx_credit_dentry) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create tx credit: %d\n", result);
--		goto error;
--	}
- 
- 	iwm->dbg.rx_ticket_dentry = debugfs_create_file("tickets", 0200,
- 						  iwm->dbg.rxdir, iwm,
- 						  &iwm_debugfs_rx_ticket_fops);
--	result = PTR_ERR(iwm->dbg.rx_ticket_dentry);
--	if (IS_ERR(iwm->dbg.rx_ticket_dentry) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create rx ticket: %d\n", result);
--		goto error;
--	}
- 
- 	iwm->dbg.fw_err_dentry = debugfs_create_file("last_fw_err", 0200,
- 						     iwm->dbg.dbgdir, iwm,
- 						     &iwm_debugfs_fw_err_fops);
--	result = PTR_ERR(iwm->dbg.fw_err_dentry);
--	if (IS_ERR(iwm->dbg.fw_err_dentry) && (result != -ENODEV)) {
--		IWM_ERR(iwm, "Couldn't create last FW err: %d\n", result);
--		goto error;
--	}
--
- 
- 	return 0;
- 
+---- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+-+++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+-@@ -27,7 +27,9 @@
+- #if !defined(__IWLWIFI_DEVICE_TRACE) || defined(TRACE_HEADER_MULTI_READ)
+- #define __IWLWIFI_DEVICE_TRACE
+- 
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
+- #include <linux/tracepoint.h>
+-+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
+- 
+- #if !defined(CONFIG_IWLWIFI_DEVICE_TRACING) || defined(__CHECKER__)
+- #undef TRACE_EVENT
+-@@ -263,4 +265,6 @@ TRACE_EVENT(iwlwifi_dev_ucode_event,
+- #define TRACE_INCLUDE_PATH .
+- #undef TRACE_INCLUDE_FILE
+- #define TRACE_INCLUDE_FILE iwl-devtrace
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
+- #include <trace/define_trace.h>
+-+#endif
+---- a/drivers/net/wireless/iwmc3200wifi/trace.h
+-+++ b/drivers/net/wireless/iwmc3200wifi/trace.h
+-@@ -1,7 +1,9 @@
+- #if !defined(__IWM_TRACE_H__) || defined(TRACE_HEADER_MULTI_READ)
+- #define __IWM_TRACE_H__
+- 
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
+- #include <linux/tracepoint.h>
+-+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
+- 
+- #if !defined(CONFIG_IWM_TRACING)
+- #undef TRACE_EVENT
+-@@ -280,4 +282,6 @@ TRACE_EVENT(iwm_rx_packet,
+- #define TRACE_INCLUDE_PATH .
+- #undef TRACE_INCLUDE_FILE
+- #define TRACE_INCLUDE_FILE trace
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
+- #include <trace/define_trace.h>
+-+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
+---- a/net/mac80211/driver-trace.h
+-+++ b/net/mac80211/driver-trace.h
+-@@ -1,7 +1,9 @@
+- #if !defined(__MAC80211_DRIVER_TRACE) || defined(TRACE_HEADER_MULTI_READ)
+- #define __MAC80211_DRIVER_TRACE
+- 
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
+- #include <linux/tracepoint.h>
+-+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
+- #include <net/mac80211.h>
+- #include "ieee80211_i.h"
+- 
+-@@ -772,4 +774,6 @@ TRACE_EVENT(drv_flush,
+- #define TRACE_INCLUDE_PATH .
+- #undef TRACE_INCLUDE_FILE
+- #define TRACE_INCLUDE_FILE driver-trace
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
+- #include <trace/define_trace.h>
+-+#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
