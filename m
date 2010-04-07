@@ -1,160 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33023 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757434Ab0DOVjr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:47 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v3 89/97] ath9k: Initialize and configure tx status for EDMA
-Date: Thu, 15 Apr 2010 17:39:34 -0400
-Message-Id: <1271367582-992-90-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+Received: from c60.cesmail.net ([216.154.195.49]:15279 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932693Ab0DGQb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Apr 2010 12:31:56 -0400
+Subject: Re: [PATCH v2] crypto: add blkcipher implementation of ARC4
+From: Pavel Roskin <proski@gnu.org>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-ppp@vger.kernel.org
+In-Reply-To: <20100407082959.GC6619@Chamillionaire.breakpoint.cc>
+References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
+	 <1270280969-11357-3-git-send-email-sebastian@breakpoint.cc>
+	 <20100405084209.GA16788@gondor.apana.org.au>
+	 <20100405170406.GA24215@Chamillionaire.breakpoint.cc>
+	 <1270621195.31184.45.camel@mj>
+	 <20100407082959.GC6619@Chamillionaire.breakpoint.cc>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Apr 2010 12:31:54 -0400
+Message-Id: <1270657914.12126.9.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+On Wed, 2010-04-07 at 10:29 +0200, Sebastian Andrzej Siewior wrote:
+> * Pavel Roskin | 2010-04-07 02:19:55 [-0400]:
+> 
+> >On Mon, 2010-04-05 at 19:04 +0200, Sebastian Andrzej Siewior wrote:
+> >
+> >> +module_init(arc4_init);
+> >> +module_exit(arc4_exit);
+> >
+> >I'm feelings uneasy about using the same module init/exit functions
+> >names in arc4blk.c and arc4cip.c.
+> >
+> >Even though it doesn't break for me on x86_64 (whether I'm compiling
+> >modules or a solid kernel), and even though the potential name conflict
+> Take a look at
+> - sd_mod_init
+> - via_init
+> - watchdog_init
+> 
+> just to name a few. There is no conflict because those functions are not
+> global. The only problem you have is in the backtrace since you can't
+> distinguish them.
 
-Also add a function to clean up tx status ring.
+Touché :-)
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    6 +++-
- drivers/net/wireless/ath/ath9k/hw.c    |    1 +
- drivers/net/wireless/ath/ath9k/hw.h    |    1 +
- drivers/net/wireless/ath/ath9k/xmit.c  |   46 +++++++++++++++++++++++++++++++-
- 4 files changed, 52 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index f67be52..2d3e42a 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -114,8 +114,10 @@ enum buffer_type {
- #define bf_isretried(bf)	(bf->bf_state.bf_type & BUF_RETRY)
- #define bf_isxretried(bf)	(bf->bf_state.bf_type & BUF_XRETRY)
- 
-+#define ATH_TXSTATUS_RING_SIZE 64
-+
- struct ath_descdma {
--	struct ath_desc *dd_desc;
-+	void *dd_desc;
- 	dma_addr_t dd_desc_paddr;
- 	u32 dd_desc_len;
- 	struct ath_buf *dd_bufptr;
-@@ -515,6 +517,8 @@ struct ath_softc {
- 	struct ath_beacon_config cur_beacon_conf;
- 	struct delayed_work tx_complete_work;
- 	struct ath_btcoex btcoex;
-+
-+	struct ath_descdma txsdma;
- };
- 
- struct ath_wiphy {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1f06ac0..4092090 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2094,6 +2094,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
- 		pCap->rx_status_len = sizeof(struct ar9003_rxs);
- 		pCap->tx_desc_len = sizeof(struct ar9003_txc);
-+		pCap->txs_len = sizeof(struct ar9003_txs);
- 	} else {
- 		pCap->tx_desc_len = sizeof(struct ath_desc);
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index b711ec2..9d3796a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -209,6 +209,7 @@ struct ath9k_hw_capabilities {
- 	u8 rx_lp_qdepth;
- 	u8 rx_status_len;
- 	u8 tx_desc_len;
-+	u8 txs_len;
- };
- 
- struct ath9k_ops_config {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index c32da05..f9f7445 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2144,6 +2144,41 @@ void ath_tx_tasklet(struct ath_softc *sc)
- /* Init, Cleanup */
- /*****************/
- 
-+static int ath_txstatus_setup(struct ath_softc *sc, int size)
-+{
-+	struct ath_descdma *dd = &sc->txsdma;
-+	u8 txs_len = sc->sc_ah->caps.txs_len;
-+
-+	dd->dd_desc_len = size * txs_len;
-+	dd->dd_desc = dma_alloc_coherent(sc->dev, dd->dd_desc_len,
-+					 &dd->dd_desc_paddr, GFP_KERNEL);
-+	if (!dd->dd_desc)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
-+static int ath_tx_edma_init(struct ath_softc *sc)
-+{
-+	int err;
-+
-+	err = ath_txstatus_setup(sc, ATH_TXSTATUS_RING_SIZE);
-+	if (!err)
-+		ath9k_hw_setup_statusring(sc->sc_ah, sc->txsdma.dd_desc,
-+					  sc->txsdma.dd_desc_paddr,
-+					  ATH_TXSTATUS_RING_SIZE);
-+
-+	return err;
-+}
-+
-+static void ath_tx_edma_cleanup(struct ath_softc *sc)
-+{
-+	struct ath_descdma *dd = &sc->txsdma;
-+
-+	dma_free_coherent(sc->dev, dd->dd_desc_len, dd->dd_desc,
-+			  dd->dd_desc_paddr);
-+}
-+
- int ath_tx_init(struct ath_softc *sc, int nbufs)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -2160,7 +2195,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
- 	}
- 
- 	error = ath_descdma_setup(sc, &sc->beacon.bdma, &sc->beacon.bbuf,
--				  "beacon", ATH_BCBUF, 1, 0);
-+				  "beacon", ATH_BCBUF, 1, 1);
- 	if (error != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to allocate beacon descriptors: %d\n", error);
-@@ -2169,6 +2204,12 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
- 
- 	INIT_DELAYED_WORK(&sc->tx_complete_work, ath_tx_complete_poll_work);
- 
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
-+		error = ath_tx_edma_init(sc);
-+		if (error)
-+			goto err;
-+	}
-+
- err:
- 	if (error != 0)
- 		ath_tx_cleanup(sc);
-@@ -2183,6 +2224,9 @@ void ath_tx_cleanup(struct ath_softc *sc)
- 
- 	if (sc->tx.txdma.dd_desc_len != 0)
- 		ath_descdma_cleanup(sc, &sc->tx.txdma, &sc->tx.txbuf);
-+
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
-+		ath_tx_edma_cleanup(sc);
- }
- 
- void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
