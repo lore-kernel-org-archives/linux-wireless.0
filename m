@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:42323 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754190Ab0DTKS3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55781 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755679Ab0DGGaE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 06:18:29 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix ieee80211_sta_conn_mon_timer with hw connection monitoring
-Date: Tue, 20 Apr 2010 13:15:56 +0300
-Message-Id: <1271758556-13558-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 7 Apr 2010 02:30:04 -0400
+Subject: Re: [PATCH v2] mac80211: check whether scan is in progress before
+ queueing scan_work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1270619767-2459-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1270619767-2459-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Apr 2010 08:29:53 +0200
+Message-ID: <1270621793.3858.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When IEEE80211_HW_CONNECTION_MONITOR is configured by the driver, starting
-of ieee80211_sta_conn_mon_timer should be prevented, as it is then not needed.
+On Wed, 2010-04-07 at 08:56 +0300, Teemu Paasikivi wrote:
+> As scan_work is queued from work_work it needs to be checked if scan
+> has been started during execution of work_work. Otherwise, when hw
+> scan is used, the stack gets error about hw being busy with ongoing
+> scan. This causes the stack to abort scan without notifying the driver
+> about it. This leads to a situation where the hw is scanning and the stack
+> thinks it's not. Then when the scan finishes, the stack will complain by
+> warnings.
+> 
+> Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+> ---
+>  net/mac80211/work.c |    9 +++++++--
+>  1 files changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+> index 1e1ea30..5df48a9 100644
+> --- a/net/mac80211/work.c
+> +++ b/net/mac80211/work.c
+> @@ -919,12 +919,17 @@ static void ieee80211_work_work(struct work_struct *work)
+>  		run_again(local, jiffies + HZ/2);
+>  	}
+>  
+> -	if (list_empty(&local->work_list) && local->scan_req)
+> +	mutex_unlock(&local->work_mtx);
+> +
+> +	mutex_lock(&local->scan_mtx);
+> +
+> +	if (list_empty(&local->work_list) && local->scan_req &&
+> +	    !local->scanning)
+>  		ieee80211_queue_delayed_work(&local->hw,
+>  					     &local->scan_work,
+>  					     round_jiffies_relative(0));
+>  
+> -	mutex_unlock(&local->work_mtx);
+> +	mutex_unlock(&local->scan_mtx);
 
-This is currently partially the case. As it seems, when a probe-response is
-received from the AP the timer is still restarted, thus restarting the host
-based connection keep-alive mechanism. These probe-responses happen at least
-when scanning while associated.
+But should we touch work_list w/o holding work_mtx?
 
-Fix this by preventing starting of the ieee80211_sta_conn_mon_timer in the
-ieee80211_rx_mgmt_probe_resp function.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- net/mac80211/mlme.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 3133681..425f66c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1333,12 +1333,17 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 		mutex_lock(&sdata->local->iflist_mtx);
- 		ieee80211_recalc_ps(sdata->local, -1);
- 		mutex_unlock(&sdata->local->iflist_mtx);
-+
-+		if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
-+			return;
-+
- 		/*
- 		 * We've received a probe response, but are not sure whether
- 		 * we have or will be receiving any beacons or data, so let's
- 		 * schedule the timers again, just in case.
- 		 */
- 		mod_beacon_timer(sdata);
-+
- 		mod_timer(&ifmgd->conn_mon_timer,
- 			  round_jiffies_up(jiffies +
- 					   IEEE80211_CONNECTION_IDLE_TIME));
--- 
-1.6.3.3
+johannes
 
