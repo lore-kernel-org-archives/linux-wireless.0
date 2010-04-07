@@ -1,84 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50081 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932222Ab0DPUDb convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:39082 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757275Ab0DGWME convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 16:03:31 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 13:03:31 -0700
-From: David Quan <David.Quan@Atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"yanmin.zhang@intel.com" <yanmin.zhang@intel.com>,
-	"shaohua.li@intel.com" <shaohua.li@intel.com>,
-	Sameer Nanda <snanda@google.com>,
-	Jonathan May <Jonathan.May@Atheros.com>
-Date: Fri, 16 Apr 2010 13:03:28 -0700
-Subject: RE: Power consumption on 802.11 / ASPM / device measurements
-Message-ID: <93781E992CBA7843962D8B0E7D683F3C1116A1A28B@SC1EXMB-MBCL.global.atheros.com>
-References: <n2q43e72e891004161253wbb9afe61y539206f010e91a78@mail.gmail.com>
-In-Reply-To: <n2q43e72e891004161253wbb9afe61y539206f010e91a78@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 7 Apr 2010 18:12:04 -0400
+Received: by pva18 with SMTP id 18so1045502pva.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Apr 2010 15:12:01 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20100407220810.14021.54998.stgit@mj.roinet.com>
+References: <20100407220810.14021.54998.stgit@mj.roinet.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 7 Apr 2010 15:11:41 -0700
+Message-ID: <u2o43e72e891004071511lb929f733m1f29ff20bc424482@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: fix fallbacks for unknown branch, remote
+	or remote URL
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-it is a very complicated issue.
-Different system have different limitation.
-it is not a one size fits all.
+On Wed, Apr 7, 2010 at 3:08 PM, Pavel Roskin <proski@gnu.org> wrote:
+> Use bash syntax that yields the replacement value if the variable is
+> either empty or unset.  The original code would only check for unset
+> variables, but the variable would be set even if git failed to give any
+> output to stdout.
 
-
-So we let the BIOS of each system with the different chipset control this, and we work with that team
-to make sure the correct settings work together for both RC and endpoint.
-
-It should not be controlled by the endpoint as endpoint can get plug into many different systems and endpoint 
-will not know the limitations of each system/chipset in the system.
-
-I highly recommend you all not to touch the aspm settings from the endpoint, point of view and let the system bios 
-do what it has been programmed to do.
-
-David
-
-
------Original Message-----
-From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
-Sent: Friday, April 16, 2010 12:54 PM
-To: linux-wireless
-Cc: linux-kernel@vger.kernel.org; yanmin.zhang@intel.com; shaohua.li@intel.com; Sameer Nanda; Jonathan May; David Quan
-Subject: Power consumption on 802.11 / ASPM / device measurements
-
-We've been accumulating a few power consumption related documents on
-the wireless wiki for a while now. One which I saw was missing was for
-actual power consumption and review of new PCI-E features which should
-be taken into consideration when debugging power consumption or
-reviewing it. ASPM is something that I can say I found little to no
-documentation for when looking into it so I've done a brain dump of
-what I recall from it, the code review of it, and some e-mail
-exchanges I've had with Jonathan May @ Atheros.
-
-I've stashed together all the power consumption docs at:
-
-http://wireless.kernel.org/en/users/Documentation/Power-consumption
-
-You'll see there some ASPM docs now and some ath9k specific power
-consumption metrics/ASPM details. Please review and enhance as you see
-fit.
-
-Yanmin, Shaohua, I see CONFIG_PCIEASPM still marked as experimental,
-I'm curious if this is still really that experimental and if there are
-plans for it go out of experimental. Also I am little puzzled with
-some of the aspm.c code, I see we fill the pci device struct with
-capability stuff via pcie_aspm_cap_init() but I also see ASPM
-capability stuff exposed on kernels without CONFIG_PCIEASPM (albeit I
-see it always disabled on my system at home), so are we filling the
-capability elsewhere? I think there are some boxes without this kernel
-config enabled and where ASPM capability info is exposed and does show
-up as enabled, could be wrong.
-
-Also curious -- how often are BIOSes buggy enough for ASPM to get
-disabled by mistake on the modern devices? And for systems that have
-no Bios (*cough* ChromeOS) how is this handled?
-
- Luis
+thanks applied
