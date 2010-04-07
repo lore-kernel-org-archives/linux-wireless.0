@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46700 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933124Ab0DHT1j (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48991 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755885Ab0DGWAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 003/102] ath9k_hw: add a macro for abstracting generic timer access
-Date: Thu,  8 Apr 2010 15:25:59 -0400
-Message-Id: <1270754858-26266-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 7 Apr 2010 18:00:17 -0400
+Date: Wed, 7 Apr 2010 17:53:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.34-rc3-git6: Reported regressions from 2.6.33
+Message-ID: <20100407215319.GA25932@tuxdriver.com>
+References: <6Pphclm24fK.A.lSF.qsPvLB@chimera>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6Pphclm24fK.A.lSF.qsPvLB@chimera>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Wed, Apr 07, 2010 at 11:08:30PM +0200, Rafael J. Wysocki wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/reg.h |   38 +++++++++++++++++----------------
- 1 files changed, 20 insertions(+), 18 deletions(-)
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15551
+> Subject		: WARNING: at net/mac80211/work.c:811 ieee80211_work_work+0x7f/0xde8 [mac80211]()
+> Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
+> Date		: 2010-03-16 22:03 (23 days old)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 5ab6d6e..68d55a2 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1610,24 +1610,26 @@ enum {
- #define AR_FIRST_NDP_TIMER                  7
- #define AR_NDP2_PERIOD                      0x81a0
- #define AR_NDP2_TIMER_MODE                  0x81c0
--#define AR_NEXT_TBTT_TIMER                  0x8200
--#define AR_NEXT_DMA_BEACON_ALERT            0x8204
--#define AR_NEXT_SWBA                        0x8208
--#define AR_NEXT_CFP                         0x8208
--#define AR_NEXT_HCF                         0x820C
--#define AR_NEXT_TIM                         0x8210
--#define AR_NEXT_DTIM                        0x8214
--#define AR_NEXT_QUIET_TIMER                 0x8218
--#define AR_NEXT_NDP_TIMER                   0x821C
--
--#define AR_BEACON_PERIOD                    0x8220
--#define AR_DMA_BEACON_PERIOD                0x8224
--#define AR_SWBA_PERIOD                      0x8228
--#define AR_HCF_PERIOD                       0x822C
--#define AR_TIM_PERIOD                       0x8230
--#define AR_DTIM_PERIOD                      0x8234
--#define AR_QUIET_PERIOD                     0x8238
--#define AR_NDP_PERIOD                       0x823C
-+
-+#define AR_GEN_TIMERS(_i)                   (0x8200 + ((_i) << 2))
-+#define AR_NEXT_TBTT_TIMER                  AR_GEN_TIMERS(0)
-+#define AR_NEXT_DMA_BEACON_ALERT            AR_GEN_TIMERS(1)
-+#define AR_NEXT_SWBA                        AR_GEN_TIMERS(2)
-+#define AR_NEXT_CFP                         AR_GEN_TIMERS(2)
-+#define AR_NEXT_HCF                         AR_GEN_TIMERS(3)
-+#define AR_NEXT_TIM                         AR_GEN_TIMERS(4)
-+#define AR_NEXT_DTIM                        AR_GEN_TIMERS(5)
-+#define AR_NEXT_QUIET_TIMER                 AR_GEN_TIMERS(6)
-+#define AR_NEXT_NDP_TIMER                   AR_GEN_TIMERS(7)
-+
-+#define AR_BEACON_PERIOD                    AR_GEN_TIMERS(8)
-+#define AR_DMA_BEACON_PERIOD                AR_GEN_TIMERS(9)
-+#define AR_SWBA_PERIOD                      AR_GEN_TIMERS(10)
-+#define AR_HCF_PERIOD                       AR_GEN_TIMERS(11)
-+#define AR_TIM_PERIOD                       AR_GEN_TIMERS(12)
-+#define AR_DTIM_PERIOD                      AR_GEN_TIMERS(13)
-+#define AR_QUIET_PERIOD                     AR_GEN_TIMERS(14)
-+#define AR_NDP_PERIOD                       AR_GEN_TIMERS(15)
- 
- #define AR_TIMER_MODE                       0x8240
- #define AR_TBTT_TIMER_EN                    0x00000001
+I sent a pull request with the patch for this to Dave M. today. :-)
+
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
