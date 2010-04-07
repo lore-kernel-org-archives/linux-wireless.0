@@ -1,72 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65015 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755454Ab0DWE6i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 00:58:38 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:38 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19409.10472.450708.915467@gargle.gargle.HOWL>
-Date: Fri, 23 Apr 2010 10:28:16 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/11] ath9k_htc: Use USB reboot
+Received: from smtp.nokia.com ([192.100.122.233]:38509 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313Ab0DGGNk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Apr 2010 02:13:40 -0400
+Subject: Re: [PATCH] mac80211: check whether scan is in progress before
+ queueing scan_work
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1270549759.3929.6.camel@jlt3.sipsolutions.net>
+References: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1270544765.3929.2.camel@jlt3.sipsolutions.net>
+	 <1270549017.7150.28.camel@paavo-desktop>
+	 <1270549677.3929.5.camel@jlt3.sipsolutions.net>
+	 <1270549759.3929.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Wed, 07 Apr 2010 09:09:00 +0300
+Message-Id: <1270620540.7150.51.camel@paavo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So, apparently there is a USB reboot command
-that the target accepts. Using this instead of
-usb_reset_device() fixes the issue of "descriptor read error"
-that pops up on repeated load/unload.
+On Tue, 2010-04-06 at 12:29 +0200, ext Johannes Berg wrote:
+> On Tue, 2010-04-06 at 12:27 +0200, Johannes Berg wrote:
+> > On Tue, 2010-04-06 at 13:16 +0300, Teemu Paasikivi wrote:
+> > > On Tue, 2010-04-06 at 11:06 +0200, ext Johannes Berg wrote:
+> > > > On Tue, 2010-04-06 at 11:54 +0300, Teemu Paasikivi wrote:
+> > > > > As scan_work is queued from work_work it needs to be checked if scan
+> > > > > has been started during execution of work_work. Otherwise, when hw
+> > > > > scan is used, the stack gets error about hw being busy with ongoing
+> > > > > scan.
+> > > > 
+> > > > Does that mean we ask the driver to scan twice? And your particular
+> > > > driver returns busy?
+> > > > 
+> > > 
+> > > Yes. There seems to be a possibility, that when ieee80211_work_work is
+> > > being executed, __ieee80211_start_scan gets called and it starts a hw
+> > > scan, and also sets local->hw_scan_req etc. (because it looks like
+> > > there's some holes in use of scan_mtx). Result is that work_work queues
+> > > ieee80211_scan_work and when it is executed, as there's already
+> > > hw_scan_req set, it will try to start hw scan again. And as the driver
+> > > used returns busy, scan_work will call ieee80211_scan_completed function
+> > > which leaves the driver (hw more precisely) scanning and the stack
+> > > thinking that it is not anymore scanning.
+> > > 
+> > > Obviously this kind of situation doesn't happen very often in normal
+> > > use, but it can be caused quite easily by associating to access points
+> > > in a loop while running scan in another loop.
+> > 
+> > Makes some sense. Ignore my other email(s), I looked at this in more
+> > detail now.
+> > 
+> > It would appear that we need to fix some of the locking here,
+> > potentially simply using a single mutex for both work and scan?
+> 
+> I'm mostly worried about deadlocks between work_mtx and scan_mtx really,
+> when we acquire them both like your patch.
+> 
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |   22 +++++++++++++++++++++-
- 1 files changed, 21 insertions(+), 1 deletions(-)
+I sent a new version of the patch to the linux-wireless. Now both
+mutexes are not locked at the same time.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index cee5feb..31665c5 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -889,6 +889,26 @@ err_alloc:
- 	return ret;
- }
- 
-+static void ath9k_hif_usb_reboot(struct usb_device *udev)
-+{
-+	u32 reboot_cmd = 0xffffffff;
-+	void *buf;
-+	int ret;
-+
-+	buf = kmalloc(4, GFP_KERNEL);
-+	if (!buf)
-+		return;
-+
-+	memcpy(buf, &reboot_cmd, 4);
-+
-+	ret = usb_bulk_msg(udev, usb_sndbulkpipe(udev, USB_REG_OUT_PIPE),
-+			   buf, 4, NULL, HZ);
-+	if (ret)
-+		dev_err(&udev->dev, "ath9k_htc: USB reboot failed\n");
-+
-+	kfree(buf);
-+}
-+
- static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- {
- 	struct usb_device *udev = interface_to_usbdev(interface);
-@@ -903,7 +923,7 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- 	}
- 
- 	if (hif_dev->flags & HIF_USB_START)
--		usb_reset_device(udev);
-+		ath9k_hif_usb_reboot(udev);
- 
- 	kfree(hif_dev);
- 	dev_info(&udev->dev, "ath9k_htc: USB layer deinitialized\n");
--- 
-1.7.0.5
+
+Br,
+
+Teemu
+
 
