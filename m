@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:51067 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753634Ab0DAR6E (ORCPT
+Received: from helcar.apana.org.au ([209.40.204.226]:57348 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752963Ab0DGJ3V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 13:58:04 -0400
-Date: Thu, 1 Apr 2010 19:57:58 +0200
-From: Daniel Mack <daniel@caiaq.de>
-To: Anders =?iso-8859-1?Q?Grafstr=F6m?=
-	<grfstrm@users.sourceforge.net>
-Cc: linux-wireless@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Sven Neumann <s.neumann@raumfeld.com>,
-	LKML <linux-kernel@vger.kernel.org>, stable@kernel.org,
-	AKML <linux-arm-kernel@lists.infradead.org>
-Subject: Re: Memory corruption with 2.6.32.10, but not with 2.6.34-rc3
-Message-ID: <20100401175758.GQ30801@buzzloop.caiaq.de>
-References: <20100401132156.GJ30807@buzzloop.caiaq.de>
- <4BB4D817.1050603@users.sourceforge.net>
+	Wed, 7 Apr 2010 05:29:21 -0400
+Date: Wed, 7 Apr 2010 17:29:07 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/7] crypto/testmgr: add testing for arc4 based on
+	ecb(arc4)
+Message-ID: <20100407092907.GB29993@gondor.apana.org.au>
+References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc> <1270280969-11357-4-git-send-email-sebastian@breakpoint.cc> <1270621793.31184.50.camel@mj>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4BB4D817.1050603@users.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1270621793.31184.50.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 01, 2010 at 07:29:59PM +0200, Anders Grafström wrote:
-> Daniel Mack wrote:
-> > We would like to have a fix for this annoying bug in the stable series
-> > (especially 2.6.32.x) as well, but I don't have much ideas about where
-> > to search for it. Hence, I would appreciate if maintainers could think
-> > about any possible commits in the described time window which haven't
-> > reached stable. Does the description ring anyone's bell?
-> > 
-> > I can cherry-pick things if anyone pin-points something and run
-> > lont-time tests again. Any pointer appreciated.
+On Wed, Apr 07, 2010 at 02:29:53AM -0400, Pavel Roskin wrote:
+>
+> Can we avoid those special cases?  If the goal is "to make arc4
+> compliant with the crypto API", this looks like a step in a wrong
+> direction.
 > 
-> You could try this one:
+> The same applies to many other changes in the series.
 > 
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8e4971f2fb2380ce66196136e113d04196b80fcd
+> I do realize that the original arc4 is not a block cipher at all.
 
-Thanks. Unfortunately, that didn't fix it (this time, it crashed after a
-few minutes only). But shouldn't we have that in -stable anyway?
+I don't like this bit either.
 
-Daniel
+Sebastian, how about precomputing the IV and provide them directly
+as a hex array?
 
+To test arc4_setup_iv itself, you can add an alg_test_arc4 function
+(like alg_test_crc32) that tests IV generation specifically.
+
+Alternatively, just add an alg_test_arc4 that computes the IV
+before calling alg_test_skcipher.
+
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
