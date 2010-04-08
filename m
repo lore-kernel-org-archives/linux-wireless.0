@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48061 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838Ab0DHGOw (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46747 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933075Ab0DHT1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 02:14:52 -0400
-Subject: Re: [PATCH] mac80211: fix paged RX crypto
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1270697769.10745.12.camel@debian>
-References: <1270632416.3858.6.camel@jlt3.sipsolutions.net>
-	 <1270696951.10745.11.camel@debian>  <1270697769.10745.12.camel@debian>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 08 Apr 2010 08:14:45 +0200
-Message-ID: <1270707285.3977.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 15:27:40 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 024/102] ath9k_hw: prevent reset control register zeroing on AR9003 reset
+Date: Thu,  8 Apr 2010 15:26:20 -0400
+Message-Id: <1270754858-26266-25-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-08 at 11:36 +0800, Zhu Yi wrote:
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-> > I thought it over. We don't need to handle nonlinear skb in
-> > ieee80211_get_mmie_keyidx(), because we only need to touch fields out of
-> > 802.11 header for management frames, and we have already skb_linearize
-> > all management frames before. 
+Also, no need for the udelay(2) on AR9003 hardware.
 
-Good point, forgot about that.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> > Now we just need to handle WEP IV
-> > correctly. How about this patch?
-
-Yeah, seems like it should work, did you test with WEP?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 207116a..6efb291 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1432,9 +1432,11 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 		REG_WRITE(ah, AR_RC, AR_RC_AHB);
+ 
+ 	REG_WRITE(ah, AR_RTC_RESET, 0);
+-	udelay(2);
+ 
+-	if (!AR_SREV_9100(ah))
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		udelay(2);
++
++	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+ 		REG_WRITE(ah, AR_RC, 0);
+ 
+ 	REG_WRITE(ah, AR_RTC_RESET, 1);
+-- 
+1.6.3.3
 
