@@ -1,164 +1,383 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31382 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932551Ab0DPVuX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:50:23 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/2] iwlwifi: fix scan races
-Date: Fri, 16 Apr 2010 14:50:13 -0700
-Message-Id: <1271454614-14272-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1271454614-14272-1-git-send-email-reinette.chatre@intel.com>
-References: <1271454614-14272-1-git-send-email-reinette.chatre@intel.com>
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3173 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933184Ab0DHVur (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 17:50:47 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville <linville"@tuxdriver.com
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 5/9] rt2x00: Align rt2800 register initialization with vendor driver.
+Date: Thu,  8 Apr 2010 23:50:33 +0200
+Message-Id: <1270763437-29526-6-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Align the rt2800 register initializations with the latest versions of the
+Ralink vendor driver.
+This patch is also preparation for the addition of support for RT3070 /
+RT3071 / RT3090 / RT3390 based devices.
 
-When an internal scan is started, nothing protects the
-is_internal_short_scan variable which can cause crashes,
-cf. https://bugzilla.kernel.org/show_bug.cgi?id=15667.
-Fix this by making the short scan request use the mutex
-for locking, which requires making the request go to a
-work struct so that it can sleep.
-
-Reported-by: Peter Zijlstra <peterz@infradead.org>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 +
- drivers/net/wireless/iwlwifi/iwl-scan.c |   31 ++++++++++++++++++++-----------
- 5 files changed, 23 insertions(+), 13 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |  155 +++++++++++++++++++++++--------
+ drivers/net/wireless/rt2x00/rt2800pci.c |   13 ---
+ 2 files changed, 114 insertions(+), 54 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e4c2e1e..ba0fdba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3330,6 +3330,7 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index d15b230..51e6ca8 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -359,11 +359,6 @@ static int rt2800_blink_set(struct led_classdev *led_cdev,
+ 	rt2800_register_read(led->rt2x00dev, LED_CFG, &reg);
+ 	rt2x00_set_field32(&reg, LED_CFG_ON_PERIOD, *delay_on);
+ 	rt2x00_set_field32(&reg, LED_CFG_OFF_PERIOD, *delay_off);
+-	rt2x00_set_field32(&reg, LED_CFG_SLOW_BLINK_PERIOD, 3);
+-	rt2x00_set_field32(&reg, LED_CFG_R_LED_MODE, 3);
+-	rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE, 3);
+-	rt2x00_set_field32(&reg, LED_CFG_Y_LED_MODE, 3);
+-	rt2x00_set_field32(&reg, LED_CFG_LED_POLAR, 1);
+ 	rt2800_register_write(led->rt2x00dev, LED_CFG, reg);
  
- 	cancel_delayed_work_sync(&priv->init_alive_start);
- 	cancel_delayed_work(&priv->scan_check);
-+	cancel_work_sync(&priv->start_internal_scan);
- 	cancel_delayed_work(&priv->alive_start);
- 	cancel_work_sync(&priv->beacon_update);
- 	del_timer_sync(&priv->statistics_periodic);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 894bcb8..1459cdb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -3357,7 +3357,6 @@ static void iwl_force_rf_reset(struct iwl_priv *priv)
- 	 */
- 	IWL_DEBUG_INFO(priv, "perform radio reset.\n");
- 	iwl_internal_short_hw_scan(priv);
--	return;
- }
- 
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 732590f..36940a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -506,7 +506,7 @@ void iwl_init_scan_params(struct iwl_priv *priv);
- int iwl_scan_cancel(struct iwl_priv *priv);
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
- int iwl_mac_hw_scan(struct ieee80211_hw *hw, struct cfg80211_scan_request *req);
--int iwl_internal_short_hw_scan(struct iwl_priv *priv);
-+void iwl_internal_short_hw_scan(struct iwl_priv *priv);
- int iwl_force_reset(struct iwl_priv *priv, int mode);
- u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
- 		       const u8 *ie, int ie_len, int left);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 6054c5f..ef1720a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1296,6 +1296,7 @@ struct iwl_priv {
- 	struct work_struct tt_work;
- 	struct work_struct ct_enter;
- 	struct work_struct ct_exit;
-+	struct work_struct start_internal_scan;
- 
- 	struct tasklet_struct irq_tasklet;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index bd2f7c4..5062f4e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -469,6 +469,8 @@ EXPORT_SYMBOL(iwl_init_scan_params);
- 
- static int iwl_scan_initiate(struct iwl_priv *priv)
+ 	return 0;
+@@ -531,12 +526,8 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME,
+ 			   !(filter_flags & FIF_PROMISC_IN_BSS));
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_MY_BSSD, 0);
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_VER_ERROR, 1);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_MULTICAST,
+ 			   !(filter_flags & FIF_ALLMULTI));
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BROADCAST, 0);
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_DUPLICATE, 1);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CF_END_ACK,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CF_END,
+@@ -549,8 +540,6 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PSPOLL,
+ 			   !(filter_flags & FIF_PSPOLL));
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA, 1);
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR, 0);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CNTL,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2800_register_write(rt2x00dev, RX_FILTER_CFG, reg);
+@@ -609,10 +598,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
  {
-+	WARN_ON(!mutex_is_locked(&priv->mutex));
-+
- 	IWL_DEBUG_INFO(priv, "Starting scan...\n");
- 	set_bit(STATUS_SCANNING, &priv->status);
- 	priv->is_internal_short_scan = false;
-@@ -546,24 +548,31 @@ EXPORT_SYMBOL(iwl_mac_hw_scan);
-  * internal short scan, this function should only been called while associated.
-  * It will reset and tune the radio to prevent possible RF related problem
-  */
--int iwl_internal_short_hw_scan(struct iwl_priv *priv)
-+void iwl_internal_short_hw_scan(struct iwl_priv *priv)
- {
--	int ret = 0;
-+	queue_work(priv->workqueue, &priv->start_internal_scan);
-+}
-+
-+static void iwl_bg_start_internal_scan(struct work_struct *work)
-+{
-+	struct iwl_priv *priv =
-+		container_of(work, struct iwl_priv, start_internal_scan);
-+
-+	mutex_lock(&priv->mutex);
+ 	u32 reg;
  
- 	if (!iwl_is_ready_rf(priv)) {
--		ret = -EIO;
- 		IWL_DEBUG_SCAN(priv, "not ready or exit pending\n");
--		goto out;
-+		goto unlock;
- 	}
-+
- 	if (test_bit(STATUS_SCANNING, &priv->status)) {
- 		IWL_DEBUG_SCAN(priv, "Scan already in progress.\n");
--		ret = -EAGAIN;
--		goto out;
-+		goto unlock;
- 	}
-+
- 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
- 		IWL_DEBUG_SCAN(priv, "Scan request while abort pending\n");
--		ret = -EAGAIN;
--		goto out;
-+		goto unlock;
- 	}
- 
- 	priv->scan_bands = 0;
-@@ -576,9 +585,8 @@ int iwl_internal_short_hw_scan(struct iwl_priv *priv)
- 	set_bit(STATUS_SCANNING, &priv->status);
- 	priv->is_internal_short_scan = true;
- 	queue_work(priv->workqueue, &priv->request_scan);
+-	rt2800_register_read(rt2x00dev, TX_TIMEOUT_CFG, &reg);
+-	rt2x00_set_field32(&reg, TX_TIMEOUT_CFG_RX_ACK_TIMEOUT, 0x20);
+-	rt2800_register_write(rt2x00dev, TX_TIMEOUT_CFG, reg);
 -
--out:
--	return ret;
-+ unlock:
-+	mutex_unlock(&priv->mutex);
- }
- EXPORT_SYMBOL(iwl_internal_short_hw_scan);
+ 	rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY,
+ 			   !!erp->short_preamble);
+@@ -631,15 +616,12 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
  
-@@ -964,6 +972,7 @@ void iwl_setup_scan_deferred_work(struct iwl_priv *priv)
- 	INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed);
- 	INIT_WORK(&priv->request_scan, iwl_bg_request_scan);
- 	INIT_WORK(&priv->abort_scan, iwl_bg_abort_scan);
-+	INIT_WORK(&priv->start_internal_scan, iwl_bg_start_internal_scan);
- 	INIT_DELAYED_WORK(&priv->scan_check, iwl_bg_scan_check);
+ 	rt2800_register_read(rt2x00dev, BKOFF_SLOT_CFG, &reg);
+ 	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_SLOT_TIME, erp->slot_time);
+-	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_CC_DELAY_TIME, 2);
+ 	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
+ 	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, erp->sifs);
+ 	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, erp->sifs);
+-	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_XIFS_TIME, 4);
+ 	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
+-	rt2x00_set_field32(&reg, XIFS_TIME_CFG_BB_RXEND_ENABLE, 1);
+ 	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
+@@ -984,10 +966,6 @@ static void rt2800_config_retry_limit(struct rt2x00_dev *rt2x00dev,
+ 			   libconf->conf->short_frame_max_tx_count);
+ 	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_LIMIT,
+ 			   libconf->conf->long_frame_max_tx_count);
+-	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_THRE, 2000);
+-	rt2x00_set_field32(&reg, TX_RTY_CFG_NON_AGG_RTY_MODE, 0);
+-	rt2x00_set_field32(&reg, TX_RTY_CFG_AGG_RTY_MODE, 0);
+-	rt2x00_set_field32(&reg, TX_RTY_CFG_TX_AUTO_FB_ENABLE, 1);
+ 	rt2800_register_write(rt2x00dev, TX_RTY_CFG, reg);
  }
- EXPORT_SYMBOL(iwl_setup_scan_deferred_work);
+ 
+@@ -1111,6 +1089,14 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	u32 reg;
+ 	unsigned int i;
+ 
++	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
++	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
++	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
++	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
++	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
++	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
++	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
++
+ 	if (rt2x00_is_usb(rt2x00dev)) {
+ 		/*
+ 		 * Wait until BBP and RF are ready.
+@@ -1130,8 +1116,25 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
+ 		rt2800_register_write(rt2x00dev, PBF_SYS_CTRL,
+ 				      reg & ~0x00002000);
+-	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev))
++	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
++		/*
++		 * Reset DMA indexes
++		 */
++		rt2800_register_read(rt2x00dev, WPDMA_RST_IDX, &reg);
++		rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX0, 1);
++		rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX1, 1);
++		rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX2, 1);
++		rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX3, 1);
++		rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX4, 1);
++		rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX5, 1);
++		rt2x00_set_field32(&reg, WPDMA_RST_IDX_DRX_IDX0, 1);
++		rt2800_register_write(rt2x00dev, WPDMA_RST_IDX, reg);
++
++		rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e1f);
++		rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e00);
++
+ 		rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
++	}
+ 
+ 	rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
+ 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_CSR, 1);
+@@ -1176,6 +1179,31 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, BCN_TIME_CFG_TX_TIME_COMPENSATE, 0);
+ 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
+ 
++	rt2800_register_read(rt2x00dev, RX_FILTER_CFG, &reg);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CRC_ERROR, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PHY_ERROR, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_MY_BSSD, 0);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_VER_ERROR, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_MULTICAST, 0);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BROADCAST, 0);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_DUPLICATE, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CF_END_ACK, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CF_END, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_ACK, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CTS, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_RTS, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PSPOLL, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR, 0);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CNTL, 1);
++	rt2800_register_write(rt2x00dev, RX_FILTER_CFG, reg);
++
++	rt2800_register_read(rt2x00dev, BKOFF_SLOT_CFG, &reg);
++	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_SLOT_TIME, 9);
++	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_CC_DELAY_TIME, 2);
++	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
++
+ 	if (rt2x00_is_usb(rt2x00dev) &&
+ 	    rt2x00_rt(rt2x00dev, RT3070) && rt2x00_rev(rt2x00dev) == 0x0200) {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
+@@ -1199,6 +1227,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_register_read(rt2x00dev, TX_TIMEOUT_CFG, &reg);
+ 	rt2x00_set_field32(&reg, TX_TIMEOUT_CFG_MPDU_LIFETIME, 9);
++	rt2x00_set_field32(&reg, TX_TIMEOUT_CFG_RX_ACK_TIMEOUT, 32);
+ 	rt2x00_set_field32(&reg, TX_TIMEOUT_CFG_TX_OP_TIMEOUT, 10);
+ 	rt2800_register_write(rt2x00dev, TX_TIMEOUT_CFG, reg);
+ 
+@@ -1214,38 +1243,61 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_MPDU, 0);
+ 	rt2800_register_write(rt2x00dev, MAX_LEN_CFG, reg);
+ 
++	rt2800_register_read(rt2x00dev, LED_CFG, &reg);
++	rt2x00_set_field32(&reg, LED_CFG_ON_PERIOD, 70);
++	rt2x00_set_field32(&reg, LED_CFG_OFF_PERIOD, 30);
++	rt2x00_set_field32(&reg, LED_CFG_SLOW_BLINK_PERIOD, 3);
++	rt2x00_set_field32(&reg, LED_CFG_R_LED_MODE, 3);
++	rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE, 3);
++	rt2x00_set_field32(&reg, LED_CFG_Y_LED_MODE, 3);
++	rt2x00_set_field32(&reg, LED_CFG_LED_POLAR, 1);
++	rt2800_register_write(rt2x00dev, LED_CFG, reg);
++
+ 	rt2800_register_write(rt2x00dev, PBF_MAX_PCNT, 0x1f3fbf9f);
+ 
++	rt2800_register_read(rt2x00dev, TX_RTY_CFG, &reg);
++	rt2x00_set_field32(&reg, TX_RTY_CFG_SHORT_RTY_LIMIT, 15);
++	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_LIMIT, 31);
++	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_THRE, 2000);
++	rt2x00_set_field32(&reg, TX_RTY_CFG_NON_AGG_RTY_MODE, 0);
++	rt2x00_set_field32(&reg, TX_RTY_CFG_AGG_RTY_MODE, 0);
++	rt2x00_set_field32(&reg, TX_RTY_CFG_TX_AUTO_FB_ENABLE, 1);
++	rt2800_register_write(rt2x00dev, TX_RTY_CFG, reg);
++
+ 	rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AUTORESPONDER, 1);
++	rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY, 1);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MMODE, 0);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MREF, 0);
++	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE, 1);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_DUAL_CTS_EN, 0);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_ACK_CTS_PSM_BIT, 0);
+ 	rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, CCK_PROT_CFG, &reg);
+-	rt2x00_set_field32(&reg, CCK_PROT_CFG_PROTECT_RATE, 8);
++	rt2x00_set_field32(&reg, CCK_PROT_CFG_PROTECT_RATE, 3);
+ 	rt2x00_set_field32(&reg, CCK_PROT_CFG_PROTECT_CTRL, 0);
+ 	rt2x00_set_field32(&reg, CCK_PROT_CFG_PROTECT_NAV, 1);
+ 	rt2x00_set_field32(&reg, CCK_PROT_CFG_TX_OP_ALLOW_CCK, 1);
+ 	rt2x00_set_field32(&reg, CCK_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
+ 	rt2x00_set_field32(&reg, CCK_PROT_CFG_TX_OP_ALLOW_MM20, 1);
+-	rt2x00_set_field32(&reg, CCK_PROT_CFG_TX_OP_ALLOW_MM40, 1);
++	rt2x00_set_field32(&reg, CCK_PROT_CFG_TX_OP_ALLOW_MM40, 0);
+ 	rt2x00_set_field32(&reg, CCK_PROT_CFG_TX_OP_ALLOW_GF20, 1);
+-	rt2x00_set_field32(&reg, CCK_PROT_CFG_TX_OP_ALLOW_GF40, 1);
++	rt2x00_set_field32(&reg, CCK_PROT_CFG_TX_OP_ALLOW_GF40, 0);
++	rt2x00_set_field32(&reg, CCK_PROT_CFG_RTS_TH_EN, 1);
+ 	rt2800_register_write(rt2x00dev, CCK_PROT_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, OFDM_PROT_CFG, &reg);
+-	rt2x00_set_field32(&reg, OFDM_PROT_CFG_PROTECT_RATE, 8);
++	rt2x00_set_field32(&reg, OFDM_PROT_CFG_PROTECT_RATE, 3);
+ 	rt2x00_set_field32(&reg, OFDM_PROT_CFG_PROTECT_CTRL, 0);
+ 	rt2x00_set_field32(&reg, OFDM_PROT_CFG_PROTECT_NAV, 1);
+ 	rt2x00_set_field32(&reg, OFDM_PROT_CFG_TX_OP_ALLOW_CCK, 1);
+ 	rt2x00_set_field32(&reg, OFDM_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
+ 	rt2x00_set_field32(&reg, OFDM_PROT_CFG_TX_OP_ALLOW_MM20, 1);
+-	rt2x00_set_field32(&reg, OFDM_PROT_CFG_TX_OP_ALLOW_MM40, 1);
++	rt2x00_set_field32(&reg, OFDM_PROT_CFG_TX_OP_ALLOW_MM40, 0);
+ 	rt2x00_set_field32(&reg, OFDM_PROT_CFG_TX_OP_ALLOW_GF20, 1);
+-	rt2x00_set_field32(&reg, OFDM_PROT_CFG_TX_OP_ALLOW_GF40, 1);
++	rt2x00_set_field32(&reg, OFDM_PROT_CFG_TX_OP_ALLOW_GF40, 0);
++	rt2x00_set_field32(&reg, OFDM_PROT_CFG_RTS_TH_EN, 1);
+ 	rt2800_register_write(rt2x00dev, OFDM_PROT_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, MM20_PROT_CFG, &reg);
+@@ -1258,11 +1310,15 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_MM40, 0);
+ 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_GF20, 1);
+ 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_GF40, 0);
++	rt2x00_set_field32(&reg, MM20_PROT_CFG_RTS_TH_EN, 0);
+ 	rt2800_register_write(rt2x00dev, MM20_PROT_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, MM40_PROT_CFG, &reg);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_RATE, 0x4084);
+-	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 0);
++	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev))
++		rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 1);
++	else if (rt2x00_is_usb(rt2x00dev))
++		rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 0);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_NAV, 1);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_CCK, 1);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
+@@ -1270,6 +1326,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_MM40, 1);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_GF20, 1);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_GF40, 1);
++	rt2x00_set_field32(&reg, MM40_PROT_CFG_RTS_TH_EN, 0);
+ 	rt2800_register_write(rt2x00dev, MM40_PROT_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, GF20_PROT_CFG, &reg);
+@@ -1282,6 +1339,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_MM40, 0);
+ 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_GF20, 1);
+ 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_GF40, 0);
++	rt2x00_set_field32(&reg, GF20_PROT_CFG_RTS_TH_EN, 0);
+ 	rt2800_register_write(rt2x00dev, GF20_PROT_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, GF40_PROT_CFG, &reg);
+@@ -1294,6 +1352,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_MM40, 1);
+ 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_GF20, 1);
+ 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_GF40, 1);
++	rt2x00_set_field32(&reg, GF40_PROT_CFG_RTS_TH_EN, 0);
+ 	rt2800_register_write(rt2x00dev, GF40_PROT_CFG, reg);
+ 
+ 	if (rt2x00_is_usb(rt2x00dev)) {
+@@ -1323,6 +1382,15 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_register_write(rt2x00dev, TX_RTS_CFG, reg);
+ 
+ 	rt2800_register_write(rt2x00dev, EXP_ACK_TIME, 0x002400ca);
++
++	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
++	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, 32);
++	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, 32);
++	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_XIFS_TIME, 4);
++	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, 314);
++	rt2x00_set_field32(&reg, XIFS_TIME_CFG_BB_RXEND_ENABLE, 1);
++	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
++
+ 	rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
+ 
+ 	/*
+@@ -1472,26 +1540,31 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
+ 	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+-	rt2800_bbp_write(rt2x00dev, 69, 0x12);
++
++	if (rt2x00_rt(rt2x00dev, RT2860) && rt2x00_rev(rt2x00dev) == 0x0100) {
++		rt2800_bbp_write(rt2x00dev, 69, 0x16);
++		rt2800_bbp_write(rt2x00dev, 73, 0x12);
++	} else {
++		rt2800_bbp_write(rt2x00dev, 69, 0x12);
++		rt2800_bbp_write(rt2x00dev, 73, 0x10);
++	}
++
+ 	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
+-	rt2800_bbp_write(rt2x00dev, 73, 0x10);
+ 	rt2800_bbp_write(rt2x00dev, 81, 0x37);
+ 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
+ 	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
+-	rt2800_bbp_write(rt2x00dev, 84, 0x99);
++
++	if (rt2x00_rev(rt2x00dev) == 0x101)
++		rt2800_bbp_write(rt2x00dev, 84, 0x19);
++	else
++		rt2800_bbp_write(rt2x00dev, 84, 0x99);
++
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
+ 	rt2800_bbp_write(rt2x00dev, 103, 0x00);
+ 	rt2800_bbp_write(rt2x00dev, 105, 0x05);
+-
+-	if (rt2x00_rt(rt2x00dev, RT2860) && rt2x00_rev(rt2x00dev) == 0x0100) {
+-		rt2800_bbp_write(rt2x00dev, 69, 0x16);
+-		rt2800_bbp_write(rt2x00dev, 73, 0x12);
+-	}
+-
+-	if (rt2x00_rt(rt2x00dev, RT2860) && rt2x00_rev(rt2x00dev) > 0x0101)
+-		rt2800_bbp_write(rt2x00dev, 84, 0x19);
++	rt2800_bbp_write(rt2x00dev, 106, 0x35);
+ 
+ 	if (rt2x00_is_usb(rt2x00dev) &&
+ 	    rt2x00_rt(rt2x00dev, RT3070) && rt2x00_rev(rt2x00dev) == 0x0200) {
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index a2b37d3..2131f8f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -347,19 +347,6 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
+ 	struct queue_entry_priv_pci *entry_priv;
+ 	u32 reg;
+ 
+-	rt2800_register_read(rt2x00dev, WPDMA_RST_IDX, &reg);
+-	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX0, 1);
+-	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX1, 1);
+-	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX2, 1);
+-	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX3, 1);
+-	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX4, 1);
+-	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DTX_IDX5, 1);
+-	rt2x00_set_field32(&reg, WPDMA_RST_IDX_DRX_IDX0, 1);
+-	rt2800_register_write(rt2x00dev, WPDMA_RST_IDX, reg);
+-
+-	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e1f);
+-	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000e00);
+-
+ 	/*
+ 	 * Initialize registers.
+ 	 */
 -- 
-1.6.3.3
+1.7.0.4
 
