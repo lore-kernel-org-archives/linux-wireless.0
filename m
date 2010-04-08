@@ -1,44 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:21230 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751210Ab0DZLuo (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46907 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933266Ab0DHT1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 07:50:44 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so2498742fga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 04:50:43 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: rt2800lib: Remove redundant check for RT2872
-Date: Mon, 26 Apr 2010 13:50:27 +0200
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201004261350.27212.helmut.schaa@googlemail.com>
+	Thu, 8 Apr 2010 15:27:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 059/102] ath9k_hw: move the cck channel 14 INI to the AR9002 hw code
+Date: Thu,  8 Apr 2010 15:26:55 -0400
+Message-Id: <1270754858-26266-60-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove redundant check for RT2872.
+This is specific to the AR9002 family only.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |   13 +++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c        |   11 ++---------
+ drivers/net/wireless/ath/ath9k/hw.h        |    2 ++
+ 3 files changed, 17 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 1358d9a..b30d59c 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2018,7 +2018,6 @@ int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 		EEPROM(rt2x00dev, "Antenna: 0x%04x\n", word);
- 	} else if (rt2x00_rt(rt2x00dev, RT2860) ||
- 		   rt2x00_rt(rt2x00dev, RT2870) ||
--		   rt2x00_rt(rt2x00dev, RT2872) ||
- 		   rt2x00_rt(rt2x00dev, RT2872)) {
- 		/*
- 		 * There is a max of 2 RX streams for RT28x0 series
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index bd634fe..e9cc056 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -229,6 +229,19 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 	}
+ }
+ 
++/* Support for Japan ch.14 (2484) spread */
++void ar9002_hw_cck_chan14_spread(struct ath_hw *ah)
++{
++	if (AR_SREV_9287_11_OR_LATER(ah)) {
++		INIT_INI_ARRAY(&ah->iniCckfirNormal,
++		       ar9287Common_normal_cck_fir_coeff_92871_1,
++		       ARRAY_SIZE(ar9287Common_normal_cck_fir_coeff_92871_1), 2);
++		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
++		       ar9287Common_japan_2484_cck_fir_coeff_92871_1,
++		       ARRAY_SIZE(ar9287Common_japan_2484_cck_fir_coeff_92871_1), 2);
++	}
++}
++
+ /*
+  * Helper for ASPM support.
+  *
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 39ac6b5..20353ab 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -741,15 +741,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	else
+ 		ath9k_hw_disablepcie(ah);
+ 
+-	/* Support for Japan ch.14 (2484) spread */
+-	if (AR_SREV_9287_11_OR_LATER(ah)) {
+-		INIT_INI_ARRAY(&ah->iniCckfirNormal,
+-		       ar9287Common_normal_cck_fir_coeff_92871_1,
+-		       ARRAY_SIZE(ar9287Common_normal_cck_fir_coeff_92871_1), 2);
+-		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+-		       ar9287Common_japan_2484_cck_fir_coeff_92871_1,
+-		       ARRAY_SIZE(ar9287Common_japan_2484_cck_fir_coeff_92871_1), 2);
+-	}
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		ar9002_hw_cck_chan14_spread(ah);
+ 
+ 	r = ath9k_hw_post_init(ah);
+ 	if (r)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1c6b07b..295a3b9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -832,6 +832,8 @@ void ath9k_hw_htc_resetinit(struct ath_hw *ah);
+ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+ 				   u32 *coef_mantissa, u32 *coef_exponent);
+ 
++void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
++
+ /*
+  * Code specifric to AR9003, we stuff these here to avoid callbacks
+  * for older families
 -- 
-1.6.4.2
+1.6.3.3
 
