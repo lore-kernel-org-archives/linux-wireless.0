@@ -1,38 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:52312 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753193Ab0DGHF0 convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4865 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799Ab0DHEAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 03:05:26 -0400
-Received: by pva18 with SMTP id 18so471873pva.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Apr 2010 00:05:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100407053333.23713.61655.stgit@mj.roinet.com>
-References: <20100407053333.23713.61655.stgit@mj.roinet.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 7 Apr 2010 00:05:06 -0700
-Message-ID: <q2k43e72e891004070005q14e8fb0ev5cb06f40d241242b@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: simplify AR9220 fixup code for AR_AN_TOP2 register
-To: Pavel Roskin <proski@gnu.org>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 8 Apr 2010 00:00:19 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	br1@einfach.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/4] ath5k: fix race condition in tx desc processing
+Date: Wed,  7 Apr 2010 23:55:58 -0400
+Message-Id: <1270698959-7844-4-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
+References: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 6, 2010 at 10:33 PM, Pavel Roskin <proski@gnu.org> wrote:
-> Don't modify ah->iniModes, it's supposed to be constant.  Instead, apply
-> the fixup when the data is written to the registers.
->
-> Change ath9k_hw_init_eeprom_fix() to only determine whether the fixup is
-> needed.
->
-> This allows similteneous support for AR9220 cards that need AR_AN_TOP2
-> fixup (such as Ubiquiti SR71-12) and those that don't need it (D-Link
-> DWA-552 rev A2).
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+As pointed out by Benoit Papillault, there is a potential
+race condition between the host and the hardware in reading
+the next link in the transmit descriptor list:
 
-Wow thank you for making sense and cleaning up this nasty POS code.
+cpu0              hw
+                  tx for buf completed
+                  raise tx_ok interrupt
+process buf
+buf->ds_link = 0
+                  read buf->ds_link
 
-  Luis
+This change checks txdp before processing a descriptor
+(if there are any subsequent descriptors) to see if
+hardware moved on.  We'll then process this descriptor on
+the next tasklet.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 1e10439..f90c679 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2080,6 +2080,17 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
+ 		ds = bf->desc;
+ 
++		/*
++		 * It's possible that the hardware can say the buffer is
++		 * completed when it hasn't yet loaded the ds_link from
++		 * host memory and moved on.  If there are more TX
++		 * descriptors in the queue, wait for TXDP to change
++		 * before processing this one.
++		 */
++		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) == bf->daddr &&
++		    !list_is_last(&bf->list, &txq->q))
++			break;
++
+ 		ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
+ 		if (unlikely(ret == -EINPROGRESS))
+ 			break;
+-- 
+1.6.3.3
+
+
