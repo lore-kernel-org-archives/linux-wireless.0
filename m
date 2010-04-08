@@ -1,146 +1,339 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:35765 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444Ab0DJBGr convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46908 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933267Ab0DHT1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 21:06:47 -0400
-Message-ID: <4BBF3324.70207@openwrt.org>
-Date: Fri, 09 Apr 2010 16:01:08 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: Luis Correia <luis.f.correia@gmail.com>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
- 	driver.
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> 	<201004091332.26307.helmut.schaa@googlemail.com> <4BBF150E.3030507@openwrt.org> 	<201004091423.58803.helmut.schaa@googlemail.com> <4BBF1CF1.3090809@openwrt.org> <v2iefe7343f1004090530v11803aa5n4bd81b896684a6e9@mail.gmail.com>
-In-Reply-To: <v2iefe7343f1004090530v11803aa5n4bd81b896684a6e9@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Apr 2010 15:27:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 060/102] ath9k_hw: move TX/RX gain INI stuff to its own hardware family code
+Date: Thu,  8 Apr 2010 15:26:56 -0400
+Message-Id: <1270754858-26266-61-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis Correia írta:
-> On Fri, Apr 9, 2010 at 13:26, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2010-04-09 2:23 PM, Helmut Schaa wrote:
->>> Am Freitag 09 April 2010 schrieb Felix Fietkau:
->>>> On 2010-04-09 1:32 PM, Helmut Schaa wrote:
->>>>> Am Freitag 09 April 2010 schrieb Felix Fietkau:
->>>>>> On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
->>>>>>> On 04/09/10 00:28, Felix Fietkau wrote:
->>>>>>>> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
->>>>>>>>> Only include definitions for RT chipsets that are also used inside the
->>>>>>>>> Ralink vendor drivers.
->>>>>>>>>
->>>>>>>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>>>>>>>> ---
->>>>>>>>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
->>>>>>>>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
->>>>>>>>>  2 files changed, 3 insertions(+), 17 deletions(-)
->>>>>>>>>
->>>>>>>>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->>>>>>>>> index 394c8e4..4bc7e09 100644
->>>>>>>>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->>>>>>>>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->>>>>>>>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->>>>>>>>>       rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
->>>>>>>>>       if ((rt2x00_rt(rt2x00dev, RT2872) &&
->>>>>>>>>            (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
->>>>>>>>> -         rt2x00_rt(rt2x00dev, RT2880) ||
->>>>>>>>>           rt2x00_rt(rt2x00dev, RT2883) ||
->>>>>>>>> -         rt2x00_rt(rt2x00dev, RT2890) ||
->>>>>>>>> -         rt2x00_rt(rt2x00dev, RT3052) ||
->>>>>>>>>           (rt2x00_rt(rt2x00dev, RT3070) &&
->>>>>>>>>            (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
->>>>>>>>>               rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
->>>>>>>>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->>>>>>>>>               rt2800_bbp_write(rt2x00dev, 105, 0x05);
->>>>>>>>>       }
->>>>>>>>>
->>>>>>>>> -     if (rt2x00_rt(rt2x00dev, RT3052)) {
->>>>>>>>> -             rt2800_bbp_write(rt2x00dev, 31, 0x08);
->>>>>>>>> -             rt2800_bbp_write(rt2x00dev, 78, 0x0e);
->>>>>>>>> -             rt2800_bbp_write(rt2x00dev, 80, 0x08);
->>>>>>>>> -     }
->>>>>>>>> -
->>>>>>>> Why are you removing support for RT3052? IMHO those writes were
->>>>>>>> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
->>>>>>> That is because I have not been able to find them in any of the Ralink vendor drivers.
->>>>>>> Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
->>>>>>> as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
->>>>>>> RT2872 devices, but even for them I haven't found these BBP initializations.
->>>>>>> That's why I removed this part.
->>>>>>>
->>>>>>> I have no problem re-instating this if I can find some evidence that these devices
->>>>>>> actually exist.
->>>>>> These chipsets won't show up in STA-only drivers, because they belong to
->>>>>> embedded APs. If you download GPL sources for devices such as ASUS
->>>>>> RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
->>>>>> values in BBPRegTable in the driver sources.
->>>>>> I have a few devices based on RT3052, which is why I added this code.
->>>>>> At some point I even had basic Rx/Tx working on it, but haven't tested
->>>>>> in a while.
->>>>> I also couldn't find any evidence of the existence of an 3052 _rt_ chipset.
->>>>> However, the ralink drivers defines a 3052 _rf_ chip:
->>>>>
->>>>> #define RFIC_3052                   9       // 2.4G/5G 2T2R
->>>> RT3052 is the name of the whole WiSoC chip, not just the MAC or RF part
->>>> of it. Since wifi is integrated in the SoC, I don't think there is a
->>>> separate name for just the wifi part.
->>> There is. I have one 3052 and one 3050 board (basically a 3052 but only
->>> 1T1R), and both identify themselves as RT2872 with different rf "chips"
->>> (of course, there are no additional chips). Hence, the check for RT3052
->>> was never true on both platforms.
->> Back when I tested it, I forced the chip to identify itself as RT3052 by
->> taking the id from the platform device.
->>
->>>>> I don't have such an rf chip in my devices but I don't think the BPP
->>>>> register setup should depend on the actual rf chip. So, if the register
->>>>> setup is really needed we should maybe check for rt2x00_is_soc instead
->>>>> of removing the code?
->>>> Yes, but rt2x00_is_soc() is not enough, since RT2880 is also SoC, but
->>>> slightly different compared to RT3052. I've only tested RT3052 myself.
->>> Right. So, from what I've seen so far it seems like all 305x boards identify
->>> themselves as rt2872. Hence, we can just replace 3052 with 2872 in the above
->>> check and leave the code as is.
->> OK, if that doesn't conflict with any PCI based stuff...
-> 
-> I have a rt2880 based SOC device, my main AP Minitar, I'll hook up the
-> console to it and report what RT-RF chipset combination it has.
+The AR9003 TX/RX gain is currently initialized with the other
+components, so for now AR9003 does not implment this callback,
+after hardware bring up  we can test moving the TX/RX gain there
+as well and if it works well move them to its own callback as
+well.
 
-The ASUS RT-N15 says this:
+Since all INI stuff is now moved out hw.c no longer needs to
+include and touch any original INI headers/structs.
 
-root@OpenWrt:/# cat /proc/cpuinfo
-system type             : Ralink RT2880   id:2 rev:1
-machine                 : Asus RT-N15
-processor               : 0
-cpu model               : MIPS 4KEc V6.12
-BogoMIPS                : 266.24
-wait instruction        : yes
-microsecond timers      : yes
-tlb_entries             : 16
-extra interrupt vector  : yes
-hardware watchpoint     : yes, count: 0, address/irw mask: []
-ASEs implemented        : mips16
-shadow register sets    : 1
-core                    : 0
-VCED exceptions         : not available
-VCEI exceptions         : not available
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |  104 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |    4 +
+ drivers/net/wireless/ath/ath9k/hw.c        |  112 ++--------------------------
+ drivers/net/wireless/ath/ath9k/hw.h        |    2 +
+ 4 files changed, 118 insertions(+), 104 deletions(-)
 
-root@OpenWrt:/# cat /sys/kernel/debug/ieee80211/phy0/rt2800pci/chipset
-rt chip:        2872
-rf chip:        0001
-revision:       0200
-
-register        base    words   wordsize
-csr     4096    512     4
-eeprom  0       136     2
-bbp     0       128     1
-rf      4       4       4
-root@OpenWrt:/#
-
--Gabor
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index e9cc056..ecc0699 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -242,6 +242,109 @@ void ar9002_hw_cck_chan14_spread(struct ath_hw *ah)
+ 	}
+ }
+ 
++static void ar9280_20_hw_init_rxgain_ini(struct ath_hw *ah)
++{
++	u32 rxgain_type;
++
++	if (ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV) >= AR5416_EEP_MINOR_VER_17) {
++		rxgain_type = ah->eep_ops->get_eeprom(ah, EEP_RXGAIN_TYPE);
++
++		if (rxgain_type == AR5416_EEP_RXGAIN_13DB_BACKOFF)
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++			ar9280Modes_backoff_13db_rxgain_9280_2,
++			ARRAY_SIZE(ar9280Modes_backoff_13db_rxgain_9280_2), 6);
++		else if (rxgain_type == AR5416_EEP_RXGAIN_23DB_BACKOFF)
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++			ar9280Modes_backoff_23db_rxgain_9280_2,
++			ARRAY_SIZE(ar9280Modes_backoff_23db_rxgain_9280_2), 6);
++		else
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++			ar9280Modes_original_rxgain_9280_2,
++			ARRAY_SIZE(ar9280Modes_original_rxgain_9280_2), 6);
++	} else {
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			ar9280Modes_original_rxgain_9280_2,
++			ARRAY_SIZE(ar9280Modes_original_rxgain_9280_2), 6);
++	}
++}
++
++static void ar9280_20_hw_init_txgain_ini(struct ath_hw *ah)
++{
++	u32 txgain_type;
++
++	if (ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV) >= AR5416_EEP_MINOR_VER_19) {
++		txgain_type = ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE);
++
++		if (txgain_type == AR5416_EEP_TXGAIN_HIGH_POWER)
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++			ar9280Modes_high_power_tx_gain_9280_2,
++			ARRAY_SIZE(ar9280Modes_high_power_tx_gain_9280_2), 6);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++			ar9280Modes_original_tx_gain_9280_2,
++			ARRAY_SIZE(ar9280Modes_original_tx_gain_9280_2), 6);
++	} else {
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++		ar9280Modes_original_tx_gain_9280_2,
++		ARRAY_SIZE(ar9280Modes_original_tx_gain_9280_2), 6);
++	}
++}
++
++static void ar9002_hw_init_mode_gain_regs(struct ath_hw *ah)
++{
++	if (AR_SREV_9287_11_OR_LATER(ah))
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++		ar9287Modes_rx_gain_9287_1_1,
++		ARRAY_SIZE(ar9287Modes_rx_gain_9287_1_1), 6);
++	else if (AR_SREV_9287_10(ah))
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++		ar9287Modes_rx_gain_9287_1_0,
++		ARRAY_SIZE(ar9287Modes_rx_gain_9287_1_0), 6);
++	else if (AR_SREV_9280_20(ah))
++		ar9280_20_hw_init_rxgain_ini(ah);
++
++	if (AR_SREV_9287_11_OR_LATER(ah)) {
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++		ar9287Modes_tx_gain_9287_1_1,
++		ARRAY_SIZE(ar9287Modes_tx_gain_9287_1_1), 6);
++	} else if (AR_SREV_9287_10(ah)) {
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++		ar9287Modes_tx_gain_9287_1_0,
++		ARRAY_SIZE(ar9287Modes_tx_gain_9287_1_0), 6);
++	} else if (AR_SREV_9280_20(ah)) {
++		ar9280_20_hw_init_txgain_ini(ah);
++	} else if (AR_SREV_9285_12_OR_LATER(ah)) {
++		u32 txgain_type = ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE);
++
++		/* txgain table */
++		if (txgain_type == AR5416_EEP_TXGAIN_HIGH_POWER) {
++			if (AR_SREV_9285E_20(ah)) {
++				INIT_INI_ARRAY(&ah->iniModesTxGain,
++				ar9285Modes_XE2_0_high_power,
++				ARRAY_SIZE(
++				  ar9285Modes_XE2_0_high_power), 6);
++			} else {
++				INIT_INI_ARRAY(&ah->iniModesTxGain,
++				ar9285Modes_high_power_tx_gain_9285_1_2,
++				ARRAY_SIZE(
++				  ar9285Modes_high_power_tx_gain_9285_1_2), 6);
++			}
++		} else {
++			if (AR_SREV_9285E_20(ah)) {
++				INIT_INI_ARRAY(&ah->iniModesTxGain,
++				ar9285Modes_XE2_0_normal_power,
++				ARRAY_SIZE(
++				  ar9285Modes_XE2_0_normal_power), 6);
++			} else {
++				INIT_INI_ARRAY(&ah->iniModesTxGain,
++				ar9285Modes_original_tx_gain_9285_1_2,
++				ARRAY_SIZE(
++				  ar9285Modes_original_tx_gain_9285_1_2), 6);
++			}
++		}
++	}
++}
++
+ /*
+  * Helper for ASPM support.
+  *
+@@ -383,6 +486,7 @@ void ar9002_hw_attach_ops(struct ath_hw *ah)
+ 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+ 
+ 	priv_ops->init_mode_regs = ar9002_hw_init_mode_regs;
++	priv_ops->init_mode_gain_regs = ar9002_hw_init_mode_gain_regs;
+ 	priv_ops->macversion_supported = ar9002_hw_macversion_supported;
+ 
+ 	ops->config_pci_powersave = ar9002_hw_configpcipowersave;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 6111bdb..1984b4f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -31,6 +31,10 @@ static bool ar9003_hw_macversion_supported(u32 macversion)
+ }
+ 
+ /* AR9003 2.0 - new INI format (pre, core, post arrays per subsystem) */
++/*
++ * XXX: move TX/RX gain INI to its own init_mode_gain_regs after
++ * ensuring it does not affect hardware bring up
++ */
+ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ {
+ 	/* mac */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 20353ab..1343c7c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -19,7 +19,6 @@
+ #include "hw.h"
+ #include "hw-ops.h"
+ #include "rc.h"
+-#include "ar9002_initvals.h"
+ 
+ #define ATH9K_CLOCK_RATE_CCK		22
+ #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
+@@ -67,6 +66,14 @@ static u32 ath9k_hw_compute_pll_control(struct ath_hw *ah,
+ 	return ath9k_hw_private_ops(ah)->compute_pll_control(ah, chan);
+ }
+ 
++static void ath9k_hw_init_mode_gain_regs(struct ath_hw *ah)
++{
++	if (!ath9k_hw_private_ops(ah)->init_mode_gain_regs)
++		return;
++
++	ath9k_hw_private_ops(ah)->init_mode_gain_regs(ah);
++}
++
+ /********************/
+ /* Helper Functions */
+ /********************/
+@@ -472,54 +479,6 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
+ 	return 0;
+ }
+ 
+-static void ath9k_hw_init_rxgain_ini(struct ath_hw *ah)
+-{
+-	u32 rxgain_type;
+-
+-	if (ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV) >= AR5416_EEP_MINOR_VER_17) {
+-		rxgain_type = ah->eep_ops->get_eeprom(ah, EEP_RXGAIN_TYPE);
+-
+-		if (rxgain_type == AR5416_EEP_RXGAIN_13DB_BACKOFF)
+-			INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			ar9280Modes_backoff_13db_rxgain_9280_2,
+-			ARRAY_SIZE(ar9280Modes_backoff_13db_rxgain_9280_2), 6);
+-		else if (rxgain_type == AR5416_EEP_RXGAIN_23DB_BACKOFF)
+-			INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			ar9280Modes_backoff_23db_rxgain_9280_2,
+-			ARRAY_SIZE(ar9280Modes_backoff_23db_rxgain_9280_2), 6);
+-		else
+-			INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			ar9280Modes_original_rxgain_9280_2,
+-			ARRAY_SIZE(ar9280Modes_original_rxgain_9280_2), 6);
+-	} else {
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			ar9280Modes_original_rxgain_9280_2,
+-			ARRAY_SIZE(ar9280Modes_original_rxgain_9280_2), 6);
+-	}
+-}
+-
+-static void ath9k_hw_init_txgain_ini(struct ath_hw *ah)
+-{
+-	u32 txgain_type;
+-
+-	if (ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV) >= AR5416_EEP_MINOR_VER_19) {
+-		txgain_type = ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE);
+-
+-		if (txgain_type == AR5416_EEP_TXGAIN_HIGH_POWER)
+-			INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			ar9280Modes_high_power_tx_gain_9280_2,
+-			ARRAY_SIZE(ar9280Modes_high_power_tx_gain_9280_2), 6);
+-		else
+-			INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			ar9280Modes_original_tx_gain_9280_2,
+-			ARRAY_SIZE(ar9280Modes_original_tx_gain_9280_2), 6);
+-	} else {
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-		ar9280Modes_original_tx_gain_9280_2,
+-		ARRAY_SIZE(ar9280Modes_original_tx_gain_9280_2), 6);
+-	}
+-}
+-
+ static int ath9k_hw_post_init(struct ath_hw *ah)
+ {
+ 	int ecode;
+@@ -558,61 +517,6 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ 	return 0;
+ }
+ 
+-static void ath9k_hw_init_mode_gain_regs(struct ath_hw *ah)
+-{
+-	if (AR_SREV_9287_11_OR_LATER(ah))
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-		ar9287Modes_rx_gain_9287_1_1,
+-		ARRAY_SIZE(ar9287Modes_rx_gain_9287_1_1), 6);
+-	else if (AR_SREV_9287_10(ah))
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-		ar9287Modes_rx_gain_9287_1_0,
+-		ARRAY_SIZE(ar9287Modes_rx_gain_9287_1_0), 6);
+-	else if (AR_SREV_9280_20(ah))
+-		ath9k_hw_init_rxgain_ini(ah);
+-
+-	if (AR_SREV_9287_11_OR_LATER(ah)) {
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-		ar9287Modes_tx_gain_9287_1_1,
+-		ARRAY_SIZE(ar9287Modes_tx_gain_9287_1_1), 6);
+-	} else if (AR_SREV_9287_10(ah)) {
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-		ar9287Modes_tx_gain_9287_1_0,
+-		ARRAY_SIZE(ar9287Modes_tx_gain_9287_1_0), 6);
+-	} else if (AR_SREV_9280_20(ah)) {
+-		ath9k_hw_init_txgain_ini(ah);
+-	} else if (AR_SREV_9285_12_OR_LATER(ah)) {
+-		u32 txgain_type = ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE);
+-
+-		/* txgain table */
+-		if (txgain_type == AR5416_EEP_TXGAIN_HIGH_POWER) {
+-			if (AR_SREV_9285E_20(ah)) {
+-				INIT_INI_ARRAY(&ah->iniModesTxGain,
+-				ar9285Modes_XE2_0_high_power,
+-				ARRAY_SIZE(
+-				  ar9285Modes_XE2_0_high_power), 6);
+-			} else {
+-				INIT_INI_ARRAY(&ah->iniModesTxGain,
+-				ar9285Modes_high_power_tx_gain_9285_1_2,
+-				ARRAY_SIZE(
+-				  ar9285Modes_high_power_tx_gain_9285_1_2), 6);
+-			}
+-		} else {
+-			if (AR_SREV_9285E_20(ah)) {
+-				INIT_INI_ARRAY(&ah->iniModesTxGain,
+-				ar9285Modes_XE2_0_normal_power,
+-				ARRAY_SIZE(
+-				  ar9285Modes_XE2_0_normal_power), 6);
+-			} else {
+-				INIT_INI_ARRAY(&ah->iniModesTxGain,
+-				ar9285Modes_original_tx_gain_9285_1_2,
+-				ARRAY_SIZE(
+-				  ar9285Modes_original_tx_gain_9285_1_2), 6);
+-			}
+-		}
+-	}
+-}
+-
+ static u32 ath9k_hw_def_ini_fixup(struct ath_hw *ah,
+ 			      struct ar5416_eeprom_def *pEepData,
+ 			      u32 reg, u32 value)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 295a3b9..8feca6b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -468,6 +468,7 @@ struct ath_gen_timer_table {
+  * @init_cal: starts actual calibration
+  *
+  * @init_mode_regs: Initializes mode registers
++ * @init_mode_gain_regs: Initialize TX/RX gain registers
+  * @macversion_supported: If this specific mac revision is supported
+  *
+  * @rf_set_freq: change frequency
+@@ -486,6 +487,7 @@ struct ath_hw_private_ops {
+ 	bool (*init_cal)(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
+ 	void (*init_mode_regs)(struct ath_hw *ah);
++	void (*init_mode_gain_regs)(struct ath_hw *ah);
+ 	bool (*macversion_supported)(u32 macversion);
+ 	void (*setup_calibration)(struct ath_hw *ah,
+ 				  struct ath9k_cal_list *currCal);
+-- 
+1.6.3.3
 
