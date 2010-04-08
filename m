@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:53817 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751006Ab0DJMHL convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50520 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933150Ab0DHUAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Apr 2010 08:07:11 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so1507303qwh.37
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Apr 2010 05:07:11 -0700 (PDT)
+	Thu, 8 Apr 2010 16:00:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: reinette.chatre@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: avoid warning by using result of iwl_send_cmd_pdu in iwl_sta_init_lq
+Date: Thu,  8 Apr 2010 15:48:09 -0400
+Message-Id: <1270756089-9589-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
-References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
-	 <4BB7660A.3030900@lwfinger.net>
-	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
-	 <4BB773A9.2070703@lwfinger.net>
-	 <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
-Date: Sat, 10 Apr 2010 09:07:10 -0300
-Message-ID: <q2k917a57cb1004100507s17249540xfb11a2e2f0a2dd76@mail.gmail.com>
-Subject: Re: RTL 8187b - naughty behaviour
-From: Rogerio Luz Coelho <rogluz.news@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/3 Rogerio Luz Coelho <rogluz.news@gmail.com>:
-> 2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
->> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
->>>
->>> I have a MS-Win7 instalation on this Laptop and it works 100% even at
->>> longer distances than you report,even with walls in between.
->>>
->>> Will do the tcpperf test as soon as I get home. There are other with
->>> the same problem with my exact chip here in Brasil , that is because
->>> one of our leading Laptop vendors uses this config.
->>
->> What is the exact make and model of the device? It might be difficult
->> for me to get one in the US, but one of the rtl8187 developers lives in
->> Brazil. He should be able to find one.
->>
->
-> It�s a POSITIVO R430L - Core 2 Duo 4GB RAM
->
->
->>> Does it matter that the USB port used in this setting is a connected
->>> to a USB HUB and then to the mother board?
->>
->> Is the hub passive, or is it powered? If the hub is good and not
->> underpowered, it should be OK.
->>
->>> More details and tests will come your way in a day or two ... will
->>> reinstall Mandriva 2010 and do some tests with older kernels.
->>
->> If you can download an openSUSE 11.2 Live CD and burn it, you would not
->> even have to do an installation. That one has a 2.6.31 kernel.
->>
->> Larry
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-sta.o
+drivers/net/wireless/iwlwifi/iwl-sta.c: In function ‘iwl_sta_init_lq’:
+drivers/net/wireless/iwlwifi/iwl-sta.c:461: warning: ignoring return value of ‘iwl_send_cmd_pdu’, declared with attribute warn_unused_result
 
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-sta.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Downloaded and installed:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index e34ac03..91aaf11 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -458,8 +458,9 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, bool is_ap)
+ 	/* Update the rate scaling for control frame Tx to AP */
+ 	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_params.bcast_sta_id;
+ 
+-	iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
+-			       sizeof(link_cmd), &link_cmd);
++	if (!iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
++			       sizeof(link_cmd), &link_cmd))
++		IWL_WARN(priv, "Tx link quality reply failed\n");
+ }
+ 
+ /*
+-- 
+1.6.2.5
 
-OpenSuse 11.2 - LiveCD  result: Gnome Network-Manager tells me there
-is connection but no ping resposes, Firefox complains about conections
-errors.
-
-Mandriva 2010.0 (kernel 2.6.31-12) result: concection comes and goes
-... generally the first boot of the day connects, but it lasts less
-than 5min. The error code is the "deauthentication by local reason
-(reason=3) again.
-
-MS-Win7 : connects and is as fast as ever.
-
--- Any other suggestions?
-
-Rogerio
-
-PS: Will give OpenSuse a HD install atempt and will try to debug the
-Mandriva for some time, future tries involve Debian Stable (old
-kernel) and some Fedora (any suggestions?) and the NDISwrapper drive
-in a Debian Testing (the Distro I need working)
