@@ -1,80 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:48556 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753966Ab0DAMsw (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56217 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932642Ab0DHPus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 08:48:52 -0400
-Received: by wwb17 with SMTP id 17so740738wwb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 05:48:50 -0700 (PDT)
-MIME-Version: 1.0
-From: Luis Correia <luis.f.correia@gmail.com>
-Date: Thu, 1 Apr 2010 13:48:30 +0100
-Message-ID: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com>
-Subject: [PATCH] Remove MCU requests for SoC platforms
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Apr 2010 11:50:48 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] mac80211_hwsim: add sw_scan sw_scan_complete
+Date: Thu,  8 Apr 2010 11:50:47 -0400
+Message-Id: <1270741847-14106-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ralink SoC platforms do not have an MCU.
+Simple pre-scan and scan complete callbacks, this at least shows
+to me that mac80211 will issue two scans at the same time on the
+same wiphy.
 
-Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
 
---- a/drivers/net/wireless/rt2x00/rt2800lib.c	2010-03-26
-18:25:50.000000000 +0000
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c	2010-04-01
-13:05:18.249747122 +0100
-@@ -221,9 +221,9 @@
- 	u32 reg;
+We have been getting reports of ath9k issuing two scans at the same time,
+I figured this was mac80211 related, so I tested this implementation as a
+test and I do run into the case.
 
- 	/*
--	 * SOC devices don't support MCU requests.
-+	 * some devices don't support MCU requests.
- 	 */
--	if (rt2x00_is_soc(rt2x00dev))
-+	if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
- 		return;
+ drivers/net/wireless/mac80211_hwsim.c |   45 ++++++++++++++++++++++++++++++---
+ 1 files changed, 41 insertions(+), 4 deletions(-)
 
- 	mutex_lock(&rt2x00dev->csr_mutex);
---- a/drivers/net/wireless/rt2x00/rt2800pci.c	2010-03-26
-18:25:50.000000000 +0000
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c	2010-04-01
-13:04:42.453621607 +0100
-@@ -59,6 +59,12 @@
- {
- 	unsigned int i;
- 	u32 reg;
-+	
-+	/*
-+	 * some devices don't support MCU requests.
-+	 */
-+	if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
-+		return;
-
- 	for (i = 0; i < 200; i++) {
- 		rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
-@@ -1100,8 +1106,10 @@
- 	/*
- 	 * This device requires firmware and MCU access.
- 	 */
--	if (!rt2x00_is_soc(rt2x00dev))
-+	if (!rt2x00_is_soc(rt2x00dev)) {
- 		__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
-+		__set_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 6ea77e9..ec8b082 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -290,7 +290,8 @@ struct mac80211_hwsim_data {
+ 	struct ieee80211_channel *channel;
+ 	unsigned long beacon_int; /* in jiffies unit */
+ 	unsigned int rx_filter;
+-	bool started, idle;
++	bool started, idle, scanning;
++	struct mutex mutex;
+ 	struct timer_list beacon_timer;
+ 	enum ps_mode {
+ 		PS_DISABLED, PS_ENABLED, PS_AUTO_POLL, PS_MANUAL_POLL
+@@ -956,9 +957,9 @@ static int mac80211_hwsim_hw_scan(struct ieee80211_hw *hw,
+ 	hsd->hw = hw;
+ 	INIT_DELAYED_WORK(&hsd->w, hw_scan_done);
+ 
+-	printk(KERN_DEBUG "hwsim scan request\n");
++	printk(KERN_DEBUG "hwsim hw_scan request\n");
+ 	for (i = 0; i < req->n_channels; i++)
+-		printk(KERN_DEBUG "hwsim scan freq %d\n",
++		printk(KERN_DEBUG "hwsim hw_scan freq %d\n",
+ 			req->channels[i]->center_freq);
+ 
+ 	ieee80211_queue_delayed_work(hw, &hsd->w, 2 * HZ);
+@@ -966,6 +967,36 @@ static int mac80211_hwsim_hw_scan(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++static void mac80211_hwsim_sw_scan(struct ieee80211_hw *hw)
++{
++	struct mac80211_hwsim_data *hwsim = hw->priv;
++
++	mutex_lock(&hwsim->mutex);
++
++	if (hwsim->scanning) {
++		printk(KERN_DEBUG "two hwsim sw_scans detected!\n");
++		goto out;
 +	}
- 	__set_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags);
- 	__set_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags);
- 	if (!modparam_nohwcrypt)
---- a/drivers/net/wireless/rt2x00/rt2x00.h	2010-03-26 18:25:50.000000000 +0000
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h	2010-04-01 13:01:26.812694036 +0100
-@@ -631,6 +631,7 @@
- 	 * Driver requirements
- 	 */
- 	DRIVER_REQUIRE_FIRMWARE,
-+	DRIVER_REQUIRE_MCU,
- 	DRIVER_REQUIRE_BEACON_GUARD,
- 	DRIVER_REQUIRE_ATIM_QUEUE,
- 	DRIVER_REQUIRE_DMA,
++
++	printk(KERN_DEBUG "hwsim sw_scan request, prepping stuff\n");
++	hwsim->scanning = true;
++
++out:
++	mutex_unlock(&hwsim->mutex);
++}
++
++static void mac80211_hwsim_sw_scan_complete(struct ieee80211_hw *hw)
++{
++	struct mac80211_hwsim_data *hwsim = hw->priv;
++
++	mutex_lock(&hwsim->mutex);
++
++	printk(KERN_DEBUG "hwsim sw_scan_complete\n");
++	hwsim->scanning = true;
++
++	mutex_unlock(&hwsim->mutex);
++}
++
+ static struct ieee80211_ops mac80211_hwsim_ops =
+ {
+ 	.tx = mac80211_hwsim_tx,
+@@ -983,6 +1014,8 @@ static struct ieee80211_ops mac80211_hwsim_ops =
+ 	.conf_tx = mac80211_hwsim_conf_tx,
+ 	CFG80211_TESTMODE_CMD(mac80211_hwsim_testmode_cmd)
+ 	.ampdu_action = mac80211_hwsim_ampdu_action,
++	.sw_scan_start = mac80211_hwsim_sw_scan,
++	.sw_scan_complete = mac80211_hwsim_sw_scan_complete,
+ 	.flush = mac80211_hwsim_flush,
+ };
+ 
+@@ -1178,8 +1211,11 @@ static int __init init_mac80211_hwsim(void)
+ 	if (radios < 1 || radios > 100)
+ 		return -EINVAL;
+ 
+-	if (fake_hw_scan)
++	if (fake_hw_scan) {
+ 		mac80211_hwsim_ops.hw_scan = mac80211_hwsim_hw_scan;
++		mac80211_hwsim_ops.sw_scan_start = NULL;
++		mac80211_hwsim_ops.sw_scan_complete = NULL;
++	}
+ 
+ 	spin_lock_init(&hwsim_radio_lock);
+ 	INIT_LIST_HEAD(&hwsim_radios);
+@@ -1284,6 +1320,7 @@ static int __init init_mac80211_hwsim(void)
+ 		}
+ 		/* By default all radios are belonging to the first group */
+ 		data->group = 1;
++		mutex_init(&data->mutex);
+ 
+ 		/* Work to be done prior to ieee80211_register_hw() */
+ 		switch (regtest) {
+-- 
+1.6.3.3
+
