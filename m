@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43140 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754729Ab0DZTPL (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4851 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746Ab0DHEAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 15:15:11 -0400
-Date: Mon, 26 Apr 2010 15:09:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH PING] ssb patches for SPROM location
-Message-ID: <20100426190911.GH2387@tuxdriver.com>
-References: <p2ub170af451004152320y64c4615ub3d7186d936cdc62@mail.gmail.com>
- <20100416133711.GB8554@tuxdriver.com>
- <m2wb170af451004160851veaed6df6r2e8ec0528f66685e@mail.gmail.com>
- <4BC88EC4.5000606@lwfinger.net>
- <20100426182655.GE2387@tuxdriver.com>
- <y2nb170af451004261133qe1e0dfaand43c190b6f7f8d3@mail.gmail.com>
- <4BD5E3A3.4050907@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4BD5E3A3.4050907@lwfinger.net>
+	Thu, 8 Apr 2010 00:00:16 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	br1@einfach.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 0/4] ath5k: misc fixes
+Date: Wed,  7 Apr 2010 23:55:55 -0400
+Message-Id: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 26, 2010 at 02:04:03PM -0500, Larry Finger wrote:
-> On 04/26/2010 01:33 PM, Rafał Miłecki wrote:
-> > 2010/4/26 John W. Linville <linville@tuxdriver.com>:
+Hi,
 
-> >> FWIW, this patch series also still results in a hang on my problematic
-> >> netbook.  I'm going to merge them anyway, in hopes that they make
-> >> things better for someone (or at least get us closer to it).  I'll try
-> >> to pinpoint this hang as well.
-> > 
-> > Did it actually pick another (newly discovered) offset for SPROM
-> > location in your case? Could you add some single printk to check this?
-> 
-> My suggestion is that for now we only implement John's patch for no
-> SPROM. I am hoping that we try to fix the failures for boxes with the
-> SPROM in a normal location. Once we do that, there will be a simpler fix
-> for testing at the alternate location. The patch will all be contained
-> in sprom_do_read().
+Here are a few bug fixes for ath5k.  They are primarily minor
+and/or theoretical so I didn't include stable CCs.
 
-Hmmm...well, I just pushed (just to my public trees, not to Dave)
-Rafał's trio of patches on top of mine.  Should I revert them?
+They should not conflict with Bruno's ANI patch.
 
-John
+Bob Copeland (4):
+  ath5k: correct channel setting for 2.5 mhz spacing
+  ath5k: clean up queue manipulation
+  ath5k: fix race condition in tx desc processing
+  ath5k: add bounds check to pdadc table
 
-P.S.  With those patches, this box (soon to be Larry's) still uses
-an sprom_offset value of 0x1000.
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ drivers/net/wireless/ath/ath5k/base.c |   14 ++++++++++++--
+ drivers/net/wireless/ath/ath5k/phy.c  |   10 +++++-----
+ 2 files changed, 17 insertions(+), 7 deletions(-)
+
+
