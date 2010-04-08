@@ -1,35 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34503 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754809Ab0DZUK2 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46700 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933124Ab0DHT1j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 16:10:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: remove usage of deprecated noise value
-Date: Mon, 26 Apr 2010 16:09:21 -0400
-Message-Id: <1272312561-22648-1-git-send-email-linville@tuxdriver.com>
+	Thu, 8 Apr 2010 15:27:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 003/102] ath9k_hw: add a macro for abstracting generic timer access
+Date: Thu,  8 Apr 2010 15:25:59 -0400
+Message-Id: <1270754858-26266-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath/ath9k/common.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+From: Felix Fietkau <nbd@openwrt.org>
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 09effde..b4424a6 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -212,7 +212,6 @@ int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
- 	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
--	rx_status->noise = common->ani.noise_floor;
- 	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
- 	rx_status->antenna = rx_stats->rs_antenna;
- 	rx_status->flag |= RX_FLAG_TSFT;
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/reg.h |   38 +++++++++++++++++----------------
+ 1 files changed, 20 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 5ab6d6e..68d55a2 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1610,24 +1610,26 @@ enum {
+ #define AR_FIRST_NDP_TIMER                  7
+ #define AR_NDP2_PERIOD                      0x81a0
+ #define AR_NDP2_TIMER_MODE                  0x81c0
+-#define AR_NEXT_TBTT_TIMER                  0x8200
+-#define AR_NEXT_DMA_BEACON_ALERT            0x8204
+-#define AR_NEXT_SWBA                        0x8208
+-#define AR_NEXT_CFP                         0x8208
+-#define AR_NEXT_HCF                         0x820C
+-#define AR_NEXT_TIM                         0x8210
+-#define AR_NEXT_DTIM                        0x8214
+-#define AR_NEXT_QUIET_TIMER                 0x8218
+-#define AR_NEXT_NDP_TIMER                   0x821C
+-
+-#define AR_BEACON_PERIOD                    0x8220
+-#define AR_DMA_BEACON_PERIOD                0x8224
+-#define AR_SWBA_PERIOD                      0x8228
+-#define AR_HCF_PERIOD                       0x822C
+-#define AR_TIM_PERIOD                       0x8230
+-#define AR_DTIM_PERIOD                      0x8234
+-#define AR_QUIET_PERIOD                     0x8238
+-#define AR_NDP_PERIOD                       0x823C
++
++#define AR_GEN_TIMERS(_i)                   (0x8200 + ((_i) << 2))
++#define AR_NEXT_TBTT_TIMER                  AR_GEN_TIMERS(0)
++#define AR_NEXT_DMA_BEACON_ALERT            AR_GEN_TIMERS(1)
++#define AR_NEXT_SWBA                        AR_GEN_TIMERS(2)
++#define AR_NEXT_CFP                         AR_GEN_TIMERS(2)
++#define AR_NEXT_HCF                         AR_GEN_TIMERS(3)
++#define AR_NEXT_TIM                         AR_GEN_TIMERS(4)
++#define AR_NEXT_DTIM                        AR_GEN_TIMERS(5)
++#define AR_NEXT_QUIET_TIMER                 AR_GEN_TIMERS(6)
++#define AR_NEXT_NDP_TIMER                   AR_GEN_TIMERS(7)
++
++#define AR_BEACON_PERIOD                    AR_GEN_TIMERS(8)
++#define AR_DMA_BEACON_PERIOD                AR_GEN_TIMERS(9)
++#define AR_SWBA_PERIOD                      AR_GEN_TIMERS(10)
++#define AR_HCF_PERIOD                       AR_GEN_TIMERS(11)
++#define AR_TIM_PERIOD                       AR_GEN_TIMERS(12)
++#define AR_DTIM_PERIOD                      AR_GEN_TIMERS(13)
++#define AR_QUIET_PERIOD                     AR_GEN_TIMERS(14)
++#define AR_NDP_PERIOD                       AR_GEN_TIMERS(15)
+ 
+ #define AR_TIMER_MODE                       0x8240
+ #define AR_TBTT_TIMER_EN                    0x00000001
 -- 
-1.6.6.1
+1.6.3.3
 
