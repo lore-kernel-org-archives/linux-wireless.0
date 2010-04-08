@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:34869 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756836Ab0DFV0x (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46730 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933204Ab0DHT1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 17:26:53 -0400
-Received: by ewy20 with SMTP id 20so210121ewy.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 14:26:51 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 0/4] rt2x00: Powersave fixes.
-Date: Tue, 6 Apr 2010 23:26:48 +0200
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <1269985826-17438-1-git-send-email-gwingerde@gmail.com> <20100406193409.GA3017@tuxdriver.com> <4BBB90F6.8060406@gmail.com>
-In-Reply-To: <4BBB90F6.8060406@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201004062326.48463.IvDoorn@gmail.com>
+	Thu, 8 Apr 2010 15:27:40 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 018/102] ath9k_hw: Add hw cap flag for EDMA for the AR9003 family
+Date: Thu,  8 Apr 2010 15:26:14 -0400
+Message-Id: <1270754858-26266-19-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 April 2010, Gertjan van Wingerde wrote:
-> On 04/06/10 21:34, John W. Linville wrote:
-> > On Tue, Mar 30, 2010 at 11:50:22PM +0200, Gertjan van Wingerde wrote:
-> >> The following 4 patches fix powersave behavior of rt2x00.
-> >> The first patch fixes the rt2500usb powersave issues found lately.
-> >> The second on enables powersave for rt2500usb again, now it is fixed.
-> >> The third and fourth are ongoing work to bring the other PCI drivers
-> >> in a better shape.
-> >>
-> >> All patches are against wireless-2.6.
-> >>
-> >> The patch series is also available via:
-> >>
-> >> 	git://git.gwingerde.nl/rt2x00-2.6.git
-> >>
-> >> Gertjan van Wingerde (4):
-> >>   rt2x00: Disable auto wakeup before waking up device.
-> >>   rt2x00: Enable powersaving by default again on rt2500usb.
-> >>   rt2x00: Add wakeup interrupt handler to rt61pci.
-> >>   rt2x00: Add wakeup interrupt handler to rt2800pci.
-> > 
-> > I don't have any objection to these patches, but they don't
-> > seem appropriate for 2.6.34 to me.  As such, basing them on
-> > wireless-next-2.6 seems more appropriate.
-> > 
-> > Any objection to me applying them for 2.6.35?
-> > 
-> 
-> You're the boss ;-)
-> 
-> No, no objections from my side. We already disabled powersaving in 2.6.34,
-> so we should be covered for that release.
-> 
-> Note that patch 2 then won't apply to wireless-next-2.6, as the patch
-> that disables powersaving is only in wireless-2.6.
-> 
-> How do you want to handle applying patch 2 from the series; how do we
-> synchronize?
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-John, not sure how important you consider it, but please note that the first 2 patches would fix:
-https://bugzilla.kernel.org/show_bug.cgi?id=15699
+AR9003 supports extended DMA (EDMA), this comes with some
+bells and whistles on top of the legacy DMA that we are used
+to. Mark AR9003 and later chips EDMA capable.
 
-Ivo
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    3 +++
+ drivers/net/wireless/ath/ath9k/hw.h |    1 +
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f161a98..9a63884 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2916,6 +2916,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		btcoex_hw->scheme = ATH_BTCOEX_CFG_NONE;
+ 	}
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		pCap->hw_caps |= ATH9K_HW_CAP_EDMA;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f04d64b..c4b2770 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -165,6 +165,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_ENHANCEDPM                 = BIT(14),
+ 	ATH9K_HW_CAP_AUTOSLEEP                  = BIT(15),
+ 	ATH9K_HW_CAP_4KB_SPLITTRANS             = BIT(16),
++	ATH9K_HW_CAP_EDMA			= BIT(17),
+ };
+ 
+ enum ath9k_capability_type {
+-- 
+1.6.3.3
+
