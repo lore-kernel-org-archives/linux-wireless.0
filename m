@@ -1,35 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34504 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754831Ab0DZUK2 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46718 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933187Ab0DHT1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 16:10:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] p54: remove usage of deprecated noise value
-Date: Mon, 26 Apr 2010 16:09:26 -0400
-Message-Id: <1272312566-22812-1-git-send-email-linville@tuxdriver.com>
+	Thu, 8 Apr 2010 15:27:40 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 012/102] ath9k_hw: add a private callback for PLL control computation
+Date: Thu,  8 Apr 2010 15:26:08 -0400
+Message-Id: <1270754858-26266-13-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/p54/txrx.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+The PLL control computation used to program the AR_RTC_PLL_CONTROL
+register varies between our harware so just add a private callback for it.
+AR9003 will use its own callback.
 
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 2ceff54..4e68910 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -350,7 +350,6 @@ static int p54_rx_data(struct p54_common *priv, struct sk_buff *skb)
- 		rx_status->flag |= RX_FLAG_MMIC_ERROR;
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |   55 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c |   31 +++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c         |   64 +++------------------------
+ drivers/net/wireless/ath/ath9k/hw.h         |    4 ++
+ 4 files changed, 97 insertions(+), 57 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 4459d63..31ecea8 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -961,6 +961,54 @@ static void ar5008_set_diversity(struct ath_hw *ah, bool value)
+ 	REG_WRITE(ah, AR_PHY_CCK_DETECT, v);
+ }
  
- 	rx_status->signal = p54_rssi_to_dbm(priv, hdr->rssi);
--	rx_status->noise = priv->noise;
- 	if (hdr->rate & 0x10)
- 		rx_status->flag |= RX_FLAG_SHORTPRE;
- 	if (priv->hw->conf.channel->band == IEEE80211_BAND_5GHZ)
++static u32 ar9100_hw_compute_pll_control(struct ath_hw *ah,
++					 struct ath9k_channel *chan)
++{
++	if (chan && IS_CHAN_5GHZ(chan))
++		return 0x1450;
++	return 0x1458;
++}
++
++static u32 ar9160_hw_compute_pll_control(struct ath_hw *ah,
++					 struct ath9k_channel *chan)
++{
++	u32 pll;
++
++	pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
++
++	if (chan && IS_CHAN_HALF_RATE(chan))
++		pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
++	else if (chan && IS_CHAN_QUARTER_RATE(chan))
++		pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
++
++	if (chan && IS_CHAN_5GHZ(chan))
++		pll |= SM(0x50, AR_RTC_9160_PLL_DIV);
++	else
++		pll |= SM(0x58, AR_RTC_9160_PLL_DIV);
++
++	return pll;
++}
++
++static u32 ar5008_hw_compute_pll_control(struct ath_hw *ah,
++					 struct ath9k_channel *chan)
++{
++	u32 pll;
++
++	pll = AR_RTC_PLL_REFDIV_5 | AR_RTC_PLL_DIV2;
++
++	if (chan && IS_CHAN_HALF_RATE(chan))
++		pll |= SM(0x1, AR_RTC_PLL_CLKSEL);
++	else if (chan && IS_CHAN_QUARTER_RATE(chan))
++		pll |= SM(0x2, AR_RTC_PLL_CLKSEL);
++
++	if (chan && IS_CHAN_5GHZ(chan))
++		pll |= SM(0xa, AR_RTC_PLL_DIV);
++	else
++		pll |= SM(0xb, AR_RTC_PLL_DIV);
++
++	return pll;
++}
++
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -982,4 +1030,11 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->enable_rfkill = ar5008_hw_enable_rfkill;
+ 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
+ 	priv_ops->set_diversity = ar5008_set_diversity;
++
++	if (AR_SREV_9100(ah))
++		priv_ops->compute_pll_control = ar9100_hw_compute_pll_control;
++	else if (AR_SREV_9160_10_OR_LATER(ah))
++		priv_ops->compute_pll_control = ar9160_hw_compute_pll_control;
++	else
++		priv_ops->compute_pll_control = ar5008_hw_compute_pll_control;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index 1c36012..f94fc27 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -437,6 +437,36 @@ static void ar9002_olc_init(struct ath_hw *ah)
+ 	}
+ }
+ 
++static u32 ar9002_hw_compute_pll_control(struct ath_hw *ah,
++					 struct ath9k_channel *chan)
++{
++	u32 pll;
++
++	pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
++
++	if (chan && IS_CHAN_HALF_RATE(chan))
++		pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
++	else if (chan && IS_CHAN_QUARTER_RATE(chan))
++		pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
++
++	if (chan && IS_CHAN_5GHZ(chan)) {
++		pll |= SM(0x28, AR_RTC_9160_PLL_DIV);
++
++
++		if (AR_SREV_9280_20(ah)) {
++			if (((chan->channel % 20) == 0)
++			    || ((chan->channel % 10) == 0))
++				pll = 0x2850;
++			else
++				pll = 0x142c;
++		}
++	} else {
++		pll |= SM(0x2c, AR_RTC_9160_PLL_DIV);
++	}
++
++	return pll;
++}
++
+ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -447,4 +477,5 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->rf_set_freq = ar9002_hw_set_channel;
+ 	priv_ops->spur_mitigate_freq = ar9002_hw_spur_mitigate;
+ 	priv_ops->olc_init = ar9002_olc_init;
++	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index b242b03..d3b7a98 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -67,6 +67,12 @@ static bool ath9k_hw_macversion_supported(struct ath_hw *ah)
+ 	return ath9k_hw_private_ops(ah)->macversion_supported(ah->hw_version.macVersion);
+ }
+ 
++static u32 ath9k_hw_compute_pll_control(struct ath_hw *ah,
++					struct ath9k_channel *chan)
++{
++	return ath9k_hw_private_ops(ah)->compute_pll_control(ah, chan);
++}
++
+ /********************/
+ /* Helper Functions */
+ /********************/
+@@ -1031,64 +1037,8 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
+ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 			      struct ath9k_channel *chan)
+ {
+-	u32 pll;
+-
+-	if (AR_SREV_9100(ah)) {
+-		if (chan && IS_CHAN_5GHZ(chan))
+-			pll = 0x1450;
+-		else
+-			pll = 0x1458;
+-	} else {
+-		if (AR_SREV_9280_10_OR_LATER(ah)) {
+-			pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
+-
+-			if (chan && IS_CHAN_HALF_RATE(chan))
+-				pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
+-			else if (chan && IS_CHAN_QUARTER_RATE(chan))
+-				pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
+-
+-			if (chan && IS_CHAN_5GHZ(chan)) {
+-				pll |= SM(0x28, AR_RTC_9160_PLL_DIV);
+-
+-
+-				if (AR_SREV_9280_20(ah)) {
+-					if (((chan->channel % 20) == 0)
+-					    || ((chan->channel % 10) == 0))
+-						pll = 0x2850;
+-					else
+-						pll = 0x142c;
+-				}
+-			} else {
+-				pll |= SM(0x2c, AR_RTC_9160_PLL_DIV);
+-			}
+-
+-		} else if (AR_SREV_9160_10_OR_LATER(ah)) {
+-
+-			pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
+-
+-			if (chan && IS_CHAN_HALF_RATE(chan))
+-				pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
+-			else if (chan && IS_CHAN_QUARTER_RATE(chan))
+-				pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
+-
+-			if (chan && IS_CHAN_5GHZ(chan))
+-				pll |= SM(0x50, AR_RTC_9160_PLL_DIV);
+-			else
+-				pll |= SM(0x58, AR_RTC_9160_PLL_DIV);
+-		} else {
+-			pll = AR_RTC_PLL_REFDIV_5 | AR_RTC_PLL_DIV2;
+-
+-			if (chan && IS_CHAN_HALF_RATE(chan))
+-				pll |= SM(0x1, AR_RTC_PLL_CLKSEL);
+-			else if (chan && IS_CHAN_QUARTER_RATE(chan))
+-				pll |= SM(0x2, AR_RTC_PLL_CLKSEL);
++	u32 pll = ath9k_hw_compute_pll_control(ah, chan);
+ 
+-			if (chan && IS_CHAN_5GHZ(chan))
+-				pll |= SM(0xa, AR_RTC_PLL_DIV);
+-			else
+-				pll |= SM(0xb, AR_RTC_PLL_DIV);
+-		}
+-	}
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+ 
+ 	/* Switch the core clock for ar9271 to 117Mhz */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b277b41..a0ab32a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -454,6 +454,8 @@ struct ath_gen_timer_table {
+  * @rf_alloc_ext_banks:
+  * @rf_free_ext_banks:
+  * @set_rf_regs:
++ * @compute_pll_control: compute the PLL control value to use for
++ *	AR_RTC_PLL_CONTROL for a given channel
+  */
+ struct ath_hw_private_ops {
+ 	void (*init_cal_settings)(struct ath_hw *ah);
+@@ -483,6 +485,8 @@ struct ath_hw_private_ops {
+ 	void (*enable_rfkill)(struct ath_hw *ah);
+ 	void (*restore_chainmask)(struct ath_hw *ah);
+ 	void (*set_diversity)(struct ath_hw *ah, bool value);
++	u32 (*compute_pll_control)(struct ath_hw *ah,
++				   struct ath9k_channel *chan);
+ };
+ 
+ /**
 -- 
-1.6.6.1
+1.6.3.3
 
