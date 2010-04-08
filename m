@@ -1,118 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47893 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752429Ab0DZMUb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 08:20:31 -0400
-Message-ID: <4BD58573.3050208@redhat.com>
-Date: Mon, 26 Apr 2010 14:22:11 +0200
-From: Hans de Goede <hdegoede@redhat.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [WIP] p54pci: fix resume p54 cardbus
-References: <201004251525.19796.chunkeey@googlemail.com> <4BD55EFE.3080009@redhat.com> <201004261412.47831.chunkeey@googlemail.com>
-In-Reply-To: <201004261412.47831.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from bombadil.infradead.org ([18.85.46.34]:46859 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933251Ab0DHT1p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 15:27:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 047/102] ath9k_hw: add a helper for the OLC tem compensation for AR9002
+Date: Thu,  8 Apr 2010 15:26:43 -0400
+Message-Id: <1270754858-26266-48-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Open Loop Control temperature compensation changes between our
+hardware so use a helper for it.
 
-On 04/26/2010 02:12 PM, Christian Lamparter wrote:
-> On Monday 26 April 2010 11:38:06 Hans de Goede wrote:
->> On 04/25/2010 03:25 PM, Christian Lamparter wrote:
->>> This patch tries to fix the resume freeze, which is described in
->>> https://bugzilla.redhat.com/show_bug.cgi?id=583623
->>>
->>> Unlike (normal) PCI cards, cardbus cards are easily removable.
->>> Therefore, the user might replace/remove the card while
->>> the system is suspended. The pcmcia subsystem takes special
->>> precautions to deal with such cases and un- and rebinds
->>> all devices on the pci-bridge during the resume process.
->>>
->>> But here's the catch: p54pci uses request_firmware
->>> which blocks until the filesystem is available.
->>> This deadlocks, because the filesystem won't
->>> be initialized until all pci devices are ready again.
->>
->> p54pci uses request_firmware only from its probe function,
->> which does not get called during a suspend resume AFAIK.
->>
->> And if the card was inserted during a suspend / resume. I would
->> not expect its driver to get loaded until the resume has completed
->> and udev runs again.
->
-> no, all 2.6.34-rcX-wl kernels - I tried - refused to resume if
-> a p54pci was present in the cardslot. The culprit was found to be:
->
-> commit 88b060d6c03fcb9e4d2018b4349954c4242a5c7f
-> Author: Dominik Brodowski<linux@dominikbrodowski.net>
-> Date:   Sat Jan 2 14:14:23 2010 +0100
->
->      pcmcia: improve check for same card in slot after resume
->
->      During a suspend/resume cycle, an user may change the card in the
->      PCMCIA/CardBus slot. The pcmcia_core can at least look at the
->      socket state to check whether it is the same.
->
->      For PCMCIA devices, move the detection and handling of such a
->      change to ds.c.
->
-> -->  For CardBus devices, the PCI hotplug interface doesn't offer a "rescan"
->      facility which also _removes_ devices no longer to be found behind a
->      bridge. Therefore, remove and re-add all devices unconditionally.
->
->> Hmm, I think while typing this message I just understood what you're
->> trying to fix. The problem could occur when the driver is already loaded
->> (for some reason), but not yet bound to the device as the card got
->> inserted during suspend. Does the probe function get called during
->> resume then ?
->
-> yes, due to "pcmcia: improve check for same card in slot after resume"
-> the p54p_probe function is now always called during resume. And as
-> you know this deadlocks, unless the firmware is included into the
-> kernel.
->
->> This would seem like a driver core bug to me. It should not start
->> binding drivers to "new" devices, until the resume is completed IMHO.
-> Well, the commit author does have a point.
->
-> what if I replace my Netgear WG511 with different Netgear WG511
-> (or even SMC W2835V2) while the system is suspendend?
-> All cards are fullmac p54pci, but they are not the same HW.
->
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-Unbinding / rebinding the driver sounds like a really big hammer
-to me though. Maybe drivers need a new re-scan hook or some such.
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 26bc381..156ae34 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -964,6 +964,12 @@ static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 	}
+ }
+ 
++static void ar9002_hw_olc_temp_compensation(struct ath_hw *ah)
++{
++	if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
++		ath9k_olc_temp_compensation(ah);
++}
++
+ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			u8 rxchainmask, bool longcal)
+ {
+@@ -989,9 +995,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (longcal) {
+ 		/* Do periodic PAOffset Cal */
+ 		ar9002_hw_pa_cal(ah, false);
+-
+-		if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
+-			ath9k_olc_temp_compensation(ah);
++		ar9002_hw_olc_temp_compensation(ah);
+ 
+ 		/* Get the value from the previous NF cal and update history buffer */
+ 		ath9k_hw_getnf(ah, chan);
+-- 
+1.6.3.3
 
-> On the other hand, this patch breaks basically any cardbus
-> device driver which needs firmware and doesn't use the asynchronus
-> request interface. Also, (in case of mac80211) the unbind/bind
-> procedure resets mac80211/driver/etc.. to their uninitialized states
-> (and changes a few things, e.g.: phyX ids and friends).
-> This could very well confuse the userspace, because after the
-> resume all configurations are gone...
->
-
-Yeah, this sounds like a case of the cure being worse then the disease
-(as we say in the Netherlands).
-
->> Note that the problem which I'm mostly seeing with suspend resume,
->> is that the card fails shortly after resume. It seems to be come up
->> and I can send / receive some packets and then it fails. The changes
->> you're making to resume where you're actually calling pci enable
->> on the device, and re-doing some pci config space settings might help
->> here (I'm currently unloading the driver before suspend and reloading
->> it after resume and then things work fine).
-> hm, can't say much about that... But, I have a (mini)pci system,
-> which hopefully won't unbind/rebind the devices upon resume.
->
-
-I've taking a look at this on my to do list, and some parts of your WIP
-patch look like a good candidate for initial testing. I must say this is
-rather low on my todo though as the remove module before suspend / reinsert
-after resume fix works and my to do list is rather full.
-
-Regards,
-
-Hans
