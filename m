@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:41347 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752894Ab0DPFcp (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46708 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933170Ab0DHT1j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 01:32:45 -0400
-Subject: Re: [RFC PATCHv2 1/2] mac80211: Determine dynamic PS timeout based
- on ps-qos network latency
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Kalle Valo <kvalo@adurom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <87eiigm0vu.fsf@purkki.valot.fi>
-References: <1271228079-27321-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271228079-27321-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <87eiigm0vu.fsf@purkki.valot.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Apr 2010 08:29:07 +0300
-Message-ID: <1271395747.6205.23.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 15:27:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 007/102] ath9k_hw: AR9003 does not have AR_RC_AHB skip its setting
+Date: Thu,  8 Apr 2010 15:26:03 -0400
+Message-Id: <1270754858-26266-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+AR9003 does not have a reset control for AHB.
 
-On Fri, 2010-04-16 at 07:17 +0200, ext Kalle Valo wrote:
-> Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
-> 
-> > Determine the dynamic PS timeout based on the configured ps-qos network
-> > latency. For backwards wext compatibility, allow the dynamic PS timeout
-> > configured by the cfg80211 to overrule the automatically determined value.
-> 
-> Thanks. I took a quick look, but I haven't tested this yet myself.
-> 
-> > +		timeout = local->hw.conf.dynamic_ps_forced_timeout;
-> > +		if (timeout < 0) {
-> > +			if (latency <= 50000)
-> > +				timeout = 300;
-> > +			else if (latency <= 2000000000)
-> > +				timeout = 100;
-> > +			else
-> > +				timeout = 0;
-> > +		}
-> > +		local->hw.conf.dynamic_ps_timeout = timeout;
-> 
-> What will be the timeout value when there are no pm_qos requirements
-> from user space applications? Do you know what will be the default
-> latency value in that case?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   23 +++++++++++++++++------
+ 1 files changed, 17 insertions(+), 6 deletions(-)
 
-Yes, the default value is 2000000000 (2000 seconds, ugh.) Hence the
-value in the if statement for 100ms.
-
-> I'm mostly worried about timeout 0 case, for example I suspect ath9k
-> is broken with that value.
-> 
-> Also does this patch change the default value of dynamic ps timeout?
-> 
-
-No, the current default does not change. As the default value for the
-latency is 2000s, we will, by default, get a timeout of 100ms.
-
--Juuso
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8f3b602..a6711dc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1743,15 +1743,21 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 		rst_flags = AR_RTC_RC_MAC_WARM | AR_RTC_RC_MAC_COLD |
+ 			AR_RTC_RC_COLD_RESET | AR_RTC_RC_WARM_RESET;
+ 	} else {
++
+ 		tmpReg = REG_READ(ah, AR_INTR_SYNC_CAUSE);
+ 		if (tmpReg &
+ 		    (AR_INTR_SYNC_LOCAL_TIMEOUT |
+ 		     AR_INTR_SYNC_RADM_CPL_TIMEOUT)) {
++			u32 val;
+ 			REG_WRITE(ah, AR_INTR_SYNC_ENABLE, 0);
+-			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
+-		} else {
++
++			val = AR_RC_HOSTIF;
++			if (!AR_SREV_9300_20_OR_LATER(ah))
++				val |= AR_RC_AHB;
++			REG_WRITE(ah, AR_RC, val);
++
++		} else if (!AR_SREV_9300_20_OR_LATER(ah))
+ 			REG_WRITE(ah, AR_RC, AR_RC_AHB);
+-		}
+ 
+ 		rst_flags = AR_RTC_RC_MAC_WARM;
+ 		if (type == ATH9K_RESET_COLD)
+@@ -1782,7 +1788,7 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN |
+ 		  AR_RTC_FORCE_WAKE_ON_INT);
+ 
+-	if (!AR_SREV_9100(ah))
++	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+ 		REG_WRITE(ah, AR_RC, AR_RC_AHB);
+ 
+ 	REG_WRITE(ah, AR_RTC_RESET, 0);
+@@ -2463,15 +2469,20 @@ EXPORT_SYMBOL(ath9k_hw_keyisvalid);
+ /* Power Management (Chipset) */
+ /******************************/
+ 
++/*
++ * Notify Power Mgt is disabled in self-generated frames.
++ * If requested, force chip to sleep.
++ */
+ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
+ {
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
+ 	if (setChip) {
++		/* Clear the RTC force wake bit to allow the mac to go to sleep */
+ 		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
+ 			    AR_RTC_FORCE_WAKE_EN);
+-		if (!AR_SREV_9100(ah))
++		if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+ 			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
+-
++		/* Shutdown chip. Active low */
+ 		if (!AR_SREV_5416(ah) && !AR_SREV_9271(ah))
+ 			REG_CLR_BIT(ah, (AR_RTC_RESET),
+ 				    AR_RTC_RESET_EN);
+-- 
+1.6.3.3
 
