@@ -1,38 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39458 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752997Ab0DSJDP (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46835 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933244Ab0DHT1p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 05:03:15 -0400
-Subject: [PATCH] mac80211: add missing newline
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Apr 2010 11:03:13 +0200
-Message-ID: <1271667793.3873.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 15:27:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 041/102] ath9k: Remove ATH9K_TX_SW_ABORTED and introduce a bool for this purpose
+Date: Thu,  8 Apr 2010 15:26:37 -0400
+Message-Id: <1270754858-26266-42-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One HT debugging printk is missing a newline,
-add it.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/mac80211/agg-tx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/common.h |    1 +
+ drivers/net/wireless/ath/ath9k/mac.h    |    1 -
+ drivers/net/wireless/ath/ath9k/xmit.c   |   11 +++++------
+ 3 files changed, 6 insertions(+), 7 deletions(-)
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2010-04-19 10:53:23.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-tx.c	2010-04-19 10:53:52.000000000 +0200
-@@ -185,7 +185,7 @@ static void sta_addba_resp_timer_expired
- 		spin_unlock_bh(&sta->lock);
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "timer expired on tid %d but we are not "
--				"(or no longer) expecting addBA response there",
-+				"(or no longer) expecting addBA response there\n",
- 			tid);
- #endif
- 		return;
-
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 1a87283..5fd7fe1 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -82,6 +82,7 @@ struct ath_buf {
+ 	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
+ 	bool bf_stale;
+ 	bool bf_isnullfunc;
++	bool bf_tx_aborted;
+ 	u16 bf_flags;
+ 	struct ath_buf_state bf_state;
+ 	dma_addr_t bf_dmacontext;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index f2f4ad2..99f81eb 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -86,7 +86,6 @@
+ #define ATH9K_TX_DESC_CFG_ERR      0x04
+ #define ATH9K_TX_DATA_UNDERRUN     0x08
+ #define ATH9K_TX_DELIM_UNDERRUN    0x10
+-#define ATH9K_TX_SW_ABORTED        0x40
+ #define ATH9K_TX_SW_FILTERED       0x80
+ 
+ /* 64 bytes */
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 4bc52f4..f6da511 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -358,8 +358,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			/* transmit completion */
+ 			acked_cnt++;
+ 		} else {
+-			if (!(tid->state & AGGR_CLEANUP) &&
+-			    ts->ts_flags != ATH9K_TX_SW_ABORTED) {
++			if (!(tid->state & AGGR_CLEANUP) && !bf_last->bf_tx_aborted) {
+ 				if (bf->bf_retries < ATH_MAX_SW_RETRIES) {
+ 					ath_tx_set_retry(sc, txq, bf);
+ 					txpending = 1;
+@@ -1036,9 +1035,6 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
+ 	struct ath_tx_status ts;
+ 
+ 	memset(&ts, 0, sizeof(ts));
+-	if (!retry_tx)
+-		ts.ts_flags = ATH9K_TX_SW_ABORTED;
+-
+ 	INIT_LIST_HEAD(&bf_head);
+ 
+ 	for (;;) {
+@@ -1063,6 +1059,9 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
+ 		}
+ 
+ 		lastbf = bf->bf_lastbf;
++		if (!retry_tx)
++			lastbf->bf_tx_aborted = true;
++
+ 
+ 		/* remove ath_buf's of the same mpdu from txq */
+ 		list_cut_position(&bf_head, &txq->axq_q, &lastbf->list);
+@@ -1897,7 +1896,7 @@ static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
+ 	int nbad = 0;
+ 	int isaggr = 0;
+ 
+-	if (ts->ts_flags == ATH9K_TX_SW_ABORTED)
++	if (bf->bf_tx_aborted)
+ 		return 0;
+ 
+ 	isaggr = bf_isaggr(bf);
+-- 
+1.6.3.3
 
