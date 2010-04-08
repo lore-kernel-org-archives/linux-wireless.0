@@ -1,68 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54920 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756424Ab0DODa4 (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:57097 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759128Ab0DHWRP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:56 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH v2 67/97] ath9k_hw: rename eep_AR9287_ops to eep_ar9287_ops
-Date: Wed, 14 Apr 2010 23:30:21 -0400
-Message-Id: <1271302251-9075-68-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 8 Apr 2010 18:17:15 -0400
+Received: by ewy20 with SMTP id 20so1165878ewy.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 15:17:14 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 2/9] rt2x00: Update rt2800 register definitions towards latest definitions.
+Date: Fri, 9 Apr 2010 00:17:11 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270763437-29526-3-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Message-Id: <201004090017.11916.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/eeprom.c      |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom.h      |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+On Thursday 08 April 2010, Gertjan van Wingerde wrote:
+> Definitions taken from the latest rt2860 / rt2870 / rt3070 / rt3090 Ralink
+> vendor drivers.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index 1a48f43..aec6ebb 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -257,7 +257,7 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah)
- 	int status;
- 
- 	if (AR_SREV_9287(ah)) {
--		ah->eep_ops = &eep_AR9287_ops;
-+		ah->eep_ops = &eep_ar9287_ops;
- 	} else if (AR_SREV_9285(ah) || AR_SREV_9271(ah)) {
- 		ah->eep_ops = &eep_4k_ops;
- 	} else {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index c0cd717..60fd5b6 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -707,6 +707,6 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah);
- 
- extern const struct eeprom_ops eep_def_ops;
- extern const struct eeprom_ops eep_4k_ops;
--extern const struct eeprom_ops eep_AR9287_ops;
-+extern const struct eeprom_ops eep_ar9287_ops;
- 
- #endif /* EEPROM_H */
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index e57c5b4..0b1e885 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -1170,7 +1170,7 @@ static u16 ath9k_hw_AR9287_get_spur_channel(struct ath_hw *ah,
- #undef EEP_MAP9287_SPURCHAN
- }
- 
--const struct eeprom_ops eep_AR9287_ops = {
-+const struct eeprom_ops eep_ar9287_ops = {
- 	.check_eeprom		= ath9k_hw_AR9287_check_eeprom,
- 	.get_eeprom		= ath9k_hw_AR9287_get_eeprom,
- 	.fill_eeprom		= ath9k_hw_AR9287_fill_eeprom,
--- 
-1.6.3.3
-
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
