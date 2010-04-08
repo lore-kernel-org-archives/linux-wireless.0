@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54702 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753401Ab0DSOnv (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46702 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933128Ab0DHT1j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 10:43:51 -0400
-Subject: Re: [RFC PATCHv3 2/2] cfg80211: Remove default dynamic PS timeout
- value
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1271409274-17162-3-git-send-email-juuso.oikarinen@nokia.com>
-References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271409274-17162-3-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Apr 2010 16:43:49 +0200
-Message-ID: <1271688229.23671.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 15:27:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 004/102] ath9k_hw: fix a missing hex prefix for a register mask
+Date: Thu,  8 Apr 2010 15:26:00 -0400
+Message-Id: <1270754858-26266-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-04-16 at 12:14 +0300, Juuso Oikarinen wrote:
-> Now that the mac80211 is choosing dynamic ps timeouts based on the ps-qos
-> network latency configuration, configure a default value of -1 as the dynamic
-> ps timeout in cfg80211. This value allows the mac80211 to determine the value
-> to be used.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
->  net/wireless/core.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index 6ac70c1..37d0e0a 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -705,7 +705,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
->  			wdev->ps = true;
->  		else
->  			wdev->ps = false;
-> -		wdev->ps_timeout = 100;
-> +		/* allow mac80211 to determine the timeout */
-> +		wdev->ps_timeout = -1;
->  		if (rdev->ops->set_power_mgmt)
->  			if (rdev->ops->set_power_mgmt(wdev->wiphy, dev,
->  						      wdev->ps,
+From: Felix Fietkau <nbd@openwrt.org>
 
-Does that need some API doc updates to indicate, as part of the cfg80211
-API, that -1 means some way of setting it by default?
+This is not a stable code fix as this register is not used anywhere.
 
-Or actually, wouldn't it make sense to move the pm_qos logic here (into
-cfg80211)?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/reg.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 68d55a2..c1e58da 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1544,7 +1544,7 @@ enum {
+ #define AR_TSFOOR_THRESHOLD       0x813c
+ #define AR_TSFOOR_THRESHOLD_VAL   0x0000FFFF
+ 
+-#define AR_PHY_ERR_EIFS_MASK   8144
++#define AR_PHY_ERR_EIFS_MASK   0x8144
+ 
+ #define AR_PHY_ERR_3           0x8168
+ #define AR_PHY_ERR_3_COUNT     0x00FFFFFF
+-- 
+1.6.3.3
 
