@@ -1,129 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:55550 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751525Ab0DMHdN (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46900 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933170Ab0DHT1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 03:33:13 -0400
-Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout
- configuration
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Kalle Valo <kvalo@adurom.com>
-Cc: ext Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ylalehto Janne (Nokia-D/Tampere)" <janne.ylalehto@nokia.com>
-In-Reply-To: <871vekpexo.fsf@purkki.valot.fi>
-References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271061120.3877.6.camel@jlt3.sipsolutions.net>
-	 <1271062589.10120.1169.camel@wimaxnb.nmp.nokia.com>
-	 <1271063175.3877.13.camel@jlt3.sipsolutions.net>
-	 <1271065535.10120.1191.camel@wimaxnb.nmp.nokia.com>
-	 <871vekpexo.fsf@purkki.valot.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 13 Apr 2010 10:29:06 +0300
-Message-ID: <1271143746.10120.1232.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 15:27:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 057/102] ath9k_hw: add the config_pci_powersave AR9003 callback
+Date: Thu,  8 Apr 2010 15:26:53 -0400
+Message-Id: <1270754858-26266-58-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-I looked into this slightly more, below some more thoughts.
-
-On Mon, 2010-04-12 at 22:57 +0200, ext Kalle Valo wrote:
-> Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
-> 
-> > There are triggers for reducing the timeout, other than those mentioned
-> > by you above. A hand-held might for example attempt to save power based
-> > on the amount of user activity on the device in general.
-> 
-> Yes, this makes sense. We definitely want user space to inform kernel
-> about different requirements.
-> 
-> > That's something only user space would know about, but still is a
-> > very important factor in deciding the dynamic ps timeout value.
-> 
-> But we do not want to tie our hands to a simple timeout value because
-> that only applies to the very crude dynamic ps implementation we have
-> currently. What if, next year, we have an uber cool new power save
-> implementation in mac80211 which doesn't use the timeout value at all,
-> what do we do with the nl80211 timeout parameter then? Deprecate it?
-
-I agree that letting user-space configure a raw timeout is rather crude.
-But in my view the problem really is that we don't have that uber-cool
-power save feature of the future yet, and hence cannot fully take its
-needs into account. So apparently, until we do, we have to live without
-even the crude one?
-
-Or is it better to deprecate a semi-complex interface instead of a crude
-one, if even that does not meet all requirements of whats to come?
-
-> Also please remember we have also other cfg80211 drivers than
-> mac80211. Finding a common ps interface for all of them is next to
-> impossible. Some of them might support ps timeout, but some of them
-> will not.
-> 
-> > Also AFAIK currently in nl80211 there is no way go to "full power-save"
-> > i.e. disable dynamic power-save, which is something user-space might
-> > want to do to conserve power if the hand-held is not being used.
-> 
-> With a more advanced power save implementation in mac80211 we should
-> be able to this automatically, for example, based on information from
-> PM qos interface, amount of data transfered etc.
-> 
-> > Are you more hesitant on the concept of configuring the dynamic ps
-> > behavior from user-space or the granularity of control here? 
-> 
-> For me it's the former.
-> 
-> > In the nl80211 interface the literal timeout value could be replaced
-> > by something to indicate the level of power-saving needed, for
-> > example.
-> 
-> Something like levels 1-5? This was proposed some time (years?) ago, I
-> didn't like it then and I didn't like it now. It's just too vague.
-> 
-> I think power save control should happen outside nl80211. The problem
-> here is that we want to inform kernel about events (or states) in user
-> space (display turned off, user activity, voip call etc.). We need a
-> different interface for that, nl80211 is not suitable for this. Also
-> other subsystems than wireless would definitely benefit from this kind
-> of information. The interface might already exist (pm qos?) or we have
-> to create a new one, I haven't studied this that much.
-
-I looked into this slightly. I can see, that the mac80211 has support
-for a latency-wish from user-space, using pm_qos. This seems to affect
-only the dtim-period somehow (by the way, at least the wl1251 driver has
-an obvious bug about this - if the AP dtim is > 1 and user-space
-configures the latency properly, you can make the wl1251 miss broadcast
-traffic in PSM.)
-
-> >> In some sense I think it would be smarter to implement a gradual
-> >> powersave policy where the device first still wakes up for every
-> >> beacon and only later goes down to waking up for DTIM only (which
-> >> may or may not be the same ...)
-> >
-> > Yes, this is a good idea, although I still feel it does not alleviate
-> > the need for what I tried to explain above.
-> 
-> The need is definitely valid, I don't deny that. It just needs to be
-> implemented differently compared to what old Wireless Extensions did.
-> 
-> I would recommend to see if the pm qos interface can be used to hint
-> mac80211 dynamic ps enough so that you would get similar end result as
-> with the WE power timeout value. It should be possible, but I haven't
-> checked the code myself.
-> 
-
-The problem here is that the latency at least cannot be used in any
-simple and/or general way I can think of to control the dynamic PS
-timeout. So we would still need to add some crude PS level stuff anyway,
-unless someone comes up with that uber-cool solution of tomorrow already
-today.
-
-I see there is fierce resistance, so I'll drop looking into this here.
-As far as I can see, the result of this is that anyone using linux
-wireless in their hand-held devices either cannot switch to nl80211
-today or have to use nl80211 and wext simultaneously.
-
--Juuso
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f0a0467..8f47b7d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2627,6 +2627,37 @@ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+ }
+ EXPORT_SYMBOL(ath9k_hw_set_interrupts);
+ 
++/*
++ * Helper for ASPM support.
++ *
++ * Disable PLL when in L0s as well as receiver clock when in L1.
++ * This power saving option must be enabled through the SerDes.
++ *
++ * Programming the SerDes must go through the same 288 bit serial shift
++ * register as the other analog registers.  Hence the 9 writes.
++ */
++static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
++					 int restore,
++					 int power_off)
++{
++	if (ah->is_pciexpress != true)
++		return;
++
++	/* Do not touch SerDes registers */
++	if (ah->config.pcie_powersave_enable == 2)
++		return;
++
++	/* Nothing to do on restore for 11N */
++	if (!restore) {
++		/* set bit 19 to allow forcing of pcie core into L1 state */
++		REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PCIE_PM_CTRL_ENA);
++
++		/* Several PCIe massages to ensure proper behaviour */
++		if (ah->config.pcie_waen)
++			REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
++	}
++}
++
+ /*******************/
+ /* Beacon Handling */
+ /*******************/
+@@ -3665,10 +3696,13 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
+ static void ar9003_hw_attach_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+ 
+ 	priv_ops->init_mode_regs = ar9003_hw_init_mode_regs;
+ 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
+ 
++	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
++
+ 	ar9003_hw_attach_phy_ops(ah);
+ 	ar9003_hw_attach_calib_ops(ah);
+ 	ar9003_hw_attach_mac_ops(ah);
+-- 
+1.6.3.3
 
