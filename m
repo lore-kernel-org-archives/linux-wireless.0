@@ -1,109 +1,405 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:61116 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124Ab0DIMYH (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46950 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933281Ab0DHT1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 08:24:07 -0400
-Received: by bwz1 with SMTP id 1so2497187bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Apr 2010 05:24:05 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor driver.
-Date: Fri, 9 Apr 2010 14:23:58 +0200
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <201004091332.26307.helmut.schaa@googlemail.com> <4BBF150E.3030507@openwrt.org>
-In-Reply-To: <4BBF150E.3030507@openwrt.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201004091423.58803.helmut.schaa@googlemail.com>
+	Thu, 8 Apr 2010 15:27:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 071/102] ath9k_hw: add OFDM spur mitigation for AR9003
+Date: Thu,  8 Apr 2010 15:27:07 -0400
+Message-Id: <1270754858-26266-72-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag 09 April 2010 schrieb Felix Fietkau:
-> On 2010-04-09 1:32 PM, Helmut Schaa wrote:
-> > Am Freitag 09 April 2010 schrieb Felix Fietkau:
-> >> On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
-> >> > On 04/09/10 00:28, Felix Fietkau wrote:
-> >> >> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
-> >> >>> Only include definitions for RT chipsets that are also used inside the
-> >> >>> Ralink vendor drivers.
-> >> >>>
-> >> >>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> >> >>> ---
-> >> >>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
-> >> >>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
-> >> >>>  2 files changed, 3 insertions(+), 17 deletions(-)
-> >> >>>
-> >> >>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> >> >>> index 394c8e4..4bc7e09 100644
-> >> >>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> >> >>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> >> >>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
-> >> >>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
-> >> >>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
-> >> >>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
-> >> >>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
-> >> >>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
-> >> >>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
-> >> >>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
-> >> >>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
-> >> >>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
-> >> >>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
-> >> >>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
-> >> >>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
-> >> >>>  	}
-> >> >>>  
-> >> >>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
-> >> >>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
-> >> >>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
-> >> >>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
-> >> >>> -	}
-> >> >>> -
-> >> >> Why are you removing support for RT3052? IMHO those writes were
-> >> >> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
-> >> > 
-> >> > That is because I have not been able to find them in any of the Ralink vendor drivers.
-> >> > Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
-> >> > as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
-> >> > RT2872 devices, but even for them I haven't found these BBP initializations.
-> >> > That's why I removed this part.
-> >> > 
-> >> > I have no problem re-instating this if I can find some evidence that these devices
-> >> > actually exist.
-> >> These chipsets won't show up in STA-only drivers, because they belong to
-> >> embedded APs. If you download GPL sources for devices such as ASUS
-> >> RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
-> >> values in BBPRegTable in the driver sources.
-> >> I have a few devices based on RT3052, which is why I added this code.
-> >> At some point I even had basic Rx/Tx working on it, but haven't tested
-> >> in a while.
-> > 
-> > I also couldn't find any evidence of the existence of an 3052 _rt_ chipset.
-> > However, the ralink drivers defines a 3052 _rf_ chip:
-> > 
-> > #define RFIC_3052                   9       // 2.4G/5G 2T2R
-> RT3052 is the name of the whole WiSoC chip, not just the MAC or RF part
-> of it. Since wifi is integrated in the SoC, I don't think there is a
-> separate name for just the wifi part.
+We add this now as OFDM spur mitigation required accessing
+the EEPROM for the AR9003 devices.
 
-There is. I have one 3052 and one 3050 board (basically a 3052 but only
-1T1R), and both identify themselves as RT2872 with different rf "chips"
-(of course, there are no additional chips). Hence, the check for RT3052
-was never true on both platforms.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_phy.h |    2 -
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |  209 ++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |   54 +++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    2 +
+ drivers/net/wireless/ath/ath9k/phy.h        |    3 +
+ 5 files changed, 267 insertions(+), 3 deletions(-)
 
-> > I don't have such an rf chip in my devices but I don't think the BPP
-> > register setup should depend on the actual rf chip. So, if the register
-> > setup is really needed we should maybe check for rt2x00_is_soc instead
-> > of removing the code?
-> Yes, but rt2x00_is_soc() is not enough, since RT2880 is also SoC, but
-> slightly different compared to RT3052. I've only tested RT3052 myself.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+index 65510ab..07be17a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+@@ -289,8 +289,6 @@
+ #define	AR_PHY_TIMING11			        0x99a0
+ #define	AR_PHY_TIMING11_SPUR_DELTA_PHASE	0x000FFFFF
+ #define	AR_PHY_TIMING11_SPUR_DELTA_PHASE_S	0
+-#define	AR_PHY_TIMING11_SPUR_FREQ_SD		0x3FF00000
+-#define	AR_PHY_TIMING11_SPUR_FREQ_SD_S		20
+ #define AR_PHY_TIMING11_USE_SPUR_IN_AGC		0x40000000
+ #define AR_PHY_TIMING11_USE_SPUR_IN_SELFCOR	0x80000000
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index c60f39f..e9b8474 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -103,7 +103,8 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+  *
+  * Spur mitigation for MRC CCK
+  */
+-static void ar9003_hw_spur_mitigate(struct ath_hw *ah, struct ath9k_channel *chan)
++static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
++					    struct ath9k_channel *chan)
+ {
+ 	u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
+ 	int cur_bb_spur, negative = 0, cck_spur_freq;
+@@ -153,6 +154,212 @@ static void ar9003_hw_spur_mitigate(struct ath_hw *ah, struct ath9k_channel *cha
+ 		      AR_PHY_CCK_SPUR_MIT_CCK_SPUR_FREQ, 0x0);
+ }
+ 
++/* Clean all spur register fields */
++static void ar9003_hw_spur_ofdm_clear(struct ath_hw *ah)
++{
++	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
++		      AR_PHY_TIMING4_ENABLE_SPUR_FILTER, 0);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
++		      AR_PHY_TIMING11_SPUR_FREQ_SD, 0);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
++		      AR_PHY_TIMING11_SPUR_DELTA_PHASE, 0);
++	REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
++		      AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD, 0);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
++		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC, 0);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
++		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR, 0);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
++		      AR_PHY_TIMING4_ENABLE_SPUR_RSSI, 0);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++		      AR_PHY_SPUR_REG_EN_VIT_SPUR_RSSI, 0);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++		      AR_PHY_SPUR_REG_ENABLE_NF_RSSI_SPUR_MIT, 0);
++
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++		      AR_PHY_SPUR_REG_ENABLE_MASK_PPM, 0);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
++		      AR_PHY_TIMING4_ENABLE_PILOT_MASK, 0);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
++		      AR_PHY_TIMING4_ENABLE_CHAN_MASK, 0);
++	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
++		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A, 0);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_A,
++		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A, 0);
++	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
++		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A, 0);
++	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
++		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A, 0);
++	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
++		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A, 0);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_A,
++		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A, 0);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++		      AR_PHY_SPUR_REG_MASK_RATE_CNTL, 0);
++}
++
++static void ar9003_hw_spur_ofdm(struct ath_hw *ah,
++				int freq_offset,
++				int spur_freq_sd,
++				int spur_delta_phase,
++				int spur_subchannel_sd)
++{
++	int mask_index = 0;
++
++	/* OFDM Spur mitigation */
++	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
++		 AR_PHY_TIMING4_ENABLE_SPUR_FILTER, 0x1);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
++		      AR_PHY_TIMING11_SPUR_FREQ_SD, spur_freq_sd);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
++		      AR_PHY_TIMING11_SPUR_DELTA_PHASE, spur_delta_phase);
++	REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
++		      AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD, spur_subchannel_sd);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
++		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC, 0x1);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
++		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR, 0x1);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
++		      AR_PHY_TIMING4_ENABLE_SPUR_RSSI, 0x1);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++		      AR_PHY_SPUR_REG_SPUR_RSSI_THRESH, 34);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++		      AR_PHY_SPUR_REG_EN_VIT_SPUR_RSSI, 1);
++
++	if (REG_READ_FIELD(ah, AR_PHY_MODE,
++			   AR_PHY_MODE_DYNAMIC) == 0x1)
++		REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++			      AR_PHY_SPUR_REG_ENABLE_NF_RSSI_SPUR_MIT, 1);
++
++	mask_index = (freq_offset << 4) / 5;
++	if (mask_index < 0)
++		mask_index = mask_index - 1;
++
++	mask_index = mask_index & 0x7f;
++
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++		      AR_PHY_SPUR_REG_ENABLE_MASK_PPM, 0x1);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
++		      AR_PHY_TIMING4_ENABLE_PILOT_MASK, 0x1);
++	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
++		      AR_PHY_TIMING4_ENABLE_CHAN_MASK, 0x1);
++	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
++		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A, mask_index);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_A,
++		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A, mask_index);
++	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
++		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A, mask_index);
++	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
++		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A, 0xc);
++	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
++		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A, 0xc);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_A,
++		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A, 0xa0);
++	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
++		      AR_PHY_SPUR_REG_MASK_RATE_CNTL, 0xff);
++}
++
++static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
++				     struct ath9k_channel *chan,
++				     int freq_offset)
++{
++	int spur_freq_sd = 0;
++	int spur_subchannel_sd = 0;
++	int spur_delta_phase = 0;
++
++	if (IS_CHAN_HT40(chan)) {
++		if (freq_offset < 0) {
++			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
++					   AR_PHY_GC_DYN2040_PRI_CH) == 0x0)
++				spur_subchannel_sd = 1;
++			else
++				spur_subchannel_sd = 0;
++
++			spur_freq_sd = ((freq_offset + 10) << 9) / 11;
++
++		} else {
++			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
++			    AR_PHY_GC_DYN2040_PRI_CH) == 0x0)
++				spur_subchannel_sd = 0;
++			else
++				spur_subchannel_sd = 1;
++
++			spur_freq_sd = ((freq_offset - 10) << 9) / 11;
++
++		}
++
++		spur_delta_phase = (freq_offset << 17) / 5;
++
++	} else {
++		spur_subchannel_sd = 0;
++		spur_freq_sd = (freq_offset << 9) /11;
++		spur_delta_phase = (freq_offset << 18) / 5;
++	}
++
++	spur_freq_sd = spur_freq_sd & 0x3ff;
++	spur_delta_phase = spur_delta_phase & 0xfffff;
++
++	ar9003_hw_spur_ofdm(ah,
++			    freq_offset,
++			    spur_freq_sd,
++			    spur_delta_phase,
++			    spur_subchannel_sd);
++}
++
++/* Spur mitigation for OFDM */
++static void ar9003_hw_spur_mitigate_ofdm(struct ath_hw *ah,
++					 struct ath9k_channel *chan)
++{
++	int synth_freq;
++	int range = 10;
++	int freq_offset = 0;
++	int mode;
++	u8* spurChansPtr;
++	unsigned int i;
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++
++	if (IS_CHAN_5GHZ(chan)) {
++		spurChansPtr = &(eep->modalHeader5G.spurChans[0]);
++		mode = 0;
++	}
++	else {
++		spurChansPtr = &(eep->modalHeader2G.spurChans[0]);
++		mode = 1;
++	}
++
++	if (spurChansPtr[0] == 0)
++		return; /* No spur in the mode */
++
++	if (IS_CHAN_HT40(chan)) {
++		range = 19;
++		if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
++				   AR_PHY_GC_DYN2040_PRI_CH) == 0x0)
++			synth_freq = chan->channel - 10;
++		else
++			synth_freq = chan->channel + 10;
++	} else {
++		range = 10;
++		synth_freq = chan->channel;
++	}
++
++	ar9003_hw_spur_ofdm_clear(ah);
++
++	for (i = 0; spurChansPtr[i] && i < 5; i++) {
++		freq_offset = FBIN2FREQ(spurChansPtr[i], mode) - synth_freq;
++		if (abs(freq_offset) < range) {
++			ar9003_hw_spur_ofdm_work(ah, chan, freq_offset);
++			break;
++		}
++	}
++}
++
++static void ar9003_hw_spur_mitigate(struct ath_hw *ah,
++				    struct ath9k_channel *chan)
++{
++	ar9003_hw_spur_mitigate_mrc_cck(ah, chan);
++	ar9003_hw_spur_mitigate_ofdm(ah, chan);
++}
++
+ static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
+ 					 struct ath9k_channel *chan)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 1aeeba3..e330382 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -33,6 +33,30 @@
+ #define AR_PHY_RX_IQCAL_CORR_B0    AR_CHAN_BASE + 0xdc
+ #define AR_PHY_TX_IQCAL_CONTROL_3  AR_CHAN_BASE + 0xb0
+ 
++#define AR_PHY_TIMING11_SPUR_FREQ_SD    0x3FF00000
++#define AR_PHY_TIMING11_SPUR_FREQ_SD_S  20
++
++#define AR_PHY_TIMING11_SPUR_DELTA_PHASE 0x000FFFFF
++#define AR_PHY_TIMING11_SPUR_DELTA_PHASE_S 0
++
++#define AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC 0x40000000
++#define AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC_S 30
++
++#define AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR 0x80000000
++#define AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR_S 31
++
++#define AR_PHY_SPUR_REG_ENABLE_NF_RSSI_SPUR_MIT         0x4000000
++#define AR_PHY_SPUR_REG_ENABLE_NF_RSSI_SPUR_MIT_S       26
++
++#define AR_PHY_SPUR_REG_ENABLE_MASK_PPM                         0x20000     /* bins move with freq offset */
++#define AR_PHY_SPUR_REG_ENABLE_MASK_PPM_S                       17
++#define AR_PHY_SPUR_REG_SPUR_RSSI_THRESH            0x000000FF
++#define AR_PHY_SPUR_REG_SPUR_RSSI_THRESH_S          0
++#define AR_PHY_SPUR_REG_EN_VIT_SPUR_RSSI                        0x00000100
++#define AR_PHY_SPUR_REG_EN_VIT_SPUR_RSSI_S                      8
++#define AR_PHY_SPUR_REG_MASK_RATE_CNTL                          0x03FC0000
++#define AR_PHY_SPUR_REG_MASK_RATE_CNTL_S			18
++
+ #define AR_PHY_RX_IQCAL_CORR_B0_LOOPBACK_IQCORR_EN   0x20000000
+ #define AR_PHY_RX_IQCAL_CORR_B0_LOOPBACK_IQCORR_EN_S         29
+ 
+@@ -84,6 +108,17 @@
+ #define AR_PHY_TIMING4_IQCAL_LOG_COUNT_MAX 0xF000
+ #define AR_PHY_TIMING4_IQCAL_LOG_COUNT_MAX_S   12
+ #define AR_PHY_TIMING4_DO_CAL    0x10000
++
++#define AR_PHY_TIMING4_ENABLE_PILOT_MASK        0x10000000
++#define AR_PHY_TIMING4_ENABLE_PILOT_MASK_S      28
++#define AR_PHY_TIMING4_ENABLE_CHAN_MASK         0x20000000
++#define AR_PHY_TIMING4_ENABLE_CHAN_MASK_S       29
++
++#define AR_PHY_TIMING4_ENABLE_SPUR_FILTER 0x40000000
++#define AR_PHY_TIMING4_ENABLE_SPUR_FILTER_S 30
++#define AR_PHY_TIMING4_ENABLE_SPUR_RSSI 0x80000000
++#define AR_PHY_TIMING4_ENABLE_SPUR_RSSI_S 31
++
+ #define AR_PHY_NEW_ADC_GAIN_CORR_ENABLE 0x40000000
+ #define AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE 0x80000000
+ #define AR_PHY_SFCORR_LOW_USE_SELF_CORR_LOW  0x00000001
+@@ -107,6 +142,8 @@
+ #define AR_PHY_SFCORR_EXT_M1_THRESH_LOW_S 14
+ #define AR_PHY_SFCORR_EXT_M2_THRESH_LOW   0x0FE00000
+ #define AR_PHY_SFCORR_EXT_M2_THRESH_LOW_S 21
++#define AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD 0x10000000
++#define AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD_S 28
+ #define AR_PHY_SFCORR_SPUR_SUBCHNL_SD_S   28
+ #define AR_PHY_EXT_CCA_THRESH62 0x007F0000
+ #define AR_PHY_EXT_CCA_THRESH62_S       16
+@@ -184,6 +221,16 @@
+ #define AR_PHY_ML_CNTL_2       AR_MRC_BASE + 0x1c
+ #define AR_PHY_TST_ADC         AR_MRC_BASE + 0x20
+ 
++#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A              0x00000FE0
++#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A_S    5
++#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A                  0x1F
++#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A_S                0
++
++#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A        0x00000FE0
++#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A_S      5
++#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A            0x1F
++#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A_S		0
++
+ /*
+  * MRC Feild Definitions
+  */
+@@ -372,6 +419,11 @@
+ #define AR_PHY_ADDAC_PARA_CTL    AR_SM_BASE + 0x150
+ #define AR_PHY_XPA_CFG           AR_SM_BASE + 0x158
+ 
++#define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A           0x0001FC00
++#define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A_S         10
++#define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A                       0x3FF
++#define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A_S                     0
++
+ #define AR_PHY_TEST              AR_SM_BASE + 0x160
+ 
+ #define AR_PHY_TEST_BBB_OBS_SEL       0x780000
+@@ -499,6 +551,7 @@
+ #define AR_PHY_GC_DYN2040_EN       0x00000004  /* enable dyn 20/40 mode */
+ #define AR_PHY_GC_DYN2040_PRI_ONLY 0x00000008  /* dyn 20/40 - primary only */
+ #define AR_PHY_GC_DYN2040_PRI_CH   0x00000010  /* dyn 20/40 - primary ch offset (0=+10MHz, 1=-10MHz)*/
++#define AR_PHY_GC_DYN2040_PRI_CH_S 4
+ #define AR_PHY_GC_DYN2040_EXT_CH   0x00000020  /* dyn 20/40 - ext ch spacing (0=20MHz/ 1=25MHz) */
+ #define AR_PHY_GC_HT_EN            0x00000040  /* ht enable */
+ #define AR_PHY_GC_SHORT_GI_40      0x00000080  /* allow short GI for HT 40 */
+@@ -516,6 +569,7 @@
+ #define AR_PHY_MODE_OFDM            0x00000000
+ #define AR_PHY_MODE_CCK             0x00000001
+ #define AR_PHY_MODE_DYNAMIC         0x00000004
++#define AR_PHY_MODE_DYNAMIC_S       2
+ #define AR_PHY_MODE_HALF            0x00000020
+ #define AR_PHY_MODE_QUARTER         0x00000040
+ #define AR_PHY_MAC_CLK_MODE         0x00000080
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 3c48399..84b8922 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -76,6 +76,8 @@
+ #define REG_RMW_FIELD(_a, _r, _f, _v) \
+ 	REG_WRITE(_a, _r, \
+ 	(REG_READ(_a, _r) & ~_f) | (((_v) << _f##_S) & _f))
++#define REG_READ_FIELD(_a, _r, _f) \
++	(((REG_READ(_a, _r) & _f) >> _f##_S))
+ #define REG_SET_BIT(_a, _r, _f) \
+ 	REG_WRITE(_a, _r, REG_READ(_a, _r) | _f)
+ #define REG_CLR_BIT(_a, _r, _f) \
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index 7d397fd..e724c2c 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -59,4 +59,7 @@
+ 			(_bank)[i] = INI_RA((_iniarray), i, _col);;	\
+ 	} while (0)
+ 
++#define	AR_PHY_TIMING11_SPUR_FREQ_SD		0x3FF00000
++#define	AR_PHY_TIMING11_SPUR_FREQ_SD_S		20
++
+ #endif
+-- 
+1.6.3.3
 
-Right. So, from what I've seen so far it seems like all 305x boards identify
-themselves as rt2872. Hence, we can just replace 3052 with 2872 in the above
-check and leave the code as is.
-
-Helmut
