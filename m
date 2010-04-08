@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:64790 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752289Ab0DSRqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 13:46:40 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] mac80211: pass HT changes to driver when off channel
-Date: Mon, 19 Apr 2010 10:46:31 -0700
-Message-Id: <1271699191-28925-1-git-send-email-reinette.chatre@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:46981 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933294Ab0DHT1s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 15:27:48 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 083/102] ath9k_hw: Fix internal regulator setting on AR9003
+Date: Thu,  8 Apr 2010 15:27:19 -0400
+Message-Id: <1270754858-26266-84-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+From: Felix Fietkau <nbd@openwrt.org>
 
-Since "mac80211: make off-channel work generic" drivers have not been
-notified of configuration changes after association or authentication. This
-caused more dependence on current state to ensure driver will be notified
-when configuration changes occur. One such problem arises if off-channel is
-in progress when HT information changes. Since HT is only enabled on the
-"oper_channel" the driver will never be notified of this change. Usually
-the driver is notified soon after of a BSS information change
-(BSS_CHANGED_HT) ... but since the driver did not get a notification that
-this is a HT channel the new BSS information does not make sense.
-
-Fix this by also changing the off-channel information when HT is enabled
-and thus cause driver to be notified correctly.
-
-This fixes a problem in 4965 when associated with 5GHz 40MHz channel.
-Without this patch the system can associate but is unable to transfer any
-data, not even ping.
-
-See http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2158
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
- net/mac80211/mlme.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 35d8502..3133681 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -175,6 +175,8 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 	ht_changed = conf_is_ht(&local->hw.conf) != enable_ht ||
- 		     channel_type != local->hw.conf.channel_type;
- 
-+	if (local->tmp_channel)
-+		local->tmp_channel_type = channel_type;
- 	local->oper_channel_type = channel_type;
- 
- 	if (ht_changed) {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 30b8e87..a3e5c70 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -1085,7 +1085,8 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ {
+ 	int internal_regulator =
+ 		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
+-	if (!internal_regulator) {
++
++	if (internal_regulator) {
+ 		/* Internal regulator is ON. Write swreg register. */
+ 		int swreg = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
+ 		REG_WRITE(ah, AR_RTC_REG_CONTROL1,
 -- 
 1.6.3.3
 
