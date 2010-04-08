@@ -1,53 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml107.kpnxchange.com ([195.121.3.11]:63278 "EHLO
-	CPSMTPM-EML107.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753200Ab0DCNnL (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47049 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933316Ab0DHT1x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 09:43:11 -0400
-Message-ID: <4BB745E8.6030205@gmail.com>
-Date: Sat, 03 Apr 2010 15:43:04 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Luis Correia <luis.f.correia@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH V4] rt2x00: remove MCU requests for SoC platforms
-References: <k2g880c1631004011414z59ce4547j1bcea7ad5aff7229@mail.gmail.com> 	<t2qefe7343f1004030447i9d6f290fvd7dd317c63b5b61@mail.gmail.com> <l2mefe7343f1004030449refb18c80l3a81242338a8a4a7@mail.gmail.com>
-In-Reply-To: <l2mefe7343f1004030449refb18c80l3a81242338a8a4a7@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Apr 2010 15:27:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 101/102] ath9k_hw: Abort rx if hw is not coming out of full sleep in reset
+Date: Thu,  8 Apr 2010 15:27:37 -0400
+Message-Id: <1270754858-26266-102-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/03/10 13:49, Luis Correia wrote:
-> The ralink SoC platforms do not have an MCU.
-> 
-> Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    7 +++++++
+ drivers/net/wireless/ath/ath9k/mac.c |    8 ++++++++
+ drivers/net/wireless/ath/ath9k/mac.h |    1 +
+ 3 files changed, 16 insertions(+), 0 deletions(-)
 
-> ---
-> 
-> Removed flag usage as per Gertjan suggestion.
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c
-> b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index ce7e88e..1df2d44 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -60,6 +60,12 @@ static void rt2800pci_mcu_status(struct rt2x00_dev
-> *rt2x00dev, const u8 token)
->        unsigned int i;
->        u32 reg;
-> 
-> +       /*
-> +        * SOC devices don't support MCU requests.
-> +        */
-> +       if (rt2x00_is_soc(rt2x00dev))
-> +               return;
-> +
->        for (i = 0; i < 200; i++) {
->                rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 39c3b08..7d89346 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1133,6 +1133,13 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ah->txchainmask = common->tx_chainmask;
+ 	ah->rxchainmask = common->rx_chainmask;
+ 
++	if (!ah->chip_fullsleep) {
++		ath9k_hw_abortpcurecv(ah);
++		if (!ath9k_hw_stopdmarecv(ah))
++			ath_print(common, ATH_DBG_XMIT,
++				"Failed to stop receive dma\n");
++	}
++
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 0c48998..c0a9a71 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -751,6 +751,14 @@ void ath9k_hw_stoppcurecv(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_stoppcurecv);
+ 
++void ath9k_hw_abortpcurecv(struct ath_hw *ah)
++{
++	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_RX_ABORT | AR_DIAG_RX_DIS);
++
++	ath9k_hw_disable_mib_counters(ah);
++}
++EXPORT_SYMBOL(ath9k_hw_abortpcurecv);
++
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah)
+ {
+ #define AH_RX_STOP_DMA_TIMEOUT 10000   /* usec */
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index a0cbaa3..bf27dde 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -712,6 +712,7 @@ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
+ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
+ void ath9k_hw_startpcureceive(struct ath_hw *ah);
+ void ath9k_hw_stoppcurecv(struct ath_hw *ah);
++void ath9k_hw_abortpcurecv(struct ath_hw *ah);
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
+ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
+ 
+-- 
+1.6.3.3
 
