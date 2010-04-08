@@ -1,147 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54724 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756539Ab0DODaw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56065 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758929Ab0DHSpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:52 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 05/97] ath9k_hw: add simple register abstraction for some AR9300 registers
-Date: Wed, 14 Apr 2010 23:29:19 -0400
-Message-Id: <1271302251-9075-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 8 Apr 2010 14:45:19 -0400
+Date: Thu, 8 Apr 2010 14:41:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Michael Sprecher <sprecher.m@gmail.com>, jmalinen@atheros.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH] wireless: ath9k: Fix most coding style issues in ath9k
+	This patch fixed up almost all coding style issues in the ath9k
+	driver found by the ceckpatch.pl tool. Signed-off-by: Michael
+	Sprecher <sprecher.m@gmail.com>
+Message-ID: <20100408184106.GA2999@tuxdriver.com>
+References: <1268161528-24028-1-git-send-email-sprecher.m@gmail.com> <43e72e891003091133h31bfb1c5sceb4d3c9258792e6@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <43e72e891003091133h31bfb1c5sceb4d3c9258792e6@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Tue, Mar 09, 2010 at 11:33:44AM -0800, Luis R. Rodriguez wrote:
+> On Tue, Mar 9, 2010 at 11:05 AM, Michael Sprecher <sprecher.m@gmail.com> wrote:
+> > ---
+> >  drivers/net/wireless/ath/ath9k/ani.c         |    5 ++-
+> >  drivers/net/wireless/ath/ath9k/ath9k.h       |   28 ++++++++--------
+> >  drivers/net/wireless/ath/ath9k/beacon.c      |    6 ++--
+> >  drivers/net/wireless/ath/ath9k/btcoex.h      |    6 ++--
+> >  drivers/net/wireless/ath/ath9k/calib.c       |   15 ++++-----
+> >  drivers/net/wireless/ath/ath9k/calib.h       |    4 +-
+> >  drivers/net/wireless/ath/ath9k/common.c      |   20 +++++------
+> >  drivers/net/wireless/ath/ath9k/common.h      |   10 +++---
+> >  drivers/net/wireless/ath/ath9k/debug.c       |   12 +++---
+> >  drivers/net/wireless/ath/ath9k/eeprom.h      |    4 +-
+> >  drivers/net/wireless/ath/ath9k/eeprom_4k.c   |   16 +++++-----
+> >  drivers/net/wireless/ath/ath9k/eeprom_9287.c |   14 +++++---
+> >  drivers/net/wireless/ath/ath9k/eeprom_def.c  |   31 +++++++++---------
+> >  drivers/net/wireless/ath/ath9k/gpio.c        |    2 +-
+> >  drivers/net/wireless/ath/ath9k/hw.c          |   44 +++++++++++--------------
+> >  drivers/net/wireless/ath/ath9k/hw.h          |   22 ++++++------
+> >  drivers/net/wireless/ath/ath9k/init.c        |    6 ++--
+> >  drivers/net/wireless/ath/ath9k/mac.h         |    2 +-
+> >  drivers/net/wireless/ath/ath9k/main.c        |   26 +++++++-------
+> >  drivers/net/wireless/ath/ath9k/phy.c         |   12 +++----
+> >  drivers/net/wireless/ath/ath9k/phy.h         |    4 +-
+> >  drivers/net/wireless/ath/ath9k/rc.c          |   13 +++----
+> >  drivers/net/wireless/ath/ath9k/rc.h          |    4 +-
+> >  drivers/net/wireless/ath/ath9k/recv.c        |    5 +--
+> >  drivers/net/wireless/ath/ath9k/reg.h         |   22 ++++++------
+> >  drivers/net/wireless/ath/ath9k/virtual.c     |    3 +-
+> >  drivers/net/wireless/ath/ath9k/xmit.c        |   11 +++---
+> >  27 files changed, 167 insertions(+), 180 deletions(-)
+> 
+> Thanks a lot! Unfortunately right now we have two large patch bombs
+> pending integration which would likely conflict with your patch. One
+> set which I hope we can get into 2.6.34-rc2, the ath9k_htc driver.
+> Then after that I have an already accumulated set of patches (count is
+> at 10 right now) for AR93xx work. The ar93xx work is not intended for
+> 2.6.34 though so I could rebase my work on top of yours but lets first
+> see ath9k_htc get merged first and decide then.
+> 
+> So NACK for now.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/reg.h |   42 +++++++++++++++++-----------------
- 1 files changed, 21 insertions(+), 21 deletions(-)
+I think it is safe to rebase this now, if you are still interested... :-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index c1e58da..d56b4ea 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -20,7 +20,7 @@
- #include "../reg.h"
- 
- #define AR_CR                0x0008
--#define AR_CR_RXE            0x00000004
-+#define AR_CR_RXE            (AR_SREV_9300_20_OR_LATER(ah) ? 0x0000000c : 0x00000004)
- #define AR_CR_RXD            0x00000020
- #define AR_CR_SWI            0x00000040
- 
-@@ -232,7 +232,6 @@
- #define AR_ISR_S5_TIMER_THRESH      0x0007FE00
- #define AR_ISR_S5_TIM_TIMER         0x00000010
- #define AR_ISR_S5_DTIM_TIMER        0x00000020
--#define AR_ISR_S5_S                 0x00d8
- #define AR_IMR_S5                   0x00b8
- #define AR_IMR_S5_TIM_TIMER         0x00000010
- #define AR_IMR_S5_DTIM_TIMER        0x00000020
-@@ -240,7 +239,6 @@
- #define AR_ISR_S5_GENTIMER_TRIG_S   0
- #define AR_ISR_S5_GENTIMER_THRESH   0xFF800000
- #define AR_ISR_S5_GENTIMER_THRESH_S 16
--#define AR_ISR_S5_S                 0x00d8
- #define AR_IMR_S5_GENTIMER_TRIG     0x0000FF80
- #define AR_IMR_S5_GENTIMER_TRIG_S   0
- #define AR_IMR_S5_GENTIMER_THRESH   0xFF800000
-@@ -332,10 +330,10 @@
- #define AR_ISR_S1_QCU_TXEOL    0x03FF0000
- #define AR_ISR_S1_QCU_TXEOL_S  16
- 
--#define AR_ISR_S2_S           0x00cc
--#define AR_ISR_S3_S           0x00d0
--#define AR_ISR_S4_S           0x00d4
--#define AR_ISR_S5_S           0x00d8
-+#define AR_ISR_S2_S           (AR_SREV_9300_20_OR_LATER(ah) ? 0x00d0 : 0x00cc)
-+#define AR_ISR_S3_S           (AR_SREV_9300_20_OR_LATER(ah) ? 0x00d4 : 0x00d0)
-+#define AR_ISR_S4_S           (AR_SREV_9300_20_OR_LATER(ah) ? 0x00d8 : 0x00d4)
-+#define AR_ISR_S5_S           (AR_SREV_9300_20_OR_LATER(ah) ? 0x00dc : 0x00d8)
- #define AR_DMADBG_0           0x00e0
- #define AR_DMADBG_1           0x00e4
- #define AR_DMADBG_2           0x00e8
-@@ -968,19 +966,21 @@ enum {
- #define AR9287_GPIO_IN_VAL_S                     11
- #define AR9271_GPIO_IN_VAL                       0xFFFF0000
- #define AR9271_GPIO_IN_VAL_S                     16
-+#define AR9300_GPIO_IN_VAL                       0x0001FFFF
-+#define AR9300_GPIO_IN_VAL_S                     0
- 
--#define AR_GPIO_OE_OUT                           0x404c
-+#define AR_GPIO_OE_OUT                           (AR_SREV_9300_20_OR_LATER(ah) ? 0x4050 : 0x404c)
- #define AR_GPIO_OE_OUT_DRV                       0x3
- #define AR_GPIO_OE_OUT_DRV_NO                    0x0
- #define AR_GPIO_OE_OUT_DRV_LOW                   0x1
- #define AR_GPIO_OE_OUT_DRV_HI                    0x2
- #define AR_GPIO_OE_OUT_DRV_ALL                   0x3
- 
--#define AR_GPIO_INTR_POL                         0x4050
--#define AR_GPIO_INTR_POL_VAL                     0x00001FFF
-+#define AR_GPIO_INTR_POL                         (AR_SREV_9300_20_OR_LATER(ah) ? 0x4058 : 0x4050)
-+#define AR_GPIO_INTR_POL_VAL                     0x0001FFFF
- #define AR_GPIO_INTR_POL_VAL_S                   0
- 
--#define AR_GPIO_INPUT_EN_VAL                     0x4054
-+#define AR_GPIO_INPUT_EN_VAL                     (AR_SREV_9300_20_OR_LATER(ah) ? 0x405c : 0x4054)
- #define AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_DEF     0x00000004
- #define AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_S       2
- #define AR_GPIO_INPUT_EN_VAL_BT_FREQUENCY_DEF    0x00000008
-@@ -998,13 +998,13 @@ enum {
- #define AR_GPIO_RTC_RESET_OVERRIDE_ENABLE        0x00010000
- #define AR_GPIO_JTAG_DISABLE                     0x00020000
- 
--#define AR_GPIO_INPUT_MUX1                       0x4058
-+#define AR_GPIO_INPUT_MUX1                       (AR_SREV_9300_20_OR_LATER(ah) ? 0x4060 : 0x4058)
- #define AR_GPIO_INPUT_MUX1_BT_ACTIVE             0x000f0000
- #define AR_GPIO_INPUT_MUX1_BT_ACTIVE_S           16
- #define AR_GPIO_INPUT_MUX1_BT_PRIORITY           0x00000f00
- #define AR_GPIO_INPUT_MUX1_BT_PRIORITY_S         8
- 
--#define AR_GPIO_INPUT_MUX2                       0x405c
-+#define AR_GPIO_INPUT_MUX2                       (AR_SREV_9300_20_OR_LATER(ah) ? 0x4064 : 0x405c)
- #define AR_GPIO_INPUT_MUX2_CLK25                 0x0000000f
- #define AR_GPIO_INPUT_MUX2_CLK25_S               0
- #define AR_GPIO_INPUT_MUX2_RFSILENT              0x000000f0
-@@ -1012,13 +1012,13 @@ enum {
- #define AR_GPIO_INPUT_MUX2_RTC_RESET             0x00000f00
- #define AR_GPIO_INPUT_MUX2_RTC_RESET_S           8
- 
--#define AR_GPIO_OUTPUT_MUX1                      0x4060
--#define AR_GPIO_OUTPUT_MUX2                      0x4064
--#define AR_GPIO_OUTPUT_MUX3                      0x4068
-+#define AR_GPIO_OUTPUT_MUX1                      (AR_SREV_9300_20_OR_LATER(ah) ? 0x4068 : 0x4060)
-+#define AR_GPIO_OUTPUT_MUX2                      (AR_SREV_9300_20_OR_LATER(ah) ? 0x406c : 0x4064)
-+#define AR_GPIO_OUTPUT_MUX3                      (AR_SREV_9300_20_OR_LATER(ah) ? 0x4070 : 0x4068)
- 
--#define AR_INPUT_STATE                           0x406c
-+#define AR_INPUT_STATE                           (AR_SREV_9300_20_OR_LATER(ah) ? 0x4074 : 0x406c)
- 
--#define AR_EEPROM_STATUS_DATA                    0x407c
-+#define AR_EEPROM_STATUS_DATA                    (AR_SREV_9300_20_OR_LATER(ah) ? 0x4084 : 0x407c)
- #define AR_EEPROM_STATUS_DATA_VAL                0x0000ffff
- #define AR_EEPROM_STATUS_DATA_VAL_S              0
- #define AR_EEPROM_STATUS_DATA_BUSY               0x00010000
-@@ -1026,11 +1026,11 @@ enum {
- #define AR_EEPROM_STATUS_DATA_PROT_ACCESS        0x00040000
- #define AR_EEPROM_STATUS_DATA_ABSENT_ACCESS      0x00080000
- 
--#define AR_OBS                  0x4080
-+#define AR_OBS                  (AR_SREV_9300_20_OR_LATER(ah) ? 0x4088 : 0x4080)
- 
--#define AR_GPIO_PDPU                             0x4088
-+#define AR_GPIO_PDPU                             (AR_SREV_9300_20_OR_LATER(ah) ? 0x4090 : 0x4088)
- 
--#define AR_PCIE_MSI                              0x4094
-+#define AR_PCIE_MSI                              (AR_SREV_9300_20_OR_LATER(ah) ? 0x40a4 : 0x4094)
- #define AR_PCIE_MSI_ENABLE                       0x00000001
- 
- 
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
