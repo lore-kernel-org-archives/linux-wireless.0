@@ -1,169 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from osmium.mv.net ([199.125.85.152]:53436 "HELO shell.mv.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751157Ab0D1Bob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 21:44:31 -0400
-Date: Tue, 27 Apr 2010 20:01:08 -0400 (EDT)
-From: RHS Linux User <xxx@nei.mv.com>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k: noise floor calibration process
-In-Reply-To: <4BD74B66.3030500@free.fr>
-Message-ID: <Pine.LNX.3.95.1100427193637.9331F-100000@nei>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from bombadil.infradead.org ([18.85.46.34]:46897 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933264Ab0DHT1q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 15:27:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 056/102] ath9k_hw: add the AR9003 ar9003_hw_init_cal callback
+Date: Thu,  8 Apr 2010 15:26:52 -0400
+Message-Id: <1270754858-26266-57-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |  144 ++++++++++++++++++++++++-
+ 1 files changed, 143 insertions(+), 1 deletions(-)
 
-Hi All,
-
-   <preaching>
-
-   The chip *FOR SURE* *CANNOT* measure the thermal noise level!! It isn't
-that sensitive. That said under some conditions it CAN measure the
-local interference level which IS useful.
-
-   I am *VERY MUCH* in favor of making real time level measurements of
-various parts of real packets easy to use!  Troubleshooting becomes so
-much easier :).
-
-   </preaching>
-
-   Great ideas !!
-
-   FWIW - I have on occasion used a low noise preamp to feed the chip. 
-Many more signals are detectable which "proves" the chip by itself *IS
-NOT* that sensitive. Try it yourself !
-
-   Have fun,
-
-   Wiz
-
-
-On Tue, 27 Apr 2010, Benoit PAPILLAULT wrote:
-
-> Hello,
-> 
-> In order to move forward with noise & signal reporting, I'd like to 
-> share my current understanding of the way  ath9k HW is working before 
-> sending patches (unfortunately, I did the work before the introduction 
-> of ar9003... so I need to redo the work).
-> 
-> The ultimate purpose of this work is to be able to measure signal levels 
-> (and noise if possible) as accurately as a spectrum analyzer or power meter.
-> 
-> First, signal level reporting. It is reported in a per packet basis in 
-> RX descriptors. There are 7 fields:
->     AR_RxRSSIAnt00    0x000000ff    rs_rssi_ctl0
->     AR_RxRSSIAnt01    0x0000ff00    rs_rssi_ctl1
->     AR_RxRSSIAnt02    0x00ff0000    rs_rssi_ctl2
->     AR_RxRSSIAnt10        0x000000ff    rs_rssi_ext0
->     AR_RxRSSIAnt11        0x0000ff00    rs_rssi_ext1
->     AR_RxRSSIAnt12        0x00ff0000    rs_rssi_ext2
->     AR_RxRSSICombined    0xff000000    rs_rssi
-> 
-> Each value is for a 20 MHz wide channel, on the 3 RX chains. "ctl" is 
-> for the primary channel and "ext" is for the secondary channel (using 
-> the 802.11n words). The latter rs_rssi is the sum of the 6 previous 
-> value. However, since each value is dB, the sum is not an arithmetic 
-> sum. Each field is a signed value and the value -128 means that no 
-> measurement has been done  (no RX chain, RX chain disabled, no secondary 
-> channel, ...). It seems that in some cases, the combined value is just 
-> plain wrong. Here are few examples:
-> 
->   RSSI: ctl=(10,7,-128) ext=(-128,-128,-128) => 12 (11.76)    correct
-> 
->   RSSI: ctl=(38,29,-128) ext=(69,-84,-101) => -22        incorrect!!!
-> 
-> 
-> Next, noise floor calibration. From what I understand, signal levels is 
-> measured using the AGC + RX amplifiers gain (RF, IF and BB). However, 
-> the various gains are not really accurate, only the relative gain are 
-> accurate. This means that reading a signal value of -100dBm might not 
-> exactly means -100dBm. There is a delta between real signal and measured 
-> value. In order to know this value, we need a calibration process with a 
-> known signal.
-> 
-> One know signal is thermal noise. Thermal noise is generated in any 
-> resistor and can be computed using the well know value N = kTB. For a 20 
-> MHz bandwidth, this gives -101dBm. If the HW tries to measure signal 
-> strength when the network is supposed to be idle (during SIFS) and with 
-> RX/TX switch disabled (?), then it will in fact measure the thermal 
-> noise at the RX input.
-> 
-> So, we have :
-> 
-> Real noise (-101dBm) = Measured noise + delta
-> 
-> There are type of registers to control noise floor calibration :
-> 
-> - control register at 0x9860    (AR_PHY_AGC_CONTROL)
-> 
-> This register allows 3 differents operations :
-> 
-> 1. start noise floor measurement
-> 
->   write AR_PHY_MAXCCA_PWR (AR_PHY_CCA & 0x000001ff) : this is apparently 
-> a max value
->     for noise floor
->   REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_ENABLE_NF);
->   REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
->   REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-> 
->   When channel has been changed however, the noise floor needs to be 
-> updated immediately, so AR_PHY_AGC_CONTROL_NO_UPDATE_NF should be 
-> cleared in this particular case. Otherwise, the chip is no longer 
-> receiving (problem since CCA is defined with noise floor as reference).
-> 
-> 2. read noise floor measurement result
-> 
->     check REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF
->     if 0 (noise floor calibration is finished), read AR_PHY_MINCCA_PWR :
->       nf = MS(REG_READ(ah, AR_PHY_CCA), AR_PHY_MINCCA_PWR = 0x0ff80000)
-> 
-> 3. write noise floor reference
-> 
->   write AR_PHY_MAXCCA_PWR (the value has not the same meaning as 
-> operation 1!)
->   REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_ENABLE_NF);
->   REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
->   REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-> 
-> - data register at 0x9864 (AR_PHY_CCA, + more location for other RX chains)
-> 
->   The fields are different for AR9280+ chipsets, but the mechanism is 
-> the same.
-> 
->     AR_PHY_MAXCCA_PWR        0x000001ff (half dBm unit!)
->     AR_PHY_CCA_THRESH62    0x0007f000
->     AR_PHY_MINCCA_PWR        0x0ff80000
-> 
-> Now, we have :
-> 
-> Real signal = Measured signal + delta
->     = RSSI + Noise floor + delta
->     = RSSI + (-101 dBm)
-> 
-> Real noise is not thermal noise. There are a lot of definition for noise 
-> since noise is NOT signal. Of course, noise includes thermal noise. 
-> Since the noise measured by the chip is variable, I think we could do :
-> 
-> - Noise floor = minimum (Noise floor measures)
-> - Noise = moving average (Noise floor measures) + delta
->   with delta = (-101 dBm) - Noise floor
-> 
-> I'd like to get comments before sending patches. Since ath5k and ath9k 
-> are quite close, I'm pretty sure a similar (if not same) process is used 
-> on ath5k.
-> 
-> Regards,
-> Benoit
-> 
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 6a72677..aeef038 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -40,9 +40,151 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	return false;
+ }
+ 
++static void ar9003_hw_iqcal_collect(struct ath_hw *ah)
++{
++	int i;
++
++	/* Accumulate IQ cal measures for active chains */
++	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
++		ah->totalPowerMeasI[i] +=
++			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
++		ah->totalPowerMeasQ[i] +=
++			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
++		ah->totalIqCorrMeas[i] +=
++			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
++		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
++			  "%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
++			  ah->cal_samples, i, ah->totalPowerMeasI[i],
++			  ah->totalPowerMeasQ[i],
++			  ah->totalIqCorrMeas[i]);
++	}
++}
++
++static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 powerMeasQ, powerMeasI, iqCorrMeas;
++	u32 qCoffDenom, iCoffDenom;
++	int32_t qCoff, iCoff;
++	int iqCorrNeg, i;
++	const u_int32_t offset_array[3] = {
++		AR_PHY_RX_IQCAL_CORR_B0,
++		AR_PHY_RX_IQCAL_CORR_B1,
++		AR_PHY_RX_IQCAL_CORR_B2,
++	};
++
++	for (i = 0; i < numChains; i++) {
++		powerMeasI = ah->totalPowerMeasI[i];
++		powerMeasQ = ah->totalPowerMeasQ[i];
++		iqCorrMeas = ah->totalIqCorrMeas[i];
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Starting IQ Cal and Correction for Chain %d\n",
++			  i);
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Orignal: Chn %diq_corr_meas = 0x%08x\n",
++			  i, ah->totalIqCorrMeas[i]);
++
++		iqCorrNeg = 0;
++
++		if (iqCorrMeas > 0x80000000) {
++			iqCorrMeas = (0xffffffff - iqCorrMeas) + 1;
++			iqCorrNeg = 1;
++		}
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_i = 0x%08x\n", i, powerMeasI);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_q = 0x%08x\n", i, powerMeasQ);
++		ath_print(common, ATH_DBG_CALIBRATE, "iqCorrNeg is 0x%08x\n",
++			  iqCorrNeg);
++
++		iCoffDenom = (powerMeasI / 2 + powerMeasQ / 2) / 256;
++		qCoffDenom = powerMeasQ / 64;
++
++		if ((iCoffDenom != 0) && (qCoffDenom != 0)) {
++			iCoff = iqCorrMeas / iCoffDenom;
++			qCoff = powerMeasI / qCoffDenom - 64;
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Chn %d iCoff = 0x%08x\n", i, iCoff);
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Chn %d qCoff = 0x%08x\n", i, qCoff);
++
++			/* Force bounds on iCoff */
++			if (iCoff >= 63)
++				iCoff = 63;
++			else if (iCoff <= -63)
++				iCoff = -63;
++
++			/* Negate iCoff if iqCorrNeg == 0 */
++			if (iqCorrNeg == 0x0)
++				iCoff = -iCoff;
++
++			/* Force bounds on qCoff */
++			if (qCoff >= 63)
++				qCoff = 63;
++			else if (qCoff <= -63)
++				qCoff = -63;
++
++			iCoff = iCoff & 0x7f;
++			qCoff = qCoff & 0x7f;
++
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
++				  i, iCoff, qCoff);
++			ath_print(common, ATH_DBG_CALIBRATE,
++			          "Register offset (0x%04x) "
++				  "before update = 0x%x\n",
++				  offset_array[i],
++				  REG_READ(ah, offset_array[i]));
++
++			REG_RMW_FIELD(ah, offset_array[i],
++				      AR_PHY_RX_IQCAL_CORR_IQCORR_Q_I_COFF,
++				      iCoff);
++			REG_RMW_FIELD(ah, offset_array[i],
++				      AR_PHY_RX_IQCAL_CORR_IQCORR_Q_Q_COFF,
++				      qCoff);
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Register offset (0x%04x) QI COFF "
++				  "(bitfields 0x%08x) after update = 0x%x\n",
++				  offset_array[i],
++				  AR_PHY_RX_IQCAL_CORR_IQCORR_Q_I_COFF,
++				  REG_READ(ah, offset_array[i]));
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Register offset (0x%04x) QQ COFF "
++				  "(bitfields 0x%08x) after update = 0x%x\n",
++				  offset_array[i], AR_PHY_RX_IQCAL_CORR_IQCORR_Q_Q_COFF,
++				  REG_READ(ah, offset_array[i]));
++
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "IQ Cal and Correction done for Chain %d\n",
++				  i);
++		}
++	}
++
++	REG_SET_BIT(ah, AR_PHY_RX_IQCAL_CORR_B0,
++		    AR_PHY_RX_IQCAL_CORR_IQCORR_ENABLE);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "IQ Cal and Correction (offset 0x%04x) enabled "
++		  "(bit position 0x%08x). New Value 0x%08x\n",
++		  (unsigned) (AR_PHY_RX_IQCAL_CORR_B0),
++		  AR_PHY_RX_IQCAL_CORR_IQCORR_ENABLE,
++		  REG_READ(ah, AR_PHY_RX_IQCAL_CORR_B0));
++}
++
++static const struct ath9k_percal_data iq_cal_single_sample = {
++        IQ_MISMATCH_CAL,
++        MIN_CAL_SAMPLES,
++        PER_MAX_LOG_COUNT,
++	ar9003_hw_iqcal_collect,
++	ar9003_hw_iqcalibrate
++};
++
+ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
+ {
+-	/* TODO */
++	ah->iq_caldata.calData = &iq_cal_single_sample;
++	ah->supp_cals = IQ_MISMATCH_CAL;
+ }
+ 
+ static bool ar9003_hw_iscal_supported(struct ath_hw *ah,
+-- 
+1.6.3.3
 
