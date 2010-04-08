@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32833 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757321Ab0DOVjo (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:58079 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933823Ab0DHXxi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 48/97] ath9k_hw: rename PA calib for AR9287
-Date: Thu, 15 Apr 2010 17:38:53 -0400
-Message-Id: <1271367582-992-49-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 8 Apr 2010 19:53:38 -0400
+Received: by gyg13 with SMTP id 13so1469397gyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 16:53:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201004090032.53842.IvDoorn@gmail.com>
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+	<1270763437-29526-5-git-send-email-gwingerde@gmail.com> <201004090032.53842.IvDoorn@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 9 Apr 2010 09:53:17 +1000
+Message-ID: <j2p646765f41004081653vcb4e0178k374a203da36a9f1@mail.gmail.com>
+Subject: Re: [PATCH 4/9] rt2x00: Remove rt2800 version constants.
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+On Fri, Apr 9, 2010 at 08:32, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> On Thursday 08 April 2010, Gertjan van Wingerde wrote:
+>> The rt2800 version constants are inconsistent, and the version number don't
+>> mean a lot of things anyway. Use the literal values in the code instead of
+>> some sort of fabricated version name macro.
+>>
+>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>
+> Perhaps a more elegant way of using and defining needs to be found.
+> But at least the defined show what the purpose for the values is
+> rather then having magical values spread around the code.
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 156ae34..e2c427b 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -671,7 +671,7 @@ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
- }
- EXPORT_SYMBOL(ath9k_hw_getchan_noise);
- 
--static void ath9k_olc_temp_compensation_9287(struct ath_hw *ah)
-+static void ar9287_hw_olc_temp_compensation(struct ath_hw *ah)
- {
- 	u32 rddata;
- 	int32_t delta, currPDADC, slope;
-@@ -706,7 +706,7 @@ static void ath9k_olc_temp_compensation(struct ath_hw *ah)
- 	int delta, currPDADC, regval;
- 
- 	if (OLC_FOR_AR9287_10_LATER) {
--		ath9k_olc_temp_compensation_9287(ah);
-+		ar9287_hw_olc_temp_compensation(ah);
- 	} else {
- 		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
- 		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
+Maybe something like:
+
+#define RTDEV_IS_RT2883_R1(dev) (rt2x00_rt(dev, RT2883) && \
+                                                   rt2x00_rev(dev) < 0x0300)
+
+Thanks,
+
 -- 
-1.6.3.3
 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
