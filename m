@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31382 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932420Ab0DPVuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:50:22 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:46757 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933220Ab0DHT1l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 15:27:41 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/2] iwlwifi fixes for 2.6.34
-Date: Fri, 16 Apr 2010 14:50:12 -0700
-Message-Id: <1271454614-14272-1-git-send-email-reinette.chatre@intel.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 026/102] ath9k_hw: add common channel select helpers for ar900[23]
+Date: Thu,  8 Apr 2010 15:26:22 -0400
+Message-Id: <1270754858-26266-27-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include two fixes for 2.6.34. A scan race resulting in system crashes is
-fixed with "iwlwifi: fix scan races" - this issue is tracked in
-https://bugzilla.kernel.org/show_bug.cgi?id=15667 . The second fixes how
-regulatory information is read from the 6000 series EEPROM. Channels that
-were previously wrongly identified as not supporting IBSS are now correctly
-identified as now supporting IBSS.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/phy.h        |    4 ++++
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-These patches are also available from wireless-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
-Johannes Berg (1):
-  iwlwifi: fix scan races
-
-Shanyu Zhao (1):
-  iwlwifi: correct 6000 EEPROM regulatory address
-
- drivers/net/wireless/iwlwifi/iwl-6000.c   |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c   |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.h   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    1 +
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    4 +++
- drivers/net/wireless/iwlwifi/iwl-scan.c   |   31 ++++++++++++++++++----------
- 7 files changed, 29 insertions(+), 15 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index f94fc27..ef9768a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -83,7 +83,7 @@ static int ar9002_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		bMode = 1;
+ 		fracMode = 1;
+ 		aModeRefSel = 0;
+-		channelSel = (freq * 0x10000) / 15;
++		channelSel = CHANSEL_2G(freq);
+ 
+ 		if (AR_SREV_9287_11_OR_LATER(ah)) {
+ 			if (freq == 2484) {
+@@ -127,7 +127,7 @@ static int ar9002_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ 			 */
+ 			fracMode = 1;
+ 			refDivA = 1;
+-			channelSel = (freq * 0x8000) / 15;
++			channelSel = CHANSEL_5G(freq);
+ 
+ 			/* RefDivA setting */
+ 			REG_RMW_FIELD(ah, AR_AN_SYNTH9,
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index b908152..7d397fd 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -17,6 +17,10 @@
+ #ifndef PHY_H
+ #define PHY_H
+ 
++#define CHANSEL_DIV		15
++#define CHANSEL_2G(_freq)	(((_freq) * 0x10000) / CHANSEL_DIV)
++#define CHANSEL_5G(_freq)	(((_freq) * 0x8000) / CHANSEL_DIV)
++
+ #define AR_PHY_BASE     0x9800
+ #define AR_PHY(_n)      (AR_PHY_BASE + ((_n)<<2))
+ 
+-- 
+1.6.3.3
 
