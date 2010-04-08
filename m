@@ -1,87 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60984 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757293Ab0DOVjn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:43 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 28/97] ath9k_hw: Set the channel on AR9003
-Date: Thu, 15 Apr 2010 17:38:33 -0400
-Message-Id: <1271367582-992-29-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga02.intel.com ([134.134.136.20]:33683 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755297Ab0DHDfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Apr 2010 23:35:40 -0400
+Subject: Re: [PATCH] mac80211: fix paged RX crypto
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1270696951.10745.11.camel@debian>
+References: <1270632416.3858.6.camel@jlt3.sipsolutions.net>
+	 <1270696951.10745.11.camel@debian>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 08 Apr 2010 11:36:09 +0800
+Message-ID: <1270697769.10745.12.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Thu, 2010-04-08 at 11:22 +0800, Zhu Yi wrote:
+> On Wed, 2010-04-07 at 17:26 +0800, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > WEP crypto was broken, but upon finding the problem
+> > it is evident that other things were broken by the
+> > paged RX patch as well.
+> > 
+> > To fix it, for now move the linearising in front.
+> > This means that we linearise all frames, which is
+> > not at all what we want, but at least it fixes the
+> > problem for now.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > Acked-by: Zhu Yi <yi.zhu@intel.com>
+> 
+> I thought it over. We don't need to handle nonlinear skb in
+> ieee80211_get_mmie_keyidx(), because we only need to touch fields out of
+> 802.11 header for management frames, and we have already skb_linearize
+> all management frames before. Now we just need to handle WEP IV
+> correctly. How about this patch?
+> 
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   47 ++++++++++++++++++++++++++-
- 1 files changed, 46 insertions(+), 1 deletions(-)
+V2: reset hdr.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 084b0f9..f1632ab 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -44,7 +44,52 @@
-  */
- static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- {
--	/* TODO */
-+	u16 bMode, fracMode = 0, aModeRefSel = 0;
-+	u32 freq, channelSel = 0, reg32 = 0;
-+	struct chan_centers centers;
-+	int loadSynthChannel;
-+
-+	ath9k_hw_get_channel_centers(ah, chan, &centers);
-+	freq = centers.synth_center;
-+
-+	if (freq < 4800) {     /* 2 GHz, fractional mode */
-+		channelSel = CHANSEL_2G(freq);
-+		/* Set to 2G mode */
-+		bMode = 1;
-+	} else {
-+		channelSel = CHANSEL_5G(freq);
-+		/* Doubler is ON, so, divide channelSel by 2. */
-+		channelSel >>= 1;
-+		/* Set to 5G mode */
-+		bMode = 0;
-+	}
-+
-+	/* Enable fractional mode for all channels */
-+	fracMode = 1;
-+	aModeRefSel = 0;
-+	loadSynthChannel = 0;
-+
-+	reg32 = (bMode << 29);
-+	REG_WRITE(ah, AR_PHY_SYNTH_CONTROL, reg32);
-+
-+	/* Enable Long shift Select for Synthesizer */
-+	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_SYNTH4,
-+		      AR_PHY_SYNTH4_LONG_SHIFT_SELECT, 1);
-+
-+	/* Program Synth. setting */
-+	reg32 = (channelSel << 2) | (fracMode << 30) |
-+		(aModeRefSel << 28) | (loadSynthChannel << 31);
-+	REG_WRITE(ah, AR_PHY_65NM_CH0_SYNTH7, reg32);
-+
-+	/* Toggle Load Synth channel bit */
-+	loadSynthChannel = 1;
-+	reg32 = (channelSel << 2) | (fracMode << 30) |
-+		(aModeRefSel << 28) | (loadSynthChannel << 31);
-+	REG_WRITE(ah, AR_PHY_65NM_CH0_SYNTH7, reg32);
-+
-+	ah->curchan = chan;
-+	ah->curchan_rad_index = -1;
-+
- 	return 0;
- }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 14366d4..23312dd 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -894,6 +894,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 			rx->key = key;
+ 		return RX_CONTINUE;
+ 	} else {
++		u8 keyid;
+ 		/*
+ 		 * The device doesn't give us the IV so we won't be
+ 		 * able to look up the key. That's ok though, we
+@@ -916,7 +917,8 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		 * no need to call ieee80211_wep_get_keyidx,
+ 		 * it verifies a bunch of things we've done already
+ 		 */
+-		keyidx = rx->skb->data[hdrlen + 3] >> 6;
++		skb_copy_bits(rx->skb, hdrlen + 3, &keyid, 1);
++		keyidx = keyid >> 6;
  
--- 
-1.6.3.3
+ 		rx->key = rcu_dereference(rx->sdata->keys[keyidx]);
+ 
+@@ -940,6 +942,8 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 	if (skb_linearize(rx->skb))
+ 		return RX_DROP_UNUSABLE;
+ 
++	hdr = (struct ieee80211_hdr *)skb->data;
++
+ 	/* Check for weak IVs if possible */
+ 	if (rx->sta && rx->key->conf.alg == ALG_WEP &&
+ 	    ieee80211_is_data(hdr->frame_control) &&
+
 
