@@ -1,72 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29646 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754152Ab0DBUi5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Apr 2010 16:38:57 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:46824 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933242Ab0DHT1p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 15:27:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/7] iwlwifi updates for 2.6.35
-Date: Fri,  2 Apr 2010 13:38:47 -0700
-Message-Id: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 038/102] ath9k_hw: Add abstraction to set/get link pointer
+Date: Thu,  8 Apr 2010 15:26:34 -0400
+Message-Id: <1270754858-26266-39-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series consists mostly of code cleanup. We are planning to remove some
-module parameters and now mark them as deprecated. Their removal is also
-noted in the feature removal schedule. We also plan to remove the iwl4965
-module alias and indicate this too in the feature removal schedule.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-We include a patch here that is also included in the wireless-2.6 series.
-This is because this patch needs some modification to apply due to the
-recent code cleanups. This patch ("iwlwifi: avoid Tx queue memory allocation
-in interface down") is included in this email submission but will not be
-found on our wireless-next-2.6 branch, only on the wireless-2.6 branch.
-Please let me know if there is a better way to deal with cases like this.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   12 ++++++++++++
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |   11 +++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    2 ++
+ drivers/net/wireless/ath/ath9k/mac.c        |   13 +++++++++++++
+ drivers/net/wireless/ath/ath9k/xmit.c       |    7 ++++---
+ 5 files changed, 42 insertions(+), 3 deletions(-)
 
-These patches (except the ones mentioned not to be) are also available from
-wireless-next-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
-Frans Pop (1):
-  iwlwifi: remove trailing space in messages
-
-Wey-Yi Guy (4):
-  iwlwifi: merge module parameters into single place
-  iwlwifi: remove irrelevant comments
-  iwlwifi: deprecate "iwl4965" alias support
-  iwlwifi: code cleanup for generic defines
-
-Zhu Yi (2):
-  iwlwifi: clear rxq->queue in queue reset
-  iwlwifi: avoid Tx queue memory allocation in interface down
-
- Documentation/feature-removal-schedule.txt  |   23 +++++++++++++
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    5 ---
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-4965-hw.h  |   24 --------------
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   43 ++++--------------------
- drivers/net/wireless/iwlwifi/iwl-5000.c     |   13 -------
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h   |   16 +++++++++
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   23 +++++++++----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |   47 +++++++++++++++++++--------
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   45 +++++++++++++++++++------
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    3 +-
- drivers/net/wireless/iwlwifi/iwl-calib.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.c     |   11 +++---
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-io.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c      |   12 +++---
- drivers/net/wireless/iwlwifi/iwl-tx.c       |   22 ++++++++++++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    8 ++--
- 25 files changed, 183 insertions(+), 137 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 2089006..f28adb2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -20,11 +20,23 @@ static void ar9003_hw_rx_enable(struct ath_hw *hw)
+ 	REG_WRITE(hw, AR_CR, 0);
+ }
+ 
++static void ar9003_hw_set_desc_link(void *ds, u32 ds_link)
++{
++	((struct ar9003_txc *) ds)->link = ds_link;
++}
++
++static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
++{
++	*ds_link = &((struct ar9003_txc *) ds)->link;
++}
++
+ void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
+ {
+ 	struct ath_hw_ops *ops = ath9k_hw_ops(hw);
+ 
+ 	ops->rx_enable = ar9003_hw_rx_enable;
++	ops->set_desc_link = ar9003_hw_set_desc_link;
++	ops->get_desc_link = ar9003_hw_get_desc_link;
+ }
+ 
+ void ath9k_hw_set_rx_bufsize(struct ath_hw *ah, u16 buf_size)
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 90feffa..3f566df 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -33,6 +33,17 @@ static inline void ath9k_hw_rxena(struct ath_hw *ah)
+ 	ath9k_hw_ops(ah)->rx_enable(ah);
+ }
+ 
++static inline void ath9k_hw_set_desc_link(struct ath_hw *ah, void *ds,
++					  u32 link)
++{
++	ath9k_hw_ops(ah)->set_desc_link(ds, link);
++}
++
++static inline void ath9k_hw_get_desc_link(struct ath_hw *ah, void *ds,
++					  u32 **link)
++{
++	ath9k_hw_ops(ah)->get_desc_link(ds, link);
++}
+ /* Private hardware call ops */
+ 
+ /* PHY ops */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9abdfb7..a331786 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -521,6 +521,8 @@ struct ath_hw_ops {
+ 				     int restore,
+ 				     int power_off);
+ 	void (*rx_enable)(struct ath_hw *ah);
++	void (*set_desc_link)(void *ds, u32 link);
++	void (*get_desc_link)(void *ds, u32 **link);
+ };
+ 
+ struct ath_hw {
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 5f4e2f3..d620398 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -21,12 +21,25 @@ static void ar9002_hw_rx_enable(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_CR, AR_CR_RXE);
+ }
+ 
++static void ar9002_hw_set_desc_link(void *ds, u32 ds_link)
++{
++	((struct ath_desc*) ds)->ds_link = ds_link;
++}
++
++static void ar9002_hw_get_desc_link(void *ds, u32 **ds_link)
++{
++	*ds_link = &((struct ath_desc *)ds)->ds_link;
++}
++
+ void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+ 
+ 	ops->rx_enable = ar9002_hw_rx_enable;
++	ops->set_desc_link = ar9002_hw_set_desc_link;
++	ops->get_desc_link = ar9002_hw_get_desc_link;
+ }
++
+ static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
+ 					struct ath9k_tx_queue_info *qi)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 7219e29..4f12de9 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -665,7 +665,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 		bpad = PADBYTES(al_delta) + (ndelim << 2);
+ 
+ 		bf->bf_next = NULL;
+-		bf->bf_desc->ds_link = 0;
++		ath9k_hw_set_desc_link(sc->sc_ah, bf->bf_desc, 0);
+ 
+ 		/* link buffers of this frame to the aggregate */
+ 		ath_tx_addto_baw(sc, tid, bf);
+@@ -673,7 +673,8 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 		list_move_tail(&bf->list, bf_q);
+ 		if (bf_prev) {
+ 			bf_prev->bf_next = bf;
+-			bf_prev->bf_desc->ds_link = bf->bf_daddr;
++			ath9k_hw_set_desc_link(sc->sc_ah, bf_prev->bf_desc,
++					       bf->bf_daddr);
+ 		}
+ 		bf_prev = bf;
+ 
+@@ -1659,7 +1660,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 	list_add_tail(&bf->list, &bf_head);
+ 
+ 	ds = bf->bf_desc;
+-	ds->ds_link = 0;
++	ath9k_hw_set_desc_link(ah, ds, 0);
+ 
+ 	ath9k_hw_set11n_txdesc(ah, ds, bf->bf_frmlen, frm_type, MAX_RATE_POWER,
+ 			       bf->bf_keyix, bf->bf_keytype, bf->bf_flags);
+-- 
+1.6.3.3
 
