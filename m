@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:34884 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754322Ab0DMAQR (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46840 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933245Ab0DHT1p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 20:16:17 -0400
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0950917772
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2010 09:16:15 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to band
-Date: Tue, 13 Apr 2010 09:16:18 +0900
-References: <20100412073658.28078.32155.stgit@tt-desk> <201004121734.39700.br1@einfach.org> <1271061652.3877.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1271061652.3877.8.camel@jlt3.sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201004130916.18626.br1@einfach.org>
+	Thu, 8 Apr 2010 15:27:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 042/102] ath9k: Make bf_desc of ath_buf opaque
+Date: Thu,  8 Apr 2010 15:26:38 -0400
+Message-Id: <1270754858-26266-43-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 April 2010 17:40:52 you wrote:
-> On Mon, 2010-04-12 at 17:34 +0900, Bruno Randolf wrote:
-> > before we unconditionally used 3 (1Mbps, 2 Mbps) as basic rates. this
-> > clearly is wrong in the 5GHz band.
-> 
-> No, it's fine. Look again at how this works.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-(hello? can you please stop treating me like an idiot?)
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/common.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-this means we use 6 and 9 as basic rates in the 5GHz band.
-we should use 6, 12 and 24.
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 5fd7fe1..e08f7e5 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -77,7 +77,7 @@ struct ath_buf {
+ 					   an aggregate) */
+ 	struct ath_buf *bf_next;	/* next subframe in the aggregate */
+ 	struct sk_buff *bf_mpdu;	/* enclosing frame structure */
+-	struct ath_desc *bf_desc;	/* virtual addr of desc */
++	void *bf_desc;			/* virtual addr of desc */
+ 	dma_addr_t bf_daddr;		/* physical addr of desc */
+ 	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
+ 	bool bf_stale;
+-- 
+1.6.3.3
 
-bruno
