@@ -1,156 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1155 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751065Ab0DKMb1 (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:12588 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752289Ab0DHENO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 08:31:27 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 2/9] rt2x00: Update rt2800 register definitions towards latest definitions.
-Date: Sun, 11 Apr 2010 14:31:08 +0200
-Message-Id: <1270989075-2267-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+	Thu, 8 Apr 2010 00:13:14 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0548429992
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Apr 2010 13:13:12 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH 4/4] ath5k: add bounds check to pdadc table
+Date: Thu, 8 Apr 2010 13:15:45 +0900
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+References: <1270698959-7844-1-git-send-email-me@bobcopeland.com> <1270698959-7844-5-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1270698959-7844-5-git-send-email-me@bobcopeland.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201004081315.45624.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Definitions taken from the latest rt2860 / rt2870 / rt3070 / rt3090 Ralink
-vendor drivers.
+On Thursday 08 April 2010 12:55:59 Bob Copeland wrote:
+> We check the bounds on pdadc once when correcting for
+> negative curves but not when we later copy values from
+> from the pdadc_tmp array, leading to a potential overrun.
+> 
+> Although we shouldn't hit this case in practice, let's
+> be consistent.
+> 
+> Reported-by: Dan Carpenter <error27@gmail.com>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/phy.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c
+> b/drivers/net/wireless/ath/ath5k/phy.c index 81bdebd..65ac50b 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -2560,7 +2560,7 @@ ath5k_combine_pwr_to_pdadc_curves(struct ath5k_hw
+> *ah, max_idx = (pdadc_n < table_size) ? pdadc_n : table_size;
+> 
+>  		/* Fill pdadc_out table */
+> -		while (pdadc_0 < max_idx)
+> +		while (pdadc_0 < max_idx && pdadc_i < 128)
+>  			pdadc_out[pdadc_i++] = pdadc_tmp[pdadc_0++];
+> 
+>  		/* Need to extrapolate above this pdgain? */
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h    |   55 +++++++++++++++++++++++++++++-
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 2 files changed, 54 insertions(+), 3 deletions(-)
+for whatever it's worth :-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 74c0433..455dc3f 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -56,6 +56,7 @@
- #define RF3021				0x0007
- #define RF3022				0x0008
- #define RF3052				0x0009
-+#define RF3320				0x000b
- 
- /*
-  * Chipset version.
-@@ -90,10 +91,16 @@
- #define NUM_TX_QUEUES			4
- 
- /*
-- * USB registers.
-+ * Registers.
-  */
- 
- /*
-+ * OPT_14: Unknown register used by rt3xxx devices.
-+ */
-+#define OPT_14_CSR			0x0114
-+#define OPT_14_CSR_BIT0			FIELD32(0x00000001)
-+
-+/*
-  * INT_SOURCE_CSR: Interrupt source register.
-  * Write one to clear corresponding bit.
-  * TX_FIFO_STATUS: FIFO Statistics is full, sw should read 0x171c
-@@ -398,6 +405,31 @@
- #define EFUSE_DATA3			0x059c
- 
- /*
-+ * LDO_CFG0
-+ */
-+#define LDO_CFG0			0x05d4
-+#define LDO_CFG0_DELAY3			FIELD32(0x000000ff)
-+#define LDO_CFG0_DELAY2			FIELD32(0x0000ff00)
-+#define LDO_CFG0_DELAY1			FIELD32(0x00ff0000)
-+#define LDO_CFG0_BGSEL			FIELD32(0x03000000)
-+#define LDO_CFG0_LDO_CORE_VLEVEL	FIELD32(0x1c000000)
-+#define LD0_CFG0_LDO25_LEVEL		FIELD32(0x60000000)
-+#define LDO_CFG0_LDO25_LARGEA		FIELD32(0x80000000)
-+
-+/*
-+ * GPIO_SWITCH
-+ */
-+#define GPIO_SWITCH			0x05dc
-+#define GPIO_SWITCH_0			FIELD32(0x00000001)
-+#define GPIO_SWITCH_1			FIELD32(0x00000002)
-+#define GPIO_SWITCH_2			FIELD32(0x00000004)
-+#define GPIO_SWITCH_3			FIELD32(0x00000008)
-+#define GPIO_SWITCH_4			FIELD32(0x00000010)
-+#define GPIO_SWITCH_5			FIELD32(0x00000020)
-+#define GPIO_SWITCH_6			FIELD32(0x00000040)
-+#define GPIO_SWITCH_7			FIELD32(0x00000080)
-+
-+/*
-  * MAC Control/Status Registers(CSR).
-  * Some values are set in TU, whereas 1 TU == 1024 us.
-  */
-@@ -1492,6 +1524,14 @@ struct mac_iveiv_entry {
- #define BBP4_BANDWIDTH			FIELD8(0x18)
- 
- /*
-+ * BBP 138: Unknown
-+ */
-+#define BBP138_RX_ADC1			FIELD8(0x02)
-+#define BBP138_RX_ADC2			FIELD8(0x04)
-+#define BBP138_TX_DAC1			FIELD8(0x20)
-+#define BBP138_TX_DAC2			FIELD8(0x40)
-+
-+/*
-  * RFCSR registers
-  * The wordsize of the RFCSR is 8 bits.
-  */
-@@ -1499,7 +1539,8 @@ struct mac_iveiv_entry {
- /*
-  * RFCSR 6:
-  */
--#define RFCSR6_R			FIELD8(0x03)
-+#define RFCSR6_R1			FIELD8(0x03)
-+#define RFCSR6_R2			FIELD8(0x40)
- 
- /*
-  * RFCSR 7:
-@@ -1512,6 +1553,14 @@ struct mac_iveiv_entry {
- #define RFCSR12_TX_POWER		FIELD8(0x1f)
- 
- /*
-+ * RFCSR 17:
-+ */
-+#define RFCSR17_R1			FIELD8(0x07)
-+#define RFCSR17_R2			FIELD8(0x08)
-+#define RFCSR17_R3			FIELD8(0x20)
-+
-+
-+/*
-  * RFCSR 22:
-  */
- #define RFCSR22_BASEBAND_LOOPBACK	FIELD8(0x01)
-@@ -1603,6 +1652,8 @@ struct mac_iveiv_entry {
- #define EEPROM_NIC_WPS_PBC		FIELD16(0x0080)
- #define EEPROM_NIC_BW40M_BG		FIELD16(0x0100)
- #define EEPROM_NIC_BW40M_A		FIELD16(0x0200)
-+#define EEPROM_NIC_ANT_DIVERSITY	FIELD16(0x0800)
-+#define EEPROM_NIC_DAC_TEST		FIELD16(0x8000)
- 
- /*
-  * EEPROM frequency
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 6fdec15..394c8e4 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -797,7 +797,7 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
- 	rt2800_rfcsr_write(rt2x00dev, 3, rf->rf3);
- 
- 	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
--	rt2x00_set_field8(&rfcsr, RFCSR6_R, rf->rf2);
-+	rt2x00_set_field8(&rfcsr, RFCSR6_R1, rf->rf2);
- 	rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
- 
- 	rt2800_rfcsr_read(rt2x00dev, 12, &rfcsr);
--- 
-1.7.0.4
-
+Acked-by: Bruno Randolf <br1@einfach.org>
