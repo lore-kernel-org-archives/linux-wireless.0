@@ -1,106 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43714 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758202Ab0D3SIi (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4866 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788Ab0DHEAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 14:08:38 -0400
-Subject: [PATCH v2] mac80211: notify driver about IBSS status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1272469243.3565.27.camel@jlt3.sipsolutions.net>
-References: <1272469243.3565.27.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 29 Apr 2010 11:18:27 +0200
-Message-ID: <1272532707.3736.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 00:00:19 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	br1@einfach.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/4] ath5k: correct channel setting for 2.5 mhz spacing
+Date: Wed,  7 Apr 2010 23:55:56 -0400
+Message-Id: <1270698959-7844-2-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
+References: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (e.g. iwlwifi) need to know and try
-to figure it out based on other things, but making
-it explicit is definitely better.
+These channels aren't selectable anyway, but our calculations
+for 2.5 mhz frequencies are incorrect.  The value is supposed to
+be:
 
-When merging, first indicate to the driver that we
-leave the old IBSS BSSID and then indicate joining
-the new one.
+  (frequency - reference) * (10/25)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+i.e., divide by 2.5, but we were instead doing:
+
+  (10 * frequency - reference) / 25.
+
+Additionally, the check for (frequency % 5 == 2) had an extra
+subtraction that wasn't in madwifi HAL.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- include/net/mac80211.h |    6 +++++-
- net/mac80211/ibss.c    |   12 +++++++++++-
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/phy.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -145,6 +145,7 @@ struct ieee80211_low_level_stats {
-  * @BSS_CHANGED_BEACON_ENABLED: Beaconing should be
-  *	enabled/disabled (beaconing modes)
-  * @BSS_CHANGED_CQM: Connection quality monitor config changed
-+ * @BSS_CHANGED_IBSS: IBSS join status changed
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -158,6 +159,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_BEACON		= 1<<8,
- 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
- 	BSS_CHANGED_CQM			= 1<<10,
-+	BSS_CHANGED_IBSS		= 1<<11,
- };
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index b83ca8a..81bdebd 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -979,7 +979,7 @@ static int ath5k_hw_rf5112_channel(struct ath5k_hw *ah,
+ 			return -EINVAL;
  
- /**
-@@ -167,6 +169,8 @@ enum ieee80211_bss_change {
-  * to that BSS) that can change during the lifetime of the BSS.
-  *
-  * @assoc: association status
-+ * @ibss_joined: indicates whether this station is part of an IBSS
-+ *	or not
-  * @aid: association ID number, valid only when @assoc is true
-  * @use_cts_prot: use CTS protection
-  * @use_short_preamble: use 802.11b short preamble;
-@@ -194,7 +198,7 @@ enum ieee80211_bss_change {
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
- 	/* association related data */
--	bool assoc;
-+	bool assoc, ibss_joined;
- 	u16 aid;
- 	/* erp related data */
- 	bool use_cts_prot;
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -92,6 +92,12 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	if (memcmp(ifibss->bssid, bssid, ETH_ALEN))
- 		sta_info_flush(sdata->local, sdata);
+ 		data0 = ath5k_hw_bitswap((data0 << 2) & 0xff, 8);
+-	} else if ((c - (c % 5)) != 2 || c > 5435) {
++	} else if ((c % 5) != 2 || c > 5435) {
+ 		if (!(c % 20) && c >= 5120) {
+ 			data0 = ath5k_hw_bitswap(((c - 4800) / 20 << 2), 8);
+ 			data2 = ath5k_hw_bitswap(3, 2);
+@@ -992,7 +992,7 @@ static int ath5k_hw_rf5112_channel(struct ath5k_hw *ah,
+ 		} else
+ 			return -EINVAL;
+ 	} else {
+-		data0 = ath5k_hw_bitswap((10 * (c - 2) - 4800) / 25 + 1, 8);
++		data0 = ath5k_hw_bitswap((10 * (c - 2 - 4800)) / 25 + 1, 8);
+ 		data2 = ath5k_hw_bitswap(0, 2);
+ 	}
  
-+	/* if merging, indicate to driver that we leave the old IBSS */
-+	if (sdata->vif.bss_conf.ibss_joined) {
-+		sdata->vif.bss_conf.ibss_joined = false;
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IBSS);
-+	}
-+
- 	memcpy(ifibss->bssid, bssid, ETH_ALEN);
+@@ -1020,7 +1020,7 @@ static int ath5k_hw_rf2425_channel(struct ath5k_hw *ah,
+ 		data0 = ath5k_hw_bitswap((c - 2272), 8);
+ 		data2 = 0;
+ 	/* ? 5GHz ? */
+-	} else if ((c - (c % 5)) != 2 || c > 5435) {
++	} else if ((c % 5) != 2 || c > 5435) {
+ 		if (!(c % 20) && c < 5120)
+ 			data0 = ath5k_hw_bitswap(((c - 4800) / 20 << 2), 8);
+ 		else if (!(c % 10))
+@@ -1031,7 +1031,7 @@ static int ath5k_hw_rf2425_channel(struct ath5k_hw *ah,
+ 			return -EINVAL;
+ 		data2 = ath5k_hw_bitswap(1, 2);
+ 	} else {
+-		data0 = ath5k_hw_bitswap((10 * (c - 2) - 4800) / 25 + 1, 8);
++		data0 = ath5k_hw_bitswap((10 * (c - 2 - 4800)) / 25 + 1, 8);
+ 		data2 = ath5k_hw_bitswap(0, 2);
+ 	}
  
- 	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
-@@ -171,6 +177,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	bss_change |= BSS_CHANGED_BSSID;
- 	bss_change |= BSS_CHANGED_BEACON;
- 	bss_change |= BSS_CHANGED_BEACON_ENABLED;
-+	bss_change |= BSS_CHANGED_IBSS;
-+	sdata->vif.bss_conf.ibss_joined = true;
- 	ieee80211_bss_info_change_notify(sdata, bss_change);
- 
- 	ieee80211_sta_def_wmm_params(sdata, sband->n_bitrates, supp_rates);
-@@ -951,7 +959,9 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 	kfree(sdata->u.ibss.ie);
- 	skb = sdata->u.ibss.presp;
- 	rcu_assign_pointer(sdata->u.ibss.presp, NULL);
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
-+	sdata->vif.bss_conf.ibss_joined = false;
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
-+						BSS_CHANGED_IBSS);
- 	synchronize_rcu();
- 	kfree_skb(skb);
- 
+-- 
+1.6.3.3
 
 
