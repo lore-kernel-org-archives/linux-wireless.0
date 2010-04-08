@@ -1,157 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54788 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:46852 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756817Ab0DODax (ORCPT
+	with ESMTP id S933248Ab0DHT1p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:53 -0400
+	Thu, 8 Apr 2010 15:27:45 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v2 38/97] ath9k_hw: Add abstraction to set/get link pointer
-Date: Wed, 14 Apr 2010 23:29:52 -0400
-Message-Id: <1271302251-9075-39-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 045/102] ath9k_hw: Get rid of eep_map and reorganize the functions.
+Date: Thu,  8 Apr 2010 15:26:41 -0400
+Message-Id: <1270754858-26266-46-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+The eep_map is used only for AR9280 PCI card ini fixup. We can
+reorganize the code in such a way that eep_map can be removed
+and also the makes the code more clearer.
+
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   12 ++++++++++++
- drivers/net/wireless/ath/ath9k/hw-ops.h     |   11 +++++++++++
- drivers/net/wireless/ath/ath9k/hw.h         |    2 ++
- drivers/net/wireless/ath/ath9k/mac.c        |   13 +++++++++++++
- drivers/net/wireless/ath/ath9k/xmit.c       |    7 ++++---
- 5 files changed, 42 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom.c |    3 -
+ drivers/net/wireless/ath/ath9k/eeprom.h |    7 --
+ drivers/net/wireless/ath/ath9k/hw.c     |  107 +++++++++++++-----------------
+ drivers/net/wireless/ath/ath9k/hw.h     |    1 -
+ 4 files changed, 46 insertions(+), 72 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 2089006..f28adb2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -20,11 +20,23 @@ static void ar9003_hw_rx_enable(struct ath_hw *hw)
- 	REG_WRITE(hw, AR_CR, 0);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index dacaae9..1a48f43 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -257,13 +257,10 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah)
+ 	int status;
  
-+static void ar9003_hw_set_desc_link(void *ds, u32 ds_link)
-+{
-+	((struct ar9003_txc *) ds)->link = ds_link;
-+}
-+
-+static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
-+{
-+	*ds_link = &((struct ar9003_txc *) ds)->link;
-+}
-+
- void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
- {
- 	struct ath_hw_ops *ops = ath9k_hw_ops(hw);
+ 	if (AR_SREV_9287(ah)) {
+-		ah->eep_map = EEP_MAP_AR9287;
+ 		ah->eep_ops = &eep_AR9287_ops;
+ 	} else if (AR_SREV_9285(ah) || AR_SREV_9271(ah)) {
+-		ah->eep_map = EEP_MAP_4KBITS;
+ 		ah->eep_ops = &eep_4k_ops;
+ 	} else {
+-		ah->eep_map = EEP_MAP_DEFAULT;
+ 		ah->eep_ops = &eep_def_ops;
+ 	}
  
- 	ops->rx_enable = ar9003_hw_rx_enable;
-+	ops->set_desc_link = ar9003_hw_set_desc_link;
-+	ops->get_desc_link = ar9003_hw_get_desc_link;
- }
- 
- void ath9k_hw_set_rx_bufsize(struct ath_hw *ah, u16 buf_size)
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 08a51a2..a770107 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -33,6 +33,17 @@ static inline void ath9k_hw_rxena(struct ath_hw *ah)
- 	ath9k_hw_ops(ah)->rx_enable(ah);
- }
- 
-+static inline void ath9k_hw_set_desc_link(struct ath_hw *ah, void *ds,
-+					  u32 link)
-+{
-+	ath9k_hw_ops(ah)->set_desc_link(ds, link);
-+}
-+
-+static inline void ath9k_hw_get_desc_link(struct ath_hw *ah, void *ds,
-+					  u32 **link)
-+{
-+	ath9k_hw_ops(ah)->get_desc_link(ds, link);
-+}
- /* Private hardware call ops */
- 
- /* PHY ops */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 0361f42..51b6b26 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -520,6 +520,8 @@ struct ath_hw_ops {
- 				     int restore,
- 				     int power_off);
- 	void (*rx_enable)(struct ath_hw *ah);
-+	void (*set_desc_link)(void *ds, u32 link);
-+	void (*get_desc_link)(void *ds, u32 **link);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 2f2993b..e087e2d 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -656,13 +656,6 @@ struct ath9k_country_entry {
+ 	u8 iso[3];
  };
  
- struct ath_hw {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 0c9c378..a8dab23 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -21,12 +21,25 @@ static void ar9002_hw_rx_enable(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_CR, AR_CR_RXE);
+-enum ath9k_eep_map {
+-	EEP_MAP_DEFAULT = 0x0,
+-	EEP_MAP_4KBITS,
+-	EEP_MAP_AR9287,
+-	EEP_MAP_MAX
+-};
+-
+ struct eeprom_ops {
+ 	int (*check_eeprom)(struct ath_hw *hw);
+ 	u32 (*get_eeprom)(struct ath_hw *hw, enum eeprom_param param);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 312eda4..2ede866 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -33,9 +33,6 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah);
+ static void ar9003_hw_attach_ops(struct ath_hw *ah);
+ 
+ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type);
+-static u32 ath9k_hw_ini_fixup(struct ath_hw *ah,
+-			      struct ar5416_eeprom_def *pEepData,
+-			      u32 reg, u32 value);
+ 
+ MODULE_AUTHOR("Atheros Communications");
+ MODULE_DESCRIPTION("Support for Atheros 802.11n wireless LAN cards.");
+@@ -937,24 +934,56 @@ static void ath9k_hw_init_mode_gain_regs(struct ath_hw *ah)
+ 	}
  }
  
-+static void ar9002_hw_set_desc_link(void *ds, u32 ds_link)
++static u32 ath9k_hw_def_ini_fixup(struct ath_hw *ah,
++			      struct ar5416_eeprom_def *pEepData,
++			      u32 reg, u32 value)
 +{
-+	((struct ath_desc *) ds)->ds_link = ds_link;
++#define PWDCL_KIND	(pBase->pwdclkind << AR_AN_TOP2_PWDCLKIND_S);
++	struct base_eep_header *pBase = &(pEepData->baseEepHeader);
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	switch (ah->hw_version.devid) {
++	case AR9280_DEVID_PCI:
++		if (reg == 0x7894) {
++			ath_print(common, ATH_DBG_EEPROM,
++				"ini VAL: %x  EEPROM: %x\n", value,
++				(pBase->version & 0xff));
++
++			if ((pBase->version & 0xff) > 0x0a) {
++				ath_print(common, ATH_DBG_EEPROM,
++					  "PWDCLKIND: %d\n",
++					  pBase->pwdclkind);
++				value &= ~AR_AN_TOP2_PWDCLKIND;
++				value |= AR_AN_TOP2_PWDCLKIND & PWDCL_KIND
++			} else {
++				ath_print(common, ATH_DBG_EEPROM,
++					  "PWDCLKIND Earlier Rev\n");
++			}
++
++			ath_print(common, ATH_DBG_EEPROM,
++				  "final ini VAL: %x\n", value);
++		}
++		break;
++	}
++
++	return value;
 +}
 +
-+static void ar9002_hw_get_desc_link(void *ds, u32 **ds_link)
-+{
-+	*ds_link = &((struct ath_desc *)ds)->ds_link;
-+}
-+
- void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
+ static void ath9k_hw_init_eeprom_fix(struct ath_hw *ah)
  {
- 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+ 	u32 i, j;
  
- 	ops->rx_enable = ar9002_hw_rx_enable;
-+	ops->set_desc_link = ar9002_hw_set_desc_link;
-+	ops->get_desc_link = ar9002_hw_get_desc_link;
- }
-+
- static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
- 					struct ath9k_tx_queue_info *qi)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 7219e29..4f12de9 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -665,7 +665,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 		bpad = PADBYTES(al_delta) + (ndelim << 2);
+-	if (ah->hw_version.devid == AR9280_DEVID_PCI) {
++	/* EEPROM Fixup */
++	for (i = 0; i < ah->iniModes.ia_rows; i++) {
++		u32 reg = INI_RA(&ah->iniModes, i, 0);
  
- 		bf->bf_next = NULL;
--		bf->bf_desc->ds_link = 0;
-+		ath9k_hw_set_desc_link(sc->sc_ah, bf->bf_desc, 0);
+-		/* EEPROM Fixup */
+-		for (i = 0; i < ah->iniModes.ia_rows; i++) {
+-			u32 reg = INI_RA(&ah->iniModes, i, 0);
++		for (j = 1; j < ah->iniModes.ia_columns; j++) {
++			u32 val = INI_RA(&ah->iniModes, i, j);
  
- 		/* link buffers of this frame to the aggregate */
- 		ath_tx_addto_baw(sc, tid, bf);
-@@ -673,7 +673,8 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 		list_move_tail(&bf->list, bf_q);
- 		if (bf_prev) {
- 			bf_prev->bf_next = bf;
--			bf_prev->bf_desc->ds_link = bf->bf_daddr;
-+			ath9k_hw_set_desc_link(sc->sc_ah, bf_prev->bf_desc,
-+					       bf->bf_daddr);
+-			for (j = 1; j < ah->iniModes.ia_columns; j++) {
+-				u32 val = INI_RA(&ah->iniModes, i, j);
+-
+-				INI_RA(&ah->iniModes, i, j) =
+-					ath9k_hw_ini_fixup(ah,
+-							   &ah->eeprom.def,
+-							   reg, val);
+-			}
++			INI_RA(&ah->iniModes, i, j) =
++				ath9k_hw_def_ini_fixup(ah,
++						&ah->eeprom.def,
++						reg, val);
  		}
- 		bf_prev = bf;
+ 	}
+ }
+@@ -1058,7 +1087,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (r)
+ 		return r;
  
-@@ -1659,7 +1660,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 	list_add_tail(&bf->list, &bf_head);
+-	ath9k_hw_init_eeprom_fix(ah);
++	if (ah->hw_version.devid == AR9280_DEVID_PCI)
++		ath9k_hw_init_eeprom_fix(ah);
  
- 	ds = bf->bf_desc;
--	ds->ds_link = 0;
-+	ath9k_hw_set_desc_link(ah, ds, 0);
+ 	r = ath9k_hw_init_macaddr(ah);
+ 	if (r) {
+@@ -1284,51 +1314,6 @@ EXPORT_SYMBOL(ath9k_hw_deinit);
+ /* INI */
+ /*******/
  
- 	ath9k_hw_set11n_txdesc(ah, ds, bf->bf_frmlen, frm_type, MAX_RATE_POWER,
- 			       bf->bf_keyix, bf->bf_keytype, bf->bf_flags);
+-static u32 ath9k_hw_def_ini_fixup(struct ath_hw *ah,
+-			      struct ar5416_eeprom_def *pEepData,
+-			      u32 reg, u32 value)
+-{
+-	struct base_eep_header *pBase = &(pEepData->baseEepHeader);
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	switch (ah->hw_version.devid) {
+-	case AR9280_DEVID_PCI:
+-		if (reg == 0x7894) {
+-			ath_print(common, ATH_DBG_EEPROM,
+-				"ini VAL: %x  EEPROM: %x\n", value,
+-				(pBase->version & 0xff));
+-
+-			if ((pBase->version & 0xff) > 0x0a) {
+-				ath_print(common, ATH_DBG_EEPROM,
+-					  "PWDCLKIND: %d\n",
+-					  pBase->pwdclkind);
+-				value &= ~AR_AN_TOP2_PWDCLKIND;
+-				value |= AR_AN_TOP2_PWDCLKIND &
+-					(pBase->pwdclkind << AR_AN_TOP2_PWDCLKIND_S);
+-			} else {
+-				ath_print(common, ATH_DBG_EEPROM,
+-					  "PWDCLKIND Earlier Rev\n");
+-			}
+-
+-			ath_print(common, ATH_DBG_EEPROM,
+-				  "final ini VAL: %x\n", value);
+-		}
+-		break;
+-	}
+-
+-	return value;
+-}
+-
+-static u32 ath9k_hw_ini_fixup(struct ath_hw *ah,
+-			      struct ar5416_eeprom_def *pEepData,
+-			      u32 reg, u32 value)
+-{
+-	if (ah->eep_map == EEP_MAP_4KBITS)
+-		return value;
+-	else
+-		return ath9k_hw_def_ini_fixup(ah, pEepData, reg, value);
+-}
+-
+ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan)
+ {
+ 	u32 ctl = ath_regd_get_band_ctl(reg, chan->chan->band);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 89708d8..111b7cb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -543,7 +543,6 @@ struct ath_hw {
+ 		struct ar9287_eeprom map9287;
+ 	} eeprom;
+ 	const struct eeprom_ops *eep_ops;
+-	enum ath9k_eep_map eep_map;
+ 
+ 	bool sw_mgmt_crypto;
+ 	bool is_pciexpress;
 -- 
 1.6.3.3
 
