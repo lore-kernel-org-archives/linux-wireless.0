@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50554
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757210Ab0DOVbt (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:51711 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754105Ab0DHWdw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:31:49 -0400
-Date: Thu, 15 Apr 2010 14:31:53 -0700 (PDT)
-Message-Id: <20100415.143153.44946237.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-04-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100415205358.GA6659@tuxdriver.com>
-References: <20100415205358.GA6659@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 8 Apr 2010 18:33:52 -0400
+Received: by ewy20 with SMTP id 20so1168751ewy.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 15:33:51 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor driver.
+Date: Fri, 9 Apr 2010 00:33:04 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270763437-29526-4-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Message-Id: <201004090033.04885.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 15 Apr 2010 16:53:59 -0400
-
-> Here is another huge dump of wireless bits intended for 2.6.35...  It is
-> mostly drivers, and mostly the "usual suspects" of those -- ath5k,
-> ath9k, iwlwifi, rt2x00, wl1271, and others.  There are also some
-> infrastructure bits from Johannes and Jouni, including some tracing
-> stuff.
+On Thursday 08 April 2010, Gertjan van Wingerde wrote:
+> Only include definitions for RT chipsets that are also used inside the
+> Ralink vendor drivers.
 > 
-> Please let me know if there are problems!
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Pulled, thanks John!
-
-> P.S.  Please note the "for-davem" after the git url... :-)
-
-Yep, saw it :-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
