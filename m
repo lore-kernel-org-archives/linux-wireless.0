@@ -1,133 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:56757 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755879Ab0DCVJU (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46705 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933150Ab0DHT1j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 17:09:20 -0400
-Received: by bwz1 with SMTP id 1so2172478bwz.21
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 14:09:18 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFT/RFC] p54pci: prevent stuck rx-ring on slow system
-Date: Sat, 3 Apr 2010 23:09:12 +0200
-Cc: linville@tuxdriver.com, sean@mess.org,
-	Quintin Pitts <geek4linux@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201004032309.13029.chunkeey@googlemail.com>
+	Thu, 8 Apr 2010 15:27:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 006/102] ath9k_hw: add support for GPIO differences on AR9003
+Date: Thu,  8 Apr 2010 15:26:02 -0400
+Message-Id: <1270754858-26266-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Quintin Pitts <geek4linux@gmail.com>
+From: Felix Fietkau <nbd@openwrt.org>
 
-This patch fixes an old problem, which - under certain
-circumstances - could cause the device to become
-unresponsive. 
-
-most of p54pci's rx-ring management is implemented in just
-two distinct standalone functions. p54p_check_rx_ring takes
-care of processing incoming data, while p54p_refill_rx_ring
-tries to replenish all depleted communication buffers.
-
-This has always worked fine on my fast machine, but
-now I know there is a hidden race...
-
-The most likely candidate here is ring_control->device_idx.
-Quintin Pitts had already analyzed the culprit and posted
-a patch back in Oct 2009. But sadly, no one's picked up on this.
-( https://patchwork.kernel.org/patch/53079/ [2 & 3] ).
-This patch goes in the same way, except that we now prioritize
-rx data processing, simply because tx routine can wait.
-
-Reported-by: Sean Young <sean@mess.org>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=11386
-Reported-by: Quintin Pitts <geek4linux@gmail.com>
-Signed-off-by: Quintin Pitts <geek4linux@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Quintin, I've added the "From: ...", because this is from your post.
-So, you've the last word, if you don't agree with what just I wrote.
+ drivers/net/wireless/ath/ath9k/hw.c  |    4 +++-
+ drivers/net/wireless/ath/ath9k/reg.h |    1 +
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-NB: The comment above is just the best explanation I could
-come up with. I'm not entirely sure, if I really hit the nail
-right on this one, though. But don't get me wrong: the patch does
-definitively help.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 2f82da5..8f3b602 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3490,7 +3490,9 @@ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
+ 	if (gpio >= ah->caps.num_gpio_pins)
+ 		return 0xffffffff;
+ 
+-	if (AR_SREV_9271(ah))
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		return MS_REG_READ(AR9300, gpio) != 0;
++	else if (AR_SREV_9271(ah))
+ 		return MS_REG_READ(AR9271, gpio) != 0;
+ 	else if (AR_SREV_9287_10_OR_LATER(ah))
+ 		return MS_REG_READ(AR9287, gpio) != 0;
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index d56b4ea..d524891 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -954,6 +954,7 @@ enum {
+ #define AR9285_NUM_GPIO                          12
+ #define AR9287_NUM_GPIO                          11
+ #define AR9271_NUM_GPIO                          16
++#define AR9300_NUM_GPIO                          17
+ 
+ #define AR_GPIO_IN_OUT                           0x4048
+ #define AR_GPIO_IN_VAL                           0x0FFFC000
+-- 
+1.6.3.3
 
-Regards,
-	Christian
----
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index ed4bdff..aa29663 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -131,7 +131,7 @@ static int p54p_upload_firmware(struct ieee80211_hw *dev)
- 
- static void p54p_refill_rx_ring(struct ieee80211_hw *dev,
- 	int ring_index, struct p54p_desc *ring, u32 ring_limit,
--	struct sk_buff **rx_buf)
-+	struct sk_buff **rx_buf, u32 index)
- {
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
-@@ -139,7 +139,7 @@ static void p54p_refill_rx_ring(struct ieee80211_hw *dev,
- 
- 	idx = le32_to_cpu(ring_control->host_idx[ring_index]);
- 	limit = idx;
--	limit -= le32_to_cpu(ring_control->device_idx[ring_index]);
-+	limit -= le32_to_cpu(index);
- 	limit = ring_limit - limit;
- 
- 	i = idx % ring_limit;
-@@ -231,7 +231,7 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
- 		i %= ring_limit;
- 	}
- 
--	p54p_refill_rx_ring(dev, ring_index, ring, ring_limit, rx_buf);
-+	p54p_refill_rx_ring(dev, ring_index, ring, ring_limit, rx_buf, *index);
- }
- 
- static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
-@@ -276,14 +276,6 @@ static void p54p_tasklet(unsigned long dev_id)
- 	struct p54p_priv *priv = dev->priv;
- 	struct p54p_ring_control *ring_control = priv->ring_control;
- 
--	p54p_check_tx_ring(dev, &priv->tx_idx_mgmt, 3, ring_control->tx_mgmt,
--			   ARRAY_SIZE(ring_control->tx_mgmt),
--			   priv->tx_buf_mgmt);
--
--	p54p_check_tx_ring(dev, &priv->tx_idx_data, 1, ring_control->tx_data,
--			   ARRAY_SIZE(ring_control->tx_data),
--			   priv->tx_buf_data);
--
- 	p54p_check_rx_ring(dev, &priv->rx_idx_mgmt, 2, ring_control->rx_mgmt,
- 		ARRAY_SIZE(ring_control->rx_mgmt), priv->rx_buf_mgmt);
- 
-@@ -292,6 +284,14 @@ static void p54p_tasklet(unsigned long dev_id)
- 
- 	wmb();
- 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_UPDATE));
-+
-+	p54p_check_tx_ring(dev, &priv->tx_idx_mgmt, 3, ring_control->tx_mgmt,
-+			   ARRAY_SIZE(ring_control->tx_mgmt),
-+			   priv->tx_buf_mgmt);
-+
-+	p54p_check_tx_ring(dev, &priv->tx_idx_data, 1, ring_control->tx_data,
-+			   ARRAY_SIZE(ring_control->tx_data),
-+			   priv->tx_buf_data);
- }
- 
- static irqreturn_t p54p_interrupt(int irq, void *dev_id)
-@@ -444,10 +444,10 @@ static int p54p_open(struct ieee80211_hw *dev)
- 	priv->rx_idx_mgmt = priv->tx_idx_mgmt = 0;
- 
- 	p54p_refill_rx_ring(dev, 0, priv->ring_control->rx_data,
--		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data);
-+		ARRAY_SIZE(priv->ring_control->rx_data), priv->rx_buf_data, 0);
- 
- 	p54p_refill_rx_ring(dev, 2, priv->ring_control->rx_mgmt,
--		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt);
-+		ARRAY_SIZE(priv->ring_control->rx_mgmt), priv->rx_buf_mgmt, 0);
- 
- 	P54P_WRITE(ring_control_base, cpu_to_le32(priv->ring_control_dma));
- 	P54P_READ(ring_control_base);
