@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:27840 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751879Ab0DFLK1 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47009 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933304Ab0DHT1t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 07:10:27 -0400
-Subject: Re: [PATCH] mac80211: check whether scan is in progress before
- queueing scan_work
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1270549759.3929.6.camel@jlt3.sipsolutions.net>
-References: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1270544765.3929.2.camel@jlt3.sipsolutions.net>
-	 <1270549017.7150.28.camel@paavo-desktop>
-	 <1270549677.3929.5.camel@jlt3.sipsolutions.net>
-	 <1270549759.3929.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Tue, 06 Apr 2010 14:05:50 +0300
-Message-Id: <1270551950.7150.47.camel@paavo-desktop>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 15:27:49 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 090/102] ath9k_hw: set cwmin and cwmax to 0 for for AR9003 upon txq reset
+Date: Thu,  8 Apr 2010 15:27:26 -0400
+Message-Id: <1270754858-26266-91-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-04-06 at 12:29 +0200, ext Johannes Berg wrote:
-> On Tue, 2010-04-06 at 12:27 +0200, Johannes Berg wrote:
-> > On Tue, 2010-04-06 at 13:16 +0300, Teemu Paasikivi wrote:
-> > > On Tue, 2010-04-06 at 11:06 +0200, ext Johannes Berg wrote:
-> > > > On Tue, 2010-04-06 at 11:54 +0300, Teemu Paasikivi wrote:
-> > > > > As scan_work is queued from work_work it needs to be checked if scan
-> > > > > has been started during execution of work_work. Otherwise, when hw
-> > > > > scan is used, the stack gets error about hw being busy with ongoing
-> > > > > scan.
-> > > > 
-> > > > Does that mean we ask the driver to scan twice? And your particular
-> > > > driver returns busy?
-> > > > 
-> > > 
-> > > Yes. There seems to be a possibility, that when ieee80211_work_work is
-> > > being executed, __ieee80211_start_scan gets called and it starts a hw
-> > > scan, and also sets local->hw_scan_req etc. (because it looks like
-> > > there's some holes in use of scan_mtx). Result is that work_work queues
-> > > ieee80211_scan_work and when it is executed, as there's already
-> > > hw_scan_req set, it will try to start hw scan again. And as the driver
-> > > used returns busy, scan_work will call ieee80211_scan_completed function
-> > > which leaves the driver (hw more precisely) scanning and the stack
-> > > thinking that it is not anymore scanning.
-> > > 
-> > > Obviously this kind of situation doesn't happen very often in normal
-> > > use, but it can be caused quite easily by associating to access points
-> > > in a loop while running scan in another loop.
-> > 
-> > Makes some sense. Ignore my other email(s), I looked at this in more
-> > detail now.
-> > 
-> > It would appear that we need to fix some of the locking here,
-> > potentially simply using a single mutex for both work and scan?
-> 
-> I'm mostly worried about deadlocks between work_mtx and scan_mtx really,
-> when we acquire them both like your patch.
-> 
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/mac.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Yes, I'm bit worried about possibility of a possible deadlock too. One
-solution would be to move the block acquiring scan_mtx and queueing
-scan_work outside of the work_mtx locked section, I'll take a look on
-that. In any case, this patch won't most likely fix all issues with the
-locking here. For example there's that checking if scan is in progress
-in the beginning of the work_work. After that it is still possible that
-the scan is started. So there's obviously need for some fixing in the
-locking yet to be done. 
-
-
-Teemu
-
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 9f2bdd7..7c3f816 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -979,6 +979,12 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
+ 			     AR_D_MISC_ARB_LOCKOUT_CNTRL_S)
+ 			  | AR_D_MISC_BEACON_USE
+ 			  | AR_D_MISC_POST_FR_BKOFF_DIS);
++		/* cwmin and cwmax should be 0 for beacon queue */
++		if (AR_SREV_9300_20_OR_LATER(ah)) {
++			REG_WRITE(ah, AR_DLCL_IFS(q), SM(0, AR_D_LCL_IFS_CWMIN)
++				  | SM(0, AR_D_LCL_IFS_CWMAX)
++				  | SM(qi->tqi_aifs, AR_D_LCL_IFS_AIFS));
++		}
+ 		break;
+ 	case ATH9K_TX_QUEUE_CAB:
+ 		REG_WRITE(ah, AR_QMISC(q), REG_READ(ah, AR_QMISC(q))
+-- 
+1.6.3.3
 
