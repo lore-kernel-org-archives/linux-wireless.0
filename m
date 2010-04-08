@@ -1,174 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vilipendio.investici.org ([216.17.193.153]:49852 "EHLO
-	vilipendio.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751370Ab0D1NJn (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46819 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933232Ab0DHT1o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 09:09:43 -0400
-Date: Wed, 28 Apr 2010 14:47:36 +0200
-From: Antonio Quartulli <ordex@ritirata.org>
-To: Helmut Schaa <Helmut.Schaa@gmx.de>
-Cc: Luis Correia <luis.f.correia@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 6/9] rt2x00: Finish rt3070 support in
- rt2800 register initialization.
-Message-ID: <20100428124736.GA8637@ritirata.org>
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
- <1270989075-2267-7-git-send-email-gwingerde@gmail.com>
- <201004261302.14682.helmut.schaa@googlemail.com>
- <201004261311.20834.Helmut.Schaa@gmx.de>
- <20100427111520.GA10969@ritirata.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100427111520.GA10969@ritirata.org>
+	Thu, 8 Apr 2010 15:27:44 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 037/102] ath9k_hw: Move code which populates ds_data to ath9k_hw
+Date: Thu,  8 Apr 2010 15:26:33 -0400
+Message-Id: <1270754858-26266-38-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On mar, apr 27, 2010 at 01:15:21 +0200, Antonio Quartulli wrote:
-> On lun, apr 26, 2010 at 01:11:20 +0200, Helmut Schaa wrote:
-> > Am Montag 26 April 2010 schrieb Helmut Schaa:
-> > > Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
-> > > > rt2x00 had preliminary support for RT3070 based devices, but the support was
-> > > > incomplete.
-> > > > Update the RT3070 register initialization to be similar to the latest Ralink
-> > > > vendor driver.
-> > > > 
-> > > > With this patch my rt3070 based devices start showing a sign of life.
-> > > 
-> > > Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
-> > > more details.
-> > 
-> > Antonio, did that patch also break rx on your PCI device with rt2872?
-> > If not this is only needed for SoC.
-> Hi, I cloned the wireless-testing git a few minutes ago.
-> My card (rt2x00_set_chip: Info - Chipset detected - rt: 2872, rf: 0003,
-> rev: 0200) on miniPCI works correctly without any kind of problem.
-> No hangs at all.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Hi all, I found out that after this commit:
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    4 +---
+ drivers/net/wireless/ath/ath9k/mac.c    |    6 +++++-
+ drivers/net/wireless/ath/ath9k/mac.h    |    3 ++-
+ drivers/net/wireless/ath/ath9k/xmit.c   |    4 ++--
+ 4 files changed, 10 insertions(+), 7 deletions(-)
 
-commit 23812383c6b03afef44c4aa642500f8235c3d079
-Author: Helmut Schaa <helmut.schaa@googlemail.com>
-Date:   Mon Apr 26 13:48:45 2010 +0200
-
-    rt2x00: rt2800lib: Fix rx path on SoC devices
-
-my card becomes unstable, I mean that the connection lose packets and
-sometimes it disassociates from the AP.
-I also found that the singnal level reported by iwconfig is wrong (it
-reports -191dBm)
-
-Regards
-
-> 
-> Regards
-> 
-> > 
-> > Thanks,
-> > Helmut
-> >  
-> > > [...]
-> > > 
-> > > > @@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> > > >  {
-> > > >  	u8 rfcsr;
-> > > >  	u8 bbp;
-> > > > +	u32 reg;
-> > > > +	u16 eeprom;
-> > > >  
-> > > > -	if (rt2x00_is_usb(rt2x00dev) &&
-> > > > -	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
-> > > > +	if (!rt2x00_rt(rt2x00dev, RT3070))
-> > > >  		return 0;
-> > > >  
-> > > > -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-> > > > -		if (!rt2x00_rf(rt2x00dev, RF3020) &&
-> > > > -		    !rt2x00_rf(rt2x00dev, RF3021) &&
-> > > > -		    !rt2x00_rf(rt2x00dev, RF3022))
-> > > > -			return 0;
-> > > > -	}
-> > > 
-> > > Any reason why you've removed this part? The following code was executed on
-> > > pci and soc devices when they had an 3020, 3021 or 3022 rf.
-> > > 
-> > > >  	/*
-> > > >  	 * Init RF calibration.
-> > > >  	 */
-> > > > @@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> > > >  	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
-> > > >  	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
-> > > >  
-> > > > -	if (rt2x00_is_usb(rt2x00dev)) {
-> > > > +	if (rt2x00_rt(rt2x00dev, RT3070)) {
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
-> > > > +		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
-> > > > @@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
-> > > >  		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
-> > > > -	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
-> > > > -		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
-> > > 
-> > > This part is actually needed for getting rx to work on the SoC devices.
-> > > 
-> > > Should I post a patch that adds this code again and is only executed on SoC
-> > > devices with rf3020, 3021 and 3022?
-> > > 
-> > > Thanks,
-> > > Helmut
-> > > 
-> 
-> -- 
-> Antonio Quartulli
-> 
-> Ognuno di noi, da solo, non vale nulla 
-> Ernesto "Che" Guevara
-> 
-> _______________________________________________
-> users mailing list
-> users@rt2x00.serialmonkey.com
-> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
-
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 22375a7..268b598 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -93,8 +93,6 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 		antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs) & 1 ? 2 : 1);
+ 	}
+ 
+-	ds->ds_data = bf->bf_buf_addr;
+-
+ 	sband = &sc->sbands[common->hw->conf.channel->band];
+ 	rate = sband->bitrates[rateidx].hw_value;
+ 	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
+@@ -109,7 +107,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 
+ 	/* NB: beacon's BufLen must be a multiple of 4 bytes */
+ 	ath9k_hw_filltxdesc(ah, ds, roundup(skb->len, 4),
+-			    true, true, ds);
++			    true, true, ds, bf->bf_buf_addr);
+ 
+ 	memset(series, 0, sizeof(struct ath9k_11n_rate_series) * 4);
+ 	series[0].Tries = 1;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index ae9d54c..5f4e2f3 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -220,10 +220,13 @@ EXPORT_SYMBOL(ath9k_hw_stoptxdma);
+ 
+ void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			 u32 segLen, bool firstSeg,
+-			 bool lastSeg, const struct ath_desc *ds0)
++			 bool lastSeg, const struct ath_desc *ds0,
++			 dma_addr_t buf_addr)
+ {
+ 	struct ar5416_desc *ads = AR5416DESC(ds);
+ 
++	ads->ds_data = buf_addr;
++
+ 	if (firstSeg) {
+ 		ads->ds_ctl1 |= segLen | (lastSeg ? 0 : AR_TxMore);
+ 	} else if (lastSeg) {
+@@ -342,6 +345,7 @@ void ath9k_hw_set11n_txdesc(struct ath_hw *ah, struct ath_desc *ds,
+ {
+ 	struct ar5416_desc *ads = AR5416DESC(ds);
+ 
++
+ 	txPower += ah->txpower_indexoffset;
+ 	if (txPower > 63)
+ 		txPower = 63;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 126a403..f2f4ad2 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -693,7 +693,8 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
+ bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q);
+ void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			 u32 segLen, bool firstSeg,
+-			 bool lastSeg, const struct ath_desc *ds0);
++			 bool lastSeg, const struct ath_desc *ds0,
++			 dma_addr_t buf_addr);
+ void ath9k_hw_cleartxdesc(struct ath_hw *ah, struct ath_desc *ds);
+ int ath9k_hw_txprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			struct ath_tx_status *ts);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 02df4cb..7219e29 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1660,7 +1660,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 
+ 	ds = bf->bf_desc;
+ 	ds->ds_link = 0;
+-	ds->ds_data = bf->bf_buf_addr;
+ 
+ 	ath9k_hw_set11n_txdesc(ah, ds, bf->bf_frmlen, frm_type, MAX_RATE_POWER,
+ 			       bf->bf_keyix, bf->bf_keytype, bf->bf_flags);
+@@ -1669,7 +1668,8 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 			    skb->len,	/* segment length */
+ 			    true,	/* first segment */
+ 			    true,	/* last segment */
+-			    ds);	/* first descriptor */
++			    ds,		/* first descriptor */
++			    bf->bf_buf_addr);
+ 
+ 	spin_lock_bh(&txctl->txq->axq_lock);
+ 
 -- 
-Antonio Quartulli
+1.6.3.3
 
-Ognuno di noi, da solo, non vale nulla 
-Ernesto "Che" Guevara
