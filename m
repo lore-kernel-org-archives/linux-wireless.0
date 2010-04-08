@@ -1,79 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22859 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758436Ab0DHHav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 03:30:51 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: delay skb linearising in rx decryption
-Date: Thu,  8 Apr 2010 15:35:10 +0800
-Message-Id: <1270712110-10370-1-git-send-email-yi.zhu@intel.com>
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:2320 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932949Ab0DHVuq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 17:50:46 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville <linville"@tuxdriver.com
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2/9] rt2x00: Update rt2800 register definitions towards latest definitions.
+Date: Thu,  8 Apr 2010 23:50:30 +0200
+Message-Id: <1270763437-29526-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We delay the skb linearising in ieee80211_rx_h_decrypt so that
-frames do not require software decryption are not linearized. We
-are safe to do this because ieee80211_get_mmie_keyidx() only
-requires to touch nonlinear data for management frames, which are
-already linearized before getting here.
+Definitions taken from the latest rt2860 / rt2870 / rt3070 / rt3090 Ralink
+vendor drivers.
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c0ad7e8..052cee0 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -820,7 +820,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- {
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
--	struct ieee80211_hdr *hdr;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	int keyidx;
- 	int hdrlen;
- 	ieee80211_rx_result result = RX_DROP_UNUSABLE;
-@@ -861,11 +861,6 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 	if (!(rx->flags & IEEE80211_RX_RA_MATCH))
- 		return RX_CONTINUE;
+ drivers/net/wireless/rt2x00/rt2800.h    |   55 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 2 files changed, 54 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 74c0433..455dc3f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -56,6 +56,7 @@
+ #define RF3021				0x0007
+ #define RF3022				0x0008
+ #define RF3052				0x0009
++#define RF3320				0x000b
  
--	if (skb_linearize(rx->skb))
--		return RX_DROP_UNUSABLE;
--
--	hdr = (struct ieee80211_hdr *)skb->data;
--
- 	/* start without a key */
- 	rx->key = NULL;
+ /*
+  * Chipset version.
+@@ -90,10 +91,16 @@
+ #define NUM_TX_QUEUES			4
  
-@@ -906,6 +901,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 			rx->key = key;
- 		return RX_CONTINUE;
- 	} else {
-+		u8 keyid;
- 		/*
- 		 * The device doesn't give us the IV so we won't be
- 		 * able to look up the key. That's ok though, we
-@@ -928,7 +924,8 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		 * no need to call ieee80211_wep_get_keyidx,
- 		 * it verifies a bunch of things we've done already
- 		 */
--		keyidx = rx->skb->data[hdrlen + 3] >> 6;
-+		skb_copy_bits(rx->skb, hdrlen + 3, &keyid, 1);
-+		keyidx = keyid >> 6;
+ /*
+- * USB registers.
++ * Registers.
+  */
  
- 		rx->key = rcu_dereference(rx->sdata->keys[keyidx]);
- 
-@@ -949,6 +946,11 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		return RX_DROP_MONITOR;
- 	}
- 
-+	if (skb_linearize(rx->skb))
-+		return RX_DROP_UNUSABLE;
+ /*
++ * OPT_14: Unknown register used by rt3xxx devices.
++ */
++#define OPT_14_CSR			0x0114
++#define OPT_14_CSR_BIT0			FIELD32(0x00000001)
 +
-+	hdr = (struct ieee80211_hdr *)rx->skb->data;
++/*
+  * INT_SOURCE_CSR: Interrupt source register.
+  * Write one to clear corresponding bit.
+  * TX_FIFO_STATUS: FIFO Statistics is full, sw should read 0x171c
+@@ -398,6 +405,31 @@
+ #define EFUSE_DATA3			0x059c
+ 
+ /*
++ * LDO_CFG0
++ */
++#define LDO_CFG0			0x05d4
++#define LDO_CFG0_DELAY3			FIELD32(0x000000ff)
++#define LDO_CFG0_DELAY2			FIELD32(0x0000ff00)
++#define LDO_CFG0_DELAY1			FIELD32(0x00ff0000)
++#define LDO_CFG0_BGSEL			FIELD32(0x03000000)
++#define LDO_CFG0_LDO_CORE_VLEVEL	FIELD32(0x1c000000)
++#define LD0_CFG0_LDO25_LEVEL		FIELD32(0x60000000)
++#define LDO_CFG0_LDO25_LARGEA		FIELD32(0x80000000)
 +
- 	/* Check for weak IVs if possible */
- 	if (rx->sta && rx->key->conf.alg == ALG_WEP &&
- 	    ieee80211_is_data(hdr->frame_control) &&
++/*
++ * GPIO_SWITCH
++ */
++#define GPIO_SWITCH			0x05dc
++#define GPIO_SWITCH_0			FIELD32(0x00000001)
++#define GPIO_SWITCH_1			FIELD32(0x00000002)
++#define GPIO_SWITCH_2			FIELD32(0x00000004)
++#define GPIO_SWITCH_3			FIELD32(0x00000008)
++#define GPIO_SWITCH_4			FIELD32(0x00000010)
++#define GPIO_SWITCH_5			FIELD32(0x00000020)
++#define GPIO_SWITCH_6			FIELD32(0x00000040)
++#define GPIO_SWITCH_7			FIELD32(0x00000080)
++
++/*
+  * MAC Control/Status Registers(CSR).
+  * Some values are set in TU, whereas 1 TU == 1024 us.
+  */
+@@ -1492,6 +1524,14 @@ struct mac_iveiv_entry {
+ #define BBP4_BANDWIDTH			FIELD8(0x18)
+ 
+ /*
++ * BBP 138: Unknown
++ */
++#define BBP138_RX_ADC1			FIELD8(0x02)
++#define BBP138_RX_ADC2			FIELD8(0x04)
++#define BBP138_TX_DAC1			FIELD8(0x20)
++#define BBP138_TX_DAC2			FIELD8(0x40)
++
++/*
+  * RFCSR registers
+  * The wordsize of the RFCSR is 8 bits.
+  */
+@@ -1499,7 +1539,8 @@ struct mac_iveiv_entry {
+ /*
+  * RFCSR 6:
+  */
+-#define RFCSR6_R			FIELD8(0x03)
++#define RFCSR6_R1			FIELD8(0x03)
++#define RFCSR6_R2			FIELD8(0x40)
+ 
+ /*
+  * RFCSR 7:
+@@ -1512,6 +1553,14 @@ struct mac_iveiv_entry {
+ #define RFCSR12_TX_POWER		FIELD8(0x1f)
+ 
+ /*
++ * RFCSR 17:
++ */
++#define RFCSR17_R1			FIELD8(0x07)
++#define RFCSR17_R2			FIELD8(0x08)
++#define RFCSR17_R3			FIELD8(0x20)
++
++
++/*
+  * RFCSR 22:
+  */
+ #define RFCSR22_BASEBAND_LOOPBACK	FIELD8(0x01)
+@@ -1603,6 +1652,8 @@ struct mac_iveiv_entry {
+ #define EEPROM_NIC_WPS_PBC		FIELD16(0x0080)
+ #define EEPROM_NIC_BW40M_BG		FIELD16(0x0100)
+ #define EEPROM_NIC_BW40M_A		FIELD16(0x0200)
++#define EEPROM_NIC_ANT_DIVERSITY	FIELD16(0x0800)
++#define EEPROM_NIC_DAC_TEST		FIELD16(0x8000)
+ 
+ /*
+  * EEPROM frequency
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 6fdec15..394c8e4 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -797,7 +797,7 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_rfcsr_write(rt2x00dev, 3, rf->rf3);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
+-	rt2x00_set_field8(&rfcsr, RFCSR6_R, rf->rf2);
++	rt2x00_set_field8(&rfcsr, RFCSR6_R1, rf->rf2);
+ 	rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 12, &rfcsr);
+-- 
+1.7.0.4
+
