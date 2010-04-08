@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:25250 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752837Ab0DAIis (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46931 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933273Ab0DHT1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 04:38:48 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Thu, 8 Apr 2010 15:27:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/8] wl1271: patches of the week
-Date: Thu,  1 Apr 2010 11:38:16 +0300
-Message-Id: <1270111104-29549-1-git-send-email-luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 068/102] ath9k_hw: rename eep_AR9287_ops to eep_ar9287_ops
+Date: Thu,  8 Apr 2010 15:27:04 -0400
+Message-Id: <1270754858-26266-69-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.c      |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom.h      |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-We have a few more patches to be applied upstream.  These patches have just
-been added to our internal tree, so they're as hot as we can make them at the
-moment. ;)
-
-Please apply them.
-
-And, no, it's not an April Fool's joke that I'm sending a smaller and more
-recent bunch this time! :D
-
-Cheers,
-Luca.
-
-Juuso Oikarinen (6):
-  wl1271: Fix keep-alive related command error
-  wl1271: Use minimum rate for each band for control messages
-  wl1271: Configure rates for templates
-  wl1271: Configure a higher listen interval to AP upon association
-  wl1271: Fix debug prints for beacon-loss and psm-entry-fail scenarios
-  wl1271: Fix tx queue flushing
-
-Luciano Coelho (2):
-  wl1271: fix sdio driver name in wl1271_sdio_driver
-  wl1271: added missing command header in wl1271_cmd_disconnect
-
- drivers/net/wireless/wl12xx/wl1271.h       |    1 +
- drivers/net/wireless/wl12xx/wl1271_acx.c   |    2 +-
- drivers/net/wireless/wl12xx/wl1271_cmd.c   |   48 ++++++------
- drivers/net/wireless/wl12xx/wl1271_cmd.h   |    6 +-
- drivers/net/wireless/wl12xx/wl1271_conf.h  |   20 +++++
- drivers/net/wireless/wl12xx/wl1271_event.c |    4 +-
- drivers/net/wireless/wl12xx/wl1271_init.c  |   18 +++--
- drivers/net/wireless/wl12xx/wl1271_main.c  |  122 +++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl1271_sdio.c  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_tx.c    |   20 +----
- drivers/net/wireless/wl12xx/wl1271_tx.h    |    1 +
- 11 files changed, 167 insertions(+), 77 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index 1a48f43..aec6ebb 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -257,7 +257,7 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah)
+ 	int status;
+ 
+ 	if (AR_SREV_9287(ah)) {
+-		ah->eep_ops = &eep_AR9287_ops;
++		ah->eep_ops = &eep_ar9287_ops;
+ 	} else if (AR_SREV_9285(ah) || AR_SREV_9271(ah)) {
+ 		ah->eep_ops = &eep_4k_ops;
+ 	} else {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index c0cd717..60fd5b6 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -707,6 +707,6 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah);
+ 
+ extern const struct eeprom_ops eep_def_ops;
+ extern const struct eeprom_ops eep_4k_ops;
+-extern const struct eeprom_ops eep_AR9287_ops;
++extern const struct eeprom_ops eep_ar9287_ops;
+ 
+ #endif /* EEPROM_H */
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 32cc757..c837049 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -1170,7 +1170,7 @@ static u16 ath9k_hw_AR9287_get_spur_channel(struct ath_hw *ah,
+ #undef EEP_MAP9287_SPURCHAN
+ }
+ 
+-const struct eeprom_ops eep_AR9287_ops = {
++const struct eeprom_ops eep_ar9287_ops = {
+ 	.check_eeprom		= ath9k_hw_AR9287_check_eeprom,
+ 	.get_eeprom		= ath9k_hw_AR9287_get_eeprom,
+ 	.fill_eeprom		= ath9k_hw_AR9287_fill_eeprom,
+-- 
+1.6.3.3
 
