@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37471 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969Ab0DLHjN (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44871 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932948Ab0DHUpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 03:39:13 -0400
-Subject: Re: [PATCH 1/2] mac80211: Use G mandatory rates in 2GHz band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20100412073658.28078.32155.stgit@tt-desk>
-References: <20100412073658.28078.32155.stgit@tt-desk>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Apr 2010 09:39:08 +0200
-Message-ID: <1271057948.3877.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 16:45:17 -0400
+Date: Thu, 8 Apr 2010 16:41:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: avoid warning by using result of
+	iwl_send_cmd_pdu in iwl_sta_init_lq
+Message-ID: <20100408204123.GF2999@tuxdriver.com>
+References: <1270756089-9589-1-git-send-email-linville@tuxdriver.com> <1270758273.14052.217.camel@rchatre-DESK>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1270758273.14052.217.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-12 at 16:36 +0900, Bruno Randolf wrote:
-> This changes the mandatory (basic) rates in the 2GHz band to the ERP mandatory
-> rates (1, 2, 5.5, 11, 6, 12, 24Mbps - as defined in 802.11 section 19.1.)
-> instead of the "B" mode basic rate (1Mbps - why not 2Mbps too?).
+On Thu, Apr 08, 2010 at 01:24:33PM -0700, reinette chatre wrote:
+> Hi John,
 > 
-> B-only drivers (are there any?) should still work with this change, since they
-> simply don't have the faster rates. The functional change is that we now
-> default to faster basic rates, but as far as i can tell this is only really
-> used in IBSS code (STAs have to adapt to their AP).
+> On Thu, 2010-04-08 at 12:48 -0700, John W. Linville wrote:
+> > CC [M]  drivers/net/wireless/iwlwifi/iwl-sta.o
+> > drivers/net/wireless/iwlwifi/iwl-sta.c: In function ‘iwl_sta_init_lq’:
+> > drivers/net/wireless/iwlwifi/iwl-sta.c:461: warning: ignoring return value of ‘iwl_send_cmd_pdu’, declared with attribute warn_unused_result
+> > 
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  drivers/net/wireless/iwlwifi/iwl-sta.c |    5 +++--
+> >  1 files changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> > index e34ac03..91aaf11 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> > @@ -458,8 +458,9 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, bool is_ap)
+> >  	/* Update the rate scaling for control frame Tx to AP */
+> >  	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_params.bcast_sta_id;
+> >  
+> > -	iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
+> > -			       sizeof(link_cmd), &link_cmd);
+> > +	if (!iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
+> > +			       sizeof(link_cmd), &link_cmd))
+> > +		IWL_WARN(priv, "Tx link quality reply failed\n");
+> >  }
+> >  
+> >  /*
 > 
-> BTW: Is there a way to configure mac80211 to B-only mode or G-only mode? When
-> this is the case this has to be revised...
+> I made a mistake here somewhere since this is fixed in iwlwifi-2.6 but
+> did not propagate to wireless-next-2.6.
 > 
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  net/mac80211/util.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
+> Wouldn't the above print the warning on success though?
+
+Ha, yes...
+
+> In iwlwifi-2.6 the code looks like (whitespace broken copy&pasted) ...
+> it would be nice to have the return code available in error message:
 > 
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index 2b75b4f..282bda9 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -844,7 +844,8 @@ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
->  	}
->  
->  	if (band == IEEE80211_BAND_2GHZ)
-> -		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
-> +		mandatory_flag = IEEE80211_RATE_MANDATORY_B |
-> +				 IEEE80211_RATE_MANDATORY_G;
->  	else
->  		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
+>         ret = iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
+>                                sizeof(link_cmd), &link_cmd);
+>         if (ret)
+>                 IWL_ERR(priv, "REPLY_TX_LINK_QUALITY_CMD failed (%d)\n", ret);
+> 
+> If you want I can just fix my merging mistake.
 
-NACK.
+Works for me!
 
-This will do nothing in BSS mode, and will break IBSS mode talking to
-11b devices.
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
