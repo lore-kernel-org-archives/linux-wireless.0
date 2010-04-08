@@ -1,97 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54799 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:46733 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756838Ab0DODay (ORCPT
+	with ESMTP id S933207Ab0DHT1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:54 -0400
+	Thu, 8 Apr 2010 15:27:40 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 41/97] ath9k: Remove ATH9K_TX_SW_ABORTED and introduce a bool for this purpose
-Date: Wed, 14 Apr 2010 23:29:55 -0400
-Message-Id: <1271302251-9075-42-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 019/102] ath9k_hw: Fill few hw cap for edma
+Date: Thu,  8 Apr 2010 15:26:15 -0400
+Message-Id: <1270754858-26266-20-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/common.h |    1 +
- drivers/net/wireless/ath/ath9k/mac.h    |    1 -
- drivers/net/wireless/ath/ath9k/xmit.c   |    9 ++++-----
- 3 files changed, 5 insertions(+), 6 deletions(-)
+HP & LP queue depth and rx status length.
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index 1a87283..5fd7fe1 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -82,6 +82,7 @@ struct ath_buf {
- 	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
- 	bool bf_stale;
- 	bool bf_isnullfunc;
-+	bool bf_tx_aborted;
- 	u16 bf_flags;
- 	struct ath_buf_state bf_state;
- 	dma_addr_t bf_dmacontext;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index f2f4ad2..99f81eb 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -86,7 +86,6 @@
- #define ATH9K_TX_DESC_CFG_ERR      0x04
- #define ATH9K_TX_DATA_UNDERRUN     0x08
- #define ATH9K_TX_DELIM_UNDERRUN    0x10
--#define ATH9K_TX_SW_ABORTED        0x40
- #define ATH9K_TX_SW_FILTERED       0x80
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |   35 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c         |   10 +++++++-
+ drivers/net/wireless/ath/ath9k/hw.h         |    8 ++++++
+ 3 files changed, 52 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mac.h
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+new file mode 100644
+index 0000000..90c5ff0
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -0,0 +1,35 @@
++/*
++ * Copyright (c) 2010 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef AR9003_MAC_H
++#define AR9003_MAC_H
++
++struct ar9300_rxs {
++	u32 ds_info;
++	u32 status1;
++	u32 status2;
++	u32 status3;
++	u32 status4;
++	u32 status5;
++	u32 status6;
++	u32 status7;
++	u32 status8;
++	u32 status9;
++	u32 status10;
++	u32 status11;
++} __packed;
++
++#endif
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9a63884..6605fdb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2916,8 +2916,16 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		btcoex_hw->scheme = ATH_BTCOEX_CFG_NONE;
+ 	}
  
- /* 64 bytes */
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 4bc52f4..6ab2099 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -359,7 +359,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			acked_cnt++;
- 		} else {
- 			if (!(tid->state & AGGR_CLEANUP) &&
--			    ts->ts_flags != ATH9K_TX_SW_ABORTED) {
-+			    !bf_last->bf_tx_aborted) {
- 				if (bf->bf_retries < ATH_MAX_SW_RETRIES) {
- 					ath_tx_set_retry(sc, txq, bf);
- 					txpending = 1;
-@@ -1036,9 +1036,6 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
- 	struct ath_tx_status ts;
+-	if (AR_SREV_9300_20_OR_LATER(ah))
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		pCap->hw_caps |= ATH9K_HW_CAP_EDMA;
++		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
++		if (AR_SREV_9300_20_OR_LATER(ah))
++			pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
++		else
++			pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH_AR9300_10;
++
++		pCap->rx_status_len = sizeof(struct ar9300_rxs);
++	}
  
- 	memset(&ts, 0, sizeof(ts));
--	if (!retry_tx)
--		ts.ts_flags = ATH9K_TX_SW_ABORTED;
--
- 	INIT_LIST_HEAD(&bf_head);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index c4b2770..2d43050 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -28,6 +28,7 @@
+ #include "reg.h"
+ #include "phy.h"
+ #include "btcoex.h"
++#include "ar9003_mac.h"
  
- 	for (;;) {
-@@ -1063,6 +1060,8 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
- 		}
+ #include "../regd.h"
+ #include "../debug.h"
+@@ -135,6 +136,10 @@
  
- 		lastbf = bf->bf_lastbf;
-+		if (!retry_tx)
-+			lastbf->bf_tx_aborted = true;
+ #define TU_TO_USEC(_tu)             ((_tu) << 10)
  
- 		/* remove ath_buf's of the same mpdu from txq */
- 		list_cut_position(&bf_head, &txq->axq_q, &lastbf->list);
-@@ -1897,7 +1896,7 @@ static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
- 	int nbad = 0;
- 	int isaggr = 0;
++#define ATH9K_HW_RX_HP_QDEPTH	16
++#define ATH9K_HW_RX_LP_QDEPTH_AR9300_10	64
++#define ATH9K_HW_RX_LP_QDEPTH	128
++
+ enum wireless_mode {
+ 	ATH9K_MODE_11A = 0,
+ 	ATH9K_MODE_11G,
+@@ -192,6 +197,9 @@ struct ath9k_hw_capabilities {
+ 	u8 num_gpio_pins;
+ 	u8 num_antcfg_2ghz;
+ 	u8 num_antcfg_5ghz;
++	u8 rx_hp_qdepth;
++	u8 rx_lp_qdepth;
++	u8 rx_status_len;
+ };
  
--	if (ts->ts_flags == ATH9K_TX_SW_ABORTED)
-+	if (bf->bf_tx_aborted)
- 		return 0;
- 
- 	isaggr = bf_isaggr(bf);
+ struct ath9k_ops_config {
 -- 
 1.6.3.3
 
