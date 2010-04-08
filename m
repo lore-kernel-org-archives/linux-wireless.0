@@ -1,99 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46875 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:46984 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933258Ab0DHT1q (ORCPT
+	with ESMTP id S933295Ab0DHT1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:46 -0400
+	Thu, 8 Apr 2010 15:27:48 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 050/102] ath9k_hw: move the AR9280 OLC temp comp to its own helper
-Date: Thu,  8 Apr 2010 15:26:46 -0400
-Message-Id: <1270754858-26266-51-git-send-email-lrodriguez@atheros.com>
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 084/102] ath9k: Load SW filtered NF values and start NF cal during full reset for AR9003
+Date: Thu,  8 Apr 2010 15:27:20 -0400
+Message-Id: <1270754858-26266-85-git-send-email-lrodriguez@atheros.com>
 In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |   52 +++++++++++++++++--------------
- 1 files changed, 28 insertions(+), 24 deletions(-)
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 5d61169..dae200c 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -700,40 +700,44 @@ static void ar9287_hw_olc_temp_compensation(struct ath_hw *ah)
- 	}
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 156a416..3407a9c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1326,6 +1326,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (ah->btcoex_hw.enabled)
+ 		ath9k_hw_btcoex_enable(ah);
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		ath9k_hw_loadnf(ah, curchan);
++		ath9k_hw_start_nfcal(ah);
++	}
++
+ 	return 0;
  }
- 
--static void ath9k_olc_temp_compensation(struct ath_hw *ah)
-+static void ar9280_hw_olc_temp_compensation(struct ath_hw *ah)
- {
- 	u32 rddata, i;
- 	int delta, currPDADC, regval;
- 
--	if (OLC_FOR_AR9287_10_LATER) {
--		ar9287_hw_olc_temp_compensation(ah);
--	} else {
--		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
--		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
-+	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
-+	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
- 
--		if (ah->initPDADC == 0 || currPDADC == 0)
--			return;
-+	if (ah->initPDADC == 0 || currPDADC == 0)
-+		return;
- 
--		if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
--			delta = (currPDADC - ah->initPDADC + 4) / 8;
--		else
--			delta = (currPDADC - ah->initPDADC + 5) / 10;
--
--		if (delta != ah->PDADCdelta) {
--			ah->PDADCdelta = delta;
--			for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
--				regval = ah->originalGain[i] - delta;
--				if (regval < 0)
--					regval = 0;
--
--				REG_RMW_FIELD(ah,
--					      AR_PHY_TX_GAIN_TBL1 + i * 4,
--					      AR_PHY_TX_GAIN, regval);
--			}
-+	if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
-+		delta = (currPDADC - ah->initPDADC + 4) / 8;
-+	else
-+		delta = (currPDADC - ah->initPDADC + 5) / 10;
-+
-+	if (delta != ah->PDADCdelta) {
-+		ah->PDADCdelta = delta;
-+		for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
-+			regval = ah->originalGain[i] - delta;
-+			if (regval < 0)
-+				regval = 0;
-+
-+			REG_RMW_FIELD(ah,
-+				      AR_PHY_TX_GAIN_TBL1 + i * 4,
-+				      AR_PHY_TX_GAIN, regval);
- 		}
- 	}
- }
- 
-+static void ath9k_olc_temp_compensation(struct ath_hw *ah)
-+{
-+	if (OLC_FOR_AR9287_10_LATER)
-+		ar9287_hw_olc_temp_compensation(ah);
-+	else
-+		ar9280_hw_olc_temp_compensation(ah);
-+}
-+
- static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
- {
- 	u32 regVal;
+ EXPORT_SYMBOL(ath9k_hw_reset);
 -- 
 1.6.3.3
 
