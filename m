@@ -1,31 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43965 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755552Ab0DERaJ (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:60298 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759132Ab0DHWRP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Apr 2010 13:30:09 -0400
-Date: Mon, 5 Apr 2010 13:15:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 6/7] net/mac80211: convert wep from arc4 to arc4blk
-Message-ID: <20100405171506.GC29596@tuxdriver.com>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc> <1270280969-11357-7-git-send-email-sebastian@breakpoint.cc>
+	Thu, 8 Apr 2010 18:17:15 -0400
+Received: by ey-out-2122.google.com with SMTP id d26so253541eyd.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 15:17:14 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 0/9] rt2x00: Align with vendor driver and add support for rt3070/rt3071/rt3090/rt3390.
+Date: Fri, 9 Apr 2010 00:16:53 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1270280969-11357-7-git-send-email-sebastian@breakpoint.cc>
+Message-Id: <201004090016.53743.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 03, 2010 at 09:49:28AM +0200, Sebastian Andrzej Siewior wrote:
-> ecb(arc4) is getting replaced by arc4 which is a blkcipher by itself.
+On Thursday 08 April 2010, Gertjan van Wingerde wrote:
+> This patch series aligns rt2x00 with the latest versions of the Ralink 
+> rt2860 / rt2870 / rt3070 / rt3090 drivers, and adds support for RT3070,
+> RT3071, RT3090, and RT3390 based devices.
 > 
-> Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+> The patches are relative to wireless-next-2.6, and can also be pulled
+> from:
+> 
+> 	git://git.gwingerde.nl/rt2x00-next-2.6
 
-Seems ok to me...
+Any idea what the status is of rt2870 and rt2770 devices after this series?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ivo
