@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:12588 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752289Ab0DHENO (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:51711 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932955Ab0DHWdx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 00:13:14 -0400
-Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0548429992
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Apr 2010 13:13:12 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 4/4] ath5k: add bounds check to pdadc table
-Date: Thu, 8 Apr 2010 13:15:45 +0900
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-References: <1270698959-7844-1-git-send-email-me@bobcopeland.com> <1270698959-7844-5-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1270698959-7844-5-git-send-email-me@bobcopeland.com>
+	Thu, 8 Apr 2010 18:33:53 -0400
+Received: by mail-ew0-f220.google.com with SMTP id 20so1168751ewy.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 15:33:53 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 4/9] rt2x00: Remove rt2800 version constants.
+Date: Fri, 9 Apr 2010 00:32:53 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270763437-29526-5-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
+Message-Id: <201004090032.53842.IvDoorn@gmail.com>
+Content-Type: text/plain;
   charset="iso-8859-15"
-Message-Id: <201004081315.45624.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 April 2010 12:55:59 Bob Copeland wrote:
-> We check the bounds on pdadc once when correcting for
-> negative curves but not when we later copy values from
-> from the pdadc_tmp array, leading to a potential overrun.
+On Thursday 08 April 2010, Gertjan van Wingerde wrote:
+> The rt2800 version constants are inconsistent, and the version number don't
+> mean a lot of things anyway. Use the literal values in the code instead of
+> some sort of fabricated version name macro.
 > 
-> Although we shouldn't hit this case in practice, let's
-> be consistent.
-> 
-> Reported-by: Dan Carpenter <error27@gmail.com>
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath/ath5k/phy.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c
-> b/drivers/net/wireless/ath/ath5k/phy.c index 81bdebd..65ac50b 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -2560,7 +2560,7 @@ ath5k_combine_pwr_to_pdadc_curves(struct ath5k_hw
-> *ah, max_idx = (pdadc_n < table_size) ? pdadc_n : table_size;
-> 
->  		/* Fill pdadc_out table */
-> -		while (pdadc_0 < max_idx)
-> +		while (pdadc_0 < max_idx && pdadc_i < 128)
->  			pdadc_out[pdadc_i++] = pdadc_tmp[pdadc_0++];
-> 
->  		/* Need to extrapolate above this pdgain? */
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-for whatever it's worth :-)
+Perhaps a more elegant way of using and defining needs to be found.
+But at least the defined show what the purpose for the values is
+rather then having magical values spread around the code.
 
-Acked-by: Bruno Randolf <br1@einfach.org>
+Ivo
