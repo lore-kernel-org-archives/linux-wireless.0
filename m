@@ -1,81 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:36786 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409Ab0DVJcN (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46720 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933193Ab0DHT1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 05:32:13 -0400
-Subject: Re: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based
- on ps-qos network latency
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1271927257.3605.18.camel@jlt3.sipsolutions.net>
-References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271688177.23671.1.camel@jlt3.sipsolutions.net>
-	 <1271740120.6205.5733.camel@wimaxnb.nmp.nokia.com>
-	 <1271925939.3605.7.camel@jlt3.sipsolutions.net>
-	 <1271926547.6205.8870.camel@wimaxnb.nmp.nokia.com>
-	 <1271927257.3605.18.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Apr 2010 12:29:36 +0300
-Message-ID: <1271928576.6205.8919.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 8 Apr 2010 15:27:40 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 013/102] ath9k_hw: Add the PCI IDs for AR9300 and fill up the pci_id_tables
+Date: Thu,  8 Apr 2010 15:26:09 -0400
+Message-Id: <1270754858-26266-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-22 at 11:07 +0200, ext Johannes Berg wrote:
-> On Thu, 2010-04-22 at 11:55 +0300, Juuso Oikarinen wrote:
-> 
-> > > > Well you have to see where I'm coming from - I must come up with a way
-> > > > to tune the dynamic ps timeout value from user-space in a way that is
-> > > > agreeable with others, and that is somewhat future-proof.
-> > > 
-> > > Well I personally think that's your first mistake ;)
-> > > 
-> > > Why does userspace care about the dynamic PS timeout value to start
-> > > with? All it should care about is the latency with which it can react to
-> > > network packets, no?
-> > > 
-> > > > That said, obviously the network latency should be tuned as, well, the
-> > > > expected network latency. In this phase though, there are no other
-> > > > parameters affected by the network latency, so the result is quite
-> > > > obvious - your fear will realise itself ;)
-> > > 
-> > > But there are, like the max sleep period in # of beacons.
-> > 
-> > Yeah, okay there is. You probably noticed I posted a version of the
-> > patches with "saner" latency-values for this reason.
-> 
-> Still I think you should say why you need to actually tune the PS
-> timeout value directly? I can't see how your high-level design says "set
-> dynamic PS timeout to 100ms" rather than "make sure that while the user
-> is operating the device, there's no delay of more than 50ms" or
-> something like that?
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-You're partly right asking this. The high-level design obviously does
-not know about dynamic PS timeouts. It seems you're mainly looking at
-this from the angle of the network latency itself - i.e. network
-performance. My primary angle currently is power consumption.
+Also, clean up and reorganize the AR9287 macro to have better
+ordering. We won't add the PCI ID to the supported device list
+until we have some functional code for it.
 
-IMHO both angles are correct. The if the user sets a tight
-network-latency requirement, the value can be used to tune things so
-that the requirement can be met. If they set a loose requirement, it can
-be used as a signal to do more aggressive power saving, which often
-means reduced latency.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 +++--
+ drivers/net/wireless/ath/ath9k/hw.h |    6 +++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-While the mechanism I'm proposing here is rather crude, it does save
-power when the user-space loosens their latency requirement. The values
-chosen for the dynamic ps-timeout bear no direct relation to user space
-requirements. They are simply values that we have found to give decent
-results in typical AP configurations.
-
-The ps_timeout could be calculated based on the latency too, I guess.
-I'm just not aware of any simple formula to do this.
-
--Juuso
-
-> johannes
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index d3b7a98..6d4c6e6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -992,9 +992,10 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	case AR9280_DEVID_PCI:
+ 	case AR9280_DEVID_PCIE:
+ 	case AR9285_DEVID_PCIE:
+-	case AR5416_DEVID_AR9287_PCI:
+-	case AR5416_DEVID_AR9287_PCIE:
++	case AR9287_DEVID_PCI:
++	case AR9287_DEVID_PCIE:
+ 	case AR2427_DEVID_PCIE:
++	case AR9300_DEVID_PCIE:
+ 		break;
+ 	default:
+ 		if (common->bus_ops->ath_bus_type == ATH_USB)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index a0ab32a..705dcad 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -41,6 +41,9 @@
+ #define AR9280_DEVID_PCIE	0x002a
+ #define AR9285_DEVID_PCIE	0x002b
+ #define AR2427_DEVID_PCIE	0x002c
++#define AR9287_DEVID_PCI	0x002d
++#define AR9287_DEVID_PCIE	0x002e
++#define AR9300_DEVID_PCIE	0x0030
+ 
+ #define AR5416_AR9100_DEVID	0x000b
+ 
+@@ -48,9 +51,6 @@
+ #define AR_SUBVENDOR_ID_NEW_A	0x7065
+ #define AR5416_MAGIC		0x19641014
+ 
+-#define AR5416_DEVID_AR9287_PCI  0x002D
+-#define AR5416_DEVID_AR9287_PCIE 0x002E
+-
+ #define AR9280_COEX2WIRE_SUBSYSID	0x309b
+ #define AT9285_COEX3WIRE_SA_SUBSYSID	0x30aa
+ #define AT9285_COEX3WIRE_DA_SUBSYSID	0x30ab
+-- 
+1.6.3.3
 
