@@ -1,57 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65012 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755431Ab0DWE6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 00:58:36 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:36 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19409.10469.65377.526014@gargle.gargle.HOWL>
-Date: Fri, 23 Apr 2010 10:28:13 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/11] ath9k_htc: Cancel running timers before disabling HW
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:1978 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932949Ab0DHVus (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 17:50:48 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville <linville"@tuxdriver.com
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor driver.
+Date: Thu,  8 Apr 2010 23:50:31 +0200
+Message-Id: <1270763437-29526-4-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+Only include definitions for RT chipsets that are also used inside the
+Ralink vendor drivers.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index ec7bcc8..9c9f3e0 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1178,6 +1178,13 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 		return;
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+ drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+ 2 files changed, 3 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 394c8e4..4bc7e09 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+ 	if ((rt2x00_rt(rt2x00dev, RT2872) &&
+ 	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+-	    rt2x00_rt(rt2x00dev, RT2880) ||
+ 	    rt2x00_rt(rt2x00dev, RT2883) ||
+-	    rt2x00_rt(rt2x00dev, RT2890) ||
+-	    rt2x00_rt(rt2x00dev, RT3052) ||
+ 	    (rt2x00_rt(rt2x00dev, RT3070) &&
+ 	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+ 		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+@@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 105, 0x05);
  	}
  
-+	/* Cancel all the running timers/work .. */
-+	cancel_work_sync(&priv->ps_work);
-+	cancel_delayed_work_sync(&priv->ath9k_ani_work);
-+	cancel_delayed_work_sync(&priv->ath9k_aggr_work);
-+	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
-+	ath9k_led_stop_brightness(priv);
-+
- 	ath9k_htc_ps_wakeup(priv);
- 	htc_stop(priv->htc);
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
-@@ -1189,11 +1196,6 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	ath9k_htc_ps_restore(priv);
- 	ath9k_htc_setpower(priv, ATH9K_PM_FULL_SLEEP);
+-	if (rt2x00_rt(rt2x00dev, RT3052)) {
+-		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+-		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+-		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+-	}
+-
+ 	for (i = 0; i < EEPROM_BBP_SIZE; i++) {
+ 		rt2x00_eeprom_read(rt2x00dev, EEPROM_BBP_START + i, &eeprom);
  
--	cancel_work_sync(&priv->ps_work);
--	cancel_delayed_work_sync(&priv->ath9k_ani_work);
--	cancel_delayed_work_sync(&priv->ath9k_aggr_work);
--	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
--	ath9k_led_stop_brightness(priv);
- 	skb_queue_purge(&priv->tx_queue);
+@@ -1772,7 +1763,6 @@ int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	} else if (rt2x00_rt(rt2x00dev, RT2860) ||
+ 		   rt2x00_rt(rt2x00dev, RT2870) ||
+ 		   rt2x00_rt(rt2x00dev, RT2872) ||
+-		   rt2x00_rt(rt2x00dev, RT2880) ||
+ 		   (rt2x00_rt(rt2x00dev, RT2883) &&
+ 		    (rt2x00_rev(rt2x00dev) < RT2883_VERSION))) {
+ 		/*
+@@ -1879,10 +1869,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	if (!rt2x00_rt(rt2x00dev, RT2860) &&
+ 	    !rt2x00_rt(rt2x00dev, RT2870) &&
+ 	    !rt2x00_rt(rt2x00dev, RT2872) &&
+-	    !rt2x00_rt(rt2x00dev, RT2880) &&
+ 	    !rt2x00_rt(rt2x00dev, RT2883) &&
+-	    !rt2x00_rt(rt2x00dev, RT2890) &&
+-	    !rt2x00_rt(rt2x00dev, RT3052) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3070) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3071) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3090) &&
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index d9daa9c..16aa850 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -177,16 +177,15 @@ struct rt2x00_chip {
+ #define RT2573		0x2573
+ #define RT2860		0x2860	/* 2.4GHz PCI/CB */
+ #define RT2870		0x2870
+-#define RT2872		0x2872
+-#define RT2880		0x2880	/* WSOC */
++#define RT2872		0x2872	/* WSOC */
+ #define RT2883		0x2883	/* WSOC */
+-#define RT2890		0x2890	/* 2.4GHz PCIe */
+-#define RT3052		0x3052	/* WSOC */
+ #define RT3070		0x3070
+ #define RT3071		0x3071
+ #define RT3090		0x3090	/* 2.4GHz PCIe */
+ #define RT3390		0x3390
+ #define RT3572		0x3572
++#define RT3593		0x3593	/* PCIe */
++#define RT3883		0x3883	/* WSOC */
  
- 	/* Remove monitor interface here */
+ 	u16 rf;
+ 	u16 rev;
 -- 
-1.7.0.5
+1.7.0.4
 
