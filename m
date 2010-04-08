@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:18677 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751168Ab0D1HAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 03:00:50 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 00:00:50 -0700
-Subject: Re: [PATCH] ath9k: Added get_survey callback in order to get
- channel noise
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: Benoit Papillault <benoit.papillault@free.fr>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"ath9k-devel@lists.ath5k.org" <ath9k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
-References: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 28 Apr 2010 10:00:45 +0300
-Message-ID: <1272438045.2772.6.camel@jm-desktop>
-MIME-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:46724 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933198Ab0DHT1k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 15:27:40 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 015/102] ath9k_hw: move init config and default after chip is up
+Date: Thu,  8 Apr 2010 15:26:11 -0400
+Message-Id: <1270754858-26266-16-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-04-27 at 15:08 -0700, Benoit Papillault wrote:
-> +static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
-> +			     struct survey_info *survey)
+This allows us to add SREV checks on these helpers.
 
-> +	struct ieee80211_conf *conf = &hw->conf;
-> +
-> +	 if (idx != 0)
-> +		return -ENOENT;
-> +
-> +	survey->channel = conf->channel;
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Are there any plans on providing this information from all channels? I
-have assumed that the survey command was supposed to be used for
-surveying all channels (e.g., to get information for auto-channel
-selection) and returning something for the current channel is quite
-limited subset of that. In other words, I would like to be able to run a
-scan of all channels and then use NL80211_CMD_GET_SURVEY to fetch
-additional per-channel information like noise (and also channel usage
-statistics in case of ath9k) from the scanned channels.
-
-- Jouni
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 655da06..5c267aa 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -881,15 +881,15 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int r = 0;
+ 
+-	ath9k_hw_init_defaults(ah);
+-	ath9k_hw_init_config(ah);
+-
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Couldn't reset chip\n");
+ 		return -EIO;
+ 	}
+ 
++	ath9k_hw_init_defaults(ah);
++	ath9k_hw_init_config(ah);
++
+ 	ath9k_hw_attach_ops(ah);
+ 
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
+-- 
+1.6.3.3
 
