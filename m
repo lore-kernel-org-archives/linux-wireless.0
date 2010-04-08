@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27922 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755435Ab0DHHOc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 03:14:32 -0400
-Subject: Re: [PATCH] mac80211: fix paged RX crypto
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1270707285.3977.5.camel@jlt3.sipsolutions.net>
-References: <1270632416.3858.6.camel@jlt3.sipsolutions.net>
-	 <1270696951.10745.11.camel@debian>  <1270697769.10745.12.camel@debian>
-	 <1270707285.3977.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 08 Apr 2010 15:14:56 +0800
-Message-ID: <1270710896.10745.15.camel@debian>
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([72.66.92.28]:4860 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746Ab0DHEAS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 00:00:18 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	br1@einfach.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 4/4] ath5k: add bounds check to pdadc table
+Date: Wed,  7 Apr 2010 23:55:59 -0400
+Message-Id: <1270698959-7844-5-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
+References: <1270698959-7844-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-08 at 14:14 +0800, Johannes Berg wrote:
-> On Thu, 2010-04-08 at 11:36 +0800, Zhu Yi wrote:
-> 
-> > > I thought it over. We don't need to handle nonlinear skb in
-> > > ieee80211_get_mmie_keyidx(), because we only need to touch fields out of
-> > > 802.11 header for management frames, and we have already skb_linearize
-> > > all management frames before. 
-> 
-> Good point, forgot about that.
-> 
-> > > Now we just need to handle WEP IV
-> > > correctly. How about this patch?
-> 
-> Yeah, seems like it should work, did you test with WEP?
+We check the bounds on pdadc once when correcting for
+negative curves but not when we later copy values from
+from the pdadc_tmp array, leading to a potential overrun.
 
-Yes, it works for me. Since john has already merged yours, I'll send a
-incremental one.
+Although we shouldn't hit this case in practice, let's
+be consistent.
 
-Thanks,
--yi
+Reported-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 81bdebd..65ac50b 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -2560,7 +2560,7 @@ ath5k_combine_pwr_to_pdadc_curves(struct ath5k_hw *ah,
+ 		max_idx = (pdadc_n < table_size) ? pdadc_n : table_size;
+ 
+ 		/* Fill pdadc_out table */
+-		while (pdadc_0 < max_idx)
++		while (pdadc_0 < max_idx && pdadc_i < 128)
+ 			pdadc_out[pdadc_i++] = pdadc_tmp[pdadc_0++];
+ 
+ 		/* Need to extrapolate above this pdgain? */
+-- 
+1.6.3.3
+
 
