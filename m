@@ -1,134 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:16329 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289Ab0DZLMx (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:62598 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758334Ab0DHL2E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 07:12:53 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1961931fgg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 04:12:51 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Antonio Quartulli <ordex@ritirata.org>
-Subject: Re: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
-Date: Mon, 26 Apr 2010 13:12:37 +0200
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Luis Correia <luis.f.correia@gmail.com>
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-7-git-send-email-gwingerde@gmail.com> <201004261302.14682.helmut.schaa@googlemail.com>
-In-Reply-To: <201004261302.14682.helmut.schaa@googlemail.com>
-MIME-Version: 1.0
-Message-Id: <201004261312.37432.helmut.schaa@googlemail.com>
-Content-Type: Text/Plain;
-  charset="us-ascii"
+	Thu, 8 Apr 2010 07:28:04 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH] mac80211: Prevent starting of hw scan if it is already in progress
+Date: Thu,  8 Apr 2010 14:23:12 +0300
+Message-Id: <1270725792-581-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag 26 April 2010 schrieb Helmut Schaa:
-> Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
-> > rt2x00 had preliminary support for RT3070 based devices, but the support was
-> > incomplete.
-> > Update the RT3070 register initialization to be similar to the latest Ralink
-> > vendor driver.
-> > 
-> > With this patch my rt3070 based devices start showing a sign of life.
-> 
-> Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
-> more details.
+Added checking of status of scanning to ieee80211_scan_work when hw
+scanning is used. It is possible to scan_work get executed while scan
+has already been started. Previously this has led to a state where, when
+the driver returned EBUSY, the stack aborted scan while hw was left
+scanning. That has caused warnings from ieee80211_scan_completed when
+the scan actually has been completed.
 
-Antonio, did that patch also break rx on your PCI device with rt2872?
-If not I'm going to enable this code only on SOC devices.
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/scan.c        |    8 +++++++-
+ 2 files changed, 8 insertions(+), 1 deletions(-)
 
-Thanks,
-Helmut
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 741fb8b..1d14f7c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -756,6 +756,7 @@ struct ieee80211_local {
+ 	/* Scanning and BSS list */
+ 	struct mutex scan_mtx;
+ 	unsigned long scanning;
++	bool hw_scan_continue;
+ 	struct cfg80211_ssid scan_ssid;
+ 	struct cfg80211_scan_request *int_scan_req;
+ 	struct cfg80211_scan_request *scan_req, *hw_scan_req;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 75a8597..4e4bad0 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -265,12 +265,14 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
  
-> [...]
-> 
-> > @@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> >  {
-> >  	u8 rfcsr;
-> >  	u8 bbp;
-> > +	u32 reg;
-> > +	u16 eeprom;
-> >  
-> > -	if (rt2x00_is_usb(rt2x00dev) &&
-> > -	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
-> > +	if (!rt2x00_rt(rt2x00dev, RT3070))
-> >  		return 0;
-> >  
-> > -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-> > -		if (!rt2x00_rf(rt2x00dev, RF3020) &&
-> > -		    !rt2x00_rf(rt2x00dev, RF3021) &&
-> > -		    !rt2x00_rf(rt2x00dev, RF3022))
-> > -			return 0;
-> > -	}
-> 
-> Any reason why you've removed this part? The following code was executed on
-> pci and soc devices when they had an 3020, 3021 or 3022 rf.
-> 
-> >  	/*
-> >  	 * Init RF calibration.
-> >  	 */
-> > @@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> >  	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
-> >  	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
-> >  
-> > -	if (rt2x00_is_usb(rt2x00dev)) {
-> > +	if (rt2x00_rt(rt2x00dev, RT3070)) {
-> >  		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
-> >  		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
-> >  		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-> >  		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
-> >  		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
-> > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
-> > +		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
-> >  		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
-> >  		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
-> >  		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
-> > @@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> >  		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
-> >  		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
-> >  		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
-> > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
-> >  		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
-> > -	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-> > -		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
-> > -		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
-> > -		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
-> > -		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
-> > -		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
-> > -		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
-> > -		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-> > -		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
-> > -		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
-> > -		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
-> > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
-> > -		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
-> > -		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
-> > -		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
-> > -		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
-> > -		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
-> > -		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
-> > -		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
-> > -		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
-> > -		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
-> > -		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
-> > -		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
-> > -		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
-> > -		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
-> > -		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
-> > -		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
-> > -		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
-> > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
-> > -		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
-> > -		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
-> 
-> This part is actually needed for getting rx to work on the SoC devices.
-> 
-> Should I post a patch that adds this code again and is only executed on SoC
-> devices with rf3020, 3021 and 3022?
-> 
-> Thanks,
-> Helmut
-> 
+ 	was_hw_scan = test_bit(SCAN_HW_SCANNING, &local->scanning);
+ 	if (was_hw_scan && !aborted && ieee80211_prep_hw_scan(local)) {
++		local->hw_scan_continue =  true;
+ 		ieee80211_queue_delayed_work(&local->hw,
+ 					     &local->scan_work, 0);
+ 		mutex_unlock(&local->scan_mtx);
+ 		return;
+ 	}
+ 
++	local->hw_scan_continue = false;
+ 	kfree(local->hw_scan_req);
+ 	local->hw_scan_req = NULL;
+ 
+@@ -652,7 +654,11 @@ void ieee80211_scan_work(struct work_struct *work)
+ 	}
+ 
+ 	if (local->hw_scan_req) {
+-		int rc = drv_hw_scan(local, local->hw_scan_req);
++		int rc = 0;
++
++		if (!local->scanning || local->hw_scan_continue)
++			rc = drv_hw_scan(local, local->hw_scan_req);
++
+ 		mutex_unlock(&local->scan_mtx);
+ 		if (rc)
+ 			ieee80211_scan_completed(&local->hw, true);
+-- 
+1.5.6.3
 
