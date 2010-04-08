@@ -1,47 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65039 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755438Ab0DWFBw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 01:01:52 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 22:01:52 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19409.10663.567782.195551@gargle.gargle.HOWL>
-Date: Fri, 23 Apr 2010 10:31:27 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/11] ath9k_htc: Really fix device hotunplug
+Received: from bombadil.infradead.org ([18.85.46.34]:46958 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933284Ab0DHT1r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 15:27:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 074/102] ath9k_hw: simplify the AR9280 PCI EEPROM fix
+Date: Thu,  8 Apr 2010 15:27:10 -0400
+Message-Id: <1270754858-26266-75-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All commands to the target are disabled when the device
-is unplugged, but a normal module unload has to be
-differentiated from this case, as we could still receive
-data in the RX endpoint. Fix this by checking if the
-device is attached or not.
+Now that we know the EEPROM fix is only for AR9820 PCI
+and that the code is only called for that case we can
+simplify things a bit more.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |   64 ++++++++++++++--------------
+ 1 files changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 49b7a89..74872ca 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -922,7 +922,8 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- 		(struct hif_device_usb *) usb_get_intfdata(interface);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 487cd8d..8441807 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -488,52 +488,52 @@ static u32 ar9280_pci_hw_def_ini_fixup(struct ath_hw *ah,
+ 	struct base_eep_header *pBase = &(pEepData->baseEepHeader);
+ 	struct ath_common *common = ath9k_hw_common(ah);
  
- 	if (hif_dev) {
--		ath9k_htc_hw_deinit(hif_dev->htc_handle, true);
-+		ath9k_htc_hw_deinit(hif_dev->htc_handle,
-+		    (udev->state == USB_STATE_NOTATTACHED) ? true : false);
- 		ath9k_htc_hw_free(hif_dev->htc_handle);
- 		ath9k_hif_usb_dev_deinit(hif_dev);
- 		usb_set_intfdata(interface, NULL);
+-	switch (ah->hw_version.devid) {
+-	case AR9280_DEVID_PCI:
+-		if (reg == 0x7894) {
+-			ath_print(common, ATH_DBG_EEPROM,
+-				"ini VAL: %x  EEPROM: %x\n", value,
+-				(pBase->version & 0xff));
+-
+-			if ((pBase->version & 0xff) > 0x0a) {
+-				ath_print(common, ATH_DBG_EEPROM,
+-					  "PWDCLKIND: %d\n",
+-					  pBase->pwdclkind);
+-				value &= ~AR_AN_TOP2_PWDCLKIND;
+-				value |= AR_AN_TOP2_PWDCLKIND & PWDCL_KIND
+-			} else {
+-				ath_print(common, ATH_DBG_EEPROM,
+-					  "PWDCLKIND Earlier Rev\n");
+-			}
++	if (reg == 0x7894) {
++		ath_print(common, ATH_DBG_EEPROM,
++			"ini VAL: %x  EEPROM: %x\n", value,
++			(pBase->version & 0xff));
+ 
++		if ((pBase->version & 0xff) > 0x0a) {
++			ath_print(common, ATH_DBG_EEPROM,
++				  "PWDCLKIND: %d\n",
++				  pBase->pwdclkind);
++			value &= ~AR_AN_TOP2_PWDCLKIND;
++			value |= AR_AN_TOP2_PWDCLKIND & PWDCL_KIND
++		} else {
+ 			ath_print(common, ATH_DBG_EEPROM,
+-				  "final ini VAL: %x\n", value);
++				  "PWDCLKIND Earlier Rev\n");
+ 		}
+-		break;
++
++		ath_print(common, ATH_DBG_EEPROM,
++			  "final ini VAL: %x\n", value);
+ 	}
+ 
+ 	return value;
+ }
+ 
+-void ar9280_pci_hw_init_eeprom_fix(struct ath_hw *ah)
++static void ar9280_pci_hw_mode_eeprom_fix(struct ath_hw *ah, u32 row)
+ {
+-	u32 i, j;
++	u32 reg = INI_RA(&ah->iniModes, row, 0);
++	u32 column;
+ 
+-	/* EEPROM Fixup */
+-	for (i = 0; i < ah->iniModes.ia_rows; i++) {
+-		u32 reg = INI_RA(&ah->iniModes, i, 0);
+-
+-		for (j = 1; j < ah->iniModes.ia_columns; j++) {
+-			u32 val = INI_RA(&ah->iniModes, i, j);
++	for (column = 1; column < ah->iniModes.ia_columns; column++) {
++		u32 val = INI_RA(&ah->iniModes, row, column);
+ 
+-			INI_RA(&ah->iniModes, i, j) =
+-				ar9280_pci_hw_def_ini_fixup(ah,
+-							    &ah->eeprom.def,
+-							    reg, val);
+-		}
++		INI_RA(&ah->iniModes, row, column) =
++			ar9280_pci_hw_def_ini_fixup(ah,
++						    &ah->eeprom.def,
++						    reg, val);
+ 	}
+ }
+ 
++void ar9280_pci_hw_init_eeprom_fix(struct ath_hw *ah)
++{
++	u32 row;
++
++	/* EEPROM Fixup */
++	for (row = 0; row < ah->iniModes.ia_rows; row++)
++		ar9280_pci_hw_mode_eeprom_fix(ah, row);
++}
+ 
+ /* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
+ void ar9002_hw_attach_ops(struct ath_hw *ah)
 -- 
-1.7.0.5
+1.6.3.3
 
