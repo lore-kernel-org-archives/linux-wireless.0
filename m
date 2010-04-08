@@ -1,56 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42755 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108Ab0DMNPV (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46875 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933258Ab0DHT1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 09:15:21 -0400
-Date: Tue, 13 Apr 2010 09:06:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Mack <daniel@caiaq.de>
-Cc: Dan Williams <dcbw@redhat.com>, linux-kernel@vger.kernel.org,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] libertas/sdio: 8686: set ECSI bit for 1-bit transfers
-Message-ID: <20100413130653.GA6331@tuxdriver.com>
-References: <1270521759.24724.6.camel@localhost.localdomain> <1270543964-18130-1-git-send-email-daniel@caiaq.de> <1270570054.2969.3.camel@localhost.localdomain> <20100413102954.GH30801@buzzloop.caiaq.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100413102954.GH30801@buzzloop.caiaq.de>
+	Thu, 8 Apr 2010 15:27:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 050/102] ath9k_hw: move the AR9280 OLC temp comp to its own helper
+Date: Thu,  8 Apr 2010 15:26:46 -0400
+Message-Id: <1270754858-26266-51-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 13, 2010 at 12:29:54PM +0200, Daniel Mack wrote:
-> On Tue, Apr 06, 2010 at 09:07:34AM -0700, Dan Williams wrote:
-> > On Tue, 2010-04-06 at 10:52 +0200, Daniel Mack wrote:
-> > > When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
-> > > However, the 8686 will only drive this line when the ECSI bit is set in
-> > > the CCCR_IF register.
-> > > 
-> > > Thanks to Alagu Sankar for pointing me in the right direction.
-> > > 
-> > > Signed-off-by: Daniel Mack <daniel@caiaq.de>
-> > > Cc: Alagu Sankar <alagusankar@embwise.com>
-> > > Cc: Volker Ernst <volker.ernst@txtr.com>
-> > > Cc: Dan Williams <dcbw@redhat.com>
-> > > Cc: John W. Linville <linville@tuxdriver.com>
-> > > Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-> > > Cc: Bing Zhao <bzhao@marvell.com>
-> > > Cc: libertas-dev@lists.infradead.org
-> > > Cc: linux-wireless@vger.kernel.org
-> > > Cc: linux-mmc@vger.kernel.org
-> > 
-> > Acked-by: Dan Williams <dcbw@redhat.com>
-> 
-> Was this picked by anyone?
-> Just asking because I didn't see it in the wireless-2.6.git yet.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |   52 +++++++++++++++++--------------
+ 1 files changed, 28 insertions(+), 24 deletions(-)
 
-It is in wireless-next-2.6, queued for 2.6.35.
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 5d61169..dae200c 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -700,40 +700,44 @@ static void ar9287_hw_olc_temp_compensation(struct ath_hw *ah)
+ 	}
+ }
+ 
+-static void ath9k_olc_temp_compensation(struct ath_hw *ah)
++static void ar9280_hw_olc_temp_compensation(struct ath_hw *ah)
+ {
+ 	u32 rddata, i;
+ 	int delta, currPDADC, regval;
+ 
+-	if (OLC_FOR_AR9287_10_LATER) {
+-		ar9287_hw_olc_temp_compensation(ah);
+-	} else {
+-		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
+-		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
++	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
++	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
+ 
+-		if (ah->initPDADC == 0 || currPDADC == 0)
+-			return;
++	if (ah->initPDADC == 0 || currPDADC == 0)
++		return;
+ 
+-		if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
+-			delta = (currPDADC - ah->initPDADC + 4) / 8;
+-		else
+-			delta = (currPDADC - ah->initPDADC + 5) / 10;
+-
+-		if (delta != ah->PDADCdelta) {
+-			ah->PDADCdelta = delta;
+-			for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
+-				regval = ah->originalGain[i] - delta;
+-				if (regval < 0)
+-					regval = 0;
+-
+-				REG_RMW_FIELD(ah,
+-					      AR_PHY_TX_GAIN_TBL1 + i * 4,
+-					      AR_PHY_TX_GAIN, regval);
+-			}
++	if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
++		delta = (currPDADC - ah->initPDADC + 4) / 8;
++	else
++		delta = (currPDADC - ah->initPDADC + 5) / 10;
++
++	if (delta != ah->PDADCdelta) {
++		ah->PDADCdelta = delta;
++		for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
++			regval = ah->originalGain[i] - delta;
++			if (regval < 0)
++				regval = 0;
++
++			REG_RMW_FIELD(ah,
++				      AR_PHY_TX_GAIN_TBL1 + i * 4,
++				      AR_PHY_TX_GAIN, regval);
+ 		}
+ 	}
+ }
+ 
++static void ath9k_olc_temp_compensation(struct ath_hw *ah)
++{
++	if (OLC_FOR_AR9287_10_LATER)
++		ar9287_hw_olc_temp_compensation(ah);
++	else
++		ar9280_hw_olc_temp_compensation(ah);
++}
++
+ static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
+ {
+ 	u32 regVal;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
