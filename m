@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:56397 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752448Ab0DOL0J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 07:26:09 -0400
-Received: by bwz25 with SMTP id 25so1421700bwz.28
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 04:26:07 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
-	IvDoorn@gmail.com, gwingerde@gmail.com, xose.vazquez@gmail.com
-Subject: [PATCH] wireless: rt2x00: rt2800usb: identify Hawking devices
-Date: Thu, 15 Apr 2010 13:25:49 +0200
-Message-Id: <1271330749-4606-1-git-send-email-xose.vazquez@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:55512 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757528Ab0DHUYe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Apr 2010 16:24:34 -0400
+Subject: Re: [PATCH] iwlwifi: avoid warning by using result of
+ iwl_send_cmd_pdu in iwl_sta_init_lq
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1270756089-9589-1-git-send-email-linville@tuxdriver.com>
+References: <1270756089-9589-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 08 Apr 2010 13:24:33 -0700
+Message-ID: <1270758273.14052.217.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0x0e66,0x0009 HWUN2 Hawking Technologies Hi-Gain Wireless-150N USB Adapter w/ Upgradable Antenna
-0x0e66,0x000b HWDN2 Hawking Technologies Hi-Gain USB Wireless-150N Dish Adapter
-0x0e66,0x0013 Hawking Technologies Hi-Gain Wireless-N USB Adapter
-0x0e66,0x0017 Hawking Wireless-N Network Adapter
-0x0e66,0x0018 Hawking Wireless-N Network Adapter
+Hi John,
 
-Hawking Technologies Technical Support guys say:
+On Thu, 2010-04-08 at 12:48 -0700, John W. Linville wrote:
+> CC [M]  drivers/net/wireless/iwlwifi/iwl-sta.o
+> drivers/net/wireless/iwlwifi/iwl-sta.c: In function ‘iwl_sta_init_lq’:
+> drivers/net/wireless/iwlwifi/iwl-sta.c:461: warning: ignoring return value of ‘iwl_send_cmd_pdu’, declared with attribute warn_unused_result
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-sta.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> index e34ac03..91aaf11 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> @@ -458,8 +458,9 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, bool is_ap)
+>  	/* Update the rate scaling for control frame Tx to AP */
+>  	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_params.bcast_sta_id;
+>  
+> -	iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
+> -			       sizeof(link_cmd), &link_cmd);
+> +	if (!iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
+> +			       sizeof(link_cmd), &link_cmd))
+> +		IWL_WARN(priv, "Tx link quality reply failed\n");
+>  }
+>  
+>  /*
 
-All our N adapters use the same chipset. Ralink RT 2870 chipset.
+I made a mistake here somewhere since this is fixed in iwlwifi-2.6 but
+did not propagate to wireless-next-2.6.
 
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+Wouldn't the above print the warning on success though?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 6b809ab..df7666f 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -848,6 +848,11 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	/* Hawking */
- 	{ USB_DEVICE(0x0e66, 0x0001), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x0e66, 0x0003), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0e66, 0x0009), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0e66, 0x000b), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0e66, 0x0013), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0e66, 0x0017), USB_DEVICE_DATA(&rt2800usb_ops) },
-+	{ USB_DEVICE(0x0e66, 0x0018), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Linksys */
- 	{ USB_DEVICE(0x1737, 0x0070), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1737, 0x0071), USB_DEVICE_DATA(&rt2800usb_ops) },
-@@ -1057,9 +1062,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x15a9, 0x0010), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* Gigabyte */
- 	{ USB_DEVICE(0x1044, 0x800c), USB_DEVICE_DATA(&rt2800usb_ops) },
--	/* Hawking */
--	{ USB_DEVICE(0x0e66, 0x0009), USB_DEVICE_DATA(&rt2800usb_ops) },
--	{ USB_DEVICE(0x0e66, 0x000b), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	/* LevelOne */
- 	{ USB_DEVICE(0x1740, 0x0605), USB_DEVICE_DATA(&rt2800usb_ops) },
- 	{ USB_DEVICE(0x1740, 0x0615), USB_DEVICE_DATA(&rt2800usb_ops) },
--- 
-1.6.6.1
+In iwlwifi-2.6 the code looks like (whitespace broken copy&pasted) ...
+it would be nice to have the return code available in error message:
+
+        ret = iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
+                               sizeof(link_cmd), &link_cmd);
+        if (ret)
+                IWL_ERR(priv, "REPLY_TX_LINK_QUALITY_CMD failed (%d)\n", ret);
+
+If you want I can just fix my merging mistake.
+
+Reinette
+
 
