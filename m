@@ -1,23 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44210 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752568Ab0DMUAN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 16:00:13 -0400
-Date: Tue, 13 Apr 2010 15:58:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
+Received: from c60.cesmail.net ([216.154.195.49]:22436 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751790Ab0DIVM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Apr 2010 17:12:29 -0400
 Subject: Re: [PATCH 000/102] ath9k: add AR9003 support
-Message-ID: <20100413195806.GD6722@tuxdriver.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
 In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Fri, 09 Apr 2010 17:12:27 -0400
+Message-Id: <1270847547.23853.56.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 08, 2010 at 03:25:56PM -0400, Luis R. Rodriguez wrote:
+On Thu, 2010-04-08 at 15:25 -0400, Luis R. Rodriguez wrote:
 > This series adds support for a new chipset family for the ath9k driver,
 > the AR9003 harware family. This family of chipsets will includes 2-stream
 > and 3-stream devices. We start off by supporting only 2-streams on both
@@ -25,23 +24,21 @@ On Thu, Apr 08, 2010 at 03:25:56PM -0400, Luis R. Rodriguez wrote:
 > this point. We have a few more items which we will iron out as part
 > of future patches but we're sending this out so that we don't stall
 > development on more cleanups/etc. Our delta is already quite large.
-> 
-> For information of the status of this driver you can refer to:
-> 
-> http://wireless.kernel.org/en/users/Drivers/ath9k/todo/ar93xx
-> 
-> You can download an all-in-one series of all these patches here:
-> 
-> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2010/all-04-08-v2.patch
-> 
-> sha1sum:
-> 412524e75fb512603a31211e72ff67c635d5d04d  all-04-08-v2.patch
 
-I started trying to apply these, but I got a lot of rejects and even
-hit a file that didn't exist.  I hesitate to ask, but can we expect
-a repost? :-)
+I hope everything went through checkpatch.pl and the result was checked
+by sparse.  I tried to do it myself, but some patches need to be
+updated.
 
-John
+Considering the huge amount of changes, maybe it would be better to send
+the preparatory changes first, which don't refer to AR9003 in any way?
+Those could be tested first.  Then the rest could be posted.
+
+I like the idea of synchronization with the private HAL, as it means
+that more eyeballs will be looking at the same code.  But I don't think
+we should relax quality requirements.  If the private HAL is worse in
+any aspect, even in a comment wording, the fix should go to the private
+HAL, not to ath9k.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Pavel Roskin
