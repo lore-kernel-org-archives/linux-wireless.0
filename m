@@ -1,133 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62563 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754901Ab0DNKFz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 06:05:55 -0400
-Received: by wyf19 with SMTP id 19so650515wyf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 03:05:54 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH v2] wl1251: read default MAC address from EEPROM when available
-Date: Wed, 14 Apr 2010 13:05:48 +0300
-Message-Id: <1271239548-15326-1-git-send-email-notasas@gmail.com>
+Received: from nbd.name ([88.198.39.176]:42882 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751124Ab0DIM0c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Apr 2010 08:26:32 -0400
+Message-ID: <4BBF1CF1.3090809@openwrt.org>
+Date: Fri, 09 Apr 2010 14:26:25 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
+ driver.
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <201004091332.26307.helmut.schaa@googlemail.com> <4BBF150E.3030507@openwrt.org> <201004091423.58803.helmut.schaa@googlemail.com>
+In-Reply-To: <201004091423.58803.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some wl1251 hardware configurations (like in WG7210 module) have
-EEPROM attached where NVS data is kept, which includes MAC address.
+On 2010-04-09 2:23 PM, Helmut Schaa wrote:
+> Am Freitag 09 April 2010 schrieb Felix Fietkau:
+>> On 2010-04-09 1:32 PM, Helmut Schaa wrote:
+>> > Am Freitag 09 April 2010 schrieb Felix Fietkau:
+>> >> On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
+>> >> > On 04/09/10 00:28, Felix Fietkau wrote:
+>> >> >> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
+>> >> >>> Only include definitions for RT chipsets that are also used inside the
+>> >> >>> Ralink vendor drivers.
+>> >> >>>
+>> >> >>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> >> >>> ---
+>> >> >>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+>> >> >>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+>> >> >>>  2 files changed, 3 insertions(+), 17 deletions(-)
+>> >> >>>
+>> >> >>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> >> >>> index 394c8e4..4bc7e09 100644
+>> >> >>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> >> >>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> >> >>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>> >> >>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+>> >> >>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
+>> >> >>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+>> >> >>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
+>> >> >>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
+>> >> >>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
+>> >> >>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
+>> >> >>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
+>> >> >>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+>> >> >>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+>> >> >>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>> >> >>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+>> >> >>>  	}
+>> >> >>>  
+>> >> >>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
+>> >> >>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+>> >> >>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+>> >> >>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+>> >> >>> -	}
+>> >> >>> -
+>> >> >> Why are you removing support for RT3052? IMHO those writes were
+>> >> >> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
+>> >> > 
+>> >> > That is because I have not been able to find them in any of the Ralink vendor drivers.
+>> >> > Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
+>> >> > as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
+>> >> > RT2872 devices, but even for them I haven't found these BBP initializations.
+>> >> > That's why I removed this part.
+>> >> > 
+>> >> > I have no problem re-instating this if I can find some evidence that these devices
+>> >> > actually exist.
+>> >> These chipsets won't show up in STA-only drivers, because they belong to
+>> >> embedded APs. If you download GPL sources for devices such as ASUS
+>> >> RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
+>> >> values in BBPRegTable in the driver sources.
+>> >> I have a few devices based on RT3052, which is why I added this code.
+>> >> At some point I even had basic Rx/Tx working on it, but haven't tested
+>> >> in a while.
+>> > 
+>> > I also couldn't find any evidence of the existence of an 3052 _rt_ chipset.
+>> > However, the ralink drivers defines a 3052 _rf_ chip:
+>> > 
+>> > #define RFIC_3052                   9       // 2.4G/5G 2T2R
+>> RT3052 is the name of the whole WiSoC chip, not just the MAC or RF part
+>> of it. Since wifi is integrated in the SoC, I don't think there is a
+>> separate name for just the wifi part.
+> 
+> There is. I have one 3052 and one 3050 board (basically a 3052 but only
+> 1T1R), and both identify themselves as RT2872 with different rf "chips"
+> (of course, there are no additional chips). Hence, the check for RT3052
+> was never true on both platforms.
+Back when I tested it, I forced the chip to identify itself as RT3052 by
+taking the id from the platform device.
 
-In such configurations, let's read default MAC address from EEPROM,
-instead of using random one.
+>> > I don't have such an rf chip in my devices but I don't think the BPP
+>> > register setup should depend on the actual rf chip. So, if the register
+>> > setup is really needed we should maybe check for rt2x00_is_soc instead
+>> > of removing the code?
+>> Yes, but rt2x00_is_soc() is not enough, since RT2880 is also SoC, but
+>> slightly different compared to RT3052. I've only tested RT3052 myself.
+> 
+> Right. So, from what I've seen so far it seems like all 305x boards identify
+> themselves as rt2872. Hence, we can just replace 3052 with 2872 in the above
+> check and leave the code as is.
+OK, if that doesn't conflict with any PCI based stuff...
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |   63 +++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_reg.h  |    7 +++
- 2 files changed, 70 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 56b78e4..5dc04df 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -1196,6 +1196,66 @@ static const struct ieee80211_ops wl1251_ops = {
- 	.conf_tx = wl1251_op_conf_tx,
- };
- 
-+static int wl1251_read_eeprom_byte(struct wl1251 *wl, off_t offset, u8 *data)
-+{
-+	unsigned long timeout;
-+
-+	wl1251_reg_write32(wl, EE_ADDR, offset);
-+	wl1251_reg_write32(wl, EE_CTL, EE_CTL_READ);
-+
-+	/* EE_CTL_READ clears when data is ready */
-+	timeout = jiffies + msecs_to_jiffies(100);
-+	while (1) {
-+		if (!(wl1251_reg_read32(wl, EE_CTL) & EE_CTL_READ))
-+			break;
-+
-+		if (time_after(jiffies, timeout))
-+			return -ETIMEDOUT;
-+
-+		msleep(1);
-+	}
-+
-+	*data = wl1251_reg_read32(wl, EE_DATA);
-+	return 0;
-+}
-+
-+static int wl1251_read_eeprom(struct wl1251 *wl, off_t offset,
-+			      u8 *data, size_t len)
-+{
-+	size_t i;
-+	int ret;
-+
-+	wl1251_reg_write32(wl, EE_START, 0);
-+
-+	for (i = 0; i < len; i++) {
-+		ret = wl1251_read_eeprom_byte(wl, offset + i, &data[i]);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int wl1251_read_eeprom_mac(struct wl1251 *wl)
-+{
-+	u8 mac[ETH_ALEN];
-+	int i, ret;
-+
-+	wl1251_set_partition(wl, 0, 0, REGISTERS_BASE, REGISTERS_DOWN_SIZE);
-+
-+	ret = wl1251_read_eeprom(wl, 0x1c, mac, sizeof(mac));
-+	if (ret < 0) {
-+		wl1251_warning("failed to read MAC address from EEPROM");
-+		return ret;
-+	}
-+
-+	/* MAC is stored in reverse order */
-+	for (i = 0; i < ETH_ALEN; i++)
-+		wl->mac_addr[i] = mac[ETH_ALEN - i - 1];
-+
-+	return 0;
-+}
-+
- static int wl1251_register_hw(struct wl1251 *wl)
- {
- 	int ret;
-@@ -1242,6 +1302,9 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 
- 	wl->hw->queues = 4;
- 
-+	if (wl->use_eeprom)
-+		wl1251_read_eeprom_mac(wl);
-+
- 	ret = wl1251_register_hw(wl);
- 	if (ret)
- 		goto out;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_reg.h b/drivers/net/wireless/wl12xx/wl1251_reg.h
-index 0ca3b43..d16edd9 100644
---- a/drivers/net/wireless/wl12xx/wl1251_reg.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_reg.h
-@@ -46,7 +46,14 @@
- #define SOR_CFG                        (REGISTERS_BASE + 0x0800)
- #define ECPU_CTRL                      (REGISTERS_BASE + 0x0804)
- #define HI_CFG                         (REGISTERS_BASE + 0x0808)
-+
-+/* EEPROM registers */
- #define EE_START                       (REGISTERS_BASE + 0x080C)
-+#define EE_CTL                         (REGISTERS_BASE + 0x2000)
-+#define EE_DATA                        (REGISTERS_BASE + 0x2004)
-+#define EE_ADDR                        (REGISTERS_BASE + 0x2008)
-+
-+#define EE_CTL_READ                   2
- 
- #define CHIP_ID_B                      (REGISTERS_BASE + 0x5674)
- 
--- 
-1.6.3.3
-
+- Felix
