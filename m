@@ -1,34 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:50917 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753986Ab0DVQmS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 12:42:18 -0400
-Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Grazvydas Ignotas <notasas@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
-References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
-	 <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 22 Apr 2010 12:42:17 -0400
-Message-Id: <1271954537.8469.15.camel@mj>
-Mime-Version: 1.0
+Received: from mx51.mymxserver.com ([85.199.173.110]:24659 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127Ab0DINvA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Apr 2010 09:51:00 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] net/wireless/libertas: do not call wiphy_unregister() w/o wiphy_register()
+Date: Fri, 9 Apr 2010 15:51:38 +0200
+Cc: Dan Williams <dcbw@redhat.com>, Daniel Mack <daniel@caiaq.de>,
+	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1269875658-3324-1-git-send-email-daniel@caiaq.de> <20100330172008.GD13120@tuxdriver.com> <20100408190358.GB2999@tuxdriver.com>
+In-Reply-To: <20100408190358.GB2999@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201004091551.39365.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
+> Ping?
 
-> How was this compiling for older kernels before then?
+Pong.
 
-Compiling was fine, but loading the firmware was failing sometimes.  I'm
-glad somebody figured it out.  Thank you, Grazvydas!
-
-I would prefer to have replacement functions in compat-2.6.30.h rather
-than ifdefs in the code.  We might want to resync compat_firmware with
-the kernel one day, and ifdefs would stand in the way.
-
--- 
-Regards,
-Pavel Roskin
+I'm a bit swamped with other stuff, so I can't do that right now. That's the 
+pity of someone who can only use this-and-then on kernel projects.
