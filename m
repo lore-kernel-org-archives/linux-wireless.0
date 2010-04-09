@@ -1,163 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47023 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933302Ab0DHT1v (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:42465 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753995Ab0DIIbB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:51 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 092/102] ath9k: Setup appropriate tx desc for regular dma and edma
-Date: Thu,  8 Apr 2010 15:27:28 -0400
-Message-Id: <1270754858-26266-93-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 9 Apr 2010 04:31:01 -0400
+Received: by vws12 with SMTP id 12so231056vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Apr 2010 01:31:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1270799056.3870.1.camel@jlt3.sipsolutions.net>
+References: <1270725792-581-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	<1270799056.3870.1.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 9 Apr 2010 01:30:40 -0700
+Message-ID: <g2o43e72e891004090130t776cb7d9gbe8665e24517a99@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Prevent starting of hw scan if it is already in
+	progress
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+On Fri, Apr 9, 2010 at 12:44 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2010-04-08 at 14:23 +0300, Teemu Paasikivi wrote:
+>> Added checking of status of scanning to ieee80211_scan_work when hw
+>> scanning is used. It is possible to scan_work get executed while scan
+>> has already been started. Previously this has led to a state where, when
+>> the driver returned EBUSY, the stack aborted scan while hw was left
+>> scanning. That has caused warnings from ieee80211_scan_completed when
+>> the scan actually has been completed.
+>>
+>> Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+>> ---
+>>  net/mac80211/ieee80211_i.h |    1 +
+>>  net/mac80211/scan.c        |    8 +++++++-
+>>  2 files changed, 8 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+>> index 741fb8b..1d14f7c 100644
+>> --- a/net/mac80211/ieee80211_i.h
+>> +++ b/net/mac80211/ieee80211_i.h
+>> @@ -756,6 +756,7 @@ struct ieee80211_local {
+>>       /* Scanning and BSS list */
+>>       struct mutex scan_mtx;
+>>       unsigned long scanning;
+>> +     bool hw_scan_continue;
+>>       struct cfg80211_ssid scan_ssid;
+>>       struct cfg80211_scan_request *int_scan_req;
+>>       struct cfg80211_scan_request *scan_req, *hw_scan_req;
+>> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+>> index 75a8597..4e4bad0 100644
+>> --- a/net/mac80211/scan.c
+>> +++ b/net/mac80211/scan.c
+>> @@ -265,12 +265,14 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+>>
+>>       was_hw_scan = test_bit(SCAN_HW_SCANNING, &local->scanning);
+>>       if (was_hw_scan && !aborted && ieee80211_prep_hw_scan(local)) {
+>> +             local->hw_scan_continue =  true;
+>>               ieee80211_queue_delayed_work(&local->hw,
+>>                                            &local->scan_work, 0);
+>>               mutex_unlock(&local->scan_mtx);
+>>               return;
+>>       }
+>>
+>> +     local->hw_scan_continue = false;
+>>       kfree(local->hw_scan_req);
+>>       local->hw_scan_req = NULL;
+>>
+>> @@ -652,7 +654,11 @@ void ieee80211_scan_work(struct work_struct *work)
+>>       }
+>>
+>>       if (local->hw_scan_req) {
+>> -             int rc = drv_hw_scan(local, local->hw_scan_req);
+>> +             int rc = 0;
+>> +
+>> +             if (!local->scanning || local->hw_scan_continue)
+>> +                     rc = drv_hw_scan(local, local->hw_scan_req);
+>> +
+>
+> So Luis says he can make something similar happen with SW scan, where we
+> call drv_sw_scan_start twice?
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/init.c  |   26 ++++++++++++++++----------
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |    4 ++--
- 4 files changed, 20 insertions(+), 14 deletions(-)
+Right, see the mac80211_hswim patch, it is possible.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a11d830..f67be52 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -123,7 +123,7 @@ struct ath_descdma {
- 
- int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		      struct list_head *head, const char *name,
--		      int nbuf, int ndesc);
-+		      int nbuf, int ndesc, bool is_tx);
- void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
- 			 struct list_head *head);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 1956c61..58a87f7 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -233,31 +233,37 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- */
- int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		      struct list_head *head, const char *name,
--		      int nbuf, int ndesc)
-+		      int nbuf, int ndesc, bool is_tx)
- {
- #define	DS2PHYS(_dd, _ds)						\
- 	((_dd)->dd_desc_paddr + ((caddr_t)(_ds) - (caddr_t)(_dd)->dd_desc))
- #define ATH_DESC_4KB_BOUND_CHECK(_daddr) ((((_daddr) & 0xFFF) > 0xF7F) ? 1 : 0)
- #define ATH_DESC_4KB_BOUND_NUM_SKIPPED(_len) ((_len) / 4096)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_desc *ds;
-+	u8 *ds;
- 	struct ath_buf *bf;
--	int i, bsize, error;
-+	int i, bsize, error, desc_len;
- 
- 	ath_print(common, ATH_DBG_CONFIG, "%s DMA: %u buffers %u desc/buf\n",
- 		  name, nbuf, ndesc);
- 
- 	INIT_LIST_HEAD(head);
-+
-+	if (is_tx)
-+		desc_len = sc->sc_ah->caps.tx_desc_len;
-+	else
-+		desc_len = sizeof(struct ath_desc);
-+
- 	/* ath_desc must be a multiple of DWORDs */
--	if ((sizeof(struct ath_desc) % 4) != 0) {
-+	if ((desc_len % 4) != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "ath_desc not DWORD aligned\n");
--		BUG_ON((sizeof(struct ath_desc) % 4) != 0);
-+		BUG_ON((desc_len % 4) != 0);
- 		error = -ENOMEM;
- 		goto fail;
- 	}
- 
--	dd->dd_desc_len = sizeof(struct ath_desc) * nbuf * ndesc;
-+	dd->dd_desc_len = desc_len * nbuf * ndesc;
- 
- 	/*
- 	 * Need additional DMA memory because we can't use
-@@ -270,7 +276,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		u32 dma_len;
- 
- 		while (ndesc_skipped) {
--			dma_len = ndesc_skipped * sizeof(struct ath_desc);
-+			dma_len = ndesc_skipped * desc_len;
- 			dd->dd_desc_len += dma_len;
- 
- 			ndesc_skipped = ATH_DESC_4KB_BOUND_NUM_SKIPPED(dma_len);
-@@ -284,7 +290,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		error = -ENOMEM;
- 		goto fail;
- 	}
--	ds = dd->dd_desc;
-+	ds = (u8 *) dd->dd_desc;
- 	ath_print(common, ATH_DBG_CONFIG, "%s DMA map: %p (%u) -> %llx (%u)\n",
- 		  name, ds, (u32) dd->dd_desc_len,
- 		  ito64(dd->dd_desc_paddr), /*XXX*/(u32) dd->dd_desc_len);
-@@ -298,7 +304,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 	}
- 	dd->dd_bufptr = bf;
- 
--	for (i = 0; i < nbuf; i++, bf++, ds += ndesc) {
-+	for (i = 0; i < nbuf; i++, bf++, ds += (desc_len * ndesc)) {
- 		bf->bf_desc = ds;
- 		bf->bf_daddr = DS2PHYS(dd, ds);
- 
-@@ -314,7 +320,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 				       ((caddr_t) dd->dd_desc +
- 					dd->dd_desc_len));
- 
--				ds += ndesc;
-+				ds += (desc_len * ndesc);
- 				bf->bf_desc = ds;
- 				bf->bf_daddr = DS2PHYS(dd, ds);
- 			}
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index c7f216a..9c01c0b 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -324,7 +324,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 		/* Initialize rx descriptors */
- 
- 		error = ath_descdma_setup(sc, &sc->rx.rxdma, &sc->rx.rxbuf,
--				"rx", nbufs, 1);
-+				"rx", nbufs, 1, 0);
- 		if (error != 0) {
- 			ath_print(common, ATH_DBG_FATAL,
- 				  "failed to allocate rx descriptors: %d\n",
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5fc26f7..ee2ea32 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2151,7 +2151,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
- 	spin_lock_init(&sc->tx.txbuflock);
- 
- 	error = ath_descdma_setup(sc, &sc->tx.txdma, &sc->tx.txbuf,
--				  "tx", nbufs, 1);
-+				  "tx", nbufs, 1, 1);
- 	if (error != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to allocate tx descriptors: %d\n", error);
-@@ -2159,7 +2159,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
- 	}
- 
- 	error = ath_descdma_setup(sc, &sc->beacon.bdma, &sc->beacon.bbuf,
--				  "beacon", ATH_BCBUF, 1);
-+				  "beacon", ATH_BCBUF, 1, 0);
- 	if (error != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to allocate beacon descriptors: %d\n", error);
--- 
-1.6.3.3
-
+  Luis
