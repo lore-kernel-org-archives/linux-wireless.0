@@ -1,120 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:37120 "EHLO
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:65370 "EHLO
 	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755487Ab0DWX6v convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1756104Ab0DIVc5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 19:58:51 -0400
-Received: by pvc7 with SMTP id 7so404858pvc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 16:58:50 -0700 (PDT)
+	Fri, 9 Apr 2010 17:32:57 -0400
+Received: by pva18 with SMTP id 18so2332746pva.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Apr 2010 14:32:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20100422190923.333971365@kvm.kroah.org>
-References: <20100422191857.GA13268@kroah.com>
-	 <20100422190923.333971365@kvm.kroah.org>
-Date: Fri, 23 Apr 2010 19:50:50 -0400
-Message-ID: <o2y40ec3ea41004231650yec3c4452g716ac4993bda8513@mail.gmail.com>
-Subject: [178/197] mac80211: fix deferred hardware scan requests
-From: Chase Douglas <chase.douglas@canonical.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1270846132.23853.35.camel@mj>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	<1270754858-26266-32-git-send-email-lrodriguez@atheros.com>
+	<1270846132.23853.35.camel@mj>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 9 Apr 2010 17:32:37 -0400
+Message-ID: <p2v43e72e891004091432ga3f5df1ja7d55eaa092a5c71@mail.gmail.com>
+Subject: Re: [PATCH 031/102] ath9k_hw: run Lindent on intivals
+To: Pavel Roskin <proski@gnu.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As Luis Rodriguez pointed out, I should have cc'd linux-wireless on
-this from the beginning. I hope no one has any objections to this
-going out as part of the next stable drop.
+On Fri, Apr 9, 2010 at 4:48 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Thu, 2010-04-08 at 15:26 -0400, Luis R. Rodriguez wrote:
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>> Â drivers/net/wireless/ath/ath9k/ar5008_initvals.h | 1495 ++--
+>> Â drivers/net/wireless/ath/ath9k/ar9001_initvals.h | 2432 +++--
+>> Â drivers/net/wireless/ath/ath9k/ar9002_initvals.h |12659 +++++++++++++---------
+>> Â 3 files changed, 9658 insertions(+), 6928 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+>> index cd953f6..ba899f9 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+>> +++ b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+>> @@ -18,725 +18,856 @@
+>> Â #define INITVALS_AR5008_H
+>>
+>> Â static const u32 ar5416Modes[][6] = {
+>> - Â  Â { 0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160, 0x000001e0 },
+> ...
+>> + Â  Â  {0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160,
+>> + Â  Â  Â 0x000001e0},
+>
+> That's hardly an improvement.
+>
+> Actually, it should be possible to strip the first 4 zeroes from the
+> first value (the register number), and then there will be no wrapping.
+>
+> The only exceptions are
+>
+> Â  Â { 0x00020010, 0x00000003 },
+> Â  Â { 0x00020038, 0x000004c2 },
+>
+> in ar5416Common_9100. Â They look suspicious, by the way. Â But even
+> stripping 3 zeroes should be enough.
 
-Thanks
+Good idea.
 
--- Chase
-
----------- Forwarded message ----------
-From: Greg KH <gregkh@suse.de>
-Date: Thu, Apr 22, 2010 at 3:10 PM
-Subject: [178/197] mac80211: fix deferred hardware scan requests
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Johannes Berg
-<johannes@sipsolutions.net>, "John W. Linville"
-<linville@tuxdriver.com>, Chase Douglas <chase.douglas@canonical.com>
-
-
-2.6.32-stable review patch.  If anyone has any objections, please let us know.
-
-------------------
-
-From: Johannes Berg <johannes@sipsolutions.net>
-
-commit c0ce77b8323c1a0d4eeef97caf16c0ea971222a9 upstream.
-
-Reinette found the reason for the warnings that
-happened occasionally when a hw-offloaded scan
-finished; her description of the problem:
-
- mac80211 will defer the handling of scan requests if it is
- busy with management work at the time. The scan requests
- are deferred and run after the work has completed. When
- this occurs there are currently two problems.
-
- * The scan request for hardware scan is not fully populated
-   with the band and channels to scan not initialized.
-
- * When the scan is queued the state is not correctly updated
-   to reflect that a scan is in progress. The problem here is
-   that when the driver completes the scan and calls
-   ieee80211_scan_completed() a warning will be triggered
-   since mac80211 was not aware that a scan was in progress.
-
-The reason is that the queued scan work will start
-the hw scan right away when the hw_scan_req struct
-has already been allocated. However, in the first
-pass it will not have been filled, which happens
-at the same time as setting the bits. To fix this,
-simply move the allocation after the pending work
-test as well, so that the first iteration of the
-scan work will call __ieee80211_start_scan() even
-in the hardware scan case.
-
-Bug-identified-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Cc: Chase Douglas <chase.douglas@canonical.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- net/mac80211/scan.c |   18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
-
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -408,6 +408,16 @@ static int __ieee80211_start_scan(struct
-       if (local->scan_req)
-               return -EBUSY;
-
-+       if (req != local->int_scan_req &&
-+           sdata->vif.type == NL80211_IFTYPE_STATION &&
-+           !list_empty(&ifmgd->work_list)) {
-+               /* actually wait for the work it's doing to finish/time out */
-+               set_bit(IEEE80211_STA_REQ_SCAN, &ifmgd->request);
-+               local->scan_req = req;
-+               local->scan_sdata = sdata;
-+               return 0;
-+       }
-+
-       if (local->ops->hw_scan) {
-               u8 *ies;
-               int ielen;
-@@ -428,14 +438,6 @@ static int __ieee80211_start_scan(struct
-       local->scan_req = req;
-       local->scan_sdata = sdata;
-
--       if (req != local->int_scan_req &&
--           sdata->vif.type == NL80211_IFTYPE_STATION &&
--           !list_empty(&ifmgd->work_list)) {
--               /* actually wait for the work it's doing to finish/time out */
--               set_bit(IEEE80211_STA_REQ_SCAN, &ifmgd->request);
--               return 0;
--       }
--
-       if (local->ops->hw_scan)
-               __set_bit(SCAN_HW_SCANNING, &local->scanning);
-       else
+  Luis
