@@ -1,125 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55076 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757089Ab0DODa6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:58 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v2 21/97] ath9k_hw: Add abstraction for rx enable
-Date: Wed, 14 Apr 2010 23:29:35 -0400
-Message-Id: <1271302251-9075-22-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+Received: from nbd.name ([88.198.39.176]:57175 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754600Ab0DIFnS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Apr 2010 01:43:18 -0400
+Message-ID: <4BBEBE6B.20209@openwrt.org>
+Date: Fri, 09 Apr 2010 07:43:07 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
+ driver.
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-4-git-send-email-gwingerde@gmail.com> <4BBE5879.8000304@openwrt.org> <4BBEB6E1.70300@gmail.com>
+In-Reply-To: <4BBEB6E1.70300@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
+> On 04/09/10 00:28, Felix Fietkau wrote:
+>> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
+>>> Only include definitions for RT chipsets that are also used inside the
+>>> Ralink vendor drivers.
+>>>
+>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+>>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+>>>  2 files changed, 3 insertions(+), 17 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> index 394c8e4..4bc7e09 100644
+>>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+>>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
+>>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+>>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
+>>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
+>>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
+>>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
+>>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
+>>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+>>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+>>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+>>>  	}
+>>>  
+>>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
+>>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+>>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+>>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+>>> -	}
+>>> -
+>> Why are you removing support for RT3052? IMHO those writes were
+>> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
+> 
+> That is because I have not been able to find them in any of the Ralink vendor drivers.
+> Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
+> as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
+> RT2872 devices, but even for them I haven't found these BBP initializations.
+> That's why I removed this part.
+> 
+> I have no problem re-instating this if I can find some evidence that these devices
+> actually exist.
+These chipsets won't show up in STA-only drivers, because they belong to
+embedded APs. If you download GPL sources for devices such as ASUS
+RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
+values in BBPRegTable in the driver sources.
+I have a few devices based on RT3052, which is why I added this code.
+At some point I even had basic Rx/Tx working on it, but haven't tested
+in a while.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw-ops.h |    5 +++++
- drivers/net/wireless/ath/ath9k/hw.c     |    2 ++
- drivers/net/wireless/ath/ath9k/hw.h     |    1 +
- drivers/net/wireless/ath/ath9k/mac.c    |   17 +++++++++++------
- drivers/net/wireless/ath/ath9k/mac.h    |    3 ++-
- 5 files changed, 21 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 81f3d03..19259fb 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -28,6 +28,11 @@ static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
- 	ath9k_hw_ops(ah)->config_pci_powersave(ah, restore, power_off);
- }
- 
-+static inline void ath9k_hw_rxena(struct ath_hw *ah)
-+{
-+	ath9k_hw_ops(ah)->rx_enable(ah);
-+}
-+
- /* Private hardware call ops */
- 
- /* PHY ops */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 36c0163..0a4ccd8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1567,6 +1567,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (tsf && AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
- 		ath9k_hw_settsf64(ah, tsf);
- 
-+	ar9002_hw_attach_mac_ops(ah);
-+
- 	if (AR_SREV_9280_10_OR_LATER(ah))
- 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 6bd87bf..b07ee8d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -509,6 +509,7 @@ struct ath_hw_ops {
- 	void (*config_pci_powersave)(struct ath_hw *ah,
- 				     int restore,
- 				     int power_off);
-+	void (*rx_enable)(struct ath_hw *ah);
- };
- 
- struct ath_hw {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 4a2060e..ae9d54c 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -16,6 +16,17 @@
- 
- #include "hw.h"
- 
-+static void ar9002_hw_rx_enable(struct ath_hw *ah)
-+{
-+	REG_WRITE(ah, AR_CR, AR_CR_RXE);
-+}
-+
-+void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
-+{
-+	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
-+
-+	ops->rx_enable = ar9002_hw_rx_enable;
-+}
- static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
- 					struct ath9k_tx_queue_info *qi)
- {
-@@ -999,12 +1010,6 @@ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp)
- }
- EXPORT_SYMBOL(ath9k_hw_putrxbuf);
- 
--void ath9k_hw_rxena(struct ath_hw *ah)
--{
--	REG_WRITE(ah, AR_CR, AR_CR_RXE);
--}
--EXPORT_SYMBOL(ath9k_hw_rxena);
--
- void ath9k_hw_startpcureceive(struct ath_hw *ah)
- {
- 	ath9k_enable_mib_counters(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 68dbd7a..9e8500a 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -729,10 +729,11 @@ void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			  u32 size, u32 flags);
- bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
- void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
--void ath9k_hw_rxena(struct ath_hw *ah);
- void ath9k_hw_startpcureceive(struct ath_hw *ah);
- void ath9k_hw_stoppcurecv(struct ath_hw *ah);
- bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
- int ath9k_hw_beaconq_setup(struct ath_hw *ah);
- 
-+void ar9002_hw_attach_mac_ops(struct ath_hw *ah);
-+
- #endif /* MAC_H */
--- 
-1.6.3.3
-
+- Felix
