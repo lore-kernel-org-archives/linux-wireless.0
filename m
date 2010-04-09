@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:4876 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751949Ab0DZToP (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3880 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751935Ab0DICgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 15:44:15 -0400
-Message-ID: <4BD5ED0C.3050506@gmail.com>
-Date: Mon, 26 Apr 2010 21:44:12 +0200
+	Thu, 8 Apr 2010 22:36:32 -0400
+Message-ID: <4BBE92AE.6090301@gmail.com>
+Date: Fri, 09 Apr 2010 04:36:30 +0200
 From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>,
-	John Linville <linville@tuxdriver.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: rt2800lib: Remove redundant check for RT2872
-References: <201004261350.27212.helmut.schaa@googlemail.com>
-In-Reply-To: <201004261350.27212.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.34-rc3-git8: Reported regressions 2.6.32 -> 2.6.33
+References: <cjwJ7Pf9h0L.A.9pB.1DmvLB@chimera>
+In-Reply-To: <cjwJ7Pf9h0L.A.9pB.1DmvLB@chimera>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/10 13:50, Helmut Schaa wrote:
-> Remove redundant check for RT2872.
+On 04/09/10 00:54, Rafael J. Wysocki wrote:
 > 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15699
+> Subject		: rt2500usb driver cannot remain connected
+> Submitter	:  <abcd@gentoo.org>
+> Date		: 2010-04-05 19:30 (4 days old)
+> Handled-By	: Ivo van Doorn <IvDoorn@gmail.com>
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 1358d9a..b30d59c 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2018,7 +2018,6 @@ int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
->  		EEPROM(rt2x00dev, "Antenna: 0x%04x\n", word);
->  	} else if (rt2x00_rt(rt2x00dev, RT2860) ||
->  		   rt2x00_rt(rt2x00dev, RT2870) ||
-> -		   rt2x00_rt(rt2x00dev, RT2872) ||
->  		   rt2x00_rt(rt2x00dev, RT2872)) {
->  		/*
->  		 * There is a max of 2 RX streams for RT28x0 series
 
+This one ought to be fixed by commit 9e76ad2a27f592c1390248867391880c7efe78b3
+in Linus' tree.
+
+---
+Gertjan.
