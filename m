@@ -1,89 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12826 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753565Ab0DTGmL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 02:42:11 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 23:42:11 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:3213 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751974Ab0DIFiR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Apr 2010 01:38:17 -0400
+Message-ID: <4BBEBD47.9010405@gmail.com>
+Date: Fri, 09 Apr 2010 07:38:15 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19405.19620.199172.233574@gargle.gargle.HOWL>
-Date: Tue, 20 Apr 2010 12:11:40 +0530
-To: Ming Lei <tom.leiming@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath9k-htc: speedup disconnect handling
-In-Reply-To: <y2ud82e647a1004192259nec8aad6dy836b76b2211b6a40@mail.gmail.com>
-References: <1271691883-13133-1-git-send-email-tom.leiming@gmail.com>
-	<19405.11838.119234.371361@gargle.gargle.HOWL>
-	<y2ud82e647a1004192259nec8aad6dy836b76b2211b6a40@mail.gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	'Luis Correia' <luis.f.correia@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
+ driver.
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-4-git-send-email-gwingerde@gmail.com> <4BBE5879.8000304@openwrt.org> <4BBEB6E1.70300@gmail.com>
+In-Reply-To: <4BBEB6E1.70300@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ming Lei wrote:
-> If ATH_DBG_RESET is enabled, you will find the debug messages
-> below[1] during disconnecting.  From the messages, the short hang should
-> be caused by the 'RTC stuck in MAC reset'. Once the patch is applied,
-> no such issue will happen.
+On 04/09/10 07:10, Gertjan van Wingerde wrote:
+> On 04/09/10 00:28, Felix Fietkau wrote:
+>> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
+>>> Only include definitions for RT chipsets that are also used inside the
+>>> Ralink vendor drivers.
+>>>
+>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+>>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+>>>  2 files changed, 3 insertions(+), 17 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> index 394c8e4..4bc7e09 100644
+>>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+>>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
+>>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+>>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
+>>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
+>>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
+>>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
+>>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
+>>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+>>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+>>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+>>>  	}
+>>>  
+>>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
+>>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+>>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+>>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+>>> -	}
+>>> -
+>> Why are you removing support for RT3052? IMHO those writes were
+>> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
+> 
+> That is because I have not been able to find them in any of the Ralink vendor drivers.
+> Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
+> as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
+> RT2872 devices, but even for them I haven't found these BBP initializations.
+> That's why I removed this part.
+> 
+> I have no problem re-instating this if I can find some evidence that these devices
+> actually exist.
+> 
 
-I take it that you didn't have ATH_DBG_WMI in your debug mask.
-A simpler way to fix this issue is to deny all WMI commands once
-the target has been unplugged - something like the attached patch.
+Hold on, I seem to have found something here. And there are more things to be set, according
+to the code I found. However, that code is unclear with respect to how the chip identifies
+itself.
 
-Can you check if it fixes your issue ?
+Is it possible for you to found out on you RT3052 WiSoC how the chip identifies itself
+(i.e. what is the contents of the MAC_CSR0 register)?
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index c765ff4..b771e20 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -329,6 +329,7 @@ struct htc_beacon_config {
- #define OP_ASSOCIATED     BIT(8)
- #define OP_ENABLE_BEACON  BIT(9)
- #define OP_LED_DEINIT     BIT(10)
-+#define OP_UNPLUGGED      BIT(11)
- 
- struct ath9k_htc_priv {
- 	struct device *dev;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a861896..701f2ef 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -744,6 +744,9 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 	if (ret)
- 		goto err_init;
- 
-+	/* The device may have been unplugged earlier. */
-+	priv->op_flags &= ~OP_UNPLUGGED;
-+
- 	ret = ath9k_init_device(priv, devid);
- 	if (ret)
- 		goto err_init;
-@@ -760,6 +763,11 @@ err_free:
- void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
- {
- 	if (htc_handle->drv_priv) {
-+
-+		/* Check if the device has been yanked out. */
-+		if (hotunplug)
-+			htc_handle->drv_priv->op_flags |= OP_UNPLUGGED;
-+
- 		ath9k_deinit_device(htc_handle->drv_priv);
- 		ath9k_deinit_wmi(htc_handle->drv_priv);
- 		ieee80211_free_hw(htc_handle->drv_priv->hw);
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index dc6c6fc..c688545 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -276,6 +276,9 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 	int time_left, ret = 0;
- 	unsigned long flags;
- 
-+	if (wmi->drv_priv->op_flags & OP_UNPLUGGED)
-+		return 0;
-+
- 	if (!wmi)
- 		return -EINVAL;
- 
+Helmut, Luis, I know you guys have been experimenting with WiSoC devices as well, what kind
+of devices do you have, and how do these identify themselves?
+
+---
+Gertjan
+
