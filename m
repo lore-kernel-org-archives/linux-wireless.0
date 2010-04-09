@@ -1,97 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54812 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756865Ab0DODay (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:55943 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751181Ab0DIMbV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:54 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 45/97] ath9k_hw: the eep_map is used only for AR9280 PCI card ini fixup
-Date: Wed, 14 Apr 2010 23:29:59 -0400
-Message-Id: <1271302251-9075-46-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 9 Apr 2010 08:31:21 -0400
+Received: by wwi17 with SMTP id 17so819481wwi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Apr 2010 05:31:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4BBF1CF1.3090809@openwrt.org>
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+	<201004091332.26307.helmut.schaa@googlemail.com> <4BBF150E.3030507@openwrt.org>
+	<201004091423.58803.helmut.schaa@googlemail.com> <4BBF1CF1.3090809@openwrt.org>
+From: Luis Correia <luis.f.correia@gmail.com>
+Date: Fri, 9 Apr 2010 13:30:59 +0100
+Message-ID: <v2iefe7343f1004090530v11803aa5n4bd81b896684a6e9@mail.gmail.com>
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
+	driver.
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+On Fri, Apr 9, 2010 at 13:26, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-04-09 2:23 PM, Helmut Schaa wrote:
+>> Am Freitag 09 April 2010 schrieb Felix Fietkau:
+>>> On 2010-04-09 1:32 PM, Helmut Schaa wrote:
+>>> > Am Freitag 09 April 2010 schrieb Felix Fietkau:
+>>> >> On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
+>>> >> > On 04/09/10 00:28, Felix Fietkau wrote:
+>>> >> >> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
+>>> >> >>> Only include definitions for RT chipsets that are also used inside the
+>>> >> >>> Ralink vendor drivers.
+>>> >> >>>
+>>> >> >>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>> >> >>> ---
+>>> >> >>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+>>> >> >>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+>>> >> >>>  2 files changed, 3 insertions(+), 17 deletions(-)
+>>> >> >>>
+>>> >> >>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> >> >>> index 394c8e4..4bc7e09 100644
+>>> >> >>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> >> >>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> >> >>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>>> >> >>>       rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+>>> >> >>>       if ((rt2x00_rt(rt2x00dev, RT2872) &&
+>>> >> >>>            (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+>>> >> >>> -         rt2x00_rt(rt2x00dev, RT2880) ||
+>>> >> >>>           rt2x00_rt(rt2x00dev, RT2883) ||
+>>> >> >>> -         rt2x00_rt(rt2x00dev, RT2890) ||
+>>> >> >>> -         rt2x00_rt(rt2x00dev, RT3052) ||
+>>> >> >>>           (rt2x00_rt(rt2x00dev, RT3070) &&
+>>> >> >>>            (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+>>> >> >>>               rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+>>> >> >>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>>> >> >>>               rt2800_bbp_write(rt2x00dev, 105, 0x05);
+>>> >> >>>       }
+>>> >> >>>
+>>> >> >>> -     if (rt2x00_rt(rt2x00dev, RT3052)) {
+>>> >> >>> -             rt2800_bbp_write(rt2x00dev, 31, 0x08);
+>>> >> >>> -             rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+>>> >> >>> -             rt2800_bbp_write(rt2x00dev, 80, 0x08);
+>>> >> >>> -     }
+>>> >> >>> -
+>>> >> >> Why are you removing support for RT3052? IMHO those writes were
+>>> >> >> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
+>>> >> >
+>>> >> > That is because I have not been able to find them in any of the Ralink vendor drivers.
+>>> >> > Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
+>>> >> > as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
+>>> >> > RT2872 devices, but even for them I haven't found these BBP initializations.
+>>> >> > That's why I removed this part.
+>>> >> >
+>>> >> > I have no problem re-instating this if I can find some evidence that these devices
+>>> >> > actually exist.
+>>> >> These chipsets won't show up in STA-only drivers, because they belong to
+>>> >> embedded APs. If you download GPL sources for devices such as ASUS
+>>> >> RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
+>>> >> values in BBPRegTable in the driver sources.
+>>> >> I have a few devices based on RT3052, which is why I added this code.
+>>> >> At some point I even had basic Rx/Tx working on it, but haven't tested
+>>> >> in a while.
+>>> >
+>>> > I also couldn't find any evidence of the existence of an 3052 _rt_ chipset.
+>>> > However, the ralink drivers defines a 3052 _rf_ chip:
+>>> >
+>>> > #define RFIC_3052                   9       // 2.4G/5G 2T2R
+>>> RT3052 is the name of the whole WiSoC chip, not just the MAC or RF part
+>>> of it. Since wifi is integrated in the SoC, I don't think there is a
+>>> separate name for just the wifi part.
+>>
+>> There is. I have one 3052 and one 3050 board (basically a 3052 but only
+>> 1T1R), and both identify themselves as RT2872 with different rf "chips"
+>> (of course, there are no additional chips). Hence, the check for RT3052
+>> was never true on both platforms.
+> Back when I tested it, I forced the chip to identify itself as RT3052 by
+> taking the id from the platform device.
+>
+>>> > I don't have such an rf chip in my devices but I don't think the BPP
+>>> > register setup should depend on the actual rf chip. So, if the register
+>>> > setup is really needed we should maybe check for rt2x00_is_soc instead
+>>> > of removing the code?
+>>> Yes, but rt2x00_is_soc() is not enough, since RT2880 is also SoC, but
+>>> slightly different compared to RT3052. I've only tested RT3052 myself.
+>>
+>> Right. So, from what I've seen so far it seems like all 305x boards identify
+>> themselves as rt2872. Hence, we can just replace 3052 with 2872 in the above
+>> check and leave the code as is.
+> OK, if that doesn't conflict with any PCI based stuff...
 
-We can reorganize the code in such a way that eep_map can be removed,
-which makes the code more clearer.
+I have a rt2880 based SOC device, my main AP Minitar, I'll hook up the
+console to it and report what RT-RF chipset combination it has.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/eeprom.c |    3 ---
- drivers/net/wireless/ath/ath9k/eeprom.h |    7 -------
- drivers/net/wireless/ath/ath9k/hw.c     |    2 +-
- drivers/net/wireless/ath/ath9k/hw.h     |    1 -
- 4 files changed, 1 insertions(+), 12 deletions(-)
+>
+> - Felix
+> --
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index dacaae9..1a48f43 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -257,13 +257,10 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah)
- 	int status;
- 
- 	if (AR_SREV_9287(ah)) {
--		ah->eep_map = EEP_MAP_AR9287;
- 		ah->eep_ops = &eep_AR9287_ops;
- 	} else if (AR_SREV_9285(ah) || AR_SREV_9271(ah)) {
--		ah->eep_map = EEP_MAP_4KBITS;
- 		ah->eep_ops = &eep_4k_ops;
- 	} else {
--		ah->eep_map = EEP_MAP_DEFAULT;
- 		ah->eep_ops = &eep_def_ops;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 2f2993b..e087e2d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -656,13 +656,6 @@ struct ath9k_country_entry {
- 	u8 iso[3];
- };
- 
--enum ath9k_eep_map {
--	EEP_MAP_DEFAULT = 0x0,
--	EEP_MAP_4KBITS,
--	EEP_MAP_AR9287,
--	EEP_MAP_MAX
--};
--
- struct eeprom_ops {
- 	int (*check_eeprom)(struct ath_hw *hw);
- 	u32 (*get_eeprom)(struct ath_hw *hw, enum eeprom_param param);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2dcfaa9..ec48e7b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -947,7 +947,7 @@ static void ath9k_hw_init_eeprom_fix(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	ah->need_an_top2_fixup = (ah->hw_version.devid == AR9280_DEVID_PCI) &&
--				 (ah->eep_map != EEP_MAP_4KBITS) &&
-+				 !AR_SREV_9285(ah) && !AR_SREV_9271(ah) &&
- 				 ((pBase->version & 0xff) > 0x0a) &&
- 				 (pBase->pwdclkind == 0);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 0c95e28..1b33688 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -542,7 +542,6 @@ struct ath_hw {
- 		struct ar9287_eeprom map9287;
- 	} eeprom;
- 	const struct eeprom_ops *eep_ops;
--	enum ath9k_eep_map eep_map;
- 
- 	bool sw_mgmt_crypto;
- 	bool is_pciexpress;
--- 
-1.6.3.3
-
+Luis Correia
