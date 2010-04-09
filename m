@@ -1,74 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65013 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755438Ab0DWE6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 00:58:37 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:37 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:35765 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444Ab0DJBGr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Apr 2010 21:06:47 -0400
+Message-ID: <4BBF3324.70207@openwrt.org>
+Date: Fri, 09 Apr 2010 16:01:08 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19409.10470.219183.680579@gargle.gargle.HOWL>
-Date: Fri, 23 Apr 2010 10:28:14 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/11] ath9k_hw: Remove pointless ANI deinit
+To: Luis Correia <luis.f.correia@gmail.com>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
+ 	driver.
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> 	<201004091332.26307.helmut.schaa@googlemail.com> <4BBF150E.3030507@openwrt.org> 	<201004091423.58803.helmut.schaa@googlemail.com> <4BBF1CF1.3090809@openwrt.org> <v2iefe7343f1004090530v11803aa5n4bd81b896684a6e9@mail.gmail.com>
+In-Reply-To: <v2iefe7343f1004090530v11803aa5n4bd81b896684a6e9@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no reason to disable the PHY Error / MIB counters
-when the module is being unloaded.
+Luis Correia írta:
+> On Fri, Apr 9, 2010 at 13:26, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2010-04-09 2:23 PM, Helmut Schaa wrote:
+>>> Am Freitag 09 April 2010 schrieb Felix Fietkau:
+>>>> On 2010-04-09 1:32 PM, Helmut Schaa wrote:
+>>>>> Am Freitag 09 April 2010 schrieb Felix Fietkau:
+>>>>>> On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
+>>>>>>> On 04/09/10 00:28, Felix Fietkau wrote:
+>>>>>>>> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
+>>>>>>>>> Only include definitions for RT chipsets that are also used inside the
+>>>>>>>>> Ralink vendor drivers.
+>>>>>>>>>
+>>>>>>>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>>>>>>>> ---
+>>>>>>>>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+>>>>>>>>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+>>>>>>>>>  2 files changed, 3 insertions(+), 17 deletions(-)
+>>>>>>>>>
+>>>>>>>>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>>>>>>>> index 394c8e4..4bc7e09 100644
+>>>>>>>>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>>>>>>>>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>>>>>>>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>>>>>>>>>       rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+>>>>>>>>>       if ((rt2x00_rt(rt2x00dev, RT2872) &&
+>>>>>>>>>            (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+>>>>>>>>> -         rt2x00_rt(rt2x00dev, RT2880) ||
+>>>>>>>>>           rt2x00_rt(rt2x00dev, RT2883) ||
+>>>>>>>>> -         rt2x00_rt(rt2x00dev, RT2890) ||
+>>>>>>>>> -         rt2x00_rt(rt2x00dev, RT3052) ||
+>>>>>>>>>           (rt2x00_rt(rt2x00dev, RT3070) &&
+>>>>>>>>>            (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+>>>>>>>>>               rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+>>>>>>>>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>>>>>>>>>               rt2800_bbp_write(rt2x00dev, 105, 0x05);
+>>>>>>>>>       }
+>>>>>>>>>
+>>>>>>>>> -     if (rt2x00_rt(rt2x00dev, RT3052)) {
+>>>>>>>>> -             rt2800_bbp_write(rt2x00dev, 31, 0x08);
+>>>>>>>>> -             rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+>>>>>>>>> -             rt2800_bbp_write(rt2x00dev, 80, 0x08);
+>>>>>>>>> -     }
+>>>>>>>>> -
+>>>>>>>> Why are you removing support for RT3052? IMHO those writes were
+>>>>>>>> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
+>>>>>>> That is because I have not been able to find them in any of the Ralink vendor drivers.
+>>>>>>> Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
+>>>>>>> as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
+>>>>>>> RT2872 devices, but even for them I haven't found these BBP initializations.
+>>>>>>> That's why I removed this part.
+>>>>>>>
+>>>>>>> I have no problem re-instating this if I can find some evidence that these devices
+>>>>>>> actually exist.
+>>>>>> These chipsets won't show up in STA-only drivers, because they belong to
+>>>>>> embedded APs. If you download GPL sources for devices such as ASUS
+>>>>>> RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
+>>>>>> values in BBPRegTable in the driver sources.
+>>>>>> I have a few devices based on RT3052, which is why I added this code.
+>>>>>> At some point I even had basic Rx/Tx working on it, but haven't tested
+>>>>>> in a while.
+>>>>> I also couldn't find any evidence of the existence of an 3052 _rt_ chipset.
+>>>>> However, the ralink drivers defines a 3052 _rf_ chip:
+>>>>>
+>>>>> #define RFIC_3052                   9       // 2.4G/5G 2T2R
+>>>> RT3052 is the name of the whole WiSoC chip, not just the MAC or RF part
+>>>> of it. Since wifi is integrated in the SoC, I don't think there is a
+>>>> separate name for just the wifi part.
+>>> There is. I have one 3052 and one 3050 board (basically a 3052 but only
+>>> 1T1R), and both identify themselves as RT2872 with different rf "chips"
+>>> (of course, there are no additional chips). Hence, the check for RT3052
+>>> was never true on both platforms.
+>> Back when I tested it, I forced the chip to identify itself as RT3052 by
+>> taking the id from the platform device.
+>>
+>>>>> I don't have such an rf chip in my devices but I don't think the BPP
+>>>>> register setup should depend on the actual rf chip. So, if the register
+>>>>> setup is really needed we should maybe check for rt2x00_is_soc instead
+>>>>> of removing the code?
+>>>> Yes, but rt2x00_is_soc() is not enough, since RT2880 is also SoC, but
+>>>> slightly different compared to RT3052. I've only tested RT3052 myself.
+>>> Right. So, from what I've seen so far it seems like all 305x boards identify
+>>> themselves as rt2872. Hence, we can just replace 3052 with 2872 in the above
+>>> check and leave the code as is.
+>> OK, if that doesn't conflict with any PCI based stuff...
+> 
+> I have a rt2880 based SOC device, my main AP Minitar, I'll hook up the
+> console to it and report what RT-RF chipset combination it has.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |    9 ---------
- drivers/net/wireless/ath/ath9k/ani.h |    1 -
- drivers/net/wireless/ath/ath9k/hw.c  |    3 ---
- 3 files changed, 0 insertions(+), 13 deletions(-)
+The ASUS RT-N15 says this:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index cec62d3..ba8b20f 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -657,12 +657,3 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
- 	if (ah->config.enable_ani)
- 		ah->proc_phyerr |= HAL_PROCESS_ANI;
- }
--
--void ath9k_hw_ani_disable(struct ath_hw *ah)
--{
--	ath_print(ath9k_hw_common(ah), ATH_DBG_ANI, "Disabling ANI\n");
--
--	ath9k_hw_disable_mib_counters(ah);
--	REG_WRITE(ah, AR_PHY_ERR_1, 0);
--	REG_WRITE(ah, AR_PHY_ERR_2, 0);
--}
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 4e1ab94..3356762 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -118,6 +118,5 @@ u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah, u32 *rxc_pcnt,
- void ath9k_hw_procmibevent(struct ath_hw *ah);
- void ath9k_hw_ani_setup(struct ath_hw *ah);
- void ath9k_hw_ani_init(struct ath_hw *ah);
--void ath9k_hw_ani_disable(struct ath_hw *ah);
- 
- #endif /* ANI_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 5a29048..2d18892 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -819,9 +819,6 @@ void ath9k_hw_deinit(struct ath_hw *ah)
- 	if (common->state < ATH_HW_INITIALIZED)
- 		goto free_hw;
- 
--	if (!AR_SREV_9100(ah))
--		ath9k_hw_ani_disable(ah);
--
- 	ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
- 
- free_hw:
--- 
-1.7.0.5
+root@OpenWrt:/# cat /proc/cpuinfo
+system type             : Ralink RT2880   id:2 rev:1
+machine                 : Asus RT-N15
+processor               : 0
+cpu model               : MIPS 4KEc V6.12
+BogoMIPS                : 266.24
+wait instruction        : yes
+microsecond timers      : yes
+tlb_entries             : 16
+extra interrupt vector  : yes
+hardware watchpoint     : yes, count: 0, address/irw mask: []
+ASEs implemented        : mips16
+shadow register sets    : 1
+core                    : 0
+VCED exceptions         : not available
+VCEI exceptions         : not available
+
+root@OpenWrt:/# cat /sys/kernel/debug/ieee80211/phy0/rt2800pci/chipset
+rt chip:        2872
+rf chip:        0001
+revision:       0200
+
+register        base    words   wordsize
+csr     4096    512     4
+eeprom  0       136     2
+bbp     0       128     1
+rf      4       4       4
+root@OpenWrt:/#
+
+-Gabor
 
