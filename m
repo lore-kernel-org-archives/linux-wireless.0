@@ -1,131 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dd24806.kasserver.com ([85.13.129.11]:58666 "EHLO
-	dd24806.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754029Ab0DVLqF (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:43514 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752674Ab0DIGyM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 07:46:05 -0400
-Received: from rambo.localnet (dslb-084-057-102-201.pools.arcor-ip.net [84.57.102.201])
-	by dd24806.kasserver.com (Postfix) with ESMTPSA id 8F786BA21CA
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 13:39:49 +0200 (CEST)
-From: Antonio Weber <antonio.weber@msys-gmbh.de>
-To: linux-wireless@vger.kernel.org
-Subject: p54usb - AP degenerates (Kernel 2.6.31.13)
-Date: Thu, 22 Apr 2010 13:39:47 +0200
+	Fri, 9 Apr 2010 02:54:12 -0400
+Received: by bwz1 with SMTP id 1so2295192bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 23:54:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201004221339.47788.antonio.weber@msys-gmbh.de>
+In-Reply-To: <j2p646765f41004081653vcb4e0178k374a203da36a9f1@mail.gmail.com>
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+	 <1270763437-29526-5-git-send-email-gwingerde@gmail.com>
+	 <201004090032.53842.IvDoorn@gmail.com>
+	 <j2p646765f41004081653vcb4e0178k374a203da36a9f1@mail.gmail.com>
+Date: Fri, 9 Apr 2010 08:54:08 +0200
+Message-ID: <k2ra32f33a41004082354y2bf33919y7f0f476b62612cf6@mail.gmail.com>
+Subject: Re: [PATCH 4/9] rt2x00: Remove rt2800 version constants.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi List,
+On Fri, Apr 9, 2010 at 1:53 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> On Fri, Apr 9, 2010 at 08:32, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+>> On Thursday 08 April 2010, Gertjan van Wingerde wrote:
+>>> The rt2800 version constants are inconsistent, and the version number don't
+>>> mean a lot of things anyway. Use the literal values in the code instead of
+>>> some sort of fabricated version name macro.
+>>>
+>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>
+>> Perhaps a more elegant way of using and defining needs to be found.
+>> But at least the defined show what the purpose for the values is
+>> rather then having magical values spread around the code.
+>
+> Maybe something like:
+>
+> #define RTDEV_IS_RT2883_R1(dev) (rt2x00_rt(dev, RT2883) && \
+>                                                   rt2x00_rev(dev) < 0x0300)
 
-I try to set up a Accesspoint with a Netgear WG111v2 USB Stick which is 
-supported by the p54 driver. 
-I'm working on a small evaluation board with a i.mx27 ARM cpu which is 
-currently not supported via the mainline kernel. For that the vendor provides 
-a kernel patch to support it. I allready tried to port it to the 2.6.33 Kernel 
-- it compiles without bigger troubles but the Kernel was unable to boot (gets 
-not even uncompressed - litte bit strange - so what... :) - have to stay at 
-2.6.31 line)
+I considered this as well, but we have many checks which either do
+    rt2x00_rev() < 0xffff
+but also
+    rt2x00_ref() == 0xffff
 
-The startup with hostapd works fine. At the moment i have encryption disabled 
-so it is easy to connect because it is only for demostration purpose (even a 
-handy or ipod should be able to connect) and works in a closed environment for 
-max. an hour or so.
-
-Some debug output here
-
----------
-usb 1-1: new high speed USB device using mxc-ehci and address 2
-usb 1-1: New USB device found, idVendor=0846, idProduct=4240
-usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-usb 1-1: Product: NETGEAR WG111
-usb 1-1: Manufacturer: GlobespanVirata
-usb 1-1: SerialNumber: 3887-0000
-usb 1-1: configuration #1 chosen from 1 choice
-cfg80211: Calling CRDA to update world regulatory domain
-usb 1-1: firmware: requesting isl3887usb
-phy0: p54 detected a LM87 firmware
-p54: rx_mtu reduced from 3240 to 2384
-phy0: FW rev 2.13.24.0 - Softmac protocol 5.9
-phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-phy0: hwaddr 00:0f:b5:02:2e:64, MAC:isl3887 RF:Frisbee
-phy0: Selected rate control algorithm 'minstrel'
-usb 1-1: is registered as 'phy0'
-usbcore: registered new interface driver p54usb
-eth0: config: auto-negotiation on, 100FDX, 100HDX, 10FDX, 10HDX.
-phy0: device now idle
-in p54_set_ps: 2
-phy0: device no longer idle - in use
-in p54_set_ps: 2
-cfg80211: Calling CRDA for country: DE
-phy0: Allocated STA f8:1e:df:d1:df:8e
-phy0: Inserted STA f8:1e:df:d1:df:8e
-----------
-
-up to here - everything works fine. A device gets an IP address via dhcp after 
-connecting, can ping etc.
-after some minutes lots of that messages apear
-
------------
-
-wlan0: STA f8:1e:df:d1:df:8e aid 1 enters power save mode
-wlan0: STA f8:1e:df:d1:df:8e aid 1 exits power save mode
-wlan0: STA f8:1e:df:d1:df:8e aid 1 sending 0 filtered/0 PS frames since STA 
-not sleeping anymore
-wlan0: STA f8:1e:df:d1:df:8e aid 1 enters power save mode
-STA f8:1e:df:d1:df:8e aid 1: PS buffer (entries before 0)
-STA f8:1e:df:d1:df:8e aid 1: PS buffer (entries before 1)
-wlan0: STA f8:1e:df:d1:df:8e aid 1 exits power save mode
-wlan0: STA f8:1e:df:d1:df:8e aid 1 sending 0 filtered/2 PS frames since STA 
-not sleeping anymore
-wlan0: STA f8:1e:df:d1:df:8e aid 1 enters power save mode
-wlan0: STA f8:1e:df:d1:df:8e aid 1 exits power save mode
-wlan0: STA f8:1e:df:d1:df:8e aid 1 sending 0 filtered/0 PS frames since STA 
-not sleeping anymore
-wlan0: STA f8:1e:df:d1:df:8e aid 1 enters power save mode
-wlan0: STA f8:1e:df:d1:df:8e aid 1 exits power save mode
-wlan0: STA f8:1e:df:d1:df:8e aid 1 sending 0 filtered/0 PS frames since STA 
-not sleeping anymore
-.....
-
-------------
-(btw weird mac address, isn't it?)
-
-and then it refuses to work. No futher devices can connect. Even the connected 
-devices can not be ping anymore because ARP packets are no longer answered.
-
-On my laptop I get that kernel-messages when trying to connect to the ap
-
-------------
-
-wlan0: deauthenticating from 00:0f:b5:02:2e:64 by local choice (reason=3)
-wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 1)
-wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 2)
-wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 3)
-wlan0: direct probe to AP 00:0f:b5:02:2e:64 timed out
-wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 1)
-wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 2)
-wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 3)
-wlan0: direct probe to AP 00:0f:b5:02:2e:64 timed out
-
---------------
-
-Its probably a problem with the power management in station mode (which seems 
-to be an issue to more drivers as I found out reading some entries on this 
-list).
-
-So my questions are:
-Is it perhaps possible to disable that powersave mode for AP completly in an 
-'easy' way? (btw. 'enable powersave by default' is disabled in kernel config 
-but thats only for managed mode right?).
-
-If not - could it be allready fixed in a newer version of the kernel? If so it 
-would be great if someone out there could give me some pointer where to look 
-at in special - so I can try to fix it myself (somehow :) )
-
-Thanks in advance
-
-greetings,
-Antonio
+Ivo
