@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:55245 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752268Ab0DLOhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 10:37:13 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 07:37:13 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:2802 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751634Ab0DIFK7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Apr 2010 01:10:59 -0400
+Message-ID: <4BBEB6E1.70300@gmail.com>
+Date: Fri, 09 Apr 2010 07:10:57 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19395.12264.285777.224012@gargle.gargle.HOWL>
-Date: Mon, 12 Apr 2010 20:06:24 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Sneha Aggarwal <snehaatpec@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Frame aggregation size configuration in 802.11n
-In-Reply-To: <1271075716.23799.2.camel@jlt3.sipsolutions.net>
-References: <loom.20100412T140919-620@post.gmane.org>
-	<1271075716.23799.2.camel@jlt3.sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
+ driver.
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-4-git-send-email-gwingerde@gmail.com> <4BBE5879.8000304@openwrt.org>
+In-Reply-To: <4BBE5879.8000304@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> > and where all I have to change this parameter to get the desired output?
-> 
-> That depends on your driver. In iwlwifi, you have to tell the microcode
-> what to do -- I'm not sure off hand how to (I know there is a parameter
-> that controls the number of frames in an aggregate, I'm not sure about
-> the max size but I would think it exists)
-> 
-> In ath9k you should be able to change it in the driver but I have no
-> idea how to.
-> 
+On 04/09/10 00:28, Felix Fietkau wrote:
+> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
+>> Only include definitions for RT chipsets that are also used inside the
+>> Ralink vendor drivers.
+>>
+>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+>>  2 files changed, 3 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index 394c8e4..4bc7e09 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
+>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
+>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
+>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
+>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
+>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
+>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+>>  	}
+>>  
+>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
+>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+>> -	}
+>> -
+> Why are you removing support for RT3052? IMHO those writes were
+> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
 
-If you do decide to fiddle with ath9k, you can change the aggregate size
-and the max. no of subframes in an aggregate.
+That is because I have not been able to find them in any of the Ralink vendor drivers.
+Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
+as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
+RT2872 devices, but even for them I haven't found these BBP initializations.
+That's why I removed this part.
 
-See ath_tx_form_aggr() in xmit.c
+I have no problem re-instating this if I can find some evidence that these devices
+actually exist.
 
-(ATH_AMPDU_SUBFRAME_DEFAULT, nframes, aggr_limit, etc ...)
-
-Sujith
-
+---
+Gertjan.
