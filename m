@@ -1,98 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gerolde.archlinux.org ([66.211.214.132]:48936 "EHLO
-	archlinux.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753881Ab0DIRbT (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:52843 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507Ab0DIJWE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 13:31:19 -0400
-Message-ID: <4BBF6206.2070103@archlinux.org>
-Date: Fri, 09 Apr 2010 19:21:10 +0200
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Warning in ath9k after update from 2.6.33.1 to 2.6.33.2
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------enig43865880F7F776F0AC9FD4A5"
+	Fri, 9 Apr 2010 05:22:04 -0400
+Subject: Re: [PATCH] mac80211: Prevent dynamic ps for rx broadcast frames
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1270804355.3870.16.camel@jlt3.sipsolutions.net>
+References: <1270802794-6869-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1270804355.3870.16.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 09 Apr 2010 12:17:45 +0300
+Message-ID: <1270804665.10120.1152.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig43865880F7F776F0AC9FD4A5
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+On Fri, 2010-04-09 at 11:12 +0200, ext Johannes Berg wrote:
+> On Fri, 2010-04-09 at 11:46 +0300, Juuso Oikarinen wrote:
+> > Currently the dynamic ps timer is restarted for all non-multicast rx data
+> > frames. Congested networks have lots of broadcast traffic, which will cause
+> > the power save to remain disabled for much of the time, which causes trouble
+> > for battery-powered devices.
+> > 
+> > Fix this by preventing rx broadcast data frames from restarting the
+> > dynamic ps timer.
+> > 
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > ---
+> >  net/mac80211/rx.c |    1 +
+> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> > index c0ad7e8..8cdcc4f 100644
+> > --- a/net/mac80211/rx.c
+> > +++ b/net/mac80211/rx.c
+> > @@ -1786,6 +1786,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+> >  
+> >  	if (ieee80211_is_data(hdr->frame_control) &&
+> >  	    !is_multicast_ether_addr(hdr->addr1) &&
+> > +	    !is_broadcast_ether_addr(hdr->addr1) &&
+> >  	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
+> 
+> Huh? I'm starting to doubt my own sanity now!
+> 
+> Formal logic:
+> 
+>     (bcast => mcast)
+> <=> (!mcast => !bcast)
+> 
+> Thus
+> 
+>     (!mcast && !bcast)
+> <=> (!mcast)
+> 
+> right?
 
-Since I upgraded from 2.6.33.1 to .2, I get the following warning
-sometimes, related to wireless:
+Heh, don't doubt your sanity. It's me who has lost his. 
 
-------------[ cut here ]------------
-WARNING: at kernel/softirq.c:143 local_bh_enable_ip+0x82/0xb0()
-Hardware name: TECRA A11
-Modules linked in: ipv6 rfcomm sco bnep l2cap bridge stp llc
-cpufreq_ondemand tun ext3 jbd btusb bluetooth uvcvideo videodev
-snd_seq_dummy v4l1_compat arc4 snd_seq_oss ecb v4l2_compat_ioctl32
-snd_seq_midi_event snd_hda_codec_intelhdmi snd_seq snd_seq_device
-tpm_infineon snd_hda_codec_realtek ath9k snd_pcm_oss ath9k_common
-snd_mixer_oss snd_hda_intel snd_hda_codec mac80211 snd_hwdep snd_pcm
-snd_timer ath9k_hw snd joydev soundcore ath sdhci_pci kvm_intel
-snd_page_alloc ehci_hcd iTCO_wdt evdev sdhci iTCO_vendor_support kvm
-usbcore mmc_core e1000e psmouse tpm_tis cfg80211 tpm toshiba_acpi
-acpi_cpufreq led_class tpm_bios rfkill toshiba_bluetooth serio_raw
-pcspkr sr_mod thermal cdrom battery sg ac freq_table processor rtc_cmos
-rtc_core rtc_lib fpu aesni_intel cryptd aes_x86_64 aes_generic xts
-gf128mul dm_crypt dm_mod sd_mod ahci libata scsi_mod ext4 mbcache jbd2
-crc16 i915 drm_kms_helper drm i2c_algo_bit button i2c_core video output
-intel_agp [last unloaded: microcode]
-Pid: 2571, comm: wpa_supplicant Not tainted 2.6.33-ARCH #1
-Call Trace:
- [<ffffffff81052a08>] warn_slowpath_common+0x78/0xb0
- [<ffffffff81052a4f>] warn_slowpath_null+0xf/0x20
- [<ffffffff81059682>] local_bh_enable_ip+0x82/0xb0
- [<ffffffff8135d42f>] _raw_spin_unlock_bh+0x1f/0x30
- [<ffffffffa04018ed>] ath_tx_node_cleanup+0x19d/0x1c0 [ath9k]
- [<ffffffffa03fc607>] ath9k_sta_notify+0x57/0xb0 [ath9k]
- [<ffffffffa039bbc4>] __sta_info_unlink+0x174/0x220 [mac80211]
- [<ffffffffa039bca8>] sta_info_unlink+0x38/0x60 [mac80211]
- [<ffffffffa03a2639>] ieee80211_set_disassoc+0x1e9/0x290 [mac80211]
- [<ffffffffa03a2e89>] ieee80211_mgd_deauth+0x159/0x160 [mac80211]
- [<ffffffff8104d700>] ? default_wake_function+0x0/0x10
- [<ffffffffa03a9b69>] ieee80211_deauth+0x19/0x20 [mac80211]
- [<ffffffffa02426de>] __cfg80211_mlme_deauth+0xee/0x130 [cfg80211]
- [<ffffffff8135baad>] ? __mutex_lock_slowpath+0x26d/0x370
- [<ffffffffa0246839>] __cfg80211_disconnect+0x159/0x1d0 [cfg80211]
- [<ffffffffa0248f9c>] cfg80211_wext_siwmlme+0x8c/0xa0 [cfg80211]
- [<ffffffff8133e6b7>] ioctl_standard_iw_point+0x207/0x3a0
- [<ffffffffa0248f10>] ? cfg80211_wext_siwmlme+0x0/0xa0 [cfg80211]
- [<ffffffff8133e850>] ? ioctl_standard_call+0x0/0xd0
- [<ffffffff8133e8e9>] ioctl_standard_call+0x99/0xd0
- [<ffffffff812b2660>] ? __dev_get_by_name+0xa0/0xc0
- [<ffffffff8133dce7>] wext_ioctl_dispatch+0x1f7/0x210
- [<ffffffff8133f330>] ? ioctl_private_call+0x0/0xa0
- [<ffffffff8133de91>] wext_handle_ioctl+0x41/0x90
- [<ffffffff812b8299>] dev_ioctl+0x679/0x850
- [<ffffffff812a0522>] sock_ioctl+0xe2/0x290
- [<ffffffff812a369d>] ? sys_recvfrom+0x13d/0x160
- [<ffffffff811324c8>] vfs_ioctl+0x38/0xd0
- [<ffffffff81132670>] do_vfs_ioctl+0x80/0x560
- [<ffffffff81132bd1>] sys_ioctl+0x81/0xa0
- [<ffffffff8100b1f9>] ? do_device_not_available+0x9/0x10
- [<ffffffff81009fc2>] system_call_fastpath+0x16/0x1b
----[ end trace 8dbf12cb72787a6d ]---
+You're obviously right. I don't even try to explain what I just thought.
+Everyone, pretend you never saw this ;)
 
-This machine is an Intel Core i5-520M running x86_64, wireless is ath9k.
+-Juuso
+
+> johannes
+> 
 
 
---------------enig43865880F7F776F0AC9FD4A5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEAREIAAYFAku/YgYACgkQEda5KzHP/VB/ZACgrOMf0eQfYMR3EKlPhhNCSs8o
-DRIAoNEd5WCvP+SfnCrL1GfdJdT13Zuk
-=KDXE
------END PGP SIGNATURE-----
-
---------------enig43865880F7F776F0AC9FD4A5--
