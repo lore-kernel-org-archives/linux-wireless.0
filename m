@@ -1,137 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32959 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757402Ab0DOVjq (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:49825 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755920Ab0DIHnB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 76/97] ath9k_hw: add TX/RX gain register initialization for AR9003
-Date: Thu, 15 Apr 2010 17:39:21 -0400
-Message-Id: <1271367582-992-77-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 9 Apr 2010 03:43:01 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so1121439fga.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Apr 2010 00:42:59 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor driver.
+Date: Fri, 9 Apr 2010 09:42:53 +0200
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"'Luis Correia'" <luis.f.correia@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <4BBEB6E1.70300@gmail.com> <4BBEBD47.9010405@gmail.com>
+In-Reply-To: <4BBEBD47.9010405@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004090942.53884.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is done depending on what the EEPROM settings indicates.
+Am Freitag 09 April 2010 schrieb Gertjan van Wingerde:
+> On 04/09/10 07:10, Gertjan van Wingerde wrote:
+> > On 04/09/10 00:28, Felix Fietkau wrote:
+> >> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
+> >>> Only include definitions for RT chipsets that are also used inside the
+> >>> Ralink vendor drivers.
+> >>>
+> >>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> >>> ---
+> >>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+> >>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+> >>>  2 files changed, 3 insertions(+), 17 deletions(-)
+> >>>
+> >>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> >>> index 394c8e4..4bc7e09 100644
+> >>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> >>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> >>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+> >>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+> >>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
+> >>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+> >>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
+> >>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
+> >>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
+> >>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
+> >>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
+> >>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+> >>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+> >>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+> >>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+> >>>  	}
+> >>>  
+> >>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
+> >>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+> >>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+> >>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+> >>> -	}
+> >>> -
+> >> Why are you removing support for RT3052? IMHO those writes were
+> >> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
+> > 
+> > That is because I have not been able to find them in any of the Ralink vendor drivers.
+> > Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
+> > as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
+> > RT2872 devices, but even for them I haven't found these BBP initializations.
+> > That's why I removed this part.
+> > 
+> > I have no problem re-instating this if I can find some evidence that these devices
+> > actually exist.
+> > 
+> 
+> Hold on, I seem to have found something here. And there are more things to be set, according
+> to the code I found. However, that code is unclear with respect to how the chip identifies
+> itself.
+> 
+> Is it possible for you to found out on you RT3052 WiSoC how the chip identifies itself
+> (i.e. what is the contents of the MAC_CSR0 register)?
+> 
+> Helmut, Luis, I know you guys have been experimenting with WiSoC devices as well, what kind
+> of devices do you have, and how do these identify themselves?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    4 ++
- drivers/net/wireless/ath/ath9k/ar9003_hw.c     |   51 ++++++++++++++++++++++++
- 3 files changed, 69 insertions(+), 0 deletions(-)
+I've got two different devices and both use the same rt chipset 2872, one has
+a rf 3020 (1T1R) and the other one a rf 3022 (2T2R).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index fb39e39..5d92be4 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -1827,6 +1827,20 @@ static u16 ath9k_hw_ar9300_get_spur_channel(struct ath_hw *ah,
- 	return AR_NO_SPUR;
- }
- 
-+s32 ar9003_hw_get_tx_gain_idx(struct ath_hw *ah)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+
-+	return (eep->baseEepHeader.txrxgain >> 4) & 0xf; /* bits 7:4 */
-+}
-+
-+s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+
-+	return (eep->baseEepHeader.txrxgain) & 0xf; /* bits 3:0 */
-+}
-+
- const struct eeprom_ops eep_ar9300_ops = {
- 	.check_eeprom = ath9k_hw_ar9300_check_eeprom,
- 	.get_eeprom = ath9k_hw_ar9300_get_eeprom,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 3ca520c..5fe335e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -316,4 +316,8 @@ struct ar9300_eeprom {
- 	u8 ctl_freqbin_5G[AR9300_NUM_CTLS_5G][AR9300_NUM_BAND_EDGES_5G];
- 	struct cal_ctl_data_5g ctlPowerData_5G[AR9300_NUM_CTLS_5G];
- } __packed;
-+
-+s32 ar9003_hw_get_tx_gain_idx(struct ath_hw *ah);
-+s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah);
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 1984b4f..f32665d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -105,6 +105,56 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 		       3);
- }
- 
-+static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
-+{
-+	switch (ar9003_hw_get_tx_gain_idx(ah)) {
-+	case 0:
-+	default:
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       ar9300Modes_lowest_ob_db_tx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p0),
-+			       5);
-+		break;
-+	case 1:
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       ar9300Modes_high_ob_db_tx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p0),
-+			       5);
-+		break;
-+	case 2:
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       ar9300Modes_low_ob_db_tx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p0),
-+			       5);
-+		break;
-+	}
-+}
-+
-+static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
-+{
-+	switch (ar9003_hw_get_rx_gain_idx(ah)) {
-+	case 0:
-+	default:
-+		INIT_INI_ARRAY(&ah->iniModesRxGain, ar9300Common_rx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Common_rx_gain_table_2p0),
-+			       2);
-+		break;
-+	case 1:
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       ar9300Common_wo_xlna_rx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p0),
-+			       2);
-+		break;
-+	}
-+}
-+
-+/* set gain table pointers according to values read from the eeprom */
-+static void ar9003_hw_init_mode_gain_regs(struct ath_hw *ah)
-+{
-+	ar9003_tx_gain_table_apply(ah);
-+	ar9003_rx_gain_table_apply(ah);
-+}
-+
- /*
-  * Helper for ASPM support.
-  *
-@@ -143,6 +193,7 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
- 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
- 
- 	priv_ops->init_mode_regs = ar9003_hw_init_mode_regs;
-+	priv_ops->init_mode_gain_regs = ar9003_hw_init_mode_gain_regs;
- 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
- 
- 	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
--- 
-1.6.3.3
-
+Helmut
