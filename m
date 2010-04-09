@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46147 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754417Ab0DUNPO (ORCPT
+Received: from 30.mail-out.ovh.net ([213.186.62.213]:59331 "HELO
+	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753603Ab0DIUiI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Apr 2010 09:15:14 -0400
-Date: Wed, 21 Apr 2010 09:06:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"doug.dahlby" <Doug.Dahlby@atheros.com>,
-	Atheros Internal ath9k development team
-	<ath9k-devel@atheros.com>, Cliff Holden <Cliff.Holden@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Pavel Roskin <proski@gnu.org>
-Subject: Re: ath9k initvals-tool - integrity checks | reformat | synchronize
-Message-ID: <20100421130658.GC5072@tuxdriver.com>
-References: <w2v43e72e891004210029g15eaf50fwbca39a73b7c46268@mail.gmail.com>
+	Fri, 9 Apr 2010 16:38:08 -0400
+Message-ID: <4BBF902B.7040504@free.fr>
+Date: Fri, 09 Apr 2010 22:38:03 +0200
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <w2v43e72e891004210029g15eaf50fwbca39a73b7c46268@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Joerg Pommnitz <pommnitz@yahoo.com>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] ath9k/mac80211 and 802.11n in IBSS mode
+References: <382964.83589.qm@web51407.mail.re2.yahoo.com> <1270822655.3870.21.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1270822655.3870.21.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 21, 2010 at 12:29:26AM -0700, Luis R. Rodriguez wrote:
-> In the v2 patch cover letter for AR9003 I noted how I had started some
-> simple initval userspcae tool to check the integrity of the initvals.
-> Since we also had some discussions about the possible format changes
-> for it I've gone ahead and extended the same tool to also reformat our
-> initvals to any format we like and at the same time allowing us to
-> verify the integrity is kept. This same tool can now be used by us at
-> Atheros to check for changes quickly between our Atheros HAL and the
-> ath9k_hw module. I've written some docs how to do all this here:
-> 
-> http://wireless.kernel.org/en/users/Drivers/ath9k_hw/initvals-tool
+Johannes Berg a écrit :
+> On Fri, 2010-04-09 at 03:03 -0700, Joerg Pommnitz wrote:
+>   
+>> Hello all,
+>> the Atheros Windows drivers provide an option to enable 802.11n mode
+>> for IBSS networks. I did not find any information in this regard for
+>> mac80211 based drivers. So, is this supported and how would I enable
+>> this feature? And, btw. what exactly would this mean?
+>>     
+>
+> Benoit was working on this, but his last patchset missed the ability to
+> actually configure this when requesting an IBSS join.
+>
+> johannes
+>   
+Exactly :-). I need to dig into iw source code and understand a bit of 
+nl80211 before...
+There was some problem with rate control as well that might be fixed by 
+minstrel_ht as well.
 
-Just as an aside, I'd like to thank you for the amount of information
-you have added to the Linux Wireless wiki.  It is a really great
-resource for our community.
+Regards,
+Benoit
 
-Thanks!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
