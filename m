@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:63656 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406Ab0D1STD convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f223.google.com ([209.85.220.223]:51909 "EHLO
+	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757967Ab0DIVoc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 14:19:03 -0400
+	Fri, 9 Apr 2010 17:44:32 -0400
+Message-ID: <4BBF9FBB.3020707@gmail.com>
+Date: Fri, 09 Apr 2010 23:44:27 +0200
+From: Till Kamppeter <till.kamppeter@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20100329110339P.fujita.tomonori@lab.ntt.co.jp>
-References: <1269822285.8653.251.camel@localhost>
-	 <20100329105129Y.fujita.tomonori@lab.ntt.co.jp>
-	 <1269827928.8653.307.camel@localhost>
-	 <20100329110339P.fujita.tomonori@lab.ntt.co.jp>
-Date: Wed, 28 Apr 2010 20:19:02 +0200
-Message-ID: <u2kf6ca9fed1004281119g865f263cr26df59e620f6129f@mail.gmail.com>
-Subject: Re: [PATCH] rt28xx: Make PCI_{MAP,UNMAP}_SINGLE type-safe
-From: drago01 <drago01@gmail.com>
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: ben@decadent.org.uk, bzolnier@gmail.com, gregkh@suse.de,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Theodore Ts'o <tytso@mit.edu>, Greg KH <greg@kroah.com>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Google Summer of Code 2010 - Student Application Deadline has passed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 4:04 AM, FUJITA Tomonori
-<fujita.tomonori@lab.ntt.co.jp> wrote:
-> On Mon, 29 Mar 2010 02:58:48 +0100
-> Ben Hutchings <ben@decadent.org.uk> wrote:
->
->> On Mon, 2010-03-29 at 10:52 +0900, FUJITA Tomonori wrote:
->> > On Mon, 29 Mar 2010 01:24:45 +0100
->> > Ben Hutchings <ben@decadent.org.uk> wrote:
->> >
->> > > To avoid recurrence of bugs such as <http://bugs.debian.org/575726>,
->> > > change the type of the first parameter to linux_pci_{map,unmap}_single()
->> > > from void * to struct rt_rtmp_adapter *.  Also do not define the macros
->> > > PCI_{MAP,UNMAP}_SINGLE() when building the rt2870sta driver; they are
->> > > not used and if they were that would be a bug.
->> > >
->> > > Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
->> > > ---
->> > >  drivers/staging/rt2860/rt_linux.h    |   14 +++++---------
->> > >  drivers/staging/rt2860/rt_pci_rbus.c |   12 ++++--------
->> > >  2 files changed, 9 insertions(+), 17 deletions(-)
->> >
->> > I think using dma_map_single directly instead of inventing a wrapper
->> > function make the code more readable.
->>
->> These functions are not quite simple wrappers, unfortunately.  So while
->> I think that is worth doing it is a separate change.
->
-> Well, the current wrapper functions looks terrible. Needs to fix them
-> before moving the driver out of the staging anyway, I think.
+Hi,
 
-The driver is not expected to make it ever out of staging ... unless
-someone ports it to mac80211 ... the in kernel rt2x00 drivers are the
-longer term solutions for supporting this hardware.
+now we have a lot of student applications and to assure that we get 
+enough slots for all students we want to actually mentor, we need to 
+assign mentors to the students until MONDAY at the latest.
+
+In addition, applications which are obviously spam should be marked 
+ineligible, also until MONDAY at the latest.
+
+Incomplete proposals should only be ranked down, not marked ineligible.
+
+Please check which students are interesting for you to mentor, and feel 
+free to mentor more than one student if there are many good applications.
+
+If you are not registered as a mentor yet, do so ASAP. To do so, do the 
+following:
+
+1. Make sure you have a Google account and you are able to log in.
+
+2. Log in on http://socghop.appspot.com/ with your Google account.
+
+3. If you have no user profile for the Google Summer of Code yet, create 
+one. If you have a user profile already from one of the previous GSoCs, 
+reuse this profile.
+
+4. Under "Programs" -> "GSoC 2010" in the menu on the left you should 
+find an entry "Apply to become a Mentor" now. Click it. You will now 
+have to select the mentoring organization. It is the Linux Foundation 
+(Link ID: "lf"). After submitting your mentor application I will get a 
+notification so that I can approve it. You should get a notification 
+that I have approved you. After that you have to fill your mentor 
+profile. Only having done so you get a mentor and can assign yourself as 
+mentor for one or more students. To make it easier for me to recognize 
+your GSoC user name, send me an e-mail when you apply to get a mentor.
+
+5. Assure that every good student application has a mentor assigned (not 
+only proposed).
+
+Take more students than you really want to mentor for the case that the 
+"real" mentor is not available to assign some of the good students to 
+him until Monday. We can reassign mentors later, no we only need to 
+assign to secure good applications and slots.
+
+    Till
