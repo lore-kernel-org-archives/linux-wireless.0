@@ -1,64 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60952 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757272Ab0DOVjn (ORCPT
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:61116 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751124Ab0DIMYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:43 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 15/97] ath9k_hw: move init config and default after chip is up
-Date: Thu, 15 Apr 2010 17:38:20 -0400
-Message-Id: <1271367582-992-16-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 9 Apr 2010 08:24:07 -0400
+Received: by bwz1 with SMTP id 1so2497187bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Apr 2010 05:24:05 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor driver.
+Date: Fri, 9 Apr 2010 14:23:58 +0200
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <201004091332.26307.helmut.schaa@googlemail.com> <4BBF150E.3030507@openwrt.org>
+In-Reply-To: <4BBF150E.3030507@openwrt.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004091423.58803.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows us to add SREV checks on these helpers.
+Am Freitag 09 April 2010 schrieb Felix Fietkau:
+> On 2010-04-09 1:32 PM, Helmut Schaa wrote:
+> > Am Freitag 09 April 2010 schrieb Felix Fietkau:
+> >> On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
+> >> > On 04/09/10 00:28, Felix Fietkau wrote:
+> >> >> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
+> >> >>> Only include definitions for RT chipsets that are also used inside the
+> >> >>> Ralink vendor drivers.
+> >> >>>
+> >> >>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> >> >>> ---
+> >> >>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
+> >> >>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
+> >> >>>  2 files changed, 3 insertions(+), 17 deletions(-)
+> >> >>>
+> >> >>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> >> >>> index 394c8e4..4bc7e09 100644
+> >> >>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> >> >>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> >> >>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+> >> >>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
+> >> >>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
+> >> >>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
+> >> >>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
+> >> >>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
+> >> >>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
+> >> >>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
+> >> >>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
+> >> >>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
+> >> >>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+> >> >>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+> >> >>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+> >> >>>  	}
+> >> >>>  
+> >> >>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
+> >> >>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+> >> >>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+> >> >>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+> >> >>> -	}
+> >> >>> -
+> >> >> Why are you removing support for RT3052? IMHO those writes were
+> >> >> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
+> >> > 
+> >> > That is because I have not been able to find them in any of the Ralink vendor drivers.
+> >> > Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
+> >> > as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
+> >> > RT2872 devices, but even for them I haven't found these BBP initializations.
+> >> > That's why I removed this part.
+> >> > 
+> >> > I have no problem re-instating this if I can find some evidence that these devices
+> >> > actually exist.
+> >> These chipsets won't show up in STA-only drivers, because they belong to
+> >> embedded APs. If you download GPL sources for devices such as ASUS
+> >> RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
+> >> values in BBPRegTable in the driver sources.
+> >> I have a few devices based on RT3052, which is why I added this code.
+> >> At some point I even had basic Rx/Tx working on it, but haven't tested
+> >> in a while.
+> > 
+> > I also couldn't find any evidence of the existence of an 3052 _rt_ chipset.
+> > However, the ralink drivers defines a 3052 _rf_ chip:
+> > 
+> > #define RFIC_3052                   9       // 2.4G/5G 2T2R
+> RT3052 is the name of the whole WiSoC chip, not just the MAC or RF part
+> of it. Since wifi is integrated in the SoC, I don't think there is a
+> separate name for just the wifi part.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+There is. I have one 3052 and one 3050 board (basically a 3052 but only
+1T1R), and both identify themselves as RT2872 with different rf "chips"
+(of course, there are no additional chips). Hence, the check for RT3052
+was never true on both platforms.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 5dc7041..7127166 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -410,8 +410,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 	ah->hw_version.subvendorid = 0;
- 
- 	ah->ah_flags = 0;
--	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
--		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 	if (!AR_SREV_9100(ah))
- 		ah->ah_flags = AH_USE_EEPROM;
- 
-@@ -874,8 +872,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int r = 0;
- 
--	ath9k_hw_init_defaults(ah);
--	ath9k_hw_init_config(ah);
-+	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
-+		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
- 
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
- 		ath_print(common, ATH_DBG_FATAL,
-@@ -883,6 +881,9 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 		return -EIO;
- 	}
- 
-+	ath9k_hw_init_defaults(ah);
-+	ath9k_hw_init_config(ah);
-+
- 	ath9k_hw_attach_ops(ah);
- 
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
--- 
-1.6.3.3
+> > I don't have such an rf chip in my devices but I don't think the BPP
+> > register setup should depend on the actual rf chip. So, if the register
+> > setup is really needed we should maybe check for rt2x00_is_soc instead
+> > of removing the code?
+> Yes, but rt2x00_is_soc() is not enough, since RT2880 is also SoC, but
+> slightly different compared to RT3052. I've only tested RT3052 myself.
 
+Right. So, from what I've seen so far it seems like all 305x boards identify
+themselves as rt2872. Hence, we can just replace 3052 with 2872 in the above
+check and leave the code as is.
+
+Helmut
