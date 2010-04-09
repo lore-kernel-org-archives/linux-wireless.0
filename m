@@ -1,78 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52375 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754402Ab0D1VBM (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:33045 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756435Ab0DIIIB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 17:01:12 -0400
-From: cabtobma@tuxdriver.com
-To: linux-wireless@vger.kernel.org
-Cc: gwingerde@gmail.com, ivdoorn@gmail.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: remove now unused noise field from struct rxdone_entry_desc
-Date: Wed, 28 Apr 2010 17:00:52 -0400
-Message-Id: <1272488452-21288-1-git-send-email-cabtobma>
+	Fri, 9 Apr 2010 04:08:01 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 4/5] wl1271: Go to ELP in idle
+Date: Fri,  9 Apr 2010 11:07:29 +0300
+Message-Id: <1270800450-8167-5-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1270800450-8167-1-git-send-email-luciano.coelho@nokia.com>
+References: <1270800450-8167-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: John W. Linville <linville@tuxdriver.com>
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Allow the wl1271 go to ELP mode also in idle. This will reduce current
+consumption remarkably in idle mode (~12mA -> ~0.2mA)
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c   |    4 ----
- drivers/net/wireless/rt2x00/rt2800usb.c   |    4 ----
- drivers/net/wireless/rt2x00/rt2x00queue.h |    2 --
- 3 files changed, 0 insertions(+), 10 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_ps.c   |    6 ++++--
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 0e52f17..89281d7 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -895,10 +895,6 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
- 	    (rt2x00_get_field32(rxwi2, RXWI_W2_RSSI0) +
- 	     rt2x00_get_field32(rxwi2, RXWI_W2_RSSI1)) / 2;
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index a29969e..7894600 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -374,6 +374,7 @@ struct wl1271 {
+ #define WL1271_FLAG_PSM_REQUESTED      (8)
+ #define WL1271_FLAG_IRQ_PENDING        (9)
+ #define WL1271_FLAG_IRQ_RUNNING       (10)
++#define WL1271_FLAG_IDLE              (11)
+ 	unsigned long flags;
  
--	rxdesc->noise =
--	    (rt2x00_get_field32(rxwi3, RXWI_W3_SNR0) +
--	     rt2x00_get_field32(rxwi3, RXWI_W3_SNR1)) / 2;
--
- 	rxdesc->size = rt2x00_get_field32(rxwi0, RXWI_W0_MPDU_TOTAL_BYTE_COUNT);
+ 	struct wl1271_partition_set part;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 4adc516..5517141 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1272,7 +1272,9 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			wl1271_acx_keep_alive_config(
+ 				wl, CMD_TEMPL_KLV_IDX_NULL_DATA,
+ 				ACX_KEEP_ALIVE_TPL_INVALID);
+-		}
++			set_bit(WL1271_FLAG_IDLE, &wl->flags);
++		} else
++			clear_bit(WL1271_FLAG_IDLE, &wl->flags);
+ 	}
  
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index a716156..6f2a945 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -645,10 +645,6 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
- 	    (rt2x00_get_field32(rxwi2, RXWI_W2_RSSI0) +
- 	     rt2x00_get_field32(rxwi2, RXWI_W2_RSSI1)) / 2;
+ 	if (conf->flags & IEEE80211_CONF_PS &&
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
+index 5a04482..a5e60e0 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
+@@ -40,7 +40,8 @@ void wl1271_elp_work(struct work_struct *work)
+ 	mutex_lock(&wl->mutex);
  
--	rxdesc->noise =
--	    (rt2x00_get_field32(rxwi3, RXWI_W3_SNR0) +
--	     rt2x00_get_field32(rxwi3, RXWI_W3_SNR1)) / 2;
--
- 	rxdesc->size = rt2x00_get_field32(rxwi0, RXWI_W0_MPDU_TOTAL_BYTE_COUNT);
+ 	if (test_bit(WL1271_FLAG_IN_ELP, &wl->flags) ||
+-	    !test_bit(WL1271_FLAG_PSM, &wl->flags))
++	    (!test_bit(WL1271_FLAG_PSM, &wl->flags) &&
++	     !test_bit(WL1271_FLAG_IDLE, &wl->flags)))
+ 		goto out;
  
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index c1e482b..f519aba 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -183,7 +183,6 @@ enum rxdone_entry_desc_flags {
-  * @timestamp: RX Timestamp
-  * @signal: Signal of the received frame.
-  * @rssi: RSSI of the received frame.
-- * @noise: Measured noise during frame reception.
-  * @size: Data size of the received frame.
-  * @flags: MAC80211 receive flags (See &enum mac80211_rx_flags).
-  * @dev_flags: Ralink receive flags (See &enum rxdone_entry_desc_flags).
-@@ -197,7 +196,6 @@ struct rxdone_entry_desc {
- 	u64 timestamp;
- 	int signal;
- 	int rssi;
--	int noise;
- 	int size;
- 	int flags;
- 	int dev_flags;
+ 	wl1271_debug(DEBUG_PSM, "chip to elp");
+@@ -56,7 +57,8 @@ out:
+ /* Routines to toggle sleep mode while in ELP */
+ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ {
+-	if (test_bit(WL1271_FLAG_PSM, &wl->flags)) {
++	if (test_bit(WL1271_FLAG_PSM, &wl->flags) ||
++	    test_bit(WL1271_FLAG_IDLE, &wl->flags)) {
+ 		cancel_delayed_work(&wl->elp_work);
+ 		ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
+ 					msecs_to_jiffies(ELP_ENTRY_DELAY));
 -- 
-1.6.6.1
+1.6.3.3
 
