@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53526 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757978Ab0DPTAN (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34355
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750918Ab0DIRDi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 15:00:13 -0400
-Date: Fri, 16 Apr 2010 14:47:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Ivan Seskar <seskar@winlab.rutgers.edu>
-Subject: Re: Survey mode
-Message-ID: <20100416184701.GE8554@tuxdriver.com>
-References: <514D34D599B3254B89EEAADA3A7AC85D3F1F9D0AF4@ms2.winlab-ad.rutgers.edu> <z2p43e72e891004161046o81e032ddm20ce1e3528af0684@mail.gmail.com> <201004162043.07085.holgerschurig@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201004162043.07085.holgerschurig@gmail.com>
+	Fri, 9 Apr 2010 13:03:38 -0400
+Date: Fri, 09 Apr 2010 10:03:41 -0700 (PDT)
+Message-Id: <20100409.100341.268115452.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: jeff.chua.linux@gmail.com, shanyu.zhao@intel.com,
+	reinette.chatre@intel.com, stable@kernel.org,
+	linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
+	viro@zeniv.linux.org.uk, wey-yi.w.guy@intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-04-09
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100409153807.GA3014@tuxdriver.com>
+References: <20100408200218.GC2999@tuxdriver.com>
+	<1270762107.20845.3.camel@wwguy-ubuntu>
+	<20100409153807.GA3014@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 16, 2010 at 08:43:06PM +0200, Holger Schurig wrote:
-> > Luiz:
-> > Holger, are these in PATCH form or were they RFCs?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 9 Apr 2010 11:38:07 -0400
+
+> This fix is intended for 2.6.34.  It resolves an issue involving an
+> Oops on boxes w/ iwl4965 hardware, apparently introduced by another
+> recent patch.  The thread describing the issue and the resolution
+> is here:
 > 
-> Both patches work for me, so they're [PATCH]. If John want's them "extra", I 
-> can make sure they apply to linux-wl and repost them.
+> 	http://marc.info/?l=linux-kernel&m=127074721531649&w=2
+> 
+> In order to avoid reverting that patch, please accept this fix instead.
+> As usual, please let me know if there are problems!
 
-Sounds like people want them?  If so, a repost would be nice...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Pulled, thanks John.
