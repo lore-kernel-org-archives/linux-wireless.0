@@ -1,68 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60974 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757286Ab0DOVjn (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:33153 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754074Ab0DIIIc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:43 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Fri, 9 Apr 2010 04:08:32 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 24/97] ath9k_hw: update the chip tests for AR9003
-Date: Thu, 15 Apr 2010 17:38:29 -0400
-Message-Id: <1271367582-992-25-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Subject: [PATCH 2/5] wl1271: Fix mac80211 configuration requests during WL1271_STATE_OFF
+Date: Fri,  9 Apr 2010 11:07:27 +0300
+Message-Id: <1270800450-8167-3-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1270800450-8167-1-git-send-email-luciano.coelho@nokia.com>
+References: <1270800450-8167-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+From: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
 
-The AR9003 family requires a change on the loop and can also skip
-testing the PHY timing registers. This chip test can now be used
-by all Atheros hardware families, including legacy. We can
-eventually move this out to the generic ath module.
+mac80211 sends configuration requests even if the wl1271 interface
+state is WL1271_STATE_OFF. This creates warnings from mac80211.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+This patch leaves the configuration functions, if the interface is
+going down.
+
+Signed-off-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_main.c |   14 +++++++++++---
+ 1 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0b89605..bf7a85f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -298,18 +298,25 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
- }
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 4e97540..2eb7b99 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1223,6 +1223,9 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
  
-+/* This should work for all families including legacy */
- static bool ath9k_hw_chip_test(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
--	u32 regAddr[2] = { AR_STA_ID0, AR_PHY_BASE + (8 << 2) };
-+	u32 regAddr[2] = { AR_STA_ID0 };
- 	u32 regHold[2];
- 	u32 patternData[4] = { 0x55555555,
- 			       0xaaaaaaaa,
- 			       0x66666666,
- 			       0x99999999 };
--	int i, j;
-+	int i, j, loop_max;
+ 	mutex_lock(&wl->mutex);
  
--	for (i = 0; i < 2; i++) {
-+	if (!AR_SREV_9300_20_OR_LATER(ah)) {
-+		loop_max = 2;
-+		regAddr[1] = AR_PHY_BASE + (8 << 2);
-+	} else
-+		loop_max = 1;
++	if (unlikely(wl->state == WL1271_STATE_OFF))
++		goto out;
 +
-+	for (i = 0; i < loop_max; i++) {
- 		u32 addr = regAddr[i];
- 		u32 wrData, rdData;
+ 	ret = wl1271_ps_elp_wakeup(wl, false);
+ 	if (ret < 0)
+ 		goto out;
+@@ -1324,8 +1327,12 @@ static u64 wl1271_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
+ 				       struct dev_addr_list *mc_list)
+ {
+ 	struct wl1271_filter_params *fp;
++	struct wl1271 *wl = hw->priv;
+ 	int i;
  
++	if (unlikely(wl->state == WL1271_STATE_OFF))
++		return 0;
++
+ 	fp = kzalloc(sizeof(*fp), GFP_ATOMIC);
+ 	if (!fp) {
+ 		wl1271_error("Out of memory setting filters.");
+@@ -1372,15 +1379,16 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	if (wl->state == WL1271_STATE_OFF)
++	*total &= WL1271_SUPPORTED_FILTERS;
++	changed &= WL1271_SUPPORTED_FILTERS;
++
++	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl, false);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	*total &= WL1271_SUPPORTED_FILTERS;
+-	changed &= WL1271_SUPPORTED_FILTERS;
+ 
+ 	if (*total & FIF_ALLMULTI)
+ 		ret = wl1271_acx_group_address_tbl(wl, false, NULL, 0);
 -- 
 1.6.3.3
 
