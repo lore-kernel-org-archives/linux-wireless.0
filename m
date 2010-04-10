@@ -1,115 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47041 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933313Ab0DHT1w (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:51005 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595Ab0DJU6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:52 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 098/102] ath9k: add LDPC support
-Date: Thu,  8 Apr 2010 15:27:34 -0400
-Message-Id: <1270754858-26266-99-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 10 Apr 2010 16:58:48 -0400
+Received: by ewy20 with SMTP id 20so1599641ewy.1
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Apr 2010 13:58:47 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 5/9] rt2x00: Align rt2800 register initialization with vendor driver.
+Date: Sat, 10 Apr 2010 22:58:44 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <201004090033.29518.IvDoorn@gmail.com> <4BC0CDF8.4030609@gmail.com>
+In-Reply-To: <4BC0CDF8.4030609@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <201004102258.45258.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-LDPC is enabled by the rate control if the its determined
-that the target peer supports LDPC. We would have already
-intersected the HT capabilities so if our peer supports
-LDPC so do we.
+> > 
+> >> @@ -1214,38 +1243,61 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+> >>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_MPDU, 0);
+> >>  	rt2800_register_write(rt2x00dev, MAX_LEN_CFG, reg);
+> >>  
+> >> +	rt2800_register_read(rt2x00dev, LED_CFG, &reg);
+> >> +	rt2x00_set_field32(&reg, LED_CFG_ON_PERIOD, 70);
+> >> +	rt2x00_set_field32(&reg, LED_CFG_OFF_PERIOD, 30);
+> >> +	rt2x00_set_field32(&reg, LED_CFG_SLOW_BLINK_PERIOD, 3);
+> >> +	rt2x00_set_field32(&reg, LED_CFG_R_LED_MODE, 3);
+> >> +	rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE, 3);
+> >> +	rt2x00_set_field32(&reg, LED_CFG_Y_LED_MODE, 3);
+> >> +	rt2x00_set_field32(&reg, LED_CFG_LED_POLAR, 1);
+> >> +	rt2800_register_write(rt2x00dev, LED_CFG, reg);
+> > 
+> > Same here.
+> 
+> That's difficult. We have no other function simply manipulating the LED_CFG register.
+> There is rt2800_blink_set, but that is working completely different.
+> I'd prefer to leave this as is, instead of introducing another small helper.
+> 
+> > 
+> >>  	rt2800_register_write(rt2x00dev, PBF_MAX_PCNT, 0x1f3fbf9f);
+> >>  
+> >> +	rt2800_register_read(rt2x00dev, TX_RTY_CFG, &reg);
+> >> +	rt2x00_set_field32(&reg, TX_RTY_CFG_SHORT_RTY_LIMIT, 15);
+> >> +	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_LIMIT, 31);
+> >> +	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_THRE, 2000);
+> >> +	rt2x00_set_field32(&reg, TX_RTY_CFG_NON_AGG_RTY_MODE, 0);
+> >> +	rt2x00_set_field32(&reg, TX_RTY_CFG_AGG_RTY_MODE, 0);
+> >> +	rt2x00_set_field32(&reg, TX_RTY_CFG_TX_AUTO_FB_ENABLE, 1);
+> >> +	rt2800_register_write(rt2x00dev, TX_RTY_CFG, reg);
+> > 
+> > And here.
+> 
+> Same as for LED_CFG. Using rt2800_config_retry_limit would involve setting up a
+> complete libconf structure. Seems like a bit of overkill for the purpose.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    3 +++
- drivers/net/wireless/ath/ath9k/rc.c   |    9 +++++++++
- drivers/net/wireless/ath/ath9k/xmit.c |   14 ++++++++++----
- 3 files changed, 22 insertions(+), 4 deletions(-)
+Ok, we could fix this later because it might not even be required to do this initialization here,
+it isn't needed for the other (older) chipsets either. But until the rt2800 drivers have problems
+we should stick as close as possible to the original driver. :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 58a87f7..5adc2e3 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -189,6 +189,9 @@ static void setup_ht_cap(struct ath_softc *sc,
- 		       IEEE80211_HT_CAP_SGI_40 |
- 		       IEEE80211_HT_CAP_DSSSCCK40;
- 
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_LDPC)
-+		ht_info->cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+
- 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
- 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 3c4b5d2..f10bd06 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -689,6 +689,15 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	rate_table = sc->cur_rate_table;
- 	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe);
- 
-+	/*
-+	 * If we're in HT mode and both us and our peer supports LDPC.
-+	 * We don't need to check our own device's capabilities as our own
-+	 * ht capabilities would have already been intersected with our peer's.
-+	 */
-+	if (conf_is_ht(&sc->hw->conf) &&
-+	    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
-+		tx_info->flags |= IEEE80211_TX_CTL_LDPC;
-+
- 	if (is_probe) {
- 		/* set one try for probe rates. For the
- 		 * probes don't enable rts */
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 473be84..559327b 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1433,8 +1433,7 @@ static void assign_aggr_tid_seqno(struct sk_buff *skb,
- 	INCR(tid->seq_next, IEEE80211_SEQ_MAX);
- }
- 
--static int setup_tx_flags(struct ath_softc *sc, struct sk_buff *skb,
--			  struct ath_txq *txq)
-+static int setup_tx_flags(struct sk_buff *skb, bool use_ldpc)
- {
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	int flags = 0;
-@@ -1445,6 +1444,9 @@ static int setup_tx_flags(struct ath_softc *sc, struct sk_buff *skb,
- 	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
- 		flags |= ATH9K_TXDESC_NOACK;
- 
-+	if (use_ldpc)
-+		flags |= ATH9K_TXDESC_LDPC;
-+
- 	return flags;
- }
- 
-@@ -1596,6 +1598,7 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
- 	int hdrlen;
- 	__le16 fc;
- 	int padpos, padsize;
-+	bool use_ldpc = false;
- 
- 	tx_info->pad[0] = 0;
- 	switch (txctl->frame_type) {
-@@ -1622,10 +1625,13 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
- 		bf->bf_frmlen -= padsize;
- 	}
- 
--	if (conf_is_ht(&hw->conf))
-+	if (conf_is_ht(&hw->conf)) {
- 		bf->bf_state.bf_type |= BUF_HT;
-+		if (tx_info->flags & IEEE80211_TX_CTL_LDPC)
-+			use_ldpc = true;
-+	}
- 
--	bf->bf_flags = setup_tx_flags(sc, skb, txctl->txq);
-+	bf->bf_flags = setup_tx_flags(skb, use_ldpc);
- 
- 	bf->bf_keytype = get_hw_crypto_keytype(skb);
- 	if (bf->bf_keytype != ATH9K_KEY_TYPE_CLEAR) {
--- 
-1.6.3.3
+> >> +	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev))
+> >> +		rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 1);
+> >> +	else if (rt2x00_is_usb(rt2x00dev))
+> >> +		rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 0);
+> > 
+> > perhaps:
+> > 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, !rt2x00_is_usb(rt2x00dev));
+> 
+> Hmm, could be. Not too fond of that construction though. I think the somewhat more verbose
+> variant I had is clearer and easier to understand what is going on.
 
+Of, but the if-else-if can be replaced with if-else, unless you expect a 4th platform ;)
+
+> >> @@ -1323,6 +1382,15 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+> >>  	rt2800_register_write(rt2x00dev, TX_RTS_CFG, reg);
+> >>  
+> >>  	rt2800_register_write(rt2x00dev, EXP_ACK_TIME, 0x002400ca);
+> >> +
+> >> +	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
+> >> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, 32);
+> >> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, 32);
+> >> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_XIFS_TIME, 4);
+> >> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, 314);
+> >> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_BB_RXEND_ENABLE, 1);
+> >> +	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
+> > 
+> > Not really fond of the magical values written to the device, while mac80211
+> > sends us the proper values later. This is probably a register initialization ordering issue?
+> 
+> These magical values come straight from the Ralink vendor driver. As you know that code isn't
+> the best documented code we've seen, so I don't know what these magical values actually represent.
+> They are just initialization values for the time until we get associated.
+> 
+> For code clarity in comparison to the Ralink vendor driver I prefer to leave these in.
+
+Ok.
+
+Ivo
