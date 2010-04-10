@@ -1,213 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:59018 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755480Ab0DOTAP (ORCPT
+Received: from mail-pz0-f193.google.com ([209.85.222.193]:40429 "EHLO
+	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696Ab0DJPFP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 15:00:15 -0400
-Date: Thu, 15 Apr 2010 14:00:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl818x: Move configuration details to the rtl818x
- directory
-Message-ID: <4bc7623b.jCI2ikmsWKrNCgoa%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 10 Apr 2010 11:05:15 -0400
+Received: by pzk31 with SMTP id 31so817455pzk.33
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Apr 2010 08:05:14 -0700 (PDT)
+From: tom.leiming@gmail.com
+To: Sujith.Manoharan@atheros.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH 1/3] ath9k-htc: replace __dev_alloc_skb with alloc_skb in ath9k_hif_usb_alloc_rx_urbs
+Date: Sat, 10 Apr 2010 23:04:47 +0800
+Message-Id: <1270911887-5717-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for new rtl818x devices, move the existing rtl818x configuration
-into the rtl818x directory.
+From: Ming Lei <tom.leiming@gmail.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+In ath9k_hif_usb_alloc_rx_urbs, ath9k-htc will pass skb->data into
+usb hcd and usb hcd will do dma mapping and unmapping to the buffer
+pointed by skb->data, so we should pass a cache-line aligned address.
+
+This patch replace __dev_alloc_skb with alloc_skb to make skb->data
+pointed to a cacheline aligned address simply since ath9k-htc does not
+skb_push on the skb.
+
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/Kconfig
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/Kconfig
-+++ wireless-testing/drivers/net/wireless/Kconfig
-@@ -210,90 +210,7 @@ config USB_NET_RNDIS_WLAN
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index e2117e7..a498815 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -625,7 +625,7 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
+ 		}
  
- 	  If you choose to build a module, it'll be called rndis_wlan.
- 
--config RTL8180
--	tristate "Realtek 8180/8185 PCI support"
--	depends on MAC80211 && PCI && EXPERIMENTAL
--	select EEPROM_93CX6
--	---help---
--	  This is a driver for RTL8180 and RTL8185 based cards.
--	  These are PCI based chips found in cards such as:
--
--	  (RTL8185 802.11g)
--	  A-Link WL54PC
--
--	  (RTL8180 802.11b)
--	  Belkin F5D6020 v3
--	  Belkin F5D6020 v3
--	  Dlink DWL-610
--	  Dlink DWL-510
--	  Netgear MA521
--	  Level-One WPC-0101
--	  Acer Aspire 1357 LMi
--	  VCTnet PC-11B1
--	  Ovislink AirLive WL-1120PCM
--	  Mentor WL-PCI
--	  Linksys WPC11 v4
--	  TrendNET TEW-288PI
--	  D-Link DWL-520 Rev D
--	  Repotec RP-WP7126
--	  TP-Link TL-WN250/251
--	  Zonet ZEW1000
--	  Longshine LCS-8031-R
--	  HomeLine HLW-PCC200
--	  GigaFast WF721-AEX
--	  Planet WL-3553
--	  Encore ENLWI-PCI1-NT
--	  TrendNET TEW-266PC
--	  Gigabyte GN-WLMR101
--	  Siemens-fujitsu Amilo D1840W
--	  Edimax EW-7126
--	  PheeNet WL-11PCIR
--	  Tonze PC-2100T
--	  Planet WL-8303
--	  Dlink DWL-650 v M1
--	  Edimax EW-7106
--	  Q-Tec 770WC
--	  Topcom Skyr@cer 4011b
--	  Roper FreeLan 802.11b (edition 2004)
--	  Wistron Neweb Corp CB-200B
--	  Pentagram HorNET
--	  QTec 775WC
--	  TwinMOS Booming B Series
--	  Micronet SP906BB
--	  Sweex LC700010
--	  Surecom EP-9428
--	  Safecom SWLCR-1100
--
--	  Thanks to Realtek for their support!
--
--config RTL8187
--	tristate "Realtek 8187 and 8187B USB support"
--	depends on MAC80211 && USB
--	select EEPROM_93CX6
--	---help---
--	  This is a driver for RTL8187 and RTL8187B based cards.
--	  These are USB based chips found in devices such as:
--
--	  Netgear WG111v2
--	  Level 1 WNC-0301USB
--	  Micronet SP907GK V5
--	  Encore ENUWI-G2
--	  Trendnet TEW-424UB
--	  ASUS P5B Deluxe/P5K Premium motherboards
--	  Toshiba Satellite Pro series of laptops
--	  Asus Wireless Link
--	  Linksys WUSB54GC-EU v2
--	    (v1 = rt73usb; v3 is rt2070-based,
--	     use staging/rt3070 or try rt2800usb)
--
--	  Thanks to Realtek for their support!
--
--# If possible, automatically enable LEDs for RTL8187.
--
--config RTL8187_LEDS
--	bool
--	depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
--	default y
-+source "drivers/net/wireless/rtl818x/Kconfig"
- 
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
-Index: wireless-testing/drivers/net/wireless/rtl818x/Kconfig
-===================================================================
---- /dev/null
-+++ wireless-testing/drivers/net/wireless/rtl818x/Kconfig
-@@ -0,0 +1,88 @@
-+#
-+# RTL818X Wireless LAN device configuration
-+#
-+config RTL8180
-+	tristate "Realtek 8180/8185 PCI support"
-+	depends on MAC80211 && PCI && EXPERIMENTAL
-+	select EEPROM_93CX6
-+	---help---
-+	  This is a driver for RTL8180 and RTL8185 based cards.
-+	  These are PCI based chips found in cards such as:
-+
-+	  (RTL8185 802.11g)
-+	  A-Link WL54PC
-+
-+	  (RTL8180 802.11b)
-+	  Belkin F5D6020 v3
-+	  Belkin F5D6020 v3
-+	  Dlink DWL-610
-+	  Dlink DWL-510
-+	  Netgear MA521
-+	  Level-One WPC-0101
-+	  Acer Aspire 1357 LMi
-+	  VCTnet PC-11B1
-+	  Ovislink AirLive WL-1120PCM
-+	  Mentor WL-PCI
-+	  Linksys WPC11 v4
-+	  TrendNET TEW-288PI
-+	  D-Link DWL-520 Rev D
-+	  Repotec RP-WP7126
-+	  TP-Link TL-WN250/251
-+	  Zonet ZEW1000
-+	  Longshine LCS-8031-R
-+	  HomeLine HLW-PCC200
-+	  GigaFast WF721-AEX
-+	  Planet WL-3553
-+	  Encore ENLWI-PCI1-NT
-+	  TrendNET TEW-266PC
-+	  Gigabyte GN-WLMR101
-+	  Siemens-fujitsu Amilo D1840W
-+	  Edimax EW-7126
-+	  PheeNet WL-11PCIR
-+	  Tonze PC-2100T
-+	  Planet WL-8303
-+	  Dlink DWL-650 v M1
-+	  Edimax EW-7106
-+	  Q-Tec 770WC
-+	  Topcom Skyr@cer 4011b
-+	  Roper FreeLan 802.11b (edition 2004)
-+	  Wistron Neweb Corp CB-200B
-+	  Pentagram HorNET
-+	  QTec 775WC
-+	  TwinMOS Booming B Series
-+	  Micronet SP906BB
-+	  Sweex LC700010
-+	  Surecom EP-9428
-+	  Safecom SWLCR-1100
-+
-+	  Thanks to Realtek for their support!
-+
-+config RTL8187
-+	tristate "Realtek 8187 and 8187B USB support"
-+	depends on MAC80211 && USB
-+	select EEPROM_93CX6
-+	---help---
-+	  This is a driver for RTL8187 and RTL8187B based cards.
-+	  These are USB based chips found in devices such as:
-+
-+	  Netgear WG111v2
-+	  Level 1 WNC-0301USB
-+	  Micronet SP907GK V5
-+	  Encore ENUWI-G2
-+	  Trendnet TEW-424UB
-+	  ASUS P5B Deluxe/P5K Premium motherboards
-+	  Toshiba Satellite Pro series of laptops
-+	  Asus Wireless Link
-+	  Linksys WUSB54GC-EU v2
-+	    (v1 = rt73usb; v3 is rt2070-based,
-+	     use staging/rt3070 or try rt2800usb)
-+
-+	  Thanks to Realtek for their support!
-+
-+# If possible, automatically enable LEDs for RTL8187.
-+
-+config RTL8187_LEDS
-+	bool
-+	depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
-+	default y
-+
+ 		/* Allocate buffer */
+-		skb = __dev_alloc_skb(MAX_RX_BUF_SIZE, GFP_KERNEL);
++		skb = alloc_skb(MAX_RX_BUF_SIZE, GFP_KERNEL);
+ 		if (!skb) {
+ 			ret = -ENOMEM;
+ 			goto err_skb;
+-- 
+1.6.2.5
+
