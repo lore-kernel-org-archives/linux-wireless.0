@@ -1,68 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:42973 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752294Ab0DBFEa convert rfc822-to-8bit (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:53817 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006Ab0DJMHL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Apr 2010 01:04:30 -0400
-Received: by pwi5 with SMTP id 5so1564249pwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 22:04:29 -0700 (PDT)
+	Sat, 10 Apr 2010 08:07:11 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so1507303qwh.37
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Apr 2010 05:07:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <t2t43e72e891004012201xc3e1d823sb20e2b1d9a5460cd@mail.gmail.com>
-References: <m2p43e72e891004012145s2f344f7fo9b12044e9b895c06@mail.gmail.com>
-	<t2t43e72e891004012201xc3e1d823sb20e2b1d9a5460cd@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 1 Apr 2010 22:04:09 -0700
-Message-ID: <g2o43e72e891004012204n7e6988eax83e94c236d9ce5ba@mail.gmail.com>
-Subject: Re: iwlagn unexpected AddBA Req
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	 <4BB7660A.3030900@lwfinger.net>
+	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	 <4BB773A9.2070703@lwfinger.net>
+	 <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
+Date: Sat, 10 Apr 2010 09:07:10 -0300
+Message-ID: <q2k917a57cb1004100507s17249540xfb11a2e2f0a2dd76@mail.gmail.com>
+Subject: Re: RTL 8187b - naughty behaviour
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 1, 2010 at 10:01 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Apr 1, 2010 at 9:45 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> [  117.491303] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
->> [  178.467383] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
->> [  239.447236] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
+2010/4/3 Rogerio Luz Coelho <rogluz.news@gmail.com>:
+> 2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
+>> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
+>>>
+>>> I have a MS-Win7 instalation on this Laptop and it works 100% even at
+>>> longer distances than you report,even with walls in between.
+>>>
+>>> Will do the tcpperf test as soon as I get home. There are other with
+>>> the same problem with my exact chip here in Brasil , that is because
+>>> one of our leading Laptop vendors uses this config.
 >>
->> I get a lof of these at spurious times against my WRT610N using
->> today's wireless-testing on iwlagn.
+>> What is the exact make and model of the device? It might be difficult
+>> for me to get one in the US, but one of the rtl8187 developers lives in
+>> Brazil. He should be able to find one.
+>>
 >
-> Here's a very simply way to reproduce this -- I ping my AP and keep
-> only that connection alive. I see this come up every minute. I see the
-> MCS rate fluctuate between 7 and 15 @ HT40 Short GI, and also 6
-> Mbit/s. This is on 5 GHz.
+> It�s a POSITIVO R430L - Core 2 Duo 4GB RAM
+>
+>
+>>> Does it matter that the USB port used in this setting is a connected
+>>> to a USB HUB and then to the mother board?
+>>
+>> Is the hub passive, or is it powered? If the hub is good and not
+>> underpowered, it should be OK.
+>>
+>>> More details and tests will come your way in a day or two ... will
+>>> reinstall Mandriva 2010 and do some tests with older kernels.
+>>
+>> If you can download an openSUSE 11.2 Live CD and burn it, you would not
+>> even have to do an installation. That one has a 2.6.31 kernel.
+>>
+>> Larry
 
-OK I don't think this is coincidence this happens exactly every minute
-+ 1 second:
 
-Apr  1 21:50:01 tux kernel: [  788.234773] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:51:02 tux kernel: [  849.212426] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:52:03 tux kernel: [  910.188457] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:53:04 tux kernel: [  971.163480] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:54:05 tux kernel: [ 1032.143746] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:55:06 tux kernel: [ 1093.151574] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:56:07 tux kernel: [ 1154.158165] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:57:08 tux kernel: [ 1215.163516] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:58:09 tux kernel: [ 1276.171801] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 21:59:10 tux kernel: [ 1337.177613] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 22:00:11 tux kernel: [ 1398.186640] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 22:01:12 tux kernel: [ 1459.193255] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 22:02:13 tux kernel: [ 1520.199135] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
-Apr  1 22:03:14 tux kernel: [ 1581.204850] unexpected AddBA Req from
-00:22:6b:56:fd:e9 on tid 0
+Downloaded and installed:
 
-  Luis
+OpenSuse 11.2 - LiveCD  result: Gnome Network-Manager tells me there
+is connection but no ping resposes, Firefox complains about conections
+errors.
+
+Mandriva 2010.0 (kernel 2.6.31-12) result: concection comes and goes
+... generally the first boot of the day connects, but it lasts less
+than 5min. The error code is the "deauthentication by local reason
+(reason=3) again.
+
+MS-Win7 : connects and is as fast as ever.
+
+-- Any other suggestions?
+
+Rogerio
+
+PS: Will give OpenSuse a HD install atempt and will try to debug the
+Mandriva for some time, future tries involve Debian Stable (old
+kernel) and some Fedora (any suggestions?) and the NDISwrapper drive
+in a Debian Testing (the Distro I need working)
