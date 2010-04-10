@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33054 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757457Ab0DOVjr (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:16713 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750989Ab0DJSpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:47 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 97/97] ath9k_hw: add the PCI ID for the first AR9300 device
-Date: Thu, 15 Apr 2010 17:39:42 -0400
-Message-Id: <1271367582-992-98-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 10 Apr 2010 14:45:25 -0400
+Message-ID: <4BC0C5F1.20309@gmail.com>
+Date: Sat, 10 Apr 2010 20:39:45 +0200
+From: Till Kamppeter <till.kamppeter@gmail.com>
+MIME-Version: 1.0
+To: Theodore Ts'o <tytso@mit.edu>, Greg KH <greg@kroah.com>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Google Summer of Code 2010 - Please ASSIGN (not propose) mentors
+ to the students
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first AR9003 hardware family device supported is the
-AR9300, which has the vendor:device id 168c:0030
+Hi,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+on Tuesday morning the distribution of the student slots to the 
+mentoring organizations will take place. The number of slots which each 
+organization gets depends mainly on how many student applications with 
+assigned mentor (not only proposed mentors) they have.
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 1ec836c..257b10b 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
-+	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
- 	{ 0 }
- };
- 
--- 
-1.6.3.3
+So please ASSIGN a mentor to each good application of your work area.
 
+On the page with the list of student proposals
+
+http://socghop.appspot.com/gsoc/org/list_proposals/google/gsoc2010/lf
+
+all good applications must appear in the second list ("Student Proposals 
+already under review sent to The Linux Foundation") and in the column 
+"Mentor" must be a name of a mentor, NOT simply "N Proposed". To assign 
+a mentor to a student click on the proposal in the list to get the 
+proposal's page, there, under "Admin options" select the desired mentor 
+from the list. If you want to mentor and you are not listed, see my 
+previous posting on how to get mentor.
+
+If you do not mentor by yourself but the one who should mentor the 
+student is not available in the moment so that he cannot do the steps to 
+get mentor and to assign himself to the student until end of Monday, 
+please assign yourself as mentor to get the student considered when the 
+slots get distributed. The mentor assignment can be changed at any time.
+
+    Till
