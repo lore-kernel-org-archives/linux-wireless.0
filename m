@@ -1,95 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:1323 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754758Ab0DNKrh (ORCPT
+Received: from mail-pz0-f193.google.com ([209.85.222.193]:40429 "EHLO
+	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697Ab0DJPFr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 06:47:37 -0400
-Message-ID: <4BC59D46.6010205@gmail.com>
-Date: Wed, 14 Apr 2010 12:47:34 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, IvDoorn@gmail.com
-Subject: Re: [PATCH] wireless: rt2x00: rt2800usb: identify Sitecom devices
-References: <1271240160-2759-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1271240160-2759-1-git-send-email-xose.vazquez@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 10 Apr 2010 11:05:47 -0400
+Received: by mail-pz0-f193.google.com with SMTP id 31so817455pzk.33
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Apr 2010 08:05:47 -0700 (PDT)
+From: tom.leiming@gmail.com
+To: Sujith.Manoharan@atheros.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH 3/3] ath9k-htc: pass cacheline aligned buffer to usb hcd in register out path
+Date: Sat, 10 Apr 2010 23:05:23 +0800
+Message-Id: <1270911923-5783-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/14/10 12:16, Xose Vazquez Perez wrote:
-> A very useful information was provided by Sitecom R&D guys:
-> 
-> Please find the information regarding our latest Ralink adapters below;
-> 
-> WL-302    -    VID: 0x0DF6,    PID: 0x002D    -    Ralink RT2771
-> WL-315    -    VID: 0x0DF6,    PID: 0x0039    -    Ralink RT2770
-> WL-319    -    VID: 0x182D,    PID: 0x0037    -    Ralink RT2860
-> WL-321    -    VID: 0x0DF6,    PID: 0x003B    -    Ralink RT2770
-> WL-324    -    VID: 0x0DF6,    PID: 0x003D    -    Ralink RT2870
-> WL-329    -    VID: 0x0DF6,    PID: 0x0041    -    Ralink RT3572
-> WL-343    -    VID: 0x0DF6,    PID: 0x003E    -    Ralink RT3070
-> WL-344    -    VID: 0x0DF6,    PID: 0x0040    -    Ralink RT3071
-> WL-345    -    VID: 0x0DF6,    PID: 0x0042    -    Ralink RT3072
-> WL-608    -    VID: 0x0DF6,    PID: 0x003F    -    Ralink RT2070
-> 
-> Note:
-> PID: 0x003C, 0x004A, and 0x004D:   --these products do not exist; devices were never produced/shipped--
-> 
-> The WL-349v4 USB dongle (0x0df6,0x0050) will be shipped soon (it isn't available yet), and uses a Ralink RT3370 chipset.
-> 
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+From: Ming Lei <tom.leiming@gmail.com>
 
-Thanks. Looks good.
+This patch copies skb->data of register out command to kmalloced buffer,
+which is cacheline aligned(dma safe) and passed into usb hcd. Since the
+data in register out command is not very much, we can ignore the
+performance loss caused by the copy.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   35 +++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
+ 2 files changed, 31 insertions(+), 5 deletions(-)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |   11 ++++-------
->  1 files changed, 4 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 03a85f7..6b809ab 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -876,6 +876,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  	{ USB_DEVICE(0x0df6, 0x002c), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x0df6, 0x002d), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x0df6, 0x0039), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +	{ USB_DEVICE(0x0df6, 0x003b), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +	{ USB_DEVICE(0x0df6, 0x003d), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x0df6, 0x003f), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	/* SMC */
->  	{ USB_DEVICE(0x083a, 0x6618), USB_DEVICE_DATA(&rt2800usb_ops) },
-> @@ -975,6 +977,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  	{ USB_DEVICE(0x148f, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	/* Sitecom */
->  	{ USB_DEVICE(0x0df6, 0x003e), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +	{ USB_DEVICE(0x0df6, 0x0040), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x0df6, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x0df6, 0x0047), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x0df6, 0x0048), USB_DEVICE_DATA(&rt2800usb_ops) },
-> @@ -1002,6 +1005,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  	{ USB_DEVICE(0x148f, 0x8070), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	/* Sitecom */
->  	{ USB_DEVICE(0x0df6, 0x0041), USB_DEVICE_DATA(&rt2800usb_ops) },
-> +	{ USB_DEVICE(0x0df6, 0x0050), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	/* Zinwell */
->  	{ USB_DEVICE(0x5a57, 0x0284), USB_DEVICE_DATA(&rt2800usb_ops) },
->  #endif
-> @@ -1075,13 +1079,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  	{ USB_DEVICE(0x2019, 0xab24), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	/* Qcom */
->  	{ USB_DEVICE(0x18e8, 0x6259), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -	/* Sitecom */
-> -	{ USB_DEVICE(0x0df6, 0x003b), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -	{ USB_DEVICE(0x0df6, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -	{ USB_DEVICE(0x0df6, 0x003d), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -	{ USB_DEVICE(0x0df6, 0x0040), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -	{ USB_DEVICE(0x0df6, 0x004a), USB_DEVICE_DATA(&rt2800usb_ops) },
-> -	{ USB_DEVICE(0x0df6, 0x004d), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	/* SMC */
->  	{ USB_DEVICE(0x083a, 0xa512), USB_DEVICE_DATA(&rt2800usb_ops) },
->  	{ USB_DEVICE(0x083a, 0xc522), USB_DEVICE_DATA(&rt2800usb_ops) },
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index be4dfbd..b9d42ff 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -29,6 +29,30 @@ MODULE_DEVICE_TABLE(usb, ath9k_hif_usb_ids);
+ 
+ static int __hif_usb_tx(struct hif_device_usb *hif_dev);
+ 
++static inline struct cmd_buf *alloc_cmd(int len)
++{
++	struct cmd_buf *cmd;
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd)
++		return NULL;
++
++	cmd->usb_buf = kmalloc(len, GFP_KERNEL);
++	if (!cmd->usb_buf) {
++		kfree(cmd);
++		return NULL;
++	}
++
++	return cmd;
++}
++
++static inline void free_cmd(struct cmd_buf *cmd)
++{
++	kfree(cmd->usb_buf);
++	kfree(cmd);
++}
++
++
+ static void hif_usb_regout_cb(struct urb *urb)
+ {
+ 	struct cmd_buf *cmd = (struct cmd_buf *)urb->context;
+@@ -48,13 +72,13 @@ static void hif_usb_regout_cb(struct urb *urb)
+ 	if (cmd) {
+ 		ath9k_htc_txcompletion_cb(cmd->hif_dev->htc_handle,
+ 					  cmd->skb, 1);
+-		kfree(cmd);
++		free_cmd(cmd);
+ 	}
+ 
+ 	return;
+ free:
+ 	dev_kfree_skb_any(cmd->skb);
+-	kfree(cmd);
++	free_cmd(cmd);
+ }
+ 
+ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
+@@ -68,7 +92,7 @@ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
+ 	if (urb == NULL)
+ 		return -ENOMEM;
+ 
+-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	cmd = alloc_cmd(skb->len);
+ 	if (cmd == NULL) {
+ 		usb_free_urb(urb);
+ 		return -ENOMEM;
+@@ -76,17 +100,18 @@ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
+ 
+ 	cmd->skb = skb;
+ 	cmd->hif_dev = hif_dev;
++	memcpy(cmd->usb_buf, skb->data, skb->len);
+ 
+ 	usb_fill_int_urb(urb, hif_dev->udev,
+ 			 usb_sndintpipe(hif_dev->udev, USB_REG_OUT_PIPE),
+-			 skb->data, skb->len,
++			 cmd->usb_buf, skb->len,
+ 			 hif_usb_regout_cb, cmd, 1);
+ 
+ 	usb_anchor_urb(urb, &hif_dev->regout_submitted);
+ 	ret = usb_submit_urb(urb, GFP_KERNEL);
+ 	if (ret) {
+ 		usb_unanchor_urb(urb);
+-		kfree(cmd);
++		free_cmd(cmd);
+ 	}
+ 	usb_free_urb(urb);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 7d49a8a..ebc8c41 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -76,6 +76,7 @@ struct hif_usb_tx {
+ struct cmd_buf {
+ 	struct sk_buff *skb;
+ 	struct hif_device_usb *hif_dev;
++	unsigned char *usb_buf;
+ };
+ 
+ #define HIF_USB_START BIT(0)
+-- 
+1.6.2.5
 
