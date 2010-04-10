@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39700 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752635Ab0D1VVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 17:21:04 -0400
-Message-ID: <4BD8A6B4.20603@hauke-m.de>
-Date: Wed, 28 Apr 2010 23:20:52 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:2281 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751470Ab0DJJBp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Apr 2010 05:01:45 -0400
+Message-ID: <4BC03E77.1050003@gmail.com>
+Date: Sat, 10 Apr 2010 11:01:43 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-04-15
-References: <20100415200331.GD3020@tuxdriver.com> <20100415.142907.68448693.davem@davemloft.net>
-In-Reply-To: <20100415.142907.68448693.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Ivo van Doorn <ivdoorn@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 0/9] rt2x00: Align with vendor driver and add support
+ for rt3070/rt3071/rt3090/rt3390.
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <201004090016.53743.IvDoorn@gmail.com>
+In-Reply-To: <201004090016.53743.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
-
-in your merge in 5c01d5669356e13f0fb468944c1dd4c6a7e978ad you added "int
-i;" into wl1271_main.c which is unused in that function.
-
-This patch fixes the merge problem:
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1311,7 +1311,6 @@
- 	struct wl1271_filter_params *fp;
- 	struct netdev_hw_addr *ha;
- 	struct wl1271 *wl = hw->priv;
--	int i;
-
- 	if (unlikely(wl->state == WL1271_STATE_OFF))
- 		return 0;
-
-David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Thu, 15 Apr 2010 16:03:31 -0400
-> 
->> Another fix intended for 2.6.34...without it some firmware wierdness can
->> induce the driver into hanging the box... :-(
+On 04/09/10 00:16, Ivo van Doorn wrote:
+> On Thursday 08 April 2010, Gertjan van Wingerde wrote:
+>> This patch series aligns rt2x00 with the latest versions of the Ralink 
+>> rt2860 / rt2870 / rt3070 / rt3090 drivers, and adds support for RT3070,
+>> RT3071, RT3090, and RT3390 based devices.
 >>
->> Please let me know if there are problems!
+>> The patches are relative to wireless-next-2.6, and can also be pulled
+>> from:
+>>
+>> 	git://git.gwingerde.nl/rt2x00-next-2.6
 > 
-> Pulled, thanks.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Any idea what the status is of rt2870 and rt2770 devices after this series?
+> 
+
+To be honest I only could get my RT2870 device (which is actually identified as an
+RT2860) to scan properly when I tested it.
+However, I had major USB connection issues with that device at the time, so the USB
+connectivity would not survive a association / authentication cycle towards my WPA2-
+protect network.
+
+However, I did manage to connect to this network with my RT3070 device, so I have
+no reason to believe that things would be different for RT2870.
+
+One thing that I believe is still missing for the whole RT28xx/RT3xxx devices is
+proper 802.11n support. I am not sure about that, as I haven't really investigated
+that yet, but my feeling, based on what other drivers had to do to support 802.11n,
+is that we need more work inside rt2x00 to properly support 802.11n.
+
+---
+Gertjan.
