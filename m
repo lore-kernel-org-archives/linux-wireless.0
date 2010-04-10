@@ -1,127 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f193.google.com ([209.85.222.193]:40429 "EHLO
-	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751697Ab0DJPFr (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4164 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751244Ab0DJI5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Apr 2010 11:05:47 -0400
-Received: by mail-pz0-f193.google.com with SMTP id 31so817455pzk.33
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Apr 2010 08:05:47 -0700 (PDT)
-From: tom.leiming@gmail.com
-To: Sujith.Manoharan@atheros.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 3/3] ath9k-htc: pass cacheline aligned buffer to usb hcd in register out path
-Date: Sat, 10 Apr 2010 23:05:23 +0800
-Message-Id: <1270911923-5783-1-git-send-email-tom.leiming@gmail.com>
+	Sat, 10 Apr 2010 04:57:08 -0400
+Message-ID: <4BC03D61.1010501@gmail.com>
+Date: Sat, 10 Apr 2010 10:57:05 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Ivo Van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 4/9] rt2x00: Remove rt2800 version constants.
+References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> 	<1270763437-29526-5-git-send-email-gwingerde@gmail.com> <201004090032.53842.IvDoorn@gmail.com> 	<j2p646765f41004081653vcb4e0178k374a203da36a9f1@mail.gmail.com> 	<k2ra32f33a41004082354y2bf33919y7f0f476b62612cf6@mail.gmail.com> <h2t646765f41004090000o607f02al34df4b3556019a24@mail.gmail.com>
+In-Reply-To: <h2t646765f41004090000o607f02al34df4b3556019a24@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
+On 04/09/10 09:00, Julian Calaby wrote:
+> On Fri, Apr 9, 2010 at 16:54, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+>> On Fri, Apr 9, 2010 at 1:53 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>>> On Fri, Apr 9, 2010 at 08:32, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+>>>> On Thursday 08 April 2010, Gertjan van Wingerde wrote:
+>>>>> The rt2800 version constants are inconsistent, and the version number don't
+>>>>> mean a lot of things anyway. Use the literal values in the code instead of
+>>>>> some sort of fabricated version name macro.
+>>>>>
+>>>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>>>
+>>>> Perhaps a more elegant way of using and defining needs to be found.
+>>>> But at least the defined show what the purpose for the values is
+>>>> rather then having magical values spread around the code.
+>>>
+>>> Maybe something like:
+>>>
+>>> #define RTDEV_IS_RT2883_R1(dev) (rt2x00_rt(dev, RT2883) && \
+>>>                                                   rt2x00_rev(dev) < 0x0300)
+>>
+>> I considered this as well, but we have many checks which either do
+>>    rt2x00_rev() < 0xffff
+>> but also
+>>    rt2x00_ref() == 0xffff
+> 
+> I assume that there are certain ranges of revisions that correspond to
+> certain chips with certain ... features. So, you could have:
+> 
+> #define RTDEV_IS_RT2883_R1(dev) (rt2x00_rt(dev, RT2883) && \
+>                                                   rt2x00_rev(dev) < 0x0300)
+> 
+> for the original chip, then
+> 
+> #define RTDEV_IS_RT2883_R2(dev) (rt2x00_rt(dev, RT2883) && \
+>                                                   rt2x00_rev(dev) >= 0x0300 && \
+>                                                   rt2x00_rev(dev) < 0x1000)
+> 
+> for the troubled second version and
+> 
+> #define RTDEV_IS_RT2883_R3(dev) (rt2x00_rt(dev, RT2883) && \
+>                                                   rt2x00_rev(dev) >= 0x1000)
+> 
+> as a catch all for newer chips.
 
-This patch copies skb->data of register out command to kmalloced buffer,
-which is cacheline aligned(dma safe) and passed into usb hcd. Since the
-data in register out command is not very much, we can ignore the
-performance loss caused by the copy.
+OK. After spending the entire morning trying to understand the Ralink numbering scheme,
+I think I have come up with some sensible constant naming scheme and a set of helpers
+to clarify the code. As you can see below there is no constant numbering scheme for all
+chipsets, and the revision codes are chipset specific.
 
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+First of all, we would define the following chipset revision constants:
+
+#define REV_RT2860C	0x0100
+#define REV_RT2860D	0x0101
+#define REV_RT2870D	0x0101
+#define REV_RT2872E	0x0200
+#define REV_RT3070E	0x0200
+#define REV_RT3070F	0x0201
+#define REV_RT3071E	0x0211
+#define REV_RT3090E	0x0211
+#define REV_RT3390E	0x0211
+
+Next, we would create three helper functions:
+
+bool rt2x00_rt_rev(struct rt2x00_dev *rt2x00dev, u16 rt, u16 rev);
+bool rt2x00_less_than_rt_rev(struct rt2x00_dev *rt2x00dev, u16 rt, u16 rev);
+bool rt2x00_at_least_rt_rev(struct rt2x00_dev *rt2x00dev, u16 rt, u16 rev);
+
+This would cover all the usages that we currently have inside the code.
+
+Obviously more can be added once needed.
+
+Are you guys OK with this proposal?
+If yes, I'll update the series to change the version constants removal
+patch into a patch converting to the above scheme.
+
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |   35 +++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
- 2 files changed, 31 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index be4dfbd..b9d42ff 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -29,6 +29,30 @@ MODULE_DEVICE_TABLE(usb, ath9k_hif_usb_ids);
- 
- static int __hif_usb_tx(struct hif_device_usb *hif_dev);
- 
-+static inline struct cmd_buf *alloc_cmd(int len)
-+{
-+	struct cmd_buf *cmd;
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd)
-+		return NULL;
-+
-+	cmd->usb_buf = kmalloc(len, GFP_KERNEL);
-+	if (!cmd->usb_buf) {
-+		kfree(cmd);
-+		return NULL;
-+	}
-+
-+	return cmd;
-+}
-+
-+static inline void free_cmd(struct cmd_buf *cmd)
-+{
-+	kfree(cmd->usb_buf);
-+	kfree(cmd);
-+}
-+
-+
- static void hif_usb_regout_cb(struct urb *urb)
- {
- 	struct cmd_buf *cmd = (struct cmd_buf *)urb->context;
-@@ -48,13 +72,13 @@ static void hif_usb_regout_cb(struct urb *urb)
- 	if (cmd) {
- 		ath9k_htc_txcompletion_cb(cmd->hif_dev->htc_handle,
- 					  cmd->skb, 1);
--		kfree(cmd);
-+		free_cmd(cmd);
- 	}
- 
- 	return;
- free:
- 	dev_kfree_skb_any(cmd->skb);
--	kfree(cmd);
-+	free_cmd(cmd);
- }
- 
- static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
-@@ -68,7 +92,7 @@ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
- 	if (urb == NULL)
- 		return -ENOMEM;
- 
--	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	cmd = alloc_cmd(skb->len);
- 	if (cmd == NULL) {
- 		usb_free_urb(urb);
- 		return -ENOMEM;
-@@ -76,17 +100,18 @@ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
- 
- 	cmd->skb = skb;
- 	cmd->hif_dev = hif_dev;
-+	memcpy(cmd->usb_buf, skb->data, skb->len);
- 
- 	usb_fill_int_urb(urb, hif_dev->udev,
- 			 usb_sndintpipe(hif_dev->udev, USB_REG_OUT_PIPE),
--			 skb->data, skb->len,
-+			 cmd->usb_buf, skb->len,
- 			 hif_usb_regout_cb, cmd, 1);
- 
- 	usb_anchor_urb(urb, &hif_dev->regout_submitted);
- 	ret = usb_submit_urb(urb, GFP_KERNEL);
- 	if (ret) {
- 		usb_unanchor_urb(urb);
--		kfree(cmd);
-+		free_cmd(cmd);
- 	}
- 	usb_free_urb(urb);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index 7d49a8a..ebc8c41 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -76,6 +76,7 @@ struct hif_usb_tx {
- struct cmd_buf {
- 	struct sk_buff *skb;
- 	struct hif_device_usb *hif_dev;
-+	unsigned char *usb_buf;
- };
- 
- #define HIF_USB_START BIT(0)
--- 
-1.6.2.5
-
+Gertjan.
