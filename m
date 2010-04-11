@@ -1,43 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:36244 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757854Ab0DPWBB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 18:01:01 -0400
-Subject: Re: [PATCH v3 42/97] ath9k: Make bf_desc of ath_buf opaque
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-In-Reply-To: <1271367582-992-43-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-	 <1271367582-992-43-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain
-Date: Fri, 16 Apr 2010 18:00:59 -0400
-Message-Id: <1271455259.16507.43.camel@mj>
-Mime-Version: 1.0
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1155 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751065Ab0DKMb1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Apr 2010 08:31:27 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2/9] rt2x00: Update rt2800 register definitions towards latest definitions.
+Date: Sun, 11 Apr 2010 14:31:08 +0200
+Message-Id: <1270989075-2267-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-15 at 17:38 -0400, Luis R. Rodriguez wrote:
-> From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Definitions taken from the latest rt2860 / rt2870 / rt3070 / rt3090 Ralink
+vendor drivers.
 
-> -	struct ath_desc *bf_desc;	/* virtual addr of desc */
-> +	void *bf_desc;			/* virtual addr of desc */
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |   55 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 2 files changed, 54 insertions(+), 3 deletions(-)
 
-Why?
-
-The obvious downside is that bf_desc becomes compatible with pointers of
-any type.
-
-The only upside I can think of is that bf_desc won't be dereferenced by
-accident.  The same could be done by using a scalar type or
-__attribute__((noderef)).
-
-I believe the downside outweighs the upside in absence of any
-explanation.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 74c0433..455dc3f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -56,6 +56,7 @@
+ #define RF3021				0x0007
+ #define RF3022				0x0008
+ #define RF3052				0x0009
++#define RF3320				0x000b
+ 
+ /*
+  * Chipset version.
+@@ -90,10 +91,16 @@
+ #define NUM_TX_QUEUES			4
+ 
+ /*
+- * USB registers.
++ * Registers.
+  */
+ 
+ /*
++ * OPT_14: Unknown register used by rt3xxx devices.
++ */
++#define OPT_14_CSR			0x0114
++#define OPT_14_CSR_BIT0			FIELD32(0x00000001)
++
++/*
+  * INT_SOURCE_CSR: Interrupt source register.
+  * Write one to clear corresponding bit.
+  * TX_FIFO_STATUS: FIFO Statistics is full, sw should read 0x171c
+@@ -398,6 +405,31 @@
+ #define EFUSE_DATA3			0x059c
+ 
+ /*
++ * LDO_CFG0
++ */
++#define LDO_CFG0			0x05d4
++#define LDO_CFG0_DELAY3			FIELD32(0x000000ff)
++#define LDO_CFG0_DELAY2			FIELD32(0x0000ff00)
++#define LDO_CFG0_DELAY1			FIELD32(0x00ff0000)
++#define LDO_CFG0_BGSEL			FIELD32(0x03000000)
++#define LDO_CFG0_LDO_CORE_VLEVEL	FIELD32(0x1c000000)
++#define LD0_CFG0_LDO25_LEVEL		FIELD32(0x60000000)
++#define LDO_CFG0_LDO25_LARGEA		FIELD32(0x80000000)
++
++/*
++ * GPIO_SWITCH
++ */
++#define GPIO_SWITCH			0x05dc
++#define GPIO_SWITCH_0			FIELD32(0x00000001)
++#define GPIO_SWITCH_1			FIELD32(0x00000002)
++#define GPIO_SWITCH_2			FIELD32(0x00000004)
++#define GPIO_SWITCH_3			FIELD32(0x00000008)
++#define GPIO_SWITCH_4			FIELD32(0x00000010)
++#define GPIO_SWITCH_5			FIELD32(0x00000020)
++#define GPIO_SWITCH_6			FIELD32(0x00000040)
++#define GPIO_SWITCH_7			FIELD32(0x00000080)
++
++/*
+  * MAC Control/Status Registers(CSR).
+  * Some values are set in TU, whereas 1 TU == 1024 us.
+  */
+@@ -1492,6 +1524,14 @@ struct mac_iveiv_entry {
+ #define BBP4_BANDWIDTH			FIELD8(0x18)
+ 
+ /*
++ * BBP 138: Unknown
++ */
++#define BBP138_RX_ADC1			FIELD8(0x02)
++#define BBP138_RX_ADC2			FIELD8(0x04)
++#define BBP138_TX_DAC1			FIELD8(0x20)
++#define BBP138_TX_DAC2			FIELD8(0x40)
++
++/*
+  * RFCSR registers
+  * The wordsize of the RFCSR is 8 bits.
+  */
+@@ -1499,7 +1539,8 @@ struct mac_iveiv_entry {
+ /*
+  * RFCSR 6:
+  */
+-#define RFCSR6_R			FIELD8(0x03)
++#define RFCSR6_R1			FIELD8(0x03)
++#define RFCSR6_R2			FIELD8(0x40)
+ 
+ /*
+  * RFCSR 7:
+@@ -1512,6 +1553,14 @@ struct mac_iveiv_entry {
+ #define RFCSR12_TX_POWER		FIELD8(0x1f)
+ 
+ /*
++ * RFCSR 17:
++ */
++#define RFCSR17_R1			FIELD8(0x07)
++#define RFCSR17_R2			FIELD8(0x08)
++#define RFCSR17_R3			FIELD8(0x20)
++
++
++/*
+  * RFCSR 22:
+  */
+ #define RFCSR22_BASEBAND_LOOPBACK	FIELD8(0x01)
+@@ -1603,6 +1652,8 @@ struct mac_iveiv_entry {
+ #define EEPROM_NIC_WPS_PBC		FIELD16(0x0080)
+ #define EEPROM_NIC_BW40M_BG		FIELD16(0x0100)
+ #define EEPROM_NIC_BW40M_A		FIELD16(0x0200)
++#define EEPROM_NIC_ANT_DIVERSITY	FIELD16(0x0800)
++#define EEPROM_NIC_DAC_TEST		FIELD16(0x8000)
+ 
+ /*
+  * EEPROM frequency
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 6fdec15..394c8e4 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -797,7 +797,7 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_rfcsr_write(rt2x00dev, 3, rf->rf3);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
+-	rt2x00_set_field8(&rfcsr, RFCSR6_R, rf->rf2);
++	rt2x00_set_field8(&rfcsr, RFCSR6_R1, rf->rf2);
+ 	rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 12, &rfcsr);
 -- 
-Regards,
-Pavel Roskin
+1.7.0.4
+
