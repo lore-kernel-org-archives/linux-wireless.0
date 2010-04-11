@@ -1,33 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:55946 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755223Ab0DAQwa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 12:52:30 -0400
-Date: Thu, 1 Apr 2010 09:51:44 -0700
-From: Greg KH <gregkh@suse.de>
-To: Daniel Mack <daniel@caiaq.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	AKML <linux-arm-kernel@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Sven Neumann <s.neumann@raumfeld.com>
-Subject: Re: Memory corruption with 2.6.32.10, but not with 2.6.34-rc3
-Message-ID: <20100401165144.GB1138@suse.de>
-References: <20100401132156.GJ30807@buzzloop.caiaq.de>
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:56223 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752234Ab0DKQ5M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Apr 2010 12:57:12 -0400
+Received: by ewy20 with SMTP id 20so1707879ewy.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2010 09:57:10 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 7/9] rt2x00: Add rt3071 support in rt2800 register initialization.
+Date: Sun, 11 Apr 2010 18:57:09 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-8-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270989075-2267-8-git-send-email-gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100401132156.GJ30807@buzzloop.caiaq.de>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <201004111857.09263.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 01, 2010 at 03:21:56PM +0200, Daniel Mack wrote:
+On Sunday 11 April 2010, Gertjan van Wingerde wrote:
+> Add RT3071 specific register initializations to rt2x00, based on the latest
+> Ralink rt3070 vendor driver.
 > 
-> I can cherry-pick things if anyone pin-points something and run
-> lont-time tests again. Any pointer appreciated.
+> With this patch my RT3071 based devices start showing a sign of life.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Oh, how about running 'git bisect' to try to find the solution?  Just
-remember to reverse 'good' and 'bad' for when you tell git bisect what
-the results are.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-thanks,
-
-greg k-h
