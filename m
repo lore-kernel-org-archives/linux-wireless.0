@@ -1,45 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:44748 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755376Ab0DITww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 15:52:52 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: 2.6.34-rc3-git8: Reported regressions 2.6.32 -> 2.6.33
-Date: Fri, 9 Apr 2010 21:56:05 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <cjwJ7Pf9h0L.A.9pB.1DmvLB@chimera> <4BBE92AE.6090301@gmail.com>
-In-Reply-To: <4BBE92AE.6090301@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201004092156.05674.rjw@sisk.pl>
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:4162 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751247Ab0DKMbZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Apr 2010 08:31:25 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 1/9] rt2x00: Let RF chipset decide the RF channel switch method to use in rt2800.
+Date: Sun, 11 Apr 2010 14:31:07 +0200
+Message-Id: <1270989075-2267-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 09 April 2010, Gertjan van Wingerde wrote:
-> On 04/09/10 00:54, Rafael J. Wysocki wrote:
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15699
-> > Subject		: rt2500usb driver cannot remain connected
-> > Submitter	:  <abcd@gentoo.org>
-> > Date		: 2010-04-05 19:30 (4 days old)
-> > Handled-By	: Ivo van Doorn <IvDoorn@gmail.com>
-> > 
-> 
-> This one ought to be fixed by commit 9e76ad2a27f592c1390248867391880c7efe78b3
-> in Linus' tree.
+It seems that the distinction between RF channel switch method is solely based
+on the RF chipset that is used.
+Refactor the channel switch decision to just take the RF chipset into account,
+thereby greatly simplifying the check.
 
-Thanks, closing.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   31 ++++++++++++++-----------------
+ 1 files changed, 14 insertions(+), 17 deletions(-)
 
-Rafael
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index ec3ec78..6fdec15 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -717,10 +717,10 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00dev->lna_gain = lna_gain;
+ }
+ 
+-static void rt2800_config_channel_rt2x(struct rt2x00_dev *rt2x00dev,
+-				       struct ieee80211_conf *conf,
+-				       struct rf_channel *rf,
+-				       struct channel_info *info)
++static void rt2800_config_channel_rf2xxx(struct rt2x00_dev *rt2x00dev,
++					 struct ieee80211_conf *conf,
++					 struct rf_channel *rf,
++					 struct channel_info *info)
+ {
+ 	rt2x00_set_field32(&rf->rf4, RF4_FREQ_OFFSET, rt2x00dev->freq_offset);
+ 
+@@ -786,10 +786,10 @@ static void rt2800_config_channel_rt2x(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_rf_write(rt2x00dev, 4, rf->rf4);
+ }
+ 
+-static void rt2800_config_channel_rt3x(struct rt2x00_dev *rt2x00dev,
+-				       struct ieee80211_conf *conf,
+-				       struct rf_channel *rf,
+-				       struct channel_info *info)
++static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
++					 struct ieee80211_conf *conf,
++					 struct rf_channel *rf,
++					 struct channel_info *info)
+ {
+ 	u8 rfcsr;
+ 
+@@ -826,16 +826,13 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	unsigned int tx_pin;
+ 	u8 bbp;
+ 
+-	if ((rt2x00_rt(rt2x00dev, RT3070) ||
+-	     rt2x00_rt(rt2x00dev, RT3090) ||
+-	     rt2x00_rt(rt2x00dev, RT2872)) &&
+-	    (rt2x00_rf(rt2x00dev, RF2020) ||
+-	     rt2x00_rf(rt2x00dev, RF3020) ||
+-	     rt2x00_rf(rt2x00dev, RF3021) ||
+-	     rt2x00_rf(rt2x00dev, RF3022)))
+-		rt2800_config_channel_rt3x(rt2x00dev, conf, rf, info);
++	if (rt2x00_rf(rt2x00dev, RF2020) ||
++	    rt2x00_rf(rt2x00dev, RF3020) ||
++	    rt2x00_rf(rt2x00dev, RF3021) ||
++	    rt2x00_rf(rt2x00dev, RF3022))
++		rt2800_config_channel_rf3xxx(rt2x00dev, conf, rf, info);
+ 	else
+-		rt2800_config_channel_rt2x(rt2x00dev, conf, rf, info);
++		rt2800_config_channel_rf2xxx(rt2x00dev, conf, rf, info);
+ 
+ 	/*
+ 	 * Change BBP settings
+-- 
+1.7.0.4
+
