@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60944 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757268Ab0DOVjm (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:58530 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953Ab0DKQzo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:42 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 11/97] ath9k_hw: add some comments for ath9k_set_power_network_sleep()
-Date: Thu, 15 Apr 2010 17:38:16 -0400
-Message-Id: <1271367582-992-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 11 Apr 2010 12:55:44 -0400
+Received: by ewy20 with SMTP id 20so1707665ewy.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2010 09:55:42 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 4/9] rt2x00: Refactor rt2800 version constants.
+Date: Sun, 11 Apr 2010 18:55:40 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270989075-2267-5-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <201004111855.40831.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+On Sunday 11 April 2010, Gertjan van Wingerde wrote:
+> The rt2800 version constants are inconsistent, and the version number don't
+> mean a lot of things anyway. Refactor the constants to have some more
+> meaningful names, and introduce and use some new helpers to check these
+> chipset revisions. At the same time rename to revision, as they are more
+> revision numbers rather than version numbers.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index dd37e90..8aa1684 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2037,6 +2037,11 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
- 	}
- }
- 
-+/*
-+ * Notify Power Management is enabled in self-generating
-+ * frames. If request, set power mode of chip to
-+ * auto/normal.  Duration in units of 128us (1/8 TU).
-+ */
- static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
- {
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
-@@ -2044,9 +2049,14 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
- 		struct ath9k_hw_capabilities *pCap = &ah->caps;
- 
- 		if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
-+			/* Set WakeOnInterrupt bit; clear ForceWake bit */
- 			REG_WRITE(ah, AR_RTC_FORCE_WAKE,
- 				  AR_RTC_FORCE_WAKE_ON_INT);
- 		} else {
-+			/*
-+			 * Clear the RTC force wake bit to allow the
-+			 * mac to go to sleep.
-+			 */
- 			REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
- 				    AR_RTC_FORCE_WAKE_EN);
- 		}
--- 
-1.6.3.3
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
