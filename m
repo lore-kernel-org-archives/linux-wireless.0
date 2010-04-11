@@ -1,29 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43680 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753126Ab0DRNiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Apr 2010 09:38:08 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/2] compat-wireless: compile fixes
-Date: Sun, 18 Apr 2010 15:37:55 +0200
-Message-Id: <1271597877-4878-1-git-send-email-hauke@hauke-m.de>
+Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:1955 "EHLO
+	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751653Ab0DKMb3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Apr 2010 08:31:29 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 7/9] rt2x00: Add rt3071 support in rt2800 register initialization.
+Date: Sun, 11 Apr 2010 14:31:13 +0200
+Message-Id: <1270989075-2267-8-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains mostly compile fixes.
-It was compile tested on kernel 2.6.25 to 2.6.34 and ath9k is working in
-Ubuntu 9.04.
+Add RT3071 specific register initializations to rt2x00, based on the latest
+Ralink rt3070 vendor driver.
 
-Hauke Mehrtens (2):
-  compat: Add definitions needed for libertas sdio driver.
-  compat: Add linux/version.h include before using it.
+With this patch my RT3071 based devices start showing a sign of life.
 
- include/linux/compat-2.6.35.h |    3 +++
- include/linux/tracepoint.h    |    2 ++
- include/net/net_namespace.h   |    2 ++
- include/trace/define_trace.h  |    2 ++
- 4 files changed, 9 insertions(+), 0 deletions(-)
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |  102 ++++++++++++++++++++++++++++---
+ 1 files changed, 93 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 7d1cb7e..fe7171f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1042,7 +1042,8 @@ EXPORT_SYMBOL_GPL(rt2800_link_stats);
+ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
+ {
+ 	if (rt2x00dev->curr_band == IEEE80211_BAND_2GHZ) {
+-		if (rt2x00_rt(rt2x00dev, RT3070))
++		if (rt2x00_rt(rt2x00dev, RT3070) ||
++		    rt2x00_rt(rt2x00dev, RT3071))
+ 			return 0x1c + (2 * rt2x00dev->lna_gain);
+ 		else
+ 			return 0x2e + rt2x00dev->lna_gain;
+@@ -1091,6 +1092,7 @@ EXPORT_SYMBOL_GPL(rt2800_link_tuner);
+ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u32 reg;
++	u16 eeprom;
+ 	unsigned int i;
+ 
+ 	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+@@ -1190,7 +1192,22 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_CC_DELAY_TIME, 2);
+ 	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3070)) {
++	if (rt2x00_rt(rt2x00dev, RT3071)) {
++		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
++		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
++		if (rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E)) {
++			rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
++			if (rt2x00_get_field16(eeprom, EEPROM_NIC_DAC_TEST))
++				rt2800_register_write(rt2x00dev, TX_SW_CFG2,
++						      0x0000002c);
++			else
++				rt2800_register_write(rt2x00dev, TX_SW_CFG2,
++						      0x0000000f);
++		} else {
++			rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
++		}
++		rt2800_register_write(rt2x00dev, TX_SW_CFG2, reg);
++	} else if (rt2x00_rt(rt2x00dev, RT3070)) {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
+ 
+ 		if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
+@@ -1540,7 +1557,8 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3070)) {
++	if (rt2x00_rt(rt2x00dev, RT3070) ||
++	    rt2x00_rt(rt2x00dev, RT3071)) {
+ 		rt2800_bbp_write(rt2x00dev, 79, 0x13);
+ 		rt2800_bbp_write(rt2x00dev, 80, 0x05);
+ 		rt2800_bbp_write(rt2x00dev, 81, 0x33);
+@@ -1561,7 +1579,8 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
+ 
+-	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F))
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
++	    rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E))
+ 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ 	else
+ 		rt2800_bbp_write(rt2x00dev, 103, 0x00);
+@@ -1569,6 +1588,18 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 105, 0x05);
+ 	rt2800_bbp_write(rt2x00dev, 106, 0x35);
+ 
++	if (rt2x00_rt(rt2x00dev, RT3071)) {
++		rt2800_bbp_read(rt2x00dev, 138, &value);
++
++		rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &eeprom);
++		if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TXPATH) == 1)
++			value |= 0x20;
++		if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RXPATH) == 1)
++			value &= ~0x02;
++
++		rt2800_bbp_write(rt2x00dev, 138, value);
++	}
++
+ 	if (rt2x00_rt(rt2x00dev, RT2872)) {
+ 		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+ 		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+@@ -1656,7 +1687,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	u32 reg;
+ 	u16 eeprom;
+ 
+-	if (!rt2x00_rt(rt2x00dev, RT3070))
++	if (!rt2x00_rt(rt2x00dev, RT3070) &&
++	    !rt2x00_rt(rt2x00dev, RT3071))
+ 		return 0;
+ 
+ 	/*
+@@ -1669,7 +1701,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+ 	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3070)) {
++	if (rt2x00_rt(rt2x00dev, RT3070) ||
++	    rt2x00_rt(rt2x00dev, RT3071)) {
+ 		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+ 		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+ 		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+@@ -1696,6 +1729,23 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
+ 		rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
+ 		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
++	} else if (rt2x00_rt(rt2x00dev, RT3071)) {
++		rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
++		rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
++		rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
++
++		rt2800_rfcsr_write(rt2x00dev, 31, 0x14);
++
++		rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
++		if (rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E)) {
++			rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
++			if (rt2x00_get_field16(eeprom, EEPROM_NIC_DAC_TEST))
++				rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
++			else
++				rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
++		}
++		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+ 	}
+ 
+ 	/*
+@@ -1706,6 +1756,11 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 			rt2800_init_rx_filter(rt2x00dev, false, 0x07, 0x16);
+ 		rt2x00dev->calibration[1] =
+ 			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x19);
++	} else if (rt2x00_rt(rt2x00dev, RT3071)) {
++		rt2x00dev->calibration[0] =
++			rt2800_init_rx_filter(rt2x00dev, false, 0x07, 0x13);
++		rt2x00dev->calibration[1] =
++			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x15);
+ 	}
+ 
+ 	/*
+@@ -1724,7 +1779,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field8(&bbp, BBP4_BANDWIDTH, 0);
+ 	rt2800_bbp_write(rt2x00dev, 4, bbp);
+ 
+-	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F))
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F) ||
++	    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E))
+ 		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+ 
+ 	rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
+@@ -1733,6 +1789,11 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E)) {
++		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
++		if (rt2x00_get_field16(eeprom, EEPROM_NIC_EXTERNAL_LNA_BG))
++			rt2x00_set_field8(&rfcsr, RFCSR17_R, 1);
++	}
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &eeprom);
+ 	if (rt2x00_get_field16(eeprom, EEPROM_TXMIXER_GAIN_BG_VAL) >= 1)
+ 		rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
+@@ -1740,9 +1801,32 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 						   EEPROM_TXMIXER_GAIN_BG_VAL));
+ 	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3070)) {
++	if (rt2x00_rt(rt2x00dev, RT3071)) {
++		rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
++		rt2x00_set_field8(&rfcsr, RFCSR1_RF_BLOCK_EN, 1);
++		rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 0);
++		rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 0);
++		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
++		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
++		rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
++
++		rt2800_rfcsr_read(rt2x00dev, 15, &rfcsr);
++		rt2x00_set_field8(&rfcsr, RFCSR15_TX_LO2_EN, 0);
++		rt2800_rfcsr_write(rt2x00dev, 15, rfcsr);
++
++		rt2800_rfcsr_read(rt2x00dev, 20, &rfcsr);
++		rt2x00_set_field8(&rfcsr, RFCSR20_RX_LO1_EN, 0);
++		rt2800_rfcsr_write(rt2x00dev, 20, rfcsr);
++
++		rt2800_rfcsr_read(rt2x00dev, 21, &rfcsr);
++		rt2x00_set_field8(&rfcsr, RFCSR21_RX_LO2_EN, 0);
++		rt2800_rfcsr_write(rt2x00dev, 21, rfcsr);
++	}
++
++	if (rt2x00_rt(rt2x00dev, RT3070) || rt2x00_rt(rt2x00dev, RT3071)) {
+ 		rt2800_rfcsr_read(rt2x00dev, 27, &rfcsr);
+-		if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F))
++		if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F) ||
++		    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E))
+ 			rt2x00_set_field8(&rfcsr, RFCSR27_R1, 3);
+ 		else
+ 			rt2x00_set_field8(&rfcsr, RFCSR27_R1, 0);
+-- 
+1.7.0.4
 
