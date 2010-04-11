@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:52614 "EHLO purkki.valot.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753837Ab0DOFKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 01:10:33 -0400
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wl1251: read default MAC address from EEPROM when available
-References: <1271239548-15326-1-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 15 Apr 2010 08:10:30 +0300
-In-Reply-To: <1271239548-15326-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Wed\, 14 Apr 2010 13\:05\:48 +0300")
-Message-ID: <87tyrdmhbt.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:4914 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751065Ab0DKMbZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Apr 2010 08:31:25 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 0/9] rt2x00: Align with vendor driver and add support for rt3070/rt3071/rt3090/rt3390.
+Date: Sun, 11 Apr 2010 14:31:06 +0200
+Message-Id: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+This patch series aligns rt2x00 with the latest versions of the Ralink 
+rt2860 / rt2870 / rt3070 / rt3090 drivers, and adds support for RT3070,
+RT3071, RT3090, and RT3390 based devices.
 
-> Some wl1251 hardware configurations (like in WG7210 module) have
-> EEPROM attached where NVS data is kept, which includes MAC address.
->
-> In such configurations, let's read default MAC address from EEPROM,
-> instead of using random one.
->
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+The patches are relative to wireless-next-2.6, and can also be pulled
+from:
 
-Acked-by: Kalle Valo <kvalo@adurom.com>
+	git://git.gwingerde.nl/rt2x00-next-2.6
 
-Thank you for the patch.
+v2: Handle comments received from Ivo, Julian and Felix.
 
--- 
-Kalle Valo
+Gertjan van Wingerde (9):
+  rt2x00: Let RF chipset decide the RF channel switch method to use in rt2800.
+  rt2x00: Update rt2800 register definitions towards latest definitions.
+  rt2x00: Align RT chipset definitions with vendor driver.
+  rt2x00: Refactor rt2800 version constants.
+  rt2x00: Align rt2800 register initialization with vendor driver.
+  rt2x00: Finish rt3070 support in rt2800 register initialization.
+  rt2x00: Add rt3071 support in rt2800 register initialization.
+  rt2x00: Add rt3090 support in rt2800 register initialization.
+  rt2x00: Add rt3390 support in rt2800 register initialization.
+
+ drivers/net/wireless/rt2x00/rt2800.h    |  108 +++++++-
+ drivers/net/wireless/rt2x00/rt2800lib.c |  464 ++++++++++++++++++++++---------
+ drivers/net/wireless/rt2x00/rt2800pci.c |   13 -
+ drivers/net/wireless/rt2x00/rt2x00.h    |   29 ++-
+ 4 files changed, 458 insertions(+), 156 deletions(-)
+
