@@ -1,94 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f171.google.com ([209.85.210.171]:65083 "EHLO
-	mail-yx0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752716Ab0DSW5Q (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.24]:18660 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751522Ab0DKNLh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 18:57:16 -0400
-Message-ID: <4BCCDFBC.4020907@gmail.com>
-Date: Mon, 19 Apr 2010 15:57:00 -0700
-From: Till Kamppeter <till.kamppeter@gmail.com>
+	Sun, 11 Apr 2010 09:11:37 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so1720397qwh.37
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2010 06:11:36 -0700 (PDT)
 MIME-Version: 1.0
-To: Greg KH <greg@kroah.com>
-CC: Theodore Ts'o <tytso@mit.edu>,
-	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Witold Sowa <witold.sowa@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: Google Summer of Code 2010 - Please resolve duplicates
-References: <4BCCB176.3060206@gmail.com> <20100419224634.GG1800@kroah.com>
-In-Reply-To: <20100419224634.GG1800@kroah.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <19393.24337.10019.88274@gargle.gargle.HOWL>
+References: <1270911887-5717-1-git-send-email-tom.leiming@gmail.com>
+	 <19393.24337.10019.88274@gargle.gargle.HOWL>
+Date: Sun, 11 Apr 2010 21:11:36 +0800
+Message-ID: <n2ld82e647a1004110611hc424f464gf8443967fa97c21a@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath9k-htc: replace __dev_alloc_skb with alloc_skb in
+	ath9k_hif_usb_alloc_rx_urbs
+From: Ming Lei <tom.leiming@gmail.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/19/2010 03:46 PM, Greg KH wrote:
-> On Mon, Apr 19, 2010 at 12:39:34PM -0700, Till Kamppeter wrote:
->> Hi,
+2010/4/11 Sujith <Sujith.Manoharan@atheros.com>:
+> tom.leiming@gmail.com wrote:
+>> In ath9k_hif_usb_alloc_rx_urbs, ath9k-htc will pass skb->data into
+>> usb hcd and usb hcd will do dma mapping and unmapping to the buffer
+>> pointed by skb->data, so we should pass a cache-line aligned address.
 >>
->> two students who applied for your projects have applied also for
->> another organization's project and they got accepted by us and by
->> the other organization.
+>> This patch replace __dev_alloc_skb with alloc_skb to make skb->data
+>> pointed to a cacheline aligned address simply since ath9k-htc does not
+>> skb_push on the skb.
 >>
->> Until Wednesday Google wants these situation to be resolved until
->> Wednesday April 21, 17:00 UTC. Please contact the students and/or
->> the organization to agree on one of the project for each student.
->>
->> In addition, the ranking of the students (to decide who actually
->> gets our slots) and the mentor assignments have to be finalized by
->> the same date and time.
->>
->> Duplicates not be resolved until then will be resolved on an IRC
->> meeting on Wednesday April 21 at 19:00 UTC. The meeting takes place
->> in the #gsoc channel on Freenode.
->>
->> Please mail me if a mentor needs to be (re)assigned.
->>
->>     Till
->>
->>
->>
->> ----------------------------------------------------------------------
->>
->> Hi all,
->>
->> I have opened the duplicate information for students to all of your
->> orgs. If you view your student proposals now the ones that are ranked
->> to be accepted that are duplicated with another org will be marked in
->> red. If you click on the proposal you will see the contact information
->> for the other organization(s)'s admins near the bottom of the
->> proposal.
->>
->> You must also have a mentor assigned to all the students in your top N
->> slots by now. If you do not have a mentor assigned to them the
->> duplicate detection script will not pick them up and we may have
->> duplicates we don't know about. That is bad, please fix that if its
->> the case.
->>
->> Please try to resolve as many of these duplicate situations via email
->> in the next two days as possible - contact your fellow organizations,
->> be clear with each other about who is taking the student, and then
->> rank the student up if you are accepting him/her or mark the student
->> ineligible with a public comment that you have marked it ineligible
->> because of a duplicate situation if you are not taking the student.
->>
->> The deadline for changing rankings is 17:00UTC on Wednesday, April 21.
->> All duplicates that have not been resolved by 17:00 UTC will be taken
->> to the IRC meeting at 19:00 UTC.
 >
-> Have a pointer to the web site to do this?
+> AFAIK, the only architecture that has a requirement to override NET_SKB_PAD
+> is powerpc, and it does it anyway - by setting it to a cacheline size.
 >
-> thanks,
->
-> greg k-h
->
+> So why do we need to do this ?
 
-Sorry, here we go:
+Documentation/DMA-API.txt says:
+| Warnings:  Memory coherency operates at a granularity called the cache
+| line width.  In order for memory mapped by this API to operate
+| correctly, the mapped region must begin exactly on a cache line
+| boundary and end exactly on one (to prevent two separately mapped
+| regions from sharing a single cache line).  Since the cache line size
+| may not be known at compile time, the API will not enforce this
+| requirement.  Therefore, it is recommended that driver writers who
+| don't take special care to determine the cache line size at run time
+| only map virtual regions that begin and end on page boundaries (which
+| are guaranteed also to be cache line boundaries)
 
-http://socghop.appspot.com/gsoc/org/list_proposals/google/gsoc2010/lf
+The skb->data is passed into usb hcd and usb hcd will do dma mapping
+for the buffer of skb->data, so it is better to keep it cache-line aligned.
 
-Requires login as mentor.
+Size of cache line is very cpu dependent, we can't suppose it is
+32byte(NET_SKB_PAD) aligned, 64byte or more is very possible.
 
-    Till
+Thanks,
+
+-- 
+Lei Ming
