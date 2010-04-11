@@ -1,126 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:41077 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753253Ab0DHUVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 16:21:42 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: 2.6.34-rc3-git6: Reported regressions from 2.6.33
-Date: Thu, 8 Apr 2010 22:24:42 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>,
-	Al Viro <viro@zeniv.linux.org.uk>
-References: <6Pphclm24fK.A.lSF.qsPvLB@chimera> <alpine.LFD.2.00.1004071444440.3586@i5.linux-foundation.org>
-In-Reply-To: <alpine.LFD.2.00.1004071444440.3586@i5.linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004082224.42633.rjw@sisk.pl>
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:2403 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751067Ab0DKMbZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Apr 2010 08:31:25 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
+Date: Sun, 11 Apr 2010 14:31:12 +0200
+Message-Id: <1270989075-2267-7-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 April 2010, Linus Torvalds wrote:
-> 
-> On Wed, 7 Apr 2010, Rafael J. Wysocki wrote:
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15718
-> > Subject		: File corruption regression on NFS related to commit 1f36f774
-> > Submitter	: Boaz Harrosh <bharrosh@panasas.com>
-> > Date		: 2010-03-24 15:49 (15 days old)
-> > First-Bad-Commit: http://git.kernel.org/git/linus/1f36f774b22a0ceb7dd33eca626746c81a97b6a5
-> > Message-ID	: <4BAA3493.1030802@panasas.com>
-> > References	: http://marc.info/?l=linux-kernel&m=126944579810350&w=4
-> > Handled-By	: Al Viro <viro@zeniv.linux.org.uk>
-> 
-> I think this one is fixed by commit 3e297b61349.
+rt2x00 had preliminary support for RT3070 based devices, but the support was
+incomplete.
+Update the RT3070 register initialization to be similar to the latest Ralink
+vendor driver.
 
-Closed.
+With this patch my rt3070 based devices start showing a sign of life.
 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15716
-> > Subject		: ata2: lost interrupt with kernel 2.6.34-rc1
-> > Submitter	: Andrew Benton <b3nton@gmail.com>
-> > Date		: 2010-03-11 16:57 (28 days old)
-> > Message-ID	: <4B992110.2090300@gmail.com>
-> > References	: http://marc.info/?l=linux-kernel&m=126832670609705&w=4
-> > Handled-By	: Jeff Garzik <jeff@garzik.org>
-> 
-> And isn't this the already long-fixed commit 332ac7ff77cd?
-> 
-> That bugzilla entry is a duplicate of 
-> 
-> 	https://bugzilla.kernel.org/show_bug.cgi?id=15537
-> 
-> as far as I can see.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |  133 ++++++++++++++++--------------
+ 1 files changed, 71 insertions(+), 62 deletions(-)
 
-Yes, my bad, sorry.  Closed.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 1890b9a..7d1cb7e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1042,8 +1042,7 @@ EXPORT_SYMBOL_GPL(rt2800_link_stats);
+ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
+ {
+ 	if (rt2x00dev->curr_band == IEEE80211_BAND_2GHZ) {
+-		if (rt2x00_is_usb(rt2x00dev) &&
+-		    rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
++		if (rt2x00_rt(rt2x00dev, RT3070))
+ 			return 0x1c + (2 * rt2x00dev->lna_gain);
+ 		else
+ 			return 0x2e + rt2x00dev->lna_gain;
+@@ -1191,11 +1190,16 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_CC_DELAY_TIME, 2);
+ 	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
+ 
+-	if (rt2x00_is_usb(rt2x00dev) &&
+-	    rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E)) {
++	if (rt2x00_rt(rt2x00dev, RT3070)) {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
+-		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
+-		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
++
++		if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
++			rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
++			rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x0000002c);
++		} else {
++			rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
++			rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
++		}
+ 	} else {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000000);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+@@ -1535,7 +1539,15 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
+-	rt2800_bbp_write(rt2x00dev, 81, 0x37);
++
++	if (rt2x00_rt(rt2x00dev, RT3070)) {
++		rt2800_bbp_write(rt2x00dev, 79, 0x13);
++		rt2800_bbp_write(rt2x00dev, 80, 0x05);
++		rt2800_bbp_write(rt2x00dev, 81, 0x33);
++	} else {
++		rt2800_bbp_write(rt2x00dev, 81, 0x37);
++	}
++
+ 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
+ 	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
+ 
+@@ -1548,7 +1560,12 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
+ 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
+-	rt2800_bbp_write(rt2x00dev, 103, 0x00);
++
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F))
++		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
++	else
++		rt2800_bbp_write(rt2x00dev, 103, 0x00);
++
+ 	rt2800_bbp_write(rt2x00dev, 105, 0x05);
+ 	rt2800_bbp_write(rt2x00dev, 106, 0x35);
+ 
+@@ -1558,13 +1575,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+ 	}
+ 
+-	if (rt2x00_is_usb(rt2x00dev) &&
+-	    rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E)) {
+-		rt2800_bbp_write(rt2x00dev, 70, 0x0a);
+-		rt2800_bbp_write(rt2x00dev, 84, 0x99);
+-		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+-	}
+-
+ 	for (i = 0; i < EEPROM_BBP_SIZE; i++) {
+ 		rt2x00_eeprom_read(rt2x00dev, EEPROM_BBP_START + i, &eeprom);
+ 
+@@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u8 rfcsr;
+ 	u8 bbp;
++	u32 reg;
++	u16 eeprom;
+ 
+-	if (rt2x00_is_usb(rt2x00dev) &&
+-	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
++	if (!rt2x00_rt(rt2x00dev, RT3070))
+ 		return 0;
+ 
+-	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+-		if (!rt2x00_rf(rt2x00dev, RF3020) &&
+-		    !rt2x00_rf(rt2x00dev, RF3021) &&
+-		    !rt2x00_rf(rt2x00dev, RF3022))
+-			return 0;
+-	}
+-
+ 	/*
+ 	 * Init RF calibration.
+ 	 */
+@@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+ 	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+ 
+-	if (rt2x00_is_usb(rt2x00dev)) {
++	if (rt2x00_rt(rt2x00dev, RT3070)) {
+ 		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+ 		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+ 		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+ 		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
+ 		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+-		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
++		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
+ 		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+ 		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
+ 		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+@@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+ 		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
+ 		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+-		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+ 		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
+-	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+-		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+-		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+-		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+-		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
+-		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+-		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+-		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+-		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
+-		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
+-		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+-		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
+-		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+-		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
+-		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
+-		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+-		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
+-		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
+-		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
+-		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
+-		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
+-		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
+-		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+-		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
+-		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
+-		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
+-		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+-		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
+-		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
+-		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
+-		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
++	}
++
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
++		rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
++		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
++		rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
++		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+ 	}
+ 
+ 	/*
+ 	 * Set RX Filter calibration for 20MHz and 40MHz
+ 	 */
+-	rt2x00dev->calibration[0] =
+-	    rt2800_init_rx_filter(rt2x00dev, false, 0x07, 0x16);
+-	rt2x00dev->calibration[1] =
+-	    rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x19);
++	if (rt2x00_rt(rt2x00dev, RT3070)) {
++		rt2x00dev->calibration[0] =
++			rt2800_init_rx_filter(rt2x00dev, false, 0x07, 0x16);
++		rt2x00dev->calibration[1] =
++			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x19);
++	}
+ 
+ 	/*
+ 	 * Set back to initial state
+@@ -1743,6 +1724,34 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field8(&bbp, BBP4_BANDWIDTH, 0);
+ 	rt2800_bbp_write(rt2x00dev, 4, bbp);
+ 
++	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F))
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
++
++	rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
++	rt2x00_set_field32(&reg, OPT_14_CSR_BIT0, 1);
++	rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
++
++	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
++	rt2x00_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &eeprom);
++	if (rt2x00_get_field16(eeprom, EEPROM_TXMIXER_GAIN_BG_VAL) >= 1)
++		rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
++				  rt2x00_get_field16(eeprom,
++						   EEPROM_TXMIXER_GAIN_BG_VAL));
++	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
++
++	if (rt2x00_rt(rt2x00dev, RT3070)) {
++		rt2800_rfcsr_read(rt2x00dev, 27, &rfcsr);
++		if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F))
++			rt2x00_set_field8(&rfcsr, RFCSR27_R1, 3);
++		else
++			rt2x00_set_field8(&rfcsr, RFCSR27_R1, 0);
++		rt2x00_set_field8(&rfcsr, RFCSR27_R2, 0);
++		rt2x00_set_field8(&rfcsr, RFCSR27_R3, 0);
++		rt2x00_set_field8(&rfcsr, RFCSR27_R4, 0);
++		rt2800_rfcsr_write(rt2x00dev, 27, rfcsr);
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rt2800_init_rfcsr);
+-- 
+1.7.0.4
 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15715
-> > Subject		: vmscan: underflow for get_scan_ratio
-> > Submitter	: Shaohua Li <shaohua.li@intel.com>
-> > Date		: 2010-03-30 5:53 (9 days old)
-> > First-Bad-Commit: http://git.kernel.org/git/linus/84b18490d1f1bc7ed5095c929f78bc002eb70f26
-> > Message-ID	: <20100330055304.GA2983@sli10-desk.sh.intel.com>
-> > References	: http://marc.info/?l=linux-kernel&m=126992842105754&w=4
-> > Handled-By	: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-> > 		  Wu Fengguang <fengguang.wu@intel.com>
-> 
-> That commit got reverted. See commit d6da1a5abc.
-
-Closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15674
-> > Subject		: [2.6.34-rc2 NFS4 oops] open error path failure...
-> > Submitter	: Daniel J Blueman <daniel.blueman@gmail.com>
-> > Date		: 2010-03-29 18:36 (10 days old)
-> > Message-ID	: <6278d2221003291136p6481fe8emfb039403343c082@mail.gmail.com>
-> > References	: http://marc.info/?l=linux-kernel&m=126988782722711&w=2
-> 
-> This smells like the same LOOKUP_DIRECTORY thing as the first entry, but.. 
-> 
-> Al?
-
-This one has been fixed too, I see, so closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15600
-> > Subject		: CONFIG_NO_BOOTMEM woes, 2.6.34-rc1
-> > Submitter	: Avi Kivity <avi@redhat.com>
-> > Date		: 2010-03-15 15:28 (24 days old)
-> > Message-ID	: <4B9E5211.9000204@redhat.com>
-> > References	: http://marc.info/?l=linux-kernel&m=126866691701926&w=2
-> 
-> These should hopefully be all fixed. There was some confusion over this, 
-> but the report that said it wasn't fixed in -rc3 was apparently not true 
-> after all. Several commits, but mainly commit eed63519e, iirc.
-
-Closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15518
-> > Subject		: CONFIG_NO_BOOTMEM=y breaks boot on 32bit
-> > Submitter	: Daniel Vetter <daniel@ffwll.ch>
-> > Date		: 2010-03-11 15:37 (28 days old)
-> 
-> Duplicate entry. See above.
-
-Closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15480
-> > Subject		: [regression] Fails to boot properly unless given pci=nocrs
-> > Submitter	: Yanko Kaneti <yaneti@declera.com>
-> > Date		: 2010-03-09 01:24 (30 days old)
-> > Handled-By	: Bjorn Helgaas <bjorn.helgaas@hp.com>
-> > Patch		: http://lkml.org/lkml/2010/3/11/512
-> 
-> These are merged already. Commits d558b483d5, eb9fc8ef7cb etc.
-
-Closed.
-
-Thanks,
-Rafael
