@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6480 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756789Ab0DIUJk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 16:09:40 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 04/12] iwlagn: simplify WEP key check
-Date: Fri,  9 Apr 2010 13:09:21 -0700
-Message-Id: <1270843769-30017-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1270843769-30017-1-git-send-email-reinette.chatre@intel.com>
-References: <1270843769-30017-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:19015 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752304Ab0DLHhE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Apr 2010 03:37:04 -0400
+Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-011617816
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 16:36:59 +0900 (JST)
+Subject: [PATCH 1/2] mac80211: Use G mandatory rates in 2GHz band
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 12 Apr 2010 16:36:58 +0900
+Message-ID: <20100412073658.28078.32155.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This changes the mandatory (basic) rates in the 2GHz band to the ERP mandatory
+rates (1, 2, 5.5, 11, 6, 12, 24Mbps - as defined in 802.11 section 19.1.)
+instead of the "B" mode basic rate (1Mbps - why not 2Mbps too?).
 
-Simplify the WEP group key check by checking the
-sta pointer instead of the sta_id we calculate
-with it; also clean up the comment formatting.
+B-only drivers (are there any?) should still work with this change, since they
+simply don't have the faster rates. The functional change is that we now
+default to faster basic rates, but as far as i can tell this is only really
+used in IBSS code (STAs have to adapt to their AP).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+BTW: Is there a way to configure mac80211 to B-only mode or G-only mode? When
+this is the case this has to be revised...
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+ net/mac80211/util.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8a3b0ed..3526d5e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2901,12 +2901,13 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	mutex_lock(&priv->mutex);
- 	iwl_scan_cancel_timeout(priv, 100);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 2b75b4f..282bda9 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -844,7 +844,8 @@ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
+ 	}
  
--	/* If we are getting WEP group key and we didn't receive any key mapping
-+	/*
-+	 * If we are getting WEP group key and we didn't receive any key mapping
- 	 * so far, we are in legacy wep mode (group key only), otherwise we are
- 	 * in 1X mode.
--	 * In legacy wep mode, we use another host command to the uCode */
--	if (key->alg == ALG_WEP && sta_id == priv->hw_params.bcast_sta_id &&
--		priv->iw_mode != NL80211_IFTYPE_AP) {
-+	 * In legacy wep mode, we use another host command to the uCode.
-+	 */
-+	if (key->alg == ALG_WEP && !sta && vif->type != NL80211_IFTYPE_AP) {
- 		if (cmd == SET_KEY)
- 			is_default_wep_key = !priv->key_mapping_key;
- 		else
--- 
-1.6.3.3
+ 	if (band == IEEE80211_BAND_2GHZ)
+-		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
++		mandatory_flag = IEEE80211_RATE_MANDATORY_B |
++				 IEEE80211_RATE_MANDATORY_G;
+ 	else
+ 		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
+ 
 
