@@ -1,229 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:43664 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755480Ab0DOTTR convert rfc822-to-8bit (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:9978 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752725Ab0DLH6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 15:19:17 -0400
-Received: by wwb24 with SMTP id 24so717565wwb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 12:19:15 -0700 (PDT)
+	Mon, 12 Apr 2010 03:58:09 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0465869088
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 16:58:08 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to band
+Date: Mon, 12 Apr 2010 16:58:09 +0900
+References: <20100412073658.28078.32155.stgit@tt-desk> <20100412073703.28078.90501.stgit@tt-desk> <1271058082.3877.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1271058082.3877.3.camel@jlt3.sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-In-Reply-To: <4bc7623b.jCI2ikmsWKrNCgoa%Larry.Finger@lwfinger.net>
-References: <4bc7623b.jCI2ikmsWKrNCgoa%Larry.Finger@lwfinger.net>
-Date: Thu, 15 Apr 2010 20:19:15 +0100
-Message-ID: <s2t3ace41891004151219kb118330fh8fa4b3830e0c9fbe@mail.gmail.com>
-Subject: Re: [PATCH] rtl818x: Move configuration details to the rtl818x
-	directory
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201004121658.09189.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 15, 2010 at 8:00 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> In preparation for new rtl818x devices, move the existing rtl818x configuration
-> into the rtl818x directory.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Monday 12 April 2010 16:41:22 you wrote:
+> On Mon, 2010-04-12 at 16:37 +0900, Bruno Randolf wrote:
+> > When we create an IBSS we are can define the basic rates according to the
+> > band in use. Previously only the B mode rates (1 and 2Mbps) were used
+> > unconditionally, which resulted in low thruput when using RTS/CTS.
+> > 
+> > Also we should save the IBSS basic rates configuration when we join an
+> > IBSS.
+> 
+> Again, this breaks things. If you feel this is necessary for some
+> reason, it needs to be configurable during the IBSS join by userspace.
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+without the previous patch (which you NACKed) this is still the correct thing 
+to do in B mode and will result in only 1Mbps as a basic rate. without this 
+patch it is definetly wrong for A mode.
 
-are we going to have a lot more rtl818x devices?
+i can see the reason why you refused the first patch, but the main problem is 
+that there is no clear distiction between B and G in mac80211. there needs to 
+be a way to configure B-only, G-only and BG ERP mode. i don't believe this is 
+applicable to IBSS mode only... is it?
 
-> ---
->
-> Index: wireless-testing/drivers/net/wireless/Kconfig
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/Kconfig
-> +++ wireless-testing/drivers/net/wireless/Kconfig
-> @@ -210,90 +210,7 @@ config USB_NET_RNDIS_WLAN
->
->          If you choose to build a module, it'll be called rndis_wlan.
->
-> -config RTL8180
-> -       tristate "Realtek 8180/8185 PCI support"
-> -       depends on MAC80211 && PCI && EXPERIMENTAL
-> -       select EEPROM_93CX6
-> -       ---help---
-> -         This is a driver for RTL8180 and RTL8185 based cards.
-> -         These are PCI based chips found in cards such as:
-> -
-> -         (RTL8185 802.11g)
-> -         A-Link WL54PC
-> -
-> -         (RTL8180 802.11b)
-> -         Belkin F5D6020 v3
-> -         Belkin F5D6020 v3
-> -         Dlink DWL-610
-> -         Dlink DWL-510
-> -         Netgear MA521
-> -         Level-One WPC-0101
-> -         Acer Aspire 1357 LMi
-> -         VCTnet PC-11B1
-> -         Ovislink AirLive WL-1120PCM
-> -         Mentor WL-PCI
-> -         Linksys WPC11 v4
-> -         TrendNET TEW-288PI
-> -         D-Link DWL-520 Rev D
-> -         Repotec RP-WP7126
-> -         TP-Link TL-WN250/251
-> -         Zonet ZEW1000
-> -         Longshine LCS-8031-R
-> -         HomeLine HLW-PCC200
-> -         GigaFast WF721-AEX
-> -         Planet WL-3553
-> -         Encore ENLWI-PCI1-NT
-> -         TrendNET TEW-266PC
-> -         Gigabyte GN-WLMR101
-> -         Siemens-fujitsu Amilo D1840W
-> -         Edimax EW-7126
-> -         PheeNet WL-11PCIR
-> -         Tonze PC-2100T
-> -         Planet WL-8303
-> -         Dlink DWL-650 v M1
-> -         Edimax EW-7106
-> -         Q-Tec 770WC
-> -         Topcom Skyr@cer 4011b
-> -         Roper FreeLan 802.11b (edition 2004)
-> -         Wistron Neweb Corp CB-200B
-> -         Pentagram HorNET
-> -         QTec 775WC
-> -         TwinMOS Booming B Series
-> -         Micronet SP906BB
-> -         Sweex LC700010
-> -         Surecom EP-9428
-> -         Safecom SWLCR-1100
-> -
-> -         Thanks to Realtek for their support!
-> -
-> -config RTL8187
-> -       tristate "Realtek 8187 and 8187B USB support"
-> -       depends on MAC80211 && USB
-> -       select EEPROM_93CX6
-> -       ---help---
-> -         This is a driver for RTL8187 and RTL8187B based cards.
-> -         These are USB based chips found in devices such as:
-> -
-> -         Netgear WG111v2
-> -         Level 1 WNC-0301USB
-> -         Micronet SP907GK V5
-> -         Encore ENUWI-G2
-> -         Trendnet TEW-424UB
-> -         ASUS P5B Deluxe/P5K Premium motherboards
-> -         Toshiba Satellite Pro series of laptops
-> -         Asus Wireless Link
-> -         Linksys WUSB54GC-EU v2
-> -           (v1 = rt73usb; v3 is rt2070-based,
-> -            use staging/rt3070 or try rt2800usb)
-> -
-> -         Thanks to Realtek for their support!
-> -
-> -# If possible, automatically enable LEDs for RTL8187.
-> -
-> -config RTL8187_LEDS
-> -       bool
-> -       depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
-> -       default y
-> +source "drivers/net/wireless/rtl818x/Kconfig"
->
->  config ADM8211
->        tristate "ADMtek ADM8211 support"
-> Index: wireless-testing/drivers/net/wireless/rtl818x/Kconfig
-> ===================================================================
-> --- /dev/null
-> +++ wireless-testing/drivers/net/wireless/rtl818x/Kconfig
-> @@ -0,0 +1,88 @@
-> +#
-> +# RTL818X Wireless LAN device configuration
-> +#
-> +config RTL8180
-> +       tristate "Realtek 8180/8185 PCI support"
-> +       depends on MAC80211 && PCI && EXPERIMENTAL
-> +       select EEPROM_93CX6
-> +       ---help---
-> +         This is a driver for RTL8180 and RTL8185 based cards.
-> +         These are PCI based chips found in cards such as:
-> +
-> +         (RTL8185 802.11g)
-> +         A-Link WL54PC
-> +
-> +         (RTL8180 802.11b)
-> +         Belkin F5D6020 v3
-> +         Belkin F5D6020 v3
-> +         Dlink DWL-610
-> +         Dlink DWL-510
-> +         Netgear MA521
-> +         Level-One WPC-0101
-> +         Acer Aspire 1357 LMi
-> +         VCTnet PC-11B1
-> +         Ovislink AirLive WL-1120PCM
-> +         Mentor WL-PCI
-> +         Linksys WPC11 v4
-> +         TrendNET TEW-288PI
-> +         D-Link DWL-520 Rev D
-> +         Repotec RP-WP7126
-> +         TP-Link TL-WN250/251
-> +         Zonet ZEW1000
-> +         Longshine LCS-8031-R
-> +         HomeLine HLW-PCC200
-> +         GigaFast WF721-AEX
-> +         Planet WL-3553
-> +         Encore ENLWI-PCI1-NT
-> +         TrendNET TEW-266PC
-> +         Gigabyte GN-WLMR101
-> +         Siemens-fujitsu Amilo D1840W
-> +         Edimax EW-7126
-> +         PheeNet WL-11PCIR
-> +         Tonze PC-2100T
-> +         Planet WL-8303
-> +         Dlink DWL-650 v M1
-> +         Edimax EW-7106
-> +         Q-Tec 770WC
-> +         Topcom Skyr@cer 4011b
-> +         Roper FreeLan 802.11b (edition 2004)
-> +         Wistron Neweb Corp CB-200B
-> +         Pentagram HorNET
-> +         QTec 775WC
-> +         TwinMOS Booming B Series
-> +         Micronet SP906BB
-> +         Sweex LC700010
-> +         Surecom EP-9428
-> +         Safecom SWLCR-1100
-> +
-> +         Thanks to Realtek for their support!
-> +
-> +config RTL8187
-> +       tristate "Realtek 8187 and 8187B USB support"
-> +       depends on MAC80211 && USB
-> +       select EEPROM_93CX6
-> +       ---help---
-> +         This is a driver for RTL8187 and RTL8187B based cards.
-> +         These are USB based chips found in devices such as:
-> +
-> +         Netgear WG111v2
-> +         Level 1 WNC-0301USB
-> +         Micronet SP907GK V5
-> +         Encore ENUWI-G2
-> +         Trendnet TEW-424UB
-> +         ASUS P5B Deluxe/P5K Premium motherboards
-> +         Toshiba Satellite Pro series of laptops
-> +         Asus Wireless Link
-> +         Linksys WUSB54GC-EU v2
-> +           (v1 = rt73usb; v3 is rt2070-based,
-> +            use staging/rt3070 or try rt2800usb)
-> +
-> +         Thanks to Realtek for their support!
-> +
-> +# If possible, automatically enable LEDs for RTL8187.
-> +
-> +config RTL8187_LEDS
-> +       bool
-> +       depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
-> +       default y
-> +
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+btw: why is only 1Mbps used as a basic rate in B mode in 
+set_mandatory_flags_band()? i think 2Mbps should be there as well?
+
+anyhow, i wouldn't mind adding something to configure this from userspace. can 
+you point me to the right direction? i mean i can add something to IBSS setup 
+but as i said i can't believe this is only relevant to IBSS mode.
+
+bruno
