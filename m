@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14767 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754419Ab0DOFbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 01:31:11 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 22:31:11 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-yw0-f194.google.com ([209.85.211.194]:63829 "EHLO
+	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752372Ab0DLIWY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Apr 2010 04:22:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19398.42095.140609.399357@gargle.gargle.HOWL>
-Date: Thu, 15 Apr 2010 11:00:23 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/6] ath: Add buffered register write operations
+In-Reply-To: <4BC242BD.7060405@gmail.com>
+References: <4BC242BD.7060405@gmail.com>
+From: Grant Likely <grant.likely@secretlab.ca>
+Date: Mon, 12 Apr 2010 01:22:04 -0700
+Message-ID: <h2mfa686aa41004120122we257d50cs3e32df4b9b9bf062@mail.gmail.com>
+Subject: Re: Google Summer of Code 2010 - Assigned all unassigned kernel
+	applications to Grant Likely
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: "Theodore Ts'o" <tytso@mit.edu>, Greg KH <greg@kroah.com>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is required to implement delayed/buffered
-register writes in ath9k_htc.
+On Sun, Apr 11, 2010 at 3:44 PM, Till Kamppeter
+<till.kamppeter@gmail.com> wrote:
+> To assure that we do not loose any good application, I have now assigned all
+> remaining mentor-less applications to Grant Likely as mentor. I will remove
+> or change these assignments as soon as someone of you tells me.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath.h |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+Heeheehee.  My good intentions have been dutifully punished.
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 1fbf6b1..d32f282 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -71,9 +71,21 @@ struct ath_regulatory {
- 	struct reg_dmn_pair_mapping *regpair;
- };
- 
-+/**
-+ * struct ath_ops - Register read/write operations
-+ *
-+ * @read: Register read
-+ * @write: Register write
-+ * @enable_write_buffer: Enable multiple register writes
-+ * @disable_write_buffer: Disable multiple register writes
-+ * @write_flush: Flush buffered register writes
-+ */
- struct ath_ops {
- 	unsigned int (*read)(void *, u32 reg_offset);
--        void (*write)(void *, u32 val, u32 reg_offset);
-+	void (*write)(void *, u32 val, u32 reg_offset);
-+	void (*enable_write_buffer)(void *);
-+	void (*disable_write_buffer)(void *);
-+	void (*write_flush) (void *);
- };
- 
- struct ath_common;
+> Please have at least a quick look of these applications make sense (I am not
+> a kernel guy) and give negative scores to the bad ones. At least I could see
+> that none of them is spam, so nothing to mark ineligible.
+>
+> Also propose mentors for these applications, Grant is most probably not the
+> perfect mentor for all of them and also does not want to mentor six
+> students.
+
+Indeed!
+
+> Grant is for now the only kernel guy who registered as a mentor at
+> the Linux Foundation.
+>
+> Grant, sorry for assigning six students to you, it is only temporary.
+
+No worries, I understand.  I've gone through and commented on each of
+the proposals to the best of my ability.
+
+Cheers,
+g.
+
 -- 
-1.7.0.4
-
+Grant Likely, B.Sc., P.Eng.
+Secret Lab Technologies Ltd.
