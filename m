@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:42214 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754958Ab0DVUvB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 16:51:01 -0400
-Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Grazvydas Ignotas <notasas@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
-References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
-	 <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
-	 <1271954537.8469.15.camel@mj>
-	 <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 22 Apr 2010 16:50:59 -0400
-Message-Id: <1271969459.11483.3.camel@mj>
+Received: from he.sipsolutions.net ([78.46.109.217]:50815 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548Ab0DLIKF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Apr 2010 04:10:05 -0400
+Subject: Re: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to
+ band
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <201004121658.09189.br1@einfach.org>
+References: <20100412073658.28078.32155.stgit@tt-desk>
+	 <20100412073703.28078.90501.stgit@tt-desk>
+	 <1271058082.3877.3.camel@jlt3.sipsolutions.net>
+	 <201004121658.09189.br1@einfach.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 12 Apr 2010 10:10:01 +0200
+Message-ID: <1271059801.3877.5.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-22 at 13:33 -0700, Luis R. Rodriguez wrote:
-> On Thu, Apr 22, 2010 at 9:42 AM, Pavel Roskin <proski@gnu.org> wrote:
-> > On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
-> >
-> >> How was this compiling for older kernels before then?
-> >
-> > Compiling was fine, but loading the firmware was failing sometimes.  I'm
-> > glad somebody figured it out.  Thank you, Grazvydas!
+On Mon, 2010-04-12 at 16:58 +0900, Bruno Randolf wrote:
+> On Monday 12 April 2010 16:41:22 you wrote:
+> > On Mon, 2010-04-12 at 16:37 +0900, Bruno Randolf wrote:
+> > > When we create an IBSS we are can define the basic rates according to the
+> > > band in use. Previously only the B mode rates (1 and 2Mbps) were used
+> > > unconditionally, which resulted in low thruput when using RTS/CTS.
+> > > 
+> > > Also we should save the IBSS basic rates configuration when we join an
+> > > IBSS.
+> > 
+> > Again, this breaks things. If you feel this is necessary for some
+> > reason, it needs to be configurable during the IBSS join by userspace.
 > 
-> OK Applied. I'm still puzzled, if it compiled, then that means
-> dev_set_uevent_suppress() was being defined somehow for older kernels.
+> without the previous patch (which you NACKed) this is still the correct thing 
+> to do in B mode and will result in only 1Mbps as a basic rate. without this 
+> patch it is definetly wrong for A mode.
 
-It's wasn't defined.  The function just wasn't called for older kernels.
-"#if" was there; the patch added "#else".
+No, you don't understand. It will break _talking to_ 11b only stations
+when the local station is 11g capable.
 
-It's a great example how simply-minded commenting out missing functions
-can lead to a hard problem, a race condition.
+> i can see the reason why you refused the first patch, but the main problem is 
+> that there is no clear distiction between B and G in mac80211. there needs to 
+> be a way to configure B-only, G-only and BG ERP mode. i don't believe this is 
+> applicable to IBSS mode only... is it?
 
--- 
-Regards,
-Pavel Roskin
+It is, as far as I can tell. And mesh maybe.
+
+> btw: why is only 1Mbps used as a basic rate in B mode in 
+> set_mandatory_flags_band()? i think 2Mbps should be there as well?
+
+Not sure, could be a bug?
+
+> anyhow, i wouldn't mind adding something to configure this from userspace. can 
+> you point me to the right direction? i mean i can add something to IBSS setup 
+> but as i said i can't believe this is only relevant to IBSS mode.
+
+What other modes do you think it is relevant to?
+
+johannes
+
