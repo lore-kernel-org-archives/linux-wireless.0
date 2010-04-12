@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:41788 "EHLO purkki.valot.fi"
+Received: from mail.atheros.com ([12.36.123.2]:55245 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751578Ab0DQFeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Apr 2010 01:34:12 -0400
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH] wl1251: add support for dedicated IRQ line
-References: <1271413332-2979-1-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sat, 17 Apr 2010 08:34:08 +0300
-In-Reply-To: <1271413332-2979-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Fri\, 16 Apr 2010 13\:22\:12 +0300")
-Message-ID: <87633qmylr.fsf@purkki.valot.fi>
+	id S1752268Ab0DLOhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Apr 2010 10:37:13 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 07:37:13 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19395.12264.285777.224012@gargle.gargle.HOWL>
+Date: Mon, 12 Apr 2010 20:06:24 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Sneha Aggarwal <snehaatpec@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Frame aggregation size configuration in 802.11n
+In-Reply-To: <1271075716.23799.2.camel@jlt3.sipsolutions.net>
+References: <loom.20100412T140919-620@post.gmane.org>
+	<1271075716.23799.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+Johannes Berg wrote:
+> > and where all I have to change this parameter to get the desired output?
+> 
+> That depends on your driver. In iwlwifi, you have to tell the microcode
+> what to do -- I'm not sure off hand how to (I know there is a parameter
+> that controls the number of frames in an aggregate, I'm not sure about
+> the max size but I would think it exists)
+> 
+> In ath9k you should be able to change it in the driver but I have no
+> idea how to.
+> 
 
-> wl1251 has WLAN_IRQ pin for generating interrupts to host processor,
-> which is mandatory in SPI mode and optional in SDIO mode (which can
-> use SDIO interrupts instead). However TI recommends using deditated
-> IRQ line for SDIO too.
->
-> Add support for using dedicated interrupt line with SDIO, but also leave
-> ability to switch to SDIO interrupts in case it's needed.
+If you do decide to fiddle with ath9k, you can change the aggregate size
+and the max. no of subframes in an aggregate.
 
-For spi the irq number delivered through struct spi_device, I assume
-sdio didn't have any similar mechanism and that's why you added it to
-struct wl12xx_platform_data.
+See ath_tx_form_aggr() in xmit.c
 
-Only minor comment is that it would be better to mention also in the
-code that the gpio interrupt is the recommended method. But I can add
-that comment later.
+(ATH_AMPDU_SUBFRAME_DEFAULT, nframes, aggr_limit, etc ...)
 
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+Sujith
 
-Acked-by: Kalle Valo <kvalo@adurom.com>
-
-Thank you again.
-
--- 
-Kalle Valo
