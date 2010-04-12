@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:59609 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753035Ab0DSXVB convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:64341 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753147Ab0DLKAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 19:21:01 -0400
-Received: by pwj9 with SMTP id 9so3830857pwj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 16:20:59 -0700 (PDT)
+	Mon, 12 Apr 2010 06:00:30 -0400
+Received: by ewy20 with SMTP id 20so1859925ewy.1
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 03:00:29 -0700 (PDT)
+Message-ID: <4BC2EF3B.2060902@gmail.com>
+Date: Mon, 12 Apr 2010 12:00:27 +0200
+From: =?windows-1252?Q?Torquil_Macdonald_S=F8rensen?= <torquil@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1271699405.14052.18189.camel@rchatre-DESK>
-References: <m2p43e72e891004012145s2f344f7fo9b12044e9b895c06@mail.gmail.com>
-	<1271699405.14052.18189.camel@rchatre-DESK>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 19 Apr 2010 16:20:39 -0700
-Message-ID: <i2v43e72e891004191620s15d3eb09m8fdc16f699b3285d@mail.gmail.com>
-Subject: Re: iwlagn unexpected AddBA Req
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: ath9k compilation error
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 19, 2010 at 10:50 AM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> On Thu, 2010-04-01 at 21:45 -0700, Luis R. Rodriguez wrote:
->> [ Â 117.491303] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
->> [ Â 178.467383] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
->> [ Â 239.447236] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
->>
->> I get a lof of these at spurious times against my WRT610N using
->> today's wireless-testing on iwlagn.
->
-> If you still have this setup available, could you please try out the
-> recent patch "mac80211: pass HT changes to driver when off
-> channel" (http://thread.gmane.org/gmane.linux.kernel.wireless.general/49855 ) ?
+Hi!
 
-Thanks Reinette, I've given my hardware to nbd.
+I hope this is the right place to report this. If not, I would appreciate 
+directions to the correct mailing list. In that case, sorry for spamming! :-)
 
-  Luis
+I'm getting an error when compiling the ath9k driver in 
+compat-wireless-2010-04-11. The version 2010-04-04 compiles fine after fixing a 
+simple
+
+First I do:
+
+./scripts/driver-select ath9k
+
+The I run "make", and after some time I get the following:
+
+   CC [M]  /home/tmac/src/compat-wireless-2010-04-11/net/mac80211/main.o
+/home/tmac/src/compat-wireless-2010-04-11/net/mac80211/main.c: In function 
+‘ieee80211_alloc_hw’:
+/home/tmac/src/compat-wireless-2010-04-11/net/mac80211/main.c:394: error: 
+implicit declaration of function ‘__hw_addr_init’
+make[5]: *** [/home/tmac/src/compat-wireless-2010-04-11/net/mac80211/main.o] Error 1
+make[4]: *** [/home/tmac/src/compat-wireless-2010-04-11/net/mac80211] Error 2
+make[3]: *** [_module_/home/tmac/src/compat-wireless-2010-04-11] Error 2
+make[2]: *** [sub-make] Error 2
+
+
+I want to try the newest driver because I have a lot of dropout problems when 
+using my "Atheros Communications Inc. AR9285 Wireless Network Adapter 
+(PCI-Express) (rev 01)"
+
+gcc (Debian 4.4.3-7) 4.4.3
+
+Best regards
+Torquil Sørensen
