@@ -1,82 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46900 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933170Ab0DHT1q (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:3498 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752499Ab0DLHhG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 057/102] ath9k_hw: add the config_pci_powersave AR9003 callback
-Date: Thu,  8 Apr 2010 15:26:53 -0400
-Message-Id: <1270754858-26266-58-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 12 Apr 2010 03:37:06 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0289977822
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 16:37:04 +0900 (JST)
+Subject: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to band
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 12 Apr 2010 16:37:03 +0900
+Message-ID: <20100412073703.28078.90501.stgit@tt-desk>
+In-Reply-To: <20100412073658.28078.32155.stgit@tt-desk>
+References: <20100412073658.28078.32155.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   34 ++++++++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+When we create an IBSS we are can define the basic rates according to the band
+in use. Previously only the B mode rates (1 and 2Mbps) were used
+unconditionally, which resulted in low thruput when using RTS/CTS.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f0a0467..8f47b7d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2627,6 +2627,37 @@ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+Also we should save the IBSS basic rates configuration when we join an IBSS.
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ net/mac80211/ibss.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 01974c2..05846ab 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -77,6 +77,10 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	u32 bss_change;
+ 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
+ 
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++	printk(KERN_DEBUG "JOIN IBSS basic_rates %x\n", basic_rates);
++#endif
++
+ 	/* Reset own TSF to allow time synchronization work. */
+ 	drv_reset_tsf(local);
+ 
+@@ -165,6 +169,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	rcu_assign_pointer(ifibss->presp, skb);
+ 
+ 	sdata->vif.bss_conf.beacon_int = beacon_int;
++	sdata->vif.bss_conf.basic_rates = basic_rates;
+ 	bss_change = BSS_CHANGED_BEACON_INT;
+ 	bss_change |= ieee80211_reset_erp_info(sdata);
+ 	bss_change |= BSS_CHANGED_BSSID;
+@@ -518,7 +523,8 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 		sdata->drop_unencrypted = 0;
+ 
+ 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+-				  ifibss->channel, 3, /* first two are basic */
++				  ifibss->channel,
++				  ieee80211_mandatory_rates(local, sband->band),
+ 				  capability, 0);
  }
- EXPORT_SYMBOL(ath9k_hw_set_interrupts);
  
-+/*
-+ * Helper for ASPM support.
-+ *
-+ * Disable PLL when in L0s as well as receiver clock when in L1.
-+ * This power saving option must be enabled through the SerDes.
-+ *
-+ * Programming the SerDes must go through the same 288 bit serial shift
-+ * register as the other analog registers.  Hence the 9 writes.
-+ */
-+static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
-+					 int restore,
-+					 int power_off)
-+{
-+	if (ah->is_pciexpress != true)
-+		return;
-+
-+	/* Do not touch SerDes registers */
-+	if (ah->config.pcie_powersave_enable == 2)
-+		return;
-+
-+	/* Nothing to do on restore for 11N */
-+	if (!restore) {
-+		/* set bit 19 to allow forcing of pcie core into L1 state */
-+		REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PCIE_PM_CTRL_ENA);
-+
-+		/* Several PCIe massages to ensure proper behaviour */
-+		if (ah->config.pcie_waen)
-+			REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
-+	}
-+}
-+
- /*******************/
- /* Beacon Handling */
- /*******************/
-@@ -3665,10 +3696,13 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
- static void ar9003_hw_attach_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-+	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
- 
- 	priv_ops->init_mode_regs = ar9003_hw_init_mode_regs;
- 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
- 
-+	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
-+
- 	ar9003_hw_attach_phy_ops(ah);
- 	ar9003_hw_attach_calib_ops(ah);
- 	ar9003_hw_attach_mac_ops(ah);
--- 
-1.6.3.3
 
