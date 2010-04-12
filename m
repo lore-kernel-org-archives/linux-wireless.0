@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33014 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757433Ab0DOVjr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:47 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 87/97] ath9k_hw: set cwmin and cwmax to 0 for for AR9003 upon txq reset
-Date: Thu, 15 Apr 2010 17:39:32 -0400
-Message-Id: <1271367582-992-88-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+Received: from lo.gmane.org ([80.91.229.12]:60184 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751031Ab0DLMZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Apr 2010 08:25:08 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1O1IhL-0002iK-TD
+	for linux-wireless@vger.kernel.org; Mon, 12 Apr 2010 14:25:04 +0200
+Received: from 203.200.35.32.ill-bgl.static.vsnl.net.in ([203.200.35.32.ill-bgl.static.vsnl.net.in])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 14:25:03 +0200
+Received: from snehaatpec by 203.200.35.32.ill-bgl.static.vsnl.net.in with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 14:25:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Sneha Aggarwal <snehaatpec@gmail.com>
+Subject: Frame aggregation size configuration in 802.11n
+Date: Mon, 12 Apr 2010 12:11:22 +0000 (UTC)
+Message-ID: <loom.20100412T140919-620@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Hello all
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 44ea43a..c003baf 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -533,6 +533,12 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 			     AR_D_MISC_ARB_LOCKOUT_CNTRL_S)
- 			  | AR_D_MISC_BEACON_USE
- 			  | AR_D_MISC_POST_FR_BKOFF_DIS);
-+		/* cwmin and cwmax should be 0 for beacon queue */
-+		if (AR_SREV_9300_20_OR_LATER(ah)) {
-+			REG_WRITE(ah, AR_DLCL_IFS(q), SM(0, AR_D_LCL_IFS_CWMIN)
-+				  | SM(0, AR_D_LCL_IFS_CWMAX)
-+				  | SM(qi->tqi_aifs, AR_D_LCL_IFS_AIFS));
-+		}
- 		break;
- 	case ATH9K_TX_QUEUE_CAB:
- 		REG_WRITE(ah, AR_QMISC(q), REG_READ(ah, AR_QMISC(q))
+I think this is the appropriate place to post this query.
+I am studying the effect of frame aggregation size on throughput for my project.
+Is there any direct command to change the aggregation size like iwconfig/iwpriv
+or something?
+
+I have gone through the kernel code of aggregation from the file agg-tx.c from
+the linux-2.6.32.7 
+and the exact path is linux-2.6.32.7/net/mac80211/agg-tx.c
+The function which I have recognized to change the aggregation size is:
+ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata, const u8 *da,
+u16 tid, u8 dialog_token, u16 start_seq_num, u16 agg_size, u16 timeout)
+
+I am wondering if this is the right place to change the parameter or not. Or is
+there any other way to change this parameter without changing the kernel file
+directly? 
+and where all I have to change this parameter to get the desired output?
+And I am planning to write of a piece of code to make this parameter available
+to the user to configure.
+
 -- 
-1.6.3.3
+Regards
+Sneha Aggarwal
 
