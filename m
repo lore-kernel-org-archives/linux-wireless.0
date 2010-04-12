@@ -1,62 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1652 "EHLO mail.perches.com"
+Received: from c60.cesmail.net ([216.154.195.49]:7310 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754900Ab0DUWuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Apr 2010 18:50:07 -0400
-Subject: Re: [PATCH] Added configurable debug messages to libertastf
-From: Joe Perches <joe@perches.com>
-To: Steve deRosier <steve@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
-In-Reply-To: <1271889581-21352-1-git-send-email-steve@cozybit.com>
-References: <1271889581-21352-1-git-send-email-steve@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Apr 2010 15:50:05 -0700
-Message-ID: <1271890205.1730.588.camel@Joe-Laptop.home>
+	id S1753702Ab0DLVt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Apr 2010 17:49:28 -0400
+Subject: Re: [ath9k-devel] On ath9k debugfs, having trouble recompiling and
+ inserting only ath9k
+From: Pavel Roskin <proski@gnu.org>
+To: Rakesh Kumar <gopchandani@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+In-Reply-To: <n2icdc21431004112229n9303fcc1s788eadda177d079a@mail.gmail.com>
+References: <n2icdc21431004112229n9303fcc1s788eadda177d079a@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 12 Apr 2010 17:49:26 -0400
+Message-Id: <1271108966.15194.4.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-04-21 at 15:39 -0700, Steve deRosier wrote:
-> Add the same type of configurable debug messages to libertas_tf as
-> already exist in the libertas driver.  This has facilitated creation of a interface
-> specification and will facilitate future development of this driver.
+On Mon, 2010-04-12 at 00:29 -0500, Rakesh Kumar wrote:
+> So I modified few entries in ath9k's debug.c and used them in the
+> code. Recompiled the module ath9k, went painlessly. But when I try to
+> do following:
 > 
-> Signed-off-by: Steve deRosier <steve@cozybit.com>
-[]
-> +#define lbtf_pr_info(format, args...) \
-> +	printk(KERN_INFO DRV_NAME": " format, ## args)
-> +#define lbtf_pr_err(format, args...) \
-> +	printk(KERN_ERR DRV_NAME": " format, ## args)
-> +#define lbtf_pr_alert(format, args...) \
-> +	printk(KERN_ALERT DRV_NAME": " format, ## args)
+> sudo insmod drivers/net/wireless/ath/ath9k/ath9k.ko
+> 
+> I get the following error: insmod: error inserting
+> 'drivers/net/wireless/ath/ath9k/ath9k.ko': -1 Unknown symbol in module
 
-I think it'd be better to add
+Please use modprobe, not insmod, as modprobe can resolve symbols and
+load the requisite modules first.
 
-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+If modprobe doesn't help, use the "dmesg" command to see the kernel log.
+You should see messages about unresolved symbols.  Maybe you misspelled
+some function?
 
-and use the more standard pr_<level>s.
+> I remember this error occurs when the module being inserted is not
+> compiled with the kernel currently running. But in my case, that's not
+> true.
+> 
+> dmesg only yeilds following pertinent line:
+> 
+> [29471.324717] ath9k: Unable to create debugfs root: -2
+> 
+> Which indicates a failure to create the root directory under
+> /sys/kernel/debug/ath9k/...
+> 
+> Any ideas on why this is happening would be highly appreciated!
 
-> +#ifdef DEBUG
-> +static inline void lbtf_deb_hex(unsigned int grp, const char *prompt, u8 *buf, int len)
-> +{
-> +	int i = 0;
-> +
-> +	if (len &&
-> +	    (lbtf_debug & LBTF_DEB_HEX) &&
-> +	    (lbtf_debug & grp))	{
-> +		for (i = 1; i <= len; i++) {
-> +			if ((i & 0xf) == 1) {
-> +				if (i != 1)
-> +					printk("\n");
-> +				printk(DRV_NAME " %s: ", prompt);
-> +			}
-> +			printk("%02x ", (u8) *buf);
-> +			buf++;
-> +		}
-> +		printk("\n");
-> +	}
-> +}
+Maybe /sys/kernel/debug/ath9k is already present.  You may want to
+reboot to "fix" it.
 
-print_hex_dump_bytes
+But I don't think you would get any message from the ath9k module if it
+fails to load due to unresolved symbols.
 
-
+-- 
+Regards,
+Pavel Roskin
