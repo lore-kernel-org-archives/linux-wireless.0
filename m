@@ -1,71 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65016 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755450Ab0DWE6j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 00:58:39 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:39 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19409.10473.482170.515511@gargle.gargle.HOWL>
-Date: Fri, 23 Apr 2010 10:28:17 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/11] ath9k_htc: Process command data properly
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:59190 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753599Ab0DLW0p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Apr 2010 18:26:45 -0400
+Received: by bwz19 with SMTP id 19so3333bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 15:26:44 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH] wl1251: read default MAC address from EEPROM when available
+Date: Tue, 13 Apr 2010 01:21:24 +0300
+Message-Id: <1271110884-18545-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When handling the REGIN callback, processing
-the incoming data first should be the preferred
-mode of operation. Allocation of a new SKB may fail,
-in which case, the URB will not be resubmitted.
+Some wl1251 hardware configurations (like in WG7210 module) have
+EEPROM attached where NVS data is kept, which includes MAC address.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+In such configurations, let's read default MAC address from EEPROM,
+instead of using random one.
+
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |   18 ++++++++++++------
- 1 files changed, 12 insertions(+), 6 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_main.c |   63 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_reg.h  |    7 +++
+ 2 files changed, 70 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 31665c5..49b7a89 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -510,9 +510,18 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- 	if (likely(urb->actual_length != 0)) {
- 		skb_put(skb, urb->actual_length);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 56b78e4..7bc109d 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1196,6 +1196,66 @@ static const struct ieee80211_ops wl1251_ops = {
+ 	.conf_tx = wl1251_op_conf_tx,
+ };
  
-+		/* Process the command first */
-+		ath9k_htc_rx_msg(hif_dev->htc_handle, skb,
-+				 skb->len, USB_REG_IN_PIPE);
++static int wl1251_read_eeprom_byte(struct wl1251 *wl, off_t offset, u8 *data)
++{
++	unsigned long timeout;
 +
++	wl1251_reg_write32(wl, EE_ADDR, offset);
++	wl1251_reg_write32(wl, EE_CTL, EE_CTL_READ);
 +
- 		nskb = alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_ATOMIC);
--		if (!nskb)
--			goto resubmit;
-+		if (!nskb) {
-+			dev_err(&hif_dev->udev->dev,
-+				"ath9k_htc: REG_IN memory allocation failure\n");
-+			urb->context = NULL;
-+			return;
-+		}
++	/* EE_CTL_READ clears when data is ready */
++	timeout = jiffies + msecs_to_jiffies(100);
++	while (1) {
++		if (!(wl1251_reg_read32(wl, EE_CTL) & EE_CTL_READ))
++			break;
++
++		if (time_after(jiffies, timeout))
++			return -ETIMEDOUT;
++
++		udelay(200);
++	}
++
++	*data = wl1251_reg_read32(wl, EE_DATA);
++	return 0;
++}
++
++static int wl1251_read_eeprom(struct wl1251 *wl, off_t offset,
++			      u8 *data, size_t len)
++{
++	size_t i;
++	int ret;
++
++	wl1251_reg_write32(wl, EE_START, 0);
++
++	for (i = 0; i < len; i++) {
++		ret = wl1251_read_eeprom_byte(wl, offset + i, &data[i]);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
++
++static int wl1251_read_eeprom_mac(struct wl1251 *wl)
++{
++	u8 mac[ETH_ALEN];
++	int i, ret;
++
++	wl1251_set_partition(wl, 0, 0, REGISTERS_BASE, REGISTERS_DOWN_SIZE);
++
++	ret = wl1251_read_eeprom(wl, 0x1c, mac, sizeof(mac));
++	if (ret < 0) {
++		wl1251_warning("failed to read MAC address from EEPROM");
++		return ret;
++	}
++
++	/* MAC is stored in reverse order */
++	for (i = 0; i < ETH_ALEN; i++)
++		wl->mac_addr[i] = mac[ETH_ALEN - i - 1];
++
++	return 0;
++}
++
+ static int wl1251_register_hw(struct wl1251 *wl)
+ {
+ 	int ret;
+@@ -1242,6 +1302,9 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
  
- 		usb_fill_int_urb(urb, hif_dev->udev,
- 				 usb_rcvintpipe(hif_dev->udev, USB_REG_IN_PIPE),
-@@ -522,12 +531,9 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- 		ret = usb_submit_urb(urb, GFP_ATOMIC);
- 		if (ret) {
- 			kfree_skb(nskb);
--			goto free;
-+			urb->context = NULL;
- 		}
+ 	wl->hw->queues = 4;
  
--		ath9k_htc_rx_msg(hif_dev->htc_handle, skb,
--				 skb->len, USB_REG_IN_PIPE);
--
- 		return;
- 	}
++	if (wl->use_eeprom)
++		wl1251_read_eeprom_mac(wl);
++
+ 	ret = wl1251_register_hw(wl);
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_reg.h b/drivers/net/wireless/wl12xx/wl1251_reg.h
+index 0ca3b43..d16edd9 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_reg.h
++++ b/drivers/net/wireless/wl12xx/wl1251_reg.h
+@@ -46,7 +46,14 @@
+ #define SOR_CFG                        (REGISTERS_BASE + 0x0800)
+ #define ECPU_CTRL                      (REGISTERS_BASE + 0x0804)
+ #define HI_CFG                         (REGISTERS_BASE + 0x0808)
++
++/* EEPROM registers */
+ #define EE_START                       (REGISTERS_BASE + 0x080C)
++#define EE_CTL                         (REGISTERS_BASE + 0x2000)
++#define EE_DATA                        (REGISTERS_BASE + 0x2004)
++#define EE_ADDR                        (REGISTERS_BASE + 0x2008)
++
++#define EE_CTL_READ                   2
+ 
+ #define CHIP_ID_B                      (REGISTERS_BASE + 0x5674)
  
 -- 
-1.7.0.5
+1.6.3.3
 
