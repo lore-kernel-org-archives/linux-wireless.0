@@ -1,58 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:35797 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932205Ab0DGIXB (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:45666 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751969Ab0DLHiw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 04:23:01 -0400
-Date: Wed, 7 Apr 2010 10:23:00 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-ppp@vger.kernel.org
-Subject: Re: [PATCH v2] crypto: add blkcipher implementation of ARC4
-Message-ID: <20100407082300.GB6619@Chamillionaire.breakpoint.cc>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
- <1270280969-11357-3-git-send-email-sebastian@breakpoint.cc>
- <20100405084209.GA16788@gondor.apana.org.au>
- <20100405170406.GA24215@Chamillionaire.breakpoint.cc>
- <20100406124412.GA24488@gondor.apana.org.au>
- <20100406203002.GA1842@Chamillionaire.breakpoint.cc>
- <20100407003109.GA27617@gondor.apana.org.au>
+	Mon, 12 Apr 2010 03:38:52 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-028257931
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 16:38:51 +0900 (JST)
+Subject: [PATCH 2/2] ath5k: treat RXORN as non-fatal
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Mon, 12 Apr 2010 16:38:52 +0900
+Message-ID: <20100412073852.28215.40002.stgit@tt-desk>
+In-Reply-To: <20100412073847.28215.87571.stgit@tt-desk>
+References: <20100412073847.28215.87571.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <20100407003109.GA27617@gondor.apana.org.au>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Herbert Xu | 2010-04-07 08:31:09 [+0800]:
+We get RXORN interrupts when all receive buffers are full. This is not
+necessarily a fatal situation. It can also happen when the bus is busy or the
+CPU is not fast enough to process all frames.
 
->On Tue, Apr 06, 2010 at 10:30:02PM +0200, Sebastian Andrzej Siewior wrote:
->>
->> Good point. All arc4 users don't care about return value of setkey so I
->> think that I just change void to int add the check for the valid key
->> length.
->
->Actually, how about getting arc4_setup_iv to do all the legwork
->and turn it into a real IV? Then we don't need any checks on the
->data path.
-So arc4_setup_iv() should do what the internal arc4_ivsetup() does and
-we change void to int and check the keysize in there right? The problem
-here is that we are bounded to *this* implementation of the algorithm
-and are not able to replace it with a different implementation. Not that
-this is likely to happen for RC4 but it may be true for other stream
-ciphers.
+Older chipsets apparently need a reset to come out of this situration, but on
+newer chips we can treat RXORN like RX, as going thru a full reset does more
+harm than good, there.
 
->> While we are here, the .setkey() callback could be removed, couldn't it?
->> It returns 0 even it is doing nothing what looks kinda wrong. However it
->> shouldn't be called at all since min/max key is 0. Any objections on
->> that?
->
->I'm pretty sure testmgr will call setkey even for keylen == 0, no?
-Prior patch #3 it has no test case so it should not test it at all.
-Patch #3 adds a flag in order to distinguish it. You want to look at
-patch #3 now :)
+The exact chip revisions which need a reset are unknown - this guess
+AR5K_SREV_AR5212 ("venice") is copied from the HAL.
 
->
->Thanks,
+Inspired by openwrt 413-rxorn.patch:
+"treat rxorn like rx, reset after rxorn seems to do more harm than good"
 
-Sebastian
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   15 ++++++++++++++-
+ drivers/net/wireless/ath/ath5k/base.h |    1 +
+ 2 files changed, 15 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3f59bc2..9232742 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2705,7 +2705,20 @@ ath5k_intr(int irq, void *dev_id)
+ 			 */
+ 			tasklet_schedule(&sc->restq);
+ 		} else if (unlikely(status & AR5K_INT_RXORN)) {
+-			tasklet_schedule(&sc->restq);
++			/*
++			 * Receive buffers are full. Either the bus is busy or
++			 * the CPU is not fast enough to process all received
++			 * frames.
++			 * Older chipsets need a reset to come out of this
++			 * condition, but we treat it as RX for newer chips.
++			 * We don't know exactly which versions need a reset -
++			 * this guess is copied from the HAL.
++			 */
++			sc->stats.rxorn_intr++;
++			if (ah->ah_mac_srev < AR5K_SREV_AR5212)
++				tasklet_schedule(&sc->restq);
++			else
++				tasklet_schedule(&sc->rxtq);
+ 		} else {
+ 			if (status & AR5K_INT_SWBA) {
+ 				tasklet_hi_schedule(&sc->beacontq);
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 53a5651..56221bc 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -135,6 +135,7 @@ struct ath5k_statistics {
+ 	unsigned int beacons;
+ 
+ 	unsigned int mib_intr;
++	unsigned int rxorn_intr;
+ };
+ 
+ #if CHAN_DEBUG
+
