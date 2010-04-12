@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60931 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757230Ab0DOVjm (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:34390 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753283Ab0DLKfl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:42 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 06/97] ath9k_hw: add support for GPIO differences on AR9003
-Date: Thu, 15 Apr 2010 17:38:11 -0400
-Message-Id: <1271367582-992-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 12 Apr 2010 06:35:41 -0400
+Message-ID: <4BC2F773.4050906@gmail.com>
+Date: Mon, 12 Apr 2010 12:35:31 +0200
+From: Till Kamppeter <till.kamppeter@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Theodore Ts'o <tytso@mit.edu>, Greg KH <greg@kroah.com>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: Google Summer of Code 2010 - Assigned all unassigned kernel
+ applications to Grant Likely
+References: <4BC242BD.7060405@gmail.com> <t2u43e72e891004120057w55fac67fk433f92920a71d787@mail.gmail.com>
+In-Reply-To: <t2u43e72e891004120057w55fac67fk433f92920a71d787@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On 04/12/2010 09:57 AM, Luis R. Rodriguez wrote:
+> Sorry for the delay, I was at a wedding at another state, back home
+> now and just signed up.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c  |    4 +++-
- drivers/net/wireless/ath/ath9k/reg.h |    1 +
- 2 files changed, 4 insertions(+), 1 deletions(-)
+I have approved you now, so you can remove some mentoring load from 
+Grant by proposing yourself or giving negative scores.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 97c9711..d924cbc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3441,7 +3441,9 @@ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
- 	if (gpio >= ah->caps.num_gpio_pins)
- 		return 0xffffffff;
- 
--	if (AR_SREV_9271(ah))
-+	if (AR_SREV_9300_20_OR_LATER(ah))
-+		return MS_REG_READ(AR9300, gpio) != 0;
-+	else if (AR_SREV_9271(ah))
- 		return MS_REG_READ(AR9271, gpio) != 0;
- 	else if (AR_SREV_9287_10_OR_LATER(ah))
- 		return MS_REG_READ(AR9287, gpio) != 0;
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index d56b4ea..d524891 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -954,6 +954,7 @@ enum {
- #define AR9285_NUM_GPIO                          12
- #define AR9287_NUM_GPIO                          11
- #define AR9271_NUM_GPIO                          16
-+#define AR9300_NUM_GPIO                          17
- 
- #define AR_GPIO_IN_OUT                           0x4048
- #define AR_GPIO_IN_VAL                           0x0FFFC000
--- 
-1.6.3.3
-
+    Till
