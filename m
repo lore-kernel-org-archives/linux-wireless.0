@@ -1,86 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54815 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756852Ab0DODay (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42753 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187Ab0DMNPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:54 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 46/97] ath9k_hw: add a helper for Power Amplifier calibration for AR9002
-Date: Wed, 14 Apr 2010 23:30:00 -0400
-Message-Id: <1271302251-9075-47-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 13 Apr 2010 09:15:18 -0400
+Date: Tue, 13 Apr 2010 09:11:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ferdinand Rau <RauFerd@web.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Bug report: Controller RESET (DMA error) long after connecting
+Message-ID: <20100413131108.GB6331@tuxdriver.com>
+References: <4375153.331710.1271156960878.JavaMail.fmail@mwmweb085>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4375153.331710.1271156960878.JavaMail.fmail@mwmweb085>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code can be simplified and shared between two locations if we bring
-this into a helper. During reset we do not account for the skip count.
+On Tue, Apr 13, 2010 at 01:09:20PM +0200, Ferdinand Rau wrote:
+> Hi,
+> 
+> I'm on a Dell Vostro 1310 (running Debian testing) using a BCM4312 wireless chip and the firmware retrieved by the b43-fwcutter from git (the debian version didn't work with my card - the upgrade to kernel 2.6.31 only happend recently).
+> I basically followed the instructions on this site:
+> http://www.linuxwireless.org/en/users/Drivers/b43#fw-b43-lp
+> 
+> The wireless connection works in principle (can connect to different networks, can ping, can browse), but at some point the following error happens and the connection is reset every few seconds afterwards rendering it unusable:
+> > ERROR: Fatal DMA error: 0x00000400, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+> > Controller RESET (DMA error) ...
+> 
+> Similar to this thread (?): https://lists.berlios.de/pipermail/bcm43xx-dev/2009-November/006273.html
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |   32 +++++++++++++++++---------------
- 1 files changed, 17 insertions(+), 15 deletions(-)
+Chances are that your device will work in PIO mode -- you can try
+building a kernel w/ CONFIG_B43_FORCE_PIO.  In 2.6.34, there is code
+to switch automatically to PIO mode when such errors are observed.
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index eed2c76..26bc381 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -949,6 +949,21 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
- 
- }
- 
-+static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
-+{
-+	if (AR_SREV_9271(ah)) {
-+		if (is_reset || !ah->pacal_info.skipcount)
-+			ath9k_hw_9271_pa_cal(ah, is_reset);
-+		else
-+			ah->pacal_info.skipcount--;
-+	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
-+		if (is_reset || !ah->pacal_info.skipcount)
-+			ath9k_hw_9285_pa_cal(ah, is_reset);
-+		else
-+			ah->pacal_info.skipcount--;
-+	}
-+}
-+
- bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 			u8 rxchainmask, bool longcal)
- {
-@@ -973,17 +988,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 	/* Do NF cal only at longer intervals */
- 	if (longcal) {
- 		/* Do periodic PAOffset Cal */
--		if (AR_SREV_9271(ah)) {
--			if (!ah->pacal_info.skipcount)
--				ath9k_hw_9271_pa_cal(ah, false);
--			else
--				ah->pacal_info.skipcount--;
--		} else if (AR_SREV_9285_11_OR_LATER(ah)) {
--			if (!ah->pacal_info.skipcount)
--				ath9k_hw_9285_pa_cal(ah, false);
--			else
--				ah->pacal_info.skipcount--;
--		}
-+		ar9002_hw_pa_cal(ah, false);
- 
- 		if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
- 			ath9k_olc_temp_compensation(ah);
-@@ -1142,10 +1147,7 @@ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 	}
- 
- 	/* Do PA Calibration */
--	if (AR_SREV_9271(ah))
--		ath9k_hw_9271_pa_cal(ah, true);
--	else if (AR_SREV_9285_11_OR_LATER(ah))
--		ath9k_hw_9285_pa_cal(ah, true);
-+	ar9002_hw_pa_cal(ah, true);
- 
- 	/* Do NF Calibration after DC offset and other calibrations */
- 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+Hth!
+
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
