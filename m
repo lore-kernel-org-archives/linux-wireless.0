@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:48305 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757877Ab0DVUdW convert rfc822-to-8bit (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:34884 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754322Ab0DMAQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 16:33:22 -0400
-Received: by pwj9 with SMTP id 9so6375909pwj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 13:33:21 -0700 (PDT)
+	Mon, 12 Apr 2010 20:16:17 -0400
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0950917772
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2010 09:16:15 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to band
+Date: Tue, 13 Apr 2010 09:16:18 +0900
+References: <20100412073658.28078.32155.stgit@tt-desk> <201004121734.39700.br1@einfach.org> <1271061652.3877.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1271061652.3877.8.camel@jlt3.sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-In-Reply-To: <1271954537.8469.15.camel@mj>
-References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
-	<g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
-	<1271954537.8469.15.camel@mj>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 22 Apr 2010 13:33:00 -0700
-Message-ID: <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
-Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
-To: Pavel Roskin <proski@gnu.org>
-Cc: Grazvydas Ignotas <notasas@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201004130916.18626.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 22, 2010 at 9:42 AM, Pavel Roskin <proski@gnu.org> wrote:
-> On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
->
->> How was this compiling for older kernels before then?
->
-> Compiling was fine, but loading the firmware was failing sometimes.  I'm
-> glad somebody figured it out.  Thank you, Grazvydas!
+On Monday 12 April 2010 17:40:52 you wrote:
+> On Mon, 2010-04-12 at 17:34 +0900, Bruno Randolf wrote:
+> > before we unconditionally used 3 (1Mbps, 2 Mbps) as basic rates. this
+> > clearly is wrong in the 5GHz band.
+> 
+> No, it's fine. Look again at how this works.
 
-OK Applied. I'm still puzzled, if it compiled, then that means
-dev_set_uevent_suppress() was being defined somehow for older kernels.
+(hello? can you please stop treating me like an idiot?)
 
-> I would prefer to have replacement functions in compat-2.6.30.h rather
-> than ifdefs in the code.  We might want to resync compat_firmware with
-> the kernel one day, and ifdefs would stand in the way.
+this means we use 6 and 9 as basic rates in the 5GHz band.
+we should use 6, 12 and 24.
 
-Good point, I merged the patch for now given that that file does't
-change that often upstream.
-
-  Luis
+bruno
