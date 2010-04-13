@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:26916 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753175Ab0DVI6L (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35865 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231Ab0DMFro (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 04:58:11 -0400
-Subject: Re: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based
- on ps-qos network latency
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1271925939.3605.7.camel@jlt3.sipsolutions.net>
-References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271688177.23671.1.camel@jlt3.sipsolutions.net>
-	 <1271740120.6205.5733.camel@wimaxnb.nmp.nokia.com>
-	 <1271925939.3605.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Apr 2010 11:55:47 +0300
-Message-ID: <1271926547.6205.8870.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Tue, 13 Apr 2010 01:47:44 -0400
+Received: by wyf19 with SMTP id 19so28431wyf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 22:47:43 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 13 Apr 2010 06:47:42 +0100
+Message-ID: <u2u719bd8781004122247kb48bedet36ea07db3819d202@mail.gmail.com>
+Subject: p54pci does not work
+From: Duarte Nuno Gomes <dnunogomes@gmail.com>
+To: linux-wireless@vger.kernel.org, chunkeey@googlemail.com
+Cc: flamingice@sourmilk.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-22 at 10:45 +0200, ext Johannes Berg wrote:
-> On Tue, 2010-04-20 at 08:08 +0300, Juuso Oikarinen wrote:
-> > On Mon, 2010-04-19 at 16:42 +0200, ext Johannes Berg wrote:
-> > > On Fri, 2010-04-16 at 12:14 +0300, Juuso Oikarinen wrote:
-> > > > Determine the dynamic PS timeout based on the configured ps-qos network
-> > > > latency. For backwards wext compatibility, allow the dynamic PS timeout
-> > > > configured by the cfg80211 to overrule the automatically determined value.
-> > > 
-> > > This seems OK, but I fear that you'll write applications setting the
-> > > pm_qos network latency just to affect this parameter?
-> > > 
-> > 
-> > Well you have to see where I'm coming from - I must come up with a way
-> > to tune the dynamic ps timeout value from user-space in a way that is
-> > agreeable with others, and that is somewhat future-proof.
-> 
-> Well I personally think that's your first mistake ;)
-> 
-> Why does userspace care about the dynamic PS timeout value to start
-> with? All it should care about is the latency with which it can react to
-> network packets, no?
-> 
-> > That said, obviously the network latency should be tuned as, well, the
-> > expected network latency. In this phase though, there are no other
-> > parameters affected by the network latency, so the result is quite
-> > obvious - your fear will realise itself ;)
-> 
-> But there are, like the max sleep period in # of beacons.
+hi,
 
-Yeah, okay there is. You probably noticed I posted a version of the
-patches with "saner" latency-values for this reason.
+im a p54pci module user.
+02:01.0 Network controller: Intersil Corporation ISL3890 [Prism GT/Prism
+Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
 
-I think there is something fishy in the max-sleep-period implementation.
-I don't yet understand it fully, but it seems to me the host is trying
-to set up it's own dtim interval, regardless of what the AP is
-configured with. It seems to me that this could lead to loss of
-broadcast/multicast frames, if the sta is not waking up a AP dtim
-beacons, but instead has its own cycle. But I have to look into this
-deeper at some point, so let's not get caught in this now.
+i use isl3886pci firmware ( 2.13.12.0.arm ) and used the latest
+compat-wireless-2.6.34-rc4-test1
+latest firmware , 2.17.2.0.arm wont work
 
--Juuso
+it works all ok ... when i visit some websites ( www.rcmadeira.pt.vu is one
+of them ), my connection just disconnects and i cannot resume it . i need to
+shutdown and re lauch kernel in order to work with wireless again.
 
-> johannes
-> 
+here is what dmesg outputs
 
+No probe response from AP 00:24:17:6c:a5:0e after 500ms, disconnecting.
+Phy0 : cannot boot firmware !
 
+i've tryed modprobe -r p54pci and modprobe p54pci , wont work. needs a
+complete shutdown.
+
+its an annoying bug... i cannot browse sucessfully for some hours , some
+will fail , making me reboot and reboot and reboot ...
+
+if u need addicional information , please let me know to
+dnunogomes@gmail.com
+Hope it will be corrected soon
+i would like to receive any update about this , thanks !
+
+bye !
