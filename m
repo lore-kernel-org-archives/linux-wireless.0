@@ -1,101 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:42385 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753832Ab0DRPcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Apr 2010 11:32:17 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 4/9] ath9k: update the ath_max_4ms_framelen table
-Date: Sun, 18 Apr 2010 16:56:37 +0200
-Message-Id: <1271602602-8538-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1271602602-8538-3-git-send-email-nbd@openwrt.org>
-References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
- <1271602602-8538-2-git-send-email-nbd@openwrt.org>
- <1271602602-8538-3-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:55331 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432Ab0DMHVZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Apr 2010 03:21:25 -0400
+Subject: Re: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to
+ band
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <201004130916.18626.br1@einfach.org>
+References: <20100412073658.28078.32155.stgit@tt-desk>
+	 <201004121734.39700.br1@einfach.org>
+	 <1271061652.3877.8.camel@jlt3.sipsolutions.net>
+	 <201004130916.18626.br1@einfach.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Apr 2010 09:21:15 +0200
+Message-ID: <1271143275.4885.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Include MCS0-31 and also add SGI for HT20. This makes it
-possible to support more different rate combinations with
-newer hardware.
+On Tue, 2010-04-13 at 09:16 +0900, Bruno Randolf wrote:
+> On Monday 12 April 2010 17:40:52 you wrote:
+> > On Mon, 2010-04-12 at 17:34 +0900, Bruno Randolf wrote:
+> > > before we unconditionally used 3 (1Mbps, 2 Mbps) as basic rates. this
+> > > clearly is wrong in the 5GHz band.
+> > 
+> > No, it's fine. Look again at how this works.
+> 
+> (hello? can you please stop treating me like an idiot?)
+> 
+> this means we use 6 and 9 as basic rates in the 5GHz band.
+> we should use 6, 12 and 24.
 
-Based on a patch by Selvam. T.
+No, we can treat 6 and 9 as basic rates if we want to when we create the
+IBSS. You seem to be confusing basic and mandatory rates or something
+else that I can't make sense of. It's NOT "clearly wrong".
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |   41 +++++++++++++++++++++-----------
- 1 files changed, 27 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5d3d563..4078982 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -71,24 +71,36 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
- 			     int nbad, int txok, bool update_rc);
- 
- enum {
--	MCS_DEFAULT,
-+	MCS_HT20,
-+	MCS_HT20_SGI,
- 	MCS_HT40,
- 	MCS_HT40_SGI,
- };
- 
--static int ath_max_4ms_framelen[3][16] = {
--	[MCS_DEFAULT] = {
--		3216,  6434,  9650,  12868, 19304, 25740,  28956,  32180,
--		6430,  12860, 19300, 25736, 38600, 51472,  57890,  64320,
-+static int ath_max_4ms_framelen[4][32] = {
-+	[MCS_HT20] = {
-+		3212,  6432,  9648,  12864,  19300,  25736,  28952,  32172,
-+		6424,  12852, 19280, 25708,  38568,  51424,  57852,  64280,
-+		9628,  19260, 28896, 38528,  57792,  65532,  65532,  65532,
-+		12828, 25656, 38488, 51320,  65532,  65532,  65532,  65532,
-+	},
-+	[MCS_HT20_SGI] = {
-+		3572,  7144,  10720,  14296,  21444,  28596,  32172,  35744,
-+		7140,  14284, 21428,  28568,  42856,  57144,  64288,  65532,
-+		10700, 21408, 32112,  42816,  64228,  65532,  65532,  65532,
-+		14256, 28516, 42780,  57040,  65532,  65532,  65532,  65532,
- 	},
- 	[MCS_HT40] = {
--		6684,  13368, 20052, 26738, 40104, 53476,  60156,  66840,
--		13360, 26720, 40080, 53440, 80160, 106880, 120240, 133600,
-+		6680,  13360,  20044,  26724,  40092,  53456,  60140,  65532,
-+		13348, 26700,  40052,  53400,  65532,  65532,  65532,  65532,
-+		20004, 40008,  60016,  65532,  65532,  65532,  65532,  65532,
-+		26644, 53292,  65532,  65532,  65532,  65532,  65532,  65532,
- 	},
- 	[MCS_HT40_SGI] = {
--		/* TODO: Only MCS 7 and 15 updated, recalculate the rest */
--		6684,  13368, 20052, 26738, 40104, 53476,  60156,  74200,
--		13360, 26720, 40080, 53440, 80160, 106880, 120240, 148400,
-+		7420,  14844,  22272,  29696,  44544,  59396,  65532,  65532,
-+		14832, 29668,  44504,  59340,  65532,  65532,  65532,  65532,
-+		22232, 44464,  65532,  65532,  65532,  65532,  65532,  65532,
-+		29616, 59232,  65532,  65532,  65532,  65532,  65532,  65532,
- 	}
- };
- 
-@@ -538,12 +550,13 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 				break;
- 			}
- 
--			if (rates[i].flags & IEEE80211_TX_RC_SHORT_GI)
--				modeidx = MCS_HT40_SGI;
--			else if (rates[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+			if (rates[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
- 				modeidx = MCS_HT40;
- 			else
--				modeidx = MCS_DEFAULT;
-+				modeidx = MCS_HT20;
-+
-+			if (rates[i].flags & IEEE80211_TX_RC_SHORT_GI)
-+				modeidx++;
- 
- 			frmlen = ath_max_4ms_framelen[modeidx][rates[i].idx];
- 			max_4ms_framelen = min(max_4ms_framelen, frmlen);
--- 
-1.6.4.2
+johannes
 
