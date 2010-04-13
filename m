@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:38859 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753008Ab0D1ICX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 04:02:23 -0400
-From: "Xu, Martin" <martin.xu@intel.com>
-To: "ath9k-devel@lists.ath5k.org" <ath9k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 28 Apr 2010 16:01:45 +0800
-Subject: kernel warning on 2.6.33 ath9k
-Message-ID: <FC2FB65B4D919844ADE4BE3C2BB739AD1E4FB31B@shsmsx501.ccr.corp.intel.com>
-References: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
- <1272438045.2772.6.camel@jm-desktop>
-In-Reply-To: <1272438045.2772.6.camel@jm-desktop>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.230]:35217 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab0DMJOK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Apr 2010 05:14:10 -0400
+Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout
+ configuration
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Kalle Valo <kvalo@adurom.com>
+Cc: ext Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ylalehto Janne (Nokia-D/Tampere)" <janne.ylalehto@nokia.com>
+In-Reply-To: <87sk6zoh4x.fsf@purkki.valot.fi>
+References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271061120.3877.6.camel@jlt3.sipsolutions.net>
+	 <1271062589.10120.1169.camel@wimaxnb.nmp.nokia.com>
+	 <1271063175.3877.13.camel@jlt3.sipsolutions.net>
+	 <1271065535.10120.1191.camel@wimaxnb.nmp.nokia.com>
+	 <871vekpexo.fsf@purkki.valot.fi>
+	 <1271143746.10120.1232.camel@wimaxnb.nmp.nokia.com>
+	 <87wrwboirr.fsf@purkki.valot.fi>
+	 <1271148573.10120.1257.camel@wimaxnb.nmp.nokia.com>
+	 <87sk6zoh4x.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Apr 2010 12:10:02 +0300
+Message-ID: <1271149802.10120.1262.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkNCkkgZm91bmQgdGhhdCBrZXJuZWwgcmVwb3J0cyBiZWxvdyB3YXJuaW5nIHdoZW4gdXNpbmcg
-YXRoOWsgaW4ga2VybmVsIDIuNi4zMy4NClNvbWVvbmUgY2FuIGtpbmRseSB0ZWxsIG1lIHdoZXRo
-ZXIgaXQgaXMgdGhlIG5ldyBmb3VuZCBpc3N1ZSBvciB0aGUgaXNzdWUgaXMga25vd24gYW5kIGhh
-cyBiZWVuIGZpeGVkIGluIGxhdGVyIGNvbW1pdCBpbiBnaXQgdHJlZT8NClRoYW5rcyENCg0KLS0t
-LS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tDQpXQVJOSU5HOiBhdCBrZXJuZWwvc29m
-dGlycS5jOjE0MyBsb2NhbF9iaF9lbmFibGVfaXArMHgzMi8weDc2KCkNCkhhcmR3YXJlIG5hbWU6
-IEFPNTMyaCAgICAgICAgICANCk1vZHVsZXMgbGlua2VkIGluOiBjYmMgZWNyeXB0ZnMgYXRoOWsg
-YXRoOWtfY29tbW9uIGJhdHRlcnkgYXRsMWMgam95ZGV2IGF0aDlrX2h3IHV2Y3ZpZGVvDQpQaWQ6
-IDg1MCwgY29tbTogd3BhX3N1cHBsaWNhbnQgTm90IHRhaW50ZWQgMi42LjMzLjItOC4xLW5ldGJv
-b2sgIzENCkNhbGwgVHJhY2U6DQogWzxjMTAzMDk3OD5dIHdhcm5fc2xvd3BhdGhfY29tbW9uKzB4
-NjYvMHg3ZA0KIFs8YzEwMzVhNzQ+XSA/IGxvY2FsX2JoX2VuYWJsZV9pcCsweDMyLzB4NzYNCiBb
-PGMxMDMwOTljPl0gd2Fybl9zbG93cGF0aF9udWxsKzB4ZC8weDEwDQogWzxjMTAzNWE3ND5dIGxv
-Y2FsX2JoX2VuYWJsZV9pcCsweDMyLzB4NzYNCiBbPGMxNDc4OWMwPl0gX3Jhd19zcGluX3VubG9j
-a19iaCsweDE3LzB4MTkNCiBbPGY4NzFkYmQzPl0gYXRoX3R4X25vZGVfY2xlYW51cCsweGUwLzB4
-ZjkgW2F0aDlrXQ0KIFs8YzEwM2FlNDY+XSA/IGxvY2tfdGltZXJfYmFzZSsweDIyLzB4NDENCiBb
-PGY4NzFhMDA1Pl0gYXRoOWtfc3RhX25vdGlmeSsweDc0LzB4NzggW2F0aDlrXQ0KIFs8YzE0NDM5
-ODc+XSBfX3N0YV9pbmZvX3VubGluaysweDEzOS8weDE4OQ0KIFs8Zjg3MTlmOTE+XSA/IGF0aDlr
-X3N0YV9ub3RpZnkrMHgwLzB4NzggW2F0aDlrXQ0KIFs8YzE0NDM5ZmE+XSBzdGFfaW5mb191bmxp
-bmsrMHgyMy8weDMxDQogWzxjMTQ0ODgzND5dIGllZWU4MDIxMV9zZXRfZGlzYXNzb2MrMHgxYmQv
-MHgxZTMNCiBbPGMxNDQ4Y2Y4Pl0gaWVlZTgwMjExX21nZF9kZWF1dGgrMHgzYy8weGZlDQogWzxj
-MTQ0ZGYyMT5dIGllZWU4MDIxMV9kZWF1dGgrMHgxNC8weDE2DQogWzxjMTQzYzNmYz5dIF9fY2Zn
-ODAyMTFfbWxtZV9kZWF1dGgrMHhlOS8weGYyDQogWzxjMTQzZWVhMT5dIF9fY2ZnODAyMTFfZGlz
-Y29ubmVjdCsweGNiLzB4MTJlDQogWzxjMTQ0MGI3ND5dIGNmZzgwMjExX3dleHRfc2l3bWxtZSsw
-eDY0LzB4ODANCiBbPGMxNDQxY2Y2Pl0gaW9jdGxfc3RhbmRhcmRfY2FsbCsweDFkNy8weDI2Zg0K
-IFs8YzEzOTI4MWI+XSA/IGRldl9nZXRfYnlfbmFtZV9yY3UrMHg3My8weDgwDQogWzxjMTM5Mjhk
-OT5dID8gX19kZXZfZ2V0X2J5X25hbWUrMHg3MS8weDdlDQogWzxjMTQ0MWU4MT5dIHdleHRfaGFu
-ZGxlX2lvY3RsKzB4ZjMvMHgxN2UNCiBbPGMxNDQwYjEwPl0gPyBjZmc4MDIxMV93ZXh0X3Npd21s
-bWUrMHgwLzB4ODANCiBbPGMxMzk2NDEwPl0gZGV2X2lvY3RsKzB4NTc4LzB4NTk4DQogWzxjMTAw
-OTFiOT5dID8gcmVzdG9yZV9pMzg3X2Z4c2F2ZSsweDU0LzB4NjYNCiBbPGMxMzg3YjQ0Pl0gc29j
-a19pb2N0bCsweDFjZi8weDFkYg0KIFs8YzEwYjA5Nzk+XSB2ZnNfaW9jdGwrMHgyOC8weDkyDQog
-WzxjMTM4Nzk3NT5dID8gc29ja19pb2N0bCsweDAvMHgxZGINCiBbPGMxMGIwZWQ2Pl0gZG9fdmZz
-X2lvY3RsKzB4NDUzLzB4NDkxDQogWzxjMTM4ODIzMz5dID8gc3lzX3JlY3Ztc2crMHgyYy8weDQ3
-DQogWzxjMTM4OTU0Mj5dID8gc3lzX3NvY2tldGNhbGwrMHgxNDcvMHgxOGMNCiBbPGMxMGIwZjQz
-Pl0gc3lzX2lvY3RsKzB4MmYvMHg0OQ0KIFs8YzEwMDI3ZDA+XSBzeXNlbnRlcl9kb19jYWxsKzB4
-MTIvMHgyNg0KDQo=
+On Tue, 2010-04-13 at 11:07 +0200, ext Kalle Valo wrote:
+> Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+> 
+> >> > The problem here is that the latency at least cannot be used in any
+> >> > simple and/or general way I can think of to control the dynamic PS
+> >> > timeout.
+> >> 
+> >> Can't you do something like this:
+> >> 
+> >> pm_qos >= 1000 -> timeout 0 ms (aka. full power save)
+> >> pm_qos <= 100 -> timeout 100 ms
+> >> pm_qos <= 50 -> timeout 300 ms
+> >> 
+> >> That is, just some arbitrary numbers but which affect dynamic ps
+> >> timeout. I haven't thought about the numbers at all, but they actually
+> >> don't matter because it's easy to change them inside mac80211.
+> >
+> > Theoretically I could, but I'm pretty sure whatever values I would
+> > choose would be unacceptable by others, as they would be tuned for a
+> > specific use.
+> 
+> I don't see a problem with that. The current use of pm_qos is very
+> limited, I think it's all positive if we start using it more.
+> 
+> > Also, although AFAIK barely anyone uses the DTIM interval which is
+> > determined based on th pm_qos, adding arbitrary rules like this to the
+> > side risks breaking something for someone.
+> 
+> AFAIK the pm_qos values are not set in stone in any. Applications just
+> request something and kernel can do whatever it wants, even ignore it.
+> So I don't see any harm if we change how mac80211 uses pm_qos values.
+> And most probably this will change many times in the future.
+> 
+
+Ok, you convinced me. I will send a RFC patch with the above, and will
+sub-sequentially be flamed to death ;)
+
+Be sure to look into that bug in wl1251 at some point, so I don't break
+it with this, if by chance I get this to go through ;)
+
+-Juuso
+
