@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:54004 "EHLO ds10.nbd.name"
+Received: from purkki.adurom.net ([80.68.90.206]:40461 "EHLO purkki.valot.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751422Ab0DZRy3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 13:54:29 -0400
-Message-ID: <4BD5D34F.8080205@openwrt.org>
-Date: Mon, 26 Apr 2010 19:54:23 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1753364Ab0DMQzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Apr 2010 12:55:22 -0400
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wl1251: register platform_device to pass board data
+References: <1271110918-18599-1-git-send-email-notasas@gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 13 Apr 2010 19:55:19 +0300
+In-Reply-To: <1271110918-18599-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Tue\, 13 Apr 2010 01\:21\:58 +0300")
+Message-ID: <87k4sbnvgo.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: fix handling of 4-address-mode in ieee80211_change_iface
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A misplaced interface type check bails out too early if the interface
-is not in monitor mode. This patch moves it to the right place, so that
-it only covers changes to the monitor flags.
+Grazvydas Ignotas <notasas@gmail.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -97,9 +97,6 @@ static int ieee80211_change_iface(struct
- 					    params->mesh_id_len,
- 					    params->mesh_id);
+> wl1251 is embedded chip that can be connected using SDIO bus, and is not
+> an actual SDIO card. For this reason there is a need to pass some board
+> specific data, like 'EEPROM is attached' flag or power control callback.
+> However there is no way to pass this data through SDIO subsystem, so
+> this patch registers dummy platform_device to allow that.
 
--	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
--		return 0;
--
- 	if (type == NL80211_IFTYPE_AP_VLAN &&
- 	    params && params->use_4addr == 0)
- 		rcu_assign_pointer(sdata->u.vlan.sta, NULL);
-@@ -107,6 +104,9 @@ static int ieee80211_change_iface(struct
- 		 params && params->use_4addr >= 0)
- 		sdata->u.mgd.use_4addr = params->use_4addr;
+Thanks a lot, this is really needed. Few comments though:
 
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
-+		return 0;
-+
- 	sdata->u.mntr_flags = *flags;
- 	return 0;
- }
+> +struct wl12xx_platform_data *wl12xx_board_data;
+
+Shouldn't this be static? Also I assume that there is no way to
+allocate this dynamically, am I correct?
+
+> @@ -208,6 +240,10 @@ static int __init wl1251_sdio_init(void)
+>  {
+>  	int err;
+>  
+> +	err = platform_driver_register(&wl1251_platform_driver);
+> +	if (err)
+> +		wl1251_error("failed to register platform driver: %d", err);
+
+You should exit the function here.
+
+Can you fix the above and resend, please?
+
+-- 
+Kalle Valo
