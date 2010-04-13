@@ -1,51 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41318 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932217Ab0DPTpK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43536 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197Ab0DMIOV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 15:45:10 -0400
-Date: Fri, 16 Apr 2010 15:43:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH v3 09/97] ath9k_hw: Move some RF ops to the private
-	callbacks
-Message-ID: <20100416194335.GF8554@tuxdriver.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com> <1271367582-992-10-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1271367582-992-10-git-send-email-lrodriguez@atheros.com>
+	Tue, 13 Apr 2010 04:14:21 -0400
+Subject: Re: [PATCH] cfg80211: Avoid sending IWEVASSOCREQIE and
+ IWEVASSOCRESPIE events with NULL event body
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nishant Sarmukadam <nishants@marvell.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1271145896-13377-1-git-send-email-nishants@marvell.com>
+References: <1271145896-13377-1-git-send-email-nishants@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Apr 2010 10:14:12 +0200
+Message-ID: <1271146452.4885.35.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 15, 2010 at 05:38:14PM -0400, Luis R. Rodriguez wrote:
-> The PHY split is easier done in a few steps. First move
-> the RF ops to the private ops and rename them accordingly.
-> We split PHY stuff up first for the AR5008 and AR9002
-> families. There are some callbacks that AR9002 share
-> with the AR5008 familiy so we set those first, if AR9002
-> has some different callbacks it will override them upon
-> hardware init.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+On Tue, 2010-04-13 at 01:04 -0700, Nishant Sarmukadam wrote:
+> In a scenario, where a cfg80211 driver (station mode) does not send
+> assoc request and assoc response IEs in cfg80211_connect_result after
+> a successful association to an AP, cfg80211 sends IWEVASSOCREQIE and
+> IWEVASSOCRESPIE to the user space application with NULL data. This can
+> cause an issue for the event recipient. An example of this is when cfg80211
+> sends IWEVASSOCREQIE and IWEVASSOCRESPIE events with NULL event body to
+> wpa_supplicant. The wpa_supplicant overwrites the assoc request and assoc response
+> IEs for this station with NULL data. If the association is WPA/WPA2,
+> then wpa_supplicant is not able to generate EAPOL handshake messages, since the IEs are NULL.
+> This patch fixes the issue by not sending these events in case the event body is NULL.
+
+I can agree with the patch, but I think the commit log needs to be more
+explicit about why this is sufficient, since you never touch the event
+sending code! Also, you should format in a way that's easier to read, I
+think ...
+
+johannes
+
+> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
 > ---
->  drivers/net/wireless/ath/ath9k/Makefile            |    3 +-
->  drivers/net/wireless/ath/ath9k/ani.c               |    1 +
->  .../net/wireless/ath/ath9k/{phy.c => ar5008_phy.c} |  884 ++++++++++----------
+>  net/wireless/sme.c |   16 ++++++++++------
+>  1 files changed, 10 insertions(+), 6 deletions(-)
+> 
+> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> index 17fde0d..396b8d3 100644
+> --- a/net/wireless/sme.c
+> +++ b/net/wireless/sme.c
+> @@ -516,12 +516,16 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+>  	ev->type = EVENT_CONNECT_RESULT;
+>  	if (bssid)
+>  		memcpy(ev->cr.bssid, bssid, ETH_ALEN);
+> -	ev->cr.req_ie = ((u8 *)ev) + sizeof(*ev);
+> -	ev->cr.req_ie_len = req_ie_len;
+> -	memcpy((void *)ev->cr.req_ie, req_ie, req_ie_len);
+> -	ev->cr.resp_ie = ((u8 *)ev) + sizeof(*ev) + req_ie_len;
+> -	ev->cr.resp_ie_len = resp_ie_len;
+> -	memcpy((void *)ev->cr.resp_ie, resp_ie, resp_ie_len);
+> +	if (req_ie_len) {
+> +		ev->cr.req_ie = ((u8 *)ev) + sizeof(*ev);
+> +		ev->cr.req_ie_len = req_ie_len;
+> +		memcpy((void *)ev->cr.req_ie, req_ie, req_ie_len);
+> +	}
+> +	if (resp_ie_len) {
+> +		ev->cr.resp_ie = ((u8 *)ev) + sizeof(*ev) + req_ie_len;
+> +		ev->cr.resp_ie_len = resp_ie_len;
+> +		memcpy((void *)ev->cr.resp_ie, resp_ie, resp_ie_len);
+> +	}
+>  	ev->cr.status = status;
+>  
+>  	spin_lock_irqsave(&wdev->event_lock, flags);
 
-In general, it is better to do renames in a separate patch -- the
-fixups are easier in cases where something else hit that file before
-your patch is applied.  It might also help if you based big patches
-(or big series) on wireless-next-2.6 instead of wireless-testing, as I
-need to apply them to wireless-next-2.6 before I can send them to Dave.
 
-In this case, a patch that wireless-testing picked-up from linux-2.6
-and which isn't in wireless-next-2.6 (and probably not net-next-2.6
-either) causes this patch to fail to apply to wirless-next-2.6.
-I'll fix it up, in the interest of putting this series behind us...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
