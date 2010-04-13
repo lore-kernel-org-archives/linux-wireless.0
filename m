@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:35048 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756781Ab0DWUTE convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:38548 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752888Ab0DMWEA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 16:19:04 -0400
-Received: by bwz25 with SMTP id 25so11683641bwz.28
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 13:19:02 -0700 (PDT)
+	Tue, 13 Apr 2010 18:04:00 -0400
+Received: by bwz19 with SMTP id 19so36141bwz.21
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2010 15:03:58 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <19409.10472.450708.915467@gargle.gargle.HOWL>
-References: <19409.10472.450708.915467@gargle.gargle.HOWL>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 23 Apr 2010 22:18:42 +0200
-Message-ID: <s2m69e28c911004231318oaf7cd7fex440846d2f90a5774@mail.gmail.com>
-Subject: Re: [PATCH 07/11] ath9k_htc: Use USB reboot
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <877hobnqs1.fsf@purkki.valot.fi>
+References: <1271110918-18599-1-git-send-email-notasas@gmail.com>
+	 <87k4sbnvgo.fsf@purkki.valot.fi>
+	 <g2lb6c5339f1004131056v597857c0qf0da0dd093d6dbfa@mail.gmail.com>
+	 <877hobnqs1.fsf@purkki.valot.fi>
+Date: Wed, 14 Apr 2010 01:03:57 +0300
+Message-ID: <i2u6ed0b2681004131503p4a584365j76a39f25ae395731@mail.gmail.com>
+Subject: Re: [PATCH] wl1251: register platform_device to pass board data
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 23, 2010 at 6:58 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> So, apparently there is a USB reboot command
-> that the target accepts. Using this instead of
-> usb_reset_device() fixes the issue of "descriptor read error"
-> that pops up on repeated load/unload.
+On Tue, Apr 13, 2010 at 7:55 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>> +struct wl12xx_platform_data *wl12xx_board_data;
 >
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hif_usb.c |   22 +++++++++++++++++++++-
->  1 files changed, 21 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-> index cee5feb..31665c5 100644
-> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-> @@ -889,6 +889,26 @@ err_alloc:
->        return ret;
->  }
->
-> +static void ath9k_hif_usb_reboot(struct usb_device *udev)
-> +{
-> +       u32 reboot_cmd = 0xffffffff;
-> +       void *buf;
-> +       int ret;
-> +
-> +       buf = kmalloc(4, GFP_KERNEL);
-> +       if (!buf)
-> +               return;
-> +
-> +       memcpy(buf, &reboot_cmd, 4);
-> +
-> +       ret = usb_bulk_msg(udev, usb_sndbulkpipe(udev, USB_REG_OUT_PIPE),
-> +                          buf, 4, NULL, HZ);
-> +       if (ret)
-> +               dev_err(&udev->dev, "ath9k_htc: USB reboot failed\n");
-> +
-> +       kfree(buf);
-> +}
-> +
->  static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
->  {
->        struct usb_device *udev = interface_to_usbdev(interface);
-> @@ -903,7 +923,7 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
->        }
->
->        if (hif_dev->flags & HIF_USB_START)
-> -               usb_reset_device(udev);
-> +               ath9k_hif_usb_reboot(udev);
->
->        kfree(hif_dev);
->        dev_info(&udev->dev, "ath9k_htc: USB layer deinitialized\n");
-> --
-> 1.7.0.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Shouldn't this be static? Also I assume that there is no way to
+> allocate this dynamically, am I correct?
 
-This patch seems to be the wrong way around... or is it supposed to be
-applied using "patch -R"?
+Yes, it should be static. Could not think if a way to avoid global
+pointer though..
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+On Tue, Apr 13, 2010 at 9:36 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Bob Copeland <me@bobcopeland.com> writes:
+>
+>> On Tue, Apr 13, 2010 at 12:55 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>>>> However there is no way to pass this data through SDIO subsystem, so
+>>>> this patch registers dummy platform_device to allow that.
+>>
+>> No objection to the patch, platforms like android want this so
+>> you can set the gpio for irq handling instead of using the
+>> SDIO interrupts.
+>
+> I talked with TI about the interrupts. They say SDIO interrupt should
+> not be used, instead we should always the external gpio line for the
+> interrupt.
+
+I've got some patches for this in the pipeline, just need a way to
+pass platform_data..
+
+>> But maybe we should invent a way to send it through the SDIO
+>> subsystem?
+>
+> I agree, that is the best option.
+
+Well there are even more problems with this particular chip as it's
+missing essential SDIO registers like CIS and CCCR and can't even
+probe without some additional kernel hacks..
+
+>> My hope was that device trees on ARM would solve the issue
+>> eventually.
+>
+> But no luck yet?
+
+There is lot of talk but it's not there yet, and I'm not sure it will
+suit this case even. I think we can use my hack for the time being.
