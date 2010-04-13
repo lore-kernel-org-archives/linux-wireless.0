@@ -1,41 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39340 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754040Ab0DZTEm (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:49429 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752071Ab0DMXnn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 15:04:42 -0400
+	Tue, 13 Apr 2010 19:43:43 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2010 16:43:43 -0700
+Date: Tue, 13 Apr 2010 16:43:41 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 11/13] ath9k_hw: Fix endian bug in an AR9003 EEPROM field
-Date: Mon, 26 Apr 2010 15:04:39 -0400
-Message-Id: <1272308681-32396-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
-References: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 012/102] ath9k_hw: add a private callback for PLL
+ control computation
+Message-ID: <20100413234341.GE2610@tux>
+References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+ <1270754858-26266-13-git-send-email-lrodriguez@atheros.com>
+ <20100413195408.GC6722@tuxdriver.com>
+ <4BC4D0DA.2070109@openwrt.org>
+ <m2y43e72e891004131442jab214ed3hdf2cbd59b8910d58@mail.gmail.com>
+ <20100413233800.GB2092@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <20100413233800.GB2092@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Tue, Apr 13, 2010 at 04:38:01PM -0700, John W. Linville wrote:
+> On Tue, Apr 13, 2010 at 02:42:13PM -0700, Luis R. Rodriguez wrote:
+> > On Tue, Apr 13, 2010 at 1:15 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> > > On 2010-04-13 9:54 PM, John W. Linville wrote:
+> > >> On Thu, Apr 08, 2010 at 03:26:08PM -0400, Luis R. Rodriguez wrote:
+> > >>> The PLL control computation used to program the AR_RTC_PLL_CONTROL
+> > >>> register varies between our harware so just add a private callback for it.
+> > >>> AR9003 will use its own callback.
+> > >>>
+> > >>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > >>> ---
+> > >>>  drivers/net/wireless/ath/ath9k/ar5008_phy.c |   55 +++++++++++++++++++++++
+> > >>>  drivers/net/wireless/ath/ath9k/ar9002_phy.c |   31 +++++++++++++
+> > >>>  drivers/net/wireless/ath/ath9k/hw.c         |   64 +++------------------------
+> > >>>  drivers/net/wireless/ath/ath9k/hw.h         |    4 ++
+> > >>>  4 files changed, 97 insertions(+), 57 deletions(-)
+> > >>>
+> > >>> diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> > >>> index 4459d63..31ecea8 100644
+> > >>> --- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> > >>> +++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> > >>> @@ -961,6 +961,54 @@ static void ar5008_set_diversity(struct ath_hw *ah, bool value)
+> > >>
+> > >> <snip>
+> > >>
+> > >> drivers/net/wireless/ath/ath9k/ar5008_phy.c doesn't seem to exist...?
+> > > Luis' git version creates patches that mark renames in metadata, so they
+> > > probably won't apply when using 'patch', only with 'git apply'...
+> > > Patch 009 renames phy.c to ar5008_phy.c
+> > 
+> > Right, so this is part of the -M on git format-patch, we do this to
+> > keep the patch diff stat to 0 so that its clear no changes were
+> > actually made to the file.
+> 
+> FWIW, I was using "git apply" with your all-<whatever>.patch mbox file.
+> Maybe you generated that differently.
+> 
+> Anyway, I'm happy to wait for the repost to try again. :-)
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Interesting -- hm, yeah this is odd. Lets see on the respin.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 25dd44d..8a79550 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -659,6 +659,9 @@ static void ar9300_swap_eeprom(struct ar9300_eeprom *eep)
- 	word = swab16(eep->baseEepHeader.regDmn[1]);
- 	eep->baseEepHeader.regDmn[1] = word;
- 
-+	dword = swab32(eep->baseEepHeader.swreg);
-+	eep->baseEepHeader.swreg = dword;
-+
- 	dword = swab32(eep->modalHeader2G.antCtrlCommon);
- 	eep->modalHeader2G.antCtrlCommon = dword;
- 
--- 
-1.6.3.3
-
+  Luis
