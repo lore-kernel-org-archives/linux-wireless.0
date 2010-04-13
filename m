@@ -1,72 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:2802 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751634Ab0DIFK7 (ORCPT
+Received: from mail-pz0-f204.google.com ([209.85.222.204]:62852 "EHLO
+	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262Ab0DMT3N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 01:10:59 -0400
-Message-ID: <4BBEB6E1.70300@gmail.com>
-Date: Fri, 09 Apr 2010 07:10:57 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Tue, 13 Apr 2010 15:29:13 -0400
+Received: by pzk42 with SMTP id 42so5036325pzk.4
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2010 12:29:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
- driver.
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-4-git-send-email-gwingerde@gmail.com> <4BBE5879.8000304@openwrt.org>
-In-Reply-To: <4BBE5879.8000304@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1271149802.10120.1262.camel@wimaxnb.nmp.nokia.com>
+References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
+	<1271062589.10120.1169.camel@wimaxnb.nmp.nokia.com> <1271063175.3877.13.camel@jlt3.sipsolutions.net>
+	<1271065535.10120.1191.camel@wimaxnb.nmp.nokia.com> <871vekpexo.fsf@purkki.valot.fi>
+	<1271143746.10120.1232.camel@wimaxnb.nmp.nokia.com> <87wrwboirr.fsf@purkki.valot.fi>
+	<1271148573.10120.1257.camel@wimaxnb.nmp.nokia.com> <87sk6zoh4x.fsf@purkki.valot.fi>
+	<1271149802.10120.1262.camel@wimaxnb.nmp.nokia.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 13 Apr 2010 12:28:53 -0700
+Message-ID: <n2l43e72e891004131228o3f288cfcp79c73062dcfeec17@mail.gmail.com>
+Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout
+	configuration
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: ext Kalle Valo <kvalo@adurom.com>,
+	ext Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ylalehto Janne (Nokia-D/Tampere)" <janne.ylalehto@nokia.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/10 00:28, Felix Fietkau wrote:
-> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
->> Only include definitions for RT chipsets that are also used inside the
->> Ralink vendor drivers.
+On Tue, Apr 13, 2010 at 2:10 AM, Juuso Oikarinen
+<juuso.oikarinen@nokia.com> wrote:
+> On Tue, 2010-04-13 at 11:07 +0200, ext Kalle Valo wrote:
+>> Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
 >>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->> ---
->>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
->>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
->>  2 files changed, 3 insertions(+), 17 deletions(-)
+>> >> > The problem here is that the latency at least cannot be used in any
+>> >> > simple and/or general way I can think of to control the dynamic PS
+>> >> > timeout.
+>> >>
+>> >> Can't you do something like this:
+>> >>
+>> >> pm_qos >= 1000 -> timeout 0 ms (aka. full power save)
+>> >> pm_qos <= 100 -> timeout 100 ms
+>> >> pm_qos <= 50 -> timeout 300 ms
+>> >>
+>> >> That is, just some arbitrary numbers but which affect dynamic ps
+>> >> timeout. I haven't thought about the numbers at all, but they actually
+>> >> don't matter because it's easy to change them inside mac80211.
+>> >
+>> > Theoretically I could, but I'm pretty sure whatever values I would
+>> > choose would be unacceptable by others, as they would be tuned for a
+>> > specific use.
 >>
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index 394c8e4..4bc7e09 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
->>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
->>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
->> -	    rt2x00_rt(rt2x00dev, RT2880) ||
->>  	    rt2x00_rt(rt2x00dev, RT2883) ||
->> -	    rt2x00_rt(rt2x00dev, RT2890) ||
->> -	    rt2x00_rt(rt2x00dev, RT3052) ||
->>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
->>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
->>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
->> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
->>  	}
->>  
->> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
->> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
->> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
->> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
->> -	}
->> -
-> Why are you removing support for RT3052? IMHO those writes were
-> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
+>> I don't see a problem with that. The current use of pm_qos is very
+>> limited, I think it's all positive if we start using it more.
+>>
+>> > Also, although AFAIK barely anyone uses the DTIM interval which is
+>> > determined based on th pm_qos, adding arbitrary rules like this to the
+>> > side risks breaking something for someone.
+>>
+>> AFAIK the pm_qos values are not set in stone in any. Applications just
+>> request something and kernel can do whatever it wants, even ignore it.
+>> So I don't see any harm if we change how mac80211 uses pm_qos values.
+>> And most probably this will change many times in the future.
+>>
+>
+> Ok, you convinced me. I will send a RFC patch with the above, and will
+> sub-sequentially be flamed to death ;)
+>
+> Be sure to look into that bug in wl1251 at some point, so I don't break
+> it with this, if by chance I get this to go through ;)
 
-That is because I have not been able to find them in any of the Ralink vendor drivers.
-Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
-as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
-RT2872 devices, but even for them I haven't found these BBP initializations.
-That's why I removed this part.
+If you do change this however, please document it. It took me a while
+to review this before, it'd be nice to keep this documentation in
+synch and updated as soon as your stuff gets merged.
 
-I have no problem re-instating this if I can find some evidence that these devices
-actually exist.
+http://wireless.kernel.org/en/developers/Documentation/pm-qos
 
----
-Gertjan.
+  Luis
