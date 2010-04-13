@@ -1,82 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14249 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932581Ab0DPVwm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:52:42 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/21] iwlwifi: remove scan_pass_start
-Date: Fri, 16 Apr 2010 14:52:22 -0700
-Message-Id: <1271454758-14351-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
-References: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:33418 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772Ab0DMFf1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Apr 2010 01:35:27 -0400
+MIME-Version: 1.0
+In-Reply-To: <m2s43e72e891004122151n2677a158o7f9aa8d054bf058e@mail.gmail.com>
+References: <m2s43e72e891004122151n2677a158o7f9aa8d054bf058e@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 12 Apr 2010 22:35:06 -0700
+Message-ID: <v2q43e72e891004122235p87e971c9o12986a064f7d2be1@mail.gmail.com>
+Subject: Re: Compat-wireless for 2.6.34 - 802.11 and bluetooth backported
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Apr 12, 2010 at 9:51 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> We're up to 2.6.34-rc4 upstream but we hadn't released a respective
+> compat-wireless stable [1] tarball yet. I finally got some time so
+> just posted one up [2], this gives us the 2.6.34-rc4 wireless
+> subsystem, bluetooth subsystem and new wireless/bluetooth drivers
+> compilable and installed on older kernels. Please report any issues
+> ASAP. For details on changes you can refer to the
+> ChangeLog-2.6.34-rc4-wireless [3].
+>
+> I only did a quick build test against 2.6.31 and it seems to compile
+> fine :), more compile tests reports against older kernels and actual
+> loading tests reports against different kernels are greatly
+> appreciated.
+>
+>  Luis
+>
+> [1] http://wireless.kernel.org/en/users/Download/stable
+> [2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.34/compat-wireless-2.6.34-rc4.tar.bz2
+> [3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.34/ChangeLog-2.6.34-rc4-wireless
 
-Since we no longer do a multi-pass scan,
-keeping track of how long each pass took
-is pointless since there will only be one.
+Also just updated the tarballs for 2.6.32.11 and 2.6.33.2, and removed
+the 2.6.30 and 2.6.31 tarballs since not even kernel.org supports
+those anymore.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
- drivers/net/wireless/iwlwifi/iwl-scan.c |    8 ++------
- 2 files changed, 2 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index f2d4ca5..a7ffb4f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1050,7 +1050,6 @@ struct iwl_priv {
- 
- 	/* Scan related variables */
- 	unsigned long scan_start;
--	unsigned long scan_pass_start;
- 	unsigned long scan_start_tsf;
- 	void *scan;
- 	enum ieee80211_band scan_band;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index e45b49a..cb3601d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -218,10 +218,10 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 	/* The HW is no longer scanning */
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
- 
--	IWL_DEBUG_INFO(priv, "Scan pass on %sGHz took %dms\n",
-+	IWL_DEBUG_INFO(priv, "Scan on %sGHz took %dms\n",
- 		       (priv->scan_band == IEEE80211_BAND_2GHZ) ? "2.4" : "5.2",
- 		       jiffies_to_msecs(elapsed_jiffies
--					(priv->scan_pass_start, jiffies)));
-+					(priv->scan_start, jiffies)));
- 
- 	/*
- 	 * If a request to abort was given, or the scan did not succeed
-@@ -235,9 +235,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 
- 	clear_bit(STATUS_SCANNING, &priv->status);
- 
--	IWL_DEBUG_INFO(priv, "Scan took %dms\n",
--		jiffies_to_msecs(elapsed_jiffies(priv->scan_start, jiffies)));
--
- 	queue_work(priv->workqueue, &priv->scan_completed);
- }
- 
-@@ -449,7 +446,6 @@ static int iwl_scan_initiate(struct iwl_priv *priv)
- 	set_bit(STATUS_SCANNING, &priv->status);
- 	priv->is_internal_short_scan = false;
- 	priv->scan_start = jiffies;
--	priv->scan_pass_start = priv->scan_start;
- 
- 	queue_work(priv->workqueue, &priv->request_scan);
- 
--- 
-1.6.3.3
-
+  Luis
