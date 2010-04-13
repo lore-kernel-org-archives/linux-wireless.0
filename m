@@ -1,35 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50659 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757325Ab0DFTFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 15:05:09 -0400
-Message-ID: <4BBB85DD.10409@openwrt.org>
-Date: Tue, 06 Apr 2010 12:05:01 -0700
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: fix double calls to ath_radio_enable
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([192.100.122.230]:29193 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752567Ab0DMIxh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Apr 2010 04:53:37 -0400
+Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout
+ configuration
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Kalle Valo <kvalo@adurom.com>
+Cc: ext Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ylalehto Janne (Nokia-D/Tampere)" <janne.ylalehto@nokia.com>
+In-Reply-To: <87wrwboirr.fsf@purkki.valot.fi>
+References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271061120.3877.6.camel@jlt3.sipsolutions.net>
+	 <1271062589.10120.1169.camel@wimaxnb.nmp.nokia.com>
+	 <1271063175.3877.13.camel@jlt3.sipsolutions.net>
+	 <1271065535.10120.1191.camel@wimaxnb.nmp.nokia.com>
+	 <871vekpexo.fsf@purkki.valot.fi>
+	 <1271143746.10120.1232.camel@wimaxnb.nmp.nokia.com>
+	 <87wrwboirr.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Apr 2010 11:49:33 +0300
+Message-ID: <1271148573.10120.1257.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the enable_radio being uninitialized, ath_radio_enable() might be
-called twice, which can leave some hardware in an undefined state.
+On Tue, 2010-04-13 at 10:31 +0200, ext Kalle Valo wrote:
+> Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+> 
+> >> But we do not want to tie our hands to a simple timeout value because
+> >> that only applies to the very crude dynamic ps implementation we have
+> >> currently. What if, next year, we have an uber cool new power save
+> >> implementation in mac80211 which doesn't use the timeout value at all,
+> >> what do we do with the nl80211 timeout parameter then? Deprecate it?
+> >
+> > I agree that letting user-space configure a raw timeout is rather crude.
+> > But in my view the problem really is that we don't have that uber-cool
+> > power save feature of the future yet, and hence cannot fully take its
+> > needs into account. So apparently, until we do, we have to live without
+> > even the crude one?
+> >
+> > Or is it better to deprecate a semi-complex interface instead of a crude
+> > one, if even that does not meet all requirements of whats to come?
+> 
+> But nl80211 is a user space interface and there are special rules for
+> that. Basically we need to support it a long time to avoid breaking
+> existing user space applications. If we add new features to nl80211
+> which we will deprecate later on, it will soon become a mess and
+> difficult to maintain. That would create more work for the wireless
+> community and I would like to minimise the extra work, naturally :)
+> 
+> If this would affect only a kernel internal API (like mac80211 driver
+> API), I would have no objections at all. That's always easy to change.
+> 
+> >> I think power save control should happen outside nl80211. The problem
+> >> here is that we want to inform kernel about events (or states) in user
+> >> space (display turned off, user activity, voip call etc.). We need a
+> >> different interface for that, nl80211 is not suitable for this. Also
+> >> other subsystems than wireless would definitely benefit from this kind
+> >> of information. The interface might already exist (pm qos?) or we have
+> >> to create a new one, I haven't studied this that much.
+> >
+> > I looked into this slightly. I can see, that the mac80211 has support
+> > for a latency-wish from user-space, using pm_qos. This seems to affect
+> > only the dtim-period somehow (by the way, at least the wl1251 driver has
+> > an obvious bug about this - if the AP dtim is > 1 and user-space
+> > configures the latency properly, you can make the wl1251 miss broadcast
+> > traffic in PSM.)
+> 
+> Thanks, I wrote down that wl1251 issue and I'll take a look at it
+> later on.
+> 
+> >> I would recommend to see if the pm qos interface can be used to hint
+> >> mac80211 dynamic ps enough so that you would get similar end result as
+> >> with the WE power timeout value. It should be possible, but I haven't
+> >> checked the code myself.
+> >
+> > The problem here is that the latency at least cannot be used in any
+> > simple and/or general way I can think of to control the dynamic PS
+> > timeout.
+> 
+> Can't you do something like this:
+> 
+> pm_qos >= 1000 -> timeout 0 ms (aka. full power save)
+> pm_qos <= 100 -> timeout 100 ms
+> pm_qos <= 50 -> timeout 300 ms
+> 
+> That is, just some arbitrary numbers but which affect dynamic ps
+> timeout. I haven't thought about the numbers at all, but they actually
+> don't matter because it's easy to change them inside mac80211.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1572,8 +1572,7 @@ static int ath9k_config(struct ieee80211
- 		all_wiphys_idle =  ath9k_all_wiphys_idle(sc);
- 		ath9k_set_wiphy_idle(aphy, idle);
+Theoretically I could, but I'm pretty sure whatever values I would
+choose would be unacceptable by others, as they would be tuned for a
+specific use.
 
--		if (!idle && all_wiphys_idle)
--			enable_radio = true;
-+		enable_radio = (!idle && all_wiphys_idle);
+Also, although AFAIK barely anyone uses the DTIM interval which is
+determined based on th pm_qos, adding arbitrary rules like this to the
+side risks breaking something for someone.
 
- 		/*
- 		 * After we unlock here its possible another wiphy
+-Juuso
+
+> > So we would still need to add some crude PS level stuff anyway,
+> > unless someone comes up with that uber-cool solution of tomorrow
+> > already today.
+> >
+> > I see there is fierce resistance, so I'll drop looking into this here.
+> > As far as I can see, the result of this is that anyone using linux
+> > wireless in their hand-held devices either cannot switch to nl80211
+> > today or have to use nl80211 and wext simultaneously.
+> 
+> If yoy need this right now, using wext for setting the timeout is the
+> fastest way. But it's ugly :/
+> 
+
+Ugly it is!
+
+-Juuso
+
+
