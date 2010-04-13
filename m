@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:50733 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752676Ab0DVWNM (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:64944 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037Ab0DMEwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 18:13:12 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so71837fgg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 15:13:09 -0700 (PDT)
-Date: Fri, 23 Apr 2010 00:15:44 +0200
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: rc80211_minstrel.c:70 WARNING with 2.6.34-rc4
-Message-ID: <20100422221544.GA15879@linux-m68k.org>
-References: <20100418085653.GA7345@linux-m68k.org> <1271694855.9026.51.camel@mj> <20100419174100.GA5312@linux-m68k.org> <4BCC95CC.7030109@openwrt.org> <20100419175508.GB5312@linux-m68k.org> <4BCC9A27.9000104@openwrt.org> <1271972321.12589.2.camel@mj>
+	Tue, 13 Apr 2010 00:52:07 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1271972321.12589.2.camel@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 12 Apr 2010 21:51:47 -0700
+Message-ID: <m2s43e72e891004122151n2677a158o7f9aa8d054bf058e@mail.gmail.com>
+Subject: Compat-wireless for 2.6.34 - 802.11 and bluetooth backported
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 22, 2010 at 05:38:41PM -0400, Pavel Roskin wrote:
-> On Mon, 2010-04-19 at 20:00 +0200, Felix Fietkau wrote:
-> 
-> > > can that happen when both ends are configured to a fixed rate of 11M?
-> > No idea. I've never used fixed-rate. I guess it could, if it uses 11M
-> > for communicating with a peer that it for some reason did not enable
-> > this rate for.
-> 
-> I think if there is a legitimate condition when it can happen, we should
-> not be using WARN_ON.
+We're up to 2.6.34-rc4 upstream but we hadn't released a respective
+compat-wireless stable [1] tarball yet. I finally got some time so
+just posted one up [2], this gives us the 2.6.34-rc4 wireless
+subsystem, bluetooth subsystem and new wireless/bluetooth drivers
+compilable and installed on older kernels. Please report any issues
+ASAP. For details on changes you can refer to the
+ChangeLog-2.6.34-rc4-wireless [3].
 
-certainly there must be rate limitting before it hits any stable kernel.
+I only did a quick build test against 2.6.31 and it seems to compile
+fine :), more compile tests reports against older kernels and actual
+loading tests reports against different kernels are greatly
+appreciated.
 
-Richard
+ Luis
 
+[1] http://wireless.kernel.org/en/users/Download/stable
+[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.34/compat-wireless-2.6.34-rc4.tar.bz2
+[3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.34/ChangeLog-2.6.34-rc4-wireless
