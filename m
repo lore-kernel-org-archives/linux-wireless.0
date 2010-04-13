@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4775 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750895Ab0DWPVa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 11:21:30 -0400
-Message-ID: <4BD1BAF8.1060908@gmail.com>
-Date: Fri, 23 Apr 2010 17:21:28 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:37334 "EHLO purkki.valot.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751059Ab0DMJHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Apr 2010 05:07:12 -0400
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: ext Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ylalehto Janne \(Nokia-D\/Tampere\)" <janne.ylalehto@nokia.com>
+Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout configuration
+References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
+	<1271061120.3877.6.camel@jlt3.sipsolutions.net>
+	<1271062589.10120.1169.camel@wimaxnb.nmp.nokia.com>
+	<1271063175.3877.13.camel@jlt3.sipsolutions.net>
+	<1271065535.10120.1191.camel@wimaxnb.nmp.nokia.com>
+	<871vekpexo.fsf@purkki.valot.fi>
+	<1271143746.10120.1232.camel@wimaxnb.nmp.nokia.com>
+	<87wrwboirr.fsf@purkki.valot.fi>
+	<1271148573.10120.1257.camel@wimaxnb.nmp.nokia.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 13 Apr 2010 12:07:10 +0300
+In-Reply-To: <1271148573.10120.1257.camel@wimaxnb.nmp.nokia.com> (Juuso Oikarinen's message of "Tue\, 13 Apr 2010 11\:49\:33 +0300")
+Message-ID: <87sk6zoh4x.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: rt2800lib: disable HT40 for now as it causes
- reception problems
-References: <201004231505.29689.helmut.schaa@googlemail.com>
-In-Reply-To: <201004231505.29689.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/23/10 15:05, Helmut Schaa wrote:
-> Disable HT40 support for now as it causes rx problems with HT40 capable
-> 11n APs (when mac80211 enables HT40, rx is completely disfunctional).
-> 
-> Once the rt2800 HT code is capable of using HT40 we should enable the
-> flag again.
-> 
-> I only tested this patch with a rt305x SoC device, nevertheless the
-> patch disables HT40 also on PCI and USB rt2800 devices.
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
 
-I can confirm that this also helps for PCI and USB devices.
-With this patch applied all my rt28xx and rt30xx based devices starting working correctly.
+>> > The problem here is that the latency at least cannot be used in any
+>> > simple and/or general way I can think of to control the dynamic PS
+>> > timeout.
+>> 
+>> Can't you do something like this:
+>> 
+>> pm_qos >= 1000 -> timeout 0 ms (aka. full power save)
+>> pm_qos <= 100 -> timeout 100 ms
+>> pm_qos <= 50 -> timeout 300 ms
+>> 
+>> That is, just some arbitrary numbers but which affect dynamic ps
+>> timeout. I haven't thought about the numbers at all, but they actually
+>> don't matter because it's easy to change them inside mac80211.
+>
+> Theoretically I could, but I'm pretty sure whatever values I would
+> choose would be unacceptable by others, as they would be tuned for a
+> specific use.
 
-So, definately,
+I don't see a problem with that. The current use of pm_qos is very
+limited, I think it's all positive if we start using it more.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Also, although AFAIK barely anyone uses the DTIM interval which is
+> determined based on th pm_qos, adding arbitrary rules like this to the
+> side risks breaking something for someone.
 
-> ---
-> 
-> Using this patch I was able to associate a rt305x SoC device with my 11n
-> capable AP using WPA and the connection basically works although I see lots
-> of retried frames when sniffing the wireless traffic.
-> 
-> If someone already had success with rt2800 and HT40 capable APs we should
-> consider to only conditionally unset the HT40 flag for 305x SoC devices.
-> 
->  drivers/net/wireless/rt2x00/rt2800lib.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 2648f31..aa02ff6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2318,8 +2318,11 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  	else
->  		spec->ht.ht_supported = false;
->  
-> +	/*
-> +	 * Don't set IEEE80211_HT_CAP_SUP_WIDTH_20_40 for now as it causes
-> +	 * reception problems with HT40 capable 11n APs
-> +	 */
->  	spec->ht.cap =
-> -	    IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
->  	    IEEE80211_HT_CAP_GRN_FLD |
->  	    IEEE80211_HT_CAP_SGI_20 |
->  	    IEEE80211_HT_CAP_SGI_40 |
+AFAIK the pm_qos values are not set in stone in any. Applications just
+request something and kernel can do whatever it wants, even ignore it.
+So I don't see any harm if we change how mac80211 uses pm_qos values.
+And most probably this will change many times in the future.
 
+-- 
+Kalle Valo
