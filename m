@@ -1,111 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49468 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753738Ab0DONpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 09:45:08 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<wey-yi.w.guy@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 resend 1/3] mac80211: explicitly disable/enable QoS
-Date: Thu, 15 Apr 2010 15:43:00 +0200
-Message-Id: <1271338982-3157-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:56055 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792Ab0DMNWs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Apr 2010 09:22:48 -0400
+Subject: Re: [PATCH v2] cfg80211: Avoid sending IWEVASSOCREQIE and
+ IWEVASSOCRESPIE events with NULL event body
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nishant Sarmukadam <nishants@marvell.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1271163717-26654-1-git-send-email-nishants@marvell.com>
+References: <1271163717-26654-1-git-send-email-nishants@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Apr 2010 15:22:43 +0200
+Message-ID: <1271164963.4885.45.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add interface to disable/enable QoS (aka WMM or WME). Currently drivers
-enable it explicitly when ->conf_tx method is called, and newer disable.
-Disabling is needed for some APs, which do not support QoS, such
-we should send QoS frames to them.
+On Tue, 2010-04-13 at 06:01 -0700, Nishant Sarmukadam wrote:
+> In a scenario, where a cfg80211 driver (station mode) does not send assoc request
+> and assoc response IEs in cfg80211_connect_result after a successful association
+> to an AP, cfg80211 sends IWEVASSOCREQIE and IWEVASSOCRESPIE to the user space
+> application with NULL data. This can cause an issue at the event recipient.
+> 
+> An example of this is when cfg80211 sends IWEVASSOCREQIE and IWEVASSOCRESPIE
+> events with NULL event body to wpa_supplicant. The wpa_supplicant overwrites
+> the assoc request and assoc response IEs for this station with NULL data.
+> If the association is WPA/WPA2, the wpa_supplicant is not able to generate
+> EAPOL handshake messages, since the IEs are NULL.
+> 
+> With the patch, req_ie and resp_ie will be NULL by avoiding the
+> assignment if the driver has not sent the IEs to cfg80211. The event sending
+> code sends the events only if resp_ie and req_ie are not NULL. This
+> will ensure that the events are not sent with NULL event body.
+> 
+> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> ---
+> v2: Incorporated comments from Johannes, added some more information and
+> did formatting changes
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-v1 -> v2:
- - fix typo
- - default disable QoS
+Thanks.
 
- include/net/mac80211.h |    5 +++++
- net/mac80211/mlme.c    |    9 ++++++++-
- net/mac80211/util.c    |    5 +++++
- 3 files changed, 18 insertions(+), 1 deletions(-)
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 45d7d44..ea607d6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -580,11 +580,15 @@ struct ieee80211_rx_status {
-  *	may turn the device off as much as possible. Typically, this flag will
-  *	be set when an interface is set UP but not associated or scanning, but
-  *	it can also be unset in that case when monitor interfaces are active.
-+ * @IEEE80211_CONF_QOS: Enable 802.11e QoS also know as WMM (Wireless
-+ *      Multimedia). On some drivers (iwlwifi is one of know) we have
-+ *      to enable/disable QoS explicitly.
-  */
- enum ieee80211_conf_flags {
- 	IEEE80211_CONF_MONITOR		= (1<<0),
- 	IEEE80211_CONF_PS		= (1<<1),
- 	IEEE80211_CONF_IDLE		= (1<<2),
-+	IEEE80211_CONF_QOS		= (1<<3),
- };
- 
- 
-@@ -609,6 +613,7 @@ enum ieee80211_conf_changed {
- 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
- 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
- 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
-+	IEEE80211_CONF_CHANGE_QOS		= BIT(9),
- };
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index be5f723..5af0cb9 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -589,6 +589,9 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 	int count;
- 	u8 *pos, uapsd_queues = 0;
- 
-+	if (!local->ops->conf_tx)
-+		return;
-+
- 	if (local->hw.queues < 4)
- 		return;
- 
-@@ -663,11 +666,15 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 		       params.aifs, params.cw_min, params.cw_max, params.txop,
- 		       params.uapsd);
- #endif
--		if (drv_conf_tx(local, queue, &params) && local->ops->conf_tx)
-+		if (drv_conf_tx(local, queue, &params))
- 			printk(KERN_DEBUG "%s: failed to set TX queue "
- 			       "parameters for queue %d\n",
- 			       wiphy_name(local->hw.wiphy), queue);
- 	}
-+
-+	/* enable WMM or activate new settings */
-+	local->hw.conf.flags |=	IEEE80211_CONF_QOS;
-+	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
- }
- 
- static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index c453226..7b2c170 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -796,6 +796,11 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
- 
- 		drv_conf_tx(local, queue, &qparam);
- 	}
-+
-+	/* after reinitialize QoS TX queues setting to default,
-+	 * disable QoS at all */
-+	local->hw.conf.flags &=	~IEEE80211_CONF_QOS;
-+	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
- }
- 
- void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
--- 
-1.6.2.5
+> ---
+>  net/wireless/sme.c |   16 ++++++++++------
+>  1 files changed, 10 insertions(+), 6 deletions(-)
+> 
+> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> index 1746577..dcd7685 100644
+> --- a/net/wireless/sme.c
+> +++ b/net/wireless/sme.c
+> @@ -517,12 +517,16 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+>  	ev->type = EVENT_CONNECT_RESULT;
+>  	if (bssid)
+>  		memcpy(ev->cr.bssid, bssid, ETH_ALEN);
+> -	ev->cr.req_ie = ((u8 *)ev) + sizeof(*ev);
+> -	ev->cr.req_ie_len = req_ie_len;
+> -	memcpy((void *)ev->cr.req_ie, req_ie, req_ie_len);
+> -	ev->cr.resp_ie = ((u8 *)ev) + sizeof(*ev) + req_ie_len;
+> -	ev->cr.resp_ie_len = resp_ie_len;
+> -	memcpy((void *)ev->cr.resp_ie, resp_ie, resp_ie_len);
+> +	if (req_ie_len) {
+> +		ev->cr.req_ie = ((u8 *)ev) + sizeof(*ev);
+> +		ev->cr.req_ie_len = req_ie_len;
+> +		memcpy((void *)ev->cr.req_ie, req_ie, req_ie_len);
+> +	}
+> +	if (resp_ie_len) {
+> +		ev->cr.resp_ie = ((u8 *)ev) + sizeof(*ev) + req_ie_len;
+> +		ev->cr.resp_ie_len = resp_ie_len;
+> +		memcpy((void *)ev->cr.resp_ie, resp_ie, resp_ie_len);
+> +	}
+>  	ev->cr.status = status;
+>  
+>  	spin_lock_irqsave(&wdev->event_lock, flags);
+
 
