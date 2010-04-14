@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46889 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933263Ab0DHT1q (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:33766 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753970Ab0DNGvS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 054/102] ath9k_hw: move the cal AR9100 calibration settings
-Date: Thu,  8 Apr 2010 15:26:50 -0400
-Message-Id: <1270754858-26266-55-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 14 Apr 2010 02:51:18 -0400
+Received: by gyg13 with SMTP id 13so3962913gyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Apr 2010 23:51:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1271227264-26868-3-git-send-email-juuso.oikarinen@nokia.com>
+References: <1271227264-26868-1-git-send-email-juuso.oikarinen@nokia.com>
+	<1271227264-26868-3-git-send-email-juuso.oikarinen@nokia.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 14 Apr 2010 16:50:57 +1000
+Message-ID: <q2u646765f41004132350zdd258fp1d59016dae8ecda6@mail.gmail.com>
+Subject: Re: [RFC PATCH 2/2] cfg80211: Remove default dynamic PS timeout value
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org, kalle.valo@iki.fi
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The calibration settings should go into the respective
-hardware family AR9002 calibration settings callback,
-ar9002_hw_init_cal_settings().
+On Wed, Apr 14, 2010 at 16:41, Juuso Oikarinen
+<juuso.oikarinen@nokia.com> wrote:
+> Now that the mac80211 is choosing dynamic ps timeouts based on the ps-qos
+> network latency configuration, configure a default value of -1 as the dynamic
+> ps timeout in cfg80211. This value allows the mac80211 to determine the value
+> to be used.
+>
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
+>  net/mac80211/mlme.c |    2 +-
+>  net/wireless/core.c |    3 ++-
+>  2 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 22860bd..6c5c034 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -514,7 +514,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+>                if (timeout < 0) {
+>                        if (latency <= 50000)
+>                                timeout = 300;
+> -                       else if (latency <= 2000000)
+> +                       else if (latency <= 2000000000)
+>                                timeout = 100;
+>                        else
+>                                timeout = 0;
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+This doesn't seem to belong with the description.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2ede866..ac13745 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -596,6 +596,12 @@ static bool ar9003_hw_macversion_supported(u32 macversion)
- 
- static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
- {
-+	if (AR_SREV_9100(ah)) {
-+		ah->iq_caldata.calData = &iq_cal_multi_sample;
-+		ah->supp_cals = IQ_MISMATCH_CAL;
-+		return;
-+	}
-+
- 	if (AR_SREV_9160_10_OR_LATER(ah)) {
- 		if (AR_SREV_9280_10_OR_LATER(ah)) {
- 			ah->iq_caldata.calData = &iq_cal_single_sample;
-@@ -1045,13 +1051,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (AR_SREV_9100(ah)) {
--		ah->iq_caldata.calData = &iq_cal_multi_sample;
--		ah->supp_cals = IQ_MISMATCH_CAL;
--		ah->is_pciexpress = false;
--	}
--
--	if (AR_SREV_9271(ah))
-+	if (AR_SREV_9271(ah) || AR_SREV_9100(ah))
- 		ah->is_pciexpress = false;
- 
- 	ah->hw_version.phyRev = REG_READ(ah, AR_PHY_CHIP_ID);
+Thanks,
+
 -- 
-1.6.3.3
 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
