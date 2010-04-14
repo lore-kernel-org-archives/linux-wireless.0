@@ -1,57 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22967 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754499Ab0DPGY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 02:24:29 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:24:29 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19400.630.19170.735521@gargle.gargle.HOWL>
-Date: Fri, 16 Apr 2010 11:53:50 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/10] ath: Add buffered register write operations
+Received: from smtp.nokia.com ([192.100.105.134]:55001 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753914Ab0DNG7I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Apr 2010 02:59:08 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: kalle.valo@iki.fi
+Subject: [RFC PATCHv2 1/2] mac80211: Determine dynamic PS timeout based on ps-qos network latency
+Date: Wed, 14 Apr 2010 09:54:38 +0300
+Message-Id: <1271228079-27321-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1271228079-27321-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1271228079-27321-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is required to implement delayed/buffered
-register writes in ath9k_htc.
+Determine the dynamic PS timeout based on the configured ps-qos network
+latency. For backwards wext compatibility, allow the dynamic PS timeout
+configured by the cfg80211 to overrule the automatically determined value.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/ath/ath.h |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+ include/net/mac80211.h |    5 ++++-
+ net/mac80211/cfg.c     |    4 ++--
+ net/mac80211/main.c    |    2 ++
+ net/mac80211/mlme.c    |   12 ++++++++++++
+ 4 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 1fbf6b1..d32f282 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -71,9 +71,21 @@ struct ath_regulatory {
- 	struct reg_dmn_pair_mapping *regpair;
- };
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dcf3c5f..243e4ab 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -661,6 +661,9 @@ enum ieee80211_smps_mode {
+  * @dynamic_ps_timeout: The dynamic powersave timeout (in ms), see the
+  *	powersave documentation below. This variable is valid only when
+  *	the CONF_PS flag is set.
++ * @dynamic_ps_forced_timeout: The dynamic powersave timeout (in ms) configured
++ *	by cfg80211 (essentially, wext) If set, this value overrules the value
++ *	chosen by mac80211 based on ps qos network latency.
+  *
+  * @power_level: requested transmit power (in dBm)
+  *
+@@ -680,7 +683,7 @@ enum ieee80211_smps_mode {
+  */
+ struct ieee80211_conf {
+ 	u32 flags;
+-	int power_level, dynamic_ps_timeout;
++	int power_level, dynamic_ps_timeout, dynamic_ps_forced_timeout;
+ 	int max_sleep_period;
  
-+/**
-+ * struct ath_ops - Register read/write operations
-+ *
-+ * @read: Register read
-+ * @write: Register write
-+ * @enable_write_buffer: Enable multiple register writes
-+ * @disable_write_buffer: Disable multiple register writes
-+ * @write_flush: Flush buffered register writes
-+ */
- struct ath_ops {
- 	unsigned int (*read)(void *, u32 reg_offset);
--        void (*write)(void *, u32 val, u32 reg_offset);
-+	void (*write)(void *, u32 val, u32 reg_offset);
-+	void (*enable_write_buffer)(void *);
-+	void (*disable_write_buffer)(void *);
-+	void (*write_flush) (void *);
- };
+ 	u16 listen_interval;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7dd7cda..9a1a91c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1388,11 +1388,11 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EOPNOTSUPP;
  
- struct ath_common;
+ 	if (enabled == sdata->u.mgd.powersave &&
+-	    timeout == conf->dynamic_ps_timeout)
++	    timeout == conf->dynamic_ps_forced_timeout)
+ 		return 0;
+ 
+ 	sdata->u.mgd.powersave = enabled;
+-	conf->dynamic_ps_timeout = timeout;
++	conf->dynamic_ps_forced_timeout = timeout;
+ 
+ 	/* no change, but if automatic follow powersave */
+ 	mutex_lock(&sdata->u.mgd.mtx);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 4afe851..ebcca0e 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -569,6 +569,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	local->hw.conf.listen_interval = local->hw.max_listen_interval;
+ 
++	local->hw.conf.dynamic_ps_forced_timeout = -1;
++
+ 	result = sta_info_start(local);
+ 	if (result < 0)
+ 		goto fail_sta_info;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 35d8502..6c5c034 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -476,6 +476,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ {
+ 	struct ieee80211_sub_if_data *sdata, *found = NULL;
+ 	int count = 0;
++	int timeout;
+ 
+ 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS)) {
+ 		local->ps_sdata = NULL;
+@@ -509,6 +510,17 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 		beaconint_us = ieee80211_tu_to_usec(
+ 					found->vif.bss_conf.beacon_int);
+ 
++		timeout = local->hw.conf.dynamic_ps_forced_timeout;
++		if (timeout < 0) {
++			if (latency <= 50000)
++				timeout = 300;
++			else if (latency <= 2000000000)
++				timeout = 100;
++			else
++				timeout = 0;
++		}
++		local->hw.conf.dynamic_ps_timeout = timeout;
++
+ 		if (beaconint_us > latency) {
+ 			local->ps_sdata = NULL;
+ 		} else {
 -- 
-1.7.0.5
+1.6.3.3
 
