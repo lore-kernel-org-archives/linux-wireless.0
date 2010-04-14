@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32805 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757311Ab0DOVjo (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:49540 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754005Ab0DNGpo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v3 40/97] ath9k: Use memcpy in ath_clone_txbuf()
-Date: Thu, 15 Apr 2010 17:38:45 -0400
-Message-Id: <1271367582-992-41-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 14 Apr 2010 02:45:44 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: kalle.valo@iki.fi
+Subject: [RFC PATCH 0/2] mac80211: cfg80211: dynamic ps timeout based on pm-qos
+Date: Wed, 14 Apr 2010 09:41:02 +0300
+Message-Id: <1271227264-26868-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+These patches propose a way to adjust the dynamic ps timeout in the mac80211
+based on the pm-qos network latency value. This allows user space to influence
+the level of power saving performed by the mac80211.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+These patches will the current 100ms timeout for the default network
+latency value (2000s), so that for non-adjusted pm-qos the functionality will
+remain as it is currently. Dynamic ps is disabled for any larger latency
+values, and a timeout of 300s is used for latency values smaller than 50ms.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 16f7a3d..4bc52f4 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -279,7 +279,7 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
- 	tbf->aphy = bf->aphy;
- 	tbf->bf_mpdu = bf->bf_mpdu;
- 	tbf->bf_buf_addr = bf->bf_buf_addr;
--	*(tbf->bf_desc) = *(bf->bf_desc);
-+	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
- 	tbf->bf_state = bf->bf_state;
- 	tbf->bf_dmacontext = bf->bf_dmacontext;
- 
--- 
-1.6.3.3
+As wext still has an interface to adjust the dynamic ps timeout from userspace,
+the wext configuration will override the above, to remain backwards
+compatible.
+
+Comments are appreciated.
+
+
+Juuso Oikarinen (2):
+  mac80211: Determine dynamic PS timeout based on ps-qos network
+    latency
+  cfg80211: Remove default dynamic PS timeout value
+
+ include/net/mac80211.h |    5 ++++-
+ net/mac80211/cfg.c     |    4 ++--
+ net/mac80211/main.c    |    2 ++
+ net/mac80211/mlme.c    |   12 ++++++++++++
+ net/wireless/core.c    |    3 ++-
+ 5 files changed, 22 insertions(+), 4 deletions(-)
 
