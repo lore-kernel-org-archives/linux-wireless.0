@@ -1,112 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:31768 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750Ab0DSHS7 (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:44373 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754967Ab0DNKQJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 03:18:59 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: janne.ylalehto@nokia.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Prevent running sta_cleanup timer unnecessarily
-Date: Mon, 19 Apr 2010 10:12:52 +0300
-Message-Id: <1271661172-18558-1-git-send-email-juuso.oikarinen@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Wed, 14 Apr 2010 06:16:09 -0400
+Received: by bwz25 with SMTP id 25so6684477bwz.28
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 03:16:07 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
+	IvDoorn@gmail.com, gwingerde@gmail.com, xose.vazquez@gmail.com
+Subject: [PATCH] wireless: rt2x00: rt2800usb: identify Sitecom devices
+Date: Wed, 14 Apr 2010 12:16:00 +0200
+Message-Id: <1271240160-2759-1-git-send-email-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sta_cleanup timer is used to periodically expire buffered frames from the
-tx buf. The timer is executing periodically, regardless of the need for it.
-This is wasting resources.
+A very useful information was provided by Sitecom R&D guys:
 
-Fix this simply by not restarting the sta_cleanup timer if the tx buffer was
-empty. Restart the timer when there is some more tx-traffic.
+Please find the information regarding our latest Ralink adapters below;
 
-Cc: Janne Ylälehto <janne.ylalehto@nokia.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+WL-302    -    VID: 0x0DF6,    PID: 0x002D    -    Ralink RT2771
+WL-315    -    VID: 0x0DF6,    PID: 0x0039    -    Ralink RT2770
+WL-319    -    VID: 0x182D,    PID: 0x0037    -    Ralink RT2860
+WL-321    -    VID: 0x0DF6,    PID: 0x003B    -    Ralink RT2770
+WL-324    -    VID: 0x0DF6,    PID: 0x003D    -    Ralink RT2870
+WL-329    -    VID: 0x0DF6,    PID: 0x0041    -    Ralink RT3572
+WL-343    -    VID: 0x0DF6,    PID: 0x003E    -    Ralink RT3070
+WL-344    -    VID: 0x0DF6,    PID: 0x0040    -    Ralink RT3071
+WL-345    -    VID: 0x0DF6,    PID: 0x0042    -    Ralink RT3072
+WL-608    -    VID: 0x0DF6,    PID: 0x003F    -    Ralink RT2070
+
+Note:
+PID: 0x003C, 0x004A, and 0x004D:   --these products do not exist; devices were never produced/shipped--
+
+The WL-349v4 USB dongle (0x0df6,0x0050) will be shipped soon (it isn't available yet), and uses a Ralink RT3370 chipset.
+
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- net/mac80211/sta_info.c |   13 ++++++++++---
- net/mac80211/tx.c       |    7 +++++++
- 2 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |   11 ++++-------
+ 1 files changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index ff0eb94..3de7a22 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -575,7 +575,7 @@ static int sta_info_buffer_expired(struct sta_info *sta,
- }
- 
- 
--static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
-+static bool sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
- 					     struct sta_info *sta)
- {
- 	unsigned long flags;
-@@ -583,7 +583,7 @@ static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
- 	struct ieee80211_sub_if_data *sdata;
- 
- 	if (skb_queue_empty(&sta->ps_tx_buf))
--		return;
-+		return false;
- 
- 	for (;;) {
- 		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
-@@ -608,6 +608,8 @@ static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
- 		if (skb_queue_empty(&sta->ps_tx_buf))
- 			sta_info_clear_tim_bit(sta);
- 	}
-+
-+	return true;
- }
- 
- static int __must_check __sta_info_destroy(struct sta_info *sta)
-@@ -755,15 +757,20 @@ static void sta_info_cleanup(unsigned long data)
- {
- 	struct ieee80211_local *local = (struct ieee80211_local *) data;
- 	struct sta_info *sta;
-+	bool timer_needed = false;
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sta, &local->sta_list, list)
--		sta_info_cleanup_expire_buffered(local, sta);
-+		if (sta_info_cleanup_expire_buffered(local, sta))
-+			timer_needed = true;
- 	rcu_read_unlock();
- 
- 	if (local->quiescing)
- 		return;
- 
-+	if (!timer_needed)
-+		return;
-+
- 	local->sta_cleanup.expires =
- 		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
- 	add_timer(&local->sta_cleanup);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2cb7726..e2aa972 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -429,6 +429,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 	struct sta_info *sta = tx->sta;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-+	struct ieee80211_local *local = tx->local;
- 	u32 staflags;
- 
- 	if (unlikely(!sta ||
-@@ -476,6 +477,12 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 		info->control.vif = &tx->sdata->vif;
- 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 		skb_queue_tail(&sta->ps_tx_buf, tx->skb);
-+
-+		if (!timer_pending(&local->sta_cleanup))
-+			mod_timer(&local->sta_cleanup,
-+				  round_jiffies(jiffies +
-+						STA_INFO_CLEANUP_INTERVAL));
-+
- 		return TX_QUEUED;
- 	}
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 03a85f7..6b809ab 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -876,6 +876,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0df6, 0x002c), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x002d), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x0039), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0df6, 0x003b), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0df6, 0x003d), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x003f), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0x6618), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -975,6 +977,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x148f, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Sitecom */
+ 	{ USB_DEVICE(0x0df6, 0x003e), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0df6, 0x0040), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x0042), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x0047), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0df6, 0x0048), USB_DEVICE_DATA(&rt2800usb_ops) },
+@@ -1002,6 +1005,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x148f, 0x8070), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Sitecom */
+ 	{ USB_DEVICE(0x0df6, 0x0041), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x0df6, 0x0050), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Zinwell */
+ 	{ USB_DEVICE(0x5a57, 0x0284), USB_DEVICE_DATA(&rt2800usb_ops) },
+ #endif
+@@ -1075,13 +1079,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x2019, 0xab24), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Qcom */
+ 	{ USB_DEVICE(0x18e8, 0x6259), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	/* Sitecom */
+-	{ USB_DEVICE(0x0df6, 0x003b), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0df6, 0x003c), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0df6, 0x003d), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0df6, 0x0040), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0df6, 0x004a), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x0df6, 0x004d), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0xa512), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x083a, 0xc522), USB_DEVICE_DATA(&rt2800usb_ops) },
 -- 
-1.6.3.3
+1.6.6.1
 
