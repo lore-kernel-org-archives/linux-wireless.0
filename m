@@ -1,113 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33775 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751665Ab0DFQII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 12:08:08 -0400
-Subject: Re: [PATCH] libertas/sdio: 8686: set ECSI bit for 1-bit transfers
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Mack <daniel@caiaq.de>
-Cc: linux-kernel@vger.kernel.org,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org, stable@kernel.org
-In-Reply-To: <1270543964-18130-1-git-send-email-daniel@caiaq.de>
-References: <1270521759.24724.6.camel@localhost.localdomain>
-	 <1270543964-18130-1-git-send-email-daniel@caiaq.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 06 Apr 2010 09:07:34 -0700
-Message-ID: <1270570054.2969.3.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62563 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754901Ab0DNKFz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Apr 2010 06:05:55 -0400
+Received: by wyf19 with SMTP id 19so650515wyf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 03:05:54 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH v2] wl1251: read default MAC address from EEPROM when available
+Date: Wed, 14 Apr 2010 13:05:48 +0300
+Message-Id: <1271239548-15326-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-04-06 at 10:52 +0200, Daniel Mack wrote:
-> When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
-> However, the 8686 will only drive this line when the ECSI bit is set in
-> the CCCR_IF register.
-> 
-> Thanks to Alagu Sankar for pointing me in the right direction.
-> 
-> Signed-off-by: Daniel Mack <daniel@caiaq.de>
-> Cc: Alagu Sankar <alagusankar@embwise.com>
-> Cc: Volker Ernst <volker.ernst@txtr.com>
-> Cc: Dan Williams <dcbw@redhat.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Cc: libertas-dev@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: linux-mmc@vger.kernel.org
+Some wl1251 hardware configurations (like in WG7210 module) have
+EEPROM attached where NVS data is kept, which includes MAC address.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+In such configurations, let's read default MAC address from EEPROM,
+instead of using random one.
 
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |   22 ++++++++++++++++++++++
->  include/linux/mmc/sdio.h                |    2 ++
->  2 files changed, 24 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 7a73f62..33206a9 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -34,6 +34,8 @@
->  #include <linux/mmc/card.h>
->  #include <linux/mmc/sdio_func.h>
->  #include <linux/mmc/sdio_ids.h>
-> +#include <linux/mmc/sdio.h>
-> +#include <linux/mmc/host.h>
->  
->  #include "host.h"
->  #include "decl.h"
-> @@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
->  	int ret, i;
->  	unsigned int model;
->  	struct if_sdio_packet *packet;
-> +	struct mmc_host *host = func->card->host;
->  
->  	lbs_deb_enter(LBS_DEB_SDIO);
->  
-> @@ -1022,6 +1025,25 @@ static int if_sdio_probe(struct sdio_func *func,
->  	if (ret)
->  		goto disable;
->  
-> +	/* For 1-bit transfers to the 8686 model, we need to enable the
-> +	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
-> +	 * bit to allow access to non-vendor registers. */
-> +	if ((card->model == IF_SDIO_MODEL_8686) &&
-> +	    (host->caps & MMC_CAP_SDIO_IRQ) &&
-> +	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-> +		u8 reg;
-> +
-> +		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-> +		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
-> +		if (ret)
-> +			goto release_int;
-> +
-> +		reg |= SDIO_BUS_ECSI;
-> +		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
-> +		if (ret)
-> +			goto release_int;
-> +	}
-> +
->  	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
->  	if (ret)
->  		goto release_int;
-> diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
-> index 0ebaef5..329a8fa 100644
-> --- a/include/linux/mmc/sdio.h
-> +++ b/include/linux/mmc/sdio.h
-> @@ -94,6 +94,8 @@
->  
->  #define  SDIO_BUS_WIDTH_1BIT	0x00
->  #define  SDIO_BUS_WIDTH_4BIT	0x02
-> +#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
-> +#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
->  
->  #define  SDIO_BUS_ASYNC_INT	0x20
->  
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_main.c |   63 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_reg.h  |    7 +++
+ 2 files changed, 70 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 56b78e4..5dc04df 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1196,6 +1196,66 @@ static const struct ieee80211_ops wl1251_ops = {
+ 	.conf_tx = wl1251_op_conf_tx,
+ };
+ 
++static int wl1251_read_eeprom_byte(struct wl1251 *wl, off_t offset, u8 *data)
++{
++	unsigned long timeout;
++
++	wl1251_reg_write32(wl, EE_ADDR, offset);
++	wl1251_reg_write32(wl, EE_CTL, EE_CTL_READ);
++
++	/* EE_CTL_READ clears when data is ready */
++	timeout = jiffies + msecs_to_jiffies(100);
++	while (1) {
++		if (!(wl1251_reg_read32(wl, EE_CTL) & EE_CTL_READ))
++			break;
++
++		if (time_after(jiffies, timeout))
++			return -ETIMEDOUT;
++
++		msleep(1);
++	}
++
++	*data = wl1251_reg_read32(wl, EE_DATA);
++	return 0;
++}
++
++static int wl1251_read_eeprom(struct wl1251 *wl, off_t offset,
++			      u8 *data, size_t len)
++{
++	size_t i;
++	int ret;
++
++	wl1251_reg_write32(wl, EE_START, 0);
++
++	for (i = 0; i < len; i++) {
++		ret = wl1251_read_eeprom_byte(wl, offset + i, &data[i]);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
++
++static int wl1251_read_eeprom_mac(struct wl1251 *wl)
++{
++	u8 mac[ETH_ALEN];
++	int i, ret;
++
++	wl1251_set_partition(wl, 0, 0, REGISTERS_BASE, REGISTERS_DOWN_SIZE);
++
++	ret = wl1251_read_eeprom(wl, 0x1c, mac, sizeof(mac));
++	if (ret < 0) {
++		wl1251_warning("failed to read MAC address from EEPROM");
++		return ret;
++	}
++
++	/* MAC is stored in reverse order */
++	for (i = 0; i < ETH_ALEN; i++)
++		wl->mac_addr[i] = mac[ETH_ALEN - i - 1];
++
++	return 0;
++}
++
+ static int wl1251_register_hw(struct wl1251 *wl)
+ {
+ 	int ret;
+@@ -1242,6 +1302,9 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 
+ 	wl->hw->queues = 4;
+ 
++	if (wl->use_eeprom)
++		wl1251_read_eeprom_mac(wl);
++
+ 	ret = wl1251_register_hw(wl);
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_reg.h b/drivers/net/wireless/wl12xx/wl1251_reg.h
+index 0ca3b43..d16edd9 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_reg.h
++++ b/drivers/net/wireless/wl12xx/wl1251_reg.h
+@@ -46,7 +46,14 @@
+ #define SOR_CFG                        (REGISTERS_BASE + 0x0800)
+ #define ECPU_CTRL                      (REGISTERS_BASE + 0x0804)
+ #define HI_CFG                         (REGISTERS_BASE + 0x0808)
++
++/* EEPROM registers */
+ #define EE_START                       (REGISTERS_BASE + 0x080C)
++#define EE_CTL                         (REGISTERS_BASE + 0x2000)
++#define EE_DATA                        (REGISTERS_BASE + 0x2004)
++#define EE_ADDR                        (REGISTERS_BASE + 0x2008)
++
++#define EE_CTL_READ                   2
+ 
+ #define CHIP_ID_B                      (REGISTERS_BASE + 0x5674)
+ 
+-- 
+1.6.3.3
 
