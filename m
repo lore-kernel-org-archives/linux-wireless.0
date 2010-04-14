@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38256 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752916Ab0DZRE0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46108 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047Ab0DNTAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 13:04:26 -0400
-Received: by wyb42 with SMTP id 42so57210wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 10:04:25 -0700 (PDT)
+	Wed, 14 Apr 2010 15:00:09 -0400
+Date: Wed, 14 Apr 2010 14:49:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] cfg80211: Avoid sending IWEVASSOCREQIE and
+	IWEVASSOCRESPIE events with NULL event body
+Message-ID: <20100414184859.GA4352@tuxdriver.com>
+References: <1271163717-26654-1-git-send-email-nishants@marvell.com> <1271164963.4885.45.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1272300138.4381.8815.camel@rchatre-DESK>
-References: <n2g2d0a357f1004170705j6d0750fdkc4784f86aab51c97@mail.gmail.com>
-	 <1271782442.14052.19698.camel@rchatre-DESK>
-	 <s2j2d0a357f1004210006gc964e5edl672ec5406b892a9@mail.gmail.com>
-	 <1271883056.4381.1743.camel@rchatre-DESK>
-	 <m2s2d0a357f1004260120z30d8b3a3i2792cfa4bc390dcc@mail.gmail.com>
-	 <1272298097.4381.8765.camel@rchatre-DESK>
-	 <k2i2d0a357f1004260931l98ce66d2ia3422958779c64d7@mail.gmail.com>
-	 <1272300138.4381.8815.camel@rchatre-DESK>
-Date: Mon, 26 Apr 2010 19:04:23 +0200
-Message-ID: <i2w2d0a357f1004261004l93447d00oa4ca674795437d4c@mail.gmail.com>
-Subject: Re: iwl3945: Error sending REPLY_{RXON|SCAN_CMD|TX_PWR_TABLE_CMD}
-	time out after 500ms
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1271164963.4885.45.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 26, 2010 at 6:42 PM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> On Mon, 2010-04-26 at 09:31 -0700, Sedat Dilek wrote:
->> I tested both .34-git4 kernels half a day and this was the only
->> problem I saw in the my system-logs.
->
-> This may indicate a problem in your environment since it just says that
-> the station cannot communicate with the AP anymore. This occurs very
-> often in various environments. This does not indicate a bug.
->
->> BTW, the WLAN connection did not crash as described in the initial
->> bug-report (logs see [1]).
->> At that time, I had to coldstart my machine - this was not the case
->> last weekend while testing.
->
-> Either this issue is very hard to reproduce or it has been addressed
-> with a change introduced between the kernels you are testing. Can you
-> reproduce the issue when going back to earlier kernels? If so, then this
-> may be a candidate for a bisect for us to find out what fixed it.
->
+On Tue, Apr 13, 2010 at 03:22:43PM +0200, Johannes Berg wrote:
+> On Tue, 2010-04-13 at 06:01 -0700, Nishant Sarmukadam wrote:
+> > In a scenario, where a cfg80211 driver (station mode) does not send assoc request
+> > and assoc response IEs in cfg80211_connect_result after a successful association
+> > to an AP, cfg80211 sends IWEVASSOCREQIE and IWEVASSOCRESPIE to the user space
+> > application with NULL data. This can cause an issue at the event recipient.
+> > 
+> > An example of this is when cfg80211 sends IWEVASSOCREQIE and IWEVASSOCRESPIE
+> > events with NULL event body to wpa_supplicant. The wpa_supplicant overwrites
+> > the assoc request and assoc response IEs for this station with NULL data.
+> > If the association is WPA/WPA2, the wpa_supplicant is not able to generate
+> > EAPOL handshake messages, since the IEs are NULL.
+> > 
+> > With the patch, req_ie and resp_ie will be NULL by avoiding the
+> > assignment if the driver has not sent the IEs to cfg80211. The event sending
+> > code sends the events only if resp_ie and req_ie are not NULL. This
+> > will ensure that the events are not sent with NULL event body.
+> > 
+> > Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> > ---
+> > v2: Incorporated comments from Johannes, added some more information and
+> > did formatting changes
+> 
+> Thanks.
+> 
+> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-The kernel (with patches) is identical to the one from 20100417, so
-what shall I bisect?
-With same kernel-config, etc.
-But in the meantime I upgraded my system - it could be that some other
-package(s) fixed the magic.
-Other idea could be some temporarily occured disturbance in WLAN
-connection and/or in streaming on the websites I visited.
+Somehow, I never got the original email.  The MARC archive seems to
+have missed the original as well:
 
-- Sedat -
+http://marc.info/?l=linux-wireless&m=127116497024611&w=2
+
+Any chance for a resend?
+
+Thanks!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
