@@ -1,114 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:54756 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926Ab0DOHNn (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55076 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757089Ab0DODa6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 03:13:43 -0400
-Received: by mail-bw0-f225.google.com with SMTP id 25so1091871bwz.28
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 00:13:43 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 2/2] rt2x00: rt2800pci: fix tx path by not accessing the skb after it was DMA mapped
-Date: Thu, 15 Apr 2010 09:13:35 +0200
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-Message-Id: <201004150913.35443.helmut.schaa@googlemail.com>
-Content-Type: Text/Plain;
-  charset="us-ascii"
+	Wed, 14 Apr 2010 23:30:58 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v2 21/97] ath9k_hw: Add abstraction for rx enable
+Date: Wed, 14 Apr 2010 23:29:35 -0400
+Message-Id: <1271302251-9075-22-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2800pci used the callback write_tx_desc to write the tx descriptor but
-also to update the txwi which is part of the dma mapped skb. Since the
-memory was already DMA mapped _before_ the call to write_tx_desc the
-device didn't get the txwi data at all or only sporadically.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-The call order is basically as follows (from rt2x00queue.c):
-1) write_tx_data
-2) rt2x00queue_map_txskb
-3) write_tx_desc
-
-Hence, we shouldn't touch the skb in write_tx_desc anymore.
-
-To fix this issue create a new rt2800pci_write_tx_data callback and use it
-for updating the txwi _before_ the memory gets DMA mapped.
-
-The tx descriptor is still written (as before) in write_tx_desc.
-
-This patch allows basic TX on an rt305x soc device but I'm pretty sure
-that it will fix pci based cards as well. I can associate just fine with
-an AP now but I wasn't able to get a wpa secured connection working yet.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |   34 ++++++++++++++++++++++++------
- 1 files changed, 27 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw-ops.h |    5 +++++
+ drivers/net/wireless/ath/ath9k/hw.c     |    2 ++
+ drivers/net/wireless/ath/ath9k/hw.h     |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c    |   17 +++++++++++------
+ drivers/net/wireless/ath/ath9k/mac.h    |    3 ++-
+ 5 files changed, 21 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 2131f8f..0e52f17 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -613,15 +613,23 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
- /*
-  * TX descriptor initialization
-  */
--static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
--				    struct sk_buff *skb,
--				    struct txentry_desc *txdesc)
-+static int rt2800pci_write_tx_data(struct queue_entry* entry,
-+				   struct txentry_desc *txdesc)
- {
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	__le32 *txd = skbdesc->desc;
--	__le32 *txwi = (__le32 *)(skb->data - rt2x00dev->ops->extra_tx_headroom);
-+	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	struct sk_buff *skb = entry->skb;
-+	struct skb_frame_desc *skbdesc;
-+	int ret;
-+	__le32 *txwi;
- 	u32 word;
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 81f3d03..19259fb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -28,6 +28,11 @@ static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
+ 	ath9k_hw_ops(ah)->config_pci_powersave(ah, restore, power_off);
+ }
  
-+	ret = rt2x00pci_write_tx_data(entry, txdesc);
-+	if (ret)
-+		return ret;
-+
-+	skbdesc = get_skb_frame_desc(skb);
-+	txwi = (__le32 *)(skb->data - rt2x00dev->ops->extra_tx_headroom);
-+
- 	/*
- 	 * Initialize TX Info descriptor
- 	 */
-@@ -670,6 +678,18 @@ static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	_rt2x00_desc_write(txwi, 2, 0 /* skbdesc->iv[0] */);
- 	_rt2x00_desc_write(txwi, 3, 0 /* skbdesc->iv[1] */);
- 
-+	return 0;
++static inline void ath9k_hw_rxena(struct ath_hw *ah)
++{
++	ath9k_hw_ops(ah)->rx_enable(ah);
 +}
 +
+ /* Private hardware call ops */
+ 
+ /* PHY ops */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 36c0163..0a4ccd8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1567,6 +1567,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (tsf && AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ 		ath9k_hw_settsf64(ah, tsf);
+ 
++	ar9002_hw_attach_mac_ops(ah);
 +
-+static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
-+				    struct sk_buff *skb,
-+				    struct txentry_desc *txdesc)
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+ 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6bd87bf..b07ee8d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -509,6 +509,7 @@ struct ath_hw_ops {
+ 	void (*config_pci_powersave)(struct ath_hw *ah,
+ 				     int restore,
+ 				     int power_off);
++	void (*rx_enable)(struct ath_hw *ah);
+ };
+ 
+ struct ath_hw {
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 4a2060e..ae9d54c 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -16,6 +16,17 @@
+ 
+ #include "hw.h"
+ 
++static void ar9002_hw_rx_enable(struct ath_hw *ah)
 +{
-+	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
-+	__le32 *txd = skbdesc->desc;
-+	u32 word;
++	REG_WRITE(ah, AR_CR, AR_CR_RXE);
++}
 +
- 	/*
- 	 * The buffers pointed by SD_PTR0/SD_LEN0 and SD_PTR1/SD_LEN1
- 	 * must contains a TXWI structure + 802.11 header + padding + 802.11
-@@ -1135,7 +1155,7 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 	.reset_tuner		= rt2800_reset_tuner,
- 	.link_tuner		= rt2800_link_tuner,
- 	.write_tx_desc		= rt2800pci_write_tx_desc,
--	.write_tx_data		= rt2x00pci_write_tx_data,
-+	.write_tx_data		= rt2800pci_write_tx_data,
- 	.write_beacon		= rt2800pci_write_beacon,
- 	.kick_tx_queue		= rt2800pci_kick_tx_queue,
- 	.kill_tx_queue		= rt2800pci_kill_tx_queue,
++void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
++{
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
++
++	ops->rx_enable = ar9002_hw_rx_enable;
++}
+ static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
+ 					struct ath9k_tx_queue_info *qi)
+ {
+@@ -999,12 +1010,6 @@ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp)
+ }
+ EXPORT_SYMBOL(ath9k_hw_putrxbuf);
+ 
+-void ath9k_hw_rxena(struct ath_hw *ah)
+-{
+-	REG_WRITE(ah, AR_CR, AR_CR_RXE);
+-}
+-EXPORT_SYMBOL(ath9k_hw_rxena);
+-
+ void ath9k_hw_startpcureceive(struct ath_hw *ah)
+ {
+ 	ath9k_enable_mib_counters(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 68dbd7a..9e8500a 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -729,10 +729,11 @@ void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			  u32 size, u32 flags);
+ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
+ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
+-void ath9k_hw_rxena(struct ath_hw *ah);
+ void ath9k_hw_startpcureceive(struct ath_hw *ah);
+ void ath9k_hw_stoppcurecv(struct ath_hw *ah);
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
+ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
+ 
++void ar9002_hw_attach_mac_ops(struct ath_hw *ah);
++
+ #endif /* MAC_H */
 -- 
-1.6.4.2
+1.6.3.3
 
