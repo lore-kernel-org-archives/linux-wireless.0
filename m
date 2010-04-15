@@ -1,33 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:57413 "EHLO purkki.valot.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751494Ab0DSHTQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 03:19:16 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: regression: soft lockup with ath9k on master-2010-04-14
-References: <87pr20mrez.fsf@purkki.valot.fi>
-	<20100415195812.GC3020@tuxdriver.com> <871veclztk.fsf@purkki.valot.fi>
-	<1271659397.3873.9.camel@jlt3.sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 19 Apr 2010 10:19:14 +0300
-In-Reply-To: <1271659397.3873.9.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Mon\, 19 Apr 2010 08\:43\:17 +0200")
-Message-ID: <87wrw3lxjh.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from bombadil.infradead.org ([18.85.46.34]:32857 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757335Ab0DOVjo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 17:39:44 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 54/97] ath9k_hw: move the cal AR9100 calibration settings
+Date: Thu, 15 Apr 2010 17:38:59 -0400
+Message-Id: <1271367582-992-55-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+The calibration settings should go into the respective
+hardware family AR9002 calibration settings callback,
+ar9002_hw_init_cal_settings().
 
-> However that shouldn't be the problem. Or rather, that could be the
-> reason you're seeing the problem on this patch, rather than the 098a
-> one.
->
-> Try the patch below?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-Sorry, no luck. Still my laptop freezes.
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ec48e7b..51f1e84 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -603,6 +603,12 @@ static bool ar9003_hw_macversion_supported(u32 macversion)
+ 
+ static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
+ {
++	if (AR_SREV_9100(ah)) {
++		ah->iq_caldata.calData = &iq_cal_multi_sample;
++		ah->supp_cals = IQ_MISMATCH_CAL;
++		return;
++	}
++
+ 	if (AR_SREV_9160_10_OR_LATER(ah)) {
+ 		if (AR_SREV_9280_10_OR_LATER(ah)) {
+ 			ah->iq_caldata.calData = &iq_cal_single_sample;
+@@ -1016,13 +1022,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	if (AR_SREV_9100(ah)) {
+-		ah->iq_caldata.calData = &iq_cal_multi_sample;
+-		ah->supp_cals = IQ_MISMATCH_CAL;
+-		ah->is_pciexpress = false;
+-	}
+-
+-	if (AR_SREV_9271(ah))
++	if (AR_SREV_9271(ah) || AR_SREV_9100(ah))
+ 		ah->is_pciexpress = false;
+ 
+ 	ah->hw_version.phyRev = REG_READ(ah, AR_PHY_CHIP_ID);
 -- 
-Kalle Valo
+1.6.3.3
+
