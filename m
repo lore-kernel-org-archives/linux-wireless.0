@@ -1,61 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22583 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751828Ab0DFJho (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 05:37:44 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 02:37:44 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19387.1463.310224.890658@gargle.gargle.HOWL>
-Date: Tue, 6 Apr 2010 15:28:15 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/5] ath9k_htc: Fix module unloading issue
+Received: from bombadil.infradead.org ([18.85.46.34]:54746 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756746Ab0DODax (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Apr 2010 23:30:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 10/97] ath9k_hw: skip PLL initialization on AR9003 on Power-On-Reset
+Date: Wed, 14 Apr 2010 23:29:24 -0400
+Message-Id: <1271302251-9075-11-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The maximum number of packets in a single buffer in
-stream mode is 10. The driver currently uses 8 - which
-caused stack corruption, in the absence of any kind
-of OOB checking.
+This is not required for the AR9003 family.
 
-Fixing this to the correct value of 10 fixes the module
-unload issue.
-
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |    2 +-
- drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 4528df4..69bef1d 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -324,7 +324,7 @@ static struct ath9k_htc_hif hif_usb = {
- static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
- 				    struct sk_buff *skb)
- {
--	struct sk_buff *nskb, *skb_pool[8];
-+	struct sk_buff *nskb, *skb_pool[MAX_PKT_NUM_IN_TRANSFER];
- 	int index = 0, i = 0, chk_idx, len = skb->len;
- 	int rx_remain_len = 0, rx_pkt_len = 0;
- 	u16 pkt_len, pkt_tag, pool_index = 0;
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index ed9708c..179cea4 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -34,6 +34,7 @@
- 
- #define MAX_RX_URB_NUM  8
- #define MAX_RX_BUF_SIZE 16384
-+#define MAX_PKT_NUM_IN_TRANSFER 10
- 
- #define MAX_REG_OUT_URB_NUM  1
- #define MAX_REG_OUT_BUF_NUM  8
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 060451f..dd37e90 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2065,7 +2065,8 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
+ 					   ATH9K_RESET_POWER_ON) != true) {
+ 				return false;
+ 			}
+-			ath9k_hw_init_pll(ah, NULL);
++			if (!AR_SREV_9300_20_OR_LATER(ah))
++				ath9k_hw_init_pll(ah, NULL);
+ 		}
+ 		if (AR_SREV_9100(ah))
+ 			REG_SET_BIT(ah, AR_RTC_RESET,
 -- 
-1.7.0.3
+1.6.3.3
 
