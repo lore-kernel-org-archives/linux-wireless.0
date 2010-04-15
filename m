@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:56707 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166Ab0DIHAh convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54956 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756981Ab0DODa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 03:00:37 -0400
-Received: by iwn35 with SMTP id 35so2069075iwn.21
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Apr 2010 00:00:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <k2ra32f33a41004082354y2bf33919y7f0f476b62612cf6@mail.gmail.com>
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
-	<1270763437-29526-5-git-send-email-gwingerde@gmail.com> <201004090032.53842.IvDoorn@gmail.com>
-	<j2p646765f41004081653vcb4e0178k374a203da36a9f1@mail.gmail.com>
-	<k2ra32f33a41004082354y2bf33919y7f0f476b62612cf6@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 9 Apr 2010 17:00:14 +1000
-Message-ID: <h2t646765f41004090000o607f02al34df4b3556019a24@mail.gmail.com>
-Subject: Re: [PATCH 4/9] rt2x00: Remove rt2800 version constants.
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 14 Apr 2010 23:30:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v2 74/97] ath9k_hw: Configure Tx interrupt mitigation timer
+Date: Wed, 14 Apr 2010 23:30:28 -0400
+Message-Id: <1271302251-9075-75-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 9, 2010 at 16:54, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> On Fri, Apr 9, 2010 at 1:53 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> On Fri, Apr 9, 2010 at 08:32, Ivo van Doorn <ivdoorn@gmail.com> wrote:
->>> On Thursday 08 April 2010, Gertjan van Wingerde wrote:
->>>> The rt2800 version constants are inconsistent, and the version number don't
->>>> mean a lot of things anyway. Use the literal values in the code instead of
->>>> some sort of fabricated version name macro.
->>>>
->>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>>
->>> Perhaps a more elegant way of using and defining needs to be found.
->>> But at least the defined show what the purpose for the values is
->>> rather then having magical values spread around the code.
->>
->> Maybe something like:
->>
->> #define RTDEV_IS_RT2883_R1(dev) (rt2x00_rt(dev, RT2883) && \
->>                                                   rt2x00_rev(dev) < 0x0300)
->
-> I considered this as well, but we have many checks which either do
->    rt2x00_rev() < 0xffff
-> but also
->    rt2x00_ref() == 0xffff
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-I assume that there are certain ranges of revisions that correspond to
-certain chips with certain ... features. So, you could have:
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-#define RTDEV_IS_RT2883_R1(dev) (rt2x00_rt(dev, RT2883) && \
-                                                  rt2x00_rev(dev) < 0x0300)
-
-for the original chip, then
-
-#define RTDEV_IS_RT2883_R2(dev) (rt2x00_rt(dev, RT2883) && \
-                                                  rt2x00_rev(dev) >= 0x0300 && \
-                                                  rt2x00_rev(dev) < 0x1000)
-
-for the troubled second version and
-
-#define RTDEV_IS_RT2883_R3(dev) (rt2x00_rt(dev, RT2883) && \
-                                                  rt2x00_rev(dev) >= 0x1000)
-
-as a catch all for newer chips.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index eeecc72..9e4288a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1287,6 +1287,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, 2000);
+ 	}
+ 
++	if (ah->config.tx_intr_mitigation) {
++		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_LAST, 300);
++		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_FIRST, 750);
++	}
++
+ 	ath9k_hw_init_bb(ah, chan);
+ 
+ 	if (!ath9k_hw_init_cal(ah, chan))
 -- 
+1.6.3.3
 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
