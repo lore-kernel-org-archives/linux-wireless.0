@@ -1,73 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44871 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932948Ab0DHUpR (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60948 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757270Ab0DOVjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 16:45:17 -0400
-Date: Thu, 8 Apr 2010 16:41:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: avoid warning by using result of
-	iwl_send_cmd_pdu in iwl_sta_init_lq
-Message-ID: <20100408204123.GF2999@tuxdriver.com>
-References: <1270756089-9589-1-git-send-email-linville@tuxdriver.com> <1270758273.14052.217.camel@rchatre-DESK>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1270758273.14052.217.camel@rchatre-DESK>
+	Thu, 15 Apr 2010 17:39:43 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH v3 13/97] ath9k_hw: Add the PCI IDs for AR9300 and fill up the pci_id_tables
+Date: Thu, 15 Apr 2010 17:38:18 -0400
+Message-Id: <1271367582-992-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 08, 2010 at 01:24:33PM -0700, reinette chatre wrote:
-> Hi John,
-> 
-> On Thu, 2010-04-08 at 12:48 -0700, John W. Linville wrote:
-> > CC [M]  drivers/net/wireless/iwlwifi/iwl-sta.o
-> > drivers/net/wireless/iwlwifi/iwl-sta.c: In function ‘iwl_sta_init_lq’:
-> > drivers/net/wireless/iwlwifi/iwl-sta.c:461: warning: ignoring return value of ‘iwl_send_cmd_pdu’, declared with attribute warn_unused_result
-> > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-sta.c |    5 +++--
-> >  1 files changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> > index e34ac03..91aaf11 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-> > @@ -458,8 +458,9 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, bool is_ap)
-> >  	/* Update the rate scaling for control frame Tx to AP */
-> >  	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_params.bcast_sta_id;
-> >  
-> > -	iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
-> > -			       sizeof(link_cmd), &link_cmd);
-> > +	if (!iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
-> > +			       sizeof(link_cmd), &link_cmd))
-> > +		IWL_WARN(priv, "Tx link quality reply failed\n");
-> >  }
-> >  
-> >  /*
-> 
-> I made a mistake here somewhere since this is fixed in iwlwifi-2.6 but
-> did not propagate to wireless-next-2.6.
-> 
-> Wouldn't the above print the warning on success though?
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-Ha, yes...
+Also, clean up and reorganize the AR9287 macro to have better
+ordering. We won't add the PCI ID to the supported device list
+until we have some functional code for it.
 
-> In iwlwifi-2.6 the code looks like (whitespace broken copy&pasted) ...
-> it would be nice to have the return code available in error message:
-> 
->         ret = iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
->                                sizeof(link_cmd), &link_cmd);
->         if (ret)
->                 IWL_ERR(priv, "REPLY_TX_LINK_QUALITY_CMD failed (%d)\n", ret);
-> 
-> If you want I can just fix my merging mistake.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 +++--
+ drivers/net/wireless/ath/ath9k/hw.h |    6 +++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-Works for me!
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 245e678..b4becc6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -985,9 +985,10 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	case AR9280_DEVID_PCI:
+ 	case AR9280_DEVID_PCIE:
+ 	case AR9285_DEVID_PCIE:
+-	case AR5416_DEVID_AR9287_PCI:
+-	case AR5416_DEVID_AR9287_PCIE:
++	case AR9287_DEVID_PCI:
++	case AR9287_DEVID_PCIE:
+ 	case AR2427_DEVID_PCIE:
++	case AR9300_DEVID_PCIE:
+ 		break;
+ 	default:
+ 		if (common->bus_ops->ath_bus_type == ATH_USB)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 79b938b..a1ce79d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -41,6 +41,9 @@
+ #define AR9280_DEVID_PCIE	0x002a
+ #define AR9285_DEVID_PCIE	0x002b
+ #define AR2427_DEVID_PCIE	0x002c
++#define AR9287_DEVID_PCI	0x002d
++#define AR9287_DEVID_PCIE	0x002e
++#define AR9300_DEVID_PCIE	0x0030
+ 
+ #define AR5416_AR9100_DEVID	0x000b
+ 
+@@ -48,9 +51,6 @@
+ #define AR_SUBVENDOR_ID_NEW_A	0x7065
+ #define AR5416_MAGIC		0x19641014
+ 
+-#define AR5416_DEVID_AR9287_PCI  0x002D
+-#define AR5416_DEVID_AR9287_PCIE 0x002E
+-
+ #define AR9280_COEX2WIRE_SUBSYSID	0x309b
+ #define AT9285_COEX3WIRE_SA_SUBSYSID	0x30aa
+ #define AT9285_COEX3WIRE_DA_SUBSYSID	0x30ab
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
