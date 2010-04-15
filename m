@@ -1,184 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32866 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:60966 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757337Ab0DOVjp (ORCPT
+	with ESMTP id S1757281Ab0DOVjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:45 -0400
+	Thu, 15 Apr 2010 17:39:43 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 56/97] ath9k_hw: add the AR9003 ar9003_hw_init_cal callback
-Date: Thu, 15 Apr 2010 17:39:01 -0400
-Message-Id: <1271367582-992-57-git-send-email-lrodriguez@atheros.com>
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 22/97] ath9k_hw: Fill rx_enable() for the AR9003 hardware family
+Date: Thu, 15 Apr 2010 17:38:27 -0400
+Message-Id: <1271367582-992-23-git-send-email-lrodriguez@atheros.com>
 In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |  145 ++++++++++++++++++++++++-
- 1 files changed, 144 insertions(+), 1 deletions(-)
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 6a72677..00e4cb8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -40,9 +40,152 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	return false;
- }
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/Makefile     |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   28 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +
+ drivers/net/wireless/ath/ath9k/hw.c         |    6 +++-
+ 4 files changed, 35 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mac.c
+
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index ecf3f8c..96af3d9 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -25,6 +25,7 @@ ath9k_hw-y:=	hw.o \
+ 		ani.o \
+ 		btcoex.o \
+ 		mac.o \
++		ar9003_mac.o
  
-+static void ar9003_hw_iqcal_collect(struct ath_hw *ah)
-+{
-+	int i;
+ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+new file mode 100644
+index 0000000..ee84e64
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -0,0 +1,28 @@
++/*
++ * Copyright (c) 2010 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include "hw.h"
 +
-+	/* Accumulate IQ cal measures for active chains */
-+	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+		ah->totalPowerMeasI[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
-+		ah->totalPowerMeasQ[i] +=
-+			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
-+		ah->totalIqCorrMeas[i] +=
-+			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
-+		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
-+			  "%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
-+			  ah->cal_samples, i, ah->totalPowerMeasI[i],
-+			  ah->totalPowerMeasQ[i],
-+			  ah->totalIqCorrMeas[i]);
-+	}
++static void ar9003_hw_rx_enable(struct ath_hw *hw)
++{
++	REG_WRITE(hw, AR_CR, 0);
 +}
 +
-+static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
++void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
 +{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 powerMeasQ, powerMeasI, iqCorrMeas;
-+	u32 qCoffDenom, iCoffDenom;
-+	int32_t qCoff, iCoff;
-+	int iqCorrNeg, i;
-+	const u_int32_t offset_array[3] = {
-+		AR_PHY_RX_IQCAL_CORR_B0,
-+		AR_PHY_RX_IQCAL_CORR_B1,
-+		AR_PHY_RX_IQCAL_CORR_B2,
-+	};
++	struct ath_hw_ops *ops = ath9k_hw_ops(hw);
 +
-+	for (i = 0; i < numChains; i++) {
-+		powerMeasI = ah->totalPowerMeasI[i];
-+		powerMeasQ = ah->totalPowerMeasQ[i];
-+		iqCorrMeas = ah->totalIqCorrMeas[i];
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Starting IQ Cal and Correction for Chain %d\n",
-+			  i);
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Orignal: Chn %diq_corr_meas = 0x%08x\n",
-+			  i, ah->totalIqCorrMeas[i]);
-+
-+		iqCorrNeg = 0;
-+
-+		if (iqCorrMeas > 0x80000000) {
-+			iqCorrMeas = (0xffffffff - iqCorrMeas) + 1;
-+			iqCorrNeg = 1;
-+		}
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_i = 0x%08x\n", i, powerMeasI);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "Chn %d pwr_meas_q = 0x%08x\n", i, powerMeasQ);
-+		ath_print(common, ATH_DBG_CALIBRATE, "iqCorrNeg is 0x%08x\n",
-+			  iqCorrNeg);
-+
-+		iCoffDenom = (powerMeasI / 2 + powerMeasQ / 2) / 256;
-+		qCoffDenom = powerMeasQ / 64;
-+
-+		if ((iCoffDenom != 0) && (qCoffDenom != 0)) {
-+			iCoff = iqCorrMeas / iCoffDenom;
-+			qCoff = powerMeasI / qCoffDenom - 64;
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d iCoff = 0x%08x\n", i, iCoff);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d qCoff = 0x%08x\n", i, qCoff);
-+
-+			/* Force bounds on iCoff */
-+			if (iCoff >= 63)
-+				iCoff = 63;
-+			else if (iCoff <= -63)
-+				iCoff = -63;
-+
-+			/* Negate iCoff if iqCorrNeg == 0 */
-+			if (iqCorrNeg == 0x0)
-+				iCoff = -iCoff;
-+
-+			/* Force bounds on qCoff */
-+			if (qCoff >= 63)
-+				qCoff = 63;
-+			else if (qCoff <= -63)
-+				qCoff = -63;
-+
-+			iCoff = iCoff & 0x7f;
-+			qCoff = qCoff & 0x7f;
-+
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
-+				  i, iCoff, qCoff);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Register offset (0x%04x) "
-+				  "before update = 0x%x\n",
-+				  offset_array[i],
-+				  REG_READ(ah, offset_array[i]));
-+
-+			REG_RMW_FIELD(ah, offset_array[i],
-+				      AR_PHY_RX_IQCAL_CORR_IQCORR_Q_I_COFF,
-+				      iCoff);
-+			REG_RMW_FIELD(ah, offset_array[i],
-+				      AR_PHY_RX_IQCAL_CORR_IQCORR_Q_Q_COFF,
-+				      qCoff);
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Register offset (0x%04x) QI COFF "
-+				  "(bitfields 0x%08x) after update = 0x%x\n",
-+				  offset_array[i],
-+				  AR_PHY_RX_IQCAL_CORR_IQCORR_Q_I_COFF,
-+				  REG_READ(ah, offset_array[i]));
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "Register offset (0x%04x) QQ COFF "
-+				  "(bitfields 0x%08x) after update = 0x%x\n",
-+				  offset_array[i],
-+				  AR_PHY_RX_IQCAL_CORR_IQCORR_Q_Q_COFF,
-+				  REG_READ(ah, offset_array[i]));
-+
-+			ath_print(common, ATH_DBG_CALIBRATE,
-+				  "IQ Cal and Correction done for Chain %d\n",
-+				  i);
-+		}
-+	}
-+
-+	REG_SET_BIT(ah, AR_PHY_RX_IQCAL_CORR_B0,
-+		    AR_PHY_RX_IQCAL_CORR_IQCORR_ENABLE);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "IQ Cal and Correction (offset 0x%04x) enabled "
-+		  "(bit position 0x%08x). New Value 0x%08x\n",
-+		  (unsigned) (AR_PHY_RX_IQCAL_CORR_B0),
-+		  AR_PHY_RX_IQCAL_CORR_IQCORR_ENABLE,
-+		  REG_READ(ah, AR_PHY_RX_IQCAL_CORR_B0));
++	ops->rx_enable = ar9003_hw_rx_enable;
 +}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index dbf74eb..2a9d80e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -32,4 +32,6 @@ struct ar9003_rxs {
+ 	u32 status11;
+ } __packed;
+ 
++void ar9003_hw_attach_mac_ops(struct ath_hw *hw);
 +
-+static const struct ath9k_percal_data iq_cal_single_sample = {
-+	IQ_MISMATCH_CAL,
-+	MIN_CAL_SAMPLES,
-+	PER_MAX_LOG_COUNT,
-+	ar9003_hw_iqcal_collect,
-+	ar9003_hw_iqcalibrate
-+};
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0a4ccd8..0b89605 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1567,8 +1567,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (tsf && AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ 		ath9k_hw_settsf64(ah, tsf);
+ 
+-	ar9002_hw_attach_mac_ops(ah);
+-
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+ 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+ 
+@@ -3564,6 +3562,8 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
+ 	ar5008_hw_attach_phy_ops(ah);
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+ 		ar9002_hw_attach_phy_ops(ah);
 +
- static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
- {
--	/* TODO */
-+	ah->iq_caldata.calData = &iq_cal_single_sample;
-+	ah->supp_cals = IQ_MISMATCH_CAL;
++	ar9002_hw_attach_mac_ops(ah);
  }
  
- static bool ar9003_hw_iscal_supported(struct ath_hw *ah,
+ /* Sets up the AR9003 hardware familiy callbacks */
+@@ -3574,4 +3574,6 @@ static void ar9003_hw_attach_ops(struct ath_hw *ah)
+ 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
+ 
+ 	ar9003_hw_attach_phy_ops(ah);
++
++	ar9003_hw_attach_mac_ops(ah);
+ }
 -- 
 1.6.3.3
 
