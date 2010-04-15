@@ -1,92 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36813 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755311Ab0D1Pkq (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:32897 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757348Ab0DOVjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 11:40:46 -0400
-Subject: [PATCH] mac80211: notify driver about IBSS status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 28 Apr 2010 17:40:43 +0200
-Message-ID: <1272469243.3565.27.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 15 Apr 2010 17:39:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 63/97] ath9k_hw: abstract the AR_PHY_AGC_CONTROL register access
+Date: Thu, 15 Apr 2010 17:39:08 -0400
+Message-Id: <1271367582-992-64-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (e.g. iwlwifi) need to know and try
-to figure it out based on other things, but making
-it explicit is definitely better.
+This is so we can share routines which access this register
+on calib.c
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-Yay. cfg80211 really made things easy. Not a billion of code paths to go
-through for ifdown and all that :)
+ drivers/net/wireless/ath/ath9k/ar9002_phy.h |    7 -------
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |   13 -------------
+ drivers/net/wireless/ath/ath9k/reg.h        |   15 +++++++++++++++
+ 3 files changed, 15 insertions(+), 20 deletions(-)
 
- include/net/mac80211.h |    6 +++++-
- net/mac80211/ibss.c    |    6 +++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
-
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -145,6 +145,7 @@ struct ieee80211_low_level_stats {
-  * @BSS_CHANGED_BEACON_ENABLED: Beaconing should be
-  *	enabled/disabled (beaconing modes)
-  * @BSS_CHANGED_CQM: Connection quality monitor config changed
-+ * @BSS_CHANGED_IBSS: IBSS join status changed
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -158,6 +159,7 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_BEACON		= 1<<8,
- 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
- 	BSS_CHANGED_CQM			= 1<<10,
-+	BSS_CHANGED_IBSS		= 1<<11,
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+index 4fe204e..afe4808 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
+@@ -120,13 +120,6 @@
+ #define AR_PHY_AGC_CTL1_COARSE_HIGH      0x003F8000
+ #define AR_PHY_AGC_CTL1_COARSE_HIGH_S    15
  
- /**
-@@ -167,6 +169,8 @@ enum ieee80211_bss_change {
-  * to that BSS) that can change during the lifetime of the BSS.
-  *
-  * @assoc: association status
-+ * @ibss_joined: indicates whether this station is part of an IBSS
-+ *	or not
-  * @aid: association ID number, valid only when @assoc is true
-  * @use_cts_prot: use CTS protection
-  * @use_short_preamble: use 802.11b short preamble;
-@@ -194,7 +198,7 @@ enum ieee80211_bss_change {
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
- 	/* association related data */
--	bool assoc;
-+	bool assoc, ibss_joined;
- 	u16 aid;
- 	/* erp related data */
- 	bool use_cts_prot;
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index e6f3b0c..e47ad17 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -171,6 +171,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	bss_change |= BSS_CHANGED_BSSID;
- 	bss_change |= BSS_CHANGED_BEACON;
- 	bss_change |= BSS_CHANGED_BEACON_ENABLED;
-+	bss_change |= BSS_CHANGED_IBSS;
-+	sdata->vif.bss_conf.ibss_joined = true;
- 	ieee80211_bss_info_change_notify(sdata, bss_change);
+-#define AR_PHY_AGC_CONTROL               0x9860
+-#define AR_PHY_AGC_CONTROL_CAL           0x00000001
+-#define AR_PHY_AGC_CONTROL_NF            0x00000002
+-#define AR_PHY_AGC_CONTROL_ENABLE_NF     0x00008000
+-#define AR_PHY_AGC_CONTROL_FLTR_CAL      0x00010000
+-#define AR_PHY_AGC_CONTROL_NO_UPDATE_NF  0x00020000
+-
+ #define AR_PHY_CCA                  0x9864
+ #define AR_PHY_MINCCA_PWR           0x0FF80000
+ #define AR_PHY_MINCCA_PWR_S         19
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 70e647b..4e1177d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -359,7 +359,6 @@
+ #define AR_PHY_SWITCH_COM_2      (AR_SM_BASE + 0x8c)
+ #define AR_PHY_RX_CHAINMASK      (AR_SM_BASE + 0xa0)
+ #define AR_PHY_CAL_CHAINMASK     (AR_SM_BASE + 0xc0)
+-#define AR_PHY_AGC_CONTROL       (AR_SM_BASE + 0xc4)
+ #define AR_PHY_CALMODE           (AR_SM_BASE + 0xc8)
+ #define AR_PHY_FCAL_1            (AR_SM_BASE + 0xcc)
+ #define AR_PHY_FCAL_2_0          (AR_SM_BASE + 0xd0)
+@@ -509,18 +508,6 @@
+ #define AR_PHY_GC_ENABLE_DAC_FIFO  0x00000800  /* fifo between bb and dac */
+ #define AR_PHY_RX_DELAY_DELAY      0x00003FFF  /* delay from wakeup to rx ena */
  
- 	ieee80211_sta_def_wmm_params(sdata, sband->n_bitrates, supp_rates);
-@@ -951,7 +953,9 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 	kfree(sdata->u.ibss.ie);
- 	skb = sdata->u.ibss.presp;
- 	rcu_assign_pointer(sdata->u.ibss.presp, NULL);
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
-+	sdata->vif.bss_conf.ibss_joined = false;
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
-+						BSS_CHANGED_IBSS);
- 	synchronize_rcu();
- 	kfree_skb(skb);
+-#define AR_PHY_AGC_CONTROL_CAL              0x00000001  /* do internal calibration */
+-#define AR_PHY_AGC_CONTROL_NF               0x00000002  /* do noise-floor calibration */
+-#define AR_PHY_AGC_CONTROL_OFFSET_CAL       0x00000800  /* allow offset calibration */
+-#define AR_PHY_AGC_CONTROL_ENABLE_NF        0x00008000  /* enable noise floor calibration to happen */
+-#define AR_PHY_AGC_CONTROL_FLTR_CAL         0x00010000  /* allow tx filter calibration */
+-#define AR_PHY_AGC_CONTROL_NO_UPDATE_NF     0x00020000  /* don't update noise floor automatically */
+-#define AR_PHY_AGC_CONTROL_EXT_NF_PWR_MEAS  0x00040000  /* extend noise floor power measurement */
+-#define AR_PHY_AGC_CONTROL_CLC_SUCCESS      0x00080000  /* carrier leak calibration done */
+-
+-#define AR_PHY_AGC_CONTROL_YCOK_MAX         0x000003c0
+-#define AR_PHY_AGC_CONTROL_YCOK_MAX_S                6
+-
+ #define AR_PHY_CALMODE_IQ           0x00000000
+ #define AR_PHY_CALMODE_ADC_GAIN     0x00000001
+ #define AR_PHY_CALMODE_ADC_DC_PER   0x00000002
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 7758d99..aacc29a 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1776,4 +1776,19 @@ enum {
+ 						     * pcu_txsm.
+ 						     */
  
-
++#define AR9300_SM_BASE				0xa200
++#define AR9002_PHY_AGC_CONTROL			0x9860
++#define AR9003_PHY_AGC_CONTROL			AR9300_SM_BASE + 0xc4
++#define AR_PHY_AGC_CONTROL			(AR_SREV_9300_20_OR_LATER(ah) ? AR9003_PHY_AGC_CONTROL : AR9002_PHY_AGC_CONTROL)
++#define AR_PHY_AGC_CONTROL_CAL			0x00000001  /* do internal calibration */
++#define AR_PHY_AGC_CONTROL_NF			0x00000002  /* do noise-floor calibration */
++#define AR_PHY_AGC_CONTROL_OFFSET_CAL		0x00000800  /* allow offset calibration */
++#define AR_PHY_AGC_CONTROL_ENABLE_NF		0x00008000  /* enable noise floor calibration to happen */
++#define AR_PHY_AGC_CONTROL_FLTR_CAL		0x00010000  /* allow tx filter calibration */
++#define AR_PHY_AGC_CONTROL_NO_UPDATE_NF		0x00020000  /* don't update noise floor automatically */
++#define AR_PHY_AGC_CONTROL_EXT_NF_PWR_MEAS	0x00040000  /* extend noise floor power measurement */
++#define AR_PHY_AGC_CONTROL_CLC_SUCCESS		0x00080000  /* carrier leak calibration done */
++#define AR_PHY_AGC_CONTROL_YCOK_MAX		0x000003c0
++#define AR_PHY_AGC_CONTROL_YCOK_MAX_S		6
++
+ #endif
+-- 
+1.6.3.3
 
