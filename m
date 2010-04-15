@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 27.mail-out.ovh.net ([91.121.30.210]:50468 "HELO
-	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753292Ab0D0TXL (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60952 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757272Ab0DOVjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 15:23:11 -0400
-Message-ID: <4BD7399B.9040104@free.fr>
-Date: Tue, 27 Apr 2010 21:23:07 +0200
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: remove usage of deprecated noise value
-References: <1272312561-22648-1-git-send-email-linville@tuxdriver.com> <4BD682AF.6030206@free.fr> <loom.20100427T125258-288@post.gmane.org>
-In-Reply-To: <loom.20100427T125258-288@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 15 Apr 2010 17:39:43 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v3 15/97] ath9k_hw: move init config and default after chip is up
+Date: Thu, 15 Apr 2010 17:38:20 -0400
+Message-Id: <1271367582-992-16-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joerg Pommnitz a écrit :
-> Benoit PAPILLAULT <benoit.papillault@...> writes:
->   
->> Before removing noise reporting and all related code, wouln't it be 
->> better to have a replacement API? 
->>     
->
-> I thought this is what NL80211_CMD_GET_SURVEY is supposed to do...
-> See
-> http://osdir.com/ml/linux-wireless/2009-11/msg00977.html
->
->   
-Thanks Joerg! I tried : iw dev wlan0 survey dump and nothing show up.
-What drivers are supposed to have this feature implemented?
+This allows us to add SREV checks on these helpers.
 
-Anyway, I really like to have it implemented for ath9k before removing 
-the deprecated noise value. If it's not currently implemented, I'll try 
-my best to send a patch in the next couple of days. I'll try then to 
-implement it for ath5k (already done?), ar9170, zd1211rw (if possible), 
-rt2800usb/pci.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-BTW, on rt2800usb/pci, it seems the noise is reported on a per packet 
-basis by HW. Kinda strange isn't it? :-]
-
-Regards,
-Benoit
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5dc7041..7127166 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -410,8 +410,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->hw_version.subvendorid = 0;
+ 
+ 	ah->ah_flags = 0;
+-	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
+-		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 	if (!AR_SREV_9100(ah))
+ 		ah->ah_flags = AH_USE_EEPROM;
+ 
+@@ -874,8 +872,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int r = 0;
+ 
+-	ath9k_hw_init_defaults(ah);
+-	ath9k_hw_init_config(ah);
++	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
++		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+@@ -883,6 +881,9 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 		return -EIO;
+ 	}
+ 
++	ath9k_hw_init_defaults(ah);
++	ath9k_hw_init_config(ah);
++
+ 	ath9k_hw_attach_ops(ah);
+ 
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
+-- 
+1.6.3.3
 
