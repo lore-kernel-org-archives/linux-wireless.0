@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:45794 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753025Ab0D1Mxn (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60956 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757274Ab0DOVjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 08:53:43 -0400
-From: Holger Schurig <holgerschurig@gmail.com>
-To: RHS Linux User <xxx@nei.mv.com>
-Subject: Re: [ath9k-devel] ath9k: noise floor calibration process
-Date: Wed, 28 Apr 2010 14:53:39 +0200
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"ath9k-devel" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <Pine.LNX.3.95.1100428051914.9331G-100000@nei>
-In-Reply-To: <Pine.LNX.3.95.1100428051914.9331G-100000@nei>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004281453.39817.holgerschurig@gmail.com>
+	Thu, 15 Apr 2010 17:39:43 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Enis Akay <Enis.Akay@atheros.com>
+Subject: [PATCH v3 17/97] ath9k_hw: disable ANI for AR9003
+Date: Thu, 15 Apr 2010 17:38:22 -0400
+Message-Id: <1271367582-992-18-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->    In the USA Amateur radio operators can use 1000 Watts (under certain
-> conditions) !!
+ANI is still being debugged on AR9003 by our systems team
+so it should not yet be enabled yet. When ANI will be
+enabled all ANI functionality is expected to be enabled
+so fill the ANI functionality to all for AR9003 for now
+as well.
 
-Don't count on the 1000 W. Most countries have tight restrictions, only 
-allowing certain frequencies, bandwiths, max PEP, max ERP, max EIRP, max 
-electric field, max magnetic fields.
+Cc: Enis Akay <Enis.Akay@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-In Germany, with my license class, I can use up to 75W PEP in the frequency 
-range 2320-2450 MHz. So, way less than 1000W. But I don't care, I wouldn't 
-want to use 1000 W anyway. That's quite dangerous, e.g. if someone moves too 
-near to the transmitting antenna.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0e78e35..e54c76e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -364,7 +364,13 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	ah->config.ofdm_trig_high = 500;
+ 	ah->config.cck_trig_high = 200;
+ 	ah->config.cck_trig_low = 100;
+-	ah->config.enable_ani = 1;
++
++	/*
++	 * For now ANI is disabled for AR9003, it is still
++	 * being tested.
++	 */
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		ah->config.enable_ani = 1;
+ 
+ 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
+ 		ah->config.spurchans[i][0] = AR_NO_SPUR;
+@@ -942,7 +948,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	ath9k_hw_init_cal_settings(ah);
+ 
+ 	ah->ani_function = ATH9K_ANI_ALL;
+-	if (AR_SREV_9280_10_OR_LATER(ah))
++	if (AR_SREV_9280_10_OR_LATER(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+ 		ah->ani_function &= ~ATH9K_ANI_NOISE_IMMUNITY_LEVEL;
+ 
+ 	ath9k_hw_init_mode_regs(ah);
+-- 
+1.6.3.3
 
-
-> It is VERY surprising that no chips I am aware of provide directly for
-> support of an external low noise preamp AND on a seperate coax a REAL
-> amplifier.
-
-However, as licensed ham radio op, I'm allowed to build and use self-build 
-equipment. That means, I'm not restricted to use only certified devices, e.g. 
-I don't need some FCC or ZZF or whatever number on my equipment. So I'm 
-perfectly eligible to add some pre-amp. And guess what, for frequencies above 
-100 MHz it's quite common to use low-noise pre-amps. Many HAMs do this, and 
-also every satellite dish LNB does this.
-
-I don't no chip "allowing" me this, I simply attach the pre-amp as near to the 
-antenna as possible. How would a chip be able to prevent that anyway ?!?
-
-Any WLAN chip provides for a separate coax. Again, how would a chip prevent 
-against that?  Only some hybrid chip with built-in antenne could possible 
-prevent me doing that. But maybe you don't mean chips, but devices?  Most USB 
-dongles that I've seen won't provide a coax connector. But I have a bunch of 
-PC-Card wlan cards with some SMA (or similar) coax connectors. And for Mini-
-PCI cards it's the common case to provide some coax socket.
-
-
-> Now two high powered, low noise Acess Points with a clear line of sight
-> would give some real range!
-
-Clear line of sight is nice, clear fresnel zone would be better.
-
-
-Actually, what you're talking already happens already. It's called HAMNET.  
-Some english language link that I found:
-
-http://db0fhn.efi.fh-nuernberg.de/doku.php?id=projects:wlan:hamnet
-
-Oh, and they use atheros hardware :-)
