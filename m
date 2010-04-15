@@ -1,104 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54898 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756945Ab0DODaz (ORCPT
+Received: from mail-pz0-f204.google.com ([209.85.222.204]:53226 "EHLO
+	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756730Ab0DODny (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:55 -0400
+	Wed, 14 Apr 2010 23:43:54 -0400
+Received: by pzk42 with SMTP id 42so771618pzk.4
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 20:43:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 14 Apr 2010 20:36:33 -0700
+Message-ID: <h2k43e72e891004142036ne0cf90e5z4d56af343199762@mail.gmail.com>
+Subject: Re: [PATCH v2 00/97] ath9k: add AR9003 support
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 63/97] ath9k_hw: abstract the AR_PHY_AGC_CONTROL register access
-Date: Wed, 14 Apr 2010 23:30:17 -0400
-Message-Id: <1271302251-9075-64-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is so we can share routines which access this register
-on calib.c
+Oh and the all-in-one git am'able series patch and its respective sha1sum:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_phy.h |    7 -------
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |   13 -------------
- drivers/net/wireless/ath/ath9k/reg.h        |   15 +++++++++++++++
- 3 files changed, 15 insertions(+), 20 deletions(-)
+http://bombadil.infradead.org/~mcgrof/tmp/all-04-14-v4.patch -
+cc876f28fb2d9d0dcbaed05e4a7cd003420d20cb
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-index 4fe204e..afe4808 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-@@ -120,13 +120,6 @@
- #define AR_PHY_AGC_CTL1_COARSE_HIGH      0x003F8000
- #define AR_PHY_AGC_CTL1_COARSE_HIGH_S    15
- 
--#define AR_PHY_AGC_CONTROL               0x9860
--#define AR_PHY_AGC_CONTROL_CAL           0x00000001
--#define AR_PHY_AGC_CONTROL_NF            0x00000002
--#define AR_PHY_AGC_CONTROL_ENABLE_NF     0x00008000
--#define AR_PHY_AGC_CONTROL_FLTR_CAL      0x00010000
--#define AR_PHY_AGC_CONTROL_NO_UPDATE_NF  0x00020000
--
- #define AR_PHY_CCA                  0x9864
- #define AR_PHY_MINCCA_PWR           0x0FF80000
- #define AR_PHY_MINCCA_PWR_S         19
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 70e647b..4e1177d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -359,7 +359,6 @@
- #define AR_PHY_SWITCH_COM_2      (AR_SM_BASE + 0x8c)
- #define AR_PHY_RX_CHAINMASK      (AR_SM_BASE + 0xa0)
- #define AR_PHY_CAL_CHAINMASK     (AR_SM_BASE + 0xc0)
--#define AR_PHY_AGC_CONTROL       (AR_SM_BASE + 0xc4)
- #define AR_PHY_CALMODE           (AR_SM_BASE + 0xc8)
- #define AR_PHY_FCAL_1            (AR_SM_BASE + 0xcc)
- #define AR_PHY_FCAL_2_0          (AR_SM_BASE + 0xd0)
-@@ -509,18 +508,6 @@
- #define AR_PHY_GC_ENABLE_DAC_FIFO  0x00000800  /* fifo between bb and dac */
- #define AR_PHY_RX_DELAY_DELAY      0x00003FFF  /* delay from wakeup to rx ena */
- 
--#define AR_PHY_AGC_CONTROL_CAL              0x00000001  /* do internal calibration */
--#define AR_PHY_AGC_CONTROL_NF               0x00000002  /* do noise-floor calibration */
--#define AR_PHY_AGC_CONTROL_OFFSET_CAL       0x00000800  /* allow offset calibration */
--#define AR_PHY_AGC_CONTROL_ENABLE_NF        0x00008000  /* enable noise floor calibration to happen */
--#define AR_PHY_AGC_CONTROL_FLTR_CAL         0x00010000  /* allow tx filter calibration */
--#define AR_PHY_AGC_CONTROL_NO_UPDATE_NF     0x00020000  /* don't update noise floor automatically */
--#define AR_PHY_AGC_CONTROL_EXT_NF_PWR_MEAS  0x00040000  /* extend noise floor power measurement */
--#define AR_PHY_AGC_CONTROL_CLC_SUCCESS      0x00080000  /* carrier leak calibration done */
--
--#define AR_PHY_AGC_CONTROL_YCOK_MAX         0x000003c0
--#define AR_PHY_AGC_CONTROL_YCOK_MAX_S                6
--
- #define AR_PHY_CALMODE_IQ           0x00000000
- #define AR_PHY_CALMODE_ADC_GAIN     0x00000001
- #define AR_PHY_CALMODE_ADC_DC_PER   0x00000002
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 7758d99..aacc29a 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1776,4 +1776,19 @@ enum {
- 						     * pcu_txsm.
- 						     */
- 
-+#define AR9300_SM_BASE				0xa200
-+#define AR9002_PHY_AGC_CONTROL			0x9860
-+#define AR9003_PHY_AGC_CONTROL			AR9300_SM_BASE + 0xc4
-+#define AR_PHY_AGC_CONTROL			(AR_SREV_9300_20_OR_LATER(ah) ? AR9003_PHY_AGC_CONTROL : AR9002_PHY_AGC_CONTROL)
-+#define AR_PHY_AGC_CONTROL_CAL			0x00000001  /* do internal calibration */
-+#define AR_PHY_AGC_CONTROL_NF			0x00000002  /* do noise-floor calibration */
-+#define AR_PHY_AGC_CONTROL_OFFSET_CAL		0x00000800  /* allow offset calibration */
-+#define AR_PHY_AGC_CONTROL_ENABLE_NF		0x00008000  /* enable noise floor calibration to happen */
-+#define AR_PHY_AGC_CONTROL_FLTR_CAL		0x00010000  /* allow tx filter calibration */
-+#define AR_PHY_AGC_CONTROL_NO_UPDATE_NF		0x00020000  /* don't update noise floor automatically */
-+#define AR_PHY_AGC_CONTROL_EXT_NF_PWR_MEAS	0x00040000  /* extend noise floor power measurement */
-+#define AR_PHY_AGC_CONTROL_CLC_SUCCESS		0x00080000  /* carrier leak calibration done */
-+#define AR_PHY_AGC_CONTROL_YCOK_MAX		0x000003c0
-+#define AR_PHY_AGC_CONTROL_YCOK_MAX_S		6
-+
- #endif
--- 
-1.6.3.3
-
+  Luis
