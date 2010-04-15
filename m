@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:63271 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753266Ab0D0AZy (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55079 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757086Ab0DODa6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 20:25:54 -0400
-Received: by pvg2 with SMTP id 2so817020pvg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 17:25:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100427001233.GB2079@tuxdriver.com>
-References: <1272324216-73349-1-git-send-email-nbd@openwrt.org>
-	<20100426232332.GA2079@tuxdriver.com> <4BD621FA.1000405@openwrt.org>
-	<20100427001233.GB2079@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 26 Apr 2010 17:25:34 -0700
-Message-ID: <t2i43e72e891004261725kdd3c1388jc2758db8a0b7e82@mail.gmail.com>
-Subject: Re: [PATCH 1/2] cfg80211: add ap isolation support
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-Content-Type: text/plain; charset=UTF-8
+	Wed, 14 Apr 2010 23:30:58 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 15/97] ath9k_hw: move init config and default after chip is up
+Date: Wed, 14 Apr 2010 23:29:29 -0400
+Message-Id: <1271302251-9075-16-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 26, 2010 at 5:12 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Tue, Apr 27, 2010 at 01:30:02AM +0200, Felix Fietkau wrote:
->> On 2010-04-27 1:23 AM, John W. Linville wrote:
->> > On Tue, Apr 27, 2010 at 01:23:35AM +0200, Felix Fietkau wrote:
->> >> This is used to configure APs to not bridge traffic between connected stations.
->> >>
->> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> >
->> > Is this useful?
->> Yes, if you have an AP with lots of users that aren't expected to
->> communicate with each other (e.g. only for internet access), it can save
->> a lot of airtime by not forwarding every broadcast message emitted from
->> any station.
->> I'm sure there are a more situations where this can be useful.
->
-> Ah, OK -- I suppose that makes sense.
+This allows us to add SREV checks on these helpers.
 
-In fact technically IEEE-802.11 2007 section 11.7 states "STAs are not
-allowed to transmit frames directly to other STAs in a BSS and should
-always rely
-on the AP for the delivery of the frames", with the exception being
-using DLS direct links for QoS STAs.  This would prevent the STAs from
-going into PS mode for as long duration of the stream.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-If the AP does not support this it would just set the result code for
-DLS requests to "Not allowed in the BSS". It does not seem the
-standard has a way for an AP to teardown an existing DLS links though
-(at no reason code for it), so I guess if we ever support DLS we won't
-be able to enable this option if a direct links is already
-established.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5dc7041..7127166 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -410,8 +410,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->hw_version.subvendorid = 0;
+ 
+ 	ah->ah_flags = 0;
+-	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
+-		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 	if (!AR_SREV_9100(ah))
+ 		ah->ah_flags = AH_USE_EEPROM;
+ 
+@@ -874,8 +872,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int r = 0;
+ 
+-	ath9k_hw_init_defaults(ah);
+-	ath9k_hw_init_config(ah);
++	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
++		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+@@ -883,6 +881,9 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 		return -EIO;
+ 	}
+ 
++	ath9k_hw_init_defaults(ah);
++	ath9k_hw_init_config(ah);
++
+ 	ath9k_hw_attach_ops(ah);
+ 
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
+-- 
+1.6.3.3
 
-  Luis
