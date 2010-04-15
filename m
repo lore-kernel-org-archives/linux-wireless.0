@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51406.mail.re2.yahoo.com ([206.190.38.185]:41834 "HELO
-	web51406.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758608Ab0DHNv4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 09:51:56 -0400
-Message-ID: <282382.19639.qm@web51406.mail.re2.yahoo.com>
-Date: Thu, 8 Apr 2010 06:45:15 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Any news regarding multicast rate configuration?
-To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from bombadil.infradead.org ([18.85.46.34]:32950 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757397Ab0DOVjq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 17:39:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 74/97] ath9k_hw: Configure Tx interrupt mitigation timer
+Date: Thu, 15 Apr 2010 17:39:19 -0400
+Message-Id: <1271367582-992-75-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
-sometime ago I asked about a way to configure the multicast
-data rate for mac80211 based drivers. At the time the answer
-was, that the groundwork was in place but that this still
-needed an API that would make this feature accessible for
-users.
-Is there any progress in this regard? What needs to be done?
--- 
-Regards
-       Joerg
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-__________________________________________________
-Do You Yahoo!?
-Sie sind Spam leid? Yahoo! Mail verfügt über einen herausragenden Schutz gegen Massenmails. 
-http://mail.yahoo.com 
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index eeecc72..9e4288a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1287,6 +1287,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, 2000);
+ 	}
+ 
++	if (ah->config.tx_intr_mitigation) {
++		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_LAST, 300);
++		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_FIRST, 750);
++	}
++
+ 	ath9k_hw_init_bb(ah, chan);
+ 
+ 	if (!ath9k_hw_init_cal(ah, chan))
+-- 
+1.6.3.3
+
