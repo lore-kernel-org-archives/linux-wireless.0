@@ -1,89 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:45928 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752952Ab0DSR5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 13:57:44 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v2 1/9] ath9k: check for specific rx stuck conditions and recover from them
-Date: Mon, 19 Apr 2010 19:57:29 +0200
-Message-Id: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:60944 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757268Ab0DOVjm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 17:39:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 11/97] ath9k_hw: add some comments for ath9k_set_power_network_sleep()
+Date: Thu, 15 Apr 2010 17:38:16 -0400
+Message-Id: <1271367582-992-12-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c   |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h   |    1 +
- drivers/net/wireless/ath/ath9k/main.c |    3 ++-
- 3 files changed, 31 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9aa40df..5a29048 100644
+index dd37e90..8aa1684 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.c
 +++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1160,6 +1160,34 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 	return true;
+@@ -2037,6 +2037,11 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
+ 	}
  }
  
-+bool ath9k_hw_check_alive(struct ath_hw *ah)
-+{
-+	int count = 50;
-+	u32 reg;
-+
-+	if (AR_SREV_9285_10_OR_LATER(ah))
-+		return true;
-+
-+	do {
-+		reg = REG_READ(ah, AR_OBS_BUS_1);
-+
-+		if ((reg & 0x7E7FFFEF) == 0x00702400)
-+			continue;
-+
-+		switch (reg & 0x7E000B00) {
-+		case 0x1E000000:
-+		case 0x52000B00:
-+		case 0x18000B00:
-+			continue;
-+		default:
-+			return true;
-+		}
-+	} while (count-- > 0);
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(ath9k_hw_check_alive);
-+
- int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		    bool bChannelChange)
++/*
++ * Notify Power Management is enabled in self-generating
++ * frames. If request, set power mode of chip to
++ * auto/normal.  Duration in units of 128us (1/8 TU).
++ */
+ static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
  {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 8158e8e..a78e09b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -869,6 +869,7 @@ void ath9k_hw_set11nmac2040(struct ath_hw *ah);
- void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
- void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
- 				    const struct ath9k_beacon_state *bs);
-+bool ath9k_hw_check_alive(struct ath_hw *ah);
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
+@@ -2044,9 +2049,14 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
+ 		struct ath9k_hw_capabilities *pCap = &ah->caps;
  
- bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1f4ea74..0246e7a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -405,7 +405,8 @@ void ath9k_tasklet(unsigned long data)
- 
- 	ath9k_ps_wakeup(sc);
- 
--	if (status & ATH9K_INT_FATAL) {
-+	if ((status & ATH9K_INT_FATAL) ||
-+	    !ath9k_hw_check_alive(ah)) {
- 		ath_reset(sc, false);
- 		ath9k_ps_restore(sc);
- 		return;
+ 		if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
++			/* Set WakeOnInterrupt bit; clear ForceWake bit */
+ 			REG_WRITE(ah, AR_RTC_FORCE_WAKE,
+ 				  AR_RTC_FORCE_WAKE_ON_INT);
+ 		} else {
++			/*
++			 * Clear the RTC force wake bit to allow the
++			 * mac to go to sleep.
++			 */
+ 			REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
+ 				    AR_RTC_FORCE_WAKE_EN);
+ 		}
 -- 
-1.6.4.2
+1.6.3.3
 
