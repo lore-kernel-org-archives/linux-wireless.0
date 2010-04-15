@@ -1,79 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63409 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755626Ab0DPB21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 21:28:27 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 1/2] iwmc3200wifi: Fix sparse warnings
-Date: Fri, 16 Apr 2010 09:28:43 +0800
-Message-Id: <1271381324-21044-1-git-send-email-yi.zhu@intel.com>
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:46064 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845Ab0DOPXe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 11:23:34 -0400
+Received: by bwz25 with SMTP id 25so1743176bwz.28
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 08:23:33 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH v2] wl1251: register platform_device to pass board data
+Date: Thu, 15 Apr 2010 18:23:23 +0300
+Message-Id: <1271345003-15453-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <sameo@linux.intel.com>
+wl1251 is embedded chip that can be connected using SDIO bus, and is not
+an actual SDIO card. For this reason there is a need to pass some board
+specific data, like 'EEPROM is attached' flag or power control callback.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+However currently there is no way to pass this data through SDIO subsystem,
+so this patch registers dummy platform_device to allow that, until we
+have a better solution to this.
+
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
- drivers/net/wireless/iwmc3200wifi/rx.c    |    3 ++-
- drivers/net/wireless/iwmc3200wifi/trace.h |    4 ++--
- drivers/net/wireless/iwmc3200wifi/tx.c    |    4 ++--
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |   40 +++++++++++++++++++++++++++++
+ 1 files changed, 40 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-index ad53987..e1184de 100644
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -431,7 +431,8 @@ static int iwm_ntf_rx_ticket(struct iwm_priv *iwm, u8 *buf,
- 				return PTR_ERR(ticket_node);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index 2051ef0..7409c34 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -23,6 +23,8 @@
+ #include <linux/mod_devicetable.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
++#include <linux/platform_device.h>
++#include <linux/spi/wl12xx.h>
  
- 			IWM_DBG_RX(iwm, DBG, "TICKET %s(%d)\n",
--				   ticket->action ==  IWM_RX_TICKET_RELEASE ?
-+				   __le16_to_cpu(ticket->action) ==
-+							IWM_RX_TICKET_RELEASE ?
- 				   "RELEASE" : "DROP",
- 				   ticket->id);
- 			spin_lock(&iwm->ticket_lock);
-diff --git a/drivers/net/wireless/iwmc3200wifi/trace.h b/drivers/net/wireless/iwmc3200wifi/trace.h
-index 320e54f..abb4805 100644
---- a/drivers/net/wireless/iwmc3200wifi/trace.h
-+++ b/drivers/net/wireless/iwmc3200wifi/trace.h
-@@ -76,7 +76,7 @@ TRACE_EVENT(iwm_tx_wifi_cmd,
- 		IWM_ASSIGN;
- 		__entry->opcode = hdr->sw_hdr.cmd.cmd;
- 		__entry->lmac = 0;
--		__entry->seq = hdr->sw_hdr.cmd.seq_num;
-+		__entry->seq = __le16_to_cpu(hdr->sw_hdr.cmd.seq_num);
- 		__entry->resp = GET_VAL8(hdr->sw_hdr.cmd.flags, UMAC_DEV_CMD_FLAGS_RESP_REQ);
- 		__entry->color = GET_VAL32(hdr->sw_hdr.meta_data, UMAC_FW_CMD_TX_STA_COLOR);
- 		__entry->eot = GET_VAL32(hdr->hw_hdr.cmd, UMAC_HDI_OUT_CMD_EOT);
-@@ -123,7 +123,7 @@ TRACE_EVENT(iwm_tx_packets,
- 		__entry->ra_tid = GET_VAL32(hdr->hw_hdr.meta_data, UMAC_HDI_OUT_RATID);
- 		__entry->credit_group = GET_VAL32(hdr->hw_hdr.meta_data, UMAC_HDI_OUT_CREDIT_GRP);
- 		__entry->color = GET_VAL32(hdr->sw_hdr.meta_data, UMAC_FW_CMD_TX_STA_COLOR);
--		__entry->seq = hdr->sw_hdr.cmd.seq_num;
-+		__entry->seq = __le16_to_cpu(hdr->sw_hdr.cmd.seq_num);
- 		__entry->npkt = 1;
- 		__entry->bytes = len;
+ #include "wl1251.h"
  
-diff --git a/drivers/net/wireless/iwmc3200wifi/tx.c b/drivers/net/wireless/iwmc3200wifi/tx.c
-index 9537cdb..3216621 100644
---- a/drivers/net/wireless/iwmc3200wifi/tx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/tx.c
-@@ -302,8 +302,8 @@ void iwm_tx_credit_init_pools(struct iwm_priv *iwm,
+@@ -34,6 +36,8 @@
+ #define SDIO_DEVICE_ID_TI_WL1251	0x9066
+ #endif
  
- #define IWM_UDMA_HDR_LEN	sizeof(struct iwm_umac_wifi_out_hdr)
- 
--static int iwm_tx_build_packet(struct iwm_priv *iwm, struct sk_buff *skb,
--			       int pool_id, u8 *buf)
-+static __le16 iwm_tx_build_packet(struct iwm_priv *iwm, struct sk_buff *skb,
-+				  int pool_id, u8 *buf)
++static struct wl12xx_platform_data *wl12xx_board_data;
++
+ static struct sdio_func *wl_to_func(struct wl1251 *wl)
  {
- 	struct iwm_umac_wifi_out_hdr *hdr = (struct iwm_umac_wifi_out_hdr *)buf;
- 	struct iwm_udma_wifi_cmd udma_cmd;
+ 	return wl->if_priv;
+@@ -144,6 +148,30 @@ static const struct wl1251_if_operations wl1251_sdio_ops = {
+ 	.disable_irq = wl1251_sdio_disable_irq,
+ };
+ 
++static int wl1251_platform_probe(struct platform_device *pdev)
++{
++	if (pdev->id != -1) {
++		wl1251_error("can only handle single device");
++		return -ENODEV;
++	}
++
++	wl12xx_board_data = pdev->dev.platform_data;
++	return 0;
++}
++
++/*
++ * Dummy platform_driver for passing platform_data to this driver,
++ * until we have a way to pass this through SDIO subsystem or
++ * some other way.
++ */
++static struct platform_driver wl1251_platform_driver = {
++	.driver = {
++		.name	= "wl1251_data",
++		.owner	= THIS_MODULE,
++	},
++	.probe	= wl1251_platform_probe,
++};
++
+ static int wl1251_sdio_probe(struct sdio_func *func,
+ 			     const struct sdio_device_id *id)
+ {
+@@ -169,6 +197,11 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 	wl->if_ops = &wl1251_sdio_ops;
+ 	wl->set_power = wl1251_sdio_set_power;
+ 
++	if (wl12xx_board_data != NULL) {
++		wl->set_power = wl12xx_board_data->set_power;
++		wl->use_eeprom = wl12xx_board_data->use_eeprom;
++	}
++
+ 	sdio_release_host(func);
+ 	ret = wl1251_init_ieee80211(wl);
+ 	if (ret)
+@@ -208,6 +241,12 @@ static int __init wl1251_sdio_init(void)
+ {
+ 	int err;
+ 
++	err = platform_driver_register(&wl1251_platform_driver);
++	if (err) {
++		wl1251_error("failed to register platform driver: %d", err);
++		return err;
++	}
++
+ 	err = sdio_register_driver(&wl1251_sdio_driver);
+ 	if (err)
+ 		wl1251_error("failed to register sdio driver: %d", err);
+@@ -217,6 +256,7 @@ static int __init wl1251_sdio_init(void)
+ static void __exit wl1251_sdio_exit(void)
+ {
+ 	sdio_unregister_driver(&wl1251_sdio_driver);
++	platform_driver_unregister(&wl1251_platform_driver);
+ 	wl1251_notice("unloaded");
+ }
+ 
 -- 
 1.6.3.3
 
