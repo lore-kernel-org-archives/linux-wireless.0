@@ -1,54 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37911 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126Ab0DQIVD (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:32870 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757338Ab0DOVjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Apr 2010 04:21:03 -0400
-Subject: Re: [PATCH 2/2] iwmc3200wifi: check sparse endianness annotations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <1271453698.16507.26.camel@mj>
-References: <1271381324-21044-1-git-send-email-yi.zhu@intel.com>
-	 <1271381324-21044-2-git-send-email-yi.zhu@intel.com>
-	 <1271451350.16507.2.camel@mj>
-	 <1271451466.8043.0.camel@jlt3.sipsolutions.net>
-	 <1271453698.16507.26.camel@mj>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 17 Apr 2010 10:20:41 +0200
-Message-ID: <1271492441.5157.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 15 Apr 2010 17:39:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 57/97] ath9k_hw: add the config_pci_powersave AR9003 callback
+Date: Thu, 15 Apr 2010 17:39:02 -0400
+Message-Id: <1271367582-992-58-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-04-16 at 17:34 -0400, Pavel Roskin wrote:
-> On Fri, 2010-04-16 at 22:57 +0200, Johannes Berg wrote:
-> 
-> > We've done it on other drivers -- we can't do it for all of the kernel
-> > because that would drown people in warnings, but for those drivers that
-> > _should_ be clean it ought to be fine to add it by default.
-> 
-> Oh, I see, there are several precedents.
-> 
-> That said, there are not many warnings added by __CHECK_ENDIAN__.  In my
-> x86_64 configuration, sparse produces 2316 lines of output without
-> __CHECK_ENDIAN__ and 3526 lines with __CHECK_ENDIAN__, a 52% increase.
-> That's hardly "drowning".
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-Other people feel differently by that, evidenced by the "lack of
-enthusiasm" for adding endian checking by default.
-
-> Also, the warnings about endianess are perhaps the most useful of all
-> sparse warnings.
-
-I agree, so I want them whenever I run sparse on code I own.
-
-However, I'm simply not willing to fight for making endian checking
-default kernel-wide to achieve that goal. You may disagree, and you're
-welcome to pick that fight. Until then, please let us do what gets our
-job done.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 6c092ee..240ca4c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2595,6 +2595,37 @@ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+ }
+ EXPORT_SYMBOL(ath9k_hw_set_interrupts);
+ 
++/*
++ * Helper for ASPM support.
++ *
++ * Disable PLL when in L0s as well as receiver clock when in L1.
++ * This power saving option must be enabled through the SerDes.
++ *
++ * Programming the SerDes must go through the same 288 bit serial shift
++ * register as the other analog registers.  Hence the 9 writes.
++ */
++static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
++					 int restore,
++					 int power_off)
++{
++	if (ah->is_pciexpress != true)
++		return;
++
++	/* Do not touch SerDes registers */
++	if (ah->config.pcie_powersave_enable == 2)
++		return;
++
++	/* Nothing to do on restore for 11N */
++	if (!restore) {
++		/* set bit 19 to allow forcing of pcie core into L1 state */
++		REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PCIE_PM_CTRL_ENA);
++
++		/* Several PCIe massages to ensure proper behaviour */
++		if (ah->config.pcie_waen)
++			REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
++	}
++}
++
+ /*******************/
+ /* Beacon Handling */
+ /*******************/
+@@ -3629,10 +3660,13 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
+ static void ar9003_hw_attach_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+ 
+ 	priv_ops->init_mode_regs = ar9003_hw_init_mode_regs;
+ 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
+ 
++	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
++
+ 	ar9003_hw_attach_phy_ops(ah);
+ 	ar9003_hw_attach_calib_ops(ah);
+ 	ar9003_hw_attach_mac_ops(ah);
+-- 
+1.6.3.3
 
