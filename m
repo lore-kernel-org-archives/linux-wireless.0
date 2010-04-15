@@ -1,124 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:33448 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924Ab0DZLC2 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54815 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756852Ab0DODay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 07:02:28 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1957183fgg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 04:02:26 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
-Date: Mon, 26 Apr 2010 13:02:14 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Luis Correia <luis.f.correia@gmail.com>
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-7-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270989075-2267-7-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201004261302.14682.helmut.schaa@googlemail.com>
+	Wed, 14 Apr 2010 23:30:54 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 46/97] ath9k_hw: add a helper for Power Amplifier calibration for AR9002
+Date: Wed, 14 Apr 2010 23:30:00 -0400
+Message-Id: <1271302251-9075-47-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
-> rt2x00 had preliminary support for RT3070 based devices, but the support was
-> incomplete.
-> Update the RT3070 register initialization to be similar to the latest Ralink
-> vendor driver.
-> 
-> With this patch my rt3070 based devices start showing a sign of life.
+The code can be simplified and shared between two locations if we bring
+this into a helper. During reset we do not account for the skip count.
 
-Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
-more details.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |   32 +++++++++++++++++---------------
+ 1 files changed, 17 insertions(+), 15 deletions(-)
 
-[...]
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index eed2c76..26bc381 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -949,6 +949,21 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
+ 
+ }
+ 
++static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
++{
++	if (AR_SREV_9271(ah)) {
++		if (is_reset || !ah->pacal_info.skipcount)
++			ath9k_hw_9271_pa_cal(ah, is_reset);
++		else
++			ah->pacal_info.skipcount--;
++	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
++		if (is_reset || !ah->pacal_info.skipcount)
++			ath9k_hw_9285_pa_cal(ah, is_reset);
++		else
++			ah->pacal_info.skipcount--;
++	}
++}
++
+ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			u8 rxchainmask, bool longcal)
+ {
+@@ -973,17 +988,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	/* Do NF cal only at longer intervals */
+ 	if (longcal) {
+ 		/* Do periodic PAOffset Cal */
+-		if (AR_SREV_9271(ah)) {
+-			if (!ah->pacal_info.skipcount)
+-				ath9k_hw_9271_pa_cal(ah, false);
+-			else
+-				ah->pacal_info.skipcount--;
+-		} else if (AR_SREV_9285_11_OR_LATER(ah)) {
+-			if (!ah->pacal_info.skipcount)
+-				ath9k_hw_9285_pa_cal(ah, false);
+-			else
+-				ah->pacal_info.skipcount--;
+-		}
++		ar9002_hw_pa_cal(ah, false);
+ 
+ 		if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
+ 			ath9k_olc_temp_compensation(ah);
+@@ -1142,10 +1147,7 @@ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	}
+ 
+ 	/* Do PA Calibration */
+-	if (AR_SREV_9271(ah))
+-		ath9k_hw_9271_pa_cal(ah, true);
+-	else if (AR_SREV_9285_11_OR_LATER(ah))
+-		ath9k_hw_9285_pa_cal(ah, true);
++	ar9002_hw_pa_cal(ah, true);
+ 
+ 	/* Do NF Calibration after DC offset and other calibrations */
+ 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+-- 
+1.6.3.3
 
-> @@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->  {
->  	u8 rfcsr;
->  	u8 bbp;
-> +	u32 reg;
-> +	u16 eeprom;
->  
-> -	if (rt2x00_is_usb(rt2x00dev) &&
-> -	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
-> +	if (!rt2x00_rt(rt2x00dev, RT3070))
->  		return 0;
->  
-> -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-> -		if (!rt2x00_rf(rt2x00dev, RF3020) &&
-> -		    !rt2x00_rf(rt2x00dev, RF3021) &&
-> -		    !rt2x00_rf(rt2x00dev, RF3022))
-> -			return 0;
-> -	}
-
-Any reason why you've removed this part? The following code was executed on
-pci and soc devices when they had an 3020, 3021 or 3022 rf.
-
->  	/*
->  	 * Init RF calibration.
->  	 */
-> @@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->  	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
->  	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
->  
-> -	if (rt2x00_is_usb(rt2x00dev)) {
-> +	if (rt2x00_rt(rt2x00dev, RT3070)) {
->  		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
->  		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
->  		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
->  		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
->  		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
-> -		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
-> +		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
->  		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
->  		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
->  		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
-> @@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->  		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
->  		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
->  		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
-> -		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
->  		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
-> -	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-> -		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
-> -		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
-> -		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
-> -		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
-> -		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
-> -		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
-> -		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-> -		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
-> -		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
-> -		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
-> -		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
-> -		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
-> -		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
-> -		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
-> -		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
-> -		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
-> -		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
-> -		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
-> -		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
-> -		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
-> -		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
-> -		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
-> -		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
-> -		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
-> -		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
-> -		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
-> -		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
-> -		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
-> -		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
-> -		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
-
-This part is actually needed for getting rx to work on the SoC devices.
-
-Should I post a patch that adds this code again and is only executed on SoC
-devices with rf3020, 3021 and 3022?
-
-Thanks,
-Helmut
