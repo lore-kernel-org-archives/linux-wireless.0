@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48943 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753123Ab0DFRR5 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54725 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756636Ab0DODaw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 13:17:57 -0400
-Subject: Re: [PATCH] mac80211: check whether scan is in progress before
- queueing scan_work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1270570994.2969.12.camel@localhost.localdomain>
-References: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1270544765.3929.2.camel@jlt3.sipsolutions.net>
-	 <1270549017.7150.28.camel@paavo-desktop>
-	 <1270549677.3929.5.camel@jlt3.sipsolutions.net>
-	 <1270549759.3929.6.camel@jlt3.sipsolutions.net>
-	 <1270551950.7150.47.camel@paavo-desktop>
-	 <1270570994.2969.12.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 06 Apr 2010 19:17:45 +0200
-Message-ID: <1270574265.24505.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 14 Apr 2010 23:30:52 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 02/97] ath9k_hw: add silicon revision macros for AR9300
+Date: Wed, 14 Apr 2010 23:29:16 -0400
+Message-Id: <1271302251-9075-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-04-06 at 09:23 -0700, Dan Williams wrote:
+From: Felix Fietkau <nbd@openwrt.org>
 
-> > Yes, I'm bit worried about possibility of a possible deadlock too. One
-> > solution would be to move the block acquiring scan_mtx and queueing
-> > scan_work outside of the work_mtx locked section, I'll take a look on
-> > that. In any case, this patch won't most likely fix all issues with the
-> > locking here. For example there's that checking if scan is in progress
-> > in the beginning of the work_work. After that it is still possible that
-> > the scan is started. So there's obviously need for some fixing in the
-> > locking yet to be done. 
-> 
-> One issue would be if the new scan request has different parameters than
-> the in-progress scan request.  This is especially important when the
-> incoming scan request is for a specific SSID (hidden network probing)
-> while the ongoing one is not.  Can we make sure that the patch at least
-> returns the error up the stack when the incoming scan is dropped?
-> Otherwise userspace has no idea that the specific SSID scan was dropped
-> on the floor, and just thinks that the hidden SSID wasn't found.
+AR9300 will be the first device supported of the AR9003
+family. AR9300 1.0 hardware exists but it is not going to
+be sold anywhere so we completely skip its support.
 
-There's no scan request being dropped -- it's just that we try to ask
-the hw to do the same scan twice without noticing that we've already
-asked it.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/reg.h |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 7e36ad7..5ab6d6e 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -759,6 +759,8 @@
+ #define AR_SREV_VERSION_9271			0x140
+ #define AR_SREV_REVISION_9271_10		0
+ #define AR_SREV_REVISION_9271_11		1
++#define AR_SREV_VERSION_9300                  0x1c0
++#define AR_SREV_REVISION_9300_20              2 /* 2.0 and 2.1 */
+ 
+ #define AR_SREV_5416(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
+@@ -844,6 +846,15 @@
+ #define AR_SREV_9271_11(_ah) \
+     (AR_SREV_9271(_ah) && \
+      ((_ah)->hw_version.macRev == AR_SREV_REVISION_9271_11))
++#define AR_SREV_9300(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300))
++#define AR_SREV_9300_20(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9300_20))
++#define AR_SREV_9300_20_OR_LATER(_ah) \
++	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9300) || \
++	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
++	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9300_20)))
+ 
+ #define AR_SREV_9285E_20(_ah) \
+     (AR_SREV_9285_12_OR_LATER(_ah) && \
+-- 
+1.6.3.3
 
