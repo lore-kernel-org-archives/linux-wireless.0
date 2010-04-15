@@ -1,279 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:56035 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755523Ab0DEREI (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54872 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756924Ab0DODaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Apr 2010 13:04:08 -0400
-Date: Mon, 5 Apr 2010 19:04:06 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-ppp@vger.kernel.org
-Subject: [PATCH v2] crypto: add blkcipher implementation of ARC4
-Message-ID: <20100405170406.GA24215@Chamillionaire.breakpoint.cc>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
- <1270280969-11357-3-git-send-email-sebastian@breakpoint.cc>
- <20100405084209.GA16788@gondor.apana.org.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <20100405084209.GA16788@gondor.apana.org.au>
+	Wed, 14 Apr 2010 23:30:55 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 57/97] ath9k_hw: add the config_pci_powersave AR9003 callback
+Date: Wed, 14 Apr 2010 23:30:11 -0400
+Message-Id: <1271302251-9075-58-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a pure blkcipher implementation of ARC4. The internal state is
-saved within an IV which is supplied by the user. The goal is that the
-cipher does not change its internal state now, only the iv changes during
-encryption.
-
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- crypto/Kconfig        |   13 ++++
- crypto/Makefile       |    1 +
- crypto/arc4blk.c      |  150 +++++++++++++++++++++++++++++++++++++++++++++++++
- crypto/testmgr.h      |    3 +-
- include/crypto/arc4.h |   26 +++++++++
- 5 files changed, 192 insertions(+), 1 deletions(-)
- create mode 100644 crypto/arc4blk.c
- create mode 100644 include/crypto/arc4.h
+ drivers/net/wireless/ath/ath9k/hw.c |   34 ++++++++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/crypto/Kconfig b/crypto/Kconfig
-index 81c185a..be9add2 100644
---- a/crypto/Kconfig
-+++ b/crypto/Kconfig
-@@ -570,6 +570,19 @@ config CRYPTO_ARC4
- 	  WEP, but it should not be for other purposes because of the
- 	  weakness of the algorithm.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 6c092ee..240ca4c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2595,6 +2595,37 @@ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+ }
+ EXPORT_SYMBOL(ath9k_hw_set_interrupts);
  
-+config CRYPTO_ARC4BLK
-+	tristate "ARC4 cipher algorithm (alternative implemenation)"
-+	select CRYPTO_BLKCIPHER
-+	help
-+	  ARC4 cipher algorithm. This is an alternative ARC4 implementation which
-+	  will replace the other ARC4 implementation once all in-kernel users are
-+	  converted.
-+
-+	  ARC4 is a stream cipher using keys ranging from 8 bits to 2048
-+	  bits in length.  This algorithm is required for driver-based
-+	  WEP, but it should not be for other purposes because of the
-+	  weakness of the algorithm.
-+
- config CRYPTO_BLOWFISH
- 	tristate "Blowfish cipher algorithm"
- 	select CRYPTO_ALGAPI
-diff --git a/crypto/Makefile b/crypto/Makefile
-index 1f15112..11300e3 100644
---- a/crypto/Makefile
-+++ b/crypto/Makefile
-@@ -68,6 +68,7 @@ obj-$(CONFIG_CRYPTO_CAMELLIA) += camellia.o
- obj-$(CONFIG_CRYPTO_CAST5) += cast5.o
- obj-$(CONFIG_CRYPTO_CAST6) += cast6.o
- obj-$(CONFIG_CRYPTO_ARC4) += arc4cip.o
-+obj-$(CONFIG_CRYPTO_ARC4BLK) += arc4blk.o
- obj-$(CONFIG_CRYPTO_TEA) += tea.o
- obj-$(CONFIG_CRYPTO_KHAZAD) += khazad.o
- obj-$(CONFIG_CRYPTO_ANUBIS) += anubis.o
-diff --git a/crypto/arc4blk.c b/crypto/arc4blk.c
-new file mode 100644
-index 0000000..bdf938a
---- /dev/null
-+++ b/crypto/arc4blk.c
-@@ -0,0 +1,150 @@
 +/*
-+ * Cryptographic API
++ * Helper for ASPM support.
 + *
-+ * ARC4 Cipher Algorithm
++ * Disable PLL when in L0s as well as receiver clock when in L1.
++ * This power saving option must be enabled through the SerDes.
 + *
-+ * Jon Oberheide <jon@oberheide.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
++ * Programming the SerDes must go through the same 288 bit serial shift
++ * register as the other analog registers.  Hence the 9 writes.
 + */
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <crypto/algapi.h>
-+#include <crypto/arc4.h>
-+
-+#define ARC4_MIN_KEY_SIZE	1
-+#define ARC4_MAX_KEY_SIZE	256
-+#define ARC4_BLOCK_SIZE		1
-+
-+static int arc4_set_key(struct crypto_tfm *tfm, const u8 *in_key,
-+			unsigned int key_len)
++static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
++					 int restore,
++					 int power_off)
 +{
-+	/*
-+	 * ARC4 is special: The user should supply an IV as struct arc4_iv and
-+	 * fill either the key or the iv.
-+	 */
-+	return 0;
-+}
-+
-+static void arc4_key_to_iv(const u8 *in_key, u32 key_len, struct arc4_iv *iv)
-+{
-+	int i, j = 0, k = 0;
-+
-+	iv->iv.x = 1;
-+	iv->iv.y = 0;
-+
-+	for (i = 0; i < 256; i++)
-+		iv->iv.S[i] = i;
-+
-+	for (i = 0; i < 256; i++)
-+	{
-+		u8 a = iv->iv.S[i];
-+		j = (j + in_key[k] + a) & 0xff;
-+		iv->iv.S[i] = iv->iv.S[j];
-+		iv->iv.S[j] = a;
-+		if (++k >= key_len)
-+			k = 0;
-+	}
-+}
-+
-+static void arc4_ivsetup(struct arc4_iv *iv)
-+{
-+	struct arc4_iv tmp_iv;
-+
-+	if (iv->type == ARC4_TYPE_IV)
++	if (ah->is_pciexpress != true)
 +		return;
 +
-+	memcpy(&tmp_iv, iv, sizeof(tmp_iv));
-+	arc4_key_to_iv(tmp_iv.key.key, tmp_iv.key.key_len, iv);
-+	iv->type = ARC4_TYPE_IV;
-+}
++	/* Do not touch SerDes registers */
++	if (ah->config.pcie_powersave_enable == 2)
++		return;
 +
-+static int arc4_crypt(struct blkcipher_desc *desc, struct scatterlist *dst,
-+		struct scatterlist *src, unsigned int nbytes)
-+{
-+	struct blkcipher_walk walk;
-+	struct arc4_iv *aiv;
-+	u8 *S;
-+	u8 x;
-+	u8 y;
-+	u8 a, b;
-+	int ret;
++	/* Nothing to do on restore for 11N */
++	if (!restore) {
++		/* set bit 19 to allow forcing of pcie core into L1 state */
++		REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PCIE_PM_CTRL_ENA);
 +
-+	blkcipher_walk_init(&walk, dst, src, nbytes);
-+	ret = blkcipher_walk_virt(desc, &walk);
-+	if (ret)
-+		return ret;
-+
-+	aiv = (struct arc4_iv *)walk.iv;
-+	arc4_ivsetup(aiv);
-+
-+	S = aiv->iv.S;
-+	x = aiv->iv.x;
-+	y = aiv->iv.y;
-+
-+	while (walk.nbytes) {
-+		u8 *in = walk.src.virt.addr;
-+		u8 *out = walk.dst.virt.addr;
-+		u32 i;
-+
-+		for (i = 0; i < walk.nbytes; i++) {
-+			a = S[x];
-+			y = (y + a) & 0xff;
-+			b = S[y];
-+			S[x] = b;
-+			S[y] = a;
-+			x = (x + 1) & 0xff;
-+			*out = *in ^ S[(a + b) & 0xff];
-+
-+			in++;
-+			out++;
-+		}
-+		ret = blkcipher_walk_done(desc, &walk, 0);
-+		WARN_ON(ret < 0);
++		/* Several PCIe massages to ensure proper behaviour */
++		if (ah->config.pcie_waen)
++			REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
 +	}
-+
-+	aiv->iv.x = x;
-+	aiv->iv.y = y;
-+	return ret;
 +}
 +
-+static struct crypto_alg arc4_alg = {
-+	.cra_name		=	"arc4",
-+	.cra_priority		=	100,
-+	.cra_flags		=	CRYPTO_ALG_TYPE_BLKCIPHER,
-+	.cra_blocksize		=	ARC4_BLOCK_SIZE,
-+	.cra_ctxsize		=	0,
-+	.cra_type		=	&crypto_blkcipher_type,
-+	.cra_alignmask		=	3,
-+	.cra_module		=	THIS_MODULE,
-+	.cra_list		=	LIST_HEAD_INIT(arc4_alg.cra_list),
-+	.cra_u			=	{ .blkcipher = {
-+	.min_keysize		=	0,
-+	.max_keysize		=	0,
-+	.ivsize			=	sizeof(struct arc4_iv),
-+	.setkey			=	arc4_set_key,
-+	.encrypt		=	arc4_crypt,
-+	.decrypt		=	arc4_crypt } }
-+};
-+
-+static int __init arc4_init(void)
-+{
-+	return crypto_register_alg(&arc4_alg);
-+}
-+
-+static void __exit arc4_exit(void)
-+{
-+	crypto_unregister_alg(&arc4_alg);
-+}
-+
-+module_init(arc4_init);
-+module_exit(arc4_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("ARC4 Cipher Algorithm");
-+MODULE_AUTHOR("Jon Oberheide <jon@oberheide.org>");
-+MODULE_ALIAS("arc4");
-diff --git a/crypto/testmgr.h b/crypto/testmgr.h
-index fb76517..423cf86 100644
---- a/crypto/testmgr.h
-+++ b/crypto/testmgr.h
-@@ -24,7 +24,8 @@
- #define MAX_TAP			8
+ /*******************/
+ /* Beacon Handling */
+ /*******************/
+@@ -3629,10 +3660,13 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
+ static void ar9003_hw_attach_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
  
- #define MAX_KEYLEN		56
--#define MAX_IVLEN		32
-+/* sizeof arc4_iv */
-+#define MAX_IVLEN		260
+ 	priv_ops->init_mode_regs = ar9003_hw_init_mode_regs;
+ 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
  
- struct hash_testvec {
- 	/* only used with keyed hash algorithms */
-diff --git a/include/crypto/arc4.h b/include/crypto/arc4.h
-new file mode 100644
-index 0000000..1423c92
---- /dev/null
-+++ b/include/crypto/arc4.h
-@@ -0,0 +1,26 @@
-+#ifndef __CRYPTO_ARC4_H__
-+#define __CRYPTO_ARC4_H__
++	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
 +
-+struct arc4_iv {
-+	union {
-+		struct arc4_key {
-+			u8 key[256];
-+			u16 key_len;
-+		} key;
-+		struct arc4_riv {
-+			u8 S[256];
-+			u8 x, y;
-+		} iv;
-+	};
-+#define ARC4_TYPE_KEY   0
-+#define ARC4_TYPE_IV    1
-+	u8 type;
-+};
-+
-+static inline void arc4_setup_iv(struct arc4_iv *iv, const u8 *key, u32 len)
-+{
-+	memcpy(iv->key.key, key, len);
-+	iv->key.key_len = len;
-+	iv->type = ARC4_TYPE_KEY;
-+}
-+#endif
+ 	ar9003_hw_attach_phy_ops(ah);
+ 	ar9003_hw_attach_calib_ops(ah);
+ 	ar9003_hw_attach_mac_ops(ah);
 -- 
-1.7.0.3
+1.6.3.3
 
