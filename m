@@ -1,56 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:53441 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756768Ab0DIUJk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 16:09:40 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:55072 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757083Ab0DODa6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Apr 2010 23:30:58 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 11/12] iwlwifi: fix compiler warning
-Date: Fri,  9 Apr 2010 13:09:28 -0700
-Message-Id: <1270843769-30017-12-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1270843769-30017-1-git-send-email-reinette.chatre@intel.com>
-References: <1270843769-30017-1-git-send-email-reinette.chatre@intel.com>
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v2 22/97] ath9k_hw: Fill rx_enable() for the AR9003 hardware family
+Date: Wed, 14 Apr 2010 23:29:36 -0400
+Message-Id: <1271302251-9075-23-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Check return code on iwl_send_cmd_pdu() to get rid of compiler warning.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-sta.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/Makefile     |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   28 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +
+ drivers/net/wireless/ath/ath9k/hw.c         |    6 +++-
+ 4 files changed, 35 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mac.c
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 9b4d527..d86ecd2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -425,6 +425,7 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, bool is_ap)
- 		.reserved1 = 0,
- 	};
- 	u32 rate_flags;
-+	int ret = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index ecf3f8c..96af3d9 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -25,6 +25,7 @@ ath9k_hw-y:=	hw.o \
+ 		ani.o \
+ 		btcoex.o \
+ 		mac.o \
++		ar9003_mac.o
  
- 	/* Set up the rate scaling to start at selected rate, fall back
- 	 * all the way down to 1M in IEEE order, and then spin on 1M */
-@@ -458,8 +459,10 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, bool is_ap)
- 	/* Update the rate scaling for control frame Tx to AP */
- 	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_params.bcast_sta_id;
+ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
  
--	iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
-+	ret = iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
- 			       sizeof(link_cmd), &link_cmd);
-+	if (ret)
-+		IWL_ERR(priv, "REPLY_TX_LINK_QUALITY_CMD failed (%d)\n", ret);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+new file mode 100644
+index 0000000..ee84e64
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -0,0 +1,28 @@
++/*
++ * Copyright (c) 2010 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include "hw.h"
++
++static void ar9003_hw_rx_enable(struct ath_hw *hw)
++{
++	REG_WRITE(hw, AR_CR, 0);
++}
++
++void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
++{
++	struct ath_hw_ops *ops = ath9k_hw_ops(hw);
++
++	ops->rx_enable = ar9003_hw_rx_enable;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index dbf74eb..2a9d80e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -32,4 +32,6 @@ struct ar9003_rxs {
+ 	u32 status11;
+ } __packed;
+ 
++void ar9003_hw_attach_mac_ops(struct ath_hw *hw);
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0a4ccd8..0b89605 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1567,8 +1567,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (tsf && AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ 		ath9k_hw_settsf64(ah, tsf);
+ 
+-	ar9002_hw_attach_mac_ops(ah);
+-
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+ 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+ 
+@@ -3564,6 +3562,8 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
+ 	ar5008_hw_attach_phy_ops(ah);
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+ 		ar9002_hw_attach_phy_ops(ah);
++
++	ar9002_hw_attach_mac_ops(ah);
  }
  
- /*
+ /* Sets up the AR9003 hardware familiy callbacks */
+@@ -3574,4 +3574,6 @@ static void ar9003_hw_attach_ops(struct ath_hw *ah)
+ 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
+ 
+ 	ar9003_hw_attach_phy_ops(ah);
++
++	ar9003_hw_attach_mac_ops(ah);
+ }
 -- 
 1.6.3.3
 
