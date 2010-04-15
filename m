@@ -1,58 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:61201 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757505Ab0DIKMi (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33023 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757434Ab0DOVjr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 06:12:38 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+	Thu, 15 Apr 2010 17:39:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
-	<ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH] mac80211: check whether scan is in progress before queueing scan_work
-Date: Fri,  9 Apr 2010 13:07:55 +0300
-Message-Id: <1270807675-8597-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 89/97] ath9k: Initialize and configure tx status for EDMA
+Date: Thu, 15 Apr 2010 17:39:34 -0400
+Message-Id: <1271367582-992-90-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Paasikivi Teemu.3 (EXT-Ixonos/Tampere) <ext-teemu.3.paasikivi@nokia.com>
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-As scan_work is queued from work_work it needs to be checked if scan
-has been started during execution of work_work. Otherwise, when hw
-scan is used, the stack gets error about hw being busy with ongoing
-scan. This causes the stack to abort scan without notifying the driver
-about it. This leads to a situation where the hw is scanning and the stack
-thinks it's not. Then when the scan finishes, the stack will complain by
-warnings.
+Also add a function to clean up tx status ring.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- net/mac80211/work.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    6 +++-
+ drivers/net/wireless/ath/ath9k/hw.c    |    1 +
+ drivers/net/wireless/ath/ath9k/hw.h    |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c  |   46 +++++++++++++++++++++++++++++++-
+ 4 files changed, 52 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 1e1ea30..7bd8670 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -919,11 +919,16 @@ static void ieee80211_work_work(struct work_struct *work)
- 		run_again(local, jiffies + HZ/2);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index f67be52..2d3e42a 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -114,8 +114,10 @@ enum buffer_type {
+ #define bf_isretried(bf)	(bf->bf_state.bf_type & BUF_RETRY)
+ #define bf_isxretried(bf)	(bf->bf_state.bf_type & BUF_XRETRY)
+ 
++#define ATH_TXSTATUS_RING_SIZE 64
++
+ struct ath_descdma {
+-	struct ath_desc *dd_desc;
++	void *dd_desc;
+ 	dma_addr_t dd_desc_paddr;
+ 	u32 dd_desc_len;
+ 	struct ath_buf *dd_bufptr;
+@@ -515,6 +517,8 @@ struct ath_softc {
+ 	struct ath_beacon_config cur_beacon_conf;
+ 	struct delayed_work tx_complete_work;
+ 	struct ath_btcoex btcoex;
++
++	struct ath_descdma txsdma;
+ };
+ 
+ struct ath_wiphy {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1f06ac0..4092090 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2094,6 +2094,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
+ 		pCap->rx_status_len = sizeof(struct ar9003_rxs);
+ 		pCap->tx_desc_len = sizeof(struct ar9003_txc);
++		pCap->txs_len = sizeof(struct ar9003_txs);
+ 	} else {
+ 		pCap->tx_desc_len = sizeof(struct ath_desc);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b711ec2..9d3796a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -209,6 +209,7 @@ struct ath9k_hw_capabilities {
+ 	u8 rx_lp_qdepth;
+ 	u8 rx_status_len;
+ 	u8 tx_desc_len;
++	u8 txs_len;
+ };
+ 
+ struct ath9k_ops_config {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index c32da05..f9f7445 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2144,6 +2144,41 @@ void ath_tx_tasklet(struct ath_softc *sc)
+ /* Init, Cleanup */
+ /*****************/
+ 
++static int ath_txstatus_setup(struct ath_softc *sc, int size)
++{
++	struct ath_descdma *dd = &sc->txsdma;
++	u8 txs_len = sc->sc_ah->caps.txs_len;
++
++	dd->dd_desc_len = size * txs_len;
++	dd->dd_desc = dma_alloc_coherent(sc->dev, dd->dd_desc_len,
++					 &dd->dd_desc_paddr, GFP_KERNEL);
++	if (!dd->dd_desc)
++		return -ENOMEM;
++
++	return 0;
++}
++
++static int ath_tx_edma_init(struct ath_softc *sc)
++{
++	int err;
++
++	err = ath_txstatus_setup(sc, ATH_TXSTATUS_RING_SIZE);
++	if (!err)
++		ath9k_hw_setup_statusring(sc->sc_ah, sc->txsdma.dd_desc,
++					  sc->txsdma.dd_desc_paddr,
++					  ATH_TXSTATUS_RING_SIZE);
++
++	return err;
++}
++
++static void ath_tx_edma_cleanup(struct ath_softc *sc)
++{
++	struct ath_descdma *dd = &sc->txsdma;
++
++	dma_free_coherent(sc->dev, dd->dd_desc_len, dd->dd_desc,
++			  dd->dd_desc_paddr);
++}
++
+ int ath_tx_init(struct ath_softc *sc, int nbufs)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+@@ -2160,7 +2195,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
  	}
  
--	if (list_empty(&local->work_list) && local->scan_req)
-+	mutex_lock(&local->scan_mtx);
-+
-+	if (list_empty(&local->work_list) && local->scan_req &&
-+	    !local->scanning)
- 		ieee80211_queue_delayed_work(&local->hw,
- 					     &local->scan_work,
- 					     round_jiffies_relative(0));
+ 	error = ath_descdma_setup(sc, &sc->beacon.bdma, &sc->beacon.bbuf,
+-				  "beacon", ATH_BCBUF, 1, 0);
++				  "beacon", ATH_BCBUF, 1, 1);
+ 	if (error != 0) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Failed to allocate beacon descriptors: %d\n", error);
+@@ -2169,6 +2204,12 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
  
-+	mutex_unlock(&local->scan_mtx);
-+
- 	mutex_unlock(&local->work_mtx);
+ 	INIT_DELAYED_WORK(&sc->tx_complete_work, ath_tx_complete_poll_work);
  
- 	ieee80211_recalc_idle(local);
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
++		error = ath_tx_edma_init(sc);
++		if (error)
++			goto err;
++	}
++
+ err:
+ 	if (error != 0)
+ 		ath_tx_cleanup(sc);
+@@ -2183,6 +2224,9 @@ void ath_tx_cleanup(struct ath_softc *sc)
+ 
+ 	if (sc->tx.txdma.dd_desc_len != 0)
+ 		ath_descdma_cleanup(sc, &sc->tx.txdma, &sc->tx.txbuf);
++
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
++		ath_tx_edma_cleanup(sc);
+ }
+ 
+ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
 -- 
-1.5.6.3
+1.6.3.3
 
