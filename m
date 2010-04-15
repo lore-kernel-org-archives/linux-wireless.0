@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f193.google.com ([209.85.222.193]:54233 "EHLO
-	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757679Ab0DFXdO (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58135 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751403Ab0DPAZb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 19:33:14 -0400
-Received: by pzk31 with SMTP id 31so507283pzk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 16:33:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1270586624-11410-1-git-send-email-hauke@hauke-m.de>
-References: <1270586624-11410-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 6 Apr 2010 16:32:54 -0700
-Message-ID: <r2j43e72e891004061632jafedafday1635a515a13b501b@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: use wireless_handlers for wext
-	functions.
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	michael-dev@fami-braun.de
-Content-Type: text/plain; charset=UTF-8
+	Thu, 15 Apr 2010 20:25:31 -0400
+Date: Thu, 15 Apr 2010 17:22:05 -0400
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Ben Gamari <bgamari.foss@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k@venema.h4ckr.net, Herbert Xu <herbert@gondor.hengli.com.au>
+Subject: Re: Lockup inside of stop_machine() during modprobe aes (was Re:
+ Another AR5008 hang)
+Message-Id: <20100415172205.c1e57636.akpm@linux-foundation.org>
+In-Reply-To: <4bbb7896.48c3f10a.30b9.365b@mx.google.com>
+References: <4bb0e2da.04c2f10a.32b2.11ae@mx.google.com>
+	<1269928986.3927.5.camel@jlt3.sipsolutions.net>
+	<4bb1f940.47c2f10a.3469.609b@mx.google.com>
+	<4bb235fb.0baa660a.5b56.ffffa9c2@mx.google.com>
+	<4bbb7896.48c3f10a.30b9.365b@mx.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 6, 2010 at 1:43 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> The struct wiphy changes in kernel versions so old kernels compiled with
-> a different version of struct wiphy than compat-wireless are unable to
-> dereference the pointer to the functions in cfg80211_wext_handler
-> correctly. This causes oops on kernel >= 2.6.33 when using wext with
-> cfg80211.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On Tue, 06 Apr 2010 11:08:22 -0700 (PDT) Ben Gamari <bgamari.foss@gmail.com> wrote:
 
-thanks applied
+> 
+> ...
+>
+> I just built 2.6.34-rc3 with the appropriate fixes for the ACPI thermal lockdep
+> issues and have attached the dmesg output of the crash below. It appears that
+> modprobe is freezing with a few locks held while inserting aes.ko. In
+> particular, it seems that the kernel is deadlocking inside of stop_machine()
+> while flushing workqueues.
+> 
+> ...
+>
+
+My guess would be that ieee80211 is calling crypto->request_module()
+under rtnl_lock, and the fact that rtnl_lock is held is causing
+modprobe->stop_machine to not complete.
+
+> P.S. I am now quite certain that I was mistaken in saying that 2.6.33 was
+> affected. This seems to just be a 2.6.34 issue.
+
+OK, thanks, I'll ask Rafael and Maciej to track this as a post-2.6.33
+regression, probably wireless.
+
