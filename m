@@ -1,15 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60934 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:32817 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757240Ab0DOVjm (ORCPT
+	with ESMTP id S1757315Ab0DOVjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:42 -0400
+	Thu, 15 Apr 2010 17:39:44 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 05/97] ath9k_hw: add simple register abstraction for some AR9300 registers
-Date: Thu, 15 Apr 2010 17:38:10 -0400
-Message-Id: <1271367582-992-6-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 44/97] ath9k_hw: Split out the function for reading the noise floor
+Date: Thu, 15 Apr 2010 17:38:49 -0400
+Message-Id: <1271367582-992-45-git-send-email-lrodriguez@atheros.com>
 In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -18,130 +19,454 @@ List-ID: <linux-wireless.vger.kernel.org>
 From: Felix Fietkau <nbd@openwrt.org>
 
 Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/reg.h |   42 +++++++++++++++++-----------------
- 1 files changed, 21 insertions(+), 21 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |   50 ++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c |   53 +++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |  110 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/calib.c      |   90 +---------------------
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |    6 ++
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +
+ drivers/net/wireless/ath/ath9k/hw.h         |   12 +++
+ 7 files changed, 235 insertions(+), 89 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index c1e58da..d56b4ea 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -20,7 +20,7 @@
- #include "../reg.h"
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index dddca59..bd3792c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1198,6 +1198,55 @@ static bool ar5008_hw_ani_control(struct ath_hw *ah,
+ 	return true;
+ }
  
- #define AR_CR                0x0008
--#define AR_CR_RXE            0x00000004
-+#define AR_CR_RXE            (AR_SREV_9300_20_OR_LATER(ah) ? 0x0000000c : 0x00000004)
- #define AR_CR_RXD            0x00000020
- #define AR_CR_SWI            0x00000040
++static void ar5008_hw_do_getnf(struct ath_hw *ah,
++			      int16_t nfarray[NUM_NF_READINGS])
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	int16_t nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CCA), AR_PHY_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
++	nfarray[0] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CH1_CCA), AR_PHY_CH1_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ctl] [chain 1] is %d\n", nf);
++	nfarray[1] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CH2_CCA), AR_PHY_CH2_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ctl] [chain 2] is %d\n", nf);
++	nfarray[2] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR_PHY_EXT_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ext] [chain 0] is %d\n", nf);
++	nfarray[3] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA), AR_PHY_CH1_EXT_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ext] [chain 1] is %d\n", nf);
++	nfarray[4] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA), AR_PHY_CH2_EXT_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ext] [chain 2] is %d\n", nf);
++	nfarray[5] = nf;
++}
++
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -1220,6 +1269,7 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
+ 	priv_ops->set_diversity = ar5008_set_diversity;
+ 	priv_ops->ani_control = ar5008_hw_ani_control;
++	priv_ops->do_getnf = ar5008_hw_do_getnf;
  
-@@ -232,7 +232,6 @@
- #define AR_ISR_S5_TIMER_THRESH      0x0007FE00
- #define AR_ISR_S5_TIM_TIMER         0x00000010
- #define AR_ISR_S5_DTIM_TIMER        0x00000020
--#define AR_ISR_S5_S                 0x00d8
- #define AR_IMR_S5                   0x00b8
- #define AR_IMR_S5_TIM_TIMER         0x00000010
- #define AR_IMR_S5_DTIM_TIMER        0x00000020
-@@ -240,7 +239,6 @@
- #define AR_ISR_S5_GENTIMER_TRIG_S   0
- #define AR_ISR_S5_GENTIMER_THRESH   0xFF800000
- #define AR_ISR_S5_GENTIMER_THRESH_S 16
--#define AR_ISR_S5_S                 0x00d8
- #define AR_IMR_S5_GENTIMER_TRIG     0x0000FF80
- #define AR_IMR_S5_GENTIMER_TRIG_S   0
- #define AR_IMR_S5_GENTIMER_THRESH   0xFF800000
-@@ -332,10 +330,10 @@
- #define AR_ISR_S1_QCU_TXEOL    0x03FF0000
- #define AR_ISR_S1_QCU_TXEOL_S  16
+ 	if (AR_SREV_9100(ah))
+ 		priv_ops->compute_pll_control = ar9100_hw_compute_pll_control;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index 1f8ac0a..a0a2f58 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -467,6 +467,58 @@ static u32 ar9002_hw_compute_pll_control(struct ath_hw *ah,
+ 	return pll;
+ }
  
--#define AR_ISR_S2_S           0x00cc
--#define AR_ISR_S3_S           0x00d0
--#define AR_ISR_S4_S           0x00d4
--#define AR_ISR_S5_S           0x00d8
-+#define AR_ISR_S2_S           (AR_SREV_9300_20_OR_LATER(ah) ? 0x00d0 : 0x00cc)
-+#define AR_ISR_S3_S           (AR_SREV_9300_20_OR_LATER(ah) ? 0x00d4 : 0x00d0)
-+#define AR_ISR_S4_S           (AR_SREV_9300_20_OR_LATER(ah) ? 0x00d8 : 0x00d4)
-+#define AR_ISR_S5_S           (AR_SREV_9300_20_OR_LATER(ah) ? 0x00dc : 0x00d8)
- #define AR_DMADBG_0           0x00e0
- #define AR_DMADBG_1           0x00e4
- #define AR_DMADBG_2           0x00e8
-@@ -968,19 +966,21 @@ enum {
- #define AR9287_GPIO_IN_VAL_S                     11
- #define AR9271_GPIO_IN_VAL                       0xFFFF0000
- #define AR9271_GPIO_IN_VAL_S                     16
-+#define AR9300_GPIO_IN_VAL                       0x0001FFFF
-+#define AR9300_GPIO_IN_VAL_S                     0
++static void ar9002_hw_do_getnf(struct ath_hw *ah,
++			      int16_t nfarray[NUM_NF_READINGS])
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	int16_t nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CCA), AR9280_PHY_MINCCA_PWR);
++
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
++
++	if (AR_SREV_9271(ah) && (nf >= -114))
++		nf = -116;
++
++	nfarray[0] = nf;
++
++	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
++		nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
++				AR9280_PHY_CH1_MINCCA_PWR);
++
++		if (nf & 0x100)
++			nf = 0 - ((nf ^ 0x1ff) + 1);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "NF calibrated [ctl] [chain 1] is %d\n", nf);
++		nfarray[1] = nf;
++	}
++
++	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR9280_PHY_EXT_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ext] [chain 0] is %d\n", nf);
++
++	if (AR_SREV_9271(ah) && (nf >= -114))
++		nf = -116;
++
++	nfarray[3] = nf;
++
++	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
++		nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
++				AR9280_PHY_CH1_EXT_MINCCA_PWR);
++
++		if (nf & 0x100)
++			nf = 0 - ((nf ^ 0x1ff) + 1);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "NF calibrated [ext] [chain 1] is %d\n", nf);
++		nfarray[4] = nf;
++	}
++}
++
+ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -478,4 +530,5 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->spur_mitigate_freq = ar9002_hw_spur_mitigate;
+ 	priv_ops->olc_init = ar9002_olc_init;
+ 	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
++	priv_ops->do_getnf = ar9002_hw_do_getnf;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index c938b85..67b3b65 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -705,6 +705,115 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
+ 	return true;
+ }
  
--#define AR_GPIO_OE_OUT                           0x404c
-+#define AR_GPIO_OE_OUT                           (AR_SREV_9300_20_OR_LATER(ah) ? 0x4050 : 0x404c)
- #define AR_GPIO_OE_OUT_DRV                       0x3
- #define AR_GPIO_OE_OUT_DRV_NO                    0x0
- #define AR_GPIO_OE_OUT_DRV_LOW                   0x1
- #define AR_GPIO_OE_OUT_DRV_HI                    0x2
- #define AR_GPIO_OE_OUT_DRV_ALL                   0x3
++static void ar9003_hw_nf_sanitize_2g(struct ath_hw *ah, s16 *nf)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (*nf > ah->nf_2g_max) {
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "2 GHz NF (%d) > MAX (%d), "
++			  "correcting to MAX",
++			  *nf, ah->nf_2g_max);
++		*nf = ah->nf_2g_max;
++	} else if (*nf < ah->nf_2g_min) {
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "2 GHz NF (%d) < MIN (%d), "
++			  "correcting to MIN",
++			  *nf, ah->nf_2g_min);
++		*nf = ah->nf_2g_min;
++	}
++}
++
++static void ar9003_hw_nf_sanitize_5g(struct ath_hw *ah, s16 *nf)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (*nf > ah->nf_5g_max) {
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "5 GHz NF (%d) > MAX (%d), "
++			  "correcting to MAX",
++			  *nf, ah->nf_5g_max);
++		*nf = ah->nf_5g_max;
++	} else if (*nf < ah->nf_5g_min) {
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "5 GHz NF (%d) < MIN (%d), "
++			  "correcting to MIN",
++			  *nf, ah->nf_5g_min);
++		*nf = ah->nf_5g_min;
++	}
++}
++
++static void ar9003_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
++{
++	if (IS_CHAN_2GHZ(ah->curchan))
++		ar9003_hw_nf_sanitize_2g(ah, nf);
++	else
++		ar9003_hw_nf_sanitize_5g(ah, nf);
++}
++
++static void ar9003_hw_do_getnf(struct ath_hw *ah,
++			      int16_t nfarray[NUM_NF_READINGS])
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	int16_t nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CCA_0), AR_PHY_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ar9003_hw_nf_sanitize(ah, &nf);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
++	nfarray[0] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CCA_1), AR_PHY_CH1_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ar9003_hw_nf_sanitize(ah, &nf);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ctl] [chain 1] is %d\n", nf);
++	nfarray[1] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_CCA_2), AR_PHY_CH2_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ar9003_hw_nf_sanitize(ah, &nf);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ctl] [chain 2] is %d\n", nf);
++	nfarray[2] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR_PHY_EXT_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ar9003_hw_nf_sanitize(ah, &nf);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ext] [chain 0] is %d\n", nf);
++	nfarray[3] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA_1), AR_PHY_CH1_EXT_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ar9003_hw_nf_sanitize(ah, &nf);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ext] [chain 1] is %d\n", nf);
++	nfarray[4] = nf;
++
++	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA_2), AR_PHY_CH2_EXT_MINCCA_PWR);
++	if (nf & 0x100)
++		nf = 0 - ((nf ^ 0x1ff) + 1);
++	ar9003_hw_nf_sanitize(ah, &nf);
++	ath_print(common, ATH_DBG_CALIBRATE,
++		  "NF calibrated [ext] [chain 2] is %d\n", nf);
++	nfarray[5] = nf;
++}
++
++void ar9003_hw_set_nf_limits(struct ath_hw *ah)
++{
++	ah->nf_2g_max = AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ;
++	ah->nf_2g_min = AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ;
++	ah->nf_5g_max = AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ;
++	ah->nf_5g_min = AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ;
++}
++
+ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -723,4 +832,5 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->enable_rfkill = ar9003_hw_enable_rfkill;
+ 	priv_ops->set_diversity = ar9003_hw_set_diversity;
+ 	priv_ops->ani_control = ar9003_hw_ani_control;
++	priv_ops->do_getnf = ar9003_hw_do_getnf;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index eba85ad..eed2c76 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -15,6 +15,7 @@
+  */
  
--#define AR_GPIO_INTR_POL                         0x4050
--#define AR_GPIO_INTR_POL_VAL                     0x00001FFF
-+#define AR_GPIO_INTR_POL                         (AR_SREV_9300_20_OR_LATER(ah) ? 0x4058 : 0x4050)
-+#define AR_GPIO_INTR_POL_VAL                     0x0001FFFF
- #define AR_GPIO_INTR_POL_VAL_S                   0
+ #include "hw.h"
++#include "hw-ops.h"
+ #include "ar9002_phy.h"
  
--#define AR_GPIO_INPUT_EN_VAL                     0x4054
-+#define AR_GPIO_INPUT_EN_VAL                     (AR_SREV_9300_20_OR_LATER(ah) ? 0x405c : 0x4054)
- #define AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_DEF     0x00000004
- #define AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_S       2
- #define AR_GPIO_INPUT_EN_VAL_BT_FREQUENCY_DEF    0x00000008
-@@ -998,13 +998,13 @@ enum {
- #define AR_GPIO_RTC_RESET_OVERRIDE_ENABLE        0x00010000
- #define AR_GPIO_JTAG_DISABLE                     0x00020000
+ /* We can tune this as we go by monitoring really low values */
+@@ -88,95 +89,6 @@ static void ath9k_hw_update_nfcal_hist_buffer(struct ath9k_nfcal_hist *h,
+ 	return;
+ }
  
--#define AR_GPIO_INPUT_MUX1                       0x4058
-+#define AR_GPIO_INPUT_MUX1                       (AR_SREV_9300_20_OR_LATER(ah) ? 0x4060 : 0x4058)
- #define AR_GPIO_INPUT_MUX1_BT_ACTIVE             0x000f0000
- #define AR_GPIO_INPUT_MUX1_BT_ACTIVE_S           16
- #define AR_GPIO_INPUT_MUX1_BT_PRIORITY           0x00000f00
- #define AR_GPIO_INPUT_MUX1_BT_PRIORITY_S         8
+-static void ath9k_hw_do_getnf(struct ath_hw *ah,
+-			      int16_t nfarray[NUM_NF_READINGS])
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	int16_t nf;
+-
+-	if (AR_SREV_9280_10_OR_LATER(ah))
+-		nf = MS(REG_READ(ah, AR_PHY_CCA), AR9280_PHY_MINCCA_PWR);
+-	else
+-		nf = MS(REG_READ(ah, AR_PHY_CCA), AR_PHY_MINCCA_PWR);
+-
+-	if (nf & 0x100)
+-		nf = 0 - ((nf ^ 0x1ff) + 1);
+-	ath_print(common, ATH_DBG_CALIBRATE,
+-		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
+-
+-	if (AR_SREV_9271(ah) && (nf >= -114))
+-		nf = -116;
+-
+-	nfarray[0] = nf;
+-
+-	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
+-		if (AR_SREV_9280_10_OR_LATER(ah))
+-			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
+-					AR9280_PHY_CH1_MINCCA_PWR);
+-		else
+-			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
+-					AR_PHY_CH1_MINCCA_PWR);
+-
+-		if (nf & 0x100)
+-			nf = 0 - ((nf ^ 0x1ff) + 1);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "NF calibrated [ctl] [chain 1] is %d\n", nf);
+-		nfarray[1] = nf;
+-
+-		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
+-			nf = MS(REG_READ(ah, AR_PHY_CH2_CCA),
+-					AR_PHY_CH2_MINCCA_PWR);
+-			if (nf & 0x100)
+-				nf = 0 - ((nf ^ 0x1ff) + 1);
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "NF calibrated [ctl] [chain 2] is %d\n", nf);
+-			nfarray[2] = nf;
+-		}
+-	}
+-
+-	if (AR_SREV_9280_10_OR_LATER(ah))
+-		nf = MS(REG_READ(ah, AR_PHY_EXT_CCA),
+-			AR9280_PHY_EXT_MINCCA_PWR);
+-	else
+-		nf = MS(REG_READ(ah, AR_PHY_EXT_CCA),
+-			AR_PHY_EXT_MINCCA_PWR);
+-
+-	if (nf & 0x100)
+-		nf = 0 - ((nf ^ 0x1ff) + 1);
+-	ath_print(common, ATH_DBG_CALIBRATE,
+-		  "NF calibrated [ext] [chain 0] is %d\n", nf);
+-
+-	if (AR_SREV_9271(ah) && (nf >= -114))
+-		nf = -116;
+-
+-	nfarray[3] = nf;
+-
+-	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
+-		if (AR_SREV_9280_10_OR_LATER(ah))
+-			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
+-					AR9280_PHY_CH1_EXT_MINCCA_PWR);
+-		else
+-			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
+-					AR_PHY_CH1_EXT_MINCCA_PWR);
+-
+-		if (nf & 0x100)
+-			nf = 0 - ((nf ^ 0x1ff) + 1);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "NF calibrated [ext] [chain 1] is %d\n", nf);
+-		nfarray[4] = nf;
+-
+-		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
+-			nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA),
+-					AR_PHY_CH2_EXT_MINCCA_PWR);
+-			if (nf & 0x100)
+-				nf = 0 - ((nf ^ 0x1ff) + 1);
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "NF calibrated [ext] [chain 2] is %d\n", nf);
+-			nfarray[5] = nf;
+-		}
+-	}
+-}
+-
+ static bool getNoiseFloorThresh(struct ath_hw *ah,
+ 				enum ieee80211_band band,
+ 				int16_t *nft)
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index a770107..e2b8ad4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -163,4 +163,10 @@ static inline bool ath9k_hw_ani_control(struct ath_hw *ah,
+ 	return ath9k_hw_private_ops(ah)->ani_control(ah, cmd, param);
+ }
  
--#define AR_GPIO_INPUT_MUX2                       0x405c
-+#define AR_GPIO_INPUT_MUX2                       (AR_SREV_9300_20_OR_LATER(ah) ? 0x4064 : 0x405c)
- #define AR_GPIO_INPUT_MUX2_CLK25                 0x0000000f
- #define AR_GPIO_INPUT_MUX2_CLK25_S               0
- #define AR_GPIO_INPUT_MUX2_RFSILENT              0x000000f0
-@@ -1012,13 +1012,13 @@ enum {
- #define AR_GPIO_INPUT_MUX2_RTC_RESET             0x00000f00
- #define AR_GPIO_INPUT_MUX2_RTC_RESET_S           8
++static inline void ath9k_hw_do_getnf(struct ath_hw *ah,
++				     int16_t nfarray[NUM_NF_READINGS])
++{
++	return ath9k_hw_private_ops(ah)->do_getnf(ah, nfarray);
++}
++
+ #endif /* ATH9K_HW_OPS_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index aa80d43..2dcfaa9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1072,6 +1072,9 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	else
+ 		ah->tx_trig_level = (AR_FTRIG_512B >> AR_FTRIG_S);
  
--#define AR_GPIO_OUTPUT_MUX1                      0x4060
--#define AR_GPIO_OUTPUT_MUX2                      0x4064
--#define AR_GPIO_OUTPUT_MUX3                      0x4068
-+#define AR_GPIO_OUTPUT_MUX1                      (AR_SREV_9300_20_OR_LATER(ah) ? 0x4068 : 0x4060)
-+#define AR_GPIO_OUTPUT_MUX2                      (AR_SREV_9300_20_OR_LATER(ah) ? 0x406c : 0x4064)
-+#define AR_GPIO_OUTPUT_MUX3                      (AR_SREV_9300_20_OR_LATER(ah) ? 0x4070 : 0x4068)
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		ar9003_hw_set_nf_limits(ah);
++
+ 	ath9k_init_nfcal_hist_buffer(ah);
  
--#define AR_INPUT_STATE                           0x406c
-+#define AR_INPUT_STATE                           (AR_SREV_9300_20_OR_LATER(ah) ? 0x4074 : 0x406c)
+ 	common->state = ATH_HW_INITIALIZED;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1eceda2..7889ecb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -513,6 +513,7 @@ struct ath_hw_private_ops {
+ 				   struct ath9k_channel *chan);
+ 	bool (*ani_control)(struct ath_hw *ah, enum ath9k_ani_cmd cmd,
+ 			    int param);
++	void (*do_getnf)(struct ath_hw *ah, int16_t nfarray[NUM_NF_READINGS]);
+ };
  
--#define AR_EEPROM_STATUS_DATA                    0x407c
-+#define AR_EEPROM_STATUS_DATA                    (AR_SREV_9300_20_OR_LATER(ah) ? 0x4084 : 0x407c)
- #define AR_EEPROM_STATUS_DATA_VAL                0x0000ffff
- #define AR_EEPROM_STATUS_DATA_VAL_S              0
- #define AR_EEPROM_STATUS_DATA_BUSY               0x00010000
-@@ -1026,11 +1026,11 @@ enum {
- #define AR_EEPROM_STATUS_DATA_PROT_ACCESS        0x00040000
- #define AR_EEPROM_STATUS_DATA_ABSENT_ACCESS      0x00080000
+ /**
+@@ -553,6 +554,10 @@ struct ath_hw {
+ 	bool is_pciexpress;
+ 	bool need_an_top2_fixup;
+ 	u16 tx_trig_level;
++	s16 nf_2g_max;
++	s16 nf_2g_min;
++	s16 nf_5g_max;
++	s16 nf_5g_min;
+ 	u16 rfsilent;
+ 	u32 rfkill_gpio;
+ 	u32 rfkill_polarity;
+@@ -818,6 +823,13 @@ void ath9k_hw_htc_resetinit(struct ath_hw *ah);
+ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+ 				   u32 *coef_mantissa, u32 *coef_exponent);
  
--#define AR_OBS                  0x4080
-+#define AR_OBS                  (AR_SREV_9300_20_OR_LATER(ah) ? 0x4088 : 0x4080)
- 
--#define AR_GPIO_PDPU                             0x4088
-+#define AR_GPIO_PDPU                             (AR_SREV_9300_20_OR_LATER(ah) ? 0x4090 : 0x4088)
- 
--#define AR_PCIE_MSI                              0x4094
-+#define AR_PCIE_MSI                              (AR_SREV_9300_20_OR_LATER(ah) ? 0x40a4 : 0x4094)
- #define AR_PCIE_MSI_ENABLE                       0x00000001
- 
- 
++/*
++ * Code specifric to AR9003, we stuff these here to avoid callbacks
++ * for older families
++ */
++void ar9003_hw_set_nf_limits(struct ath_hw *ah);
++
++/* Hardware family op attach helpers */
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah);
+ void ar9002_hw_attach_phy_ops(struct ath_hw *ah);
+ void ar9003_hw_attach_phy_ops(struct ath_hw *ah);
 -- 
 1.6.3.3
 
