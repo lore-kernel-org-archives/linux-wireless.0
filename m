@@ -1,52 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65017 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755438Ab0DWE6k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 00:58:40 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:40 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19409.10474.575134.11678@gargle.gargle.HOWL>
-Date: Fri, 23 Apr 2010 10:28:18 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/11] ath9k_htc: Increase WMI timeout value
+Received: from bombadil.infradead.org ([18.85.46.34]:54759 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756781Ab0DODax (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Apr 2010 23:30:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 29/97] ath9k_hw: Implement PLL control on AR9003
+Date: Wed, 14 Apr 2010 23:29:43 -0400
+Message-Id: <1271302251-9075-30-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Completion of WMI commands take a longer time
-on some platforms. Increase the timeout value
-to handle this.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/wmi.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   23 +++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/reg.h        |    6 ++++++
+ 2 files changed, 27 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 167e15c..765db5f 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -126,14 +126,14 @@ void ath9k_wmi_tasklet(unsigned long data);
- 	do {								\
- 		ret = ath9k_wmi_cmd(priv->wmi, _wmi_cmd, NULL, 0,	\
- 				    (u8 *) &cmd_rsp,			\
--				    sizeof(cmd_rsp), HZ);		\
-+				    sizeof(cmd_rsp), HZ*2);		\
- 	} while (0)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index f1632ab..9767265 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -112,8 +112,27 @@ static void ar9003_hw_spur_mitigate(struct ath_hw *ah,
+ static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
+ 					 struct ath9k_channel *chan)
+ {
+-	/* TODO */
+-	return 0;
++	u32 pll;
++
++	pll = SM(0x5, AR_RTC_9300_PLL_REFDIV);
++
++	if (chan && IS_CHAN_HALF_RATE(chan))
++		pll |= SM(0x1, AR_RTC_9300_PLL_CLKSEL);
++	else if (chan && IS_CHAN_QUARTER_RATE(chan))
++		pll |= SM(0x2, AR_RTC_9300_PLL_CLKSEL);
++
++	if (chan && IS_CHAN_5GHZ(chan)) {
++		pll |= SM(0x28, AR_RTC_9300_PLL_DIV);
++
++		/*
++		 * When doing fast clock, set PLL to 0x142c
++		 */
++		if (IS_CHAN_A_5MHZ_SPACED(chan))
++			pll = 0x142c;
++	} else
++		pll |= SM(0x2c, AR_RTC_9300_PLL_DIV);
++
++	return pll;
+ }
  
- #define WMI_CMD_BUF(_wmi_cmd, _buf)					\
- 	do {								\
- 		ret = ath9k_wmi_cmd(priv->wmi, _wmi_cmd,		\
- 				    (u8 *) _buf, sizeof(*_buf),		\
--				    &cmd_rsp, sizeof(cmd_rsp), HZ);	\
-+				    &cmd_rsp, sizeof(cmd_rsp), HZ*2);	\
- 	} while (0)
+ static void ar9003_hw_set_channel_regs(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index bc48bc9..9d63286 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1040,6 +1040,12 @@ enum {
+ #define AR_PCIE_MSI                              (AR_SREV_9300_20_OR_LATER(ah) ? 0x40a4 : 0x4094)
+ #define AR_PCIE_MSI_ENABLE                       0x00000001
  
- #endif /* WMI_H */
++#define AR_RTC_9300_PLL_DIV          0x000003ff
++#define AR_RTC_9300_PLL_DIV_S        0
++#define AR_RTC_9300_PLL_REFDIV       0x00003C00
++#define AR_RTC_9300_PLL_REFDIV_S     10
++#define AR_RTC_9300_PLL_CLKSEL       0x0000C000
++#define AR_RTC_9300_PLL_CLKSEL_S     14
+ 
+ #define AR_RTC_9160_PLL_DIV	0x000003ff
+ #define AR_RTC_9160_PLL_DIV_S   0
 -- 
-1.7.0.5
+1.6.3.3
 
