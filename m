@@ -1,63 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50815 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548Ab0DLIKF (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:32882 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757340Ab0DOVjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 04:10:05 -0400
-Subject: Re: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to
- band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <201004121658.09189.br1@einfach.org>
-References: <20100412073658.28078.32155.stgit@tt-desk>
-	 <20100412073703.28078.90501.stgit@tt-desk>
-	 <1271058082.3877.3.camel@jlt3.sipsolutions.net>
-	 <201004121658.09189.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Apr 2010 10:10:01 +0200
-Message-ID: <1271059801.3877.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 15 Apr 2010 17:39:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 59/97] ath9k_hw: move the cck channel 14 INI to the AR9002 hw code
+Date: Thu, 15 Apr 2010 17:39:04 -0400
+Message-Id: <1271367582-992-60-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-12 at 16:58 +0900, Bruno Randolf wrote:
-> On Monday 12 April 2010 16:41:22 you wrote:
-> > On Mon, 2010-04-12 at 16:37 +0900, Bruno Randolf wrote:
-> > > When we create an IBSS we are can define the basic rates according to the
-> > > band in use. Previously only the B mode rates (1 and 2Mbps) were used
-> > > unconditionally, which resulted in low thruput when using RTS/CTS.
-> > > 
-> > > Also we should save the IBSS basic rates configuration when we join an
-> > > IBSS.
-> > 
-> > Again, this breaks things. If you feel this is necessary for some
-> > reason, it needs to be configurable during the IBSS join by userspace.
-> 
-> without the previous patch (which you NACKed) this is still the correct thing 
-> to do in B mode and will result in only 1Mbps as a basic rate. without this 
-> patch it is definetly wrong for A mode.
+This is specific to the AR9002 family only.
 
-No, you don't understand. It will break _talking to_ 11b only stations
-when the local station is 11g capable.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |   15 +++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c        |   11 ++---------
+ drivers/net/wireless/ath/ath9k/hw.h        |    2 ++
+ 3 files changed, 19 insertions(+), 9 deletions(-)
 
-> i can see the reason why you refused the first patch, but the main problem is 
-> that there is no clear distiction between B and G in mac80211. there needs to 
-> be a way to configure B-only, G-only and BG ERP mode. i don't believe this is 
-> applicable to IBSS mode only... is it?
-
-It is, as far as I can tell. And mesh maybe.
-
-> btw: why is only 1Mbps used as a basic rate in B mode in 
-> set_mandatory_flags_band()? i think 2Mbps should be there as well?
-
-Not sure, could be a bug?
-
-> anyhow, i wouldn't mind adding something to configure this from userspace. can 
-> you point me to the right direction? i mean i can add something to IBSS setup 
-> but as i said i can't believe this is only relevant to IBSS mode.
-
-What other modes do you think it is relevant to?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index aa52fd7..ff81efa 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -229,6 +229,21 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 	}
+ }
+ 
++/* Support for Japan ch.14 (2484) spread */
++void ar9002_hw_cck_chan14_spread(struct ath_hw *ah)
++{
++	if (AR_SREV_9287_11_OR_LATER(ah)) {
++		INIT_INI_ARRAY(&ah->iniCckfirNormal,
++		       ar9287Common_normal_cck_fir_coeff_92871_1,
++		       ARRAY_SIZE(ar9287Common_normal_cck_fir_coeff_92871_1),
++		       2);
++		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
++		       ar9287Common_japan_2484_cck_fir_coeff_92871_1,
++		       ARRAY_SIZE(ar9287Common_japan_2484_cck_fir_coeff_92871_1),
++		       2);
++	}
++}
++
+ /*
+  * Helper for ASPM support.
+  *
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 672c5ad..a43e587 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -713,15 +713,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	else
+ 		ath9k_hw_disablepcie(ah);
+ 
+-	/* Support for Japan ch.14 (2484) spread */
+-	if (AR_SREV_9287_11_OR_LATER(ah)) {
+-		INIT_INI_ARRAY(&ah->iniCckfirNormal,
+-		       ar9287Common_normal_cck_fir_coeff_92871_1,
+-		       ARRAY_SIZE(ar9287Common_normal_cck_fir_coeff_92871_1), 2);
+-		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+-		       ar9287Common_japan_2484_cck_fir_coeff_92871_1,
+-		       ARRAY_SIZE(ar9287Common_japan_2484_cck_fir_coeff_92871_1), 2);
+-	}
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		ar9002_hw_cck_chan14_spread(ah);
+ 
+ 	r = ath9k_hw_post_init(ah);
+ 	if (r)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9325095..56c5735 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -838,6 +838,8 @@ void ath9k_hw_htc_resetinit(struct ath_hw *ah);
+ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+ 				   u32 *coef_mantissa, u32 *coef_exponent);
+ 
++void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
++
+ /*
+  * Code specifric to AR9003, we stuff these here to avoid callbacks
+  * for older families
+-- 
+1.6.3.3
 
