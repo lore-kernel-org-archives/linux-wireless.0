@@ -1,861 +1,2303 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:34487 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051Ab0DSHfs (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54863 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756916Ab0DODaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 03:35:48 -0400
-Received: by wyb39 with SMTP id 39so2304576wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 00:35:46 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC 1/5] orinoco: add hermes_ops
-Date: Mon, 19 Apr 2010 08:35:18 +0100
-Message-Id: <1271662522-29119-2-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1271662522-29119-1-git-send-email-kilroyd@googlemail.com>
-References: <1271662522-29119-1-git-send-email-kilroyd@googlemail.com>
+	Wed, 14 Apr 2010 23:30:55 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 55/97] ath9k_hw: split calib code by hardware families
+Date: Wed, 14 Apr 2010 23:30:09 -0400
+Message-Id: <1271302251-9075-56-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pave the way for introducing USB alternative functions.
+Calibration code touches phy registers and since these
+change the calibration code needs to be abstracted.
 
-Force callers to dereference ops instead of providing wrappers.
+Noise floor calibration is the only thing remaining but
+since the remaining calls only touch the AR_PHY_AGC_CONTROL
+register we'll just define that register conditionally, that
+will be done separately. The goal is to remove the dependency
+of ar9002_phy.h on calib.c
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+This also adds stubs to be filled for AR9003 calibration code.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/orinoco/airport.c    |    2 +-
- drivers/net/wireless/orinoco/cfg.c        |    2 +-
- drivers/net/wireless/orinoco/fw.c         |    2 +-
- drivers/net/wireless/orinoco/hermes.c     |   52 ++++++++++--------
- drivers/net/wireless/orinoco/hermes.h     |   50 ++++++++++--------
- drivers/net/wireless/orinoco/hermes_dld.c |   34 ++++++------
- drivers/net/wireless/orinoco/hw.c         |   63 +++++++++++-----------
- drivers/net/wireless/orinoco/main.c       |   83 +++++++++++++++--------------
- drivers/net/wireless/orinoco/wext.c       |    6 +-
- 9 files changed, 154 insertions(+), 140 deletions(-)
+ drivers/net/wireless/ath/ath9k/Makefile       |    4 +-
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |  993 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   66 ++
+ drivers/net/wireless/ath/ath9k/calib.c        |  928 +-----------------------
+ drivers/net/wireless/ath/ath9k/calib.h        |   15 +-
+ drivers/net/wireless/ath/ath9k/hw-ops.h       |   28 +-
+ drivers/net/wireless/ath/ath9k/hw.c           |   34 +-
+ drivers/net/wireless/ath/ath9k/hw.h           |   21 +-
+ 8 files changed, 1118 insertions(+), 971 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_calib.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_calib.c
 
-diff --git a/drivers/net/wireless/orinoco/airport.c b/drivers/net/wireless/orinoco/airport.c
-index c60df2c..ea23c4f 100644
---- a/drivers/net/wireless/orinoco/airport.c
-+++ b/drivers/net/wireless/orinoco/airport.c
-@@ -195,7 +195,7 @@ airport_attach(struct macio_dev *mdev, const struct of_device_id *match)
- 	ssleep(1);
- 
- 	/* Reset it before we get the interrupt */
--	hermes_init(hw);
-+	hw->ops->init(hw);
- 
- 	if (request_irq(card->irq, orinoco_interrupt, 0, DRIVER_NAME, priv)) {
- 		printk(KERN_ERR PFX "Couldn't get IRQ %d\n", card->irq);
-diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
-index 90dd4d0..81d228d 100644
---- a/drivers/net/wireless/orinoco/cfg.c
-+++ b/drivers/net/wireless/orinoco/cfg.c
-@@ -189,7 +189,7 @@ static int orinoco_set_channel(struct wiphy *wiphy,
- 	if (priv->iw_mode == NL80211_IFTYPE_MONITOR) {
- 		/* Fast channel change - no commit if successful */
- 		hermes_t *hw = &priv->hw;
--		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
-+		err = hw->ops->cmd_wait(hw, HERMES_CMD_TEST |
- 					    HERMES_TEST_SET_CHANNEL,
- 					channel, NULL);
- 	}
-diff --git a/drivers/net/wireless/orinoco/fw.c b/drivers/net/wireless/orinoco/fw.c
-index 5ea0f7c..4c99240 100644
---- a/drivers/net/wireless/orinoco/fw.c
-+++ b/drivers/net/wireless/orinoco/fw.c
-@@ -260,7 +260,7 @@ symbol_dl_image(struct orinoco_private *priv, const struct fw_info *fw,
- 	}
- 
- 	/* Reset hermes chip and make sure it responds */
--	ret = hermes_init(hw);
-+	ret = hw->ops->init(hw);
- 
- 	/* hermes_reset() should return 0 with the secondary firmware */
- 	if (secondary && ret != 0)
-diff --git a/drivers/net/wireless/orinoco/hermes.c b/drivers/net/wireless/orinoco/hermes.c
-index 1a2fca7..a7df524 100644
---- a/drivers/net/wireless/orinoco/hermes.c
-+++ b/drivers/net/wireless/orinoco/hermes.c
-@@ -70,6 +70,7 @@
- 
- #endif /* ! HERMES_DEBUG */
- 
-+static const struct hermes_ops hermes_ops_local;
- 
- /*
-  * Internal functions
-@@ -111,9 +112,9 @@ static int hermes_issue_cmd(hermes_t *hw, u16 cmd, u16 param0,
-  */
- 
- /* For doing cmds that wipe the magic constant in SWSUPPORT0 */
--int hermes_doicmd_wait(hermes_t *hw, u16 cmd,
--		       u16 parm0, u16 parm1, u16 parm2,
--		       struct hermes_response *resp)
-+static int hermes_doicmd_wait(hermes_t *hw, u16 cmd,
-+			      u16 parm0, u16 parm1, u16 parm2,
-+			      struct hermes_response *resp)
- {
- 	int err = 0;
- 	int k;
-@@ -163,17 +164,17 @@ int hermes_doicmd_wait(hermes_t *hw, u16 cmd,
- out:
- 	return err;
- }
--EXPORT_SYMBOL(hermes_doicmd_wait);
- 
- void hermes_struct_init(hermes_t *hw, void __iomem *address, int reg_spacing)
- {
- 	hw->iobase = address;
- 	hw->reg_spacing = reg_spacing;
- 	hw->inten = 0x0;
-+	hw->ops = &hermes_ops_local;
- }
- EXPORT_SYMBOL(hermes_struct_init);
- 
--int hermes_init(hermes_t *hw)
-+static int hermes_init(hermes_t *hw)
- {
- 	u16 reg;
- 	int err = 0;
-@@ -217,7 +218,6 @@ int hermes_init(hermes_t *hw)
- 
- 	return err;
- }
--EXPORT_SYMBOL(hermes_init);
- 
- /* Issue a command to the chip, and (busy!) wait for it to
-  * complete.
-@@ -228,8 +228,8 @@ EXPORT_SYMBOL(hermes_init);
-  *     > 0 on error returned by the firmware
-  *
-  * Callable from any context, but locking is your problem. */
--int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
--		      struct hermes_response *resp)
-+static int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
-+			     struct hermes_response *resp)
- {
- 	int err;
- 	int k;
-@@ -291,9 +291,8 @@ int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
-  out:
- 	return err;
- }
--EXPORT_SYMBOL(hermes_docmd_wait);
- 
--int hermes_allocate(hermes_t *hw, u16 size, u16 *fid)
-+static int hermes_allocate(hermes_t *hw, u16 size, u16 *fid)
- {
- 	int err = 0;
- 	int k;
-@@ -333,7 +332,6 @@ int hermes_allocate(hermes_t *hw, u16 size, u16 *fid)
- 
- 	return 0;
- }
--EXPORT_SYMBOL(hermes_allocate);
- 
- /* Set up a BAP to read a particular chunk of data from card's internal buffer.
-  *
-@@ -403,8 +401,8 @@ static int hermes_bap_seek(hermes_t *hw, int bap, u16 id, u16 offset)
-  *       0 on success
-  *     > 0 on error from firmware
-  */
--int hermes_bap_pread(hermes_t *hw, int bap, void *buf, int len,
--		     u16 id, u16 offset)
-+static int hermes_bap_pread(hermes_t *hw, int bap, void *buf, int len,
-+			    u16 id, u16 offset)
- {
- 	int dreg = bap ? HERMES_DATA1 : HERMES_DATA0;
- 	int err = 0;
-@@ -422,7 +420,6 @@ int hermes_bap_pread(hermes_t *hw, int bap, void *buf, int len,
-  out:
- 	return err;
- }
--EXPORT_SYMBOL(hermes_bap_pread);
- 
- /* Write a block of data to the chip's buffer, via the
-  * BAP. Synchronization/serialization is the caller's problem.
-@@ -432,8 +429,8 @@ EXPORT_SYMBOL(hermes_bap_pread);
-  *       0 on success
-  *     > 0 on error from firmware
-  */
--int hermes_bap_pwrite(hermes_t *hw, int bap, const void *buf, int len,
--		      u16 id, u16 offset)
-+static int hermes_bap_pwrite(hermes_t *hw, int bap, const void *buf, int len,
-+			     u16 id, u16 offset)
- {
- 	int dreg = bap ? HERMES_DATA1 : HERMES_DATA0;
- 	int err = 0;
-@@ -451,7 +448,6 @@ int hermes_bap_pwrite(hermes_t *hw, int bap, const void *buf, int len,
-  out:
- 	return err;
- }
--EXPORT_SYMBOL(hermes_bap_pwrite);
- 
- /* Read a Length-Type-Value record from the card.
-  *
-@@ -461,8 +457,8 @@ EXPORT_SYMBOL(hermes_bap_pwrite);
-  * practice.
-  *
-  * Callable from user or bh context.  */
--int hermes_read_ltv(hermes_t *hw, int bap, u16 rid, unsigned bufsize,
--		    u16 *length, void *buf)
-+static int hermes_read_ltv(hermes_t *hw, int bap, u16 rid, unsigned bufsize,
-+			   u16 *length, void *buf)
- {
- 	int err = 0;
- 	int dreg = bap ? HERMES_DATA1 : HERMES_DATA0;
-@@ -505,10 +501,9 @@ int hermes_read_ltv(hermes_t *hw, int bap, u16 rid, unsigned bufsize,
- 
- 	return 0;
- }
--EXPORT_SYMBOL(hermes_read_ltv);
- 
--int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
--		     u16 length, const void *value)
-+static int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
-+			    u16 length, const void *value)
- {
- 	int dreg = bap ? HERMES_DATA1 : HERMES_DATA0;
- 	int err = 0;
-@@ -533,4 +528,15 @@ int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
- 
- 	return err;
- }
--EXPORT_SYMBOL(hermes_write_ltv);
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 96af3d9..d2417ed 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -17,11 +17,13 @@ ath9k_hw-y:=	hw.o \
+ 		ar9003_phy.o \
+ 		ar9002_phy.o \
+ 		ar5008_phy.o \
++		ar9002_calib.o \
++		ar9003_calib.o \
++		calib.o \
+ 		eeprom.o \
+ 		eeprom_def.o \
+ 		eeprom_4k.o \
+ 		eeprom_9287.o \
+-		calib.o \
+ 		ani.o \
+ 		btcoex.o \
+ 		mac.o \
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+new file mode 100644
+index 0000000..cd234aa
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -0,0 +1,993 @@
++/*
++ * Copyright (c) 2008-2010 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+/* Hermes operations for local buses */
-+static const struct hermes_ops hermes_ops_local = {
-+	.init = hermes_init,
-+	.cmd_wait = hermes_docmd_wait,
-+	.init_cmd_wait = hermes_doicmd_wait,
-+	.allocate = hermes_allocate,
-+	.read_ltv = hermes_read_ltv,
-+	.write_ltv = hermes_write_ltv,
-+	.bap_pread = hermes_bap_pread,
-+	.bap_pwrite = hermes_bap_pwrite
++#include "hw.h"
++#include "hw-ops.h"
++#include "ar9002_phy.h"
++
++#define AR9285_CLCAL_REDO_THRESH    1
++
++static void ar9002_hw_setup_calibration(struct ath_hw *ah,
++					struct ath9k_cal_list *currCal)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(0),
++		      AR_PHY_TIMING_CTRL4_IQCAL_LOG_COUNT_MAX,
++		      currCal->calData->calCountMax);
++
++	switch (currCal->calData->calType) {
++	case IQ_MISMATCH_CAL:
++		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_IQ);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "starting IQ Mismatch Calibration\n");
++		break;
++	case ADC_GAIN_CAL:
++		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_GAIN);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "starting ADC Gain Calibration\n");
++		break;
++	case ADC_DC_CAL:
++		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_DC_PER);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "starting ADC DC Calibration\n");
++		break;
++	case ADC_DC_INIT_CAL:
++		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_DC_INIT);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "starting Init ADC DC Calibration\n");
++		break;
++	}
++
++	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
++		    AR_PHY_TIMING_CTRL4_DO_CAL);
++}
++
++static bool ar9002_hw_per_calibration(struct ath_hw *ah,
++				      struct ath9k_channel *ichan,
++				      u8 rxchainmask,
++				      struct ath9k_cal_list *currCal)
++{
++	bool iscaldone = false;
++
++	if (currCal->calState == CAL_RUNNING) {
++		if (!(REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
++		      AR_PHY_TIMING_CTRL4_DO_CAL)) {
++
++			currCal->calData->calCollect(ah);
++			ah->cal_samples++;
++
++			if (ah->cal_samples >=
++			    currCal->calData->calNumSamples) {
++				int i, numChains = 0;
++				for (i = 0; i < AR5416_MAX_CHAINS; i++) {
++					if (rxchainmask & (1 << i))
++						numChains++;
++				}
++
++				currCal->calData->calPostProc(ah, numChains);
++				ichan->CalValid |= currCal->calData->calType;
++				currCal->calState = CAL_DONE;
++				iscaldone = true;
++			} else {
++				ar9002_hw_setup_calibration(ah, currCal);
++			}
++		}
++	} else if (!(ichan->CalValid & currCal->calData->calType)) {
++		ath9k_hw_reset_calibration(ah, currCal);
++	}
++
++	return iscaldone;
++}
++
++/* Assumes you are talking about the currently configured channel */
++static bool ar9002_hw_iscal_supported(struct ath_hw *ah,
++				      enum ath9k_cal_types calType)
++{
++	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
++
++	switch (calType & ah->supp_cals) {
++	case IQ_MISMATCH_CAL: /* Both 2 GHz and 5 GHz support OFDM */
++		return true;
++	case ADC_GAIN_CAL:
++	case ADC_DC_CAL:
++		if (!(conf->channel->band == IEEE80211_BAND_2GHZ &&
++		      conf_is_ht20(conf)))
++			return true;
++		break;
++	}
++	return false;
++}
++
++static void ar9002_hw_iqcal_collect(struct ath_hw *ah)
++{
++	int i;
++
++	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
++		ah->totalPowerMeasI[i] +=
++			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
++		ah->totalPowerMeasQ[i] +=
++			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
++		ah->totalIqCorrMeas[i] +=
++			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
++		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
++			  "%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
++			  ah->cal_samples, i, ah->totalPowerMeasI[i],
++			  ah->totalPowerMeasQ[i],
++			  ah->totalIqCorrMeas[i]);
++	}
++}
++
++static void ar9002_hw_adc_gaincal_collect(struct ath_hw *ah)
++{
++	int i;
++
++	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
++		ah->totalAdcIOddPhase[i] +=
++			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
++		ah->totalAdcIEvenPhase[i] +=
++			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
++		ah->totalAdcQOddPhase[i] +=
++			REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
++		ah->totalAdcQEvenPhase[i] +=
++			REG_READ(ah, AR_PHY_CAL_MEAS_3(i));
++
++		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
++			  "%d: Chn %d oddi=0x%08x; eveni=0x%08x; "
++			  "oddq=0x%08x; evenq=0x%08x;\n",
++			  ah->cal_samples, i,
++			  ah->totalAdcIOddPhase[i],
++			  ah->totalAdcIEvenPhase[i],
++			  ah->totalAdcQOddPhase[i],
++			  ah->totalAdcQEvenPhase[i]);
++	}
++}
++
++static void ar9002_hw_adc_dccal_collect(struct ath_hw *ah)
++{
++	int i;
++
++	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
++		ah->totalAdcDcOffsetIOddPhase[i] +=
++			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
++		ah->totalAdcDcOffsetIEvenPhase[i] +=
++			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
++		ah->totalAdcDcOffsetQOddPhase[i] +=
++			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
++		ah->totalAdcDcOffsetQEvenPhase[i] +=
++			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_3(i));
++
++		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
++			  "%d: Chn %d oddi=0x%08x; eveni=0x%08x; "
++			  "oddq=0x%08x; evenq=0x%08x;\n",
++			  ah->cal_samples, i,
++			  ah->totalAdcDcOffsetIOddPhase[i],
++			  ah->totalAdcDcOffsetIEvenPhase[i],
++			  ah->totalAdcDcOffsetQOddPhase[i],
++			  ah->totalAdcDcOffsetQEvenPhase[i]);
++	}
++}
++
++static void ar9002_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 powerMeasQ, powerMeasI, iqCorrMeas;
++	u32 qCoffDenom, iCoffDenom;
++	int32_t qCoff, iCoff;
++	int iqCorrNeg, i;
++
++	for (i = 0; i < numChains; i++) {
++		powerMeasI = ah->totalPowerMeasI[i];
++		powerMeasQ = ah->totalPowerMeasQ[i];
++		iqCorrMeas = ah->totalIqCorrMeas[i];
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Starting IQ Cal and Correction for Chain %d\n",
++			  i);
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Orignal: Chn %diq_corr_meas = 0x%08x\n",
++			  i, ah->totalIqCorrMeas[i]);
++
++		iqCorrNeg = 0;
++
++		if (iqCorrMeas > 0x80000000) {
++			iqCorrMeas = (0xffffffff - iqCorrMeas) + 1;
++			iqCorrNeg = 1;
++		}
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_i = 0x%08x\n", i, powerMeasI);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_q = 0x%08x\n", i, powerMeasQ);
++		ath_print(common, ATH_DBG_CALIBRATE, "iqCorrNeg is 0x%08x\n",
++			  iqCorrNeg);
++
++		iCoffDenom = (powerMeasI / 2 + powerMeasQ / 2) / 128;
++		qCoffDenom = powerMeasQ / 64;
++
++		if ((powerMeasQ != 0) && (iCoffDenom != 0) &&
++		    (qCoffDenom != 0)) {
++			iCoff = iqCorrMeas / iCoffDenom;
++			qCoff = powerMeasI / qCoffDenom - 64;
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Chn %d iCoff = 0x%08x\n", i, iCoff);
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Chn %d qCoff = 0x%08x\n", i, qCoff);
++
++			iCoff = iCoff & 0x3f;
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "New: Chn %d iCoff = 0x%08x\n", i, iCoff);
++			if (iqCorrNeg == 0x0)
++				iCoff = 0x40 - iCoff;
++
++			if (qCoff > 15)
++				qCoff = 15;
++			else if (qCoff <= -16)
++				qCoff = 16;
++
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
++				  i, iCoff, qCoff);
++
++			REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(i),
++				      AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF,
++				      iCoff);
++			REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(i),
++				      AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF,
++				      qCoff);
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "IQ Cal and Correction done for Chain %d\n",
++				  i);
++		}
++	}
++
++	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
++		    AR_PHY_TIMING_CTRL4_IQCORR_ENABLE);
++}
++
++static void ar9002_hw_adc_gaincal_calibrate(struct ath_hw *ah, u8 numChains)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 iOddMeasOffset, iEvenMeasOffset, qOddMeasOffset, qEvenMeasOffset;
++	u32 qGainMismatch, iGainMismatch, val, i;
++
++	for (i = 0; i < numChains; i++) {
++		iOddMeasOffset = ah->totalAdcIOddPhase[i];
++		iEvenMeasOffset = ah->totalAdcIEvenPhase[i];
++		qOddMeasOffset = ah->totalAdcQOddPhase[i];
++		qEvenMeasOffset = ah->totalAdcQEvenPhase[i];
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Starting ADC Gain Cal for Chain %d\n", i);
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_odd_i = 0x%08x\n", i,
++			  iOddMeasOffset);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_even_i = 0x%08x\n", i,
++			  iEvenMeasOffset);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_odd_q = 0x%08x\n", i,
++			  qOddMeasOffset);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_even_q = 0x%08x\n", i,
++			  qEvenMeasOffset);
++
++		if (iOddMeasOffset != 0 && qEvenMeasOffset != 0) {
++			iGainMismatch =
++				((iEvenMeasOffset * 32) /
++				 iOddMeasOffset) & 0x3f;
++			qGainMismatch =
++				((qOddMeasOffset * 32) /
++				 qEvenMeasOffset) & 0x3f;
++
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Chn %d gain_mismatch_i = 0x%08x\n", i,
++				  iGainMismatch);
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "Chn %d gain_mismatch_q = 0x%08x\n", i,
++				  qGainMismatch);
++
++			val = REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i));
++			val &= 0xfffff000;
++			val |= (qGainMismatch) | (iGainMismatch << 6);
++			REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i), val);
++
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "ADC Gain Cal done for Chain %d\n", i);
++		}
++	}
++
++	REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0),
++		  REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0)) |
++		  AR_PHY_NEW_ADC_GAIN_CORR_ENABLE);
++}
++
++static void ar9002_hw_adc_dccal_calibrate(struct ath_hw *ah, u8 numChains)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 iOddMeasOffset, iEvenMeasOffset, val, i;
++	int32_t qOddMeasOffset, qEvenMeasOffset, qDcMismatch, iDcMismatch;
++	const struct ath9k_percal_data *calData =
++		ah->cal_list_curr->calData;
++	u32 numSamples =
++		(1 << (calData->calCountMax + 5)) * calData->calNumSamples;
++
++	for (i = 0; i < numChains; i++) {
++		iOddMeasOffset = ah->totalAdcDcOffsetIOddPhase[i];
++		iEvenMeasOffset = ah->totalAdcDcOffsetIEvenPhase[i];
++		qOddMeasOffset = ah->totalAdcDcOffsetQOddPhase[i];
++		qEvenMeasOffset = ah->totalAdcDcOffsetQEvenPhase[i];
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			   "Starting ADC DC Offset Cal for Chain %d\n", i);
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_odd_i = %d\n", i,
++			  iOddMeasOffset);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_even_i = %d\n", i,
++			  iEvenMeasOffset);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_odd_q = %d\n", i,
++			  qOddMeasOffset);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d pwr_meas_even_q = %d\n", i,
++			  qEvenMeasOffset);
++
++		iDcMismatch = (((iEvenMeasOffset - iOddMeasOffset) * 2) /
++			       numSamples) & 0x1ff;
++		qDcMismatch = (((qOddMeasOffset - qEvenMeasOffset) * 2) /
++			       numSamples) & 0x1ff;
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d dc_offset_mismatch_i = 0x%08x\n", i,
++			  iDcMismatch);
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "Chn %d dc_offset_mismatch_q = 0x%08x\n", i,
++			  qDcMismatch);
++
++		val = REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i));
++		val &= 0xc0000fff;
++		val |= (qDcMismatch << 12) | (iDcMismatch << 21);
++		REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i), val);
++
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "ADC DC Offset Cal done for Chain %d\n", i);
++	}
++
++	REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0),
++		  REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0)) |
++		  AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE);
++}
++
++static void ar9287_hw_olc_temp_compensation(struct ath_hw *ah)
++{
++	u32 rddata;
++	int32_t delta, currPDADC, slope;
++
++	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
++	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
++
++	if (ah->initPDADC == 0 || currPDADC == 0) {
++		/*
++		 * Zero value indicates that no frames have been transmitted
++		 * yet, can't do temperature compensation until frames are
++		 * transmitted.
++		 */
++		return;
++	} else {
++		slope = ah->eep_ops->get_eeprom(ah, EEP_TEMPSENSE_SLOPE);
++
++		if (slope == 0) { /* to avoid divide by zero case */
++			delta = 0;
++		} else {
++			delta = ((currPDADC - ah->initPDADC)*4) / slope;
++		}
++		REG_RMW_FIELD(ah, AR_PHY_CH0_TX_PWRCTRL11,
++			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
++		REG_RMW_FIELD(ah, AR_PHY_CH1_TX_PWRCTRL11,
++			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
++	}
++}
++
++static void ar9280_hw_olc_temp_compensation(struct ath_hw *ah)
++{
++	u32 rddata, i;
++	int delta, currPDADC, regval;
++
++	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
++	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
++
++	if (ah->initPDADC == 0 || currPDADC == 0)
++		return;
++
++	if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
++		delta = (currPDADC - ah->initPDADC + 4) / 8;
++	else
++		delta = (currPDADC - ah->initPDADC + 5) / 10;
++
++	if (delta != ah->PDADCdelta) {
++		ah->PDADCdelta = delta;
++		for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
++			regval = ah->originalGain[i] - delta;
++			if (regval < 0)
++				regval = 0;
++
++			REG_RMW_FIELD(ah,
++				      AR_PHY_TX_GAIN_TBL1 + i * 4,
++				      AR_PHY_TX_GAIN, regval);
++		}
++	}
++}
++
++static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
++{
++	u32 regVal;
++	unsigned int i;
++	u32 regList[][2] = {
++		{ 0x786c, 0 },
++		{ 0x7854, 0 },
++		{ 0x7820, 0 },
++		{ 0x7824, 0 },
++		{ 0x7868, 0 },
++		{ 0x783c, 0 },
++		{ 0x7838, 0 } ,
++		{ 0x7828, 0 } ,
++	};
++
++	for (i = 0; i < ARRAY_SIZE(regList); i++)
++		regList[i][1] = REG_READ(ah, regList[i][0]);
++
++	regVal = REG_READ(ah, 0x7834);
++	regVal &= (~(0x1));
++	REG_WRITE(ah, 0x7834, regVal);
++	regVal = REG_READ(ah, 0x9808);
++	regVal |= (0x1 << 27);
++	REG_WRITE(ah, 0x9808, regVal);
++
++	/* 786c,b23,1, pwddac=1 */
++	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
++	/* 7854, b5,1, pdrxtxbb=1 */
++	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
++	/* 7854, b7,1, pdv2i=1 */
++	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
++	/* 7854, b8,1, pddacinterface=1 */
++	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
++	/* 7824,b12,0, offcal=0 */
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
++	/* 7838, b1,0, pwddb=0 */
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
++	/* 7820,b11,0, enpacal=0 */
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
++	/* 7820,b25,1, pdpadrv1=0 */
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
++	/* 7820,b24,0, pdpadrv2=0 */
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2, 0);
++	/* 7820,b23,0, pdpaout=0 */
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
++	/* 783c,b14-16,7, padrvgn2tab_0=7 */
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G8, AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
++	/*
++	 * 7838,b29-31,0, padrvgn1tab_0=0
++	 * does not matter since we turn it off
++	 */
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
++
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9271_AN_RF2G3_CCOMP, 0xfff);
++
++	/* Set:
++	 * localmode=1,bmode=1,bmoderxtx=1,synthon=1,
++	 * txon=1,paon=1,oscon=1,synthon_force=1
++	 */
++	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
++	udelay(30);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9271_AN_RF2G6_OFFS, 0);
++
++	/* find off_6_1; */
++	for (i = 6; i > 0; i--) {
++		regVal = REG_READ(ah, 0x7834);
++		regVal |= (1 << (20 + i));
++		REG_WRITE(ah, 0x7834, regVal);
++		udelay(1);
++		/* regVal = REG_READ(ah, 0x7834); */
++		regVal &= (~(0x1 << (20 + i)));
++		regVal |= (MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9)
++			    << (20 + i));
++		REG_WRITE(ah, 0x7834, regVal);
++	}
++
++	regVal = (regVal >> 20) & 0x7f;
++
++	/* Update PA cal info */
++	if ((!is_reset) && (ah->pacal_info.prev_offset == regVal)) {
++		if (ah->pacal_info.max_skipcount < MAX_PACAL_SKIPCOUNT)
++			ah->pacal_info.max_skipcount =
++				2 * ah->pacal_info.max_skipcount;
++		ah->pacal_info.skipcount = ah->pacal_info.max_skipcount;
++	} else {
++		ah->pacal_info.max_skipcount = 1;
++		ah->pacal_info.skipcount = 0;
++		ah->pacal_info.prev_offset = regVal;
++	}
++
++	regVal = REG_READ(ah, 0x7834);
++	regVal |= 0x1;
++	REG_WRITE(ah, 0x7834, regVal);
++	regVal = REG_READ(ah, 0x9808);
++	regVal &= (~(0x1 << 27));
++	REG_WRITE(ah, 0x9808, regVal);
++
++	for (i = 0; i < ARRAY_SIZE(regList); i++)
++		REG_WRITE(ah, regList[i][0], regList[i][1]);
++}
++
++static inline void ar9285_hw_pa_cal(struct ath_hw *ah, bool is_reset)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 regVal;
++	int i, offset, offs_6_1, offs_0;
++	u32 ccomp_org, reg_field;
++	u32 regList[][2] = {
++		{ 0x786c, 0 },
++		{ 0x7854, 0 },
++		{ 0x7820, 0 },
++		{ 0x7824, 0 },
++		{ 0x7868, 0 },
++		{ 0x783c, 0 },
++		{ 0x7838, 0 },
++	};
++
++	ath_print(common, ATH_DBG_CALIBRATE, "Running PA Calibration\n");
++
++	/* PA CAL is not needed for high power solution */
++	if (ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE) ==
++	    AR5416_EEP_TXGAIN_HIGH_POWER)
++		return;
++
++	if (AR_SREV_9285_11(ah)) {
++		REG_WRITE(ah, AR9285_AN_TOP4, (AR9285_AN_TOP4_DEFAULT | 0x14));
++		udelay(10);
++	}
++
++	for (i = 0; i < ARRAY_SIZE(regList); i++)
++		regList[i][1] = REG_READ(ah, regList[i][0]);
++
++	regVal = REG_READ(ah, 0x7834);
++	regVal &= (~(0x1));
++	REG_WRITE(ah, 0x7834, regVal);
++	regVal = REG_READ(ah, 0x9808);
++	regVal |= (0x1 << 27);
++	REG_WRITE(ah, 0x9808, regVal);
++
++	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
++	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
++	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
++	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2, 0);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G8, AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
++	ccomp_org = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_CCOMP);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, 0xf);
++
++	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
++	udelay(30);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_OFFS, 0);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, 0);
++
++	for (i = 6; i > 0; i--) {
++		regVal = REG_READ(ah, 0x7834);
++		regVal |= (1 << (19 + i));
++		REG_WRITE(ah, 0x7834, regVal);
++		udelay(1);
++		regVal = REG_READ(ah, 0x7834);
++		regVal &= (~(0x1 << (19 + i)));
++		reg_field = MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9);
++		regVal |= (reg_field << (19 + i));
++		REG_WRITE(ah, 0x7834, regVal);
++	}
++
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, 1);
++	udelay(1);
++	reg_field = MS(REG_READ(ah, AR9285_AN_RF2G9), AR9285_AN_RXTXBB1_SPARE9);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, reg_field);
++	offs_6_1 = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_OFFS);
++	offs_0   = MS(REG_READ(ah, AR9285_AN_RF2G3), AR9285_AN_RF2G3_PDVCCOMP);
++
++	offset = (offs_6_1<<1) | offs_0;
++	offset = offset - 0;
++	offs_6_1 = offset>>1;
++	offs_0 = offset & 1;
++
++	if ((!is_reset) && (ah->pacal_info.prev_offset == offset)) {
++		if (ah->pacal_info.max_skipcount < MAX_PACAL_SKIPCOUNT)
++			ah->pacal_info.max_skipcount =
++				2 * ah->pacal_info.max_skipcount;
++		ah->pacal_info.skipcount = ah->pacal_info.max_skipcount;
++	} else {
++		ah->pacal_info.max_skipcount = 1;
++		ah->pacal_info.skipcount = 0;
++		ah->pacal_info.prev_offset = offset;
++	}
++
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_OFFS, offs_6_1);
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, offs_0);
++
++	regVal = REG_READ(ah, 0x7834);
++	regVal |= 0x1;
++	REG_WRITE(ah, 0x7834, regVal);
++	regVal = REG_READ(ah, 0x9808);
++	regVal &= (~(0x1 << 27));
++	REG_WRITE(ah, 0x9808, regVal);
++
++	for (i = 0; i < ARRAY_SIZE(regList); i++)
++		REG_WRITE(ah, regList[i][0], regList[i][1]);
++
++	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, ccomp_org);
++
++	if (AR_SREV_9285_11(ah))
++		REG_WRITE(ah, AR9285_AN_TOP4, AR9285_AN_TOP4_DEFAULT);
++
++}
++
++static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
++{
++	if (AR_SREV_9271(ah)) {
++		if (is_reset || !ah->pacal_info.skipcount)
++			ar9271_hw_pa_cal(ah, is_reset);
++		else
++			ah->pacal_info.skipcount--;
++	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
++		if (is_reset || !ah->pacal_info.skipcount)
++			ar9285_hw_pa_cal(ah, is_reset);
++		else
++			ah->pacal_info.skipcount--;
++	}
++}
++
++static void ar9002_hw_olc_temp_compensation(struct ath_hw *ah)
++{
++	if (OLC_FOR_AR9287_10_LATER)
++		ar9287_hw_olc_temp_compensation(ah);
++	else if (OLC_FOR_AR9280_20_LATER)
++		ar9280_hw_olc_temp_compensation(ah);
++}
++
++static bool ar9002_hw_calibrate(struct ath_hw *ah,
++				struct ath9k_channel *chan,
++				u8 rxchainmask,
++				bool longcal)
++{
++	bool iscaldone = true;
++	struct ath9k_cal_list *currCal = ah->cal_list_curr;
++
++	if (currCal &&
++	    (currCal->calState == CAL_RUNNING ||
++	     currCal->calState == CAL_WAITING)) {
++		iscaldone = ar9002_hw_per_calibration(ah, chan,
++						      rxchainmask, currCal);
++		if (iscaldone) {
++			ah->cal_list_curr = currCal = currCal->calNext;
++
++			if (currCal->calState == CAL_WAITING) {
++				iscaldone = false;
++				ath9k_hw_reset_calibration(ah, currCal);
++			}
++		}
++	}
++
++	/* Do NF cal only at longer intervals */
++	if (longcal) {
++		/* Do periodic PAOffset Cal */
++		ar9002_hw_pa_cal(ah, false);
++		ar9002_hw_olc_temp_compensation(ah);
++
++		/*
++		 * Get the value from the previous NF cal and update
++		 * history buffer.
++		 */
++		ath9k_hw_getnf(ah, chan);
++
++		/*
++		 * Load the NF from history buffer of the current channel.
++		 * NF is slow time-variant, so it is OK to use a historical
++		 * value.
++		 */
++		ath9k_hw_loadnf(ah, ah->curchan);
++
++		ath9k_hw_start_nfcal(ah);
++	}
++
++	return iscaldone;
++}
++
++/* Carrier leakage Calibration fix */
++static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
++	if (IS_CHAN_HT20(chan)) {
++		REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
++		REG_SET_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
++		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
++			    AR_PHY_AGC_CONTROL_FLTR_CAL);
++		REG_CLR_BIT(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_CAL_ENABLE);
++		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL);
++		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
++				  AR_PHY_AGC_CONTROL_CAL, 0, AH_WAIT_TIMEOUT)) {
++			ath_print(common, ATH_DBG_CALIBRATE, "offset "
++				  "calibration failed to complete in "
++				  "1ms; noisy ??\n");
++			return false;
++		}
++		REG_CLR_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
++		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
++		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
++	}
++	REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
++	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
++	REG_SET_BIT(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_CAL_ENABLE);
++	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL);
++	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
++			  0, AH_WAIT_TIMEOUT)) {
++		ath_print(common, ATH_DBG_CALIBRATE, "offset calibration "
++			  "failed to complete in 1ms; noisy ??\n");
++		return false;
++	}
++
++	REG_SET_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
++	REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
++	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
++
++	return true;
++}
++
++static bool ar9285_hw_clc(struct ath_hw *ah, struct ath9k_channel *chan)
++{
++	int i;
++	u_int32_t txgain_max;
++	u_int32_t clc_gain, gain_mask = 0, clc_num = 0;
++	u_int32_t reg_clc_I0, reg_clc_Q0;
++	u_int32_t i0_num = 0;
++	u_int32_t q0_num = 0;
++	u_int32_t total_num = 0;
++	u_int32_t reg_rf2g5_org;
++	bool retv = true;
++
++	if (!(ar9285_hw_cl_cal(ah, chan)))
++		return false;
++
++	txgain_max = MS(REG_READ(ah, AR_PHY_TX_PWRCTRL7),
++			AR_PHY_TX_PWRCTRL_TX_GAIN_TAB_MAX);
++
++	for (i = 0; i < (txgain_max+1); i++) {
++		clc_gain = (REG_READ(ah, (AR_PHY_TX_GAIN_TBL1+(i<<2))) &
++			   AR_PHY_TX_GAIN_CLC) >> AR_PHY_TX_GAIN_CLC_S;
++		if (!(gain_mask & (1 << clc_gain))) {
++			gain_mask |= (1 << clc_gain);
++			clc_num++;
++		}
++	}
++
++	for (i = 0; i < clc_num; i++) {
++		reg_clc_I0 = (REG_READ(ah, (AR_PHY_CLC_TBL1 + (i << 2)))
++			      & AR_PHY_CLC_I0) >> AR_PHY_CLC_I0_S;
++		reg_clc_Q0 = (REG_READ(ah, (AR_PHY_CLC_TBL1 + (i << 2)))
++			      & AR_PHY_CLC_Q0) >> AR_PHY_CLC_Q0_S;
++		if (reg_clc_I0 == 0)
++			i0_num++;
++
++		if (reg_clc_Q0 == 0)
++			q0_num++;
++	}
++	total_num = i0_num + q0_num;
++	if (total_num > AR9285_CLCAL_REDO_THRESH) {
++		reg_rf2g5_org = REG_READ(ah, AR9285_RF2G5);
++		if (AR_SREV_9285E_20(ah)) {
++			REG_WRITE(ah, AR9285_RF2G5,
++				  (reg_rf2g5_org & AR9285_RF2G5_IC50TX) |
++				  AR9285_RF2G5_IC50TX_XE_SET);
++		} else {
++			REG_WRITE(ah, AR9285_RF2G5,
++				  (reg_rf2g5_org & AR9285_RF2G5_IC50TX) |
++				  AR9285_RF2G5_IC50TX_SET);
++		}
++		retv = ar9285_hw_cl_cal(ah, chan);
++		REG_WRITE(ah, AR9285_RF2G5, reg_rf2g5_org);
++	}
++	return retv;
++}
++
++static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (AR_SREV_9271(ah) || AR_SREV_9285_12_OR_LATER(ah)) {
++		if (!ar9285_hw_clc(ah, chan))
++			return false;
++	} else {
++		if (AR_SREV_9280_10_OR_LATER(ah)) {
++			if (!AR_SREV_9287_10_OR_LATER(ah))
++				REG_CLR_BIT(ah, AR_PHY_ADC_CTL,
++					    AR_PHY_ADC_CTL_OFF_PWDADC);
++			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
++				    AR_PHY_AGC_CONTROL_FLTR_CAL);
++		}
++
++		/* Calibrate the AGC */
++		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
++			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
++			  AR_PHY_AGC_CONTROL_CAL);
++
++		/* Poll for offset calibration complete */
++		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
++				   AR_PHY_AGC_CONTROL_CAL,
++				   0, AH_WAIT_TIMEOUT)) {
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "offset calibration failed to "
++				  "complete in 1ms; noisy environment?\n");
++			return false;
++		}
++
++		if (AR_SREV_9280_10_OR_LATER(ah)) {
++			if (!AR_SREV_9287_10_OR_LATER(ah))
++				REG_SET_BIT(ah, AR_PHY_ADC_CTL,
++					    AR_PHY_ADC_CTL_OFF_PWDADC);
++			REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
++				    AR_PHY_AGC_CONTROL_FLTR_CAL);
++		}
++	}
++
++	/* Do PA Calibration */
++	ar9002_hw_pa_cal(ah, true);
++
++	/* Do NF Calibration after DC offset and other calibrations */
++	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
++		  REG_READ(ah, AR_PHY_AGC_CONTROL) | AR_PHY_AGC_CONTROL_NF);
++
++	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
++
++	/* Enable IQ, ADC Gain and ADC DC offset CALs */
++	if (AR_SREV_9100(ah) || AR_SREV_9160_10_OR_LATER(ah)) {
++		if (ar9002_hw_iscal_supported(ah, ADC_GAIN_CAL)) {
++			INIT_CAL(&ah->adcgain_caldata);
++			INSERT_CAL(ah, &ah->adcgain_caldata);
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "enabling ADC Gain Calibration.\n");
++		}
++		if (ar9002_hw_iscal_supported(ah, ADC_DC_CAL)) {
++			INIT_CAL(&ah->adcdc_caldata);
++			INSERT_CAL(ah, &ah->adcdc_caldata);
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "enabling ADC DC Calibration.\n");
++		}
++		if (ar9002_hw_iscal_supported(ah, IQ_MISMATCH_CAL)) {
++			INIT_CAL(&ah->iq_caldata);
++			INSERT_CAL(ah, &ah->iq_caldata);
++			ath_print(common, ATH_DBG_CALIBRATE,
++				  "enabling IQ Calibration.\n");
++		}
++
++		ah->cal_list_curr = ah->cal_list;
++
++		if (ah->cal_list_curr)
++			ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
++	}
++
++	chan->CalValid = 0;
++
++	return true;
++}
++
++static const struct ath9k_percal_data iq_cal_multi_sample = {
++	IQ_MISMATCH_CAL,
++	MAX_CAL_SAMPLES,
++	PER_MIN_LOG_COUNT,
++	ar9002_hw_iqcal_collect,
++	ar9002_hw_iqcalibrate
 +};
-diff --git a/drivers/net/wireless/orinoco/hermes.h b/drivers/net/wireless/orinoco/hermes.h
-index 2dddbb5..18b268c 100644
---- a/drivers/net/wireless/orinoco/hermes.h
-+++ b/drivers/net/wireless/orinoco/hermes.h
-@@ -374,6 +374,27 @@ struct hermes_multicast {
- /* Timeouts */
- #define HERMES_BAP_BUSY_TIMEOUT (10000) /* In iterations of ~1us */
- 
-+struct hermes;
-+
-+/* Functions to access hardware */
-+struct hermes_ops {
-+	int (*init)(struct hermes *hw);
-+	int (*cmd_wait)(struct hermes *hw, u16 cmd, u16 parm0,
-+			struct hermes_response *resp);
-+	int (*init_cmd_wait)(struct hermes *hw, u16 cmd,
-+			     u16 parm0, u16 parm1, u16 parm2,
-+			     struct hermes_response *resp);
-+	int (*allocate)(struct hermes *hw, u16 size, u16 *fid);
-+	int (*read_ltv)(struct hermes *hw, int bap, u16 rid, unsigned buflen,
-+			u16 *length, void *buf);
-+	int (*write_ltv)(struct hermes *hw, int bap, u16 rid,
-+			 u16 length, const void *value);
-+	int (*bap_pread)(struct hermes *hw, int bap, void *buf, int len,
-+			 u16 id, u16 offset);
-+	int (*bap_pwrite)(struct hermes *hw, int bap, const void *buf,
-+			  int len, u16 id, u16 offset);
++static const struct ath9k_percal_data iq_cal_single_sample = {
++	IQ_MISMATCH_CAL,
++	MIN_CAL_SAMPLES,
++	PER_MAX_LOG_COUNT,
++	ar9002_hw_iqcal_collect,
++	ar9002_hw_iqcalibrate
++};
++static const struct ath9k_percal_data adc_gain_cal_multi_sample = {
++	ADC_GAIN_CAL,
++	MAX_CAL_SAMPLES,
++	PER_MIN_LOG_COUNT,
++	ar9002_hw_adc_gaincal_collect,
++	ar9002_hw_adc_gaincal_calibrate
++};
++static const struct ath9k_percal_data adc_gain_cal_single_sample = {
++	ADC_GAIN_CAL,
++	MIN_CAL_SAMPLES,
++	PER_MAX_LOG_COUNT,
++	ar9002_hw_adc_gaincal_collect,
++	ar9002_hw_adc_gaincal_calibrate
++};
++static const struct ath9k_percal_data adc_dc_cal_multi_sample = {
++	ADC_DC_CAL,
++	MAX_CAL_SAMPLES,
++	PER_MIN_LOG_COUNT,
++	ar9002_hw_adc_dccal_collect,
++	ar9002_hw_adc_dccal_calibrate
++};
++static const struct ath9k_percal_data adc_dc_cal_single_sample = {
++	ADC_DC_CAL,
++	MIN_CAL_SAMPLES,
++	PER_MAX_LOG_COUNT,
++	ar9002_hw_adc_dccal_collect,
++	ar9002_hw_adc_dccal_calibrate
++};
++static const struct ath9k_percal_data adc_init_dc_cal = {
++	ADC_DC_INIT_CAL,
++	MIN_CAL_SAMPLES,
++	INIT_LOG_COUNT,
++	ar9002_hw_adc_dccal_collect,
++	ar9002_hw_adc_dccal_calibrate
 +};
 +
- /* Basic control structure */
- typedef struct hermes {
- 	void __iomem *iobase;
-@@ -381,6 +402,7 @@ typedef struct hermes {
- #define HERMES_16BIT_REGSPACING	0
- #define HERMES_32BIT_REGSPACING	1
- 	u16 inten; /* Which interrupts should be enabled? */
-+	const struct hermes_ops *ops;
- } hermes_t;
++static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
++{
++	if (AR_SREV_9100(ah)) {
++		ah->iq_caldata.calData = &iq_cal_multi_sample;
++		ah->supp_cals = IQ_MISMATCH_CAL;
++		return;
++	}
++
++	if (AR_SREV_9160_10_OR_LATER(ah)) {
++		if (AR_SREV_9280_10_OR_LATER(ah)) {
++			ah->iq_caldata.calData = &iq_cal_single_sample;
++			ah->adcgain_caldata.calData =
++				&adc_gain_cal_single_sample;
++			ah->adcdc_caldata.calData =
++				&adc_dc_cal_single_sample;
++			ah->adcdc_calinitdata.calData =
++				&adc_init_dc_cal;
++		} else {
++			ah->iq_caldata.calData = &iq_cal_multi_sample;
++			ah->adcgain_caldata.calData =
++				&adc_gain_cal_multi_sample;
++			ah->adcdc_caldata.calData =
++				&adc_dc_cal_multi_sample;
++			ah->adcdc_calinitdata.calData =
++				&adc_init_dc_cal;
++		}
++		ah->supp_cals = ADC_GAIN_CAL | ADC_DC_CAL | IQ_MISMATCH_CAL;
++	}
++}
++
++void ar9002_hw_attach_calib_ops(struct ath_hw *ah)
++{
++	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
++
++	priv_ops->init_cal_settings = ar9002_hw_init_cal_settings;
++	priv_ops->init_cal = ar9002_hw_init_cal;
++	priv_ops->setup_calibration = ar9002_hw_setup_calibration;
++	priv_ops->iscal_supported = ar9002_hw_iscal_supported;
++
++	ops->calibrate = ar9002_hw_calibrate;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+new file mode 100644
+index 0000000..6a72677
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -0,0 +1,66 @@
++/*
++ * Copyright (c) 2010 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "hw.h"
++#include "hw-ops.h"
++#include "ar9003_phy.h"
++
++static void ar9003_hw_setup_calibration(struct ath_hw *ah,
++					struct ath9k_cal_list *currCal)
++{
++	/* TODO */
++}
++
++static bool ar9003_hw_calibrate(struct ath_hw *ah,
++				struct ath9k_channel *chan,
++				u8 rxchainmask,
++				bool longcal)
++{
++	/* TODO */
++	return false;
++}
++
++static bool ar9003_hw_init_cal(struct ath_hw *ah,
++			       struct ath9k_channel *chan)
++{
++	/* TODO */
++	return false;
++}
++
++static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
++{
++	/* TODO */
++}
++
++static bool ar9003_hw_iscal_supported(struct ath_hw *ah,
++				      enum ath9k_cal_types calType)
++{
++	/* TODO */
++	return false;
++}
++
++void ar9003_hw_attach_calib_ops(struct ath_hw *ah)
++{
++	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
++
++	priv_ops->init_cal_settings = ar9003_hw_init_cal_settings;
++	priv_ops->init_cal = ar9003_hw_init_cal;
++	priv_ops->setup_calibration = ar9003_hw_setup_calibration;
++	priv_ops->iscal_supported = ar9003_hw_iscal_supported;
++
++	ops->calibrate = ar9003_hw_calibrate;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index aa724c2..085e126 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -18,9 +18,10 @@
+ #include "hw-ops.h"
+ #include "ar9002_phy.h"
  
- /* Register access convenience macros */
-@@ -394,22 +416,6 @@ typedef struct hermes {
++/* Common calibration code */
++
+ /* We can tune this as we go by monitoring really low values */
+ #define ATH9K_NF_TOO_LOW	-60
+-#define AR9285_CLCAL_REDO_THRESH    1
  
- /* Function prototypes */
- void hermes_struct_init(hermes_t *hw, void __iomem *address, int reg_spacing);
--int hermes_init(hermes_t *hw);
--int hermes_docmd_wait(hermes_t *hw, u16 cmd, u16 parm0,
--		      struct hermes_response *resp);
--int hermes_doicmd_wait(hermes_t *hw, u16 cmd,
--		       u16 parm0, u16 parm1, u16 parm2,
--		       struct hermes_response *resp);
--int hermes_allocate(hermes_t *hw, u16 size, u16 *fid);
+ /* AR5416 may return very high value (like -31 dBm), in those cases the nf
+  * is incorrect and we should use the static NF value. Later we can try to
+@@ -108,44 +109,8 @@ static bool ath9k_hw_get_nf_thresh(struct ath_hw *ah,
+ 	return true;
+ }
+ 
+-static void ath9k_hw_setup_calibration(struct ath_hw *ah,
+-				       struct ath9k_cal_list *currCal)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
 -
--int hermes_bap_pread(hermes_t *hw, int bap, void *buf, int len,
--		       u16 id, u16 offset);
--int hermes_bap_pwrite(hermes_t *hw, int bap, const void *buf, int len,
--			u16 id, u16 offset);
--int hermes_read_ltv(hermes_t *hw, int bap, u16 rid, unsigned buflen,
--		    u16 *length, void *buf);
--int hermes_write_ltv(hermes_t *hw, int bap, u16 rid,
--		      u16 length, const void *value);
- 
- /* Inline functions */
- 
-@@ -426,13 +432,13 @@ static inline void hermes_set_irqmask(hermes_t *hw, u16 events)
- 
- static inline int hermes_enable_port(hermes_t *hw, int port)
+-	REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(0),
+-		      AR_PHY_TIMING_CTRL4_IQCAL_LOG_COUNT_MAX,
+-		      currCal->calData->calCountMax);
+-
+-	switch (currCal->calData->calType) {
+-	case IQ_MISMATCH_CAL:
+-		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_IQ);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "starting IQ Mismatch Calibration\n");
+-		break;
+-	case ADC_GAIN_CAL:
+-		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_GAIN);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "starting ADC Gain Calibration\n");
+-		break;
+-	case ADC_DC_CAL:
+-		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_DC_PER);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "starting ADC DC Calibration\n");
+-		break;
+-	case ADC_DC_INIT_CAL:
+-		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_ADC_DC_INIT);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "starting Init ADC DC Calibration\n");
+-		break;
+-	}
+-
+-	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
+-		    AR_PHY_TIMING_CTRL4_DO_CAL);
+-}
+-
+-static void ath9k_hw_reset_calibration(struct ath_hw *ah,
+-				       struct ath9k_cal_list *currCal)
++void ath9k_hw_reset_calibration(struct ath_hw *ah,
++				struct ath9k_cal_list *currCal)
  {
--	return hermes_docmd_wait(hw, HERMES_CMD_ENABLE | (port << 8),
-+	return hw->ops->cmd_wait(hw, HERMES_CMD_ENABLE | (port << 8),
- 				 0, NULL);
+ 	int i;
+ 
+@@ -163,324 +128,6 @@ static void ath9k_hw_reset_calibration(struct ath_hw *ah,
+ 	ah->cal_samples = 0;
  }
  
- static inline int hermes_disable_port(hermes_t *hw, int port)
+-static bool ath9k_hw_per_calibration(struct ath_hw *ah,
+-				     struct ath9k_channel *ichan,
+-				     u8 rxchainmask,
+-				     struct ath9k_cal_list *currCal)
+-{
+-	bool iscaldone = false;
+-
+-	if (currCal->calState == CAL_RUNNING) {
+-		if (!(REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
+-		      AR_PHY_TIMING_CTRL4_DO_CAL)) {
+-
+-			currCal->calData->calCollect(ah);
+-			ah->cal_samples++;
+-
+-			if (ah->cal_samples >= currCal->calData->calNumSamples) {
+-				int i, numChains = 0;
+-				for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-					if (rxchainmask & (1 << i))
+-						numChains++;
+-				}
+-
+-				currCal->calData->calPostProc(ah, numChains);
+-				ichan->CalValid |= currCal->calData->calType;
+-				currCal->calState = CAL_DONE;
+-				iscaldone = true;
+-			} else {
+-				ath9k_hw_setup_calibration(ah, currCal);
+-			}
+-		}
+-	} else if (!(ichan->CalValid & currCal->calData->calType)) {
+-		ath9k_hw_reset_calibration(ah, currCal);
+-	}
+-
+-	return iscaldone;
+-}
+-
+-/* Assumes you are talking about the currently configured channel */
+-static bool ath9k_hw_iscal_supported(struct ath_hw *ah,
+-				     enum ath9k_cal_types calType)
+-{
+-	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
+-
+-	switch (calType & ah->supp_cals) {
+-	case IQ_MISMATCH_CAL: /* Both 2 GHz and 5 GHz support OFDM */
+-		return true;
+-	case ADC_GAIN_CAL:
+-	case ADC_DC_CAL:
+-		if (!(conf->channel->band == IEEE80211_BAND_2GHZ &&
+-		      conf_is_ht20(conf)))
+-			return true;
+-		break;
+-	}
+-	return false;
+-}
+-
+-static void ath9k_hw_iqcal_collect(struct ath_hw *ah)
+-{
+-	int i;
+-
+-	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-		ah->totalPowerMeasI[i] +=
+-			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
+-		ah->totalPowerMeasQ[i] +=
+-			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
+-		ah->totalIqCorrMeas[i] +=
+-			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
+-		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
+-			  "%d: Chn %d pmi=0x%08x;pmq=0x%08x;iqcm=0x%08x;\n",
+-			  ah->cal_samples, i, ah->totalPowerMeasI[i],
+-			  ah->totalPowerMeasQ[i],
+-			  ah->totalIqCorrMeas[i]);
+-	}
+-}
+-
+-static void ath9k_hw_adc_gaincal_collect(struct ath_hw *ah)
+-{
+-	int i;
+-
+-	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-		ah->totalAdcIOddPhase[i] +=
+-			REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
+-		ah->totalAdcIEvenPhase[i] +=
+-			REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
+-		ah->totalAdcQOddPhase[i] +=
+-			REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
+-		ah->totalAdcQEvenPhase[i] +=
+-			REG_READ(ah, AR_PHY_CAL_MEAS_3(i));
+-
+-		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
+-			  "%d: Chn %d oddi=0x%08x; eveni=0x%08x; "
+-			  "oddq=0x%08x; evenq=0x%08x;\n",
+-			  ah->cal_samples, i,
+-			  ah->totalAdcIOddPhase[i],
+-			  ah->totalAdcIEvenPhase[i],
+-			  ah->totalAdcQOddPhase[i],
+-			  ah->totalAdcQEvenPhase[i]);
+-	}
+-}
+-
+-static void ath9k_hw_adc_dccal_collect(struct ath_hw *ah)
+-{
+-	int i;
+-
+-	for (i = 0; i < AR5416_MAX_CHAINS; i++) {
+-		ah->totalAdcDcOffsetIOddPhase[i] +=
+-			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_0(i));
+-		ah->totalAdcDcOffsetIEvenPhase[i] +=
+-			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_1(i));
+-		ah->totalAdcDcOffsetQOddPhase[i] +=
+-			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_2(i));
+-		ah->totalAdcDcOffsetQEvenPhase[i] +=
+-			(int32_t) REG_READ(ah, AR_PHY_CAL_MEAS_3(i));
+-
+-		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
+-			  "%d: Chn %d oddi=0x%08x; eveni=0x%08x; "
+-			  "oddq=0x%08x; evenq=0x%08x;\n",
+-			  ah->cal_samples, i,
+-			  ah->totalAdcDcOffsetIOddPhase[i],
+-			  ah->totalAdcDcOffsetIEvenPhase[i],
+-			  ah->totalAdcDcOffsetQOddPhase[i],
+-			  ah->totalAdcDcOffsetQEvenPhase[i]);
+-	}
+-}
+-
+-static void ath9k_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 powerMeasQ, powerMeasI, iqCorrMeas;
+-	u32 qCoffDenom, iCoffDenom;
+-	int32_t qCoff, iCoff;
+-	int iqCorrNeg, i;
+-
+-	for (i = 0; i < numChains; i++) {
+-		powerMeasI = ah->totalPowerMeasI[i];
+-		powerMeasQ = ah->totalPowerMeasQ[i];
+-		iqCorrMeas = ah->totalIqCorrMeas[i];
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Starting IQ Cal and Correction for Chain %d\n",
+-			  i);
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Orignal: Chn %diq_corr_meas = 0x%08x\n",
+-			  i, ah->totalIqCorrMeas[i]);
+-
+-		iqCorrNeg = 0;
+-
+-		if (iqCorrMeas > 0x80000000) {
+-			iqCorrMeas = (0xffffffff - iqCorrMeas) + 1;
+-			iqCorrNeg = 1;
+-		}
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_i = 0x%08x\n", i, powerMeasI);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_q = 0x%08x\n", i, powerMeasQ);
+-		ath_print(common, ATH_DBG_CALIBRATE, "iqCorrNeg is 0x%08x\n",
+-			  iqCorrNeg);
+-
+-		iCoffDenom = (powerMeasI / 2 + powerMeasQ / 2) / 128;
+-		qCoffDenom = powerMeasQ / 64;
+-
+-		if ((powerMeasQ != 0) && (iCoffDenom != 0) &&
+-		    (qCoffDenom != 0)) {
+-			iCoff = iqCorrMeas / iCoffDenom;
+-			qCoff = powerMeasI / qCoffDenom - 64;
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "Chn %d iCoff = 0x%08x\n", i, iCoff);
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "Chn %d qCoff = 0x%08x\n", i, qCoff);
+-
+-			iCoff = iCoff & 0x3f;
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "New: Chn %d iCoff = 0x%08x\n", i, iCoff);
+-			if (iqCorrNeg == 0x0)
+-				iCoff = 0x40 - iCoff;
+-
+-			if (qCoff > 15)
+-				qCoff = 15;
+-			else if (qCoff <= -16)
+-				qCoff = 16;
+-
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
+-				  i, iCoff, qCoff);
+-
+-			REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(i),
+-				      AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF,
+-				      iCoff);
+-			REG_RMW_FIELD(ah, AR_PHY_TIMING_CTRL4(i),
+-				      AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF,
+-				      qCoff);
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "IQ Cal and Correction done for Chain %d\n",
+-				  i);
+-		}
+-	}
+-
+-	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
+-		    AR_PHY_TIMING_CTRL4_IQCORR_ENABLE);
+-}
+-
+-static void ath9k_hw_adc_gaincal_calibrate(struct ath_hw *ah, u8 numChains)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 iOddMeasOffset, iEvenMeasOffset, qOddMeasOffset, qEvenMeasOffset;
+-	u32 qGainMismatch, iGainMismatch, val, i;
+-
+-	for (i = 0; i < numChains; i++) {
+-		iOddMeasOffset = ah->totalAdcIOddPhase[i];
+-		iEvenMeasOffset = ah->totalAdcIEvenPhase[i];
+-		qOddMeasOffset = ah->totalAdcQOddPhase[i];
+-		qEvenMeasOffset = ah->totalAdcQEvenPhase[i];
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Starting ADC Gain Cal for Chain %d\n", i);
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_odd_i = 0x%08x\n", i,
+-			  iOddMeasOffset);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_even_i = 0x%08x\n", i,
+-			  iEvenMeasOffset);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_odd_q = 0x%08x\n", i,
+-			  qOddMeasOffset);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_even_q = 0x%08x\n", i,
+-			  qEvenMeasOffset);
+-
+-		if (iOddMeasOffset != 0 && qEvenMeasOffset != 0) {
+-			iGainMismatch =
+-				((iEvenMeasOffset * 32) /
+-				 iOddMeasOffset) & 0x3f;
+-			qGainMismatch =
+-				((qOddMeasOffset * 32) /
+-				 qEvenMeasOffset) & 0x3f;
+-
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "Chn %d gain_mismatch_i = 0x%08x\n", i,
+-				  iGainMismatch);
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "Chn %d gain_mismatch_q = 0x%08x\n", i,
+-				  qGainMismatch);
+-
+-			val = REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i));
+-			val &= 0xfffff000;
+-			val |= (qGainMismatch) | (iGainMismatch << 6);
+-			REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i), val);
+-
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "ADC Gain Cal done for Chain %d\n", i);
+-		}
+-	}
+-
+-	REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0),
+-		  REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0)) |
+-		  AR_PHY_NEW_ADC_GAIN_CORR_ENABLE);
+-}
+-
+-static void ath9k_hw_adc_dccal_calibrate(struct ath_hw *ah, u8 numChains)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 iOddMeasOffset, iEvenMeasOffset, val, i;
+-	int32_t qOddMeasOffset, qEvenMeasOffset, qDcMismatch, iDcMismatch;
+-	const struct ath9k_percal_data *calData =
+-		ah->cal_list_curr->calData;
+-	u32 numSamples =
+-		(1 << (calData->calCountMax + 5)) * calData->calNumSamples;
+-
+-	for (i = 0; i < numChains; i++) {
+-		iOddMeasOffset = ah->totalAdcDcOffsetIOddPhase[i];
+-		iEvenMeasOffset = ah->totalAdcDcOffsetIEvenPhase[i];
+-		qOddMeasOffset = ah->totalAdcDcOffsetQOddPhase[i];
+-		qEvenMeasOffset = ah->totalAdcDcOffsetQEvenPhase[i];
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			   "Starting ADC DC Offset Cal for Chain %d\n", i);
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_odd_i = %d\n", i,
+-			  iOddMeasOffset);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_even_i = %d\n", i,
+-			  iEvenMeasOffset);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_odd_q = %d\n", i,
+-			  qOddMeasOffset);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d pwr_meas_even_q = %d\n", i,
+-			  qEvenMeasOffset);
+-
+-		iDcMismatch = (((iEvenMeasOffset - iOddMeasOffset) * 2) /
+-			       numSamples) & 0x1ff;
+-		qDcMismatch = (((qOddMeasOffset - qEvenMeasOffset) * 2) /
+-			       numSamples) & 0x1ff;
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d dc_offset_mismatch_i = 0x%08x\n", i,
+-			  iDcMismatch);
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "Chn %d dc_offset_mismatch_q = 0x%08x\n", i,
+-			  qDcMismatch);
+-
+-		val = REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i));
+-		val &= 0xc0000fff;
+-		val |= (qDcMismatch << 12) | (iDcMismatch << 21);
+-		REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(i), val);
+-
+-		ath_print(common, ATH_DBG_CALIBRATE,
+-			  "ADC DC Offset Cal done for Chain %d\n", i);
+-	}
+-
+-	REG_WRITE(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0),
+-		  REG_READ(ah, AR_PHY_NEW_ADC_DC_GAIN_CORR(0)) |
+-		  AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE);
+-}
+-
+ /* This is done for the currently configured channel */
+ bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
  {
--	return hermes_docmd_wait(hw, HERMES_CMD_DISABLE | (port << 8),
-+	return hw->ops->cmd_wait(hw, HERMES_CMD_DISABLE | (port << 8),
- 				 0, NULL);
+@@ -670,570 +317,3 @@ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	return nf;
  }
+ EXPORT_SYMBOL(ath9k_hw_getchan_noise);
+-
+-static void ar9287_hw_olc_temp_compensation(struct ath_hw *ah)
+-{
+-	u32 rddata;
+-	int32_t delta, currPDADC, slope;
+-
+-	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
+-	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
+-
+-	if (ah->initPDADC == 0 || currPDADC == 0) {
+-		/*
+-		 * Zero value indicates that no frames have been transmitted yet,
+-		 * can't do temperature compensation until frames are transmitted.
+-		 */
+-		return;
+-	} else {
+-		slope = ah->eep_ops->get_eeprom(ah, EEP_TEMPSENSE_SLOPE);
+-
+-		if (slope == 0) { /* to avoid divide by zero case */
+-			delta = 0;
+-		} else {
+-			delta = ((currPDADC - ah->initPDADC)*4) / slope;
+-		}
+-		REG_RMW_FIELD(ah, AR_PHY_CH0_TX_PWRCTRL11,
+-			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
+-		REG_RMW_FIELD(ah, AR_PHY_CH1_TX_PWRCTRL11,
+-			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
+-	}
+-}
+-
+-static void ar9280_hw_olc_temp_compensation(struct ath_hw *ah)
+-{
+-	u32 rddata, i;
+-	int delta, currPDADC, regval;
+-
+-	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
+-	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
+-
+-	if (ah->initPDADC == 0 || currPDADC == 0)
+-		return;
+-
+-	if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
+-		delta = (currPDADC - ah->initPDADC + 4) / 8;
+-	else
+-		delta = (currPDADC - ah->initPDADC + 5) / 10;
+-
+-	if (delta != ah->PDADCdelta) {
+-		ah->PDADCdelta = delta;
+-		for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
+-			regval = ah->originalGain[i] - delta;
+-			if (regval < 0)
+-				regval = 0;
+-
+-			REG_RMW_FIELD(ah,
+-				      AR_PHY_TX_GAIN_TBL1 + i * 4,
+-				      AR_PHY_TX_GAIN, regval);
+-		}
+-	}
+-}
+-
+-static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+-{
+-	u32 regVal;
+-	unsigned int i;
+-	u32 regList [][2] = {
+-		{ 0x786c, 0 },
+-		{ 0x7854, 0 },
+-		{ 0x7820, 0 },
+-		{ 0x7824, 0 },
+-		{ 0x7868, 0 },
+-		{ 0x783c, 0 },
+-		{ 0x7838, 0 } ,
+-		{ 0x7828, 0 } ,
+-	};
+-
+-	for (i = 0; i < ARRAY_SIZE(regList); i++)
+-		regList[i][1] = REG_READ(ah, regList[i][0]);
+-
+-	regVal = REG_READ(ah, 0x7834);
+-	regVal &= (~(0x1));
+-	REG_WRITE(ah, 0x7834, regVal);
+-	regVal = REG_READ(ah, 0x9808);
+-	regVal |= (0x1 << 27);
+-	REG_WRITE(ah, 0x9808, regVal);
+-
+-	/* 786c,b23,1, pwddac=1 */
+-	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
+-	/* 7854, b5,1, pdrxtxbb=1 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
+-	/* 7854, b7,1, pdv2i=1 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
+-	/* 7854, b8,1, pddacinterface=1 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
+-	/* 7824,b12,0, offcal=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
+-	/* 7838, b1,0, pwddb=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
+-	/* 7820,b11,0, enpacal=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
+-	/* 7820,b25,1, pdpadrv1=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
+-	/* 7820,b24,0, pdpadrv2=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1,AR9285_AN_RF2G1_PDPADRV2,0);
+-	/* 7820,b23,0, pdpaout=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
+-	/* 783c,b14-16,7, padrvgn2tab_0=7 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G8,AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
+-	/*
+-	 * 7838,b29-31,0, padrvgn1tab_0=0
+-	 * does not matter since we turn it off
+-	 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G7,AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
+-
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9271_AN_RF2G3_CCOMP, 0xfff);
+-
+-	/* Set:
+-	 * localmode=1,bmode=1,bmoderxtx=1,synthon=1,
+-	 * txon=1,paon=1,oscon=1,synthon_force=1
+-	 */
+-	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
+-	udelay(30);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9271_AN_RF2G6_OFFS, 0);
+-
+-	/* find off_6_1; */
+-	for (i = 6; i > 0; i--) {
+-		regVal = REG_READ(ah, 0x7834);
+-		regVal |= (1 << (20 + i));
+-		REG_WRITE(ah, 0x7834, regVal);
+-		udelay(1);
+-		//regVal = REG_READ(ah, 0x7834);
+-		regVal &= (~(0x1 << (20 + i)));
+-		regVal |= (MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9)
+-			    << (20 + i));
+-		REG_WRITE(ah, 0x7834, regVal);
+-	}
+-
+-	regVal = (regVal >>20) & 0x7f;
+-
+-	/* Update PA cal info */
+-	if ((!is_reset) && (ah->pacal_info.prev_offset == regVal)) {
+-		if (ah->pacal_info.max_skipcount < MAX_PACAL_SKIPCOUNT)
+-			ah->pacal_info.max_skipcount =
+-				2 * ah->pacal_info.max_skipcount;
+-		ah->pacal_info.skipcount = ah->pacal_info.max_skipcount;
+-	} else {
+-		ah->pacal_info.max_skipcount = 1;
+-		ah->pacal_info.skipcount = 0;
+-		ah->pacal_info.prev_offset = regVal;
+-	}
+-
+-	regVal = REG_READ(ah, 0x7834);
+-	regVal |= 0x1;
+-	REG_WRITE(ah, 0x7834, regVal);
+-	regVal = REG_READ(ah, 0x9808);
+-	regVal &= (~(0x1 << 27));
+-	REG_WRITE(ah, 0x9808, regVal);
+-
+-	for (i = 0; i < ARRAY_SIZE(regList); i++)
+-		REG_WRITE(ah, regList[i][0], regList[i][1]);
+-}
+-
+-static inline void ar9285_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 regVal;
+-	int i, offset, offs_6_1, offs_0;
+-	u32 ccomp_org, reg_field;
+-	u32 regList[][2] = {
+-		{ 0x786c, 0 },
+-		{ 0x7854, 0 },
+-		{ 0x7820, 0 },
+-		{ 0x7824, 0 },
+-		{ 0x7868, 0 },
+-		{ 0x783c, 0 },
+-		{ 0x7838, 0 },
+-	};
+-
+-	ath_print(common, ATH_DBG_CALIBRATE, "Running PA Calibration\n");
+-
+-	/* PA CAL is not needed for high power solution */
+-	if (ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE) ==
+-	    AR5416_EEP_TXGAIN_HIGH_POWER)
+-		return;
+-
+-	if (AR_SREV_9285_11(ah)) {
+-		REG_WRITE(ah, AR9285_AN_TOP4, (AR9285_AN_TOP4_DEFAULT | 0x14));
+-		udelay(10);
+-	}
+-
+-	for (i = 0; i < ARRAY_SIZE(regList); i++)
+-		regList[i][1] = REG_READ(ah, regList[i][0]);
+-
+-	regVal = REG_READ(ah, 0x7834);
+-	regVal &= (~(0x1));
+-	REG_WRITE(ah, 0x7834, regVal);
+-	regVal = REG_READ(ah, 0x9808);
+-	regVal |= (0x1 << 27);
+-	REG_WRITE(ah, 0x9808, regVal);
+-
+-	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2, 0);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G8, AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
+-	ccomp_org = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_CCOMP);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, 0xf);
+-
+-	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
+-	udelay(30);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_OFFS, 0);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, 0);
+-
+-	for (i = 6; i > 0; i--) {
+-		regVal = REG_READ(ah, 0x7834);
+-		regVal |= (1 << (19 + i));
+-		REG_WRITE(ah, 0x7834, regVal);
+-		udelay(1);
+-		regVal = REG_READ(ah, 0x7834);
+-		regVal &= (~(0x1 << (19 + i)));
+-		reg_field = MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9);
+-		regVal |= (reg_field << (19 + i));
+-		REG_WRITE(ah, 0x7834, regVal);
+-	}
+-
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, 1);
+-	udelay(1);
+-	reg_field = MS(REG_READ(ah, AR9285_AN_RF2G9), AR9285_AN_RXTXBB1_SPARE9);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, reg_field);
+-	offs_6_1 = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_OFFS);
+-	offs_0   = MS(REG_READ(ah, AR9285_AN_RF2G3), AR9285_AN_RF2G3_PDVCCOMP);
+-
+-	offset = (offs_6_1<<1) | offs_0;
+-	offset = offset - 0;
+-	offs_6_1 = offset>>1;
+-	offs_0 = offset & 1;
+-
+-	if ((!is_reset) && (ah->pacal_info.prev_offset == offset)) {
+-		if (ah->pacal_info.max_skipcount < MAX_PACAL_SKIPCOUNT)
+-			ah->pacal_info.max_skipcount =
+-				2 * ah->pacal_info.max_skipcount;
+-		ah->pacal_info.skipcount = ah->pacal_info.max_skipcount;
+-	} else {
+-		ah->pacal_info.max_skipcount = 1;
+-		ah->pacal_info.skipcount = 0;
+-		ah->pacal_info.prev_offset = offset;
+-	}
+-
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_OFFS, offs_6_1);
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9285_AN_RF2G3_PDVCCOMP, offs_0);
+-
+-	regVal = REG_READ(ah, 0x7834);
+-	regVal |= 0x1;
+-	REG_WRITE(ah, 0x7834, regVal);
+-	regVal = REG_READ(ah, 0x9808);
+-	regVal &= (~(0x1 << 27));
+-	REG_WRITE(ah, 0x9808, regVal);
+-
+-	for (i = 0; i < ARRAY_SIZE(regList); i++)
+-		REG_WRITE(ah, regList[i][0], regList[i][1]);
+-
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, ccomp_org);
+-
+-	if (AR_SREV_9285_11(ah))
+-		REG_WRITE(ah, AR9285_AN_TOP4, AR9285_AN_TOP4_DEFAULT);
+-
+-}
+-
+-static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+-{
+-	if (AR_SREV_9271(ah)) {
+-		if (is_reset || !ah->pacal_info.skipcount)
+-			ar9271_hw_pa_cal(ah, is_reset);
+-		else
+-			ah->pacal_info.skipcount--;
+-	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
+-		if (is_reset || !ah->pacal_info.skipcount)
+-			ar9285_hw_pa_cal(ah, is_reset);
+-		else
+-			ah->pacal_info.skipcount--;
+-	}
+-}
+-
+-static void ar9002_hw_olc_temp_compensation(struct ath_hw *ah)
+-{
+-	if (OLC_FOR_AR9287_10_LATER)
+-		ar9287_hw_olc_temp_compensation(ah);
+-	else if (OLC_FOR_AR9280_20_LATER)
+-		ar9280_hw_olc_temp_compensation(ah);
+-}
+-
+-bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+-			u8 rxchainmask, bool longcal)
+-{
+-	bool iscaldone = true;
+-	struct ath9k_cal_list *currCal = ah->cal_list_curr;
+-
+-	if (currCal &&
+-	    (currCal->calState == CAL_RUNNING ||
+-	     currCal->calState == CAL_WAITING)) {
+-		iscaldone = ath9k_hw_per_calibration(ah, chan,
+-						     rxchainmask, currCal);
+-		if (iscaldone) {
+-			ah->cal_list_curr = currCal = currCal->calNext;
+-
+-			if (currCal->calState == CAL_WAITING) {
+-				iscaldone = false;
+-				ath9k_hw_reset_calibration(ah, currCal);
+-			}
+-		}
+-	}
+-
+-	/* Do NF cal only at longer intervals */
+-	if (longcal) {
+-		/* Do periodic PAOffset Cal */
+-		ar9002_hw_pa_cal(ah, false);
+-		ar9002_hw_olc_temp_compensation(ah);
+-
+-		/* Get the value from the previous NF cal and update history buffer */
+-		ath9k_hw_getnf(ah, chan);
+-
+-		/*
+-		 * Load the NF from history buffer of the current channel.
+-		 * NF is slow time-variant, so it is OK to use a historical value.
+-		 */
+-		ath9k_hw_loadnf(ah, ah->curchan);
+-
+-		ath9k_hw_start_nfcal(ah);
+-	}
+-
+-	return iscaldone;
+-}
+-EXPORT_SYMBOL(ath9k_hw_calibrate);
+-
+-/* Carrier leakage Calibration fix */
+-static bool ar9285_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
+-	if (IS_CHAN_HT20(chan)) {
+-		REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
+-		REG_SET_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
+-		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+-			    AR_PHY_AGC_CONTROL_FLTR_CAL);
+-		REG_CLR_BIT(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_CAL_ENABLE);
+-		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL);
+-		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
+-				  AR_PHY_AGC_CONTROL_CAL, 0, AH_WAIT_TIMEOUT)) {
+-			ath_print(common, ATH_DBG_CALIBRATE, "offset "
+-				  "calibration failed to complete in "
+-				  "1ms; noisy ??\n");
+-			return false;
+-		}
+-		REG_CLR_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
+-		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_PARALLEL_CAL_ENABLE);
+-		REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
+-	}
+-	REG_CLR_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
+-	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
+-	REG_SET_BIT(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_CAL_ENABLE);
+-	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL);
+-	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
+-			  0, AH_WAIT_TIMEOUT)) {
+-		ath_print(common, ATH_DBG_CALIBRATE, "offset calibration "
+-			  "failed to complete in 1ms; noisy ??\n");
+-		return false;
+-	}
+-
+-	REG_SET_BIT(ah, AR_PHY_ADC_CTL, AR_PHY_ADC_CTL_OFF_PWDADC);
+-	REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
+-	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_FLTR_CAL);
+-
+-	return true;
+-}
+-
+-static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
+-{
+-	int i;
+-	u_int32_t txgain_max;
+-	u_int32_t clc_gain, gain_mask = 0, clc_num = 0;
+-	u_int32_t reg_clc_I0, reg_clc_Q0;
+-	u_int32_t i0_num = 0;
+-	u_int32_t q0_num = 0;
+-	u_int32_t total_num = 0;
+-	u_int32_t reg_rf2g5_org;
+-	bool retv = true;
+-
+-	if (!(ar9285_cl_cal(ah, chan)))
+-		return false;
+-
+-	txgain_max = MS(REG_READ(ah, AR_PHY_TX_PWRCTRL7),
+-			AR_PHY_TX_PWRCTRL_TX_GAIN_TAB_MAX);
+-
+-	for (i = 0; i < (txgain_max+1); i++) {
+-		clc_gain = (REG_READ(ah, (AR_PHY_TX_GAIN_TBL1+(i<<2))) &
+-			   AR_PHY_TX_GAIN_CLC) >> AR_PHY_TX_GAIN_CLC_S;
+-		if (!(gain_mask & (1 << clc_gain))) {
+-			gain_mask |= (1 << clc_gain);
+-			clc_num++;
+-		}
+-	}
+-
+-	for (i = 0; i < clc_num; i++) {
+-		reg_clc_I0 = (REG_READ(ah, (AR_PHY_CLC_TBL1 + (i << 2)))
+-			      & AR_PHY_CLC_I0) >> AR_PHY_CLC_I0_S;
+-		reg_clc_Q0 = (REG_READ(ah, (AR_PHY_CLC_TBL1 + (i << 2)))
+-			      & AR_PHY_CLC_Q0) >> AR_PHY_CLC_Q0_S;
+-		if (reg_clc_I0 == 0)
+-			i0_num++;
+-
+-		if (reg_clc_Q0 == 0)
+-			q0_num++;
+-	}
+-	total_num = i0_num + q0_num;
+-	if (total_num > AR9285_CLCAL_REDO_THRESH) {
+-		reg_rf2g5_org = REG_READ(ah, AR9285_RF2G5);
+-		if (AR_SREV_9285E_20(ah)) {
+-			REG_WRITE(ah, AR9285_RF2G5,
+-				  (reg_rf2g5_org & AR9285_RF2G5_IC50TX) |
+-				  AR9285_RF2G5_IC50TX_XE_SET);
+-		} else {
+-			REG_WRITE(ah, AR9285_RF2G5,
+-				  (reg_rf2g5_org & AR9285_RF2G5_IC50TX) |
+-				  AR9285_RF2G5_IC50TX_SET);
+-		}
+-		retv = ar9285_cl_cal(ah, chan);
+-		REG_WRITE(ah, AR9285_RF2G5, reg_rf2g5_org);
+-	}
+-	return retv;
+-}
+-
+-bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	if (AR_SREV_9271(ah) || AR_SREV_9285_12_OR_LATER(ah)) {
+-		if (!ar9285_clc(ah, chan))
+-			return false;
+-	} else {
+-		if (AR_SREV_9280_10_OR_LATER(ah)) {
+-			if (!AR_SREV_9287_10_OR_LATER(ah))
+-				REG_CLR_BIT(ah, AR_PHY_ADC_CTL,
+-					    AR_PHY_ADC_CTL_OFF_PWDADC);
+-			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
+-				    AR_PHY_AGC_CONTROL_FLTR_CAL);
+-		}
+-
+-		/* Calibrate the AGC */
+-		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+-			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
+-			  AR_PHY_AGC_CONTROL_CAL);
+-
+-		/* Poll for offset calibration complete */
+-		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
+-				   0, AH_WAIT_TIMEOUT)) {
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "offset calibration failed to "
+-				  "complete in 1ms; noisy environment?\n");
+-			return false;
+-		}
+-
+-		if (AR_SREV_9280_10_OR_LATER(ah)) {
+-			if (!AR_SREV_9287_10_OR_LATER(ah))
+-				REG_SET_BIT(ah, AR_PHY_ADC_CTL,
+-					    AR_PHY_ADC_CTL_OFF_PWDADC);
+-			REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+-				    AR_PHY_AGC_CONTROL_FLTR_CAL);
+-		}
+-	}
+-
+-	/* Do PA Calibration */
+-	ar9002_hw_pa_cal(ah, true);
+-
+-	/* Do NF Calibration after DC offset and other calibrations */
+-	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+-		  REG_READ(ah, AR_PHY_AGC_CONTROL) | AR_PHY_AGC_CONTROL_NF);
+-
+-	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+-
+-	/* Enable IQ, ADC Gain and ADC DC offset CALs */
+-	if (AR_SREV_9100(ah) || AR_SREV_9160_10_OR_LATER(ah)) {
+-		if (ath9k_hw_iscal_supported(ah, ADC_GAIN_CAL)) {
+-			INIT_CAL(&ah->adcgain_caldata);
+-			INSERT_CAL(ah, &ah->adcgain_caldata);
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "enabling ADC Gain Calibration.\n");
+-		}
+-		if (ath9k_hw_iscal_supported(ah, ADC_DC_CAL)) {
+-			INIT_CAL(&ah->adcdc_caldata);
+-			INSERT_CAL(ah, &ah->adcdc_caldata);
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "enabling ADC DC Calibration.\n");
+-		}
+-		if (ath9k_hw_iscal_supported(ah, IQ_MISMATCH_CAL)) {
+-			INIT_CAL(&ah->iq_caldata);
+-			INSERT_CAL(ah, &ah->iq_caldata);
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "enabling IQ Calibration.\n");
+-		}
+-
+-		ah->cal_list_curr = ah->cal_list;
+-
+-		if (ah->cal_list_curr)
+-			ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
+-	}
+-
+-	chan->CalValid = 0;
+-
+-	return true;
+-}
+-
+-const struct ath9k_percal_data iq_cal_multi_sample = {
+-	IQ_MISMATCH_CAL,
+-	MAX_CAL_SAMPLES,
+-	PER_MIN_LOG_COUNT,
+-	ath9k_hw_iqcal_collect,
+-	ath9k_hw_iqcalibrate
+-};
+-const struct ath9k_percal_data iq_cal_single_sample = {
+-	IQ_MISMATCH_CAL,
+-	MIN_CAL_SAMPLES,
+-	PER_MAX_LOG_COUNT,
+-	ath9k_hw_iqcal_collect,
+-	ath9k_hw_iqcalibrate
+-};
+-const struct ath9k_percal_data adc_gain_cal_multi_sample = {
+-	ADC_GAIN_CAL,
+-	MAX_CAL_SAMPLES,
+-	PER_MIN_LOG_COUNT,
+-	ath9k_hw_adc_gaincal_collect,
+-	ath9k_hw_adc_gaincal_calibrate
+-};
+-const struct ath9k_percal_data adc_gain_cal_single_sample = {
+-	ADC_GAIN_CAL,
+-	MIN_CAL_SAMPLES,
+-	PER_MAX_LOG_COUNT,
+-	ath9k_hw_adc_gaincal_collect,
+-	ath9k_hw_adc_gaincal_calibrate
+-};
+-const struct ath9k_percal_data adc_dc_cal_multi_sample = {
+-	ADC_DC_CAL,
+-	MAX_CAL_SAMPLES,
+-	PER_MIN_LOG_COUNT,
+-	ath9k_hw_adc_dccal_collect,
+-	ath9k_hw_adc_dccal_calibrate
+-};
+-const struct ath9k_percal_data adc_dc_cal_single_sample = {
+-	ADC_DC_CAL,
+-	MIN_CAL_SAMPLES,
+-	PER_MAX_LOG_COUNT,
+-	ath9k_hw_adc_dccal_collect,
+-	ath9k_hw_adc_dccal_calibrate
+-};
+-const struct ath9k_percal_data adc_init_dc_cal = {
+-	ADC_DC_INIT_CAL,
+-	MIN_CAL_SAMPLES,
+-	INIT_LOG_COUNT,
+-	ath9k_hw_adc_dccal_collect,
+-	ath9k_hw_adc_dccal_calibrate
+-};
+diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
+index b2c873e..9f6c21d 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.h
++++ b/drivers/net/wireless/ath/ath9k/calib.h
+@@ -19,14 +19,6 @@
  
-@@ -440,7 +446,7 @@ static inline int hermes_disable_port(hermes_t *hw, int port)
-  * information frame in __orinoco_ev_info() */
- static inline int hermes_inquire(hermes_t *hw, u16 rid)
+ #include "hw.h"
+ 
+-extern const struct ath9k_percal_data iq_cal_multi_sample;
+-extern const struct ath9k_percal_data iq_cal_single_sample;
+-extern const struct ath9k_percal_data adc_gain_cal_multi_sample;
+-extern const struct ath9k_percal_data adc_gain_cal_single_sample;
+-extern const struct ath9k_percal_data adc_dc_cal_multi_sample;
+-extern const struct ath9k_percal_data adc_dc_cal_single_sample;
+-extern const struct ath9k_percal_data adc_init_dc_cal;
+-
+ #define AR_PHY_CCA_MAX_AR5416_GOOD_VALUE	-85
+ #define AR_PHY_CCA_MAX_AR9280_GOOD_VALUE	-112
+ #define AR_PHY_CCA_MAX_AR9285_GOOD_VALUE	-118
+@@ -127,9 +119,8 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 		       struct ath9k_channel *chan);
+ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah);
+ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan);
+-bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+-			u8 rxchainmask, bool longcal);
+-bool ath9k_hw_init_cal(struct ath_hw *ah,
+-		       struct ath9k_channel *chan);
++void ath9k_hw_reset_calibration(struct ath_hw *ah,
++				struct ath9k_cal_list *currCal);
++
+ 
+ #endif /* CALIB_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index e2b8ad4..3848c0d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -44,6 +44,14 @@ static inline void ath9k_hw_get_desc_link(struct ath_hw *ah, void *ds,
  {
--	return hermes_docmd_wait(hw, HERMES_CMD_INQUIRE, rid, NULL);
-+	return hw->ops->cmd_wait(hw, HERMES_CMD_INQUIRE, rid, NULL);
+ 	ath9k_hw_ops(ah)->get_desc_link(ds, link);
  }
++static inline bool ath9k_hw_calibrate(struct ath_hw *ah,
++				      struct ath9k_channel *chan,
++				      u8 rxchainmask,
++				      bool longcal)
++{
++	return ath9k_hw_ops(ah)->calibrate(ah, chan, rxchainmask, longcal);
++}
++
+ /* Private hardware call ops */
  
- #define HERMES_BYTES_TO_RECLEN(n) ((((n)+1)/2) + 1)
-@@ -475,10 +481,10 @@ static inline void hermes_clear_words(struct hermes *hw, int off,
- }
- 
- #define HERMES_READ_RECORD(hw, bap, rid, buf) \
--	(hermes_read_ltv((hw), (bap), (rid), sizeof(*buf), NULL, (buf)))
-+	(hw->ops->read_ltv((hw), (bap), (rid), sizeof(*buf), NULL, (buf)))
- #define HERMES_WRITE_RECORD(hw, bap, rid, buf) \
--	(hermes_write_ltv((hw), (bap), (rid), \
--			  HERMES_BYTES_TO_RECLEN(sizeof(*buf)), (buf)))
-+	(hw->ops->write_ltv((hw), (bap), (rid), \
-+			    HERMES_BYTES_TO_RECLEN(sizeof(*buf)), (buf)))
- 
- static inline int hermes_read_wordrec(hermes_t *hw, int bap, u16 rid, u16 *word)
+ /* PHY ops */
+@@ -166,7 +174,25 @@ static inline bool ath9k_hw_ani_control(struct ath_hw *ah,
+ static inline void ath9k_hw_do_getnf(struct ath_hw *ah,
+ 				     int16_t nfarray[NUM_NF_READINGS])
  {
-diff --git a/drivers/net/wireless/orinoco/hermes_dld.c b/drivers/net/wireless/orinoco/hermes_dld.c
-index fb157eb..8f22e20 100644
---- a/drivers/net/wireless/orinoco/hermes_dld.c
-+++ b/drivers/net/wireless/orinoco/hermes_dld.c
-@@ -293,7 +293,7 @@ int hermes_read_pda(hermes_t *hw,
- 		/* PDA of spectrum symbol is in eeprom */
- 
- 		/* Issue command to read EEPROM */
--		ret = hermes_docmd_wait(hw, HERMES_CMD_READMIF, 0, NULL);
-+		ret = hw->ops->cmd_wait(hw, HERMES_CMD_READMIF, 0, NULL);
- 		if (ret)
- 			return ret;
- 	} else {
-@@ -408,16 +408,16 @@ int hermesi_program_init(hermes_t *hw, u32 offset)
- 	/* Acknowledge any outstanding command */
- 	hermes_write_regn(hw, EVACK, 0xFFFF);
- 
--	/* Using doicmd_wait rather than docmd_wait */
--	err = hermes_doicmd_wait(hw,
--				 0x0100 | HERMES_CMD_INIT,
--				 0, 0, 0, NULL);
-+	/* Using init_cmd_wait rather than cmd_wait */
-+	err = hw->ops->init_cmd_wait(hw,
-+				     0x0100 | HERMES_CMD_INIT,
-+				     0, 0, 0, NULL);
- 	if (err)
- 		return err;
- 
--	err = hermes_doicmd_wait(hw,
--				 0x0000 | HERMES_CMD_INIT,
--				 0, 0, 0, NULL);
-+	err = hw->ops->init_cmd_wait(hw,
-+				     0x0000 | HERMES_CMD_INIT,
-+				     0, 0, 0, NULL);
- 	if (err)
- 		return err;
- 
-@@ -428,12 +428,12 @@ int hermesi_program_init(hermes_t *hw, u32 offset)
- 		return err;
- 
- 	pr_debug(PFX "Enabling volatile, EP 0x%08x\n", offset);
--	err = hermes_doicmd_wait(hw,
--				 HERMES_PROGRAM_ENABLE_VOLATILE,
--				 offset & 0xFFFFu,
--				 offset >> 16,
--				 0,
--				 NULL);
-+	err = hw->ops->init_cmd_wait(hw,
-+				     HERMES_PROGRAM_ENABLE_VOLATILE,
-+				     offset & 0xFFFFu,
-+				     offset >> 16,
-+				     0,
-+				     NULL);
- 	pr_debug(PFX "PROGRAM_ENABLE returned %d\n", err);
- 
- 	return err;
-@@ -451,7 +451,7 @@ int hermesi_program_end(hermes_t *hw)
- 	int rc = 0;
- 	int err;
- 
--	rc = hermes_docmd_wait(hw, HERMES_PROGRAM_DISABLE, 0, &resp);
-+	rc = hw->ops->cmd_wait(hw, HERMES_PROGRAM_DISABLE, 0, &resp);
- 
- 	pr_debug(PFX "PROGRAM_DISABLE returned %d, "
- 		 "r0 0x%04x, r1 0x%04x, r2 0x%04x\n",
-@@ -468,8 +468,8 @@ int hermesi_program_end(hermes_t *hw)
- 	hermes_write_regn(hw, EVACK, 0xFFFF);
- 
- 	/* Reinitialise, ignoring return */
--	(void) hermes_doicmd_wait(hw, 0x0000 | HERMES_CMD_INIT,
--				  0, 0, 0, NULL);
-+	(void) hw->ops->init_cmd_wait(hw, 0x0000 | HERMES_CMD_INIT,
-+				      0, 0, 0, NULL);
- 
- 	return rc ? rc : err;
+-	return ath9k_hw_private_ops(ah)->do_getnf(ah, nfarray);
++	ath9k_hw_private_ops(ah)->do_getnf(ah, nfarray);
++}
++
++static inline bool ath9k_hw_init_cal(struct ath_hw *ah,
++				     struct ath9k_channel *chan)
++{
++	return ath9k_hw_private_ops(ah)->init_cal(ah, chan);
++}
++
++static inline void ath9k_hw_setup_calibration(struct ath_hw *ah,
++					      struct ath9k_cal_list *currCal)
++{
++	ath9k_hw_private_ops(ah)->setup_calibration(ah, currCal);
++}
++
++static inline bool ath9k_hw_iscal_supported(struct ath_hw *ah,
++					    enum ath9k_cal_types calType)
++{
++	return ath9k_hw_private_ops(ah)->iscal_supported(ah, calType);
  }
-diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
-index 24ea4b4..9c86acc 100644
---- a/drivers/net/wireless/orinoco/hw.c
-+++ b/drivers/net/wireless/orinoco/hw.c
-@@ -177,9 +177,9 @@ int determine_fw_capabilities(struct orinoco_private *priv,
- 		/* 3Com MAC : 00:50:DA:* */
- 		memset(tmp, 0, sizeof(tmp));
- 		/* Get the Symbol firmware version */
--		err = hermes_read_ltv(hw, USER_BAP,
--				      HERMES_RID_SECONDARYVERSION_SYMBOL,
--				      SYMBOL_MAX_VER_LEN, NULL, &tmp);
-+		err = hw->ops->read_ltv(hw, USER_BAP,
-+					HERMES_RID_SECONDARYVERSION_SYMBOL,
-+					SYMBOL_MAX_VER_LEN, NULL, &tmp);
- 		if (err) {
- 			dev_warn(dev, "Error %d reading Symbol firmware info. "
- 				 "Wildly guessing capabilities...\n", err);
-@@ -286,8 +286,8 @@ int orinoco_hw_read_card_settings(struct orinoco_private *priv, u8 *dev_addr)
- 	u16 reclen;
  
- 	/* Get the MAC address */
--	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CNFOWNMACADDR,
--			      ETH_ALEN, NULL, dev_addr);
-+	err = hw->ops->read_ltv(hw, USER_BAP, HERMES_RID_CNFOWNMACADDR,
-+				ETH_ALEN, NULL, dev_addr);
- 	if (err) {
- 		dev_warn(dev, "Failed to read MAC address!\n");
- 		goto out;
-@@ -296,8 +296,8 @@ int orinoco_hw_read_card_settings(struct orinoco_private *priv, u8 *dev_addr)
- 	dev_dbg(dev, "MAC address %pM\n", dev_addr);
- 
- 	/* Get the station name */
--	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CNFOWNNAME,
--			      sizeof(nickbuf), &reclen, &nickbuf);
-+	err = hw->ops->read_ltv(hw, USER_BAP, HERMES_RID_CNFOWNNAME,
-+				sizeof(nickbuf), &reclen, &nickbuf);
- 	if (err) {
- 		dev_err(dev, "failed to read station name\n");
- 		goto out;
-@@ -413,11 +413,11 @@ int orinoco_hw_allocate_fid(struct orinoco_private *priv)
- 	struct hermes *hw = &priv->hw;
- 	int err;
- 
--	err = hermes_allocate(hw, priv->nicbuf_size, &priv->txfid);
-+	err = hw->ops->allocate(hw, priv->nicbuf_size, &priv->txfid);
- 	if (err == -EIO && priv->nicbuf_size > TX_NICBUF_SIZE_BUG) {
- 		/* Try workaround for old Symbol firmware bug */
- 		priv->nicbuf_size = TX_NICBUF_SIZE_BUG;
--		err = hermes_allocate(hw, priv->nicbuf_size, &priv->txfid);
-+		err = hw->ops->allocate(hw, priv->nicbuf_size, &priv->txfid);
- 
- 		dev_warn(dev, "Firmware ALLOC bug detected "
- 			 "(old Symbol firmware?). Work around %s\n",
-@@ -463,8 +463,9 @@ int orinoco_hw_program_rids(struct orinoco_private *priv)
- 	struct hermes_idstring idbuf;
- 
- 	/* Set the MAC address */
--	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNMACADDR,
--			       HERMES_BYTES_TO_RECLEN(ETH_ALEN), dev->dev_addr);
-+	err = hw->ops->write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNMACADDR,
-+				 HERMES_BYTES_TO_RECLEN(ETH_ALEN),
-+				 dev->dev_addr);
- 	if (err) {
- 		printk(KERN_ERR "%s: Error %d setting MAC address\n",
- 		       dev->name, err);
-@@ -527,7 +528,7 @@ int orinoco_hw_program_rids(struct orinoco_private *priv)
- 	idbuf.len = cpu_to_le16(strlen(priv->desired_essid));
- 	memcpy(&idbuf.val, priv->desired_essid, sizeof(idbuf.val));
- 	/* WinXP wants partner to configure OWNSSID even in IBSS mode. (jimc) */
--	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNSSID,
-+	err = hw->ops->write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNSSID,
- 			HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
- 			&idbuf);
- 	if (err) {
-@@ -535,7 +536,7 @@ int orinoco_hw_program_rids(struct orinoco_private *priv)
- 		       dev->name, err);
- 		return err;
- 	}
--	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFDESIREDSSID,
-+	err = hw->ops->write_ltv(hw, USER_BAP, HERMES_RID_CNFDESIREDSSID,
- 			HERMES_BYTES_TO_RECLEN(strlen(priv->desired_essid)+2),
- 			&idbuf);
- 	if (err) {
-@@ -547,9 +548,9 @@ int orinoco_hw_program_rids(struct orinoco_private *priv)
- 	/* Set the station name */
- 	idbuf.len = cpu_to_le16(strlen(priv->nick));
- 	memcpy(&idbuf.val, priv->nick, sizeof(idbuf.val));
--	err = hermes_write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNNAME,
--			       HERMES_BYTES_TO_RECLEN(strlen(priv->nick)+2),
--			       &idbuf);
-+	err = hw->ops->write_ltv(hw, USER_BAP, HERMES_RID_CNFOWNNAME,
-+				 HERMES_BYTES_TO_RECLEN(strlen(priv->nick)+2),
-+				 &idbuf);
- 	if (err) {
- 		printk(KERN_ERR "%s: Error %d setting nickname\n",
- 		       dev->name, err);
-@@ -664,12 +665,12 @@ int orinoco_hw_program_rids(struct orinoco_private *priv)
- 	if (priv->iw_mode == NL80211_IFTYPE_MONITOR) {
- 		/* Enable monitor mode */
- 		dev->type = ARPHRD_IEEE80211;
--		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
-+		err = hw->ops->cmd_wait(hw, HERMES_CMD_TEST |
- 					    HERMES_TEST_MONITOR, 0, NULL);
- 	} else {
- 		/* Disable monitor mode */
- 		dev->type = ARPHRD_ETHER;
--		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
-+		err = hw->ops->cmd_wait(hw, HERMES_CMD_TEST |
- 					    HERMES_TEST_STOP, 0, NULL);
- 	}
- 	if (err)
-@@ -695,8 +696,8 @@ int orinoco_hw_get_tkip_iv(struct orinoco_private *priv, int key, u8 *tsc)
- 	if ((key < 0) || (key >= 4))
- 		return -EINVAL;
- 
--	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENT_TKIP_IV,
--			      sizeof(tsc_arr), NULL, &tsc_arr);
-+	err = hw->ops->read_ltv(hw, USER_BAP, HERMES_RID_CURRENT_TKIP_IV,
-+				sizeof(tsc_arr), NULL, &tsc_arr);
- 	if (!err)
- 		memcpy(tsc, &tsc_arr[key][0], sizeof(tsc_arr[0]));
- 
-@@ -875,7 +876,7 @@ int __orinoco_hw_setup_wepkeys(struct orinoco_private *priv)
- 				memcpy(key, priv->keys[i].key,
- 				       priv->keys[i].key_len);
- 
--				err = hermes_write_ltv(hw, USER_BAP,
-+				err = hw->ops->write_ltv(hw, USER_BAP,
- 						HERMES_RID_CNFDEFAULTKEY0 + i,
- 						HERMES_BYTES_TO_RECLEN(keylen),
- 						key);
-@@ -1092,7 +1093,7 @@ int __orinoco_hw_set_multicast_list(struct orinoco_private *priv,
- 			memcpy(mclist.addr[i++], p->dmi_addr, ETH_ALEN);
- 		}
- 
--		err = hermes_write_ltv(hw, USER_BAP,
-+		err = hw->ops->write_ltv(hw, USER_BAP,
- 				   HERMES_RID_CNFGROUPADDRESSES,
- 				   HERMES_BYTES_TO_RECLEN(mc_count * ETH_ALEN),
- 				   &mclist);
-@@ -1134,15 +1135,15 @@ int orinoco_hw_get_essid(struct orinoco_private *priv, int *active,
- 		rid = (priv->port_type == 3) ? HERMES_RID_CNFOWNSSID :
- 			HERMES_RID_CNFDESIREDSSID;
- 
--		err = hermes_read_ltv(hw, USER_BAP, rid, sizeof(essidbuf),
--				      NULL, &essidbuf);
-+		err = hw->ops->read_ltv(hw, USER_BAP, rid, sizeof(essidbuf),
-+					NULL, &essidbuf);
- 		if (err)
- 			goto fail_unlock;
- 	} else {
- 		*active = 0;
- 
--		err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENTSSID,
--				      sizeof(essidbuf), NULL, &essidbuf);
-+		err = hw->ops->read_ltv(hw, USER_BAP, HERMES_RID_CURRENTSSID,
-+					sizeof(essidbuf), NULL, &essidbuf);
- 		if (err)
- 			goto fail_unlock;
- 	}
-@@ -1213,8 +1214,8 @@ int orinoco_hw_get_bitratelist(struct orinoco_private *priv,
- 	if (orinoco_lock(priv, &flags) != 0)
- 		return -EBUSY;
- 
--	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_SUPPORTEDDATARATES,
--			      sizeof(list), NULL, &list);
-+	err = hw->ops->read_ltv(hw, USER_BAP, HERMES_RID_SUPPORTEDDATARATES,
-+				sizeof(list), NULL, &list);
- 	orinoco_unlock(priv, &flags);
- 
- 	if (err)
-@@ -1281,7 +1282,7 @@ int orinoco_hw_trigger_scan(struct orinoco_private *priv,
- 				idbuf.len = cpu_to_le16(len);
- 				memcpy(idbuf.val, ssid->ssid, len);
- 
--				err = hermes_write_ltv(hw, USER_BAP,
-+				err = hw->ops->write_ltv(hw, USER_BAP,
- 					       HERMES_RID_CNFSCANSSID_AGERE,
- 					       HERMES_BYTES_TO_RECLEN(len + 2),
- 					       &idbuf);
-@@ -1345,8 +1346,8 @@ int orinoco_hw_get_current_bssid(struct orinoco_private *priv,
- 	hermes_t *hw = &priv->hw;
- 	int err;
- 
--	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENTBSSID,
--			      ETH_ALEN, NULL, addr);
-+	err = hw->ops->read_ltv(hw, USER_BAP, HERMES_RID_CURRENTBSSID,
-+				ETH_ALEN, NULL, addr);
- 
- 	return err;
+ #endif /* ATH9K_HW_OPS_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 51f1e84..6c092ee 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -601,36 +601,6 @@ static bool ar9003_hw_macversion_supported(u32 macversion)
+ 	return false;
  }
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index 413e9ab..8c8009c 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -400,8 +400,8 @@ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- 		memset(&desc, 0, sizeof(desc));
  
- 		*txcntl = cpu_to_le16(tx_control);
--		err = hermes_bap_pwrite(hw, USER_BAP, &desc, sizeof(desc),
--					txfid, 0);
-+		err = hw->ops->bap_pwrite(hw, USER_BAP, &desc, sizeof(desc),
-+					  txfid, 0);
- 		if (err) {
- 			if (net_ratelimit())
- 				printk(KERN_ERR "%s: Error %d writing Tx "
-@@ -414,8 +414,8 @@ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- 		memset(&desc, 0, sizeof(desc));
+-static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
+-{
+-	if (AR_SREV_9100(ah)) {
+-		ah->iq_caldata.calData = &iq_cal_multi_sample;
+-		ah->supp_cals = IQ_MISMATCH_CAL;
+-		return;
+-	}
+-
+-	if (AR_SREV_9160_10_OR_LATER(ah)) {
+-		if (AR_SREV_9280_10_OR_LATER(ah)) {
+-			ah->iq_caldata.calData = &iq_cal_single_sample;
+-			ah->adcgain_caldata.calData =
+-				&adc_gain_cal_single_sample;
+-			ah->adcdc_caldata.calData =
+-				&adc_dc_cal_single_sample;
+-			ah->adcdc_calinitdata.calData =
+-				&adc_init_dc_cal;
+-		} else {
+-			ah->iq_caldata.calData = &iq_cal_multi_sample;
+-			ah->adcgain_caldata.calData =
+-				&adc_gain_cal_multi_sample;
+-			ah->adcdc_caldata.calData =
+-				&adc_dc_cal_multi_sample;
+-			ah->adcdc_calinitdata.calData =
+-				&adc_init_dc_cal;
+-		}
+-		ah->supp_cals = ADC_GAIN_CAL | ADC_DC_CAL | IQ_MISMATCH_CAL;
+-	}
+-}
+-
+ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ {
+ 	if (AR_SREV_9271(ah)) {
+@@ -3642,7 +3612,6 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+ 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
  
- 		desc.tx_control = cpu_to_le16(tx_control);
--		err = hermes_bap_pwrite(hw, USER_BAP, &desc, sizeof(desc),
--					txfid, 0);
-+		err = hw->ops->bap_pwrite(hw, USER_BAP, &desc, sizeof(desc),
-+					  txfid, 0);
- 		if (err) {
- 			if (net_ratelimit())
- 				printk(KERN_ERR "%s: Error %d writing Tx "
-@@ -458,8 +458,8 @@ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- 		memcpy(eh, &hdr, sizeof(hdr));
- 	}
+-	priv_ops->init_cal_settings = ar9002_hw_init_cal_settings;
+ 	priv_ops->init_mode_regs = ar9002_hw_init_mode_regs;
+ 	priv_ops->macversion_supported = ar9002_hw_macversion_supported;
  
--	err = hermes_bap_pwrite(hw, USER_BAP, skb->data, skb->len,
--				txfid, HERMES_802_3_OFFSET);
-+	err = hw->ops->bap_pwrite(hw, USER_BAP, skb->data, skb->len,
-+				  txfid, HERMES_802_3_OFFSET);
- 	if (err) {
- 		printk(KERN_ERR "%s: Error %d writing packet to BAP\n",
- 		       dev->name, err);
-@@ -490,8 +490,8 @@ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- 			    skb->data + ETH_HLEN, skb->len - ETH_HLEN, mic);
+@@ -3652,6 +3621,7 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+ 		ar9002_hw_attach_phy_ops(ah);
  
- 		/* Write the MIC */
--		err = hermes_bap_pwrite(hw, USER_BAP, &mic_buf[0], len,
--					txfid, HERMES_802_3_OFFSET + offset);
-+		err = hw->ops->bap_pwrite(hw, USER_BAP, &mic_buf[0], len,
-+					  txfid, HERMES_802_3_OFFSET + offset);
- 		if (err) {
- 			printk(KERN_ERR "%s: Error %d writing MIC to BAP\n",
- 			       dev->name, err);
-@@ -502,7 +502,7 @@ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- 	/* Finally, we actually initiate the send */
- 	netif_stop_queue(dev);
++	ar9002_hw_attach_calib_ops(ah);
+ 	ar9002_hw_attach_mac_ops(ah);
+ }
  
--	err = hermes_docmd_wait(hw, HERMES_CMD_TX | HERMES_CMD_RECL,
-+	err = hw->ops->cmd_wait(hw, HERMES_CMD_TX | HERMES_CMD_RECL,
- 				txfid, NULL);
- 	if (err) {
- 		netif_start_queue(dev);
-@@ -572,9 +572,9 @@ static void __orinoco_ev_txexc(struct net_device *dev, hermes_t *hw)
- 		return; /* Nothing's really happened */
+@@ -3664,6 +3634,6 @@ static void ar9003_hw_attach_ops(struct ath_hw *ah)
+ 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
  
- 	/* Read part of the frame header - we need status and addr1 */
--	err = hermes_bap_pread(hw, IRQ_BAP, &hdr,
--			       sizeof(struct hermes_txexc_data),
--			       fid, 0);
-+	err = hw->ops->bap_pread(hw, IRQ_BAP, &hdr,
-+				 sizeof(struct hermes_txexc_data),
-+				 fid, 0);
+ 	ar9003_hw_attach_phy_ops(ah);
+-
++	ar9003_hw_attach_calib_ops(ah);
+ 	ar9003_hw_attach_mac_ops(ah);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1b33688..a4200d2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -463,7 +463,9 @@ struct ath_gen_timer_table {
+  * This structure contains private callbacks designed to only be used internally
+  * by the hardware core.
+  *
+- * @init_cal_settings: Initializes calibration settings
++ * @init_cal_settings: setup types of calibrations supported
++ * @init_cal: starts actual calibration
++ *
+  * @init_mode_regs: Initializes mode registers
+  * @macversion_supported: If this specific mac revision is supported
+  *
+@@ -474,11 +476,20 @@ struct ath_gen_timer_table {
+  * @set_rf_regs:
+  * @compute_pll_control: compute the PLL control value to use for
+  *	AR_RTC_PLL_CONTROL for a given channel
++ * @setup_calibration: set up calibration
++ * @iscal_supported: used to query if a type of calibration is supported
+  */
+ struct ath_hw_private_ops {
++	/* Calibration ops */
+ 	void (*init_cal_settings)(struct ath_hw *ah);
++	bool (*init_cal)(struct ath_hw *ah, struct ath9k_channel *chan);
++
+ 	void (*init_mode_regs)(struct ath_hw *ah);
+ 	bool (*macversion_supported)(u32 macversion);
++	void (*setup_calibration)(struct ath_hw *ah,
++				  struct ath9k_cal_list *currCal);
++	bool (*iscal_supported)(struct ath_hw *ah,
++				enum ath9k_cal_types calType);
  
- 	hermes_write_regn(hw, TXCOMPLFID, DUMMY_FID);
- 	stats->tx_errors++;
-@@ -764,9 +764,9 @@ static void orinoco_rx_monitor(struct net_device *dev, u16 rxfid,
+ 	/* PHY ops */
+ 	int (*rf_set_freq)(struct ath_hw *ah,
+@@ -517,6 +528,7 @@ struct ath_hw_private_ops {
+  * hardware code and also by the lower level driver.
+  *
+  * @config_pci_powersave:
++ * @calibrate: periodic calibration for NF, ANI, IQ, ADC gain, ADC-DC
+  */
+ struct ath_hw_ops {
+ 	void (*config_pci_powersave)(struct ath_hw *ah,
+@@ -525,6 +537,10 @@ struct ath_hw_ops {
+ 	void (*rx_enable)(struct ath_hw *ah);
+ 	void (*set_desc_link)(void *ds, u32 link);
+ 	void (*get_desc_link)(void *ds, u32 **link);
++	bool (*calibrate)(struct ath_hw *ah,
++			  struct ath9k_channel *chan,
++			  u8 rxchainmask,
++			  bool longcal);
+ };
  
- 	/* If any, copy the data from the card to the skb */
- 	if (datalen > 0) {
--		err = hermes_bap_pread(hw, IRQ_BAP, skb_put(skb, datalen),
--				       ALIGN(datalen, 2), rxfid,
--				       HERMES_802_2_OFFSET);
-+		err = hw->ops->bap_pread(hw, IRQ_BAP, skb_put(skb, datalen),
-+					 ALIGN(datalen, 2), rxfid,
-+					 HERMES_802_2_OFFSET);
- 		if (err) {
- 			printk(KERN_ERR "%s: error %d reading monitor frame\n",
- 			       dev->name, err);
-@@ -814,8 +814,8 @@ static void __orinoco_ev_rx(struct net_device *dev, hermes_t *hw)
+ struct ath_hw {
+@@ -827,6 +843,9 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah);
+ void ar9002_hw_attach_phy_ops(struct ath_hw *ah);
+ void ar9003_hw_attach_phy_ops(struct ath_hw *ah);
  
- 	rxfid = hermes_read_regn(hw, RXFID);
- 
--	err = hermes_bap_pread(hw, IRQ_BAP, desc, sizeof(*desc),
--			       rxfid, 0);
-+	err = hw->ops->bap_pread(hw, IRQ_BAP, desc, sizeof(*desc),
-+				 rxfid, 0);
- 	if (err) {
- 		printk(KERN_ERR "%s: error %d reading Rx descriptor. "
- 		       "Frame dropped.\n", dev->name, err);
-@@ -882,9 +882,9 @@ static void __orinoco_ev_rx(struct net_device *dev, hermes_t *hw)
- 	   nothing is removed.  2 is for aligning the IP header.  */
- 	skb_reserve(skb, ETH_HLEN + 2);
- 
--	err = hermes_bap_pread(hw, IRQ_BAP, skb_put(skb, length),
--			       ALIGN(length, 2), rxfid,
--			       HERMES_802_2_OFFSET);
-+	err = hw->ops->bap_pread(hw, IRQ_BAP, skb_put(skb, length),
-+				 ALIGN(length, 2), rxfid,
-+				 HERMES_802_2_OFFSET);
- 	if (err) {
- 		printk(KERN_ERR "%s: error %d reading frame. "
- 		       "Frame dropped.\n", dev->name, err);
-@@ -1145,9 +1145,9 @@ static void orinoco_join_ap(struct work_struct *work)
- 		goto out;
- 
- 	/* Read scan results from the firmware */
--	err = hermes_read_ltv(hw, USER_BAP,
--			      HERMES_RID_SCANRESULTSTABLE,
--			      MAX_SCAN_LEN, &len, buf);
-+	err = hw->ops->read_ltv(hw, USER_BAP,
-+				HERMES_RID_SCANRESULTSTABLE,
-+				MAX_SCAN_LEN, &len, buf);
- 	if (err) {
- 		printk(KERN_ERR "%s: Cannot read scan results\n",
- 		       dev->name);
-@@ -1194,8 +1194,8 @@ static void orinoco_send_bssid_wevent(struct orinoco_private *priv)
- 	union iwreq_data wrqu;
- 	int err;
- 
--	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENTBSSID,
--			      ETH_ALEN, NULL, wrqu.ap_addr.sa_data);
-+	err = hw->ops->read_ltv(hw, USER_BAP, HERMES_RID_CURRENTBSSID,
-+				ETH_ALEN, NULL, wrqu.ap_addr.sa_data);
- 	if (err != 0)
- 		return;
- 
-@@ -1217,8 +1217,8 @@ static void orinoco_send_assocreqie_wevent(struct orinoco_private *priv)
- 	if (!priv->has_wpa)
- 		return;
- 
--	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENT_ASSOC_REQ_INFO,
--			      sizeof(buf), NULL, &buf);
-+	err = hw->ops->read_ltv(hw, USER_BAP, HERMES_RID_CURRENT_ASSOC_REQ_INFO,
-+				sizeof(buf), NULL, &buf);
- 	if (err != 0)
- 		return;
- 
-@@ -1247,8 +1247,9 @@ static void orinoco_send_assocrespie_wevent(struct orinoco_private *priv)
- 	if (!priv->has_wpa)
- 		return;
- 
--	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENT_ASSOC_RESP_INFO,
--			      sizeof(buf), NULL, &buf);
-+	err = hw->ops->read_ltv(hw, USER_BAP,
-+				HERMES_RID_CURRENT_ASSOC_RESP_INFO,
-+				sizeof(buf), NULL, &buf);
- 	if (err != 0)
- 		return;
- 
-@@ -1371,8 +1372,8 @@ static void __orinoco_ev_info(struct net_device *dev, hermes_t *hw)
- 	infofid = hermes_read_regn(hw, INFOFID);
- 
- 	/* Read the info frame header - don't try too hard */
--	err = hermes_bap_pread(hw, IRQ_BAP, &info, sizeof(info),
--			       infofid, 0);
-+	err = hw->ops->bap_pread(hw, IRQ_BAP, &info, sizeof(info),
-+				 infofid, 0);
- 	if (err) {
- 		printk(KERN_ERR "%s: error %d reading info frame. "
- 		       "Frame dropped.\n", dev->name, err);
-@@ -1393,8 +1394,8 @@ static void __orinoco_ev_info(struct net_device *dev, hermes_t *hw)
- 			len = sizeof(tallies);
- 		}
- 
--		err = hermes_bap_pread(hw, IRQ_BAP, &tallies, len,
--				       infofid, sizeof(info));
-+		err = hw->ops->bap_pread(hw, IRQ_BAP, &tallies, len,
-+					 infofid, sizeof(info));
- 		if (err)
- 			break;
- 
-@@ -1429,8 +1430,8 @@ static void __orinoco_ev_info(struct net_device *dev, hermes_t *hw)
- 			break;
- 		}
- 
--		err = hermes_bap_pread(hw, IRQ_BAP, &linkstatus, len,
--				       infofid, sizeof(info));
-+		err = hw->ops->bap_pread(hw, IRQ_BAP, &linkstatus, len,
-+					 infofid, sizeof(info));
- 		if (err)
- 			break;
- 		newstatus = le16_to_cpu(linkstatus.linkstatus);
-@@ -1494,8 +1495,8 @@ static void __orinoco_ev_info(struct net_device *dev, hermes_t *hw)
- 		}
- 
- 		/* Read scan data */
--		err = hermes_bap_pread(hw, IRQ_BAP, (void *) buf, len,
--				       infofid, sizeof(info));
-+		err = hw->ops->bap_pread(hw, IRQ_BAP, (void *) buf, len,
-+					 infofid, sizeof(info));
- 		if (err) {
- 			kfree(buf);
- 			qabort_scan(priv);
-@@ -1547,8 +1548,8 @@ static void __orinoco_ev_info(struct net_device *dev, hermes_t *hw)
- 			break;
- 
- 		/* Read scan data */
--		err = hermes_bap_pread(hw, IRQ_BAP, (void *) bss, len,
--				       infofid, sizeof(info));
-+		err = hw->ops->bap_pread(hw, IRQ_BAP, (void *) bss, len,
-+					 infofid, sizeof(info));
- 		if (err)
- 			kfree(bss);
- 		else
-@@ -1647,7 +1648,7 @@ static int orinoco_reinit_firmware(struct orinoco_private *priv)
- 	struct hermes *hw = &priv->hw;
- 	int err;
- 
--	err = hermes_init(hw);
-+	err = hw->ops->init(hw);
- 	if (priv->do_fw_download && !err) {
- 		err = orinoco_download(priv);
- 		if (err)
-@@ -1984,7 +1985,7 @@ int orinoco_init(struct orinoco_private *priv)
- 	priv->nicbuf_size = IEEE80211_MAX_FRAME_LEN + ETH_HLEN;
- 
- 	/* Initialize the firmware */
--	err = hermes_init(hw);
-+	err = hw->ops->init(hw);
- 	if (err != 0) {
- 		dev_err(dev, "Failed to initialize firmware (err = %d)\n",
- 			err);
-diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
-index a1006bf..5775124 100644
---- a/drivers/net/wireless/orinoco/wext.c
-+++ b/drivers/net/wireless/orinoco/wext.c
-@@ -458,7 +458,7 @@ static int orinoco_ioctl_setfreq(struct net_device *dev,
- 	if (priv->iw_mode == NL80211_IFTYPE_MONITOR) {
- 		/* Fast channel change - no commit if successful */
- 		hermes_t *hw = &priv->hw;
--		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
-+		err = hw->ops->cmd_wait(hw, HERMES_CMD_TEST |
- 					    HERMES_TEST_SET_CHANNEL,
- 					chan, NULL);
- 	}
-@@ -1273,8 +1273,8 @@ static int orinoco_ioctl_getrid(struct net_device *dev,
- 	if (orinoco_lock(priv, &flags) != 0)
- 		return -EBUSY;
- 
--	err = hermes_read_ltv(hw, USER_BAP, rid, MAX_RID_LEN, &length,
--			      extra);
-+	err = hw->ops->read_ltv(hw, USER_BAP, rid, MAX_RID_LEN, &length,
-+				extra);
- 	if (err)
- 		goto out;
- 
++void ar9002_hw_attach_calib_ops(struct ath_hw *ah);
++void ar9003_hw_attach_calib_ops(struct ath_hw *ah);
++
+ #define ATH_PCIE_CAP_LINK_CTRL	0x70
+ #define ATH_PCIE_CAP_LINK_L0S	1
+ #define ATH_PCIE_CAP_LINK_L1	2
 -- 
-1.6.4.4
+1.6.3.3
 
