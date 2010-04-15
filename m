@@ -1,60 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:53262 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757054Ab0DFWGZ convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54786 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756806Ab0DODax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 18:06:25 -0400
-Received: by ewy20 with SMTP id 20so227588ewy.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 15:06:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201004062328.40656.IvDoorn@gmail.com>
-References: <1270574791-14006-1-git-send-email-xose.vazquez@gmail.com>
-	 <201004062328.40656.IvDoorn@gmail.com>
-Date: Wed, 7 Apr 2010 00:06:23 +0200
-Message-ID: <j2z14add3d11004061506q8b45b003ucbb3537cda763b58@mail.gmail.com>
-Subject: Re: [PATCH] wireless: rt2x00: delete duplicates ids in rt73usb
-	rt2500usb
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 14 Apr 2010 23:30:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v2 37/97] ath9k_hw: Move code which populates ds_data to ath9k_hw
+Date: Wed, 14 Apr 2010 23:29:51 -0400
+Message-Id: <1271302251-9075-38-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 6, 2010 at 11:28 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> On Tuesday 06 April 2010, Xose Vazquez Perez wrote:
->> Follow the precepts of the ralink drivers.
->>
->> (0x050d, 0x7050) is only found in:
->>
->> RT25USB-SRC-V2.0.8.0/rt2570sw.h:#define RTVID8                  0x050D //ralink
->> RT25USB-SRC-V2.0.8.0/rt2570sw.h:#define RTPID8                  0x7050
->> RT25USB-SRC-V2.0.8.0/rt2570sw.h: {USB_DEVICE(RTVID8,RTPID8)},
->>
->> and (0x050d, 0x705a) (0x1371, 0x9022) (0x148f, 0x2573) are only in:
->>
->> 2009_0713_RT73_Linux_STA_Drv1.1.0.3/Module/rtmp_def.h: {USB_DEVICE(0x050d,0x705a)}, /* Belkin */
->> 2009_0713_RT73_Linux_STA_Drv1.1.0.3/Module/rtmp_def.h: {USB_DEVICE(0x1371,0x9022)}, /* CNet */
->> 2009_0713_RT73_Linux_STA_Drv1.1.0.3/Module/rtmp_def.h: {USB_DEVICE(0x148f,0x2573)}, /* Ralink */
->>
->> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->
-> I have my doubts about this one.
-> Gertjan, do you consider it wise to remove these ID's?
->
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Yes, I have my doubts here as well. We know about overlap in USB IDs
-between rt2500 and rt73 devices,
-and these could very well be these devices.
-
-However, if Ralink doesn't have this overlap in their devices, then
-why should we care.
-
-Xose, can you verify with the Windows drivers whether the situation on
-the USB IDs is the same as for the
-Ralink Linux drivers?
-
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
-Gertjan.
+ drivers/net/wireless/ath/ath9k/beacon.c |    4 +---
+ drivers/net/wireless/ath/ath9k/mac.c    |    5 ++++-
+ drivers/net/wireless/ath/ath9k/mac.h    |    3 ++-
+ drivers/net/wireless/ath/ath9k/xmit.c   |    4 ++--
+ 4 files changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 22375a7..268b598 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -93,8 +93,6 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 		antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs) & 1 ? 2 : 1);
+ 	}
+ 
+-	ds->ds_data = bf->bf_buf_addr;
+-
+ 	sband = &sc->sbands[common->hw->conf.channel->band];
+ 	rate = sband->bitrates[rateidx].hw_value;
+ 	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
+@@ -109,7 +107,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 
+ 	/* NB: beacon's BufLen must be a multiple of 4 bytes */
+ 	ath9k_hw_filltxdesc(ah, ds, roundup(skb->len, 4),
+-			    true, true, ds);
++			    true, true, ds, bf->bf_buf_addr);
+ 
+ 	memset(series, 0, sizeof(struct ath9k_11n_rate_series) * 4);
+ 	series[0].Tries = 1;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index ae9d54c..0c9c378 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -220,10 +220,13 @@ EXPORT_SYMBOL(ath9k_hw_stoptxdma);
+ 
+ void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			 u32 segLen, bool firstSeg,
+-			 bool lastSeg, const struct ath_desc *ds0)
++			 bool lastSeg, const struct ath_desc *ds0,
++			 dma_addr_t buf_addr)
+ {
+ 	struct ar5416_desc *ads = AR5416DESC(ds);
+ 
++	ads->ds_data = buf_addr;
++
+ 	if (firstSeg) {
+ 		ads->ds_ctl1 |= segLen | (lastSeg ? 0 : AR_TxMore);
+ 	} else if (lastSeg) {
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 126a403..f2f4ad2 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -693,7 +693,8 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
+ bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q);
+ void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			 u32 segLen, bool firstSeg,
+-			 bool lastSeg, const struct ath_desc *ds0);
++			 bool lastSeg, const struct ath_desc *ds0,
++			 dma_addr_t buf_addr);
+ void ath9k_hw_cleartxdesc(struct ath_hw *ah, struct ath_desc *ds);
+ int ath9k_hw_txprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			struct ath_tx_status *ts);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 02df4cb..7219e29 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1660,7 +1660,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 
+ 	ds = bf->bf_desc;
+ 	ds->ds_link = 0;
+-	ds->ds_data = bf->bf_buf_addr;
+ 
+ 	ath9k_hw_set11n_txdesc(ah, ds, bf->bf_frmlen, frm_type, MAX_RATE_POWER,
+ 			       bf->bf_keyix, bf->bf_keytype, bf->bf_flags);
+@@ -1669,7 +1668,8 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 			    skb->len,	/* segment length */
+ 			    true,	/* first segment */
+ 			    true,	/* last segment */
+-			    ds);	/* first descriptor */
++			    ds,		/* first descriptor */
++			    bf->bf_buf_addr);
+ 
+ 	spin_lock_bh(&txctl->txq->axq_lock);
+ 
+-- 
+1.6.3.3
+
