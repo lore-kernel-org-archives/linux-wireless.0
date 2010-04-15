@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from katherina.student.utwente.nl ([130.89.168.160]:33906 "EHLO
-	katherina.student.utwente.nl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752355Ab0DCP2k (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54847 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756893Ab0DODaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 11:28:40 -0400
-Date: Sat, 3 Apr 2010 17:28:34 +0200
-From: Matthijs Kooijman <matthijs@stdin.nl>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Ondrej Zary <linux@rainbow-software.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] [RFC] rt2500pci: fix powersaving
-Message-ID: <20100403152834.GP21160@katherina.student.utwente.nl>
-References: <201003290956.54234.linux@rainbow-software.org>
- <201003301433.55355.linux@rainbow-software.org>
- <20100330125620.GA2173@katherina.student.utwente.nl>
- <201003302209.23334.linux@rainbow-software.org>
- <20100331174138.GE21160@katherina.student.utwente.nl>
- <4BB396B4.8090005@gmail.com>
- <4BB3988C.40902@gmail.com>
- <20100331190011.GG21160@katherina.student.utwente.nl>
- <4BB74C9A.40900@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="QAdlk5ze2izLk3Ap"
-In-Reply-To: <4BB74C9A.40900@gmail.com>
+	Wed, 14 Apr 2010 23:30:55 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 51/97] ath9k_hw: simplify OLC temp compensation for AR9002
+Date: Wed, 14 Apr 2010 23:30:05 -0400
+Message-Id: <1271302251-9075-52-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We can do the family revision check on the top level caller.
 
---QAdlk5ze2izLk3Ap
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |   14 ++++----------
+ 1 files changed, 4 insertions(+), 10 deletions(-)
 
-Hi Gertjan,
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index dae200c..b44b305 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -730,14 +730,6 @@ static void ar9280_hw_olc_temp_compensation(struct ath_hw *ah)
+ 	}
+ }
+ 
+-static void ath9k_olc_temp_compensation(struct ath_hw *ah)
+-{
+-	if (OLC_FOR_AR9287_10_LATER)
+-		ar9287_hw_olc_temp_compensation(ah);
+-	else
+-		ar9280_hw_olc_temp_compensation(ah);
+-}
+-
+ static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
+ {
+ 	u32 regVal;
+@@ -969,8 +961,10 @@ static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 
+ static void ar9002_hw_olc_temp_compensation(struct ath_hw *ah)
+ {
+-	if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
+-		ath9k_olc_temp_compensation(ah);
++	if (OLC_FOR_AR9287_10_LATER)
++		ar9287_hw_olc_temp_compensation(ah);
++	else if (OLC_FOR_AR9280_20_LATER)
++		ar9280_hw_olc_temp_compensation(ah);
+ }
+ 
+ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+-- 
+1.6.3.3
 
-> Did you have the chance to test the patch and do you have some feedback if the patch
-> helps improve the rt2500pci situation?
-I've been running with all three patches applied for a while, and it does
-indeed seem more stable. I haven't seen the powersaving error anymore either
-(though I've not continuously checked for it). I haven't gotten any new
-problems.
-
-Gr.
-
-Matthijs
-
---QAdlk5ze2izLk3Ap
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAku3XqIACgkQz0nQ5oovr7y7QgCaA46lVMC3R1PpjvfB84krAtty
-/a0An2N7Xgws9A6W/Qic2E2Zq0VeO0W6
-=stHi
------END PGP SIGNATURE-----
-
---QAdlk5ze2izLk3Ap--
