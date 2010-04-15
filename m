@@ -1,62 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55074 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:32964 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757092Ab0DODa7 (ORCPT
+	with ESMTP id S1757404Ab0DOVjq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:59 -0400
+	Thu, 15 Apr 2010 17:39:46 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Enis Akay <Enis.Akay@atheros.com>
-Subject: [PATCH v2 17/97] ath9k_hw: disable ANI for AR9003
-Date: Wed, 14 Apr 2010 23:29:31 -0400
-Message-Id: <1271302251-9075-18-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v3 77/97] ath9k_hw: Update ath9k_hw_set_dma for AR9300
+Date: Thu, 15 Apr 2010 17:39:22 -0400
+Message-Id: <1271367582-992-78-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ANI is still being debugged on AR9003 by our systems team
-so it should not yet be enabled yet. When ANI will be
-enabled all ANI functionality is expected to be enabled
-so fill the ANI functionality to all for AR9003 for now
-as well.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Cc: Enis Akay <Enis.Akay@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c  |   18 +++++++++++++++---
+ drivers/net/wireless/ath/ath9k/reg.h |    6 ++++++
+ 2 files changed, 21 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0e78e35..e54c76e 100644
+index de7ee90..953911d 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.c
 +++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -364,7 +364,13 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 	ah->config.ofdm_trig_high = 500;
- 	ah->config.cck_trig_high = 200;
- 	ah->config.cck_trig_low = 100;
--	ah->config.enable_ani = 1;
-+
-+	/*
-+	 * For now ANI is disabled for AR9003, it is still
-+	 * being tested.
-+	 */
+@@ -837,13 +837,16 @@ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan)
+ 
+ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
+ {
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 regval;
+ 
+ 	/*
+ 	 * set AHB_MODE not to do cacheline prefetches
+ 	*/
+-	regval = REG_READ(ah, AR_AHB_MODE);
+-	REG_WRITE(ah, AR_AHB_MODE, regval | AR_AHB_PREFETCH_RD_EN);
++	if (!AR_SREV_9300_20_OR_LATER(ah)) {
++		regval = REG_READ(ah, AR_AHB_MODE);
++		REG_WRITE(ah, AR_AHB_MODE, regval | AR_AHB_PREFETCH_RD_EN);
++	}
+ 
+ 	/*
+ 	 * let mac dma reads be in 128 byte chunks
+@@ -856,7 +859,8 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
+ 	 * The initial value depends on whether aggregation is enabled, and is
+ 	 * adjusted whenever underruns are detected.
+ 	 */
+-	REG_RMW_FIELD(ah, AR_TXCFG, AR_FTRIG, ah->tx_trig_level);
 +	if (!AR_SREV_9300_20_OR_LATER(ah))
-+		ah->config.enable_ani = 1;
++		REG_RMW_FIELD(ah, AR_TXCFG, AR_FTRIG, ah->tx_trig_level);
  
- 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
- 		ah->config.spurchans[i][0] = AR_NO_SPUR;
-@@ -942,7 +948,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	ath9k_hw_init_cal_settings(ah);
+ 	/*
+ 	 * let mac dma writes be in 128 byte chunks
+@@ -869,6 +873,14 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
+ 	 */
+ 	REG_WRITE(ah, AR_RXFIFO_CFG, 0x200);
  
- 	ah->ani_function = ATH9K_ANI_ALL;
--	if (AR_SREV_9280_10_OR_LATER(ah))
-+	if (AR_SREV_9280_10_OR_LATER(ah) && !AR_SREV_9300_20_OR_LATER(ah))
- 		ah->ani_function &= ~ATH9K_ANI_NOISE_IMMUNITY_LEVEL;
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		REG_RMW_FIELD(ah, AR_RXBP_THRESH, AR_RXBP_THRESH_HP, 0x1);
++		REG_RMW_FIELD(ah, AR_RXBP_THRESH, AR_RXBP_THRESH_LP, 0x1);
++
++		ath9k_hw_set_rx_bufsize(ah, common->rx_bufsize -
++			ah->caps.rx_status_len);
++	}
++
+ 	/*
+ 	 * reduce the number of usable entries in PCU TXBUF to avoid
+ 	 * wrap around issues.
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 12f1621..2ca478c 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -39,6 +39,12 @@
+ #define AR_CFG_PCI_MASTER_REQ_Q_THRESH         0x00060000
+ #define AR_CFG_PCI_MASTER_REQ_Q_THRESH_S       17
  
- 	ath9k_hw_init_mode_regs(ah);
++#define AR_RXBP_THRESH       0x0018
++#define AR_RXBP_THRESH_HP    0x0000000f
++#define AR_RXBP_THRESH_HP_S  0
++#define AR_RXBP_THRESH_LP    0x00003f00
++#define AR_RXBP_THRESH_LP_S  8
++
+ #define AR_MIRT              0x0020
+ #define AR_MIRT_VAL          0x0000ffff
+ #define AR_MIRT_VAL_S        16
 -- 
 1.6.3.3
 
