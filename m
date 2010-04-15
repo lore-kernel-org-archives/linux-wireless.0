@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:62789 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753456Ab0DANDA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 09:03:00 -0400
-Received: by ewy20 with SMTP id 20so332267ewy.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 06:02:58 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: [PATCH V2] Remove MCU requests for SoC platforms
-Date: Thu, 1 Apr 2010 15:02:55 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	John Linville <linville@tuxdriver.com>
-References: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com> <201004011451.44204.IvDoorn@gmail.com> <h2iefe7343f1004010558ze63465bcm5e3bd10e702dea66@mail.gmail.com>
-In-Reply-To: <h2iefe7343f1004010558ze63465bcm5e3bd10e702dea66@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201004011502.56211.IvDoorn@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:63984 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753463Ab0DONow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 09:44:52 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<wey-yi.w.guy@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 resend 3/3] mac80211: enable QoS explicitly in AP mode
+Date: Thu, 15 Apr 2010 15:43:02 +0200
+Message-Id: <1271338982-3157-3-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1271338982-3157-2-git-send-email-sgruszka@redhat.com>
+References: <1271338982-3157-1-git-send-email-sgruszka@redhat.com>
+ <1271338982-3157-2-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 01 April 2010, Luis Correia wrote:
-> The ralink SoC platforms do not have an MCU.
-> 
-> Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
+Enable QoS explicitly, when user space AP program will setup a QoS
+queues. Currently this is not needed as iwlwifi not work in AP mode
+and no other driver implement enable/disable QoS.
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+v1 -> v2:
+ - add this patch  
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+ net/mac80211/cfg.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b7116ef..b88c7e4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1136,6 +1136,10 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
+ 
++	/* enable WMM or activate new settings */
++	local->hw.conf.flags |= IEEE80211_CONF_QOS;
++	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
++
+ 	return 0;
+ }
+ 
+-- 
+1.6.2.5
+
