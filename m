@@ -1,87 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54757 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756778Ab0DODax (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:57373 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754744Ab0DORbJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:53 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 28/97] ath9k_hw: Set the channel on AR9003
-Date: Wed, 14 Apr 2010 23:29:42 -0400
-Message-Id: <1271302251-9075-29-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 15 Apr 2010 13:31:09 -0400
+Received: by mail-ww0-f46.google.com with SMTP id 24so648191wwb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 10:31:08 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+Date: Thu, 15 Apr 2010 19:31:08 +0200
+Message-ID: <p2g2d0a357f1004151031he100c81ai586d4606715b37bc@mail.gmail.com>
+Subject: iwl3945: Network dropouts w/ flash-stream in firefox
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: wireless <linux-wireless@vger.kernel.org>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+Hi,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   47 ++++++++++++++++++++++++++-
- 1 files changed, 46 insertions(+), 1 deletions(-)
+I have here reproduceable network dropouts with my iwl3945 wlan device
+when watching flash10 A/V streams in firefox-3.6.3.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 084b0f9..f1632ab 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -44,7 +44,52 @@
-  */
- static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- {
--	/* TODO */
-+	u16 bMode, fracMode = 0, aModeRefSel = 0;
-+	u32 freq, channelSel = 0, reg32 = 0;
-+	struct chan_centers centers;
-+	int loadSynthChannel;
-+
-+	ath9k_hw_get_channel_centers(ah, chan, &centers);
-+	freq = centers.synth_center;
-+
-+	if (freq < 4800) {     /* 2 GHz, fractional mode */
-+		channelSel = CHANSEL_2G(freq);
-+		/* Set to 2G mode */
-+		bMode = 1;
-+	} else {
-+		channelSel = CHANSEL_5G(freq);
-+		/* Doubler is ON, so, divide channelSel by 2. */
-+		channelSel >>= 1;
-+		/* Set to 5G mode */
-+		bMode = 0;
-+	}
-+
-+	/* Enable fractional mode for all channels */
-+	fracMode = 1;
-+	aModeRefSel = 0;
-+	loadSynthChannel = 0;
-+
-+	reg32 = (bMode << 29);
-+	REG_WRITE(ah, AR_PHY_SYNTH_CONTROL, reg32);
-+
-+	/* Enable Long shift Select for Synthesizer */
-+	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_SYNTH4,
-+		      AR_PHY_SYNTH4_LONG_SHIFT_SELECT, 1);
-+
-+	/* Program Synth. setting */
-+	reg32 = (channelSel << 2) | (fracMode << 30) |
-+		(aModeRefSel << 28) | (loadSynthChannel << 31);
-+	REG_WRITE(ah, AR_PHY_65NM_CH0_SYNTH7, reg32);
-+
-+	/* Toggle Load Synth channel bit */
-+	loadSynthChannel = 1;
-+	reg32 = (channelSel << 2) | (fracMode << 30) |
-+		(aModeRefSel << 28) | (loadSynthChannel << 31);
-+	REG_WRITE(ah, AR_PHY_65NM_CH0_SYNTH7, reg32);
-+
-+	ah->curchan = chan;
-+	ah->curchan_rad_index = -1;
-+
- 	return 0;
- }
- 
--- 
-1.6.3.3
+My Linux-kernel is 2.6.34-rc4-git3 enriched with "iwlwifi: work around
+bogus active chains detection" patch from wireless-2.6 GIT branch,
+so-to-say I am on version as-of master-2010-04-12.
 
+Furthermore, I also did a reboot of my xDSL-router-modem and a
+coldstart of my notebook.
+
+Some additional informations:
+
+$ dpkg -l | egrep 'wpa|crda|regdb'
+ii  crda
+    1.1.1-0~svnr1515.3                    wireless Central Regulatory
+Domain Agent
+ii  wireless-regdb
+    2009.11.25-0+c0.sidux.2               wireless regulatory database
+ii  wpagui
+    0.7.1-1~dileX+1                       graphical user interface for
+wpa_supplicant
+ii  wpasupplicant
+    0.7.1-1~dileX+1                       client support for WPA and
+WPA2 (IEEE 802.11i)
+
+
+Need more infos?
+Any hints? Any ideas?
+
+Kind Regards,
+- Sedat -
+
+[dmesg]
+...
+[  267.204048] No probe response from AP 00:04:0e:e4:00:3d after
+500ms, disconnecting.
+[  267.704053] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  267.704062] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  268.206048] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  268.206057] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  268.208045] cfg80211: Calling CRDA to update world regulatory domain
+[  268.213286] cfg80211: World regulatory domain updated:
+[  268.213291]     (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+[  268.213298]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  268.213304]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[  268.213310]     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[  268.213316]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  268.213322]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  268.806083] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  268.806091] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  269.306299] iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD:
+time out after 500ms.
+[  269.806072] iwl3945 0000:10:00.0: Error sending
+REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+[  270.306060] iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD:
+time out after 500ms.
+[  270.806052] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  270.806061] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  271.306074] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  271.306083] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  271.806074] iwl3945 0000:10:00.0: Error sending
+REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+[  275.811047] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  275.811056] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  276.311074] iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD:
+time out after 500ms.
+[  276.811068] iwl3945 0000:10:00.0: Error sending
+REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+[  277.311068] iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD:
+time out after 500ms.
+[  277.811080] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  277.811089] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  278.311064] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  278.311073] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  278.811074] iwl3945 0000:10:00.0: Error sending
+REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+[  282.814051] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  282.814060] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  283.314067] iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD:
+time out after 500ms.
+[  283.814063] iwl3945 0000:10:00.0: Error sending
+REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+[  284.314063] iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD:
+time out after 500ms.
+[  284.814054] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  284.814063] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  285.314056] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  285.314065] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  285.814074] iwl3945 0000:10:00.0: Error sending
+REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
+[  287.814202] hda_codec_cleanup_stream: NID=0x3
+[  289.814060] iwl3945 0000:10:00.0: Error sending REPLY_RXON: time
+out after 500ms.
+[  289.814068] iwl3945 0000:10:00.0: Error setting new configuration (-110).
+[  289.814107] iwl3945 0000:10:00.0: No space in command queue
+[  289.814113] iwl3945 0000:10:00.0: Restarting adapter due to queue full
+[  289.814120] iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD:
+enqueue_hcmd failed: -28
+[  298.367489] wlan0: authenticate with 00:04:0e:e4:00:3d (try 1)
+[  298.369762] wlan0: authenticated
+[  298.369861] wlan0: associate with 00:04:0e:e4:00:3d (try 1)
+[  298.374873] wlan0: RX ReassocResp from 00:04:0e:e4:00:3d
+(capab=0x411 status=0 aid=1)
+[  298.374879] wlan0: associated
+...
+[/dmesg]
