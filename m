@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56586 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754528Ab0DSM3Q convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54749 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756750Ab0DODax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 08:29:16 -0400
-References: <1271602602-8538-1-git-send-email-nbd@openwrt.org> <1271602602-8538-2-git-send-email-nbd@openwrt.org> <1271602602-8538-3-git-send-email-nbd@openwrt.org> <1271602602-8538-4-git-send-email-nbd@openwrt.org> <1271602602-8538-5-git-send-email-nbd@openwrt.org> <1271602602-8538-6-git-send-email-nbd@openwrt.org> <1271602602-8538-7-git-send-email-nbd@openwrt.org> <1271602602-8538-8-git-send-email-nbd@openwrt.org> <g2i133e8d7e1004190522n7dff80c3v1238a9f72cff734f@mail.gmail.com>
-Message-Id: <9A06F358-B052-4288-934B-6554CE603497@nbd.name>
-From: Felix Fietkau <nbd@nbd.name>
-To: =?utf-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
-In-Reply-To: <g2i133e8d7e1004190522n7dff80c3v1238a9f72cff734f@mail.gmail.com>
-Content-Type: text/plain;
-	charset=utf-8;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7E18)
-Subject: Re: [PATCH 8/9] ath9k: add support for Tx and Rx STBC
-Date: Mon, 19 Apr 2010 14:28:41 +0200
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"lrodriguez@atheros.com" <lrodriguez@atheros.com>
+	Wed, 14 Apr 2010 23:30:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 24/97] ath9k_hw: update the chip tests for AR9003
+Date: Wed, 14 Apr 2010 23:29:38 -0400
+Message-Id: <1271302251-9075-25-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19.04.2010, at 14:22, Björn Smedman <bjorn.smedman@venatech.se>  
-wrote:
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-> Hi all,
->
-> Is STBC not supported on any chipsets other than  
-> AR_SREV_9280_10_OR_LATER(ah)?
-Right. AR9160 and older do not support this - at least according to  
-sources and datasheets.
+The AR9003 family requires a change on the loop and can also skip
+testing the PHY timing registers. This chip test can now be used
+by all Atheros hardware families, including legacy. We can
+eventually move this out to the generic ath module.
 
-- Felix
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0b89605..bf7a85f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -298,18 +298,25 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
+ }
+ 
++/* This should work for all families including legacy */
+ static bool ath9k_hw_chip_test(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 regAddr[2] = { AR_STA_ID0, AR_PHY_BASE + (8 << 2) };
++	u32 regAddr[2] = { AR_STA_ID0 };
+ 	u32 regHold[2];
+ 	u32 patternData[4] = { 0x55555555,
+ 			       0xaaaaaaaa,
+ 			       0x66666666,
+ 			       0x99999999 };
+-	int i, j;
++	int i, j, loop_max;
+ 
+-	for (i = 0; i < 2; i++) {
++	if (!AR_SREV_9300_20_OR_LATER(ah)) {
++		loop_max = 2;
++		regAddr[1] = AR_PHY_BASE + (8 << 2);
++	} else
++		loop_max = 1;
++
++	for (i = 0; i < loop_max; i++) {
+ 		u32 addr = regAddr[i];
+ 		u32 wrData, rdData;
+ 
+-- 
+1.6.3.3
+
