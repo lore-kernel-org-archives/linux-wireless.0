@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:56223 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234Ab0DKQ5M (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33054 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757457Ab0DOVjr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 12:57:12 -0400
-Received: by ewy20 with SMTP id 20so1707879ewy.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2010 09:57:10 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 7/9] rt2x00: Add rt3071 support in rt2800 register initialization.
-Date: Sun, 11 Apr 2010 18:57:09 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-8-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270989075-2267-8-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201004111857.09263.IvDoorn@gmail.com>
+	Thu, 15 Apr 2010 17:39:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 97/97] ath9k_hw: add the PCI ID for the first AR9300 device
+Date: Thu, 15 Apr 2010 17:39:42 -0400
+Message-Id: <1271367582-992-98-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 11 April 2010, Gertjan van Wingerde wrote:
-> Add RT3071 specific register initializations to rt2x00, based on the latest
-> Ralink rt3070 vendor driver.
-> 
-> With this patch my RT3071 based devices start showing a sign of life.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+The first AR9003 hardware family device supported is the
+AR9300, which has the vendor:device id 168c:0030
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/pci.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 1ec836c..257b10b 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -28,6 +28,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
++	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
+ 	{ 0 }
+ };
+ 
+-- 
+1.6.3.3
 
