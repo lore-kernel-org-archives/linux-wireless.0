@@ -1,34 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:62394 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540Ab0DSKK0 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55074 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757092Ab0DODa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 06:10:26 -0400
-Received: by ewy20 with SMTP id 20so1361097ewy.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 03:10:24 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH] wireless: rt2x00: rt2800usb: identify Allwin devices
-Date: Mon, 19 Apr 2010 12:10:21 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, gwingerde@gmail.com
-References: <1271670856-2532-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1271670856-2532-1-git-send-email-xose.vazquez@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201004191210.21735.IvDoorn@gmail.com>
+	Wed, 14 Apr 2010 23:30:59 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Enis Akay <Enis.Akay@atheros.com>
+Subject: [PATCH v2 17/97] ath9k_hw: disable ANI for AR9003
+Date: Wed, 14 Apr 2010 23:29:31 -0400
+Message-Id: <1271302251-9075-18-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 19 April 2010, Xose Vazquez Perez wrote:
-> Applied common sense, no info from the manufacturer:
-> 
-> (0x8516, 0x2070) is RT2070
-> (0x8516, 0x2770) is RT2770
-> (0x8516, 0x2870) is RT2870
-> [...]
-> 
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+ANI is still being debugged on AR9003 by our systems team
+so it should not yet be enabled yet. When ANI will be
+enabled all ANI functionality is expected to be enabled
+so fill the ANI functionality to all for AR9003 for now
+as well.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Enis Akay <Enis.Akay@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0e78e35..e54c76e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -364,7 +364,13 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	ah->config.ofdm_trig_high = 500;
+ 	ah->config.cck_trig_high = 200;
+ 	ah->config.cck_trig_low = 100;
+-	ah->config.enable_ani = 1;
++
++	/*
++	 * For now ANI is disabled for AR9003, it is still
++	 * being tested.
++	 */
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		ah->config.enable_ani = 1;
+ 
+ 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
+ 		ah->config.spurchans[i][0] = AR_NO_SPUR;
+@@ -942,7 +948,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	ath9k_hw_init_cal_settings(ah);
+ 
+ 	ah->ani_function = ATH9K_ANI_ALL;
+-	if (AR_SREV_9280_10_OR_LATER(ah))
++	if (AR_SREV_9280_10_OR_LATER(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+ 		ah->ani_function &= ~ATH9K_ANI_NOISE_IMMUNITY_LEVEL;
+ 
+ 	ath9k_hw_init_mode_regs(ah);
+-- 
+1.6.3.3
+
