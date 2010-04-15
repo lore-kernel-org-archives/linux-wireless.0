@@ -1,87 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46761 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:54750 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933224Ab0DHT1l (ORCPT
+	with ESMTP id S1756757Ab0DODax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:41 -0400
+	Wed, 14 Apr 2010 23:30:53 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+Cc: linux-wireless@vger.kernel.org,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 027/102] ath9k_hw: Set the channel on AR9003
-Date: Thu,  8 Apr 2010 15:26:23 -0400
-Message-Id: <1270754858-26266-28-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Subject: [PATCH v2 25/97] ath9k_hw: prevent reset control register zeroing on AR9003 reset
+Date: Wed, 14 Apr 2010 23:29:39 -0400
+Message-Id: <1271302251-9075-26-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Also, no need for the udelay(2) on AR9003 hardware.
+
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   47 ++++++++++++++++++++++++++-
- 1 files changed, 46 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 7698223..71d1b01 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -44,7 +44,52 @@
-  */
- static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- {
--	/* TODO */
-+	u16 bMode, fracMode = 0, aModeRefSel = 0;
-+	u32 freq, channelSel = 0, reg32 = 0;
-+	struct chan_centers centers;
-+	int loadSynthChannel;
-+
-+	ath9k_hw_get_channel_centers(ah, chan, &centers);
-+	freq = centers.synth_center;
-+
-+	if (freq < 4800) {     /* 2 GHz, fractional mode */
-+		channelSel = CHANSEL_2G(freq);
-+		/* Set to 2G mode */
-+		bMode = 1;
-+	} else {
-+		channelSel = CHANSEL_5G(freq);
-+		/* Doubler is ON, so, divide channelSel by 2. */
-+		channelSel >>= 1;
-+		/* Set to 5G mode */
-+		bMode = 0;
-+	}
-+
-+	/* Enable fractional mode for all channels */
-+	fracMode = 1;
-+	aModeRefSel = 0;
-+	loadSynthChannel = 0;
-+
-+	reg32 = (bMode << 29);
-+	REG_WRITE(ah, AR_PHY_SYNTH_CONTROL, reg32);
-+
-+	/* Enable Long shift Select for Synthesizer */
-+	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_SYNTH4,
-+		      AR_PHY_SYNTH4_LONG_SHIFT_SELECT, 1);
-+
-+	/* Program Synth. setting */
-+	reg32 = (channelSel << 2 ) | (fracMode << 30) |
-+		(aModeRefSel << 28) | (loadSynthChannel << 31);
-+	REG_WRITE(ah, AR_PHY_65NM_CH0_SYNTH7, reg32);
-+
-+	/* Toggle Load Synth channel bit */
-+	loadSynthChannel = 1;
-+	reg32 = (channelSel << 2 ) | (fracMode << 30) |
-+		(aModeRefSel << 28) | (loadSynthChannel << 31);
-+	REG_WRITE(ah, AR_PHY_65NM_CH0_SYNTH7, reg32);
-+
-+	ah->curchan = chan;
-+	ah->curchan_rad_index = -1;
-+
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index bf7a85f..f695437 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1386,9 +1386,11 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 		REG_WRITE(ah, AR_RC, AR_RC_AHB);
  
+ 	REG_WRITE(ah, AR_RTC_RESET, 0);
+-	udelay(2);
+ 
+-	if (!AR_SREV_9100(ah))
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		udelay(2);
++
++	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+ 		REG_WRITE(ah, AR_RC, 0);
+ 
+ 	REG_WRITE(ah, AR_RTC_RESET, 1);
 -- 
 1.6.3.3
 
