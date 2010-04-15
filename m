@@ -1,56 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:50720 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933416Ab0D3SWz (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54997 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757016Ab0DODa5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 14:22:55 -0400
-Received: by vws19 with SMTP id 19so426678vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Apr 2010 11:22:52 -0700 (PDT)
-Date: Thu, 29 Apr 2010 11:29:57 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "Ortiz, Samuel" <samuel.ortiz@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Alexey Dobriyan <adobriyan@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [patch] iwl: cleanup: remove unneeded error handling
-Message-ID: <20100429092956.GH29093@bicker>
-References: <20100428090115.GF29093@bicker> <1272507134.14773.4339.camel@debian>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1272507134.14773.4339.camel@debian>
+	Wed, 14 Apr 2010 23:30:57 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 84/97] ath9k: add RXLP and RXHP to debugfs counters
+Date: Wed, 14 Apr 2010 23:30:38 -0400
+Message-Id: <1271302251-9075-85-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 29, 2010 at 10:12:14AM +0800, Zhu Yi wrote:
-> 
-> Thanks. But looks like you missed the one in if_sdio_debugfs_init().
-> 
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   22 ++++++++++++++++++----
+ drivers/net/wireless/ath/ath9k/debug.h |    4 ++++
+ 2 files changed, 22 insertions(+), 4 deletions(-)
 
-Yup.
-
-> I don't think we even need to check -ENODEV ourselves because if
-> DEBUG_FS is not compiled in, all the debugfs utility functions will
-> become no-op.
-> 
-
-Good point.
-
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-Probably this could get changed to just "Reported-by" but I'm happy to
-take credit for other peoples work.  :)
-
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> 
-
-Acked-by: Dan Carpenter <error27@gmail.com>
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 9a8e419..64e30cd 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -180,8 +180,15 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
+ {
+ 	if (status)
+ 		sc->debug.stats.istats.total++;
+-	if (status & ATH9K_INT_RX)
+-		sc->debug.stats.istats.rxok++;
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
++		if (status & ATH9K_INT_RXLP)
++			sc->debug.stats.istats.rxlp++;
++		if (status & ATH9K_INT_RXHP)
++			sc->debug.stats.istats.rxhp++;
++	} else {
++		if (status & ATH9K_INT_RX)
++			sc->debug.stats.istats.rxok++;
++	}
+ 	if (status & ATH9K_INT_RXEOL)
+ 		sc->debug.stats.istats.rxeol++;
+ 	if (status & ATH9K_INT_RXORN)
+@@ -223,8 +230,15 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+ 	char buf[512];
+ 	unsigned int len = 0;
+ 
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-		"%8s: %10u\n", "RX", sc->debug.stats.istats.rxok);
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
++		len += snprintf(buf + len, sizeof(buf) - len,
++			"%8s: %10u\n", "RXLP", sc->debug.stats.istats.rxlp);
++		len += snprintf(buf + len, sizeof(buf) - len,
++			"%8s: %10u\n", "RXHP", sc->debug.stats.istats.rxhp);
++	} else {
++		len += snprintf(buf + len, sizeof(buf) - len,
++			"%8s: %10u\n", "RX", sc->debug.stats.istats.rxok);
++	}
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 		"%8s: %10u\n", "RXEOL", sc->debug.stats.istats.rxeol);
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index b2af9de..c545960 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -35,6 +35,8 @@ struct ath_buf;
+  * struct ath_interrupt_stats - Contains statistics about interrupts
+  * @total: Total no. of interrupts generated so far
+  * @rxok: RX with no errors
++ * @rxlp: RX with low priority RX
++ * @rxhp: RX with high priority, uapsd only
+  * @rxeol: RX with no more RXDESC available
+  * @rxorn: RX FIFO overrun
+  * @txok: TX completed at the requested rate
+@@ -55,6 +57,8 @@ struct ath_buf;
+ struct ath_interrupt_stats {
+ 	u32 total;
+ 	u32 rxok;
++	u32 rxlp;
++	u32 rxhp;
+ 	u32 rxeol;
+ 	u32 rxorn;
+ 	u32 txok;
+-- 
+1.6.3.3
 
