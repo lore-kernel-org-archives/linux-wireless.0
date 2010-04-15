@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:36341 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758588Ab0DWSRX (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60942 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757266Ab0DOVjm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 14:17:23 -0400
-Date: Fri, 23 Apr 2010 13:17:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ssb: Make bus registration failure not be silent
-Message-ID: <4bd1e431.vQNH3R5aTXsSl1FV%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 15 Apr 2010 17:39:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 10/97] ath9k_hw: skip PLL initialization on AR9003 on Power-On-Reset
+Date: Thu, 15 Apr 2010 17:38:15 -0400
+Message-Id: <1271367582-992-11-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In kernel Bugzilla #15825, a case where routine ssb_bus_pcibus_register()
-fails silently is reported. The cause for the failure is still being
-investigated; however, the diagnosis would be easier if the failure
-had been reported.
+This is not required for the AR9003 family.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/hw.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-John,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 060451f..dd37e90 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2065,7 +2065,8 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
+ 					   ATH9K_RESET_POWER_ON) != true) {
+ 				return false;
+ 			}
+-			ath9k_hw_init_pll(ah, NULL);
++			if (!AR_SREV_9300_20_OR_LATER(ah))
++				ath9k_hw_init_pll(ah, NULL);
+ 		}
+ 		if (AR_SREV_9100(ah))
+ 			REG_SET_BIT(ah, AR_RTC_RESET,
+-- 
+1.6.3.3
 
-This patch has low priority - 2.6.35. Whatever fixes are needed after the
-source of the problem is discovered will likely be 2.6.34 and stable material.
-
-Larry
----
-
-Michael,
-
-Please be aware that the failure in the SSB registration leads to a system
-freeze when ssb is unloaded. I did a quick check but could not locate a
-routine that fails to tear down all structures on an error return, but that
-search will be easier once we know which routine is failing. The OP for the
-Bugzilla entry has been given a test patch to further identify the problem.
-
-Larry
----
-
-Index: wireless-testing/drivers/ssb/main.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/main.c
-+++ wireless-testing/drivers/ssb/main.c
-@@ -834,6 +834,9 @@ int ssb_bus_pcibus_register(struct ssb_b
- 	if (!err) {
- 		ssb_printk(KERN_INFO PFX "Sonics Silicon Backplane found on "
- 			   "PCI device %s\n", dev_name(&host_pci->dev));
-+	} else {
-+		ssb_printk(KERN_ERR PFX "Failed to register PCI version"
-+			   " of SSB with error %d\n", err);
- 	}
- 
- 	return err;
