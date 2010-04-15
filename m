@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:44272 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754322Ab0DGG3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 02:29:55 -0400
-Subject: Re: [PATCH 3/7] crypto/testmgr: add testing for arc4 based on
- ecb(arc4)
-From: Pavel Roskin <proski@gnu.org>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1270280969-11357-4-git-send-email-sebastian@breakpoint.cc>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
-	 <1270280969-11357-4-git-send-email-sebastian@breakpoint.cc>
-Content-Type: text/plain
-Date: Wed, 07 Apr 2010 02:29:53 -0400
-Message-Id: <1270621793.31184.50.camel@mj>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:33037 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757447Ab0DOVjr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 17:39:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 92/97] mac80211: add LDPC control flag
+Date: Thu, 15 Apr 2010 17:39:37 -0400
+Message-Id: <1271367582-992-93-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-04-03 at 09:49 +0200, Sebastian Andrzej Siewior wrote:
+LDPC will be enabled through the rate control algorithm
+for each buffer the the tx_info flags.
 
-> +			if (mode == CRYPT_ARC4)
-> +				arc4_setup_iv((struct arc4_iv *)iv,
-> +					template[i].key, template[i].klen);
-> +			else
-> +				ret = crypto_ablkcipher_setkey(tfm, template[i].key,
->  						       template[i].klen);
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/mac80211.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Can we avoid those special cases?  If the goal is "to make arc4
-compliant with the crypto API", this looks like a step in a wrong
-direction.
-
-The same applies to many other changes in the series.
-
-I do realize that the original arc4 is not a block cipher at all.
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dcf3c5f..75056dd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -274,6 +274,7 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_INTFL_NL80211_FRAME_TX: Frame was requested through nl80211
+  *	MLME command (internal to mac80211 to figure out whether to send TX
+  *	status to user space)
++ * @IEEE80211_TX_CTL_LDPC: tells the driver to use LDPC for this frame
+  */
+ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+@@ -297,6 +298,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(19),
+ 	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
+ 	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
++	IEEE80211_TX_CTL_LDPC			= BIT(22),
+ };
+ 
+ /**
 -- 
-Regards,
-Pavel Roskin
+1.6.3.3
+
