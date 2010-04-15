@@ -1,116 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46819 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933232Ab0DHT1o (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51672 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756518Ab0DOUAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 037/102] ath9k_hw: Move code which populates ds_data to ath9k_hw
-Date: Thu,  8 Apr 2010 15:26:33 -0400
-Message-Id: <1270754858-26266-38-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 15 Apr 2010 16:00:15 -0400
+Date: Thu, 15 Apr 2010 15:58:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: regression: soft lockup with ath9k on master-2010-04-14
+Message-ID: <20100415195812.GC3020@tuxdriver.com>
+References: <87pr20mrez.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87pr20mrez.fsf@purkki.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+On Thu, Apr 15, 2010 at 10:44:52PM +0300, Kalle Valo wrote:
+> Hello,
+> 
+> I just updated my laptop to latest wireless-testing and it everytime
+> soft lockups few seconds after association.
+> 
+> I haven't updated wireless-testing for few days, so I can't say when
+> this bug was introduced.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    4 +---
- drivers/net/wireless/ath/ath9k/mac.c    |    6 +++++-
- drivers/net/wireless/ath/ath9k/mac.h    |    3 ++-
- drivers/net/wireless/ath/ath9k/xmit.c   |    4 ++--
- 4 files changed, 10 insertions(+), 7 deletions(-)
+It might be useful to do a bisect.  If you choose to do that, you
+might want to use wireless-next-2.6 instead, since that doesn't have
+the occasional pulls from Linus that make bisecting wireless-testing
+more painful.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 22375a7..268b598 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -93,8 +93,6 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 		antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs) & 1 ? 2 : 1);
- 	}
- 
--	ds->ds_data = bf->bf_buf_addr;
--
- 	sband = &sc->sbands[common->hw->conf.channel->band];
- 	rate = sband->bitrates[rateidx].hw_value;
- 	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
-@@ -109,7 +107,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 
- 	/* NB: beacon's BufLen must be a multiple of 4 bytes */
- 	ath9k_hw_filltxdesc(ah, ds, roundup(skb->len, 4),
--			    true, true, ds);
-+			    true, true, ds, bf->bf_buf_addr);
- 
- 	memset(series, 0, sizeof(struct ath9k_11n_rate_series) * 4);
- 	series[0].Tries = 1;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index ae9d54c..5f4e2f3 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -220,10 +220,13 @@ EXPORT_SYMBOL(ath9k_hw_stoptxdma);
- 
- void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			 u32 segLen, bool firstSeg,
--			 bool lastSeg, const struct ath_desc *ds0)
-+			 bool lastSeg, const struct ath_desc *ds0,
-+			 dma_addr_t buf_addr)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 
-+	ads->ds_data = buf_addr;
-+
- 	if (firstSeg) {
- 		ads->ds_ctl1 |= segLen | (lastSeg ? 0 : AR_TxMore);
- 	} else if (lastSeg) {
-@@ -342,6 +345,7 @@ void ath9k_hw_set11n_txdesc(struct ath_hw *ah, struct ath_desc *ds,
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 
-+
- 	txPower += ah->txpower_indexoffset;
- 	if (txPower > 63)
- 		txPower = 63;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 126a403..f2f4ad2 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -693,7 +693,8 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
- bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q);
- void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			 u32 segLen, bool firstSeg,
--			 bool lastSeg, const struct ath_desc *ds0);
-+			 bool lastSeg, const struct ath_desc *ds0,
-+			 dma_addr_t buf_addr);
- void ath9k_hw_cleartxdesc(struct ath_hw *ah, struct ath_desc *ds);
- int ath9k_hw_txprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			struct ath_tx_status *ts);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 02df4cb..7219e29 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1660,7 +1660,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 
- 	ds = bf->bf_desc;
- 	ds->ds_link = 0;
--	ds->ds_data = bf->bf_buf_addr;
- 
- 	ath9k_hw_set11n_txdesc(ah, ds, bf->bf_frmlen, frm_type, MAX_RATE_POWER,
- 			       bf->bf_keyix, bf->bf_keytype, bf->bf_flags);
-@@ -1669,7 +1668,8 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 			    skb->len,	/* segment length */
- 			    true,	/* first segment */
- 			    true,	/* last segment */
--			    ds);	/* first descriptor */
-+			    ds,		/* first descriptor */
-+			    bf->bf_buf_addr);
- 
- 	spin_lock_bh(&txctl->txq->axq_lock);
- 
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
