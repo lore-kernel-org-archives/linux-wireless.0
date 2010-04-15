@@ -1,39 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48899 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751111Ab0DTEND (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 00:13:03 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.34-rc5: Reported regressions from 2.6.33
-Date: Tue, 20 Apr 2010 06:13:33 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <deuQKFRcc0B.A.3EG.BRSzLB@tosh> <20100419205723.8724338c.akpm@linux-foundation.org>
-In-Reply-To: <20100419205723.8724338c.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004200613.33696.rjw@sisk.pl>
+Received: from bombadil.infradead.org ([18.85.46.34]:54878 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756928Ab0DODaz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Apr 2010 23:30:55 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 59/97] ath9k_hw: move the cck channel 14 INI to the AR9002 hw code
+Date: Wed, 14 Apr 2010 23:30:13 -0400
+Message-Id: <1271302251-9075-60-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 20 April 2010, Andrew Morton wrote:
-> On Tue, 20 Apr 2010 05:15:57 +0200 (CEST) "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15812
-> > Subject		: utsname.domainname not set in x86_32 processes (causing "YPBINDPROC_DOMAIN: domain not bound" errors)
-> > Submitter	:  <adi@hexapodia.org>
-> > Date		: 2010-04-19 21:28 (1 days old)
-> 
-> I merged hch's fix for this twelve seconds ago.
+This is specific to the AR9002 family only.
 
-I updated the entry.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |   15 +++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c        |   11 ++---------
+ drivers/net/wireless/ath/ath9k/hw.h        |    2 ++
+ 3 files changed, 19 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index aa52fd7..ff81efa 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -229,6 +229,21 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 	}
+ }
+ 
++/* Support for Japan ch.14 (2484) spread */
++void ar9002_hw_cck_chan14_spread(struct ath_hw *ah)
++{
++	if (AR_SREV_9287_11_OR_LATER(ah)) {
++		INIT_INI_ARRAY(&ah->iniCckfirNormal,
++		       ar9287Common_normal_cck_fir_coeff_92871_1,
++		       ARRAY_SIZE(ar9287Common_normal_cck_fir_coeff_92871_1),
++		       2);
++		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
++		       ar9287Common_japan_2484_cck_fir_coeff_92871_1,
++		       ARRAY_SIZE(ar9287Common_japan_2484_cck_fir_coeff_92871_1),
++		       2);
++	}
++}
++
+ /*
+  * Helper for ASPM support.
+  *
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 672c5ad..a43e587 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -713,15 +713,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	else
+ 		ath9k_hw_disablepcie(ah);
+ 
+-	/* Support for Japan ch.14 (2484) spread */
+-	if (AR_SREV_9287_11_OR_LATER(ah)) {
+-		INIT_INI_ARRAY(&ah->iniCckfirNormal,
+-		       ar9287Common_normal_cck_fir_coeff_92871_1,
+-		       ARRAY_SIZE(ar9287Common_normal_cck_fir_coeff_92871_1), 2);
+-		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+-		       ar9287Common_japan_2484_cck_fir_coeff_92871_1,
+-		       ARRAY_SIZE(ar9287Common_japan_2484_cck_fir_coeff_92871_1), 2);
+-	}
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		ar9002_hw_cck_chan14_spread(ah);
+ 
+ 	r = ath9k_hw_post_init(ah);
+ 	if (r)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 2f6aabe..e49f001 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -832,6 +832,8 @@ void ath9k_hw_htc_resetinit(struct ath_hw *ah);
+ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+ 				   u32 *coef_mantissa, u32 *coef_exponent);
+ 
++void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
++
+ /*
+  * Code specifric to AR9003, we stuff these here to avoid callbacks
+  * for older families
+-- 
+1.6.3.3
+
