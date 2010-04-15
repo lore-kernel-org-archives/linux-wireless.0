@@ -1,127 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:17466 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919Ab0DSE7B (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:32942 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757378Ab0DOVjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 00:59:01 -0400
-Subject: Re: [RFC PATCH] mac80211: Prevent running sta_cleanup timer
- unnecessarily
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1271449060.4184.1.camel@jlt3.sipsolutions.net>
-References: <1271403308-23416-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271403308-23416-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271449060.4184.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Apr 2010 07:56:04 +0300
-Message-ID: <1271652964.6205.4211.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 15 Apr 2010 17:39:45 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v3 72/97] ath9k_hw: move AR9280 PCI EEPROM fix to eeprom_def.c
+Date: Thu, 15 Apr 2010 17:39:17 -0400
+Message-Id: <1271367582-992-73-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-04-16 at 22:17 +0200, ext Johannes Berg wrote:
-> On Fri, 2010-04-16 at 10:35 +0300, Juuso Oikarinen wrote:
-> > The sta_cleanup timer is used to periodically expire buffered frames from the
-> > tx buf. The timer is executing periodically, regardless of the need for it.
-> > This is wasting resources.
-> > 
-> > Fix this simply by not restarting the sta_cleanup timer if the tx buffer was
-> > empty. Restart the timer when there is some more tx-traffic.
-> > 
-> > Cc: Janne Ylälehto <janne.ylalehto@nokia.com>
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > ---
-> >  net/mac80211/sta_info.c |   13 ++++++++++---
-> >  net/mac80211/tx.c       |    7 +++++++
-> >  2 files changed, 17 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> > index ff0eb94..3de7a22 100644
-> > --- a/net/mac80211/sta_info.c
-> > +++ b/net/mac80211/sta_info.c
-> > @@ -575,7 +575,7 @@ static int sta_info_buffer_expired(struct sta_info *sta,
-> >  }
-> >  
-> > 
-> > -static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
-> > +static bool sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
-> >  					     struct sta_info *sta)
-> >  {
-> >  	unsigned long flags;
-> > @@ -583,7 +583,7 @@ static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
-> >  	struct ieee80211_sub_if_data *sdata;
-> >  
-> >  	if (skb_queue_empty(&sta->ps_tx_buf))
-> > -		return;
-> > +		return false;
-> >  
-> >  	for (;;) {
-> >  		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
-> > @@ -608,6 +608,8 @@ static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
-> >  		if (skb_queue_empty(&sta->ps_tx_buf))
-> >  			sta_info_clear_tim_bit(sta);
-> >  	}
-> > +
-> > +	return true;
-> >  }
-> >  
-> >  static int __must_check __sta_info_destroy(struct sta_info *sta)
-> > @@ -755,15 +757,20 @@ static void sta_info_cleanup(unsigned long data)
-> >  {
-> >  	struct ieee80211_local *local = (struct ieee80211_local *) data;
-> >  	struct sta_info *sta;
-> > +	bool timer_needed = false;
-> >  
-> >  	rcu_read_lock();
-> >  	list_for_each_entry_rcu(sta, &local->sta_list, list)
-> > -		sta_info_cleanup_expire_buffered(local, sta);
-> > +		if (sta_info_cleanup_expire_buffered(local, sta))
-> > +			timer_needed = true;
-> >  	rcu_read_unlock();
-> >  
-> >  	if (local->quiescing)
-> >  		return;
-> >  
-> > +	if (!timer_needed)
-> > +		return;
-> > +
-> >  	local->sta_cleanup.expires =
-> >  		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
-> >  	add_timer(&local->sta_cleanup);
-> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> > index 2cb7726..e2aa972 100644
-> > --- a/net/mac80211/tx.c
-> > +++ b/net/mac80211/tx.c
-> > @@ -429,6 +429,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
-> >  	struct sta_info *sta = tx->sta;
-> >  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
-> >  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-> > +	struct ieee80211_local *local = tx->local;
-> >  	u32 staflags;
-> >  
-> >  	if (unlikely(!sta ||
-> > @@ -476,6 +477,12 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
-> >  		info->control.vif = &tx->sdata->vif;
-> >  		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
-> >  		skb_queue_tail(&sta->ps_tx_buf, tx->skb);
-> > +
-> > +		if (!timer_pending(&local->sta_cleanup))
-> > +			mod_timer(&local->sta_cleanup,
-> > +				  round_jiffies(jiffies +
-> > +						STA_INFO_CLEANUP_INTERVAL));
-> > +
-> 
-> Why bother to check !timer_pending?
-> 
+From: Felix Fietkau <nbd@openwrt.org>
 
-Otherwise, if we have some periodic TX going on with an interval less
-than STA_INFO_CLEANUP_INTERVAL, the sta_cleanup could be delayed
-considerably.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |    6 ++++++
+ drivers/net/wireless/ath/ath9k/hw.c         |   17 -----------------
+ 2 files changed, 6 insertions(+), 17 deletions(-)
 
--Juuso
-
-> johannes
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 3d1b86b..cf59799 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -223,6 +223,12 @@ static int ath9k_hw_def_check_eeprom(struct ath_hw *ah)
+ 		return -EINVAL;
+ 	}
+ 
++	/* Enable fixup for AR_AN_TOP2 if necessary */
++	if (AR_SREV_9280_10_OR_LATER(ah) &&
++	    (eep->baseEepHeader.version & 0xff) > 0x0a &&
++	    eep->baseEepHeader.pwdclkind == 0)
++		ah->need_an_top2_fixup = 1;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e8b88be..c224f21 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -526,21 +526,6 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ 	return 0;
+ }
+ 
+-static void ath9k_hw_init_eeprom_fix(struct ath_hw *ah)
+-{
+-	struct base_eep_header *pBase = &(ah->eeprom.def.baseEepHeader);
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	ah->need_an_top2_fixup = (ah->hw_version.devid == AR9280_DEVID_PCI) &&
+-				 !AR_SREV_9285(ah) && !AR_SREV_9271(ah) &&
+-				 ((pBase->version & 0xff) > 0x0a) &&
+-				 (pBase->pwdclkind == 0);
+-
+-	if (ah->need_an_top2_fixup)
+-		ath_print(common, ATH_DBG_EEPROM,
+-			  "needs fixup for AR_AN_TOP2 register\n");
+-}
+-
+ static void ath9k_hw_attach_ops(struct ath_hw *ah)
+ {
+ 	if (AR_SREV_9300_20_OR_LATER(ah))
+@@ -630,8 +615,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (r)
+ 		return r;
+ 
+-	ath9k_hw_init_eeprom_fix(ah);
+-
+ 	r = ath9k_hw_init_macaddr(ah);
+ 	if (r) {
+ 		ath_print(common, ATH_DBG_FATAL,
+-- 
+1.6.3.3
 
