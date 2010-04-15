@@ -1,34 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:55907 "EHLO purkki.valot.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754107Ab0DLVDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 17:03:47 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout configuration
-References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
-	<1271061120.3877.6.camel@jlt3.sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 12 Apr 2010 23:19:35 +0300
-In-Reply-To: <1271061120.3877.6.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Mon\, 12 Apr 2010 10\:32\:00 +0200")
-Message-ID: <878w8spgo8.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from bombadil.infradead.org ([18.85.46.34]:54858 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756914Ab0DODaz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Apr 2010 23:30:55 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 54/97] ath9k_hw: move the cal AR9100 calibration settings
+Date: Wed, 14 Apr 2010 23:30:08 -0400
+Message-Id: <1271302251-9075-55-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+The calibration settings should go into the respective
+hardware family AR9002 calibration settings callback,
+ar9002_hw_init_cal_settings().
 
-> On Mon, 2010-04-12 at 11:11 +0300, Juuso Oikarinen wrote:
->> This adds support to configure the dynamic ps timeout via nl80211. The
->> relevant attribute is added to NL80211_CMD_SET_POWER_SAVE.
->
-> I'm not sure we even want this.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-When I added power save support to nl80211, I deliberately left out
-setting the timeout. In the future there will be more advanced methods
-to control power save and the timeout value would be then meaningless.
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ec48e7b..51f1e84 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -603,6 +603,12 @@ static bool ar9003_hw_macversion_supported(u32 macversion)
+ 
+ static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
+ {
++	if (AR_SREV_9100(ah)) {
++		ah->iq_caldata.calData = &iq_cal_multi_sample;
++		ah->supp_cals = IQ_MISMATCH_CAL;
++		return;
++	}
++
+ 	if (AR_SREV_9160_10_OR_LATER(ah)) {
+ 		if (AR_SREV_9280_10_OR_LATER(ah)) {
+ 			ah->iq_caldata.calData = &iq_cal_single_sample;
+@@ -1016,13 +1022,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	if (AR_SREV_9100(ah)) {
+-		ah->iq_caldata.calData = &iq_cal_multi_sample;
+-		ah->supp_cals = IQ_MISMATCH_CAL;
+-		ah->is_pciexpress = false;
+-	}
+-
+-	if (AR_SREV_9271(ah))
++	if (AR_SREV_9271(ah) || AR_SREV_9100(ah))
+ 		ah->is_pciexpress = false;
+ 
+ 	ah->hw_version.phyRev = REG_READ(ah, AR_PHY_CHIP_ID);
 -- 
-Kalle Valo
+1.6.3.3
+
