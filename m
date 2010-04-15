@@ -1,142 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:39001 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755821Ab0DHWdx (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54942 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756965Ab0DODa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 18:33:53 -0400
-Received: by ewy20 with SMTP id 20so1168754ewy.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 15:33:52 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 5/9] rt2x00: Align rt2800 register initialization with vendor driver.
-Date: Fri, 9 Apr 2010 00:33:29 +0200
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-6-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270763437-29526-6-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Message-Id: <201004090033.29518.IvDoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain;
-  charset="iso-8859-15"
+	Wed, 14 Apr 2010 23:30:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v2 71/97] ath9k_hw: Fill get_isr() for AR9003
+Date: Wed, 14 Apr 2010 23:30:25 -0400
+Message-Id: <1271302251-9075-72-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 April 2010, Gertjan van Wingerde wrote:
-> Align the rt2800 register initializations with the latest versions of the
-> Ralink vendor driver.
-> This patch is also preparation for the addition of support for RT3070 /
-> RT3071 / RT3090 / RT3390 based devices.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |  155 +++++++++++++++++++++++--------
->  drivers/net/wireless/rt2x00/rt2800pci.c |   13 ---
->  2 files changed, 114 insertions(+), 54 deletions(-)
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-> @@ -531,12 +526,8 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
->  			   !(filter_flags & FIF_PLCPFAIL));
->  	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME,
->  			   !(filter_flags & FIF_PROMISC_IN_BSS));
-> -	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_MY_BSSD, 0);
-> -	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_VER_ERROR, 1);
->  	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_MULTICAST,
->  			   !(filter_flags & FIF_ALLMULTI));
-> -	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BROADCAST, 0);
-> -	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_DUPLICATE, 1);
->  	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CF_END_ACK,
->  			   !(filter_flags & FIF_CONTROL));
->  	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CF_END,
-> @@ -549,8 +540,6 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
->  			   !(filter_flags & FIF_CONTROL));
->  	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PSPOLL,
->  			   !(filter_flags & FIF_PSPOLL));
-> -	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA, 1);
-> -	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR, 0);
->  	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CNTL,
->  			   !(filter_flags & FIF_CONTROL));
->  	rt2800_register_write(rt2x00dev, RX_FILTER_CFG, reg);
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |  132 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |    8 ++
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 +
+ drivers/net/wireless/ath/ath9k/reg.h        |    2 +
+ 5 files changed, 146 insertions(+), 0 deletions(-)
 
-I'm not a big fan of these changes. Unless the filters don't work as expected,
-I rather see the entire list of filters set to their correct values here.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 15f1b0f..2319456 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -32,6 +32,138 @@ static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
+ 
+ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ {
++	u32 isr = 0;
++	u32 mask2 = 0;
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
++	u32 sync_cause = 0;
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (REG_READ(ah, AR_INTR_ASYNC_CAUSE) & AR_INTR_MAC_IRQ) {
++		if ((REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M)
++				== AR_RTC_STATUS_ON)
++			isr = REG_READ(ah, AR_ISR);
++	}
++
++	sync_cause = REG_READ(ah, AR_INTR_SYNC_CAUSE) & AR_INTR_SYNC_DEFAULT;
++
++	*masked = 0;
++
++	if (!isr && !sync_cause)
++		return false;
++
++	if (isr) {
++		if (isr & AR_ISR_BCNMISC) {
++			u32 isr2;
++			isr2 = REG_READ(ah, AR_ISR_S2);
++
++			mask2 |= ((isr2 & AR_ISR_S2_TIM) >>
++				  MAP_ISR_S2_TIM);
++			mask2 |= ((isr2 & AR_ISR_S2_DTIM) >>
++				  MAP_ISR_S2_DTIM);
++			mask2 |= ((isr2 & AR_ISR_S2_DTIMSYNC) >>
++				  MAP_ISR_S2_DTIMSYNC);
++			mask2 |= ((isr2 & AR_ISR_S2_CABEND) >>
++				  MAP_ISR_S2_CABEND);
++			mask2 |= ((isr2 & AR_ISR_S2_GTT) <<
++				  MAP_ISR_S2_GTT);
++			mask2 |= ((isr2 & AR_ISR_S2_CST) <<
++				  MAP_ISR_S2_CST);
++			mask2 |= ((isr2 & AR_ISR_S2_TSFOOR) >>
++				  MAP_ISR_S2_TSFOOR);
++
++			if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++				REG_WRITE(ah, AR_ISR_S2, isr2);
++				isr &= ~AR_ISR_BCNMISC;
++			}
++		}
++
++		if ((pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED))
++			isr = REG_READ(ah, AR_ISR_RAC);
++
++		if (isr == 0xffffffff) {
++			*masked = 0;
++			return false;
++		}
++
++		*masked = isr & ATH9K_INT_COMMON;
++
++		if (ah->config.rx_intr_mitigation)
++			if (isr & (AR_ISR_RXMINTR | AR_ISR_RXINTM))
++				*masked |= ATH9K_INT_RXLP;
++
++		if (ah->config.tx_intr_mitigation)
++			if (isr & (AR_ISR_TXMINTR | AR_ISR_TXINTM))
++				*masked |= ATH9K_INT_TX;
++
++		if (isr & (AR_ISR_LP_RXOK | AR_ISR_RXERR))
++			*masked |= ATH9K_INT_RXLP;
++
++		if (isr & AR_ISR_HP_RXOK)
++			*masked |= ATH9K_INT_RXHP;
++
++		if (isr & (AR_ISR_TXOK | AR_ISR_TXERR | AR_ISR_TXEOL)) {
++			*masked |= ATH9K_INT_TX;
++
++			if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++				u32 s0, s1;
++				s0 = REG_READ(ah, AR_ISR_S0);
++				REG_WRITE(ah, AR_ISR_S0, s0);
++				s1 = REG_READ(ah, AR_ISR_S1);
++				REG_WRITE(ah, AR_ISR_S1, s1);
++
++				isr &= ~(AR_ISR_TXOK | AR_ISR_TXERR |
++					 AR_ISR_TXEOL);
++			}
++		}
++
++		if (isr & AR_ISR_GENTMR) {
++			u32 s5;
++
++			if (pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)
++				s5 = REG_READ(ah, AR_ISR_S5_S);
++			else
++				s5 = REG_READ(ah, AR_ISR_S5);
++
++			ah->intr_gen_timer_trigger =
++				MS(s5, AR_ISR_S5_GENTIMER_TRIG);
++
++			ah->intr_gen_timer_thresh =
++				MS(s5, AR_ISR_S5_GENTIMER_THRESH);
++
++			if (ah->intr_gen_timer_trigger)
++				*masked |= ATH9K_INT_GENTIMER;
++
++			if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++				REG_WRITE(ah, AR_ISR_S5, s5);
++				isr &= ~AR_ISR_GENTMR;
++			}
++
++		}
++
++		*masked |= mask2;
++
++		if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++			REG_WRITE(ah, AR_ISR, isr);
++
++			(void) REG_READ(ah, AR_ISR);
++		}
++	}
++
++	if (sync_cause) {
++		if (sync_cause & AR_INTR_SYNC_RADM_CPL_TIMEOUT) {
++			REG_WRITE(ah, AR_RC, AR_RC_HOSTIF);
++			REG_WRITE(ah, AR_RC, 0);
++			*masked |= ATH9K_INT_FATAL;
++		}
++
++		if (sync_cause & AR_INTR_SYNC_LOCAL_TIMEOUT)
++			ath_print(common, ATH_DBG_INTERRUPT,
++				  "AR_INTR_SYNC_LOCAL_TIMEOUT\n");
++
++			REG_WRITE(ah, AR_INTR_SYNC_CAUSE_CLR, sync_cause);
++		(void) REG_READ(ah, AR_INTR_SYNC_CAUSE_CLR);
++
++	}
+ 	return true;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index 7f87804..b78d009 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -22,6 +22,14 @@
+ #define AR_CtrlStat	0x00004000
+ #define AR_TxRxDesc	0x00008000
+ 
++#define MAP_ISR_S2_CST          6
++#define MAP_ISR_S2_GTT          6
++#define MAP_ISR_S2_TIM          3
++#define MAP_ISR_S2_CABEND       0
++#define MAP_ISR_S2_DTIMSYNC     7
++#define MAP_ISR_S2_DTIM         7
++#define MAP_ISR_S2_TSFOOR       4
++
+ enum ath9k_rx_qtype {
+ 	ATH9K_RX_QUEUE_HP,
+ 	ATH9K_RX_QUEUE_LP,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8c25059..e8b88be 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2146,6 +2146,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		pCap->tx_desc_len = sizeof(struct ath_desc);
+ 	}
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		pCap->hw_caps |= ATH9K_HW_CAP_RAC_SUPPORTED;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6da5b8e..3a53233 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -179,6 +179,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_AUTOSLEEP                  = BIT(15),
+ 	ATH9K_HW_CAP_4KB_SPLITTRANS             = BIT(16),
+ 	ATH9K_HW_CAP_EDMA			= BIT(17),
++	ATH9K_HW_CAP_RAC_SUPPORTED		= BIT(18),
+ };
+ 
+ enum ath9k_capability_type {
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 12de95e..12f1621 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -169,6 +169,8 @@
+ #define AR_ISR               0x0080
+ #define AR_ISR_RXOK          0x00000001
+ #define AR_ISR_RXDESC        0x00000002
++#define AR_ISR_HP_RXOK	     0x00000001
++#define AR_ISR_LP_RXOK	     0x00000002
+ #define AR_ISR_RXERR         0x00000004
+ #define AR_ISR_RXNOPKT       0x00000008
+ #define AR_ISR_RXEOL         0x00000010
+-- 
+1.6.3.3
 
-> @@ -1176,6 +1179,31 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->  	rt2x00_set_field32(&reg, BCN_TIME_CFG_TX_TIME_COMPENSATE, 0);
->  	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
->  
-> +	rt2800_register_read(rt2x00dev, RX_FILTER_CFG, &reg);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CRC_ERROR, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PHY_ERROR, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_MY_BSSD, 0);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_VER_ERROR, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_MULTICAST, 0);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BROADCAST, 0);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_DUPLICATE, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CF_END_ACK, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CF_END, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_ACK, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CTS, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_RTS, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PSPOLL, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA, 1);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR, 0);
-> +	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CNTL, 1);
-> +	rt2800_register_write(rt2x00dev, RX_FILTER_CFG, reg);
-
-Can't we just fix this by calling the config_filter() function with the proper settings?
-This function is getting huge by now, so we could try to reduce it a bit.
-
-> @@ -1214,38 +1243,61 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_MPDU, 0);
->  	rt2800_register_write(rt2x00dev, MAX_LEN_CFG, reg);
->  
-> +	rt2800_register_read(rt2x00dev, LED_CFG, &reg);
-> +	rt2x00_set_field32(&reg, LED_CFG_ON_PERIOD, 70);
-> +	rt2x00_set_field32(&reg, LED_CFG_OFF_PERIOD, 30);
-> +	rt2x00_set_field32(&reg, LED_CFG_SLOW_BLINK_PERIOD, 3);
-> +	rt2x00_set_field32(&reg, LED_CFG_R_LED_MODE, 3);
-> +	rt2x00_set_field32(&reg, LED_CFG_G_LED_MODE, 3);
-> +	rt2x00_set_field32(&reg, LED_CFG_Y_LED_MODE, 3);
-> +	rt2x00_set_field32(&reg, LED_CFG_LED_POLAR, 1);
-> +	rt2800_register_write(rt2x00dev, LED_CFG, reg);
-
-Same here.
-
->  	rt2800_register_write(rt2x00dev, PBF_MAX_PCNT, 0x1f3fbf9f);
->  
-> +	rt2800_register_read(rt2x00dev, TX_RTY_CFG, &reg);
-> +	rt2x00_set_field32(&reg, TX_RTY_CFG_SHORT_RTY_LIMIT, 15);
-> +	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_LIMIT, 31);
-> +	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_THRE, 2000);
-> +	rt2x00_set_field32(&reg, TX_RTY_CFG_NON_AGG_RTY_MODE, 0);
-> +	rt2x00_set_field32(&reg, TX_RTY_CFG_AGG_RTY_MODE, 0);
-> +	rt2x00_set_field32(&reg, TX_RTY_CFG_TX_AUTO_FB_ENABLE, 1);
-> +	rt2800_register_write(rt2x00dev, TX_RTY_CFG, reg);
-
-And here.
-
-> +	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev))
-> +		rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 1);
-> +	else if (rt2x00_is_usb(rt2x00dev))
-> +		rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 0);
-
-perhaps:
-	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, !rt2x00_is_usb(rt2x00dev));
-
-> @@ -1323,6 +1382,15 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->  	rt2800_register_write(rt2x00dev, TX_RTS_CFG, reg);
->  
->  	rt2800_register_write(rt2x00dev, EXP_ACK_TIME, 0x002400ca);
-> +
-> +	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
-> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, 32);
-> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, 32);
-> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_XIFS_TIME, 4);
-> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, 314);
-> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_BB_RXEND_ENABLE, 1);
-> +	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
-
-Not really fond of the magical values written to the device, while mac80211
-sends us the proper values later. This is probably a register initialization ordering issue?
-
-Ivo
