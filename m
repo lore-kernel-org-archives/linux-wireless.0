@@ -1,41 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44873 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933157Ab0DHUpS (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33029 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757439Ab0DOVjr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 16:45:18 -0400
-Date: Thu, 8 Apr 2010 16:39:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jeff Chua <jeff.chua.linux@gmail.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>, stable@kernel.org,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [REVERT] be6b38bcb175613f239e0b302607db346472c6b6.
-	v2.6.34-rc3-406 oops with 4965AGN wireless
-Message-ID: <20100408203952.GE2999@tuxdriver.com>
-References: <Pine.LNX.4.64.1004090251210.11582@boston.corp.fedex.com> <20100408201952.GD2999@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100408201952.GD2999@tuxdriver.com>
+	Thu, 15 Apr 2010 17:39:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v3 90/97] ath9k_hw: Compute pointer checksum over the link descriptor
+Date: Thu, 15 Apr 2010 17:39:35 -0400
+Message-Id: <1271367582-992-91-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 08, 2010 at 04:19:53PM -0400, John W. Linville wrote:
-> On Fri, Apr 09, 2010 at 03:27:53AM +0800, Jeff Chua wrote:
-> 
-> > Wey, the patch doesn't apply cleanly. I believe you meant "iwl_" instead  
-> > of "iwlagn_".
-> 
-> He based his patch on wireless-testing (or something similar), where
-> iwlagn_ is the proper prefix for the functions in question.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-"She based her patch..." -- my apologies!
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   36 +++++++++++++++-----------
+ 1 files changed, 21 insertions(+), 15 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 1a8c1ba..582c880 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -21,14 +21,33 @@ static void ar9003_hw_rx_enable(struct ath_hw *hw)
+ 	REG_WRITE(hw, AR_CR, 0);
+ }
+ 
++static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
++{
++	int checksum;
++
++	checksum = ads->info + ads->link
++		+ ads->data0 + ads->ctl3
++		+ ads->data1 + ads->ctl5
++		+ ads->data2 + ads->ctl7
++		+ ads->data3 + ads->ctl9;
++
++	return ((checksum & 0xffff) + (checksum >> 16)) & AR_TxPtrChkSum;
++}
++
+ static void ar9003_hw_set_desc_link(void *ds, u32 ds_link)
+ {
+-	((struct ar9003_txc *) ds)->link = ds_link;
++	struct ar9003_txc *ads = ds;
++
++	ads->link = ds_link;
++	ads->ctl10 &= ~AR_TxPtrChkSum;
++	ads->ctl10 |= ar9003_calc_ptr_chksum(ads);
+ }
+ 
+ static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
+ {
+-	*ds_link = &((struct ar9003_txc *) ds)->link;
++	struct ar9003_txc *ads = ds;
++
++	*ds_link = &ads->link;
+ }
+ 
+ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+@@ -168,19 +187,6 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 	return true;
+ }
+ 
+-static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
+-{
+-	int checksum;
+-
+-	checksum = ads->info + ads->link
+-		+ ads->data0 + ads->ctl3
+-		+ ads->data1 + ads->ctl5
+-		+ ads->data2 + ads->ctl7
+-		+ ads->data3 + ads->ctl9;
+-
+-	return ((checksum & 0xffff) + (checksum >> 16)) & AR_TxPtrChkSum;
+-}
+-
+ static void ar9003_hw_fill_txdesc(struct ath_hw *ah, void *ds, u32 seglen,
+ 				  bool is_firstseg, bool is_lastseg,
+ 				  const void *ds0, dma_addr_t buf_addr,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
