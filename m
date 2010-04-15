@@ -1,34 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:65196 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149Ab0DKQ4b (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54952 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756974Ab0DODa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 12:56:31 -0400
-Received: by ewy20 with SMTP id 20so1707789ewy.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2010 09:56:30 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 5/9] rt2x00: Align rt2800 register initialization with vendor driver.
-Date: Sun, 11 Apr 2010 18:56:22 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-6-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270989075-2267-6-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <201004111856.22893.IvDoorn@gmail.com>
+	Wed, 14 Apr 2010 23:30:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 73/97] ath9k_hw: move the RF claim stuff to AR9002 hardware family
+Date: Wed, 14 Apr 2010 23:30:27 -0400
+Message-Id: <1271302251-9075-74-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 11 April 2010, Gertjan van Wingerde wrote:
-> Align the rt2800 register initializations with the latest versions of the
-> Ralink vendor driver.
-> This patch is also preparation for the addition of support for RT3070 /
-> RT3071 / RT3090 / RT3390 based devices.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |   43 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c        |   51 +++-------------------------
+ drivers/net/wireless/ath/ath9k/hw.h        |    5 +++
+ 3 files changed, 53 insertions(+), 46 deletions(-)
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index eeaea26..5b21e69 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -483,6 +483,49 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+ 	}
+ }
+ 
++static int ar9002_hw_get_radiorev(struct ath_hw *ah)
++{
++	u32 val;
++	int i;
++
++	REG_WRITE(ah, AR_PHY(0x36), 0x00007058);
++
++	for (i = 0; i < 8; i++)
++		REG_WRITE(ah, AR_PHY(0x20), 0x00010000);
++	val = (REG_READ(ah, AR_PHY(256)) >> 24) & 0xff;
++	val = ((val & 0xf0) >> 4) | ((val & 0x0f) << 4);
++
++	return ath9k_hw_reverse_bits(val, 8);
++}
++
++int ar9002_hw_rf_claim(struct ath_hw *ah)
++{
++	u32 val;
++
++	REG_WRITE(ah, AR_PHY(0), 0x00000007);
++
++	val = ar9002_hw_get_radiorev(ah);
++	switch (val & AR_RADIO_SREV_MAJOR) {
++	case 0:
++		val = AR_RAD5133_SREV_MAJOR;
++		break;
++	case AR_RAD5133_SREV_MAJOR:
++	case AR_RAD5122_SREV_MAJOR:
++	case AR_RAD2133_SREV_MAJOR:
++	case AR_RAD2122_SREV_MAJOR:
++		break;
++	default:
++		ath_print(ath9k_hw_common(ah), ATH_DBG_FATAL,
++			  "Radio Chip Rev 0x%02X not supported\n",
++			  val & AR_RADIO_SREV_MAJOR);
++		return -EOPNOTSUPP;
++	}
++
++	ah->hw_version.analog5GhzRev = val;
++
++	return 0;
++}
++
+ /* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
+ void ar9002_hw_attach_ops(struct ath_hw *ah)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c224f21..eeecc72 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -265,21 +265,6 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+ 	}
+ }
+ 
+-static int ath9k_hw_get_radiorev(struct ath_hw *ah)
+-{
+-	u32 val;
+-	int i;
+-
+-	REG_WRITE(ah, AR_PHY(0x36), 0x00007058);
+-
+-	for (i = 0; i < 8; i++)
+-		REG_WRITE(ah, AR_PHY(0x20), 0x00010000);
+-	val = (REG_READ(ah, AR_PHY(256)) >> 24) & 0xff;
+-	val = ((val & 0xf0) >> 4) | ((val & 0x0f) << 4);
+-
+-	return ath9k_hw_reverse_bits(val, 8);
+-}
+-
+ /************************************/
+ /* HW Attach, Detach, Init Routines */
+ /************************************/
+@@ -439,34 +424,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->power_mode = ATH9K_PM_UNDEFINED;
+ }
+ 
+-static int ath9k_hw_rf_claim(struct ath_hw *ah)
+-{
+-	u32 val;
+-
+-	REG_WRITE(ah, AR_PHY(0), 0x00000007);
+-
+-	val = ath9k_hw_get_radiorev(ah);
+-	switch (val & AR_RADIO_SREV_MAJOR) {
+-	case 0:
+-		val = AR_RAD5133_SREV_MAJOR;
+-		break;
+-	case AR_RAD5133_SREV_MAJOR:
+-	case AR_RAD5122_SREV_MAJOR:
+-	case AR_RAD2133_SREV_MAJOR:
+-	case AR_RAD2122_SREV_MAJOR:
+-		break;
+-	default:
+-		ath_print(ath9k_hw_common(ah), ATH_DBG_FATAL,
+-			  "Radio Chip Rev 0x%02X not supported\n",
+-			  val & AR_RADIO_SREV_MAJOR);
+-		return -EOPNOTSUPP;
+-	}
+-
+-	ah->hw_version.analog5GhzRev = val;
+-
+-	return 0;
+-}
+-
+ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -497,9 +454,11 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ 			return -ENODEV;
+ 	}
+ 
+-	ecode = ath9k_hw_rf_claim(ah);
+-	if (ecode != 0)
+-		return ecode;
++	if (!AR_SREV_9300_20_OR_LATER(ah)) {
++		ecode = ar9002_hw_rf_claim(ah);
++		if (ecode != 0)
++			return ecode;
++	}
+ 
+ 	ecode = ath9k_hw_eeprom_init(ah);
+ 	if (ecode != 0)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 3a53233..580de2f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -838,7 +838,12 @@ void ath9k_hw_htc_resetinit(struct ath_hw *ah);
+ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+ 				   u32 *coef_mantissa, u32 *coef_exponent);
+ 
++/*
++ * Code Specific to AR5008, AR9001 or AR9002,
++ * we stuff these here to avoid callbacks for AR9003.
++ */
+ void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
++int ar9002_hw_rf_claim(struct ath_hw *ah);
+ 
+ /*
+  * Code specifric to AR9003, we stuff these here to avoid callbacks
+-- 
+1.6.3.3
 
