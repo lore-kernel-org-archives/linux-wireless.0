@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46833 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:33014 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933243Ab0DHT1p (ORCPT
+	with ESMTP id S1757433Ab0DOVjr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:45 -0400
+	Thu, 15 Apr 2010 17:39:47 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 040/102] ath9k: Use memcpy in ath_clone_txbuf()
-Date: Thu,  8 Apr 2010 15:26:36 -0400
-Message-Id: <1270754858-26266-41-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 87/97] ath9k_hw: set cwmin and cwmax to 0 for for AR9003 upon txq reset
+Date: Thu, 15 Apr 2010 17:39:32 -0400
+Message-Id: <1271367582-992-88-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/mac.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 16f7a3d..4bc52f4 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -279,7 +279,7 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
- 	tbf->aphy = bf->aphy;
- 	tbf->bf_mpdu = bf->bf_mpdu;
- 	tbf->bf_buf_addr = bf->bf_buf_addr;
--	*(tbf->bf_desc) = *(bf->bf_desc);
-+	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
- 	tbf->bf_state = bf->bf_state;
- 	tbf->bf_dmacontext = bf->bf_dmacontext;
- 
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 44ea43a..c003baf 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -533,6 +533,12 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
+ 			     AR_D_MISC_ARB_LOCKOUT_CNTRL_S)
+ 			  | AR_D_MISC_BEACON_USE
+ 			  | AR_D_MISC_POST_FR_BKOFF_DIS);
++		/* cwmin and cwmax should be 0 for beacon queue */
++		if (AR_SREV_9300_20_OR_LATER(ah)) {
++			REG_WRITE(ah, AR_DLCL_IFS(q), SM(0, AR_D_LCL_IFS_CWMIN)
++				  | SM(0, AR_D_LCL_IFS_CWMAX)
++				  | SM(qi->tqi_aifs, AR_D_LCL_IFS_AIFS));
++		}
+ 		break;
+ 	case ATH9K_TX_QUEUE_CAB:
+ 		REG_WRITE(ah, AR_QMISC(q), REG_READ(ah, AR_QMISC(q))
 -- 
 1.6.3.3
 
