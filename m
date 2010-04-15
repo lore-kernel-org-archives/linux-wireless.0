@@ -1,161 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 26.mail-out.ovh.net ([91.121.27.225]:60108 "HELO
-	26.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757308Ab0D0WVY (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:32937 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757382Ab0DOVjq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 18:21:24 -0400
-Message-ID: <4BD76360.2070005@free.fr>
-Date: Wed, 28 Apr 2010 00:21:20 +0200
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFT] ar9170: implement get_survey
-References: <201004272323.22107.chunkeey@googlemail.com>
-In-Reply-To: <201004272323.22107.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 15 Apr 2010 17:39:46 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 71/97] ath9k_hw: Fill get_isr() for AR9003
+Date: Thu, 15 Apr 2010 17:39:16 -0400
+Message-Id: <1271367582-992-72-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter a écrit :
-> This patch adds a basic get_survey for ar9170.
->
-> Survey data from wlan1
-> 	frequency:	2412 MHz
-> 	noise:		-85 dBm
->
-> TODO:
->   Currently, the noise level is updated only by a channel change.
->   Now, we could simply add another ar9170_set_channel to always get
->   a fresh result, but then we risk a RF lockup.
->   
-It seems to be a good start. The code is very similar to what is used in 
-ath9k. Just few questions below.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-> ---
-> diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
-> index dc662b7..26fa31e 100644
-> --- a/drivers/net/wireless/ath/ar9170/ar9170.h
-> +++ b/drivers/net/wireless/ath/ar9170/ar9170.h
-> @@ -198,7 +198,7 @@ struct ar9170 {
->  
->  	/* PHY */
->  	struct ieee80211_channel *channel;
-> -	int noise[4];
-> +	int noise[6];
->  
->  	/* power calibration data */
->  	u8 power_5G_leg[4];
-> @@ -302,5 +302,5 @@ int ar9170_init_phy(struct ar9170 *ar, enum ieee80211_band band);
->  int ar9170_init_rf(struct ar9170 *ar);
->  int ar9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
->  		       enum ar9170_rf_init_mode rfi, enum ar9170_bw bw);
-> -
-> +int ar9170_get_noisefloor(struct ar9170 *ar);
->  #endif /* __AR9170_H */
-> diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-> index 3247db8..1e422ed 100644
-> --- a/drivers/net/wireless/ath/ar9170/main.c
-> +++ b/drivers/net/wireless/ath/ar9170/main.c
-> @@ -2485,6 +2485,25 @@ static int ar9170_ampdu_action(struct ieee80211_hw *hw,
->  	return 0;
->  }
->  
-> +static int ar9170_op_get_survey(struct ieee80211_hw *hw, int idx,
-> +				struct survey_info *survey)
-> +{
-> +	struct ar9170 *ar = hw->priv;
-> +	int err;
-> +
-> +	if (idx != 0)
-> +		return -ENOENT;
-> +
-> +	err = ar9170_get_noisefloor(ar);
-> +	if (err)
-> +		return err;
-> +
-> +	survey->channel = ar->channel;
-> +	survey->filled = SURVEY_INFO_NOISE_DBM;
-> +	survey->noise = ar->noise[0];
-> +	return 0;
-> +}
-> +
->  static const struct ieee80211_ops ar9170_ops = {
->  	.start			= ar9170_op_start,
->  	.stop			= ar9170_op_stop,
-> @@ -2501,6 +2520,7 @@ static const struct ieee80211_ops ar9170_ops = {
->  	.sta_add		= ar9170_sta_add,
->  	.sta_remove		= ar9170_sta_remove,
->  	.get_stats		= ar9170_get_stats,
-> +	.get_survey		= ar9170_op_get_survey,
->  	.ampdu_action		= ar9170_ampdu_action,
->  };
->  
-> diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
-> index 45a415e..31ff163 100644
-> --- a/drivers/net/wireless/ath/ar9170/phy.c
-> +++ b/drivers/net/wireless/ath/ar9170/phy.c
-> @@ -1584,6 +1584,31 @@ static int ar9170_calc_noise_dbm(u32 raw_noise)
->  		return (raw_noise & 0xff) >> 1;
->  }
->  
-> +int ar9170_get_noisefloor(struct ar9170 *ar)
-> +{
-> +	static const u32 phy_regs[] = {
-> +		0x1c5864, 0x1c6864, 0x1c7864,
-> +		0x1c59bc, 0x1c69bc, 0x1c79bc };
->   
-Maybe #define would be more appropriate. Moreover, it's clear in my 
-notes that some ar9170 registers are just ath9k registers + 0x1bc000.
-> +	u32 phy_res[ARRAY_SIZE(phy_regs)];
-> +	int err, i;
-> +
-> +	BUILD_BUG_ON(ARRAY_SIZE(phy_regs) != ARRAY_SIZE(ar->noise));
-> +
-> +	err = ar9170_read_mreg(ar, ARRAY_SIZE(phy_regs), phy_regs, phy_res);
-> +	if (err)
-> +		return err;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(phy_regs); i++) {
-> +		ar->noise[i] = ar9170_calc_noise_dbm(
-> +			(phy_res[i] >> 19) & 0x1ff);
-> +
-> +		ar->noise[i + 3] = ar9170_calc_noise_dbm(
-> +			(phy_res[i + 3] >> 23) & 0x1ff);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  int ar9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
->  		       enum ar9170_rf_init_mode rfi, enum ar9170_bw bw)
->  {
-> @@ -1708,12 +1733,12 @@ int ar9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
->  		}
->  	}
->  
-> -	for (i = 0; i < 2; i++) {
-> +	for (i = 0; i < 3; i++) {
->   
-Why using 3 RX channels ? ar9170 is always 2x2, isn't it ? And why read 
-3 values since only one will be used in ar9170_op_get_survey?
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |  132 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |    8 ++
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 +
+ drivers/net/wireless/ath/ath9k/reg.h        |    2 +
+ 5 files changed, 146 insertions(+), 0 deletions(-)
 
-Maybe we should combine the 3 values before reporting a single value ?
->  		ar->noise[i] = ar9170_calc_noise_dbm(
-> -				(le32_to_cpu(vals[2 + i]) >> 19) & 0x1ff);
-> +				(le32_to_cpu(vals[i + 1]) >> 19) & 0x1ff);
->  
-> -		ar->noise[i + 2] = ar9170_calc_noise_dbm(
-> -				    (le32_to_cpu(vals[5 + i]) >> 23) & 0x1ff);
-> +		ar->noise[i + 3] = ar9170_calc_noise_dbm(
-> +				    (le32_to_cpu(vals[i + 4]) >> 23) & 0x1ff);
->  	}
->  
->  	ar->channel = channel;
->   
-Moreover (but my patch for ath9k has the very same error), I think we 
-are reported the noise floor calibration result which is not the noise 
-at all... that might be another story anyway.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 15f1b0f..2319456 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -32,6 +32,138 @@ static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
+ 
+ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ {
++	u32 isr = 0;
++	u32 mask2 = 0;
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
++	u32 sync_cause = 0;
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (REG_READ(ah, AR_INTR_ASYNC_CAUSE) & AR_INTR_MAC_IRQ) {
++		if ((REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M)
++				== AR_RTC_STATUS_ON)
++			isr = REG_READ(ah, AR_ISR);
++	}
++
++	sync_cause = REG_READ(ah, AR_INTR_SYNC_CAUSE) & AR_INTR_SYNC_DEFAULT;
++
++	*masked = 0;
++
++	if (!isr && !sync_cause)
++		return false;
++
++	if (isr) {
++		if (isr & AR_ISR_BCNMISC) {
++			u32 isr2;
++			isr2 = REG_READ(ah, AR_ISR_S2);
++
++			mask2 |= ((isr2 & AR_ISR_S2_TIM) >>
++				  MAP_ISR_S2_TIM);
++			mask2 |= ((isr2 & AR_ISR_S2_DTIM) >>
++				  MAP_ISR_S2_DTIM);
++			mask2 |= ((isr2 & AR_ISR_S2_DTIMSYNC) >>
++				  MAP_ISR_S2_DTIMSYNC);
++			mask2 |= ((isr2 & AR_ISR_S2_CABEND) >>
++				  MAP_ISR_S2_CABEND);
++			mask2 |= ((isr2 & AR_ISR_S2_GTT) <<
++				  MAP_ISR_S2_GTT);
++			mask2 |= ((isr2 & AR_ISR_S2_CST) <<
++				  MAP_ISR_S2_CST);
++			mask2 |= ((isr2 & AR_ISR_S2_TSFOOR) >>
++				  MAP_ISR_S2_TSFOOR);
++
++			if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++				REG_WRITE(ah, AR_ISR_S2, isr2);
++				isr &= ~AR_ISR_BCNMISC;
++			}
++		}
++
++		if ((pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED))
++			isr = REG_READ(ah, AR_ISR_RAC);
++
++		if (isr == 0xffffffff) {
++			*masked = 0;
++			return false;
++		}
++
++		*masked = isr & ATH9K_INT_COMMON;
++
++		if (ah->config.rx_intr_mitigation)
++			if (isr & (AR_ISR_RXMINTR | AR_ISR_RXINTM))
++				*masked |= ATH9K_INT_RXLP;
++
++		if (ah->config.tx_intr_mitigation)
++			if (isr & (AR_ISR_TXMINTR | AR_ISR_TXINTM))
++				*masked |= ATH9K_INT_TX;
++
++		if (isr & (AR_ISR_LP_RXOK | AR_ISR_RXERR))
++			*masked |= ATH9K_INT_RXLP;
++
++		if (isr & AR_ISR_HP_RXOK)
++			*masked |= ATH9K_INT_RXHP;
++
++		if (isr & (AR_ISR_TXOK | AR_ISR_TXERR | AR_ISR_TXEOL)) {
++			*masked |= ATH9K_INT_TX;
++
++			if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++				u32 s0, s1;
++				s0 = REG_READ(ah, AR_ISR_S0);
++				REG_WRITE(ah, AR_ISR_S0, s0);
++				s1 = REG_READ(ah, AR_ISR_S1);
++				REG_WRITE(ah, AR_ISR_S1, s1);
++
++				isr &= ~(AR_ISR_TXOK | AR_ISR_TXERR |
++					 AR_ISR_TXEOL);
++			}
++		}
++
++		if (isr & AR_ISR_GENTMR) {
++			u32 s5;
++
++			if (pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)
++				s5 = REG_READ(ah, AR_ISR_S5_S);
++			else
++				s5 = REG_READ(ah, AR_ISR_S5);
++
++			ah->intr_gen_timer_trigger =
++				MS(s5, AR_ISR_S5_GENTIMER_TRIG);
++
++			ah->intr_gen_timer_thresh =
++				MS(s5, AR_ISR_S5_GENTIMER_THRESH);
++
++			if (ah->intr_gen_timer_trigger)
++				*masked |= ATH9K_INT_GENTIMER;
++
++			if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++				REG_WRITE(ah, AR_ISR_S5, s5);
++				isr &= ~AR_ISR_GENTMR;
++			}
++
++		}
++
++		*masked |= mask2;
++
++		if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++			REG_WRITE(ah, AR_ISR, isr);
++
++			(void) REG_READ(ah, AR_ISR);
++		}
++	}
++
++	if (sync_cause) {
++		if (sync_cause & AR_INTR_SYNC_RADM_CPL_TIMEOUT) {
++			REG_WRITE(ah, AR_RC, AR_RC_HOSTIF);
++			REG_WRITE(ah, AR_RC, 0);
++			*masked |= ATH9K_INT_FATAL;
++		}
++
++		if (sync_cause & AR_INTR_SYNC_LOCAL_TIMEOUT)
++			ath_print(common, ATH_DBG_INTERRUPT,
++				  "AR_INTR_SYNC_LOCAL_TIMEOUT\n");
++
++			REG_WRITE(ah, AR_INTR_SYNC_CAUSE_CLR, sync_cause);
++		(void) REG_READ(ah, AR_INTR_SYNC_CAUSE_CLR);
++
++	}
+ 	return true;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index 7374439..2ba06d7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -22,6 +22,14 @@
+ #define AR_CtrlStat	0x00004000
+ #define AR_TxRxDesc	0x00008000
+ 
++#define MAP_ISR_S2_CST          6
++#define MAP_ISR_S2_GTT          6
++#define MAP_ISR_S2_TIM          3
++#define MAP_ISR_S2_CABEND       0
++#define MAP_ISR_S2_DTIMSYNC     7
++#define MAP_ISR_S2_DTIM         7
++#define MAP_ISR_S2_TSFOOR       4
++
+ struct ar9003_rxs {
+ 	u32 ds_info;
+ 	u32 status1;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8c25059..e8b88be 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2146,6 +2146,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		pCap->tx_desc_len = sizeof(struct ath_desc);
+ 	}
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		pCap->hw_caps |= ATH9K_HW_CAP_RAC_SUPPORTED;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 25713be..fcf7842 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -179,6 +179,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_AUTOSLEEP                  = BIT(15),
+ 	ATH9K_HW_CAP_4KB_SPLITTRANS             = BIT(16),
+ 	ATH9K_HW_CAP_EDMA			= BIT(17),
++	ATH9K_HW_CAP_RAC_SUPPORTED		= BIT(18),
+ };
+ 
+ enum ath9k_capability_type {
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 12de95e..12f1621 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -169,6 +169,8 @@
+ #define AR_ISR               0x0080
+ #define AR_ISR_RXOK          0x00000001
+ #define AR_ISR_RXDESC        0x00000002
++#define AR_ISR_HP_RXOK	     0x00000001
++#define AR_ISR_LP_RXOK	     0x00000002
+ #define AR_ISR_RXERR         0x00000004
+ #define AR_ISR_RXNOPKT       0x00000008
+ #define AR_ISR_RXEOL         0x00000010
+-- 
+1.6.3.3
 
-Regards,
-Benoit
