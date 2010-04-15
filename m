@@ -1,63 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.apana.org.au ([209.40.204.226]:43613 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754261Ab0DFMoP (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33051 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757450Ab0DOVjr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 08:44:15 -0400
-Date: Tue, 6 Apr 2010 20:44:12 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-ppp@vger.kernel.org
-Subject: Re: [PATCH v2] crypto: add blkcipher implementation of ARC4
-Message-ID: <20100406124412.GA24488@gondor.apana.org.au>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc> <1270280969-11357-3-git-send-email-sebastian@breakpoint.cc> <20100405084209.GA16788@gondor.apana.org.au> <20100405170406.GA24215@Chamillionaire.breakpoint.cc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100405170406.GA24215@Chamillionaire.breakpoint.cc>
+	Thu, 15 Apr 2010 17:39:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 96/97] ath9k_hw: Abort rx if hw is not coming out of full sleep in reset
+Date: Thu, 15 Apr 2010 17:39:41 -0400
+Message-Id: <1271367582-992-97-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 05, 2010 at 07:04:06PM +0200, Sebastian Andrzej Siewior wrote:
->
-> +static void arc4_key_to_iv(const u8 *in_key, u32 key_len, struct arc4_iv *iv)
-> +{
-> +	int i, j = 0, k = 0;
-> +
-> +	iv->iv.x = 1;
-> +	iv->iv.y = 0;
-> +
-> +	for (i = 0; i < 256; i++)
-> +		iv->iv.S[i] = i;
-> +
-> +	for (i = 0; i < 256; i++)
-> +	{
-> +		u8 a = iv->iv.S[i];
-> +		j = (j + in_key[k] + a) & 0xff;
-> +		iv->iv.S[i] = iv->iv.S[j];
-> +		iv->iv.S[j] = a;
-> +		if (++k >= key_len)
-> +			k = 0;
-> +	}
-> +}
-> +
-> +static void arc4_ivsetup(struct arc4_iv *iv)
-> +{
-> +	struct arc4_iv tmp_iv;
-> +
-> +	if (iv->type == ARC4_TYPE_IV)
-> +		return;
-> +
-> +	memcpy(&tmp_iv, iv, sizeof(tmp_iv));
-> +	arc4_key_to_iv(tmp_iv.key.key, tmp_iv.key.key_len, iv);
-> +	iv->type = ARC4_TYPE_IV;
-> +}
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-We need to verify that 1 <= key_len <= 256.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    7 +++++++
+ drivers/net/wireless/ath/ath9k/mac.c |    8 ++++++++
+ drivers/net/wireless/ath/ath9k/mac.h |    1 +
+ 3 files changed, 16 insertions(+), 0 deletions(-)
 
-Cheers,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 44077cb..b9921e9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1138,6 +1138,13 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ah->txchainmask = common->tx_chainmask;
+ 	ah->rxchainmask = common->rx_chainmask;
+ 
++	if (!ah->chip_fullsleep) {
++		ath9k_hw_abortpcurecv(ah);
++		if (!ath9k_hw_stopdmarecv(ah))
++			ath_print(common, ATH_DBG_XMIT,
++				"Failed to stop receive dma\n");
++	}
++
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index c003baf..b54e857 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -747,6 +747,14 @@ void ath9k_hw_stoppcurecv(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_stoppcurecv);
+ 
++void ath9k_hw_abortpcurecv(struct ath_hw *ah)
++{
++	REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_RX_ABORT | AR_DIAG_RX_DIS);
++
++	ath9k_hw_disable_mib_counters(ah);
++}
++EXPORT_SYMBOL(ath9k_hw_abortpcurecv);
++
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah)
+ {
+ #define AH_RX_STOP_DMA_TIMEOUT 10000   /* usec */
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 346d84a..68eb8d0 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -711,6 +711,7 @@ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
+ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
+ void ath9k_hw_startpcureceive(struct ath_hw *ah);
+ void ath9k_hw_stoppcurecv(struct ath_hw *ah);
++void ath9k_hw_abortpcurecv(struct ath_hw *ah);
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
+ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
+ 
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+1.6.3.3
+
