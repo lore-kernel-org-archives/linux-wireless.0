@@ -1,99 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:34414 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751914Ab0DXI4w (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60974 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757286Ab0DOVjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Apr 2010 04:56:52 -0400
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-To: me@bobcopeland.com
-Subject: Re: ath5k misbehaving affecting other kernel parts unrelated?
-Date: Sat, 24 Apr 2010 09:56:45 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com
-References: <201004230806.13628.pedrogfrancisco@gmail.com> <20100423134823.GB5004@tuxdriver.com> <20100423163703.GB11112@hash.localnet>
-In-Reply-To: <20100423163703.GB11112@hash.localnet>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004240956.45899.pedrogfrancisco@gmail.com>
+	Thu, 15 Apr 2010 17:39:43 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 24/97] ath9k_hw: update the chip tests for AR9003
+Date: Thu, 15 Apr 2010 17:38:29 -0400
+Message-Id: <1271367582-992-25-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A Sexta, 23 de Abril de 2010 17:37:03 me@bobcopeland.com escreveu:
-> On Fri, Apr 23, 2010 at 09:48:23AM -0400, John W. Linville wrote:
-> > > a) is it "normal"? I thought modules were somewhat isolated these days.
-> > > b) any advices for debugging? I've yet to have two oopses that are
-> > > similar....
-> 
-> Advice for debugging: turn on slub/slab debug options, and possibly
-> kmemcheck.  kmemcheck was very helpful for me last time I had such
-> a corruption issue.
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
+The AR9003 family requires a change on the loop and can also skip
+testing the PHY timing registers. This chip test can now be used
+by all Atheros hardware families, including legacy. We can
+eventually move this out to the generic ath module.
 
-For some reason I am unable to get a kernel I compiled to boot. Since I was 
-unable to compile the kernel with those debugging options, I just turned on 
-slub_debug on GRUB.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
 
-I got a few messages which I pasting here only partially to check for their 
-significance. If significant I'll post them fully:
-
-[ 2658.663308] 
-=============================================================================
-[ 2658.663424] BUG kmalloc-4096: Poison overwritten
-[ 2658.663483] 
------------------------------------------------------------------------------
-[ 2658.663486] 
-[ 2658.663606] INFO: 0xed3db0c0-0xed3db0cf. First byte 0xc4 instead of 0x6b
-[ 2658.663698] INFO: Allocated in ath_rxbuf_alloc+0x30/0xa0 [ath] age=7117 
-cpu=0 pid=0
-[ 2658.663799] INFO: Freed in skb_release_data+0x70/0xa0 age=0 cpu=0 pid=0
-[ 2658.663882] INFO: Slab 0xc15fbb00 objects=7 used=5 fp=0xed3db090 
-flags=0x400040c3
-[ 2658.663975] INFO: Object 0xed3db090 @offset=12432 fp=0xed3da060
-[ 2658.663977] 
-[ 2658.664069] Bytes b4 0xed3db080:  00 00 00 00 61 ff 08 00 5a 5a 5a 5a 5a 5a 
-5a 5a ....a<FF>..ZZZZZZZZ
-[ 2658.664258]   Object 0xed3db090:  6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 
-6b 6b kkkkkkkkkkkkkkkk
-
-(a lot of lines with memory contents omitted)
-
-[ 2658.667258]  Redzone 0xed3dc090:  bb bb bb bb                                     
-<BB><BB><BB><BB>            
-[ 2658.667258]  Padding 0xed3dc0b8:  5a 5a 5a 5a 5a 5a 5a 5a                         
-ZZZZZZZZ        
-[ 2658.667258] Pid: 0, comm: swapper Not tainted 2.6.32-21-generic #32-Ubuntu
-[ 2658.667258] Call Trace:
-[ 2658.667258]  [<c01faf63>] print_trailer+0xd3/0x120
-[ 2658.667258]  [<c01fb07c>] check_bytes_and_report+0xcc/0xf0
-[ 2658.667258]  [<c01fc021>] check_object+0x1a1/0x1e0
-[ 2658.667258]  [<c01fcc98>] alloc_debug_processing+0xc8/0x190
-(...)
-
-
-[ 2658.667258] FIX kmalloc-4096: Restoring 0xed3db0c0-0xed3db0cf=0x6b
-[ 2658.667258] 
-[ 2658.667258] FIX kmalloc-4096: Marking all objects used
-[ 4689.941595] 
-
-
-And I've two or three more similar messages. The system was apparently stable 
-in the morning though I had an error on the console:
-
-[24370.460011] Pid: 2011, comm: kismet_server Not tainted 2.6.32-21-generic 
-#32-Ubuntu
-[24370.460011] Call Trace:
-(...)
-
-
-The latest daily from Ubuntu PPA wouldn't boot, the one from 2 or 3 days ago 
-did, if needed I can install that one.
-
-
-Were those lines significant and shall I post them here?
-
-
-Thank you for your time,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0b89605..bf7a85f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -298,18 +298,25 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
+ }
+ 
++/* This should work for all families including legacy */
+ static bool ath9k_hw_chip_test(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 regAddr[2] = { AR_STA_ID0, AR_PHY_BASE + (8 << 2) };
++	u32 regAddr[2] = { AR_STA_ID0 };
+ 	u32 regHold[2];
+ 	u32 patternData[4] = { 0x55555555,
+ 			       0xaaaaaaaa,
+ 			       0x66666666,
+ 			       0x99999999 };
+-	int i, j;
++	int i, j, loop_max;
+ 
+-	for (i = 0; i < 2; i++) {
++	if (!AR_SREV_9300_20_OR_LATER(ah)) {
++		loop_max = 2;
++		regAddr[1] = AR_PHY_BASE + (8 << 2);
++	} else
++		loop_max = 1;
++
++	for (i = 0; i < loop_max; i++) {
+ 		u32 addr = regAddr[i];
+ 		u32 wrData, rdData;
+ 
 -- 
-Pedro
+1.6.3.3
+
