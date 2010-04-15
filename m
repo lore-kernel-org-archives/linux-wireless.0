@@ -1,36 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:59094 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753422Ab0DSTEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 15:04:14 -0400
-Subject: Re: [PATCH v2 1/9] ath9k: check for specific rx stuck conditions
- and recover from them
-From: Pavel Roskin <proski@gnu.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-In-Reply-To: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
-References: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain
-Date: Mon, 19 Apr 2010 15:04:12 -0400
-Message-Id: <1271703852.19879.1.camel@mj>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:54839 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756405Ab0DODay (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Apr 2010 23:30:54 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 49/97] ath9k_hw: shift code for AR9280 OLC temp comp
+Date: Wed, 14 Apr 2010 23:30:03 -0400
+Message-Id: <1271302251-9075-50-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-19 at 19:57 +0200, Felix Fietkau wrote:
-> +		if ((reg & 0x7E7FFFEF) == 0x00702400)
-> +			continue;
-> +
-> +		switch (reg & 0x7E000B00) {
-> +		case 0x1E000000:
-> +		case 0x52000B00:
-> +		case 0x18000B00:
-> +			continue;
+We're bailing out on the alternative code path so remove the
+else branch.
 
-Where did you get all that magic?  If it's from Atheros documentation,
-maybe you could give those numbers descriptive names?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |   35 +++++++++++++++----------------
+ 1 files changed, 17 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index e2c427b..5d61169 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -711,25 +711,24 @@ static void ath9k_olc_temp_compensation(struct ath_hw *ah)
+ 		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
+ 		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
+ 
+-		if (ah->initPDADC == 0 || currPDADC == 0) {
++		if (ah->initPDADC == 0 || currPDADC == 0)
+ 			return;
+-		} else {
+-			if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
+-				delta = (currPDADC - ah->initPDADC + 4) / 8;
+-			else
+-				delta = (currPDADC - ah->initPDADC + 5) / 10;
+-
+-			if (delta != ah->PDADCdelta) {
+-				ah->PDADCdelta = delta;
+-				for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
+-					regval = ah->originalGain[i] - delta;
+-					if (regval < 0)
+-						regval = 0;
+-
+-					REG_RMW_FIELD(ah,
+-						      AR_PHY_TX_GAIN_TBL1 + i * 4,
+-						      AR_PHY_TX_GAIN, regval);
+-				}
++
++		if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
++			delta = (currPDADC - ah->initPDADC + 4) / 8;
++		else
++			delta = (currPDADC - ah->initPDADC + 5) / 10;
++
++		if (delta != ah->PDADCdelta) {
++			ah->PDADCdelta = delta;
++			for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
++				regval = ah->originalGain[i] - delta;
++				if (regval < 0)
++					regval = 0;
++
++				REG_RMW_FIELD(ah,
++					      AR_PHY_TX_GAIN_TBL1 + i * 4,
++					      AR_PHY_TX_GAIN, regval);
+ 			}
+ 		}
+ 	}
 -- 
-Regards,
-Pavel Roskin
+1.6.3.3
+
