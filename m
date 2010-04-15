@@ -1,89 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32972 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757408Ab0DOVjq (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:60155 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756095Ab0DOTfm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 79/97] ath9k_hw: skip WEP aggregation enable code for AR9003
-Date: Thu, 15 Apr 2010 17:39:24 -0400
-Message-Id: <1271367582-992-80-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 15 Apr 2010 15:35:42 -0400
+Received: by pva18 with SMTP id 18so1176518pva.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 12:35:42 -0700 (PDT)
+Message-ID: <4BC76A8A.1020402@lwfinger.net>
+Date: Thu, 15 Apr 2010 14:35:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl818x: Move configuration details to the rtl818x 	directory
+References: <4bc7623b.jCI2ikmsWKrNCgoa%Larry.Finger@lwfinger.net> <s2t3ace41891004151219kb118330fh8fa4b3830e0c9fbe@mail.gmail.com>
+In-Reply-To: <s2t3ace41891004151219kb118330fh8fa4b3830e0c9fbe@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR9002 hardware code enables aggregation for WEP but
-mac80211 doesn't enable aggregation with WEP, and the AR9003
-code family does not need this so skip it for now for AR9003
-but leave the code and annotate we should eventually consider
-how to remove this in consideration for the HAL unification
-goals.
+On 04/15/2010 02:19 PM, Hin-Tak Leung wrote:
+> On Thu, Apr 15, 2010 at 8:00 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> In preparation for new rtl818x devices, move the existing rtl818x configuration
+>> into the rtl818x directory.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+> 
+> are we going to have a lot more rtl818x devices?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c |   12 ++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c        |    7 ++-----
- drivers/net/wireless/ath/ath9k/hw.h        |    1 +
- 3 files changed, 15 insertions(+), 5 deletions(-)
+There will be at least one. The mac80211 driver for the RTL8187SE is
+receiving data and it can transmit short packets (48 bytes or less).
+When I transmit a packet of 68 bytes, the device returns a TX interrupt
+for that one, and then seems to freeze. So far, I have not found that
+problem, but I expect to find the problem fairly soon.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index cf36f64..17b98a3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -555,6 +555,18 @@ void ar9002_hw_enable_async_fifo(struct ath_hw *ah)
- 	}
- }
- 
-+/*
-+ * We don't enable WEP aggregation on mac80211 but we keep this
-+ * around for HAL unification purposes.
-+ */
-+void ar9002_hw_enable_wep_aggregation(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9287_12_OR_LATER(ah)) {
-+		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
-+				AR_PCU_MISC_MODE2_ENABLE_AGGWEP);
-+	}
-+}
-+
- /* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
- void ar9002_hw_attach_ops(struct ath_hw *ah)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index ab223c6..5260c43 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1266,12 +1266,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	ath9k_hw_init_global_settings(ah);
- 
--	if (!AR_SREV_9300_20_OR_LATER(ah))
-+	if (!AR_SREV_9300_20_OR_LATER(ah)) {
- 		ar9002_hw_enable_async_fifo(ah);
--
--	if (AR_SREV_9287_12_OR_LATER(ah)) {
--		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
--				AR_PCU_MISC_MODE2_ENABLE_AGGWEP);
-+		ar9002_hw_enable_wep_aggregation(ah);
- 	}
- 
- 	REG_WRITE(ah, AR_STA_ID1,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index e4eacdd..affb848 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -851,6 +851,7 @@ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
- void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
- int ar9002_hw_rf_claim(struct ath_hw *ah);
- void ar9002_hw_enable_async_fifo(struct ath_hw *ah);
-+void ar9002_hw_enable_wep_aggregation(struct ath_hw *ah);
- 
- /*
-  * Code specifric to AR9003, we stuff these here to avoid callbacks
--- 
-1.6.3.3
+If anyone has any clues for this problem, I would be most interested.
+
+Larry
 
