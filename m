@@ -1,112 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:59557 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754199Ab0DAVoM (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54968 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756990Ab0DODa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 17:44:12 -0400
-Message-ID: <4BB513AA.8020209@gmail.com>
-Date: Thu, 01 Apr 2010 23:44:10 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Luis Correia <buga@loide.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH V3] rt2x00: remove MCU requests for SoC platforms
-References: <k2g880c1631004011414z59ce4547j1bcea7ad5aff7229@mail.gmail.com>
-In-Reply-To: <k2g880c1631004011414z59ce4547j1bcea7ad5aff7229@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 14 Apr 2010 23:30:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 77/97] ath9k_hw: Update ath9k_hw_set_dma for AR9300
+Date: Wed, 14 Apr 2010 23:30:31 -0400
+Message-Id: <1271302251-9075-78-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis,
+From: Felix Fietkau <nbd@openwrt.org>
 
-On 04/01/10 23:14, Luis Correia wrote:
-> The ralink SoC platforms do not have an MCU.
-> 
-> Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
-
-I know Ivo already acked the v2 version of the patch, but isn't the
-addition of a driver flag a bit overkill?
-
-We have the test on whether the platform is SOC w.r.t. MCU requests
-in 2 places, and both of them are in rt2800 code. I do not really see
-a need to clutter the global rt2x00 space with a rt2800 specific flag,
-which is only used in rt2800 code.
-
-> ---
-> 
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c   2010-03-26
-> 18:25:50.000000000 +0000
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c   2010-04-01
-> 13:05:18.249747122 +0100
-> @@ -221,9 +221,9 @@
->        u32 reg;
-> 
->        /*
-> -        * SOC devices don't support MCU requests.
-> +        * some devices don't support MCU requests.
->         */
-> -       if (rt2x00_is_soc(rt2x00dev))
-> +       if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
->                return;
-> 
->        mutex_lock(&rt2x00dev->csr_mutex);
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c   2010-03-26
-> 18:25:50.000000000 +0000
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c   2010-04-01
-> 13:04:42.453621607 +0100
-> @@ -59,6 +59,12 @@
->  {
->        unsigned int i;
->        u32 reg;
-> +
-> +       /*
-> +        * some devices don't support MCU requests.
-> +        */
-> +       if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
-> +               return;
-> 
->        for (i = 0; i < 200; i++) {
->                rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
-
-So, the minimal patch would be simply this change to rt2800pci, and to have it
-test for SoC (via rt2x00_is_soc).
-
-> @@ -1098,10 +1104,12 @@
->        __set_bit(DRIVER_SUPPORT_CONTROL_FILTER_PSPOLL, &rt2x00dev->flags);
-> 
->        /*
-> -        * This device requires firmware.
-> +        * This device requires firmware and MCU access.
->         */
-> -       if (!rt2x00_is_soc(rt2x00dev))
-> +       if (!rt2x00_is_soc(rt2x00dev)) {
->                __set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
-> +               __set_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags);
-> +       }
->        __set_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags);
->        __set_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags);
->        if (!modparam_nohwcrypt)
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h      2010-03-26
-> 18:25:50.000000000 +0000
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h      2010-04-01
-> 13:01:26.812694036 +0100
-> @@ -631,6 +631,7 @@
->         * Driver requirements
->         */
->        DRIVER_REQUIRE_FIRMWARE,
-> +       DRIVER_REQUIRE_MCU,
->        DRIVER_REQUIRE_BEACON_GUARD,
->        DRIVER_REQUIRE_ATIM_QUEUE,
->        DRIVER_REQUIRE_DMA,
-
-If we choose to have the flag anyways:
->From a naming point of view, this name is aligned with the other flags.
-However, from a usage point of view it would be better to have a flag
-DRIVER_NO_MCU, so we don't have to have the negative tests above, and
-have no tests at all that determine if MCU is allowed.
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Gertjan.
+ drivers/net/wireless/ath/ath9k/hw.c  |   18 +++++++++++++++---
+ drivers/net/wireless/ath/ath9k/reg.h |    6 ++++++
+ 2 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index de7ee90..953911d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -837,13 +837,16 @@ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan)
+ 
+ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
+ {
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 regval;
+ 
+ 	/*
+ 	 * set AHB_MODE not to do cacheline prefetches
+ 	*/
+-	regval = REG_READ(ah, AR_AHB_MODE);
+-	REG_WRITE(ah, AR_AHB_MODE, regval | AR_AHB_PREFETCH_RD_EN);
++	if (!AR_SREV_9300_20_OR_LATER(ah)) {
++		regval = REG_READ(ah, AR_AHB_MODE);
++		REG_WRITE(ah, AR_AHB_MODE, regval | AR_AHB_PREFETCH_RD_EN);
++	}
+ 
+ 	/*
+ 	 * let mac dma reads be in 128 byte chunks
+@@ -856,7 +859,8 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
+ 	 * The initial value depends on whether aggregation is enabled, and is
+ 	 * adjusted whenever underruns are detected.
+ 	 */
+-	REG_RMW_FIELD(ah, AR_TXCFG, AR_FTRIG, ah->tx_trig_level);
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		REG_RMW_FIELD(ah, AR_TXCFG, AR_FTRIG, ah->tx_trig_level);
+ 
+ 	/*
+ 	 * let mac dma writes be in 128 byte chunks
+@@ -869,6 +873,14 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
+ 	 */
+ 	REG_WRITE(ah, AR_RXFIFO_CFG, 0x200);
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		REG_RMW_FIELD(ah, AR_RXBP_THRESH, AR_RXBP_THRESH_HP, 0x1);
++		REG_RMW_FIELD(ah, AR_RXBP_THRESH, AR_RXBP_THRESH_LP, 0x1);
++
++		ath9k_hw_set_rx_bufsize(ah, common->rx_bufsize -
++			ah->caps.rx_status_len);
++	}
++
+ 	/*
+ 	 * reduce the number of usable entries in PCU TXBUF to avoid
+ 	 * wrap around issues.
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 12f1621..2ca478c 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -39,6 +39,12 @@
+ #define AR_CFG_PCI_MASTER_REQ_Q_THRESH         0x00060000
+ #define AR_CFG_PCI_MASTER_REQ_Q_THRESH_S       17
+ 
++#define AR_RXBP_THRESH       0x0018
++#define AR_RXBP_THRESH_HP    0x0000000f
++#define AR_RXBP_THRESH_HP_S  0
++#define AR_RXBP_THRESH_LP    0x00003f00
++#define AR_RXBP_THRESH_LP_S  8
++
+ #define AR_MIRT              0x0020
+ #define AR_MIRT_VAL          0x0000ffff
+ #define AR_MIRT_VAL_S        16
+-- 
+1.6.3.3
+
