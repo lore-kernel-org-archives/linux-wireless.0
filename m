@@ -1,472 +1,965 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54809 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:55004 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756854Ab0DODay (ORCPT
+	with ESMTP id S1757035Ab0DODa5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:54 -0400
+	Wed, 14 Apr 2010 23:30:57 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+Cc: linux-wireless@vger.kernel.org,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 44/97] ath9k_hw: Split out the function for reading the noise floor
-Date: Wed, 14 Apr 2010 23:29:58 -0400
-Message-Id: <1271302251-9075-45-git-send-email-lrodriguez@atheros.com>
+Subject: [PATCH v2 87/97] ath9k_hw: move AR9002 mac ops to its own file
+Date: Wed, 14 Apr 2010 23:30:41 -0400
+Message-Id: <1271302251-9075-88-git-send-email-lrodriguez@atheros.com>
 In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   50 ++++++++++++
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |   53 +++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |  110 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/calib.c      |   90 +---------------------
- drivers/net/wireless/ath/ath9k/hw-ops.h     |    6 ++
- drivers/net/wireless/ath/ath9k/hw.c         |    3 +
- drivers/net/wireless/ath/ath9k/hw.h         |   12 +++
- 7 files changed, 235 insertions(+), 89 deletions(-)
+ drivers/net/wireless/ath/ath9k/Makefile     |    1 +
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |  462 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/mac.c        |  445 --------------------------
+ 3 files changed, 463 insertions(+), 445 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9002_mac.c
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index dddca59..bd3792c 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -1198,6 +1198,55 @@ static bool ar5008_hw_ani_control(struct ath_hw *ah,
- 	return true;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index b0702fc..dd112be 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -30,6 +30,7 @@ ath9k_hw-y:=	\
+ 		ani.o \
+ 		btcoex.o \
+ 		mac.o \
++		ar9002_mac.o \
+ 		ar9003_mac.o \
+ 		ar9003_eeprom.o
  
-+static void ar5008_hw_do_getnf(struct ath_hw *ah,
-+			      int16_t nfarray[NUM_NF_READINGS])
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+new file mode 100644
+index 0000000..a01fba8
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -0,0 +1,462 @@
++/*
++ * Copyright (c) 2008-2009 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "hw.h"
++
++static void ar9002_hw_rx_enable(struct ath_hw *ah)
 +{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	int16_t nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_CCA), AR_PHY_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
-+	nfarray[0] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_CH1_CCA), AR_PHY_CH1_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ctl] [chain 1] is %d\n", nf);
-+	nfarray[1] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_CH2_CCA), AR_PHY_CH2_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ctl] [chain 2] is %d\n", nf);
-+	nfarray[2] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR_PHY_EXT_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ext] [chain 0] is %d\n", nf);
-+	nfarray[3] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA), AR_PHY_CH1_EXT_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ext] [chain 1] is %d\n", nf);
-+	nfarray[4] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA), AR_PHY_CH2_EXT_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ext] [chain 2] is %d\n", nf);
-+	nfarray[5] = nf;
++	REG_WRITE(ah, AR_CR, AR_CR_RXE);
 +}
 +
- void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -1220,6 +1269,7 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
- 	priv_ops->set_diversity = ar5008_set_diversity;
- 	priv_ops->ani_control = ar5008_hw_ani_control;
-+	priv_ops->do_getnf = ar5008_hw_do_getnf;
- 
- 	if (AR_SREV_9100(ah))
- 		priv_ops->compute_pll_control = ar9100_hw_compute_pll_control;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 1f8ac0a..a0a2f58 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -467,6 +467,58 @@ static u32 ar9002_hw_compute_pll_control(struct ath_hw *ah,
- 	return pll;
- }
- 
-+static void ar9002_hw_do_getnf(struct ath_hw *ah,
-+			      int16_t nfarray[NUM_NF_READINGS])
++static void ar9002_hw_set_desc_link(void *ds, u32 ds_link)
 +{
++	((struct ath_desc*) ds)->ds_link = ds_link;
++}
++
++static void ar9002_hw_get_desc_link(void *ds, u32 **ds_link)
++{
++	*ds_link = &((struct ath_desc *)ds)->ds_link;
++}
++
++static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
++{
++	u32 isr = 0;
++	u32 mask2 = 0;
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
++	u32 sync_cause = 0;
++	bool fatal_int = false;
 +	struct ath_common *common = ath9k_hw_common(ah);
-+	int16_t nf;
 +
-+	nf = MS(REG_READ(ah, AR_PHY_CCA), AR9280_PHY_MINCCA_PWR);
++	if (!AR_SREV_9100(ah)) {
++		if (REG_READ(ah, AR_INTR_ASYNC_CAUSE) & AR_INTR_MAC_IRQ) {
++			if ((REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M)
++			    == AR_RTC_STATUS_ON) {
++				isr = REG_READ(ah, AR_ISR);
++			}
++		}
 +
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
++		sync_cause = REG_READ(ah, AR_INTR_SYNC_CAUSE) &
++			AR_INTR_SYNC_DEFAULT;
 +
-+	if (AR_SREV_9271(ah) && (nf >= -114))
-+		nf = -116;
++		*masked = 0;
 +
-+	nfarray[0] = nf;
-+
-+	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
-+		nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
-+				AR9280_PHY_CH1_MINCCA_PWR);
-+
-+		if (nf & 0x100)
-+			nf = 0 - ((nf ^ 0x1ff) + 1);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "NF calibrated [ctl] [chain 1] is %d\n", nf);
-+		nfarray[1] = nf;
++		if (!isr && !sync_cause)
++			return false;
++	} else {
++		*masked = 0;
++		isr = REG_READ(ah, AR_ISR);
 +	}
 +
-+	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR9280_PHY_EXT_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ext] [chain 0] is %d\n", nf);
++	if (isr) {
++		if (isr & AR_ISR_BCNMISC) {
++			u32 isr2;
++			isr2 = REG_READ(ah, AR_ISR_S2);
++			if (isr2 & AR_ISR_S2_TIM)
++				mask2 |= ATH9K_INT_TIM;
++			if (isr2 & AR_ISR_S2_DTIM)
++				mask2 |= ATH9K_INT_DTIM;
++			if (isr2 & AR_ISR_S2_DTIMSYNC)
++				mask2 |= ATH9K_INT_DTIMSYNC;
++			if (isr2 & (AR_ISR_S2_CABEND))
++				mask2 |= ATH9K_INT_CABEND;
++			if (isr2 & AR_ISR_S2_GTT)
++				mask2 |= ATH9K_INT_GTT;
++			if (isr2 & AR_ISR_S2_CST)
++				mask2 |= ATH9K_INT_CST;
++			if (isr2 & AR_ISR_S2_TSFOOR)
++				mask2 |= ATH9K_INT_TSFOOR;
++		}
 +
-+	if (AR_SREV_9271(ah) && (nf >= -114))
-+		nf = -116;
++		isr = REG_READ(ah, AR_ISR_RAC);
++		if (isr == 0xffffffff) {
++			*masked = 0;
++			return false;
++		}
 +
-+	nfarray[3] = nf;
++		*masked = isr & ATH9K_INT_COMMON;
 +
-+	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
-+		nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
-+				AR9280_PHY_CH1_EXT_MINCCA_PWR);
++		if (ah->config.rx_intr_mitigation) {
++			if (isr & (AR_ISR_RXMINTR | AR_ISR_RXINTM))
++				*masked |= ATH9K_INT_RX;
++		}
 +
-+		if (nf & 0x100)
-+			nf = 0 - ((nf ^ 0x1ff) + 1);
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "NF calibrated [ext] [chain 1] is %d\n", nf);
-+		nfarray[4] = nf;
++		if (isr & (AR_ISR_RXOK | AR_ISR_RXERR))
++			*masked |= ATH9K_INT_RX;
++		if (isr &
++		    (AR_ISR_TXOK | AR_ISR_TXDESC | AR_ISR_TXERR |
++		     AR_ISR_TXEOL)) {
++			u32 s0_s, s1_s;
++
++			*masked |= ATH9K_INT_TX;
++
++			s0_s = REG_READ(ah, AR_ISR_S0_S);
++			ah->intr_txqs |= MS(s0_s, AR_ISR_S0_QCU_TXOK);
++			ah->intr_txqs |= MS(s0_s, AR_ISR_S0_QCU_TXDESC);
++
++			s1_s = REG_READ(ah, AR_ISR_S1_S);
++			ah->intr_txqs |= MS(s1_s, AR_ISR_S1_QCU_TXERR);
++			ah->intr_txqs |= MS(s1_s, AR_ISR_S1_QCU_TXEOL);
++		}
++
++		if (isr & AR_ISR_RXORN) {
++			ath_print(common, ATH_DBG_INTERRUPT,
++				  "receive FIFO overrun interrupt\n");
++		}
++
++		if (!AR_SREV_9100(ah)) {
++			if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
++				u32 isr5 = REG_READ(ah, AR_ISR_S5_S);
++				if (isr5 & AR_ISR_S5_TIM_TIMER)
++					*masked |= ATH9K_INT_TIM_TIMER;
++			}
++		}
++
++		*masked |= mask2;
++	}
++
++	if (AR_SREV_9100(ah))
++		return true;
++
++	if (isr & AR_ISR_GENTMR) {
++		u32 s5_s;
++
++		s5_s = REG_READ(ah, AR_ISR_S5_S);
++		if (isr & AR_ISR_GENTMR) {
++			ah->intr_gen_timer_trigger =
++				MS(s5_s, AR_ISR_S5_GENTIMER_TRIG);
++
++			ah->intr_gen_timer_thresh =
++				MS(s5_s, AR_ISR_S5_GENTIMER_THRESH);
++
++			if (ah->intr_gen_timer_trigger)
++				*masked |= ATH9K_INT_GENTIMER;
++
++		}
++	}
++
++	if (sync_cause) {
++		fatal_int =
++			(sync_cause &
++			 (AR_INTR_SYNC_HOST1_FATAL | AR_INTR_SYNC_HOST1_PERR))
++			? true : false;
++
++		if (fatal_int) {
++			if (sync_cause & AR_INTR_SYNC_HOST1_FATAL) {
++				ath_print(common, ATH_DBG_ANY,
++					  "received PCI FATAL interrupt\n");
++			}
++			if (sync_cause & AR_INTR_SYNC_HOST1_PERR) {
++				ath_print(common, ATH_DBG_ANY,
++					  "received PCI PERR interrupt\n");
++			}
++			*masked |= ATH9K_INT_FATAL;
++		}
++		if (sync_cause & AR_INTR_SYNC_RADM_CPL_TIMEOUT) {
++			ath_print(common, ATH_DBG_INTERRUPT,
++				  "AR_INTR_SYNC_RADM_CPL_TIMEOUT\n");
++			REG_WRITE(ah, AR_RC, AR_RC_HOSTIF);
++			REG_WRITE(ah, AR_RC, 0);
++			*masked |= ATH9K_INT_FATAL;
++		}
++		if (sync_cause & AR_INTR_SYNC_LOCAL_TIMEOUT) {
++			ath_print(common, ATH_DBG_INTERRUPT,
++				  "AR_INTR_SYNC_LOCAL_TIMEOUT\n");
++		}
++
++		REG_WRITE(ah, AR_INTR_SYNC_CAUSE_CLR, sync_cause);
++		(void) REG_READ(ah, AR_INTR_SYNC_CAUSE_CLR);
++	}
++
++	return true;
++}
++
++static void ar9002_hw_fill_txdesc(struct ath_hw *ah, void *ds, u32 seglen,
++				  bool is_firstseg, bool is_lastseg,
++				  const void *ds0, dma_addr_t buf_addr,
++				  unsigned int qcu)
++{
++	struct ar5416_desc *ads = AR5416DESC(ds);
++
++	ads->ds_data = buf_addr;
++
++	if (is_firstseg) {
++		ads->ds_ctl1 |= seglen | (is_lastseg ? 0 : AR_TxMore);
++	} else if (is_lastseg) {
++		ads->ds_ctl0 = 0;
++		ads->ds_ctl1 = seglen;
++		ads->ds_ctl2 = AR5416DESC_CONST(ds0)->ds_ctl2;
++		ads->ds_ctl3 = AR5416DESC_CONST(ds0)->ds_ctl3;
++	} else {
++		ads->ds_ctl0 = 0;
++		ads->ds_ctl1 = seglen | AR_TxMore;
++		ads->ds_ctl2 = 0;
++		ads->ds_ctl3 = 0;
++	}
++	ads->ds_txstatus0 = ads->ds_txstatus1 = 0;
++	ads->ds_txstatus2 = ads->ds_txstatus3 = 0;
++	ads->ds_txstatus4 = ads->ds_txstatus5 = 0;
++	ads->ds_txstatus6 = ads->ds_txstatus7 = 0;
++	ads->ds_txstatus8 = ads->ds_txstatus9 = 0;
++}
++
++static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
++				 struct ath_tx_status *ts)
++{
++	struct ar5416_desc *ads = AR5416DESC(ds);
++
++	if ((ads->ds_txstatus9 & AR_TxDone) == 0)
++		return -EINPROGRESS;
++
++	ts->ts_seqnum = MS(ads->ds_txstatus9, AR_SeqNum);
++	ts->ts_tstamp = ads->AR_SendTimestamp;
++	ts->ts_status = 0;
++	ts->ts_flags = 0;
++
++	if (ads->ds_txstatus1 & AR_FrmXmitOK)
++		ts->ts_status |= ATH9K_TX_ACKED;
++	if (ads->ds_txstatus1 & AR_ExcessiveRetries)
++		ts->ts_status |= ATH9K_TXERR_XRETRY;
++	if (ads->ds_txstatus1 & AR_Filtered)
++		ts->ts_status |= ATH9K_TXERR_FILT;
++	if (ads->ds_txstatus1 & AR_FIFOUnderrun) {
++		ts->ts_status |= ATH9K_TXERR_FIFO;
++		ath9k_hw_updatetxtriglevel(ah, true);
++	}
++	if (ads->ds_txstatus9 & AR_TxOpExceeded)
++		ts->ts_status |= ATH9K_TXERR_XTXOP;
++	if (ads->ds_txstatus1 & AR_TxTimerExpired)
++		ts->ts_status |= ATH9K_TXERR_TIMER_EXPIRED;
++
++	if (ads->ds_txstatus1 & AR_DescCfgErr)
++		ts->ts_flags |= ATH9K_TX_DESC_CFG_ERR;
++	if (ads->ds_txstatus1 & AR_TxDataUnderrun) {
++		ts->ts_flags |= ATH9K_TX_DATA_UNDERRUN;
++		ath9k_hw_updatetxtriglevel(ah, true);
++	}
++	if (ads->ds_txstatus1 & AR_TxDelimUnderrun) {
++		ts->ts_flags |= ATH9K_TX_DELIM_UNDERRUN;
++		ath9k_hw_updatetxtriglevel(ah, true);
++	}
++	if (ads->ds_txstatus0 & AR_TxBaStatus) {
++		ts->ts_flags |= ATH9K_TX_BA;
++		ts->ba_low = ads->AR_BaBitmapLow;
++		ts->ba_high = ads->AR_BaBitmapHigh;
++	}
++
++	ts->ts_rateindex = MS(ads->ds_txstatus9, AR_FinalTxIdx);
++	switch (ts->ts_rateindex) {
++	case 0:
++		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate0);
++		break;
++	case 1:
++		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate1);
++		break;
++	case 2:
++		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate2);
++		break;
++	case 3:
++		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate3);
++		break;
++	}
++
++	ts->ts_rssi = MS(ads->ds_txstatus5, AR_TxRSSICombined);
++	ts->ts_rssi_ctl0 = MS(ads->ds_txstatus0, AR_TxRSSIAnt00);
++	ts->ts_rssi_ctl1 = MS(ads->ds_txstatus0, AR_TxRSSIAnt01);
++	ts->ts_rssi_ctl2 = MS(ads->ds_txstatus0, AR_TxRSSIAnt02);
++	ts->ts_rssi_ext0 = MS(ads->ds_txstatus5, AR_TxRSSIAnt10);
++	ts->ts_rssi_ext1 = MS(ads->ds_txstatus5, AR_TxRSSIAnt11);
++	ts->ts_rssi_ext2 = MS(ads->ds_txstatus5, AR_TxRSSIAnt12);
++	ts->evm0 = ads->AR_TxEVM0;
++	ts->evm1 = ads->AR_TxEVM1;
++	ts->evm2 = ads->AR_TxEVM2;
++	ts->ts_shortretry = MS(ads->ds_txstatus1, AR_RTSFailCnt);
++	ts->ts_longretry = MS(ads->ds_txstatus1, AR_DataFailCnt);
++	ts->ts_virtcol = MS(ads->ds_txstatus1, AR_VirtRetryCnt);
++	ts->ts_antenna = 0;
++
++	return 0;
++}
++
++static void ar9002_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
++				    u32 pktLen, enum ath9k_pkt_type type,
++				    u32 txPower, u32 keyIx,
++				    enum ath9k_key_type keyType, u32 flags)
++{
++	struct ar5416_desc *ads = AR5416DESC(ds);
++
++	txPower += ah->txpower_indexoffset;
++	if (txPower > 63)
++		txPower = 63;
++
++	ads->ds_ctl0 = (pktLen & AR_FrameLen)
++		| (flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
++		| SM(txPower, AR_XmitPower)
++		| (flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
++		| (flags & ATH9K_TXDESC_CLRDMASK ? AR_ClrDestMask : 0)
++		| (flags & ATH9K_TXDESC_INTREQ ? AR_TxIntrReq : 0)
++		| (keyIx != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0);
++
++	ads->ds_ctl1 =
++		(keyIx != ATH9K_TXKEYIX_INVALID ? SM(keyIx, AR_DestIdx) : 0)
++		| SM(type, AR_FrameType)
++		| (flags & ATH9K_TXDESC_NOACK ? AR_NoAck : 0)
++		| (flags & ATH9K_TXDESC_EXT_ONLY ? AR_ExtOnly : 0)
++		| (flags & ATH9K_TXDESC_EXT_AND_CTL ? AR_ExtAndCtl : 0);
++
++	ads->ds_ctl6 = SM(keyType, AR_EncrType);
++
++	if (AR_SREV_9285(ah) || AR_SREV_9271(ah)) {
++		ads->ds_ctl8 = 0;
++		ads->ds_ctl9 = 0;
++		ads->ds_ctl10 = 0;
++		ads->ds_ctl11 = 0;
 +	}
 +}
 +
- void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -478,4 +530,5 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->spur_mitigate_freq = ar9002_hw_spur_mitigate;
- 	priv_ops->olc_init = ar9002_olc_init;
- 	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
-+	priv_ops->do_getnf = ar9002_hw_do_getnf;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index c938b85..67b3b65 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -705,6 +705,115 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
- 	return true;
- }
- 
-+static void ar9003_hw_nf_sanitize_2g(struct ath_hw *ah, s16 *nf)
++static void ar9002_hw_set11n_ratescenario(struct ath_hw *ah, void *ds,
++					  void *lastds,
++					  u32 durUpdateEn, u32 rtsctsRate,
++					  u32 rtsctsDuration,
++					  struct ath9k_11n_rate_series series[],
++					  u32 nseries, u32 flags)
 +{
-+	struct ath_common *common = ath9k_hw_common(ah);
++	struct ar5416_desc *ads = AR5416DESC(ds);
++	struct ar5416_desc *last_ads = AR5416DESC(lastds);
++	u32 ds_ctl0;
 +
-+	if (*nf > ah->nf_2g_max) {
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "2 GHz NF (%d) > MAX (%d), "
-+			  "correcting to MAX",
-+			  *nf, ah->nf_2g_max);
-+		*nf = ah->nf_2g_max;
-+	} else if (*nf < ah->nf_2g_min) {
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "2 GHz NF (%d) < MIN (%d), "
-+			  "correcting to MIN",
-+			  *nf, ah->nf_2g_min);
-+		*nf = ah->nf_2g_min;
++	if (flags & (ATH9K_TXDESC_RTSENA | ATH9K_TXDESC_CTSENA)) {
++		ds_ctl0 = ads->ds_ctl0;
++
++		if (flags & ATH9K_TXDESC_RTSENA) {
++			ds_ctl0 &= ~AR_CTSEnable;
++			ds_ctl0 |= AR_RTSEnable;
++		} else {
++			ds_ctl0 &= ~AR_RTSEnable;
++			ds_ctl0 |= AR_CTSEnable;
++		}
++
++		ads->ds_ctl0 = ds_ctl0;
++	} else {
++		ads->ds_ctl0 =
++			(ads->ds_ctl0 & ~(AR_RTSEnable | AR_CTSEnable));
 +	}
++
++	ads->ds_ctl2 = set11nTries(series, 0)
++		| set11nTries(series, 1)
++		| set11nTries(series, 2)
++		| set11nTries(series, 3)
++		| (durUpdateEn ? AR_DurUpdateEna : 0)
++		| SM(0, AR_BurstDur);
++
++	ads->ds_ctl3 = set11nRate(series, 0)
++		| set11nRate(series, 1)
++		| set11nRate(series, 2)
++		| set11nRate(series, 3);
++
++	ads->ds_ctl4 = set11nPktDurRTSCTS(series, 0)
++		| set11nPktDurRTSCTS(series, 1);
++
++	ads->ds_ctl5 = set11nPktDurRTSCTS(series, 2)
++		| set11nPktDurRTSCTS(series, 3);
++
++	ads->ds_ctl7 = set11nRateFlags(series, 0)
++		| set11nRateFlags(series, 1)
++		| set11nRateFlags(series, 2)
++		| set11nRateFlags(series, 3)
++		| SM(rtsctsRate, AR_RTSCTSRate);
++	last_ads->ds_ctl2 = ads->ds_ctl2;
++	last_ads->ds_ctl3 = ads->ds_ctl3;
 +}
 +
-+static void ar9003_hw_nf_sanitize_5g(struct ath_hw *ah, s16 *nf)
++static void ar9002_hw_set11n_aggr_first(struct ath_hw *ah, void *ds,
++					u32 aggrLen)
 +{
-+	struct ath_common *common = ath9k_hw_common(ah);
++	struct ar5416_desc *ads = AR5416DESC(ds);
 +
-+	if (*nf > ah->nf_5g_max) {
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "5 GHz NF (%d) > MAX (%d), "
-+			  "correcting to MAX",
-+			  *nf, ah->nf_5g_max);
-+		*nf = ah->nf_5g_max;
-+	} else if (*nf < ah->nf_5g_min) {
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "5 GHz NF (%d) < MIN (%d), "
-+			  "correcting to MIN",
-+			  *nf, ah->nf_5g_min);
-+		*nf = ah->nf_5g_min;
-+	}
++	ads->ds_ctl1 |= (AR_IsAggr | AR_MoreAggr);
++	ads->ds_ctl6 &= ~AR_AggrLen;
++	ads->ds_ctl6 |= SM(aggrLen, AR_AggrLen);
 +}
 +
-+static void ar9003_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
++static void ar9002_hw_set11n_aggr_middle(struct ath_hw *ah, void *ds,
++					 u32 numDelims)
 +{
-+	if (IS_CHAN_2GHZ(ah->curchan))
-+		ar9003_hw_nf_sanitize_2g(ah, nf);
++	struct ar5416_desc *ads = AR5416DESC(ds);
++	unsigned int ctl6;
++
++	ads->ds_ctl1 |= (AR_IsAggr | AR_MoreAggr);
++
++	ctl6 = ads->ds_ctl6;
++	ctl6 &= ~AR_PadDelim;
++	ctl6 |= SM(numDelims, AR_PadDelim);
++	ads->ds_ctl6 = ctl6;
++}
++
++static void ar9002_hw_set11n_aggr_last(struct ath_hw *ah, void *ds)
++{
++	struct ar5416_desc *ads = AR5416DESC(ds);
++
++	ads->ds_ctl1 |= AR_IsAggr;
++	ads->ds_ctl1 &= ~AR_MoreAggr;
++	ads->ds_ctl6 &= ~AR_PadDelim;
++}
++
++static void ar9002_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
++{
++	struct ar5416_desc *ads = AR5416DESC(ds);
++
++	ads->ds_ctl1 &= (~AR_IsAggr & ~AR_MoreAggr);
++}
++
++static void ar9002_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
++					   u32 burstDuration)
++{
++	struct ar5416_desc *ads = AR5416DESC(ds);
++
++	ads->ds_ctl2 &= ~AR_BurstDur;
++	ads->ds_ctl2 |= SM(burstDuration, AR_BurstDur);
++}
++
++static void ar9002_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
++					    u32 vmf)
++{
++	struct ar5416_desc *ads = AR5416DESC(ds);
++
++	if (vmf)
++		ads->ds_ctl0 |= AR_VirtMoreFrag;
 +	else
-+		ar9003_hw_nf_sanitize_5g(ah, nf);
++		ads->ds_ctl0 &= ~AR_VirtMoreFrag;
 +}
 +
-+static void ar9003_hw_do_getnf(struct ath_hw *ah,
-+			      int16_t nfarray[NUM_NF_READINGS])
++void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
 +{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	int16_t nf;
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
 +
-+	nf = MS(REG_READ(ah, AR_PHY_CCA_0), AR_PHY_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ar9003_hw_nf_sanitize(ah, &nf);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
-+	nfarray[0] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_CCA_1), AR_PHY_CH1_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ar9003_hw_nf_sanitize(ah, &nf);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ctl] [chain 1] is %d\n", nf);
-+	nfarray[1] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_CCA_2), AR_PHY_CH2_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ar9003_hw_nf_sanitize(ah, &nf);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ctl] [chain 2] is %d\n", nf);
-+	nfarray[2] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR_PHY_EXT_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ar9003_hw_nf_sanitize(ah, &nf);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ext] [chain 0] is %d\n", nf);
-+	nfarray[3] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA_1), AR_PHY_CH1_EXT_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ar9003_hw_nf_sanitize(ah, &nf);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ext] [chain 1] is %d\n", nf);
-+	nfarray[4] = nf;
-+
-+	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA_2), AR_PHY_CH2_EXT_MINCCA_PWR);
-+	if (nf & 0x100)
-+		nf = 0 - ((nf ^ 0x1ff) + 1);
-+	ar9003_hw_nf_sanitize(ah, &nf);
-+	ath_print(common, ATH_DBG_CALIBRATE,
-+		  "NF calibrated [ext] [chain 2] is %d\n", nf);
-+	nfarray[5] = nf;
++	ops->rx_enable = ar9002_hw_rx_enable;
++	ops->set_desc_link = ar9002_hw_set_desc_link;
++	ops->get_desc_link = ar9002_hw_get_desc_link;
++	ops->get_isr = ar9002_hw_get_isr;
++	ops->fill_txdesc = ar9002_hw_fill_txdesc;
++	ops->proc_txdesc = ar9002_hw_proc_txdesc;
++	ops->set11n_txdesc = ar9002_hw_set11n_txdesc;
++	ops->set11n_ratescenario = ar9002_hw_set11n_ratescenario;
++	ops->set11n_aggr_first = ar9002_hw_set11n_aggr_first;
++	ops->set11n_aggr_middle = ar9002_hw_set11n_aggr_middle;
++	ops->set11n_aggr_last = ar9002_hw_set11n_aggr_last;
++	ops->clr11n_aggr = ar9002_hw_clr11n_aggr;
++	ops->set11n_burstduration = ar9002_hw_set11n_burstduration;
++	ops->set11n_virtualmorefrag = ar9002_hw_set11n_virtualmorefrag;
 +}
-+
-+void ar9003_hw_set_nf_limits(struct ath_hw *ah)
-+{
-+	ah->nf_2g_max = AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ;
-+	ah->nf_2g_min = AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ;
-+	ah->nf_5g_max = AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ;
-+	ah->nf_5g_min = AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ;
-+}
-+
- void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -723,4 +832,5 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->enable_rfkill = ar9003_hw_enable_rfkill;
- 	priv_ops->set_diversity = ar9003_hw_set_diversity;
- 	priv_ops->ani_control = ar9003_hw_ani_control;
-+	priv_ops->do_getnf = ar9003_hw_do_getnf;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index eba85ad..eed2c76 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -15,6 +15,7 @@
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 9ad1bfc..c5e9e03 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -16,451 +16,6 @@
  
  #include "hw.h"
-+#include "hw-ops.h"
- #include "ar9002_phy.h"
  
- /* We can tune this as we go by monitoring really low values */
-@@ -88,95 +89,6 @@ static void ath9k_hw_update_nfcal_hist_buffer(struct ath9k_nfcal_hist *h,
- 	return;
- }
- 
--static void ath9k_hw_do_getnf(struct ath_hw *ah,
--			      int16_t nfarray[NUM_NF_READINGS])
+-static void ar9002_hw_rx_enable(struct ath_hw *ah)
 -{
+-	REG_WRITE(ah, AR_CR, AR_CR_RXE);
+-}
+-
+-static void ar9002_hw_set_desc_link(void *ds, u32 ds_link)
+-{
+-	((struct ath_desc *) ds)->ds_link = ds_link;
+-}
+-
+-static void ar9002_hw_get_desc_link(void *ds, u32 **ds_link)
+-{
+-	*ds_link = &((struct ath_desc *)ds)->ds_link;
+-}
+-
+-static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+-{
+-	u32 isr = 0;
+-	u32 mask2 = 0;
+-	struct ath9k_hw_capabilities *pCap = &ah->caps;
+-	u32 sync_cause = 0;
+-	bool fatal_int = false;
 -	struct ath_common *common = ath9k_hw_common(ah);
--	int16_t nf;
 -
--	if (AR_SREV_9280_10_OR_LATER(ah))
--		nf = MS(REG_READ(ah, AR_PHY_CCA), AR9280_PHY_MINCCA_PWR);
--	else
--		nf = MS(REG_READ(ah, AR_PHY_CCA), AR_PHY_MINCCA_PWR);
+-	if (!AR_SREV_9100(ah)) {
+-		if (REG_READ(ah, AR_INTR_ASYNC_CAUSE) & AR_INTR_MAC_IRQ) {
+-			if ((REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M)
+-			    == AR_RTC_STATUS_ON) {
+-				isr = REG_READ(ah, AR_ISR);
+-			}
+-		}
 -
--	if (nf & 0x100)
--		nf = 0 - ((nf ^ 0x1ff) + 1);
--	ath_print(common, ATH_DBG_CALIBRATE,
--		  "NF calibrated [ctl] [chain 0] is %d\n", nf);
+-		sync_cause = REG_READ(ah, AR_INTR_SYNC_CAUSE) &
+-			AR_INTR_SYNC_DEFAULT;
 -
--	if (AR_SREV_9271(ah) && (nf >= -114))
--		nf = -116;
+-		*masked = 0;
 -
--	nfarray[0] = nf;
+-		if (!isr && !sync_cause)
+-			return false;
+-	} else {
+-		*masked = 0;
+-		isr = REG_READ(ah, AR_ISR);
+-	}
 -
--	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
--		if (AR_SREV_9280_10_OR_LATER(ah))
--			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
--					AR9280_PHY_CH1_MINCCA_PWR);
--		else
--			nf = MS(REG_READ(ah, AR_PHY_CH1_CCA),
--					AR_PHY_CH1_MINCCA_PWR);
+-	if (isr) {
+-		if (isr & AR_ISR_BCNMISC) {
+-			u32 isr2;
+-			isr2 = REG_READ(ah, AR_ISR_S2);
+-			if (isr2 & AR_ISR_S2_TIM)
+-				mask2 |= ATH9K_INT_TIM;
+-			if (isr2 & AR_ISR_S2_DTIM)
+-				mask2 |= ATH9K_INT_DTIM;
+-			if (isr2 & AR_ISR_S2_DTIMSYNC)
+-				mask2 |= ATH9K_INT_DTIMSYNC;
+-			if (isr2 & (AR_ISR_S2_CABEND))
+-				mask2 |= ATH9K_INT_CABEND;
+-			if (isr2 & AR_ISR_S2_GTT)
+-				mask2 |= ATH9K_INT_GTT;
+-			if (isr2 & AR_ISR_S2_CST)
+-				mask2 |= ATH9K_INT_CST;
+-			if (isr2 & AR_ISR_S2_TSFOOR)
+-				mask2 |= ATH9K_INT_TSFOOR;
+-		}
 -
--		if (nf & 0x100)
--			nf = 0 - ((nf ^ 0x1ff) + 1);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "NF calibrated [ctl] [chain 1] is %d\n", nf);
--		nfarray[1] = nf;
+-		isr = REG_READ(ah, AR_ISR_RAC);
+-		if (isr == 0xffffffff) {
+-			*masked = 0;
+-			return false;
+-		}
 -
--		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
--			nf = MS(REG_READ(ah, AR_PHY_CH2_CCA),
--					AR_PHY_CH2_MINCCA_PWR);
--			if (nf & 0x100)
--				nf = 0 - ((nf ^ 0x1ff) + 1);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "NF calibrated [ctl] [chain 2] is %d\n", nf);
--			nfarray[2] = nf;
+-		*masked = isr & ATH9K_INT_COMMON;
+-
+-		if (ah->config.rx_intr_mitigation) {
+-			if (isr & (AR_ISR_RXMINTR | AR_ISR_RXINTM))
+-				*masked |= ATH9K_INT_RX;
+-		}
+-
+-		if (isr & (AR_ISR_RXOK | AR_ISR_RXERR))
+-			*masked |= ATH9K_INT_RX;
+-		if (isr &
+-		    (AR_ISR_TXOK | AR_ISR_TXDESC | AR_ISR_TXERR |
+-		     AR_ISR_TXEOL)) {
+-			u32 s0_s, s1_s;
+-
+-			*masked |= ATH9K_INT_TX;
+-
+-			s0_s = REG_READ(ah, AR_ISR_S0_S);
+-			ah->intr_txqs |= MS(s0_s, AR_ISR_S0_QCU_TXOK);
+-			ah->intr_txqs |= MS(s0_s, AR_ISR_S0_QCU_TXDESC);
+-
+-			s1_s = REG_READ(ah, AR_ISR_S1_S);
+-			ah->intr_txqs |= MS(s1_s, AR_ISR_S1_QCU_TXERR);
+-			ah->intr_txqs |= MS(s1_s, AR_ISR_S1_QCU_TXEOL);
+-		}
+-
+-		if (isr & AR_ISR_RXORN) {
+-			ath_print(common, ATH_DBG_INTERRUPT,
+-				  "receive FIFO overrun interrupt\n");
+-		}
+-
+-		if (!AR_SREV_9100(ah)) {
+-			if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
+-				u32 isr5 = REG_READ(ah, AR_ISR_S5_S);
+-				if (isr5 & AR_ISR_S5_TIM_TIMER)
+-					*masked |= ATH9K_INT_TIM_TIMER;
+-			}
+-		}
+-
+-		*masked |= mask2;
+-	}
+-
+-	if (AR_SREV_9100(ah))
+-		return true;
+-
+-	if (isr & AR_ISR_GENTMR) {
+-		u32 s5_s;
+-
+-		s5_s = REG_READ(ah, AR_ISR_S5_S);
+-		if (isr & AR_ISR_GENTMR) {
+-			ah->intr_gen_timer_trigger =
+-				MS(s5_s, AR_ISR_S5_GENTIMER_TRIG);
+-
+-			ah->intr_gen_timer_thresh =
+-				MS(s5_s, AR_ISR_S5_GENTIMER_THRESH);
+-
+-			if (ah->intr_gen_timer_trigger)
+-				*masked |= ATH9K_INT_GENTIMER;
+-
 -		}
 -	}
 -
--	if (AR_SREV_9280_10_OR_LATER(ah))
--		nf = MS(REG_READ(ah, AR_PHY_EXT_CCA),
--			AR9280_PHY_EXT_MINCCA_PWR);
--	else
--		nf = MS(REG_READ(ah, AR_PHY_EXT_CCA),
--			AR_PHY_EXT_MINCCA_PWR);
+-	if (sync_cause) {
+-		fatal_int =
+-			(sync_cause &
+-			 (AR_INTR_SYNC_HOST1_FATAL | AR_INTR_SYNC_HOST1_PERR))
+-			? true : false;
 -
--	if (nf & 0x100)
--		nf = 0 - ((nf ^ 0x1ff) + 1);
--	ath_print(common, ATH_DBG_CALIBRATE,
--		  "NF calibrated [ext] [chain 0] is %d\n", nf);
--
--	if (AR_SREV_9271(ah) && (nf >= -114))
--		nf = -116;
--
--	nfarray[3] = nf;
--
--	if (!AR_SREV_9285(ah) && !AR_SREV_9271(ah)) {
--		if (AR_SREV_9280_10_OR_LATER(ah))
--			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
--					AR9280_PHY_CH1_EXT_MINCCA_PWR);
--		else
--			nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA),
--					AR_PHY_CH1_EXT_MINCCA_PWR);
--
--		if (nf & 0x100)
--			nf = 0 - ((nf ^ 0x1ff) + 1);
--		ath_print(common, ATH_DBG_CALIBRATE,
--			  "NF calibrated [ext] [chain 1] is %d\n", nf);
--		nfarray[4] = nf;
--
--		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
--			nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA),
--					AR_PHY_CH2_EXT_MINCCA_PWR);
--			if (nf & 0x100)
--				nf = 0 - ((nf ^ 0x1ff) + 1);
--			ath_print(common, ATH_DBG_CALIBRATE,
--				  "NF calibrated [ext] [chain 2] is %d\n", nf);
--			nfarray[5] = nf;
+-		if (fatal_int) {
+-			if (sync_cause & AR_INTR_SYNC_HOST1_FATAL) {
+-				ath_print(common, ATH_DBG_ANY,
+-					  "received PCI FATAL interrupt\n");
+-			}
+-			if (sync_cause & AR_INTR_SYNC_HOST1_PERR) {
+-				ath_print(common, ATH_DBG_ANY,
+-					  "received PCI PERR interrupt\n");
+-			}
+-			*masked |= ATH9K_INT_FATAL;
 -		}
+-		if (sync_cause & AR_INTR_SYNC_RADM_CPL_TIMEOUT) {
+-			ath_print(common, ATH_DBG_INTERRUPT,
+-				  "AR_INTR_SYNC_RADM_CPL_TIMEOUT\n");
+-			REG_WRITE(ah, AR_RC, AR_RC_HOSTIF);
+-			REG_WRITE(ah, AR_RC, 0);
+-			*masked |= ATH9K_INT_FATAL;
+-		}
+-		if (sync_cause & AR_INTR_SYNC_LOCAL_TIMEOUT) {
+-			ath_print(common, ATH_DBG_INTERRUPT,
+-				  "AR_INTR_SYNC_LOCAL_TIMEOUT\n");
+-		}
+-
+-		REG_WRITE(ah, AR_INTR_SYNC_CAUSE_CLR, sync_cause);
+-		(void) REG_READ(ah, AR_INTR_SYNC_CAUSE_CLR);
+-	}
+-
+-	return true;
+-}
+-
+-static void ar9002_hw_fill_txdesc(struct ath_hw *ah, void *ds, u32 seglen,
+-				  bool is_firstseg, bool is_lastseg,
+-				  const void *ds0, dma_addr_t buf_addr,
+-				  unsigned int qcu)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	ads->ds_data = buf_addr;
+-
+-	if (is_firstseg) {
+-		ads->ds_ctl1 |= seglen | (is_lastseg ? 0 : AR_TxMore);
+-	} else if (is_lastseg) {
+-		ads->ds_ctl0 = 0;
+-		ads->ds_ctl1 = seglen;
+-		ads->ds_ctl2 = AR5416DESC_CONST(ds0)->ds_ctl2;
+-		ads->ds_ctl3 = AR5416DESC_CONST(ds0)->ds_ctl3;
+-	} else {
+-		ads->ds_ctl0 = 0;
+-		ads->ds_ctl1 = seglen | AR_TxMore;
+-		ads->ds_ctl2 = 0;
+-		ads->ds_ctl3 = 0;
+-	}
+-	ads->ds_txstatus0 = ads->ds_txstatus1 = 0;
+-	ads->ds_txstatus2 = ads->ds_txstatus3 = 0;
+-	ads->ds_txstatus4 = ads->ds_txstatus5 = 0;
+-	ads->ds_txstatus6 = ads->ds_txstatus7 = 0;
+-	ads->ds_txstatus8 = ads->ds_txstatus9 = 0;
+-}
+-
+-static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+-				 struct ath_tx_status *ts)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	if ((ads->ds_txstatus9 & AR_TxDone) == 0)
+-		return -EINPROGRESS;
+-
+-	ts->ts_seqnum = MS(ads->ds_txstatus9, AR_SeqNum);
+-	ts->ts_tstamp = ads->AR_SendTimestamp;
+-	ts->ts_status = 0;
+-	ts->ts_flags = 0;
+-
+-	if (ads->ds_txstatus1 & AR_FrmXmitOK)
+-		ts->ts_status |= ATH9K_TX_ACKED;
+-	if (ads->ds_txstatus1 & AR_ExcessiveRetries)
+-		ts->ts_status |= ATH9K_TXERR_XRETRY;
+-	if (ads->ds_txstatus1 & AR_Filtered)
+-		ts->ts_status |= ATH9K_TXERR_FILT;
+-	if (ads->ds_txstatus1 & AR_FIFOUnderrun) {
+-		ts->ts_status |= ATH9K_TXERR_FIFO;
+-		ath9k_hw_updatetxtriglevel(ah, true);
+-	}
+-	if (ads->ds_txstatus9 & AR_TxOpExceeded)
+-		ts->ts_status |= ATH9K_TXERR_XTXOP;
+-	if (ads->ds_txstatus1 & AR_TxTimerExpired)
+-		ts->ts_status |= ATH9K_TXERR_TIMER_EXPIRED;
+-
+-	if (ads->ds_txstatus1 & AR_DescCfgErr)
+-		ts->ts_flags |= ATH9K_TX_DESC_CFG_ERR;
+-	if (ads->ds_txstatus1 & AR_TxDataUnderrun) {
+-		ts->ts_flags |= ATH9K_TX_DATA_UNDERRUN;
+-		ath9k_hw_updatetxtriglevel(ah, true);
+-	}
+-	if (ads->ds_txstatus1 & AR_TxDelimUnderrun) {
+-		ts->ts_flags |= ATH9K_TX_DELIM_UNDERRUN;
+-		ath9k_hw_updatetxtriglevel(ah, true);
+-	}
+-	if (ads->ds_txstatus0 & AR_TxBaStatus) {
+-		ts->ts_flags |= ATH9K_TX_BA;
+-		ts->ba_low = ads->AR_BaBitmapLow;
+-		ts->ba_high = ads->AR_BaBitmapHigh;
+-	}
+-
+-	ts->ts_rateindex = MS(ads->ds_txstatus9, AR_FinalTxIdx);
+-	switch (ts->ts_rateindex) {
+-	case 0:
+-		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate0);
+-		break;
+-	case 1:
+-		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate1);
+-		break;
+-	case 2:
+-		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate2);
+-		break;
+-	case 3:
+-		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate3);
+-		break;
+-	}
+-
+-	ts->ts_rssi = MS(ads->ds_txstatus5, AR_TxRSSICombined);
+-	ts->ts_rssi_ctl0 = MS(ads->ds_txstatus0, AR_TxRSSIAnt00);
+-	ts->ts_rssi_ctl1 = MS(ads->ds_txstatus0, AR_TxRSSIAnt01);
+-	ts->ts_rssi_ctl2 = MS(ads->ds_txstatus0, AR_TxRSSIAnt02);
+-	ts->ts_rssi_ext0 = MS(ads->ds_txstatus5, AR_TxRSSIAnt10);
+-	ts->ts_rssi_ext1 = MS(ads->ds_txstatus5, AR_TxRSSIAnt11);
+-	ts->ts_rssi_ext2 = MS(ads->ds_txstatus5, AR_TxRSSIAnt12);
+-	ts->evm0 = ads->AR_TxEVM0;
+-	ts->evm1 = ads->AR_TxEVM1;
+-	ts->evm2 = ads->AR_TxEVM2;
+-	ts->ts_shortretry = MS(ads->ds_txstatus1, AR_RTSFailCnt);
+-	ts->ts_longretry = MS(ads->ds_txstatus1, AR_DataFailCnt);
+-	ts->ts_virtcol = MS(ads->ds_txstatus1, AR_VirtRetryCnt);
+-	ts->ts_antenna = 0;
+-
+-	return 0;
+-}
+-
+-static void ar9002_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
+-				    u32 pktLen, enum ath9k_pkt_type type,
+-				    u32 txPower, u32 keyIx,
+-				    enum ath9k_key_type keyType, u32 flags)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	txPower += ah->txpower_indexoffset;
+-	if (txPower > 63)
+-		txPower = 63;
+-
+-	ads->ds_ctl0 = (pktLen & AR_FrameLen)
+-		| (flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
+-		| SM(txPower, AR_XmitPower)
+-		| (flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
+-		| (flags & ATH9K_TXDESC_CLRDMASK ? AR_ClrDestMask : 0)
+-		| (flags & ATH9K_TXDESC_INTREQ ? AR_TxIntrReq : 0)
+-		| (keyIx != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0);
+-
+-	ads->ds_ctl1 =
+-		(keyIx != ATH9K_TXKEYIX_INVALID ? SM(keyIx, AR_DestIdx) : 0)
+-		| SM(type, AR_FrameType)
+-		| (flags & ATH9K_TXDESC_NOACK ? AR_NoAck : 0)
+-		| (flags & ATH9K_TXDESC_EXT_ONLY ? AR_ExtOnly : 0)
+-		| (flags & ATH9K_TXDESC_EXT_AND_CTL ? AR_ExtAndCtl : 0);
+-
+-	ads->ds_ctl6 = SM(keyType, AR_EncrType);
+-
+-	if (AR_SREV_9285(ah) || AR_SREV_9271(ah)) {
+-		ads->ds_ctl8 = 0;
+-		ads->ds_ctl9 = 0;
+-		ads->ds_ctl10 = 0;
+-		ads->ds_ctl11 = 0;
 -	}
 -}
 -
- static bool getNoiseFloorThresh(struct ath_hw *ah,
- 				enum ieee80211_band band,
- 				int16_t *nft)
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index a770107..e2b8ad4 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -163,4 +163,10 @@ static inline bool ath9k_hw_ani_control(struct ath_hw *ah,
- 	return ath9k_hw_private_ops(ah)->ani_control(ah, cmd, param);
- }
- 
-+static inline void ath9k_hw_do_getnf(struct ath_hw *ah,
-+				     int16_t nfarray[NUM_NF_READINGS])
-+{
-+	return ath9k_hw_private_ops(ah)->do_getnf(ah, nfarray);
-+}
-+
- #endif /* ATH9K_HW_OPS_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index aa80d43..2dcfaa9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1072,6 +1072,9 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	else
- 		ah->tx_trig_level = (AR_FTRIG_512B >> AR_FTRIG_S);
- 
-+	if (AR_SREV_9300_20_OR_LATER(ah))
-+		ar9003_hw_set_nf_limits(ah);
-+
- 	ath9k_init_nfcal_hist_buffer(ah);
- 
- 	common->state = ATH_HW_INITIALIZED;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 0538e28..0c95e28 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -507,6 +507,7 @@ struct ath_hw_private_ops {
- 				   struct ath9k_channel *chan);
- 	bool (*ani_control)(struct ath_hw *ah, enum ath9k_ani_cmd cmd,
- 			    int param);
-+	void (*do_getnf)(struct ath_hw *ah, int16_t nfarray[NUM_NF_READINGS]);
- };
- 
- /**
-@@ -547,6 +548,10 @@ struct ath_hw {
- 	bool is_pciexpress;
- 	bool need_an_top2_fixup;
- 	u16 tx_trig_level;
-+	s16 nf_2g_max;
-+	s16 nf_2g_min;
-+	s16 nf_5g_max;
-+	s16 nf_5g_min;
- 	u16 rfsilent;
- 	u32 rfkill_gpio;
- 	u32 rfkill_polarity;
-@@ -812,6 +817,13 @@ void ath9k_hw_htc_resetinit(struct ath_hw *ah);
- void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
- 				   u32 *coef_mantissa, u32 *coef_exponent);
- 
-+/*
-+ * Code specifric to AR9003, we stuff these here to avoid callbacks
-+ * for older families
-+ */
-+void ar9003_hw_set_nf_limits(struct ath_hw *ah);
-+
-+/* Hardware family op attach helpers */
- void ar5008_hw_attach_phy_ops(struct ath_hw *ah);
- void ar9002_hw_attach_phy_ops(struct ath_hw *ah);
- void ar9003_hw_attach_phy_ops(struct ath_hw *ah);
+-static void ar9002_hw_set11n_ratescenario(struct ath_hw *ah, void *ds,
+-					  void *lastds,
+-					  u32 durUpdateEn, u32 rtsctsRate,
+-					  u32 rtsctsDuration,
+-					  struct ath9k_11n_rate_series series[],
+-					  u32 nseries, u32 flags)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-	struct ar5416_desc *last_ads = AR5416DESC(lastds);
+-	u32 ds_ctl0;
+-
+-	if (flags & (ATH9K_TXDESC_RTSENA | ATH9K_TXDESC_CTSENA)) {
+-		ds_ctl0 = ads->ds_ctl0;
+-
+-		if (flags & ATH9K_TXDESC_RTSENA) {
+-			ds_ctl0 &= ~AR_CTSEnable;
+-			ds_ctl0 |= AR_RTSEnable;
+-		} else {
+-			ds_ctl0 &= ~AR_RTSEnable;
+-			ds_ctl0 |= AR_CTSEnable;
+-		}
+-
+-		ads->ds_ctl0 = ds_ctl0;
+-	} else {
+-		ads->ds_ctl0 =
+-			(ads->ds_ctl0 & ~(AR_RTSEnable | AR_CTSEnable));
+-	}
+-
+-	ads->ds_ctl2 = set11nTries(series, 0)
+-		| set11nTries(series, 1)
+-		| set11nTries(series, 2)
+-		| set11nTries(series, 3)
+-		| (durUpdateEn ? AR_DurUpdateEna : 0)
+-		| SM(0, AR_BurstDur);
+-
+-	ads->ds_ctl3 = set11nRate(series, 0)
+-		| set11nRate(series, 1)
+-		| set11nRate(series, 2)
+-		| set11nRate(series, 3);
+-
+-	ads->ds_ctl4 = set11nPktDurRTSCTS(series, 0)
+-		| set11nPktDurRTSCTS(series, 1);
+-
+-	ads->ds_ctl5 = set11nPktDurRTSCTS(series, 2)
+-		| set11nPktDurRTSCTS(series, 3);
+-
+-	ads->ds_ctl7 = set11nRateFlags(series, 0)
+-		| set11nRateFlags(series, 1)
+-		| set11nRateFlags(series, 2)
+-		| set11nRateFlags(series, 3)
+-		| SM(rtsctsRate, AR_RTSCTSRate);
+-	last_ads->ds_ctl2 = ads->ds_ctl2;
+-	last_ads->ds_ctl3 = ads->ds_ctl3;
+-}
+-
+-static void ar9002_hw_set11n_aggr_first(struct ath_hw *ah, void *ds,
+-					u32 aggrLen)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	ads->ds_ctl1 |= (AR_IsAggr | AR_MoreAggr);
+-	ads->ds_ctl6 &= ~AR_AggrLen;
+-	ads->ds_ctl6 |= SM(aggrLen, AR_AggrLen);
+-}
+-
+-static void ar9002_hw_set11n_aggr_middle(struct ath_hw *ah, void *ds,
+-					 u32 numDelims)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-	unsigned int ctl6;
+-
+-	ads->ds_ctl1 |= (AR_IsAggr | AR_MoreAggr);
+-
+-	ctl6 = ads->ds_ctl6;
+-	ctl6 &= ~AR_PadDelim;
+-	ctl6 |= SM(numDelims, AR_PadDelim);
+-	ads->ds_ctl6 = ctl6;
+-}
+-
+-static void ar9002_hw_set11n_aggr_last(struct ath_hw *ah, void *ds)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	ads->ds_ctl1 |= AR_IsAggr;
+-	ads->ds_ctl1 &= ~AR_MoreAggr;
+-	ads->ds_ctl6 &= ~AR_PadDelim;
+-}
+-
+-static void ar9002_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	ads->ds_ctl1 &= (~AR_IsAggr & ~AR_MoreAggr);
+-}
+-
+-static void ar9002_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
+-					   u32 burstDuration)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	ads->ds_ctl2 &= ~AR_BurstDur;
+-	ads->ds_ctl2 |= SM(burstDuration, AR_BurstDur);
+-}
+-
+-static void ar9002_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
+-					    u32 vmf)
+-{
+-	struct ar5416_desc *ads = AR5416DESC(ds);
+-
+-	if (vmf)
+-		ads->ds_ctl0 |= AR_VirtMoreFrag;
+-	else
+-		ads->ds_ctl0 &= ~AR_VirtMoreFrag;
+-}
+-
+-void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
+-{
+-	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+-
+-	ops->rx_enable = ar9002_hw_rx_enable;
+-	ops->set_desc_link = ar9002_hw_set_desc_link;
+-	ops->get_desc_link = ar9002_hw_get_desc_link;
+-	ops->get_isr = ar9002_hw_get_isr;
+-	ops->fill_txdesc = ar9002_hw_fill_txdesc;
+-	ops->proc_txdesc = ar9002_hw_proc_txdesc;
+-	ops->set11n_txdesc = ar9002_hw_set11n_txdesc;
+-	ops->set11n_ratescenario = ar9002_hw_set11n_ratescenario;
+-	ops->set11n_aggr_first = ar9002_hw_set11n_aggr_first;
+-	ops->set11n_aggr_middle = ar9002_hw_set11n_aggr_middle;
+-	ops->set11n_aggr_last = ar9002_hw_set11n_aggr_last;
+-	ops->clr11n_aggr = ar9002_hw_clr11n_aggr;
+-	ops->set11n_burstduration = ar9002_hw_set11n_burstduration;
+-	ops->set11n_virtualmorefrag = ar9002_hw_set11n_virtualmorefrag;
+-}
+-
+ static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
+ 					struct ath9k_tx_queue_info *qi)
+ {
 -- 
 1.6.3.3
 
