@@ -1,50 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63984 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753463Ab0DONow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 09:44:52 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<wey-yi.w.guy@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 resend 3/3] mac80211: enable QoS explicitly in AP mode
-Date: Thu, 15 Apr 2010 15:43:02 +0200
-Message-Id: <1271338982-3157-3-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1271338982-3157-2-git-send-email-sgruszka@redhat.com>
-References: <1271338982-3157-1-git-send-email-sgruszka@redhat.com>
- <1271338982-3157-2-git-send-email-sgruszka@redhat.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:60964 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757280Ab0DOVjn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 17:39:43 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 21/97] ath9k_hw: Add abstraction for rx enable
+Date: Thu, 15 Apr 2010 17:38:26 -0400
+Message-Id: <1271367582-992-22-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable QoS explicitly, when user space AP program will setup a QoS
-queues. Currently this is not needed as iwlwifi not work in AP mode
-and no other driver implement enable/disable QoS.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
-v1 -> v2:
- - add this patch  
+ drivers/net/wireless/ath/ath9k/hw-ops.h |    5 +++++
+ drivers/net/wireless/ath/ath9k/hw.c     |    2 ++
+ drivers/net/wireless/ath/ath9k/hw.h     |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c    |   17 +++++++++++------
+ drivers/net/wireless/ath/ath9k/mac.h    |    3 ++-
+ 5 files changed, 21 insertions(+), 7 deletions(-)
 
- net/mac80211/cfg.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b7116ef..b88c7e4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1136,6 +1136,10 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
-+	/* enable WMM or activate new settings */
-+	local->hw.conf.flags |= IEEE80211_CONF_QOS;
-+	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
-+
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 81f3d03..19259fb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -28,6 +28,11 @@ static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
+ 	ath9k_hw_ops(ah)->config_pci_powersave(ah, restore, power_off);
  }
  
++static inline void ath9k_hw_rxena(struct ath_hw *ah)
++{
++	ath9k_hw_ops(ah)->rx_enable(ah);
++}
++
+ /* Private hardware call ops */
+ 
+ /* PHY ops */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 36c0163..0a4ccd8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1567,6 +1567,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (tsf && AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ 		ath9k_hw_settsf64(ah, tsf);
+ 
++	ar9002_hw_attach_mac_ops(ah);
++
+ 	if (AR_SREV_9280_10_OR_LATER(ah))
+ 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6bd87bf..b07ee8d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -509,6 +509,7 @@ struct ath_hw_ops {
+ 	void (*config_pci_powersave)(struct ath_hw *ah,
+ 				     int restore,
+ 				     int power_off);
++	void (*rx_enable)(struct ath_hw *ah);
+ };
+ 
+ struct ath_hw {
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 4a2060e..ae9d54c 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -16,6 +16,17 @@
+ 
+ #include "hw.h"
+ 
++static void ar9002_hw_rx_enable(struct ath_hw *ah)
++{
++	REG_WRITE(ah, AR_CR, AR_CR_RXE);
++}
++
++void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
++{
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
++
++	ops->rx_enable = ar9002_hw_rx_enable;
++}
+ static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
+ 					struct ath9k_tx_queue_info *qi)
+ {
+@@ -999,12 +1010,6 @@ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp)
+ }
+ EXPORT_SYMBOL(ath9k_hw_putrxbuf);
+ 
+-void ath9k_hw_rxena(struct ath_hw *ah)
+-{
+-	REG_WRITE(ah, AR_CR, AR_CR_RXE);
+-}
+-EXPORT_SYMBOL(ath9k_hw_rxena);
+-
+ void ath9k_hw_startpcureceive(struct ath_hw *ah)
+ {
+ 	ath9k_enable_mib_counters(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 68dbd7a..9e8500a 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -729,10 +729,11 @@ void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			  u32 size, u32 flags);
+ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
+ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
+-void ath9k_hw_rxena(struct ath_hw *ah);
+ void ath9k_hw_startpcureceive(struct ath_hw *ah);
+ void ath9k_hw_stoppcurecv(struct ath_hw *ah);
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
+ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
+ 
++void ar9002_hw_attach_mac_ops(struct ath_hw *ah);
++
+ #endif /* MAC_H */
 -- 
-1.6.2.5
+1.6.3.3
 
