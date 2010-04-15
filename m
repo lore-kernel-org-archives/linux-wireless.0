@@ -1,146 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:5522 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752345Ab0DKRNQ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55012 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757039Ab0DODa5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 13:13:16 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so1761273qwh.37
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Apr 2010 10:13:15 -0700 (PDT)
-Message-ID: <4bc20326.e22be50a.5f3d.ffffc22d@mx.google.com>
-Date: Sun, 11 Apr 2010 10:13:10 -0700 (PDT)
-From: Ben Gamari <bgamari.foss@gmail.com>
-To: ath9k-devel@ath9k.org, linux-wireless@vger.kernel.org
-Subject: ath: timeout on reg 0x9860
+	Wed, 14 Apr 2010 23:30:57 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v2 88/97] ath9k: Setup appropriate tx desc for regular dma and edma
+Date: Wed, 14 Apr 2010 23:30:42 -0400
+Message-Id: <1271302251-9075-89-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While testing 2.6.34 I find that my card will frequently (once an hour or so)
-drop my connection. This is evidently the result of the hardware going down
-(dmesg output[1] attached). What debugging flags might help in identifying this
-issue?
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Futhermore, it seems that the driver goes down pretty hard, as even rmmod
-simply hangs in stop_machine() (backtraces[2] attached). It is rather strange
-that this is yet another lockup in stop_machine(), considering this is also
-where a aes acceleration issue has manifested itself (see "Lockup inside of
-stop_machine() during modprobe aes (was: Re: Another AR5008 hang)"). That being
-said, I think that this is a distinct issue.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath/ath9k/init.c  |   26 ++++++++++++++++----------
+ drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c  |    4 ++--
+ 4 files changed, 20 insertions(+), 14 deletions(-)
 
-Any feedback at all would be greatly appreciated. Thanks,
-
-- Ben
-
-
-Hardware:
-0c:00.0 Network controller: Atheros Communications Inc. AR5008 Wireless Network Adapter (rev 01)
-	Subsystem: Askey Computer Corp. Device 7125
-	Flags: bus master, fast devsel, latency 0, IRQ 17
-	Memory at f6cf0000 (64-bit, non-prefetchable) [size=64K]
-	Capabilities: [40] Power Management version 2
-	Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable-
-	Capabilities: [60] Express Legacy Endpoint, MSI 00
-	Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
-	Capabilities: [100] Advanced Error Reporting <?>
-	Capabilities: [140] Virtual Channel <?>
-	Kernel driver in use: ath9k
-	Kernel modules: ath9k
-
-
-======================================================================
-[1] Representative timeouts
-
-[ 2854.842825] ath: timeout (100000 us) on reg 0x9860: 0x00049d19 & 0x00000001 != 0x00000000
-[ 2854.842843] ath: Unable to reset channel (2422 MHz), reset status -5
-[ 2854.842893] ath: Unable to set channel
-[ 2855.273252] ath: timeout (100000 us) on reg 0x9860: 0x00049d19 & 0x00000001 != 0x00000000
-[ 2855.273270] ath: Unable to reset channel (5680 MHz), reset status -5
-[ 2855.273290] ath: Unable to set channel
-[ 2855.399853] ath: timeout (100000 us) on reg 0x9860: 0x00049d19 & 0x00000001 != 0x00000000
-[ 2855.399868] ath: Unable to reset channel (2422 MHz), reset status -5
-[ 2855.399986] ath: Unable to set channel
-[ 2855.827771] ath: timeout (100000 us) on reg 0x9860: 0x00049d19 & 0x00000001 != 0x00000000
-...
-[ 2858.728228] ath: Unable to reset channel (2422 MHz), reset status -5
-[ 2858.728245] ath: Unable to set channel
-[ 2859.736738] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[ 2859.736770] ath: Unable to stop TxDMA. Reset HAL!
-[ 2859.863857] ath: timeout (100000 us) on reg 0x9860: 0x00049d19 & 0x00000001 != 0x00000000
-[ 2859.863874] ath: Unable to reset hardware; reset status -5
-[ 2859.991871] ath: timeout (100000 us) on reg 0x9860: 0x00049d19 & 0x00000001 != 0x00000000
-[ 2859.991886] ath: Unable to reset hardware; reset status -5
-[ 2861.493121] No probe response from AP 00:21:63:2f:fe:6f after 500ms, disconnecting.
-[ 2861.502294] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[ 2861.502324] ath: Unable to stop TxDMA. Reset HAL!
-[ 2861.629032] ath: timeout (100000 us) on reg 0x9860: 0x00049d19 & 0x00000001 != 0x00000000
-[ 2861.629048] ath: Unable to reset hardware; reset status -5
-[ 2861.756113] ath: timeout (100000 us) on reg 0x9860: 0x00049d19 & 0x00000001 != 0x00000000
-[ 2861.756127] ath: Unable to reset channel (2422 MHz), reset status -5
-[ 2861.756201] ath: Unable to set channel
-
-======================================================================
-[2] Post-mortem backtraces and locking data after rmmod ath9k
-
-[ 3058.221094] SysRq : Show Blocked State
-[ 3058.221110]   task                        PC stack   pid father
-[ 3058.221193] rmmod         D 00000000ffffffff     0 15406  15194 0x00000000
-[ 3058.221206]  ffff8800659abc08 0000000000000046 ffffffff81e62040 0000000000015c80
-[ 3058.221219]  ffff8800659abfd8 0000000000015c80 ffff8800659abfd8 ffff88009f9da020
-[ 3058.221232]  0000000000015c80 0000000000015c80 ffff8800659abfd8 0000000000015c80
-[ 3058.221244] Call Trace:
-[ 3058.221261]  [<ffffffff815bd73d>] schedule_timeout+0x23d/0x310
-[ 3058.221274]  [<ffffffff8109089b>] ? mark_held_locks+0x6b/0xa0
-[ 3058.221284]  [<ffffffff815bff90>] ? _raw_spin_unlock_irq+0x30/0x40
-[ 3058.221294]  [<ffffffff81090bad>] ? trace_hardirqs_on_caller+0x14d/0x190
-[ 3058.221304]  [<ffffffff815bd32f>] wait_for_common+0xcf/0x170
-[ 3058.221316]  [<ffffffff81052620>] ? default_wake_function+0x0/0x20
-[ 3058.221325]  [<ffffffff81090bad>] ? trace_hardirqs_on_caller+0x14d/0x190
-[ 3058.221334]  [<ffffffff815bd48d>] wait_for_completion+0x1d/0x20
-[ 3058.221345]  [<ffffffff8107668d>] flush_cpu_workqueue+0x6d/0xd0
-[ 3058.221354]  [<ffffffff81076850>] ? wq_barrier_func+0x0/0x20
-[ 3058.221364]  [<ffffffff81077153>] flush_workqueue+0x83/0xb0
-[ 3058.221373]  [<ffffffff810770d0>] ? flush_workqueue+0x0/0xb0
-[ 3058.221383]  [<ffffffff810b4ae4>] __stop_machine+0x114/0x140
-[ 3058.221392]  [<ffffffff8109bb40>] ? __try_stop_module+0x0/0x50
-[ 3058.221401]  [<ffffffff810b4d4e>] stop_machine+0x3e/0x60
-[ 3058.221410]  [<ffffffff8109b064>] ? find_module+0x34/0x70
-[ 3058.221428]  [<ffffffff8109c43b>] sys_delete_module+0x18b/0x290
-[ 3058.221439]  [<ffffffff81080613>] ? up_read+0x23/0x40
-[ 3058.221449]  [<ffffffff815bf5f2>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[ 3058.221461]  [<ffffffff8100a072>] system_call_fastpath+0x16/0x1b
-...
-[ 3224.234488] SysRq : Show Locks Held
-[ 3224.234495] 
-[ 3224.234496] Showing all locks held in the system:
-[ 3224.234516] 1 lock held by getty/4343:
-[ 3224.234518]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234539] 1 lock held by getty/4349:
-[ 3224.234541]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234549] 1 lock held by getty/4452:
-[ 3224.234550]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234557] 1 lock held by getty/4453:
-[ 3224.234559]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234565] 1 lock held by getty/4455:
-[ 3224.234567]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234576] 1 lock held by getty/5047:
-[ 3224.234578]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234589] 1 lock held by bash/5174:
-[ 3224.234590]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234602] 1 lock held by bash/5305:
-[ 3224.234603]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234617] 1 lock held by chromium-browse/6063:
-[ 3224.234618]  #0:  (&u->readlock){+.+.+.}, at: [<ffffffff81548a43>] unix_dgram_recvmsg+0x73/0x380
-[ 3224.234628] 2 locks held by rmmod/15406:
-[ 3224.234629]  #0:  (module_mutex){+.+.+.}, at: [<ffffffff8109c36e>] sys_delete_module+0xbe/0x290
-[ 3224.234637]  #1:  (lock){+.+...}, at: [<ffffffff810b49f7>] __stop_machine+0x27/0x140
-[ 3224.234650] 1 lock held by bash/15410:
-[ 3224.234651]  #0:  (&tty->atomic_read_lock){+.+.+.}, at: [<ffffffff8138d0ce>] n_tty_read+0x4ce/0x980
-[ 3224.234658] 6 locks held by gnome-screensho/15760:
-[ 3224.234659]  #0:  (&serio->lock){-.-...}, at: [<ffffffff814537e6>] serio_interrupt+0x36/0xa0
-[ 3224.234666]  #1:  (&(&dev->event_lock)->rlock){-.-...}, at: [<ffffffff814589b2>] input_event+0x62/0xa0
-[ 3224.234672]  #2:  (rcu_read_lock){.+.+..}, at: [<ffffffff81457fb0>] input_pass_event+0x0/0x110
-[ 3224.234677]  #3:  (kbd_event_lock){-.-...}, at: [<ffffffff81399098>] kbd_event+0x38/0x820
-[ 3224.234682]  #4:  (sysrq_key_table_lock){-.-...}, at: [<ffffffff813a2975>] __handle_sysrq+0x35/0x190
-[ 3224.234688]  #5:  (tasklist_lock){.?.?..}, at: [<ffffffff8108f500>] debug_show_all_locks+0x40/0x1c0
-[ 3224.234696] 
-[ 3224.234697] =============================================
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index a11d830..f67be52 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -123,7 +123,7 @@ struct ath_descdma {
+ 
+ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ 		      struct list_head *head, const char *name,
+-		      int nbuf, int ndesc);
++		      int nbuf, int ndesc, bool is_tx);
+ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
+ 			 struct list_head *head);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 9779646..299ec05 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -235,31 +235,37 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
+ */
+ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ 		      struct list_head *head, const char *name,
+-		      int nbuf, int ndesc)
++		      int nbuf, int ndesc, bool is_tx)
+ {
+ #define	DS2PHYS(_dd, _ds)						\
+ 	((_dd)->dd_desc_paddr + ((caddr_t)(_ds) - (caddr_t)(_dd)->dd_desc))
+ #define ATH_DESC_4KB_BOUND_CHECK(_daddr) ((((_daddr) & 0xFFF) > 0xF7F) ? 1 : 0)
+ #define ATH_DESC_4KB_BOUND_NUM_SKIPPED(_len) ((_len) / 4096)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	struct ath_desc *ds;
++	u8 *ds;
+ 	struct ath_buf *bf;
+-	int i, bsize, error;
++	int i, bsize, error, desc_len;
+ 
+ 	ath_print(common, ATH_DBG_CONFIG, "%s DMA: %u buffers %u desc/buf\n",
+ 		  name, nbuf, ndesc);
+ 
+ 	INIT_LIST_HEAD(head);
++
++	if (is_tx)
++		desc_len = sc->sc_ah->caps.tx_desc_len;
++	else
++		desc_len = sizeof(struct ath_desc);
++
+ 	/* ath_desc must be a multiple of DWORDs */
+-	if ((sizeof(struct ath_desc) % 4) != 0) {
++	if ((desc_len % 4) != 0) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "ath_desc not DWORD aligned\n");
+-		BUG_ON((sizeof(struct ath_desc) % 4) != 0);
++		BUG_ON((desc_len % 4) != 0);
+ 		error = -ENOMEM;
+ 		goto fail;
+ 	}
+ 
+-	dd->dd_desc_len = sizeof(struct ath_desc) * nbuf * ndesc;
++	dd->dd_desc_len = desc_len * nbuf * ndesc;
+ 
+ 	/*
+ 	 * Need additional DMA memory because we can't use
+@@ -272,7 +278,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ 		u32 dma_len;
+ 
+ 		while (ndesc_skipped) {
+-			dma_len = ndesc_skipped * sizeof(struct ath_desc);
++			dma_len = ndesc_skipped * desc_len;
+ 			dd->dd_desc_len += dma_len;
+ 
+ 			ndesc_skipped = ATH_DESC_4KB_BOUND_NUM_SKIPPED(dma_len);
+@@ -286,7 +292,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ 		error = -ENOMEM;
+ 		goto fail;
+ 	}
+-	ds = dd->dd_desc;
++	ds = (u8 *) dd->dd_desc;
+ 	ath_print(common, ATH_DBG_CONFIG, "%s DMA map: %p (%u) -> %llx (%u)\n",
+ 		  name, ds, (u32) dd->dd_desc_len,
+ 		  ito64(dd->dd_desc_paddr), /*XXX*/(u32) dd->dd_desc_len);
+@@ -300,7 +306,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ 	}
+ 	dd->dd_bufptr = bf;
+ 
+-	for (i = 0; i < nbuf; i++, bf++, ds += ndesc) {
++	for (i = 0; i < nbuf; i++, bf++, ds += (desc_len * ndesc)) {
+ 		bf->bf_desc = ds;
+ 		bf->bf_daddr = DS2PHYS(dd, ds);
+ 
+@@ -316,7 +322,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+ 				       ((caddr_t) dd->dd_desc +
+ 					dd->dd_desc_len));
+ 
+-				ds += ndesc;
++				ds += (desc_len * ndesc);
+ 				bf->bf_desc = ds;
+ 				bf->bf_daddr = DS2PHYS(dd, ds);
+ 			}
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index ffb599c..921b39d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -324,7 +324,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 		/* Initialize rx descriptors */
+ 
+ 		error = ath_descdma_setup(sc, &sc->rx.rxdma, &sc->rx.rxbuf,
+-				"rx", nbufs, 1);
++				"rx", nbufs, 1, 0);
+ 		if (error != 0) {
+ 			ath_print(common, ATH_DBG_FATAL,
+ 				  "failed to allocate rx descriptors: %d\n",
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 550253f..c859e46 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2151,7 +2151,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
+ 	spin_lock_init(&sc->tx.txbuflock);
+ 
+ 	error = ath_descdma_setup(sc, &sc->tx.txdma, &sc->tx.txbuf,
+-				  "tx", nbufs, 1);
++				  "tx", nbufs, 1, 1);
+ 	if (error != 0) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Failed to allocate tx descriptors: %d\n", error);
+@@ -2159,7 +2159,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
+ 	}
+ 
+ 	error = ath_descdma_setup(sc, &sc->beacon.bdma, &sc->beacon.bbuf,
+-				  "beacon", ATH_BCBUF, 1);
++				  "beacon", ATH_BCBUF, 1, 0);
+ 	if (error != 0) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Failed to allocate beacon descriptors: %d\n", error);
+-- 
+1.6.3.3
 
