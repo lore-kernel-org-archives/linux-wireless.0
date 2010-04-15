@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59653 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754040Ab0DUNAQ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54920 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756424Ab0DODa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Apr 2010 09:00:16 -0400
-Date: Wed, 21 Apr 2010 08:59:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Wiktor Zajas <w.zajas@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k_htc: add the 0cf3:1006 TL-WN422G v2 device
- ID now
-Message-ID: <20100421125911.GB5072@tuxdriver.com>
-References: <43e72e891003281929hfff3821p65a9c42f15d9f6db@mail.gmail.com>
- <c13c21871003281948y40edee0bi36c185b9dfaf4036@mail.gmail.com>
- <43e72e891003282006l266141ehb78a2f4d46db76d6@mail.gmail.com>
- <c13c21871003282118s80d7c8era5585af4a3377bc3@mail.gmail.com>
- <c13c21871003282131x1ebaaee8h74f737c797b71b84@mail.gmail.com>
- <19376.15678.641255.41127@gargle.gargle.HOWL>
- <20100329214009.804ec23f.wzajas@gmail.com>
- <20100329222008.GA2852@tux>
- <20100420154543.GA6472@tuxdriver.com>
- <19406.24076.583237.267376@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <19406.24076.583237.267376@gargle.gargle.HOWL>
+	Wed, 14 Apr 2010 23:30:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH v2 67/97] ath9k_hw: rename eep_AR9287_ops to eep_ar9287_ops
+Date: Wed, 14 Apr 2010 23:30:21 -0400
+Message-Id: <1271302251-9075-68-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 21, 2010 at 07:38:12AM +0530, Sujith wrote:
-> John W. Linville wrote:
-> > Any feedback on this?
-> 
-> This has already been merged.
-> 
-> commit e92119ca88691ac2239916d31c3dcecd10867521
-> Author: Sujith <Sujith.Manoharan@atheros.com>
-> Date:   Thu Apr 1 10:28:24 2010 +0530
-> 
->     ath9k_htc: Add TL-WN422G v2 product ID
-> 
->     Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.c      |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom.h      |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-:-)  OK, thanks!
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index 1a48f43..aec6ebb 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -257,7 +257,7 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah)
+ 	int status;
+ 
+ 	if (AR_SREV_9287(ah)) {
+-		ah->eep_ops = &eep_AR9287_ops;
++		ah->eep_ops = &eep_ar9287_ops;
+ 	} else if (AR_SREV_9285(ah) || AR_SREV_9271(ah)) {
+ 		ah->eep_ops = &eep_4k_ops;
+ 	} else {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index c0cd717..60fd5b6 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -707,6 +707,6 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah);
+ 
+ extern const struct eeprom_ops eep_def_ops;
+ extern const struct eeprom_ops eep_4k_ops;
+-extern const struct eeprom_ops eep_AR9287_ops;
++extern const struct eeprom_ops eep_ar9287_ops;
+ 
+ #endif /* EEPROM_H */
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index e57c5b4..0b1e885 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -1170,7 +1170,7 @@ static u16 ath9k_hw_AR9287_get_spur_channel(struct ath_hw *ah,
+ #undef EEP_MAP9287_SPURCHAN
+ }
+ 
+-const struct eeprom_ops eep_AR9287_ops = {
++const struct eeprom_ops eep_ar9287_ops = {
+ 	.check_eeprom		= ath9k_hw_AR9287_check_eeprom,
+ 	.get_eeprom		= ath9k_hw_AR9287_get_eeprom,
+ 	.fill_eeprom		= ath9k_hw_AR9287_fill_eeprom,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
