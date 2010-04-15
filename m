@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54795 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756832Ab0DODay (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:13743 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949Ab0DORLx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:54 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v2 39/97] ath9k: Use abstraction to get link pointer
-Date: Wed, 14 Apr 2010 23:29:53 -0400
-Message-Id: <1271302251-9075-40-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 15 Apr 2010 13:11:53 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2901303fgg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 10:11:52 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 15 Apr 2010 21:11:52 +0400
+Message-ID: <t2wd01f95791004151011n1a5077a3oca9f7b641b311ac2@mail.gmail.com>
+Subject: compat-wireless doesn't compile against 2.6.32 on Ubuntu beta
+From: Andrey Semyonov <gatekeeper.mail@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+I get this when trying to compile current drivers:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 4f12de9..16f7a3d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1242,7 +1242,7 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 			  txq->axq_qnum, txq->axq_link,
- 			  ito64(bf->bf_daddr), bf->bf_desc);
- 	}
--	txq->axq_link = &(bf->bf_lastbf->bf_desc->ds_link);
-+	ath9k_hw_get_desc_link(ah, bf->bf_lastbf->bf_desc, &txq->axq_link);
- 	ath9k_hw_txstart(ah, txq->axq_qnum);
- }
- 
--- 
-1.6.3.3
+/usr/local/src/compat-wireless-2010-04-14# make
+make -C /lib/modules/2.6.32-19-generic/build
+M=/usr/local/src/compat-wireless-2010-04-14 modules
+make[1]: Вход в каталог `/usr/src/linux-headers-2.6.32-19-generic'
+ CC [M]  /usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.o
+/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.c: In
+function 'ieee80211_alloc_hw':
+/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.c:394:
+error: implicit declaration of function '__hw_addr_init'
+make[3]: *** [/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.o]
+Ошибка 1
+make[2]: *** [/usr/local/src/compat-wireless-2010-04-14/net/mac80211] Ошибка 2
+make[1]: *** [_module_/usr/local/src/compat-wireless-2010-04-14] Ошибка 2
+make[1]: Выход из каталога `/usr/src/linux-headers-2.6.32-19-generic'
+make: *** [modules] Ошибка 2
 
+The driver selected is b43. System is Ubuntu 10.04 beta2 (currently
+available for testing).
+
+I apologize if this is a duplicate, yesterday's attempt to send this
+report haven't cause any mailing list notification nor this report
+appeared in ML archives.
