@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:3073 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754245Ab0DWPZV (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54854 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756901Ab0DODaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 11:25:21 -0400
-Message-ID: <4BD1BBDE.7080607@gmail.com>
-Date: Fri, 23 Apr 2010 17:25:18 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: rt2800: use tx_power2 in rt2800_config_channel_rf3xxx
-References: <201004231554.43474.helmut.schaa@googlemail.com>
-In-Reply-To: <201004231554.43474.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 14 Apr 2010 23:30:55 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 53/97] ath9k_hw: rename getNoiseFloorThresh() to ath9k_hw_loadnf()
+Date: Wed, 14 Apr 2010 23:30:07 -0400
+Message-Id: <1271302251-9075-54-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/23/10 15:54, Helmut Schaa wrote:
-> Get closer to what the ralink driver does by setting the rf register 13
-> to tx_power2 during channel switch.
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-Good catch.
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
-> 
-> Just found that difference between rt2x00 and the ralink driver.
-> However I couldn't see any obvious improvements. So, this change
-> is mostly for completeness.
-> 
->  drivers/net/wireless/rt2x00/rt2800.h    |    5 +++++
->  drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++++
->  2 files changed, 10 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index ec89372..1c59dc6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -1566,6 +1566,11 @@ struct mac_iveiv_entry {
->  #define RFCSR12_TX_POWER		FIELD8(0x1f)
->  
->  /*
-> + * RFCSR 13:
-> + */
-> +#define RFCSR13_TX_POWER		FIELD8(0x1f)
-> +
-> +/*
->   * RFCSR 15:
->   */
->  #define RFCSR15_TX_LO2_EN		FIELD8(0x08)
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index aa02ff6..3ee9882 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -794,6 +794,11 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
->  			  TXPOWER_G_TO_DEV(info->tx_power1));
->  	rt2800_rfcsr_write(rt2x00dev, 12, rfcsr);
->  
-> +	rt2800_rfcsr_read(rt2x00dev, 13, &rfcsr);
-> +	rt2x00_set_field8(&rfcsr, RFCSR13_TX_POWER,
-> +			  TXPOWER_G_TO_DEV(info->tx_power2));
-> +	rt2800_rfcsr_write(rt2x00dev, 13, rfcsr);
-> +
->  	rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
->  	rt2x00_set_field8(&rfcsr, RFCSR23_FREQ_OFFSET, rt2x00dev->freq_offset);
->  	rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 4018074..aa724c2 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -89,9 +89,9 @@ static void ath9k_hw_update_nfcal_hist_buffer(struct ath9k_nfcal_hist *h,
+ 	return;
+ }
+ 
+-static bool getNoiseFloorThresh(struct ath_hw *ah,
+-				enum ieee80211_band band,
+-				int16_t *nft)
++static bool ath9k_hw_get_nf_thresh(struct ath_hw *ah,
++				   enum ieee80211_band band,
++				   int16_t *nft)
+ {
+ 	switch (band) {
+ 	case IEEE80211_BAND_5GHZ:
+@@ -612,7 +612,7 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 	} else {
+ 		ath9k_hw_do_getnf(ah, nfarray);
+ 		nf = nfarray[0];
+-		if (getNoiseFloorThresh(ah, c->band, &nfThresh)
++		if (ath9k_hw_get_nf_thresh(ah, c->band, &nfThresh)
+ 		    && nf > nfThresh) {
+ 			ath_print(common, ATH_DBG_CALIBRATE,
+ 				  "noise floor failed detected; "
+-- 
+1.6.3.3
 
