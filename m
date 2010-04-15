@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:57349 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987Ab0DEKQF (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55002 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757032Ab0DODa5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Apr 2010 06:16:05 -0400
-Received: from smtp08.web.de (fmsmtp08.dlan.cinetic.de [172.20.5.216])
-	by fmmailgate03.web.de (Postfix) with ESMTP id E4A3014B9610D
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Apr 2010 12:16:01 +0200 (CEST)
-Received: from [84.56.181.66] (helo=pinguin.localnet)
-	by smtp08.web.de with asmtp (TLSv1:AES256-SHA:256)
-	(WEB.DE 4.110 #4)
-	id 1NyjLd-0000F6-00
-	for linux-wireless@vger.kernel.org; Mon, 05 Apr 2010 12:16:01 +0200
-From: Jens Westemeier <Jens_Westemeier@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: prism54 -> p54pci transition not working
-Date: Mon, 5 Apr 2010 12:16:01 +0200
-References: <4B6F15D1.3050307@iperbole.bo.it> <201002082004.20641.Jens_Westemeier@web.de>
-In-Reply-To: <201002082004.20641.Jens_Westemeier@web.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201004051216.01359.Jens_Westemeier@web.de>
+	Wed, 14 Apr 2010 23:30:57 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 85/97] ath9k_hw: enable CRC check of descriptors for AR9003
+Date: Wed, 14 Apr 2010 23:30:39 -0400
+Message-Id: <1271302251-9075-86-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Enable CRC check on the descriptor fetched from host on AR9003
+upon reseting the TX queue.
 
-I have a SMC 2802 card, working with Win XP and prism54, now I want to go to 
-the p54pci driver.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/mac.c |    3 +++
+ drivers/net/wireless/ath/ath9k/reg.h |    4 ++++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-lspci gives:
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 22fa512..c623e73 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -1014,6 +1014,9 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
+ 			  AR_D_MISC_POST_FR_BKOFF_DIS);
+ 	}
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		REG_WRITE(ah, AR_Q_DESC_CRCCHK, AR_Q_DESC_CRCCHK_EN);
++
+ 	if (qi->tqi_qflags & TXQ_FLAG_TXOKINT_ENABLE)
+ 		ah->txok_interrupt_mask |= 1 << q;
+ 	else
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index ff89140..d4371a4 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -478,6 +478,10 @@
+ #define AR_Q_RDYTIMESHDN    0x0a40
+ #define AR_Q_RDYTIMESHDN_M  0x000003FF
+ 
++/* MAC Descriptor CRC check */
++#define AR_Q_DESC_CRCCHK    0xa44
++/* Enable CRC check on the descriptor fetched from host */
++#define AR_Q_DESC_CRCCHK_EN 1
+ 
+ #define AR_NUM_DCU      10
+ #define AR_DCU_0        0x0001
+-- 
+1.6.3.3
 
-Network controller: Intersil Corporation ISL3890 [Prism GT/Prism 
-Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
-
-modprobe p54pci gives in /var/log/messages:
-
-p54pci 0000:05:01.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-p54pci 0000:05:01.0: firmware: requesting isl3886pci
-phy2: p54 detected a LM86 firmware
-p54: rx_mtu reduced from 3240 to 2376
-phy2: FW rev 2.17.2.0 - Softmac protocol 7.6
-phy2: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-phy2: device does not respond!
-p54pci 0000:05:01.0: PCI INT A disabled
-p54pci: probe of 0000:05:01.0 failed with error -16
-
-I have a 2.6.31.12-0.2-desktop 64 bit kernel from OpenSUSE 11.2 and tried with 
-all flavours of fw.
-
-In the notes I have found, that old SMC 2802 cards (without eeprom) are not 
-supported. How can I check that I have such a card? Will this card been 
-supported (soon)?
-
-Greetings, Jens.
