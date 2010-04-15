@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:4914 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751065Ab0DKMbZ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60953 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757273Ab0DOVjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 08:31:25 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 0/9] rt2x00: Align with vendor driver and add support for rt3070/rt3071/rt3090/rt3390.
-Date: Sun, 11 Apr 2010 14:31:06 +0200
-Message-Id: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+	Thu, 15 Apr 2010 17:39:43 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 16/97] ath9k_hw: add the AR9003 ar9003_hw_macversion_supported()
+Date: Thu, 15 Apr 2010 17:38:21 -0400
+Message-Id: <1271367582-992-17-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series aligns rt2x00 with the latest versions of the Ralink 
-rt2860 / rt2870 / rt3070 / rt3090 drivers, and adds support for RT3070,
-RT3071, RT3090, and RT3390 based devices.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-The patches are relative to wireless-next-2.6, and can also be pulled
-from:
-
-	git://git.gwingerde.nl/rt2x00-next-2.6
-
-v2: Handle comments received from Ivo, Julian and Felix.
-
-Gertjan van Wingerde (9):
-  rt2x00: Let RF chipset decide the RF channel switch method to use in rt2800.
-  rt2x00: Update rt2800 register definitions towards latest definitions.
-  rt2x00: Align RT chipset definitions with vendor driver.
-  rt2x00: Refactor rt2800 version constants.
-  rt2x00: Align rt2800 register initialization with vendor driver.
-  rt2x00: Finish rt3070 support in rt2800 register initialization.
-  rt2x00: Add rt3071 support in rt2800 register initialization.
-  rt2x00: Add rt3090 support in rt2800 register initialization.
-  rt2x00: Add rt3390 support in rt2800 register initialization.
-
- drivers/net/wireless/rt2x00/rt2800.h    |  108 +++++++-
- drivers/net/wireless/rt2x00/rt2800lib.c |  464 ++++++++++++++++++++++---------
- drivers/net/wireless/rt2x00/rt2800pci.c |   13 -
- drivers/net/wireless/rt2x00/rt2x00.h    |   29 ++-
- 4 files changed, 458 insertions(+), 156 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 7127166..0e78e35 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -574,6 +574,17 @@ static bool ar9002_hw_macversion_supported(u32 macversion)
+ 	return false;
+ }
+ 
++static bool ar9003_hw_macversion_supported(u32 macversion)
++{
++	switch (macversion) {
++	case AR_SREV_VERSION_9300:
++		return true;
++	default:
++		break;
++	}
++	return false;
++}
++
+ static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
+ {
+ 	if (AR_SREV_9160_10_OR_LATER(ah)) {
+@@ -3543,5 +3554,9 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
+ /* Sets up the AR9003 hardware familiy callbacks */
+ static void ar9003_hw_attach_ops(struct ath_hw *ah)
+ {
++	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++
++	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
++
+ 	ar9003_hw_attach_phy_ops(ah);
+ }
+-- 
+1.6.3.3
 
