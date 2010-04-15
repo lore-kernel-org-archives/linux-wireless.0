@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:22954 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712Ab0DLJuE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56138 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756317Ab0DOUPL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 05:50:04 -0400
-Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout
- configuration
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ylalehto Janne (Nokia-D/Tampere)" <janne.ylalehto@nokia.com>
-In-Reply-To: <1271063175.3877.13.camel@jlt3.sipsolutions.net>
-References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271061120.3877.6.camel@jlt3.sipsolutions.net>
-	 <1271062589.10120.1169.camel@wimaxnb.nmp.nokia.com>
-	 <1271063175.3877.13.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Apr 2010 12:45:35 +0300
-Message-ID: <1271065535.10120.1191.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 15 Apr 2010 16:15:11 -0400
+Date: Thu, 15 Apr 2010 16:03:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2010-04-15
+Message-ID: <20100415200331.GD3020@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-12 at 11:06 +0200, ext Johannes Berg wrote:
-> On Mon, 2010-04-12 at 11:56 +0300, Juuso Oikarinen wrote:
-> 
-> > We could obviously do that. This patch does not prevent adding
-> > functionality ;)
-> 
-> Well yeah but why let userspace make arbitrary decisions? :)
->
-> > For desktops, obviously reduced latency is desirable, while increased
-> > power consumption is not so much of an issue. For hand-held devices the
-> > situation is often the opposite: in many situations we might want to
-> > sacrifice some latency just to stretch the battery life that last inch
-> > longer, possibly depending on the type of traffic we know we have going
-> > on.
-> 
-> I don't think this contradicts each other. And we can also factor in the
-> network_latency pm_qos value. Keep in mind that the gain from the
-> timeout goes down as it increases past the beacon interval.
+Dave,
 
-You're right obviously. But what we're looking for here are timeout
-values less than the beacon/DTIM interval.
+Another fix intended for 2.6.34...without it some firmware wierdness can
+induce the driver into hanging the box... :-(
 
-There are triggers for reducing the timeout, other than those mentioned
-by you above. A hand-held might for example attempt to save power based
-on the amount of user activity on the device in general. That's
-something only user space would know about, but still is a very
-important factor in deciding the dynamic ps timeout value.
+Please let me know if there are problems!
 
-Also AFAIK currently in nl80211 there is no way go to "full power-save"
-i.e. disable dynamic power-save, which is something user-space might
-want to do to conserve power if the hand-held is not being used.
+Thanks,
 
-Are you more hesitant on the concept of configuring the dynamic ps
-behavior from user-space or the granularity of control here? In the
-nl80211 interface the literal timeout value could be replaced by
-something to indicate the level of power-saving needed, for example.
+John
 
-> In some sense I think it would be smarter to implement a gradual
-> powersave policy where the device first still wakes up for every beacon
-> and only later goes down to waking up for DTIM only (which may or may
-> not be the same ...)
+---
 
-Yes, this is a good idea, although I still feel it does not alleviate
-the need for what I tried to explain above.
+The following changes since commit 4eaa0e3c869acd5dbc7c2e3818a9ae9cbf221d27:
+  Eric Dumazet (1):
+        fib: suppress lockdep-RCU false positive in FIB trie.
 
--Juuso
+are available in the git repository at:
 
-> johannes
-> 
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
 
+Johannes Berg (1):
+      iwlwifi: work around bogus active chains detection
 
+ drivers/net/wireless/iwlwifi/iwl-calib.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
+index 845831a..64de42b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-calib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
+@@ -807,6 +807,18 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv,
+ 		}
+ 	}
+ 
++	/*
++	 * The above algorithm sometimes fails when the ucode
++	 * reports 0 for all chains. It's not clear why that
++	 * happens to start with, but it is then causing trouble
++	 * because this can make us enable more chains than the
++	 * hardware really has.
++	 *
++	 * To be safe, simply mask out any chains that we know
++	 * are not on the device.
++	 */
++	active_chains &= priv->hw_params.valid_rx_ant;
++
+ 	num_tx_chains = 0;
+ 	for (i = 0; i < NUM_RX_CHAINS; i++) {
+ 		/* loops on all the bits of
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
