@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46859 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:32805 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933251Ab0DHT1p (ORCPT
+	with ESMTP id S1757311Ab0DOVjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:45 -0400
+	Thu, 15 Apr 2010 17:39:44 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 047/102] ath9k_hw: add a helper for the OLC tem compensation for AR9002
-Date: Thu,  8 Apr 2010 15:26:43 -0400
-Message-Id: <1270754858-26266-48-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 40/97] ath9k: Use memcpy in ath_clone_txbuf()
+Date: Thu, 15 Apr 2010 17:38:45 -0400
+Message-Id: <1271367582-992-41-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Open Loop Control temperature compensation changes between our
-hardware so use a helper for it.
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/calib.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 26bc381..156ae34 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -964,6 +964,12 @@ static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 	}
- }
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 16f7a3d..4bc52f4 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -279,7 +279,7 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
+ 	tbf->aphy = bf->aphy;
+ 	tbf->bf_mpdu = bf->bf_mpdu;
+ 	tbf->bf_buf_addr = bf->bf_buf_addr;
+-	*(tbf->bf_desc) = *(bf->bf_desc);
++	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
+ 	tbf->bf_state = bf->bf_state;
+ 	tbf->bf_dmacontext = bf->bf_dmacontext;
  
-+static void ar9002_hw_olc_temp_compensation(struct ath_hw *ah)
-+{
-+	if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
-+		ath9k_olc_temp_compensation(ah);
-+}
-+
- bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 			u8 rxchainmask, bool longcal)
- {
-@@ -989,9 +995,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (longcal) {
- 		/* Do periodic PAOffset Cal */
- 		ar9002_hw_pa_cal(ah, false);
--
--		if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
--			ath9k_olc_temp_compensation(ah);
-+		ar9002_hw_olc_temp_compensation(ah);
- 
- 		/* Get the value from the previous NF cal and update history buffer */
- 		ath9k_hw_getnf(ah, chan);
 -- 
 1.6.3.3
 
