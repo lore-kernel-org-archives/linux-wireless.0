@@ -1,98 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47125 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485Ab0DFJWq (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:32826 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757317Ab0DOVjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 05:22:46 -0400
-Message-Id: <20100406092141.761810465@sipsolutions.net>
-Date: Tue, 06 Apr 2010 11:18:46 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/7] mac80211: rename WLAN_STA_SUSPEND to WLAN_STA_BLOCK_BA
-References: <20100406091841.549805267@sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 15 Apr 2010 17:39:44 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 46/97] ath9k_hw: add a helper for Power Amplifier calibration for AR9002
+Date: Thu, 15 Apr 2010 17:38:51 -0400
+Message-Id: <1271367582-992-47-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I want to use it during station destruction as well
-so rename it to WLAN_STA_BLOCK_BA which is also the
-only use of it now.
+The code can be simplified and shared between two locations if we bring
+this into a helper. During reset we do not account for the skip count.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/agg-rx.c   |    2 +-
- net/mac80211/agg-tx.c   |    2 +-
- net/mac80211/pm.c       |    2 +-
- net/mac80211/sta_info.h |    6 +++---
- net/mac80211/util.c     |    2 +-
- 5 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/calib.c |   32 +++++++++++++++++---------------
+ 1 files changed, 17 insertions(+), 15 deletions(-)
 
---- wireless-testing.orig/net/mac80211/agg-rx.c	2010-04-05 19:24:17.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-rx.c	2010-04-05 19:24:50.000000000 +0200
-@@ -173,7 +173,7 @@ void ieee80211_process_addba_request(str
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index eed2c76..26bc381 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -949,6 +949,21 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
  
- 	status = WLAN_STATUS_REQUEST_DECLINED;
+ }
  
--	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
-+	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA)) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "Suspend in progress. "
- 		       "Denying ADDBA request\n");
---- wireless-testing.orig/net/mac80211/agg-tx.c	2010-04-05 19:24:17.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-tx.c	2010-04-05 19:24:50.000000000 +0200
-@@ -245,7 +245,7 @@ int ieee80211_start_tx_ba_session(struct
- 		return -EINVAL;
++static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
++{
++	if (AR_SREV_9271(ah)) {
++		if (is_reset || !ah->pacal_info.skipcount)
++			ath9k_hw_9271_pa_cal(ah, is_reset);
++		else
++			ah->pacal_info.skipcount--;
++	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
++		if (is_reset || !ah->pacal_info.skipcount)
++			ath9k_hw_9285_pa_cal(ah, is_reset);
++		else
++			ah->pacal_info.skipcount--;
++	}
++}
++
+ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			u8 rxchainmask, bool longcal)
+ {
+@@ -973,17 +988,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	/* Do NF cal only at longer intervals */
+ 	if (longcal) {
+ 		/* Do periodic PAOffset Cal */
+-		if (AR_SREV_9271(ah)) {
+-			if (!ah->pacal_info.skipcount)
+-				ath9k_hw_9271_pa_cal(ah, false);
+-			else
+-				ah->pacal_info.skipcount--;
+-		} else if (AR_SREV_9285_11_OR_LATER(ah)) {
+-			if (!ah->pacal_info.skipcount)
+-				ath9k_hw_9285_pa_cal(ah, false);
+-			else
+-				ah->pacal_info.skipcount--;
+-		}
++		ar9002_hw_pa_cal(ah, false);
+ 
+ 		if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
+ 			ath9k_olc_temp_compensation(ah);
+@@ -1142,10 +1147,7 @@ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
  	}
  
--	if (test_sta_flags(sta, WLAN_STA_SUSPEND)) {
-+	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA)) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "Suspend in progress. "
- 		       "Denying BA session request\n");
---- wireless-testing.orig/net/mac80211/pm.c	2010-04-05 19:24:17.000000000 +0200
-+++ wireless-testing/net/mac80211/pm.c	2010-04-05 19:24:50.000000000 +0200
-@@ -46,7 +46,7 @@ int __ieee80211_suspend(struct ieee80211
+ 	/* Do PA Calibration */
+-	if (AR_SREV_9271(ah))
+-		ath9k_hw_9271_pa_cal(ah, true);
+-	else if (AR_SREV_9285_11_OR_LATER(ah))
+-		ath9k_hw_9285_pa_cal(ah, true);
++	ar9002_hw_pa_cal(ah, true);
  
- 	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
- 		list_for_each_entry_rcu(sta, &local->sta_list, list) {
--			set_sta_flags(sta, WLAN_STA_SUSPEND);
-+			set_sta_flags(sta, WLAN_STA_BLOCK_BA);
- 			ieee80211_sta_tear_down_BA_sessions(sta);
- 		}
- 	}
---- wireless-testing.orig/net/mac80211/sta_info.h	2010-04-05 19:24:17.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2010-04-05 19:25:19.000000000 +0200
-@@ -35,8 +35,8 @@
-  *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
-  *	frame to this station is transmitted.
-  * @WLAN_STA_MFP: Management frame protection is used with this STA.
-- * @WLAN_STA_SUSPEND: Set/cleared during a suspend/resume cycle.
-- *	Used to deny ADDBA requests (both TX and RX).
-+ * @WLAN_STA_BLOCK_BA: Used to deny ADDBA requests (both TX and RX)
-+ *	during suspend/resume.
-  * @WLAN_STA_PS_DRIVER: driver requires keeping this station in
-  *	power-save mode logically to flush frames that might still
-  *	be in the queues
-@@ -57,7 +57,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_WDS		= 1<<7,
- 	WLAN_STA_CLEAR_PS_FILT	= 1<<9,
- 	WLAN_STA_MFP		= 1<<10,
--	WLAN_STA_SUSPEND	= 1<<11,
-+	WLAN_STA_BLOCK_BA	= 1<<11,
- 	WLAN_STA_PS_DRIVER	= 1<<12,
- 	WLAN_STA_PSPOLL		= 1<<13,
- 	WLAN_STA_DISASSOC       = 1<<14,
---- wireless-testing.orig/net/mac80211/util.c	2010-04-05 19:24:17.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2010-04-05 19:24:50.000000000 +0200
-@@ -1140,7 +1140,7 @@ int ieee80211_reconfig(struct ieee80211_
- 
- 	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
- 		list_for_each_entry_rcu(sta, &local->sta_list, list) {
--			clear_sta_flags(sta, WLAN_STA_SUSPEND);
-+			clear_sta_flags(sta, WLAN_STA_BLOCK_BA);
- 		}
- 	}
- 
-
+ 	/* Do NF Calibration after DC offset and other calibrations */
+ 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+-- 
+1.6.3.3
 
