@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:39718 "EHLO purkki.valot.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750917Ab0DMLAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 07:00:04 -0400
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: ext Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ylalehto Janne \(Nokia-D\/Tampere\)" <janne.ylalehto@nokia.com>
-Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout configuration
-References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
-	<1271061120.3877.6.camel@jlt3.sipsolutions.net>
-	<1271062589.10120.1169.camel@wimaxnb.nmp.nokia.com>
-	<1271063175.3877.13.camel@jlt3.sipsolutions.net>
-	<1271065535.10120.1191.camel@wimaxnb.nmp.nokia.com>
-	<871vekpexo.fsf@purkki.valot.fi>
-	<1271143746.10120.1232.camel@wimaxnb.nmp.nokia.com>
-	<87wrwboirr.fsf@purkki.valot.fi>
-	<1271148573.10120.1257.camel@wimaxnb.nmp.nokia.com>
-	<87sk6zoh4x.fsf@purkki.valot.fi>
-	<1271149802.10120.1262.camel@wimaxnb.nmp.nokia.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 13 Apr 2010 14:00:01 +0300
-In-Reply-To: <1271149802.10120.1262.camel@wimaxnb.nmp.nokia.com> (Juuso Oikarinen's message of "Tue\, 13 Apr 2010 12\:10\:02 +0300")
-Message-ID: <87ochnobwu.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from bombadil.infradead.org ([18.85.46.34]:33047 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757452Ab0DOVjr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 17:39:47 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 95/97] ath9k: Enable TXOK and TXERR interrupts for TX EDMA
+Date: Thu, 15 Apr 2010 17:39:40 -0400
+Message-Id: <1271367582-992-96-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
->> AFAIK the pm_qos values are not set in stone in any. Applications just
->> request something and kernel can do whatever it wants, even ignore it.
->> So I don't see any harm if we change how mac80211 uses pm_qos values.
->> And most probably this will change many times in the future.
->
-> Ok, you convinced me. I will send a RFC patch with the above, and will
-> sub-sequentially be flamed to death ;)
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-Nah, you are so used to flaming already that you don't feel a thing :)
-
-> Be sure to look into that bug in wl1251 at some point, so I don't break
-> it with this, if by chance I get this to go through ;)
-
-I will.
-
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 90e629f..cac178a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -886,11 +886,16 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
+ 	 * The UAPSD queue is an exception, since we take a desc-
+ 	 * based intr on the EOSP frames.
+ 	 */
+-	if (qtype == ATH9K_TX_QUEUE_UAPSD)
+-		qi.tqi_qflags = TXQ_FLAG_TXDESCINT_ENABLE;
+-	else
+-		qi.tqi_qflags = TXQ_FLAG_TXEOLINT_ENABLE |
+-			TXQ_FLAG_TXDESCINT_ENABLE;
++	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
++		qi.tqi_qflags = TXQ_FLAG_TXOKINT_ENABLE |
++				TXQ_FLAG_TXERRINT_ENABLE;
++	} else {
++		if (qtype == ATH9K_TX_QUEUE_UAPSD)
++			qi.tqi_qflags = TXQ_FLAG_TXDESCINT_ENABLE;
++		else
++			qi.tqi_qflags = TXQ_FLAG_TXEOLINT_ENABLE |
++					TXQ_FLAG_TXDESCINT_ENABLE;
++	}
+ 	qnum = ath9k_hw_setuptxqueue(ah, qtype, &qi);
+ 	if (qnum == -1) {
+ 		/*
 -- 
-Kalle Valo
+1.6.3.3
+
