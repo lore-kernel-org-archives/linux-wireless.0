@@ -1,56 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44515 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525Ab0DLIk5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 04:40:57 -0400
-Subject: Re: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to
- band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <201004121734.39700.br1@einfach.org>
-References: <20100412073658.28078.32155.stgit@tt-desk>
-	 <201004121658.09189.br1@einfach.org>
-	 <1271059801.3877.5.camel@jlt3.sipsolutions.net>
-	 <201004121734.39700.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Apr 2010 10:40:52 +0200
-Message-ID: <1271061652.3877.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:14766 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754033Ab0DOFbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Apr 2010 01:31:10 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 22:31:10 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19398.42092.122406.965291@gargle.gargle.HOWL>
+Date: Thu, 15 Apr 2010 11:00:20 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/6] ath9k_htc: Cleanup beacon configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-12 at 17:34 +0900, Bruno Randolf wrote:
+This patch cleans up beacon configuration,
+removing a redundant interface type check
+and updating beacon interval in the correct place.
 
-> > No, you don't understand. It will break _talking to_ 11b only stations
-> > when the local station is 11g capable.
-> 
-> i understood that this is what you mean. note that i said *without* the other 
-> patch! the first patch breaks talking to 11b only stations, true. the second 
-> doesn't because:
-> 
-> as it is now ieee80211_mandatory_rates(local, sband->band) returns 1 (1Mbps) 
-> in a 2GHz channel. which is o.k. for B only stations.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   23 +++++++++--------------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    2 +-
+ 2 files changed, 10 insertions(+), 15 deletions(-)
 
-Oh ok, right.
-
-> before we unconditionally used 3 (1Mbps, 2 Mbps) as basic rates. this clearly 
-> is wrong in the 5GHz band.
-
-No, it's fine. Look again at how this works.
-
-> > > anyhow, i wouldn't mind adding something to configure this from
-> > > userspace. can you point me to the right direction? i mean i can add
-> > > something to IBSS setup but as i said i can't believe this is only
-> > > relevant to IBSS mode.
-> > 
-> > What other modes do you think it is relevant to?
-> 
-> i'm not so familiar with the way STA and AP operate, but i thought that also 
-> there the distiction between B, B/G and pure-G could make sense.
-
-Not unless you want your 11g+ STA to operate in 11b-only mode.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 5e21f4d..d104028 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -244,25 +244,20 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	enum nl80211_iftype iftype;
+ 	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 
+-	if (vif) {
+-		struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+-		iftype = vif->type;
+-		cur_conf->beacon_interval = bss_conf->beacon_int;
+-		cur_conf->dtim_period = bss_conf->dtim_period;
+-		cur_conf->listen_interval = 1;
+-		cur_conf->dtim_count = 1;
+-		cur_conf->bmiss_timeout =
+-			ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
+-	} else
+-		iftype = priv->ah->opmode;
+-
++	cur_conf->beacon_interval = bss_conf->beacon_int;
+ 	if (cur_conf->beacon_interval == 0)
+ 		cur_conf->beacon_interval = 100;
+ 
+-	switch (iftype) {
++	cur_conf->dtim_period = bss_conf->dtim_period;
++	cur_conf->listen_interval = 1;
++	cur_conf->dtim_count = 1;
++	cur_conf->bmiss_timeout =
++		ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
++
++	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		ath9k_htc_beacon_config_sta(priv, cur_conf);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index eb7722b..08a4a58 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1687,7 +1687,7 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 	priv->op_flags |= OP_FULL_RESET;
+ 	if (priv->op_flags & OP_ASSOCIATED)
+-		ath9k_htc_beacon_config(priv, NULL);
++		ath9k_htc_beacon_config(priv, priv->vif);
+ 	ath_start_ani(priv);
+ 	mutex_unlock(&priv->mutex);
+ 	ath9k_htc_ps_restore(priv);
+-- 
+1.7.0.4
 
