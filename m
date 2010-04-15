@@ -1,115 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:64804 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753592Ab0DLWW4 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54971 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756992Ab0DODa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 18:22:56 -0400
-Received: by bwz19 with SMTP id 19so387bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 15:22:52 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH] wl1251: register platform_device to pass board data
-Date: Tue, 13 Apr 2010 01:21:58 +0300
-Message-Id: <1271110918-18599-1-git-send-email-notasas@gmail.com>
+	Wed, 14 Apr 2010 23:30:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 78/97] ath9k_hw: skip asynch fifo enablement to AR9003
+Date: Wed, 14 Apr 2010 23:30:32 -0400
+Message-Id: <1271302251-9075-79-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wl1251 is embedded chip that can be connected using SDIO bus, and is not
-an actual SDIO card. For this reason there is a need to pass some board
-specific data, like 'EEPROM is attached' flag or power control callback.
-However there is no way to pass this data through SDIO subsystem, so
-this patch registers dummy platform_device to allow that.
+The asynch fifo code is specific to >= AR9287 so stuff it
+into the AR9002 hardware family code and skip it for AR9003
+cards.
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/wl12xx/wl1251_sdio.c |   37 +++++++++++++++++++++++++++++
- 1 files changed, 37 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |   29 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c        |   19 ++---------------
+ drivers/net/wireless/ath/ath9k/hw.h        |    1 +
+ 3 files changed, 33 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-index 2051ef0..b05ecc0 100644
---- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -23,6 +23,8 @@
- #include <linux/mod_devicetable.h>
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
-+#include <linux/platform_device.h>
-+#include <linux/spi/wl12xx.h>
- 
- #include "wl1251.h"
- 
-@@ -34,6 +36,8 @@
- #define SDIO_DEVICE_ID_TI_WL1251	0x9066
- #endif
- 
-+struct wl12xx_platform_data *wl12xx_board_data;
-+
- static struct sdio_func *wl_to_func(struct wl1251 *wl)
- {
- 	return wl->if_priv;
-@@ -144,6 +148,29 @@ static const struct wl1251_if_operations wl1251_sdio_ops = {
- 	.disable_irq = wl1251_sdio_disable_irq,
- };
- 
-+static int wl1251_platform_probe(struct platform_device *pdev)
-+{
-+	if (pdev->id != -1) {
-+		wl1251_error("can only handle single device");
-+		return -ENODEV;
-+	}
-+
-+	wl12xx_board_data = pdev->dev.platform_data;
-+	return 0;
-+}
-+
-+/*
-+ * Dummy platform_driver for passing platform_data to this driver,
-+ * used because SDIO subsystem doesn't provide a way to do this.
-+ */
-+static struct platform_driver wl1251_platform_driver = {
-+	.driver = {
-+		.name	= "wl1251_data",
-+		.owner	= THIS_MODULE,
-+	},
-+	.probe	= wl1251_platform_probe,
-+};
-+
- static int wl1251_sdio_probe(struct sdio_func *func,
- 			     const struct sdio_device_id *id)
- {
-@@ -169,6 +196,11 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	wl->if_ops = &wl1251_sdio_ops;
- 	wl->set_power = wl1251_sdio_set_power;
- 
-+	if (wl12xx_board_data != NULL) {
-+		wl->set_power = wl12xx_board_data->set_power;
-+		wl->use_eeprom = wl12xx_board_data->use_eeprom;
-+	}
-+
- 	sdio_release_host(func);
- 	ret = wl1251_init_ieee80211(wl);
- 	if (ret)
-@@ -208,6 +240,10 @@ static int __init wl1251_sdio_init(void)
- {
- 	int err;
- 
-+	err = platform_driver_register(&wl1251_platform_driver);
-+	if (err)
-+		wl1251_error("failed to register platform driver: %d", err);
-+
- 	err = sdio_register_driver(&wl1251_sdio_driver);
- 	if (err)
- 		wl1251_error("failed to register sdio driver: %d", err);
-@@ -217,6 +253,7 @@ static int __init wl1251_sdio_init(void)
- static void __exit wl1251_sdio_exit(void)
- {
- 	sdio_unregister_driver(&wl1251_sdio_driver);
-+	platform_driver_unregister(&wl1251_platform_driver);
- 	wl1251_notice("unloaded");
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 5b21e69..cf36f64 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -526,6 +526,35 @@ int ar9002_hw_rf_claim(struct ath_hw *ah)
+ 	return 0;
  }
  
++/*
++ * Enable ASYNC FIFO
++ *
++ * If Async FIFO is enabled, the following counters change as MAC now runs
++ * at 117 Mhz instead of 88/44MHz when async FIFO is disabled.
++ *
++ * The values below tested for ht40 2 chain.
++ * Overwrite the delay/timeouts initialized in process ini.
++ */
++void ar9002_hw_enable_async_fifo(struct ath_hw *ah)
++{
++	if (AR_SREV_9287_12_OR_LATER(ah)) {
++		REG_WRITE(ah, AR_D_GBL_IFS_SIFS,
++			  AR_D_GBL_IFS_SIFS_ASYNC_FIFO_DUR);
++		REG_WRITE(ah, AR_D_GBL_IFS_SLOT,
++			  AR_D_GBL_IFS_SLOT_ASYNC_FIFO_DUR);
++		REG_WRITE(ah, AR_D_GBL_IFS_EIFS,
++			  AR_D_GBL_IFS_EIFS_ASYNC_FIFO_DUR);
++
++		REG_WRITE(ah, AR_TIME_OUT, AR_TIME_OUT_ACK_CTS_ASYNC_FIFO_DUR);
++		REG_WRITE(ah, AR_USEC, AR_USEC_ASYNC_FIFO_DUR);
++
++		REG_SET_BIT(ah, AR_MAC_PCU_LOGIC_ANALYZER,
++			    AR_MAC_PCU_LOGIC_ANALYZER_DISBUG20768);
++		REG_RMW_FIELD(ah, AR_AHB_MODE, AR_AHB_CUSTOM_BURST_EN,
++			      AR_AHB_CUSTOM_BURST_ASYNC_FIFO_VAL);
++	}
++}
++
+ /* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
+ void ar9002_hw_attach_ops(struct ath_hw *ah)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 953911d..ab223c6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1266,22 +1266,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	ath9k_hw_init_global_settings(ah);
+ 
+-	if (AR_SREV_9287_12_OR_LATER(ah)) {
+-		REG_WRITE(ah, AR_D_GBL_IFS_SIFS,
+-			  AR_D_GBL_IFS_SIFS_ASYNC_FIFO_DUR);
+-		REG_WRITE(ah, AR_D_GBL_IFS_SLOT,
+-			  AR_D_GBL_IFS_SLOT_ASYNC_FIFO_DUR);
+-		REG_WRITE(ah, AR_D_GBL_IFS_EIFS,
+-			  AR_D_GBL_IFS_EIFS_ASYNC_FIFO_DUR);
+-
+-		REG_WRITE(ah, AR_TIME_OUT, AR_TIME_OUT_ACK_CTS_ASYNC_FIFO_DUR);
+-		REG_WRITE(ah, AR_USEC, AR_USEC_ASYNC_FIFO_DUR);
++	if (!AR_SREV_9300_20_OR_LATER(ah))
++		ar9002_hw_enable_async_fifo(ah);
+ 
+-		REG_SET_BIT(ah, AR_MAC_PCU_LOGIC_ANALYZER,
+-			    AR_MAC_PCU_LOGIC_ANALYZER_DISBUG20768);
+-		REG_RMW_FIELD(ah, AR_AHB_MODE, AR_AHB_CUSTOM_BURST_EN,
+-			      AR_AHB_CUSTOM_BURST_ASYNC_FIFO_VAL);
+-	}
+ 	if (AR_SREV_9287_12_OR_LATER(ah)) {
+ 		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
+ 				AR_PCU_MISC_MODE2_ENABLE_AGGWEP);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 580de2f..81fb3a7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -844,6 +844,7 @@ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+  */
+ void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
+ int ar9002_hw_rf_claim(struct ath_hw *ah);
++void ar9002_hw_enable_async_fifo(struct ath_hw *ah);
+ 
+ /*
+  * Code specifric to AR9003, we stuff these here to avoid callbacks
 -- 
 1.6.3.3
 
