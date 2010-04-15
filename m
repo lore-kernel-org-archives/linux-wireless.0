@@ -1,46 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:48136 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754109Ab0DVQeG convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60993 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757296Ab0DOVjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 12:34:06 -0400
-Received: by pvh1 with SMTP id 1so534784pvh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 09:34:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1271944442-9214-1-git-send-email-notasas@gmail.com>
-References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 22 Apr 2010 09:33:40 -0700
-Message-ID: <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
-Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 15 Apr 2010 17:39:43 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 30/97] ath9k_hw: Implement spur mitigation on AR9003
+Date: Thu, 15 Apr 2010 17:38:35 -0400
+Message-Id: <1271367582-992-31-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 22, 2010 at 6:54 AM, Grazvydas Ignotas <notasas@gmail.com> wrote:
-> Missing uevent_suppress is causing two uevents instead of one, which is
-> confusing udev and sometimes causing firmware load to fail due to race
-> condition, so let's add it.
->
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
-> ---
->  compat/compat_firmware_class.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
->
-> diff --git a/compat/compat_firmware_class.c b/compat/compat_firmware_class.c
-> index ce937a3..54ee8b9 100644
-> --- a/compat/compat_firmware_class.c
-> +++ b/compat/compat_firmware_class.c
-> @@ -432,6 +432,8 @@ static int fw_register_device(struct device **dev_p, const char *fw_name,
->        dev_set_drvdata(f_dev, fw_priv);
->  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
->        dev_set_uevent_suppress(f_dev, 1);
-> +#else
-> +       f_dev->uevent_suppress = 1;
->  #endif
+From: Felix Fietkau <nbd@openwrt.org>
 
-How was this compiling for older kernels before then?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   50 ++++++++++++++++++++++++++-
+ 1 files changed, 49 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 9767265..3e3472e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -106,7 +106,55 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+ static void ar9003_hw_spur_mitigate(struct ath_hw *ah,
+ 				    struct ath9k_channel *chan)
+ {
+-	/* TODO */
++	u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
++	int cur_bb_spur, negative = 0, cck_spur_freq;
++	int i;
++
++	/*
++	 * Need to verify range +/- 10 MHz in control channel, otherwise spur
++	 * is out-of-band and can be ignored.
++	 */
++
++	for (i = 0; i < 4; i++) {
++		negative = 0;
++		cur_bb_spur = spur_freq[i] - chan->channel;
++
++		if (cur_bb_spur < 0) {
++			negative = 1;
++			cur_bb_spur = -cur_bb_spur;
++		}
++		if (cur_bb_spur < 10) {
++			cck_spur_freq = (int)((cur_bb_spur << 19) / 11);
++
++			if (negative == 1)
++				cck_spur_freq = -cck_spur_freq;
++
++			cck_spur_freq = cck_spur_freq & 0xfffff;
++
++			REG_RMW_FIELD(ah, AR_PHY_AGC_CONTROL,
++				      AR_PHY_AGC_CONTROL_YCOK_MAX, 0x7);
++			REG_RMW_FIELD(ah, AR_PHY_CCK_SPUR_MIT,
++				      AR_PHY_CCK_SPUR_MIT_SPUR_RSSI_THR, 0x7f);
++			REG_RMW_FIELD(ah, AR_PHY_CCK_SPUR_MIT,
++				      AR_PHY_CCK_SPUR_MIT_SPUR_FILTER_TYPE,
++				      0x2);
++			REG_RMW_FIELD(ah, AR_PHY_CCK_SPUR_MIT,
++				      AR_PHY_CCK_SPUR_MIT_USE_CCK_SPUR_MIT,
++				      0x1);
++			REG_RMW_FIELD(ah, AR_PHY_CCK_SPUR_MIT,
++				      AR_PHY_CCK_SPUR_MIT_CCK_SPUR_FREQ,
++				      cck_spur_freq);
++
++			return;
++		}
++	}
++
++	REG_RMW_FIELD(ah, AR_PHY_AGC_CONTROL,
++		      AR_PHY_AGC_CONTROL_YCOK_MAX, 0x5);
++	REG_RMW_FIELD(ah, AR_PHY_CCK_SPUR_MIT,
++		      AR_PHY_CCK_SPUR_MIT_USE_CCK_SPUR_MIT, 0x0);
++	REG_RMW_FIELD(ah, AR_PHY_CCK_SPUR_MIT,
++		      AR_PHY_CCK_SPUR_MIT_CCK_SPUR_FREQ, 0x0);
+ }
+ 
+ static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
+-- 
+1.6.3.3
+
