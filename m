@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f179.google.com ([209.85.221.179]:62908 "EHLO
-	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796Ab0D1Xda convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:60960 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757276Ab0DOVjn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 19:33:30 -0400
-Received: by qyk9 with SMTP id 9so22083111qyk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 16:33:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1272483466.14103.4.camel@localhost.localdomain>
-References: <i2y446ae9281004271235sf6f04323j2faa28108481d81b@mail.gmail.com>
-	 <1272413690.32717.10.camel@localhost.localdomain>
-	 <1272483466.14103.4.camel@localhost.localdomain>
-Date: Wed, 28 Apr 2010 16:33:28 -0700
-Message-ID: <u2p446ae9281004281633xcbb3ed4peeed0dfce7dd4c81@mail.gmail.com>
-Subject: Re: [PATCH] libertas: fix 8686 firmware loading regression in
-	96021f096e5178582af296a2fbb6df7dbd6b695c
-From: Steve deRosier <steve@cozybit.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Alagu Sankar <alagusankar@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 15 Apr 2010 17:39:43 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH v3 19/97] ath9k_hw: Add hw cap flag for EDMA for the AR9003 family
+Date: Thu, 15 Apr 2010 17:38:24 -0400
+Message-Id: <1271367582-992-20-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan,
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-I tried your patch, it works on the XO-1.5.
+AR9003 supports extended DMA (EDMA), this comes with some
+bells and whistles on top of the legacy DMA that we are used
+to. Mark AR9003 and later chips EDMA capable.
 
-Thank you.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    3 +++
+ drivers/net/wireless/ath/ath9k/hw.h |    1 +
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-- Steve
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e54c76e..2a3ff65 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2874,6 +2874,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		btcoex_hw->scheme = ATH_BTCOEX_CFG_NONE;
+ 	}
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		pCap->hw_caps |= ATH9K_HW_CAP_EDMA;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 3bc3621..d89af6e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -165,6 +165,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_ENHANCEDPM                 = BIT(14),
+ 	ATH9K_HW_CAP_AUTOSLEEP                  = BIT(15),
+ 	ATH9K_HW_CAP_4KB_SPLITTRANS             = BIT(16),
++	ATH9K_HW_CAP_EDMA			= BIT(17),
+ };
+ 
+ enum ath9k_capability_type {
+-- 
+1.6.3.3
 
-On Wed, Apr 28, 2010 at 12:37 PM, Dan Williams <dcbw@redhat.com> wrote:
-> The 'ready' condition was incorrectly evaluated which sometimes lead to
-> failures loading the second-stage firmware on 8686 devices.
->
-> Signed-off-by: Dan Williams <dcbw@redhat.com>
->
-> ---
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> index 13dfeda..64dd345 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -324,7 +324,9 @@ static int if_sdio_wait_status(struct if_sdio_card *card, const u8 condition)
->        timeout = jiffies + HZ;
->        while (1) {
->                status = sdio_readb(card->func, IF_SDIO_STATUS, &ret);
-> -               if (ret || (status & condition))
-> +               if (ret)
-> +                       return ret;
-> +               if ((status & condition) == condition)
->                        break;
->                if (time_after(jiffies, timeout))
->                        return -ETIMEDOUT;
->
->
->
