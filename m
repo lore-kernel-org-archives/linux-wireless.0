@@ -1,80 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47031 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:32838 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933310Ab0DHT1w (ORCPT
+	with ESMTP id S1757322Ab0DOVjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:52 -0400
+	Thu, 15 Apr 2010 17:39:44 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 094/102] ath9k_hw: Compute pointer checksum over the link descriptor
-Date: Thu,  8 Apr 2010 15:27:30 -0400
-Message-Id: <1270754858-26266-95-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 49/97] ath9k_hw: shift code for AR9280 OLC temp comp
+Date: Thu, 15 Apr 2010 17:38:54 -0400
+Message-Id: <1271367582-992-50-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+We're bailing out on the alternative code path so remove the
+else branch.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   32 +++++++++++++++-----------
- 1 files changed, 18 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath9k/calib.c |   35 +++++++++++++++----------------
+ 1 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index b44e2f8..3562503 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -20,9 +20,26 @@ static void ar9003_hw_rx_enable(struct ath_hw *hw)
- 	REG_WRITE(hw, AR_CR, 0);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index e2c427b..5d61169 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -711,25 +711,24 @@ static void ath9k_olc_temp_compensation(struct ath_hw *ah)
+ 		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
+ 		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
  
-+static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
-+{
-+	int checksum;
-+
-+	checksum = ads->info + ads->link
-+		+ ads->data0 + ads->ctl3
-+		+ ads->data1 + ads->ctl5
-+		+ ads->data2 + ads->ctl7
-+		+ ads->data3 + ads->ctl9;
-+
-+	return ((checksum & 0xffff) + (checksum >> 16)) & AR_TxPtrChkSum;
-+}
-+
- static void ar9003_hw_set_desc_link(void *ds, u32 ds_link)
- {
--	((struct ar9003_txc *) ds)->link = ds_link;
-+	struct ar9003_txc *ads = (struct ar9003_txc *) ds;
-+
-+	ads->link = ds_link;
-+	ads->ctl10 &= ~AR_TxPtrChkSum;
-+	ads->ctl10 |= ar9003_calc_ptr_chksum(ads);
- }
- 
- static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
-@@ -167,19 +184,6 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 	return true;
- }
- 
--static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
--{
--	int checksum;
+-		if (ah->initPDADC == 0 || currPDADC == 0) {
++		if (ah->initPDADC == 0 || currPDADC == 0)
+ 			return;
+-		} else {
+-			if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
+-				delta = (currPDADC - ah->initPDADC + 4) / 8;
+-			else
+-				delta = (currPDADC - ah->initPDADC + 5) / 10;
 -
--	checksum = ads->info + ads->link
--		+ ads->data0 + ads->ctl3
--		+ ads->data1 + ads->ctl5
--		+ ads->data2 + ads->ctl7
--		+ ads->data3 + ads->ctl9;
+-			if (delta != ah->PDADCdelta) {
+-				ah->PDADCdelta = delta;
+-				for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
+-					regval = ah->originalGain[i] - delta;
+-					if (regval < 0)
+-						regval = 0;
 -
--	return ((checksum & 0xffff) + (checksum >> 16)) & AR_TxPtrChkSum;
--}
--
- static void ar9003_hw_fill_txdesc(struct ath_hw *ah, void *ds, u32 seglen,
- 				  bool is_firstseg, bool is_lastseg,
- 				  const void *ds0, dma_addr_t buf_addr,
+-					REG_RMW_FIELD(ah,
+-						      AR_PHY_TX_GAIN_TBL1 + i * 4,
+-						      AR_PHY_TX_GAIN, regval);
+-				}
++
++		if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
++			delta = (currPDADC - ah->initPDADC + 4) / 8;
++		else
++			delta = (currPDADC - ah->initPDADC + 5) / 10;
++
++		if (delta != ah->PDADCdelta) {
++			ah->PDADCdelta = delta;
++			for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
++				regval = ah->originalGain[i] - delta;
++				if (regval < 0)
++					regval = 0;
++
++				REG_RMW_FIELD(ah,
++					      AR_PHY_TX_GAIN_TBL1 + i * 4,
++					      AR_PHY_TX_GAIN, regval);
+ 			}
+ 		}
+ 	}
 -- 
 1.6.3.3
 
