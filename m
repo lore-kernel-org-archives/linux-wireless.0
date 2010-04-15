@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f200.google.com ([209.85.221.200]:44868 "EHLO
-	mail-qy0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755075Ab0DCRES convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54852 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756897Ab0DODaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 13:04:18 -0400
-Received: by qyk38 with SMTP id 38so1308334qyk.5
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 10:04:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
-References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
-	 <4BB7660A.3030900@lwfinger.net>
-	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
-	 <4BB773A9.2070703@lwfinger.net>
-	 <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
-Date: Sat, 3 Apr 2010 14:04:17 -0300
-Message-ID: <r2n917a57cb1004031004l392de507x6e655440d2509d0@mail.gmail.com>
-Subject: Re: RTL 8187b - naughty behaviour
-From: Rogerio Luz Coelho <rogluz.news@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 14 Apr 2010 23:30:55 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 52/97] ath9k_hw: rename the PA calib routines to match their families
+Date: Wed, 14 Apr 2010 23:30:06 -0400
+Message-Id: <1271302251-9075-53-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/3 Rogerio Luz Coelho <rogluz.news@gmail.com>:
-> 2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
->> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
->>>
->>> I have a MS-Win7 instalation on this Laptop and it works 100% even at
->>> longer distances than you report,even with walls in between.
->>>
->>> Will do the tcpperf test as soon as I get home. There are other with
->>> the same problem with my exact chip here in Brasil , that is because
->>> one of our leading Laptop vendors uses this config.
->>
->> What is the exact make and model of the device? It might be difficult
->> for me to get one in the US, but one of the rtl8187 developers lives in
->> Brazil. He should be able to find one.
->>
->
-> It´s a POSITIVO R430L - Core 2 Duo 4GB RAM
->
->
->>> Does it matter that the USB port used in this setting is a connected
->>> to a USB HUB and then to the mother board?
->>
->> Is the hub passive, or is it powered? If the hub is good and not
->> underpowered, it should be OK.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-Have no idea ... how do I find this out?
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index b44b305..4018074 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -730,7 +730,7 @@ static void ar9280_hw_olc_temp_compensation(struct ath_hw *ah)
+ 	}
+ }
+ 
+-static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
++static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ {
+ 	u32 regVal;
+ 	unsigned int i;
+@@ -831,7 +831,7 @@ static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
+ 		REG_WRITE(ah, regList[i][0], regList[i][1]);
+ }
+ 
+-static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
++static inline void ar9285_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 regVal;
+@@ -948,12 +948,12 @@ static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ {
+ 	if (AR_SREV_9271(ah)) {
+ 		if (is_reset || !ah->pacal_info.skipcount)
+-			ath9k_hw_9271_pa_cal(ah, is_reset);
++			ar9271_hw_pa_cal(ah, is_reset);
+ 		else
+ 			ah->pacal_info.skipcount--;
+ 	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
+ 		if (is_reset || !ah->pacal_info.skipcount)
+-			ath9k_hw_9285_pa_cal(ah, is_reset);
++			ar9285_hw_pa_cal(ah, is_reset);
+ 		else
+ 			ah->pacal_info.skipcount--;
+ 	}
+-- 
+1.6.3.3
 
-Rogerio
