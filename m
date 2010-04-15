@@ -1,405 +1,280 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46950 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:54904 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933281Ab0DHT1r (ORCPT
+	with ESMTP id S1756946Ab0DODaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:47 -0400
+	Wed, 14 Apr 2010 23:30:55 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 071/102] ath9k_hw: add OFDM spur mitigation for AR9003
-Date: Thu,  8 Apr 2010 15:27:07 -0400
-Message-Id: <1270754858-26266-72-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 64/97] ath9k_hw: abstract loading noisefloor
+Date: Wed, 14 Apr 2010 23:30:18 -0400
+Message-Id: <1271302251-9075-65-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We add this now as OFDM spur mitigation required accessing
-the EEPROM for the AR9003 devices.
+This is the last call on calib.c which acceses PHY stuff,
+with this change we calib.c is now generic between both
+all supported hardware families.
 
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_phy.h |    2 -
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |  209 ++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |   54 +++++++
- drivers/net/wireless/ath/ath9k/hw.h         |    2 +
- drivers/net/wireless/ath/ath9k/phy.h        |    3 +
- 5 files changed, 267 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c   |   67 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    6 ++
+ drivers/net/wireless/ath/ath9k/calib.c        |   67 -------------------------
+ drivers/net/wireless/ath/ath9k/calib.h        |    1 -
+ drivers/net/wireless/ath/ath9k/hw-ops.h       |    6 ++
+ drivers/net/wireless/ath/ath9k/hw.h           |    2 +
+ 6 files changed, 81 insertions(+), 68 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-index 65510ab..07be17a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-@@ -289,8 +289,6 @@
- #define	AR_PHY_TIMING11			        0x99a0
- #define	AR_PHY_TIMING11_SPUR_DELTA_PHASE	0x000FFFFF
- #define	AR_PHY_TIMING11_SPUR_DELTA_PHASE_S	0
--#define	AR_PHY_TIMING11_SPUR_FREQ_SD		0x3FF00000
--#define	AR_PHY_TIMING11_SPUR_FREQ_SD_S		20
- #define AR_PHY_TIMING11_USE_SPUR_IN_AGC		0x40000000
- #define AR_PHY_TIMING11_USE_SPUR_IN_SELFCOR	0x80000000
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index c60f39f..e9b8474 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -103,7 +103,8 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
-  *
-  * Spur mitigation for MRC CCK
-  */
--static void ar9003_hw_spur_mitigate(struct ath_hw *ah, struct ath9k_channel *chan)
-+static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
-+					    struct ath9k_channel *chan)
- {
- 	u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
- 	int cur_bb_spur, negative = 0, cck_spur_freq;
-@@ -153,6 +154,212 @@ static void ar9003_hw_spur_mitigate(struct ath_hw *ah, struct ath9k_channel *cha
- 		      AR_PHY_CCK_SPUR_MIT_CCK_SPUR_FREQ, 0x0);
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index bd3792c..94eb069 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1247,6 +1247,72 @@ static void ar5008_hw_do_getnf(struct ath_hw *ah,
+ 	nfarray[5] = nf;
  }
  
-+/* Clean all spur register fields */
-+static void ar9003_hw_spur_ofdm_clear(struct ath_hw *ah)
++static void ar5008_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
 +{
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+		      AR_PHY_TIMING4_ENABLE_SPUR_FILTER, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+		      AR_PHY_TIMING11_SPUR_FREQ_SD, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+		      AR_PHY_TIMING11_SPUR_DELTA_PHASE, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
-+		      AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+		      AR_PHY_TIMING4_ENABLE_SPUR_RSSI, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+		      AR_PHY_SPUR_REG_EN_VIT_SPUR_RSSI, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+		      AR_PHY_SPUR_REG_ENABLE_NF_RSSI_SPUR_MIT, 0);
++	struct ath9k_nfcal_hist *h;
++	int i, j;
++	int32_t val;
++	const u32 ar5416_cca_regs[6] = {
++		AR_PHY_CCA,
++		AR_PHY_CH1_CCA,
++		AR_PHY_CH2_CCA,
++		AR_PHY_EXT_CCA,
++		AR_PHY_CH1_EXT_CCA,
++		AR_PHY_CH2_EXT_CCA
++	};
++	u8 chainmask, rx_chain_status;
 +
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+		      AR_PHY_SPUR_REG_ENABLE_MASK_PPM, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+		      AR_PHY_TIMING4_ENABLE_PILOT_MASK, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+		      AR_PHY_TIMING4_ENABLE_CHAN_MASK, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
-+		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_A,
-+		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
-+		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
-+		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
-+		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_A,
-+		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A, 0);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+		      AR_PHY_SPUR_REG_MASK_RATE_CNTL, 0);
-+}
-+
-+static void ar9003_hw_spur_ofdm(struct ath_hw *ah,
-+				int freq_offset,
-+				int spur_freq_sd,
-+				int spur_delta_phase,
-+				int spur_subchannel_sd)
-+{
-+	int mask_index = 0;
-+
-+	/* OFDM Spur mitigation */
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+		 AR_PHY_TIMING4_ENABLE_SPUR_FILTER, 0x1);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+		      AR_PHY_TIMING11_SPUR_FREQ_SD, spur_freq_sd);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+		      AR_PHY_TIMING11_SPUR_DELTA_PHASE, spur_delta_phase);
-+	REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
-+		      AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD, spur_subchannel_sd);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC, 0x1);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING11,
-+		      AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR, 0x1);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+		      AR_PHY_TIMING4_ENABLE_SPUR_RSSI, 0x1);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+		      AR_PHY_SPUR_REG_SPUR_RSSI_THRESH, 34);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+		      AR_PHY_SPUR_REG_EN_VIT_SPUR_RSSI, 1);
-+
-+	if (REG_READ_FIELD(ah, AR_PHY_MODE,
-+			   AR_PHY_MODE_DYNAMIC) == 0x1)
-+		REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+			      AR_PHY_SPUR_REG_ENABLE_NF_RSSI_SPUR_MIT, 1);
-+
-+	mask_index = (freq_offset << 4) / 5;
-+	if (mask_index < 0)
-+		mask_index = mask_index - 1;
-+
-+	mask_index = mask_index & 0x7f;
-+
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+		      AR_PHY_SPUR_REG_ENABLE_MASK_PPM, 0x1);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+		      AR_PHY_TIMING4_ENABLE_PILOT_MASK, 0x1);
-+	REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+		      AR_PHY_TIMING4_ENABLE_CHAN_MASK, 0x1);
-+	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
-+		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A, mask_index);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_A,
-+		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A, mask_index);
-+	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
-+		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A, mask_index);
-+	REG_RMW_FIELD(ah, AR_PHY_PILOT_SPUR_MASK,
-+		      AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A, 0xc);
-+	REG_RMW_FIELD(ah, AR_PHY_CHAN_SPUR_MASK,
-+		      AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A, 0xc);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_MASK_A,
-+		      AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A, 0xa0);
-+	REG_RMW_FIELD(ah, AR_PHY_SPUR_REG,
-+		      AR_PHY_SPUR_REG_MASK_RATE_CNTL, 0xff);
-+}
-+
-+static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
-+				     struct ath9k_channel *chan,
-+				     int freq_offset)
-+{
-+	int spur_freq_sd = 0;
-+	int spur_subchannel_sd = 0;
-+	int spur_delta_phase = 0;
-+
-+	if (IS_CHAN_HT40(chan)) {
-+		if (freq_offset < 0) {
-+			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
-+					   AR_PHY_GC_DYN2040_PRI_CH) == 0x0)
-+				spur_subchannel_sd = 1;
-+			else
-+				spur_subchannel_sd = 0;
-+
-+			spur_freq_sd = ((freq_offset + 10) << 9) / 11;
-+
-+		} else {
-+			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
-+			    AR_PHY_GC_DYN2040_PRI_CH) == 0x0)
-+				spur_subchannel_sd = 0;
-+			else
-+				spur_subchannel_sd = 1;
-+
-+			spur_freq_sd = ((freq_offset - 10) << 9) / 11;
-+
-+		}
-+
-+		spur_delta_phase = (freq_offset << 17) / 5;
-+
-+	} else {
-+		spur_subchannel_sd = 0;
-+		spur_freq_sd = (freq_offset << 9) /11;
-+		spur_delta_phase = (freq_offset << 18) / 5;
-+	}
-+
-+	spur_freq_sd = spur_freq_sd & 0x3ff;
-+	spur_delta_phase = spur_delta_phase & 0xfffff;
-+
-+	ar9003_hw_spur_ofdm(ah,
-+			    freq_offset,
-+			    spur_freq_sd,
-+			    spur_delta_phase,
-+			    spur_subchannel_sd);
-+}
-+
-+/* Spur mitigation for OFDM */
-+static void ar9003_hw_spur_mitigate_ofdm(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	int synth_freq;
-+	int range = 10;
-+	int freq_offset = 0;
-+	int mode;
-+	u8* spurChansPtr;
-+	unsigned int i;
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+
-+	if (IS_CHAN_5GHZ(chan)) {
-+		spurChansPtr = &(eep->modalHeader5G.spurChans[0]);
-+		mode = 0;
-+	}
-+	else {
-+		spurChansPtr = &(eep->modalHeader2G.spurChans[0]);
-+		mode = 1;
-+	}
-+
-+	if (spurChansPtr[0] == 0)
-+		return; /* No spur in the mode */
-+
-+	if (IS_CHAN_HT40(chan)) {
-+		range = 19;
-+		if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
-+				   AR_PHY_GC_DYN2040_PRI_CH) == 0x0)
-+			synth_freq = chan->channel - 10;
++	rx_chain_status = REG_READ(ah, AR_PHY_RX_CHAINMASK);
++	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
++		chainmask = 0x9;
++	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
++		if ((rx_chain_status & 0x2) || (rx_chain_status & 0x4))
++			chainmask = 0x1B;
 +		else
-+			synth_freq = chan->channel + 10;
++			chainmask = 0x09;
 +	} else {
-+		range = 10;
-+		synth_freq = chan->channel;
++		if (rx_chain_status & 0x4)
++			chainmask = 0x3F;
++		else if (rx_chain_status & 0x2)
++			chainmask = 0x1B;
++		else
++			chainmask = 0x09;
 +	}
 +
-+	ar9003_hw_spur_ofdm_clear(ah);
++	h = ah->nfCalHist;
 +
-+	for (i = 0; spurChansPtr[i] && i < 5; i++) {
-+		freq_offset = FBIN2FREQ(spurChansPtr[i], mode) - synth_freq;
-+		if (abs(freq_offset) < range) {
-+			ar9003_hw_spur_ofdm_work(ah, chan, freq_offset);
++	for (i = 0; i < NUM_NF_READINGS; i++) {
++		if (chainmask & (1 << i)) {
++			val = REG_READ(ah, ar5416_cca_regs[i]);
++			val &= 0xFFFFFE00;
++			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
++			REG_WRITE(ah, ar5416_cca_regs[i], val);
++		}
++	}
++
++	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
++		    AR_PHY_AGC_CONTROL_ENABLE_NF);
++	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
++		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
++	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
++
++	for (j = 0; j < 5; j++) {
++		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
++		     AR_PHY_AGC_CONTROL_NF) == 0)
 +			break;
++		udelay(50);
++	}
++
++	for (i = 0; i < NUM_NF_READINGS; i++) {
++		if (chainmask & (1 << i)) {
++			val = REG_READ(ah, ar5416_cca_regs[i]);
++			val &= 0xFFFFFE00;
++			val |= (((u32) (-50) << 1) & 0x1ff);
++			REG_WRITE(ah, ar5416_cca_regs[i], val);
 +		}
 +	}
 +}
 +
-+static void ar9003_hw_spur_mitigate(struct ath_hw *ah,
-+				    struct ath9k_channel *chan)
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -1270,6 +1336,7 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->set_diversity = ar5008_set_diversity;
+ 	priv_ops->ani_control = ar5008_hw_ani_control;
+ 	priv_ops->do_getnf = ar5008_hw_do_getnf;
++	priv_ops->loadnf = ar5008_hw_loadnf;
+ 
+ 	if (AR_SREV_9100(ah))
+ 		priv_ops->compute_pll_control = ar9100_hw_compute_pll_control;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 00e4cb8..cd80a43 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -195,6 +195,11 @@ static bool ar9003_hw_iscal_supported(struct ath_hw *ah,
+ 	return false;
+ }
+ 
++static void ar9003_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
 +{
-+	ar9003_hw_spur_mitigate_mrc_cck(ah, chan);
-+	ar9003_hw_spur_mitigate_ofdm(ah, chan);
++	/* TODO */
 +}
 +
- static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
- 					 struct ath9k_channel *chan)
+ void ar9003_hw_attach_calib_ops(struct ath_hw *ah)
  {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 1aeeba3..e330382 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -33,6 +33,30 @@
- #define AR_PHY_RX_IQCAL_CORR_B0    AR_CHAN_BASE + 0xdc
- #define AR_PHY_TX_IQCAL_CONTROL_3  AR_CHAN_BASE + 0xb0
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -204,6 +209,7 @@ void ar9003_hw_attach_calib_ops(struct ath_hw *ah)
+ 	priv_ops->init_cal = ar9003_hw_init_cal;
+ 	priv_ops->setup_calibration = ar9003_hw_setup_calibration;
+ 	priv_ops->iscal_supported = ar9003_hw_iscal_supported;
++	priv_ops->loadnf = ar9003_hw_loadnf;
  
-+#define AR_PHY_TIMING11_SPUR_FREQ_SD    0x3FF00000
-+#define AR_PHY_TIMING11_SPUR_FREQ_SD_S  20
-+
-+#define AR_PHY_TIMING11_SPUR_DELTA_PHASE 0x000FFFFF
-+#define AR_PHY_TIMING11_SPUR_DELTA_PHASE_S 0
-+
-+#define AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC 0x40000000
-+#define AR_PHY_TIMING11_USE_SPUR_FILTER_IN_AGC_S 30
-+
-+#define AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR 0x80000000
-+#define AR_PHY_TIMING11_USE_SPUR_FILTER_IN_SELFCOR_S 31
-+
-+#define AR_PHY_SPUR_REG_ENABLE_NF_RSSI_SPUR_MIT         0x4000000
-+#define AR_PHY_SPUR_REG_ENABLE_NF_RSSI_SPUR_MIT_S       26
-+
-+#define AR_PHY_SPUR_REG_ENABLE_MASK_PPM                         0x20000     /* bins move with freq offset */
-+#define AR_PHY_SPUR_REG_ENABLE_MASK_PPM_S                       17
-+#define AR_PHY_SPUR_REG_SPUR_RSSI_THRESH            0x000000FF
-+#define AR_PHY_SPUR_REG_SPUR_RSSI_THRESH_S          0
-+#define AR_PHY_SPUR_REG_EN_VIT_SPUR_RSSI                        0x00000100
-+#define AR_PHY_SPUR_REG_EN_VIT_SPUR_RSSI_S                      8
-+#define AR_PHY_SPUR_REG_MASK_RATE_CNTL                          0x03FC0000
-+#define AR_PHY_SPUR_REG_MASK_RATE_CNTL_S			18
-+
- #define AR_PHY_RX_IQCAL_CORR_B0_LOOPBACK_IQCORR_EN   0x20000000
- #define AR_PHY_RX_IQCAL_CORR_B0_LOOPBACK_IQCORR_EN_S         29
+ 	ops->calibrate = ar9003_hw_calibrate;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 085e126..6982577 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -16,7 +16,6 @@
  
-@@ -84,6 +108,17 @@
- #define AR_PHY_TIMING4_IQCAL_LOG_COUNT_MAX 0xF000
- #define AR_PHY_TIMING4_IQCAL_LOG_COUNT_MAX_S   12
- #define AR_PHY_TIMING4_DO_CAL    0x10000
-+
-+#define AR_PHY_TIMING4_ENABLE_PILOT_MASK        0x10000000
-+#define AR_PHY_TIMING4_ENABLE_PILOT_MASK_S      28
-+#define AR_PHY_TIMING4_ENABLE_CHAN_MASK         0x20000000
-+#define AR_PHY_TIMING4_ENABLE_CHAN_MASK_S       29
-+
-+#define AR_PHY_TIMING4_ENABLE_SPUR_FILTER 0x40000000
-+#define AR_PHY_TIMING4_ENABLE_SPUR_FILTER_S 30
-+#define AR_PHY_TIMING4_ENABLE_SPUR_RSSI 0x80000000
-+#define AR_PHY_TIMING4_ENABLE_SPUR_RSSI_S 31
-+
- #define AR_PHY_NEW_ADC_GAIN_CORR_ENABLE 0x40000000
- #define AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE 0x80000000
- #define AR_PHY_SFCORR_LOW_USE_SELF_CORR_LOW  0x00000001
-@@ -107,6 +142,8 @@
- #define AR_PHY_SFCORR_EXT_M1_THRESH_LOW_S 14
- #define AR_PHY_SFCORR_EXT_M2_THRESH_LOW   0x0FE00000
- #define AR_PHY_SFCORR_EXT_M2_THRESH_LOW_S 21
-+#define AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD 0x10000000
-+#define AR_PHY_SFCORR_EXT_SPUR_SUBCHANNEL_SD_S 28
- #define AR_PHY_SFCORR_SPUR_SUBCHNL_SD_S   28
- #define AR_PHY_EXT_CCA_THRESH62 0x007F0000
- #define AR_PHY_EXT_CCA_THRESH62_S       16
-@@ -184,6 +221,16 @@
- #define AR_PHY_ML_CNTL_2       AR_MRC_BASE + 0x1c
- #define AR_PHY_TST_ADC         AR_MRC_BASE + 0x20
+ #include "hw.h"
+ #include "hw-ops.h"
+-#include "ar9002_phy.h"
  
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A              0x00000FE0
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_IDX_A_S    5
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A                  0x1F
-+#define AR_PHY_PILOT_SPUR_MASK_CF_PILOT_MASK_A_S                0
-+
-+#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A        0x00000FE0
-+#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_IDX_A_S      5
-+#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A            0x1F
-+#define AR_PHY_CHAN_SPUR_MASK_CF_CHAN_MASK_A_S		0
-+
- /*
-  * MRC Feild Definitions
-  */
-@@ -372,6 +419,11 @@
- #define AR_PHY_ADDAC_PARA_CTL    AR_SM_BASE + 0x150
- #define AR_PHY_XPA_CFG           AR_SM_BASE + 0x158
+ /* Common calibration code */
  
-+#define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A           0x0001FC00
-+#define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A_S         10
-+#define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A                       0x3FF
-+#define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A_S                     0
-+
- #define AR_PHY_TEST              AR_SM_BASE + 0x160
+@@ -174,72 +173,6 @@ void ath9k_hw_start_nfcal(struct ath_hw *ah)
+ 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
+ }
  
- #define AR_PHY_TEST_BBB_OBS_SEL       0x780000
-@@ -499,6 +551,7 @@
- #define AR_PHY_GC_DYN2040_EN       0x00000004  /* enable dyn 20/40 mode */
- #define AR_PHY_GC_DYN2040_PRI_ONLY 0x00000008  /* dyn 20/40 - primary only */
- #define AR_PHY_GC_DYN2040_PRI_CH   0x00000010  /* dyn 20/40 - primary ch offset (0=+10MHz, 1=-10MHz)*/
-+#define AR_PHY_GC_DYN2040_PRI_CH_S 4
- #define AR_PHY_GC_DYN2040_EXT_CH   0x00000020  /* dyn 20/40 - ext ch spacing (0=20MHz/ 1=25MHz) */
- #define AR_PHY_GC_HT_EN            0x00000040  /* ht enable */
- #define AR_PHY_GC_SHORT_GI_40      0x00000080  /* allow short GI for HT 40 */
-@@ -516,6 +569,7 @@
- #define AR_PHY_MODE_OFDM            0x00000000
- #define AR_PHY_MODE_CCK             0x00000001
- #define AR_PHY_MODE_DYNAMIC         0x00000004
-+#define AR_PHY_MODE_DYNAMIC_S       2
- #define AR_PHY_MODE_HALF            0x00000020
- #define AR_PHY_MODE_QUARTER         0x00000040
- #define AR_PHY_MAC_CLK_MODE         0x00000080
+-void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+-{
+-	struct ath9k_nfcal_hist *h;
+-	int i, j;
+-	int32_t val;
+-	const u32 ar5416_cca_regs[6] = {
+-		AR_PHY_CCA,
+-		AR_PHY_CH1_CCA,
+-		AR_PHY_CH2_CCA,
+-		AR_PHY_EXT_CCA,
+-		AR_PHY_CH1_EXT_CCA,
+-		AR_PHY_CH2_EXT_CCA
+-	};
+-	u8 chainmask, rx_chain_status;
+-
+-	rx_chain_status = REG_READ(ah, AR_PHY_RX_CHAINMASK);
+-	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
+-		chainmask = 0x9;
+-	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
+-		if ((rx_chain_status & 0x2) || (rx_chain_status & 0x4))
+-			chainmask = 0x1B;
+-		else
+-			chainmask = 0x09;
+-	} else {
+-		if (rx_chain_status & 0x4)
+-			chainmask = 0x3F;
+-		else if (rx_chain_status & 0x2)
+-			chainmask = 0x1B;
+-		else
+-			chainmask = 0x09;
+-	}
+-
+-	h = ah->nfCalHist;
+-
+-	for (i = 0; i < NUM_NF_READINGS; i++) {
+-		if (chainmask & (1 << i)) {
+-			val = REG_READ(ah, ar5416_cca_regs[i]);
+-			val &= 0xFFFFFE00;
+-			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
+-			REG_WRITE(ah, ar5416_cca_regs[i], val);
+-		}
+-	}
+-
+-	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+-		    AR_PHY_AGC_CONTROL_ENABLE_NF);
+-	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+-		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
+-	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
+-
+-	for (j = 0; j < 5; j++) {
+-		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
+-		     AR_PHY_AGC_CONTROL_NF) == 0)
+-			break;
+-		udelay(50);
+-	}
+-
+-	for (i = 0; i < NUM_NF_READINGS; i++) {
+-		if (chainmask & (1 << i)) {
+-			val = REG_READ(ah, ar5416_cca_regs[i]);
+-			val &= 0xFFFFFE00;
+-			val |= (((u32) (-50) << 1) & 0x1ff);
+-			REG_WRITE(ah, ar5416_cca_regs[i], val);
+-		}
+-	}
+-}
+-
+ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 		       struct ath9k_channel *chan)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
+index 9f6c21d..25828e8 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.h
++++ b/drivers/net/wireless/ath/ath9k/calib.h
+@@ -114,7 +114,6 @@ struct ath9k_pacal_info{
+ 
+ bool ath9k_hw_reset_calvalid(struct ath_hw *ah);
+ void ath9k_hw_start_nfcal(struct ath_hw *ah);
+-void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan);
+ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 		       struct ath9k_channel *chan);
+ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index b777fd1..b444ce5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -182,6 +182,12 @@ static inline void ath9k_hw_do_getnf(struct ath_hw *ah,
+ 	ath9k_hw_private_ops(ah)->do_getnf(ah, nfarray);
+ }
+ 
++static inline void ath9k_hw_loadnf(struct ath_hw *ah,
++				   struct ath9k_channel *chan)
++{
++	ath9k_hw_private_ops(ah)->loadnf(ah, chan);
++}
++
+ static inline bool ath9k_hw_init_cal(struct ath_hw *ah,
+ 				     struct ath9k_channel *chan)
+ {
 diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 3c48399..84b8922 100644
+index 493cccf..dbd7cb8 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.h
 +++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -76,6 +76,8 @@
- #define REG_RMW_FIELD(_a, _r, _f, _v) \
- 	REG_WRITE(_a, _r, \
- 	(REG_READ(_a, _r) & ~_f) | (((_v) << _f##_S) & _f))
-+#define REG_READ_FIELD(_a, _r, _f) \
-+	(((REG_READ(_a, _r) & _f) >> _f##_S))
- #define REG_SET_BIT(_a, _r, _f) \
- 	REG_WRITE(_a, _r, REG_READ(_a, _r) | _f)
- #define REG_CLR_BIT(_a, _r, _f) \
-diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
-index 7d397fd..e724c2c 100644
---- a/drivers/net/wireless/ath/ath9k/phy.h
-+++ b/drivers/net/wireless/ath/ath9k/phy.h
-@@ -59,4 +59,7 @@
- 			(_bank)[i] = INI_RA((_iniarray), i, _col);;	\
- 	} while (0)
+@@ -480,6 +480,7 @@ struct ath_gen_timer_table {
+  *	AR_RTC_PLL_CONTROL for a given channel
+  * @setup_calibration: set up calibration
+  * @iscal_supported: used to query if a type of calibration is supported
++ * @loadnf: load noise floor read from each chain on the CCA registers
+  */
+ struct ath_hw_private_ops {
+ 	/* Calibration ops */
+@@ -522,6 +523,7 @@ struct ath_hw_private_ops {
+ 	bool (*ani_control)(struct ath_hw *ah, enum ath9k_ani_cmd cmd,
+ 			    int param);
+ 	void (*do_getnf)(struct ath_hw *ah, int16_t nfarray[NUM_NF_READINGS]);
++	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
+ };
  
-+#define	AR_PHY_TIMING11_SPUR_FREQ_SD		0x3FF00000
-+#define	AR_PHY_TIMING11_SPUR_FREQ_SD_S		20
-+
- #endif
+ /**
 -- 
 1.6.3.3
 
