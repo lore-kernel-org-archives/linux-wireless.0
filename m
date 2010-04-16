@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:53094 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752040Ab0DCHtk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 03:49:40 -0400
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	<linux-ppp@vger.kernel.org>
-Subject: [PATCH 1/7] crypto: rename arc4
-Date: Sat,  3 Apr 2010 09:49:23 +0200
-Message-Id: <1270280969-11357-2-git-send-email-sebastian@breakpoint.cc>
-In-Reply-To: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
+Received: from c60.cesmail.net ([216.154.195.49]:55360 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758593Ab0DPVNG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 17:13:06 -0400
+Subject: Re: [ath5k-devel] [PATCH] ath5k/ath9k: Fix 64 bits TSF reads
+From: Pavel Roskin <proski@gnu.org>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath5k.org
+In-Reply-To: <1271369246-6892-1-git-send-email-benoit.papillault@free.fr>
+References: <1271369246-6892-1-git-send-email-benoit.papillault@free.fr>
+Content-Type: text/plain
+Date: Fri, 16 Apr 2010 17:13:04 -0400
+Message-Id: <1271452384.16507.16.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The blk version of arc4 is comming. The rename ensures that the request
-for arc4 loads both modules: this one and the new blk edition.
+On Fri, 2010-04-16 at 00:07 +0200, Benoit Papillault wrote:
 
-Cc: <linux-ppp@vger.kernel.org>
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- crypto/Makefile              |    2 +-
- crypto/{arc4.c => arc4cip.c} |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
- rename crypto/{arc4.c => arc4cip.c} (98%)
+> It follows the logic mentionned by Derek, with only 2 register reads
+> needed at each additional steps instead of 3 (the minimum number of
+> register reads is still 3).
 
-diff --git a/crypto/Makefile b/crypto/Makefile
-index 9e8f619..1f15112 100644
---- a/crypto/Makefile
-+++ b/crypto/Makefile
-@@ -67,7 +67,7 @@ obj-$(CONFIG_CRYPTO_AES) += aes_generic.o
- obj-$(CONFIG_CRYPTO_CAMELLIA) += camellia.o
- obj-$(CONFIG_CRYPTO_CAST5) += cast5.o
- obj-$(CONFIG_CRYPTO_CAST6) += cast6.o
--obj-$(CONFIG_CRYPTO_ARC4) += arc4.o
-+obj-$(CONFIG_CRYPTO_ARC4) += arc4cip.o
- obj-$(CONFIG_CRYPTO_TEA) += tea.o
- obj-$(CONFIG_CRYPTO_KHAZAD) += khazad.o
- obj-$(CONFIG_CRYPTO_ANUBIS) += anubis.o
-diff --git a/crypto/arc4.c b/crypto/arc4cip.c
-similarity index 98%
-rename from crypto/arc4.c
-rename to crypto/arc4cip.c
-index 8be47e1..bf04659 100644
---- a/crypto/arc4.c
-+++ b/crypto/arc4cip.c
-@@ -102,3 +102,4 @@ module_exit(arc4_exit);
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("ARC4 Cipher Algorithm");
- MODULE_AUTHOR("Jon Oberheide <jon@oberheide.org>");
-+MODULE_ALIAS("arc4");
+I would prefer an approach whereas tsf_upper2 or tsf_upper1 is chosen
+based on whether tsf_lower is more or less than 0x80000000 if
+(tsf_upper2 - tsf_upper1) is 1.  If the difference is not 0 or 1, either
+the hardware is broken or the kernel was stuck for so long (71 minutes!)
+that getting the exact tsf should be the least worry.  That's when
+WARN_ON would be appropriate.
+
+The problem with overengineered code is that it doesn't break when it's
+better to break and expose the problem :-)
+
+But it's just a suggestion, not a NACK.  It's better to have some fix
+than no fix at all.
+ 
 -- 
-1.6.6
-
+Regards,
+Pavel Roskin
