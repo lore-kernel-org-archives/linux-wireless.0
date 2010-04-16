@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43124 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753516Ab0DVDns (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Apr 2010 23:43:48 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 20:43:48 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19407.50651.473633.812258@gargle.gargle.HOWL>
-Date: Thu, 22 Apr 2010 09:13:23 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/9] ath9k_htc: Handle device unplug properly
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50770 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757156Ab0DPKQ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 06:16:59 -0400
+Received: by wyb39 with SMTP id 39so1033745wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 03:16:57 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
+	IvDoorn@gmail.com, gwingerde@gmail.com, xose.vazquez@gmail.com
+Subject: [PATCH] wireless: rt2x00: rt2800usb: delete Allwin devices
+Date: Fri, 16 Apr 2010 12:16:45 +0200
+Message-Id: <1271413005-2509-1-git-send-email-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the USB device has been unplugged, there is
-no point in trying to send commands to the target.
-Fix this by denying all WMI commands in such a case.
+Common sense says:
+(0x8516, 0x2070) is RT2070
+(0x8516, 0x2770) is RT2770
+(0x8516, 0x2870) is RT2870
+[...]
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+but Allwin doesn't sell USB dongles nor PCI boards, only voip-routers
+http://www.allwin.com.tw/eng/modules/tinyd0/content/index.php?id=1
+
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    1 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++++++++
- drivers/net/wireless/ath/ath9k/wmi.c          |    3 +++
- 3 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index c765ff4..b771e20 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -329,6 +329,7 @@ struct htc_beacon_config {
- #define OP_ASSOCIATED     BIT(8)
- #define OP_ENABLE_BEACON  BIT(9)
- #define OP_LED_DEINIT     BIT(10)
-+#define OP_UNPLUGGED      BIT(11)
- 
- struct ath9k_htc_priv {
- 	struct device *dev;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a861896..701f2ef 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -744,6 +744,9 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 	if (ret)
- 		goto err_init;
- 
-+	/* The device may have been unplugged earlier. */
-+	priv->op_flags &= ~OP_UNPLUGGED;
-+
- 	ret = ath9k_init_device(priv, devid);
- 	if (ret)
- 		goto err_init;
-@@ -760,6 +763,11 @@ err_free:
- void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
- {
- 	if (htc_handle->drv_priv) {
-+
-+		/* Check if the device has been yanked out. */
-+		if (hotunplug)
-+			htc_handle->drv_priv->op_flags |= OP_UNPLUGGED;
-+
- 		ath9k_deinit_device(htc_handle->drv_priv);
- 		ath9k_deinit_wmi(htc_handle->drv_priv);
- 		ieee80211_free_hw(htc_handle->drv_priv->hw);
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index dc6c6fc..c688545 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -276,6 +276,9 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 	int time_left, ret = 0;
- 	unsigned long flags;
- 
-+	if (wmi->drv_priv->op_flags & OP_UNPLUGGED)
-+		return 0;
-+
- 	if (!wmi)
- 		return -EINVAL;
- 
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index df7666f..41de405 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1019,14 +1019,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	 * Unclear what kind of devices these are (they aren't supported by the
+ 	 * vendor driver).
+ 	 */
+-	/* Allwin */
+-	{ USB_DEVICE(0x8516, 0x2070), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x8516, 0x2770), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x8516, 0x2870), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x8516, 0x3070), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x8516, 0x3071), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x8516, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
+-	{ USB_DEVICE(0x8516, 0x3572), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Amigo */
+ 	{ USB_DEVICE(0x0e0b, 0x9031), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x0e0b, 0x9041), USB_DEVICE_DATA(&rt2800usb_ops) },
 -- 
-1.7.0.5
+1.6.6.1
 
