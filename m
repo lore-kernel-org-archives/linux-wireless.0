@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:50713 "EHLO
-	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753978Ab0DCOLk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 10:11:40 -0400
-Message-ID: <4BB74C9A.40900@gmail.com>
-Date: Sat, 03 Apr 2010 16:11:38 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:22965 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753695Ab0DPGYP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 02:24:15 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:24:15 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: matthijs@stdin.nl
-CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Ondrej Zary <linux@rainbow-software.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH] [RFC] rt2500pci: fix powersaving
-References: <201003290956.54234.linux@rainbow-software.org> <201003301433.55355.linux@rainbow-software.org> <20100330125620.GA2173@katherina.student.utwente.nl> <201003302209.23334.linux@rainbow-software.org> <20100331174138.GE21160@katherina.student.utwente.nl> <4BB396B4.8090005@gmail.com> <4BB3988C.40902@gmail.com> <20100331190011.GG21160@katherina.student.utwente.nl>
-In-Reply-To: <20100331190011.GG21160@katherina.student.utwente.nl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19400.614.725359.995680@gargle.gargle.HOWL>
+Date: Fri, 16 Apr 2010 11:53:34 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/10] ath9k_htc updates
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/31/10 21:00, Matthijs Kooijman wrote:
-> Hi Gertjan, 
-> 
->> Sorry, I got confused on which driver we were working on. Find attached the correct
->> patch, now for the rt2500pci driver instead of the rt2500usb driver.
-> I had already come up with that patch myself. Rebooting in a minute, I'll get
-> back to you when I have something to tell :-)
-> 
+John,
 
-Hi Matthijs,
+This series contains all the pending patches
+for ath9k_htc, rebased over Luis' latest series.
 
-Did you have the chance to test the patch and do you have some feedback if the patch
-helps improve the rt2500pci situation?
+Sujith
 
----
-Gertjan.
+Sujith (10):
+  ath9k_htc: Cleanup beacon configuration
+  ath: Add buffered register write operations
+  ath9k_htc: Implement multiple register write support
+  ath9k_hw: Add macros for multiple register writes
+  ath9k_hw: Relocate Opmode initialization
+  ath9k_hw: Use buffered register writes
+  ath9k_htc: Remove GPIO set on unload
+  ath9k_htc: Add dropped SKB count to debugfs
+  ath9k_htc: Handle WMI timeouts properly
+  ath9k_htc: Fix sparse endian warnings
+
+ drivers/net/wireless/ath/ath.h                  |   14 +++-
+ drivers/net/wireless/ath/ath9k/ani.c            |   23 +++++
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c     |   28 ++++++
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c   |    5 +
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c      |    7 ++-
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c     |    5 +
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c      |   10 ++
+ drivers/net/wireless/ath/ath9k/hif_usb.c        |   13 ++-
+ drivers/net/wireless/ath/ath9k/htc.h            |   19 ++--
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   29 +++----
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |  104 ++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   20 +++--
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   11 +--
+ drivers/net/wireless/ath/ath9k/htc_hst.c        |    8 +-
+ drivers/net/wireless/ath/ath9k/htc_hst.h        |   24 +++---
+ drivers/net/wireless/ath/ath9k/hw.c             |   79 ++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.h             |   18 ++++
+ drivers/net/wireless/ath/ath9k/mac.c            |   27 ++++++
+ drivers/net/wireless/ath/ath9k/mac.h            |   10 +-
+ drivers/net/wireless/ath/ath9k/wmi.c            |   16 +++-
+ drivers/net/wireless/ath/ath9k/wmi.h            |   19 ++++-
+ 21 files changed, 407 insertions(+), 82 deletions(-)
+
