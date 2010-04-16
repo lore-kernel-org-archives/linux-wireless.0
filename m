@@ -1,76 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:48922 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842Ab0DANWD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 09:22:03 -0400
-Date: Thu, 1 Apr 2010 15:21:56 +0200
-From: Daniel Mack <daniel@caiaq.de>
-To: LKML <linux-kernel@vger.kernel.org>,
-	AKML <linux-arm-kernel@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@suse.de>,
-	Sven Neumann <s.neumann@raumfeld.com>
-Subject: Memory corruption with 2.6.32.10, but not with 2.6.34-rc3
-Message-ID: <20100401132156.GJ30807@buzzloop.caiaq.de>
+Received: from mail.atheros.com ([12.36.123.2]:22968 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754097Ab0DPGYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 02:24:33 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:24:33 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19400.633.438406.247495@gargle.gargle.HOWL>
+Date: Fri, 16 Apr 2010 11:53:53 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/10] ath9k_htc: Implement multiple register write support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This patch adds support for writing multiple registers
+in a single USB command.
 
-we observed repeated occurances of memory corruptions (Ooopes somewhere
-deep down in the memory mangement code) on ARM PXA300 based boards.
+Specific calls from the HW code that performs multiple
+register writes would be modified to make use of this
+in subsequent patches.
 
-The systems we see this on (arch/arm/mach-pxa/raumfeld.c) feature a
-libertas chipset for WiFi, an ethernet controller (smsc9220), a USB
-fullspeed host, and NAND flash which is used as UBIFS storage.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |  104 ++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/wmi.c          |    1 +
+ drivers/net/wireless/ath/ath9k/wmi.h          |   12 +++
+ 3 files changed, 113 insertions(+), 4 deletions(-)
 
-Currently, these boards run a 2.6.32.10 kernel. After collecting
-evidences for a week or so about when and how and why the memory
-corruptions happen, I tried a 2.6.34-rc3 today and the issue seems fixed
-there. So - appearantly some important fix since 2.6.32 didn't get
-enough care to be backported to the stable branch.
-
-The bug is rather hard to trigger. What I currently do is: after the
-system booted from NAND (UBIFS root partition), I wait for the WPA2
-secured WiFi link to get active and then download a file (~8MB) over
-WiFi to local storage. This download is done in an endless loop. Once in
-a while this crashes the 2.6.32.10 kernel instantly, sometimes it takes
-up to ~5hrs to happen.
-
-Some findings I collected over the last weeks:
-
- - when calling wget with '-O /dev/null' to not write any file
-   -> does NOT crash
-
- - downloading via Ethernet instead of WiFi
-   -> does NOT crash
-
- - writing the file to either a tmpfs parition or a fatfs (on USB
-   connected external media)
-   -> DOES still crash (so it is most likely not an UBIFS issue)
-
- - passing --download-rate=50000 to wget (to limit the traffic
-   thruput to 50kb/s) _in_creases the probability of the crash
-
- - running userspace applications which heavily allocate and
-   deallocate memory doesn't seem to make the bug more likely or
-   unlikely
-
-So my current summary is that this is related to WiFi, but OTOH it still
-only happens when file system traffic is issued.
-
-We would like to have a fix for this annoying bug in the stable series
-(especially 2.6.32.x) as well, but I don't have much ideas about where
-to search for it. Hence, I would appreciate if maintainers could think
-about any possible commits in the described time window which haven't
-reached stable. Does the description ring anyone's bell?
-
-I can cherry-pick things if anyone pin-points something and run
-lont-time tests again. Any pointer appreciated.
-
-Thanks,
-Daniel
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index aed5357..a861896 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -213,7 +213,7 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
+ 				      ath9k_hw_regulatory(priv->ah));
+ }
+ 
+-static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
++static unsigned int ath9k_regread(void *hw_priv, u32 reg_offset)
+ {
+ 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -235,7 +235,7 @@ static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
+ 	return be32_to_cpu(val);
+ }
+ 
+-static void ath9k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
++static void ath9k_regwrite_single(void *hw_priv, u32 val, u32 reg_offset)
+ {
+ 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -257,9 +257,105 @@ static void ath9k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
+ 	}
+ }
+ 
++static void ath9k_regwrite_buffer(void *hw_priv, u32 val, u32 reg_offset)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++	u32 rsp_status;
++	int r;
++
++	mutex_lock(&priv->wmi->multi_write_mutex);
++
++	/* Store the register/value */
++	priv->wmi->multi_write[priv->wmi->multi_write_idx].reg =
++		cpu_to_be32(reg_offset);
++	priv->wmi->multi_write[priv->wmi->multi_write_idx].val =
++		cpu_to_be32(val);
++
++	priv->wmi->multi_write_idx++;
++
++	/* If the buffer is full, send it out. */
++	if (priv->wmi->multi_write_idx == MAX_CMD_NUMBER) {
++		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_WRITE_CMDID,
++			  (u8 *) &priv->wmi->multi_write,
++			  sizeof(struct register_write) * priv->wmi->multi_write_idx,
++			  (u8 *) &rsp_status, sizeof(rsp_status),
++			  100);
++		if (unlikely(r)) {
++			ath_print(common, ATH_DBG_WMI,
++				  "REGISTER WRITE FAILED, multi len: %d\n",
++				  priv->wmi->multi_write_idx);
++		}
++		priv->wmi->multi_write_idx = 0;
++	}
++
++	mutex_unlock(&priv->wmi->multi_write_mutex);
++}
++
++static void ath9k_regwrite(void *hw_priv, u32 val, u32 reg_offset)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	if (atomic_read(&priv->wmi->mwrite_cnt))
++		ath9k_regwrite_buffer(hw_priv, val, reg_offset);
++	else
++		ath9k_regwrite_single(hw_priv, val, reg_offset);
++}
++
++static void ath9k_enable_regwrite_buffer(void *hw_priv)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	atomic_inc(&priv->wmi->mwrite_cnt);
++}
++
++static void ath9k_disable_regwrite_buffer(void *hw_priv)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	atomic_dec(&priv->wmi->mwrite_cnt);
++}
++
++static void ath9k_regwrite_flush(void *hw_priv)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++	u32 rsp_status;
++	int r;
++
++	mutex_lock(&priv->wmi->multi_write_mutex);
++
++	if (priv->wmi->multi_write_idx) {
++		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_WRITE_CMDID,
++			  (u8 *) &priv->wmi->multi_write,
++			  sizeof(struct register_write) * priv->wmi->multi_write_idx,
++			  (u8 *) &rsp_status, sizeof(rsp_status),
++			  100);
++		if (unlikely(r)) {
++			ath_print(common, ATH_DBG_WMI,
++				  "REGISTER WRITE FAILED, multi len: %d\n",
++				  priv->wmi->multi_write_idx);
++		}
++		priv->wmi->multi_write_idx = 0;
++	}
++
++	mutex_unlock(&priv->wmi->multi_write_mutex);
++}
++
+ static const struct ath_ops ath9k_common_ops = {
+-	.read = ath9k_ioread32,
+-	.write = ath9k_iowrite32,
++	.read = ath9k_regread,
++	.write = ath9k_regwrite,
++	.enable_write_buffer = ath9k_enable_regwrite_buffer,
++	.disable_write_buffer = ath9k_disable_regwrite_buffer,
++	.write_flush = ath9k_regwrite_flush,
+ };
+ 
+ static void ath_usb_read_cachesize(struct ath_common *common, int *csz)
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index f2ff18c..355e0db 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -101,6 +101,7 @@ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv)
+ 	wmi->drv_priv = priv;
+ 	wmi->stopped = false;
+ 	mutex_init(&wmi->op_mutex);
++	mutex_init(&wmi->multi_write_mutex);
+ 	init_completion(&wmi->cmd_wait);
+ 
+ 	return wmi;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 39ef926..fd8c9c5 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -84,6 +84,13 @@ enum wmi_event_id {
+ 	WMI_TXRATE_EVENTID,
+ };
+ 
++#define MAX_CMD_NUMBER 62
++
++struct register_write {
++	u32 reg;
++	u32 val;
++};
++
+ struct wmi {
+ 	struct ath9k_htc_priv *drv_priv;
+ 	struct htc_target *htc;
+@@ -97,6 +104,11 @@ struct wmi {
+ 
+ 	struct sk_buff *wmi_skb;
+ 	spinlock_t wmi_lock;
++
++	atomic_t mwrite_cnt;
++	struct register_write multi_write[MAX_CMD_NUMBER];
++	u32 multi_write_idx;
++	struct mutex multi_write_mutex;
+ };
+ 
+ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv);
+-- 
+1.7.0.5
 
