@@ -1,50 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:35865 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231Ab0DMFro (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 01:47:44 -0400
-Received: by wyf19 with SMTP id 19so28431wyf.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 22:47:43 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 13 Apr 2010 06:47:42 +0100
-Message-ID: <u2u719bd8781004122247kb48bedet36ea07db3819d202@mail.gmail.com>
-Subject: p54pci does not work
-From: Duarte Nuno Gomes <dnunogomes@gmail.com>
-To: linux-wireless@vger.kernel.org, chunkeey@googlemail.com
-Cc: flamingice@sourmilk.net
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:14249 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932581Ab0DPVwm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 17:52:42 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/21] iwlwifi: remove scan_pass_start
+Date: Fri, 16 Apr 2010 14:52:22 -0700
+Message-Id: <1271454758-14351-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
+References: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-im a p54pci module user.
-02:01.0 Network controller: Intersil Corporation ISL3890 [Prism GT/Prism
-Duette]/ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
+Since we no longer do a multi-pass scan,
+keeping track of how long each pass took
+is pointless since there will only be one.
 
-i use isl3886pci firmware ( 2.13.12.0.arm ) and used the latest
-compat-wireless-2.6.34-rc4-test1
-latest firmware , 2.17.2.0.arm wont work
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    8 ++------
+ 2 files changed, 2 insertions(+), 7 deletions(-)
 
-it works all ok ... when i visit some websites ( www.rcmadeira.pt.vu is one
-of them ), my connection just disconnects and i cannot resume it . i need to
-shutdown and re lauch kernel in order to work with wireless again.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f2d4ca5..a7ffb4f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1050,7 +1050,6 @@ struct iwl_priv {
+ 
+ 	/* Scan related variables */
+ 	unsigned long scan_start;
+-	unsigned long scan_pass_start;
+ 	unsigned long scan_start_tsf;
+ 	void *scan;
+ 	enum ieee80211_band scan_band;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index e45b49a..cb3601d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -218,10 +218,10 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 	/* The HW is no longer scanning */
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
+ 
+-	IWL_DEBUG_INFO(priv, "Scan pass on %sGHz took %dms\n",
++	IWL_DEBUG_INFO(priv, "Scan on %sGHz took %dms\n",
+ 		       (priv->scan_band == IEEE80211_BAND_2GHZ) ? "2.4" : "5.2",
+ 		       jiffies_to_msecs(elapsed_jiffies
+-					(priv->scan_pass_start, jiffies)));
++					(priv->scan_start, jiffies)));
+ 
+ 	/*
+ 	 * If a request to abort was given, or the scan did not succeed
+@@ -235,9 +235,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 
+ 	clear_bit(STATUS_SCANNING, &priv->status);
+ 
+-	IWL_DEBUG_INFO(priv, "Scan took %dms\n",
+-		jiffies_to_msecs(elapsed_jiffies(priv->scan_start, jiffies)));
+-
+ 	queue_work(priv->workqueue, &priv->scan_completed);
+ }
+ 
+@@ -449,7 +446,6 @@ static int iwl_scan_initiate(struct iwl_priv *priv)
+ 	set_bit(STATUS_SCANNING, &priv->status);
+ 	priv->is_internal_short_scan = false;
+ 	priv->scan_start = jiffies;
+-	priv->scan_pass_start = priv->scan_start;
+ 
+ 	queue_work(priv->workqueue, &priv->request_scan);
+ 
+-- 
+1.6.3.3
 
-here is what dmesg outputs
-
-No probe response from AP 00:24:17:6c:a5:0e after 500ms, disconnecting.
-Phy0 : cannot boot firmware !
-
-i've tryed modprobe -r p54pci and modprobe p54pci , wont work. needs a
-complete shutdown.
-
-its an annoying bug... i cannot browse sucessfully for some hours , some
-will fail , making me reboot and reboot and reboot ...
-
-if u need addicional information , please let me know to
-dnunogomes@gmail.com
-Hope it will be corrected soon
-i would like to receive any update about this , thanks !
-
-bye !
