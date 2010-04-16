@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47002 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933300Ab0DHT1s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 089/102] ath9k_hw: enable CRC check of descriptors for AR9003
-Date: Thu,  8 Apr 2010 15:27:25 -0400
-Message-Id: <1270754858-26266-90-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from c60.cesmail.net ([216.154.195.49]:36244 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757854Ab0DPWBB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 18:01:01 -0400
+Subject: Re: [PATCH v3 42/97] ath9k: Make bf_desc of ath_buf opaque
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+In-Reply-To: <1271367582-992-43-git-send-email-lrodriguez@atheros.com>
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	 <1271367582-992-43-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Fri, 16 Apr 2010 18:00:59 -0400
+Message-Id: <1271455259.16507.43.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable CRC check on the descriptor fetched from host on AR9003
-upon reseting the TX queue.
+On Thu, 2010-04-15 at 17:38 -0400, Luis R. Rodriguez wrote:
+> From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |    3 +++
- drivers/net/wireless/ath/ath9k/reg.h |    3 +++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+> -	struct ath_desc *bf_desc;	/* virtual addr of desc */
+> +	void *bf_desc;			/* virtual addr of desc */
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index aa5efa7..9f2bdd7 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -1015,6 +1015,9 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 			  AR_D_MISC_POST_FR_BKOFF_DIS);
- 	}
- 
-+	if (AR_SREV_9300_20_OR_LATER(ah))
-+		REG_WRITE(ah, AR_Q_DESC_CRCCHK, AR_Q_DESC_CRCCHK_EN);
-+
- 	if (qi->tqi_qflags & TXQ_FLAG_TXOKINT_ENABLE)
- 		ah->txok_interrupt_mask |= 1 << q;
- 	else
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index ff89140..7fc1ddf 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -478,6 +478,9 @@
- #define AR_Q_RDYTIMESHDN    0x0a40
- #define AR_Q_RDYTIMESHDN_M  0x000003FF
- 
-+/* MAC Descriptor CRC check */
-+#define AR_Q_DESC_CRCCHK    0xa44
-+#define AR_Q_DESC_CRCCHK_EN 1 /* Enable CRC check on the descriptor fetched from host */
- 
- #define AR_NUM_DCU      10
- #define AR_DCU_0        0x0001
+Why?
+
+The obvious downside is that bf_desc becomes compatible with pointers of
+any type.
+
+The only upside I can think of is that bf_desc won't be dereferenced by
+accident.  The same could be done by using a scalar type or
+__attribute__((noderef)).
+
+I believe the downside outweighs the upside in absence of any
+explanation.
+
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
