@@ -1,40 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60958 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757275Ab0DOVjn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:43 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 18/97] ath9k: disable the MIB interrupt if ANI is disabled
-Date: Thu, 15 Apr 2010 17:38:23 -0400
-Message-Id: <1271367582-992-19-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+Received: from c60.cesmail.net ([216.154.195.49]:15271 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757894Ab0DPWKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 18:10:31 -0400
+Subject: Re: Compiling ar9170 on 2.6.30
+From: Pavel Roskin <proski@gnu.org>
+To: Eric Siegel <nticompass@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4BC776F4.80600@gmail.com>
+References: <4BC776F4.80600@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Apr 2010 18:10:26 -0400
+Message-Id: <1271455826.16507.45.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+On Thu, 2010-04-15 at 16:28 -0400, Eric Siegel wrote:
+> I was trying to compile ar9170 from today's tarball, and I got a compile
+> error.
+> ar9170/main.c:2060: error: expected ‘;’ before ‘mchash’
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f7ef114..494456c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1436,7 +1436,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	if ((vif->type == NL80211_IFTYPE_STATION) ||
- 	    (vif->type == NL80211_IFTYPE_ADHOC) ||
- 	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
--		ah->imask |= ATH9K_INT_MIB;
-+		if (ah->config.enable_ani)
-+			ah->imask |= ATH9K_INT_MIB;
- 		ah->imask |= ATH9K_INT_TSFOOR;
- 	}
- 
+The bleeding edge compat-wireless is currently broken.  Please use
+compat-wireless-2.6.34-rc4.tar.bz2 from
+http://wireless.kernel.org/en/users/Download/stable/
+
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
