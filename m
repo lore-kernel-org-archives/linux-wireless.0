@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:46734 "EHLO purkki.valot.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752593Ab0DPFDO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 01:03:14 -0400
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] wl1251: register platform_device to pass board data
-References: <1271345003-15453-1-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Fri, 16 Apr 2010 08:03:12 +0300
-In-Reply-To: <1271345003-15453-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Thu\, 15 Apr 2010 18\:23\:23 +0300")
-Message-ID: <87iq7sm1kf.fsf@purkki.valot.fi>
+Received: from mx51.mymxserver.com ([85.199.173.110]:23683 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754110Ab0DPGoj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 02:44:39 -0400
+From: Holger Schurig <holgerschurig@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: Survey mode volunteers
+Date: Fri, 16 Apr 2010 08:45:01 +0200
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Anton Puolakka <Anton.Puolakka@7signal.com>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <0290AB2F0A8E124B9FFC144088A1A95609D6029647@EX-MBS04.nbl.local> <201004140911.11459.holgerschurig@gmail.com> <20100414173044.GA2841@tux>
+In-Reply-To: <20100414173044.GA2841@tux>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201004160845.02027.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+> Nice, it should be very similar for ath9k
 
-> wl1251 is embedded chip that can be connected using SDIO bus, and is not
-> an actual SDIO card. For this reason there is a need to pass some board
-> specific data, like 'EEPROM is attached' flag or power control callback.
->
-> However currently there is no way to pass this data through SDIO subsystem,
-> so this patch registers dummy platform_device to allow that, until we
-> have a better solution to this.
+... but please be aware that is is only about 20% of survey. Things that need 
+to be addressed are the reporting of some kind of duty-cycle (how much is this 
+channel occupied) and logic inside scanning to actually trigger this for 
+channels other than the current one.
 
-Looks very good now, thanks a lot for doing this.
+> BTW, one enhancement which we've
+> been meanint to address but haven't had the time yet is to split noise
+> floor per channel. This can be seen how its done on the legacy HAL with
+> the code sprinkled with the ATH_NF_PER_CHAN ifdef.
 
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
-
-Acked-by: Kalle Valo <kvalo@adurom.com>
+Nice, knowing the noise-per-channel AND the channel occupation would be quite 
+helpful to select the "best" channel.
 
 -- 
-Kalle Valo
+http://www.holgerschurig.de
