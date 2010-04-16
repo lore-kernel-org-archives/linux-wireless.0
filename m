@@ -1,60 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60930 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757216Ab0DOVjm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53526 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757978Ab0DPTAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:42 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 02/97] ath9k_hw: add silicon revision macros for AR9300
-Date: Thu, 15 Apr 2010 17:38:07 -0400
-Message-Id: <1271367582-992-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 16 Apr 2010 15:00:13 -0400
+Date: Fri, 16 Apr 2010 14:47:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Ivan Seskar <seskar@winlab.rutgers.edu>
+Subject: Re: Survey mode
+Message-ID: <20100416184701.GE8554@tuxdriver.com>
+References: <514D34D599B3254B89EEAADA3A7AC85D3F1F9D0AF4@ms2.winlab-ad.rutgers.edu> <z2p43e72e891004161046o81e032ddm20ce1e3528af0684@mail.gmail.com> <201004162043.07085.holgerschurig@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201004162043.07085.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Fri, Apr 16, 2010 at 08:43:06PM +0200, Holger Schurig wrote:
+> > Luiz:
+> > Holger, are these in PATCH form or were they RFCs?
+> 
+> Both patches work for me, so they're [PATCH]. If John want's them "extra", I 
+> can make sure they apply to linux-wl and repost them.
 
-AR9300 will be the first device supported of the AR9003
-family. AR9300 1.0 hardware exists but it is not going to
-be sold anywhere so we completely skip its support.
+Sounds like people want them?  If so, a repost would be nice...
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/reg.h |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 7e36ad7..5ab6d6e 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -759,6 +759,8 @@
- #define AR_SREV_VERSION_9271			0x140
- #define AR_SREV_REVISION_9271_10		0
- #define AR_SREV_REVISION_9271_11		1
-+#define AR_SREV_VERSION_9300                  0x1c0
-+#define AR_SREV_REVISION_9300_20              2 /* 2.0 and 2.1 */
- 
- #define AR_SREV_5416(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
-@@ -844,6 +846,15 @@
- #define AR_SREV_9271_11(_ah) \
-     (AR_SREV_9271(_ah) && \
-      ((_ah)->hw_version.macRev == AR_SREV_REVISION_9271_11))
-+#define AR_SREV_9300(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300))
-+#define AR_SREV_9300_20(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9300_20))
-+#define AR_SREV_9300_20_OR_LATER(_ah) \
-+	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9300) || \
-+	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
-+	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9300_20)))
- 
- #define AR_SREV_9285E_20(_ah) \
-     (AR_SREV_9285_12_OR_LATER(_ah) && \
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
