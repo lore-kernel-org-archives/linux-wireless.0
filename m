@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:33010 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754050Ab0DIIHw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 04:07:52 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 1/5] wl1271: Fix memory leaks on driver initialization
-Date: Fri,  9 Apr 2010 11:07:26 +0300
-Message-Id: <1270800450-8167-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1270800450-8167-1-git-send-email-luciano.coelho@nokia.com>
-References: <1270800450-8167-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mx1.redhat.com ([209.132.183.28]:29712 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757645Ab0DPNt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 09:49:28 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	<wey-yi.w.guy@intel.com>, Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] iwlwifi: initialize iwl_wimax_coex_cmd.flags
+Date: Fri, 16 Apr 2010 15:47:56 +0200
+Message-Id: <1271425676-32552-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+iwl_wimax_coex_cmd.flags can be really uninitialized, so fix
+that.
 
-This patch fixes some memory leaks occurring during driver init/de-init.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 5c32d8d..4e97540 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1093,6 +1093,14 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 		wl->tx_blocks_freed[i] = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index f09bff8..2e489cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2382,11 +2382,11 @@ EXPORT_SYMBOL(iwl_free_txq_mem);
  
- 	wl1271_debugfs_reset(wl);
-+
-+	kfree(wl->fw_status);
-+	wl->fw_status = NULL;
-+	kfree(wl->tx_res_if);
-+	wl->tx_res_if = NULL;
-+	kfree(wl->target_mem_map);
-+	wl->target_mem_map = NULL;
-+
- 	mutex_unlock(&wl->mutex);
- }
+ int iwl_send_wimax_coex(struct iwl_priv *priv)
+ {
+-	struct iwl_wimax_coex_cmd uninitialized_var(coex_cmd);
++	struct iwl_wimax_coex_cmd coex_cmd;
  
-@@ -2387,7 +2395,6 @@ int wl1271_free_hw(struct wl1271 *wl)
+ 	if (priv->cfg->support_wimax_coexist) {
+ 		/* UnMask wake up src at associated sleep */
+-		coex_cmd.flags |= COEX_FLAGS_ASSOC_WA_UNMASK_MSK;
++		coex_cmd.flags = COEX_FLAGS_ASSOC_WA_UNMASK_MSK;
  
- 	wl1271_debugfs_exit(wl);
- 
--	kfree(wl->target_mem_map);
- 	vfree(wl->fw);
- 	wl->fw = NULL;
- 	kfree(wl->nvs);
+ 		/* UnMask wake up src at unassociated sleep */
+ 		coex_cmd.flags |= COEX_FLAGS_UNASSOC_WA_UNMASK_MSK;
 -- 
-1.6.3.3
+1.6.2.5
 
