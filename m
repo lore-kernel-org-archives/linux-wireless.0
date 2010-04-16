@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51323 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815Ab0D0SaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 14:30:12 -0400
-Date: Tue, 27 Apr 2010 14:15:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: rt2800lib: Fix rx path on SoC devices
-Message-ID: <20100427181551.GA32012@tuxdriver.com>
-References: <201004261348.45044.helmut.schaa@googlemail.com>
- <4BD609C9.1080005@gmail.com>
- <201004270828.17303.helmut.schaa@googlemail.com>
- <4BD7270B.6050000@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4BD7270B.6050000@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:52756 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757610Ab0DPSEv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 14:04:51 -0400
+Subject: Re: [PATCH] iwlwifi: initialize iwl_wimax_coex_cmd.flags
+From: reinette chatre <reinette.chatre@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+In-Reply-To: <1271425676-32552-1-git-send-email-sgruszka@redhat.com>
+References: <1271425676-32552-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Apr 2010 11:04:50 -0700
+Message-ID: <1271441090.14052.13515.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 27, 2010 at 08:03:55PM +0200, Gertjan van Wingerde wrote:
+On Fri, 2010-04-16 at 06:47 -0700, Stanislaw Gruszka wrote:
+> iwl_wimax_coex_cmd.flags can be really uninitialized, so fix
+> that.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
 
-> P.S. It seems that John already applied this patch without even Ivo or me Acking it, so I guess an
-> incremental patch would be best now.
+Thank you
 
-Yes, sorry if that offends -- "fix rx path" makes me take things seriously. :-)
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Reinette
+
+
