@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46757 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933220Ab0DHT1l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:41 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 026/102] ath9k_hw: add common channel select helpers for ar900[23]
-Date: Thu,  8 Apr 2010 15:26:22 -0400
-Message-Id: <1270754858-26266-27-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from c60.cesmail.net ([216.154.195.49]:34310 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932417Ab0DPVe7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 17:34:59 -0400
+Subject: Re: [PATCH 2/2] iwmc3200wifi: check sparse endianness annotations
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+In-Reply-To: <1271451466.8043.0.camel@jlt3.sipsolutions.net>
+References: <1271381324-21044-1-git-send-email-yi.zhu@intel.com>
+	 <1271381324-21044-2-git-send-email-yi.zhu@intel.com>
+	 <1271451350.16507.2.camel@mj>
+	 <1271451466.8043.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Fri, 16 Apr 2010 17:34:58 -0400
+Message-Id: <1271453698.16507.26.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |    4 ++--
- drivers/net/wireless/ath/ath9k/phy.h        |    4 ++++
- 2 files changed, 6 insertions(+), 2 deletions(-)
+On Fri, 2010-04-16 at 22:57 +0200, Johannes Berg wrote:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index f94fc27..ef9768a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -83,7 +83,7 @@ static int ar9002_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 		bMode = 1;
- 		fracMode = 1;
- 		aModeRefSel = 0;
--		channelSel = (freq * 0x10000) / 15;
-+		channelSel = CHANSEL_2G(freq);
- 
- 		if (AR_SREV_9287_11_OR_LATER(ah)) {
- 			if (freq == 2484) {
-@@ -127,7 +127,7 @@ static int ar9002_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 			 */
- 			fracMode = 1;
- 			refDivA = 1;
--			channelSel = (freq * 0x8000) / 15;
-+			channelSel = CHANSEL_5G(freq);
- 
- 			/* RefDivA setting */
- 			REG_RMW_FIELD(ah, AR_AN_SYNTH9,
-diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
-index b908152..7d397fd 100644
---- a/drivers/net/wireless/ath/ath9k/phy.h
-+++ b/drivers/net/wireless/ath/ath9k/phy.h
-@@ -17,6 +17,10 @@
- #ifndef PHY_H
- #define PHY_H
- 
-+#define CHANSEL_DIV		15
-+#define CHANSEL_2G(_freq)	(((_freq) * 0x10000) / CHANSEL_DIV)
-+#define CHANSEL_5G(_freq)	(((_freq) * 0x8000) / CHANSEL_DIV)
-+
- #define AR_PHY_BASE     0x9800
- #define AR_PHY(_n)      (AR_PHY_BASE + ((_n)<<2))
- 
+> We've done it on other drivers -- we can't do it for all of the kernel
+> because that would drown people in warnings, but for those drivers that
+> _should_ be clean it ought to be fine to add it by default.
+
+Oh, I see, there are several precedents.
+
+That said, there are not many warnings added by __CHECK_ENDIAN__.  In my
+x86_64 configuration, sparse produces 2316 lines of output without
+__CHECK_ENDIAN__ and 3526 lines with __CHECK_ENDIAN__, a 52% increase.
+That's hardly "drowning".
+
+Also, the warnings about endianess are perhaps the most useful of all
+sparse warnings.
+
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
