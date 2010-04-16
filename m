@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:17339 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:28656 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756793Ab0DIUJl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 16:09:41 -0400
+	id S932597Ab0DPVwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 17:52:45 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
 	Johannes Berg <johannes.berg@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/12] iwlwifi: remove pointless sta_id invalid check
-Date: Fri,  9 Apr 2010 13:09:22 -0700
-Message-Id: <1270843769-30017-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1270843769-30017-1-git-send-email-reinette.chatre@intel.com>
-References: <1270843769-30017-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 18/21] iwlwifi: rename TX_CMD_FLG_BT_DIS_MSK
+Date: Fri, 16 Apr 2010 14:52:35 -0700
+Message-Id: <1271454758-14351-19-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
+References: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-lq->sta_id cannot be invalid here since this
-function will only be called after the station
-has been added properly.
+The flag name is a little misleading, this
+flag instructs the device to ignore bluetooth
+messages for purposes of frame transmissions,
+so rename the flag to TX_CMD_FLG_IGNORE_BT.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-sta.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index a43493f..6876f7c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1187,13 +1187,9 @@ int iwl_send_lq_cmd(struct iwl_priv *priv,
- 		.data = lq,
- 	};
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index d830086..67c723c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -1443,7 +1443,7 @@ struct iwl4965_rx_mpdu_res_start {
  
--	if ((lq->sta_id == 0xFF) &&
--	    (priv->iw_mode == NL80211_IFTYPE_ADHOC))
-+	if (WARN_ON(lq->sta_id == IWL_INVALID_STATION))
- 		return -EINVAL;
+ /* 1: Ignore Bluetooth priority for this frame.
+  * 0: Delay Tx until Bluetooth device is done (normal usage). */
+-#define TX_CMD_FLG_BT_DIS_MSK cpu_to_le32(1 << 12)
++#define TX_CMD_FLG_IGNORE_BT cpu_to_le32(1 << 12)
  
--	if (lq->sta_id == 0xFF)
--		lq->sta_id = IWL_AP_ID;
--
- 	iwl_dump_lq_cmd(priv, lq);
- 	BUG_ON(init && (cmd.flags & CMD_ASYNC));
- 
+ /* 1: uCode overrides sequence control field in MAC header.
+  * 0: Driver provides sequence control field in MAC header.
 -- 
 1.6.3.3
 
