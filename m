@@ -1,86 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:63811 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018Ab0DAM6X (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:60727 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753226Ab0DPKWS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 08:58:23 -0400
-Received: by wwb17 with SMTP id 17so746725wwb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 05:58:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201004011451.44204.IvDoorn@gmail.com>
-References: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com>
-	<201004011451.44204.IvDoorn@gmail.com>
-From: Luis Correia <luis.f.correia@gmail.com>
-Date: Thu, 1 Apr 2010 13:58:02 +0100
-Message-ID: <h2iefe7343f1004010558ze63465bcm5e3bd10e702dea66@mail.gmail.com>
-Subject: [PATCH V2] Remove MCU requests for SoC platforms
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 16 Apr 2010 06:22:18 -0400
+Received: by bwz25 with SMTP id 25so2861104bwz.28
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 03:22:16 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Bob Copeland <me@bobcopeland.com>,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH] wl1251: add support for dedicated IRQ line
+Date: Fri, 16 Apr 2010 13:22:12 +0300
+Message-Id: <1271413332-2979-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ralink SoC platforms do not have an MCU.
+wl1251 has WLAN_IRQ pin for generating interrupts to host processor,
+which is mandatory in SPI mode and optional in SDIO mode (which can
+use SDIO interrupts instead). However TI recommends using deditated
+IRQ line for SDIO too.
 
-Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
+Add support for using dedicated interrupt line with SDIO, but also leave
+ability to switch to SDIO interrupts in case it's needed.
+
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |   56 ++++++++++++++++++++++++++---
+ include/linux/spi/wl12xx.h                |    2 +
+ 2 files changed, 53 insertions(+), 5 deletions(-)
 
---- a/drivers/net/wireless/rt2x00/rt2800lib.c	2010-03-26
-18:25:50.000000000 +0000
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c	2010-04-01
-13:05:18.249747122 +0100
-@@ -221,9 +221,9 @@
- 	u32 reg;
-
- 	/*
--	 * SOC devices don't support MCU requests.
-+	 * some devices don't support MCU requests.
- 	 */
--	if (rt2x00_is_soc(rt2x00dev))
-+	if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
- 		return;
-
- 	mutex_lock(&rt2x00dev->csr_mutex);
---- a/drivers/net/wireless/rt2x00/rt2800pci.c	2010-03-26
-18:25:50.000000000 +0000
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c	2010-04-01
-13:04:42.453621607 +0100
-@@ -59,6 +59,12 @@
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index 7409c34..d234285 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -25,6 +25,7 @@
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/platform_device.h>
+ #include <linux/spi/wl12xx.h>
++#include <linux/irq.h>
+ 
+ #include "wl1251.h"
+ 
+@@ -134,18 +135,36 @@ static void wl1251_sdio_disable_irq(struct wl1251 *wl)
+ 	sdio_release_host(func);
+ }
+ 
++/* Interrupts when using dedicated WLAN_IRQ pin */
++static irqreturn_t wl1251_line_irq(int irq, void *cookie)
++{
++	struct wl1251 *wl = cookie;
++
++	ieee80211_queue_work(wl->hw, &wl->irq_work);
++
++	return IRQ_HANDLED;
++}
++
++static void wl1251_enable_line_irq(struct wl1251 *wl)
++{
++	return enable_irq(wl->irq);
++}
++
++static void wl1251_disable_line_irq(struct wl1251 *wl)
++{
++	return disable_irq(wl->irq);
++}
++
+ static void wl1251_sdio_set_power(bool enable)
  {
- 	unsigned int i;
- 	u32 reg;
-+	
-+	/*
-+	 * some devices don't support MCU requests.
-+	 */
-+	if (!test_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags))
-+		return;
-
- 	for (i = 0; i < 200; i++) {
- 		rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
-@@ -1098,10 +1104,12 @@
- 	__set_bit(DRIVER_SUPPORT_CONTROL_FILTER_PSPOLL, &rt2x00dev->flags);
-
- 	/*
--	 * This device requires firmware.
-+	 * This device requires firmware and MCU access.
- 	 */
--	if (!rt2x00_is_soc(rt2x00dev))
-+	if (!rt2x00_is_soc(rt2x00dev)){
- 		__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
-+		__set_bit(DRIVER_REQUIRE_MCU, &rt2x00dev->flags);
+ }
+ 
+-static const struct wl1251_if_operations wl1251_sdio_ops = {
++static struct wl1251_if_operations wl1251_sdio_ops = {
+ 	.read = wl1251_sdio_read,
+ 	.write = wl1251_sdio_write,
+ 	.write_elp = wl1251_sdio_write_elp,
+ 	.read_elp = wl1251_sdio_read_elp,
+ 	.reset = wl1251_sdio_reset,
+-	.enable_irq = wl1251_sdio_enable_irq,
+-	.disable_irq = wl1251_sdio_disable_irq,
+ };
+ 
+ static int wl1251_platform_probe(struct platform_device *pdev)
+@@ -191,6 +210,7 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 		goto release;
+ 
+ 	sdio_set_block_size(func, 512);
++	sdio_release_host(func);
+ 
+ 	SET_IEEE80211_DEV(hw, &func->dev);
+ 	wl->if_priv = func;
+@@ -199,17 +219,41 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 
+ 	if (wl12xx_board_data != NULL) {
+ 		wl->set_power = wl12xx_board_data->set_power;
++		wl->irq = wl12xx_board_data->irq;
+ 		wl->use_eeprom = wl12xx_board_data->use_eeprom;
+ 	}
+ 
+-	sdio_release_host(func);
++	if (wl->irq) {
++		ret = request_irq(wl->irq, wl1251_line_irq, 0, "wl1251", wl);
++		if (ret < 0) {
++			wl1251_error("request_irq() failed: %d", ret);
++			goto disable;
++		}
++
++		set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
++		disable_irq(wl->irq);
++
++		wl1251_sdio_ops.enable_irq = wl1251_enable_line_irq;
++		wl1251_sdio_ops.disable_irq = wl1251_disable_line_irq;
++
++		wl1251_info("using dedicated interrupt line");
++	} else {
++		wl1251_sdio_ops.enable_irq = wl1251_sdio_enable_irq;
++		wl1251_sdio_ops.disable_irq = wl1251_sdio_disable_irq;
++
++		wl1251_info("using SDIO interrupt");
 +	}
- 	__set_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags);
- 	__set_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags);
- 	if (!modparam_nohwcrypt)
---- a/drivers/net/wireless/rt2x00/rt2x00.h	2010-03-26 18:25:50.000000000 +0000
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h	2010-04-01 13:01:26.812694036 +0100
-@@ -631,6 +631,7 @@
- 	 * Driver requirements
- 	 */
- 	DRIVER_REQUIRE_FIRMWARE,
-+	DRIVER_REQUIRE_MCU,
- 	DRIVER_REQUIRE_BEACON_GUARD,
- 	DRIVER_REQUIRE_ATIM_QUEUE,
- 	DRIVER_REQUIRE_DMA,
++
+ 	ret = wl1251_init_ieee80211(wl);
+ 	if (ret)
+-		goto disable;
++		goto out_free_irq;
+ 
+ 	sdio_set_drvdata(func, wl);
+ 	return ret;
+ 
++out_free_irq:
++	if (wl->irq)
++		free_irq(wl->irq, wl);
+ disable:
+ 	sdio_claim_host(func);
+ 	sdio_disable_func(func);
+@@ -222,6 +266,8 @@ static void __devexit wl1251_sdio_remove(struct sdio_func *func)
+ {
+ 	struct wl1251 *wl = sdio_get_drvdata(func);
+ 
++	if (wl->irq)
++		free_irq(wl->irq, wl);
+ 	wl1251_free_hw(wl);
+ 
+ 	sdio_claim_host(func);
+diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
+index aed64ed..a223ecb 100644
+--- a/include/linux/spi/wl12xx.h
++++ b/include/linux/spi/wl12xx.h
+@@ -26,6 +26,8 @@
+ 
+ struct wl12xx_platform_data {
+ 	void (*set_power)(bool enable);
++	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
++	int irq;
+ 	bool use_eeprom;
+ };
+ 
+-- 
+1.6.3.3
+
