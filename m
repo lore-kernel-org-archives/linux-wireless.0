@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:48888 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750Ab0DSHQh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 03:16:37 -0400
-Received: by wwb24 with SMTP id 24so2312104wwb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 00:16:36 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 3/3] orinoco: have sparse check endian issues
-Date: Mon, 19 Apr 2010 08:16:23 +0100
-Message-Id: <1271661383-27839-3-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1271661383-27839-1-git-send-email-kilroyd@googlemail.com>
-References: <1271661383-27839-1-git-send-email-kilroyd@googlemail.com>
+Received: from nbd.name ([88.198.39.176]:39174 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753132Ab0DPWJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 18:09:53 -0400
+Message-ID: <4BC8E027.1030807@openwrt.org>
+Date: Sat, 17 Apr 2010 00:09:43 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: Re: [PATCH v3 42/97] ath9k: Make bf_desc of ath_buf opaque
+References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>	 <1271367582-992-43-git-send-email-lrodriguez@atheros.com> <1271455259.16507.43.camel@mj>
+In-Reply-To: <1271455259.16507.43.camel@mj>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Orinoco should be endian clean, so enable the checking.
+On 2010-04-17 12:00 AM, Pavel Roskin wrote:
+> On Thu, 2010-04-15 at 17:38 -0400, Luis R. Rodriguez wrote:
+>> From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+>> 
+>> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> 
+>> -	struct ath_desc *bf_desc;	/* virtual addr of desc */
+>> +	void *bf_desc;			/* virtual addr of desc */
+> 
+> Why?
+> 
+> The obvious downside is that bf_desc becomes compatible with pointers of
+> any type.
+Because on AR9300 where it's used, it points to a struct ar9003_txc instead.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/Makefile |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+> The only upside I can think of is that bf_desc won't be dereferenced by
+> accident.  The same could be done by using a scalar type or
+> __attribute__((noderef)).
+I don't think a scalar type makes any sense for this, because it is a
+pointer, and it does get passed to functions that dereference it.
+In cases where struct ar9003_txc is used, it'd have to pass through
+either an explicit cast or an implicit one going through void* anyway,
+so we might as well make it clear that while bf_desc is a valid pointer,
+it does not always point to struct ath_desc
 
-diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
-index 9abd632..e645269 100644
---- a/drivers/net/wireless/orinoco/Makefile
-+++ b/drivers/net/wireless/orinoco/Makefile
-@@ -11,3 +11,6 @@ obj-$(CONFIG_PCI_HERMES)	+= orinoco_pci.o
- obj-$(CONFIG_TMD_HERMES)	+= orinoco_tmd.o
- obj-$(CONFIG_NORTEL_HERMES)	+= orinoco_nortel.o
- obj-$(CONFIG_PCMCIA_SPECTRUM)	+= spectrum_cs.o
-+
-+# Orinoco should be endian clean.
-+ccflags-y += -D__CHECK_ENDIAN__
--- 
-1.6.4.4
-
+- Felix
