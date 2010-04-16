@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:64944 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037Ab0DMEwH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 00:52:07 -0400
+Received: from purkki.adurom.net ([80.68.90.206]:49604 "EHLO purkki.valot.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752351Ab0DPFSK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 01:18:10 -0400
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCHv2 1/2] mac80211: Determine dynamic PS timeout based on ps-qos network latency
+References: <1271228079-27321-1-git-send-email-juuso.oikarinen@nokia.com>
+	<1271228079-27321-2-git-send-email-juuso.oikarinen@nokia.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Fri, 16 Apr 2010 08:17:57 +0300
+In-Reply-To: <1271228079-27321-2-git-send-email-juuso.oikarinen@nokia.com> (Juuso Oikarinen's message of "Wed\, 14 Apr 2010 09\:54\:38 +0300")
+Message-ID: <87eiigm0vu.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 12 Apr 2010 21:51:47 -0700
-Message-ID: <m2s43e72e891004122151n2677a158o7f9aa8d054bf058e@mail.gmail.com>
-Subject: Compat-wireless for 2.6.34 - 802.11 and bluetooth backported
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're up to 2.6.34-rc4 upstream but we hadn't released a respective
-compat-wireless stable [1] tarball yet. I finally got some time so
-just posted one up [2], this gives us the 2.6.34-rc4 wireless
-subsystem, bluetooth subsystem and new wireless/bluetooth drivers
-compilable and installed on older kernels. Please report any issues
-ASAP. For details on changes you can refer to the
-ChangeLog-2.6.34-rc4-wireless [3].
+Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
 
-I only did a quick build test against 2.6.31 and it seems to compile
-fine :), more compile tests reports against older kernels and actual
-loading tests reports against different kernels are greatly
-appreciated.
+> Determine the dynamic PS timeout based on the configured ps-qos network
+> latency. For backwards wext compatibility, allow the dynamic PS timeout
+> configured by the cfg80211 to overrule the automatically determined value.
 
- Luis
+Thanks. I took a quick look, but I haven't tested this yet myself.
 
-[1] http://wireless.kernel.org/en/users/Download/stable
-[2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.34/compat-wireless-2.6.34-rc4.tar.bz2
-[3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.34/ChangeLog-2.6.34-rc4-wireless
+> +		timeout = local->hw.conf.dynamic_ps_forced_timeout;
+> +		if (timeout < 0) {
+> +			if (latency <= 50000)
+> +				timeout = 300;
+> +			else if (latency <= 2000000000)
+> +				timeout = 100;
+> +			else
+> +				timeout = 0;
+> +		}
+> +		local->hw.conf.dynamic_ps_timeout = timeout;
+
+What will be the timeout value when there are no pm_qos requirements
+from user space applications? Do you know what will be the default
+latency value in that case?
+
+I'm mostly worried about timeout 0 case, for example I suspect ath9k
+is broken with that value.
+
+Also does this patch change the default value of dynamic ps timeout?
+
+-- 
+Kalle Valo
