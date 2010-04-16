@@ -1,64 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:61660 "EHLO
-	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753835Ab0DCOIv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49551 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757329Ab0DPNpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 10:08:51 -0400
-Message-ID: <4BB74BEC.4000703@gmail.com>
-Date: Sat, 03 Apr 2010 16:08:44 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Fri, 16 Apr 2010 09:45:10 -0400
+Date: Fri, 16 Apr 2010 09:41:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH] mac80211: Prevent running sta_cleanup timer
+	unnecessarily
+Message-ID: <20100416134122.GC8554@tuxdriver.com>
+References: <1271403308-23416-1-git-send-email-juuso.oikarinen@nokia.com> <1271403308-23416-2-git-send-email-juuso.oikarinen@nokia.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Correia <luis.f.correia@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH V4] rt2x00: remove MCU requests for SoC platforms
-References: <k2g880c1631004011414z59ce4547j1bcea7ad5aff7229@mail.gmail.com> 	<t2qefe7343f1004030447i9d6f290fvd7dd317c63b5b61@mail.gmail.com> <l2mefe7343f1004030449refb18c80l3a81242338a8a4a7@mail.gmail.com> <4BB745E8.6030205@gmail.com>
-In-Reply-To: <4BB745E8.6030205@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1271403308-23416-2-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/03/10 15:43, Gertjan van Wingerde wrote:
-> On 04/03/10 13:49, Luis Correia wrote:
->> The ralink SoC platforms do not have an MCU.
->>
->> Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
+On Fri, Apr 16, 2010 at 10:35:08AM +0300, Juuso Oikarinen wrote:
+> The sta_cleanup timer is used to periodically expire buffered frames from the
+> tx buf. The timer is executing periodically, regardless of the need for it.
+> This is wasting resources.
 > 
-> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Fix this simply by not restarting the sta_cleanup timer if the tx buffer was
+> empty. Restart the timer when there is some more tx-traffic.
 > 
->> ---
->>
->> Removed flag usage as per Gertjan suggestion.
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c
->> b/drivers/net/wireless/rt2x00/rt2800pci.c
->> index ce7e88e..1df2d44 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
->> @@ -60,6 +60,12 @@ static void rt2800pci_mcu_status(struct rt2x00_dev
->> *rt2x00dev, const u8 token)
->>        unsigned int i;
->>        u32 reg;
->>
->> +       /*
->> +        * SOC devices don't support MCU requests.
->> +        */
->> +       if (rt2x00_is_soc(rt2x00dev))
->> +               return;
->> +
->>        for (i = 0; i < 200; i++) {
->>                rt2800_register_read(rt2x00dev, H2M_MAILBOX_CID, &reg);
->>
+> Cc: Janne Ylälehto <janne.ylalehto@nokia.com>
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-John,
+Seems reasonable to me...
 
-This patch seems to be word-wrapped and white-space damaged. I fixed it up
-and applied it to my tree.
-
-If you want you can pull from git://git.gwingerde.nl/rt2x00-next-2.6 to
-get the fixed up patch.
-
----
-Gertjan.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
