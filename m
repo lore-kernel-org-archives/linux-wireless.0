@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46744 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933218Ab0DHT1k (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:55172 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932222Ab0DPTyN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:40 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 023/102] ath9k_hw: update the chip tests for AR9003
-Date: Thu,  8 Apr 2010 15:26:19 -0400
-Message-Id: <1270754858-26266-24-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 16 Apr 2010 15:54:13 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 16 Apr 2010 12:53:52 -0700
+Message-ID: <n2q43e72e891004161253wbb9afe61y539206f010e91a78@mail.gmail.com>
+Subject: Power consumption on 802.11 / ASPM / device measurements
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, yanmin.zhang@intel.com,
+	shaohua.li@intel.com, Sameer Nanda <snanda@google.com>,
+	Jonathan May <Jonathan.May@atheros.com>,
+	David Quan <David.Quan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+We've been accumulating a few power consumption related documents on
+the wireless wiki for a while now. One which I saw was missing was for
+actual power consumption and review of new PCI-E features which should
+be taken into consideration when debugging power consumption or
+reviewing it. ASPM is something that I can say I found little to no
+documentation for when looking into it so I've done a brain dump of
+what I recall from it, the code review of it, and some e-mail
+exchanges I've had with Jonathan May @ Atheros.
 
-The AR9003 family requires a change on the loop and can also skip
-testing the PHY timing registers. This chip test can now be used
-by all Atheros hardware families, including legacy. We can
-eventually move this out to the generic ath module.
+I've stashed together all the power consumption docs at:
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+http://wireless.kernel.org/en/users/Documentation/Power-consumption
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0e4a40c..207116a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -298,18 +298,25 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
- }
- 
-+/* This should work for all families including legacy */
- static bool ath9k_hw_chip_test(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
--	u32 regAddr[2] = { AR_STA_ID0, AR_PHY_BASE + (8 << 2) };
-+	u32 regAddr[2] = { AR_STA_ID0 };
- 	u32 regHold[2];
- 	u32 patternData[4] = { 0x55555555,
- 			       0xaaaaaaaa,
- 			       0x66666666,
- 			       0x99999999 };
--	int i, j;
-+	int i, j, loop_max;
- 
--	for (i = 0; i < 2; i++) {
-+	if (!AR_SREV_9300_20_OR_LATER(ah)) {
-+		loop_max = 2;
-+		regAddr[1] = AR_PHY_BASE + (8 << 2);
-+	} else
-+		loop_max = 1;
-+
-+	for (i = 0; i < loop_max; i++) {
- 		u32 addr = regAddr[i];
- 		u32 wrData, rdData;
- 
--- 
-1.6.3.3
+You'll see there some ASPM docs now and some ath9k specific power
+consumption metrics/ASPM details. Please review and enhance as you see
+fit.
 
+Yanmin, Shaohua, I see CONFIG_PCIEASPM still marked as experimental,
+I'm curious if this is still really that experimental and if there are
+plans for it go out of experimental. Also I am little puzzled with
+some of the aspm.c code, I see we fill the pci device struct with
+capability stuff via pcie_aspm_cap_init() but I also see ASPM
+capability stuff exposed on kernels without CONFIG_PCIEASPM (albeit I
+see it always disabled on my system at home), so are we filling the
+capability elsewhere? I think there are some boxes without this kernel
+config enabled and where ASPM capability info is exposed and does show
+up as enabled, could be wrong.
+
+Also curious -- how often are BIOSes buggy enough for ASPM to get
+disabled by mistake on the modern devices? And for systems that have
+no Bios (*cough* ChromeOS) how is this handled?
+
+ Luis
