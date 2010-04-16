@@ -1,41 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55057 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757062Ab0DODa6 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:31738 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932522Ab0DPUvg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:58 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 97/97] ath9k_hw: add the PCI ID for the first AR9300 device
-Date: Wed, 14 Apr 2010 23:30:51 -0400
-Message-Id: <1271302251-9075-98-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 16 Apr 2010 16:51:36 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so501902fgg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 13:51:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <k2r8108ad761004161334x894f9298xf3728846ff69b36b@mail.gmail.com>
+References: <k2r8108ad761004161334x894f9298xf3728846ff69b36b@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 16 Apr 2010 22:51:15 +0200
+Message-ID: <w2s69e28c911004161351xa56d4d50l519a3c99258c5ea0@mail.gmail.com>
+Subject: Re: timeout in zd1211rw with zotac mini-itx (geforce 9300)
+To: Tsuwei Chen <tsuwei@gmail.com>
+Cc: zd1211-devs@lists.sourceforge.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first AR9003 hardware family device supported is the
-AR9300, which has the vendor:device id 168c:0030
+On Fri, Apr 16, 2010 at 10:34 PM, Tsuwei Chen <tsuwei@gmail.com> wrote:
+> Has anyone use the zd1211 usb adapter with mini-itx board based on
+> geforce 9300? I have been experience some annoying issues ever since I
+> got this motherboard. The problem is that sometime the card just
+> cannot be switched on. It complains about ioread32() error -110. And I
+> have spent a few days and try a few different combination, and here is
+> what I have found so far:
+>
+> 1, with 1 wifi adapter directly plugged into the board, the wifi
+> adapter works fine most of the time (have seen a couple failure, but
+> is hard to reproduce)
+> 2. with 1 wifi adapter, plugged in through a USB hub, the driver
+> complains ioread32 error. I've try 2 USB hubs: a cheap 4-port USB
+> dongle and also the USB hubs built into my DELL monitor. Both showed
+> the same problem.
+> 3. If I plugged in 2 wifi adapters directly to the board, more than
+> 50% of chance one of the wifi adapter would fail during the 'ifconifg
+> up'.
+>
+> I tried to dig our more on this. I am using kernel 2.6.24-26 (ubuntu).
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Please try a more recent kernel - 2.6.24 contains
+zd1211rw-ieee80211softmac, which is no longer developed.
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 1ec836c..257b10b 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
-+	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
- 	{ 0 }
- };
- 
+> I had turned on the debug message output and I have traced out that
+> the failure was first detected in the zd_mac_open(). Probably around
+> the call to zd_chip_switch_radio_on(). The error message is printed in
+> the zd_usb_ioread16v(), and probably indicate the driver is
+> experiencing a timeout while it is trying to read the register from
+> the adapter.
+>
+> What exactly does this mean? Why adding a usb hub cause such a huge
+> differnce? Has anyone experienced similar problem before? Any pointer
+> that can help me solve this problem is appreciated.
+>
+> BTW, I never had this problem before when I was still using a regular
+> HP desktop PC, even with the same version of kernel and same USB hub.
+> I switched to mini-itx because I am building a small system. So if
+> anyone is currently using this adapter with a mini-ITX board, please
+> also let me know which model you use.
+>
+> TIA,
+> Tsuwei
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.6.3.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
