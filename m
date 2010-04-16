@@ -1,59 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:48439 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753275Ab0DSAYY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Apr 2010 20:24:24 -0400
-Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0846096661
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 09:24:22 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 1/2] ath5k: Use high bitrates for ACK/CTS
-Date: Mon, 19 Apr 2010 09:24:25 +0900
-Cc: linville@tuxdriver.com, ath5k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org
-References: <20100412073847.28215.87571.stgit@tt-desk> <20100416155907.6e33c722@dhcp-lab-109.englab.brq.redhat.com>
-In-Reply-To: <20100416155907.6e33c722@dhcp-lab-109.englab.brq.redhat.com>
+Received: from web23101.mail.ird.yahoo.com ([217.146.189.41]:25619 "HELO
+	web23101.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932665Ab0DPWd1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 18:33:27 -0400
+Message-ID: <30211.6195.qm@web23101.mail.ird.yahoo.com>
+Date: Fri, 16 Apr 2010 22:26:44 +0000 (GMT)
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Subject: Re: [zd1211-devs] timeout in zd1211rw with zotac mini-itx (geforce 9300)
+To: zd1211-devs@lists.sourceforge.net, Tsuwei Chen <tsuwei@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <k2r8108ad761004161334x894f9298xf3728846ff69b36b@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004190924.25709.br1@einfach.org>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 16 April 2010 22:59:07 Stanislaw Gruszka wrote:
-> On Mon, 12 Apr 2010 16:38:47 +0900
+I suspect it is just poor hardware. The more power-drawing devices you have got, the current/power available to each can drop, and some devices are more sensitive to drop in voltage than others. That seems to be the obvious conclusion - the more bus-powered devices plugged in, the more likely the wireless device fails to initialise.
+
+You probably would find that you will need a independently-powered hub (i.e. a USB hub which has its own power-plug that you need to plug into the mains) for it to work reliably, since your motherboard doesn't seem to be able to do it. 
+
+--- On Fri, 16/4/10, Tsuwei Chen <tsuwei@gmail.com> wrote:
+
+> From: Tsuwei Chen <tsuwei@gmail.com>
+> Subject: [zd1211-devs] timeout in zd1211rw with zotac mini-itx (geforce 9300)
+> To: zd1211-devs@lists.sourceforge.net
+> Cc: linux-wireless@vger.kernel.org
+> Date: Friday, 16 April, 2010, 21:34
+> Has anyone use the zd1211 usb adapter
+> with mini-itx board based on
+> geforce 9300? I have been experience some annoying issues
+> ever since I
+> got this motherboard. The problem is that sometime the card
+> just
+> cannot be switched on. It complains about ioread32() error
+> -110. And I
+> have spent a few days and try a few different combination,
+> and here is
+> what I have found so far:
 > 
-> Bruno Randolf <br1@einfach.org> wrote:
-> > There was a confusion in the usage of the bits AR5K_STA_ID1_ACKCTS_6MB
-> > and AR5K_STA_ID1_BASE_RATE_11B. If they are set (1), we will get lower
-> > bitrates for ACK and CTS. Therefore ath5k_hw_set_ack_bitrate_high(ah,
-> > false) actually resulted in high bitrates, which i think is what we want
-> > anyways. Cleared the confusion and added some documentation.
+> 1, with 1 wifi adapter directly plugged into the board, the
+> wifi
+> adapter works fine most of the time (have seen a couple
+> failure, but
+> is hard to reproduce)
+> 2. with 1 wifi adapter, plugged in through a USB hub, the
+> driver
+> complains ioread32 error. I've try 2 USB hubs: a cheap
+> 4-port USB
+> dongle and also the USB hubs built into my DELL monitor.
+> Both showed
+> the same problem.
+> 3. If I plugged in 2 wifi adapters directly to the board,
+> more than
+> 50% of chance one of the wifi adapter would fail during the
+> 'ifconifg
+> up'.
 > 
-> I thought ACK and other control frames have to be modulated at slow/robust
-> bitrates, but can't remember where I read that ...
+> I tried to dig our more on this. I am using kernel
+> 2.6.24-26 (ubuntu).
+> I had turned on the debug message output and I have traced
+> out that
+> the failure was first detected in the zd_mac_open().
+> Probably around
+> the call to zd_chip_switch_radio_on(). The error message is
+> printed in
+> the zd_usb_ioread16v(), and probably indicate the driver
+> is
+> experiencing a timeout while it is trying to read the
+> register from
+> the adapter.
+> 
+> What exactly does this mean? Why adding a usb hub cause
+> such a huge
+> differnce? Has anyone experienced similar problem before?
+> Any pointer
+> that can help me solve this problem is appreciated.
+> 
+> BTW, I never had this problem before when I was still using
+> a regular
+> HP desktop PC, even with the same version of kernel and
+> same USB hub.
+> I switched to mini-itx because I am building a small
+> system. So if
+> anyone is currently using this adapter with a mini-ITX
+> board, please
+> also let me know which model you use.
+> 
+> TIA,
+> Tsuwei
+> 
+> ------------------------------------------------------------------------------
+> Download Intel® Parallel Studio Eval
+> Try the new software tools for yourself. Speed compiling,
+> find bugs
+> proactively, and fine-tune applications for parallel
+> performance.
+> See why Intel Parallel Studio got high marks during beta.
+> http://p.sf.net/sfu/intel-sw-dev
+> _______________________________________________
+> Zd1211-devs mailing list - http://zd1211.wiki.sourceforge.net/
+> Unsubscribe: https://lists.sourceforge.net/lists/listinfo/zd1211-devs
+> 
 
-this has been discussed on ath5k-devel before. i'm copying it here. please let 
-me know if i missed something...
 
-(https://lists.ath5k.org/pipermail/ath5k-devel/2010-March/003391.html)
-
-control frames have to be sent at one of the lower bitrates - one of the 
-"basic rates". in G mode these are 1, 2, 5.5, 11, 6, 12, 24Mbps. 
-
-this is from the 802.11g spec:
-"a STA responding to a received frame shall transmit its Control Response
-(either CTS or ACK) frames at the highest rate in the BSSBasicRateSet that is 
-less than or equal to the rate of the immediately previous frame in the frame 
-exchange sequence (as defined in 9.7)"
-
-basically we have to make a tradeoff here: using lower rates for ACK/CTS will 
-improve reliability, but lower performance. for example i could get only 
-10Mbps truput with ACK/CTS at the lowest bitrates and RTS/CTS enabled 
-(iwconfig wlan0 rts 250) and i can get more than 20Mbps with higher bitrates. 
-so i think it's worth to use high bitrates. actually also this should be 
-tuneable for the user, too...
-
-bruno
+      
