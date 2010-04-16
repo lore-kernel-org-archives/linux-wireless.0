@@ -1,276 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46923 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933275Ab0DHT1r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:47 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga11.intel.com ([192.55.52.93]:50641 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932566Ab0DPVwk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 17:52:40 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 064/102] ath9k_hw: abstract loading noisefloor
-Date: Thu,  8 Apr 2010 15:27:00 -0400
-Message-Id: <1270754858-26266-65-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 00/21] iwlwifi updates for 2.6.35
+Date: Fri, 16 Apr 2010 14:52:17 -0700
+Message-Id: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the last call on calib.c which acceses PHY stuff,
-with this change we calib.c is now generic between both
-all supported hardware families.
+We include a variety of changes. For statistics display in debugfs we add
+some generic functions that will help us add similar functions for all
+devices soon. Included are a few cleanups to the scanning code, removing
+unnecessary code and making code synchronous when it can sleep. We include
+some preparation work for the support of new hardware. The rest is small
+stand alone cleanups.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_phy.c   |   67 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    6 ++
- drivers/net/wireless/ath/ath9k/calib.c        |   67 -------------------------
- drivers/net/wireless/ath/ath9k/calib.h        |    1 -
- drivers/net/wireless/ath/ath9k/hw-ops.h       |    6 ++
- drivers/net/wireless/ath/ath9k/hw.h           |    2 +
- 6 files changed, 81 insertions(+), 68 deletions(-)
+These patches are also available from wireless-next-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 9d10879..7790d93 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -519,6 +519,72 @@ static void ar9002_hw_do_getnf(struct ath_hw *ah,
- 	}
- }
- 
-+static void ar9002_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	struct ath9k_nfcal_hist *h;
-+	int i, j;
-+	int32_t val;
-+	const u32 ar5416_cca_regs[6] = {
-+		AR_PHY_CCA,
-+		AR_PHY_CH1_CCA,
-+		AR_PHY_CH2_CCA,
-+		AR_PHY_EXT_CCA,
-+		AR_PHY_CH1_EXT_CCA,
-+		AR_PHY_CH2_EXT_CCA
-+	};
-+	u8 chainmask, rx_chain_status;
-+
-+	rx_chain_status = REG_READ(ah, AR_PHY_RX_CHAINMASK);
-+	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
-+		chainmask = 0x9;
-+	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
-+		if ((rx_chain_status & 0x2) || (rx_chain_status & 0x4))
-+			chainmask = 0x1B;
-+		else
-+			chainmask = 0x09;
-+	} else {
-+		if (rx_chain_status & 0x4)
-+			chainmask = 0x3F;
-+		else if (rx_chain_status & 0x2)
-+			chainmask = 0x1B;
-+		else
-+			chainmask = 0x09;
-+	}
-+
-+	h = ah->nfCalHist;
-+
-+	for (i = 0; i < NUM_NF_READINGS; i++) {
-+		if (chainmask & (1 << i)) {
-+			val = REG_READ(ah, ar5416_cca_regs[i]);
-+			val &= 0xFFFFFE00;
-+			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
-+			REG_WRITE(ah, ar5416_cca_regs[i], val);
-+		}
-+	}
-+
-+	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
-+		    AR_PHY_AGC_CONTROL_ENABLE_NF);
-+	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
-+		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
-+	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-+
-+	for (j = 0; j < 5; j++) {
-+		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
-+		     AR_PHY_AGC_CONTROL_NF) == 0)
-+			break;
-+		udelay(50);
-+	}
-+
-+	for (i = 0; i < NUM_NF_READINGS; i++) {
-+		if (chainmask & (1 << i)) {
-+			val = REG_READ(ah, ar5416_cca_regs[i]);
-+			val &= 0xFFFFFE00;
-+			val |= (((u32) (-50) << 1) & 0x1ff);
-+			REG_WRITE(ah, ar5416_cca_regs[i], val);
-+		}
-+	}
-+}
-+
- void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -531,4 +597,5 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->olc_init = ar9002_olc_init;
- 	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
- 	priv_ops->do_getnf = ar9002_hw_do_getnf;
-+	priv_ops->loadnf = ar9002_hw_loadnf;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index aeef038..b46834f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -194,6 +194,11 @@ static bool ar9003_hw_iscal_supported(struct ath_hw *ah,
- 	return false;
- }
- 
-+static void ar9003_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
-+{
-+	/* TODO */
-+}
-+
- void ar9003_hw_attach_calib_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -203,6 +208,7 @@ void ar9003_hw_attach_calib_ops(struct ath_hw *ah)
- 	priv_ops->init_cal = ar9003_hw_init_cal;
- 	priv_ops->setup_calibration = ar9003_hw_setup_calibration;
- 	priv_ops->iscal_supported = ar9003_hw_iscal_supported;
-+	priv_ops->loadnf = ar9003_hw_loadnf;
- 
- 	ops->calibrate = ar9003_hw_calibrate;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 085e126..6982577 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -16,7 +16,6 @@
- 
- #include "hw.h"
- #include "hw-ops.h"
--#include "ar9002_phy.h"
- 
- /* Common calibration code */
- 
-@@ -174,72 +173,6 @@ void ath9k_hw_start_nfcal(struct ath_hw *ah)
- 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
- }
- 
--void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
--{
--	struct ath9k_nfcal_hist *h;
--	int i, j;
--	int32_t val;
--	const u32 ar5416_cca_regs[6] = {
--		AR_PHY_CCA,
--		AR_PHY_CH1_CCA,
--		AR_PHY_CH2_CCA,
--		AR_PHY_EXT_CCA,
--		AR_PHY_CH1_EXT_CCA,
--		AR_PHY_CH2_EXT_CCA
--	};
--	u8 chainmask, rx_chain_status;
--
--	rx_chain_status = REG_READ(ah, AR_PHY_RX_CHAINMASK);
--	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
--		chainmask = 0x9;
--	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
--		if ((rx_chain_status & 0x2) || (rx_chain_status & 0x4))
--			chainmask = 0x1B;
--		else
--			chainmask = 0x09;
--	} else {
--		if (rx_chain_status & 0x4)
--			chainmask = 0x3F;
--		else if (rx_chain_status & 0x2)
--			chainmask = 0x1B;
--		else
--			chainmask = 0x09;
--	}
--
--	h = ah->nfCalHist;
--
--	for (i = 0; i < NUM_NF_READINGS; i++) {
--		if (chainmask & (1 << i)) {
--			val = REG_READ(ah, ar5416_cca_regs[i]);
--			val &= 0xFFFFFE00;
--			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
--			REG_WRITE(ah, ar5416_cca_regs[i], val);
--		}
--	}
--
--	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
--		    AR_PHY_AGC_CONTROL_ENABLE_NF);
--	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
--		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
--	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
--
--	for (j = 0; j < 5; j++) {
--		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
--		     AR_PHY_AGC_CONTROL_NF) == 0)
--			break;
--		udelay(50);
--	}
--
--	for (i = 0; i < NUM_NF_READINGS; i++) {
--		if (chainmask & (1 << i)) {
--			val = REG_READ(ah, ar5416_cca_regs[i]);
--			val &= 0xFFFFFE00;
--			val |= (((u32) (-50) << 1) & 0x1ff);
--			REG_WRITE(ah, ar5416_cca_regs[i], val);
--		}
--	}
--}
--
- int16_t ath9k_hw_getnf(struct ath_hw *ah,
- 		       struct ath9k_channel *chan)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 9f6c21d..25828e8 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -114,7 +114,6 @@ struct ath9k_pacal_info{
- 
- bool ath9k_hw_reset_calvalid(struct ath_hw *ah);
- void ath9k_hw_start_nfcal(struct ath_hw *ah);
--void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan);
- int16_t ath9k_hw_getnf(struct ath_hw *ah,
- 		       struct ath9k_channel *chan);
- void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index edb5abb..2c3171d 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -181,6 +181,12 @@ static inline void ath9k_hw_do_getnf(struct ath_hw *ah,
- 	ath9k_hw_private_ops(ah)->do_getnf(ah, nfarray);
- }
- 
-+static inline void ath9k_hw_loadnf(struct ath_hw *ah,
-+				   struct ath9k_channel *chan)
-+{
-+	ath9k_hw_private_ops(ah)->loadnf(ah, chan);
-+}
-+
- static inline bool ath9k_hw_init_cal(struct ath_hw *ah,
- 				     struct ath9k_channel *chan)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 1e95144..b280bcb 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -481,6 +481,7 @@ struct ath_gen_timer_table {
-  *	AR_RTC_PLL_CONTROL for a given channel
-  * @setup_calibration: set up calibration
-  * @iscal_supported: used to query if a type of calibration is supported
-+ * @loadnf: load noise floor read from each chain on the CCA registers
-  */
- struct ath_hw_private_ops {
- 	/* Calibration ops */
-@@ -523,6 +524,7 @@ struct ath_hw_private_ops {
- 	bool (*ani_control)(struct ath_hw *ah, enum ath9k_ani_cmd cmd,
- 			    int param);
- 	void (*do_getnf)(struct ath_hw *ah, int16_t nfarray[NUM_NF_READINGS]);
-+	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
- };
- 
- /**
--- 
-1.6.3.3
+Abhijeet Kolekar (1):
+  iwlwifi: add debugfs ops to iwlwifi
+
+Johannes Berg (11):
+  iwlwifi: remove scan_bands logic
+  iwlwifi: correct atomic bitops usage
+  iwlwifi: remove next_scan_jiffies
+  iwlwifi: remove scan_pass_start
+  iwlwifi: rename priv->scan to priv->scan_cmd
+  iwlwifi: trigger scan synchronously
+  iwlwifi: make BT coex config a virtual method
+  iwlwifi: rename TX_CMD_FLG_BT_DIS_MSK
+  iwlwifi: don't check monitor for scanning
+  iwlwifi: remove monitor check
+  iwlwifi: make scan antenna forcing more generic
+
+Shanyu Zhao (2):
+  iwlwifi: bring up 6000 Series 2x2 AGN Gen2 adapters
+  iwlwifi: remove redundant iwl_dump_lq_cmd()
+
+Wey-Yi Guy (7):
+  iwlwifi: set correct single/dual stream mask
+  iwlwifi: more generic eeprom defines
+  iwlwifi: remove duplicated debug functions
+  iwlwifi: add hw revision for 6000g2 NIC
+  iwlwifi: PA type for 6000g2 series
+  iwlwifi: sanity check for turn on aggregation tid
+  iwlwifi: more code clean up for agn devices
+
+ drivers/net/wireless/iwlwifi/Makefile          |    1 +
+ drivers/net/wireless/iwlwifi/iwl-1000.c        |    6 +
+ drivers/net/wireless/iwlwifi/iwl-3945.c        |    2 +
+ drivers/net/wireless/iwlwifi/iwl-3945.h        |    3 +
+ drivers/net/wireless/iwlwifi/iwl-4965.c        |   15 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c        |   11 +
+ drivers/net/wireless/iwlwifi/iwl-6000.c        |   33 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |  834 ++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.h |   56 ++
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c    |    2 +
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |  403 +++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c      |   47 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c      |   42 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c   |   36 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c         |   50 +--
+ drivers/net/wireless/iwlwifi/iwl-agn.h         |    3 +
+ drivers/net/wireless/iwlwifi/iwl-commands.h    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c        |   42 +--
+ drivers/net/wireless/iwlwifi/iwl-core.h        |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h         |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debug.h       |    2 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c     |  775 +---------------------
+ drivers/net/wireless/iwlwifi/iwl-dev.h         |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h      |   32 +-
+ drivers/net/wireless/iwlwifi/iwl-prph.h        |   80 ++--
+ drivers/net/wireless/iwlwifi/iwl-scan.c        |  500 +--------------
+ drivers/net/wireless/iwlwifi/iwl-sta.c         |   13 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c    |   87 +--
+ 28 files changed, 1599 insertions(+), 1506 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-debugfs.h
 
