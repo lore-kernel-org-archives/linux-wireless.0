@@ -1,404 +1,373 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30614 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:22985 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751145Ab0DEJSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Apr 2010 05:18:17 -0400
+	id S1754884Ab0DPG0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 02:26:49 -0400
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 05 Apr 2010 02:18:17 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:26:49 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19400.769.142679.327917@gargle.gargle.HOWL>
+Date: Fri, 16 Apr 2010 11:56:09 +0530
 To: <linville@tuxdriver.com>
 CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] ath9k_htc: Add support for power save.
-Date: Mon, 5 Apr 2010 14:48:05 +0530
-Message-ID: <1270459086-2504-2-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1270459086-2504-1-git-send-email-vnatarajan@atheros.com>
-References: <1270459086-2504-1-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Subject: [PATCH 10/10] ath9k_htc: Fix sparse endian warnings
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+This patch fixes a bunch of endian issues that
+were exposed by sparse. It's a miracle that the driver
+worked at all till now.
+
+The Lord be praised.
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |    9 +++
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   93 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    7 ++-
- drivers/net/wireless/ath/ath9k/hw.c           |    6 +-
- 5 files changed, 117 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h            |   18 ++++++++--------
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    6 +++-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |   14 +++++++-----
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   11 ++-------
+ drivers/net/wireless/ath/ath9k/htc_hst.c        |    8 +++---
+ drivers/net/wireless/ath/ath9k/htc_hst.h        |   24 +++++++++++-----------
+ drivers/net/wireless/ath/ath9k/mac.h            |   10 ++++----
+ drivers/net/wireless/ath/ath9k/wmi.c            |    2 +-
+ drivers/net/wireless/ath/ath9k/wmi.h            |   10 ++++----
+ 9 files changed, 51 insertions(+), 52 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index e09c6c2..0160e83 100644
+index 6a4614a..c765ff4 100644
 --- a/drivers/net/wireless/ath/ath9k/htc.h
 +++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -363,6 +363,11 @@ struct ath9k_htc_priv {
- 	struct ath9k_htc_aggr_work aggr_work;
- 	struct delayed_work ath9k_aggr_work;
- 	struct delayed_work ath9k_ani_work;
-+	struct work_struct ps_work;
-+
-+	struct mutex htc_pm_lock;
-+	unsigned long ps_usecount;
-+	bool ps_enabled;
+@@ -124,13 +124,13 @@ struct ath9k_htc_cap_target {
+ struct ath9k_htc_target_vif {
+ 	u8 index;
+ 	u8 des_bssid[ETH_ALEN];
+-	enum htc_opmode opmode;
++	__be32 opmode;
+ 	u8 myaddr[ETH_ALEN];
+ 	u8 bssid[ETH_ALEN];
+ 	u32 flags;
+ 	u32 flags_ext;
+ 	u16 ps_sta;
+-	u16 rtsthreshold;
++	__be16 rtsthreshold;
+ 	u8 ath_cap;
+ 	u8 node;
+ 	s8 mcast_rate;
+@@ -151,7 +151,7 @@ struct ath9k_htc_target_sta {
+ 	u8 sta_index;
+ 	u8 vif_index;
+ 	u8 vif_sta;
+-	u16 flags; /* ATH_HTC_STA_* */
++	__be16 flags; /* ATH_HTC_STA_* */
+ 	u16 htcap;
+ 	u8 valid;
+ 	u16 capinfo;
+@@ -191,16 +191,16 @@ struct ath9k_htc_rate {
+ struct ath9k_htc_target_rate {
+ 	u8 sta_index;
+ 	u8 isnew;
+-	u32 capflags;
++	__be32 capflags;
+ 	struct ath9k_htc_rate rates;
+ };
  
- 	struct ath_led radio_led;
- 	struct ath_led assoc_led;
-@@ -420,6 +425,10 @@ void ath9k_host_rx_init(struct ath9k_htc_priv *priv);
- void ath9k_rx_tasklet(unsigned long data);
- u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv);
+ struct ath9k_htc_target_stats {
+-	u32 tx_shortretry;
+-	u32 tx_longretry;
+-	u32 tx_xretries;
+-	u32 ht_txunaggr_xretry;
+-	u32 ht_tx_xretries;
++	__be32 tx_shortretry;
++	__be32 tx_longretry;
++	__be32 tx_xretries;
++	__be32 ht_txunaggr_xretry;
++	__be32 ht_tx_xretries;
+ } __packed;
  
-+void ath9k_htc_ps_wakeup(struct ath9k_htc_priv *priv);
-+void ath9k_htc_ps_restore(struct ath9k_htc_priv *priv);
-+void ath9k_ps_work(struct work_struct *work);
-+
- void ath9k_start_rfkill_poll(struct ath9k_htc_priv *priv);
- void ath9k_init_leds(struct ath9k_htc_priv *priv);
- void ath9k_deinit_leds(struct ath9k_htc_priv *priv);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 90cfd90..1c6c99e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -453,6 +453,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv, u16 devid)
- 	spin_lock_init(&priv->tx_lock);
- 	mutex_init(&priv->mutex);
- 	mutex_init(&priv->aggr_work.mutex);
-+	mutex_init(&priv->htc_pm_lock);
- 	tasklet_init(&priv->wmi_tasklet, ath9k_wmi_tasklet,
- 		     (unsigned long)priv);
- 	tasklet_init(&priv->rx_tasklet, ath9k_rx_tasklet,
-@@ -460,6 +461,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv, u16 devid)
- 	tasklet_init(&priv->tx_tasklet, ath9k_tx_tasklet, (unsigned long)priv);
- 	INIT_DELAYED_WORK(&priv->ath9k_aggr_work, ath9k_htc_aggr_work);
- 	INIT_DELAYED_WORK(&priv->ath9k_ani_work, ath9k_ani_work);
-+	INIT_WORK(&priv->ps_work, ath9k_ps_work);
+ struct ath9k_htc_vif {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index d104028..7cb55f5 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -26,7 +26,8 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
+ 	enum ath9k_int imask = 0;
+ 	int dtimperiod, dtimcount, sleepduration;
+ 	int cfpperiod, cfpcount, bmiss_timeout;
+-	u32 nexttbtt = 0, intval, tsftu, htc_imask = 0;
++	u32 nexttbtt = 0, intval, tsftu;
++	__be32 htc_imask = 0;
+ 	u64 tsf;
+ 	int num_beacons, offset, dtim_dec_count, cfp_dec_count;
+ 	int ret;
+@@ -142,7 +143,8 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	enum ath9k_int imask = 0;
+-	u32 nexttbtt, intval, htc_imask = 0;
++	u32 nexttbtt, intval;
++	__be32 htc_imask = 0;
+ 	int ret;
+ 	u8 cmd_rsp;
  
- 	/*
- 	 * Cache line size is used to size and align various
-@@ -514,12 +516,16 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 		IEEE80211_HW_AMPDU_AGGREGATION |
- 		IEEE80211_HW_SPECTRUM_MGMT |
- 		IEEE80211_HW_HAS_RATE_CONTROL |
--		IEEE80211_HW_RX_INCLUDES_FCS;
-+		IEEE80211_HW_RX_INCLUDES_FCS |
-+		IEEE80211_HW_SUPPORTS_PS |
-+		IEEE80211_HW_PS_NULLFUNC_STACK;
- 
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
- 
-+	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-+
- 	hw->queues = 4;
- 	hw->channel_change_time = 5000;
- 	hw->max_listen_interval = 10;
 diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 63f032d..e04452f 100644
+index 081f445..ec7bcc8 100644
 --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
 +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -65,6 +65,56 @@ static enum htc_phymode ath9k_htc_get_curmode(struct ath9k_htc_priv *priv,
- 	return mode;
- }
+@@ -125,7 +125,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	bool fastcc = true;
+ 	struct ieee80211_channel *channel = hw->conf.channel;
+ 	enum htc_phymode mode;
+-	u16 htc_mode;
++	__be16 htc_mode;
+ 	u8 cmd_rsp;
+ 	int ret;
  
-+static bool ath9k_htc_setpower(struct ath9k_htc_priv *priv,
-+			       enum ath9k_power_mode mode)
-+{
-+	bool ret;
-+
-+	mutex_lock(&priv->htc_pm_lock);
-+	ret = ath9k_hw_setpower(priv->ah, mode);
-+	mutex_unlock(&priv->htc_pm_lock);
-+
-+	return ret;
-+}
-+
-+void ath9k_htc_ps_wakeup(struct ath9k_htc_priv *priv)
-+{
-+	mutex_lock(&priv->htc_pm_lock);
-+	if (++priv->ps_usecount != 1)
-+		goto unlock;
-+	ath9k_hw_setpower(priv->ah, ATH9K_PM_AWAKE);
-+
-+unlock:
-+	mutex_unlock(&priv->htc_pm_lock);
-+}
-+
-+void ath9k_htc_ps_restore(struct ath9k_htc_priv *priv)
-+{
-+	mutex_lock(&priv->htc_pm_lock);
-+	if (--priv->ps_usecount != 0)
-+		goto unlock;
-+
-+	if (priv->ps_enabled)
-+		ath9k_hw_setpower(priv->ah, ATH9K_PM_NETWORK_SLEEP);
-+unlock:
-+	mutex_unlock(&priv->htc_pm_lock);
-+}
-+
-+void ath9k_ps_work(struct work_struct *work)
-+{
-+	struct ath9k_htc_priv *priv =
-+		container_of(work, struct ath9k_htc_priv,
-+			     ps_work);
-+	ath9k_htc_setpower(priv, ATH9K_PM_AWAKE);
-+
-+	/* The chip wakes up after receiving the first beacon
-+	   while network sleep is enabled. For the driver to
-+	   be in sync with the hw, set the chip to awake and
-+	   only then set it to sleep.
-+	 */
-+	ath9k_htc_setpower(priv, ATH9K_PM_NETWORK_SLEEP);
-+}
-+
- static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 				 struct ieee80211_hw *hw,
- 				 struct ath9k_channel *hchan)
-@@ -87,7 +137,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+@@ -378,7 +378,7 @@ static int ath9k_htc_init_rate(struct ath9k_htc_priv *priv,
+ 	priv->tgt_rate.sta_index = ista->index;
+ 	priv->tgt_rate.isnew = 1;
+ 	trate = priv->tgt_rate;
+-	priv->tgt_rate.capflags = caps;
++	priv->tgt_rate.capflags = cpu_to_be32(caps);
+ 	trate.capflags = cpu_to_be32(caps);
  
- 	/* Fiddle around with fastcc later on, for now just use full reset */
- 	fastcc = false;
--
-+	ath9k_htc_ps_wakeup(priv);
- 	htc_stop(priv->htc);
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
-@@ -103,6 +153,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to reset channel (%u Mhz) "
- 			  "reset status %d\n", channel->center_freq, ret);
-+		ath9k_htc_ps_restore(priv);
- 		goto err;
- 	}
+ 	WMI_CMD_BUF(WMI_RC_RATE_UPDATE_CMDID, &trate);
+@@ -426,6 +426,7 @@ static void ath9k_htc_rc_update(struct ath9k_htc_priv *priv, bool is_cw40)
+ 	struct ath9k_htc_target_rate trate;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	int ret;
++	u32 caps = be32_to_cpu(priv->tgt_rate.capflags);
+ 	u8 cmd_rsp;
  
-@@ -128,6 +179,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	memset(&trate, 0, sizeof(trate));
+@@ -433,11 +434,12 @@ static void ath9k_htc_rc_update(struct ath9k_htc_priv *priv, bool is_cw40)
+ 	trate = priv->tgt_rate;
  
- 	priv->op_flags &= ~OP_FULL_RESET;
- err:
-+	ath9k_htc_ps_restore(priv);
- 	return ret;
- }
+ 	if (is_cw40)
+-		priv->tgt_rate.capflags |= WLAN_RC_40_FLAG;
++		caps |= WLAN_RC_40_FLAG;
+ 	else
+-		priv->tgt_rate.capflags &= ~WLAN_RC_40_FLAG;
++		caps &= ~WLAN_RC_40_FLAG;
  
-@@ -693,6 +745,10 @@ void ath9k_ani_work(struct work_struct *work)
+-	trate.capflags = cpu_to_be32(priv->tgt_rate.capflags);
++	priv->tgt_rate.capflags = cpu_to_be32(caps);
++	trate.capflags = cpu_to_be32(caps);
  
- 	short_cal_interval = ATH_STA_SHORT_CALINTERVAL;
+ 	WMI_CMD_BUF(WMI_RC_RATE_UPDATE_CMDID, &trate);
+ 	if (ret) {
+@@ -1104,7 +1106,7 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
+ 	struct ath9k_channel *init_channel;
+ 	int ret = 0;
+ 	enum htc_phymode mode;
+-	u16 htc_mode;
++	__be16 htc_mode;
+ 	u8 cmd_rsp;
  
-+	/* Only calibrate if awake */
-+	if (ah->power_mode != ATH9K_PM_AWAKE)
-+		goto set_timer;
-+
- 	/* Long calibration runs independently of short calibration. */
- 	if ((timestamp - common->ani.longcal_timer) >= ATH_LONG_CALINTERVAL) {
- 		longcal = true;
-@@ -727,6 +783,9 @@ void ath9k_ani_work(struct work_struct *work)
- 
- 	/* Skip all processing if there's nothing to do. */
- 	if (longcal || shortcal || aniflag) {
-+
-+		ath9k_htc_ps_wakeup(priv);
-+
- 		/* Call ANI routine if necessary */
- 		if (aniflag)
- 			ath9k_hw_ani_monitor(ah, ah->curchan);
-@@ -748,8 +807,11 @@ void ath9k_ani_work(struct work_struct *work)
- 				  ah->curchan->channelFlags,
- 				  common->ani.noise_floor);
- 		}
-+
-+		ath9k_htc_ps_restore(priv);
- 	}
- 
-+set_timer:
- 	/*
- 	* Set timer interval based on previous results.
- 	* The interval must be the shortest necessary to satisfy ANI,
-@@ -1112,6 +1174,7 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 		return;
- 	}
- 
-+	ath9k_htc_ps_wakeup(priv);
- 	htc_stop(priv->htc);
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
-@@ -1119,8 +1182,10 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	ath9k_hw_phy_disable(ah);
- 	ath9k_hw_disable(ah);
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
--	ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
-+	ath9k_htc_ps_restore(priv);
-+	ath9k_htc_setpower(priv, ATH9K_PM_FULL_SLEEP);
- 
-+	cancel_work_sync(&priv->ps_work);
- 	cancel_delayed_work_sync(&priv->ath9k_ani_work);
- 	cancel_delayed_work_sync(&priv->ath9k_aggr_work);
- 	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
-@@ -1161,6 +1226,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
-+	ath9k_htc_ps_wakeup(priv);
- 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
- 	memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
- 
-@@ -1207,6 +1273,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 
- 	priv->vif = vif;
- out:
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- 	return ret;
- }
-@@ -1275,6 +1342,16 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 
- 	}
-+	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		if (conf->flags & IEEE80211_CONF_PS) {
-+			ath9k_htc_setpower(priv, ATH9K_PM_NETWORK_SLEEP);
-+			priv->ps_enabled = true;
-+		} else {
-+			priv->ps_enabled = false;
-+			cancel_work_sync(&priv->ps_work);
-+			ath9k_htc_setpower(priv, ATH9K_PM_AWAKE);
-+		}
-+	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
- 		if (conf->flags & IEEE80211_CONF_MONITOR) {
-@@ -1311,6 +1388,7 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&priv->mutex);
- 
-+	ath9k_htc_ps_wakeup(priv);
- 	changed_flags &= SUPPORTED_FILTERS;
- 	*total_flags &= SUPPORTED_FILTERS;
- 
-@@ -1321,6 +1399,7 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
- 	ath_print(ath9k_hw_common(priv->ah), ATH_DBG_CONFIG,
- 		  "Set HW RX filter: 0x%x\n", rfilt);
- 
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -1398,6 +1477,7 @@ static int ath9k_htc_set_key(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&priv->mutex);
- 	ath_print(common, ATH_DBG_CONFIG, "Set HW Key\n");
-+	ath9k_htc_ps_wakeup(priv);
- 
- 	switch (cmd) {
- 	case SET_KEY:
-@@ -1420,6 +1500,7 @@ static int ath9k_htc_set_key(struct ieee80211_hw *hw,
- 		ret = -EINVAL;
- 	}
- 
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- 
- 	return ret;
-@@ -1435,6 +1516,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		common->curaid = bss_conf->assoc ?
-@@ -1447,6 +1529,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 			ath_start_ani(priv);
- 		} else {
- 			priv->op_flags &= ~OP_ASSOCIATED;
-+			cancel_work_sync(&priv->ps_work);
- 			cancel_delayed_work_sync(&priv->ath9k_ani_work);
- 		}
- 	}
-@@ -1506,6 +1589,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 		ath9k_hw_init_global_settings(ah);
- 	}
- 
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -1534,9 +1618,11 @@ static void ath9k_htc_reset_tsf(struct ieee80211_hw *hw)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
- 
-+	ath9k_htc_ps_wakeup(priv);
- 	mutex_lock(&priv->mutex);
- 	ath9k_hw_reset_tsf(priv->ah);
- 	mutex_unlock(&priv->mutex);
-+	ath9k_htc_ps_restore(priv);
- }
- 
- static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
-@@ -1585,6 +1671,7 @@ static void ath9k_htc_sw_scan_start(struct ieee80211_hw *hw)
- 	spin_lock_bh(&priv->beacon_lock);
- 	priv->op_flags |= OP_SCANNING;
- 	spin_unlock_bh(&priv->beacon_lock);
-+	cancel_work_sync(&priv->ps_work);
- 	cancel_delayed_work_sync(&priv->ath9k_ani_work);
- 	mutex_unlock(&priv->mutex);
- }
-@@ -1593,6 +1680,7 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
- 
-+	ath9k_htc_ps_wakeup(priv);
- 	mutex_lock(&priv->mutex);
- 	spin_lock_bh(&priv->beacon_lock);
- 	priv->op_flags &= ~OP_SCANNING;
-@@ -1600,6 +1688,7 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
- 	priv->op_flags |= OP_FULL_RESET;
- 	ath_start_ani(priv);
- 	mutex_unlock(&priv->mutex);
-+	ath9k_htc_ps_restore(priv);
- }
- 
- static int ath9k_htc_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	ath_print(common, ATH_DBG_CONFIG,
 diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index f1e3d83..0a7cb30 100644
+index 0a7cb30..2c3c510 100644
 --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
 +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -553,7 +553,7 @@ void ath9k_rx_tasklet(unsigned long data)
- 	struct ieee80211_rx_status rx_status;
- 	struct sk_buff *skb;
- 	unsigned long flags;
--
-+	struct ieee80211_hdr *hdr;
- 
- 	do {
- 		spin_lock_irqsave(&priv->rx.rxbuflock, flags);
-@@ -580,6 +580,11 @@ void ath9k_rx_tasklet(unsigned long data)
- 		memcpy(IEEE80211_SKB_RXCB(rxbuf->skb), &rx_status,
- 		       sizeof(struct ieee80211_rx_status));
- 		skb = rxbuf->skb;
-+		hdr = (struct ieee80211_hdr *) skb->data;
-+
-+		if (ieee80211_is_beacon(hdr->frame_control) && priv->ps_enabled)
-+				ieee80211_queue_work(priv->hw, &priv->ps_work);
-+
- 		spin_unlock_irqrestore(&priv->rx.rxbuflock, flags);
- 
- 		ieee80211_rx(priv->hw, skb);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a4826d5..338a8fc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3245,8 +3245,10 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		pCap->hw_caps |= ATH9K_HW_CAP_RFSILENT;
+@@ -530,7 +530,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+ 			priv->ah->stats.avgbrssi = rxbuf->rxstatus.rs_rssi;
  	}
- #endif
--
--	pCap->hw_caps &= ~ATH9K_HW_CAP_AUTOSLEEP;
-+	if (AR_SREV_9271(ah))
-+		pCap->hw_caps |= ATH9K_HW_CAP_AUTOSLEEP;
-+	else
-+		pCap->hw_caps &= ~ATH9K_HW_CAP_AUTOSLEEP;
  
- 	if (AR_SREV_9280(ah) || AR_SREV_9285(ah))
- 		pCap->hw_caps &= ~ATH9K_HW_CAP_4KB_SPLITTRANS;
+-	rx_status->mactime = rxbuf->rxstatus.rs_tstamp;
++	rx_status->mactime = be64_to_cpu(rxbuf->rxstatus.rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
+ 	rx_status->freq = hw->conf.channel->center_freq;
+ 	rx_status->signal =  rxbuf->rxstatus.rs_rssi + ATH_DEFAULT_NOISE_FLOOR;
+@@ -634,13 +634,8 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
+ 
+ 	rxstatus = (struct ath_htc_rx_status *)skb->data;
+ 
+-	rxstatus->rs_tstamp = be64_to_cpu(rxstatus->rs_tstamp);
+-	rxstatus->rs_datalen = be16_to_cpu(rxstatus->rs_datalen);
+-	rxstatus->evm0 = be32_to_cpu(rxstatus->evm0);
+-	rxstatus->evm1 = be32_to_cpu(rxstatus->evm1);
+-	rxstatus->evm2 = be32_to_cpu(rxstatus->evm2);
+-
+-	if (rxstatus->rs_datalen - (len - HTC_RX_FRAME_HEADER_SIZE) != 0) {
++	if (be16_to_cpu(rxstatus->rs_datalen) -
++	    (len - HTC_RX_FRAME_HEADER_SIZE) != 0) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Corrupted RX data len, dropping "
+ 			  "(epid: %d, dlen: %d, skblen: %d)\n",
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index 587d98e..f2dca25 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -368,7 +368,7 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
+ 	struct htc_frame_hdr *htc_hdr;
+ 	enum htc_endpoint_id epid;
+ 	struct htc_endpoint *endpoint;
+-	u16 *msg_id;
++	__be16 *msg_id;
+ 
+ 	if (!htc_handle || !skb)
+ 		return;
+@@ -388,14 +388,14 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
+ 
+ 		/* Handle trailer */
+ 		if (htc_hdr->flags & HTC_FLAGS_RECV_TRAILER) {
+-			if (be32_to_cpu(*(u32 *) skb->data) == 0x00C60000)
++			if (be32_to_cpu(*(__be32 *) skb->data) == 0x00C60000)
+ 				/* Move past the Watchdog pattern */
+ 				htc_hdr = (struct htc_frame_hdr *)(skb->data + 4);
+ 		}
+ 
+ 		/* Get the message ID */
+-		msg_id = (u16 *) ((void *) htc_hdr +
+-					   sizeof(struct htc_frame_hdr));
++		msg_id = (__be16 *) ((void *) htc_hdr +
++				     sizeof(struct htc_frame_hdr));
+ 
+ 		/* Now process HTC messages */
+ 		switch (be16_to_cpu(*msg_id)) {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
+index cd7048f..ea50ab0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.h
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
+@@ -59,20 +59,20 @@ enum htc_endpoint_id {
+ struct htc_frame_hdr {
+ 	u8 endpoint_id;
+ 	u8 flags;
+-	u16 payload_len;
++	__be16 payload_len;
+ 	u8 control[4];
+ } __packed;
+ 
+ struct htc_ready_msg {
+-	u16 message_id;
+-	u16 credits;
+-	u16 credit_size;
++	__be16 message_id;
++	__be16 credits;
++	__be16 credit_size;
+ 	u8 max_endpoints;
+ 	u8 pad;
+ } __packed;
+ 
+ struct htc_config_pipe_msg {
+-	u16 message_id;
++	__be16 message_id;
+ 	u8 pipe_id;
+ 	u8 credits;
+ } __packed;
+@@ -192,9 +192,9 @@ enum htc_service_group_ids{
+ #define WMI_DATA_BK_SVC   MAKE_SERVICE_ID(WMI_SERVICE_GROUP, 8)
+ 
+ struct htc_conn_svc_msg {
+-	u16 msg_id;
+-	u16 service_id;
+-	u16 con_flags;
++	__be16 msg_id;
++	__be16 service_id;
++	__be16 con_flags;
+ 	u8 dl_pipeid;
+ 	u8 ul_pipeid;
+ 	u8 svc_meta_len;
+@@ -209,17 +209,17 @@ struct htc_conn_svc_msg {
+ #define HTC_SERVICE_NO_MORE_EP   4
+ 
+ struct htc_conn_svc_rspmsg {
+-	u16 msg_id;
+-	u16 service_id;
++	__be16 msg_id;
++	__be16 service_id;
+ 	u8 status;
+ 	u8 endpoint_id;
+-	u16 max_msg_len;
++	__be16 max_msg_len;
+ 	u8 svc_meta_len;
+ 	u8 pad;
+ } __packed;
+ 
+ struct htc_comp_msg {
+-	u16 msg_id;
++	__be16 msg_id;
+ } __packed;
+ 
+ int htc_init(struct htc_target *target);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 68eb8d0..66d0d5e 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -155,8 +155,8 @@ struct ath_rx_status {
+ };
+ 
+ struct ath_htc_rx_status {
+-	u64 rs_tstamp;
+-	u16 rs_datalen;
++	__be64 rs_tstamp;
++	__be16 rs_datalen;
+ 	u8 rs_status;
+ 	u8 rs_phyerr;
+ 	int8_t rs_rssi;
+@@ -175,9 +175,9 @@ struct ath_htc_rx_status {
+ 	u8 rs_num_delims;
+ 	u8 rs_flags;
+ 	u8 rs_dummy;
+-	u32 evm0;
+-	u32 evm1;
+-	u32 evm2;
++	__be32 evm0;
++	__be32 evm1;
++	__be32 evm2;
+ };
+ 
+ #define ATH9K_RXERR_CRC           0x01
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index afbf63d..dc6c6fc 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -129,7 +129,7 @@ void ath9k_wmi_tasklet(unsigned long data)
+ 	void *wmi_event;
+ 	unsigned long flags;
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-	u32 txrate;
++	__be32 txrate;
+ #endif
+ 
+ 	spin_lock_irqsave(&priv->wmi->wmi_lock, flags);
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 6113571..167e15c 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -19,7 +19,7 @@
+ 
+ 
+ struct wmi_event_txrate {
+-	u32 txrate;
++	__be32 txrate;
+ 	struct {
+ 		u8 rssi_thresh;
+ 		u8 per;
+@@ -27,8 +27,8 @@ struct wmi_event_txrate {
+ } __packed;
+ 
+ struct wmi_cmd_hdr {
+-	u16 command_id;
+-	u16 seq_no;
++	__be16 command_id;
++	__be16 seq_no;
+ } __packed;
+ 
+ struct wmi_swba {
+@@ -87,8 +87,8 @@ enum wmi_event_id {
+ #define MAX_CMD_NUMBER 62
+ 
+ struct register_write {
+-	u32 reg;
+-	u32 val;
++	__be32 reg;
++	__be32 val;
+ };
+ 
+ struct wmi {
 -- 
-1.7.0.3
+1.7.0.5
 
