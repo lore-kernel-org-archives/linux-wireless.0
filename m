@@ -1,84 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:2327 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754409Ab0D1WEO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 18:04:14 -0400
-Message-ID: <4BD8B0DB.1010902@gmail.com>
-Date: Thu, 29 Apr 2010 00:04:11 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:22966 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754097Ab0DPGY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 02:24:28 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:24:28 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: cabtobma@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, ivdoorn@gmail.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] rt2x00: remove now unused noise field from struct rxdone_entry_desc
-References: <1272488452-21288-1-git-send-email-cabtobma>
-In-Reply-To: <1272488452-21288-1-git-send-email-cabtobma>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19400.628.309675.409046@gargle.gargle.HOWL>
+Date: Fri, 16 Apr 2010 11:53:48 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/10] ath9k_htc: Cleanup beacon configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/28/10 23:00, cabtobma@tuxdriver.com wrote:
-> From: John W. Linville <linville@tuxdriver.com>
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+This patch cleans up beacon configuration,
+removing a redundant interface type check
+and updating beacon interval in the correct place.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   23 +++++++++--------------
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    2 +-
+ 2 files changed, 10 insertions(+), 15 deletions(-)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c   |    4 ----
->  drivers/net/wireless/rt2x00/rt2800usb.c   |    4 ----
->  drivers/net/wireless/rt2x00/rt2x00queue.h |    2 --
->  3 files changed, 0 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 0e52f17..89281d7 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -895,10 +895,6 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
->  	    (rt2x00_get_field32(rxwi2, RXWI_W2_RSSI0) +
->  	     rt2x00_get_field32(rxwi2, RXWI_W2_RSSI1)) / 2;
->  
-> -	rxdesc->noise =
-> -	    (rt2x00_get_field32(rxwi3, RXWI_W3_SNR0) +
-> -	     rt2x00_get_field32(rxwi3, RXWI_W3_SNR1)) / 2;
-> -
->  	rxdesc->size = rt2x00_get_field32(rxwi0, RXWI_W0_MPDU_TOTAL_BYTE_COUNT);
->  
->  	/*
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index a716156..6f2a945 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -645,10 +645,6 @@ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
->  	    (rt2x00_get_field32(rxwi2, RXWI_W2_RSSI0) +
->  	     rt2x00_get_field32(rxwi2, RXWI_W2_RSSI1)) / 2;
->  
-> -	rxdesc->noise =
-> -	    (rt2x00_get_field32(rxwi3, RXWI_W3_SNR0) +
-> -	     rt2x00_get_field32(rxwi3, RXWI_W3_SNR1)) / 2;
-> -
->  	rxdesc->size = rt2x00_get_field32(rxwi0, RXWI_W0_MPDU_TOTAL_BYTE_COUNT);
->  
->  	/*
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-> index c1e482b..f519aba 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-> @@ -183,7 +183,6 @@ enum rxdone_entry_desc_flags {
->   * @timestamp: RX Timestamp
->   * @signal: Signal of the received frame.
->   * @rssi: RSSI of the received frame.
-> - * @noise: Measured noise during frame reception.
->   * @size: Data size of the received frame.
->   * @flags: MAC80211 receive flags (See &enum mac80211_rx_flags).
->   * @dev_flags: Ralink receive flags (See &enum rxdone_entry_desc_flags).
-> @@ -197,7 +196,6 @@ struct rxdone_entry_desc {
->  	u64 timestamp;
->  	int signal;
->  	int rssi;
-> -	int noise;
->  	int size;
->  	int flags;
->  	int dev_flags;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 5e21f4d..d104028 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -244,25 +244,20 @@ void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
+ 			     struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	enum nl80211_iftype iftype;
+ 	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+ 
+-	if (vif) {
+-		struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
+-		iftype = vif->type;
+-		cur_conf->beacon_interval = bss_conf->beacon_int;
+-		cur_conf->dtim_period = bss_conf->dtim_period;
+-		cur_conf->listen_interval = 1;
+-		cur_conf->dtim_count = 1;
+-		cur_conf->bmiss_timeout =
+-			ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
+-	} else
+-		iftype = priv->ah->opmode;
+-
++	cur_conf->beacon_interval = bss_conf->beacon_int;
+ 	if (cur_conf->beacon_interval == 0)
+ 		cur_conf->beacon_interval = 100;
+ 
+-	switch (iftype) {
++	cur_conf->dtim_period = bss_conf->dtim_period;
++	cur_conf->listen_interval = 1;
++	cur_conf->dtim_count = 1;
++	cur_conf->bmiss_timeout =
++		ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
++
++	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		ath9k_htc_beacon_config_sta(priv, cur_conf);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index eb7722b..08a4a58 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1687,7 +1687,7 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 	priv->op_flags |= OP_FULL_RESET;
+ 	if (priv->op_flags & OP_ASSOCIATED)
+-		ath9k_htc_beacon_config(priv, NULL);
++		ath9k_htc_beacon_config(priv, priv->vif);
+ 	ath_start_ani(priv);
+ 	mutex_unlock(&priv->mutex);
+ 	ath9k_htc_ps_restore(priv);
+-- 
+1.7.0.5
 
