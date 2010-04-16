@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:55535 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759041Ab0DHVYP convert rfc822-to-8bit (ORCPT
+Received: from static-92-33-14-100.sme.bredbandsbolaget.se ([92.33.14.100]:18971
+	"EHLO mailhost.lundinova.se" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756682Ab0DPKwj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 17:24:15 -0400
-Received: by pwj9 with SMTP id 9so2351923pwj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Apr 2010 14:24:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1270761488.16012.11.camel@mj>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-	<1270754858-26266-8-git-send-email-lrodriguez@atheros.com>
-	<1270761488.16012.11.camel@mj>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 8 Apr 2010 14:23:54 -0700
-Message-ID: <j2o43e72e891004081423w5d5076dy5077bb3fab2548f8@mail.gmail.com>
-Subject: Re: [PATCH 007/102] ath9k_hw: AR9003 does not have AR_RC_AHB skip its
-	setting
-To: Pavel Roskin <proski@gnu.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 16 Apr 2010 06:52:39 -0400
+From: Johan Hovold <johan.hovold@lundinova.se>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Tor Krill <tor@excito.com>,
+	Johan Hovold <johan.hovold@lundinova.se>
+Subject: [RFC][PATCH 1/6] ath9k: clean up rx skb post-process logic
+Date: Fri, 16 Apr 2010 12:52:10 +0200
+Message-Id: <1271415135-18317-1-git-send-email-johan.hovold@lundinova.se>
+In-Reply-To: <20100416104850.GA13329@lundinova.se>
+References: <20100416104850.GA13329@lundinova.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 8, 2010 at 2:18 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Thu, 2010-04-08 at 15:26 -0400, Luis R. Rodriguez wrote:
->> AR9003 does not have a reset control for AHB.
-> ...
->> +                     val = AR_RC_HOSTIF;
->> +                     if (!AR_SREV_9300_20_OR_LATER(ah))
->> +                             val |= AR_RC_AHB;
->
-> Perhaps AR_RC_AHB could be defined to 0 for AR9300 in the header?  Just
-> an idea.
+Refactor IEEE80211_FCTL_PROTECTED and decryption error test.
 
-Hm, I rather be explicit for now. A larger goal we have after all this
-will be to unify our code with the Atheros HAL. That itself should be
-easier for review if we are explicit about some things for review
-purposes. But that's just me thinking out loud.
+Signed-off-by: Johan Hovold <johan.hovold@lundinova.se>
+---
+ drivers/net/wireless/ath/ath9k/common.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 09effde..0cd10dc 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -255,15 +255,15 @@ void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
+ 
+ 	keyix = rx_stats->rs_keyix;
+ 
+-	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
+-	    ieee80211_has_protected(fc)) {
+-		rxs->flag |= RX_FLAG_DECRYPTED;
+-	} else if (ieee80211_has_protected(fc)
+-		   && !decrypt_error && skb->len >= hdrlen + 4) {
+-		keyix = skb->data[hdrlen + 3] >> 6;
+-
+-		if (test_bit(keyix, common->keymap))
++	if (ieee80211_has_protected(fc) && !decrypt_error) {
++		if (keyix != ATH9K_RXKEYIX_INVALID) {
+ 			rxs->flag |= RX_FLAG_DECRYPTED;
++		} else if (skb->len >= hdrlen + 4) {
++			keyix = skb->data[hdrlen + 3] >> 6;
++
++			if (test_bit(keyix, common->keymap))
++				rxs->flag |= RX_FLAG_DECRYPTED;
++		}
+ 	}
+ 	if (ah->sw_mgmt_crypto &&
+ 	    (rxs->flag & RX_FLAG_DECRYPTED) &&
+-- 
+1.7.0.3
+
