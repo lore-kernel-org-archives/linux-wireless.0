@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50270 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751180Ab0DLH2P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 03:28:15 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 00:28:15 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:46776 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932423Ab0DPUeX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 16:34:23 -0400
+Received: by pva18 with SMTP id 18so2035880pva.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 13:34:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19394.52061.869979.530453@gargle.gargle.HOWL>
-Date: Mon, 12 Apr 2010 12:57:25 +0530
-To: "tom.leiming@gmail.com" <tom.leiming@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: [PATCH 3/3] ath9k-htc: pass cacheline aligned buffer to usb hcd in
- register out path
-In-Reply-To: <1270911923-5783-1-git-send-email-tom.leiming@gmail.com>
-References: <1270911923-5783-1-git-send-email-tom.leiming@gmail.com>
+Date: Fri, 16 Apr 2010 13:34:22 -0700
+Message-ID: <k2r8108ad761004161334x894f9298xf3728846ff69b36b@mail.gmail.com>
+Subject: timeout in zd1211rw with zotac mini-itx (geforce 9300)
+From: Tsuwei Chen <tsuwei@gmail.com>
+To: zd1211-devs@lists.sourceforge.net
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tom.leiming@gmail.com wrote:
-> This patch copies skb->data of register out command to kmalloced buffer,
-> which is cacheline aligned(dma safe) and passed into usb hcd. Since the
-> data in register out command is not very much, we can ignore the
-> performance loss caused by the copy.
+Has anyone use the zd1211 usb adapter with mini-itx board based on
+geforce 9300? I have been experience some annoying issues ever since I
+got this motherboard. The problem is that sometime the card just
+cannot be switched on. It complains about ioread32() error -110. And I
+have spent a few days and try a few different combination, and here is
+what I have found so far:
 
-Actually, the current code is correct, though a bit sub-optimal.
-The inital dev_alloc_skb() in ath9k_wmi_cmd() allocates a headroom
-for WMI header + HTC header. The headers are then pushed as the packet
-moves down through HTC. Finally, skb->data is passed to submit_urb().
+1, with 1 wifi adapter directly plugged into the board, the wifi
+adapter works fine most of the time (have seen a couple failure, but
+is hard to reproduce)
+2. with 1 wifi adapter, plugged in through a USB hub, the driver
+complains ioread32 error. I've try 2 USB hubs: a cheap 4-port USB
+dongle and also the USB hubs built into my DELL monitor. Both showed
+the same problem.
+3. If I plugged in 2 wifi adapters directly to the board, more than
+50% of chance one of the wifi adapter would fail during the 'ifconifg
+up'.
 
-To take care of cacheline alignment, you can just replace the dev_alloc_skb()
-with alloc_skb(). A patch is welcome. :-)
+I tried to dig our more on this. I am using kernel 2.6.24-26 (ubuntu).
+I had turned on the debug message output and I have traced out that
+the failure was first detected in the zd_mac_open(). Probably around
+the call to zd_chip_switch_radio_on(). The error message is printed in
+the zd_usb_ioread16v(), and probably indicate the driver is
+experiencing a timeout while it is trying to read the register from
+the adapter.
 
-Sujith
+What exactly does this mean? Why adding a usb hub cause such a huge
+differnce? Has anyone experienced similar problem before? Any pointer
+that can help me solve this problem is appreciated.
+
+BTW, I never had this problem before when I was still using a regular
+HP desktop PC, even with the same version of kernel and same USB hub.
+I switched to mini-itx because I am building a small system. So if
+anyone is currently using this adapter with a mini-ITX board, please
+also let me know which model you use.
+
+TIA,
+Tsuwei
