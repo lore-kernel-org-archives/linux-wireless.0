@@ -1,45 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:33418 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab0DMFf1 convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:61883 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756720Ab0DPJSY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 01:35:27 -0400
-MIME-Version: 1.0
-In-Reply-To: <m2s43e72e891004122151n2677a158o7f9aa8d054bf058e@mail.gmail.com>
-References: <m2s43e72e891004122151n2677a158o7f9aa8d054bf058e@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 12 Apr 2010 22:35:06 -0700
-Message-ID: <v2q43e72e891004122235p87e971c9o12986a064f7d2be1@mail.gmail.com>
-Subject: Re: Compat-wireless for 2.6.34 - 802.11 and bluetooth backported
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 16 Apr 2010 05:18:24 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o3G9HvOF016628
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 12:18:21 +0300
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o3G9I0IH010544
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 12:18:01 +0300
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based on ps-qos network latency
+Date: Fri, 16 Apr 2010 12:14:33 +0300
+Message-Id: <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 12, 2010 at 9:51 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> We're up to 2.6.34-rc4 upstream but we hadn't released a respective
-> compat-wireless stable [1] tarball yet. I finally got some time so
-> just posted one up [2], this gives us the 2.6.34-rc4 wireless
-> subsystem, bluetooth subsystem and new wireless/bluetooth drivers
-> compilable and installed on older kernels. Please report any issues
-> ASAP. For details on changes you can refer to the
-> ChangeLog-2.6.34-rc4-wireless [3].
->
-> I only did a quick build test against 2.6.31 and it seems to compile
-> fine :), more compile tests reports against older kernels and actual
-> loading tests reports against different kernels are greatly
-> appreciated.
->
->  Luis
->
-> [1] http://wireless.kernel.org/en/users/Download/stable
-> [2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.34/compat-wireless-2.6.34-rc4.tar.bz2
-> [3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.34/ChangeLog-2.6.34-rc4-wireless
+Determine the dynamic PS timeout based on the configured ps-qos network
+latency. For backwards wext compatibility, allow the dynamic PS timeout
+configured by the cfg80211 to overrule the automatically determined value.
 
-Also just updated the tarballs for 2.6.32.11 and 2.6.33.2, and removed
-the 2.6.30 and 2.6.31 tarballs since not even kernel.org supports
-those anymore.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ include/net/mac80211.h |    5 ++++-
+ net/mac80211/cfg.c     |    4 ++--
+ net/mac80211/main.c    |    2 ++
+ net/mac80211/mlme.c    |   14 ++++++++++++++
+ 4 files changed, 22 insertions(+), 3 deletions(-)
 
-  Luis
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dcf3c5f..243e4ab 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -661,6 +661,9 @@ enum ieee80211_smps_mode {
+  * @dynamic_ps_timeout: The dynamic powersave timeout (in ms), see the
+  *	powersave documentation below. This variable is valid only when
+  *	the CONF_PS flag is set.
++ * @dynamic_ps_forced_timeout: The dynamic powersave timeout (in ms) configured
++ *	by cfg80211 (essentially, wext) If set, this value overrules the value
++ *	chosen by mac80211 based on ps qos network latency.
+  *
+  * @power_level: requested transmit power (in dBm)
+  *
+@@ -680,7 +683,7 @@ enum ieee80211_smps_mode {
+  */
+ struct ieee80211_conf {
+ 	u32 flags;
+-	int power_level, dynamic_ps_timeout;
++	int power_level, dynamic_ps_timeout, dynamic_ps_forced_timeout;
+ 	int max_sleep_period;
+ 
+ 	u16 listen_interval;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7dd7cda..9a1a91c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1388,11 +1388,11 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EOPNOTSUPP;
+ 
+ 	if (enabled == sdata->u.mgd.powersave &&
+-	    timeout == conf->dynamic_ps_timeout)
++	    timeout == conf->dynamic_ps_forced_timeout)
+ 		return 0;
+ 
+ 	sdata->u.mgd.powersave = enabled;
+-	conf->dynamic_ps_timeout = timeout;
++	conf->dynamic_ps_forced_timeout = timeout;
+ 
+ 	/* no change, but if automatic follow powersave */
+ 	mutex_lock(&sdata->u.mgd.mtx);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 4afe851..ebcca0e 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -569,6 +569,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	local->hw.conf.listen_interval = local->hw.max_listen_interval;
+ 
++	local->hw.conf.dynamic_ps_forced_timeout = -1;
++
+ 	result = sta_info_start(local);
+ 	if (result < 0)
+ 		goto fail_sta_info;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 35d8502..6402997 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -476,6 +476,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ {
+ 	struct ieee80211_sub_if_data *sdata, *found = NULL;
+ 	int count = 0;
++	int timeout;
+ 
+ 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS)) {
+ 		local->ps_sdata = NULL;
+@@ -509,6 +510,19 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 		beaconint_us = ieee80211_tu_to_usec(
+ 					found->vif.bss_conf.beacon_int);
+ 
++		timeout = local->hw.conf.dynamic_ps_forced_timeout;
++		if (timeout < 0) {
++			if (latency <= 50000)
++				timeout = 300;
++			else if (latency <= 2000000000)
++				timeout = 100;
++			else if (latency <= 2100000000)
++				timeout = 50;
++			else
++				timeout = 0;
++		}
++		local->hw.conf.dynamic_ps_timeout = timeout;
++
+ 		if (beaconint_us > latency) {
+ 			local->ps_sdata = NULL;
+ 		} else {
+-- 
+1.6.3.3
+
