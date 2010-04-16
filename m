@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:51012 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750876Ab0DZIWA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 04:22:00 -0400
-Received: by ewy20 with SMTP id 20so3552277ewy.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 01:21:59 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH] rt2x00: fix typo in rt2800.h
-Date: Mon, 26 Apr 2010 10:21:57 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <201004261018.08830.helmut.schaa@googlemail.com>
-In-Reply-To: <201004261018.08830.helmut.schaa@googlemail.com>
+Received: from mail.atheros.com ([12.36.123.2]:22967 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754499Ab0DPGY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 02:24:29 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:24:29 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201004261021.57393.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19400.630.19170.735521@gargle.gargle.HOWL>
+Date: Fri, 16 Apr 2010 11:53:50 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/10] ath: Add buffered register write operations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 26 April 2010, Helmut Schaa wrote:
-> Fix a typo in a comment in rt2800.h. Instead of replacing the wrong
-> hexvalue (0x171c) with the correct one (0x1718) just use the appropriate
-> readable define.
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+This is required to implement delayed/buffered
+register writes in ath9k_htc.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath.h |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index ec89372..3492825 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -107,7 +107,7 @@
->  /*
->   * INT_SOURCE_CSR: Interrupt source register.
->   * Write one to clear corresponding bit.
-> - * TX_FIFO_STATUS: FIFO Statistics is full, sw should read 0x171c
-> + * TX_FIFO_STATUS: FIFO Statistics is full, sw should read TX_STA_FIFO
->   */
->  #define INT_SOURCE_CSR			0x0200
->  #define INT_SOURCE_CSR_RXDELAYINT	FIELD32(0x00000001)
-
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 1fbf6b1..d32f282 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -71,9 +71,21 @@ struct ath_regulatory {
+ 	struct reg_dmn_pair_mapping *regpair;
+ };
+ 
++/**
++ * struct ath_ops - Register read/write operations
++ *
++ * @read: Register read
++ * @write: Register write
++ * @enable_write_buffer: Enable multiple register writes
++ * @disable_write_buffer: Disable multiple register writes
++ * @write_flush: Flush buffered register writes
++ */
+ struct ath_ops {
+ 	unsigned int (*read)(void *, u32 reg_offset);
+-        void (*write)(void *, u32 val, u32 reg_offset);
++	void (*write)(void *, u32 val, u32 reg_offset);
++	void (*enable_write_buffer)(void *);
++	void (*disable_write_buffer)(void *);
++	void (*write_flush) (void *);
+ };
+ 
+ struct ath_common;
+-- 
+1.7.0.5
 
