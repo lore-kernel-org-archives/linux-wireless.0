@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:56712 "EHLO purkki.valot.fi"
+Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754522Ab0DSLWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 07:22:09 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	id S932180Ab0DPN5P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 09:57:15 -0400
+Date: Fri, 16 Apr 2010 15:59:07 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@venema.h4ckr.net,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: fix stopping RX BA session from timer
-References: <87pr20mrez.fsf@purkki.valot.fi>
-	<20100415195812.GC3020@tuxdriver.com> <871veclztk.fsf@purkki.valot.fi>
-	<1271659397.3873.9.camel@jlt3.sipsolutions.net>
-	<87wrw3lxjh.fsf@purkki.valot.fi>
-	<1271667624.3873.12.camel@jlt3.sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 19 Apr 2010 14:22:06 +0300
-In-Reply-To: <1271667624.3873.12.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Mon\, 19 Apr 2010 11\:00\:24 +0200")
-Message-ID: <87sk6rlmap.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [PATCH 1/2] ath5k: Use high bitrates for ACK/CTS
+Message-ID: <20100416155907.6e33c722@dhcp-lab-109.englab.brq.redhat.com>
+In-Reply-To: <20100412073847.28215.87571.stgit@tt-desk>
+References: <20100412073847.28215.87571.stgit@tt-desk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Mon, 12 Apr 2010 16:38:47 +0900
+Bruno Randolf <br1@einfach.org> wrote:
 
-> Kalle reported that his system deadlocks since my
-> recent work in this area. The reason quickly became
-> apparent: we try to cancel_timer_sync() a timer
-> from within itself. Fix that by making the function
-> aware of the context it is called from.
+> There was a confusion in the usage of the bits AR5K_STA_ID1_ACKCTS_6MB and
+> AR5K_STA_ID1_BASE_RATE_11B. If they are set (1), we will get lower bitrates for
+> ACK and CTS. Therefore ath5k_hw_set_ack_bitrate_high(ah, false) actually
+> resulted in high bitrates, which i think is what we want anyways. Cleared the
+> confusion and added some documentation.
 
-I have now tested this for an hour and I can't reproduce the problem
-anymore, earlier I was able to reproduce at least within a minute or
-so. So I'm confident that the problem I saw is this fixed by this
-patch.
+I thought ACK and other control frames have to be modulated at slow/robust
+bitrates, but can't remember where I read that ...
 
-Thank you very much for fixing this so quickly.
-
-> Reported-by: Kalle Valo <kvalo@adurom.com>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-
-Tested-by: Kalle Valo <kvalo@adurom.com>
-
--- 
-Kalle Valo
+Stanislaw
