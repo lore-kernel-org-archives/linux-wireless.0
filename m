@@ -1,92 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:34604 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751313Ab0DGFaw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 01:30:52 -0400
-Subject: [PATCH 1/4] compat-wireless: remove patch part dealing with
- net/net_namespace.h
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-From: Pavel Roskin <proski@gnu.org>
-Date: Wed, 07 Apr 2010 01:30:51 -0400
-Message-ID: <20100407053051.23575.94594.stgit@mj.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from he.sipsolutions.net ([78.46.109.217]:42354 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932446Ab0DPU56 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 16:57:58 -0400
+Subject: Re: [PATCH 2/2] iwmc3200wifi: check sparse endianness annotations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Zhu Yi <yi.zhu@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+In-Reply-To: <1271451350.16507.2.camel@mj>
+References: <1271381324-21044-1-git-send-email-yi.zhu@intel.com>
+	 <1271381324-21044-2-git-send-email-yi.zhu@intel.com>
+	 <1271451350.16507.2.camel@mj>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Apr 2010 22:57:46 +0200
+Message-ID: <1271451466.8043.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net/net_namespace.h stub is now provided by compat
+On Fri, 2010-04-16 at 16:55 -0400, Pavel Roskin wrote:
+> On Fri, 2010-04-16 at 09:28 +0800, Zhu Yi wrote:
+> > From: Samuel Ortiz <sameo@linux.intel.com>
+> > 
+> > Add -D__CHECK_ENDIAN__ to driver ccflags so that sparse will
+> > always check endianness by default.
+> 
+> I believe it's wrong.  I would be fine with enabling __CHECK_ENDIAN__
+> for the whole kernel by default (perhaps with an option to disable it).
+> But there is no reason why some particular drivers need that check more
+> than the rest of the kernel.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- patches/06-header-changes.patch |   60 ---------------------------------------
- 1 files changed, 0 insertions(+), 60 deletions(-)
+We've done it on other drivers -- we can't do it for all of the kernel
+because that would drown people in warnings, but for those drivers that
+_should_ be clean it ought to be fine to add it by default.
 
-diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
-index 2fcf7a5..b3c71fb 100644
---- a/patches/06-header-changes.patch
-+++ b/patches/06-header-changes.patch
-@@ -64,63 +64,3 @@ cases.
-  
-  /**
-   * DOC: Key handling basics
----- a/net/mac80211/main.c
--+++ b/net/mac80211/main.c
--@@ -20,7 +20,9 @@
-- #include <linux/rtnetlink.h>
-- #include <linux/bitmap.h>
-- #include <linux/pm_qos_params.h>
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
-- #include <net/net_namespace.h>
--+#endif
-- #include <net/cfg80211.h>
-- 
-- #include "ieee80211_i.h"
----- a/net/mac80211/cfg.c
--+++ b/net/mac80211/cfg.c
--@@ -10,7 +10,9 @@
-- #include <linux/nl80211.h>
-- #include <linux/rtnetlink.h>
-- #include <linux/slab.h>
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
-- #include <net/net_namespace.h>
--+#endif
-- #include <linux/rcupdate.h>
-- #include <net/cfg80211.h>
-- #include "ieee80211_i.h"
----- a/net/mac80211/tx.c
--+++ b/net/mac80211/tx.c
--@@ -18,7 +18,9 @@
-- #include <linux/etherdevice.h>
-- #include <linux/bitmap.h>
-- #include <linux/rcupdate.h>
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
-- #include <net/net_namespace.h>
--+#endif
-- #include <net/ieee80211_radiotap.h>
-- #include <net/cfg80211.h>
-- #include <net/mac80211.h>
----- a/net/mac80211/util.c
--+++ b/net/mac80211/util.c
--@@ -20,7 +20,9 @@
-- #include <linux/if_arp.h>
-- #include <linux/bitmap.h>
-- #include <linux/crc32.h>
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
-- #include <net/net_namespace.h>
--+#endif
-- #include <net/cfg80211.h>
-- #include <net/rtnetlink.h>
-- 
----- a/net/wireless/nl80211.c
--+++ b/net/wireless/nl80211.c
--@@ -15,7 +15,9 @@
-- #include <linux/rtnetlink.h>
-- #include <linux/netlink.h>
-- #include <linux/etherdevice.h>
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
-- #include <net/net_namespace.h>
--+#endif
-- #include <net/genetlink.h>
-- #include <net/cfg80211.h>
-- #include <net/sock.h>
+johannes
+
