@@ -1,230 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:1955 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751653Ab0DKMb3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 08:31:29 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 7/9] rt2x00: Add rt3071 support in rt2800 register initialization.
-Date: Sun, 11 Apr 2010 14:31:13 +0200
-Message-Id: <1270989075-2267-8-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:22973 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754646Ab0DPGYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 02:24:40 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:24:40 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19400.640.637451.935311@gargle.gargle.HOWL>
+Date: Fri, 16 Apr 2010 11:54:00 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/10] ath9k_htc: Add dropped SKB count to debugfs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add RT3071 specific register initializations to rt2x00, based on the latest
-Ralink rt3070 vendor driver.
-
-With this patch my RT3071 based devices start showing a sign of life.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |  102 ++++++++++++++++++++++++++++---
- 1 files changed, 93 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/hif_usb.c      |   13 +++++++++----
+ drivers/net/wireless/ath/ath9k/htc.h          |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 +++
+ 3 files changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 7d1cb7e..fe7171f 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1042,7 +1042,8 @@ EXPORT_SYMBOL_GPL(rt2800_link_stats);
- static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- {
- 	if (rt2x00dev->curr_band == IEEE80211_BAND_2GHZ) {
--		if (rt2x00_rt(rt2x00dev, RT3070))
-+		if (rt2x00_rt(rt2x00dev, RT3070) ||
-+		    rt2x00_rt(rt2x00dev, RT3071))
- 			return 0x1c + (2 * rt2x00dev->lna_gain);
- 		else
- 			return 0x2e + rt2x00dev->lna_gain;
-@@ -1091,6 +1092,7 @@ EXPORT_SYMBOL_GPL(rt2800_link_tuner);
- int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- {
- 	u32 reg;
-+	u16 eeprom;
- 	unsigned int i;
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index fe994e2..3091bb3 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -129,6 +129,7 @@ static void hif_usb_tx_cb(struct urb *urb)
+ 				TX_STAT_INC(skb_completed);
+ 			} else {
+ 				dev_kfree_skb_any(skb);
++				TX_STAT_INC(skb_dropped);
+ 			}
+ 		}
  
- 	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-@@ -1190,7 +1192,22 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_CC_DELAY_TIME, 2);
- 	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
- 
--	if (rt2x00_rt(rt2x00dev, RT3070)) {
-+	if (rt2x00_rt(rt2x00dev, RT3071)) {
-+		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
-+		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
-+		if (rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E)) {
-+			rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
-+			if (rt2x00_get_field16(eeprom, EEPROM_NIC_DAC_TEST))
-+				rt2800_register_write(rt2x00dev, TX_SW_CFG2,
-+						      0x0000002c);
-+			else
-+				rt2800_register_write(rt2x00dev, TX_SW_CFG2,
-+						      0x0000000f);
-+		} else {
-+			rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-+		}
-+		rt2800_register_write(rt2x00dev, TX_SW_CFG2, reg);
-+	} else if (rt2x00_rt(rt2x00dev, RT3070)) {
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
- 
- 		if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
-@@ -1540,7 +1557,8 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
- 
--	if (rt2x00_rt(rt2x00dev, RT3070)) {
-+	if (rt2x00_rt(rt2x00dev, RT3070) ||
-+	    rt2x00_rt(rt2x00dev, RT3071)) {
- 		rt2800_bbp_write(rt2x00dev, 79, 0x13);
- 		rt2800_bbp_write(rt2x00dev, 80, 0x05);
- 		rt2800_bbp_write(rt2x00dev, 81, 0x33);
-@@ -1561,7 +1579,8 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
- 
--	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F))
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
-+	    rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E))
- 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 103, 0x00);
-@@ -1569,6 +1588,18 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 105, 0x05);
- 	rt2800_bbp_write(rt2x00dev, 106, 0x35);
- 
-+	if (rt2x00_rt(rt2x00dev, RT3071)) {
-+		rt2800_bbp_read(rt2x00dev, 138, &value);
-+
-+		rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &eeprom);
-+		if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TXPATH) == 1)
-+			value |= 0x20;
-+		if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RXPATH) == 1)
-+			value &= ~0x02;
-+
-+		rt2800_bbp_write(rt2x00dev, 138, value);
-+	}
-+
- 	if (rt2x00_rt(rt2x00dev, RT2872)) {
- 		rt2800_bbp_write(rt2x00dev, 31, 0x08);
- 		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
-@@ -1656,7 +1687,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	u32 reg;
- 	u16 eeprom;
- 
--	if (!rt2x00_rt(rt2x00dev, RT3070))
-+	if (!rt2x00_rt(rt2x00dev, RT3070) &&
-+	    !rt2x00_rt(rt2x00dev, RT3071))
- 		return 0;
- 
- 	/*
-@@ -1669,7 +1701,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
- 	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
- 
--	if (rt2x00_rt(rt2x00dev, RT3070)) {
-+	if (rt2x00_rt(rt2x00dev, RT3070) ||
-+	    rt2x00_rt(rt2x00dev, RT3071)) {
- 		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
- 		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
- 		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-@@ -1696,6 +1729,23 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
- 		rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
- 		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
-+	} else if (rt2x00_rt(rt2x00dev, RT3071)) {
-+		rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
-+		rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
-+		rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
-+
-+		rt2800_rfcsr_write(rt2x00dev, 31, 0x14);
-+
-+		rt2800_register_read(rt2x00dev, LDO_CFG0, &reg);
-+		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
-+		if (rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E)) {
-+			rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
-+			if (rt2x00_get_field16(eeprom, EEPROM_NIC_DAC_TEST))
-+				rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
-+			else
-+				rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 0);
-+		}
-+		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
+@@ -149,11 +150,15 @@ static void hif_usb_tx_cb(struct urb *urb)
  	}
+ }
  
- 	/*
-@@ -1706,6 +1756,11 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 			rt2800_init_rx_filter(rt2x00dev, false, 0x07, 0x16);
- 		rt2x00dev->calibration[1] =
- 			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x19);
-+	} else if (rt2x00_rt(rt2x00dev, RT3071)) {
-+		rt2x00dev->calibration[0] =
-+			rt2800_init_rx_filter(rt2x00dev, false, 0x07, 0x13);
-+		rt2x00dev->calibration[1] =
-+			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x15);
- 	}
- 
- 	/*
-@@ -1724,7 +1779,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field8(&bbp, BBP4_BANDWIDTH, 0);
- 	rt2800_bbp_write(rt2x00dev, 4, bbp);
- 
--	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F))
-+	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F) ||
-+	    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E))
- 		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
- 
- 	rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
-@@ -1733,6 +1789,11 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
-+	if (rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E)) {
-+		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
-+		if (rt2x00_get_field16(eeprom, EEPROM_NIC_EXTERNAL_LNA_BG))
-+			rt2x00_set_field8(&rfcsr, RFCSR17_R, 1);
+-static inline void ath9k_skb_queue_purge(struct sk_buff_head *list)
++static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
++					 struct sk_buff_head *list)
+ {
+ 	struct sk_buff *skb;
+-	while ((skb = __skb_dequeue(list)) != NULL)
++
++	while ((skb = __skb_dequeue(list)) != NULL) {
+ 		dev_kfree_skb_any(skb);
++		TX_STAT_INC(skb_dropped);
 +	}
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_TXMIXER_GAIN_BG, &eeprom);
- 	if (rt2x00_get_field16(eeprom, EEPROM_TXMIXER_GAIN_BG_VAL) >= 1)
- 		rt2x00_set_field8(&rfcsr, RFCSR17_TXMIXER_GAIN,
-@@ -1740,9 +1801,32 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 						   EEPROM_TXMIXER_GAIN_BG_VAL));
- 	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
+ }
  
--	if (rt2x00_rt(rt2x00dev, RT3070)) {
-+	if (rt2x00_rt(rt2x00dev, RT3071)) {
-+		rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_RF_BLOCK_EN, 1);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 0);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 0);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
-+		rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
-+
-+		rt2800_rfcsr_read(rt2x00dev, 15, &rfcsr);
-+		rt2x00_set_field8(&rfcsr, RFCSR15_TX_LO2_EN, 0);
-+		rt2800_rfcsr_write(rt2x00dev, 15, rfcsr);
-+
-+		rt2800_rfcsr_read(rt2x00dev, 20, &rfcsr);
-+		rt2x00_set_field8(&rfcsr, RFCSR20_RX_LO1_EN, 0);
-+		rt2800_rfcsr_write(rt2x00dev, 20, rfcsr);
-+
-+		rt2800_rfcsr_read(rt2x00dev, 21, &rfcsr);
-+		rt2x00_set_field8(&rfcsr, RFCSR21_RX_LO2_EN, 0);
-+		rt2800_rfcsr_write(rt2x00dev, 21, rfcsr);
-+	}
-+
-+	if (rt2x00_rt(rt2x00dev, RT3070) || rt2x00_rt(rt2x00dev, RT3071)) {
- 		rt2800_rfcsr_read(rt2x00dev, 27, &rfcsr);
--		if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F))
-+		if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F) ||
-+		    rt2x00_rt_rev_lt(rt2x00dev, RT3071, REV_RT3071E))
- 			rt2x00_set_field8(&rfcsr, RFCSR27_R1, 3);
- 		else
- 			rt2x00_set_field8(&rfcsr, RFCSR27_R1, 0);
+ /* TX lock has to be taken */
+@@ -214,7 +219,7 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
+ 	ret = usb_submit_urb(tx_buf->urb, GFP_ATOMIC);
+ 	if (ret) {
+ 		tx_buf->len = tx_buf->offset = 0;
+-		ath9k_skb_queue_purge(&tx_buf->skb_queue);
++		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
+ 		__skb_queue_head_init(&tx_buf->skb_queue);
+ 		list_move_tail(&tx_buf->list, &hif_dev->tx.tx_buf);
+ 		hif_dev->tx.tx_buf_cnt++;
+@@ -281,7 +286,7 @@ static void hif_usb_stop(void *hif_handle, u8 pipe_id)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+-	ath9k_skb_queue_purge(&hif_dev->tx.tx_skb_queue);
++	ath9k_skb_queue_purge(hif_dev, &hif_dev->tx.tx_skb_queue);
+ 	hif_dev->tx.tx_skb_cnt = 0;
+ 	hif_dev->tx.flags |= HIF_USB_TX_STOP;
+ 	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 78213fc..6a4614a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -261,6 +261,7 @@ struct ath_tx_stats {
+ 	u32 buf_completed;
+ 	u32 skb_queued;
+ 	u32 skb_completed;
++	u32 skb_dropped;
+ };
+ 
+ struct ath_rx_stats {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 2cea577..081f445 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -609,6 +609,9 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"%20s : %10u\n", "SKBs completed",
+ 			priv->debug.tx_stats.skb_completed);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%20s : %10u\n", "SKBs dropped",
++			priv->debug.tx_stats.skb_dropped);
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
 -- 
-1.7.0.4
+1.7.0.5
 
