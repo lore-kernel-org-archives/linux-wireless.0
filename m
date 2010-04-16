@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49661 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756877Ab0DIUKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 16:10:05 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH wireless-2.6] iwlwifi: work around bogus active chains detection
-Date: Fri,  9 Apr 2010 13:10:02 -0700
-Message-Id: <1270843802-30081-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49553 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757617Ab0DPNpK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 09:45:10 -0400
+Date: Fri, 16 Apr 2010 09:37:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH PING] ssb patches for SPROM location
+Message-ID: <20100416133711.GB8554@tuxdriver.com>
+References: <p2ub170af451004152320y64c4615ub3d7186d936cdc62@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <p2ub170af451004152320y64c4615ub3d7186d936cdc62@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Apr 16, 2010 at 08:20:51AM +0200, Rafał Miłecki wrote:
+> John, I posted some time ago following patches:
+> 
+> [RFT][PATCH] ssb: Look for SPROM at different offset on higher rev CC
+> [PATCH 1/2] ssb: Use relative offsets for SPROM
+> [PATCH 2/2] ssb: Fix order of definitions and some text space indents
+> 
+> while Michael has some doubts about "ssb: Look for SPROM at different
+> offset on higher rev CC" I explained to him that what he does not like
+> was fixed in next 2 posted patches.
+> 
+> AFAIR you got some device with this recently-discovered location of
+> SPROM. Could you test my set if it makes your card working? If so,
+> could you take that patches to your tree?
 
-The current algorithm will sometimes "detect" that
-more chains are enabled than are really present in
-the device because, for unknown reasons, the ucode
-sends up all-zeroes signal values.
+Sorry, been busy w/ other things.  FWIW, my implementation based on
+the RE work from Larry did not work on the box in question, and my
+implementation wasn't substantially different from yours.  Anyway,
+I'll try to confirm this soon w/ your patches and to collect more
+information for Larry.
 
-The simplest way of solving this is to restrict the
-active chains mask to the chains we know are really
-present on the device.
+Thanks,
 
-This fixes a bug with some devices where, since sometimes
-more chains are enabled than really present, the system would hang.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-This patch is also available from wireless-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-calib.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index 845831a..64de42b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -807,6 +807,18 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv,
- 		}
- 	}
- 
-+	/*
-+	 * The above algorithm sometimes fails when the ucode
-+	 * reports 0 for all chains. It's not clear why that
-+	 * happens to start with, but it is then causing trouble
-+	 * because this can make us enable more chains than the
-+	 * hardware really has.
-+	 *
-+	 * To be safe, simply mask out any chains that we know
-+	 * are not on the device.
-+	 */
-+	active_chains &= priv->hw_params.valid_rx_ant;
-+
- 	num_tx_chains = 0;
- 	for (i = 0; i < NUM_RX_CHAINS; i++) {
- 		/* loops on all the bits of
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
