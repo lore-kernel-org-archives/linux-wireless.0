@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13490 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933100Ab0D3RV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 13:21:29 -0400
-Date: Fri, 30 Apr 2010 10:57:14 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: fix supported rates IE if AP doesn't give
- us it's rates
-Message-ID: <20100430105714.3d8cf84b@dhcp-lab-109.englab.brq.redhat.com>
-In-Reply-To: <20100428203304.GB2912@tuxdriver.com>
-References: <1272460624-3611-1-git-send-email-sgruszka@redhat.com>
-	<1272460624-3611-2-git-send-email-sgruszka@redhat.com>
-	<20100428133336.GA2527@dhcp-lab-161.englab.brq.redhat.com>
-	<20100428203304.GB2912@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.deathmatch.net ([72.66.92.28]:4156 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758308Ab0DPMT7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 08:19:59 -0400
+Date: Fri, 16 Apr 2010 08:15:47 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [PATCH] wl1251: add support for dedicated IRQ line
+Message-ID: <20100416121547.GA10649@hash.localnet>
+References: <1271413332-2979-1-git-send-email-notasas@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1271413332-2979-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 28 Apr 2010 16:33:04 -0400
-"John W. Linville" <linville@tuxdriver.com> wrote:
-
-> > Please note these two patches together with "QoS fixes":
-> > - mac80211: explicitly disable/enable QoS
-> > - iwlwifi: manage QoS by mac stack
-> > resolve:
-> > https://bugzilla.redhat.com/show_bug.cgi?id=558002
-> > 
-> > "QoS fixes" alone resolve:
-> > https://bugzilla.redhat.com/show_bug.cgi?id=539878
-> > 
-> > So I think we want all 4 patches in stable.
-> > 
-> > John,if possible push patches to Linus tree. When they lend there,
-> > I will post backported patches to stable ML. I have them already
-> > prepared ant tested for 2.6.32 :)
+On Fri, Apr 16, 2010 at 01:22:12PM +0300, Grazvydas Ignotas wrote:
+> wl1251 has WLAN_IRQ pin for generating interrupts to host processor,
+> which is mandatory in SPI mode and optional in SDIO mode (which can
+> use SDIO interrupts instead). However TI recommends using deditated
+> IRQ line for SDIO too.
 > 
-> It is fairly late in the 2.6.34 cycle, and it isn't obvious to me
-> that these fix any sort of regression.  Am I wrong?
+> Add support for using dedicated interrupt line with SDIO, but also leave
+> ability to switch to SDIO interrupts in case it's needed.
+> 
+> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 
-If you count as regression bugs introduced in 2.6.34 development
-cycle, these are not regression. Bugs are Fedora 12 regression over
-Fedora 11, so most likely these bugs were introduced in 2.6.32
-or 2.6.31 kernel. I have no strong filings to fix them fast, since
-we have them unfixed for long time and not hear many complains. We
-may fix them for Fedora now, and post to -stable after some more testing
-and 2.6.34 release.
+Thanks, looks good to me!
 
-Cheers
-Stanislaw
+Reviewed-by: Bob Copeland <me@bobcopeland.com>
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
