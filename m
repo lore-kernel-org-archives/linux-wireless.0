@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48991 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755885Ab0DGWAR (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:61000 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756322Ab0DPSnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 18:00:17 -0400
-Date: Wed, 7 Apr 2010 17:53:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.34-rc3-git6: Reported regressions from 2.6.33
-Message-ID: <20100407215319.GA25932@tuxdriver.com>
-References: <6Pphclm24fK.A.lSF.qsPvLB@chimera>
+	Fri, 16 Apr 2010 14:43:53 -0400
+Received: by bwz25 with SMTP id 25so3494764bwz.28
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 11:43:51 -0700 (PDT)
+From: Holger Schurig <holgerschurig@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Survey mode
+Date: Fri, 16 Apr 2010 20:43:06 +0200
+Cc: Ivan Seskar <seskar@winlab.rutgers.edu>
+References: <514D34D599B3254B89EEAADA3A7AC85D3F1F9D0AF4@ms2.winlab-ad.rutgers.edu> <z2p43e72e891004161046o81e032ddm20ce1e3528af0684@mail.gmail.com>
+In-Reply-To: <z2p43e72e891004161046o81e032ddm20ce1e3528af0684@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6Pphclm24fK.A.lSF.qsPvLB@chimera>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201004162043.07085.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 07, 2010 at 11:08:30PM +0200, Rafael J. Wysocki wrote:
+> Luiz:
+> Holger, are these in PATCH form or were they RFCs?
 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15551
-> Subject		: WARNING: at net/mac80211/work.c:811 ieee80211_work_work+0x7f/0xde8 [mac80211]()
-> Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
-> Date		: 2010-03-16 22:03 (23 days old)
+Both patches work for me, so they're [PATCH]. If John want's them "extra", I 
+can make sure they apply to linux-wl and repost them.
 
-I sent a pull request with the patch for this to Dave M. today. :-)
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+http://www.holgerschurig.de
