@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54839 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756405Ab0DODay (ORCPT
+Received: from static-92-33-14-100.sme.bredbandsbolaget.se ([92.33.14.100]:18978
+	"EHLO mailhost.lundinova.se" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757882Ab0DPKwr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:54 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 49/97] ath9k_hw: shift code for AR9280 OLC temp comp
-Date: Wed, 14 Apr 2010 23:30:03 -0400
-Message-Id: <1271302251-9075-50-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 16 Apr 2010 06:52:47 -0400
+From: Johan Hovold <johan.hovold@lundinova.se>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Tor Krill <tor@excito.com>,
+	Johan Hovold <johan.hovold@lundinova.se>
+Subject: [RFC][PATCH 6/6] ath9k: clear mic error flag on encrypted frames
+Date: Fri, 16 Apr 2010 12:52:15 +0200
+Message-Id: <1271415135-18317-6-git-send-email-johan.hovold@lundinova.se>
+In-Reply-To: <20100416104850.GA13329@lundinova.se>
+References: <20100416104850.GA13329@lundinova.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're bailing out on the alternative code path so remove the
-else branch.
+It does not make sense to forward MIC-errors on non-decrypted frames.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johan Hovold <johan.hovold@lundinova.se>
 ---
- drivers/net/wireless/ath/ath9k/calib.c |   35 +++++++++++++++----------------
- 1 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index e2c427b..5d61169 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -711,25 +711,24 @@ static void ath9k_olc_temp_compensation(struct ath_hw *ah)
- 		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
- 		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
+ drivers/net/wireless/ath/ath9k/common.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 1623af1..6efb388 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -255,11 +255,15 @@ void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
  
--		if (ah->initPDADC == 0 || currPDADC == 0) {
-+		if (ah->initPDADC == 0 || currPDADC == 0)
- 			return;
--		} else {
--			if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
--				delta = (currPDADC - ah->initPDADC + 4) / 8;
--			else
--				delta = (currPDADC - ah->initPDADC + 5) / 10;
--
--			if (delta != ah->PDADCdelta) {
--				ah->PDADCdelta = delta;
--				for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
--					regval = ah->originalGain[i] - delta;
--					if (regval < 0)
--						regval = 0;
--
--					REG_RMW_FIELD(ah,
--						      AR_PHY_TX_GAIN_TBL1 + i * 4,
--						      AR_PHY_TX_GAIN, regval);
--				}
-+
-+		if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
-+			delta = (currPDADC - ah->initPDADC + 4) / 8;
-+		else
-+			delta = (currPDADC - ah->initPDADC + 5) / 10;
-+
-+		if (delta != ah->PDADCdelta) {
-+			ah->PDADCdelta = delta;
-+			for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
-+				regval = ah->originalGain[i] - delta;
-+				if (regval < 0)
-+					regval = 0;
-+
-+				REG_RMW_FIELD(ah,
-+					      AR_PHY_TX_GAIN_TBL1 + i * 4,
-+					      AR_PHY_TX_GAIN, regval);
- 			}
- 		}
+ 	keyix = rx_stats->rs_keyix;
+ 
+-	if (ieee80211_has_protected(fc) && !decrypt_error &&
+-		!(rx_stats->rs_flags & ATH9K_RX_DECRYPT_BUSY) &&
+-		!(rx_stats->rs_flags & ATH9K_RX_KEY_MISS)) {
+-		if (keyix != ATH9K_RXKEYIX_INVALID)
++	if (ieee80211_has_protected(fc)) {
++		if (!decrypt_error &&
++		    !(rx_stats->rs_flags & ATH9K_RX_DECRYPT_BUSY) &&
++		    !(rx_stats->rs_flags & ATH9K_RX_KEY_MISS) &&
++		    keyix != ATH9K_RXKEYIX_INVALID) {
+ 			rxs->flag |= RX_FLAG_DECRYPTED;
++		}
++		if (!(rxs->flag & RX_FLAG_DECRYPTED))
++			rxs->flag &= ~RX_FLAG_MMIC_ERROR;
  	}
+ 	if (ah->sw_mgmt_crypto &&
+ 	    (rxs->flag & RX_FLAG_DECRYPTED) &&
 -- 
-1.6.3.3
+1.7.0.3
 
