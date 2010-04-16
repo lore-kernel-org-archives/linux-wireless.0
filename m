@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f193.google.com ([209.85.222.193]:50258 "EHLO
-	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752866Ab0DGHMX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 03:12:23 -0400
-Received: by pzk31 with SMTP id 31so740326pzk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Apr 2010 00:12:22 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:22983 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754724Ab0DPG03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 02:26:29 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:26:29 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20100407053108.23575.92800.stgit@mj.roinet.com>
-References: <20100407053051.23575.94594.stgit@mj.roinet.com>
-	<20100407053108.23575.92800.stgit@mj.roinet.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 7 Apr 2010 00:12:02 -0700
-Message-ID: <q2w43e72e891004070012p4867e5e6vfa4386149b65e6c5@mail.gmail.com>
-Subject: Re: [PATCH 4/4] compat-wireless: find the actual remote URL
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19400.748.861647.996982@gargle.gargle.HOWL>
+Date: Fri, 16 Apr 2010 11:55:48 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/10] ath9k_htc: Remove GPIO set on unload
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 6, 2010 at 10:31 PM, Pavel Roskin <proski@gnu.org> wrote:
-> Don't assume the remote to be called "origin".  Instead, find the
-> current branch first, defaulting to "master".  Then find the
-> corresponding remote, defaulting to "origin".  Then find the remote URL,
-> defaulting to "unknown".  Reuse the remote URL for TREE_NAME.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+There is no point in trying to set the LED pin
+when the module is being unloaded. The target
+would be reset anyway.
 
-Thanks! All 4 patches applied.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 08a4a58..2cea577 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -960,7 +960,6 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
+ 	ath9k_unregister_led(&priv->tx_led);
+ 	ath9k_unregister_led(&priv->rx_led);
+ 	ath9k_unregister_led(&priv->radio_led);
+-	ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 1);
+ }
+ 
+ void ath9k_init_leds(struct ath9k_htc_priv *priv)
+-- 
+1.7.0.5
+
