@@ -1,132 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47034 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933211Ab0DHT1w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:52 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga03.intel.com ([143.182.124.21]:31382 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932551Ab0DPVuX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Apr 2010 17:50:23 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 095/102] ath9k: Add frame onto hw tx fifo for edma
-Date: Thu,  8 Apr 2010 15:27:31 -0400
-Message-Id: <1270754858-26266-96-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/2] iwlwifi: fix scan races
+Date: Fri, 16 Apr 2010 14:50:13 -0700
+Message-Id: <1271454614-14272-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1271454614-14272-1-git-send-email-reinette.chatre@intel.com>
+References: <1271454614-14272-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+When an internal scan is started, nothing protects the
+is_internal_short_scan variable which can cause crashes,
+cf. https://bugzilla.kernel.org/show_bug.cgi?id=15667.
+Fix this by making the short scan request use the mutex
+for locking, which requires making the request go to a
+work struct so that it can sleep.
+
+Reported-by: Peter Zijlstra <peterz@infradead.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    4 +++
- drivers/net/wireless/ath/ath9k/xmit.c  |   47 ++++++++++++++++++++++++-------
- 2 files changed, 40 insertions(+), 11 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   31 ++++++++++++++++++++-----------
+ 5 files changed, 23 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 2d3e42a..dd0f9c4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -190,6 +190,7 @@ enum ATH_AGGR_STATUS {
- 	ATH_AGGR_LIMITED,
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e4c2e1e..ba0fdba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3330,6 +3330,7 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
  
-+#define ATH_TXFIFO_DEPTH 8
- struct ath_txq {
- 	u32 axq_qnum;
- 	u32 *axq_link;
-@@ -199,6 +200,9 @@ struct ath_txq {
- 	bool stopped;
- 	bool axq_tx_inprogress;
- 	struct list_head axq_acq;
-+	struct list_head txq_fifo[ATH_TXFIFO_DEPTH];
-+	u8 txq_headidx;
-+	u8 txq_tailidx;
- };
- 
- #define AGGR_CLEANUP         BIT(1)
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 375b2e6..473be84 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -853,7 +853,7 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_tx_queue_info qi;
--	int qnum;
-+	int qnum, i;
- 
- 	memset(&qi, 0, sizeof(qi));
- 	qi.tqi_subtype = subtype;
-@@ -908,6 +908,10 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
- 		txq->axq_depth = 0;
- 		txq->axq_tx_inprogress = false;
- 		sc->tx.txqsetup |= 1<<qnum;
-+
-+		txq->txq_headidx = txq->txq_tailidx = 0;
-+		for (i = 0; i < ATH_TXFIFO_DEPTH; i++)
-+			INIT_LIST_HEAD(&txq->txq_fifo[i]);
- 	}
- 	return &sc->tx.txq[qnum];
+ 	cancel_delayed_work_sync(&priv->init_alive_start);
+ 	cancel_delayed_work(&priv->scan_check);
++	cancel_work_sync(&priv->start_internal_scan);
+ 	cancel_delayed_work(&priv->alive_start);
+ 	cancel_work_sync(&priv->beacon_update);
+ 	del_timer_sync(&priv->statistics_periodic);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 894bcb8..1459cdb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -3357,7 +3357,6 @@ static void iwl_force_rf_reset(struct iwl_priv *priv)
+ 	 */
+ 	IWL_DEBUG_INFO(priv, "perform radio reset.\n");
+ 	iwl_internal_short_hw_scan(priv);
+-	return;
  }
-@@ -1224,25 +1228,46 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
  
- 	bf = list_first_entry(head, struct ath_buf, list);
  
--	list_splice_tail_init(head, &txq->axq_q);
--	txq->axq_depth++;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 732590f..36940a9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -506,7 +506,7 @@ void iwl_init_scan_params(struct iwl_priv *priv);
+ int iwl_scan_cancel(struct iwl_priv *priv);
+ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
+ int iwl_mac_hw_scan(struct ieee80211_hw *hw, struct cfg80211_scan_request *req);
+-int iwl_internal_short_hw_scan(struct iwl_priv *priv);
++void iwl_internal_short_hw_scan(struct iwl_priv *priv);
+ int iwl_force_reset(struct iwl_priv *priv, int mode);
+ u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
+ 		       const u8 *ie, int ie_len, int left);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 6054c5f..ef1720a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1296,6 +1296,7 @@ struct iwl_priv {
+ 	struct work_struct tt_work;
+ 	struct work_struct ct_enter;
+ 	struct work_struct ct_exit;
++	struct work_struct start_internal_scan;
+ 
+ 	struct tasklet_struct irq_tasklet;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index bd2f7c4..5062f4e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -469,6 +469,8 @@ EXPORT_SYMBOL(iwl_init_scan_params);
+ 
+ static int iwl_scan_initiate(struct iwl_priv *priv)
+ {
++	WARN_ON(!mutex_is_locked(&priv->mutex));
++
+ 	IWL_DEBUG_INFO(priv, "Starting scan...\n");
+ 	set_bit(STATUS_SCANNING, &priv->status);
+ 	priv->is_internal_short_scan = false;
+@@ -546,24 +548,31 @@ EXPORT_SYMBOL(iwl_mac_hw_scan);
+  * internal short scan, this function should only been called while associated.
+  * It will reset and tune the radio to prevent possible RF related problem
+  */
+-int iwl_internal_short_hw_scan(struct iwl_priv *priv)
++void iwl_internal_short_hw_scan(struct iwl_priv *priv)
+ {
+-	int ret = 0;
++	queue_work(priv->workqueue, &priv->start_internal_scan);
++}
++
++static void iwl_bg_start_internal_scan(struct work_struct *work)
++{
++	struct iwl_priv *priv =
++		container_of(work, struct iwl_priv, start_internal_scan);
++
++	mutex_lock(&priv->mutex);
+ 
+ 	if (!iwl_is_ready_rf(priv)) {
+-		ret = -EIO;
+ 		IWL_DEBUG_SCAN(priv, "not ready or exit pending\n");
+-		goto out;
++		goto unlock;
+ 	}
++
+ 	if (test_bit(STATUS_SCANNING, &priv->status)) {
+ 		IWL_DEBUG_SCAN(priv, "Scan already in progress.\n");
+-		ret = -EAGAIN;
+-		goto out;
++		goto unlock;
+ 	}
++
+ 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+ 		IWL_DEBUG_SCAN(priv, "Scan request while abort pending\n");
+-		ret = -EAGAIN;
+-		goto out;
++		goto unlock;
+ 	}
+ 
+ 	priv->scan_bands = 0;
+@@ -576,9 +585,8 @@ int iwl_internal_short_hw_scan(struct iwl_priv *priv)
+ 	set_bit(STATUS_SCANNING, &priv->status);
+ 	priv->is_internal_short_scan = true;
+ 	queue_work(priv->workqueue, &priv->request_scan);
 -
- 	ath_print(common, ATH_DBG_QUEUE,
- 		  "qnum: %d, txq depth: %d\n", txq->axq_qnum, txq->axq_depth);
- 
--	if (txq->axq_link == NULL) {
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
-+		if (txq->axq_depth >= ATH_TXFIFO_DEPTH) {
-+			ath_print(common, ATH_DBG_XMIT, "Tx fifo is full\n");
-+			return;
-+		}
-+		if (!list_empty(&txq->txq_fifo[txq->txq_headidx]))
-+			ath_print(common, ATH_DBG_XMIT,
-+				  "Initializing tx fifo %d which is non-empty\n",
-+				  txq->txq_headidx);
-+		INIT_LIST_HEAD(&txq->txq_fifo[txq->txq_headidx]);
-+		list_splice_init(head, &txq->txq_fifo[txq->txq_headidx]);
-+		INCR(txq->txq_headidx, ATH_TXFIFO_DEPTH);
- 		ath9k_hw_puttxbuf(ah, txq->axq_qnum, bf->bf_daddr);
- 		ath_print(common, ATH_DBG_XMIT,
- 			  "TXDP[%u] = %llx (%p)\n",
- 			  txq->axq_qnum, ito64(bf->bf_daddr), bf->bf_desc);
- 	} else {
--		*txq->axq_link = bf->bf_daddr;
--		ath_print(common, ATH_DBG_XMIT, "link[%u] (%p)=%llx (%p)\n",
--			  txq->axq_qnum, txq->axq_link,
--			  ito64(bf->bf_daddr), bf->bf_desc);
-+		list_splice_tail_init(head, &txq->axq_q);
-+
-+		if (txq->axq_link == NULL) {
-+			ath9k_hw_puttxbuf(ah, txq->axq_qnum, bf->bf_daddr);
-+			ath_print(common, ATH_DBG_XMIT,
-+					"TXDP[%u] = %llx (%p)\n",
-+					txq->axq_qnum, ito64(bf->bf_daddr),
-+					bf->bf_desc);
-+		} else {
-+			*txq->axq_link = bf->bf_daddr;
-+			ath_print(common, ATH_DBG_XMIT,
-+					"link[%u] (%p)=%llx (%p)\n",
-+					txq->axq_qnum, txq->axq_link,
-+					ito64(bf->bf_daddr), bf->bf_desc);
-+		}
-+		ath9k_hw_get_desc_link(ah, bf->bf_lastbf->bf_desc,
-+				       &txq->axq_link);
-+		ath9k_hw_txstart(ah, txq->axq_qnum);
- 	}
--	ath9k_hw_get_desc_link(ah, bf->bf_lastbf->bf_desc, &txq->axq_link);
--	ath9k_hw_txstart(ah, txq->axq_qnum);
-+	txq->axq_depth++;
+-out:
+-	return ret;
++ unlock:
++	mutex_unlock(&priv->mutex);
  }
+ EXPORT_SYMBOL(iwl_internal_short_hw_scan);
  
- static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
+@@ -964,6 +972,7 @@ void iwl_setup_scan_deferred_work(struct iwl_priv *priv)
+ 	INIT_WORK(&priv->scan_completed, iwl_bg_scan_completed);
+ 	INIT_WORK(&priv->request_scan, iwl_bg_request_scan);
+ 	INIT_WORK(&priv->abort_scan, iwl_bg_abort_scan);
++	INIT_WORK(&priv->start_internal_scan, iwl_bg_start_internal_scan);
+ 	INIT_DELAYED_WORK(&priv->scan_check, iwl_bg_scan_check);
+ }
+ EXPORT_SYMBOL(iwl_setup_scan_deferred_work);
 -- 
 1.6.3.3
 
