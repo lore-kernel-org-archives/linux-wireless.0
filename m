@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44007 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752090Ab0DZSpM (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:64153 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101Ab0DPGVR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 14:45:12 -0400
-Date: Mon, 26 Apr 2010 14:32:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] ssb: Avoid system hang when SPROM read fails
-Message-ID: <20100426183233.GF2387@tuxdriver.com>
-References: <4bd4c284.WBohOsmgdwRzw5JC%Larry.Finger@lwfinger.net>
- <20100426171505.GC2387@tuxdriver.com>
- <4BD5D5B1.6020906@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4BD5D5B1.6020906@lwfinger.net>
+	Fri, 16 Apr 2010 02:21:17 -0400
+Subject: Re: [RFC PATCHv2 1/2] mac80211: Determine dynamic PS timeout based
+ on ps-qos network latency
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Kalle Valo <kvalo@adurom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87aat4lygg.fsf@purkki.valot.fi>
+References: <1271228079-27321-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271228079-27321-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <87eiigm0vu.fsf@purkki.valot.fi>
+	 <1271395747.6205.23.camel@wimaxnb.nmp.nokia.com>
+	 <87aat4lygg.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Apr 2010 09:17:12 +0300
+Message-ID: <1271398632.6205.27.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 26, 2010 at 01:04:33PM -0500, Larry Finger wrote:
-> On 04/26/2010 12:15 PM, John W. Linville wrote:
-> > 
-> > Well, the "good" news is that I hit the "Unable to read SPROM" case.
-> > The bad news is that the box still hangs after the -ENODEV.  I have
-> > not yet tracked-down the exact location of the current hang.
-> > 
-> > John
-> > 
-> > P.S.  Sorry about the 'radio silence' -- I've been distracted with
-> > some other things.  Also, the box in question originally belonged
-> > to someone else who had configured it in a way that was less than
-> > friendly to kernel development.  I finally reinstalled it...
+On Fri, 2010-04-16 at 08:10 +0200, ext Kalle Valo wrote:
+> Maybe at some point we can talk with QoS framework about this.
 > 
-> That box is certainly resistant!
+> >> I'm mostly worried about timeout 0 case, for example I suspect ath9k
+> >> is broken with that value.
+> >> 
+> >> Also does this patch change the default value of dynamic ps timeout?
+> >> 
+> >
+> > No, the current default does not change. As the default value for the
+> > latency is 2000s, we will, by default, get a timeout of 100ms.
 > 
-> I certainly understand your distractions. That has to be a major
-> understatement.
+> Excellent. Thank you for explaining these.
 > 
-> As the patch makes some improvement in both your system and the one in
-> Bug #15825, I'll push it as a real patch.
-> 
-> Would your box be available to me as a loaner? I have considered buying
-> a netbook for debugging purposes, but I cannot quite justify the cost.
-> In addition, Murphy's law would make whatever one I bought work without
-> any problems.
+> From my point of view these patches look good and I have nothing to
+> complain. 
 
-I think that can be arranged...
+You're definitely getting soft. I will stretch my luck by submitting a
+v3 with one more latency range, giving a dynamic PS timeout of 50 ms.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> (I hope Juuso didn't hit his head when falling off from his chair when
+> reading this.)
+> 
+
+*ouch*
+
+-Juuso
+
