@@ -1,163 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55012 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757039Ab0DODa5 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:43192 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751672Ab0DQOFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:57 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v2 88/97] ath9k: Setup appropriate tx desc for regular dma and edma
-Date: Wed, 14 Apr 2010 23:30:42 -0400
-Message-Id: <1271302251-9075-89-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 17 Apr 2010 10:05:53 -0400
+Received: by wyb39 with SMTP id 39so1685865wyb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Apr 2010 07:05:51 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+Date: Sat, 17 Apr 2010 16:05:51 +0200
+Message-ID: <n2g2d0a357f1004170705j6d0750fdkc4784f86aab51c97@mail.gmail.com>
+Subject: iwl3945: Error sending REPLY_{RXON|SCAN_CMD|TX_PWR_TABLE_CMD} time
+	out after 500ms
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: wireless <linux-wireless@vger.kernel.org>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Hi,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/init.c  |   26 ++++++++++++++++----------
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |    4 ++--
- 4 files changed, 20 insertions(+), 14 deletions(-)
+I have already sent an bug-report "iwl3945: Network dropouts w/
+flash-stream in firefox" in [1].
+Unfortunately, the problem still remains, especially when
+fast-forwarding flash movies in firefox-3.6.3.
+It seems the wifi-card is hanging and my system needs a coldstart.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a11d830..f67be52 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -123,7 +123,7 @@ struct ath_descdma {
- 
- int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		      struct list_head *head, const char *name,
--		      int nbuf, int ndesc);
-+		      int nbuf, int ndesc, bool is_tx);
- void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
- 			 struct list_head *head);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 9779646..299ec05 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -235,31 +235,37 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- */
- int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		      struct list_head *head, const char *name,
--		      int nbuf, int ndesc)
-+		      int nbuf, int ndesc, bool is_tx)
- {
- #define	DS2PHYS(_dd, _ds)						\
- 	((_dd)->dd_desc_paddr + ((caddr_t)(_ds) - (caddr_t)(_dd)->dd_desc))
- #define ATH_DESC_4KB_BOUND_CHECK(_daddr) ((((_daddr) & 0xFFF) > 0xF7F) ? 1 : 0)
- #define ATH_DESC_4KB_BOUND_NUM_SKIPPED(_len) ((_len) / 4096)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_desc *ds;
-+	u8 *ds;
- 	struct ath_buf *bf;
--	int i, bsize, error;
-+	int i, bsize, error, desc_len;
- 
- 	ath_print(common, ATH_DBG_CONFIG, "%s DMA: %u buffers %u desc/buf\n",
- 		  name, nbuf, ndesc);
- 
- 	INIT_LIST_HEAD(head);
-+
-+	if (is_tx)
-+		desc_len = sc->sc_ah->caps.tx_desc_len;
-+	else
-+		desc_len = sizeof(struct ath_desc);
-+
- 	/* ath_desc must be a multiple of DWORDs */
--	if ((sizeof(struct ath_desc) % 4) != 0) {
-+	if ((desc_len % 4) != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "ath_desc not DWORD aligned\n");
--		BUG_ON((sizeof(struct ath_desc) % 4) != 0);
-+		BUG_ON((desc_len % 4) != 0);
- 		error = -ENOMEM;
- 		goto fail;
- 	}
- 
--	dd->dd_desc_len = sizeof(struct ath_desc) * nbuf * ndesc;
-+	dd->dd_desc_len = desc_len * nbuf * ndesc;
- 
- 	/*
- 	 * Need additional DMA memory because we can't use
-@@ -272,7 +278,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		u32 dma_len;
- 
- 		while (ndesc_skipped) {
--			dma_len = ndesc_skipped * sizeof(struct ath_desc);
-+			dma_len = ndesc_skipped * desc_len;
- 			dd->dd_desc_len += dma_len;
- 
- 			ndesc_skipped = ATH_DESC_4KB_BOUND_NUM_SKIPPED(dma_len);
-@@ -286,7 +292,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 		error = -ENOMEM;
- 		goto fail;
- 	}
--	ds = dd->dd_desc;
-+	ds = (u8 *) dd->dd_desc;
- 	ath_print(common, ATH_DBG_CONFIG, "%s DMA map: %p (%u) -> %llx (%u)\n",
- 		  name, ds, (u32) dd->dd_desc_len,
- 		  ito64(dd->dd_desc_paddr), /*XXX*/(u32) dd->dd_desc_len);
-@@ -300,7 +306,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 	}
- 	dd->dd_bufptr = bf;
- 
--	for (i = 0; i < nbuf; i++, bf++, ds += ndesc) {
-+	for (i = 0; i < nbuf; i++, bf++, ds += (desc_len * ndesc)) {
- 		bf->bf_desc = ds;
- 		bf->bf_daddr = DS2PHYS(dd, ds);
- 
-@@ -316,7 +322,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- 				       ((caddr_t) dd->dd_desc +
- 					dd->dd_desc_len));
- 
--				ds += ndesc;
-+				ds += (desc_len * ndesc);
- 				bf->bf_desc = ds;
- 				bf->bf_daddr = DS2PHYS(dd, ds);
- 			}
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ffb599c..921b39d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -324,7 +324,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 		/* Initialize rx descriptors */
- 
- 		error = ath_descdma_setup(sc, &sc->rx.rxdma, &sc->rx.rxbuf,
--				"rx", nbufs, 1);
-+				"rx", nbufs, 1, 0);
- 		if (error != 0) {
- 			ath_print(common, ATH_DBG_FATAL,
- 				  "failed to allocate rx descriptors: %d\n",
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 550253f..c859e46 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2151,7 +2151,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
- 	spin_lock_init(&sc->tx.txbuflock);
- 
- 	error = ath_descdma_setup(sc, &sc->tx.txdma, &sc->tx.txbuf,
--				  "tx", nbufs, 1);
-+				  "tx", nbufs, 1, 1);
- 	if (error != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to allocate tx descriptors: %d\n", error);
-@@ -2159,7 +2159,7 @@ int ath_tx_init(struct ath_softc *sc, int nbufs)
- 	}
- 
- 	error = ath_descdma_setup(sc, &sc->beacon.bdma, &sc->beacon.bbuf,
--				  "beacon", ATH_BCBUF, 1);
-+				  "beacon", ATH_BCBUF, 1, 0);
- 	if (error != 0) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to allocate beacon descriptors: %d\n", error);
--- 
-1.6.3.3
+My wifi-card is an iwl3945 and my access-point is a speedport-w701v.
+I am using a Debian/sid 32-bit system.
 
+Today, I enabled CONFIG_IWLWIFI_DEBUG=y to see what is going on.
+
+I stopped networking, unloaded the kernel-module and re-loaded with
+module-option debug=0x43fff [2].
+
+# /etc/init.d/networking stop
+# modprobe -r -v iwl3945
+# modprobe -v iwl3945 debug=0x43fff
+
+The kernel I use is a Linux-2.6.34-rc4-git4 with these 3 patches in addition:
+
+patches/wireless-2.6:
+0001-iwlwifi-work-around-bogus-active-chains-detection.patch
+
+patches/iwlwifi-fixes-for-2.6.34:
+1-2-iwlwifi-fix-scan-races.patch
+2-2-iwlwifi-correct-6000-EEPROM-regulatory-address.patch
+
+According to Johannes (on IRC) iwl3945 doesn't use internal scans yet
+(see my patch below).
+Thus, I am not sure if this needs to be fixed separately for iwl3945
+and if I ran into a scan race condition here.
+
+If this matters: I am using Debian's wpasupplicant (0.6.10-2) and wext
+wpa-driver.
+
+I collected all data and provide them in [3].
+
+Hope, this helps.
+
+Kind Regards,
+- Sedat -
+
+[1] http://marc.info/?l=linux-wireless&m=127135267301937&w=2
+[2] http://intellinuxwireless.org/?n=fw_error_report
+[3] http://files.iniza.org/BUG_iwl3945_20100417/
+
+[PATCH]
+$ cat iwl3945-fix-scan-races.patch
+--- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2010-04-13
+03:41:35.000000000 +0200
++++ linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c	2010-04-17
+10:46:52.765166367 +0200
+@@ -3792,6 +3792,7 @@ static void iwl3945_cancel_deferred_work
+
+ 	cancel_delayed_work_sync(&priv->init_alive_start);
+ 	cancel_delayed_work(&priv->scan_check);
++	cancel_work_sync(&priv->start_internal_scan);
+ 	cancel_delayed_work(&priv->alive_start);
+ 	cancel_work_sync(&priv->beacon_update);
+ }
+[/PATCH]
