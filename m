@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:41258 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907Ab0DDT74 (ORCPT
+Received: from dmz4.indranet.co.nz ([203.97.93.68]:64744 "EHLO
+	mail.indranet.co.nz" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972Ab0DQVd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Apr 2010 15:59:56 -0400
-Received: by fxm27 with SMTP id 27so591583fxm.28
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Apr 2010 12:59:54 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: =?utf-8?b?0JvQtdC00L7QstGB0LrQuNGFINCd0LjQutC+0LvQsNC5?=
-	 =?utf-8?b?INCS0LDQu9C10YDRjNC10LLQuNGH?= <nledovskih@mail.ru>
-Subject: Re: [PATCH] mac80211: fix ieee80211_meshconf_ie::meshconf_cap type to be u16
-Date: Sun, 4 Apr 2010 23:59:52 +0400
-Cc: linux-wireless@vger.kernel.org
-References: <1270375964-23668-1-git-send-email-jcmvbkbc@gmail.com> <20100404234549.9fba2292.nledovskih@mail.ru>
-In-Reply-To: <20100404234549.9fba2292.nledovskih@mail.ru>
+	Sat, 17 Apr 2010 17:33:28 -0400
+Date: Sun, 18 Apr 2010 09:33:24 +1200 (NZST)
+From: Derek Smithies <derek@indranet.co.nz>
+To: Pavel Roskin <proski@gnu.org>
+cc: Benoit Papillault <benoit.papillault@free.fr>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	ath9k-devel@lists.ath5k.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k/ath9k: Fix 64 bits TSF reads
+In-Reply-To: <1271452384.16507.16.camel@mj>
+Message-ID: <alpine.DEB.2.00.1004180914300.4114@monster>
+References: <1271369246-6892-1-git-send-email-benoit.papillault@free.fr> <1271452384.16507.16.camel@mj>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004042359.52494.jcmvbkbc@gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sun,  4 Apr 2010 14:12:44 +0400
-> Max Filippov <jcmvbkbc@gmail.com> wrote:
-> 
-> > According to the current 802.11s draft mesh capability field
-> > is 16 bits wide.
-> > 
-> > Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
-> > ---
-> >  include/linux/ieee80211.h |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> > index 1998495..910b4bc 100644
-> > --- a/include/linux/ieee80211.h
-> > +++ b/include/linux/ieee80211.h
-> > @@ -604,7 +604,7 @@ struct ieee80211_meshconf_ie {
-> >  	u8 meshconf_synch;
-> >  	u8 meshconf_auth;
-> >  	u8 meshconf_form;
-> > -	u8 meshconf_cap;
-> > +	u16 meshconf_cap;
-> >  } __attribute__ ((packed));
-> >  
-> >  /**
-> 
-> May be it should be:
-> 
-> struct ieee80211_meshconf_ie {
->         u32 meshconf_psel;
->         u32 meshconf_pmetric;
->         u32 meshconf_congest;
->         u32 meshconf_synch;
->         u32 meshconf_auth;
->         u8 meshconf_form;
->         u16 meshconf_cap;
-> } __attribute__ ((packed));
-> 
-> 
+Hi,
+  The original code was wrong, and there must have been occasions when the 
+TSF was read incorrectly. Those occasions were infrequent, and would have 
+show up in large networks that were operational on the month timescale.
 
-My reference is 802.11s-D4.01, it says (7.3.2.95.1):
+Benoit's code tries 10 times to read the TSF, looking for when two 
+consecutive upper TSF values that are the same. I can think of no physical 
+scenario that would cause the 10 consecutive reads to not terminate.
 
-Element id: 1 octet,
-Length: 1 octet,
-Active path selection protocol identifier: 1 octet,
-Active path selection metric identifier: 1 octet,
-Congestion control mode identifier: 1 octet,
-Synchronization protocol identifier: 1 octet,
-Authentication protocol identifier: 1 octet,
-Mesh formation info: 1 octet,
-Mesh capability: 2 octets.
+If this fails to happen, then the TSF counter on the radio board is 
+busted. If the TSF counter (or the reading of the TSF counter) is busted, 
+then you have a bad situation, and something seriously wrong is happening.
+We need to know about this - so the kernel warnings are good.
 
-The length field is set to 8.
+> The problem with overengineered code is that it doesn't break when it's
+> better to break and expose the problem :-)
+Yes, but the problem with underengineered code is that it doesn't break, 
+and the users of the code are blissfully unaware of serious problems.
 
-Thanks.
--- Max
+I would not call this overengineered. I would call this the appropriate 
+level of peer review to get stable code that is acceptably reliable.
+
+Benoit's patch is good.
+ACK.
+
+Derek.
+========================================================================
+On Fri, 16 Apr 2010, Pavel Roskin wrote:
+
+> On Fri, 2010-04-16 at 00:07 +0200, Benoit Papillault wrote:
+>
+>> It follows the logic mentionned by Derek, with only 2 register reads
+>> needed at each additional steps instead of 3 (the minimum number of
+>> register reads is still 3).
+>
+> I would prefer an approach whereas tsf_upper2 or tsf_upper1 is chosen
+> based on whether tsf_lower is more or less than 0x80000000 if
+> (tsf_upper2 - tsf_upper1) is 1.  If the difference is not 0 or 1, either
+> the hardware is broken or the kernel was stuck for so long (71 minutes!)
+> that getting the exact tsf should be the least worry.  That's when
+> WARN_ON would be appropriate.
+>
+> The problem with overengineered code is that it doesn't break when it's
+> better to break and expose the problem :-)
+>
+> But it's just a suggestion, not a NACK.  It's better to have some fix
+> than no fix at all.
+>
+>
+
+-- 
+Derek Smithies Ph.D.
+IndraNet Technologies Ltd.
+Email: derek@indranet.co.nz
+ph +64 3 365 6485
+Web: http://www.indranet-technologies.com/
+
