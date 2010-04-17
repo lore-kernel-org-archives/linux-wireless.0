@@ -1,125 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:42081 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752850Ab0DMKaB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 06:30:01 -0400
-Date: Tue, 13 Apr 2010 12:29:54 +0200
-From: Daniel Mack <daniel@caiaq.de>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] libertas/sdio: 8686: set ECSI bit for 1-bit transfers
-Message-ID: <20100413102954.GH30801@buzzloop.caiaq.de>
-References: <1270521759.24724.6.camel@localhost.localdomain>
- <1270543964-18130-1-git-send-email-daniel@caiaq.de>
- <1270570054.2969.3.camel@localhost.localdomain>
+Received: from c60.cesmail.net ([216.154.195.49]:31320 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755664Ab0DQXCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Apr 2010 19:02:06 -0400
+Message-ID: <20100417190203.yyfsyoma1z40o4ko-cebfxv@webmail.spamcop.net>
+Date: Sat, 17 Apr 2010 19:02:03 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath5k.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k/ath9k: Fix 64 bits TSF reads
+References: <1271369246-6892-1-git-send-email-benoit.papillault@free.fr>
+	<1271452384.16507.16.camel@mj> <4BC9B75E.9070005@free.fr>
+In-Reply-To: <4BC9B75E.9070005@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1270570054.2969.3.camel@localhost.localdomain>
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 06, 2010 at 09:07:34AM -0700, Dan Williams wrote:
-> On Tue, 2010-04-06 at 10:52 +0200, Daniel Mack wrote:
-> > When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
-> > However, the 8686 will only drive this line when the ECSI bit is set in
-> > the CCCR_IF register.
-> > 
-> > Thanks to Alagu Sankar for pointing me in the right direction.
-> > 
-> > Signed-off-by: Daniel Mack <daniel@caiaq.de>
-> > Cc: Alagu Sankar <alagusankar@embwise.com>
-> > Cc: Volker Ernst <volker.ernst@txtr.com>
-> > Cc: Dan Williams <dcbw@redhat.com>
-> > Cc: John W. Linville <linville@tuxdriver.com>
-> > Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-> > Cc: Bing Zhao <bzhao@marvell.com>
-> > Cc: libertas-dev@lists.infradead.org
-> > Cc: linux-wireless@vger.kernel.org
-> > Cc: linux-mmc@vger.kernel.org
-> 
-> Acked-by: Dan Williams <dcbw@redhat.com>
+Quoting Benoit PAPILLAULT <benoit.papillault@free.fr>:
 
-Was this picked by anyone?
-Just asking because I didn't see it in the wireless-2.6.git yet.
+> You are considering rollover here, but the TSF can make big jumps as
+> well (in case of IBSS merges). This later case can only be handled by
+> the above code, to my knowledge. I am seeking consistency first and
+> optimization next, not the opposite.
 
-Thanks,
-Daniel
+OK, I didn't realize that.  Then I'm fine with your patch.  Sorry for  
+the noise.
 
-
-
-> 
-> > ---
-> >  drivers/net/wireless/libertas/if_sdio.c |   22 ++++++++++++++++++++++
-> >  include/linux/mmc/sdio.h                |    2 ++
-> >  2 files changed, 24 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-> > index 7a73f62..33206a9 100644
-> > --- a/drivers/net/wireless/libertas/if_sdio.c
-> > +++ b/drivers/net/wireless/libertas/if_sdio.c
-> > @@ -34,6 +34,8 @@
-> >  #include <linux/mmc/card.h>
-> >  #include <linux/mmc/sdio_func.h>
-> >  #include <linux/mmc/sdio_ids.h>
-> > +#include <linux/mmc/sdio.h>
-> > +#include <linux/mmc/host.h>
-> >  
-> >  #include "host.h"
-> >  #include "decl.h"
-> > @@ -942,6 +944,7 @@ static int if_sdio_probe(struct sdio_func *func,
-> >  	int ret, i;
-> >  	unsigned int model;
-> >  	struct if_sdio_packet *packet;
-> > +	struct mmc_host *host = func->card->host;
-> >  
-> >  	lbs_deb_enter(LBS_DEB_SDIO);
-> >  
-> > @@ -1022,6 +1025,25 @@ static int if_sdio_probe(struct sdio_func *func,
-> >  	if (ret)
-> >  		goto disable;
-> >  
-> > +	/* For 1-bit transfers to the 8686 model, we need to enable the
-> > +	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
-> > +	 * bit to allow access to non-vendor registers. */
-> > +	if ((card->model == IF_SDIO_MODEL_8686) &&
-> > +	    (host->caps & MMC_CAP_SDIO_IRQ) &&
-> > +	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-> > +		u8 reg;
-> > +
-> > +		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-> > +		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
-> > +		if (ret)
-> > +			goto release_int;
-> > +
-> > +		reg |= SDIO_BUS_ECSI;
-> > +		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
-> > +		if (ret)
-> > +			goto release_int;
-> > +	}
-> > +
-> >  	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
-> >  	if (ret)
-> >  		goto release_int;
-> > diff --git a/include/linux/mmc/sdio.h b/include/linux/mmc/sdio.h
-> > index 0ebaef5..329a8fa 100644
-> > --- a/include/linux/mmc/sdio.h
-> > +++ b/include/linux/mmc/sdio.h
-> > @@ -94,6 +94,8 @@
-> >  
-> >  #define  SDIO_BUS_WIDTH_1BIT	0x00
-> >  #define  SDIO_BUS_WIDTH_4BIT	0x02
-> > +#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
-> > +#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
-> >  
-> >  #define  SDIO_BUS_ASYNC_INT	0x20
-> >  
-> 
-> 
+-- 
+Regards,
+Pavel Roskin
