@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24496 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752860Ab0DUWik (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Apr 2010 18:38:40 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 15:38:40 -0700
-Date: Wed, 21 Apr 2010 15:38:38 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath9k_hw: make two initvals consto for the AR9001
- family
-Message-ID: <20100421223838.GA2266@tux>
-References: <1271802516-15195-1-git-send-email-lrodriguez@atheros.com>
- <1271802516-15195-2-git-send-email-lrodriguez@atheros.com>
- <1271886897.6212.9.camel@mj>
+Received: from mo-p05-ob.rzone.de ([81.169.146.181]:34414 "EHLO
+	mo-p05-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753324Ab0DQHCY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Apr 2010 03:02:24 -0400
+Message-ID: <4BC95A5C.5020205@acm.org>
+Date: Sat, 17 Apr 2010 08:51:08 +0200
+From: U Kuehn <ukuehn@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1271886897.6212.9.camel@mj>
+To: reinette chatre <reinette.chatre@intel.com>
+CC: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Resolved, was Re: Problem: Regression with iwl 4965 since 2.6.32.10
+References: <4BC04027.1090802@acm.org> <1271195092.14052.8010.camel@rchatre-DESK>
+In-Reply-To: <1271195092.14052.8010.camel@rchatre-DESK>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 21, 2010 at 02:54:57PM -0700, Pavel Roskin wrote:
-> On Tue, 2010-04-20 at 18:28 -0400, Luis R. Rodriguez wrote:
-> > This makes ar5416Addac_9160 and ar5416Addac_9160 const
-> > I guess we skipped them long ago.
-> 
-> It's a step in the right direction, but it makes the code more
-> misleading.  Those arrays are not constant.
-> 
-> Please see ath9k_hw_def_set_addac() and ath9k_hw_4k_set_addac().  They
-> both modify ah->iniAddac for AR9160.
-> 
-> The compiler doesn't warn about it because the definition of
-> INIT_INI_ARRAY uses a cast that removes the const modifier.
-> 
-> It's not an objection against the patch, it's just a reminder that we
-> have a real problem with the code that is likely to affect parallel
-> operation of more than one AR9160 device in the system, especially if
-> they are working on different channels.
+Dear Reinette,
 
-Yeah good point, well not sure how to resolve that, other than leaving
-it as is for now. Let me know if you come up with something.
+reinette chatre wrote:
+>> In my usual setup, I connect to an WPA2-configured access point using
+>> wpa_supplicant. Starting with 2.6.32.10 networking stops to work shortly
+>> after the 4-way handshake. After the next re-keying it works again for a
+>> short time.
+>>
+>> I tracked the problem down to commit
+>> 44af042e42f2231579ea8ef7586d3789d198f609.
+>>
+> 
+> Two more patches following up on the one you mention are on their way to
+> stable. If you want to pick them up earlier they are:
+> iwlwifi: counting number of tfds can be free for 4965
+> iwlwifi: need check for valid qos packet before free
+> 
+> In fact ... I just checked and they are both already queued for 2.6.32
+> so you can just pick them up from the 2.6.32 stable queue
+> ( http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=tree;f=queue-2.6.32;hb=HEAD )
+> 
+> ... in fact ... I suggest you take all the iwlwifi patches there.
+> 
+Thanks, that did indeed help. With the four patches
+	iwlwifi-counting-number-of-tfds-can-be-free-for-4965.patch
+	iwlwifi-fix-nfreed.patch
+	iwlwifi-need-check-for-valid-qos-packet-before-free.patch
+	iwlwifi-range-checking-issue.patch
+applied, 2.6.32.11 works again reliably, as far as I could test so far.
 
-  Luis
+Best regards,
+Ulrich
+
+
