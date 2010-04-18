@@ -1,74 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:31738 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932522Ab0DPUvg convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50406 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354Ab0DRPxd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 16:51:36 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so501902fgg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 13:51:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <k2r8108ad761004161334x894f9298xf3728846ff69b36b@mail.gmail.com>
-References: <k2r8108ad761004161334x894f9298xf3728846ff69b36b@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 16 Apr 2010 22:51:15 +0200
-Message-ID: <w2s69e28c911004161351xa56d4d50l519a3c99258c5ea0@mail.gmail.com>
-Subject: Re: timeout in zd1211rw with zotac mini-itx (geforce 9300)
-To: Tsuwei Chen <tsuwei@gmail.com>
-Cc: zd1211-devs@lists.sourceforge.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 18 Apr 2010 11:53:33 -0400
+Subject: Re: [PATCH 7/9] mac80211: add flags for STBC (Space-Time Block
+ Coding)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+In-Reply-To: <1271602602-8538-7-git-send-email-nbd@openwrt.org>
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-2-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-3-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-4-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-5-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-6-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-7-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 18 Apr 2010 17:53:29 +0200
+Message-ID: <1271606009.3873.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 16, 2010 at 10:34 PM, Tsuwei Chen <tsuwei@gmail.com> wrote:
-> Has anyone use the zd1211 usb adapter with mini-itx board based on
-> geforce 9300? I have been experience some annoying issues ever since I
-> got this motherboard. The problem is that sometime the card just
-> cannot be switched on. It complains about ioread32() error -110. And I
-> have spent a few days and try a few different combination, and here is
-> what I have found so far:
->
-> 1, with 1 wifi adapter directly plugged into the board, the wifi
-> adapter works fine most of the time (have seen a couple failure, but
-> is hard to reproduce)
-> 2. with 1 wifi adapter, plugged in through a USB hub, the driver
-> complains ioread32 error. I've try 2 USB hubs: a cheap 4-port USB
-> dongle and also the USB hubs built into my DELL monitor. Both showed
-> the same problem.
-> 3. If I plugged in 2 wifi adapters directly to the board, more than
-> 50% of chance one of the wifi adapter would fail during the 'ifconifg
-> up'.
->
-> I tried to dig our more on this. I am using kernel 2.6.24-26 (ubuntu).
+On Sun, 2010-04-18 at 16:56 +0200, Felix Fietkau wrote:
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  include/linux/ieee80211.h |    1 +
+>  include/net/mac80211.h    |    3 +++
+>  2 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> index 1252ba1..97b2eae 100644
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -876,6 +876,7 @@ struct ieee80211_ht_cap {
+>  #define IEEE80211_HT_CAP_SGI_40			0x0040
+>  #define IEEE80211_HT_CAP_TX_STBC		0x0080
+>  #define IEEE80211_HT_CAP_RX_STBC		0x0300
+> +#define		IEEE80211_HT_CAP_RX_STBC_SHIFT	8
+>  #define IEEE80211_HT_CAP_DELAY_BA		0x0400
+>  #define IEEE80211_HT_CAP_MAX_AMSDU		0x0800
+>  #define IEEE80211_HT_CAP_DSSSCCK40		0x1000
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 75056dd..eadf794 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -275,6 +275,8 @@ struct ieee80211_bss_conf {
+>   *	MLME command (internal to mac80211 to figure out whether to send TX
+>   *	status to user space)
+>   * @IEEE80211_TX_CTL_LDPC: tells the driver to use LDPC for this frame
+> + * @IEEE80211_TX_CTL_STBC: tells the driver to use Space-Time Block Coding
+> + *  (STBC) for this frame.
+>   */
+>  enum mac80211_tx_control_flags {
+>  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+> @@ -299,6 +301,7 @@ enum mac80211_tx_control_flags {
+>  	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
+>  	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
+>  	IEEE80211_TX_CTL_LDPC			= BIT(22),
+> +	IEEE80211_TX_CTL_STBC			= BIT(23),
 
-Please try a more recent kernel - 2.6.24 contains
-zd1211rw-ieee80211softmac, which is no longer developed.
+What if the # of streams is different? That doesn't look sufficient.
 
-> I had turned on the debug message output and I have traced out that
-> the failure was first detected in the zd_mac_open(). Probably around
-> the call to zd_chip_switch_radio_on(). The error message is printed in
-> the zd_usb_ioread16v(), and probably indicate the driver is
-> experiencing a timeout while it is trying to read the register from
-> the adapter.
->
-> What exactly does this mean? Why adding a usb hub cause such a huge
-> differnce? Has anyone experienced similar problem before? Any pointer
-> that can help me solve this problem is appreciated.
->
-> BTW, I never had this problem before when I was still using a regular
-> HP desktop PC, even with the same version of kernel and same USB hub.
-> I switched to mini-itx because I am building a small system. So if
-> anyone is currently using this adapter with a mini-ITX board, please
-> also let me know which model you use.
->
-> TIA,
-> Tsuwei
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+johannes
 
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
