@@ -1,141 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:36370 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751701Ab0DTFLM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 01:11:12 -0400
-Subject: Re: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based
- on ps-qos network latency
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1271688177.23671.1.camel@jlt3.sipsolutions.net>
-References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271688177.23671.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Apr 2010 08:08:40 +0300
-Message-ID: <1271740120.6205.5733.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:39541 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755067Ab0DRPy6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Apr 2010 11:54:58 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 5/9] ath9k: reduce the bits_per_symbol table size, support more streams
+Date: Sun, 18 Apr 2010 16:56:38 +0200
+Message-Id: <1271602602-8538-5-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1271602602-8538-4-git-send-email-nbd@openwrt.org>
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-2-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-3-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-19 at 16:42 +0200, ext Johannes Berg wrote:
-> On Fri, 2010-04-16 at 12:14 +0300, Juuso Oikarinen wrote:
-> > Determine the dynamic PS timeout based on the configured ps-qos network
-> > latency. For backwards wext compatibility, allow the dynamic PS timeout
-> > configured by the cfg80211 to overrule the automatically determined value.
-> 
-> This seems OK, but I fear that you'll write applications setting the
-> pm_qos network latency just to affect this parameter?
-> 
+Instead of increasing bits_per_symbol for supporting more streams, keep
+it single-stream only and multiply the values by the numer of streams.
 
-Well you have to see where I'm coming from - I must come up with a way
-to tune the dynamic ps timeout value from user-space in a way that is
-agreeable with others, and that is somewhat future-proof.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   19 ++++++-------------
+ 1 files changed, 6 insertions(+), 13 deletions(-)
 
-That said, obviously the network latency should be tuned as, well, the
-expected network latency. In this phase though, there are no other
-parameters affected by the network latency, so the result is quite
-obvious - your fear will realise itself ;)
-
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > ---
-> >  include/net/mac80211.h |    5 ++++-
-> >  net/mac80211/cfg.c     |    4 ++--
-> >  net/mac80211/main.c    |    2 ++
-> >  net/mac80211/mlme.c    |   14 ++++++++++++++
-> >  4 files changed, 22 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> > index dcf3c5f..243e4ab 100644
-> > --- a/include/net/mac80211.h
-> > +++ b/include/net/mac80211.h
-> > @@ -661,6 +661,9 @@ enum ieee80211_smps_mode {
-> >   * @dynamic_ps_timeout: The dynamic powersave timeout (in ms), see the
-> >   *	powersave documentation below. This variable is valid only when
-> >   *	the CONF_PS flag is set.
-> > + * @dynamic_ps_forced_timeout: The dynamic powersave timeout (in ms) configured
-> > + *	by cfg80211 (essentially, wext) If set, this value overrules the value
-> > + *	chosen by mac80211 based on ps qos network latency.
-> >   *
-> >   * @power_level: requested transmit power (in dBm)
-> >   *
-> > @@ -680,7 +683,7 @@ enum ieee80211_smps_mode {
-> >   */
-> >  struct ieee80211_conf {
-> >  	u32 flags;
-> > -	int power_level, dynamic_ps_timeout;
-> > +	int power_level, dynamic_ps_timeout, dynamic_ps_forced_timeout;
-> >  	int max_sleep_period;
-> >  
-> >  	u16 listen_interval;
-> > diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> > index 7dd7cda..9a1a91c 100644
-> > --- a/net/mac80211/cfg.c
-> > +++ b/net/mac80211/cfg.c
-> > @@ -1388,11 +1388,11 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
-> >  		return -EOPNOTSUPP;
-> >  
-> >  	if (enabled == sdata->u.mgd.powersave &&
-> > -	    timeout == conf->dynamic_ps_timeout)
-> > +	    timeout == conf->dynamic_ps_forced_timeout)
-> >  		return 0;
-> >  
-> >  	sdata->u.mgd.powersave = enabled;
-> > -	conf->dynamic_ps_timeout = timeout;
-> > +	conf->dynamic_ps_forced_timeout = timeout;
-> >  
-> >  	/* no change, but if automatic follow powersave */
-> >  	mutex_lock(&sdata->u.mgd.mtx);
-> > diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> > index 4afe851..ebcca0e 100644
-> > --- a/net/mac80211/main.c
-> > +++ b/net/mac80211/main.c
-> > @@ -569,6 +569,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-> >  
-> >  	local->hw.conf.listen_interval = local->hw.max_listen_interval;
-> >  
-> > +	local->hw.conf.dynamic_ps_forced_timeout = -1;
-> > +
-> >  	result = sta_info_start(local);
-> >  	if (result < 0)
-> >  		goto fail_sta_info;
-> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> > index 35d8502..6402997 100644
-> > --- a/net/mac80211/mlme.c
-> > +++ b/net/mac80211/mlme.c
-> > @@ -476,6 +476,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
-> >  {
-> >  	struct ieee80211_sub_if_data *sdata, *found = NULL;
-> >  	int count = 0;
-> > +	int timeout;
-> >  
-> >  	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS)) {
-> >  		local->ps_sdata = NULL;
-> > @@ -509,6 +510,19 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
-> >  		beaconint_us = ieee80211_tu_to_usec(
-> >  					found->vif.bss_conf.beacon_int);
-> >  
-> > +		timeout = local->hw.conf.dynamic_ps_forced_timeout;
-> > +		if (timeout < 0) {
-> > +			if (latency <= 50000)
-> > +				timeout = 300;
-> > +			else if (latency <= 2000000000)
-> > +				timeout = 100;
-> > +			else if (latency <= 2100000000)
-> > +				timeout = 50;
-> > +			else
-> > +				timeout = 0;
-> 
-> Is it even possible to set it larger than 2000 seconds?
-
-Good question. I have not yet had the opportunity to test this, so I
-can't tell. You could be right. ;)
-
--Juuso
-
-> johannes
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 4078982..2237658 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -34,7 +34,7 @@
+ 
+ #define OFDM_SIFS_TIME    	    16
+ 
+-static u32 bits_per_symbol[][2] = {
++static u16 bits_per_symbol[][2] = {
+ 	/* 20MHz 40MHz */
+ 	{    26,   54 },     /*  0: BPSK */
+ 	{    52,  108 },     /*  1: QPSK 1/2 */
+@@ -44,14 +44,6 @@ static u32 bits_per_symbol[][2] = {
+ 	{   208,  432 },     /*  5: 64-QAM 2/3 */
+ 	{   234,  486 },     /*  6: 64-QAM 3/4 */
+ 	{   260,  540 },     /*  7: 64-QAM 5/6 */
+-	{    52,  108 },     /*  8: BPSK */
+-	{   104,  216 },     /*  9: QPSK 1/2 */
+-	{   156,  324 },     /* 10: QPSK 3/4 */
+-	{   208,  432 },     /* 11: 16-QAM 1/2 */
+-	{   312,  648 },     /* 12: 16-QAM 3/4 */
+-	{   416,  864 },     /* 13: 64-QAM 2/3 */
+-	{   468,  972 },     /* 14: 64-QAM 3/4 */
+-	{   520, 1080 },     /* 15: 64-QAM 5/6 */
+ };
+ 
+ #define IS_HT_RATE(_rate)     ((_rate) & 0x80)
+@@ -601,7 +593,7 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	u32 nsymbits, nsymbols;
+ 	u16 minlen;
+ 	u8 flags, rix;
+-	int width, half_gi, ndelim, mindelim;
++	int width, streams, half_gi, ndelim, mindelim;
+ 
+ 	/* Select standard number of delimiters based on frame length alone */
+ 	ndelim = ATH_AGGR_GET_NDELIM(frmlen);
+@@ -641,7 +633,8 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	if (nsymbols == 0)
+ 		nsymbols = 1;
+ 
+-	nsymbits = bits_per_symbol[rix][width];
++	streams = HT_RC_2_STREAMS(rix);
++	nsymbits = bits_per_symbol[rix % 8][width] * streams;
+ 	minlen = (nsymbols * nsymbits) / BITS_PER_BYTE;
+ 
+ 	if (frmlen < minlen) {
+@@ -1533,8 +1526,9 @@ static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, struct ath_buf *bf,
+ 	pktlen = bf_isaggr(bf) ? bf->bf_al : bf->bf_frmlen;
+ 
+ 	/* find number of symbols: PLCP + data */
++	streams = HT_RC_2_STREAMS(rix);
+ 	nbits = (pktlen << 3) + OFDM_PLCP_BITS;
+-	nsymbits = bits_per_symbol[rix][width];
++	nsymbits = bits_per_symbol[rix % 8][width] * streams;
+ 	nsymbols = (nbits + nsymbits - 1) / nsymbits;
+ 
+ 	if (!half_gi)
+@@ -1543,7 +1537,6 @@ static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, struct ath_buf *bf,
+ 		duration = SYMBOL_TIME_HALFGI(nsymbols);
+ 
+ 	/* addup duration for legacy/ht training and signal fields */
+-	streams = HT_RC_2_STREAMS(rix);
+ 	duration += L_STF + L_LTF + L_SIG + HT_SIG + HT_STF + HT_LTF(streams);
+ 
+ 	return duration;
+-- 
+1.6.4.2
 
