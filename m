@@ -1,63 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56059 "EHLO ds10.nbd.name"
+Received: from nbd.name ([88.198.39.176]:42365 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753837Ab0D0BmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 21:42:25 -0400
-Message-ID: <4BD640F5.8010206@openwrt.org>
-Date: Tue, 27 Apr 2010 03:42:13 +0200
+	id S1754006Ab0DRP3G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Apr 2010 11:29:06 -0400
 From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH 1/2] cfg80211: add ap isolation support
-References: <1272324216-73349-1-git-send-email-nbd@openwrt.org> 	<20100426232332.GA2079@tuxdriver.com> <4BD621FA.1000405@openwrt.org> 	<20100427001233.GB2079@tuxdriver.com> <t2i43e72e891004261725kdd3c1388jc2758db8a0b7e82@mail.gmail.com> <k2y43e72e891004261834w1eb604d0q83f9cd80820e3d8@mail.gmail.com>
-In-Reply-To: <k2y43e72e891004261834w1eb604d0q83f9cd80820e3d8@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 6/9] ath9k: initialize the number of tx/rx streams correctly
+Date: Sun, 18 Apr 2010 16:56:39 +0200
+Message-Id: <1271602602-8538-6-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1271602602-8538-5-git-send-email-nbd@openwrt.org>
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-2-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-3-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-4-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-04-27 3:34 AM, Luis R. Rodriguez wrote:
-> On Mon, Apr 26, 2010 at 5:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Mon, Apr 26, 2010 at 5:12 PM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->>> On Tue, Apr 27, 2010 at 01:30:02AM +0200, Felix Fietkau wrote:
->>>> On 2010-04-27 1:23 AM, John W. Linville wrote:
->>>> > On Tue, Apr 27, 2010 at 01:23:35AM +0200, Felix Fietkau wrote:
->>>> >> This is used to configure APs to not bridge traffic between connected stations.
->>>> >>
->>>> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->>>> >
->>>> > Is this useful?
->>>> Yes, if you have an AP with lots of users that aren't expected to
->>>> communicate with each other (e.g. only for internet access), it can save
->>>> a lot of airtime by not forwarding every broadcast message emitted from
->>>> any station.
->>>> I'm sure there are a more situations where this can be useful.
->>>
->>> Ah, OK -- I suppose that makes sense.
->>
->> In fact technically IEEE-802.11 2007 section 11.7 states "STAs are not
->> allowed to transmit frames directly to other STAs in a BSS and should
->> always rely
->> on the AP for the delivery of the frames", with the exception being
->> using DLS direct links for QoS STAs.  This would prevent the STAs from
->> going into PS mode for as long duration of the stream.
->>
->> If the AP does not support this it would just set the result code for
->> DLS requests to "Not allowed in the BSS". It does not seem the
->> standard has a way for an AP to teardown an existing DLS links though
->> (at no reason code for it), so I guess if we ever support DLS we won't
->> be able to enable this option if a direct links is already
->> established.
-> 
-> Now that I think about it, why is this even required, why not just
-> enforce this all the time and have an option to disable DLS? Are there
-> ways to enable direct STA <--> STA communication on a BSS other than
-> DLS?
-I think allowing/disallowing DLS should be separate from AP isolation.
-In some cases, AP isolation might only be used to reduce the amount of
-broadcast traffic, and DLS wouldn't be a problem then.
+AR9300 based hardware can 3x3 MCS rates, this should be set in the
+HT capabilities.
 
-- Felix
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/init.c |   39 +++++++++++++++++++++++---------
+ 1 files changed, 28 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index ca6e781..2c0630e 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -175,6 +175,18 @@ static const struct ath_ops ath9k_common_ops = {
+ 	.write = ath9k_iowrite32,
+ };
+ 
++static int count_streams(unsigned int chainmask, int max)
++{
++	int streams = 0;
++
++	do {
++		if (++streams == max)
++			break;
++	} while ((chainmask = chainmask & (chainmask - 1)));
++
++	return streams;
++}
++
+ /**************************/
+ /*     Initialization     */
+ /**************************/
+@@ -182,8 +194,10 @@ static const struct ath_ops ath9k_common_ops = {
+ static void setup_ht_cap(struct ath_softc *sc,
+ 			 struct ieee80211_sta_ht_cap *ht_info)
+ {
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	u8 tx_streams, rx_streams;
++	int i, max_streams;
+ 
+ 	ht_info->ht_supported = true;
+ 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+@@ -197,25 +211,28 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+ 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		max_streams = 3;
++	else
++		max_streams = 2;
++
+ 	/* set up supported mcs set */
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+-	tx_streams = !(common->tx_chainmask & (common->tx_chainmask - 1)) ?
+-		     1 : 2;
+-	rx_streams = !(common->rx_chainmask & (common->rx_chainmask - 1)) ?
+-		     1 : 2;
++	tx_streams = count_streams(common->tx_chainmask, max_streams);
++	rx_streams = count_streams(common->rx_chainmask, max_streams);
++
++	ath_print(common, ATH_DBG_CONFIG,
++		  "TX streams %d, RX streams: %d\n",
++		  tx_streams, rx_streams);
+ 
+ 	if (tx_streams != rx_streams) {
+-		ath_print(common, ATH_DBG_CONFIG,
+-			  "TX streams %d, RX streams: %d\n",
+-			  tx_streams, rx_streams);
+ 		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
+ 		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
+ 				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
+ 	}
+ 
+-	ht_info->mcs.rx_mask[0] = 0xff;
+-	if (rx_streams >= 2)
+-		ht_info->mcs.rx_mask[1] = 0xff;
++	for (i = 0; i < rx_streams; i++)
++		ht_info->mcs.rx_mask[i] = 0xff;
+ 
+ 	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
+ }
+-- 
+1.6.4.2
+
