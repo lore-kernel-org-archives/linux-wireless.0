@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36790 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:42362 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751225Ab0DKFq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 01:46:58 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Apr 2010 22:46:58 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19393.25118.429074.497553@gargle.gargle.HOWL>
-Date: Sun, 11 Apr 2010 11:16:06 +0530
-To: "tom.leiming@gmail.com" <tom.leiming@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: [PATCH 3/3] ath9k-htc: pass cacheline aligned buffer to usb hcd in register out path
-In-Reply-To: <1270911923-5783-1-git-send-email-tom.leiming@gmail.com>
-References: <1270911923-5783-1-git-send-email-tom.leiming@gmail.com>
+	id S1752771Ab0DRP3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Apr 2010 11:29:01 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 9/9] ath9k: set the STBC flag in rate control if the peer supports it
+Date: Sun, 18 Apr 2010 16:56:42 +0200
+Message-Id: <1271602602-8538-9-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1271602602-8538-8-git-send-email-nbd@openwrt.org>
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-2-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-3-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-4-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-5-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-6-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-7-git-send-email-nbd@openwrt.org>
+ <1271602602-8538-8-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tom.leiming@gmail.com wrote:
-> This patch copies skb->data of register out command to kmalloced buffer,
-> which is cacheline aligned(dma safe) and passed into usb hcd. Since the
-> data in register out command is not very much, we can ignore the
-> performance loss caused by the copy.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-The skb for every frame sent out through the REG_OUT pipe is allocated
-using dev_alloc_skb(). So again, am not sure about your cacheline argument.
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index bf3ad7a..7f2000c 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -700,6 +700,10 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
+ 		tx_info->flags |= IEEE80211_TX_CTL_LDPC;
+ 
++	if (conf_is_ht(&sc->hw->conf) &&
++	    (sta->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC))
++		tx_info->flags |= IEEE80211_TX_CTL_STBC;
++
+ 	if (is_probe) {
+ 		/* set one try for probe rates. For the
+ 		 * probes don't enable rts */
+-- 
+1.6.4.2
 
-And the extra memcpy would certainly cause a performance loss, since we
-already do a memcpy once to copy the data in ath9k_wmi_cmd().
-
-Are you having DMA issues with the driver ?
-If so, on which architecture ?
-
-Sujith
