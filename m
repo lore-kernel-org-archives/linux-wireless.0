@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29646 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754209Ab0DBUi6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Apr 2010 16:38:58 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/7] iwlwifi: remove irrelevant comments
-Date: Fri,  2 Apr 2010 13:38:49 -0700
-Message-Id: <1270240734-12825-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
-References: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55942 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752771Ab0DRNgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Apr 2010 09:36:43 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/3] compat-wireless: compile fixes
+Date: Sun, 18 Apr 2010 15:36:21 +0200
+Message-Id: <1271597784-4811-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This series contains mostly compile fixes.
+It was compile tested on kernel 2.6.25 to 2.6.34 and ath9k is working in
+Ubuntu 9.04.
 
-Removing irrelevant comments from iwl-agn.c
+Hauke Mehrtens (3):
+  compat-wireless: backport convert multicast list to list_head.
+  compat-wireless: Remove use of sdio quirks attribute
+  compat-wireless: include net and trace includes form compat.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    7 -------
- 1 files changed, 0 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8262f43..8b66010 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -83,13 +83,6 @@ MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
- MODULE_ALIAS("iwl4965");
- 
--/*************** STATION TABLE MANAGEMENT ****
-- * mac80211 should be examined to determine if sta_info is duplicating
-- * the functionality provided here
-- */
--
--/**************************************************************/
--
- /**
-  * iwl_commit_rxon - commit staging_rxon to hardware
-  *
--- 
-1.6.3.3
+ patches/25-multicast-list_head.patch |  813 ++++++++++++++++++++++++++++++++++
+ patches/26-sdio-quirks.patch         |   20 +
+ scripts/admin-update.sh              |    3 +
+ 3 files changed, 836 insertions(+), 0 deletions(-)
+ create mode 100644 patches/25-multicast-list_head.patch
+ create mode 100644 patches/26-sdio-quirks.patch
 
