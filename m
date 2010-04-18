@@ -1,37 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ernst.netinsight.se ([194.16.221.21]:64348 "HELO
-	ernst.netinsight.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755148Ab0DARaI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 13:30:08 -0400
-Message-ID: <4BB4D817.1050603@users.sourceforge.net>
-Date: Thu, 01 Apr 2010 19:29:59 +0200
-From: =?ISO-8859-1?Q?Anders_Grafstr=F6m?= <grfstrm@users.sourceforge.net>
-MIME-Version: 1.0
-To: Daniel Mack <daniel@caiaq.de>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	AKML <linux-arm-kernel@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Sven Neumann <s.neumann@raumfeld.com>, stable@kernel.org
-Subject: Re: Memory corruption with 2.6.32.10, but not with 2.6.34-rc3
-References: <20100401132156.GJ30807@buzzloop.caiaq.de>
-In-Reply-To: <20100401132156.GJ30807@buzzloop.caiaq.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([88.198.39.176]:39538 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754020Ab0DRPyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Apr 2010 11:54:54 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/9] ath9k: clean up tx buffer handling
+Date: Sun, 18 Apr 2010 16:56:35 +0200
+Message-Id: <1271602602-8538-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Mack wrote:
-> We would like to have a fix for this annoying bug in the stable series
-> (especially 2.6.32.x) as well, but I don't have much ideas about where
-> to search for it. Hence, I would appreciate if maintainers could think
-> about any possible commits in the described time window which haven't
-> reached stable. Does the description ring anyone's bell?
-> 
-> I can cherry-pick things if anyone pin-points something and run
-> lont-time tests again. Any pointer appreciated.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   67 ++++++++++++++++-----------------
+ 1 files changed, 32 insertions(+), 35 deletions(-)
 
-You could try this one:
-
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8e4971f2fb2380ce66196136e113d04196b80fcd
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index cac178a..fcbb4a8 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -261,19 +261,40 @@ static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
+ 	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_RETRY);
+ }
+ 
+-static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
++static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
+ {
+-	struct ath_buf *tbf;
++	struct ath_buf *bf = NULL;
+ 
+ 	spin_lock_bh(&sc->tx.txbuflock);
+-	if (WARN_ON(list_empty(&sc->tx.txbuf))) {
++
++	if (unlikely(list_empty(&sc->tx.txbuf))) {
+ 		spin_unlock_bh(&sc->tx.txbuflock);
+ 		return NULL;
+ 	}
+-	tbf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
+-	list_del(&tbf->list);
++
++	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
++	list_del(&bf->list);
++
+ 	spin_unlock_bh(&sc->tx.txbuflock);
+ 
++	return bf;
++}
++
++static void ath_tx_return_buffer(struct ath_softc *sc, struct ath_buf *bf)
++{
++	spin_lock_bh(&sc->tx.txbuflock);
++	list_add_tail(&bf->list, &sc->tx.txbuf);
++	spin_unlock_bh(&sc->tx.txbuflock);
++}
++
++static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
++{
++	struct ath_buf *tbf;
++
++	tbf = ath_tx_get_buffer(sc);
++	if (WARN_ON(!tbf))
++		return NULL;
++
+ 	ATH_TXBUF_RESET(tbf);
+ 
+ 	tbf->aphy = bf->aphy;
+@@ -1081,9 +1102,7 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
+ 				list_del(&bf->list);
+ 				spin_unlock_bh(&txq->axq_lock);
+ 
+-				spin_lock_bh(&sc->tx.txbuflock);
+-				list_add_tail(&bf->list, &sc->tx.txbuf);
+-				spin_unlock_bh(&sc->tx.txbuflock);
++				ath_tx_return_buffer(sc, bf);
+ 				continue;
+ 			}
+ 		}
+@@ -1325,25 +1344,6 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 	txq->axq_depth++;
+ }
+ 
+-static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
+-{
+-	struct ath_buf *bf = NULL;
+-
+-	spin_lock_bh(&sc->tx.txbuflock);
+-
+-	if (unlikely(list_empty(&sc->tx.txbuf))) {
+-		spin_unlock_bh(&sc->tx.txbuflock);
+-		return NULL;
+-	}
+-
+-	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
+-	list_del(&bf->list);
+-
+-	spin_unlock_bh(&sc->tx.txbuflock);
+-
+-	return bf;
+-}
+-
+ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 			      struct list_head *bf_head,
+ 			      struct ath_tx_control *txctl)
+@@ -1825,9 +1825,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		}
+ 		spin_unlock_bh(&txq->axq_lock);
+ 
+-		spin_lock_bh(&sc->tx.txbuflock);
+-		list_add_tail(&bf->list, &sc->tx.txbuf);
+-		spin_unlock_bh(&sc->tx.txbuflock);
++		ath_tx_return_buffer(sc, bf);
+ 
+ 		return r;
+ 	}
+@@ -2141,13 +2139,12 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 		txq->axq_depth--;
+ 		txok = !(ts.ts_status & ATH9K_TXERR_MASK);
+ 		txq->axq_tx_inprogress = false;
++		if (bf_held)
++			list_del(&bf_held->list);
+ 		spin_unlock_bh(&txq->axq_lock);
+ 
+-		if (bf_held) {
+-			spin_lock_bh(&sc->tx.txbuflock);
+-			list_move_tail(&bf_held->list, &sc->tx.txbuf);
+-			spin_unlock_bh(&sc->tx.txbuflock);
+-		}
++		if (bf_held)
++			ath_tx_return_buffer(sc, bf_held);
+ 
+ 		if (!bf_isampdu(bf)) {
+ 			/*
+-- 
+1.6.4.2
 
