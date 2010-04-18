@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228Ab0DFJWj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 05:22:39 -0400
-Message-Id: <20100406091841.549805267@sipsolutions.net>
-Date: Tue, 06 Apr 2010 11:18:41 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/7] mac80211 fixes
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55974 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752973Ab0DRNgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Apr 2010 09:36:52 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat-wireless: include net and trace includes form compat.
+Date: Sun, 18 Apr 2010 15:36:24 +0200
+Message-Id: <1271597784-4811-4-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1271597784-4811-1-git-send-email-hauke@hauke-m.de>
+References: <1271597784-4811-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are a few mac80211 fixes, I'll let you decide
-which trees to add them to. The first one is only
-relevant for -34 and should probably be applied there
-to avoid all the warnings.
+The includes form the net and trace directory of compat were not copyed.
+This broke compilation on older kernels that needed some files in these
+directories from compat.
 
-The other ones in theory apply to some previous
-versions, but nobody seems to have run into any
-of the problems, and they are quite unlikely to
-actually happen due to the way the code is otherwise
-structured and the amount of code in there. I
-was reluctant to add stable tags to all of them
-for that reason since they're quite big.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/admin-update.sh |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 36cdfac..39fafb2 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -116,6 +116,7 @@ DRIVER_FILES="$DRIVER_FILES mwl8k.c"
+ mkdir -p include/linux/ include/net/ include/linux/usb \
+ 	include/linux/unaligned \
+ 	include/linux/spi \
++	include/trace \
+ 	net/mac80211/ net/wireless/ \
+ 	net/rfkill/ \
+ 	drivers/ssb/ \
+@@ -233,6 +234,8 @@ cp $GIT_COMPAT_TREE/compat/Makefile $COMPAT/
+ cp -a $GIT_COMPAT_TREE/udev/ .
+ cp -a $GIT_COMPAT_TREE/scripts/ $COMPAT/
+ cp -a $GIT_COMPAT_TREE/include/linux/* include/linux/
++cp -a $GIT_COMPAT_TREE/include/net/* include/net/
++cp -a $GIT_COMPAT_TREE/include/trace/* include/trace/
+ rm -f $COMPAT/*.mod.c
+ 
+ # Refresh patches using quilt
+-- 
+1.6.3.3
 
