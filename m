@@ -1,25 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:54422 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441Ab0DZRLQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 13:11:16 -0400
-Received: by pxi17 with SMTP id 17so1723336pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 10:11:16 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 26 Apr 2010 10:10:55 -0700
-Message-ID: <m2n43e72e891004261010v59694ea7ld078ade033c1c82@mail.gmail.com>
-Subject: 802.11n copper bag hack for MIMO
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:11290 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755644Ab0DSQeQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 12:34:16 -0400
+Subject: Re: rc80211_minstrel.c:70 WARNING with 2.6.34-rc4
+From: Pavel Roskin <proski@gnu.org>
+To: Richard Zidlicky <rz@linux-m68k.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20100418085653.GA7345@linux-m68k.org>
+References: <20100418085653.GA7345@linux-m68k.org>
+Content-Type: text/plain
+Date: Mon, 19 Apr 2010 12:34:15 -0400
+Message-Id: <1271694855.9026.51.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Figured you guys working with 802.11n on close range over the air
-environments might enjoy this little hack to test performance with
-MIMO:
+On Sun, 2010-04-18 at 10:56 +0200, Richard Zidlicky wrote:
+> Hi,
+> 
+> I am getting tons of these http://www.kerneloops.org/submitresult.php?number=3048061,
+> appears every packet triggers that.
 
-http://www.youtube.com/watch?v=pCMjKJ7LK_U
+The warning comes from the function rix_to_ndx() in rc80211_minstrel.c:
 
-  Luis
+/* convert mac80211 rate index to local array index */
+static inline int
+rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+{
+        int i = rix;
+        for (i = rix; i >= 0; i--)
+                if (mi->r[i].rix == rix)
+                        break;
+        WARN_ON(i < 0);
+        return i;
+}
+
+> Can provide lots of debugging info.
+
+My impression is that WARN_ON is not warranted in that function, but it
+would be interesting to know how you got to that point.
+
+What driver are you using?  What is the mode for the interface? What is
+your hardware?  Is there anything unusual you do that triggers the
+warning?  Are you using 5 GHz band by any chance?  Are you using
+2.6.34-rc4 or it's compat-wireless compiled for another kernel?
+
+-- 
+Regards,
+Pavel Roskin
