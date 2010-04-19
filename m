@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46981 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933294Ab0DHT1s (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59609 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753035Ab0DSXVB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 083/102] ath9k_hw: Fix internal regulator setting on AR9003
-Date: Thu,  8 Apr 2010 15:27:19 -0400
-Message-Id: <1270754858-26266-84-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 19 Apr 2010 19:21:01 -0400
+Received: by pwj9 with SMTP id 9so3830857pwj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 16:20:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1271699405.14052.18189.camel@rchatre-DESK>
+References: <m2p43e72e891004012145s2f344f7fo9b12044e9b895c06@mail.gmail.com>
+	<1271699405.14052.18189.camel@rchatre-DESK>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 19 Apr 2010 16:20:39 -0700
+Message-ID: <i2v43e72e891004191620s15d3eb09m8fdc16f699b3285d@mail.gmail.com>
+Subject: Re: iwlagn unexpected AddBA Req
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Mon, Apr 19, 2010 at 10:50 AM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Thu, 2010-04-01 at 21:45 -0700, Luis R. Rodriguez wrote:
+>> [  117.491303] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
+>> [  178.467383] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
+>> [  239.447236] unexpected AddBA Req from 00:22:6b:56:fd:e9 on tid 0
+>>
+>> I get a lof of these at spurious times against my WRT610N using
+>> today's wireless-testing on iwlagn.
+>
+> If you still have this setup available, could you please try out the
+> recent patch "mac80211: pass HT changes to driver when off
+> channel" (http://thread.gmane.org/gmane.linux.kernel.wireless.general/49855 ) ?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Thanks Reinette, I've given my hardware to nbd.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 30b8e87..a3e5c70 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -1085,7 +1085,8 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- {
- 	int internal_regulator =
- 		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
--	if (!internal_regulator) {
-+
-+	if (internal_regulator) {
- 		/* Internal regulator is ON. Write swreg register. */
- 		int swreg = ath9k_hw_ar9300_get_eeprom(ah, EEP_SWREG);
- 		REG_WRITE(ah, AR_RTC_REG_CONTROL1,
--- 
-1.6.3.3
-
+  Luis
