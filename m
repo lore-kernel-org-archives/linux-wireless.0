@@ -1,79 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:16177 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753137Ab0DNHKp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 03:10:45 -0400
-From: Holger Schurig <holgerschurig@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: Survey mode volunteers
-Date: Wed, 14 Apr 2010 09:11:11 +0200
-Cc: Anton Puolakka <Anton.Puolakka@7signal.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-References: <0290AB2F0A8E124B9FFC144088A1A95609D6029647@EX-MBS04.nbl.local> <0290AB2F0A8E124B9FFC144088A1A95609D6096AB9@EX-MBS04.nbl.local> <20100412180424.GB2920@tux>
-In-Reply-To: <20100412180424.GB2920@tux>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004140911.11459.holgerschurig@gmail.com>
+Received: from nbd.name ([88.198.39.176]:45934 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753259Ab0DSR5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 13:57:44 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH v2 2/9] ath9k: clean up tx buffer handling
+Date: Mon, 19 Apr 2010 19:57:30 +0200
+Message-Id: <1271699857-12366-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
+References: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've some preliminary patch for ath5k.
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Subject: [ath5k] add noise reporting to survey
+ drivers/net/wireless/ath/ath9k/xmit.c |   67 ++++++++++++++++-----------------
+ 1 files changed, 32 insertions(+), 35 deletions(-)
 
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
-
----
- drivers/net/wireless/ath/ath5k/base.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
-
---- compat-wireless-2010-03-15.orig/drivers/net/wireless/ath/ath5k/base.c
-+++ compat-wireless-2010-03-15/drivers/net/wireless/ath/ath5k/base.c
-@@ -273,6 +273,8 @@ static int ath5k_set_key(struct ieee8021
- 		struct ieee80211_key_conf *key);
- static int ath5k_get_stats(struct ieee80211_hw *hw,
- 		struct ieee80211_low_level_stats *stats);
-+static int ath5k_get_survey(struct ieee80211_hw *hw,
-+		int idx, struct survey_info *survey);
- static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
- static void ath5k_set_tsf(struct ieee80211_hw *hw, u64 tsf);
- static void ath5k_reset_tsf(struct ieee80211_hw *hw);
-@@ -298,6 +300,7 @@ static const struct ieee80211_ops ath5k_
- 	.configure_filter = ath5k_configure_filter,
- 	.set_key 	= ath5k_set_key,
- 	.get_stats 	= ath5k_get_stats,
-+	.get_survey	= ath5k_get_survey,
- 	.conf_tx 	= NULL,
- 	.get_tsf 	= ath5k_get_tsf,
- 	.set_tsf 	= ath5k_set_tsf,
-@@ -3250,6 +3253,22 @@ ath5k_get_stats(struct ieee80211_hw *hw,
- 
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index cac178a..fcbb4a8 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -261,19 +261,40 @@ static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
+ 	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_RETRY);
  }
-+
-+static int ath5k_get_survey(struct ieee80211_hw *hw, int idx,
-+		struct survey_info *survey)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+	struct ieee80211_conf *conf = &hw->conf;
-+
-+	 if (idx != 0)
-+		return -ENOENT;
-+
-+	survey->channel = conf->channel;
-+	survey->filled = SURVEY_INFO_NOISE_DBM;
-+	survey->noise = sc->ah->ah_noise_floor;
-+
-+	return 0;
-+}
  
- static u64
- ath5k_get_tsf(struct ieee80211_hw *hw)
-
-
+-static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
++static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
+ {
+-	struct ath_buf *tbf;
++	struct ath_buf *bf = NULL;
+ 
+ 	spin_lock_bh(&sc->tx.txbuflock);
+-	if (WARN_ON(list_empty(&sc->tx.txbuf))) {
++
++	if (unlikely(list_empty(&sc->tx.txbuf))) {
+ 		spin_unlock_bh(&sc->tx.txbuflock);
+ 		return NULL;
+ 	}
+-	tbf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
+-	list_del(&tbf->list);
++
++	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
++	list_del(&bf->list);
++
+ 	spin_unlock_bh(&sc->tx.txbuflock);
+ 
++	return bf;
++}
++
++static void ath_tx_return_buffer(struct ath_softc *sc, struct ath_buf *bf)
++{
++	spin_lock_bh(&sc->tx.txbuflock);
++	list_add_tail(&bf->list, &sc->tx.txbuf);
++	spin_unlock_bh(&sc->tx.txbuflock);
++}
++
++static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
++{
++	struct ath_buf *tbf;
++
++	tbf = ath_tx_get_buffer(sc);
++	if (WARN_ON(!tbf))
++		return NULL;
++
+ 	ATH_TXBUF_RESET(tbf);
+ 
+ 	tbf->aphy = bf->aphy;
+@@ -1081,9 +1102,7 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
+ 				list_del(&bf->list);
+ 				spin_unlock_bh(&txq->axq_lock);
+ 
+-				spin_lock_bh(&sc->tx.txbuflock);
+-				list_add_tail(&bf->list, &sc->tx.txbuf);
+-				spin_unlock_bh(&sc->tx.txbuflock);
++				ath_tx_return_buffer(sc, bf);
+ 				continue;
+ 			}
+ 		}
+@@ -1325,25 +1344,6 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 	txq->axq_depth++;
+ }
+ 
+-static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
+-{
+-	struct ath_buf *bf = NULL;
+-
+-	spin_lock_bh(&sc->tx.txbuflock);
+-
+-	if (unlikely(list_empty(&sc->tx.txbuf))) {
+-		spin_unlock_bh(&sc->tx.txbuflock);
+-		return NULL;
+-	}
+-
+-	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
+-	list_del(&bf->list);
+-
+-	spin_unlock_bh(&sc->tx.txbuflock);
+-
+-	return bf;
+-}
+-
+ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 			      struct list_head *bf_head,
+ 			      struct ath_tx_control *txctl)
+@@ -1825,9 +1825,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		}
+ 		spin_unlock_bh(&txq->axq_lock);
+ 
+-		spin_lock_bh(&sc->tx.txbuflock);
+-		list_add_tail(&bf->list, &sc->tx.txbuf);
+-		spin_unlock_bh(&sc->tx.txbuflock);
++		ath_tx_return_buffer(sc, bf);
+ 
+ 		return r;
+ 	}
+@@ -2141,13 +2139,12 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 		txq->axq_depth--;
+ 		txok = !(ts.ts_status & ATH9K_TXERR_MASK);
+ 		txq->axq_tx_inprogress = false;
++		if (bf_held)
++			list_del(&bf_held->list);
+ 		spin_unlock_bh(&txq->axq_lock);
+ 
+-		if (bf_held) {
+-			spin_lock_bh(&sc->tx.txbuflock);
+-			list_move_tail(&bf_held->list, &sc->tx.txbuf);
+-			spin_unlock_bh(&sc->tx.txbuflock);
+-		}
++		if (bf_held)
++			ath_tx_return_buffer(sc, bf_held);
+ 
+ 		if (!bf_isampdu(bf)) {
+ 			/*
 -- 
-http://www.holgerschurig.de
+1.6.4.2
+
