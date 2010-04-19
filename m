@@ -1,88 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47037 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933312Ab0DHT1w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:52 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 097/102] ath9k_hw: add LDPC support for AR9003
-Date: Thu,  8 Apr 2010 15:27:33 -0400
-Message-Id: <1270754858-26266-98-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from nbd.name ([88.198.39.176]:51386 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753422Ab0DSTHo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 15:07:44 -0400
+Message-ID: <4BCCA9F9.6070508@openwrt.org>
+Date: Mon, 19 Apr 2010 21:07:37 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH v2 1/9] ath9k: check for specific rx stuck conditions
+ and recover from them
+References: <1271699857-12366-1-git-send-email-nbd@openwrt.org> <1271703852.19879.1.camel@mj>
+In-Reply-To: <1271703852.19879.1.camel@mj>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    3 ++-
- drivers/net/wireless/ath/ath9k/hw.c         |    2 +-
- drivers/net/wireless/ath/ath9k/hw.h         |    1 +
- drivers/net/wireless/ath/ath9k/mac.h        |    2 ++
- 4 files changed, 6 insertions(+), 2 deletions(-)
+On 2010-04-19 9:04 PM, Pavel Roskin wrote:
+> On Mon, 2010-04-19 at 19:57 +0200, Felix Fietkau wrote:
+>> +		if ((reg & 0x7E7FFFEF) == 0x00702400)
+>> +			continue;
+>> +
+>> +		switch (reg & 0x7E000B00) {
+>> +		case 0x1E000000:
+>> +		case 0x52000B00:
+>> +		case 0x18000B00:
+>> +			continue;
+> 
+> Where did you get all that magic?  If it's from Atheros documentation,
+> maybe you could give those numbers descriptive names?
+I don't have any names for that. It's stuff from a debugging register -
+adapted from Atheros code...
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 3562503..098fbad 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -336,7 +336,8 @@ static void ar9003_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
- 		| (flags & ATH9K_TXDESC_EXT_ONLY ? AR_ExtOnly : 0)
- 		| (flags & ATH9K_TXDESC_EXT_AND_CTL ? AR_ExtAndCtl : 0);
- 
--	ads->ctl17 = SM(keyType, AR_EncrType);
-+	ads->ctl17 = SM(keyType, AR_EncrType) |
-+		     (flags & ATH9K_TXDESC_LDPC ? AR_LDPC : 0);
- 	ads->ctl18 = 0;
- 	ads->ctl19 = AR_Not_Sounding;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index feb76fd..39c3b08 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2085,7 +2085,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
--		pCap->hw_caps |= ATH9K_HW_CAP_EDMA;
-+		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_LDPC;
- 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
- 		if (AR_SREV_9300_20_OR_LATER(ah))
- 			pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 7a07daf..6463e77 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -181,6 +181,7 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_4KB_SPLITTRANS             = BIT(16),
- 	ATH9K_HW_CAP_EDMA			= BIT(17),
- 	ATH9K_HW_CAP_RAC_SUPPORTED		= BIT(18),
-+	ATH9K_HW_CAP_LDPC			= BIT(19),
- };
- 
- enum ath9k_capability_type {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index a27cdd1..a0cbaa3 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -264,6 +264,7 @@ struct ath_desc {
- #define ATH9K_TXDESC_VMF		0x0100
- #define ATH9K_TXDESC_FRAG_IS_ON 	0x0200
- #define ATH9K_TXDESC_LOWRXCHAIN		0x0400
-+#define ATH9K_TXDESC_LDPC		0x00010000
- 
- #define ATH9K_RXDESC_INTREQ		0x0020
- 
-@@ -415,6 +416,7 @@ struct ar5416_desc {
- #define AR_EncrType         0x0c000000
- #define AR_EncrType_S       26
- #define AR_TxCtlRsvd61      0xf0000000
-+#define AR_LDPC             0x80000000
- 
- #define AR_2040_0           0x00000001
- #define AR_GI0              0x00000002
--- 
-1.6.3.3
-
+- Felix
