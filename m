@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:64487 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083Ab0DKQrH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 12:47:07 -0400
-Message-ID: <4bc1fd09.9615f10a.46f6.ffffab58@mx.google.com>
-Date: Sun, 11 Apr 2010 09:47:05 -0700 (PDT)
-From: Ben Gamari <bgamari.foss@gmail.com>
-Subject: Re: [REGRESSION] Lockup inside of stop_machine() during modprobe aes
-	(was Re: Another AR5008 hang)
+Received: from nbd.name ([88.198.39.176]:46262 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753930Ab0DSKPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 06:15:06 -0400
+Message-ID: <4BCC2D1E.4000408@openwrt.org>
+Date: Mon, 19 Apr 2010 12:14:54 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k@lists.ath9k.org
-In-Reply-To: <4bbb7896.48c3f10a.30b9.365b@mx.google.com>
-References: <4bb0e2da.04c2f10a.32b2.11ae@mx.google.com>
-	<1269928986.3927.5.camel@jlt3.sipsolutions.net>
-	<4bb1f940.47c2f10a.3469.609b@mx.google.com>
-	<4bb235fb.0baa660a.5b56.ffffa9c2@mx.google.com>
-	<4bbb7896.48c3f10a.30b9.365b@mx.google.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH 7/9] mac80211: add flags for STBC (Space-Time Block Coding)
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>	 <1271602602-8538-2-git-send-email-nbd@openwrt.org>	 <1271602602-8538-3-git-send-email-nbd@openwrt.org>	 <1271602602-8538-4-git-send-email-nbd@openwrt.org>	 <1271602602-8538-5-git-send-email-nbd@openwrt.org>	 <1271602602-8538-6-git-send-email-nbd@openwrt.org>	 <1271602602-8538-7-git-send-email-nbd@openwrt.org>	 <1271606009.3873.0.camel@jlt3.sipsolutions.net>	 <4BCB2DB3.3020700@openwrt.org>	 <1271656677.3873.5.camel@jlt3.sipsolutions.net>	 <4BCC1844.4030607@openwrt.org>	 <1271667582.3873.11.camel@jlt3.sipsolutions.net>	 <4BCC1D1A.7020705@openwrt.org> <1271668150.3873.17.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1271668150.3873.17.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 06 Apr 2010 11:08:22 -0700 (PDT), Ben Gamari <bgamari.foss@gmail.com> wrote:
-> Hey all,
+On 2010-04-19 11:09 AM, Johannes Berg wrote:
+> On Mon, 2010-04-19 at 11:06 +0200, Felix Fietkau wrote:
+>> On 2010-04-19 10:59 AM, Johannes Berg wrote:
+>> > On Mon, 2010-04-19 at 10:45 +0200, Felix Fietkau wrote:
+>> >> On 2010-04-19 7:57 AM, Johannes Berg wrote:
+>> >> > On Sun, 2010-04-18 at 18:05 +0200, Felix Fietkau wrote:
+>> >> > 
+>> >> >> >> + * @IEEE80211_TX_CTL_STBC: tells the driver to use Space-Time Block Coding
+>> >> >> >> + *  (STBC) for this frame.
+>> >> >> >>   */
+>> >> >> >>  enum mac80211_tx_control_flags {
+>> >> >> >>  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+>> >> >> >> @@ -299,6 +301,7 @@ enum mac80211_tx_control_flags {
+>> >> >> >>  	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
+>> >> >> >>  	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
+>> >> >> >>  	IEEE80211_TX_CTL_LDPC			= BIT(22),
+>> >> >> >> +	IEEE80211_TX_CTL_STBC			= BIT(23),
+>> >> >> > 
+>> >> >> > What if the # of streams is different? That doesn't look sufficient.
+>> >> > 
+>> >> >> Hm, you're right. I initially thought the combination of the MCS index
+>> >> >> and the STBC flag would be enough, but there are still some corner cases.
+>> >> > 
+>> >> > Hm actually I guess that should be sufficient? What corner case are you
+>> >> > thinking of?
+>> >> Support for multi-rate retry and STBC with more than one stream on one
+>> >> side, using rates from both MCS0-7 and MCS8-15 in the rate series.
+>> >> Rx STBC for only one stream on the other side.
+>> > 
+>> > So the flag should be per rate entry instead, no?
 > 
-> I just built 2.6.34-rc3 with the appropriate fixes for the ACPI thermal lockdep
-> issues and have attached the dmesg output of the crash below. It appears that
-> modprobe is freezing with a few locks held while inserting aes.ko. In
-> particular, it seems that the kernel is deadlocking inside of stop_machine()
-> while flushing workqueues.
+>> Well, I think if we use two bits in the tx control flags, we don't need
+>> it to be per rate entry.
 > 
-I can confirm that modprobing aes explicitly also results in the stop_machine()
-deadlock, so this doesn't appear to be an interaction with ath9k or the
-mac80211 subsystem.
+> But then you can't probe stbc properly, can you?
+I'm not sure we even need to probe STBC. In all of the drivers that I've
+looked at, it's always enabled if the peer supports it.
+I'm not aware of any situation where it would make the reception worse,
+aside from hardware damage of course ;)
 
-Furthermore, if I disable CONFIG_CRYPTO_AES_X86_64 (I'm on a Core Duo
-platform), aes loads as expected and things work as they should. 
-
-Any ideas? I'm rather disturbed that this regression has still not had a single
-reply while -rc4 is so near.
-
-- Ben
+- Felix
