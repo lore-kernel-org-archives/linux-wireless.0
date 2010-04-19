@@ -1,193 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:30615 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752221Ab0DEJSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Apr 2010 05:18:22 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 05 Apr 2010 02:18:22 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath9k_htc: Configure the beacon timers once the scan is completed.
-Date: Mon, 5 Apr 2010 14:48:06 +0530
-Message-ID: <1270459086-2504-3-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1270459086-2504-2-git-send-email-vnatarajan@atheros.com>
-References: <1270459086-2504-1-git-send-email-vnatarajan@atheros.com>
- <1270459086-2504-2-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:48888 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751750Ab0DSHQh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 03:16:37 -0400
+Received: by wwb24 with SMTP id 24so2312104wwb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 00:16:36 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 3/3] orinoco: have sparse check endian issues
+Date: Mon, 19 Apr 2010 08:16:23 +0100
+Message-Id: <1271661383-27839-3-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1271661383-27839-1-git-send-email-kilroyd@googlemail.com>
+References: <1271661383-27839-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h            |   12 +++++-
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |   41 ++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    6 ++-
- 3 files changed, 43 insertions(+), 16 deletions(-)
+Orinoco should be endian clean, so enable the checking.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 0160e83..78213fc 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -309,6 +309,14 @@ struct ath_led {
- 	int brightness;
- };
- 
-+struct htc_beacon_config {
-+	u16 beacon_interval;
-+	u16 listen_interval;
-+	u16 dtim_period;
-+	u16 bmiss_timeout;
-+	u8 dtim_count;
-+};
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/Makefile |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/Makefile b/drivers/net/wireless/orinoco/Makefile
+index 9abd632..e645269 100644
+--- a/drivers/net/wireless/orinoco/Makefile
++++ b/drivers/net/wireless/orinoco/Makefile
+@@ -11,3 +11,6 @@ obj-$(CONFIG_PCI_HERMES)	+= orinoco_pci.o
+ obj-$(CONFIG_TMD_HERMES)	+= orinoco_tmd.o
+ obj-$(CONFIG_NORTEL_HERMES)	+= orinoco_nortel.o
+ obj-$(CONFIG_PCMCIA_SPECTRUM)	+= spectrum_cs.o
 +
- #define OP_INVALID        BIT(0)
- #define OP_SCANNING       BIT(1)
- #define OP_FULL_RESET     BIT(2)
-@@ -353,6 +361,7 @@ struct ath9k_htc_priv {
- 	spinlock_t tx_lock;
- 
- 	struct ieee80211_vif *vif;
-+	struct htc_beacon_config cur_beacon_conf;
- 	unsigned int rxfilter;
- 	struct tasklet_struct wmi_tasklet;
- 	struct tasklet_struct rx_tasklet;
-@@ -394,8 +403,7 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- }
- 
- void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
--			     struct ieee80211_vif *vif,
--			     struct ieee80211_bss_conf *bss_conf);
-+			     struct ieee80211_vif *vif);
- void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending);
- void ath9k_htc_beacon_update(struct ath9k_htc_priv *priv,
- 			     struct ieee80211_vif *vif);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 25f5b53..5e21f4d 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -19,7 +19,7 @@
- #define FUDGE 2
- 
- static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
--					struct ieee80211_bss_conf *bss_conf)
-+					struct htc_beacon_config *bss_conf)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath9k_beacon_state bs;
-@@ -34,8 +34,8 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- 
- 	memset(&bs, 0, sizeof(bs));
- 
--	intval = bss_conf->beacon_int & ATH9K_BEACON_PERIOD;
--	bmiss_timeout = (ATH_DEFAULT_BMISS_LIMIT * bss_conf->beacon_int);
-+	intval = bss_conf->beacon_interval & ATH9K_BEACON_PERIOD;
-+	bmiss_timeout = (ATH_DEFAULT_BMISS_LIMIT * bss_conf->beacon_interval);
- 
- 	/*
- 	 * Setup dtim and cfp parameters according to
-@@ -138,7 +138,7 @@ static void ath9k_htc_beacon_config_sta(struct ath9k_htc_priv *priv,
- }
- 
- static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
--					  struct ieee80211_bss_conf *bss_conf)
-+					  struct htc_beacon_config *bss_conf)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	enum ath9k_int imask = 0;
-@@ -146,7 +146,7 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- 	int ret;
- 	u8 cmd_rsp;
- 
--	intval = bss_conf->beacon_int & ATH9K_BEACON_PERIOD;
-+	intval = bss_conf->beacon_interval & ATH9K_BEACON_PERIOD;
- 	nexttbtt = intval;
- 	intval |= ATH9K_BEACON_ENA;
- 	if (priv->op_flags & OP_ENABLE_BEACON)
-@@ -154,7 +154,7 @@ static void ath9k_htc_beacon_config_adhoc(struct ath9k_htc_priv *priv,
- 
- 	ath_print(common, ATH_DBG_BEACON,
- 		  "IBSS Beacon config, intval: %d, imask: 0x%x\n",
--		  bss_conf->beacon_int, imask);
-+		  bss_conf->beacon_interval, imask);
- 
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	ath9k_hw_beaconinit(priv->ah, nexttbtt, intval);
-@@ -239,18 +239,35 @@ void ath9k_htc_swba(struct ath9k_htc_priv *priv, u8 beacon_pending)
- 	spin_unlock_bh(&priv->beacon_lock);
- }
- 
-+
- void ath9k_htc_beacon_config(struct ath9k_htc_priv *priv,
--			     struct ieee80211_vif *vif,
--			     struct ieee80211_bss_conf *bss_conf)
-+			     struct ieee80211_vif *vif)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
--
--	switch (vif->type) {
-+	enum nl80211_iftype iftype;
-+	struct htc_beacon_config *cur_conf = &priv->cur_beacon_conf;
-+
-+	if (vif) {
-+		struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
-+		iftype = vif->type;
-+		cur_conf->beacon_interval = bss_conf->beacon_int;
-+		cur_conf->dtim_period = bss_conf->dtim_period;
-+		cur_conf->listen_interval = 1;
-+		cur_conf->dtim_count = 1;
-+		cur_conf->bmiss_timeout =
-+			ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
-+	} else
-+		iftype = priv->ah->opmode;
-+
-+	if (cur_conf->beacon_interval == 0)
-+		cur_conf->beacon_interval = 100;
-+
-+	switch (iftype) {
- 	case NL80211_IFTYPE_STATION:
--		ath9k_htc_beacon_config_sta(priv, bss_conf);
-+		ath9k_htc_beacon_config_sta(priv, cur_conf);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		ath9k_htc_beacon_config_adhoc(priv, bss_conf);
-+		ath9k_htc_beacon_config_adhoc(priv, cur_conf);
- 		break;
- 	default:
- 		ath_print(common, ATH_DBG_CONFIG,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index e04452f..eb7722b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1549,7 +1549,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 	    ((changed & BSS_CHANGED_BEACON_ENABLED) &&
- 	    bss_conf->enable_beacon)) {
- 		priv->op_flags |= OP_ENABLE_BEACON;
--		ath9k_htc_beacon_config(priv, vif, bss_conf);
-+		ath9k_htc_beacon_config(priv, vif);
- 	}
- 
- 	if (changed & BSS_CHANGED_BEACON)
-@@ -1558,7 +1558,7 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 	if ((changed & BSS_CHANGED_BEACON_ENABLED) &&
- 	    !bss_conf->enable_beacon) {
- 		priv->op_flags &= ~OP_ENABLE_BEACON;
--		ath9k_htc_beacon_config(priv, vif, bss_conf);
-+		ath9k_htc_beacon_config(priv, vif);
- 	}
- 
- 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
-@@ -1686,6 +1686,8 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
- 	priv->op_flags &= ~OP_SCANNING;
- 	spin_unlock_bh(&priv->beacon_lock);
- 	priv->op_flags |= OP_FULL_RESET;
-+	if (priv->op_flags & OP_ASSOCIATED)
-+		ath9k_htc_beacon_config(priv, NULL);
- 	ath_start_ani(priv);
- 	mutex_unlock(&priv->mutex);
- 	ath9k_htc_ps_restore(priv);
++# Orinoco should be endian clean.
++ccflags-y += -D__CHECK_ENDIAN__
 -- 
-1.7.0.3
+1.6.4.4
 
