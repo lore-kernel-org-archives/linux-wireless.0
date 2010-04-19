@@ -1,50 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58135 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751403Ab0DPAZb (ORCPT
+Received: from mail-iw0-f199.google.com ([209.85.223.199]:36343 "EHLO
+	mail-iw0-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729Ab0DSPpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 20:25:31 -0400
-Date: Thu, 15 Apr 2010 17:22:05 -0400
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Ben Gamari <bgamari.foss@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k@venema.h4ckr.net, Herbert Xu <herbert@gondor.hengli.com.au>
-Subject: Re: Lockup inside of stop_machine() during modprobe aes (was Re:
- Another AR5008 hang)
-Message-Id: <20100415172205.c1e57636.akpm@linux-foundation.org>
-In-Reply-To: <4bbb7896.48c3f10a.30b9.365b@mx.google.com>
-References: <4bb0e2da.04c2f10a.32b2.11ae@mx.google.com>
-	<1269928986.3927.5.camel@jlt3.sipsolutions.net>
-	<4bb1f940.47c2f10a.3469.609b@mx.google.com>
-	<4bb235fb.0baa660a.5b56.ffffa9c2@mx.google.com>
-	<4bbb7896.48c3f10a.30b9.365b@mx.google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 19 Apr 2010 11:45:05 -0400
+Received: by iwn37 with SMTP id 37so546319iwn.15
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 08:45:04 -0700 (PDT)
+From: tom.leiming@gmail.com
+To: Sujith.Manoharan@atheros.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH] ath9k-htc: speedup disconnect handling
+Date: Mon, 19 Apr 2010 23:44:43 +0800
+Message-Id: <1271691883-13133-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 06 Apr 2010 11:08:22 -0700 (PDT) Ben Gamari <bgamari.foss@gmail.com> wrote:
+From: Ming Lei <tom.leiming@gmail.com>
 
-> 
-> ...
->
-> I just built 2.6.34-rc3 with the appropriate fixes for the ACPI thermal lockdep
-> issues and have attached the dmesg output of the crash below. It appears that
-> modprobe is freezing with a few locks held while inserting aes.ko. In
-> particular, it seems that the kernel is deadlocking inside of stop_machine()
-> while flushing workqueues.
-> 
-> ...
->
+This patch detects the disconnect in wmi register write path,
+then speedup the disconnect handling.
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    2 ++
+ drivers/net/wireless/ath/ath9k/hw.h  |    1 +
+ drivers/net/wireless/ath/ath9k/wmi.c |    8 ++++++++
+ 3 files changed, 11 insertions(+), 0 deletions(-)
 
-My guess would be that ieee80211 is calling crypto->request_module()
-under rtnl_lock, and the fact that rtnl_lock is held is causing
-modprobe->stop_machine to not complete.
-
-> P.S. I am now quite certain that I was mistaken in saying that 2.6.33 was
-> affected. This seems to just be a 2.6.34 issue.
-
-OK, thanks, I'll ask Rafael and Maciej to track this as a post-2.6.33
-regression, probably wireless.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9aa40df..bcc48ff 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -111,6 +111,8 @@ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout)
+ 	BUG_ON(timeout < AH_TIME_QUANTUM);
+ 
+ 	for (i = 0; i < (timeout / AH_TIME_QUANTUM); i++) {
++		if (AR_SREV_9271(ah) && ah->htc_disconnected)
++			break;
+ 		if ((REG_READ(ah, reg) & mask) == val)
+ 			return true;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 8158e8e..6b22158 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -635,6 +635,7 @@ struct ath_hw {
+ 	u32 ah_flags;
+ 
+ 	bool htc_reset_init;
++	bool htc_disconnected;
+ 
+ 	enum nl80211_iftype opmode;
+ 	enum ath9k_power_mode power_mode;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index dc6c6fc..fbd44c7 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -279,6 +279,9 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	if (!wmi)
+ 		return -EINVAL;
+ 
++	if (ah->htc_disconnected)
++		return -ENODEV;
++
+ 	skb = alloc_skb(headroom + cmd_len, GFP_ATOMIC);
+ 	if (!skb)
+ 		return -ENOMEM;
+@@ -324,6 +327,11 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	return 0;
+ 
+ out:
++	if (ret == -ENODEV) {
++		ah->htc_disconnected = 1;
++		ath_print(common, ATH_DBG_WMI,"HTC disconnected!\n");
++	}
++
+ 	ath_print(common, ATH_DBG_WMI,
+ 		  "WMI failure for: %s\n", wmi_cmd_to_name(cmd_id));
+ 	mutex_unlock(&wmi->op_mutex);
+-- 
+1.6.2.5
 
