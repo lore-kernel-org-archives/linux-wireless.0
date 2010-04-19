@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44122 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753311Ab0DZJxK (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:15705 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752125Ab0DSI6e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 05:53:10 -0400
-Subject: Re: [RFC PATCH 1/1] mac80211: Disable cfg80211 assoc timeout
- warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1272275367-7532-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
-References: <1272275367-7532-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Apr 2010 11:53:06 +0200
-Message-ID: <1272275586.3619.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 19 Apr 2010 04:58:34 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 804473A02B
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 10:58:33 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 2LmXAkFHW07g for <linux-wireless@vger.kernel.org>;
+	Mon, 19 Apr 2010 10:58:33 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95F800E.dip0.t-ipconnect.de [217.95.128.14])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 3FC273A009
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 10:58:32 +0200 (CEST)
+Received: from mnz66.localnet (schurig.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id C9F7D1E0036
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 10:58:31 +0200 (CEST)
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: sample survey implementation for mac80211 & hwsim
+Date: Mon, 19 Apr 2010 10:58:52 +0200
+References: <201004191023.57987.holgerschurig@gmail.com>
+In-Reply-To: <201004191023.57987.holgerschurig@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201004191058.52574.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-26 at 12:49 +0300, Saravanan Dhanabal wrote:
-> While the association response is queued and yet to be
-> processed, if the interface goes down, ieee80211_stop
-> marks work queue items as IEEE80211_WORK_ABORT. This
-> creates assoc timeout warnings which are actually caused
-> by if down. Those warnings could be avoided, since they
-> are not beacuse of association response.
-> 
-> This patch disables assoc timeout warnings if interface is
-> not running.
+Oh, that should have been [PATCH].
 
-I don't think this is the right fix, we just debated exactly this
-problem too.
-
-The right fix would be to make mac80211 kill the association work when
-deauthentication is requested. We're testing that fix right now.
-
-johannes
-
-> Signed-off-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
-> ---
->  net/wireless/mlme.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-> index 0855f0d..a3ab86c 100644
-> --- a/net/wireless/mlme.c
-> +++ b/net/wireless/mlme.c
-> @@ -337,7 +337,7 @@ void cfg80211_send_assoc_timeout(struct net_device *dev, const u8 *addr)
->  		}
->  	}
->  
-> -	WARN_ON(!done);
-> +	WARN_ON(netif_running(dev) && !done);
->  
->  	wdev_unlock(wdev);
->  }
+So much to copying subject lines from quilt patches without really reading.
 
 
+-- 
+DH3HS, http://www.holgerschurig.de
