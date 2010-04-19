@@ -1,108 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:53101 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752379Ab0DCHtk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 03:49:40 -0400
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [PATCH 4/7] net/wireless: switch lib80211_crypt_tkip from arc4 to arc4blk
-Date: Sat,  3 Apr 2010 09:49:26 +0200
-Message-Id: <1270280969-11357-5-git-send-email-sebastian@breakpoint.cc>
-In-Reply-To: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
-References: <1270280969-11357-1-git-send-email-sebastian@breakpoint.cc>
+Received: from nbd.name ([88.198.39.176]:45932 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753113Ab0DSR5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 13:57:44 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH v2 6/9] ath9k: initialize the number of tx/rx streams correctly
+Date: Mon, 19 Apr 2010 19:57:34 +0200
+Message-Id: <1271699857-12366-6-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1271699857-12366-5-git-send-email-nbd@openwrt.org>
+References: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
+ <1271699857-12366-2-git-send-email-nbd@openwrt.org>
+ <1271699857-12366-3-git-send-email-nbd@openwrt.org>
+ <1271699857-12366-4-git-send-email-nbd@openwrt.org>
+ <1271699857-12366-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ecb(arc4) is getting replaced by arc4 which is a blkcipher by itself. The
-required selects are now pulled in by LIB80211_CRYPT_TKIP instead of
-selecting it by every driver.
+AR9300 based hardware can 3x3 MCS rates, this should be set in the
+HT capabilities.
 
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/wireless/Kconfig               |    2 ++
- net/wireless/lib80211_crypt_tkip.c |   11 +++++++----
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c |   39 +++++++++++++++++++++++---------
+ 1 files changed, 28 insertions(+), 11 deletions(-)
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 90e93a5..119f1eb 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -147,6 +147,8 @@ config LIB80211_CRYPT_CCMP
- 	tristate
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index ca6e781..2c0630e 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -175,6 +175,18 @@ static const struct ath_ops ath9k_common_ops = {
+ 	.write = ath9k_iowrite32,
+ };
  
- config LIB80211_CRYPT_TKIP
-+	select CRYPTO
-+	select CRYPTO_ARC4BLK
- 	tristate
++static int count_streams(unsigned int chainmask, int max)
++{
++	int streams = 0;
++
++	do {
++		if (++streams == max)
++			break;
++	} while ((chainmask = chainmask & (chainmask - 1)));
++
++	return streams;
++}
++
+ /**************************/
+ /*     Initialization     */
+ /**************************/
+@@ -182,8 +194,10 @@ static const struct ath_ops ath9k_common_ops = {
+ static void setup_ht_cap(struct ath_softc *sc,
+ 			 struct ieee80211_sta_ht_cap *ht_info)
+ {
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	u8 tx_streams, rx_streams;
++	int i, max_streams;
  
- config LIB80211_DEBUG
-diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
-index c362873..089f84f 100644
---- a/net/wireless/lib80211_crypt_tkip.c
-+++ b/net/wireless/lib80211_crypt_tkip.c
-@@ -28,6 +28,7 @@
- #include <net/iw_handler.h>
+ 	ht_info->ht_supported = true;
+ 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+@@ -197,25 +211,28 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+ 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
  
- #include <linux/crypto.h>
-+#include <crypto/arc4.h>
- #include <linux/crc32.h>
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		max_streams = 3;
++	else
++		max_streams = 2;
++
+ 	/* set up supported mcs set */
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+-	tx_streams = !(common->tx_chainmask & (common->tx_chainmask - 1)) ?
+-		     1 : 2;
+-	rx_streams = !(common->rx_chainmask & (common->rx_chainmask - 1)) ?
+-		     1 : 2;
++	tx_streams = count_streams(common->tx_chainmask, max_streams);
++	rx_streams = count_streams(common->rx_chainmask, max_streams);
++
++	ath_print(common, ATH_DBG_CONFIG,
++		  "TX streams %d, RX streams: %d\n",
++		  tx_streams, rx_streams);
  
- #include <net/lib80211.h>
-@@ -94,7 +95,7 @@ static void *lib80211_tkip_init(int key_idx)
- 
- 	priv->key_idx = key_idx;
- 
--	priv->tx_tfm_arc4 = crypto_alloc_blkcipher("ecb(arc4)", 0,
-+	priv->tx_tfm_arc4 = crypto_alloc_blkcipher("arc4", 0,
- 						CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(priv->tx_tfm_arc4)) {
- 		printk(KERN_DEBUG "lib80211_crypt_tkip: could not allocate "
-@@ -112,7 +113,7 @@ static void *lib80211_tkip_init(int key_idx)
- 		goto fail;
+ 	if (tx_streams != rx_streams) {
+-		ath_print(common, ATH_DBG_CONFIG,
+-			  "TX streams %d, RX streams: %d\n",
+-			  tx_streams, rx_streams);
+ 		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
+ 		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
+ 				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
  	}
  
--	priv->rx_tfm_arc4 = crypto_alloc_blkcipher("ecb(arc4)", 0,
-+	priv->rx_tfm_arc4 = crypto_alloc_blkcipher("arc4", 0,
- 						CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(priv->rx_tfm_arc4)) {
- 		printk(KERN_DEBUG "lib80211_crypt_tkip: could not allocate "
-@@ -360,6 +361,7 @@ static int lib80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- {
- 	struct lib80211_tkip_data *tkey = priv;
- 	struct blkcipher_desc desc = { .tfm = tkey->tx_tfm_arc4 };
-+	struct arc4_iv *iv = crypto_blkcipher_crt(tkey->tx_tfm_arc4)->iv;
- 	int len;
- 	u8 rc4key[16], *pos, *icv;
- 	u32 crc;
-@@ -392,7 +394,7 @@ static int lib80211_tkip_encrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	icv[2] = crc >> 16;
- 	icv[3] = crc >> 24;
+-	ht_info->mcs.rx_mask[0] = 0xff;
+-	if (rx_streams >= 2)
+-		ht_info->mcs.rx_mask[1] = 0xff;
++	for (i = 0; i < rx_streams; i++)
++		ht_info->mcs.rx_mask[i] = 0xff;
  
--	crypto_blkcipher_setkey(tkey->tx_tfm_arc4, rc4key, 16);
-+	arc4_setup_iv(iv, rc4key, 16);
- 	sg_init_one(&sg, pos, len + 4);
- 	return crypto_blkcipher_encrypt(&desc, &sg, &sg, len + 4);
+ 	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
  }
-@@ -414,6 +416,7 @@ static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- {
- 	struct lib80211_tkip_data *tkey = priv;
- 	struct blkcipher_desc desc = { .tfm = tkey->rx_tfm_arc4 };
-+	struct arc4_iv *iv = crypto_blkcipher_crt(tkey->rx_tfm_arc4)->iv;
- 	u8 rc4key[16];
- 	u8 keyidx, *pos;
- 	u32 iv32;
-@@ -485,7 +488,7 @@ static int lib80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 
- 	plen = skb->len - hdr_len - 12;
- 
--	crypto_blkcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
-+	arc4_setup_iv(iv, rc4key, 16);
- 	sg_init_one(&sg, pos, plen + 4);
- 	if (crypto_blkcipher_decrypt(&desc, &sg, &sg, plen + 4)) {
- 		if (net_ratelimit()) {
 -- 
-1.6.6
+1.6.4.2
 
