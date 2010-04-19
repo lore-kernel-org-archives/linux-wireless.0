@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54749 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756750Ab0DODax (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39458 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997Ab0DSJDP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:53 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 24/97] ath9k_hw: update the chip tests for AR9003
-Date: Wed, 14 Apr 2010 23:29:38 -0400
-Message-Id: <1271302251-9075-25-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 19 Apr 2010 05:03:15 -0400
+Subject: [PATCH] mac80211: add missing newline
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Apr 2010 11:03:13 +0200
+Message-ID: <1271667793.3873.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+One HT debugging printk is missing a newline,
+add it.
 
-The AR9003 family requires a change on the loop and can also skip
-testing the PHY timing registers. This chip test can now be used
-by all Atheros hardware families, including legacy. We can
-eventually move this out to the generic ath module.
-
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ net/mac80211/agg-tx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0b89605..bf7a85f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -298,18 +298,25 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
- }
- 
-+/* This should work for all families including legacy */
- static bool ath9k_hw_chip_test(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
--	u32 regAddr[2] = { AR_STA_ID0, AR_PHY_BASE + (8 << 2) };
-+	u32 regAddr[2] = { AR_STA_ID0 };
- 	u32 regHold[2];
- 	u32 patternData[4] = { 0x55555555,
- 			       0xaaaaaaaa,
- 			       0x66666666,
- 			       0x99999999 };
--	int i, j;
-+	int i, j, loop_max;
- 
--	for (i = 0; i < 2; i++) {
-+	if (!AR_SREV_9300_20_OR_LATER(ah)) {
-+		loop_max = 2;
-+		regAddr[1] = AR_PHY_BASE + (8 << 2);
-+	} else
-+		loop_max = 1;
-+
-+	for (i = 0; i < loop_max; i++) {
- 		u32 addr = regAddr[i];
- 		u32 wrData, rdData;
- 
--- 
-1.6.3.3
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-04-19 10:53:23.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-04-19 10:53:52.000000000 +0200
+@@ -185,7 +185,7 @@ static void sta_addba_resp_timer_expired
+ 		spin_unlock_bh(&sta->lock);
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		printk(KERN_DEBUG "timer expired on tid %d but we are not "
+-				"(or no longer) expecting addBA response there",
++				"(or no longer) expecting addBA response there\n",
+ 			tid);
+ #endif
+ 		return;
+
 
