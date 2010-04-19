@@ -1,71 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56138 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756317Ab0DOUPL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 16:15:11 -0400
-Date: Thu, 15 Apr 2010 16:03:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2010-04-15
-Message-ID: <20100415200331.GD3020@tuxdriver.com>
+Received: from purkki.adurom.net ([80.68.90.206]:56712 "EHLO purkki.valot.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754522Ab0DSLWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 07:22:09 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix stopping RX BA session from timer
+References: <87pr20mrez.fsf@purkki.valot.fi>
+	<20100415195812.GC3020@tuxdriver.com> <871veclztk.fsf@purkki.valot.fi>
+	<1271659397.3873.9.camel@jlt3.sipsolutions.net>
+	<87wrw3lxjh.fsf@purkki.valot.fi>
+	<1271667624.3873.12.camel@jlt3.sipsolutions.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 19 Apr 2010 14:22:06 +0300
+In-Reply-To: <1271667624.3873.12.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Mon\, 19 Apr 2010 11\:00\:24 +0200")
+Message-ID: <87sk6rlmap.fsf@purkki.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Another fix intended for 2.6.34...without it some firmware wierdness can
-induce the driver into hanging the box... :-(
+> Kalle reported that his system deadlocks since my
+> recent work in this area. The reason quickly became
+> apparent: we try to cancel_timer_sync() a timer
+> from within itself. Fix that by making the function
+> aware of the context it is called from.
 
-Please let me know if there are problems!
+I have now tested this for an hour and I can't reproduce the problem
+anymore, earlier I was able to reproduce at least within a minute or
+so. So I'm confident that the problem I saw is this fixed by this
+patch.
 
-Thanks,
+Thank you very much for fixing this so quickly.
 
-John
+> Reported-by: Kalle Valo <kvalo@adurom.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
----
+Tested-by: Kalle Valo <kvalo@adurom.com>
 
-The following changes since commit 4eaa0e3c869acd5dbc7c2e3818a9ae9cbf221d27:
-  Eric Dumazet (1):
-        fib: suppress lockdep-RCU false positive in FIB trie.
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Johannes Berg (1):
-      iwlwifi: work around bogus active chains detection
-
- drivers/net/wireless/iwlwifi/iwl-calib.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index 845831a..64de42b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -807,6 +807,18 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv,
- 		}
- 	}
- 
-+	/*
-+	 * The above algorithm sometimes fails when the ucode
-+	 * reports 0 for all chains. It's not clear why that
-+	 * happens to start with, but it is then causing trouble
-+	 * because this can make us enable more chains than the
-+	 * hardware really has.
-+	 *
-+	 * To be safe, simply mask out any chains that we know
-+	 * are not on the device.
-+	 */
-+	active_chains &= priv->hw_params.valid_rx_ant;
-+
- 	num_tx_chains = 0;
- 	for (i = 0; i < NUM_RX_CHAINS; i++) {
- 		/* loops on all the bits of
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
