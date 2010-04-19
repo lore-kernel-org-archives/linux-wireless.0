@@ -1,151 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46990 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933297Ab0DHT1s (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:60834 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494Ab0DSRij (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 086/102] ath9k_hw: Add function to configure tx status ring buffer
-Date: Thu,  8 Apr 2010 15:27:22 -0400
-Message-Id: <1270754858-26266-87-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 19 Apr 2010 13:38:39 -0400
+Received: by bwz25 with SMTP id 25so5901961bwz.28
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 10:38:38 -0700 (PDT)
+Date: Mon, 19 Apr 2010 19:41:01 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rc80211_minstrel.c:70 WARNING with 2.6.34-rc4
+Message-ID: <20100419174100.GA5312@linux-m68k.org>
+References: <20100418085653.GA7345@linux-m68k.org> <1271694855.9026.51.camel@mj>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1271694855.9026.51.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Also reset tx status ring suring chip reset.
+Hi,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   30 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_mac.h |   17 ++++++++++++++-
- drivers/net/wireless/ath/ath9k/hw.c         |    3 ++
- drivers/net/wireless/ath/ath9k/hw.h         |    7 ++++++
- drivers/net/wireless/ath/ath9k/reg.h        |    3 ++
- 5 files changed, 59 insertions(+), 1 deletions(-)
+> > I am getting tons of these http://www.kerneloops.org/submitresult.php?number=3048061,
+> > appears every packet triggers that.
+> 
+> The warning comes from the function rix_to_ndx() in rc80211_minstrel.c:
+> 
+> /* convert mac80211 rate index to local array index */
+> static inline int
+> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+> {
+>         int i = rix;
+>         for (i = rix; i >= 0; i--)
+>                 if (mi->r[i].rix == rix)
+>                         break;
+>         WARN_ON(i < 0);
+>         return i;
+> }
+> 
+> > Can provide lots of debugging info.
+> 
+> My impression is that WARN_ON is not warranted in that function, but it
+> would be interesting to know how you got to that point.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 9fcac16..886b075 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -352,3 +352,33 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 	return 0;
- }
- EXPORT_SYMBOL(ath9k_hw_process_rxdesc_edma);
-+
-+void ath9k_hw_reset_txstatus_ring(struct ath_hw *ah)
-+{
-+	ah->ts_tail = 0;
-+
-+	memset((void *) ah->ts_ring, 0,
-+		ah->ts_size * sizeof(struct ar9003_txs));
-+
-+	ath_print(ath9k_hw_common(ah), ATH_DBG_XMIT,
-+		  "TS Start 0x%x End 0x%x Virt %p, Size %d\n",
-+		   ah->ts_paddr_start, ah->ts_paddr_end,
-+		   ah->ts_ring, ah->ts_size);
-+
-+	REG_WRITE(ah, AR_Q_STATUS_RING_START, ah->ts_paddr_start);
-+	REG_WRITE(ah, AR_Q_STATUS_RING_END, ah->ts_paddr_end);
-+}
-+
-+void ath9k_hw_setup_statusring(struct ath_hw *ah, void *ts_start,
-+			       u32 ts_paddr_start,
-+			       u8 size)
-+{
-+
-+	ah->ts_paddr_start = ts_paddr_start;
-+	ah->ts_paddr_end = ts_paddr_start + (size * sizeof(struct ar9003_txs));
-+	ah->ts_size = size;
-+	ah->ts_ring = (struct ar9003_txs *) ts_start;
-+
-+	ath9k_hw_reset_txstatus_ring(ah);
-+}
-+EXPORT_SYMBOL(ath9k_hw_setup_statusring);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-index 18e928f..97af30b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-@@ -79,6 +79,18 @@ struct ar9003_txc {
- 	u32 pad[9]; /* pad to cache line (128 bytes/32 dwords) */
- } __packed;
- 
-+struct ar9003_txs {
-+	u32 ds_info;
-+	u32 status1;
-+	u32 status2;
-+	u32 status3;
-+	u32 status4;
-+	u32 status5;
-+	u32 status6;
-+	u32 status7;
-+	u32 status8;
-+} __packed;
-+
- void ar9003_hw_attach_mac_ops(struct ath_hw *hw);
- void ath9k_hw_set_rx_bufsize(struct ath_hw *ah, u16 buf_size);
- void ath9k_hw_addrxbuf_edma(struct ath_hw *ah, u32 rxdp,
-@@ -87,5 +99,8 @@ void ath9k_hw_addrxbuf_edma(struct ath_hw *ah, u32 rxdp,
- int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah,
- 				 struct ath_rx_status *rxs,
- 				 void *buf_addr);
--
-+void ath9k_hw_reset_txstatus_ring(struct ath_hw *ah);
-+void ath9k_hw_setup_statusring(struct ath_hw *ah, void *ts_start,
-+			       u32 ts_paddr_start,
-+			       u8 size);
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3407a9c..e2d5abc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -891,6 +891,9 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- 		REG_WRITE(ah, AR_PCU_TXBUF_CTRL,
- 			  AR_PCU_TXBUF_CTRL_USABLE_SIZE);
- 	}
-+
-+	if (AR_SREV_9300_20_OR_LATER(ah))
-+		ath9k_hw_reset_txstatus_ring(ah);
- }
- 
- static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 121a268..a9c8507 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -756,6 +756,13 @@ struct ath_hw {
- 	u32 intr_gen_timer_trigger;
- 	u32 intr_gen_timer_thresh;
- 	struct ath_gen_timer_table hw_gen_timers;
-+
-+	struct ar9003_txs *ts_ring;
-+	void *ts_start;
-+	u32 ts_paddr_start;
-+	u32 ts_paddr_end;
-+	u16 ts_tail;
-+	u8 ts_size;
- };
- 
- static inline struct ath_common *ath9k_hw_common(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 2ca478c..ff89140 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -383,6 +383,9 @@
- #define AR_Q9_TXDP           0x0824
- #define AR_QTXDP(_i)    (AR_Q0_TXDP + ((_i)<<2))
- 
-+#define AR_Q_STATUS_RING_START	0x830
-+#define AR_Q_STATUS_RING_END	0x834
-+
- #define AR_Q_TXE             0x0840
- #define AR_Q_TXE_M           0x000003FF
- 
--- 
-1.6.3.3
+I am using the rt73usb, WEP, adhoc, fixed rate(11M) on both ends:
 
+wlan0     IEEE 802.11bg  ESSID:"XXXXXXXX"  
+          Mode:Ad-Hoc  Frequency:2.442 GHz  Cell: F6:B2:CB:FC:62:6C   
+          Tx-Power=20 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:  XXXXXXXXXX
+          Power Management:on
+
+It is 2.6.34-rc4, no compat-wireless.
+
+As of unusual circumstances - the  rt73usb driver has some bug that causes
+very high retransmit rates. On the opposite end the ath5k driver complains "cant
+handle jumbo frames".
+I had it perfectly working some time ago but need to figure out which off the many 
+patches did it and apply it to the new kernel. 
+This might stress minstrel more than needed but otoh it was my impression that the
+warning was triggered by every single packet.
+
+Let me know if you want any more info.
+
+Richard
