@@ -1,104 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:61920 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752403Ab0DLIPc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39755 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462Ab0DSJA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 04:15:32 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o3C8F5CN009625
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 11:15:30 +0300
-Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
-	by mgw-da01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o3C8FNxL013294
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 11:15:24 +0300
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH] nl80211: Add support for dynamic ps timeout configuration
-Date: Mon, 12 Apr 2010 11:11:42 +0300
-Message-Id: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 19 Apr 2010 05:00:28 -0400
+Subject: [PATCH] mac80211: fix stopping RX BA session from timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <87wrw3lxjh.fsf@purkki.valot.fi>
+References: <87pr20mrez.fsf@purkki.valot.fi>
+	 <20100415195812.GC3020@tuxdriver.com> <871veclztk.fsf@purkki.valot.fi>
+	 <1271659397.3873.9.camel@jlt3.sipsolutions.net>
+	 <87wrw3lxjh.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Apr 2010 11:00:24 +0200
+Message-ID: <1271667624.3873.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support to configure the dynamic ps timeout via nl80211. The
-relevant attribute is added to NL80211_CMD_SET_POWER_SAVE.
+Kalle reported that his system deadlocks since my
+recent work in this area. The reason quickly became
+apparent: we try to cancel_timer_sync() a timer
+from within itself. Fix that by making the function
+aware of the context it is called from.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reported-by: Kalle Valo <kvalo@adurom.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- include/linux/nl80211.h |    2 ++
- net/wireless/nl80211.c  |   16 +++++++++++++++-
- 2 files changed, 17 insertions(+), 1 deletions(-)
+Please apply after Kalle confirms it fixes the problem.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 2ea3ede..c5f12e7 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -864,6 +864,8 @@ enum nl80211_attrs {
+ net/mac80211/agg-rx.c |   18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-04-19 10:49:25.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-04-19 10:51:57.000000000 +0200
+@@ -18,8 +18,9 @@
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
  
- 	NL80211_ATTR_LOCAL_STATE_CHANGE,
+-void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+-				    u16 initiator, u16 reason)
++static void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++					    u16 initiator, u16 reason,
++					    bool from_timer)
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct tid_ampdu_rx *tid_rx;
+@@ -69,10 +70,17 @@ void __ieee80211_stop_rx_ba_session(stru
  
-+	NL80211_ATTR_PS_TIMEOUT,
+ 	spin_unlock_bh(&sta->lock);
+ 
+-	del_timer_sync(&tid_rx->session_timer);
++	if (!from_timer)
++		del_timer_sync(&tid_rx->session_timer);
+ 	kfree(tid_rx);
+ }
+ 
++void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++				    u16 initiator, u16 reason)
++{
++	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason, false);
++}
 +
- 	/* add attributes here, update the policy in nl80211.c */
+ /*
+  * After accepting the AddBA Request we activated a timer,
+  * resetting it after each frame that arrives from the originator.
+@@ -91,8 +99,8 @@ static void sta_rx_agg_session_timer_exp
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
+ #endif
+-	__ieee80211_stop_rx_ba_session(sta, *ptid, WLAN_BACK_RECIPIENT,
+-				       WLAN_REASON_QSTA_TIMEOUT);
++	___ieee80211_stop_rx_ba_session(sta, *ptid, WLAN_BACK_RECIPIENT,
++					WLAN_REASON_QSTA_TIMEOUT, true);
+ }
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index df5505b..709bda3 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -151,6 +151,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_PS_STATE] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CQM] = { .type = NLA_NESTED, },
- 	[NL80211_ATTR_LOCAL_STATE_CHANGE] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_PS_TIMEOUT] = { .type = NLA_U32 },
- };
- 
- /* policy for the attributes */
-@@ -4682,6 +4683,7 @@ static int nl80211_set_power_save(struct sk_buff *skb, struct genl_info *info)
- 	struct net_device *dev;
- 	u8 ps_state;
- 	bool state;
-+	int timeout = -1;
- 	int err;
- 
- 	if (!info->attrs[NL80211_ATTR_PS_STATE]) {
-@@ -4696,6 +4698,14 @@ static int nl80211_set_power_save(struct sk_buff *skb, struct genl_info *info)
- 		goto out;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_PS_TIMEOUT]) {
-+		timeout = nla_get_u32(info->attrs[NL80211_ATTR_PS_TIMEOUT]);
-+		if (timeout < 0) {
-+			err = -EINVAL;
-+			goto out;
-+		}
-+	}
-+
- 	rtnl_lock();
- 
- 	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
-@@ -4710,11 +4720,14 @@ static int nl80211_set_power_save(struct sk_buff *skb, struct genl_info *info)
- 	}
- 
- 	state = (ps_state == NL80211_PS_ENABLED) ? true : false;
-+	if (timeout < 0)
-+		timeout = wdev->ps_timeout;
- 
--	if (state == wdev->ps)
-+	if (state == wdev->ps && timeout == wdev->ps_timeout)
- 		goto unlock_rdev;
- 
- 	wdev->ps = state;
-+	wdev->ps_timeout = timeout;
- 
- 	if (rdev->ops->set_power_mgmt(wdev->wiphy, dev, wdev->ps,
- 				      wdev->ps_timeout))
-@@ -4772,6 +4785,7 @@ static int nl80211_get_power_save(struct sk_buff *skb, struct genl_info *info)
- 		ps_state = NL80211_PS_DISABLED;
- 
- 	NLA_PUT_U32(msg, NL80211_ATTR_PS_STATE, ps_state);
-+	NLA_PUT_U32(msg, NL80211_ATTR_PS_TIMEOUT, wdev->ps_timeout);
- 
- 	genlmsg_end(msg, hdr);
- 	err = genlmsg_reply(msg, info);
--- 
-1.6.3.3
+ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
+
 
