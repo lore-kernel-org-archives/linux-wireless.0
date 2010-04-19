@@ -1,77 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56804.mail.re3.yahoo.com ([66.196.97.78]:30925 "HELO
-	web56804.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751651Ab0DQNJv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Apr 2010 09:09:51 -0400
-Message-ID: <79834.90907.qm@web56804.mail.re3.yahoo.com>
-Date: Sat, 17 Apr 2010 06:09:51 -0700 (PDT)
-From: Walter <goldenstranger@yahoo.com>
-Subject: Re: [rt2x00] rt3070 fails to initialize with rt2800usb
-To: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-In-Reply-To: <201004171445.13785.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:38067 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751666Ab0DSJJO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 05:09:14 -0400
+Subject: Re: [PATCH 7/9] mac80211: add flags for STBC (Space-Time Block
+ Coding)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+In-Reply-To: <4BCC1D1A.7020705@openwrt.org>
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-2-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-3-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-4-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-5-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-6-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-7-git-send-email-nbd@openwrt.org>
+	 <1271606009.3873.0.camel@jlt3.sipsolutions.net>
+	 <4BCB2DB3.3020700@openwrt.org>
+	 <1271656677.3873.5.camel@jlt3.sipsolutions.net>
+	 <4BCC1844.4030607@openwrt.org>
+	 <1271667582.3873.11.camel@jlt3.sipsolutions.net>
+	 <4BCC1D1A.7020705@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Apr 2010 11:09:10 +0200
+Message-ID: <1271668150.3873.17.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Ivo van Doorn <ivdoorn@gmail.com>
-> Subject: Re: [rt2x00] rt3070 fails to initialize with rt2800usb
-> To: "Walter" <goldenstranger@yahoo.com>
-> Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-> Date: Saturday, April 17, 2010, 8:45 AM
-> On Saturday 17 April 2010, Walter
-> wrote:
-> > I've been monitoring the community's work for the
-> rt3070 chips and especially your recent success towards
-> improving the driver.
+On Mon, 2010-04-19 at 11:06 +0200, Felix Fietkau wrote:
+> On 2010-04-19 10:59 AM, Johannes Berg wrote:
+> > On Mon, 2010-04-19 at 10:45 +0200, Felix Fietkau wrote:
+> >> On 2010-04-19 7:57 AM, Johannes Berg wrote:
+> >> > On Sun, 2010-04-18 at 18:05 +0200, Felix Fietkau wrote:
+> >> > 
+> >> >> >> + * @IEEE80211_TX_CTL_STBC: tells the driver to use Space-Time Block Coding
+> >> >> >> + *  (STBC) for this frame.
+> >> >> >>   */
+> >> >> >>  enum mac80211_tx_control_flags {
+> >> >> >>  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+> >> >> >> @@ -299,6 +301,7 @@ enum mac80211_tx_control_flags {
+> >> >> >>  	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
+> >> >> >>  	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
+> >> >> >>  	IEEE80211_TX_CTL_LDPC			= BIT(22),
+> >> >> >> +	IEEE80211_TX_CTL_STBC			= BIT(23),
+> >> >> > 
+> >> >> > What if the # of streams is different? That doesn't look sufficient.
+> >> > 
+> >> >> Hm, you're right. I initially thought the combination of the MCS index
+> >> >> and the STBC flag would be enough, but there are still some corner cases.
+> >> > 
+> >> > Hm actually I guess that should be sufficient? What corner case are you
+> >> > thinking of?
+> >> Support for multi-rate retry and STBC with more than one stream on one
+> >> side, using rates from both MCS0-7 and MCS8-15 in the rate series.
+> >> Rx STBC for only one stream on the other side.
 > > 
-> > I would like to share something with the rt2x00
-> development team which may or may not be known.
-> > 
-> > The rt3070 card I own fails to initialize with the
-> latest (working) compat-wireless release. When I plug the
-> USB card, rt2800usb doesn't automatically load and when I
-> manually modprobe the driver it does not recognize it as
-> well.
-> > 
-> > Looking in to the rt2800usb.c file I found the
-> 'problem'. The VIDs aren't properly set. Mine shows
-> 148f:3070. Although a line is included in the "#ifdef
-> CONFIG_RT2800USB_RT30XX", the module won't initialize the
-> card.
-> > 
-> > I fixed the problem by adding my device here:
-> > 
-> >     /* Ralink */
-> >     { USB_DEVICE(0x148f, 0x2770),
-> USB_DEVICE_DATA(&rt2800usb_ops) },
-> >     { USB_DEVICE(0x148f, 0x2870),
-> USB_DEVICE_DATA(&rt2800usb_ops) },
-> >     /* Samsung */ 
-> > 
-> > which now looks like:
-> > 
-> >     /* Ralink */
-> >     { USB_DEVICE(0x148f, 0x2770),
-> USB_DEVICE_DATA(&rt2800usb_ops) },
-> >     { USB_DEVICE(0x148f, 0x2870),
-> USB_DEVICE_DATA(&rt2800usb_ops) },
-> >         {
-> USB_DEVICE(0x148f, 0x3070),
-> USB_DEVICE_DATA(&rt2800usb_ops) },
-> >     /* Samsung */
-> > 
-> > This pertains to the rt3071 as well.
-> 
-> That USB ID is already known, did you compile the driver
-> with support
-> for CONFIG_RT2800USB_RT30XX enabled?
-> 
-> Ivo
+> > So the flag should be per rate entry instead, no?
 
-Yes, compat-wireless ships with ''CONFIG_RT2800USB_RT30XX=y'' in config.mk, but the card's VIDs aren't shown in modinfo rt2800usb when compiled, thus the module doesn't recognize the card at all. The only workaround I rustled up is the above mentioned one. 
+> Well, I think if we use two bits in the tx control flags, we don't need
+> it to be per rate entry.
 
+But then you can't probe stbc properly, can you?
 
-      
+> We don't have any space left for more per rate entry flags ;)
+
+separate problem ;)
+
+johannes
+
