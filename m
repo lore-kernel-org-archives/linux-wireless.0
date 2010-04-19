@@ -1,102 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32912 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757360Ab0DOVjp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 65/97] ath9k_hw: fill in the callbacks for calibration for AR9003
-Date: Thu, 15 Apr 2010 17:39:10 -0400
-Message-Id: <1271367582-992-66-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+Received: from nbd.name ([88.198.39.176]:45931 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753096Ab0DSR5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 13:57:44 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH v2 3/9] ath9k: update the MCS mask for MCS16 and above
+Date: Mon, 19 Apr 2010 19:57:31 +0200
+Message-Id: <1271699857-12366-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1271699857-12366-2-git-send-email-nbd@openwrt.org>
+References: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
+ <1271699857-12366-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   36 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/calib.h        |    3 +-
- 3 files changed, 39 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index cd234aa..968529b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -50,6 +50,8 @@ static void ar9002_hw_setup_calibration(struct ath_hw *ah,
- 		ath_print(common, ATH_DBG_CALIBRATE,
- 			  "starting Init ADC DC Calibration\n");
- 		break;
-+	case TEMP_COMP_CAL:
-+		break; /* Not supported */
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index fcbb4a8..5d3d563 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -19,7 +19,7 @@
  
- 	REG_SET_BIT(ah, AR_PHY_TIMING_CTRL4(0),
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index cd80a43..f0e8f63 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -21,7 +21,41 @@
- static void ar9003_hw_setup_calibration(struct ath_hw *ah,
- 					struct ath9k_cal_list *currCal)
- {
--	/* TODO */
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	/* Select calibration to run */
-+	switch (currCal->calData->calType) {
-+	case IQ_MISMATCH_CAL:
-+		/*
-+		 * Start calibration with
-+		 * 2^(INIT_IQCAL_LOG_COUNT_MAX+1) samples
-+		 */
-+		REG_RMW_FIELD(ah, AR_PHY_TIMING4,
-+			      AR_PHY_TIMING4_IQCAL_LOG_COUNT_MAX,
-+		currCal->calData->calCountMax);
-+		REG_WRITE(ah, AR_PHY_CALMODE, AR_PHY_CALMODE_IQ);
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "starting IQ Mismatch Calibration\n");
-+
-+		/* Kick-off cal */
-+		REG_SET_BIT(ah, AR_PHY_TIMING4, AR_PHY_TIMING4_DO_CAL);
-+		break;
-+	case TEMP_COMP_CAL:
-+		REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_THERM,
-+			      AR_PHY_65NM_CH0_THERM_LOCAL, 1);
-+		REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_THERM,
-+			      AR_PHY_65NM_CH0_THERM_START, 1);
-+
-+		ath_print(common, ATH_DBG_CALIBRATE,
-+			  "starting Temperature Compensation Calibration\n");
-+		break;
-+	case ADC_DC_INIT_CAL:
-+	case ADC_GAIN_CAL:
-+	case ADC_DC_CAL:
-+		/* Not yet */
-+		break;
-+	}
- }
- 
- static bool ar9003_hw_calibrate(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 25828e8..24538bd 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -68,7 +68,8 @@ enum ath9k_cal_types {
- 	ADC_DC_INIT_CAL = 0x1,
- 	ADC_GAIN_CAL = 0x2,
- 	ADC_DC_CAL = 0x4,
--	IQ_MISMATCH_CAL = 0x8
-+	IQ_MISMATCH_CAL = 0x8,
-+	TEMP_COMP_CAL = 0x10,
- };
- 
- enum ath9k_cal_state {
+ #define BITS_PER_BYTE           8
+ #define OFDM_PLCP_BITS          22
+-#define HT_RC_2_MCS(_rc)        ((_rc) & 0x0f)
++#define HT_RC_2_MCS(_rc)        ((_rc) & 0x1f)
+ #define HT_RC_2_STREAMS(_rc)    ((((_rc) & 0x78) >> 3) + 1)
+ #define L_STF                   8
+ #define L_LTF                   8
 -- 
-1.6.3.3
+1.6.4.2
 
