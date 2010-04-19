@@ -1,52 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:40927 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753327Ab0DSJGk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 05:06:40 -0400
-Message-ID: <4BCC1D1A.7020705@openwrt.org>
-Date: Mon, 19 Apr 2010 11:06:34 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH 7/9] mac80211: add flags for STBC (Space-Time Block Coding)
-References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>	 <1271602602-8538-2-git-send-email-nbd@openwrt.org>	 <1271602602-8538-3-git-send-email-nbd@openwrt.org>	 <1271602602-8538-4-git-send-email-nbd@openwrt.org>	 <1271602602-8538-5-git-send-email-nbd@openwrt.org>	 <1271602602-8538-6-git-send-email-nbd@openwrt.org>	 <1271602602-8538-7-git-send-email-nbd@openwrt.org>	 <1271606009.3873.0.camel@jlt3.sipsolutions.net>	 <4BCB2DB3.3020700@openwrt.org>	 <1271656677.3873.5.camel@jlt3.sipsolutions.net>	 <4BCC1844.4030607@openwrt.org> <1271667582.3873.11.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1271667582.3873.11.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([192.100.105.134]:17466 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919Ab0DSE7B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 00:59:01 -0400
+Subject: Re: [RFC PATCH] mac80211: Prevent running sta_cleanup timer
+ unnecessarily
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1271449060.4184.1.camel@jlt3.sipsolutions.net>
+References: <1271403308-23416-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271403308-23416-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271449060.4184.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Apr 2010 07:56:04 +0300
+Message-ID: <1271652964.6205.4211.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-04-19 10:59 AM, Johannes Berg wrote:
-> On Mon, 2010-04-19 at 10:45 +0200, Felix Fietkau wrote:
->> On 2010-04-19 7:57 AM, Johannes Berg wrote:
->> > On Sun, 2010-04-18 at 18:05 +0200, Felix Fietkau wrote:
->> > 
->> >> >> + * @IEEE80211_TX_CTL_STBC: tells the driver to use Space-Time Block Coding
->> >> >> + *  (STBC) for this frame.
->> >> >>   */
->> >> >>  enum mac80211_tx_control_flags {
->> >> >>  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
->> >> >> @@ -299,6 +301,7 @@ enum mac80211_tx_control_flags {
->> >> >>  	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
->> >> >>  	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
->> >> >>  	IEEE80211_TX_CTL_LDPC			= BIT(22),
->> >> >> +	IEEE80211_TX_CTL_STBC			= BIT(23),
->> >> > 
->> >> > What if the # of streams is different? That doesn't look sufficient.
->> > 
->> >> Hm, you're right. I initially thought the combination of the MCS index
->> >> and the STBC flag would be enough, but there are still some corner cases.
->> > 
->> > Hm actually I guess that should be sufficient? What corner case are you
->> > thinking of?
->> Support for multi-rate retry and STBC with more than one stream on one
->> side, using rates from both MCS0-7 and MCS8-15 in the rate series.
->> Rx STBC for only one stream on the other side.
+On Fri, 2010-04-16 at 22:17 +0200, ext Johannes Berg wrote:
+> On Fri, 2010-04-16 at 10:35 +0300, Juuso Oikarinen wrote:
+> > The sta_cleanup timer is used to periodically expire buffered frames from the
+> > tx buf. The timer is executing periodically, regardless of the need for it.
+> > This is wasting resources.
+> > 
+> > Fix this simply by not restarting the sta_cleanup timer if the tx buffer was
+> > empty. Restart the timer when there is some more tx-traffic.
+> > 
+> > Cc: Janne Ylälehto <janne.ylalehto@nokia.com>
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > ---
+> >  net/mac80211/sta_info.c |   13 ++++++++++---
+> >  net/mac80211/tx.c       |    7 +++++++
+> >  2 files changed, 17 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> > index ff0eb94..3de7a22 100644
+> > --- a/net/mac80211/sta_info.c
+> > +++ b/net/mac80211/sta_info.c
+> > @@ -575,7 +575,7 @@ static int sta_info_buffer_expired(struct sta_info *sta,
+> >  }
+> >  
+> > 
+> > -static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
+> > +static bool sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
+> >  					     struct sta_info *sta)
+> >  {
+> >  	unsigned long flags;
+> > @@ -583,7 +583,7 @@ static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
+> >  	struct ieee80211_sub_if_data *sdata;
+> >  
+> >  	if (skb_queue_empty(&sta->ps_tx_buf))
+> > -		return;
+> > +		return false;
+> >  
+> >  	for (;;) {
+> >  		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
+> > @@ -608,6 +608,8 @@ static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
+> >  		if (skb_queue_empty(&sta->ps_tx_buf))
+> >  			sta_info_clear_tim_bit(sta);
+> >  	}
+> > +
+> > +	return true;
+> >  }
+> >  
+> >  static int __must_check __sta_info_destroy(struct sta_info *sta)
+> > @@ -755,15 +757,20 @@ static void sta_info_cleanup(unsigned long data)
+> >  {
+> >  	struct ieee80211_local *local = (struct ieee80211_local *) data;
+> >  	struct sta_info *sta;
+> > +	bool timer_needed = false;
+> >  
+> >  	rcu_read_lock();
+> >  	list_for_each_entry_rcu(sta, &local->sta_list, list)
+> > -		sta_info_cleanup_expire_buffered(local, sta);
+> > +		if (sta_info_cleanup_expire_buffered(local, sta))
+> > +			timer_needed = true;
+> >  	rcu_read_unlock();
+> >  
+> >  	if (local->quiescing)
+> >  		return;
+> >  
+> > +	if (!timer_needed)
+> > +		return;
+> > +
+> >  	local->sta_cleanup.expires =
+> >  		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
+> >  	add_timer(&local->sta_cleanup);
+> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> > index 2cb7726..e2aa972 100644
+> > --- a/net/mac80211/tx.c
+> > +++ b/net/mac80211/tx.c
+> > @@ -429,6 +429,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+> >  	struct sta_info *sta = tx->sta;
+> >  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+> >  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+> > +	struct ieee80211_local *local = tx->local;
+> >  	u32 staflags;
+> >  
+> >  	if (unlikely(!sta ||
+> > @@ -476,6 +477,12 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+> >  		info->control.vif = &tx->sdata->vif;
+> >  		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+> >  		skb_queue_tail(&sta->ps_tx_buf, tx->skb);
+> > +
+> > +		if (!timer_pending(&local->sta_cleanup))
+> > +			mod_timer(&local->sta_cleanup,
+> > +				  round_jiffies(jiffies +
+> > +						STA_INFO_CLEANUP_INTERVAL));
+> > +
 > 
-> So the flag should be per rate entry instead, no?
-Well, I think if we use two bits in the tx control flags, we don't need
-it to be per rate entry.
-We don't have any space left for more per rate entry flags ;)
+> Why bother to check !timer_pending?
+> 
 
-- Felix
+Otherwise, if we have some periodic TX going on with an interval less
+than STA_INFO_CLEANUP_INTERVAL, the sta_cleanup could be delayed
+considerably.
+
+-Juuso
+
+> johannes
+> 
+
+
