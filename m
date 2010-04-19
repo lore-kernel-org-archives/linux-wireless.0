@@ -1,208 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22968 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754097Ab0DPGYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 02:24:33 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 23:24:33 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mailrelay003.isp.belgacom.be ([195.238.6.53]:5096 "EHLO
+	mailrelay003.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753845Ab0DSPAz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 11:00:55 -0400
+Date: Mon, 19 Apr 2010 17:00:50 +0200
+From: Philippe De Muyter <phdm@macqel.be>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
+Message-ID: <20100419150050.GA28290@frolo.macqel>
+References: <20100329201236.GA9587@frolo.macqel> <4BB1335F.7030306@lwfinger.net> <20100330073401.GA13675@frolo.macqel> <1269967657.3019.16.camel@localhost.localdomain> <20100330171139.GA28367@srcf.ucam.org> <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org> <20100419115329.GA5306@frolo.macqel> <20100419145107.GB8017@srcf.ucam.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19400.633.438406.247495@gargle.gargle.HOWL>
-Date: Fri, 16 Apr 2010 11:53:53 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/10] ath9k_htc: Implement multiple register write support
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100419145107.GB8017@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for writing multiple registers
-in a single USB command.
+On Mon, Apr 19, 2010 at 03:51:07PM +0100, Matthew Garrett wrote:
+> On Mon, Apr 19, 2010 at 01:53:29PM +0200, Philippe De Muyter wrote:
+> 
+> > and the blue/red led doesn't change color, and wifi state does not change
+> > either.
+> 
+> What's the output of the rfkill command now?
 
-Specific calls from the HW code that performs multiple
-register writes would be modified to make use of this
-in subsequent patches.
+Sorry, I cannot answer before friday (not my laptop).
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |  104 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/wmi.c          |    1 +
- drivers/net/wireless/ath/ath9k/wmi.h          |   12 +++
- 3 files changed, 113 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index aed5357..a861896 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -213,7 +213,7 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- 				      ath9k_hw_regulatory(priv->ah));
- }
- 
--static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
-+static unsigned int ath9k_regread(void *hw_priv, u32 reg_offset)
- {
- 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -235,7 +235,7 @@ static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
- 	return be32_to_cpu(val);
- }
- 
--static void ath9k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
-+static void ath9k_regwrite_single(void *hw_priv, u32 val, u32 reg_offset)
- {
- 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -257,9 +257,105 @@ static void ath9k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
- 	}
- }
- 
-+static void ath9k_regwrite_buffer(void *hw_priv, u32 val, u32 reg_offset)
-+{
-+	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
-+	u32 rsp_status;
-+	int r;
-+
-+	mutex_lock(&priv->wmi->multi_write_mutex);
-+
-+	/* Store the register/value */
-+	priv->wmi->multi_write[priv->wmi->multi_write_idx].reg =
-+		cpu_to_be32(reg_offset);
-+	priv->wmi->multi_write[priv->wmi->multi_write_idx].val =
-+		cpu_to_be32(val);
-+
-+	priv->wmi->multi_write_idx++;
-+
-+	/* If the buffer is full, send it out. */
-+	if (priv->wmi->multi_write_idx == MAX_CMD_NUMBER) {
-+		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_WRITE_CMDID,
-+			  (u8 *) &priv->wmi->multi_write,
-+			  sizeof(struct register_write) * priv->wmi->multi_write_idx,
-+			  (u8 *) &rsp_status, sizeof(rsp_status),
-+			  100);
-+		if (unlikely(r)) {
-+			ath_print(common, ATH_DBG_WMI,
-+				  "REGISTER WRITE FAILED, multi len: %d\n",
-+				  priv->wmi->multi_write_idx);
-+		}
-+		priv->wmi->multi_write_idx = 0;
-+	}
-+
-+	mutex_unlock(&priv->wmi->multi_write_mutex);
-+}
-+
-+static void ath9k_regwrite(void *hw_priv, u32 val, u32 reg_offset)
-+{
-+	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
-+
-+	if (atomic_read(&priv->wmi->mwrite_cnt))
-+		ath9k_regwrite_buffer(hw_priv, val, reg_offset);
-+	else
-+		ath9k_regwrite_single(hw_priv, val, reg_offset);
-+}
-+
-+static void ath9k_enable_regwrite_buffer(void *hw_priv)
-+{
-+	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
-+
-+	atomic_inc(&priv->wmi->mwrite_cnt);
-+}
-+
-+static void ath9k_disable_regwrite_buffer(void *hw_priv)
-+{
-+	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
-+
-+	atomic_dec(&priv->wmi->mwrite_cnt);
-+}
-+
-+static void ath9k_regwrite_flush(void *hw_priv)
-+{
-+	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
-+	u32 rsp_status;
-+	int r;
-+
-+	mutex_lock(&priv->wmi->multi_write_mutex);
-+
-+	if (priv->wmi->multi_write_idx) {
-+		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_WRITE_CMDID,
-+			  (u8 *) &priv->wmi->multi_write,
-+			  sizeof(struct register_write) * priv->wmi->multi_write_idx,
-+			  (u8 *) &rsp_status, sizeof(rsp_status),
-+			  100);
-+		if (unlikely(r)) {
-+			ath_print(common, ATH_DBG_WMI,
-+				  "REGISTER WRITE FAILED, multi len: %d\n",
-+				  priv->wmi->multi_write_idx);
-+		}
-+		priv->wmi->multi_write_idx = 0;
-+	}
-+
-+	mutex_unlock(&priv->wmi->multi_write_mutex);
-+}
-+
- static const struct ath_ops ath9k_common_ops = {
--	.read = ath9k_ioread32,
--	.write = ath9k_iowrite32,
-+	.read = ath9k_regread,
-+	.write = ath9k_regwrite,
-+	.enable_write_buffer = ath9k_enable_regwrite_buffer,
-+	.disable_write_buffer = ath9k_disable_regwrite_buffer,
-+	.write_flush = ath9k_regwrite_flush,
- };
- 
- static void ath_usb_read_cachesize(struct ath_common *common, int *csz)
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index f2ff18c..355e0db 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -101,6 +101,7 @@ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv)
- 	wmi->drv_priv = priv;
- 	wmi->stopped = false;
- 	mutex_init(&wmi->op_mutex);
-+	mutex_init(&wmi->multi_write_mutex);
- 	init_completion(&wmi->cmd_wait);
- 
- 	return wmi;
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 39ef926..fd8c9c5 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -84,6 +84,13 @@ enum wmi_event_id {
- 	WMI_TXRATE_EVENTID,
- };
- 
-+#define MAX_CMD_NUMBER 62
-+
-+struct register_write {
-+	u32 reg;
-+	u32 val;
-+};
-+
- struct wmi {
- 	struct ath9k_htc_priv *drv_priv;
- 	struct htc_target *htc;
-@@ -97,6 +104,11 @@ struct wmi {
- 
- 	struct sk_buff *wmi_skb;
- 	spinlock_t wmi_lock;
-+
-+	atomic_t mwrite_cnt;
-+	struct register_write multi_write[MAX_CMD_NUMBER];
-+	u32 multi_write_idx;
-+	struct mutex multi_write_mutex;
- };
- 
- struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv);
--- 
-1.7.0.5
-
+Philippe
