@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51550 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116Ab0D1XST (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 19:18:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rtl8180: fix tx status reporting
-Date: Wed, 28 Apr 2010 19:14:42 -0400
-Message-Id: <1272496482-12687-1-git-send-email-linville@tuxdriver.com>
+Received: from c60.cesmail.net ([216.154.195.49]:24825 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751813Ab0DSP5R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 11:57:17 -0400
+Subject: Re: [PATCH] mac80211: document IEEE80211_CONF_CHANGE_QoS
+From: Pavel Roskin <proski@gnu.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	wey-yi.w.guy@intel.com, Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20100419092451.GA2696@dhcp-lab-161.englab.brq.redhat.com>
+References: <1271338982-3157-1-git-send-email-sgruszka@redhat.com>
+	 <1271495090.5157.4.camel@jlt3.sipsolutions.net>
+	 <20100419092451.GA2696@dhcp-lab-161.englab.brq.redhat.com>
+Content-Type: text/plain
+Date: Mon, 19 Apr 2010 11:57:15 -0400
+Message-Id: <1271692635.9026.17.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When reporting Tx status, indicate that only one rate was used.
-Otherwise, the rate is frozen at rate index 0 (i.e. 1Mb/s).
+On Mon, 2010-04-19 at 11:24 +0200, Stanislaw Gruszka wrote:
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index dcf3c5f..97b2222 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -610,6 +610,7 @@ enum ieee80211_conf_flags {
+>   * @IEEE80211_CONF_CHANGE_RETRY_LIMITS: retry limits changed
+>   * @IEEE80211_CONF_CHANGE_IDLE: Idle flag changed
+>   * @IEEE80211_CONF_CHANGE_SMPS: Spatial multiplexing powersave mode changed
+> + * @IEEE80211_CONF_CHANGE_QoS: Quality of service was enabled or disabled
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rtl818x/rtl8180_dev.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Let's make it uppercase, please.  The actual code is already uppercase.
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index d84ad05..8487327 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -188,6 +188,7 @@ static void rtl8180_handle_tx(struct ieee80211_hw *dev, unsigned int prio)
- 			info->flags |= IEEE80211_TX_STAT_ACK;
- 
- 		info->status.rates[0].count = (flags & 0xFF) + 1;
-+		info->status.rates[1].idx = -1;
- 
- 		ieee80211_tx_status_irqsafe(dev, skb);
- 		if (ring->entries - skb_queue_len(&ring->queue) == 2)
 -- 
-1.6.6.1
-
+Regards,
+Pavel Roskin
