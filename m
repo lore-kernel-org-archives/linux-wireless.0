@@ -1,102 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:1978 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932949Ab0DHVus (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36612 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753882Ab0DSKTK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 17:50:48 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville <linville"@tuxdriver.com
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor driver.
-Date: Thu,  8 Apr 2010 23:50:31 +0200
-Message-Id: <1270763437-29526-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+	Mon, 19 Apr 2010 06:19:10 -0400
+Subject: Re: [PATCH 7/9] mac80211: add flags for STBC (Space-Time Block
+ Coding)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+In-Reply-To: <4BCC2D1E.4000408@openwrt.org>
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-2-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-3-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-4-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-5-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-6-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-7-git-send-email-nbd@openwrt.org>
+	 <1271606009.3873.0.camel@jlt3.sipsolutions.net>
+	 <4BCB2DB3.3020700@openwrt.org>
+	 <1271656677.3873.5.camel@jlt3.sipsolutions.net>
+	 <4BCC1844.4030607@openwrt.org>
+	 <1271667582.3873.11.camel@jlt3.sipsolutions.net>
+	 <4BCC1D1A.7020705@openwrt.org>
+	 <1271668150.3873.17.camel@jlt3.sipsolutions.net>
+	 <4BCC2D1E.4000408@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Apr 2010 12:19:07 +0200
+Message-ID: <1271672347.3873.18.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only include definitions for RT chipsets that are also used inside the
-Ralink vendor drivers.
+On Mon, 2010-04-19 at 12:14 +0200, Felix Fietkau wrote:
+> On 2010-04-19 11:09 AM, Johannes Berg wrote:
+> > On Mon, 2010-04-19 at 11:06 +0200, Felix Fietkau wrote:
+> >> On 2010-04-19 10:59 AM, Johannes Berg wrote:
+> >> > On Mon, 2010-04-19 at 10:45 +0200, Felix Fietkau wrote:
+> >> >> On 2010-04-19 7:57 AM, Johannes Berg wrote:
+> >> >> > On Sun, 2010-04-18 at 18:05 +0200, Felix Fietkau wrote:
+> >> >> > 
+> >> >> >> >> + * @IEEE80211_TX_CTL_STBC: tells the driver to use Space-Time Block Coding
+> >> >> >> >> + *  (STBC) for this frame.
+> >> >> >> >>   */
+> >> >> >> >>  enum mac80211_tx_control_flags {
+> >> >> >> >>  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+> >> >> >> >> @@ -299,6 +301,7 @@ enum mac80211_tx_control_flags {
+> >> >> >> >>  	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
+> >> >> >> >>  	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
+> >> >> >> >>  	IEEE80211_TX_CTL_LDPC			= BIT(22),
+> >> >> >> >> +	IEEE80211_TX_CTL_STBC			= BIT(23),
+> >> >> >> > 
+> >> >> >> > What if the # of streams is different? That doesn't look sufficient.
+> >> >> > 
+> >> >> >> Hm, you're right. I initially thought the combination of the MCS index
+> >> >> >> and the STBC flag would be enough, but there are still some corner cases.
+> >> >> > 
+> >> >> > Hm actually I guess that should be sufficient? What corner case are you
+> >> >> > thinking of?
+> >> >> Support for multi-rate retry and STBC with more than one stream on one
+> >> >> side, using rates from both MCS0-7 and MCS8-15 in the rate series.
+> >> >> Rx STBC for only one stream on the other side.
+> >> > 
+> >> > So the flag should be per rate entry instead, no?
+> > 
+> >> Well, I think if we use two bits in the tx control flags, we don't need
+> >> it to be per rate entry.
+> > 
+> > But then you can't probe stbc properly, can you?
+> I'm not sure we even need to probe STBC. In all of the drivers that I've
+> looked at, it's always enabled if the peer supports it.
+> I'm not aware of any situation where it would make the reception worse,
+> aside from hardware damage of course ;)
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
- drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
- 2 files changed, 3 insertions(+), 17 deletions(-)
+Ok ... I guess two bits then so you don't have to look up sta capability
+when doing the hw programming?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 394c8e4..4bc7e09 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
- 	if ((rt2x00_rt(rt2x00dev, RT2872) &&
- 	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
--	    rt2x00_rt(rt2x00dev, RT2880) ||
- 	    rt2x00_rt(rt2x00dev, RT2883) ||
--	    rt2x00_rt(rt2x00dev, RT2890) ||
--	    rt2x00_rt(rt2x00dev, RT3052) ||
- 	    (rt2x00_rt(rt2x00dev, RT3070) &&
- 	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
- 		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
-@@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		rt2800_bbp_write(rt2x00dev, 105, 0x05);
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT3052)) {
--		rt2800_bbp_write(rt2x00dev, 31, 0x08);
--		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
--		rt2800_bbp_write(rt2x00dev, 80, 0x08);
--	}
--
- 	for (i = 0; i < EEPROM_BBP_SIZE; i++) {
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_BBP_START + i, &eeprom);
- 
-@@ -1772,7 +1763,6 @@ int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	} else if (rt2x00_rt(rt2x00dev, RT2860) ||
- 		   rt2x00_rt(rt2x00dev, RT2870) ||
- 		   rt2x00_rt(rt2x00dev, RT2872) ||
--		   rt2x00_rt(rt2x00dev, RT2880) ||
- 		   (rt2x00_rt(rt2x00dev, RT2883) &&
- 		    (rt2x00_rev(rt2x00dev) < RT2883_VERSION))) {
- 		/*
-@@ -1879,10 +1869,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	if (!rt2x00_rt(rt2x00dev, RT2860) &&
- 	    !rt2x00_rt(rt2x00dev, RT2870) &&
- 	    !rt2x00_rt(rt2x00dev, RT2872) &&
--	    !rt2x00_rt(rt2x00dev, RT2880) &&
- 	    !rt2x00_rt(rt2x00dev, RT2883) &&
--	    !rt2x00_rt(rt2x00dev, RT2890) &&
--	    !rt2x00_rt(rt2x00dev, RT3052) &&
- 	    !rt2x00_rt(rt2x00dev, RT3070) &&
- 	    !rt2x00_rt(rt2x00dev, RT3071) &&
- 	    !rt2x00_rt(rt2x00dev, RT3090) &&
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index d9daa9c..16aa850 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -177,16 +177,15 @@ struct rt2x00_chip {
- #define RT2573		0x2573
- #define RT2860		0x2860	/* 2.4GHz PCI/CB */
- #define RT2870		0x2870
--#define RT2872		0x2872
--#define RT2880		0x2880	/* WSOC */
-+#define RT2872		0x2872	/* WSOC */
- #define RT2883		0x2883	/* WSOC */
--#define RT2890		0x2890	/* 2.4GHz PCIe */
--#define RT3052		0x3052	/* WSOC */
- #define RT3070		0x3070
- #define RT3071		0x3071
- #define RT3090		0x3090	/* 2.4GHz PCIe */
- #define RT3390		0x3390
- #define RT3572		0x3572
-+#define RT3593		0x3593	/* PCIe */
-+#define RT3883		0x3883	/* WSOC */
- 
- 	u16 rf;
- 	u16 rev;
--- 
-1.7.0.4
+johannes
 
