@@ -1,131 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:54118 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751924Ab0DZLLe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 07:11:34 -0400
-From: Helmut Schaa <Helmut.Schaa@gmx.de>
-To: Antonio Quartulli <ordex@ritirata.org>
-Subject: Re: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
-Date: Mon, 26 Apr 2010 13:11:20 +0200
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Luis Correia <luis.f.correia@gmail.com>
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-7-git-send-email-gwingerde@gmail.com> <201004261302.14682.helmut.schaa@googlemail.com>
-In-Reply-To: <201004261302.14682.helmut.schaa@googlemail.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:11054 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752886Ab0DSIYD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 04:24:03 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 1C70A3A009
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 10:24:02 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id y60GDnnJdcyh for <linux-wireless@vger.kernel.org>;
+	Mon, 19 Apr 2010 10:24:02 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95F800E.dip0.t-ipconnect.de [217.95.128.14])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 74F563A00A
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 10:24:01 +0200 (CEST)
+Received: from mnz66.localnet (schurig.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 03A921E0036
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 10:24:01 +0200 (CEST)
+From: Holger Schurig <holgerschurig@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath5k: basic support for survey
+Date: Mon, 19 Apr 2010 10:24:22 +0200
 MIME-Version: 1.0
-Content-Type: Text/Plain;
+Content-Type: text/plain;
   charset="us-ascii"
-Message-Id: <201004261311.20834.Helmut.Schaa@gmx.de>
+Message-Id: <201004191024.22550.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag 26 April 2010 schrieb Helmut Schaa:
-> Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
-> > rt2x00 had preliminary support for RT3070 based devices, but the support was
-> > incomplete.
-> > Update the RT3070 register initialization to be similar to the latest Ralink
-> > vendor driver.
-> > 
-> > With this patch my rt3070 based devices start showing a sign of life.
-> 
-> Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
-> more details.
+This adds the first element of survey data, the noise floor figure.
 
-Antonio, did that patch also break rx on your PCI device with rt2872?
-If not this is only needed for SoC.
+Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
 
-Thanks,
-Helmut
+---
+ drivers/net/wireless/ath/ath5k/base.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+--- linux-wl.orig/drivers/net/wireless/ath/ath5k/base.c
++++ linux-wl/drivers/net/wireless/ath/ath5k/base.c
+@@ -242,6 +242,8 @@ static int ath5k_set_key(struct ieee8021
+ 		struct ieee80211_key_conf *key);
+ static int ath5k_get_stats(struct ieee80211_hw *hw,
+ 		struct ieee80211_low_level_stats *stats);
++static int ath5k_get_survey(struct ieee80211_hw *hw,
++		int idx, struct survey_info *survey);
+ static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
+ static void ath5k_set_tsf(struct ieee80211_hw *hw, u64 tsf);
+ static void ath5k_reset_tsf(struct ieee80211_hw *hw);
+@@ -267,6 +269,7 @@ static const struct ieee80211_ops ath5k_
+ 	.configure_filter = ath5k_configure_filter,
+ 	.set_key 	= ath5k_set_key,
+ 	.get_stats 	= ath5k_get_stats,
++	.get_survey	= ath5k_get_survey,
+ 	.conf_tx 	= NULL,
+ 	.get_tsf 	= ath5k_get_tsf,
+ 	.set_tsf 	= ath5k_set_tsf,
+@@ -3294,6 +3297,22 @@ ath5k_get_stats(struct ieee80211_hw *hw,
  
-> [...]
-> 
-> > @@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> >  {
-> >  	u8 rfcsr;
-> >  	u8 bbp;
-> > +	u32 reg;
-> > +	u16 eeprom;
-> >  
-> > -	if (rt2x00_is_usb(rt2x00dev) &&
-> > -	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
-> > +	if (!rt2x00_rt(rt2x00dev, RT3070))
-> >  		return 0;
-> >  
-> > -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-> > -		if (!rt2x00_rf(rt2x00dev, RF3020) &&
-> > -		    !rt2x00_rf(rt2x00dev, RF3021) &&
-> > -		    !rt2x00_rf(rt2x00dev, RF3022))
-> > -			return 0;
-> > -	}
-> 
-> Any reason why you've removed this part? The following code was executed on
-> pci and soc devices when they had an 3020, 3021 or 3022 rf.
-> 
-> >  	/*
-> >  	 * Init RF calibration.
-> >  	 */
-> > @@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> >  	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
-> >  	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
-> >  
-> > -	if (rt2x00_is_usb(rt2x00dev)) {
-> > +	if (rt2x00_rt(rt2x00dev, RT3070)) {
-> >  		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
-> >  		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
-> >  		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-> >  		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
-> >  		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
-> > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
-> > +		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
-> >  		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
-> >  		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
-> >  		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
-> > @@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
-> >  		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
-> >  		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
-> >  		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
-> > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
-> >  		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
-> > -	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-> > -		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
-> > -		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
-> > -		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
-> > -		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
-> > -		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
-> > -		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
-> > -		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-> > -		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
-> > -		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
-> > -		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
-> > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
-> > -		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
-> > -		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
-> > -		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
-> > -		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
-> > -		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
-> > -		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
-> > -		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
-> > -		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
-> > -		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
-> > -		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
-> > -		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
-> > -		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
-> > -		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
-> > -		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
-> > -		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
-> > -		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
-> > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
-> > -		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
-> > -		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
-> 
-> This part is actually needed for getting rx to work on the SoC devices.
-> 
-> Should I post a patch that adds this code again and is only executed on SoC
-> devices with rf3020, 3021 and 3022?
-> 
-> Thanks,
-> Helmut
-> 
+ 	return 0;
+ }
++
++static int ath5k_get_survey(struct ieee80211_hw *hw, int idx,
++		struct survey_info *survey)
++{
++	struct ath5k_softc *sc = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
++
++	 if (idx != 0)
++		return -ENOENT;
++
++	survey->channel = conf->channel;
++	survey->filled = SURVEY_INFO_NOISE_DBM;
++	survey->noise = sc->ah->ah_noise_floor;
++
++	return 0;
++}
+ 
+ static u64
+ ath5k_get_tsf(struct ieee80211_hw *hw)
 
+-- 
+DH3HS, http://www.holgerschurig.de
