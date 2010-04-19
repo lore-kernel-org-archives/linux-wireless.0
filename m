@@ -1,100 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ex-fe04.nebula.fi ([83.145.252.49]:19476 "EHLO ex07.nebula.fi"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752518Ab0DOLVY convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f171.google.com ([209.85.210.171]:65083 "EHLO
+	mail-yx0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716Ab0DSW5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 07:21:24 -0400
-From: Anton Puolakka <Anton.Puolakka@7signal.com>
-To: Holger Schurig <holgerschurig@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 15 Apr 2010 14:15:54 +0300
-Subject: RE: Survey mode volunteers
-Message-ID: <0290AB2F0A8E124B9FFC144088A1A95609D6097401@EX-MBS04.nbl.local>
-References: <0290AB2F0A8E124B9FFC144088A1A95609D6029647@EX-MBS04.nbl.local>
- <0290AB2F0A8E124B9FFC144088A1A95609D6096AB9@EX-MBS04.nbl.local>
- <20100412180424.GB2920@tux> <201004140911.11459.holgerschurig@gmail.com>
-In-Reply-To: <201004140911.11459.holgerschurig@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 19 Apr 2010 18:57:16 -0400
+Message-ID: <4BCCDFBC.4020907@gmail.com>
+Date: Mon, 19 Apr 2010 15:57:00 -0700
+From: Till Kamppeter <till.kamppeter@gmail.com>
 MIME-Version: 1.0
+To: Greg KH <greg@kroah.com>
+CC: Theodore Ts'o <tytso@mit.edu>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: Google Summer of Code 2010 - Please resolve duplicates
+References: <4BCCB176.3060206@gmail.com> <20100419224634.GG1800@kroah.com>
+In-Reply-To: <20100419224634.GG1800@kroah.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 04/19/2010 03:46 PM, Greg KH wrote:
+> On Mon, Apr 19, 2010 at 12:39:34PM -0700, Till Kamppeter wrote:
+>> Hi,
+>>
+>> two students who applied for your projects have applied also for
+>> another organization's project and they got accepted by us and by
+>> the other organization.
+>>
+>> Until Wednesday Google wants these situation to be resolved until
+>> Wednesday April 21, 17:00 UTC. Please contact the students and/or
+>> the organization to agree on one of the project for each student.
+>>
+>> In addition, the ranking of the students (to decide who actually
+>> gets our slots) and the mentor assignments have to be finalized by
+>> the same date and time.
+>>
+>> Duplicates not be resolved until then will be resolved on an IRC
+>> meeting on Wednesday April 21 at 19:00 UTC. The meeting takes place
+>> in the #gsoc channel on Freenode.
+>>
+>> Please mail me if a mentor needs to be (re)assigned.
+>>
+>>     Till
+>>
+>>
+>>
+>> ----------------------------------------------------------------------
+>>
+>> Hi all,
+>>
+>> I have opened the duplicate information for students to all of your
+>> orgs. If you view your student proposals now the ones that are ranked
+>> to be accepted that are duplicated with another org will be marked in
+>> red. If you click on the proposal you will see the contact information
+>> for the other organization(s)'s admins near the bottom of the
+>> proposal.
+>>
+>> You must also have a mentor assigned to all the students in your top N
+>> slots by now. If you do not have a mentor assigned to them the
+>> duplicate detection script will not pick them up and we may have
+>> duplicates we don't know about. That is bad, please fix that if its
+>> the case.
+>>
+>> Please try to resolve as many of these duplicate situations via email
+>> in the next two days as possible - contact your fellow organizations,
+>> be clear with each other about who is taking the student, and then
+>> rank the student up if you are accepting him/her or mark the student
+>> ineligible with a public comment that you have marked it ineligible
+>> because of a duplicate situation if you are not taking the student.
+>>
+>> The deadline for changing rankings is 17:00UTC on Wednesday, April 21.
+>> All duplicates that have not been resolved by 17:00 UTC will be taken
+>> to the IRC meeting at 19:00 UTC.
+>
+> Have a pointer to the web site to do this?
+>
+> thanks,
+>
+> greg k-h
+>
 
-Hi,
+Sorry, here we go:
 
-and thanks for this.
+http://socghop.appspot.com/gsoc/org/list_proposals/google/gsoc2010/lf
 
-We checked the most recent wireless-testing and saw no related patch on mac80211 yet. So, Holger, do You have one for that, too? Or anyone else on the mailing-list? Could You please share?
+Requires login as mentor.
 
-
-Kind regards,
-Anton
-
-
-
-
------Original Message-----
-From: Holger Schurig [mailto:holgerschurig@gmail.com] 
-Sent: 14. huhtikuuta 2010 10:11
-To: Luis R. Rodriguez
-Cc: Anton Puolakka; Luis Rodriguez; linux-wireless@vger.kernel.org
-Subject: Re: Survey mode volunteers
-
-I've some preliminary patch for ath5k.
-
----
-Subject: [ath5k] add noise reporting to survey
-
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
-
----
- drivers/net/wireless/ath/ath5k/base.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
-
---- compat-wireless-2010-03-15.orig/drivers/net/wireless/ath/ath5k/base.c
-+++ compat-wireless-2010-03-15/drivers/net/wireless/ath/ath5k/base.c
-@@ -273,6 +273,8 @@ static int ath5k_set_key(struct ieee8021
- 		struct ieee80211_key_conf *key);
- static int ath5k_get_stats(struct ieee80211_hw *hw,
- 		struct ieee80211_low_level_stats *stats);
-+static int ath5k_get_survey(struct ieee80211_hw *hw,
-+		int idx, struct survey_info *survey);
- static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
- static void ath5k_set_tsf(struct ieee80211_hw *hw, u64 tsf);
- static void ath5k_reset_tsf(struct ieee80211_hw *hw);
-@@ -298,6 +300,7 @@ static const struct ieee80211_ops ath5k_
- 	.configure_filter = ath5k_configure_filter,
- 	.set_key 	= ath5k_set_key,
- 	.get_stats 	= ath5k_get_stats,
-+	.get_survey	= ath5k_get_survey,
- 	.conf_tx 	= NULL,
- 	.get_tsf 	= ath5k_get_tsf,
- 	.set_tsf 	= ath5k_set_tsf,
-@@ -3250,6 +3253,22 @@ ath5k_get_stats(struct ieee80211_hw *hw,
- 
- 	return 0;
- }
-+
-+static int ath5k_get_survey(struct ieee80211_hw *hw, int idx,
-+		struct survey_info *survey)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+	struct ieee80211_conf *conf = &hw->conf;
-+
-+	 if (idx != 0)
-+		return -ENOENT;
-+
-+	survey->channel = conf->channel;
-+	survey->filled = SURVEY_INFO_NOISE_DBM;
-+	survey->noise = sc->ah->ah_noise_floor;
-+
-+	return 0;
-+}
- 
- static u64
- ath5k_get_tsf(struct ieee80211_hw *hw)
-
-
--- 
-http://www.holgerschurig.de
+    Till
