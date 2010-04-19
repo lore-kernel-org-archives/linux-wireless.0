@@ -1,115 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55041 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757057Ab0DODa6 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48928 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751484Ab0DSHQf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:58 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 94/97] ath9k: add LDPC support
-Date: Wed, 14 Apr 2010 23:30:48 -0400
-Message-Id: <1271302251-9075-95-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 19 Apr 2010 03:16:35 -0400
+Received: by wyb39 with SMTP id 39so2297068wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 00:16:33 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 2/3] orinoco: use cfg80211_find_ie
+Date: Mon, 19 Apr 2010 08:16:22 +0100
+Message-Id: <1271661383-27839-2-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1271661383-27839-1-git-send-email-kilroyd@googlemail.com>
+References: <1271661383-27839-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-LDPC is enabled by the rate control if the its determined
-that the target peer supports LDPC. We would have already
-intersected the HT capabilities so if our peer supports
-LDPC so do we.
+Instead of using a local function.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c |    3 +++
- drivers/net/wireless/ath/ath9k/rc.c   |    9 +++++++++
- drivers/net/wireless/ath/ath9k/xmit.c |   14 ++++++++++----
- 3 files changed, 22 insertions(+), 4 deletions(-)
+ drivers/net/wireless/orinoco/main.h |   12 ------------
+ drivers/net/wireless/orinoco/scan.c |    4 ++--
+ 2 files changed, 2 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 299ec05..ca6e781 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -191,6 +191,9 @@ static void setup_ht_cap(struct ath_softc *sc,
- 		       IEEE80211_HT_CAP_SGI_40 |
- 		       IEEE80211_HT_CAP_DSSSCCK40;
+diff --git a/drivers/net/wireless/orinoco/main.h b/drivers/net/wireless/orinoco/main.h
+index 21ab36c..4dadf98 100644
+--- a/drivers/net/wireless/orinoco/main.h
++++ b/drivers/net/wireless/orinoco/main.h
+@@ -33,18 +33,6 @@ int orinoco_commit(struct orinoco_private *priv);
+ void orinoco_reset(struct work_struct *work);
  
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_LDPC)
-+		ht_info->cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+
- 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
- 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index ee81291..bf3ad7a 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -691,6 +691,15 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	rate_table = sc->cur_rate_table;
- 	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe);
- 
-+	/*
-+	 * If we're in HT mode and both us and our peer supports LDPC.
-+	 * We don't need to check our own device's capabilities as our own
-+	 * ht capabilities would have already been intersected with our peer's.
-+	 */
-+	if (conf_is_ht(&sc->hw->conf) &&
-+	    (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING))
-+		tx_info->flags |= IEEE80211_TX_CTL_LDPC;
-+
- 	if (is_probe) {
- 		/* set one try for probe rates. For the
- 		 * probes don't enable rts */
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 33c7027..34dcb75 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1482,8 +1482,7 @@ static void assign_aggr_tid_seqno(struct sk_buff *skb,
- 	INCR(tid->seq_next, IEEE80211_SEQ_MAX);
- }
- 
--static int setup_tx_flags(struct ath_softc *sc, struct sk_buff *skb,
--			  struct ath_txq *txq)
-+static int setup_tx_flags(struct sk_buff *skb, bool use_ldpc)
+ /* Information element helpers - find a home for these... */
+-static inline u8 *orinoco_get_ie(u8 *data, size_t len,
+-				 enum ieee80211_eid eid)
+-{
+-	u8 *p = data;
+-	while ((p + 2) < (data + len)) {
+-		if (p[0] == eid)
+-			return p;
+-		p += p[1] + 2;
+-	}
+-	return NULL;
+-}
+-
+ #define WPA_OUI_TYPE	"\x00\x50\xF2\x01"
+ #define WPA_SELECTOR_LEN 4
+ static inline u8 *orinoco_get_wpa_ie(u8 *data, size_t len)
+diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco/scan.c
+index 330d42d..4300d9d 100644
+--- a/drivers/net/wireless/orinoco/scan.c
++++ b/drivers/net/wireless/orinoco/scan.c
+@@ -127,7 +127,7 @@ void orinoco_add_extscan_result(struct orinoco_private *priv,
  {
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	int flags = 0;
-@@ -1494,6 +1493,9 @@ static int setup_tx_flags(struct ath_softc *sc, struct sk_buff *skb,
- 	if (tx_info->flags & IEEE80211_TX_CTL_NO_ACK)
- 		flags |= ATH9K_TXDESC_NOACK;
+ 	struct wiphy *wiphy = priv_to_wiphy(priv);
+ 	struct ieee80211_channel *channel;
+-	u8 *ie;
++	const u8 *ie;
+ 	u64 timestamp;
+ 	s32 signal;
+ 	u16 capability;
+@@ -136,7 +136,7 @@ void orinoco_add_extscan_result(struct orinoco_private *priv,
+ 	int chan, freq;
  
-+	if (use_ldpc)
-+		flags |= ATH9K_TXDESC_LDPC;
-+
- 	return flags;
- }
- 
-@@ -1645,6 +1647,7 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
- 	int hdrlen;
- 	__le16 fc;
- 	int padpos, padsize;
-+	bool use_ldpc = false;
- 
- 	tx_info->pad[0] = 0;
- 	switch (txctl->frame_type) {
-@@ -1671,10 +1674,13 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
- 		bf->bf_frmlen -= padsize;
- 	}
- 
--	if (conf_is_ht(&hw->conf))
-+	if (conf_is_ht(&hw->conf)) {
- 		bf->bf_state.bf_type |= BUF_HT;
-+		if (tx_info->flags & IEEE80211_TX_CTL_LDPC)
-+			use_ldpc = true;
-+	}
- 
--	bf->bf_flags = setup_tx_flags(sc, skb, txctl->txq);
-+	bf->bf_flags = setup_tx_flags(skb, use_ldpc);
- 
- 	bf->bf_keytype = get_hw_crypto_keytype(skb);
- 	if (bf->bf_keytype != ATH9K_KEY_TYPE_CLEAR) {
+ 	ie_len = len - sizeof(*bss);
+-	ie = orinoco_get_ie(bss->data, ie_len, WLAN_EID_DS_PARAMS);
++	ie = cfg80211_find_ie(WLAN_EID_DS_PARAMS, bss->data, ie_len);
+ 	chan = ie ? ie[2] : 0;
+ 	freq = ieee80211_dsss_chan_to_freq(chan);
+ 	channel = ieee80211_get_channel(wiphy, freq);
 -- 
-1.6.3.3
+1.6.4.4
 
