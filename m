@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:49190 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756468Ab0DFVDh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 17:03:37 -0400
-Subject: Re: [PATCH 2/2] compat-wireless: fix use of device_create
-From: Pavel Roskin <proski@gnu.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	mcgrof@infradead.org
-In-Reply-To: <1270501410-3956-2-git-send-email-hauke@hauke-m.de>
-References: <1270501410-3956-1-git-send-email-hauke@hauke-m.de>
-	 <1270501410-3956-2-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain
-Date: Tue, 06 Apr 2010 17:03:35 -0400
-Message-Id: <1270587815.31184.4.camel@mj>
-Mime-Version: 1.0
+Received: from cavan.codon.org.uk ([93.93.128.6]:56274 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754414Ab0DSPGf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 11:06:35 -0400
+Date: Mon, 19 Apr 2010 16:06:28 +0100
+From: Matthew Garrett <mjg@redhat.com>
+To: Philippe De Muyter <phdm@macqel.be>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
+Message-ID: <20100419150627.GA10680@srcf.ucam.org>
+References: <20100329201236.GA9587@frolo.macqel> <4BB1335F.7030306@lwfinger.net> <20100330073401.GA13675@frolo.macqel> <1269967657.3019.16.camel@localhost.localdomain> <20100330171139.GA28367@srcf.ucam.org> <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org> <20100419115329.GA5306@frolo.macqel> <20100419145107.GB8017@srcf.ucam.org> <20100419150050.GA28290@frolo.macqel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100419150050.GA28290@frolo.macqel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-05 at 23:03 +0200, Hauke Mehrtens wrote: 
-> The signature of device_create changed in the last kernel version.
-> Backporting it in compat is hard because of the use of var args.
+On Mon, Apr 19, 2010 at 05:00:50PM +0200, Philippe De Muyter wrote:
+> On Mon, Apr 19, 2010 at 03:51:07PM +0100, Matthew Garrett wrote:
+> > On Mon, Apr 19, 2010 at 01:53:29PM +0200, Philippe De Muyter wrote:
+> > 
+> > > and the blue/red led doesn't change color, and wifi state does not change
+> > > either.
+> > 
+> > What's the output of the rfkill command now?
+> 
+> Sorry, I cannot answer before friday (not my laptop).
 
-I see it's applied already, but I hope some belated critique could be
-useful anyway.
+No problem. The best command to run will be
 
-The log mentions "last kernel version", but the patch affects Linux
-2.6.26 and older.  Either the log is wrong (more likely), or the
-implementation doesn't include something that it was meant to do.
+rfkill list
 
-> ++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
-> + 		data->dev = device_create(hwsim_class, NULL, 0, hw,
-> + 					  "hwsim%d", i);
-> ++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26))
-> ++		data->dev = device_create_drvdata(hwsim_class, NULL, 0, hw,
-> ++					  "hwsim%d", i);
-> ++#else
-> ++		data->dev = device_create(hwsim_class, NULL, 0,
-> ++					  "hwsim%d", i);
-> ++		dev_set_drvdata(data->dev, hw);
-> ++#endif
+and then just attach the output.
 
-Linux 2.6.26 should be able to use exactly the same code as the older
-kernels.  It has device_create() with the old signature and
-dev_set_drvdata().  I'd rather avoid extra complexity.
-
-Also, it should be possible to redefine device_create() for older
-kernels using a macro:
-
-#define device_create(cls, parent, devt, drvdata, fmt, ...)            \
-({                                                                     \
-       struct device *_dev;                                            \
-       _dev = (device_create)(cls, parent, devt, fmt, __VA_ARGS__);    \
-       dev_set_drvdata(_dev, drvdata);                                 \
-       _dev;                                                           \
-})
-
+Thanks,
 -- 
-Regards,
-Pavel Roskin
+Matthew Garrett | mjg59@srcf.ucam.org
