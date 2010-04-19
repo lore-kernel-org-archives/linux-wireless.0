@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37744 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754152Ab0DBUi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Apr 2010 16:38:59 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/7] iwlwifi: clear rxq->queue in queue reset
-Date: Fri,  2 Apr 2010 13:38:50 -0700
-Message-Id: <1270240734-12825-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
-References: <1270240734-12825-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:32807 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753932Ab0DSKPP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 06:15:15 -0400
+Received: by ewy20 with SMTP id 20so1362427ewy.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 03:15:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201004190924.25709.br1@einfach.org>
+References: <20100412073847.28215.87571.stgit@tt-desk> <20100416155907.6e33c722@dhcp-lab-109.englab.brq.redhat.com>
+	<201004190924.25709.br1@einfach.org>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 19 Apr 2010 12:14:53 +0200
+Message-ID: <o2g69e28c911004190314w89e7a220y825cd563f6d98e3b@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ath5k: Use high bitrates for ACK/CTS
+To: Bruno Randolf <br1@einfach.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, linville@tuxdriver.com,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
+On Mon, Apr 19, 2010 at 2:24 AM, Bruno Randolf <br1@einfach.org> wrote:
+> On Friday 16 April 2010 22:59:07 Stanislaw Gruszka wrote:
+>> On Mon, 12 Apr 2010 16:38:47 +0900
+>>
+>> Bruno Randolf <br1@einfach.org> wrote:
+>> > There was a confusion in the usage of the bits AR5K_STA_ID1_ACKCTS_6MB
+>> > and AR5K_STA_ID1_BASE_RATE_11B. If they are set (1), we will get lower
+>> > bitrates for ACK and CTS. Therefore ath5k_hw_set_ack_bitrate_high(ah,
+>> > false) actually resulted in high bitrates, which i think is what we want
+>> > anyways. Cleared the confusion and added some documentation.
+>>
+>> I thought ACK and other control frames have to be modulated at slow/robust
+>> bitrates, but can't remember where I read that ...
+>
+> this has been discussed on ath5k-devel before. i'm copying it here. please let
+> me know if i missed something...
+>
+> (https://lists.ath5k.org/pipermail/ath5k-devel/2010-March/003391.html)
+>
+> control frames have to be sent at one of the lower bitrates - one of the
+> "basic rates". in G mode these are 1, 2, 5.5, 11, 6, 12, 24Mbps.
 
-In iwl_rx_queue_reset(), we didn't clear the rxq->queue[]. This might
-cause the same rxb appears on multiple places in rxq->queue. Although
-this won't cause any problem because of the read and write pointers
-protection in rxq, we'd better clear it to avoid misleading.
+Aren't basic rates defined so as to exclude any OFDM rates? I.e. are
+6M, 12M and 24M really basic rates?
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+>
+> this is from the 802.11g spec:
+> "a STA responding to a received frame shall transmit its Control Response
+> (either CTS or ACK) frames at the highest rate in the BSSBasicRateSet that is
+> less than or equal to the rate of the immediately previous frame in the frame
+> exchange sequence (as defined in 9.7)"
+>
+> basically we have to make a tradeoff here: using lower rates for ACK/CTS will
+> improve reliability, but lower performance. for example i could get only
+> 10Mbps truput with ACK/CTS at the lowest bitrates and RTS/CTS enabled
+> (iwconfig wlan0 rts 250) and i can get more than 20Mbps with higher bitrates.
+> so i think it's worth to use high bitrates. actually also this should be
+> tuneable for the user, too...
+>
+> bruno
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 1d2e84c..6fe1d93 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -403,6 +403,9 @@ void iwlagn_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 		list_add_tail(&rxq->pool[i].list, &rxq->rx_used);
- 	}
- 
-+	for (i = 0; i < RX_QUEUE_SIZE; i++)
-+		rxq->queue[i] = NULL;
-+
- 	/* Set us so that we have processed and used all buffers, but have
- 	 * not restocked the Rx queue with fresh buffers */
- 	rxq->read = rxq->write = 0;
-@@ -538,11 +541,13 @@ void iwlagn_rx_queue_restock(struct iwl_priv *priv)
- 	struct list_head *element;
- 	struct iwl_rx_mem_buffer *rxb;
- 	unsigned long flags;
--	int write;
- 
- 	spin_lock_irqsave(&rxq->lock, flags);
--	write = rxq->write & ~0x7;
- 	while ((iwl_rx_queue_space(rxq) > 0) && (rxq->free_count)) {
-+		/* The overwritten rxb must be a used one */
-+		rxb = rxq->queue[rxq->write];
-+		BUG_ON(rxb && rxb->page);
-+
- 		/* Get next free Rx buffer, remove from free list */
- 		element = rxq->rx_free.next;
- 		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
-@@ -635,6 +640,7 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 
- 		spin_unlock_irqrestore(&rxq->lock, flags);
- 
-+		BUG_ON(rxb->page);
- 		rxb->page = page;
- 		/* Get physical address of the RB */
- 		rxb->page_dma = pci_map_page(priv->pci_dev, page, 0,
+
+
 -- 
-1.6.3.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
