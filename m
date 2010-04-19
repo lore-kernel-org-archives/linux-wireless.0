@@ -1,63 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63414 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751899Ab0DTQyD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 12:54:03 -0400
-Subject: Re: iwl3945: Error sending REPLY_{RXON|SCAN_CMD|TX_PWR_TABLE_CMD}
- time out after 500ms
-From: reinette chatre <reinette.chatre@intel.com>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-In-Reply-To: <n2g2d0a357f1004170705j6d0750fdkc4784f86aab51c97@mail.gmail.com>
-References: <n2g2d0a357f1004170705j6d0750fdkc4784f86aab51c97@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:39748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666Ab0DSI7p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 04:59:45 -0400
+Subject: Re: [PATCH 7/9] mac80211: add flags for STBC (Space-Time Block
+ Coding)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+In-Reply-To: <4BCC1844.4030607@openwrt.org>
+References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-2-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-3-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-4-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-5-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-6-git-send-email-nbd@openwrt.org>
+	 <1271602602-8538-7-git-send-email-nbd@openwrt.org>
+	 <1271606009.3873.0.camel@jlt3.sipsolutions.net>
+	 <4BCB2DB3.3020700@openwrt.org>
+	 <1271656677.3873.5.camel@jlt3.sipsolutions.net>
+	 <4BCC1844.4030607@openwrt.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Apr 2010 09:54:02 -0700
-Message-ID: <1271782442.14052.19698.camel@rchatre-DESK>
+Date: Mon, 19 Apr 2010 10:59:42 +0200
+Message-ID: <1271667582.3873.11.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2010-04-19 at 10:45 +0200, Felix Fietkau wrote:
+> On 2010-04-19 7:57 AM, Johannes Berg wrote:
+> > On Sun, 2010-04-18 at 18:05 +0200, Felix Fietkau wrote:
+> > 
+> >> >> + * @IEEE80211_TX_CTL_STBC: tells the driver to use Space-Time Block Coding
+> >> >> + *  (STBC) for this frame.
+> >> >>   */
+> >> >>  enum mac80211_tx_control_flags {
+> >> >>  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+> >> >> @@ -299,6 +301,7 @@ enum mac80211_tx_control_flags {
+> >> >>  	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
+> >> >>  	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
+> >> >>  	IEEE80211_TX_CTL_LDPC			= BIT(22),
+> >> >> +	IEEE80211_TX_CTL_STBC			= BIT(23),
+> >> > 
+> >> > What if the # of streams is different? That doesn't look sufficient.
+> > 
+> >> Hm, you're right. I initially thought the combination of the MCS index
+> >> and the STBC flag would be enough, but there are still some corner cases.
+> > 
+> > Hm actually I guess that should be sufficient? What corner case are you
+> > thinking of?
+> Support for multi-rate retry and STBC with more than one stream on one
+> side, using rates from both MCS0-7 and MCS8-15 in the rate series.
+> Rx STBC for only one stream on the other side.
 
-On Sat, 2010-04-17 at 07:05 -0700, Sedat Dilek wrote:
-> I have already sent an bug-report "iwl3945: Network dropouts w/
-> flash-stream in firefox" in [1].
-> Unfortunately, the problem still remains, especially when
-> fast-forwarding flash movies in firefox-3.6.3.
-> It seems the wifi-card is hanging and my system needs a coldstart.
+So the flag should be per rate entry instead, no?
 
-Is this a recent problem? How regularly do you update your kernel?
-
-> 
-> The kernel I use is a Linux-2.6.34-rc4-git4 with these 3 patches in addition:
-
-Where can I access this kernel's git repo?
-
-> According to Johannes (on IRC) iwl3945 doesn't use internal scans yet
-> (see my patch below).
-> Thus, I am not sure if this needs to be fixed separately for iwl3945
-> and if I ran into a scan race condition here.
-
-Does this patch make any difference for you?
-
-
-> Hope, this helps.
-
-It does. Thank you. As a sanity check, could you please try this patch? 
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c8cd169..1ad15bd 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -814,7 +814,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata)
- 	changed |= BSS_CHANGED_ASSOC;
- 	sdata->vif.bss_conf.assoc = false;
- 
--	ieee80211_set_wmm_default(sdata);
-+	/*ieee80211_set_wmm_default(sdata);*/
- 
- 	/* channel(_type) changes are handled by ieee80211_hw_config */
- 	local->oper_channel_type = NL80211_CHAN_NO_HT;
-
+johannes
 
