@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46477 "EHLO vs166246.vserver.de"
+Received: from ogre.sisk.pl ([217.79.144.158]:48899 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751743Ab0DAO2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 10:28:21 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <zajec5@gmail.com>
-Subject: Re: [PATCH V3] ssb: do not read SPROM if it does not exist
-Date: Thu, 1 Apr 2010 15:28:19 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <1270064375-3138-2-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1270064375-3138-2-git-send-email-linville@tuxdriver.com>
+	id S1751111Ab0DTEND (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Apr 2010 00:13:03 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: 2.6.34-rc5: Reported regressions from 2.6.33
+Date: Tue, 20 Apr 2010 06:13:33 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <deuQKFRcc0B.A.3EG.BRSzLB@tosh> <20100419205723.8724338c.akpm@linux-foundation.org>
+In-Reply-To: <20100419205723.8724338c.akpm@linux-foundation.org>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201004011628.19654.mb@bu3sch.de>
+  charset="iso-8859-1"
+Message-Id: <201004200613.33696.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 31 March 2010 21:39:35 John W. Linville wrote:
-> diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-> index 9e50896..a4b2b99 100644
-> --- a/drivers/ssb/pci.c
-> +++ b/drivers/ssb/pci.c
-> @@ -620,6 +620,11 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
->  	int err = -ENOMEM;
->  	u16 *buf;
->  
-> +	if (!ssb_is_sprom_available(bus)) {
-> +		ssb_printk(KERN_ERR PFX "No SPROM available!\n");
-> +		return -ENODEV;
-> +	}
+On Tuesday 20 April 2010, Andrew Morton wrote:
+> On Tue, 20 Apr 2010 05:15:57 +0200 (CEST) "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15812
+> > Subject		: utsname.domainname not set in x86_32 processes (causing "YPBINDPROC_DOMAIN: domain not bound" errors)
+> > Submitter	:  <adi@hexapodia.org>
+> > Date		: 2010-04-19 21:28 (1 days old)
+> 
+> I merged hch's fix for this twelve seconds ago.
 
-Note that in ssb_pci_init() you might also want to add such a check to avoid
-registering the "sprom" sysfs file in case there's no sprom. Otherwise root is
-able to crash the machine via that file. Same goes for ssb_pci_exit(), of course.
-
--- 
-Greetings, Michael.
+I updated the entry.
