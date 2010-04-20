@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:13743 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949Ab0DORLx convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:34257 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754847Ab0DTRcA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 13:11:53 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2901303fgg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 10:11:52 -0700 (PDT)
+	Tue, 20 Apr 2010 13:32:00 -0400
+Message-ID: <4BCDE507.10800@gmail.com>
+Date: Tue, 20 Apr 2010 10:31:51 -0700
+From: Till Kamppeter <till.kamppeter@gmail.com>
 MIME-Version: 1.0
-Date: Thu, 15 Apr 2010 21:11:52 +0400
-Message-ID: <t2wd01f95791004151011n1a5077a3oca9f7b641b311ac2@mail.gmail.com>
-Subject: compat-wireless doesn't compile against 2.6.32 on Ubuntu beta
-From: Andrey Semyonov <gatekeeper.mail@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=KOI8-R
+To: Grant Likely <grant.likely@secretlab.ca>
+CC: Rik van Riel <riel@redhat.com>, Theodore Ts'o <tytso@mit.edu>,
+	Greg KH <greg@kroah.com>,
+	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Google Summer of Code 2010 - Please resolve duplicates
+References: <4BCCB176.3060206@gmail.com> <i2wfa686aa41004200543gfbb71c98m9a70120fe1cbc8b9@mail.gmail.com>
+In-Reply-To: <i2wfa686aa41004200543gfbb71c98m9a70120fe1cbc8b9@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I get this when trying to compile current drivers:
+On 04/20/2010 05:43 AM, Grant Likely wrote:
+> On Mon, Apr 19, 2010 at 1:39 PM, Till Kamppeter
+> <till.kamppeter@gmail.com>  wrote:
+>> Please mail me if a mentor needs to be (re)assigned.
+>
+> Nitin Gupta has 2 proposals on the table (one pending acceptance, and
+> one rejection).  I'm assigned as mentor on both of them, but I'm
+> certainly not qualified.  Rik van Riel has expressed a willingness to
+> mentor Nitin.  Rik, are you willing to take on a second student, or
+> can you suggest somebody to mentor Nitin?
+>
 
+Set Rik as mentor for the project pending acceptance.
 
-/usr/local/src/compat-wireless-2010-04-14# make
-make -C /lib/modules/2.6.32-19-generic/build
-M=/usr/local/src/compat-wireless-2010-04-14 modules
-make[1]: Вход в каталог `/usr/src/linux-headers-2.6.32-19-generic'
- CC [M]  /usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.o
-/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.c: In
-function 'ieee80211_alloc_hw':
-/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.c:394:
-error: implicit declaration of function '__hw_addr_init'
-make[3]: *** [/usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.o]
-Ошибка 1
-make[2]: *** [/usr/local/src/compat-wireless-2010-04-14/net/mac80211] Ошибка 2
-make[1]: *** [_module_/usr/local/src/compat-wireless-2010-04-14] Ошибка 2
-make[1]: Выход из каталога `/usr/src/linux-headers-2.6.32-19-generic'
-make: *** [modules] Ошибка 2
+> Alex Lorca's Locator/ID Separation Protocol project is pending
+> acceptance, but it has not been reviewed by anyone working in the area
+> of network routing.  Again, I'm not qualified to mentor this project
+> and I do not know who to suggest.
 
-The driver selected is b43. System is Ubuntu 10.04 beta2 (currently
-available for testing).
+Seems that we have to reject this student because no one wants to mentor 
+him.
 
-I apologize if this is a duplicate, yesterday's attempt to send this
-report haven't cause any mailing list notification nor this report
-appeared in ML archives.
+    TIll
