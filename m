@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p05-ob.rzone.de ([81.169.146.181]:34414 "EHLO
-	mo-p05-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753324Ab0DQHCY (ORCPT
+Received: from static-92-33-14-100.sme.bredbandsbolaget.se ([92.33.14.100]:58565
+	"EHLO mailhost.lundinova.se" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753086Ab0DTI2g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Apr 2010 03:02:24 -0400
-Message-ID: <4BC95A5C.5020205@acm.org>
-Date: Sat, 17 Apr 2010 08:51:08 +0200
-From: U Kuehn <ukuehn@acm.org>
-MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Resolved, was Re: Problem: Regression with iwl 4965 since 2.6.32.10
-References: <4BC04027.1090802@acm.org> <1271195092.14052.8010.camel@rchatre-DESK>
-In-Reply-To: <1271195092.14052.8010.camel@rchatre-DESK>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Apr 2010 04:28:36 -0400
+From: Johan Hovold <johan.hovold@lundinova.se>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Johan Hovold <johan.hovold@lundinova.se>
+Subject: [RFC][PATCH 1/2] ath9k: fix corrupt frames being forwarded to mac80211
+Date: Tue, 20 Apr 2010 10:28:07 +0200
+Message-Id: <1271752088-13639-1-git-send-email-johan.hovold@lundinova.se>
+In-Reply-To: <20100420082519.GB5288@lundinova.se>
+References: <20100420082519.GB5288@lundinova.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Reinette,
+Frame status frequently gets corrupted in hardware with 802.11n which
+can lead to corrupt frames being forwarded to mac80211. This in turn may
+trigger countermeasures in reponse to false MIC-errors or cause receive
+to stall when frames are dropped after processing a frame with corrupt PN.
 
-reinette chatre wrote:
->> In my usual setup, I connect to an WPA2-configured access point using
->> wpa_supplicant. Starting with 2.6.32.10 networking stops to work shortly
->> after the 4-way handshake. After the next re-keying it works again for a
->> short time.
->>
->> I tracked the problem down to commit
->> 44af042e42f2231579ea8ef7586d3789d198f609.
->>
-> 
-> Two more patches following up on the one you mention are on their way to
-> stable. If you want to pick them up earlier they are:
-> iwlwifi: counting number of tfds can be free for 4965
-> iwlwifi: need check for valid qos packet before free
-> 
-> In fact ... I just checked and they are both already queued for 2.6.32
-> so you can just pick them up from the 2.6.32 stable queue
-> ( http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=tree;f=queue-2.6.32;hb=HEAD )
-> 
-> ... in fact ... I suggest you take all the iwlwifi patches there.
-> 
-Thanks, that did indeed help. With the four patches
-	iwlwifi-counting-number-of-tfds-can-be-free-for-4965.patch
-	iwlwifi-fix-nfreed.patch
-	iwlwifi-need-check-for-valid-qos-packet-before-free.patch
-	iwlwifi-range-checking-issue.patch
-applied, 2.6.32.11 works again reliably, as far as I could test so far.
+Verify frame status by making sure that no error flags are set if frame
+is marked ok and that reserved bits 19 through 28 (0x1ff80000) are all
+zero, otherwise discarded frame (as ATH9K_PHYERR_HT_CRC_ERROR).
 
-Best regards,
-Ulrich
+Tested with AR9280 (WEP, TKIP and CCMP).
 
+Signed-off-by: Johan Hovold <johan.hovold@lundinova.se>
+---
+ drivers/net/wireless/ath/ath9k/mac.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 4a2060e..2afe72f 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -934,9 +934,22 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
+ 		else if (ads.ds_rxstatus8 & AR_MichaelErr)
+ 			rs->rs_status |= ATH9K_RXERR_MIC;
++	} else {
++		if (ads.ds_rxstatus8 & (AR_CRCErr |
++					AR_PHYErr |
++					AR_DecryptCRCErr |
++					AR_MichaelErr |
++					AR_DecryptBusyErr))
++			goto corrupt;
+ 	}
++	if (ads.ds_rxstatus8 & 0x1ff80000)
++		goto corrupt;
+ 
+ 	return 0;
++corrupt:
++	rs->rs_status |= ATH9K_RXERR_PHY;
++	rs->rs_phyerr = ATH9K_PHYERR_HT_CRC_ERROR;
++	return 0;
+ }
+ EXPORT_SYMBOL(ath9k_hw_rxprocdesc);
+ 
+-- 
+1.7.0.3
 
