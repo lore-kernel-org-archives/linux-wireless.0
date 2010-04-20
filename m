@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:46529 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168Ab0D1Gua (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:64089 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753194Ab0DTSEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 02:50:30 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] wl1271: patches of the week
-Date: Wed, 28 Apr 2010 09:49:58 +0300
-Message-Id: <1272437402-28801-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 20 Apr 2010 14:04:10 -0400
+Received: by ewy20 with SMTP id 20so2134220ewy.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Apr 2010 11:04:09 -0700 (PDT)
+Message-ID: <4BCDEC94.2080202@lwfinger.net>
+Date: Tue, 20 Apr 2010 13:04:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>
+CC: "Bernhard M. Wiedemann" <bernhardout@lsmod.de>
+Subject: Problem with AR5001 on eeepc900A after disable with RFKILL switch
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+This problem is reported at
+https://bugzilla.novell.com/show_bug.cgi?id=595586.
 
-It has been a while since I last sent patches for wl1271, but there hasn't been too much going on with the wl1271 driver itself.  Most of our work is going to mac80211 at the moment.
+Although not mentioned in the bug report, the kernel is 2.6.33.
 
-Anyway, it's time to send them so that we catch up.
+The initial part of the report is as follows:
 
-Cheers,
-Luca.
+======================================================================
 
-Juuso Oikarinen (2):
-  wl1271: Improve command polling
-  wl1271: Rewrite hardware keep-alive handling
+After disabling WLAN on Asus eeepc 900A using rfkill button (Fn+F2) it
+does not get back into a working state without a reboot.
 
-Luciano Coelho (1):
-  wl1271: fix a bunch of sparse warnings
+Reproducible: Always
 
-Saravanan Dhanabal (1):
-  wl1271: Configure QOS nullfunc template for U-APSD
+Steps to Reproduce:
+1. boot up eeepc900A with WLAN enabled
+2. press Fn+F2 (rfkill button) to disable WLAN
+3. press Fn+F2 again to enable WLAN
+Actual Results:
 
- drivers/net/wireless/wl12xx/wl1271_acx.c  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_boot.c |    8 +-
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   14 ++--
- drivers/net/wireless/wl12xx/wl1271_conf.h |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |   95 +++++++++++++++--------------
- 5 files changed, 63 insertions(+), 58 deletions(-)
+-----
+1. lspci before rfkill
+01:00.0 Ethernet controller: Atheros Communications AR8121/AR8113/AR8114
+Gigabit or Fast Ethernet (rev b0)
+02:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless
+Network Adapter (rev 01)
+-----
+2. lspci after rfkill
+01:00.0 Ethernet controller: Attansic Technology Corp. Atheros
+AR8121/AR8113/AR8114 PCI-E Ethernet Controller (rev b0)
+02:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless
+Network Adapter (rev ff)
+
+======================================================================
+
+The curious thing is that the lspci output is different for both the
+wired and wireless cards.
+
+Any ideas on why setting rfkill should change data in this way?
+
+Thanks,
+
+Larry
+
+
+
 
