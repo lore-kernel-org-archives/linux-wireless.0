@@ -1,256 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60946 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757269Ab0DOVjn (ORCPT
+Received: from static-92-33-14-100.sme.bredbandsbolaget.se ([92.33.14.100]:58490
+	"EHLO mailhost.lundinova.se" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753940Ab0DTIZW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:43 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 12/97] ath9k_hw: add a private callback for PLL control computation
-Date: Thu, 15 Apr 2010 17:38:17 -0400
-Message-Id: <1271367582-992-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 20 Apr 2010 04:25:22 -0400
+Date: Tue, 20 Apr 2010 10:25:19 +0200
+From: Johan Hovold <johan.hovold@lundinova.se>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: Johan Hovold <johan.hovold@lundinova.se>,
+	Tor Krill <tor@excito.com>
+Subject: Re: [ath9k-devel] ath9k: corrupt frames forwarded to mac80211 as
+ decrypted
+Message-ID: <20100420082519.GB5288@lundinova.se>
+References: <20100331191058.GD18913@lundinova.se>
+ <20100416104850.GA13329@lundinova.se>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100416104850.GA13329@lundinova.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PLL control computation used to program the AR_RTC_PLL_CONTROL
-register varies between our harware so just add a private callback for it.
-AR9003 will use its own callback.
+Hi again,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   55 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |   31 +++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c         |   64 +++------------------------
- drivers/net/wireless/ath/ath9k/hw.h         |    4 ++
- 4 files changed, 97 insertions(+), 57 deletions(-)
+On Fri, Apr 16, 2010 at 12:48:50PM +0200, Johan Hovold wrote:
+> I now know why 802.11n receive stalls; ath9k is passing corrupt frames to
+> mac80211.
+[...]
+> An example of such a frame is:
+> 
+> 	00000000: 88 41 30 00 00 80 48 68 08 0f 00 21 6a 56 2c 36
+> 	00000010: 00 22 02 00 0b 63 20 52 00 00 20 21 21 05 00 20
+> 	00000020: 8a 39 7b 1f 0f 11 07 9e bd 53 80 33 3b 8c 98 00
+> 	00000030: ef 5f da 7c 9a d6 3d d7 59 ac e0 21 44 88 63 d7
+> 	00000040: 21 34 b7 9a 89 8e cf 9e 46 1c ee d6 81 56 25 59
+> 	00000050: d2 ec ac 33 e6 12 3d c5 02 61 2d 80 8d 30 44 1e
+> 	00000060: 79 74 79 79 62 25 ba ec 04 4d 54 dc
+> 
+> with associated status
+> 
+> 	rxstatus8 = 1e989103
+> 
+> Here nothing in the frame status indicates an error; the frame has no error
+> flags set, the frame-ok flag is set, and so on. Still the frame is indeed
+> corrupt; the last four octets of the CCMP-header (bytes 0x20..0x23) should
+> be {00,00,00,00} rather than {8a,39,7b,1f} as the correct PN is 0x0521 (not
+> 0x1f7b398a0521).
+> 
+> The corrupt frames all seem to have the upper half of the CCMP-header, data
+> and MIC corrupted, whereas the FCS (last four bytes) seem to be correct in the
+> sense that they match what I see in the air (and is verified by wireshark).
+> 
+> One explanation for all of this could be that the corrupt packet is what the
+> hardware is expected to return should it's processing fail (e.g. due to
+> checksum error). Then the problem is merely that the status field sometimes
+> get corrupted (some frames with corrupt PN do indeed come with matching
+> rxstatus). Comments in the code concerning corrupt status fields also point in
+> this direction.
+> 
+> Another explanation could be that the status is actually correct but for some
+> reason the returned frame is corrupted. Perhaps it's a combination of both
+> corrupt status and frame.
+> 
+> Any ideas about what may be going on here?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 982b0d3..9685f4c 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -967,6 +967,54 @@ static void ar5008_set_diversity(struct ath_hw *ah, bool value)
- 	REG_WRITE(ah, AR_PHY_CCK_DETECT, v);
- }
- 
-+static u32 ar9100_hw_compute_pll_control(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	if (chan && IS_CHAN_5GHZ(chan))
-+		return 0x1450;
-+	return 0x1458;
-+}
-+
-+static u32 ar9160_hw_compute_pll_control(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	u32 pll;
-+
-+	pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
-+
-+	if (chan && IS_CHAN_HALF_RATE(chan))
-+		pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
-+	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-+		pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
-+
-+	if (chan && IS_CHAN_5GHZ(chan))
-+		pll |= SM(0x50, AR_RTC_9160_PLL_DIV);
-+	else
-+		pll |= SM(0x58, AR_RTC_9160_PLL_DIV);
-+
-+	return pll;
-+}
-+
-+static u32 ar5008_hw_compute_pll_control(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	u32 pll;
-+
-+	pll = AR_RTC_PLL_REFDIV_5 | AR_RTC_PLL_DIV2;
-+
-+	if (chan && IS_CHAN_HALF_RATE(chan))
-+		pll |= SM(0x1, AR_RTC_PLL_CLKSEL);
-+	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-+		pll |= SM(0x2, AR_RTC_PLL_CLKSEL);
-+
-+	if (chan && IS_CHAN_5GHZ(chan))
-+		pll |= SM(0xa, AR_RTC_PLL_DIV);
-+	else
-+		pll |= SM(0xb, AR_RTC_PLL_DIV);
-+
-+	return pll;
-+}
-+
- void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -988,4 +1036,11 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->enable_rfkill = ar5008_hw_enable_rfkill;
- 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
- 	priv_ops->set_diversity = ar5008_set_diversity;
-+
-+	if (AR_SREV_9100(ah))
-+		priv_ops->compute_pll_control = ar9100_hw_compute_pll_control;
-+	else if (AR_SREV_9160_10_OR_LATER(ah))
-+		priv_ops->compute_pll_control = ar9160_hw_compute_pll_control;
-+	else
-+		priv_ops->compute_pll_control = ar5008_hw_compute_pll_control;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 29b50ca..87541a8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -437,6 +437,36 @@ static void ar9002_olc_init(struct ath_hw *ah)
- 	}
- }
- 
-+static u32 ar9002_hw_compute_pll_control(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	u32 pll;
-+
-+	pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
-+
-+	if (chan && IS_CHAN_HALF_RATE(chan))
-+		pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
-+	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-+		pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
-+
-+	if (chan && IS_CHAN_5GHZ(chan)) {
-+		pll |= SM(0x28, AR_RTC_9160_PLL_DIV);
-+
-+
-+		if (AR_SREV_9280_20(ah)) {
-+			if (((chan->channel % 20) == 0)
-+			    || ((chan->channel % 10) == 0))
-+				pll = 0x2850;
-+			else
-+				pll = 0x142c;
-+		}
-+	} else {
-+		pll |= SM(0x2c, AR_RTC_9160_PLL_DIV);
-+	}
-+
-+	return pll;
-+}
-+
- void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -447,4 +477,5 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->rf_set_freq = ar9002_hw_set_channel;
- 	priv_ops->spur_mitigate_freq = ar9002_hw_spur_mitigate;
- 	priv_ops->olc_init = ar9002_olc_init;
-+	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8aa1684..245e678 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -67,6 +67,12 @@ static bool ath9k_hw_macversion_supported(struct ath_hw *ah)
- 	return priv_ops->macversion_supported(ah->hw_version.macVersion);
- }
- 
-+static u32 ath9k_hw_compute_pll_control(struct ath_hw *ah,
-+					struct ath9k_channel *chan)
-+{
-+	return ath9k_hw_private_ops(ah)->compute_pll_control(ah, chan);
-+}
-+
- /********************/
- /* Helper Functions */
- /********************/
-@@ -1024,64 +1030,8 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
- static void ath9k_hw_init_pll(struct ath_hw *ah,
- 			      struct ath9k_channel *chan)
- {
--	u32 pll;
--
--	if (AR_SREV_9100(ah)) {
--		if (chan && IS_CHAN_5GHZ(chan))
--			pll = 0x1450;
--		else
--			pll = 0x1458;
--	} else {
--		if (AR_SREV_9280_10_OR_LATER(ah)) {
--			pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
--
--			if (chan && IS_CHAN_HALF_RATE(chan))
--				pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
--			else if (chan && IS_CHAN_QUARTER_RATE(chan))
--				pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
--
--			if (chan && IS_CHAN_5GHZ(chan)) {
--				pll |= SM(0x28, AR_RTC_9160_PLL_DIV);
--
--
--				if (AR_SREV_9280_20(ah)) {
--					if (((chan->channel % 20) == 0)
--					    || ((chan->channel % 10) == 0))
--						pll = 0x2850;
--					else
--						pll = 0x142c;
--				}
--			} else {
--				pll |= SM(0x2c, AR_RTC_9160_PLL_DIV);
--			}
--
--		} else if (AR_SREV_9160_10_OR_LATER(ah)) {
--
--			pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
--
--			if (chan && IS_CHAN_HALF_RATE(chan))
--				pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
--			else if (chan && IS_CHAN_QUARTER_RATE(chan))
--				pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
--
--			if (chan && IS_CHAN_5GHZ(chan))
--				pll |= SM(0x50, AR_RTC_9160_PLL_DIV);
--			else
--				pll |= SM(0x58, AR_RTC_9160_PLL_DIV);
--		} else {
--			pll = AR_RTC_PLL_REFDIV_5 | AR_RTC_PLL_DIV2;
--
--			if (chan && IS_CHAN_HALF_RATE(chan))
--				pll |= SM(0x1, AR_RTC_PLL_CLKSEL);
--			else if (chan && IS_CHAN_QUARTER_RATE(chan))
--				pll |= SM(0x2, AR_RTC_PLL_CLKSEL);
-+	u32 pll = ath9k_hw_compute_pll_control(ah, chan);
- 
--			if (chan && IS_CHAN_5GHZ(chan))
--				pll |= SM(0xa, AR_RTC_PLL_DIV);
--			else
--				pll |= SM(0xb, AR_RTC_PLL_DIV);
--		}
--	}
- 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
- 
- 	/* Switch the core clock for ar9271 to 117Mhz */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index d740e9c..79b938b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -454,6 +454,8 @@ struct ath_gen_timer_table {
-  * @rf_alloc_ext_banks:
-  * @rf_free_ext_banks:
-  * @set_rf_regs:
-+ * @compute_pll_control: compute the PLL control value to use for
-+ *	AR_RTC_PLL_CONTROL for a given channel
-  */
- struct ath_hw_private_ops {
- 	void (*init_cal_settings)(struct ath_hw *ah);
-@@ -483,6 +485,8 @@ struct ath_hw_private_ops {
- 	void (*enable_rfkill)(struct ath_hw *ah);
- 	void (*restore_chainmask)(struct ath_hw *ah);
- 	void (*set_diversity)(struct ath_hw *ah, bool value);
-+	u32 (*compute_pll_control)(struct ath_hw *ah,
-+				   struct ath9k_channel *chan);
- };
- 
- /**
--- 
-1.6.3.3
+I'll answer my own question -- the status field is clearly corrupted.
+The bad frames all have status such as 
+
+	19fdb637
+	9131f6d7
+	87b3f0c1
+	29de5e7b
+	10c68ff3
+	4c1a33c7
+	9abd470b
+
+where it should look something like 00030943. From inspection of
+returned frame status, I've come up with at way to catch these; I
+discard frames marked ok but with errors flags set or which have any of
+the reserved bits 19 through 28 (0x1ff80000) set.
+
+My question is: Is the latter assumption correct? Can I expect bits
+19..28 to be zero?
+
+On my AR9820 hardware this seems to be case and I am able to catch all
+the corrupt frames and have 802.11n work perfectly. It also works fine
+with 802.11g/WEP/TKIP/CCMP.
+
+As a side note, I also seem able to confirm my observation above that
+frames returned with non-corrupt status and decrypt error flag set
+indeed do have corrupt CCMP header, data and MIC. That is, this seem to
+be what hw is expected to return on (such) errors.
+
+I'm responding to this mail with my fix (workaround).
+
+I have also seen non-decrypted frames with decrypt busy flag set but
+without decrypt crc err set (frame is marked not ok). I'm not sure
+whether this is due to a bug or bit error (decrypt crc somehow got
+cleared) but I also propose a change to remedy this.
+
+Thanks,
+Johan Hovold
 
