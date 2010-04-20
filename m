@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52566 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756367Ab0DEVCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Apr 2010 17:02:47 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: Backport clamp
-Date: Mon,  5 Apr 2010 23:02:38 +0200
-Message-Id: <1270501358-3888-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:48683 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753827Ab0DTHqk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Apr 2010 03:46:40 -0400
+Received: by pwj9 with SMTP id 9so4001355pwj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Apr 2010 00:46:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <19405.19620.199172.233574@gargle.gargle.HOWL>
+References: <1271691883-13133-1-git-send-email-tom.leiming@gmail.com>
+	 <19405.11838.119234.371361@gargle.gargle.HOWL>
+	 <y2ud82e647a1004192259nec8aad6dy836b76b2211b6a40@mail.gmail.com>
+	 <19405.19620.199172.233574@gargle.gargle.HOWL>
+Date: Tue, 20 Apr 2010 15:46:38 +0800
+Message-ID: <w2wd82e647a1004200046gecfbc655y889759c27caad557@mail.gmail.com>
+Subject: Re: [PATCH] ath9k-htc: speedup disconnect handling
+From: Ming Lei <tom.leiming@gmail.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed by the ath5k driver.
+2010/4/20 Sujith <Sujith.Manoharan@atheros.com>:
+> Ming Lei wrote:
+>> If ATH_DBG_RESET is enabled, you will find the debug messages
+>> below[1] during disconnecting.  From the messages, the short hang should
+>> be caused by the 'RTC stuck in MAC reset'. Once the patch is applied,
+>> no such issue will happen.
+>
+> I take it that you didn't have ATH_DBG_WMI in your debug mask.
+> A simpler way to fix this issue is to deny all WMI commands once
+> the target has been unplugged - something like the attached patch.
+>
+> Can you check if it fixes your issue ?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.26.h |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+Yes,  the patch does fix the issue.
 
-diff --git a/include/linux/compat-2.6.26.h b/include/linux/compat-2.6.26.h
-index 2bee30e..8251177 100644
---- a/include/linux/compat-2.6.26.h
-+++ b/include/linux/compat-2.6.26.h
-@@ -48,6 +48,24 @@ extern int dev_set_name(struct device *dev, const char *name, ...)
- 			__attribute__((format(printf, 2, 3)));
- 
- /**
-+ * clamp - return a value clamped to a given range with strict typechecking
-+ * @val: current value
-+ * @min: minimum allowable value
-+ * @max: maximum allowable value
-+ *
-+ * This macro does strict typechecking of min/max to make sure they are of the
-+ * same type as val.  See the unnecessary pointer comparisons.
-+ */
-+#define clamp(val, min, max) ({			\
-+	typeof(val) __val = (val);		\
-+	typeof(min) __min = (min);		\
-+	typeof(max) __max = (max);		\
-+	(void) (&__val == &__min);		\
-+	(void) (&__val == &__max);		\
-+	__val = __val < __min ? __min: __val;	\
-+	__val > __max ? __max: __val; })
-+
-+/**
-  * clamp_t - return a value clamped to a given range using a given type
-  * @type: the type of variable to use
-  * @val: current value
+Thanks,
+
 -- 
-1.6.3.3
-
+Lei Ming
