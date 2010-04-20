@@ -1,43 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3880 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751935Ab0DICgc (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:36370 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701Ab0DTFLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 22:36:32 -0400
-Message-ID: <4BBE92AE.6090301@gmail.com>
-Date: Fri, 09 Apr 2010 04:36:30 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.34-rc3-git8: Reported regressions 2.6.32 -> 2.6.33
-References: <cjwJ7Pf9h0L.A.9pB.1DmvLB@chimera>
-In-Reply-To: <cjwJ7Pf9h0L.A.9pB.1DmvLB@chimera>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Apr 2010 01:11:12 -0400
+Subject: Re: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based
+ on ps-qos network latency
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1271688177.23671.1.camel@jlt3.sipsolutions.net>
+References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271688177.23671.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Apr 2010 08:08:40 +0300
+Message-ID: <1271740120.6205.5733.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/10 00:54, Rafael J. Wysocki wrote:
+On Mon, 2010-04-19 at 16:42 +0200, ext Johannes Berg wrote:
+> On Fri, 2010-04-16 at 12:14 +0300, Juuso Oikarinen wrote:
+> > Determine the dynamic PS timeout based on the configured ps-qos network
+> > latency. For backwards wext compatibility, allow the dynamic PS timeout
+> > configured by the cfg80211 to overrule the automatically determined value.
 > 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15699
-> Subject		: rt2500usb driver cannot remain connected
-> Submitter	:  <abcd@gentoo.org>
-> Date		: 2010-04-05 19:30 (4 days old)
-> Handled-By	: Ivo van Doorn <IvDoorn@gmail.com>
+> This seems OK, but I fear that you'll write applications setting the
+> pm_qos network latency just to affect this parameter?
 > 
 
-This one ought to be fixed by commit 9e76ad2a27f592c1390248867391880c7efe78b3
-in Linus' tree.
+Well you have to see where I'm coming from - I must come up with a way
+to tune the dynamic ps timeout value from user-space in a way that is
+agreeable with others, and that is somewhat future-proof.
 
----
-Gertjan.
+That said, obviously the network latency should be tuned as, well, the
+expected network latency. In this phase though, there are no other
+parameters affected by the network latency, so the result is quite
+obvious - your fear will realise itself ;)
+
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > ---
+> >  include/net/mac80211.h |    5 ++++-
+> >  net/mac80211/cfg.c     |    4 ++--
+> >  net/mac80211/main.c    |    2 ++
+> >  net/mac80211/mlme.c    |   14 ++++++++++++++
+> >  4 files changed, 22 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> > index dcf3c5f..243e4ab 100644
+> > --- a/include/net/mac80211.h
+> > +++ b/include/net/mac80211.h
+> > @@ -661,6 +661,9 @@ enum ieee80211_smps_mode {
+> >   * @dynamic_ps_timeout: The dynamic powersave timeout (in ms), see the
+> >   *	powersave documentation below. This variable is valid only when
+> >   *	the CONF_PS flag is set.
+> > + * @dynamic_ps_forced_timeout: The dynamic powersave timeout (in ms) configured
+> > + *	by cfg80211 (essentially, wext) If set, this value overrules the value
+> > + *	chosen by mac80211 based on ps qos network latency.
+> >   *
+> >   * @power_level: requested transmit power (in dBm)
+> >   *
+> > @@ -680,7 +683,7 @@ enum ieee80211_smps_mode {
+> >   */
+> >  struct ieee80211_conf {
+> >  	u32 flags;
+> > -	int power_level, dynamic_ps_timeout;
+> > +	int power_level, dynamic_ps_timeout, dynamic_ps_forced_timeout;
+> >  	int max_sleep_period;
+> >  
+> >  	u16 listen_interval;
+> > diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> > index 7dd7cda..9a1a91c 100644
+> > --- a/net/mac80211/cfg.c
+> > +++ b/net/mac80211/cfg.c
+> > @@ -1388,11 +1388,11 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+> >  		return -EOPNOTSUPP;
+> >  
+> >  	if (enabled == sdata->u.mgd.powersave &&
+> > -	    timeout == conf->dynamic_ps_timeout)
+> > +	    timeout == conf->dynamic_ps_forced_timeout)
+> >  		return 0;
+> >  
+> >  	sdata->u.mgd.powersave = enabled;
+> > -	conf->dynamic_ps_timeout = timeout;
+> > +	conf->dynamic_ps_forced_timeout = timeout;
+> >  
+> >  	/* no change, but if automatic follow powersave */
+> >  	mutex_lock(&sdata->u.mgd.mtx);
+> > diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> > index 4afe851..ebcca0e 100644
+> > --- a/net/mac80211/main.c
+> > +++ b/net/mac80211/main.c
+> > @@ -569,6 +569,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+> >  
+> >  	local->hw.conf.listen_interval = local->hw.max_listen_interval;
+> >  
+> > +	local->hw.conf.dynamic_ps_forced_timeout = -1;
+> > +
+> >  	result = sta_info_start(local);
+> >  	if (result < 0)
+> >  		goto fail_sta_info;
+> > diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> > index 35d8502..6402997 100644
+> > --- a/net/mac80211/mlme.c
+> > +++ b/net/mac80211/mlme.c
+> > @@ -476,6 +476,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+> >  {
+> >  	struct ieee80211_sub_if_data *sdata, *found = NULL;
+> >  	int count = 0;
+> > +	int timeout;
+> >  
+> >  	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS)) {
+> >  		local->ps_sdata = NULL;
+> > @@ -509,6 +510,19 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+> >  		beaconint_us = ieee80211_tu_to_usec(
+> >  					found->vif.bss_conf.beacon_int);
+> >  
+> > +		timeout = local->hw.conf.dynamic_ps_forced_timeout;
+> > +		if (timeout < 0) {
+> > +			if (latency <= 50000)
+> > +				timeout = 300;
+> > +			else if (latency <= 2000000000)
+> > +				timeout = 100;
+> > +			else if (latency <= 2100000000)
+> > +				timeout = 50;
+> > +			else
+> > +				timeout = 0;
+> 
+> Is it even possible to set it larger than 2000 seconds?
+
+Good question. I have not yet had the opportunity to test this, so I
+can't tell. You could be right. ;)
+
+-Juuso
+
+> johannes
+> 
+
+
