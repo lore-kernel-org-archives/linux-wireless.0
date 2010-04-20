@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49267 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755885Ab0DWF5Z (ORCPT
+Received: from static-92-33-14-100.sme.bredbandsbolaget.se ([92.33.14.100]:10811
+	"EHLO mailhost.lundinova.se" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754519Ab0DTLG7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 01:57:25 -0400
-Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <u2j6ed0b2681004221347z78c15832z3e0ff3ea51b4a5a8@mail.gmail.com>
-References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
-	 <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
-	 <1271954537.8469.15.camel@mj>
-	 <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
-	 <u2j6ed0b2681004221347z78c15832z3e0ff3ea51b4a5a8@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Apr 2010 07:57:21 +0200
-Message-ID: <1272002241.3737.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 20 Apr 2010 07:06:59 -0400
+Date: Tue, 20 Apr 2010 13:06:57 +0200
+From: Johan Hovold <johan.hovold@lundinova.se>
+To: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+Cc: Johan Hovold <johan.hovold@lundinova.se>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: corrupt frames forwarded to mac80211 as
+ decrypted
+Message-ID: <20100420110657.GH5288@lundinova.se>
+References: <20100331191058.GD18913@lundinova.se>
+ <20100416104850.GA13329@lundinova.se>
+ <20100420082519.GB5288@lundinova.se>
+ <1271754651.14253.112.camel@ranga-desktop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1271754651.14253.112.camel@ranga-desktop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-22 at 23:47 +0300, Grazvydas Ignotas wrote:
-> On Thu, Apr 22, 2010 at 11:33 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Thu, Apr 22, 2010 at 9:42 AM, Pavel Roskin <proski@gnu.org> wrote:
-> >> On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
-> >>
-> >>> How was this compiling for older kernels before then?
-> >>
-> >> Compiling was fine, but loading the firmware was failing sometimes.  I'm
-> >> glad somebody figured it out.  Thank you, Grazvydas!
-> >
-> > OK Applied. I'm still puzzled, if it compiled, then that means
-> > dev_set_uevent_suppress() was being defined somehow for older kernels.
-> 
-> there was already ifdef, old code:
->  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
->        dev_set_uevent_suppress(f_dev, 1);
->  #endif
-> 
-> new code:
->  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
->        dev_set_uevent_suppress(f_dev, 1);
-> #else
->        f_dev->uevent_suppress = 1;
->  #endif
+On Tue, Apr 20, 2010 at 02:40:51PM +0530, Ranga Rao Ravuri wrote:
+> Can you please tell us more about your test, 
+> what exactly is your test is ? 
+> What kind of traffic are you running 
+> what is your AP ?. 
 
-And the argument is that the new code should be
+I have a powerpc-based platform running AR9280 in AP mode. My STA is an
+Intel 5300 (but I have been able to reproduce it also with an STA using
+AR5008).
 
-	dev_set_uevent_suppress(f_dev, 1);
+After connecting I run iperf in client mode on the STA thus sending data
+to the STA. After a short while the AP stops receiving any data
+(including TCP-acks) and the transfer stalls.
 
-and some header file should provide
+I've verified that frames that look ok in the air can still be corrupt
+in ath9k. In particular, the status field is trashed so that frames are
+incorrectly forwarded to mac80211 marked as decrypted which can trigger
+countermeasures or update CCMP PN incorrectly (thereby dropping later,
+correct frames).
 
-static inline void dev_set_uevent_suppress(...)
-{
-	f_dev->uevent_suppress = 1;
-}
+Discarding frames which appear to have trashed status makes 802.11n
+work.
 
-which makes perfect sense. Although Luis merged it, a fix would be
-useful.
+> Are you testing with aggregated traffic or non-aggregate legacy
+> traffic ?
 
-Luis, a patch changing firmware_class.c just entered the tree :P I made
-it.
+Aggregated.
 
-johannes
+> Are you seeing only when CCMP is enabled or in WEP/TKIP also ?
+
+Only with 802.11n (CCMP). Everything works perfectly with 802.11g and
+WEP/TKIP/CCMP and I never see any corrupt frame status.
+
+> Can you please set register 0x8120 bit 28 to 1 and test this again to
+> see that helps ?
+
+I'll try that.
+
+Thanks,
+Johan
 
