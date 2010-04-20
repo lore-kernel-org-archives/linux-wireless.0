@@ -1,96 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:33212 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750856Ab0DILw4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 07:52:56 -0400
-Message-ID: <4BBF150E.3030507@openwrt.org>
-Date: Fri, 09 Apr 2010 13:52:46 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:64914 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731Ab0DTXgX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Apr 2010 19:36:23 -0400
+Received: by bwz25 with SMTP id 25so7447073bwz.28
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Apr 2010 16:36:22 -0700 (PDT)
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
- driver.
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <4BBEB6E1.70300@gmail.com> <4BBEBE6B.20209@openwrt.org> <201004091332.26307.helmut.schaa@googlemail.com>
-In-Reply-To: <201004091332.26307.helmut.schaa@googlemail.com>
+In-Reply-To: <6D966E94-4FD1-4675-B39B-296B4D82D2AB@cs.washington.edu>
+References: <48BAD814-F653-4CE3-85E0-A9D82EC31D53@cs.washington.edu>
+	<1271751747.8954.3.camel@jlt3.sipsolutions.net> <6D966E94-4FD1-4675-B39B-296B4D82D2AB@cs.washington.edu>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 21 Apr 2010 01:36:02 +0200
+Message-ID: <n2q69e28c911004201636k220a472dxc5f8f1aa5dfcd7f9@mail.gmail.com>
+Subject: Re: mac80211 and asymmetric 802.11n TX/RX
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-04-09 1:32 PM, Helmut Schaa wrote:
-> Am Freitag 09 April 2010 schrieb Felix Fietkau:
->> On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
->> > On 04/09/10 00:28, Felix Fietkau wrote:
->> >> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
->> >>> Only include definitions for RT chipsets that are also used inside the
->> >>> Ralink vendor drivers.
->> >>>
->> >>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->> >>> ---
->> >>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
->> >>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
->> >>>  2 files changed, 3 insertions(+), 17 deletions(-)
->> >>>
->> >>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> >>> index 394c8e4..4bc7e09 100644
->> >>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> >>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> >>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->> >>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
->> >>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
->> >>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
->> >>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
->> >>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
->> >>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
->> >>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
->> >>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
->> >>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
->> >>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
->> >>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->> >>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
->> >>>  	}
->> >>>  
->> >>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
->> >>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
->> >>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
->> >>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
->> >>> -	}
->> >>> -
->> >> Why are you removing support for RT3052? IMHO those writes were
->> >> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
->> > 
->> > That is because I have not been able to find them in any of the Ralink vendor drivers.
->> > Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
->> > as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
->> > RT2872 devices, but even for them I haven't found these BBP initializations.
->> > That's why I removed this part.
->> > 
->> > I have no problem re-instating this if I can find some evidence that these devices
->> > actually exist.
->> These chipsets won't show up in STA-only drivers, because they belong to
->> embedded APs. If you download GPL sources for devices such as ASUS
->> RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
->> values in BBPRegTable in the driver sources.
->> I have a few devices based on RT3052, which is why I added this code.
->> At some point I even had basic Rx/Tx working on it, but haven't tested
->> in a while.
-> 
-> I also couldn't find any evidence of the existence of an 3052 _rt_ chipset.
-> However, the ralink drivers defines a 3052 _rf_ chip:
-> 
-> #define RFIC_3052                   9       // 2.4G/5G 2T2R
-RT3052 is the name of the whole WiSoC chip, not just the MAC or RF part
-of it. Since wifi is integrated in the SoC, I don't think there is a
-separate name for just the wifi part.
+On Tue, Apr 20, 2010 at 7:10 PM, Daniel Halperin
+<dhalperi@cs.washington.edu> wrote:
+> Hi Johannes,
+>
+> On Apr 20, 2010, at 1:22 AM, Johannes Berg wrote:
+>>> Does anyone know if the 11n standard says that the set of TX rates has
+>>> to be a subset of the set of RX rates? This seems to be enforced now:
+>>> when I set up one node to be 2x1, i.e. transmit 2 streams but only
+>>> able to receive 1, then the mac80211 code only lets it transmit 1
+>>> streams (even with a 2-stream-capable receiver at the other end).
+>>
+>> I'm not sure. Reading 7.3.2.56.4 seems to imply that, but I'm not sure
+>> about the "Rx Highest Supported Data Rate" field. Seems like maybe you
+>> could set the "RX MCS bitmask" to more than is supported, limit it by
+>> the highest supported data rate, and then use the bitmask for TX?
+>
+> First, did you mean 7.3.2.57.4? (I'm using IEEE P802.11n/D7.0, but I assume the section numbers haven't changed). For me that section represents the "Supported MCS Set field".
+>
+> (An aside: I don't actually *have* 7.3.2.56. I'm using IEEE 802.11-2007 [has up to 7.3.2.35] and IEEE P802.11n/D7.0 [has 7.3.2.57 and beyond] --- In which document are the missing sections?)
+>
+> Can you point me at which text in the section you think implies this requirement?
+>
+> In any case, maybe this discussion is silly: I don't know of any devices with this strange configuration. Typically clients assume downlink-heavy and might support a 1x2 connection but 2x1, i.e. designed for uplink, seems unlikely.
 
-> I don't have such an rf chip in my devices but I don't think the BPP
-> register setup should depend on the actual rf chip. So, if the register
-> setup is really needed we should maybe check for rt2x00_is_soc instead
-> of removing the code?
-Yes, but rt2x00_is_soc() is not enough, since RT2880 is also SoC, but
-slightly different compared to RT3052. I've only tested RT3052 myself.
+Unless we are talking about an AP...
 
-- Felix
+>
+>>> A second question: my understanding is that if I am a 2x2 node and I
+>>> associate to a 3x3 AP, the same code will mask out the fact that the
+>>> AP can receive 3 streams since I can't transmit 3 streams. Is there a
+>>> way to access this info from the driver if I want it?
+>>
+>> Unfortunately not, at this point. We could keep track of it, what would
+>> you need it for?
+>
+> Okay, that's what I figured; I can hack around it locally. I'm working on an alternative rate selection algorithm that at one point tries to take into account how much receive diversity the other endpoint has. The intuition is that how well (e.g.) 2-stream rates work is going to depend not just on the channel, but also on how many excess antennas the receiver has. I would benefit from knowing whether they have 2 or 3 antennas even if I can only send them at most 2 streams.
+>
+> Thanks,
+> Dan--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
