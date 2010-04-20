@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:2774 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751538Ab0DJI57 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50554 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857Ab0DTIWh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Apr 2010 04:57:59 -0400
-Message-ID: <4BC03D95.8060801@gmail.com>
-Date: Sat, 10 Apr 2010 10:57:57 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-CC: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH 4/9] rt2x00: Remove rt2800 version	constants.
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>	<1270763437-29526-5-git-send-email-gwingerde@gmail.com> <201004090032.53842.IvDoorn@gmail.com> <4BBFA1BD.70900@free.fr>
-In-Reply-To: <4BBFA1BD.70900@free.fr>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Apr 2010 04:22:37 -0400
+Subject: Re: mac80211 and asymmetric 802.11n TX/RX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <48BAD814-F653-4CE3-85E0-A9D82EC31D53@cs.washington.edu>
+References: <48BAD814-F653-4CE3-85E0-A9D82EC31D53@cs.washington.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Apr 2010 10:22:27 +0200
+Message-ID: <1271751747.8954.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/10 23:53, Benoit PAPILLAULT wrote:
-> Ivo van Doorn a écrit :
->> On Thursday 08 April 2010, Gertjan van Wingerde wrote:
->>  
->>> The rt2800 version constants are inconsistent, and the version number
->>> don't
->>> mean a lot of things anyway. Use the literal values in the code
->>> instead of
->>> some sort of fabricated version name macro.
->>>
->>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>>     
->>
->> Perhaps a more elegant way of using and defining needs to be found.
->> But at least the defined show what the purpose for the values is
->> rather then having magical values spread around the code.
->>
->> Ivo
->>
->>   
-> Agreed, it's a lot better to avoid hardcoded value. #define adds a
-> meaning to the numeric value and if such define needs to be changed,
-> there's only one place to change, avoiding bugs by duplicating hardcoded
-> values and only changing one instance.
-> 
-> Even, #define MCS_0 0 is useful :-)
-> 
+Hi Dan,
 
-To be honest, I don't think that constants with meaningless names are better
-or useful.
+> Does anyone know if the 11n standard says that the set of TX rates has
+> to be a subset of the set of RX rates? This seems to be enforced now:
+> when I set up one node to be 2x1, i.e. transmit 2 streams but only
+> able to receive 1, then the mac80211 code only lets it transmit 1
+> streams (even with a 2-stream-capable receiver at the other end).
 
-If a constant is used it should have a meaningful name, otherwise it is just
-as bad as using a magical value. The only change is that it now is a magical
-name. IMHO that actually worsens the situation as code readers will start
-thinking about what that name actually means.
+I'm not sure. Reading 7.3.2.56.4 seems to imply that, but I'm not sure
+about the "Rx Highest Supported Data Rate" field. Seems like maybe you
+could set the "RX MCS bitmask" to more than is supported, limit it by
+the highest supported data rate, and then use the bitmask for TX?
 
-However, I think I found some sort of scheme that can be used for the version
-numbers. See my other email to the mailing list.
+> A quick diff to net/mac80211/ht.c that fixes this for equal modulation
+> streams is attached; the problem is still there for unequal modulation
+> directly below. Before I send it up I wanted to make sure I'm not
+> crazy.
 
----
-Gertjan.
+Hmm, ok. I interpreted the standard differently here, but your
+interpretation actually makes more sense I guess. Anyone who's more
+familiar with the standard?
+
+> A second question: my understanding is that if I am a 2x2 node and I
+> associate to a 3x3 AP, the same code will mask out the fact that the
+> AP can receive 3 streams since I can't transmit 3 streams. Is there a
+> way to access this info from the driver if I want it?
+
+Unfortunately not, at this point. We could keep track of it, what would
+you need it for?
+
+johannes
+
+
