@@ -1,75 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:44352 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754276Ab0DAIiu (ORCPT
+Received: from dsl-67-204-24-19.acanac.net ([67.204.24.19]:54979 "EHLO
+	emergent.ellipticsemi.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754751Ab0DTOMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 04:38:50 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/8] wl1271: Fix keep-alive related command error
-Date: Thu,  1 Apr 2010 11:38:19 +0300
-Message-Id: <1270111104-29549-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1270111104-29549-1-git-send-email-luciano.coelho@nokia.com>
-References: <1270111104-29549-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 20 Apr 2010 10:12:38 -0400
+Date: Tue, 20 Apr 2010 09:56:36 -0400
+From: Nick Bowler <nbowler@elliptictech.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.34-rc5: Reported regressions from 2.6.33
+Message-ID: <20100420135636.GA10674@elliptictech.com>
+References: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On 05:15 Tue 20 Apr     , Rafael J. Wysocki wrote:
+> If you know of any other unresolved regressions from 2.6.33, please let us
+> know either and we'll add them to the list.  Also, please let us know
+> if any of the entries below are invalid.
 
-The firmware does not like the host configuring the keep-alive after it has
-been once configured after a join-operation. Instead, it will complain about
-invalid parameters, which do not break functionality, but do not look nice
-in the syslog either.
+Please list these two similar regressions from 2.6.33 in the r600 DRM:
 
-This patch prevents the complaints by only configuring the keep-alive once
-for an association, after the first time join is performed with the correct
-bssid.
+ * r600 CS checker rejects GL_DEPTH_TEST w/o depth buffer:
+           https://bugs.freedesktop.org/show_bug.cgi?id=27571
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ * r600 CS checker rejects narrow FBO renderbuffers:
+           https://bugs.freedesktop.org/show_bug.cgi?id=27609
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 033cef0..2494c96 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1569,6 +1569,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	enum wl1271_cmd_ps_mode mode;
- 	struct wl1271 *wl = hw->priv;
- 	bool do_join = false;
-+	bool do_keepalive = false;
- 	int ret;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed");
-@@ -1685,6 +1686,14 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			if (ret < 0)
- 				goto out_sleep;
- 
-+			/*
-+			 * This is awkward. The keep-alive configs must be done
-+			 * *after* the join command, because otherwise it will
-+			 * not work, but it must only be done *once* because
-+			 * otherwise the firmware will start complaining.
-+			 */
-+			do_keepalive = true;
-+
- 			/* enable the connection monitoring feature */
- 			ret = wl1271_acx_conn_monit_params(wl, true);
- 			if (ret < 0)
-@@ -1763,6 +1772,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 		ret = wl1271_acx_aid(wl, wl->aid);
- 		if (ret < 0)
- 			goto out_sleep;
-+	}
-+
-+	if (do_keepalive) {
- 		ret = wl1271_cmd_build_klv_null_data(wl);
- 		if (ret < 0)
- 			goto out_sleep;
+Thanks.
+
 -- 
-1.6.3.3
-
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
