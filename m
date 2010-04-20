@@ -1,80 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:34340 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755845Ab0DFR05 (ORCPT
+Received: from mail-pz0-f204.google.com ([209.85.222.204]:50558 "EHLO
+	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753511Ab0DTXoJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 13:26:57 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so1138594fgg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 10:26:55 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
-	IvDoorn@gmail.com, gwingerde@gmail.com,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH] wireless: rt2x00: delete duplicates ids in rt73usb rt2500usb
-Date: Tue,  6 Apr 2010 19:26:31 +0200
-Message-Id: <1270574791-14006-1-git-send-email-xose.vazquez@gmail.com>
+	Tue, 20 Apr 2010 19:44:09 -0400
+Received: by pzk42 with SMTP id 42so4584278pzk.4
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Apr 2010 16:44:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <j2t69e28c911004201634h41e320bfu2f0746a25f1f0d00@mail.gmail.com>
+References: <1271802516-15195-1-git-send-email-lrodriguez@atheros.com>
+	<1271802516-15195-3-git-send-email-lrodriguez@atheros.com>
+	<j2t69e28c911004201634h41e320bfu2f0746a25f1f0d00@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 20 Apr 2010 16:43:49 -0700
+Message-ID: <z2p43e72e891004201643j7c0188a9x5f263493d06bd913@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ath9k_hw: make all AR9002 initvals use u32
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Follow the precepts of the ralink drivers.
+2010/4/20 Gábor Stefanik <netrolller.3d@gmail.com>:
+> Will the u_int32_t type be removed eventually? (Given that the
+> standard type is uint32_t.)
 
-(0x050d, 0x7050) is only found in:
+Not sure, but it doesn't matter for us so long as we use u32 :)
 
-RT25USB-SRC-V2.0.8.0/rt2570sw.h:#define RTVID8                  0x050D //ralink
-RT25USB-SRC-V2.0.8.0/rt2570sw.h:#define RTPID8                  0x7050
-RT25USB-SRC-V2.0.8.0/rt2570sw.h: {USB_DEVICE(RTVID8,RTPID8)},
-
-and (0x050d, 0x705a) (0x1371, 0x9022) (0x148f, 0x2573) are only in:
-
-2009_0713_RT73_Linux_STA_Drv1.1.0.3/Module/rtmp_def.h: {USB_DEVICE(0x050d,0x705a)}, /* Belkin */
-2009_0713_RT73_Linux_STA_Drv1.1.0.3/Module/rtmp_def.h: {USB_DEVICE(0x1371,0x9022)}, /* CNet */
-2009_0713_RT73_Linux_STA_Drv1.1.0.3/Module/rtmp_def.h: {USB_DEVICE(0x148f,0x2573)}, /* Ralink */
-
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |    4 ----
- drivers/net/wireless/rt2x00/rt73usb.c   |    1 -
- 2 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 13444b6..c7f6fa6 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1849,13 +1849,10 @@ static struct usb_device_id rt2500usb_device_table[] = {
- 	/* Belkin */
- 	{ USB_DEVICE(0x050d, 0x7050), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x050d, 0x7051), USB_DEVICE_DATA(&rt2500usb_ops) },
--	{ USB_DEVICE(0x050d, 0x705a), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Cisco Systems */
- 	{ USB_DEVICE(0x13b1, 0x000d), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x13b1, 0x0011), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x13b1, 0x001a), USB_DEVICE_DATA(&rt2500usb_ops) },
--	/* CNet */
--	{ USB_DEVICE(0x1371, 0x9022), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Conceptronic */
- 	{ USB_DEVICE(0x14b2, 0x3c02), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* D-LINK */
-@@ -1878,7 +1875,6 @@ static struct usb_device_id rt2500usb_device_table[] = {
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x1706), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2570), USB_DEVICE_DATA(&rt2500usb_ops) },
--	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x9020), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Sagem */
- 	{ USB_DEVICE(0x079b, 0x004b), USB_DEVICE_DATA(&rt2500usb_ops) },
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 290d70b..3e30ccf 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2339,7 +2339,6 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x0b05, 0x1723), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x0b05, 0x1724), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Belkin */
--	{ USB_DEVICE(0x050d, 0x7050), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x050d, 0x705a), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x050d, 0x905b), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x050d, 0x905c), USB_DEVICE_DATA(&rt73usb_ops) },
--- 
-1.6.6.1
-
+  Luis
