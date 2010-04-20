@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:62555 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752704Ab0DZSEh (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:44001 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387Ab0DTAZY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 14:04:37 -0400
-Received: by mail-pw0-f46.google.com with SMTP id 9so8601955pwj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 11:04:37 -0700 (PDT)
-Message-ID: <4BD5D5B1.6020906@lwfinger.net>
-Date: Mon, 26 Apr 2010 13:04:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 19 Apr 2010 20:25:24 -0400
+Received: by vws5 with SMTP id 5so2554988vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 17:25:23 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] ssb: Avoid system hang when SPROM read fails
-References: <4bd4c284.WBohOsmgdwRzw5JC%Larry.Finger@lwfinger.net> <20100426171505.GC2387@tuxdriver.com>
-In-Reply-To: <20100426171505.GC2387@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1271707616-4150-1-git-send-email-hauke@hauke-m.de>
+References: <4BCCA1D9.30208@hauke-m.de> <1271707616-4150-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 19 Apr 2010 17:25:03 -0700
+Message-ID: <i2o43e72e891004191725waa5246e8v591601921b4ec109@mail.gmail.com>
+Subject: Re: [PATCH v2] compat: backport convert multicast list to list_head.
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	proski@gnu.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/2010 12:15 PM, John W. Linville wrote:
-> 
-> Well, the "good" news is that I hit the "Unable to read SPROM" case.
-> The bad news is that the box still hangs after the -ENODEV.  I have
-> not yet tracked-down the exact location of the current hang.
-> 
-> John
-> 
-> P.S.  Sorry about the 'radio silence' -- I've been distracted with
-> some other things.  Also, the box in question originally belonged
-> to someone else who had configured it in a way that was less than
-> friendly to kernel development.  I finally reinstalled it...
+On Mon, Apr 19, 2010 at 1:06 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  include/linux/compat-2.6.35.h |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>
+> diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
+> index 964e8dc..4d3483a 100644
+> --- a/include/linux/compat-2.6.35.h
+> +++ b/include/linux/compat-2.6.35.h
+> @@ -4,6 +4,7 @@
+>  #include <linux/version.h>
+>
+>  #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
+> +#include <linux/etherdevice.h>
+>
+>  #define IW_HANDLER(id, func)                   \
+>        [IW_IOCTL_IDX(id)] = func
+> @@ -11,6 +12,8 @@
+>  #define  SDIO_BUS_ECSI         0x20    /* Enable continuous SPI interrupt */
+>  #define  SDIO_BUS_SCSI         0x40    /* Support continuous SPI interrupt */
+>
+> +#define netdev_hw_addr dev_mc_list
+> +
+>  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
+>
+>  #endif /* LINUX_26_35_COMPAT_H */
 
-That box is certainly resistant!
+Lets go with this approach for now, and if it bites us in the ass we
+now not to do that again :)
 
-I certainly understand your distractions. That has to be a major
-understatement.
+BTW Thanks so much for all these patches, I'm merging them now, I
+counted 6, 3 for compat, 3 for compat-wireless, if I missed anything
+please let me know. Going to force out a new tarball now.
 
-As the patch makes some improvement in both your system and the one in
-Bug #15825, I'll push it as a real patch.
+compat:
 
-Would your box be available to me as a loaner? I have considered buying
-a netbook for debugging purposes, but I cannot quite justify the cost.
-In addition, Murphy's law would make whatever one I bought work without
-any problems.
+    compat: backport convert multicast list to list_head.
+    compat: Add linux/version.h include before using it.
+    compat: Add definitions needed for libertas sdio driver.
 
-Larry
+compat-wireless:
+
+    compat-wireless: include net and trace includes form compat
+    compat-wireless: Remove use of sdio quirks attribute
+    compat-wireless: backport convert multicast list to list_head.
+
+  Luis
