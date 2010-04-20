@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43689 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753219Ab0DRNiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Apr 2010 09:38:08 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: Add definitions needed for libertas sdio driver.
-Date: Sun, 18 Apr 2010 15:37:56 +0200
-Message-Id: <1271597877-4878-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1271597877-4878-1-git-send-email-hauke@hauke-m.de>
-References: <1271597877-4878-1-git-send-email-hauke@hauke-m.de>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47829 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753307Ab0DTD7O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Apr 2010 23:59:14 -0400
+Date: Mon, 19 Apr 2010 20:57:23 -0400
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.34-rc5: Reported regressions from 2.6.33
+Message-Id: <20100419205723.8724338c.akpm@linux-foundation.org>
+In-Reply-To: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
+References: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.35.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+On Tue, 20 Apr 2010 05:15:57 +0200 (CEST) "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
 
-diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-index 7387c46..964e8dc 100644
---- a/include/linux/compat-2.6.35.h
-+++ b/include/linux/compat-2.6.35.h
-@@ -8,6 +8,9 @@
- #define IW_HANDLER(id, func)			\
- 	[IW_IOCTL_IDX(id)] = func
- 
-+#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
-+#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
- 
- #endif /* LINUX_26_35_COMPAT_H */
--- 
-1.6.3.3
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15812
+> Subject		: utsname.domainname not set in x86_32 processes (causing "YPBINDPROC_DOMAIN: domain not bound" errors)
+> Submitter	:  <adi@hexapodia.org>
+> Date		: 2010-04-19 21:28 (1 days old)
 
+I merged hch's fix for this twelve seconds ago.
