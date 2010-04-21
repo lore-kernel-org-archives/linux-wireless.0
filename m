@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46768 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933124Ab0DHT1l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:41 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 028/102] ath9k_hw: Implement PLL control on AR9003
-Date: Thu,  8 Apr 2010 15:26:24 -0400
-Message-Id: <1270754858-26266-29-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from c60.cesmail.net ([216.154.195.49]:39342 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753323Ab0DUVzA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 17:55:00 -0400
+Subject: Re: [PATCH 1/2] ath9k_hw: make two initvals consto for the AR9001
+ family
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1271802516-15195-2-git-send-email-lrodriguez@atheros.com>
+References: <1271802516-15195-1-git-send-email-lrodriguez@atheros.com>
+	 <1271802516-15195-2-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Wed, 21 Apr 2010 17:54:57 -0400
+Message-Id: <1271886897.6212.9.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Tue, 2010-04-20 at 18:28 -0400, Luis R. Rodriguez wrote:
+> This makes ar5416Addac_9160 and ar5416Addac_9160 const
+> I guess we skipped them long ago.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   23 +++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/reg.h        |    6 ++++++
- 2 files changed, 27 insertions(+), 2 deletions(-)
+It's a step in the right direction, but it makes the code more
+misleading.  Those arrays are not constant.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 71d1b01..94dcf79 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -111,8 +111,27 @@ static void ar9003_hw_spur_mitigate(struct ath_hw *ah, struct ath9k_channel *cha
- static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
- 					 struct ath9k_channel *chan)
- {
--	/* TODO */
--	return 0;
-+	u32 pll;
-+
-+	pll = SM(0x5, AR_RTC_9300_PLL_REFDIV);
-+
-+	if (chan && IS_CHAN_HALF_RATE(chan))
-+		pll |= SM(0x1, AR_RTC_9300_PLL_CLKSEL);
-+	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-+		pll |= SM(0x2, AR_RTC_9300_PLL_CLKSEL);
-+
-+	if (chan && IS_CHAN_5GHZ(chan)) {
-+		pll |= SM(0x28, AR_RTC_9300_PLL_DIV);
-+
-+		/*
-+		 * When doing fast clock, set PLL to 0x142c
-+		 */
-+		if (IS_CHAN_A_5MHZ_SPACED(chan))
-+			pll = 0x142c;
-+	} else
-+		pll |= SM(0x2c, AR_RTC_9300_PLL_DIV);
-+
-+	return pll;
- }
- 
- static void ar9003_hw_set_channel_regs(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index bc48bc9..9d63286 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1040,6 +1040,12 @@ enum {
- #define AR_PCIE_MSI                              (AR_SREV_9300_20_OR_LATER(ah) ? 0x40a4 : 0x4094)
- #define AR_PCIE_MSI_ENABLE                       0x00000001
- 
-+#define AR_RTC_9300_PLL_DIV          0x000003ff
-+#define AR_RTC_9300_PLL_DIV_S        0
-+#define AR_RTC_9300_PLL_REFDIV       0x00003C00
-+#define AR_RTC_9300_PLL_REFDIV_S     10
-+#define AR_RTC_9300_PLL_CLKSEL       0x0000C000
-+#define AR_RTC_9300_PLL_CLKSEL_S     14
- 
- #define AR_RTC_9160_PLL_DIV	0x000003ff
- #define AR_RTC_9160_PLL_DIV_S   0
+Please see ath9k_hw_def_set_addac() and ath9k_hw_4k_set_addac().  They
+both modify ah->iniAddac for AR9160.
+
+The compiler doesn't warn about it because the definition of
+INIT_INI_ARRAY uses a cast that removes the const modifier.
+
+It's not an objection against the patch, it's just a reminder that we
+have a real problem with the code that is likely to affect parallel
+operation of more than one AR9160 device in the system, especially if
+they are working on different channels.
+
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
