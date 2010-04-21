@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50236 "EHLO mail.atheros.com"
+Received: from nox2.protox.org ([95.130.11.66]:34645 "EHLO protox.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751266Ab0DLHXq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 03:23:46 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 00:23:46 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1753198Ab0DUJFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 05:05:06 -0400
+Date: Wed, 21 Apr 2010 10:57:39 +0200
+From: Jerome Glisse <glisse@freedesktop.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Nick Bowler <nbowler@elliptictech.com>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: 2.6.34-rc5: Reported regressions from 2.6.33
+Message-ID: <20100421085739.GA2576@barney.localdomain>
+References: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
+ <20100420135636.GA10674@elliptictech.com>
+ <201004210715.38621.rjw@sisk.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19394.51792.397561.53767@gargle.gargle.HOWL>
-Date: Mon, 12 Apr 2010 12:52:56 +0530
-To: Ming Lei <tom.leiming@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/3] ath9k-htc: replace __dev_alloc_skb with alloc_skb
- in 	ath9k_hif_usb_alloc_rx_urbs
-In-Reply-To: <n2ld82e647a1004110611hc424f464gf8443967fa97c21a@mail.gmail.com>
-References: <1270911887-5717-1-git-send-email-tom.leiming@gmail.com>
-	<19393.24337.10019.88274@gargle.gargle.HOWL>
-	<n2ld82e647a1004110611hc424f464gf8443967fa97c21a@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201004210715.38621.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ming Lei wrote:
-> The skb->data is passed into usb hcd and usb hcd will do dma mapping
-> for the buffer of skb->data, so it is better to keep it cache-line aligned.
+On Wed, Apr 21, 2010 at 07:15:38AM +0200, Rafael J. Wysocki wrote:
+> On Tuesday 20 April 2010, Nick Bowler wrote:
+> > On 05:15 Tue 20 Apr     , Rafael J. Wysocki wrote:
+> > > If you know of any other unresolved regressions from 2.6.33, please let us
+> > > know either and we'll add them to the list.  Also, please let us know
+> > > if any of the entries below are invalid.
+> > 
+> > Please list these two similar regressions from 2.6.33 in the r600 DRM:
+> > 
+> >  * r600 CS checker rejects GL_DEPTH_TEST w/o depth buffer:
+> >            https://bugs.freedesktop.org/show_bug.cgi?id=27571
+> > 
+> >  * r600 CS checker rejects narrow FBO renderbuffers:
+> >            https://bugs.freedesktop.org/show_bug.cgi?id=27609
 > 
-> Size of cache line is very cpu dependent, we can't suppose it is
-> 32byte(NET_SKB_PAD) aligned, 64byte or more is very possible.
+> Do you want to me to add them as one entry or as two separate bugs?
+> 
+> Rafael
+> 
 
-Hm. Indeed, using alloc_skb() is right in this case,
-since we reuse the same RX buffer and never pass it on to mac80211 directly.
-Instead, new SKBs are formed from the stream and sent to mac80211.
+First one is userspace bug, i need to look into the second one.
+ie we were lucky the hw didn't lockup without depth buffer and
+depth test enabled.
 
-So yes, it makes sense to use alloc_skb() instead of dev_alloc_skb().
-A small nitpick: It would be a bit clearer if you can use kfree_skb()
-instead of dev_kfree_skb_any() in the corresponding places.
-
-Sujith
+Cheers,
+Jerome
