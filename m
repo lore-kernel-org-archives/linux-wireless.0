@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63409 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755790Ab0DPB22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 21:28:28 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/2] iwmc3200wifi: check sparse endianness annotations
-Date: Fri, 16 Apr 2010 09:28:44 +0800
-Message-Id: <1271381324-21044-2-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1271381324-21044-1-git-send-email-yi.zhu@intel.com>
-References: <1271381324-21044-1-git-send-email-yi.zhu@intel.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:45814 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754714Ab0DUCCq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Apr 2010 22:02:46 -0400
+Message-ID: <4bce5cc3.966bdc0a.2ef7.fffff5de@mx.google.com>
+Date: Tue, 20 Apr 2010 19:02:43 -0700 (PDT)
+From: Ben Gamari <bgamari.foss@gmail.com>
+Subject: Re: 2.6.34-rc5: Reported regressions from 2.6.33
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+In-Reply-To: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
+References: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <sameo@linux.intel.com>
+On Tue, 20 Apr 2010 05:15:57 +0200 (CEST), "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+> This message contains a list of some regressions from 2.6.33,
+> for which there are no fixes in the mainline known to the tracking team.
+> If any of them have been fixed already, please let us know.
+> 
+> If you know of any other unresolved regressions from 2.6.33, please let us
+> know either and we'll add them to the list.  Also, please let us know
+> if any of the entries below are invalid.
+> 
 
-Add -D__CHECK_ENDIAN__ to driver ccflags so that sparse will
-always check endianness by default.
+I have recently reported this suspend regression on my Dell laptop hardware.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/Makefile |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+References: http://lkml.org/lkml/2010/4/18/20
+Bug-report: https://bugzilla.kernel.org/show_bug.cgi?id=15820
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/Makefile b/drivers/net/wireless/iwmc3200wifi/Makefile
-index aeed5cd..cdc7e07 100644
---- a/drivers/net/wireless/iwmc3200wifi/Makefile
-+++ b/drivers/net/wireless/iwmc3200wifi/Makefile
-@@ -6,3 +6,5 @@ iwmc3200wifi-$(CONFIG_IWM_DEBUG) += debugfs.o
- iwmc3200wifi-$(CONFIG_IWM_TRACING) += trace.o
- 
- CFLAGS_trace.o := -I$(src)
-+
-+ccflags-y += -D__CHECK_ENDIAN__
--- 
-1.6.3.3
+Thanks,
 
+- Ben
