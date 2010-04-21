@@ -1,111 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:2060 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751191Ab0DJUwZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Apr 2010 16:52:25 -0400
-Message-ID: <4BC0E506.90605@gmail.com>
-Date: Sat, 10 Apr 2010 22:52:22 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
+Received: from web56805.mail.re3.yahoo.com ([66.196.97.79]:26921 "HELO
+	web56805.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751314Ab0DUIRI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 04:17:08 -0400
+Message-ID: <754773.66544.qm@web56805.mail.re3.yahoo.com>
+Date: Wed, 21 Apr 2010 01:17:05 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: [rt2x00] rt3070 fails to initialize with rt2800usb
 To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register
- initialization.
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-7-git-send-email-gwingerde@gmail.com> <201004090033.48341.IvDoorn@gmail.com>
-In-Reply-To: <201004090033.48341.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+In-Reply-To: <201004191825.54738.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/10 00:33, Ivo van Doorn wrote:
-> On Thursday 08 April 2010, Gertjan van Wingerde wrote:
->> rt2x00 had preliminary support for RT3070 based devices, but the support was
->> incomplete.
->> Update the RT3070 register initialization to be similar to the latest Ralink
->> vendor driver.
->>
->> With this patch my rt3070 based devices start showing a sign of life.
->>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> 
-> 
->> @@ -1086,7 +1084,7 @@ EXPORT_SYMBOL_GPL(rt2800_link_tuner);
->>   */
->>  int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->>  {
->> -	u32 reg;
->> +	u32 reg, reg2;
->>  	unsigned int i;
->>  
->>  	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
->> @@ -1204,11 +1202,18 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->>  	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_CC_DELAY_TIME, 2);
->>  	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
->>  
->> -	if (rt2x00_is_usb(rt2x00dev) &&
->> -	    rt2x00_rt(rt2x00dev, RT3070) && rt2x00_rev(rt2x00dev) == 0x0200) {
->> +	if (rt2x00_rt(rt2x00dev, RT3070)) {
->>  		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
->> -		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
->> -		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
->> +
->> +		if (rt2x00_rev(rt2x00dev) < 0x0201) {
->> +			reg = 0x00000000;
->> +			reg2 = 0x0000002c;
->> +		} else {
->> +			reg = 0x00080606;
->> +			reg2 = 0x00000000;
->> +		}
->> +		rt2800_register_write(rt2x00dev, TX_SW_CFG1, reg);
->> +		rt2800_register_write(rt2x00dev, TX_SW_CFG2, reg2);
-> 
-> Might as well put the rt2800_register_write call into the if, rather then storing
-> it into variables first. That way it is consistent with the rest of the code.
 
-OK.
-
->  
->> @@ -1751,6 +1739,28 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->>  	rt2x00_set_field8(&bbp, BBP4_BANDWIDTH, 0);
->>  	rt2800_bbp_write(rt2x00dev, 4, bbp);
->>  
->> +	if (rt2x00_rt(rt2x00dev, RT3070) && rt2x00_rev(rt2x00dev) < 0x0201)
->> +		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
->> +
->> +	rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
->> +	rt2x00_set_field32(&reg, OPT_14_CSR_BIT0, 1);
->> +	rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
->> +
->> +	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
->> +	rt2x00_set_field8(&rfcsr, RFCSR17_R2, 0);
->> +	rt2x00_eeprom_read(rt2x00dev, EEPROM_RSSI_BG2, &eeprom);
->> +	if ((eeprom & 0x07) >= 1)
+> > > Thats odd, in compar-wireless, it already
+> contains the
+> > > lines:
+> > > 
+> > > #ifdef CONFIG_RT2800USB_RT30XX
+> > >     <..snip..>
+> > >     /* Ralink */
+> > >     { USB_DEVICE(0x148f, 0x2070),
+> > > USB_DEVICE_DATA(&rt2800usb_ops) },
+> > >     { USB_DEVICE(0x148f, 0x3070),
+> > > USB_DEVICE_DATA(&rt2800usb_ops) },
+> > >     { USB_DEVICE(0x148f, 0x3071),
+> > > USB_DEVICE_DATA(&rt2800usb_ops) },
+> > >     { USB_DEVICE(0x148f, 0x3072),
+> > > USB_DEVICE_DATA(&rt2800usb_ops) },
+> > >     <..snip..>
+> > > #endif
+> > > 
+> > > So adding the USB ID does not need to be added.
+> > > 
+> > > Ivo
+> > 
+> > It is odd. I followed exactly the same logic you have,
+> but I'm adamant the module doesn't recognize the VID of card
+> as it is. Lets get factual:
+> > 
+> > compat-wireless from March 28th. default install (make
+> && make install) here is the output when the
+> rt2800usb is loaded:
+> > 
+> > [21902.553231] Generic kernel compatibility enabled
+> based on linux-next next-20100113
+> > [21902.596351] cfg80211: Calling CRDA to update world
+> regulatory domain
+> > [21902.695076] usbcore: registered new interface
+> driver rt2800usb
+> > [21902.714019] cfg80211: World regulatory domain
+> updated:
+> > [21902.714026]     (start_freq - end_freq @
+> bandwidth), (max_antenna_gain, max_eirp)
+> > [21902.714032]     (2402000 KHz - 2472000 KHz @
+> 40000 KHz), (300 mBi, 2000 mBm)
+> > [21902.714036]     (2457000 KHz - 2482000 KHz @
+> 20000 KHz), (300 mBi, 2000 mBm)
+> > [21902.714041]     (2474000 KHz - 2494000 KHz @
+> 20000 KHz), (300 mBi, 2000 mBm)
+> > [21902.714045]     (5170000 KHz - 5250000 KHz @
+> 40000 KHz), (300 mBi, 2000 mBm)
+> > [21902.714050]     (5735000 KHz - 5835000 KHz @
+> 40000 KHz), (300 mBi, 2000 mBm)
+> > 
+> > modinfo rt2800usb |grep 3070 -- returns nothing
+> > 
+> > as soon as I add the 148f:rt3070 to: 
+> > 
+> >     /* Ralink */
+> >     { USB_DEVICE(0x148f, 0x2770),
+> USB_DEVICE_DATA(&rt2800usb_ops) },
+> >     { USB_DEVICE(0x148f, 0x2870),
+> USB_DEVICE_DATA(&rt2800usb_ops) },
+> >     { USB_DEVICE(0x148f, 0x3070),
+> USB_DEVICE_DATA(&rt2800usb_ops) }, <--- manually
+> added
+> >        /* Samsung */
+> > 
+> > rt2800usb recognizes the chip and initializes all
+> operations:
+> > 
+> > [22310.272382] usb 5-2.4: new high speed USB device
+> using ehci_hcd and address 10
+> > [22310.381269] usb 5-2.4: configuration #1 chosen from
+> 1 choice
+> > [22310.416482] phy1: Selected rate control algorithm
+> 'minstrel'
+> > [22310.417403] Registered led device:
+> rt2800usb-phy1::radio
+> > [22310.417456] Registered led device:
+> rt2800usb-phy1::assoc
+> > [22310.417505] Registered led device:
+> rt2800usb-phy1::quality
+> > [22310.479159] udev: renamed network interface wlan0
+> to wlan2
+> > [22310.483779] rt2800usb 5-2.4:1.0: firmware:
+> requesting rt2870.bin
+> > 
+> > Now, modinfo rt2800usb |grep 3070 -- shows its OK:
+> > 
+> > alias:         
+> usb:v148Fp3070d*dc*dsc*dp*ic*isc*ip*
+> > 
+> > 
+> > This is a longstanding bug from at least few months or
+> so,  I thought you were experimenting/adjusting the code
+> and I figured it would be temporary, but it has been so long
+> that I thought I had to report this now.
+> > 
+> > Walter.
 > 
-> Might be nicer to do the access using rt2x00_get_field16,
-> plus some name for this magical field in the header file.
-
-OK. I'll do that. Note that the EEPROM field is used in multiple ways, possibly depending
-on the chipset type. I'll add a comment stating that, so that it is explained why the
-magical field for this EEPROM offset overlap.
-
+> Just checked the wireless-compat package, but are you sure
+> that the config file contains:
+>     CONFIG_RT2800USB_RT30XX=y
+> and not the default:
+>     # CONFIG_RT2800USB_RT30XX=y
 > 
->> +		rt2x00_set_field8(&rfcsr, RFCSR17_R1, eeprom & 0x07);
->> +	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
->> +
->> +	if (rt2x00_rt(rt2x00dev, RT3070)) {
->> +		rt2800_rfcsr_read(rt2x00dev, 27, &rfcsr);
->> +		rfcsr &= 0x77;
->> +		if (rt2x00_rt(rt2x00dev, RT3070) && rt2x00_rev(rt2x00dev) < 0x0201)
->> +			rfcsr |= 0x03;
->> +		rt2800_rfcsr_write(rt2x00dev, 27, rfcsr);
->> +	}
+> Note the prefixed '#' which should be removed to enable the
+> configuration option.
 > 
-> Any ideas what these fields mean? Could set_field8 and _get_field8 simplify the code?
+> Ivo
 
-Again, no idea. I'll create some field names, like RFCSR27_R1, etc. This is aligned with
-what was done for other unknown RF CSRs.
+I think I spoke too early. Must have been a snarl up at my end, because even removing the "#" comment sign before "CONFIG_RT2800USB_RT30XX=y" in config.mk doesn't solve the detection problem.
 
----
-Gertjan.
+I just concluded a test with today's compat-wireless /April 20/, enabled "CONFIG_RT2800USB_RT30XX=y" in config.mk, but rt2800usb doesn't detect the VIDs and subsequently fails to initialize the device. Adding, however the card's VIDs in the upper portion of code appears to solve the case. I welcome you to test yourself.
+
+The good news is, once we get past the detection debacle the device seems to finally show some life.
+
+Walter.
+
+
+      
