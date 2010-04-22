@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:35717 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038Ab0DOMRQ (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:50733 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752676Ab0DVWNM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 08:17:16 -0400
-Received: by ewy20 with SMTP id 20so459287ewy.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Apr 2010 05:17:15 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54pci: fix serious sparse warning
-Date: Thu, 15 Apr 2010 14:17:07 +0200
-Cc: linville@tuxdriver.com
+	Thu, 22 Apr 2010 18:13:12 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so71837fgg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 15:13:09 -0700 (PDT)
+Date: Fri, 23 Apr 2010 00:15:44 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: rc80211_minstrel.c:70 WARNING with 2.6.34-rc4
+Message-ID: <20100422221544.GA15879@linux-m68k.org>
+References: <20100418085653.GA7345@linux-m68k.org> <1271694855.9026.51.camel@mj> <20100419174100.GA5312@linux-m68k.org> <4BCC95CC.7030109@openwrt.org> <20100419175508.GB5312@linux-m68k.org> <4BCC9A27.9000104@openwrt.org> <1271972321.12589.2.camel@mj>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004151417.07538.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1271972321.12589.2.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a bug which was just recently introduced by
-("p54pci: prevent stuck rx-ring on slow system").
+On Thu, Apr 22, 2010 at 05:38:41PM -0400, Pavel Roskin wrote:
+> On Mon, 2010-04-19 at 20:00 +0200, Felix Fietkau wrote:
+> 
+> > > can that happen when both ends are configured to a fixed rate of 11M?
+> > No idea. I've never used fixed-rate. I guess it could, if it uses 11M
+> > for communicating with a peer that it for some reason did not enable
+> > this rate for.
+> 
+> I think if there is a legitimate condition when it can happen, we should
+> not be using WARN_ON.
 
-make M=drivers/net/wireless/p54 C=2 CF=-D__CHECK_ENDIAN__
-  CHECK   drivers/net/wireless/p54/p54pci.c                                                                 
-drivers/net/wireless/p54/p54pci.c:143:11: warning: cast to restricted __le32                                
-  CC [M]  drivers/net/wireless/p54/p54pci.o
+certainly there must be rate limitting before it hits any stable kernel.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index 86f3e9a..679da7e 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -140,7 +140,7 @@ static void p54p_refill_rx_ring(struct ieee80211_hw *dev,
- 
- 	idx = le32_to_cpu(ring_control->host_idx[ring_index]);
- 	limit = idx;
--	limit -= le32_to_cpu(index);
-+	limit -= index;
- 	limit = ring_limit - limit;
- 
- 	i = idx % ring_limit;
+Richard
+
