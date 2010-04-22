@@ -1,99 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32841 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757326Ab0DOVjo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 50/97] ath9k_hw: move the AR9280 OLC temp comp to its own helper
-Date: Thu, 15 Apr 2010 17:38:55 -0400
-Message-Id: <1271367582-992-51-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:43124 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753516Ab0DVDns (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 23:43:48 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 20:43:48 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19407.50651.473633.812258@gargle.gargle.HOWL>
+Date: Thu, 22 Apr 2010 09:13:23 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/9] ath9k_htc: Handle device unplug properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |   52 +++++++++++++++++--------------
- 1 files changed, 28 insertions(+), 24 deletions(-)
+When the USB device has been unplugged, there is
+no point in trying to send commands to the target.
+Fix this by denying all WMI commands in such a case.
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 5d61169..dae200c 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -700,40 +700,44 @@ static void ar9287_hw_olc_temp_compensation(struct ath_hw *ah)
- 	}
- }
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++++++++
+ drivers/net/wireless/ath/ath9k/wmi.c          |    3 +++
+ 3 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index c765ff4..b771e20 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -329,6 +329,7 @@ struct htc_beacon_config {
+ #define OP_ASSOCIATED     BIT(8)
+ #define OP_ENABLE_BEACON  BIT(9)
+ #define OP_LED_DEINIT     BIT(10)
++#define OP_UNPLUGGED      BIT(11)
  
--static void ath9k_olc_temp_compensation(struct ath_hw *ah)
-+static void ar9280_hw_olc_temp_compensation(struct ath_hw *ah)
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index a861896..701f2ef 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -744,6 +744,9 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
+ 	if (ret)
+ 		goto err_init;
+ 
++	/* The device may have been unplugged earlier. */
++	priv->op_flags &= ~OP_UNPLUGGED;
++
+ 	ret = ath9k_init_device(priv, devid);
+ 	if (ret)
+ 		goto err_init;
+@@ -760,6 +763,11 @@ err_free:
+ void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
  {
- 	u32 rddata, i;
- 	int delta, currPDADC, regval;
- 
--	if (OLC_FOR_AR9287_10_LATER) {
--		ar9287_hw_olc_temp_compensation(ah);
--	} else {
--		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
--		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
-+	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
-+	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
- 
--		if (ah->initPDADC == 0 || currPDADC == 0)
--			return;
-+	if (ah->initPDADC == 0 || currPDADC == 0)
-+		return;
- 
--		if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
--			delta = (currPDADC - ah->initPDADC + 4) / 8;
--		else
--			delta = (currPDADC - ah->initPDADC + 5) / 10;
--
--		if (delta != ah->PDADCdelta) {
--			ah->PDADCdelta = delta;
--			for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
--				regval = ah->originalGain[i] - delta;
--				if (regval < 0)
--					regval = 0;
--
--				REG_RMW_FIELD(ah,
--					      AR_PHY_TX_GAIN_TBL1 + i * 4,
--					      AR_PHY_TX_GAIN, regval);
--			}
-+	if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
-+		delta = (currPDADC - ah->initPDADC + 4) / 8;
-+	else
-+		delta = (currPDADC - ah->initPDADC + 5) / 10;
+ 	if (htc_handle->drv_priv) {
 +
-+	if (delta != ah->PDADCdelta) {
-+		ah->PDADCdelta = delta;
-+		for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
-+			regval = ah->originalGain[i] - delta;
-+			if (regval < 0)
-+				regval = 0;
++		/* Check if the device has been yanked out. */
++		if (hotunplug)
++			htc_handle->drv_priv->op_flags |= OP_UNPLUGGED;
 +
-+			REG_RMW_FIELD(ah,
-+				      AR_PHY_TX_GAIN_TBL1 + i * 4,
-+				      AR_PHY_TX_GAIN, regval);
- 		}
- 	}
- }
+ 		ath9k_deinit_device(htc_handle->drv_priv);
+ 		ath9k_deinit_wmi(htc_handle->drv_priv);
+ 		ieee80211_free_hw(htc_handle->drv_priv->hw);
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index dc6c6fc..c688545 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -276,6 +276,9 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	int time_left, ret = 0;
+ 	unsigned long flags;
  
-+static void ath9k_olc_temp_compensation(struct ath_hw *ah)
-+{
-+	if (OLC_FOR_AR9287_10_LATER)
-+		ar9287_hw_olc_temp_compensation(ah);
-+	else
-+		ar9280_hw_olc_temp_compensation(ah);
-+}
++	if (wmi->drv_priv->op_flags & OP_UNPLUGGED)
++		return 0;
 +
- static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
- {
- 	u32 regVal;
+ 	if (!wmi)
+ 		return -EINVAL;
+ 
 -- 
-1.6.3.3
+1.7.0.5
 
