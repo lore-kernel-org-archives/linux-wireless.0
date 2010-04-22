@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:45523 "EHLO lo.gmane.org"
+Received: from c60.cesmail.net ([216.154.195.49]:46952 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755213Ab0CaWaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Mar 2010 18:30:12 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Nx6QK-0005HZ-RQ
-	for linux-wireless@vger.kernel.org; Thu, 01 Apr 2010 00:30:08 +0200
-Received: from 94-192-45-120.zone6.bethere.co.uk ([94.192.45.120])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 00:30:08 +0200
-Received: from linux by 94-192-45-120.zone6.bethere.co.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 00:30:08 +0200
-To: linux-wireless@vger.kernel.org
-From: Adam Baker <linux@baker-net.org.uk>
-Subject: Re: [PATCH 2/4] rt2x00: Enable powersaving by default again on rt2500usb.
-Date: Wed, 31 Mar 2010 22:29:58 +0000 (UTC)
-Message-ID: <loom.20100401T002825-964@post.gmane.org>
-References: <1269985826-17438-1-git-send-email-gwingerde@gmail.com> <1269985826-17438-3-git-send-email-gwingerde@gmail.com>
+	id S1750993Ab0DVVis (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Apr 2010 17:38:48 -0400
+Subject: Re: rc80211_minstrel.c:70 WARNING with 2.6.34-rc4
+From: Pavel Roskin <proski@gnu.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Richard Zidlicky <rz@linux-m68k.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4BCC9A27.9000104@openwrt.org>
+References: <20100418085653.GA7345@linux-m68k.org>
+	 <1271694855.9026.51.camel@mj> <20100419174100.GA5312@linux-m68k.org>
+	 <4BCC95CC.7030109@openwrt.org> <20100419175508.GB5312@linux-m68k.org>
+	 <4BCC9A27.9000104@openwrt.org>
+Content-Type: text/plain
+Date: Thu, 22 Apr 2010 17:38:41 -0400
+Message-Id: <1271972321.12589.2.camel@mj>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gertjan van Wingerde <gwingerde@...> writes:
+On Mon, 2010-04-19 at 20:00 +0200, Felix Fietkau wrote:
 
-> 
-> Now that the powersave issues on rt2500usb have been tackled, powersave
-> can be enabled by default again.
-> 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@...>
-> ---
->  drivers/net/wireless/rt2x00/rt2500usb.c |    5 -----
->  1 files changed, 0 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c
-b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index 54d2716..c1eec17 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -1647,11 +1647,6 @@ static int rt2500usb_probe_hw_mode(struct rt2x00_dev
-*rt2x00dev)
->  	unsigned int i;
-> 
->  	/*
-> -	 * Disable powersaving as default.
-> -	 */
-> -	rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-> 
-This looks like it deletes one line too few leaving a nested open comment
-block in the code.
+> > can that happen when both ends are configured to a fixed rate of 11M?
+> No idea. I've never used fixed-rate. I guess it could, if it uses 11M
+> for communicating with a peer that it for some reason did not enable
+> this rate for.
 
-Adam
+I think if there is a legitimate condition when it can happen, we should
+not be using WARN_ON.
 
-
-
+-- 
+Regards,
+Pavel Roskin
