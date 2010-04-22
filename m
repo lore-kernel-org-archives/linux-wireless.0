@@ -1,123 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50641 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:43127 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932583Ab0DPVwm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:52:42 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 06/21] iwlwifi: rename priv->scan to priv->scan_cmd
-Date: Fri, 16 Apr 2010 14:52:23 -0700
-Message-Id: <1271454758-14351-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
-References: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
+	id S1753723Ab0DVDnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 23:43:53 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 20:43:53 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19407.50655.42188.99474@gargle.gargle.HOWL>
+Date: Thu, 22 Apr 2010 09:13:27 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/9] ath9k_htc: Cancel running timers before disabling HW
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-I keep checking what "priv->scan" is, so rename
-it to "priv->scan_cmd" which more clearly tells
-us what it is.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   10 +++++-----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   12 ++++++------
- 4 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 955315b..3199818 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3400,7 +3400,7 @@ static void iwl_uninit_drv(struct iwl_priv *priv)
- 	iwl_calib_free_results(priv);
- 	iwlcore_free_geos(priv);
- 	iwl_free_channel_map(priv);
--	kfree(priv->scan);
-+	kfree(priv->scan_cmd);
- }
- 
- static struct attribute *iwl_sysfs_entries[] = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index a7ffb4f..4007b57 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1051,7 +1051,7 @@ struct iwl_priv {
- 	/* Scan related variables */
- 	unsigned long scan_start;
- 	unsigned long scan_start_tsf;
--	void *scan;
-+	void *scan_cmd;
- 	enum ieee80211_band scan_band;
- 	struct cfg80211_scan_request *scan_request;
- 	bool is_internal_short_scan;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index cb3601d..18b89d3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -680,16 +680,16 @@ static void iwl_bg_request_scan(struct work_struct *data)
- 		goto done;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index ec7bcc8..9c9f3e0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1178,6 +1178,13 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
+ 		return;
  	}
  
--	if (!priv->scan) {
--		priv->scan = kmalloc(sizeof(struct iwl_scan_cmd) +
--				     IWL_MAX_SCAN_SIZE, GFP_KERNEL);
--		if (!priv->scan) {
-+	if (!priv->scan_cmd) {
-+		priv->scan_cmd = kmalloc(sizeof(struct iwl_scan_cmd) +
-+					 IWL_MAX_SCAN_SIZE, GFP_KERNEL);
-+		if (!priv->scan_cmd) {
- 			IWL_DEBUG_SCAN(priv,
- 				       "fail to allocate memory for scan\n");
- 			goto done;
- 		}
- 	}
--	scan = priv->scan;
-+	scan = priv->scan_cmd;
- 	memset(scan, 0, sizeof(struct iwl_scan_cmd) + IWL_MAX_SCAN_SIZE);
++	/* Cancel all the running timers/work .. */
++	cancel_work_sync(&priv->ps_work);
++	cancel_delayed_work_sync(&priv->ath9k_ani_work);
++	cancel_delayed_work_sync(&priv->ath9k_aggr_work);
++	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
++	ath9k_led_stop_brightness(priv);
++
+ 	ath9k_htc_ps_wakeup(priv);
+ 	htc_stop(priv->htc);
+ 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
+@@ -1189,11 +1196,6 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
+ 	ath9k_htc_ps_restore(priv);
+ 	ath9k_htc_setpower(priv, ATH9K_PM_FULL_SLEEP);
  
- 	scan->quiet_plcp_th = IWL_PLCP_QUIET_THRESH;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index af32359..0f77397 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2852,15 +2852,15 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 		goto done;
- 	}
+-	cancel_work_sync(&priv->ps_work);
+-	cancel_delayed_work_sync(&priv->ath9k_ani_work);
+-	cancel_delayed_work_sync(&priv->ath9k_aggr_work);
+-	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
+-	ath9k_led_stop_brightness(priv);
+ 	skb_queue_purge(&priv->tx_queue);
  
--	if (!priv->scan) {
--		priv->scan = kmalloc(sizeof(struct iwl3945_scan_cmd) +
--				     IWL_MAX_SCAN_SIZE, GFP_KERNEL);
--		if (!priv->scan) {
-+	if (!priv->scan_cmd) {
-+		priv->scan_cmd = kmalloc(sizeof(struct iwl3945_scan_cmd) +
-+					 IWL_MAX_SCAN_SIZE, GFP_KERNEL);
-+		if (!priv->scan_cmd) {
- 			IWL_DEBUG_SCAN(priv, "Fail to allocate scan memory\n");
- 			goto done;
- 		}
- 	}
--	scan = priv->scan;
-+	scan = priv->scan_cmd;
- 	memset(scan, 0, sizeof(struct iwl3945_scan_cmd) + IWL_MAX_SCAN_SIZE);
- 
- 	scan->quiet_plcp_th = IWL_PLCP_QUIET_THRESH;
-@@ -4245,7 +4245,7 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 
- 	iwl_free_channel_map(priv);
- 	iwlcore_free_geos(priv);
--	kfree(priv->scan);
-+	kfree(priv->scan_cmd);
- 	if (priv->ibss_beacon)
- 		dev_kfree_skb(priv->ibss_beacon);
- 
+ 	/* Remove monitor interface here */
 -- 
-1.6.3.3
+1.7.0.5
 
