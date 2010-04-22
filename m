@@ -1,97 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32821 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757316Ab0DOVjo (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:38936 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758719Ab0DVUr7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 45/97] ath9k_hw: the eep_map is used only for AR9280 PCI card ini fixup
-Date: Thu, 15 Apr 2010 17:38:50 -0400
-Message-Id: <1271367582-992-46-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 22 Apr 2010 16:47:59 -0400
+Received: by bwz25 with SMTP id 25so10166830bwz.28
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 13:47:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
+References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
+	 <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
+	 <1271954537.8469.15.camel@mj>
+	 <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
+Date: Thu, 22 Apr 2010 23:47:55 +0300
+Message-ID: <u2j6ed0b2681004221347z78c15832z3e0ff3ea51b4a5a8@mail.gmail.com>
+Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+On Thu, Apr 22, 2010 at 11:33 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Apr 22, 2010 at 9:42 AM, Pavel Roskin <proski@gnu.org> wrote:
+>> On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
+>>
+>>> How was this compiling for older kernels before then?
+>>
+>> Compiling was fine, but loading the firmware was failing sometimes.  I'm
+>> glad somebody figured it out.  Thank you, Grazvydas!
+>
+> OK Applied. I'm still puzzled, if it compiled, then that means
+> dev_set_uevent_suppress() was being defined somehow for older kernels.
 
-We can reorganize the code in such a way that eep_map can be removed,
-which makes the code more clearer.
+there was already ifdef, old code:
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+       dev_set_uevent_suppress(f_dev, 1);
+ #endif
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/eeprom.c |    3 ---
- drivers/net/wireless/ath/ath9k/eeprom.h |    7 -------
- drivers/net/wireless/ath/ath9k/hw.c     |    2 +-
- drivers/net/wireless/ath/ath9k/hw.h     |    1 -
- 4 files changed, 1 insertions(+), 12 deletions(-)
+new code:
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+       dev_set_uevent_suppress(f_dev, 1);
+#else
+       f_dev->uevent_suppress = 1;
+ #endif
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index dacaae9..1a48f43 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -257,13 +257,10 @@ int ath9k_hw_eeprom_init(struct ath_hw *ah)
- 	int status;
- 
- 	if (AR_SREV_9287(ah)) {
--		ah->eep_map = EEP_MAP_AR9287;
- 		ah->eep_ops = &eep_AR9287_ops;
- 	} else if (AR_SREV_9285(ah) || AR_SREV_9271(ah)) {
--		ah->eep_map = EEP_MAP_4KBITS;
- 		ah->eep_ops = &eep_4k_ops;
- 	} else {
--		ah->eep_map = EEP_MAP_DEFAULT;
- 		ah->eep_ops = &eep_def_ops;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 2f2993b..e087e2d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -656,13 +656,6 @@ struct ath9k_country_entry {
- 	u8 iso[3];
- };
- 
--enum ath9k_eep_map {
--	EEP_MAP_DEFAULT = 0x0,
--	EEP_MAP_4KBITS,
--	EEP_MAP_AR9287,
--	EEP_MAP_MAX
--};
--
- struct eeprom_ops {
- 	int (*check_eeprom)(struct ath_hw *hw);
- 	u32 (*get_eeprom)(struct ath_hw *hw, enum eeprom_param param);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2dcfaa9..ec48e7b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -947,7 +947,7 @@ static void ath9k_hw_init_eeprom_fix(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	ah->need_an_top2_fixup = (ah->hw_version.devid == AR9280_DEVID_PCI) &&
--				 (ah->eep_map != EEP_MAP_4KBITS) &&
-+				 !AR_SREV_9285(ah) && !AR_SREV_9271(ah) &&
- 				 ((pBase->version & 0xff) > 0x0a) &&
- 				 (pBase->pwdclkind == 0);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 7889ecb..48fb5ce 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -548,7 +548,6 @@ struct ath_hw {
- 		struct ar9287_eeprom map9287;
- 	} eeprom;
- 	const struct eeprom_ops *eep_ops;
--	enum ath9k_eep_map eep_map;
- 
- 	bool sw_mgmt_crypto;
- 	bool is_pciexpress;
--- 
-1.6.3.3
-
+>> I would prefer to have replacement functions in compat-2.6.30.h rather
+>> than ifdefs in the code.  We might want to resync compat_firmware with
+>> the kernel one day, and ifdefs would stand in the way.
+>
+> Good point, I merged the patch for now given that that file does't
+> change that often upstream.
+>
+>  Luis
+>
