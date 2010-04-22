@@ -1,40 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56804.mail.re3.yahoo.com ([66.196.97.78]:21603 "HELO
-	web56804.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757392Ab0DBGnA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Apr 2010 02:43:00 -0400
-Message-ID: <336206.19355.qm@web56804.mail.re3.yahoo.com>
-Date: Thu, 1 Apr 2010 23:42:59 -0700 (PDT)
-From: Golden <goldenstranger@yahoo.com>
-Subject: Re: firmware_loading_store: vmap() failed, broken firmware with kernles .27 - .30
-To: Pavel Roskin <proski@gnu.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:50487 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752841Ab0DVIuS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Apr 2010 04:50:18 -0400
+Subject: Re: mac80211 and asymmetric 802.11n TX/RX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
 Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <6D966E94-4FD1-4675-B39B-296B4D82D2AB@cs.washington.edu>
+References: <48BAD814-F653-4CE3-85E0-A9D82EC31D53@cs.washington.edu>
+	 <1271751747.8954.3.camel@jlt3.sipsolutions.net>
+	 <6D966E94-4FD1-4675-B39B-296B4D82D2AB@cs.washington.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 22 Apr 2010 10:50:10 +0200
+Message-ID: <1271926210.3605.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I realize that it's an important issue, but I don't have
-> time to look
-> for a solution right now.  I did my part by confirming
-> the problem on an
-> 2.6.28.10 kernel.  I don't see it on other kernels,
-> but since it's a
-> race condition, I cannot say definitely that the same
-> condition cannot
-> happen on another system running a newer kernel.
+Dan,
+
+> > I'm not sure. Reading 7.3.2.56.4 seems to imply that, but I'm not sure
+> > about the "Rx Highest Supported Data Rate" field. Seems like maybe you
+> > could set the "RX MCS bitmask" to more than is supported, limit it by
+> > the highest supported data rate, and then use the bitmask for TX?
 > 
-> -- 
-> Regards,
-> Pavel Roskin
+> First, did you mean 7.3.2.57.4? (I'm using IEEE P802.11n/D7.0, but I
+> assume the section numbers haven't changed). For me that section
+> represents the "Supported MCS Set field".
 
+I guess they did change then :)
 
-Interesting scenario we have here. I confirm the race condition in 2.6.27 and 2.6.30, it appears to be gone in 2.6.31 /Ubuntu 9.10/, it appears to be present in Ubuntu 10.04 /2.6.32/ beta and then it disappears again in 2.6.33 /don't know about .34rc/.
+> (An aside: I don't actually *have* 7.3.2.56. I'm using IEEE
+> 802.11-2007 [has up to 7.3.2.35] and IEEE P802.11n/D7.0 [has 7.3.2.57
+> and beyond] --- In which document are the missing sections?)
 
-Here's a bug report back from February pertaining to 2.6.32:
-https://bugzilla.kernel.org/show_bug.cgi?id=15294
+I am looking at 802.11n final.
 
+> Can you point me at which text in the section you think implies this
+> requirement?
 
+It has a lot of tables .. not easily copied.
 
-      
+> In any case, maybe this discussion is silly: I don't know of any
+> devices with this strange configuration. Typically clients assume
+> downlink-heavy and might support a 1x2 connection but 2x1, i.e.
+> designed for uplink, seems unlikely.
+
+And APs would typically be symmetric, countering Gabor's argument :)
+
+But I don't really understand the standard text here, we'll have to find
+somebody more familiar with 11n details.
+
+> >> A second question: my understanding is that if I am a 2x2 node and I
+> >> associate to a 3x3 AP, the same code will mask out the fact that the
+> >> AP can receive 3 streams since I can't transmit 3 streams. Is there a
+> >> way to access this info from the driver if I want it?
+> > 
+> > Unfortunately not, at this point. We could keep track of it, what would
+> > you need it for?
+> 
+> Okay, that's what I figured; I can hack around it locally. I'm working
+> on an alternative rate selection algorithm that at one point tries to
+> take into account how much receive diversity the other endpoint has.
+> The intuition is that how well (e.g.) 2-stream rates work is going to
+> depend not just on the channel, but also on how many excess antennas
+> the receiver has. I would benefit from knowing whether they have 2 or
+> 3 antennas even if I can only send them at most 2 streams.
+
+Ah. That makes some sense. So far nothing has needed it, but it _could_
+also be useful for debugging, so I wouldn't necessarily mind tracking it
+in mac80211.
+
+johannes
+
