@@ -1,145 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:39943 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754813Ab0DPGrD (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:37274 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754772Ab0DVNy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 02:47:03 -0400
-From: Holger Schurig <holgerschurig@gmail.com>
-To: Anton Puolakka <Anton.Puolakka@7signal.com>
-Subject: Re: Survey mode volunteers
-Date: Fri, 16 Apr 2010 08:47:29 +0200
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <0290AB2F0A8E124B9FFC144088A1A95609D6029647@EX-MBS04.nbl.local> <201004140911.11459.holgerschurig@gmail.com> <0290AB2F0A8E124B9FFC144088A1A95609D6097401@EX-MBS04.nbl.local>
-In-Reply-To: <0290AB2F0A8E124B9FFC144088A1A95609D6097401@EX-MBS04.nbl.local>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201004160847.29368.holgerschurig@gmail.com>
+	Thu, 22 Apr 2010 09:54:29 -0400
+Received: by wwb24 with SMTP id 24so4819406wwb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 06:54:27 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
+Date: Thu, 22 Apr 2010 16:54:02 +0300
+Message-Id: <1271944442-9214-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> We checked the most recent wireless-testing and saw no related patch on
-> mac80211 yet. So, Holger, do You have one for that, too? Or anyone else on
-> the mailing-list? Could You please share?
+Missing uevent_suppress is causing two uevents instead of one, which is
+confusing udev and sometimes causing firmware load to fail due to race
+condition, so let's add it.
 
-Sure. I thought I already posted that patch. This is a patch that
-applied to compat-wireless 2010-03-23:
-
----------------
-Subject: [PATCH] mac80211: sample survey implementation for mac80211_hwsim
-
-This adds the survey function to both mac80211 itself and to mac80211_hwsim.
-For the latter driver, we simply invent some noise level.
-
-Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
-
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |   28 ++++++++++++++++++++++++++++
- include/net/mac80211.h                |    3 ++-
- net/mac80211/cfg.c                    |   12 ++++++++++++
- net/mac80211/driver-ops.h             |    9 +++++++++
- 4 files changed, 51 insertions(+), 1 deletion(-)
+ compat/compat_firmware_class.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
---- compat-wireless-2010-03-15.orig/include/net/mac80211.h
-+++ compat-wireless-2010-03-15/include/net/mac80211.h
-@@ -1646,7 +1646,8 @@ struct ieee80211_ops {
- 			    struct ieee80211_vif *vif,
- 			    enum ieee80211_ampdu_mlme_action action,
- 			    struct ieee80211_sta *sta, u16 tid, u16 *ssn);
--
-+	int (*get_survey)(struct ieee80211_hw *hw, int idx,
-+		struct survey_info *survey);
- 	void (*rfkill_poll)(struct ieee80211_hw *hw);
- 	void (*set_coverage_class)(struct ieee80211_hw *hw, u8 coverage_class);
- #ifdef CONFIG_NL80211_TESTMODE
---- compat-wireless-2010-03-15.orig/net/mac80211/cfg.c
-+++ compat-wireless-2010-03-15/net/mac80211/cfg.c
-@@ -412,6 +412,17 @@ static int ieee80211_dump_station(struct
- 	return ret;
- }
+diff --git a/compat/compat_firmware_class.c b/compat/compat_firmware_class.c
+index ce937a3..54ee8b9 100644
+--- a/compat/compat_firmware_class.c
++++ b/compat/compat_firmware_class.c
+@@ -432,6 +432,8 @@ static int fw_register_device(struct device **dev_p, const char *fw_name,
+ 	dev_set_drvdata(f_dev, fw_priv);
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+ 	dev_set_uevent_suppress(f_dev, 1);
++#else
++	f_dev->uevent_suppress = 1;
+ #endif
+ 	retval = device_register(f_dev);
+ 	if (retval) {
+@@ -479,9 +481,11 @@ static int fw_setup_device(struct firmware *fw, struct device **dev_p,
+ 		goto error_unreg;
+ 	}
  
-+static int ieee80211_dump_survey(struct wiphy *wiphy, struct net_device *dev,
-+				 int idx, struct survey_info *survey)
-+{
-+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
-+
-+	if (!local->ops->get_survey)
-+		return -EOPNOTSUPP;
-+
-+	return drv_get_survey(local, idx, survey);
-+}
-+
- static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *mac, struct station_info *sinfo)
- {
-@@ -1476,6 +1487,7 @@ struct cfg80211_ops mac80211_config_ops
- 	.change_station = ieee80211_change_station,
- 	.get_station = ieee80211_get_station,
- 	.dump_station = ieee80211_dump_station,
-+	.dump_survey = ieee80211_dump_survey,
- #ifdef CONFIG_MAC80211_MESH
- 	.add_mpath = ieee80211_add_mpath,
- 	.del_mpath = ieee80211_del_mpath,
---- compat-wireless-2010-03-15.orig/net/mac80211/driver-ops.h
-+++ compat-wireless-2010-03-15/net/mac80211/driver-ops.h
-@@ -346,6 +346,15 @@ static inline int drv_ampdu_action(struc
- 	return ret;
- }
- 
-+static inline int drv_get_survey(struct ieee80211_local *local, int idx,
-+				struct survey_info *survey)
-+{
-+	int ret = -EOPNOTSUPP;
-+	if (local->ops->get_survey)
-+		ret = local->ops->get_survey(&local->hw, idx, survey);
-+	/* trace_drv_get_survey(local, idx, survey, ret); */
-+	return ret;
-+}
- 
- static inline void drv_rfkill_poll(struct ieee80211_local *local)
- {
---- compat-wireless-2010-03-15.orig/drivers/net/wireless/mac80211_hwsim.c
-+++ compat-wireless-2010-03-15/drivers/net/wireless/mac80211_hwsim.c
-@@ -828,6 +828,33 @@ static int mac80211_hwsim_conf_tx(
- 	return 0;
- }
- 
-+static int mac80211_hwsim_get_survey(
-+	struct ieee80211_hw *hw, int idx,
-+	struct survey_info *survey)
-+{
-+	struct ieee80211_conf *conf = &hw->conf;
-+
-+	printk(KERN_DEBUG "%s:%s (idx=%d)\n",
-+	       wiphy_name(hw->wiphy), __func__, idx);
-+
-+	if (idx != 0)
-+		return -ENOENT;
-+
-+	/* Current channel */
-+	survey->channel = conf->channel;
-+
-+	/*
-+	 * Magically conjured noise level --- this is only ok for simulated hardware.
-+	 *
-+	 * A real driver which cannot determine the real channel noise MUST NOT
-+	 * report any noise, especially not a magically conjured one :-)
-+	 */
-+	survey->filled = SURVEY_INFO_NOISE_DBM;
-+	survey->noise = -92;
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_NL80211_TESTMODE
- /*
-  * This section contains example code for using netlink
-@@ -981,6 +1008,7 @@ static struct ieee80211_ops mac80211_hws
- 	.sta_notify = mac80211_hwsim_sta_notify,
- 	.set_tim = mac80211_hwsim_set_tim,
- 	.conf_tx = mac80211_hwsim_conf_tx,
-+	.get_survey = mac80211_hwsim_get_survey,
- 	CFG80211_TESTMODE_CMD(mac80211_hwsim_testmode_cmd)
- 	.ampdu_action = mac80211_hwsim_ampdu_action,
- 	.flush = mac80211_hwsim_flush,
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+ 	if (uevent)
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+ 		dev_set_uevent_suppress(f_dev, 0);
++#else
++		f_dev->uevent_suppress = 0;
+ #endif
+ 	*dev_p = f_dev;
+ 	goto out;
+-- 
+1.7.0.2
+
