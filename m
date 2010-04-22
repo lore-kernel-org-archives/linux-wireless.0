@@ -1,29 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:15271 "EHLO c60.cesmail.net"
+Received: from c60.cesmail.net ([216.154.195.49]:50917 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757894Ab0DPWKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 18:10:31 -0400
-Subject: Re: Compiling ar9170 on 2.6.30
+	id S1753986Ab0DVQmS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Apr 2010 12:42:18 -0400
+Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
 From: Pavel Roskin <proski@gnu.org>
-To: Eric Siegel <nticompass@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4BC776F4.80600@gmail.com>
-References: <4BC776F4.80600@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Apr 2010 18:10:26 -0400
-Message-Id: <1271455826.16507.45.camel@mj>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Grazvydas Ignotas <notasas@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
+References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
+	 <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 22 Apr 2010 12:42:17 -0400
+Message-Id: <1271954537.8469.15.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-15 at 16:28 -0400, Eric Siegel wrote:
-> I was trying to compile ar9170 from today's tarball, and I got a compile
-> error.
-> ar9170/main.c:2060: error: expected ‘;’ before ‘mchash’
+On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
 
-The bleeding edge compat-wireless is currently broken.  Please use
-compat-wireless-2.6.34-rc4.tar.bz2 from
-http://wireless.kernel.org/en/users/Download/stable/
+> How was this compiling for older kernels before then?
+
+Compiling was fine, but loading the firmware was failing sometimes.  I'm
+glad somebody figured it out.  Thank you, Grazvydas!
+
+I would prefer to have replacement functions in compat-2.6.30.h rather
+than ifdefs in the code.  We might want to resync compat_firmware with
+the kernel one day, and ifdefs would stand in the way.
 
 -- 
 Regards,
