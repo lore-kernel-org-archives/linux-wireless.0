@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:65449 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932420Ab0DPVuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:50:11 -0400
-Subject: Re: compat-wireless doesn't compile against 2.6.32 on Ubuntu beta
-From: Pavel Roskin <proski@gnu.org>
-To: Andrey Semyonov <gatekeeper.mail@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <t2wd01f95791004151011n1a5077a3oca9f7b641b311ac2@mail.gmail.com>
-References: <t2wd01f95791004151011n1a5077a3oca9f7b641b311ac2@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Apr 2010 17:50:10 -0400
-Message-Id: <1271454610.16507.33.camel@mj>
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:52767 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755072Ab0DVRwb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Apr 2010 13:52:31 -0400
+Received: by vws14 with SMTP id 14so38715vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 10:52:29 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] p54pci: fix bugs in p54p_check_tx_ring
+Date: Thu, 22 Apr 2010 19:52:16 +0200
+Cc: linville@tuxdriver.com, hdegoede@redhat.com
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201004221952.16857.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-04-15 at 21:11 +0400, Andrey Semyonov wrote:
-> I get this when trying to compile current drivers:
-> 
-> 
-> /usr/local/src/compat-wireless-2010-04-14# make
-> make -C /lib/modules/2.6.32-19-generic/build
-> M=/usr/local/src/compat-wireless-2010-04-14 modules
-> make[1]: Вход в каталог `/usr/src/linux-headers-2.6.32-19-generic'
->  CC [M]  /usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.o
-> /usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.c: In
-> function 'ieee80211_alloc_hw':
-> /usr/local/src/compat-wireless-2010-04-14/net/mac80211/main.c:394:
-> error: implicit declaration of function '__hw_addr_init'
+From: Hans de Goede <hdegoede@redhat.com>
 
-I confirm the problem.  Basically, the bleeding edge compat-wireless is
-useless now.  Perhaps we need a check to to prevent broken tarballs from
-being uploaded.  It's better than force users to search for the last
-working tarball.
+Hans de Goede identified a bug in p54p_check_tx_ring:
 
-compat-wireless-2.6.34-rc4 should be OK for Linux 2.6.27 and newer,
-although it lacks some fixes needed for older kernels.  It also lacks
-the experimental wireless code that is not scheduled for Linux 2.6.34.
+there are two ring indices. 1 => tx data and 3 => tx management.
+But the old code had a constant "1" and this resulted in spurious
+dma unmapping failures. 
 
--- 
-Regards,
-Pavel Roskin
+Cc: stable@kernel.org
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=583623
+Bug-Identified-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index 679da7e..cffe2f2 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -246,7 +246,7 @@ static void p54p_check_tx_ring(struct ieee80211_hw *dev, u32 *index,
+ 	u32 idx, i;
+ 
+ 	i = (*index) % ring_limit;
+-	(*index) = idx = le32_to_cpu(ring_control->device_idx[1]);
++	(*index) = idx = le32_to_cpu(ring_control->device_idx[ring_index]);
+ 	idx %= ring_limit;
+ 
+ 	while (i != idx) {
