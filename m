@@ -1,95 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47117 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:42257 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429Ab0DFJWl (ORCPT
+	with ESMTP id S1752602Ab0DVJHq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 05:22:41 -0400
-Message-Id: <20100406092141.174938785@sipsolutions.net>
-Date: Tue, 06 Apr 2010 11:18:42 +0200
+	Thu, 22 Apr 2010 05:07:46 -0400
+Subject: Re: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based
+ on ps-qos network latency
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/7] mac80211: annotate station rcu dereferences
-References: <20100406091841.549805267@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1271926547.6205.8870.camel@wimaxnb.nmp.nokia.com>
+References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271688177.23671.1.camel@jlt3.sipsolutions.net>
+	 <1271740120.6205.5733.camel@wimaxnb.nmp.nokia.com>
+	 <1271925939.3605.7.camel@jlt3.sipsolutions.net>
+	 <1271926547.6205.8870.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 22 Apr 2010 11:07:36 +0200
+Message-ID: <1271927257.3605.18.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new RCU lockdep support warns about these
-in some contexts -- make it aware of the locks
-used to protect all this. Different locks are
-used in different contexts which unfortunately
-means we can't get perfect checking.
+On Thu, 2010-04-22 at 11:55 +0300, Juuso Oikarinen wrote:
 
-Also remove rcu_dereference() from two places
-that don't actually dereference the pointers.
+> > > Well you have to see where I'm coming from - I must come up with a way
+> > > to tune the dynamic ps timeout value from user-space in a way that is
+> > > agreeable with others, and that is somewhat future-proof.
+> > 
+> > Well I personally think that's your first mistake ;)
+> > 
+> > Why does userspace care about the dynamic PS timeout value to start
+> > with? All it should care about is the latency with which it can react to
+> > network packets, no?
+> > 
+> > > That said, obviously the network latency should be tuned as, well, the
+> > > expected network latency. In this phase though, there are no other
+> > > parameters affected by the network latency, so the result is quite
+> > > obvious - your fear will realise itself ;)
+> > 
+> > But there are, like the max sleep period in # of beacons.
+> 
+> Yeah, okay there is. You probably noticed I posted a version of the
+> patches with "saner" latency-values for this reason.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/main.c     |    4 ++--
- net/mac80211/sta_info.c |   20 ++++++++++++++++----
- 2 files changed, 18 insertions(+), 6 deletions(-)
+Still I think you should say why you need to actually tune the PS
+timeout value directly? I can't see how your high-level design says "set
+dynamic PS timeout to 100ms" rather than "make sure that while the user
+is operating the device, there's no delay of more than 50ms" or
+something like that?
 
---- wireless-testing.orig/net/mac80211/sta_info.c	2010-04-06 09:07:30.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.c	2010-04-06 09:07:33.000000000 +0200
-@@ -93,12 +93,18 @@ struct sta_info *sta_info_get(struct iee
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 
--	sta = rcu_dereference(local->sta_hash[STA_HASH(addr)]);
-+	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
-+				    rcu_read_lock_held() ||
-+				    lockdep_is_held(&local->sta_lock) ||
-+				    lockdep_is_held(&local->sta_mtx));
- 	while (sta) {
- 		if (sta->sdata == sdata &&
- 		    memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
- 			break;
--		sta = rcu_dereference(sta->hnext);
-+		sta = rcu_dereference_check(sta->hnext,
-+					    rcu_read_lock_held() ||
-+					    lockdep_is_held(&local->sta_lock) ||
-+					    lockdep_is_held(&local->sta_mtx));
- 	}
- 	return sta;
- }
-@@ -113,13 +119,19 @@ struct sta_info *sta_info_get_bss(struct
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 
--	sta = rcu_dereference(local->sta_hash[STA_HASH(addr)]);
-+	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
-+				    rcu_read_lock_held() ||
-+				    lockdep_is_held(&local->sta_lock) ||
-+				    lockdep_is_held(&local->sta_mtx));
- 	while (sta) {
- 		if ((sta->sdata == sdata ||
- 		     sta->sdata->bss == sdata->bss) &&
- 		    memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
- 			break;
--		sta = rcu_dereference(sta->hnext);
-+		sta = rcu_dereference_check(sta->hnext,
-+					    rcu_read_lock_held() ||
-+					    lockdep_is_held(&local->sta_lock) ||
-+					    lockdep_is_held(&local->sta_mtx));
- 	}
- 	return sta;
- }
---- wireless-testing.orig/net/mac80211/main.c	2010-04-06 09:07:30.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2010-04-06 09:07:33.000000000 +0200
-@@ -225,11 +225,11 @@ void ieee80211_bss_info_change_notify(st
- 			switch (sdata->vif.type) {
- 			case NL80211_IFTYPE_AP:
- 				sdata->vif.bss_conf.enable_beacon =
--					!!rcu_dereference(sdata->u.ap.beacon);
-+					!!sdata->u.ap.beacon;
- 				break;
- 			case NL80211_IFTYPE_ADHOC:
- 				sdata->vif.bss_conf.enable_beacon =
--					!!rcu_dereference(sdata->u.ibss.presp);
-+					!!sdata->u.ibss.presp;
- 				break;
- 			case NL80211_IFTYPE_MESH_POINT:
- 				sdata->vif.bss_conf.enable_beacon = true;
-
+johannes
 
