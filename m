@@ -1,203 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:2731 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751224Ab0DKMbZ (ORCPT
+Received: from dd24806.kasserver.com ([85.13.129.11]:58666 "EHLO
+	dd24806.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754029Ab0DVLqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Apr 2010 08:31:25 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 4/9] rt2x00: Refactor rt2800 version constants.
-Date: Sun, 11 Apr 2010 14:31:10 +0200
-Message-Id: <1270989075-2267-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+	Thu, 22 Apr 2010 07:46:05 -0400
+Received: from rambo.localnet (dslb-084-057-102-201.pools.arcor-ip.net [84.57.102.201])
+	by dd24806.kasserver.com (Postfix) with ESMTPSA id 8F786BA21CA
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 13:39:49 +0200 (CEST)
+From: Antonio Weber <antonio.weber@msys-gmbh.de>
+To: linux-wireless@vger.kernel.org
+Subject: p54usb - AP degenerates (Kernel 2.6.31.13)
+Date: Thu, 22 Apr 2010 13:39:47 +0200
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004221339.47788.antonio.weber@msys-gmbh.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rt2800 version constants are inconsistent, and the version number don't
-mean a lot of things anyway. Refactor the constants to have some more
-meaningful names, and introduce and use some new helpers to check these
-chipset revisions. At the same time rename to revision, as they are more
-revision numbers rather than version numbers.
+Hi List,
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h    |   16 ++++++++++------
- drivers/net/wireless/rt2x00/rt2800lib.c |   30 ++++++++++--------------------
- drivers/net/wireless/rt2x00/rt2x00.h    |   22 ++++++++++++++++++++--
- 3 files changed, 40 insertions(+), 28 deletions(-)
+I try to set up a Accesspoint with a Netgear WG111v2 USB Stick which is 
+supported by the p54 driver. 
+I'm working on a small evaluation board with a i.mx27 ARM cpu which is 
+currently not supported via the mainline kernel. For that the vendor provides 
+a kernel patch to support it. I allready tried to port it to the 2.6.33 Kernel 
+- it compiles without bigger troubles but the Kernel was unable to boot (gets 
+not even uncompressed - litte bit strange - so what... :) - have to stay at 
+2.6.31 line)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 4d5871b..ec89372 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -59,13 +59,17 @@
- #define RF3320				0x000b
- 
- /*
-- * Chipset version.
-- */
--#define RT2860C_VERSION			0x0100
--#define RT2860D_VERSION			0x0101
--#define RT2880E_VERSION			0x0200
--#define RT2883_VERSION			0x0300
--#define RT3070_VERSION			0x0200
-+ * Chipset revisions.
-+ */
-+#define REV_RT2860C			0x0100
-+#define REV_RT2860D			0x0101
-+#define REV_RT2870D			0x0101
-+#define REV_RT2872E			0x0200
-+#define REV_RT3070E			0x0200
-+#define REV_RT3070F			0x0201
-+#define REV_RT3071E			0x0211
-+#define REV_RT3090E			0x0211
-+#define REV_RT3390E			0x0211
- 
- /*
-  * Signal information.
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 2ab8884..8a4ed76 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -896,8 +896,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&bbp, BBP3_HT40_PLUS, conf_is_ht40_plus(conf));
- 	rt2800_bbp_write(rt2x00dev, 3, bbp);
- 
--	if (rt2x00_rt(rt2x00dev, RT2860) &&
--	    (rt2x00_rev(rt2x00dev) == RT2860C_VERSION)) {
-+	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860C)) {
- 		if (conf_is_ht40(conf)) {
- 			rt2800_bbp_write(rt2x00dev, 69, 0x1a);
- 			rt2800_bbp_write(rt2x00dev, 70, 0x0a);
-@@ -1060,8 +1059,7 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- {
- 	if (rt2x00dev->curr_band == IEEE80211_BAND_2GHZ) {
- 		if (rt2x00_is_usb(rt2x00dev) &&
--		    rt2x00_rt(rt2x00dev, RT3070) &&
--		    (rt2x00_rev(rt2x00dev) == RT3070_VERSION))
-+		    rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
- 			return 0x1c + (2 * rt2x00dev->lna_gain);
- 		else
- 			return 0x2e + rt2x00dev->lna_gain;
-@@ -1092,8 +1090,7 @@ EXPORT_SYMBOL_GPL(rt2800_reset_tuner);
- void rt2800_link_tuner(struct rt2x00_dev *rt2x00dev, struct link_qual *qual,
- 		       const u32 count)
- {
--	if (rt2x00_rt(rt2x00dev, RT2860) &&
--	    (rt2x00_rev(rt2x00dev) == RT2860C_VERSION))
-+	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860C))
- 		return;
- 
- 	/*
-@@ -1179,8 +1176,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
- 	if (rt2x00_is_usb(rt2x00dev) &&
--	    rt2x00_rt(rt2x00dev, RT3070) &&
--	    (rt2x00_rev(rt2x00dev) == RT3070_VERSION)) {
-+	    rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E)) {
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-@@ -1207,11 +1203,9 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_register_read(rt2x00dev, MAX_LEN_CFG, &reg);
- 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
--	if ((rt2x00_rt(rt2x00dev, RT2872) &&
--	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT2872, REV_RT2872E) ||
- 	    rt2x00_rt(rt2x00dev, RT2883) ||
--	    (rt2x00_rt(rt2x00dev, RT3070) &&
--	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
-+	    rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070E))
- 		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
- 	else
- 		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 1);
-@@ -1490,14 +1484,12 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 103, 0x00);
- 	rt2800_bbp_write(rt2x00dev, 105, 0x05);
- 
--	if (rt2x00_rt(rt2x00dev, RT2860) &&
--	    (rt2x00_rev(rt2x00dev) == RT2860C_VERSION)) {
-+	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860C)) {
- 		rt2800_bbp_write(rt2x00dev, 69, 0x16);
- 		rt2800_bbp_write(rt2x00dev, 73, 0x12);
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT2860) &&
--	    (rt2x00_rev(rt2x00dev) > RT2860D_VERSION))
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT2860, REV_RT2860D))
- 		rt2800_bbp_write(rt2x00dev, 84, 0x19);
- 
- 	if (rt2x00_rt(rt2x00dev, RT2872)) {
-@@ -1507,8 +1499,7 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	if (rt2x00_is_usb(rt2x00dev) &&
--	    rt2x00_rt(rt2x00dev, RT3070) &&
--	    (rt2x00_rev(rt2x00dev) == RT3070_VERSION)) {
-+	    rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E)) {
- 		rt2800_bbp_write(rt2x00dev, 70, 0x0a);
- 		rt2800_bbp_write(rt2x00dev, 84, 0x99);
- 		rt2800_bbp_write(rt2x00dev, 105, 0x05);
-@@ -1594,8 +1585,7 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	u8 bbp;
- 
- 	if (rt2x00_is_usb(rt2x00dev) &&
--	    rt2x00_rt(rt2x00dev, RT3070) &&
--	    (rt2x00_rev(rt2x00dev) != RT3070_VERSION))
-+	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
- 		return 0;
- 
- 	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 16aa850..4de505b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -929,12 +929,12 @@ static inline void rt2x00_set_chip(struct rt2x00_dev *rt2x00dev,
- 	     rt2x00dev->chip.rt, rt2x00dev->chip.rf, rt2x00dev->chip.rev);
- }
- 
--static inline char rt2x00_rt(struct rt2x00_dev *rt2x00dev, const u16 rt)
-+static inline bool rt2x00_rt(struct rt2x00_dev *rt2x00dev, const u16 rt)
- {
- 	return (rt2x00dev->chip.rt == rt);
- }
- 
--static inline char rt2x00_rf(struct rt2x00_dev *rt2x00dev, const u16 rf)
-+static inline bool rt2x00_rf(struct rt2x00_dev *rt2x00dev, const u16 rf)
- {
- 	return (rt2x00dev->chip.rf == rf);
- }
-@@ -944,6 +944,24 @@ static inline u16 rt2x00_rev(struct rt2x00_dev *rt2x00dev)
- 	return rt2x00dev->chip.rev;
- }
- 
-+static inline bool rt2x00_rt_rev(struct rt2x00_dev *rt2x00dev,
-+				 const u16 rt, const u16 rev)
-+{
-+	return (rt2x00_rt(rt2x00dev, rt) && rt2x00_rev(rt2x00dev) == rev);
-+}
-+
-+static inline bool rt2x00_rt_rev_lt(struct rt2x00_dev *rt2x00dev,
-+				    const u16 rt, const u16 rev)
-+{
-+	return (rt2x00_rt(rt2x00dev, rt) && rt2x00_rev(rt2x00dev) < rev);
-+}
-+
-+static inline bool rt2x00_rt_rev_gte(struct rt2x00_dev *rt2x00dev,
-+				     const u16 rt, const u16 rev)
-+{
-+	return (rt2x00_rt(rt2x00dev, rt) && rt2x00_rev(rt2x00dev) >= rev);
-+}
-+
- static inline void rt2x00_set_chip_intf(struct rt2x00_dev *rt2x00dev,
- 					enum rt2x00_chip_intf intf)
- {
--- 
-1.7.0.4
+The startup with hostapd works fine. At the moment i have encryption disabled 
+so it is easy to connect because it is only for demostration purpose (even a 
+handy or ipod should be able to connect) and works in a closed environment for 
+max. an hour or so.
 
+Some debug output here
+
+---------
+usb 1-1: new high speed USB device using mxc-ehci and address 2
+usb 1-1: New USB device found, idVendor=0846, idProduct=4240
+usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 1-1: Product: NETGEAR WG111
+usb 1-1: Manufacturer: GlobespanVirata
+usb 1-1: SerialNumber: 3887-0000
+usb 1-1: configuration #1 chosen from 1 choice
+cfg80211: Calling CRDA to update world regulatory domain
+usb 1-1: firmware: requesting isl3887usb
+phy0: p54 detected a LM87 firmware
+p54: rx_mtu reduced from 3240 to 2384
+phy0: FW rev 2.13.24.0 - Softmac protocol 5.9
+phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy0: hwaddr 00:0f:b5:02:2e:64, MAC:isl3887 RF:Frisbee
+phy0: Selected rate control algorithm 'minstrel'
+usb 1-1: is registered as 'phy0'
+usbcore: registered new interface driver p54usb
+eth0: config: auto-negotiation on, 100FDX, 100HDX, 10FDX, 10HDX.
+phy0: device now idle
+in p54_set_ps: 2
+phy0: device no longer idle - in use
+in p54_set_ps: 2
+cfg80211: Calling CRDA for country: DE
+phy0: Allocated STA f8:1e:df:d1:df:8e
+phy0: Inserted STA f8:1e:df:d1:df:8e
+----------
+
+up to here - everything works fine. A device gets an IP address via dhcp after 
+connecting, can ping etc.
+after some minutes lots of that messages apear
+
+-----------
+
+wlan0: STA f8:1e:df:d1:df:8e aid 1 enters power save mode
+wlan0: STA f8:1e:df:d1:df:8e aid 1 exits power save mode
+wlan0: STA f8:1e:df:d1:df:8e aid 1 sending 0 filtered/0 PS frames since STA 
+not sleeping anymore
+wlan0: STA f8:1e:df:d1:df:8e aid 1 enters power save mode
+STA f8:1e:df:d1:df:8e aid 1: PS buffer (entries before 0)
+STA f8:1e:df:d1:df:8e aid 1: PS buffer (entries before 1)
+wlan0: STA f8:1e:df:d1:df:8e aid 1 exits power save mode
+wlan0: STA f8:1e:df:d1:df:8e aid 1 sending 0 filtered/2 PS frames since STA 
+not sleeping anymore
+wlan0: STA f8:1e:df:d1:df:8e aid 1 enters power save mode
+wlan0: STA f8:1e:df:d1:df:8e aid 1 exits power save mode
+wlan0: STA f8:1e:df:d1:df:8e aid 1 sending 0 filtered/0 PS frames since STA 
+not sleeping anymore
+wlan0: STA f8:1e:df:d1:df:8e aid 1 enters power save mode
+wlan0: STA f8:1e:df:d1:df:8e aid 1 exits power save mode
+wlan0: STA f8:1e:df:d1:df:8e aid 1 sending 0 filtered/0 PS frames since STA 
+not sleeping anymore
+.....
+
+------------
+(btw weird mac address, isn't it?)
+
+and then it refuses to work. No futher devices can connect. Even the connected 
+devices can not be ping anymore because ARP packets are no longer answered.
+
+On my laptop I get that kernel-messages when trying to connect to the ap
+
+------------
+
+wlan0: deauthenticating from 00:0f:b5:02:2e:64 by local choice (reason=3)
+wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 1)
+wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 2)
+wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 3)
+wlan0: direct probe to AP 00:0f:b5:02:2e:64 timed out
+wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 1)
+wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 2)
+wlan0: direct probe to AP 00:0f:b5:02:2e:64 (try 3)
+wlan0: direct probe to AP 00:0f:b5:02:2e:64 timed out
+
+--------------
+
+Its probably a problem with the power management in station mode (which seems 
+to be an issue to more drivers as I found out reading some entries on this 
+list).
+
+So my questions are:
+Is it perhaps possible to disable that powersave mode for AP completly in an 
+'easy' way? (btw. 'enable powersave by default' is disabled in kernel config 
+but thats only for managed mode right?).
+
+If not - could it be allready fixed in a newer version of the kernel? If so it 
+would be great if someone out there could give me some pointer where to look 
+at in special - so I can try to fix it myself (somehow :) )
+
+Thanks in advance
+
+greetings,
+Antonio
