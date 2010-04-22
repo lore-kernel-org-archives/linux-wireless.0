@@ -1,28 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51403.mail.re2.yahoo.com ([206.190.38.182]:34681 "HELO
-	web51403.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755918Ab0D1TiZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 15:38:25 -0400
-Message-ID: <497730.40090.qm@web51403.mail.re2.yahoo.com>
-References: <1272312561-22648-1-git-send-email-linville@tuxdriver.com> <4BD682AF.6030206@free.fr> <loom.20100427T125258-288@post.gmane.org> <4BD7399B.9040104@free.fr>
-Date: Wed, 28 Apr 2010 12:38:24 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: [PATCH] ath9k: remove usage of deprecated noise value
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4BD7399B.9040104@free.fr>
+Received: from mail.atheros.com ([12.36.123.2]:43123 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753475Ab0DVDnr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 23:43:47 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 20:43:47 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19407.50649.569071.103503@gargle.gargle.HOWL>
+Date: Thu, 22 Apr 2010 09:13:21 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/9] ath9k_htc: Simplify TX URB management
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------ Ursprüngliche Mail ----
+This patch simplifies URB management for transmission,
+by removing the 'FLUSH' variable (which is not needed,
+since we can determine if the URB has been killed by
+looking at the URB status), and also handling the STOP
+case properly.
 
-> From: Benoit PAPILLAULT <benoit.papillault@free.fr>
-> I'll try then to implement it for ath5k (already done?), ar9170, 
-> zd1211rw (if possible), rt2800usb/pci.
-For ath5k see 
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=55ee82b500551f80720de57a00d2990d56cf08a8
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |  100 ++++++++++++++----------------
+ drivers/net/wireless/ath/ath9k/hif_usb.h |    1 -
+ 2 files changed, 46 insertions(+), 55 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 3091bb3..cee5feb 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -93,14 +93,24 @@ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
+ 	return ret;
+ }
+ 
++static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
++					 struct sk_buff_head *list)
++{
++	struct sk_buff *skb;
++
++	while ((skb = __skb_dequeue(list)) != NULL) {
++		dev_kfree_skb_any(skb);
++		TX_STAT_INC(skb_dropped);
++	}
++}
++
+ static void hif_usb_tx_cb(struct urb *urb)
+ {
+ 	struct tx_buf *tx_buf = (struct tx_buf *) urb->context;
+ 	struct hif_device_usb *hif_dev = tx_buf->hif_dev;
+ 	struct sk_buff *skb;
+-	bool drop, flush;
+ 
+-	if (!hif_dev)
++	if (!hif_dev || !tx_buf)
+ 		return;
+ 
+ 	switch (urb->status) {
+@@ -108,57 +118,47 @@ static void hif_usb_tx_cb(struct urb *urb)
+ 		break;
+ 	case -ENOENT:
+ 	case -ECONNRESET:
+-		break;
+ 	case -ENODEV:
+ 	case -ESHUTDOWN:
++		/*
++		 * The URB has been killed, free the SKBs
++		 * and return.
++		 */
++		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
+ 		return;
+ 	default:
+ 		break;
+ 	}
+ 
+-	if (tx_buf) {
+-		spin_lock(&hif_dev->tx.tx_lock);
+-		drop = !!(hif_dev->tx.flags & HIF_USB_TX_STOP);
+-		flush = !!(hif_dev->tx.flags & HIF_USB_TX_FLUSH);
+-		spin_unlock(&hif_dev->tx.tx_lock);
+-
+-		while ((skb = __skb_dequeue(&tx_buf->skb_queue)) != NULL) {
+-			if (!drop && !flush) {
+-				ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
+-							  skb, 1);
+-				TX_STAT_INC(skb_completed);
+-			} else {
+-				dev_kfree_skb_any(skb);
+-				TX_STAT_INC(skb_dropped);
+-			}
+-		}
+-
+-		if (flush)
+-			return;
+-
+-		tx_buf->len = tx_buf->offset = 0;
+-		__skb_queue_head_init(&tx_buf->skb_queue);
+-
+-		spin_lock(&hif_dev->tx.tx_lock);
+-		list_del(&tx_buf->list);
+-		list_add_tail(&tx_buf->list, &hif_dev->tx.tx_buf);
+-		hif_dev->tx.tx_buf_cnt++;
+-		if (!drop)
+-			__hif_usb_tx(hif_dev); /* Check for pending SKBs */
+-		TX_STAT_INC(buf_completed);
++	/* Check if TX has been stopped */
++	spin_lock(&hif_dev->tx.tx_lock);
++	if (hif_dev->tx.flags & HIF_USB_TX_STOP) {
+ 		spin_unlock(&hif_dev->tx.tx_lock);
+-	}
+-}
+-
+-static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
+-					 struct sk_buff_head *list)
+-{
+-	struct sk_buff *skb;
+-
+-	while ((skb = __skb_dequeue(list)) != NULL) {
+-		dev_kfree_skb_any(skb);
+-		TX_STAT_INC(skb_dropped);
+-	}
++		ath9k_skb_queue_purge(hif_dev, &tx_buf->skb_queue);
++		goto add_free;
++	}
++	spin_unlock(&hif_dev->tx.tx_lock);
++
++	/* Complete the queued SKBs. */
++	while ((skb = __skb_dequeue(&tx_buf->skb_queue)) != NULL) {
++		ath9k_htc_txcompletion_cb(hif_dev->htc_handle,
++					  skb, 1);
++		TX_STAT_INC(skb_completed);
++	}
++
++add_free:
++	/* Re-initialize the SKB queue */
++	tx_buf->len = tx_buf->offset = 0;
++	__skb_queue_head_init(&tx_buf->skb_queue);
++
++	/* Add this TX buffer to the free list */
++	spin_lock(&hif_dev->tx.tx_lock);
++	list_move_tail(&tx_buf->list, &hif_dev->tx.tx_buf);
++	hif_dev->tx.tx_buf_cnt++;
++	if (!(hif_dev->tx.flags & HIF_USB_TX_STOP))
++		__hif_usb_tx(hif_dev); /* Check for pending SKBs */
++	TX_STAT_INC(buf_completed);
++	spin_unlock(&hif_dev->tx.tx_lock);
+ }
+ 
+ /* TX lock has to be taken */
+@@ -178,8 +178,7 @@ static int __hif_usb_tx(struct hif_device_usb *hif_dev)
+ 		return 0;
+ 
+ 	tx_buf = list_first_entry(&hif_dev->tx.tx_buf, struct tx_buf, list);
+-	list_del(&tx_buf->list);
+-	list_add_tail(&tx_buf->list, &hif_dev->tx.tx_pending);
++	list_move_tail(&tx_buf->list, &hif_dev->tx.tx_pending);
+ 	hif_dev->tx.tx_buf_cnt--;
+ 
+ 	tx_skb_cnt = min_t(u16, hif_dev->tx.tx_skb_cnt, MAX_TX_AGGR_NUM);
+@@ -548,20 +547,17 @@ free:
+ 
+ static void ath9k_hif_usb_dealloc_tx_urbs(struct hif_device_usb *hif_dev)
+ {
+-	unsigned long flags;
+ 	struct tx_buf *tx_buf = NULL, *tx_buf_tmp = NULL;
+ 
+-	list_for_each_entry_safe(tx_buf, tx_buf_tmp, &hif_dev->tx.tx_buf, list) {
++	list_for_each_entry_safe(tx_buf, tx_buf_tmp,
++				 &hif_dev->tx.tx_buf, list) {
++		usb_kill_urb(tx_buf->urb);
+ 		list_del(&tx_buf->list);
+ 		usb_free_urb(tx_buf->urb);
+ 		kfree(tx_buf->buf);
+ 		kfree(tx_buf);
+ 	}
+ 
+-	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+-	hif_dev->tx.flags |= HIF_USB_TX_FLUSH;
+-	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+-
+ 	list_for_each_entry_safe(tx_buf, tx_buf_tmp,
+ 				 &hif_dev->tx.tx_pending, list) {
+ 		usb_kill_urb(tx_buf->urb);
+@@ -570,10 +566,6 @@ static void ath9k_hif_usb_dealloc_tx_urbs(struct hif_device_usb *hif_dev)
+ 		kfree(tx_buf->buf);
+ 		kfree(tx_buf);
+ 	}
+-
+-	spin_lock_irqsave(&hif_dev->tx.tx_lock, flags);
+-	hif_dev->tx.flags &= ~HIF_USB_TX_FLUSH;
+-	spin_unlock_irqrestore(&hif_dev->tx.tx_lock, flags);
+ }
+ 
+ static int ath9k_hif_usb_alloc_tx_urbs(struct hif_device_usb *hif_dev)
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 7d49a8a..0aca49b 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -61,7 +61,6 @@ struct tx_buf {
+ };
+ 
+ #define HIF_USB_TX_STOP  BIT(0)
+-#define HIF_USB_TX_FLUSH BIT(1)
+ 
+ struct hif_usb_tx {
+ 	u8 flags;
+-- 
+1.7.0.5
 
