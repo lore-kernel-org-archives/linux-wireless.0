@@ -1,40 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:35648 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753988Ab0DDAUg (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:52533 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756285Ab0DVTwd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Apr 2010 20:20:36 -0400
-Received: by wwb17 with SMTP id 17so1937084wwb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Apr 2010 17:20:34 -0700 (PDT)
+	Thu, 22 Apr 2010 15:52:33 -0400
+Received: by gwj19 with SMTP id 19so2253721gwj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 12:52:32 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4BB773A9.2070703@lwfinger.net>
-References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
-	 <4BB7660A.3030900@lwfinger.net>
-	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
-	 <4BB773A9.2070703@lwfinger.net>
-Date: Sun, 4 Apr 2010 01:20:34 +0100
-Message-ID: <u2o3ace41891004031720ha68d9367m4be78c2a5d850f89@mail.gmail.com>
-Subject: Re: RTL 8187b - naughty behaviour
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Rogerio Luz Coelho <rogluz.news@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+In-Reply-To: <4BCDEC94.2080202@lwfinger.net>
+References: <4BCDEC94.2080202@lwfinger.net>
+Date: Thu, 22 Apr 2010 15:52:32 -0400
+Message-ID: <w2xb6c5339f1004221252v7633ea6fgba9e801774f9f4b1@mail.gmail.com>
+Subject: Re: Problem with AR5001 on eeepc900A after disable with RFKILL switch
+From: Bob Copeland <me@bobcopeland.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	"Bernhard M. Wiedemann" <bernhardout@lsmod.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 3, 2010 at 5:58 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-<snipped>
-> What is the exact make and model of the device? It might be difficult
-> for me to get one in the US, but one of the rtl8187 developers lives in
-> Brazil. He should be able to find one.
+On Tue, Apr 20, 2010 at 2:04 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> This problem is reported at
+> https://bugzilla.novell.com/show_bug.cgi?id=595586.
+>
+> Although not mentioned in the bug report, the kernel is 2.6.33.
+>
+> The initial part of the report is as follows:
+>
+> ======================================================================
+>
+> After disabling WLAN on Asus eeepc 900A using rfkill button (Fn+F2) it
+> does not get back into a working state without a reboot.
+>
+> Reproducible: Always
+>
+> Steps to Reproduce:
+> 1. boot up eeepc900A with WLAN enabled
+> 2. press Fn+F2 (rfkill button) to disable WLAN
+> 3. press Fn+F2 again to enable WLAN
+> Actual Results:
+>
+> -----
+> 1. lspci before rfkill
+> 01:00.0 Ethernet controller: Atheros Communications AR8121/AR8113/AR8114
+> Gigabit or Fast Ethernet (rev b0)
+> 02:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless
+> Network Adapter (rev 01)
+> -----
+> 2. lspci after rfkill
+> 01:00.0 Ethernet controller: Attansic Technology Corp. Atheros
+> AR8121/AR8113/AR8114 PCI-E Ethernet Controller (rev b0)
+> 02:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless
+> Network Adapter (rev ff)
 
-Herton might be able to get the exact model/etc from Brazil so it is
-worth providing the vendor details.
+Weird..
 
-I am also wondering if it would help changing the rate-changing
-algorithm, seeing as Minstrel became the default around 2.6.32, and
-there has been a couple of reports about minstrel not working as well
-as pid for weak APs. (
-https://bugzilla.kernel.org/show_bug.cgi?id=14168 )
+So it says 'Attansic' on the ethernet only after rfkill is
+re-enabled?  The 0xff revision on wifi makes slightly
+more sense, if it's some issue like broken PCI config space
+reads.
+
+IIRC rfkill switch on those platforms cuts the bus power; I don't
+think ath5k participates specifically.  I assume the
+eepc-laptop driver is loaded?
+
+-- 
+Bob Copeland %% www.bobcopeland.com
