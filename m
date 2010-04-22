@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52870 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757419Ab0DIJMm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 05:12:42 -0400
-Subject: Re: [PATCH] mac80211: Prevent dynamic ps for rx broadcast frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1270802794-6869-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1270802794-6869-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Apr 2010 11:12:35 +0200
-Message-ID: <1270804355.3870.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:45217 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753409Ab0DVJ2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Apr 2010 05:28:44 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 02:28:44 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19408.5810.511895.284103@gargle.gargle.HOWL>
+Date: Thu, 22 Apr 2010 14:58:18 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath9k_htc: Fix WMI command race
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-04-09 at 11:46 +0300, Juuso Oikarinen wrote:
-> Currently the dynamic ps timer is restarted for all non-multicast rx data
-> frames. Congested networks have lots of broadcast traffic, which will cause
-> the power save to remain disabled for much of the time, which causes trouble
-> for battery-powered devices.
-> 
-> Fix this by preventing rx broadcast data frames from restarting the
-> dynamic ps timer.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
->  net/mac80211/rx.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index c0ad7e8..8cdcc4f 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1786,6 +1786,7 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
->  
->  	if (ieee80211_is_data(hdr->frame_control) &&
->  	    !is_multicast_ether_addr(hdr->addr1) &&
-> +	    !is_broadcast_ether_addr(hdr->addr1) &&
->  	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
+My patch "ath9k_htc: Handle WMI timeouts properly" introduced
+a race condition in WMI command processing. The last issued command
+should be stored _before_ issuing a WMI command. Not doing this
+would result in the WMI event IRQ dropping correct command responses
+as invalid.
 
-Huh? I'm starting to doubt my own sanity now!
+Fix this race by storing the command id correctly.
 
-Formal logic:
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/wmi.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-    (bcast => mcast)
-<=> (!mcast => !bcast)
-
-Thus
-
-    (!mcast && !bcast)
-<=> (!mcast)
-
-right?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index c688545..e23172c 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -305,14 +305,14 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	wmi->cmd_rsp_buf = rsp_buf;
+ 	wmi->cmd_rsp_len = rsp_len;
+ 
+-	ret = ath9k_wmi_cmd_issue(wmi, skb, cmd_id, cmd_len);
+-	if (ret)
+-		goto out;
+-
+ 	spin_lock_irqsave(&wmi->wmi_lock, flags);
+ 	wmi->last_cmd_id = cmd_id;
+ 	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+ 
++	ret = ath9k_wmi_cmd_issue(wmi, skb, cmd_id, cmd_len);
++	if (ret)
++		goto out;
++
+ 	time_left = wait_for_completion_timeout(&wmi->cmd_wait, timeout);
+ 	if (!time_left) {
+ 		ath_print(common, ATH_DBG_WMI,
+-- 
+1.7.0.5
 
