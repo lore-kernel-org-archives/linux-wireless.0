@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50554 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753857Ab0DTIWh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 04:22:37 -0400
-Subject: Re: mac80211 and asymmetric 802.11n TX/RX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <48BAD814-F653-4CE3-85E0-A9D82EC31D53@cs.washington.edu>
-References: <48BAD814-F653-4CE3-85E0-A9D82EC31D53@cs.washington.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Apr 2010 10:22:27 +0200
-Message-ID: <1271751747.8954.3.camel@jlt3.sipsolutions.net>
+Received: from c60.cesmail.net ([216.154.195.49]:42214 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754958Ab0DVUvB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Apr 2010 16:51:01 -0400
+Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Grazvydas Ignotas <notasas@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
+References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
+	 <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
+	 <1271954537.8469.15.camel@mj>
+	 <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 22 Apr 2010 16:50:59 -0400
+Message-Id: <1271969459.11483.3.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On Thu, 2010-04-22 at 13:33 -0700, Luis R. Rodriguez wrote:
+> On Thu, Apr 22, 2010 at 9:42 AM, Pavel Roskin <proski@gnu.org> wrote:
+> > On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
+> >
+> >> How was this compiling for older kernels before then?
+> >
+> > Compiling was fine, but loading the firmware was failing sometimes.  I'm
+> > glad somebody figured it out.  Thank you, Grazvydas!
+> 
+> OK Applied. I'm still puzzled, if it compiled, then that means
+> dev_set_uevent_suppress() was being defined somehow for older kernels.
 
-> Does anyone know if the 11n standard says that the set of TX rates has
-> to be a subset of the set of RX rates? This seems to be enforced now:
-> when I set up one node to be 2x1, i.e. transmit 2 streams but only
-> able to receive 1, then the mac80211 code only lets it transmit 1
-> streams (even with a 2-stream-capable receiver at the other end).
+It's wasn't defined.  The function just wasn't called for older kernels.
+"#if" was there; the patch added "#else".
 
-I'm not sure. Reading 7.3.2.56.4 seems to imply that, but I'm not sure
-about the "Rx Highest Supported Data Rate" field. Seems like maybe you
-could set the "RX MCS bitmask" to more than is supported, limit it by
-the highest supported data rate, and then use the bitmask for TX?
+It's a great example how simply-minded commenting out missing functions
+can lead to a hard problem, a race condition.
 
-> A quick diff to net/mac80211/ht.c that fixes this for equal modulation
-> streams is attached; the problem is still there for unequal modulation
-> directly below. Before I send it up I wanted to make sure I'm not
-> crazy.
-
-Hmm, ok. I interpreted the standard differently here, but your
-interpretation actually makes more sense I guess. Anyone who's more
-familiar with the standard?
-
-> A second question: my understanding is that if I am a 2x2 node and I
-> associate to a 3x3 AP, the same code will mask out the fact that the
-> AP can receive 3 streams since I can't transmit 3 streams. Is there a
-> way to access this info from the driver if I want it?
-
-Unfortunately not, at this point. We could keep track of it, what would
-you need it for?
-
-johannes
-
-
+-- 
+Regards,
+Pavel Roskin
