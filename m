@@ -1,140 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:45934 "EHLO ds10.nbd.name"
+Received: from mail.atheros.com ([12.36.123.2]:43136 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753259Ab0DSR5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 13:57:44 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v2 2/9] ath9k: clean up tx buffer handling
-Date: Mon, 19 Apr 2010 19:57:30 +0200
-Message-Id: <1271699857-12366-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
-References: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
+	id S1754048Ab0DVDoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 23:44:03 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 20:44:03 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19407.50665.276352.887195@gargle.gargle.HOWL>
+Date: Thu, 22 Apr 2010 09:13:37 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 9/9] ath9k_htc: Increase WMI timeout value
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |   67 ++++++++++++++++-----------------
- 1 files changed, 32 insertions(+), 35 deletions(-)
+Completion of WMI commands take a longer time
+on some platforms. Increase the timeout value
+to handle this.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index cac178a..fcbb4a8 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -261,19 +261,40 @@ static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
- 	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_RETRY);
- }
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/wmi.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 167e15c..765db5f 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -126,14 +126,14 @@ void ath9k_wmi_tasklet(unsigned long data);
+ 	do {								\
+ 		ret = ath9k_wmi_cmd(priv->wmi, _wmi_cmd, NULL, 0,	\
+ 				    (u8 *) &cmd_rsp,			\
+-				    sizeof(cmd_rsp), HZ);		\
++				    sizeof(cmd_rsp), HZ*2);		\
+ 	} while (0)
  
--static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
-+static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
- {
--	struct ath_buf *tbf;
-+	struct ath_buf *bf = NULL;
+ #define WMI_CMD_BUF(_wmi_cmd, _buf)					\
+ 	do {								\
+ 		ret = ath9k_wmi_cmd(priv->wmi, _wmi_cmd,		\
+ 				    (u8 *) _buf, sizeof(*_buf),		\
+-				    &cmd_rsp, sizeof(cmd_rsp), HZ);	\
++				    &cmd_rsp, sizeof(cmd_rsp), HZ*2);	\
+ 	} while (0)
  
- 	spin_lock_bh(&sc->tx.txbuflock);
--	if (WARN_ON(list_empty(&sc->tx.txbuf))) {
-+
-+	if (unlikely(list_empty(&sc->tx.txbuf))) {
- 		spin_unlock_bh(&sc->tx.txbuflock);
- 		return NULL;
- 	}
--	tbf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
--	list_del(&tbf->list);
-+
-+	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
-+	list_del(&bf->list);
-+
- 	spin_unlock_bh(&sc->tx.txbuflock);
- 
-+	return bf;
-+}
-+
-+static void ath_tx_return_buffer(struct ath_softc *sc, struct ath_buf *bf)
-+{
-+	spin_lock_bh(&sc->tx.txbuflock);
-+	list_add_tail(&bf->list, &sc->tx.txbuf);
-+	spin_unlock_bh(&sc->tx.txbuflock);
-+}
-+
-+static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
-+{
-+	struct ath_buf *tbf;
-+
-+	tbf = ath_tx_get_buffer(sc);
-+	if (WARN_ON(!tbf))
-+		return NULL;
-+
- 	ATH_TXBUF_RESET(tbf);
- 
- 	tbf->aphy = bf->aphy;
-@@ -1081,9 +1102,7 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
- 				list_del(&bf->list);
- 				spin_unlock_bh(&txq->axq_lock);
- 
--				spin_lock_bh(&sc->tx.txbuflock);
--				list_add_tail(&bf->list, &sc->tx.txbuf);
--				spin_unlock_bh(&sc->tx.txbuflock);
-+				ath_tx_return_buffer(sc, bf);
- 				continue;
- 			}
- 		}
-@@ -1325,25 +1344,6 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 	txq->axq_depth++;
- }
- 
--static struct ath_buf *ath_tx_get_buffer(struct ath_softc *sc)
--{
--	struct ath_buf *bf = NULL;
--
--	spin_lock_bh(&sc->tx.txbuflock);
--
--	if (unlikely(list_empty(&sc->tx.txbuf))) {
--		spin_unlock_bh(&sc->tx.txbuflock);
--		return NULL;
--	}
--
--	bf = list_first_entry(&sc->tx.txbuf, struct ath_buf, list);
--	list_del(&bf->list);
--
--	spin_unlock_bh(&sc->tx.txbuflock);
--
--	return bf;
--}
--
- static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
- 			      struct list_head *bf_head,
- 			      struct ath_tx_control *txctl)
-@@ -1825,9 +1825,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		}
- 		spin_unlock_bh(&txq->axq_lock);
- 
--		spin_lock_bh(&sc->tx.txbuflock);
--		list_add_tail(&bf->list, &sc->tx.txbuf);
--		spin_unlock_bh(&sc->tx.txbuflock);
-+		ath_tx_return_buffer(sc, bf);
- 
- 		return r;
- 	}
-@@ -2141,13 +2139,12 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
- 		txq->axq_depth--;
- 		txok = !(ts.ts_status & ATH9K_TXERR_MASK);
- 		txq->axq_tx_inprogress = false;
-+		if (bf_held)
-+			list_del(&bf_held->list);
- 		spin_unlock_bh(&txq->axq_lock);
- 
--		if (bf_held) {
--			spin_lock_bh(&sc->tx.txbuflock);
--			list_move_tail(&bf_held->list, &sc->tx.txbuf);
--			spin_unlock_bh(&sc->tx.txbuflock);
--		}
-+		if (bf_held)
-+			ath_tx_return_buffer(sc, bf_held);
- 
- 		if (!bf_isampdu(bf)) {
- 			/*
+ #endif /* WMI_H */
 -- 
-1.6.4.2
+1.7.0.5
 
