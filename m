@@ -1,65 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 29.mail-out.ovh.net ([87.98.216.213]:49294 "HELO
-	29.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750735Ab0D0GWn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 02:22:43 -0400
-Message-ID: <4BD682AF.6030206@free.fr>
-Date: Tue, 27 Apr 2010 08:22:39 +0200
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Received: from mail.atheros.com ([12.36.123.2]:43133 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753616Ab0DVDn6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 23:43:58 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 20:43:58 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: remove usage of deprecated noise value
-References: <1272312561-22648-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1272312561-22648-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19407.50660.739033.942199@gargle.gargle.HOWL>
+Date: Thu, 22 Apr 2010 09:13:32 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 7/9] ath9k_htc: Use USB reboot
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville a écrit :
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/ath/ath9k/common.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-> index 09effde..b4424a6 100644
-> --- a/drivers/net/wireless/ath/ath9k/common.c
-> +++ b/drivers/net/wireless/ath/ath9k/common.c
-> @@ -212,7 +212,6 @@ int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
->  	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
->  	rx_status->band = hw->conf.channel->band;
->  	rx_status->freq = hw->conf.channel->center_freq;
-> -	rx_status->noise = common->ani.noise_floor;
->  	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
->  	rx_status->antenna = rx_stats->rs_antenna;
->  	rx_status->flag |= RX_FLAG_TSFT;
->   
-Hey, I'm still using this value here in my setup (I've done some work on 
-noise floor calibration and can submit a patch that report noise & 
-signal values that makes more sense to me). I mentioned in an earlier 
-patch that I was using the {last_signal, last_noise} debugfs file as 
-well (in February, 17th).
+So, apparently there is a USB reboot command
+that the target accepts. Using this instead of
+usb_reset_device() fixes the issue of "descriptor read error"
+that pops up on repeated load/unload.
 
-Before removing noise reporting and all related code, wouln't it be 
-better to have a replacement API? I was told that noise reporting is 
-buggy for most chipset, but that's a bug in each driver, not in mac80211 
-then. Such bugs could be fixed by using a default value of -101dBm 
-(thermal noise at room temperature over a 20 MHz channel) if they are 
-unable to determine a correct value.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-Moreover, it is very convenient to have the {last_signal, last_noise} 
-sampled at the same time and be in the same location. Likewise for the 
-radiotap header, it is very easy to plot noise value over time if it is 
-stored on a per packet basis. Of course, I know noise is a global 
-property of the channel and not DEFINED on a per packet basis, but once 
-you know that, it's still useful to have it REPORTED on a per packet basis.
-
-So far, the solution for me was to revert the single patch for making 
-the noise field deprecated, but I'm not going to revert each & every 
-patches related to noise. After all, isn't it the purpose of peer review?
-
-Regards,
-Benoit
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index cee5feb..ce13e08 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -889,6 +889,17 @@ err_alloc:
+ 	return ret;
+ }
+ 
++static void ath9k_hif_usb_reboot(struct usb_device *udev)
++{
++	u32 cmd = 0xffffffff;
++	int ret;
++
++	ret = usb_bulk_msg(udev, usb_sndbulkpipe(udev, USB_REG_OUT_PIPE),
++			   &cmd, sizeof(cmd), NULL, HZ);
++	if (ret)
++		dev_err(&udev->dev, "ath9k_htc: USB reboot failed\n");
++}
++
+ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
+ {
+ 	struct usb_device *udev = interface_to_usbdev(interface);
+@@ -903,7 +914,7 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
+ 	}
+ 
+ 	if (hif_dev->flags & HIF_USB_START)
+-		usb_reset_device(udev);
++		ath9k_hif_usb_reboot(udev);
+ 
+ 	kfree(hif_dev);
+ 	dev_info(&udev->dev, "ath9k_htc: USB layer deinitialized\n");
+-- 
+1.7.0.5
 
