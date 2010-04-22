@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48714 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473Ab0D0Rzs (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:48305 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757877Ab0DVUdW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 13:55:48 -0400
-Subject: Re: [PATCH 1/1] mac80211: fix rts threshold check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: shanyu.zhao@intel.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1272392112-28301-1-git-send-email-shanyu.zhao@intel.com>
-References: <1272392112-28301-1-git-send-email-shanyu.zhao@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Apr 2010 19:55:45 +0200
-Message-ID: <1272390945.3549.39.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 22 Apr 2010 16:33:22 -0400
+Received: by pwj9 with SMTP id 9so6375909pwj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 13:33:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1271954537.8469.15.camel@mj>
+References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
+	<g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
+	<1271954537.8469.15.camel@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 22 Apr 2010 13:33:00 -0700
+Message-ID: <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
+Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
+To: Pavel Roskin <proski@gnu.org>
+Cc: Grazvydas Ignotas <notasas@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-04-27 at 11:15 -0700, shanyu.zhao@intel.com wrote:
-> From: Shanyu Zhao <shanyu.zhao@intel.com>
-> 
-> Currently whenever rts thresold is set, every packet will use RTS
-> protection no matter its size exceeds the threshold or not. This is
-> due to a bug in the rts threshold check.
-> 	if (len > tx->local->hw.wiphy->rts_threshold) {
-> 		txrc.rts = rts = true;
-> 	}
-> Basically it is comparing an int (len) and a u32 (rts_threshold),
-> and the variable len is assigned as:
-> 	len = min_t(int, tx->skb->len + FCS_LEN,
-> 			 tx->local->hw.wiphy->frag_threshold);
-> However, when frag_threshold is "-1", len is always "-1", which is
-> 0xffffffff therefore rts is always set to true.
+On Thu, Apr 22, 2010 at 9:42 AM, Pavel Roskin <proski@gnu.org> wrote:
+> On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
+>
+>> How was this compiling for older kernels before then?
+>
+> Compiling was fine, but loading the firmware was failing sometimes.  I'm
+> glad somebody figured it out.  Thank you, Grazvydas!
 
-D'oh. Good catch.
+OK Applied. I'm still puzzled, if it compiled, then that means
+dev_set_uevent_suppress() was being defined somehow for older kernels.
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+> I would prefer to have replacement functions in compat-2.6.30.h rather
+> than ifdefs in the code.  We might want to resync compat_firmware with
+> the kernel one day, and ifdefs would stand in the way.
 
-> CC: stable@kernel.org
-> 
-> Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-> ---
->  net/mac80211/tx.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index e2aa972..f3841f4 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -593,7 +593,8 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
->  	struct ieee80211_hdr *hdr = (void *)tx->skb->data;
->  	struct ieee80211_supported_band *sband;
->  	struct ieee80211_rate *rate;
-> -	int i, len;
-> +	int i;
-> +	u32 len;
->  	bool inval = false, rts = false, short_preamble = false;
->  	struct ieee80211_tx_rate_control txrc;
->  	u32 sta_flags;
-> @@ -602,7 +603,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
->  
->  	sband = tx->local->hw.wiphy->bands[tx->channel->band];
->  
-> -	len = min_t(int, tx->skb->len + FCS_LEN,
-> +	len = min_t(u32, tx->skb->len + FCS_LEN,
->  			 tx->local->hw.wiphy->frag_threshold);
->  
->  	/* set up the tx rate control struct we give the RC algo */
+Good point, I merged the patch for now given that that file does't
+change that often upstream.
 
-
+  Luis
