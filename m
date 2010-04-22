@@ -1,147 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41597 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751371Ab0DFPEF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 11:04:05 -0400
-Date: Tue, 6 Apr 2010 18:03:57 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iw: Parse some common WPS attributes
-Message-ID: <20100406150357.GA26375@jm.kir.nu>
+Received: from mail.atheros.com ([12.36.123.2]:43129 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753777Ab0DVDny (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Apr 2010 23:43:54 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 20:43:54 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19407.50656.914598.860322@gargle.gargle.HOWL>
+Date: Thu, 22 Apr 2010 09:13:28 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/9] ath9k_hw: Remove pointless ANI deinit
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make iw scan result output a bit more readable for WPS APs by parsing
-some of the commonly used attributes instead of showing them as unknown
-TLVs with a hex dump.
----
-diff --git a/scan.c b/scan.c
-index c0287c4..09b1047 100644
---- a/scan.c
-+++ b/scan.c
-@@ -683,6 +683,26 @@ static void print_wifi_wmm(const uint8_t type, uint8_t len, const uint8_t *data)
- 	printf("\n");
- }
- 
-+static const char * wifi_wps_dev_passwd_id(uint16_t id)
-+{
-+	switch (id) {
-+	case 0:
-+		return "Default (PIN)";
-+	case 1:
-+		return "User-specified";
-+	case 2:
-+		return "Machine-specified";
-+	case 3:
-+		return "Rekey";
-+	case 4:
-+		return "PushButton";
-+	case 5:
-+		return "Registrar-specified";
-+	default:
-+		return "??";
-+	}
-+}
-+
- static void print_wifi_wps(const uint8_t type, uint8_t len, const uint8_t *data)
- {
- 	bool first = true;
-@@ -703,6 +723,19 @@ static void print_wifi_wps(const uint8_t type, uint8_t len, const uint8_t *data)
- 			tab_on_first(&first);
- 			printf("\t * Device name: %.*s\n", sublen, data + 4);
- 			break;
-+		case 0x1012: {
-+			uint16_t id;
-+			tab_on_first(&first);
-+			if (sublen != 2) {
-+				printf("\t * Device Password ID: (invalid "
-+				       "length %d)\n", sublen);
-+				break;
-+			}
-+			id = data[4] << 8 | data[5];
-+			printf("\t * Device Password ID: %u (%s)\n",
-+			       id, wifi_wps_dev_passwd_id(id));
-+			break;
-+		}
- 		case 0x1021:
- 			tab_on_first(&first);
- 			printf("\t * Manufacturer: %.*s\n", sublen, data + 4);
-@@ -711,17 +744,69 @@ static void print_wifi_wps(const uint8_t type, uint8_t len, const uint8_t *data)
- 			tab_on_first(&first);
- 			printf("\t * Model: %.*s\n", sublen, data + 4);
- 			break;
-+		case 0x1024:
-+			tab_on_first(&first);
-+			printf("\t * Model Number: %.*s\n", sublen, data + 4);
-+			break;
-+		case 0x103b: {
-+			__u8 val = data[4];
-+			tab_on_first(&first);
-+			printf("\t * Response Type: %d%s\n",
-+			       val, val == 3 ? " (AP)" : "");
-+			break;
-+		}
-+		case 0x103c: {
-+			__u8 val = data[4];
-+			tab_on_first(&first);
-+			printf("\t * RF Bands: 0x%x\n", val);
-+			break;
-+		}
-+		case 0x1041: {
-+			__u8 val = data[4];
-+			tab_on_first(&first);
-+			printf("\t * Selected Registrar: 0x%x\n", val);
-+			break;
-+		}
-+		case 0x1042:
-+			tab_on_first(&first);
-+			printf("\t * Serial Number: %.*s\n", sublen, data + 4);
-+			break;
-+		case 0x1044: {
-+			__u8 val = data[4];
-+			tab_on_first(&first);
-+			printf("\t * Wi-Fi Protected Setup State: %d%s%s\n",
-+			       val,
-+			       val == 1 ? " (Unconfigured)" : "",
-+			       val == 2 ? " (Configured)" : "");
-+			break;
-+		}
-+		case 0x1054: {
-+			tab_on_first(&first);
-+			if (sublen != 8) {
-+				printf("\t * Primary Device Type: (invalid "
-+				       "length %d)\n", sublen);
-+				break;
-+			}
-+			printf("\t * Primary Device Type: "
-+			       "%u-%02x%02x%02x%02x-%u\n",
-+			       data[4] << 8 | data[5],
-+			       data[6], data[7], data[8], data[9],
-+			       data[10] << 8 | data[11]);
-+			break;
-+		}
- 		case 0x1057: {
- 			__u8 val = data[4];
- 			tab_on_first(&first);
- 			printf("\t * AP setup locked: 0x%.2x\n", val);
- 			break;
- 		}
--		case 0x1008: {
-+		case 0x1008:
-+		case 0x1053: {
- 			__u16 meth = (data[4] << 8) + data[5];
- 			bool comma = false;
- 			tab_on_first(&first);
--			printf("\t * Config methods:");
-+			printf("\t * %sConfig methods:",
-+			       subtype == 0x1053 ? "Selected Registrar ": "");
- #define T(bit, name) do {		\
- 	if (meth & (1<<bit)) {		\
- 		if (comma)		\
+There is no reason to disable the PHY Error / MIB counters
+when the module is being unloaded.
 
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |    9 ---------
+ drivers/net/wireless/ath/ath9k/ani.h |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c  |    3 ---
+ 3 files changed, 0 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index cec62d3..ba8b20f 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -657,12 +657,3 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 	if (ah->config.enable_ani)
+ 		ah->proc_phyerr |= HAL_PROCESS_ANI;
+ }
+-
+-void ath9k_hw_ani_disable(struct ath_hw *ah)
+-{
+-	ath_print(ath9k_hw_common(ah), ATH_DBG_ANI, "Disabling ANI\n");
+-
+-	ath9k_hw_disable_mib_counters(ah);
+-	REG_WRITE(ah, AR_PHY_ERR_1, 0);
+-	REG_WRITE(ah, AR_PHY_ERR_2, 0);
+-}
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 4e1ab94..3356762 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -118,6 +118,5 @@ u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah, u32 *rxc_pcnt,
+ void ath9k_hw_procmibevent(struct ath_hw *ah);
+ void ath9k_hw_ani_setup(struct ath_hw *ah);
+ void ath9k_hw_ani_init(struct ath_hw *ah);
+-void ath9k_hw_ani_disable(struct ath_hw *ah);
+ 
+ #endif /* ANI_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5a29048..2d18892 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -819,9 +819,6 @@ void ath9k_hw_deinit(struct ath_hw *ah)
+ 	if (common->state < ATH_HW_INITIALIZED)
+ 		goto free_hw;
+ 
+-	if (!AR_SREV_9100(ah))
+-		ath9k_hw_ani_disable(ah);
+-
+ 	ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
+ 
+ free_hw:
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.0.5
+
