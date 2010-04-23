@@ -1,56 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:33052 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752965Ab0DYVYK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Apr 2010 17:24:10 -0400
-From: Pedro Francisco <pedrogfrancisco@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: ath5k misbehaving affecting other kernel parts unrelated?
-Date: Sun, 25 Apr 2010 22:24:04 +0100
-Cc: me@bobcopeland.com, Vegard Nossum <vegard.nossum@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	mickflemm@gmail.com
-References: <201004230806.13628.pedrogfrancisco@gmail.com> <20100425192242.GA27921@hash.localnet> <4BD4A639.8000703@gmail.com>
-In-Reply-To: <4BD4A639.8000703@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:10652 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756184Ab0DWHKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 03:10:48 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 00:10:48 -0700
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+Subject: [PATCH] ath9k: Avoid corrupt frames being forwarded to mac80211.
+Date: Fri, 23 Apr 2010 12:40:25 +0530
+Message-ID: <1272006625-6136-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201004252224.05509.pedrogfrancisco@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A Domingo, 25 de Abril de 2010 21:29:45 Jiri Slaby escreveu:
-> On 04/25/2010 09:22 PM, me@bobcopeland.com wrote:
-> > On Sat, Apr 24, 2010 at 06:28:36PM +0100, Pedro Francisco wrote:
-> >> ========================================================================
-> >> ===== [ 2658.663424] BUG kmalloc-4096: Poison overwritten
-> >> [ 2658.663483]
-> > 
-> > Ok there are 4 messages here, two of them are definitely 802.11 beacons,
-> > which would point the finger squarely at ath5k.  We had reports of this
-> > some time ago but a few things got rewritten around that time.  I'd guess
-> > the rx DMA code is still subtly broken.
-> > 
-> >> 6b 6b kkkkkkkkkkkkkkkk
-> >> [ 2658.664816]   Object 0xed3db0c0:  c4 00 84 00 00 22 43 89 42 69 4e 12
-> >> ca 6f 6f 6f �...."C.BiN.�ooo
-> >> [ 4689.945547]   Object 0xed3d9080:  c4 00 70 00 00 22 43 89 42 69 fe 08
-> >> eb 14 14 14 �.p.."C.Bi�.�...
-> > 
-> > Offhand, I'm not sure what pattern these are.
-> 
-> These are CTS frames. So I think ath5k is to blame too :/.
-> 
-> regards,
+If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
+with WEP or TKIP, eventhough the received frame may be a CRC failed
+corrupted frame.
 
-Do note that's on a 2.6.32 kernel. I've however a new dmesg/syslog which on a 
-2.6.34-rc5-daily has the same kind of issues. It's 400kB in size..... Do you 
-want me to send it to the mailing list?
+Reported-by: Johan Hovold <johan.hovold@lundinova.se>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_initvals.h |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9002_initvals.h |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Or should I open a bug report on the kernel bugzilla and post them there? Or 
-do both?
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+index cd953f6..025c31a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+@@ -249,7 +249,7 @@ static const u32 ar5416Common[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8000010 },
++    { 0x00008264, 0x88000010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+index f06313d..dae7f33 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+@@ -793,7 +793,7 @@ static const u32 ar9280Common_9280_2[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -1963,7 +1963,7 @@ static const u32 ar9285Common_9285[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -3185,7 +3185,7 @@ static const u32 ar9287Common_9287_1_0[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -4973,7 +4973,7 @@ static const u32 ar9271Common_9271[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
 -- 
-Pedro
+1.7.0.5
+
