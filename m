@@ -1,189 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:3366 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933097Ab0DHVuq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 17:50:46 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville <linville"@tuxdriver.com
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 8/9] rt2x00: Add rt3090 support in rt2800 register initialization.
-Date: Thu,  8 Apr 2010 23:50:36 +0200
-Message-Id: <1270763437-29526-9-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com>
+Received: from web56802.mail.re3.yahoo.com ([66.196.97.76]:24681 "HELO
+	web56802.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753768Ab0DWIqp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 04:46:45 -0400
+Message-ID: <260332.71011.qm@web56802.mail.re3.yahoo.com>
+Date: Fri, 23 Apr 2010 01:46:44 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: [rt2x00] rt3070 fails to initialize with rt2800usb
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+In-Reply-To: <4BD0B6BD.50509@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add RT3090 specific register initializations to rt2x00, based on the latest
-Ralink rt3090 vendor driver.
+> > The problem as I recall first occurred in late January
+> or some time in February when  someone decided to
+> remove large portion of the VIDs from the code because of
+> driver collisions and I suppose the purpose of it was to
+> reshuffle VID tables and insert some sort of order. Since
+> then, compat-wireless does not automatically provide drivers
+> for the rt307x via rt2800usb. To this point, only manual
+> modification and inserting of the VIDs above solves the
+> problem.
+> > 
+> > I'm a 100% certain of this. Even if your cards have
+> different VIDs /not 148f:3070/, just install compat-wireless
+> with enabled rt307X support and see if "modinfo rt2800usb
+> |grep 3070" returns something. Then you'll be able to verify
+> my reports.
+> > 
+> 
+> As I mentioned, I am not experiencing this. See attached
+> the modinfo output for the modules that I built with a clean
+> compat-wireless package.
+> 
+> The only way I can explain this is that on your system, for
+> some reason, changes to config.mk are not picked up by the
+> build system.
+> 
+> Can you try removing the include/linux/compat_autoconf.h
+> file (from the root of the compat-wireless tree), and then
+> run a make clean, followed by a make.
+> 
+> ---
+> Gertjan.
 
-Untested as I don't actually own an RT3090 based device, but given experiences
-on rt3070/rt3071 very hopeful that this will actually work..
+Unfortunately, removing this file changes nothing. The rt2800usb still doesn't pick up the 148f:3070 VID as modinfo would show. That is with enabled rt307x support in config.mk and removed compat_autoconf.h in the compat directory. I'm on a Ubuntu 9.10 / 2.6.31-20 kernel. The problem appears to be deeper that I thought.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   54 ++++++++++++++++++++++--------
- 1 files changed, 39 insertions(+), 15 deletions(-)
+I don't mind manually modifying VID table to enable support for my devices, but this would mean a large number of users won't be able to take advantage of the new code via compat-wireless. I'm puzzled how results differ, you appear to be testing it on Fedora system with .2.6.32 and Ubuntu 2.6.31 fails. I'm running out of explanations.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 209fd85..00f058a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1037,7 +1037,8 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- {
- 	if (rt2x00dev->curr_band == IEEE80211_BAND_2GHZ) {
- 		if (rt2x00_rt(rt2x00dev, RT3070) ||
--		    rt2x00_rt(rt2x00dev, RT3071))
-+		    rt2x00_rt(rt2x00dev, RT3071) ||
-+		    rt2x00_rt(rt2x00dev, RT3090))
- 			return 0x1c + (2 * rt2x00dev->lna_gain);
- 		else
- 			return 0x2e + rt2x00dev->lna_gain;
-@@ -1204,7 +1205,8 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_CC_DELAY_TIME, 2);
- 	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
- 
--	if (rt2x00_rt(rt2x00dev, RT3071)) {
-+	if (rt2x00_rt(rt2x00dev, RT3071) ||
-+	    rt2x00_rt(rt2x00dev, RT3090)) {
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
- 		if (rt2x00_rev(rt2x00dev) < 0x0211) {
-@@ -1558,9 +1560,9 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		     rt2800_wait_bbp_ready(rt2x00dev)))
- 		return -EACCES;
- 
--	if ((rt2x00_rt(rt2x00dev, RT3070) ||
--	     rt2x00_rt(rt2x00dev, RT3071)) &&
--	    rt2x00_rev(rt2x00dev) >= 0x0211) {
-+	if ((rt2x00_rt(rt2x00dev, RT3070) && rt2x00_rev(rt2x00dev) >= 0x0211) ||
-+	    (rt2x00_rt(rt2x00dev, RT3071) && rt2x00_rev(rt2x00dev) >= 0x0211) ||
-+	    (rt2x00_rt(rt2x00dev, RT3090) && rt2x00_rev(rt2x00dev) >= 0x0211)) {
- 		rt2800_bbp_read(rt2x00dev, 31, &value);
- 		value &= ~0x03;
- 		rt2800_bbp_write(rt2x00dev, 31, value);
-@@ -1580,7 +1582,8 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
- 
- 	if (rt2x00_rt(rt2x00dev, RT3070) ||
--	    rt2x00_rt(rt2x00dev, RT3071)) {
-+	    rt2x00_rt(rt2x00dev, RT3071) ||
-+	    rt2x00_rt(rt2x00dev, RT3090)) {
- 		rt2800_bbp_write(rt2x00dev, 79, 0x13);
- 		rt2800_bbp_write(rt2x00dev, 80, 0x05);
- 		rt2800_bbp_write(rt2x00dev, 81, 0x33);
-@@ -1593,6 +1596,7 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 
- 	if (!rt2x00_rt(rt2x00dev, RT3070) &&
- 	    !rt2x00_rt(rt2x00dev, RT3071) &&
-+	    !rt2x00_rt(rt2x00dev, RT3090) &&
- 	    rt2x00_rev(rt2x00dev) == 0x101)
- 		rt2800_bbp_write(rt2x00dev, 84, 0x19);
- 	else
-@@ -1603,7 +1607,8 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 92, 0x00);
- 
- 	if ((rt2x00_rt(rt2x00dev, RT3070) && rt2x00_rev(rt2x00dev) >= 0x0201) ||
--	    (rt2x00_rt(rt2x00dev, RT3071) && rt2x00_rev(rt2x00dev) >= 0x0211))
-+	    (rt2x00_rt(rt2x00dev, RT3071) && rt2x00_rev(rt2x00dev) >= 0x0211) ||
-+	    (rt2x00_rt(rt2x00dev, RT3090) && rt2x00_rev(rt2x00dev) >= 0x0211))
- 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 103, 0x00);
-@@ -1611,7 +1616,8 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 105, 0x05);
- 	rt2800_bbp_write(rt2x00dev, 106, 0x35);
- 
--	if (rt2x00_rt(rt2x00dev, RT3071)) {
-+	if (rt2x00_rt(rt2x00dev, RT3071) ||
-+	    rt2x00_rt(rt2x00dev, RT3090)) {
- 		rt2800_bbp_read(rt2x00dev, 138, &value);
- 
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &eeprom);
-@@ -1705,7 +1711,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	u16 eeprom;
- 
- 	if (!rt2x00_rt(rt2x00dev, RT3070) &&
--	    !rt2x00_rt(rt2x00dev, RT3071))
-+	    !rt2x00_rt(rt2x00dev, RT3071) &&
-+	    !rt2x00_rt(rt2x00dev, RT3090))
- 		return 0;
- 
- 	/*
-@@ -1719,7 +1726,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
- 
- 	if (rt2x00_rt(rt2x00dev, RT3070) ||
--	    rt2x00_rt(rt2x00dev, RT3071)) {
-+	    rt2x00_rt(rt2x00dev, RT3071) ||
-+	    rt2x00_rt(rt2x00dev, RT3090)) {
- 		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
- 		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
- 		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
-@@ -1746,7 +1754,7 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 		rt2x00_set_field32(&reg, LDO_CFG0_BGSEL, 1);
- 		rt2x00_set_field32(&reg, LDO_CFG0_LDO_CORE_VLEVEL, 3);
- 		rt2800_register_write(rt2x00dev, LDO_CFG0, reg);
--	} else if (rt2x00_rt(rt2x00dev, RT3071)) {
-+	} else if (rt2x00_rt(rt2x00dev, RT3071) || rt2x00_rt(rt2x00dev, RT3090)) {
- 		rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
- 		rt2x00_set_field8(&rfcsr, RFCSR6_R2, 1);
- 		rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
-@@ -1773,7 +1781,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 			rt2800_init_rx_filter(rt2x00dev, false, 0x07, 0x16);
- 		rt2x00dev->calibration[1] =
- 			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x19);
--	} else if (rt2x00_rt(rt2x00dev, RT3071)) {
-+	} else if (rt2x00_rt(rt2x00dev, RT3071) ||
-+		   rt2x00_rt(rt2x00dev, RT3090)) {
- 		rt2x00dev->calibration[0] =
- 			rt2800_init_rx_filter(rt2x00dev, false, 0x07, 0x13);
- 		rt2x00dev->calibration[1] =
-@@ -1797,7 +1806,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 4, bbp);
- 
- 	if ((rt2x00_rt(rt2x00dev, RT3070) && rt2x00_rev(rt2x00dev) < 0x0201) ||
--	    (rt2x00_rt(rt2x00dev, RT3071) && rt2x00_rev(rt2x00dev) < 0x0211))
-+	    (rt2x00_rt(rt2x00dev, RT3071) && rt2x00_rev(rt2x00dev) < 0x0211) ||
-+	    (rt2x00_rt(rt2x00dev, RT3090) && rt2x00_rev(rt2x00dev) < 0x0211))
- 		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
- 
- 	rt2800_register_read(rt2x00dev, OPT_14_CSR, &reg);
-@@ -1806,7 +1816,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR17_R2, 0);
--	if (rt2x00_rt(rt2x00dev, RT3071) && rt2x00_rev(rt2x00dev) < 0x0211) {
-+	if ((rt2x00_rt(rt2x00dev, RT3071) && rt2x00_rev(rt2x00dev) < 0x0211) ||
-+	    (rt2x00_rt(rt2x00dev, RT3090) && rt2x00_rev(rt2x00dev) < 0x0211)) {
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC, &eeprom);
- 		if (rt2x00_get_field16(eeprom, EEPROM_NIC_EXTERNAL_LNA_BG))
- 			rt2x00_set_field8(&rfcsr, RFCSR17_R3, 1);
-@@ -1816,7 +1827,20 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 		rt2x00_set_field8(&rfcsr, RFCSR17_R1, eeprom & 0x07);
- 	rt2800_rfcsr_write(rt2x00dev, 17, rfcsr);
- 
--	if (rt2x00_rt(rt2x00dev, RT3071)) {
-+	if (rt2x00_rt(rt2x00dev, RT3090)) {
-+		rt2800_bbp_read(rt2x00dev, 138, &bbp);
-+
-+		rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &eeprom);
-+		if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RXPATH) == 1)
-+			rt2x00_set_field8(&bbp, BBP138_RX_ADC1, 0);
-+		if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TXPATH) == 1)
-+			rt2x00_set_field8(&bbp, BBP138_TX_DAC1, 1);
-+
-+		rt2800_bbp_write(rt2x00dev, 138, bbp);
-+	}
-+
-+	if (rt2x00_rt(rt2x00dev, RT3071) ||
-+	    rt2x00_rt(rt2x00dev, RT3090)) {
- 		rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
- 		rfcsr &= ~0x0c;
- 		rfcsr |= 0x31;
--- 
-1.7.0.4
+Walter.
 
+
+      
