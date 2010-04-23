@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f179.google.com ([209.85.221.179]:47157 "EHLO
-	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753515Ab0D1NBL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 09:01:11 -0400
-Received: by mail-qy0-f179.google.com with SMTP id 9so21204917qyk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 06:01:10 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:65015 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755454Ab0DWE6i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 00:58:38 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:38 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20100427131654.4ee04752.akpm@linux-foundation.org>
-References: <g2t446ae9281004251430t89236181p8f3d056181fb8b49@mail.gmail.com>
-	 <1272231646-67723-1-git-send-email-steve@cozybit.com>
-	 <20100427131654.4ee04752.akpm@linux-foundation.org>
-Date: Wed, 28 Apr 2010 06:00:32 -0700
-Message-ID: <i2l446ae9281004280600vdc32123ew75d2b8b74c07dea3@mail.gmail.com>
-Subject: Re: [PATCH] Added configurable debug messages to libertastf
-From: Steve deRosier <steve@cozybit.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com, joe@perches.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19409.10472.450708.915467@gargle.gargle.HOWL>
+Date: Fri, 23 Apr 2010 10:28:16 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/11] ath9k_htc: Use USB reboot
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 27, 2010 at 1:16 PM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
->
-> I dunno what this pr_fmt() definition is doing here, but it has
-> unpleasant effects with a x86_64 allmodconfig build:
->...
-> so I cheerily deleted it.
+So, apparently there is a USB reboot command
+that the target accepts. Using this instead of
+usb_reset_device() fixes the issue of "descriptor read error"
+that pops up on repeated load/unload.
 
-Andrew,
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   22 +++++++++++++++++++++-
+ 1 files changed, 21 insertions(+), 1 deletions(-)
 
-I apologize for the pain.  I was trying to comply with a comment to my
-original patch:
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index cee5feb..31665c5 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -889,6 +889,26 @@ err_alloc:
+ 	return ret;
+ }
+ 
++static void ath9k_hif_usb_reboot(struct usb_device *udev)
++{
++	u32 reboot_cmd = 0xffffffff;
++	void *buf;
++	int ret;
++
++	buf = kmalloc(4, GFP_KERNEL);
++	if (!buf)
++		return;
++
++	memcpy(buf, &reboot_cmd, 4);
++
++	ret = usb_bulk_msg(udev, usb_sndbulkpipe(udev, USB_REG_OUT_PIPE),
++			   buf, 4, NULL, HZ);
++	if (ret)
++		dev_err(&udev->dev, "ath9k_htc: USB reboot failed\n");
++
++	kfree(buf);
++}
++
+ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
+ {
+ 	struct usb_device *udev = interface_to_usbdev(interface);
+@@ -903,7 +923,7 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
+ 	}
+ 
+ 	if (hif_dev->flags & HIF_USB_START)
+-		usb_reset_device(udev);
++		ath9k_hif_usb_reboot(udev);
+ 
+ 	kfree(hif_dev);
+ 	dev_info(&udev->dev, "ath9k_htc: USB layer deinitialized\n");
+-- 
+1.7.0.5
 
-On Wed, Apr 21, 2010 at 3:50 PM, Joe Perches <joe@perches.com> wrote:
->> +#define lbtf_pr_info(format, args...) \
->> +     printk(KERN_INFO DRV_NAME": " format, ## args)
->> +#define lbtf_pr_err(format, args...) \
->> +     printk(KERN_ERR DRV_NAME": " format, ## args)
->> +#define lbtf_pr_alert(format, args...) \
->> +     printk(KERN_ALERT DRV_NAME": " format, ## args)
->
-> I think it'd be better to add
->
-> #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
->
-> and use the more standard pr_<level>s.
-
-Unfortunately it turned into a mess, partly due to me wanting to keep
-the definition in only one place (my .h file) for the module, and
-partly to my lack of full understanding of the pr_fmt macro.
-
-"cheerily" deleting it is fine.  I'll followup with a second (better)
-patch for that part if I don't like the result.
-
-Thanks,
-- Steve
