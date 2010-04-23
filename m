@@ -1,111 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:42216 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599Ab0DDTuH (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:51633 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559Ab0DWUQb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Apr 2010 15:50:07 -0400
-Received: by fxm27 with SMTP id 27so588024fxm.28
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Apr 2010 12:50:06 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@openwrt.org>, Max Filippov <jcmvbkbc@gmail.com>
-Subject: [PATCH] mac80211: fix ieee80211_meshconf_ie::meshconf_cap type to be __le16
-Date: Sun,  4 Apr 2010 23:50:01 +0400
-Message-Id: <1270410601-9177-1-git-send-email-jcmvbkbc@gmail.com>
-In-Reply-To: <201004042339.35467.jcmvbkbc@gmail.com>
-References: <201004042339.35467.jcmvbkbc@gmail.com>
+	Fri, 23 Apr 2010 16:16:31 -0400
+Received: by bwz25 with SMTP id 25so11681108bwz.28
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 13:16:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <u2k917a57cb1004221345i19eb6354yffdc302f6a9b74c6@mail.gmail.com>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	<4BB7660A.3030900@lwfinger.net> <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	<4BB773A9.2070703@lwfinger.net> <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
+	<q2k917a57cb1004100507s17249540xfb11a2e2f0a2dd76@mail.gmail.com>
+	<w2i69e28c911004101150h9db59aa1x2f9d12964f3c3fc1@mail.gmail.com>
+	<y2g917a57cb1004101240g8033e225n57bf68b6d37b5431@mail.gmail.com>
+	<q2k69e28c911004110635nac8100f6pe014361ed0a516a5@mail.gmail.com>
+	<u2k917a57cb1004221345i19eb6354yffdc302f6a9b74c6@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 23 Apr 2010 22:16:09 +0200
+Message-ID: <k2s69e28c911004231316u7fd3118qe971919ed8a433d7@mail.gmail.com>
+Subject: Re: RTL 8187b - naughty behaviour
+To: Rogerio Luz Coelho <rogluz.news@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the current 802.11s draft mesh capability field
-is 16 bits wide.
+2010/4/22 Rogerio Luz Coelho <rogluz.news@gmail.com>:
+> 2010/4/11 Gábor Stefanik <netrolller.3d@gmail.com>:
+>> 2010/4/10 Rogerio Luz Coelho <rogluz.news@gmail.com>:
+>>> 2010/4/10 Gábor Stefanik <netrolller.3d@gmail.com>:
+>>>> On Sat, Apr 10, 2010 at 2:07 PM, Rogerio Luz Coelho
+>>>> <rogluz.news@gmail.com> wrote:
+>>>>> 2010/4/3 Rogerio Luz Coelho <rogluz.news@gmail.com>:
+>>>>>> 2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
+>>>>>>> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
+>>>>>>>>
+>>>>>>>> I have a MS-Win7 instalation on this Laptop and it works 100% even at
+>>>>>>>> longer distances than you report,even with walls in between.
+>>>>>>>>
+>>>>>>>> Will do the tcpperf test as soon as I get home. There are other with
+>>>>>>>> the same problem with my exact chip here in Brasil , that is because
+>>>>>>>> one of our leading Laptop vendors uses this config.
+>>>>>>>
+>>>>>>> What is the exact make and model of the device? It might be difficult
+>>>>>>> for me to get one in the US, but one of the rtl8187 developers lives in
+>>>>>>> Brazil. He should be able to find one.
+>>>>>>>
+>>>>>>
+>>>>>> It愀 a POSITIVO R430L - Core 2 Duo 4GB RAM
+>>>>>>
+>>>>>>
+>>>>>>>> Does it matter that the USB port used in this setting is a connected
+>>>>>>>> to a USB HUB and then to the mother board?
+>>>>>>>
+>>>>>>> Is the hub passive, or is it powered? If the hub is good and not
+>>>>>>> underpowered, it should be OK.
+>>>>>>>
+>>>>>>>> More details and tests will come your way in a day or two ... will
+>>>>>>>> reinstall Mandriva 2010 and do some tests with older kernels.
+>>>>>>>
+>>>>>>> If you can download an openSUSE 11.2 Live CD and burn it, you would not
+>>>>>>> even have to do an installation. That one has a 2.6.31 kernel.
+>>>>>>>
+>>>>>>> Larry
+>>>>>
+>>>>>
+>>>>> Downloaded and installed:
+>>>>>
+>>>>> OpenSuse 11.2 - LiveCD  result: Gnome Network-Manager tells me there
+>>>>> is connection but no ping resposes, Firefox complains about conections
+>>>>> errors.
+>>>>>
+>>>>> Mandriva 2010.0 (kernel 2.6.31-12) result: concection comes and goes
+>>>>> ... generally the first boot of the day connects, but it lasts less
+>>>>> than 5min. The error code is the "deauthentication by local reason
+>>>>> (reason=3) again.
+>>>>>
+>>>>> MS-Win7 : connects and is as fast as ever.
+>>>>>
+>>>>> -- Any other suggestions?
+>>>>>
+>>>>> Rogerio
+>>>>>
+>>>>> PS: Will give OpenSuse a HD install atempt and will try to debug the
+>>>>> Mandriva for some time, future tries involve Debian Stable (old
+>>>>> kernel) and some Fedora (any suggestions?) and the NDISwrapper drive
+>>>>> in a Debian Testing (the Distro I need working)
+>>>>
+>>>> Hi,
+>>>>
+>>>> Please also test Realtek's official r8187b driver. If possible, please
+>>>> do an mmiotrace on that driver.
+>>>
+>>> Ok ... The official Realtek is only for 32bits systems right ? ( At
+>>> least the guys at Realtek support told me so... ) and this mmiotrace
+>>> can be accomplished how? Is it a program, a command, a debug message
+>>> in some form? Sorry, as I said earlier I am NOT a kernel programer.
+>>>
+>>> Rogerio
+>>>
+>>
+>> You need to enable MMIO tracing support in your kernel config, and
+>> recompile your kernel (assuming it is not enabled already - distros
+>> usually disable the entire tracing framework by default). Then:
+>> -Mount debugfs to /debug. (Usually it is mounted by default, but some
+>> distros like to mount it @ /sys/kernel/debug instead - remount it to
+>> /debug.)
+>> -"echo mmiotrace > /debug/tracing/current_tracer"
+>> -"cat /debug/tracing/trace_pipe >  trace.txt &" - at this point, tracing begins.
+>> -Load r8187b and connect.
+>> -"echo "Driver loaded!" > /debug/tracing/trace_marker"
+>> -"echo nop > /debug/tracing/current_tracer" - tracing ends here.
+>>
+>> Do this for rtl8187 as well.
+>> After each trace, check if "grep -i lost trace.txt" returns anything.
+>> If it does, enlarge the trace buffer and retry:
+>> -"cat /debug/tracing/trace_buffer_kb"
+>> -"echo [BUFSIZE] > /debug/tracing/trace_buffer_kb", where [BUFSIZE] is
+>> recommended to be about twice the number returned by the previous
+>> command.
+>
+> I installed a vanilla kernel 2.6.32.11 , config to rum mmio , but my
+> rtl818x modules are loaded by default and the modprobe -r command
+> doesn't seem to change this ... any ideas ?
+>
+> Rogerio
 
-Signed-off-by: Max Filippov <jcmvbkbc@gmail.com>
----
- include/linux/ieee80211.h |    2 +-
- net/mac80211/mesh.c       |   25 ++++++++++++++-----------
- 2 files changed, 15 insertions(+), 12 deletions(-)
+Did you build rtl8187 as a module? Otherwise modprobe -r can do nothing.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 1998495..6e8d436 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -604,7 +604,7 @@ struct ieee80211_meshconf_ie {
- 	u8 meshconf_synch;
- 	u8 meshconf_auth;
- 	u8 meshconf_form;
--	u8 meshconf_cap;
-+	__le16 meshconf_cap;
- } __attribute__ ((packed));
- 
- /**
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 61080c5..fead4af 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -99,7 +99,7 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
- bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie)
- {
- 	return (ie->mesh_config->meshconf_cap &
--	    MESHCONF_CAPAB_ACCEPT_PLINKS) != 0;
-+	    cpu_to_le16(MESHCONF_CAPAB_ACCEPT_PLINKS)) != 0;
- }
- 
- /**
-@@ -216,6 +216,7 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
-+	struct ieee80211_meshconf_ie *meshconf;
- 	u8 *pos;
- 	int len, i, rate;
- 	u8 neighbors;
-@@ -259,33 +260,35 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	*pos++ = WLAN_EID_MESH_CONFIG;
- 	*pos++ = sizeof(struct ieee80211_meshconf_ie);
- 
-+	meshconf = (struct ieee80211_meshconf_ie *)pos;
-+	pos += sizeof(struct ieee80211_meshconf_ie);
-+
- 	/* Active path selection protocol ID */
--	*pos++ = sdata->u.mesh.mesh_pp_id;
-+	meshconf->meshconf_psel = sdata->u.mesh.mesh_pp_id;
- 
- 	/* Active path selection metric ID   */
--	*pos++ = sdata->u.mesh.mesh_pm_id;
-+	meshconf->meshconf_pmetric = sdata->u.mesh.mesh_pm_id;
- 
- 	/* Congestion control mode identifier */
--	*pos++ = sdata->u.mesh.mesh_cc_id;
-+	meshconf->meshconf_congest = sdata->u.mesh.mesh_cc_id;
- 
- 	/* Synchronization protocol identifier */
--	*pos++ = sdata->u.mesh.mesh_sp_id;
-+	meshconf->meshconf_synch = sdata->u.mesh.mesh_sp_id;
- 
- 	/* Authentication Protocol identifier */
--	*pos++ = sdata->u.mesh.mesh_auth_id;
-+	meshconf->meshconf_auth = sdata->u.mesh.mesh_auth_id;
- 
- 	/* Mesh Formation Info - number of neighbors */
- 	neighbors = atomic_read(&sdata->u.mesh.mshstats.estab_plinks);
- 	/* Number of neighbor mesh STAs or 15 whichever is smaller */
- 	neighbors = (neighbors > 15) ? 15 : neighbors;
--	*pos++ = neighbors << 1;
-+	meshconf->meshconf_form = neighbors << 1;
- 
- 	/* Mesh capability */
- 	sdata->u.mesh.accepting_plinks = mesh_plink_availables(sdata);
--	*pos = MESHCONF_CAPAB_FORWARDING;
--	*pos++ |= sdata->u.mesh.accepting_plinks ?
--	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
--	*pos++ = 0x00;
-+	meshconf->meshconf_cap = cpu_to_le16(MESHCONF_CAPAB_FORWARDING);
-+	meshconf->meshconf_cap |= sdata->u.mesh.accepting_plinks ?
-+	    cpu_to_le16(MESHCONF_CAPAB_ACCEPT_PLINKS) : 0x00;
- 
- 	return;
- }
+>
+>
+>>
+>> Repeat these steps until the "lost events" warning disappears. Once
+>> you find the right BUFSIZE for one driver, you can use the same size
+>> for the other one too.
+>>
+>> Hth,
+>> Gábor
+>>
+>> --
+>> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>>
+>
+
+
+
 -- 
-1.6.2.5
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
