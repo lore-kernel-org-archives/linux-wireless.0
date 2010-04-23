@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32853 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757334Ab0DOVjo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 53/97] ath9k_hw: rename getNoiseFloorThresh() to ath9k_hw_loadnf()
-Date: Thu, 15 Apr 2010 17:38:58 -0400
-Message-Id: <1271367582-992-54-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:65036 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755438Ab0DWFBM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 01:01:12 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 22:01:12 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19409.10625.87964.357864@gargle.gargle.HOWL>
+Date: Fri, 23 Apr 2010 10:30:49 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/11] ath9k_htc: Fix WMI command race
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+My patch "ath9k_htc: Handle WMI timeouts properly" introduced
+a race condition in WMI command processing. The last issued command
+should be stored _before_ issuing a WMI command. Not doing this
+would result in the WMI event IRQ dropping correct command responses
+as invalid.
+
+Fix this race by storing the command id correctly.
+
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/calib.c |    8 ++++----
+ drivers/net/wireless/ath/ath9k/wmi.c |    8 ++++----
  1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 4018074..aa724c2 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -89,9 +89,9 @@ static void ath9k_hw_update_nfcal_hist_buffer(struct ath9k_nfcal_hist *h,
- 	return;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index c688545..e23172c 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -305,14 +305,14 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	wmi->cmd_rsp_buf = rsp_buf;
+ 	wmi->cmd_rsp_len = rsp_len;
  
--static bool getNoiseFloorThresh(struct ath_hw *ah,
--				enum ieee80211_band band,
--				int16_t *nft)
-+static bool ath9k_hw_get_nf_thresh(struct ath_hw *ah,
-+				   enum ieee80211_band band,
-+				   int16_t *nft)
- {
- 	switch (band) {
- 	case IEEE80211_BAND_5GHZ:
-@@ -612,7 +612,7 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
- 	} else {
- 		ath9k_hw_do_getnf(ah, nfarray);
- 		nf = nfarray[0];
--		if (getNoiseFloorThresh(ah, c->band, &nfThresh)
-+		if (ath9k_hw_get_nf_thresh(ah, c->band, &nfThresh)
- 		    && nf > nfThresh) {
- 			ath_print(common, ATH_DBG_CALIBRATE,
- 				  "noise floor failed detected; "
+-	ret = ath9k_wmi_cmd_issue(wmi, skb, cmd_id, cmd_len);
+-	if (ret)
+-		goto out;
+-
+ 	spin_lock_irqsave(&wmi->wmi_lock, flags);
+ 	wmi->last_cmd_id = cmd_id;
+ 	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+ 
++	ret = ath9k_wmi_cmd_issue(wmi, skb, cmd_id, cmd_len);
++	if (ret)
++		goto out;
++
+ 	time_left = wait_for_completion_timeout(&wmi->cmd_wait, timeout);
+ 	if (!time_left) {
+ 		ath_print(common, ATH_DBG_WMI,
 -- 
-1.6.3.3
+1.7.0.5
 
