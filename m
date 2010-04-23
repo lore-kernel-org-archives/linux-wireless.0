@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34497 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753371Ab0DZUK0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 16:10:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mwl8k: remove usage of deprecated noise value
-Date: Mon, 26 Apr 2010 16:09:16 -0400
-Message-Id: <1272312556-22525-1-git-send-email-linville@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:2253 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754570Ab0DWCth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Apr 2010 22:49:37 -0400
+Subject: Re: bug report: potential ERR_PTR dereference in iwm_debugfs_init()
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dan Carpenter <error27@gmail.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100422095929.GS29647@bicker>
+References: <20100422095929.GS29647@bicker>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Apr 2010 10:48:31 +0800
+Message-ID: <1271990911.14773.24.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/mwl8k.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+On Thu, 2010-04-22 at 17:59 +0800, Dan Carpenter wrote:
+> Hi Zhu Yi,
+> 
+> This is a Smatch bug that has me a little puzzled.
+> 
+> drivers/net/wireless/iwmc3200wifi/debugfs.c +447 iwm_debugfs_init(26) 
+> 	warn: 'iwm->dbg.devdir' dereferencing possible ERR_PTR()
+> 
+>    440          iwm->dbg.devdir = debugfs_create_dir(devdir, iwm->dbg.rootdir);
+>    441          result = PTR_ERR(iwm->dbg.devdir);
+>    442          if (IS_ERR(iwm->dbg.devdir) && (result != -ENODEV)) {
+>    443                  IWM_ERR(iwm, "Couldn't create devdir: %d\n", result);
+>    444                  goto error;
+>    445          }
+>    446
+>    447          iwm->dbg.dbgdir = debugfs_create_dir("debug", iwm->dbg.devdir);
+> 
+> It looks like "iwm->dbg.devdir" could be ERR_PTR(-ENODEV) on line 447 and 
+> that would cause a problem inside debugfs_create_dir().  But at the same 
+> time -ENODEV was deliberately singled out as OK from other possible errors 
+> that debugfs_create_dir() can return.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 4e58ebe..9af6c94 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -749,7 +749,6 @@ mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
- 	memset(status, 0, sizeof(*status));
- 
- 	status->signal = -rxd->rssi;
--	status->noise = -rxd->noise_floor;
- 
- 	if (rxd->rate & MWL8K_8366_AP_RATE_INFO_MCS_FORMAT) {
- 		status->flag |= RX_FLAG_HT;
-@@ -851,7 +850,6 @@ mwl8k_rxd_sta_process(void *_rxd, struct ieee80211_rx_status *status,
- 	memset(status, 0, sizeof(*status));
- 
- 	status->signal = -rxd->rssi;
--	status->noise = -rxd->noise_level;
- 	status->antenna = MWL8K_STA_RATE_INFO_ANTSELECT(rate_info);
- 	status->rate_idx = MWL8K_STA_RATE_INFO_RATEID(rate_info);
- 
--- 
-1.6.6.1
+We take -ENODEV for debugfs_create_dir if CONFIG_DEBUG_FS is not
+enabled. We returns 0 deliberately in this case for rootdir create. I
+agree we don't need to check it for the subdirs like we did now. But I
+found lots of code don't even check (or don't use IS_ERR to check) the
+return value of debugfs_create_dir. Maybe that's more problematic?
+
+Thanks,
+-yi
 
