@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f179.google.com ([209.85.221.179]:64891 "EHLO
-	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857Ab0DXKwD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Apr 2010 06:52:03 -0400
-Received: by qyk9 with SMTP id 9so14510266qyk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Apr 2010 03:52:02 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:65007 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755259Ab0DWE6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 00:58:21 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:21 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <w2x55d522f11004232132ze7fcf8fdk54c2c8bfae72c64@mail.gmail.com>
-References: <w2x55d522f11004232132ze7fcf8fdk54c2c8bfae72c64@mail.gmail.com>
-Date: Sat, 24 Apr 2010 18:52:01 +0800
-Message-ID: <l2id82e647a1004240352vd82f1631t6391832b04f74978@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: use spin_lock_bh() instead of spin_lock() in
-	ath_tid_drain()
-From: Ming Lei <tom.leiming@gmail.com>
-To: Jongman Heo <jongman.heo@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19409.10453.750320.131252@gargle.gargle.HOWL>
+Date: Fri, 23 Apr 2010 10:27:57 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/11] ath9k_htc fixes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/24 Jongman Heo <jongman.heo@gmail.com>:
-> commit a9f042cb ("ath9k: fix lockdep warning when unloading module")
-> changed spin_[un]lock() to
-> spin_[un]lock_bh() in ath_tx_node_cleanup(), but didn't change those
-> in ath_tid_drain().
+John,
 
-Did you see any lockdep warning due to ath_tid_drain?
+This series contains a bunch of fixes for ath9k_htc.
+Ming Lei's comment about "ath9k_htc: Use USB reboot"
+has also been addressed in this series.
 
-It is not necessary since bh has been disabled before calling
-ath_tid_drain.
+Sujith
 
+Sujith (11):
+  ath9k_htc: Simplify TX URB management
+  ath9k_htc: Handle device unplug properly
+  ath9k_htc: Use multiple register writes
+  ath9k_htc: Cancel running timers before disabling HW
+  ath9k_hw: Remove pointless ANI deinit
+  ath9k_htc: Pass correct private pointer
+  ath9k_htc: Use USB reboot
+  ath9k_htc: Process command data properly
+  ath9k_htc: Increase WMI timeout value
+  ath9k_htc: Fix WMI command race
+  ath9k_htc: Really fix device hotunplug
 
--- 
-Lei Ming
+ drivers/net/wireless/ath/ath9k/ani.c          |    9 --
+ drivers/net/wireless/ath/ath9k/ani.h          |    1 -
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c    |    5 +
+ drivers/net/wireless/ath/ath9k/hif_usb.c      |  149 ++++++++++++++-----------
+ drivers/net/wireless/ath/ath9k/hif_usb.h      |    1 -
+ drivers/net/wireless/ath/ath9k/htc.h          |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   12 +-
+ drivers/net/wireless/ath/ath9k/htc_hst.c      |    5 +-
+ drivers/net/wireless/ath/ath9k/hw.c           |    3 -
+ drivers/net/wireless/ath/ath9k/wmi.c          |   11 +-
+ drivers/net/wireless/ath/ath9k/wmi.h          |    4 +-
+ 12 files changed, 117 insertions(+), 92 deletions(-)
+
