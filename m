@@ -1,99 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22582 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:10822 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751828Ab0DFJhm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 05:37:42 -0400
+	id S1753240Ab0DWH0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 03:26:35 -0400
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 02:37:42 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19387.1459.438884.832345@gargle.gargle.HOWL>
-Date: Tue, 6 Apr 2010 15:28:11 +0530
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 00:26:35 -0700
+From: Vivek Natarajan <vnatarajan@atheros.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/5] ath9k_htc: Protect RX stream variables
+CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>,
+	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+Subject: [PATCH] ath9k: Avoid corrupt frames being forwarded to mac80211.
+Date: Fri, 23 Apr 2010 12:56:04 +0530
+Message-ID: <1272007564-6265-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a spin lock to prevent concurrent access
-to variables dealing with RX stream mode handling.
-Currently, no protection is implemented - which
-causes problems in RX.
+If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
+with WEP or TKIP, eventhough the received frame may be a CRC failed
+corrupted frame.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Cc: stable@kernel.org
+Reported-by: Johan Hovold <johan.hovold@lundinova.se>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |    8 ++++++++
- drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
- 2 files changed, 9 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_initvals.h |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9002_initvals.h |    8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 3afc747..8838cdf 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -330,6 +330,8 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
- 	u16 pkt_len, pkt_tag, pool_index = 0;
- 	u8 *ptr;
- 
-+	spin_lock(&hif_dev->rx_lock);
-+
- 	rx_remain_len = hif_dev->rx_remain_len;
- 	rx_pkt_len = hif_dev->rx_transfer_len;
- 
-@@ -356,6 +358,8 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
- 		}
- 	}
- 
-+	spin_unlock(&hif_dev->rx_lock);
-+
- 	while (index < len) {
- 		ptr = (u8 *) skb->data;
- 
-@@ -373,6 +377,7 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
- 			index = index + 4 + pkt_len + pad_len;
- 
- 			if (index > MAX_RX_BUF_SIZE) {
-+				spin_lock(&hif_dev->rx_lock);
- 				hif_dev->rx_remain_len = index - MAX_RX_BUF_SIZE;
- 				hif_dev->rx_transfer_len =
- 					MAX_RX_BUF_SIZE - chk_idx - 4;
-@@ -384,6 +389,7 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
- 					dev_err(&hif_dev->udev->dev,
- 					"ath9k_htc: RX memory allocation"
- 					" error\n");
-+					spin_unlock(&hif_dev->rx_lock);
- 					goto err;
- 				}
- 				skb_reserve(nskb, 32);
-@@ -394,6 +400,7 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
- 
- 				/* Record the buffer pointer */
- 				hif_dev->remain_skb = nskb;
-+				spin_unlock(&hif_dev->rx_lock);
- 			} else {
- 				nskb = __dev_alloc_skb(pkt_len + 32, GFP_ATOMIC);
- 				if (!nskb) {
-@@ -612,6 +619,7 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
- 	int i, ret;
- 
- 	init_usb_anchor(&hif_dev->rx_submitted);
-+	spin_lock_init(&hif_dev->rx_lock);
- 
- 	for (i = 0; i < MAX_RX_URB_NUM; i++) {
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index ea9257b..ed9708c 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -93,6 +93,7 @@ struct hif_device_usb {
- 	int rx_pkt_len;
- 	int rx_transfer_len;
- 	int rx_pad_len;
-+	spinlock_t rx_lock;
- 	u8 flags; /* HIF_USB_* */
- };
- 
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+index cd953f6..025c31a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+@@ -249,7 +249,7 @@ static const u32 ar5416Common[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8000010 },
++    { 0x00008264, 0x88000010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+index f06313d..dae7f33 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9002_initvals.h
+@@ -793,7 +793,7 @@ static const u32 ar9280Common_9280_2[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -1963,7 +1963,7 @@ static const u32 ar9285Common_9285[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -3185,7 +3185,7 @@ static const u32 ar9287Common_9287_1_0[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -4973,7 +4973,7 @@ static const u32 ar9271Common_9271[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
 -- 
-1.7.0.3
+1.7.0.5
 
