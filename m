@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:33563 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755874Ab0DIVN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 17:13:27 -0400
-Message-ID: <4BBF986F.3090704@openwrt.org>
-Date: Fri, 09 Apr 2010 23:13:19 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 073/102] ath9k_hw: move AR9280 PCI EEPROM fix to ar9002_hw.c
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>	 <1270754858-26266-74-git-send-email-lrodriguez@atheros.com> <1270847076.23853.48.camel@mj>
-In-Reply-To: <1270847076.23853.48.camel@mj>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:49267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755885Ab0DWF5Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 01:57:25 -0400
+Subject: Re: [PATCH] compat: fix uevent_suppress on 2.6.29 or older kernels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <u2j6ed0b2681004221347z78c15832z3e0ff3ea51b4a5a8@mail.gmail.com>
+References: <1271944442-9214-1-git-send-email-notasas@gmail.com>
+	 <g2o43e72e891004220933i5faec995qae1b358ce66ed2d@mail.gmail.com>
+	 <1271954537.8469.15.camel@mj>
+	 <x2l43e72e891004221333he942ee92u3ef4c6994d769694@mail.gmail.com>
+	 <u2j6ed0b2681004221347z78c15832z3e0ff3ea51b4a5a8@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Apr 2010 07:57:21 +0200
+Message-ID: <1272002241.3737.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-04-09 11:04 PM, Pavel Roskin wrote:
-> On Thu, 2010-04-08 at 15:27 -0400, Luis R. Rodriguez wrote:
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/ar9002_hw.c |   56 ++++++++++++++++++++++++++++
->>  drivers/net/wireless/ath/ath9k/hw.c        |   56 +---------------------------
->>  drivers/net/wireless/ath/ath9k/hw.h        |    1 +
->>  3 files changed, 58 insertions(+), 55 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
->> index ecc0699..487cd8d 100644
->> --- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
->> +++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
->> @@ -479,6 +479,62 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
->>  	}
->>  }
->>  
->> +static u32 ar9280_pci_hw_def_ini_fixup(struct ath_hw *ah,
->> +				       struct ar5416_eeprom_def *pEepData,
->> +				       u32 reg,
->> +				       u32 value)
->> +{
->> +#define PWDCL_KIND	(pBase->pwdclkind << AR_AN_TOP2_PWDCLKIND_S);
->> +	struct base_eep_header *pBase = &(pEepData->baseEepHeader);
->> +	struct ath_common *common = ath9k_hw_common(ah);
->> +
->> +	switch (ah->hw_version.devid) {
->> +	case AR9280_DEVID_PCI:
->> +		if (reg == 0x7894) {
+On Thu, 2010-04-22 at 23:47 +0300, Grazvydas Ignotas wrote:
+> On Thu, Apr 22, 2010 at 11:33 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Thu, Apr 22, 2010 at 9:42 AM, Pavel Roskin <proski@gnu.org> wrote:
+> >> On Thu, 2010-04-22 at 09:33 -0700, Luis R. Rodriguez wrote:
+> >>
+> >>> How was this compiling for older kernels before then?
+> >>
+> >> Compiling was fine, but loading the firmware was failing sometimes.  I'm
+> >> glad somebody figured it out.  Thank you, Grazvydas!
+> >
+> > OK Applied. I'm still puzzled, if it compiled, then that means
+> > dev_set_uevent_suppress() was being defined somehow for older kernels.
 > 
-> Too late.  My patch is in wireless-testing already.  This will need to
-> be rebased.  Sorry for the trouble.
+> there was already ifdef, old code:
+>  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+>        dev_set_uevent_suppress(f_dev, 1);
+>  #endif
 > 
-> And by the way, the ini data is also modified in set_addac routines for
-> AR9160.  Once it's fixed, the casts that allow writing to the ini data
-> should be removed.
-Don't worry, I already took care of the rebase, a new series will be
-posted soon. I'm still working on fixing some of the new tx code.
+> new code:
+>  #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+>        dev_set_uevent_suppress(f_dev, 1);
+> #else
+>        f_dev->uevent_suppress = 1;
+>  #endif
 
-- Felix
+And the argument is that the new code should be
+
+	dev_set_uevent_suppress(f_dev, 1);
+
+and some header file should provide
+
+static inline void dev_set_uevent_suppress(...)
+{
+	f_dev->uevent_suppress = 1;
+}
+
+which makes perfect sense. Although Luis merged it, a fix would be
+useful.
+
+Luis, a patch changing firmware_class.c just entered the tree :P I made
+it.
+
+johannes
+
