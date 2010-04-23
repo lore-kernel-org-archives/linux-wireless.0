@@ -1,85 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59789 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755678Ab0DFQXY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 12:23:24 -0400
-Subject: Re: [PATCH] mac80211: check whether scan is in progress before
- queueing scan_work
-From: Dan Williams <dcbw@redhat.com>
-To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Cc: ext Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:56683 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756662Ab0DWLoO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 07:44:14 -0400
+Received: by qyk9 with SMTP id 9so12942995qyk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 04:44:13 -0700 (PDT)
+Date: Fri, 23 Apr 2010 13:43:59 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1270551950.7150.47.camel@paavo-desktop>
-References: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1270544765.3929.2.camel@jlt3.sipsolutions.net>
-	 <1270549017.7150.28.camel@paavo-desktop>
-	 <1270549677.3929.5.camel@jlt3.sipsolutions.net>
-	 <1270549759.3929.6.camel@jlt3.sipsolutions.net>
-	 <1270551950.7150.47.camel@paavo-desktop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 06 Apr 2010 09:23:14 -0700
-Message-ID: <1270570994.2969.12.camel@localhost.localdomain>
-Mime-Version: 1.0
+Subject: Re: bug report: potential ERR_PTR dereference in iwm_debugfs_init()
+Message-ID: <20100423114358.GD29093@bicker>
+References: <20100422095929.GS29647@bicker> <1271990911.14773.24.camel@debian>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1271990911.14773.24.camel@debian>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-04-06 at 14:05 +0300, Teemu Paasikivi wrote:
-> On Tue, 2010-04-06 at 12:29 +0200, ext Johannes Berg wrote:
-> > On Tue, 2010-04-06 at 12:27 +0200, Johannes Berg wrote:
-> > > On Tue, 2010-04-06 at 13:16 +0300, Teemu Paasikivi wrote:
-> > > > On Tue, 2010-04-06 at 11:06 +0200, ext Johannes Berg wrote:
-> > > > > On Tue, 2010-04-06 at 11:54 +0300, Teemu Paasikivi wrote:
-> > > > > > As scan_work is queued from work_work it needs to be checked if scan
-> > > > > > has been started during execution of work_work. Otherwise, when hw
-> > > > > > scan is used, the stack gets error about hw being busy with ongoing
-> > > > > > scan.
-> > > > > 
-> > > > > Does that mean we ask the driver to scan twice? And your particular
-> > > > > driver returns busy?
-> > > > > 
-> > > > 
-> > > > Yes. There seems to be a possibility, that when ieee80211_work_work is
-> > > > being executed, __ieee80211_start_scan gets called and it starts a hw
-> > > > scan, and also sets local->hw_scan_req etc. (because it looks like
-> > > > there's some holes in use of scan_mtx). Result is that work_work queues
-> > > > ieee80211_scan_work and when it is executed, as there's already
-> > > > hw_scan_req set, it will try to start hw scan again. And as the driver
-> > > > used returns busy, scan_work will call ieee80211_scan_completed function
-> > > > which leaves the driver (hw more precisely) scanning and the stack
-> > > > thinking that it is not anymore scanning.
-> > > > 
-> > > > Obviously this kind of situation doesn't happen very often in normal
-> > > > use, but it can be caused quite easily by associating to access points
-> > > > in a loop while running scan in another loop.
-> > > 
-> > > Makes some sense. Ignore my other email(s), I looked at this in more
-> > > detail now.
-> > > 
-> > > It would appear that we need to fix some of the locking here,
-> > > potentially simply using a single mutex for both work and scan?
+On Fri, Apr 23, 2010 at 10:48:31AM +0800, Zhu Yi wrote:
+> On Thu, 2010-04-22 at 17:59 +0800, Dan Carpenter wrote:
+> > Hi Zhu Yi,
 > > 
-> > I'm mostly worried about deadlocks between work_mtx and scan_mtx really,
-> > when we acquire them both like your patch.
+> > This is a Smatch bug that has me a little puzzled.
 > > 
+> > drivers/net/wireless/iwmc3200wifi/debugfs.c +447 iwm_debugfs_init(26) 
+> > 	warn: 'iwm->dbg.devdir' dereferencing possible ERR_PTR()
+> > 
+> >    440          iwm->dbg.devdir = debugfs_create_dir(devdir, iwm->dbg.rootdir);
+> >    441          result = PTR_ERR(iwm->dbg.devdir);
+> >    442          if (IS_ERR(iwm->dbg.devdir) && (result != -ENODEV)) {
+> >    443                  IWM_ERR(iwm, "Couldn't create devdir: %d\n", result);
+> >    444                  goto error;
+> >    445          }
+> >    446
+> >    447          iwm->dbg.dbgdir = debugfs_create_dir("debug", iwm->dbg.devdir);
+> > 
+> > It looks like "iwm->dbg.devdir" could be ERR_PTR(-ENODEV) on line 447 and 
+> > that would cause a problem inside debugfs_create_dir().  But at the same 
+> > time -ENODEV was deliberately singled out as OK from other possible errors 
+> > that debugfs_create_dir() can return.
 > 
-> Yes, I'm bit worried about possibility of a possible deadlock too. One
-> solution would be to move the block acquiring scan_mtx and queueing
-> scan_work outside of the work_mtx locked section, I'll take a look on
-> that. In any case, this patch won't most likely fix all issues with the
-> locking here. For example there's that checking if scan is in progress
-> in the beginning of the work_work. After that it is still possible that
-> the scan is started. So there's obviously need for some fixing in the
-> locking yet to be done. 
+> We take -ENODEV for debugfs_create_dir if CONFIG_DEBUG_FS is not
+> enabled. We returns 0 deliberately in this case for rootdir create. I
+> agree we don't need to check it for the subdirs like we did now. But I
+> found lots of code don't even check (or don't use IS_ERR to check) the
+> return value of debugfs_create_dir. Maybe that's more problematic?
 
-One issue would be if the new scan request has different parameters than
-the in-progress scan request.  This is especially important when the
-incoming scan request is for a specific SSID (hidden network probing)
-while the ongoing one is not.  Can we make sure that the patch at least
-returns the error up the stack when the incoming scan is dropped?
-Otherwise userspace has no idea that the specific SSID scan was dropped
-on the floor, and just thinks that the hidden SSID wasn't found.
+Ah.  Thanks for the explanation.
 
-Dan
+The bit that was problematic in this code for me is that passing
+ERR_PTR(-ENODEV) to debugfs_create_dir() on line 447 will cause an oops.
+But, as you point out, the check on line 442 is never true because we
+already established that debugfs is enabled.
+
+Couldn't we just check "if (debugfs_initialized()) { " and remove all
+the ERR_PTR checking?
+
+If you would like I can send a patch to do this.
+
+regards,
+dan carpenter
 
 
