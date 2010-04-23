@@ -1,31 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067Ab0DIORi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 10:17:38 -0400
-Subject: Re: ath9k/mac80211 and 802.11n in IBSS mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-In-Reply-To: <382964.83589.qm@web51407.mail.re2.yahoo.com>
-References: <382964.83589.qm@web51407.mail.re2.yahoo.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Apr 2010 16:17:35 +0200
-Message-ID: <1270822655.3870.21.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:65016 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755450Ab0DWE6j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 00:58:39 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:39 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19409.10473.482170.515511@gargle.gargle.HOWL>
+Date: Fri, 23 Apr 2010 10:28:17 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/11] ath9k_htc: Process command data properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-04-09 at 03:03 -0700, Joerg Pommnitz wrote:
-> Hello all,
-> the Atheros Windows drivers provide an option to enable 802.11n mode
-> for IBSS networks. I did not find any information in this regard for
-> mac80211 based drivers. So, is this supported and how would I enable
-> this feature? And, btw. what exactly would this mean?
+When handling the REGIN callback, processing
+the incoming data first should be the preferred
+mode of operation. Allocation of a new SKB may fail,
+in which case, the URB will not be resubmitted.
 
-Benoit was working on this, but his last patchset missed the ability to
-actually configure this when requesting an IBSS join.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   18 ++++++++++++------
+ 1 files changed, 12 insertions(+), 6 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 31665c5..49b7a89 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -510,9 +510,18 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
+ 	if (likely(urb->actual_length != 0)) {
+ 		skb_put(skb, urb->actual_length);
+ 
++		/* Process the command first */
++		ath9k_htc_rx_msg(hif_dev->htc_handle, skb,
++				 skb->len, USB_REG_IN_PIPE);
++
++
+ 		nskb = alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_ATOMIC);
+-		if (!nskb)
+-			goto resubmit;
++		if (!nskb) {
++			dev_err(&hif_dev->udev->dev,
++				"ath9k_htc: REG_IN memory allocation failure\n");
++			urb->context = NULL;
++			return;
++		}
+ 
+ 		usb_fill_int_urb(urb, hif_dev->udev,
+ 				 usb_rcvintpipe(hif_dev->udev, USB_REG_IN_PIPE),
+@@ -522,12 +531,9 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
+ 		ret = usb_submit_urb(urb, GFP_ATOMIC);
+ 		if (ret) {
+ 			kfree_skb(nskb);
+-			goto free;
++			urb->context = NULL;
+ 		}
+ 
+-		ath9k_htc_rx_msg(hif_dev->htc_handle, skb,
+-				 skb->len, USB_REG_IN_PIPE);
+-
+ 		return;
+ 	}
+ 
+-- 
+1.7.0.5
 
