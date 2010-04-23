@@ -1,45 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:45814 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754714Ab0DUCCq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 22:02:46 -0400
-Message-ID: <4bce5cc3.966bdc0a.2ef7.fffff5de@mx.google.com>
-Date: Tue, 20 Apr 2010 19:02:43 -0700 (PDT)
-From: Ben Gamari <bgamari.foss@gmail.com>
-Subject: Re: 2.6.34-rc5: Reported regressions from 2.6.33
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-In-Reply-To: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
-References: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
+Received: from mail.atheros.com ([12.36.123.2]:64967 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755227Ab0DWEyV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 00:54:21 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:54:21 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19409.10214.121368.607913@gargle.gargle.HOWL>
+Date: Fri, 23 Apr 2010 10:23:58 +0530
+To: Ming Lei <tom.leiming@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 7/9] ath9k_htc: Use USB reboot
+In-Reply-To: <j2nd82e647a1004220721n4668229l51c6e27a21ec9f8c@mail.gmail.com>
+References: <19407.50660.739033.942199@gargle.gargle.HOWL>
+	<j2nd82e647a1004220721n4668229l51c6e27a21ec9f8c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 20 Apr 2010 05:15:57 +0200 (CEST), "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> This message contains a list of some regressions from 2.6.33,
-> for which there are no fixes in the mainline known to the tracking team.
-> If any of them have been fixed already, please let us know.
-> 
-> If you know of any other unresolved regressions from 2.6.33, please let us
-> know either and we'll add them to the list.  Also, please let us know
-> if any of the entries below are invalid.
-> 
+Ming Lei wrote:
+> The buffer passed to usb hcd should not be allocated from stack since
+> it will be DMAed to usb host controller. The 'cmd' should be allocated by
+> kmalloc even though it is only 4byte.
 
-I have recently reported this suspend regression on my Dell laptop hardware.
+Indeed, I'll send an updated patch.
 
-References: http://lkml.org/lkml/2010/4/18/20
-Bug-report: https://bugzilla.kernel.org/show_bug.cgi?id=15820
-
-Thanks,
-
-- Ben
+Sujith
