@@ -1,90 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33029 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757439Ab0DOVjr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:47 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 90/97] ath9k_hw: Compute pointer checksum over the link descriptor
-Date: Thu, 15 Apr 2010 17:39:35 -0400
-Message-Id: <1271367582-992-91-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:65017 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755438Ab0DWE6k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Apr 2010 00:58:40 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Apr 2010 21:58:40 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19409.10474.575134.11678@gargle.gargle.HOWL>
+Date: Fri, 23 Apr 2010 10:28:18 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 09/11] ath9k_htc: Increase WMI timeout value
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Completion of WMI commands take a longer time
+on some platforms. Increase the timeout value
+to handle this.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   36 +++++++++++++++-----------
- 1 files changed, 21 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath9k/wmi.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 1a8c1ba..582c880 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -21,14 +21,33 @@ static void ar9003_hw_rx_enable(struct ath_hw *hw)
- 	REG_WRITE(hw, AR_CR, 0);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 167e15c..765db5f 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -126,14 +126,14 @@ void ath9k_wmi_tasklet(unsigned long data);
+ 	do {								\
+ 		ret = ath9k_wmi_cmd(priv->wmi, _wmi_cmd, NULL, 0,	\
+ 				    (u8 *) &cmd_rsp,			\
+-				    sizeof(cmd_rsp), HZ);		\
++				    sizeof(cmd_rsp), HZ*2);		\
+ 	} while (0)
  
-+static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
-+{
-+	int checksum;
-+
-+	checksum = ads->info + ads->link
-+		+ ads->data0 + ads->ctl3
-+		+ ads->data1 + ads->ctl5
-+		+ ads->data2 + ads->ctl7
-+		+ ads->data3 + ads->ctl9;
-+
-+	return ((checksum & 0xffff) + (checksum >> 16)) & AR_TxPtrChkSum;
-+}
-+
- static void ar9003_hw_set_desc_link(void *ds, u32 ds_link)
- {
--	((struct ar9003_txc *) ds)->link = ds_link;
-+	struct ar9003_txc *ads = ds;
-+
-+	ads->link = ds_link;
-+	ads->ctl10 &= ~AR_TxPtrChkSum;
-+	ads->ctl10 |= ar9003_calc_ptr_chksum(ads);
- }
+ #define WMI_CMD_BUF(_wmi_cmd, _buf)					\
+ 	do {								\
+ 		ret = ath9k_wmi_cmd(priv->wmi, _wmi_cmd,		\
+ 				    (u8 *) _buf, sizeof(*_buf),		\
+-				    &cmd_rsp, sizeof(cmd_rsp), HZ);	\
++				    &cmd_rsp, sizeof(cmd_rsp), HZ*2);	\
+ 	} while (0)
  
- static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
- {
--	*ds_link = &((struct ar9003_txc *) ds)->link;
-+	struct ar9003_txc *ads = ds;
-+
-+	*ds_link = &ads->link;
- }
- 
- static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
-@@ -168,19 +187,6 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 	return true;
- }
- 
--static u16 ar9003_calc_ptr_chksum(struct ar9003_txc *ads)
--{
--	int checksum;
--
--	checksum = ads->info + ads->link
--		+ ads->data0 + ads->ctl3
--		+ ads->data1 + ads->ctl5
--		+ ads->data2 + ads->ctl7
--		+ ads->data3 + ads->ctl9;
--
--	return ((checksum & 0xffff) + (checksum >> 16)) & AR_TxPtrChkSum;
--}
--
- static void ar9003_hw_fill_txdesc(struct ath_hw *ah, void *ds, u32 seglen,
- 				  bool is_firstseg, bool is_lastseg,
- 				  const void *ds0, dma_addr_t buf_addr,
+ #endif /* WMI_H */
 -- 
-1.6.3.3
+1.7.0.5
 
