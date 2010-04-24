@@ -1,58 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f193.google.com ([209.85.222.193]:40429 "EHLO
-	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696Ab0DJPFe (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:48898 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046Ab0DXN7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Apr 2010 11:05:34 -0400
-Received: by mail-pz0-f193.google.com with SMTP id 31so817455pzk.33
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Apr 2010 08:05:33 -0700 (PDT)
-From: tom.leiming@gmail.com
-To: Sujith.Manoharan@atheros.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 2/3] ath9k-htc: replace __dev_alloc_skb with alloc_skb in reg in path
-Date: Sat, 10 Apr 2010 23:05:09 +0800
-Message-Id: <1270911909-5750-1-git-send-email-tom.leiming@gmail.com>
+	Sat, 24 Apr 2010 09:59:09 -0400
+Received: by pvg4 with SMTP id 4so193692pvg.19
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Apr 2010 06:59:08 -0700 (PDT)
+Message-ID: <4BD2F929.7030600@lwfinger.net>
+Date: Sat, 24 Apr 2010 08:59:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Rogerio Luz Coelho <rogluz.news@gmail.com>
+CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: RTL 8187b - naughty behaviour
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>	 <4BB773A9.2070703@lwfinger.net>	 <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>	 <q2k917a57cb1004100507s17249540xfb11a2e2f0a2dd76@mail.gmail.com>	 <w2i69e28c911004101150h9db59aa1x2f9d12964f3c3fc1@mail.gmail.com>	 <y2g917a57cb1004101240g8033e225n57bf68b6d37b5431@mail.gmail.com>	 <q2k69e28c911004110635nac8100f6pe014361ed0a516a5@mail.gmail.com>	 <u2k917a57cb1004221345i19eb6354yffdc302f6a9b74c6@mail.gmail.com>	 <k2s69e28c911004231316u7fd3118qe971919ed8a433d7@mail.gmail.com> <l2z917a57cb1004240347jcd95308bp5be3b66c8638907d@mail.gmail.com>
+In-Reply-To: <l2z917a57cb1004240347jcd95308bp5be3b66c8638907d@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
+On 04/24/2010 05:47 AM, Rogerio Luz Coelho wrote:
+> Will check this ... but it seems to be a module ...If I have rtl8187
+> and rtl8187b in the blacklist will I be able to load them manually?
 
-In ath9k-htc register in path, ath9k-htc will pass skb->data into
-usb hcd and usb hcd will do dma mapping and unmapping to the buffer
-pointed by skb->data, so we should pass a cache-line aligned address.
+Yes, you will be able to load manually. BTW, there is no rtl8187b. Both
+the RTL8187L and the RTL8187B (device names) use driver rtl8187.
 
-This patch replace __dev_alloc_skb with alloc_skb to make skb->data
-pointed to a cacheline aligned address simply since ath9k-htc does not
-skb_push on the skb.
+In future discussions, please trim the replies. We do not need to see
+the same stuff over and over.
 
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index a498815..be4dfbd 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -499,7 +499,7 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- 	if (likely(urb->actual_length != 0)) {
- 		skb_put(skb, urb->actual_length);
- 
--		nskb = __dev_alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_ATOMIC);
-+		nskb = alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_ATOMIC);
- 		if (!nskb)
- 			goto resubmit;
- 
-@@ -684,7 +684,7 @@ static int ath9k_hif_usb_alloc_reg_in_urb(struct hif_device_usb *hif_dev)
- 	if (hif_dev->reg_in_urb == NULL)
- 		return -ENOMEM;
- 
--	skb = __dev_alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_KERNEL);
-+	skb = alloc_skb(MAX_REG_IN_BUF_SIZE, GFP_KERNEL);
- 	if (!skb)
- 		goto err;
- 
--- 
-1.6.2.5
+Larry
 
