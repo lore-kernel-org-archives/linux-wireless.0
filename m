@@ -1,73 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:32807 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753932Ab0DSKPP convert rfc822-to-8bit (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:54633 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179Ab0DXUCZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 06:15:15 -0400
-Received: by ewy20 with SMTP id 20so1362427ewy.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Apr 2010 03:15:13 -0700 (PDT)
+	Sat, 24 Apr 2010 16:02:25 -0400
+Date: Sat, 24 Apr 2010 21:02:18 +0100
+From: Matthew Garrett <mjg@redhat.com>
+To: Philippe De Muyter <phdm@macqel.be>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
+Message-ID: <20100424200218.GA16084@srcf.ucam.org>
+References: <20100330171139.GA28367@srcf.ucam.org> <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org> <20100419115329.GA5306@frolo.macqel> <20100419145107.GB8017@srcf.ucam.org> <20100419150050.GA28290@frolo.macqel> <20100419150627.GA10680@srcf.ucam.org> <20100424054210.GA23836@frolo.macqel> <20100424152107.GA13417@srcf.ucam.org> <20100424195630.GA15053@frolo.macqel>
 MIME-Version: 1.0
-In-Reply-To: <201004190924.25709.br1@einfach.org>
-References: <20100412073847.28215.87571.stgit@tt-desk> <20100416155907.6e33c722@dhcp-lab-109.englab.brq.redhat.com>
-	<201004190924.25709.br1@einfach.org>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 19 Apr 2010 12:14:53 +0200
-Message-ID: <o2g69e28c911004190314w89e7a220y825cd563f6d98e3b@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ath5k: Use high bitrates for ACK/CTS
-To: Bruno Randolf <br1@einfach.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, linville@tuxdriver.com,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100424195630.GA15053@frolo.macqel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 19, 2010 at 2:24 AM, Bruno Randolf <br1@einfach.org> wrote:
-> On Friday 16 April 2010 22:59:07 Stanislaw Gruszka wrote:
->> On Mon, 12 Apr 2010 16:38:47 +0900
->>
->> Bruno Randolf <br1@einfach.org> wrote:
->> > There was a confusion in the usage of the bits AR5K_STA_ID1_ACKCTS_6MB
->> > and AR5K_STA_ID1_BASE_RATE_11B. If they are set (1), we will get lower
->> > bitrates for ACK and CTS. Therefore ath5k_hw_set_ack_bitrate_high(ah,
->> > false) actually resulted in high bitrates, which i think is what we want
->> > anyways. Cleared the confusion and added some documentation.
->>
->> I thought ACK and other control frames have to be modulated at slow/robust
->> bitrates, but can't remember where I read that ...
->
-> this has been discussed on ath5k-devel before. i'm copying it here. please let
-> me know if i missed something...
->
-> (https://lists.ath5k.org/pipermail/ath5k-devel/2010-March/003391.html)
->
-> control frames have to be sent at one of the lower bitrates - one of the
-> "basic rates". in G mode these are 1, 2, 5.5, 11, 6, 12, 24Mbps.
+On Sat, Apr 24, 2010 at 09:56:30PM +0200, Philippe De Muyter wrote:
+> On Sat, Apr 24, 2010 at 04:21:07PM +0100, Matthew Garrett wrote:
+> > Does this laptop also have bluetooth?
+> 
+> No
 
-Aren't basic rates defined so as to exclude any OFDM rates? I.e. are
-6M, 12M and 24M really basic rates?
-
->
-> this is from the 802.11g spec:
-> "a STA responding to a received frame shall transmit its Control Response
-> (either CTS or ACK) frames at the highest rate in the BSSBasicRateSet that is
-> less than or equal to the rate of the immediately previous frame in the frame
-> exchange sequence (as defined in 9.7)"
->
-> basically we have to make a tradeoff here: using lower rates for ACK/CTS will
-> improve reliability, but lower performance. for example i could get only
-> 10Mbps truput with ACK/CTS at the lowest bitrates and RTS/CTS enabled
-> (iwconfig wlan0 rts 250) and i can get more than 20Mbps with higher bitrates.
-> so i think it's worth to use high bitrates. actually also this should be
-> tuneable for the user, too...
->
-> bruno
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+Hm. I have no idea why hitting the key doesn't change the colour then, 
+I'm afraid. On the other hand, it sounds like things are working now? 
+The only thing I can suggest is attempting to clear the CMOS data in the 
+BIOS menu and see if that changes things.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Matthew Garrett | mjg59@srcf.ucam.org
