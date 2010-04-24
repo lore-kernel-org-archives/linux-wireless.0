@@ -1,87 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:32056 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752480Ab0DFKVs (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:25763 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753207Ab0DXBjA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 06:21:48 -0400
-Subject: Re: [PATCH] mac80211: check whether scan is in progress before
- queueing scan_work
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
+	Fri, 23 Apr 2010 21:39:00 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so513266fgg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 18:38:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <19410.16272.850309.781236@gargle.gargle.HOWL>
+References: <19409.10472.450708.915467@gargle.gargle.HOWL>
+	<s2m69e28c911004231318oaf7cd7fex440846d2f90a5774@mail.gmail.com>
+	<19410.16272.850309.781236@gargle.gargle.HOWL>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 24 Apr 2010 03:38:39 +0200
+Message-ID: <p2p69e28c911004231838o70448a92jfa0bd0e69b4c6e6b@mail.gmail.com>
+Subject: Re: [PATCH 07/11] ath9k_htc: Use USB reboot
+To: Sujith <Sujith.Manoharan@atheros.com>
 Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1270544765.3929.2.camel@jlt3.sipsolutions.net>
-References: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1270544765.3929.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Tue, 06 Apr 2010 13:16:57 +0300
-Message-Id: <1270549017.7150.28.camel@paavo-desktop>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-04-06 at 11:06 +0200, ext Johannes Berg wrote:
-> On Tue, 2010-04-06 at 11:54 +0300, Teemu Paasikivi wrote:
-> > As scan_work is queued from work_work it needs to be checked if scan
-> > has been started during execution of work_work. Otherwise, when hw
-> > scan is used, the stack gets error about hw being busy with ongoing
-> > scan.
-> 
-> Does that mean we ask the driver to scan twice? And your particular
-> driver returns busy?
-> 
+2010/4/24 Sujith <Sujith.Manoharan@atheros.com>:
+> G bor Stefanik wrote:
+>> This patch seems to be the wrong way around... or is it supposed to be
+>> applied using "patch -R"?
+>
+> What's wrong ?
+>
+> Sujith
+>
 
-Yes. There seems to be a possibility, that when ieee80211_work_work is
-being executed, __ieee80211_start_scan gets called and it starts a hw
-scan, and also sets local->hw_scan_req etc. (because it looks like
-there's some holes in use of scan_mtx). Result is that work_work queues
-ieee80211_scan_work and when it is executed, as there's already
-hw_scan_req set, it will try to start hw scan again. And as the driver
-used returns busy, scan_work will call ieee80211_scan_completed function
-which leaves the driver (hw more precisely) scanning and the stack
-thinking that it is not anymore scanning.
-
-Obviously this kind of situation doesn't happen very often in normal
-use, but it can be caused quite easily by associating to access points
-in a loop while running scan in another loop.
-
-
-> >  This causes the stack to abort scan without notifying the driver
-> > about it. This leads to a situation where the hw is scanning and the stack
-> > thinks it's not. Then when the scan finishes, the stack will complain by
-> > warnings.
-> > 
-> > Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-> > ---
-> >  net/mac80211/work.c |    7 ++++++-
-> >  1 files changed, 6 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-> > index 1e1ea30..7bd8670 100644
-> > --- a/net/mac80211/work.c
-> > +++ b/net/mac80211/work.c
-> > @@ -919,11 +919,16 @@ static void ieee80211_work_work(struct work_struct *work)
-> >  		run_again(local, jiffies + HZ/2);
-> >  	}
-> >  
-> > -	if (list_empty(&local->work_list) && local->scan_req)
-> > +	mutex_lock(&local->scan_mtx);
-> > +
-> > +	if (list_empty(&local->work_list) && local->scan_req &&
-> > +	    !local->scanning)
-> >  		ieee80211_queue_delayed_work(&local->hw,
-> >  					     &local->scan_work,
-> >  					     round_jiffies_relative(0));
-> >  
-> > +	mutex_unlock(&local->scan_mtx);
-> > +
-> >  	mutex_unlock(&local->work_mtx);
-> 
-> That really doesn't look right ... at all.
-> 
-> johannes
-> 
-
-Teemu
-
-
+Sorry... I apparently thought you were trying to *remove* USB reboot
+support, rather than add it.
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
