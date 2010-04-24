@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39329 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753673Ab0DZTEl (ORCPT
+Received: from mailrelay003.isp.belgacom.be ([195.238.6.53]:47945 "EHLO
+	mailrelay003.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751494Ab0DXT4e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 15:04:41 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 06/13] ath9k_hw: update EEPROM data structure for AR9280
-Date: Mon, 26 Apr 2010 15:04:34 -0400
-Message-Id: <1272308681-32396-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
-References: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 24 Apr 2010 15:56:34 -0400
+Date: Sat, 24 Apr 2010 21:56:30 +0200
+From: Philippe De Muyter <phdm@macqel.be>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
+Message-ID: <20100424195630.GA15053@frolo.macqel>
+References: <1269967657.3019.16.camel@localhost.localdomain> <20100330171139.GA28367@srcf.ucam.org> <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org> <20100419115329.GA5306@frolo.macqel> <20100419145107.GB8017@srcf.ucam.org> <20100419150050.GA28290@frolo.macqel> <20100419150627.GA10680@srcf.ucam.org> <20100424054210.GA23836@frolo.macqel> <20100424152107.GA13417@srcf.ucam.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100424152107.GA13417@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Sat, Apr 24, 2010 at 04:21:07PM +0100, Matthew Garrett wrote:
+> On Sat, Apr 24, 2010 at 07:42:10AM +0200, Philippe De Muyter wrote:
+> 
+> > - often wifi is blocked, but (except for `sudo rfkill' now) my daughter had
+> > no way to enable it,
+> > - the led does not reflect the wifi enabled/disabled state.
+> > - messages from kernel about `Unknown key pressed'
+> 
+> Does this laptop also have bluetooth?
 
-Adds read access for the 5 GHz fast clock flag
+No
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/eeprom.h     |    3 ++-
- drivers/net/wireless/ath/ath9k/eeprom_def.c |    2 ++
- 2 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index fb9c8c9..21354c1 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -300,7 +300,8 @@ struct base_eep_header {
- 	u32 binBuildNumber;
- 	u8 deviceType;
- 	u8 pwdclkind;
--	u8 futureBase_1[2];
-+	u8 fastClk5g;
-+	u8 divChain;
- 	u8 rxGainType;
- 	u8 dacHiPwrMode_5G;
- 	u8 openLoopPwrCntl;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index cf59799..e591ad6 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -274,6 +274,8 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
- 		return pBase->txMask;
- 	case EEP_RX_MASK:
- 		return pBase->rxMask;
-+	case EEP_FSTCLK_5G:
-+		return pBase->fastClk5g;
- 	case EEP_RXGAIN_TYPE:
- 		return pBase->rxGainType;
- 	case EEP_TXGAIN_TYPE:
--- 
-1.6.3.3
-
+Philippe
