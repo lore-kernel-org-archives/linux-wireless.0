@@ -1,74 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:41444 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751279Ab0DBEKk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Apr 2010 00:10:40 -0400
-Date: Fri, 2 Apr 2010 13:10:38 +0900
+Received: from smtp-out30.alice.it ([85.33.2.30]:4365 "EHLO
+	smtp-out30.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690Ab0DYV2g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Apr 2010 17:28:36 -0400
+Subject: wl1251_sdio PSM
+From: GNUtoo <GNUtoo@no-log.org>
 To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org
-Subject: [PATCH] mwl8k: use the dma state API instead of the pci equivalents
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 25 Apr 2010 23:18:20 +0200
+Message-ID: <1272230300.2349.23.camel@gnutoo-desktop>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Message-Id: <20100402130828O.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The DMA API is preferred.
+Hi,
+We are trying to make the htc dream(also known as G1) android phone
+usable with a standard GNU(non android) userland.
 
-No functional change.
+Inside the htcdream there is a wl1251_sdio chip.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/net/wireless/mwl8k.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+We already use the wl1251_sdio driver with a special module for
+initialization.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index ac65e13..fe3c0e0 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -108,7 +108,7 @@ struct mwl8k_rx_queue {
- 	dma_addr_t rxd_dma;
- 	struct {
- 		struct sk_buff *skb;
--		DECLARE_PCI_UNMAP_ADDR(dma)
-+		DEFINE_DMA_UNMAP_ADDR(dma);
- 	} *buf;
- };
- 
-@@ -964,7 +964,7 @@ static int rxq_refill(struct ieee80211_hw *hw, int index, int limit)
- 		if (rxq->tail == MWL8K_RX_DESCS)
- 			rxq->tail = 0;
- 		rxq->buf[rx].skb = skb;
--		pci_unmap_addr_set(&rxq->buf[rx], dma, addr);
-+		dma_unmap_addr_set(&rxq->buf[rx], dma, addr);
- 
- 		rxd = rxq->rxd + (rx * priv->rxd_ops->rxd_size);
- 		priv->rxd_ops->rxd_refill(rxd, addr, MWL8K_RX_MAXSZ);
-@@ -985,9 +985,9 @@ static void mwl8k_rxq_deinit(struct ieee80211_hw *hw, int index)
- 	for (i = 0; i < MWL8K_RX_DESCS; i++) {
- 		if (rxq->buf[i].skb != NULL) {
- 			pci_unmap_single(priv->pdev,
--					 pci_unmap_addr(&rxq->buf[i], dma),
-+					 dma_unmap_addr(&rxq->buf[i], dma),
- 					 MWL8K_RX_MAXSZ, PCI_DMA_FROMDEVICE);
--			pci_unmap_addr_set(&rxq->buf[i], dma, 0);
-+			dma_unmap_addr_set(&rxq->buf[i], dma, 0);
- 
- 			kfree_skb(rxq->buf[i].skb);
- 			rxq->buf[i].skb = NULL;
-@@ -1061,9 +1061,9 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 		rxq->buf[rxq->head].skb = NULL;
- 
- 		pci_unmap_single(priv->pdev,
--				 pci_unmap_addr(&rxq->buf[rxq->head], dma),
-+				 dma_unmap_addr(&rxq->buf[rxq->head], dma),
- 				 MWL8K_RX_MAXSZ, PCI_DMA_FROMDEVICE);
--		pci_unmap_addr_set(&rxq->buf[rxq->head], dma, 0);
-+		dma_unmap_addr_set(&rxq->buf[rxq->head], dma, 0);
- 
- 		rxq->head++;
- 		if (rxq->head == MWL8K_RX_DESCS)
--- 
-1.7.0
+The problem is that When the wifi is on,the battery last for about an
+hour.
+
+So we definitely need power saving features like PSM(I hope I used the
+right acronym,I'm looking for the system which makes the access point
+buffer frames for the phone and then we request the frames,other power
+saving mode are also welcome but as I understood this one is the most
+important)
+
+Grepping for psm in the driver show that there is some sort of support
+for PSM.
+
+Unfortunately the following method of activation failed:
+
+# ./iw dev wlan0 set power_save on
+command failed: Operation not supported (-95)
+
+
+# iwconfig wlan0 power period 2 
+Error for wireless request "Set Power Management" (8B2C) :
+    invalid argument "2".
+
+and I didn't find a psm sys node.
+
+I wonder where it has been disabled,and if I can re-enable it.
+
+I was also told that most driver have psm disabled,I don't know the
+reason tough(maybe performance,as it has a serious impact on
+performance)
+
+our (bad quality)kenrel tree can be found here(we're not yet kernel
+hackers):
+http://gitorious.org/htc-msm-2-6-32/leviathan-incoming/commits/msm-gnuconform
+
+Denis
 
