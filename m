@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23465 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932582Ab0DPVwm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:52:42 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 12/21] iwlwifi: remove redundant iwl_dump_lq_cmd()
-Date: Fri, 16 Apr 2010 14:52:29 -0700
-Message-Id: <1271454758-14351-13-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
-References: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:2661 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753810Ab0DYT0j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Apr 2010 15:26:39 -0400
+Date: Sun, 25 Apr 2010 15:22:42 -0400
+From: me@bobcopeland.com
+To: Pedro Francisco <pedrogfrancisco@gmail.com>
+Cc: Vegard Nossum <vegard.nossum@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mickflemm@gmail.com
+Subject: Re: ath5k misbehaving affecting other kernel parts unrelated?
+Message-ID: <20100425192242.GA27921@hash.localnet>
+References: <201004230806.13628.pedrogfrancisco@gmail.com> <201004240956.45899.pedrogfrancisco@gmail.com> <q2p19f34abd1004240509r63449b41l379bc14f5c6eaeae@mail.gmail.com> <201004241828.37489.pedrogfrancisco@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201004241828.37489.pedrogfrancisco@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+On Sat, Apr 24, 2010 at 06:28:36PM +0100, Pedro Francisco wrote:
+> =============================================================================
+> [ 2658.663424] BUG kmalloc-4096: Poison overwritten
+> [ 2658.663483] 
 
-This function is called twice in a row, remove the second one.
+Ok there are 4 messages here, two of them are definitely 802.11 beacons,
+which would point the finger squarely at ath5k.  We had reports of this
+some time ago but a few things got rewritten around that time.  I'd guess
+the rx DMA code is still subtly broken. 
 
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-sta.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+> 6b 6b kkkkkkkkkkkkkkkk
+> [ 2658.664816]   Object 0xed3db0c0:  c4 00 84 00 00 22 43 89 42 69 4e 12 ca 6f 
+> 6f 6f �...."C.BiN.�ooo
+> [ 4689.945547]   Object 0xed3d9080:  c4 00 70 00 00 22 43 89 42 69 fe 08 eb 14 
+> 14 14 �.p.."C.Bi�.�...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 09d9c4d..db93447 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1206,7 +1206,6 @@ int iwl_send_lq_cmd(struct iwl_priv *priv,
- 	iwl_dump_lq_cmd(priv, lq);
- 	BUG_ON(init && (cmd.flags & CMD_ASYNC));
- 
--	iwl_dump_lq_cmd(priv, lq);
- 	ret = iwl_send_cmd(priv, &cmd);
- 	if (ret || (cmd.flags & CMD_ASYNC))
- 		return ret;
+Offhand, I'm not sure what pattern these are.
+
+> [14487.165341]   Object 0xed378040:  80 00 00 00 ff ff ff ff ff ff 00 1e 8c 0f 3e af 
+> [24370.460011]   Object 0xed3dc100:  80 00 00 00 ff ff ff ff ff ff 00 1e 8c 0f 3e af 
+
+These two are definitely beacons.
+
 -- 
-1.6.3.3
+Bob Copeland %% www.bobcopeland.com
 
