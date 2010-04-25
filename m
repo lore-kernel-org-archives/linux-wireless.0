@@ -1,115 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:4344 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754082Ab0D0SD6 (ORCPT
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:34903 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690Ab0DYVaG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 14:03:58 -0400
-Message-ID: <4BD7270B.6050000@gmail.com>
-Date: Tue, 27 Apr 2010 20:03:55 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sun, 25 Apr 2010 17:30:06 -0400
+Received: by qyk9 with SMTP id 9so16202749qyk.1
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Apr 2010 14:30:05 -0700 (PDT)
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>,
-	John Linville <linville@tuxdriver.com>
-CC: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: rt2800lib: Fix rx path on SoC devices
-References: <201004261348.45044.helmut.schaa@googlemail.com> <4BD609C9.1080005@gmail.com> <201004270828.17303.helmut.schaa@googlemail.com>
-In-Reply-To: <201004270828.17303.helmut.schaa@googlemail.com>
+In-Reply-To: <1271890205.1730.588.camel@Joe-Laptop.home>
+References: <1271889581-21352-1-git-send-email-steve@cozybit.com>
+	 <1271890205.1730.588.camel@Joe-Laptop.home>
+Date: Sun, 25 Apr 2010 14:30:05 -0700
+Message-ID: <g2t446ae9281004251430t89236181p8f3d056181fb8b49@mail.gmail.com>
+Subject: Re: [PATCH] Added configurable debug messages to libertastf
+From: Steve deRosier <steve@cozybit.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/27/10 08:28, Helmut Schaa wrote:
-> Am Montag 26 April 2010 schrieb Gertjan van Wingerde:
->> On 04/26/10 13:48, Helmut Schaa wrote:
->>> Restore the rfcsr initialization for RT305x SoC devices which was removed
->>> by "rt2x00: Finish rt3070 support in rt2800 register initialization.".
->>>
->>> This fixes the rx path on SoC devices.
->>>
->>> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
->>> ---
->>>  drivers/net/wireless/rt2x00/rt2800lib.c |   34 ++++++++++++++++++++++++++++++-
->>>  1 files changed, 33 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> index 2648f31..1358d9a 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> @@ -1703,7 +1703,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->>>  	if (!rt2x00_rt(rt2x00dev, RT3070) &&
->>>  	    !rt2x00_rt(rt2x00dev, RT3071) &&
->>>  	    !rt2x00_rt(rt2x00dev, RT3090) &&
->>> -	    !rt2x00_rt(rt2x00dev, RT3390))
->>> +	    !rt2x00_rt(rt2x00dev, RT3390) &&
->>> +	    !(rt2x00_is_soc(rt2x00dev) && rt2x00_rt(rt2x00dev, RT2872)))
->>>  		return 0;
+Joe,
+
+Thanks for the pointers.  Sorry it took so long to correct the patch,
+but I'll post it asap.
+
+Thanks,
+- Steve
+
+On Wed, Apr 21, 2010 at 3:50 PM, Joe Perches <joe@perches.com> wrote:
+> On Wed, 2010-04-21 at 15:39 -0700, Steve deRosier wrote:
+>> Add the same type of configurable debug messages to libertas_tf as
+>> already exist in the libertas driver.  This has facilitated creation of a interface
+>> specification and will facilitate future development of this driver.
 >>
->> As indicated in the separate email, we should also check for the presence of an RF3020, RF3021
->> or RF3022 RF chipset for the RT2872 case (maybe this should be more generic, because I'm sure
->> this will also hold for the other RT chipsets).
-> 
-> Ok, do you mean we should only check for rfXXX instead of checking for SoC
-> and rt2872? Or should we check for SoC + rfXXX?
-
-I think that at the moment we should be looking at checking for SoC, RT2872 and RFxxxx.
-To be honest I don't completely know what these RF CSR values represent, we can only find them
-in a SoC Ralink driver, so FWIW it may simply be good settings for an AP (the main use case for
-a SoC device) but not so good for an STA.
-
-So properly applying this only to SoC devices with the right RT chipset and right RF chipset
-seems to be the proper thing here.
-
-> 
->>>  	/*
->>> @@ -1771,6 +1772,37 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->>>  		rt2800_rfcsr_write(rt2x00dev, 29, 0x8f);
->>>  		rt2800_rfcsr_write(rt2x00dev, 30, 0x20);
->>>  		rt2800_rfcsr_write(rt2x00dev, 31, 0x0f);
->>> +	} else if (rt2x00_rt(rt2x00dev, RT2872)) {
->>> +		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
->>> +		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
->>> +		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
->>> +		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
->>> +		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
->>> +		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
->>> +		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
->>> +		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
->>> +		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
->>> +		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
->>> +		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
->>> +		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
->>> +		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
->>> +		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
->>> +		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
->>> +		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
->>> +		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
->>> +		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
->>> +		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
->>> +		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
->>> +		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
->>> +		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
->>> +		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
->>> +		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
->>> +		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
->>> +		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
->>> +		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
->>> +		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
->>> +		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
->>> +		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
->>>  	}
->>>  
->>>  	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
->>
->> Here we need 2 additional rfcsr_writes, for RF CSR 30 and RF CSR 31, both set to value 0x00.
->> Also, we can add an "return 0" at the end of the sequence, as nothing more needs to be done for RT2872.
-> 
-> Ok, thanks for looking that up.
-
-And please add the rt2x00_is_soc(rt2x00dev) test to that hunk as well. It makes it easier to see that
-that piece is for SoC RT2872 devices only.
-
-P.S. It seems that John already applied this patch without even Ivo or me Acking it, so I guess an
-incremental patch would be best now.
-
----
-Gertjan
+>> Signed-off-by: Steve deRosier <steve@cozybit.com>
+> []
+>> +#define lbtf_pr_info(format, args...) \
+>> +     printk(KERN_INFO DRV_NAME": " format, ## args)
+>> +#define lbtf_pr_err(format, args...) \
+>> +     printk(KERN_ERR DRV_NAME": " format, ## args)
+>> +#define lbtf_pr_alert(format, args...) \
+>> +     printk(KERN_ALERT DRV_NAME": " format, ## args)
+>
+> I think it'd be better to add
+>
+> #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+>
+> and use the more standard pr_<level>s.
+>
+>> +#ifdef DEBUG
+>> +static inline void lbtf_deb_hex(unsigned int grp, const char *prompt, u8 *buf, int len)
+>> +{
+>> +     int i = 0;
+>> +
+>> +     if (len &&
+>> +         (lbtf_debug & LBTF_DEB_HEX) &&
+>> +         (lbtf_debug & grp)) {
+>> +             for (i = 1; i <= len; i++) {
+>> +                     if ((i & 0xf) == 1) {
+>> +                             if (i != 1)
+>> +                                     printk("\n");
+>> +                             printk(DRV_NAME " %s: ", prompt);
+>> +                     }
+>> +                     printk("%02x ", (u8) *buf);
+>> +                     buf++;
+>> +             }
+>> +             printk("\n");
+>> +     }
+>> +}
+>
+> print_hex_dump_bytes
+>
+>
+>
