@@ -1,85 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43192 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672Ab0DQOFx (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59236 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872Ab0DYULI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Apr 2010 10:05:53 -0400
-Received: by wyb39 with SMTP id 39so1685865wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Apr 2010 07:05:51 -0700 (PDT)
+	Sun, 25 Apr 2010 16:11:08 -0400
+Received: by pwj9 with SMTP id 9so7893083pwj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Apr 2010 13:11:08 -0700 (PDT)
+Message-ID: <4BD4A1D8.8000203@lwfinger.net>
+Date: Sun, 25 Apr 2010 15:11:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-Date: Sat, 17 Apr 2010 16:05:51 +0200
-Message-ID: <n2g2d0a357f1004170705j6d0750fdkc4784f86aab51c97@mail.gmail.com>
-Subject: iwl3945: Error sending REPLY_{RXON|SCAN_CMD|TX_PWR_TABLE_CMD} time
-	out after 500ms
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: wireless <linux-wireless@vger.kernel.org>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Philippe De Muyter <phdm@macqel.be>
+CC: Matthew Garrett <mjg@redhat.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: b43 'hardware blocked' but only keyboard/led touch button
+References: <20100330192629.GA24060@frolo.macqel> <20100330193129.GA31847@srcf.ucam.org> <20100419115329.GA5306@frolo.macqel> <20100419145107.GB8017@srcf.ucam.org> <20100419150050.GA28290@frolo.macqel> <20100419150627.GA10680@srcf.ucam.org> <20100424054210.GA23836@frolo.macqel> <20100424152107.GA13417@srcf.ucam.org> <20100424195630.GA15053@frolo.macqel> <20100424200218.GA16084@srcf.ucam.org> <20100425195058.GA12916@frolo.macqel>
+In-Reply-To: <20100425195058.GA12916@frolo.macqel>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 04/25/2010 02:50 PM, Philippe De Muyter wrote:
+> Hello Matthew,
+> 
+> On Sat, Apr 24, 2010 at 09:02:18PM +0100, Matthew Garrett wrote:
+>> On Sat, Apr 24, 2010 at 09:56:30PM +0200, Philippe De Muyter wrote:
+>>> On Sat, Apr 24, 2010 at 04:21:07PM +0100, Matthew Garrett wrote:
+>>>> Does this laptop also have bluetooth?
+>>>
+>>> No
+>>
+>> Hm. I have no idea why hitting the key doesn't change the colour then, 
+>> I'm afraid. On the other hand, it sounds like things are working now? 
+>> The only thing I can suggest is attempting to clear the CMOS data in the 
+>> BIOS menu and see if that changes things.
+> 
+> Just some more info :
+> 
+> when I power-on this laptop, the wifi led is red.  The wifi led stays
+> red while in the bios and in grub and during the very start of linux boot.
+> It becomes blue simultaneously with the displaying of the following message :
+> 
+> 	ACPI: Core revision 20100121
 
-I have already sent an bug-report "iwl3945: Network dropouts w/
-flash-stream in firefox" in [1].
-Unfortunately, the problem still remains, especially when
-fast-forwarding flash movies in firefox-3.6.3.
-It seems the wifi-card is hanging and my system needs a coldstart.
+This makes it clear that b43 is not controlling that LED as the change
+to blue on my system only occurs after the interface comes up under the
+control of ifup or NetworkManager.
 
-My wifi-card is an iwl3945 and my access-point is a speedport-w701v.
-I am using a Debian/sid 32-bit system.
-
-Today, I enabled CONFIG_IWLWIFI_DEBUG=y to see what is going on.
-
-I stopped networking, unloaded the kernel-module and re-loaded with
-module-option debug=0x43fff [2].
-
-# /etc/init.d/networking stop
-# modprobe -r -v iwl3945
-# modprobe -v iwl3945 debug=0x43fff
-
-The kernel I use is a Linux-2.6.34-rc4-git4 with these 3 patches in addition:
-
-patches/wireless-2.6:
-0001-iwlwifi-work-around-bogus-active-chains-detection.patch
-
-patches/iwlwifi-fixes-for-2.6.34:
-1-2-iwlwifi-fix-scan-races.patch
-2-2-iwlwifi-correct-6000-EEPROM-regulatory-address.patch
-
-According to Johannes (on IRC) iwl3945 doesn't use internal scans yet
-(see my patch below).
-Thus, I am not sure if this needs to be fixed separately for iwl3945
-and if I ran into a scan race condition here.
-
-If this matters: I am using Debian's wpasupplicant (0.6.10-2) and wext
-wpa-driver.
-
-I collected all data and provide them in [3].
-
-Hope, this helps.
-
-Kind Regards,
-- Sedat -
-
-[1] http://marc.info/?l=linux-wireless&m=127135267301937&w=2
-[2] http://intellinuxwireless.org/?n=fw_error_report
-[3] http://files.iniza.org/BUG_iwl3945_20100417/
-
-[PATCH]
-$ cat iwl3945-fix-scan-races.patch
---- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2010-04-13
-03:41:35.000000000 +0200
-+++ linux-2.6/drivers/net/wireless/iwlwifi/iwl3945-base.c	2010-04-17
-10:46:52.765166367 +0200
-@@ -3792,6 +3792,7 @@ static void iwl3945_cancel_deferred_work
-
- 	cancel_delayed_work_sync(&priv->init_alive_start);
- 	cancel_delayed_work(&priv->scan_check);
-+	cancel_work_sync(&priv->start_internal_scan);
- 	cancel_delayed_work(&priv->alive_start);
- 	cancel_work_sync(&priv->beacon_update);
- }
-[/PATCH]
+Larry
