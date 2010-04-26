@@ -1,44 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f179.google.com ([209.85.221.179]:40945 "EHLO
-	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751467Ab0DLOD7 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34741 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671Ab0DZLyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 10:03:59 -0400
-Received: by qyk9 with SMTP id 9so210776qyk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 07:03:58 -0700 (PDT)
+	Mon, 26 Apr 2010 07:54:20 -0400
+Received: by fxm10 with SMTP id 10so100251fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 04:54:18 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: rt2800lib: Fix rx path on SoC devices
+Date: Mon, 26 Apr 2010 13:48:45 +0200
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-In-Reply-To: <19394.52061.869979.530453@gargle.gargle.HOWL>
-References: <1270911923-5783-1-git-send-email-tom.leiming@gmail.com>
-	 <19394.52061.869979.530453@gargle.gargle.HOWL>
-Date: Mon, 12 Apr 2010 22:03:58 +0800
-Message-ID: <r2md82e647a1004120703pab24f9c5t6d2fe6980e8e2b2e@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ath9k-htc: pass cacheline aligned buffer to usb hcd
-	in register out path
-From: Ming Lei <tom.leiming@gmail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004261348.45044.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/12 Sujith <Sujith.Manoharan@atheros.com>:
-> tom.leiming@gmail.com wrote:
->> This patch copies skb->data of register out command to kmalloced buffer,
->> which is cacheline aligned(dma safe) and passed into usb hcd. Since the
->> data in register out command is not very much, we can ignore the
->> performance loss caused by the copy.
->
-> Actually, the current code is correct, though a bit sub-optimal.
-> The inital dev_alloc_skb() in ath9k_wmi_cmd() allocates a headroom
-> for WMI header + HTC header. The headers are then pushed as the packet
-> moves down through HTC. Finally, skb->data is passed to submit_urb().
->
-> To take care of cacheline alignment, you can just replace the dev_alloc_skb()
-> with alloc_skb(). A patch is welcome. :-)
+Restore the rfcsr initialization for RT305x SoC devices which was removed
+by "rt2x00: Finish rt3070 support in rt2800 register initialization.".
 
-OK, clever idea, I'll submit a new version.
+This fixes the rx path on SoC devices.
 
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   34 ++++++++++++++++++++++++++++++-
+ 1 files changed, 33 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 2648f31..1358d9a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1703,7 +1703,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	if (!rt2x00_rt(rt2x00dev, RT3070) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3071) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3090) &&
+-	    !rt2x00_rt(rt2x00dev, RT3390))
++	    !rt2x00_rt(rt2x00dev, RT3390) &&
++	    !(rt2x00_is_soc(rt2x00dev) && rt2x00_rt(rt2x00dev, RT2872)))
+ 		return 0;
+ 
+ 	/*
+@@ -1771,6 +1772,37 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 29, 0x8f);
+ 		rt2800_rfcsr_write(rt2x00dev, 30, 0x20);
+ 		rt2800_rfcsr_write(rt2x00dev, 31, 0x0f);
++	} else if (rt2x00_rt(rt2x00dev, RT2872)) {
++		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
++		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
++		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
++		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
++		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
++		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
++		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
++		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
++		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
++		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
++		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
++		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
++		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
++		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
++		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
++		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
++		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
++		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
++		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
++		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
++		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
++		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
++		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
++		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
++		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
++		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
++		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
++		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
++		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
+ 	}
+ 
+ 	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
 -- 
-Lei Ming
+1.6.4.2
+
