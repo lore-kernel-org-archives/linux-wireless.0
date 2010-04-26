@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58771 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759160Ab0D3SPS (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39340 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040Ab0DZTEm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 14:15:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] b43legacy: Added get_survey callback in order to get channel noise
-Date: Thu, 29 Apr 2010 15:56:25 -0400
-Message-Id: <1272570985-11291-1-git-send-email-linville@tuxdriver.com>
+	Mon, 26 Apr 2010 15:04:42 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 11/13] ath9k_hw: Fix endian bug in an AR9003 EEPROM field
+Date: Mon, 26 Apr 2010 15:04:39 -0400
+Message-Id: <1272308681-32396-12-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+References: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/b43legacy/main.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+From: Felix Fietkau <nbd@openwrt.org>
 
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 1d070be..6e9e0df 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -3481,6 +3481,23 @@ static int b43legacy_op_beacon_set_tim(struct ieee80211_hw *hw,
- 	return 0;
- }
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 25dd44d..8a79550 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -659,6 +659,9 @@ static void ar9300_swap_eeprom(struct ar9300_eeprom *eep)
+ 	word = swab16(eep->baseEepHeader.regDmn[1]);
+ 	eep->baseEepHeader.regDmn[1] = word;
  
-+static int b43legacy_op_get_survey(struct ieee80211_hw *hw, int idx,
-+				   struct survey_info *survey)
-+{
-+	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
-+	struct b43legacy_wldev *dev = wl->current_dev;
-+	struct ieee80211_conf *conf = &hw->conf;
++	dword = swab32(eep->baseEepHeader.swreg);
++	eep->baseEepHeader.swreg = dword;
 +
-+	if (idx != 0)
-+		return -ENOENT;
-+
-+	survey->channel = conf->channel;
-+	survey->filled = SURVEY_INFO_NOISE_DBM;
-+	survey->noise = dev->stats.link_noise;
-+
-+	return 0;
-+}
-+
- static const struct ieee80211_ops b43legacy_hw_ops = {
- 	.tx			= b43legacy_op_tx,
- 	.conf_tx		= b43legacy_op_conf_tx,
-@@ -3493,6 +3510,7 @@ static const struct ieee80211_ops b43legacy_hw_ops = {
- 	.start			= b43legacy_op_start,
- 	.stop			= b43legacy_op_stop,
- 	.set_tim		= b43legacy_op_beacon_set_tim,
-+	.get_survey		= b43legacy_op_get_survey,
- 	.rfkill_poll		= b43legacy_rfkill_poll,
- };
+ 	dword = swab32(eep->modalHeader2G.antCtrlCommon);
+ 	eep->modalHeader2G.antCtrlCommon = dword;
  
 -- 
-1.6.6.1
+1.6.3.3
 
