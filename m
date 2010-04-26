@@ -1,171 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:51341 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735Ab0D1IMH convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42399 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671Ab0DZLyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 04:12:07 -0400
-Received: by wye20 with SMTP id 20so549896wye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 01:12:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201004280958.59704.helmut.schaa@googlemail.com>
-References: <201004280958.59704.helmut.schaa@googlemail.com>
-Date: Wed, 28 Apr 2010 10:12:04 +0200
-Message-ID: <s2x14add3d11004280112o1012b76eq861fc7df27d361f5@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: rt2800lib: update rfcsr & bbp init code for SoC
-	devices
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 26 Apr 2010 07:54:09 -0400
+Subject: Re: [RFC PATCHv3 1/2] mac80211: Determine dynamic PS timeout based
+ on ps-qos network latency
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1271928576.6205.8919.camel@wimaxnb.nmp.nokia.com>
+References: <1271409274-17162-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271409274-17162-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1271688177.23671.1.camel@jlt3.sipsolutions.net>
+	 <1271740120.6205.5733.camel@wimaxnb.nmp.nokia.com>
+	 <1271925939.3605.7.camel@jlt3.sipsolutions.net>
+	 <1271926547.6205.8870.camel@wimaxnb.nmp.nokia.com>
+	 <1271927257.3605.18.camel@jlt3.sipsolutions.net>
+	 <1271928576.6205.8919.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Apr 2010 13:54:05 +0200
+Message-ID: <1272282845.3619.25.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/28 Helmut Schaa <helmut.schaa@googlemail.com>:
-> Update the rfcsr and bbp init code for SoC devices to match with the
-> latest Ralink driver.
->
-> To have better control over which values are used for the register
-> initialization create a new function rt2800_is_305x_soc which checks
-> for SoC interface type, the correct RT chipset and the correct RF
-> chipset. This is based on the assumption that all rt305x SoC devices
-> use a rt2872 and rf3020/rf3021/rf3022.
->
-> In case an unknown RF chipset is found on a SoC device with a rt2872
-> don't treat it as rt305x and just print a message.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+On Thu, 2010-04-22 at 12:29 +0300, Juuso Oikarinen wrote:
 
-Looks good to me.
+> > Still I think you should say why you need to actually tune the PS
+> > timeout value directly? I can't see how your high-level design says "set
+> > dynamic PS timeout to 100ms" rather than "make sure that while the user
+> > is operating the device, there's no delay of more than 50ms" or
+> > something like that?
+> 
+> You're partly right asking this. The high-level design obviously does
+> not know about dynamic PS timeouts. It seems you're mainly looking at
+> this from the angle of the network latency itself - i.e. network
+> performance. My primary angle currently is power consumption.
+> 
+> IMHO both angles are correct. The if the user sets a tight
+> network-latency requirement, the value can be used to tune things so
+> that the requirement can be met. If they set a loose requirement, it can
+> be used as a signal to do more aggressive power saving, which often
+> means reduced latency.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Well I would argue that if the user requires a certain network latency,
+that should take precedence. The user is unlikely to be thinking in
+terms of "I want my battery to last that long"; rather they want to last
+it as long as possible given their quality of service demand
+constraints?
 
-> ---
->
-> Gertjan, this approach should be pretty safe and if there really exists
-> a rt305x board with a different rf chipset we'll get a log message.
->
-> At the moment rt2800_is_305x_soc is only used in rt2800lib.c but maybe
-> it's worth to move it to one of the headers?
+> While the mechanism I'm proposing here is rather crude, it does save
+> power when the user-space loosens their latency requirement. The values
+> chosen for the dynamic ps-timeout bear no direct relation to user space
+> requirements. They are simply values that we have found to give decent
+> results in typical AP configurations.
+> 
+> The ps_timeout could be calculated based on the latency too, I guess.
+> I'm just not aware of any simple formula to do this.
 
-Well, at the moment I don't see a use case beyond rt2800lib.c.
-So, let's leave it where it is now, and we'll move it when the need to
-move it to
-a header file when the need arises.
+But you did just base it on that?
 
->
->  drivers/net/wireless/rt2x00/rt2800lib.c |   43 ++++++++++++++++++++++++------
->  1 files changed, 34 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 50f4451..e7a61a3 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -76,6 +76,23 @@ MODULE_LICENSE("GPL");
->        rt2800_regbusy_read((__dev), H2M_MAILBOX_CSR, \
->                            H2M_MAILBOX_CSR_OWNER, (__reg))
->
-> +static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
-> +{
-> +       /* check for rt2872 on SoC */
-> +       if (!rt2x00_is_soc(rt2x00dev) ||
-> +           !rt2x00_rt(rt2x00dev, RT2872))
-> +               return false;
-> +
-> +       /* we know for sure that these rf chipsets are used on rt305x boards */
-> +       if (rt2x00_rf(rt2x00dev, RF3020) ||
-> +           rt2x00_rf(rt2x00dev, RF3021) ||
-> +           rt2x00_rf(rt2x00dev, RF3022))
-> +               return true;
-> +
-> +       NOTICE(rt2x00dev, "Unknown RF chipset on rt305x\n");
-> +       return false;
-> +}
-> +
->  static void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
->                             const unsigned int word, const u8 value)
->  {
-> @@ -1556,6 +1573,9 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->                     rt2800_wait_bbp_ready(rt2x00dev)))
->                return -EACCES;
->
-> +       if (rt2800_is_305x_soc(rt2x00dev))
-> +               rt2800_bbp_write(rt2x00dev, 31, 0x08);
-> +
->        rt2800_bbp_write(rt2x00dev, 65, 0x2c);
->        rt2800_bbp_write(rt2x00dev, 66, 0x38);
->
-> @@ -1576,6 +1596,9 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->                rt2800_bbp_write(rt2x00dev, 79, 0x13);
->                rt2800_bbp_write(rt2x00dev, 80, 0x05);
->                rt2800_bbp_write(rt2x00dev, 81, 0x33);
-> +       } else if (rt2800_is_305x_soc(rt2x00dev)) {
-> +               rt2800_bbp_write(rt2x00dev, 78, 0x0e);
-> +               rt2800_bbp_write(rt2x00dev, 80, 0x08);
->        } else {
->                rt2800_bbp_write(rt2x00dev, 81, 0x37);
->        }
-> @@ -1596,12 +1619,16 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->        if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
->            rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E) ||
->            rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E) ||
-> -           rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E))
-> +           rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E) ||
-> +           rt2800_is_305x_soc(rt2x00dev))
->                rt2800_bbp_write(rt2x00dev, 103, 0xc0);
->        else
->                rt2800_bbp_write(rt2x00dev, 103, 0x00);
->
-> -       rt2800_bbp_write(rt2x00dev, 105, 0x05);
-> +       if (rt2800_is_305x_soc(rt2x00dev))
-> +               rt2800_bbp_write(rt2x00dev, 105, 0x01);
-> +       else
-> +               rt2800_bbp_write(rt2x00dev, 105, 0x05);
->        rt2800_bbp_write(rt2x00dev, 106, 0x35);
->
->        if (rt2x00_rt(rt2x00dev, RT3071) ||
-> @@ -1618,11 +1645,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->                rt2800_bbp_write(rt2x00dev, 138, value);
->        }
->
-> -       if (rt2x00_rt(rt2x00dev, RT2872)) {
-> -               rt2800_bbp_write(rt2x00dev, 31, 0x08);
-> -               rt2800_bbp_write(rt2x00dev, 78, 0x0e);
-> -               rt2800_bbp_write(rt2x00dev, 80, 0x08);
-> -       }
->
->        for (i = 0; i < EEPROM_BBP_SIZE; i++) {
->                rt2x00_eeprom_read(rt2x00dev, EEPROM_BBP_START + i, &eeprom);
-> @@ -1709,7 +1731,7 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->            !rt2x00_rt(rt2x00dev, RT3071) &&
->            !rt2x00_rt(rt2x00dev, RT3090) &&
->            !rt2x00_rt(rt2x00dev, RT3390) &&
-> -           !(rt2x00_is_soc(rt2x00dev) && rt2x00_rt(rt2x00dev, RT2872)))
-> +           !rt2800_is_305x_soc(rt2x00dev))
->                return 0;
->
->        /*
-> @@ -1777,7 +1799,7 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->                rt2800_rfcsr_write(rt2x00dev, 29, 0x8f);
->                rt2800_rfcsr_write(rt2x00dev, 30, 0x20);
->                rt2800_rfcsr_write(rt2x00dev, 31, 0x0f);
-> -       } else if (rt2x00_rt(rt2x00dev, RT2872)) {
-> +       } else if (rt2800_is_305x_soc(rt2x00dev)) {
->                rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
->                rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
->                rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
-> @@ -1808,6 +1830,9 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->                rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
->                rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
->                rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
-> +               rt2800_rfcsr_write(rt2x00dev, 30, 0x00);
-> +               rt2800_rfcsr_write(rt2x00dev, 31, 0x00);
-> +               return 0;
->        }
->
->        if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
-> --
-> 1.6.4.2
->
->
+It just seems to me that you're putting the power consumption
+requirements after the quality of service demands, which would seem
+wrong?
+
+johannes
+
