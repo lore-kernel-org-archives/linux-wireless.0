@@ -1,116 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:53186 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754634Ab0DNGpF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 02:45:05 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: kalle.valo@iki.fi
-Subject: [RFC PATCH 1/2] mac80211: Determine dynamic PS timeout based on ps-qos network latency
-Date: Wed, 14 Apr 2010 09:41:03 +0300
-Message-Id: <1271227264-26868-2-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1271227264-26868-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1271227264-26868-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from nbd.name ([88.198.39.176]:54004 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751422Ab0DZRy3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Apr 2010 13:54:29 -0400
+Message-ID: <4BD5D34F.8080205@openwrt.org>
+Date: Mon, 26 Apr 2010 19:54:23 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: fix handling of 4-address-mode in ieee80211_change_iface
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Determine the dynamic PS timeout based on the configured ps-qos network
-latency. For backwards wext compatibility, allow the dynamic PS timeout
-configured by the cfg80211 to overrule the automatically determined value.
+A misplaced interface type check bails out too early if the interface
+is not in monitor mode. This patch moves it to the right place, so that
+it only covers changes to the monitor flags.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
 ---
- include/net/mac80211.h |    5 ++++-
- net/mac80211/cfg.c     |    4 ++--
- net/mac80211/main.c    |    2 ++
- net/mac80211/mlme.c    |   12 ++++++++++++
- 4 files changed, 20 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index dcf3c5f..243e4ab 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -661,6 +661,9 @@ enum ieee80211_smps_mode {
-  * @dynamic_ps_timeout: The dynamic powersave timeout (in ms), see the
-  *	powersave documentation below. This variable is valid only when
-  *	the CONF_PS flag is set.
-+ * @dynamic_ps_forced_timeout: The dynamic powersave timeout (in ms) configured
-+ *	by cfg80211 (essentially, wext) If set, this value overrules the value
-+ *	chosen by mac80211 based on ps qos network latency.
-  *
-  * @power_level: requested transmit power (in dBm)
-  *
-@@ -680,7 +683,7 @@ enum ieee80211_smps_mode {
-  */
- struct ieee80211_conf {
- 	u32 flags;
--	int power_level, dynamic_ps_timeout;
-+	int power_level, dynamic_ps_timeout, dynamic_ps_forced_timeout;
- 	int max_sleep_period;
- 
- 	u16 listen_interval;
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 7dd7cda..9a1a91c 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -1388,11 +1388,11 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 		return -EOPNOTSUPP;
- 
- 	if (enabled == sdata->u.mgd.powersave &&
--	    timeout == conf->dynamic_ps_timeout)
-+	    timeout == conf->dynamic_ps_forced_timeout)
- 		return 0;
- 
- 	sdata->u.mgd.powersave = enabled;
--	conf->dynamic_ps_timeout = timeout;
-+	conf->dynamic_ps_forced_timeout = timeout;
- 
- 	/* no change, but if automatic follow powersave */
- 	mutex_lock(&sdata->u.mgd.mtx);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4afe851..ebcca0e 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -569,6 +569,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	local->hw.conf.listen_interval = local->hw.max_listen_interval;
- 
-+	local->hw.conf.dynamic_ps_forced_timeout = -1;
-+
- 	result = sta_info_start(local);
- 	if (result < 0)
- 		goto fail_sta_info;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 35d8502..22860bd 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -476,6 +476,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- {
- 	struct ieee80211_sub_if_data *sdata, *found = NULL;
- 	int count = 0;
-+	int timeout;
- 
- 	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS)) {
- 		local->ps_sdata = NULL;
-@@ -509,6 +510,17 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- 		beaconint_us = ieee80211_tu_to_usec(
- 					found->vif.bss_conf.beacon_int);
- 
-+		timeout = local->hw.conf.dynamic_ps_forced_timeout;
-+		if (timeout < 0) {
-+			if (latency <= 50000)
-+				timeout = 300;
-+			else if (latency <= 2000000)
-+				timeout = 100;
-+			else
-+				timeout = 0;
-+		}
-+		local->hw.conf.dynamic_ps_timeout = timeout;
-+
- 		if (beaconint_us > latency) {
- 			local->ps_sdata = NULL;
- 		} else {
--- 
-1.6.3.3
+@@ -97,9 +97,6 @@ static int ieee80211_change_iface(struct
+ 					    params->mesh_id_len,
+ 					    params->mesh_id);
 
+-	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
+-		return 0;
+-
+ 	if (type == NL80211_IFTYPE_AP_VLAN &&
+ 	    params && params->use_4addr == 0)
+ 		rcu_assign_pointer(sdata->u.vlan.sta, NULL);
+@@ -107,6 +104,9 @@ static int ieee80211_change_iface(struct
+ 		 params && params->use_4addr >= 0)
+ 		sdata->u.mgd.use_4addr = params->use_4addr;
+
++	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
++		return 0;
++
+ 	sdata->u.mntr_flags = *flags;
+ 	return 0;
+ }
