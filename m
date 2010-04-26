@@ -1,95 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:57291 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751651Ab0DQNQp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Apr 2010 09:16:45 -0400
-Received: by ewy20 with SMTP id 20so1091750ewy.1
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Apr 2010 06:16:44 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Walter <goldenstranger@yahoo.com>
-Subject: Re: [rt2x00] rt3070 fails to initialize with rt2800usb
-Date: Sat, 17 Apr 2010 15:16:41 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <79834.90907.qm@web56804.mail.re3.yahoo.com>
-In-Reply-To: <79834.90907.qm@web56804.mail.re3.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201004171516.42162.IvDoorn@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:62071 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754556Ab0DZVuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Apr 2010 17:50:09 -0400
+Subject: Re: [PATCH] mac80211: fix handling of 4-address-mode in
+ ieee80211_change_iface
+From: Pavel Roskin <proski@gnu.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <4BD5D34F.8080205@openwrt.org>
+References: <4BD5D34F.8080205@openwrt.org>
+Content-Type: text/plain
+Date: Mon, 26 Apr 2010 17:50:07 -0400
+Message-Id: <1272318607.22987.2.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 17 April 2010, Walter wrote:
-> > From: Ivo van Doorn <ivdoorn@gmail.com>
-> > Subject: Re: [rt2x00] rt3070 fails to initialize with rt2800usb
-> > To: "Walter" <goldenstranger@yahoo.com>
-> > Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-> > Date: Saturday, April 17, 2010, 8:45 AM
-> > On Saturday 17 April 2010, Walter
-> > wrote:
-> > > I've been monitoring the community's work for the
-> > rt3070 chips and especially your recent success towards
-> > improving the driver.
-> > > 
-> > > I would like to share something with the rt2x00
-> > development team which may or may not be known.
-> > > 
-> > > The rt3070 card I own fails to initialize with the
-> > latest (working) compat-wireless release. When I plug the
-> > USB card, rt2800usb doesn't automatically load and when I
-> > manually modprobe the driver it does not recognize it as
-> > well.
-> > > 
-> > > Looking in to the rt2800usb.c file I found the
-> > 'problem'. The VIDs aren't properly set. Mine shows
-> > 148f:3070. Although a line is included in the "#ifdef
-> > CONFIG_RT2800USB_RT30XX", the module won't initialize the
-> > card.
-> > > 
-> > > I fixed the problem by adding my device here:
-> > > 
-> > >     /* Ralink */
-> > >     { USB_DEVICE(0x148f, 0x2770),
-> > USB_DEVICE_DATA(&rt2800usb_ops) },
-> > >     { USB_DEVICE(0x148f, 0x2870),
-> > USB_DEVICE_DATA(&rt2800usb_ops) },
-> > >     /* Samsung */ 
-> > > 
-> > > which now looks like:
-> > > 
-> > >     /* Ralink */
-> > >     { USB_DEVICE(0x148f, 0x2770),
-> > USB_DEVICE_DATA(&rt2800usb_ops) },
-> > >     { USB_DEVICE(0x148f, 0x2870),
-> > USB_DEVICE_DATA(&rt2800usb_ops) },
-> > >         {
-> > USB_DEVICE(0x148f, 0x3070),
-> > USB_DEVICE_DATA(&rt2800usb_ops) },
-> > >     /* Samsung */
-> > > 
-> > > This pertains to the rt3071 as well.
-> > 
-> > That USB ID is already known, did you compile the driver
-> > with support
-> > for CONFIG_RT2800USB_RT30XX enabled?
-> > 
-> > Ivo
-> 
-> Yes, compat-wireless ships with ''CONFIG_RT2800USB_RT30XX=y'' in config.mk, but the card's VIDs aren't shown in modinfo rt2800usb when compiled, thus the module doesn't recognize the card at all. The only workaround I rustled up is the above mentioned one. 
+On Mon, 2010-04-26 at 19:54 +0200, Felix Fietkau wrote:
+> A misplaced interface type check bails out too early if the interface
+> is not in monitor mode. This patch moves it to the right place, so that
+> it only covers changes to the monitor flags.
+...
+> +	if (sdata->vif.type != NL80211_IFTYPE_MONITOR || !flags)
+> +		return 0;
+> +
+>  	sdata->u.mntr_flags = *flags;
+>  	return 0;
+>  }
 
-Thats odd, in compar-wireless, it already contains the lines:
+Perhaps you could write it in a more readable way:
 
-#ifdef CONFIG_RT2800USB_RT30XX
-	<..snip..>
-	/* Ralink */
-	{ USB_DEVICE(0x148f, 0x2070), USB_DEVICE_DATA(&rt2800usb_ops) },
-	{ USB_DEVICE(0x148f, 0x3070), USB_DEVICE_DATA(&rt2800usb_ops) },
-	{ USB_DEVICE(0x148f, 0x3071), USB_DEVICE_DATA(&rt2800usb_ops) },
-	{ USB_DEVICE(0x148f, 0x3072), USB_DEVICE_DATA(&rt2800usb_ops) },
-	<..snip..>
-#endif
+       if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags)
+               sdata->u.mntr_flags = *flags;
 
-So adding the USB ID does not need to be added.
+       return 0;
 
-Ivo
+Just an idea, not an objection.
+
+-- 
+Regards,
+Pavel Roskin
