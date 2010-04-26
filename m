@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43540 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:22136 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753933Ab0D0UXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 16:23:08 -0400
-Subject: Re: [Fwd: 2.6.34-rc4/5: iwlagn unusable until reload]
-From: reinette chatre <reinette.chatre@intel.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "Zhao, Shanyu" <shanyu.zhao@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <1272399067.4381.10749.camel@rchatre-DESK>
-References: <1272399067.4381.10749.camel@rchatre-DESK>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Apr 2010 13:23:07 -0700
-Message-ID: <1272399787.4381.10768.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1753664Ab0DZSBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Apr 2010 14:01:21 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 11:01:21 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19413.24411.750843.368010@gargle.gargle.HOWL>
+Date: Mon, 26 Apr 2010 15:09:39 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] ath9k_htc: Validate TX Endpoint ID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I see now that a new kernel.org bug
-(https://bugzilla.kernel.org/show_bug.cgi?id=15862 ) has been created
-for this issue. We'll track it there.
+Check for the endpoint IDs when processing
+TX completions and drop the unsupported EPIDs.
 
-Reinette
+We can add other endpoints (UAPSD,..) when support
+is added.
 
-On Tue, 2010-04-27 at 13:11 -0700, reinette chatre wrote:
-> Nico,
-> 
-> The wireless folks don't really hang out on lkml. I'm forwarding your
-> message to the linux-wireless mailing list.
-> 
-> Reinette
-> 
-> 
-> -------- Forwarded Message --------
-> > From: Nico Schottelius <nico-linux-20100427@schottelius.org>
-> > To: LKML <linux-kernel@vger.kernel.org>
-> > Subject: 2.6.34-rc4/5: iwlagn unusable until reload
-> > Date: Tue, 27 Apr 2010 00:49:34 -0700
-> > 
-> > Hello again!
-> > 
-> > If I try to use iwlagn on the X201 with
-> > 
-> > 02:00.0 Network controller: Intel Corporation WiFi Link 6000 Series (rev 35)
-> > 
-> > and 2.6.34-rc5-00211-gb91ce4d, I get a lot of error and no connection,
-> > until I
-> > 
-> > [root@kr ~]# rmmod iwlagn
-> > [root@kr ~]# modprobe iwlagn
-> > 
-> > Attached dmesg before & after.
-> > 
-> > Cheers,
-> > 
-> > Nico
-> > 
-> 
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 2c3c510..08bfe5d 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -244,16 +244,25 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
+ 		    enum htc_endpoint_id ep_id, bool txok)
+ {
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) drv_priv;
++	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ieee80211_tx_info *tx_info;
+ 
+ 	if (!skb)
+ 		return;
+ 
+-	if (ep_id == priv->mgmt_ep)
++	if (ep_id == priv->mgmt_ep) {
+ 		skb_pull(skb, sizeof(struct tx_mgmt_hdr));
+-	else
+-		/* TODO: Check for cab/uapsd/data */
++	} else if ((ep_id == priv->data_bk_ep) ||
++		   (ep_id == priv->data_be_ep) ||
++		   (ep_id == priv->data_vi_ep) ||
++		   (ep_id == priv->data_vo_ep)) {
+ 		skb_pull(skb, sizeof(struct tx_frame_hdr));
++	} else {
++		ath_print(common, ATH_DBG_FATAL,
++			  "Unsupported TX EPID: %d\n", ep_id);
++		dev_kfree_skb_any(skb);
++		return;
++	}
+ 
+ 	tx_info = IEEE80211_SKB_CB(skb);
+ 
+-- 
+1.7.0.5
 
