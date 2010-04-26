@@ -1,98 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54781 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:39322 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756800Ab0DODax (ORCPT
+	with ESMTP id S1753408Ab0DZTEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:53 -0400
+	Mon, 26 Apr 2010 15:04:41 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v2 36/97] ath9k_hw: Define tx control struct for AR9003
-Date: Wed, 14 Apr 2010 23:29:50 -0400
-Message-Id: <1271302251-9075-37-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Paul Shaw <Paul.Shaw@Atheros.com>,
+	Thomas Hammel <Thomas.Hammel@atheros.com>
+Subject: [PATCH 04/13] ath9k_hw: disable TX IQ calibration for AR9003
+Date: Mon, 26 Apr 2010 15:04:32 -0400
+Message-Id: <1272308681-32396-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+References: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Disable TX IQ calibration, it was prematurely enabled in
+previous versions.
 
-Store appropriate desc length which will be used by the
-ath9k module while duplicating tx desc.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Paul Shaw <Paul.Shaw@Atheros.com>
+Cc: Thomas Hammel <Thomas.Hammel@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.h |   28 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c         |    3 ++
- drivers/net/wireless/ath/ath9k/hw.h         |    1 +
- 3 files changed, 32 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    3 ++-
+ drivers/net/wireless/ath/ath9k/hw.c           |    6 ++++++
+ drivers/net/wireless/ath/ath9k/hw.h           |    1 +
+ 3 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-index 479dcd1..7f87804 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-@@ -43,6 +43,34 @@ struct ar9003_rxs {
- 	u32 status11;
- } __packed;
- 
-+/* Transmit Control Descriptor */
-+struct ar9003_txc {
-+	u32 info;   /* descriptor information */
-+	u32 link;   /* link pointer */
-+	u32 data0;  /* data pointer to 1st buffer */
-+	u32 ctl3;   /* DMA control 3  */
-+	u32 data1;  /* data pointer to 2nd buffer */
-+	u32 ctl5;   /* DMA control 5  */
-+	u32 data2;  /* data pointer to 3rd buffer */
-+	u32 ctl7;   /* DMA control 7  */
-+	u32 data3;  /* data pointer to 4th buffer */
-+	u32 ctl9;   /* DMA control 9  */
-+	u32 ctl10;  /* DMA control 10 */
-+	u32 ctl11;  /* DMA control 11 */
-+	u32 ctl12;  /* DMA control 12 */
-+	u32 ctl13;  /* DMA control 13 */
-+	u32 ctl14;  /* DMA control 14 */
-+	u32 ctl15;  /* DMA control 15 */
-+	u32 ctl16;  /* DMA control 16 */
-+	u32 ctl17;  /* DMA control 17 */
-+	u32 ctl18;  /* DMA control 18 */
-+	u32 ctl19;  /* DMA control 19 */
-+	u32 ctl20;  /* DMA control 20 */
-+	u32 ctl21;  /* DMA control 21 */
-+	u32 ctl22;  /* DMA control 22 */
-+	u32 pad[9]; /* pad to cache line (128 bytes/32 dwords) */
-+} __packed;
-+
- void ar9003_hw_attach_mac_ops(struct ath_hw *hw);
- void ath9k_hw_set_rx_bufsize(struct ath_hw *ah, u16 buf_size);
- void ath9k_hw_addrxbuf_edma(struct ath_hw *ah, u32 rxdp,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a285e17..aa80d43 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2962,6 +2962,9 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
- 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
- 		pCap->rx_status_len = sizeof(struct ar9003_rxs);
-+		pCap->tx_desc_len = sizeof(struct ar9003_txc);
-+	} else {
-+		pCap->tx_desc_len = sizeof(struct ath_desc);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 5e20b48..5fcafb4 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -755,7 +755,8 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
  	}
  
- 	return 0;
+ 	/* Do Tx IQ Calibration */
+-	ar9003_hw_tx_iq_cal(ah);
++	if (ah->config.tx_iq_calibration)
++		ar9003_hw_tx_iq_cal(ah);
+ 
+ 	/* Revert chainmasks to their original values before NF cal */
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5a29048..9af83e5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -387,6 +387,12 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	ah->config.rx_intr_mitigation = true;
+ 
+ 	/*
++	 * Tx IQ Calibration (ah->config.tx_iq_calibration) is only
++	 * used by AR9003, but it is showing reliability issues.
++	 * It will take a while to fix so this is currently disabled.
++	 */
++
++	/*
+ 	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
+ 	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
+ 	 * This means we use it for all AR5416 devices, and the few
 diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 64266ff..0361f42 100644
+index a78e09b..6c84d31 100644
 --- a/drivers/net/wireless/ath/ath9k/hw.h
 +++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -206,6 +206,7 @@ struct ath9k_hw_capabilities {
- 	u8 rx_hp_qdepth;
- 	u8 rx_lp_qdepth;
- 	u8 rx_status_len;
-+	u8 tx_desc_len;
- };
- 
- struct ath9k_ops_config {
+@@ -261,6 +261,7 @@ struct ath9k_ops_config {
+ #define AR_BASE_FREQ_5GHZ   	4900
+ #define AR_SPUR_FEEQ_BOUND_HT40 19
+ #define AR_SPUR_FEEQ_BOUND_HT20 10
++	bool tx_iq_calibration; /* Only available for >= AR9003 */
+ 	int spurmode;
+ 	u16 spurchans[AR_EEPROM_MODAL_SPURS][2];
+ 	u8 max_txtrig_level;
 -- 
 1.6.3.3
 
