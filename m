@@ -1,93 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46916 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933269Ab0DHT1q (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44007 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752090Ab0DZSpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:46 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 062/102] ath9k_hw: Initialize interrupt mask for AR9003
-Date: Thu,  8 Apr 2010 15:26:58 -0400
-Message-Id: <1270754858-26266-63-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 26 Apr 2010 14:45:12 -0400
+Date: Mon, 26 Apr 2010 14:32:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] ssb: Avoid system hang when SPROM read fails
+Message-ID: <20100426183233.GF2387@tuxdriver.com>
+References: <4bd4c284.WBohOsmgdwRzw5JC%Larry.Finger@lwfinger.net>
+ <20100426171505.GC2387@tuxdriver.com>
+ <4BD5D5B1.6020906@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4BD5D5B1.6020906@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+On Mon, Apr 26, 2010 at 01:04:33PM -0500, Larry Finger wrote:
+> On 04/26/2010 12:15 PM, John W. Linville wrote:
+> > 
+> > Well, the "good" news is that I hit the "Unable to read SPROM" case.
+> > The bad news is that the box still hangs after the -ENODEV.  I have
+> > not yet tracked-down the exact location of the current hang.
+> > 
+> > John
+> > 
+> > P.S.  Sorry about the 'radio silence' -- I've been distracted with
+> > some other things.  Also, the box in question originally belonged
+> > to someone else who had configured it in a way that was less than
+> > friendly to kernel development.  I finally reinstalled it...
+> 
+> That box is certainly resistant!
+> 
+> I certainly understand your distractions. That has to be a major
+> understatement.
+> 
+> As the patch makes some improvement in both your system and the one in
+> Bug #15825, I'll push it as a real patch.
+> 
+> Would your box be available to me as a loaner? I have considered buying
+> a netbook for debugging purposes, but I cannot quite justify the cost.
+> In addition, Murphy's law would make whatever one I bought work without
+> any problems.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c  |   29 ++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath9k/reg.h |    5 +++++
- 2 files changed, 29 insertions(+), 5 deletions(-)
+I think that can be arranged...
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f8e7d40..3238f5a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -769,12 +769,24 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 		AR_IMR_RXORN |
- 		AR_IMR_BCNMISC;
- 
--	if (ah->config.rx_intr_mitigation)
--		imr_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
--	else
--		imr_reg |= AR_IMR_RXOK;
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		imr_reg |= AR_IMR_RXOK_HP;
-+		if (ah->config.rx_intr_mitigation)
-+			imr_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
-+		else
-+			imr_reg |= AR_IMR_RXOK_LP;
- 
--	imr_reg |= AR_IMR_TXOK;
-+	} else {
-+		if (ah->config.rx_intr_mitigation)
-+			imr_reg |= AR_IMR_RXINTM | AR_IMR_RXMINTR;
-+		else
-+			imr_reg |= AR_IMR_RXOK;
-+	}
-+
-+	if (ah->config.tx_intr_mitigation)
-+		imr_reg |= AR_IMR_TXINTM | AR_IMR_TXMINTR;
-+	else
-+		imr_reg |= AR_IMR_TXOK;
- 
- 	if (opmode == NL80211_IFTYPE_AP)
- 		imr_reg |= AR_IMR_MIB;
-@@ -788,6 +800,13 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, AR_INTR_SYNC_DEFAULT);
- 		REG_WRITE(ah, AR_INTR_SYNC_MASK, 0);
- 	}
-+
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_ENABLE, 0);
-+		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_MASK, 0);
-+		REG_WRITE(ah, AR_INTR_PRIO_SYNC_ENABLE, 0);
-+		REG_WRITE(ah, AR_INTR_PRIO_SYNC_MASK, 0);
-+	}
- }
- 
- static void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 7f85633..7758d99 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1042,6 +1042,11 @@ enum {
- #define AR_PCIE_MSI                              (AR_SREV_9300_20_OR_LATER(ah) ? 0x40a4 : 0x4094)
- #define AR_PCIE_MSI_ENABLE                       0x00000001
- 
-+#define AR_INTR_PRIO_SYNC_ENABLE  0x40c4
-+#define AR_INTR_PRIO_ASYNC_MASK   0x40c8
-+#define AR_INTR_PRIO_SYNC_MASK    0x40cc
-+#define AR_INTR_PRIO_ASYNC_ENABLE 0x40d4
-+
- #define AR_RTC_9300_PLL_DIV          0x000003ff
- #define AR_RTC_9300_PLL_DIV_S        0
- #define AR_RTC_9300_PLL_REFDIV       0x00003C00
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
