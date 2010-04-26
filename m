@@ -1,256 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46718 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933187Ab0DHT1k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:40 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 012/102] ath9k_hw: add a private callback for PLL control computation
-Date: Thu,  8 Apr 2010 15:26:08 -0400
-Message-Id: <1270754858-26266-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from nbd.name ([88.198.39.176]:39932 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753041Ab0DZXYB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Apr 2010 19:24:01 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 1/2] cfg80211: add ap isolation support
+Date: Tue, 27 Apr 2010 01:23:35 +0200
+Message-Id: <1272324216-73349-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PLL control computation used to program the AR_RTC_PLL_CONTROL
-register varies between our harware so just add a private callback for it.
-AR9003 will use its own callback.
+This is used to configure APs to not bridge traffic between connected stations.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   55 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |   31 +++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c         |   64 +++------------------------
- drivers/net/wireless/ath/ath9k/hw.h         |    4 ++
- 4 files changed, 97 insertions(+), 57 deletions(-)
+ include/linux/nl80211.h |    5 +++++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |    4 ++++
+ 3 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 4459d63..31ecea8 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -961,6 +961,54 @@ static void ar5008_set_diversity(struct ath_hw *ah, bool value)
- 	REG_WRITE(ah, AR_PHY_CCK_DETECT, v);
- }
- 
-+static u32 ar9100_hw_compute_pll_control(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	if (chan && IS_CHAN_5GHZ(chan))
-+		return 0x1450;
-+	return 0x1458;
-+}
-+
-+static u32 ar9160_hw_compute_pll_control(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	u32 pll;
-+
-+	pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
-+
-+	if (chan && IS_CHAN_HALF_RATE(chan))
-+		pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
-+	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-+		pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
-+
-+	if (chan && IS_CHAN_5GHZ(chan))
-+		pll |= SM(0x50, AR_RTC_9160_PLL_DIV);
-+	else
-+		pll |= SM(0x58, AR_RTC_9160_PLL_DIV);
-+
-+	return pll;
-+}
-+
-+static u32 ar5008_hw_compute_pll_control(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	u32 pll;
-+
-+	pll = AR_RTC_PLL_REFDIV_5 | AR_RTC_PLL_DIV2;
-+
-+	if (chan && IS_CHAN_HALF_RATE(chan))
-+		pll |= SM(0x1, AR_RTC_PLL_CLKSEL);
-+	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-+		pll |= SM(0x2, AR_RTC_PLL_CLKSEL);
-+
-+	if (chan && IS_CHAN_5GHZ(chan))
-+		pll |= SM(0xa, AR_RTC_PLL_DIV);
-+	else
-+		pll |= SM(0xb, AR_RTC_PLL_DIV);
-+
-+	return pll;
-+}
-+
- void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -982,4 +1030,11 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->enable_rfkill = ar5008_hw_enable_rfkill;
- 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
- 	priv_ops->set_diversity = ar5008_set_diversity;
-+
-+	if (AR_SREV_9100(ah))
-+		priv_ops->compute_pll_control = ar9100_hw_compute_pll_control;
-+	else if (AR_SREV_9160_10_OR_LATER(ah))
-+		priv_ops->compute_pll_control = ar9160_hw_compute_pll_control;
-+	else
-+		priv_ops->compute_pll_control = ar5008_hw_compute_pll_control;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 1c36012..f94fc27 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -437,6 +437,36 @@ static void ar9002_olc_init(struct ath_hw *ah)
- 	}
- }
- 
-+static u32 ar9002_hw_compute_pll_control(struct ath_hw *ah,
-+					 struct ath9k_channel *chan)
-+{
-+	u32 pll;
-+
-+	pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
-+
-+	if (chan && IS_CHAN_HALF_RATE(chan))
-+		pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
-+	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-+		pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
-+
-+	if (chan && IS_CHAN_5GHZ(chan)) {
-+		pll |= SM(0x28, AR_RTC_9160_PLL_DIV);
-+
-+
-+		if (AR_SREV_9280_20(ah)) {
-+			if (((chan->channel % 20) == 0)
-+			    || ((chan->channel % 10) == 0))
-+				pll = 0x2850;
-+			else
-+				pll = 0x142c;
-+		}
-+	} else {
-+		pll |= SM(0x2c, AR_RTC_9160_PLL_DIV);
-+	}
-+
-+	return pll;
-+}
-+
- void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-@@ -447,4 +477,5 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->rf_set_freq = ar9002_hw_set_channel;
- 	priv_ops->spur_mitigate_freq = ar9002_hw_spur_mitigate;
- 	priv_ops->olc_init = ar9002_olc_init;
-+	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index b242b03..d3b7a98 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -67,6 +67,12 @@ static bool ath9k_hw_macversion_supported(struct ath_hw *ah)
- 	return ath9k_hw_private_ops(ah)->macversion_supported(ah->hw_version.macVersion);
- }
- 
-+static u32 ath9k_hw_compute_pll_control(struct ath_hw *ah,
-+					struct ath9k_channel *chan)
-+{
-+	return ath9k_hw_private_ops(ah)->compute_pll_control(ah, chan);
-+}
-+
- /********************/
- /* Helper Functions */
- /********************/
-@@ -1031,64 +1037,8 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
- static void ath9k_hw_init_pll(struct ath_hw *ah,
- 			      struct ath9k_channel *chan)
- {
--	u32 pll;
--
--	if (AR_SREV_9100(ah)) {
--		if (chan && IS_CHAN_5GHZ(chan))
--			pll = 0x1450;
--		else
--			pll = 0x1458;
--	} else {
--		if (AR_SREV_9280_10_OR_LATER(ah)) {
--			pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
--
--			if (chan && IS_CHAN_HALF_RATE(chan))
--				pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
--			else if (chan && IS_CHAN_QUARTER_RATE(chan))
--				pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
--
--			if (chan && IS_CHAN_5GHZ(chan)) {
--				pll |= SM(0x28, AR_RTC_9160_PLL_DIV);
--
--
--				if (AR_SREV_9280_20(ah)) {
--					if (((chan->channel % 20) == 0)
--					    || ((chan->channel % 10) == 0))
--						pll = 0x2850;
--					else
--						pll = 0x142c;
--				}
--			} else {
--				pll |= SM(0x2c, AR_RTC_9160_PLL_DIV);
--			}
--
--		} else if (AR_SREV_9160_10_OR_LATER(ah)) {
--
--			pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
--
--			if (chan && IS_CHAN_HALF_RATE(chan))
--				pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
--			else if (chan && IS_CHAN_QUARTER_RATE(chan))
--				pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
--
--			if (chan && IS_CHAN_5GHZ(chan))
--				pll |= SM(0x50, AR_RTC_9160_PLL_DIV);
--			else
--				pll |= SM(0x58, AR_RTC_9160_PLL_DIV);
--		} else {
--			pll = AR_RTC_PLL_REFDIV_5 | AR_RTC_PLL_DIV2;
--
--			if (chan && IS_CHAN_HALF_RATE(chan))
--				pll |= SM(0x1, AR_RTC_PLL_CLKSEL);
--			else if (chan && IS_CHAN_QUARTER_RATE(chan))
--				pll |= SM(0x2, AR_RTC_PLL_CLKSEL);
-+	u32 pll = ath9k_hw_compute_pll_control(ah, chan);
- 
--			if (chan && IS_CHAN_5GHZ(chan))
--				pll |= SM(0xa, AR_RTC_PLL_DIV);
--			else
--				pll |= SM(0xb, AR_RTC_PLL_DIV);
--		}
--	}
- 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
- 
- 	/* Switch the core clock for ar9271 to 117Mhz */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index b277b41..a0ab32a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -454,6 +454,8 @@ struct ath_gen_timer_table {
-  * @rf_alloc_ext_banks:
-  * @rf_free_ext_banks:
-  * @set_rf_regs:
-+ * @compute_pll_control: compute the PLL control value to use for
-+ *	AR_RTC_PLL_CONTROL for a given channel
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 2ea3ede..f8750f9 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -709,6 +709,9 @@ enum nl80211_commands {
+  *	NL80211_CMD_AUTHENTICATE, NL80211_CMD_DEAUTHENTICATE,
+  *	NL80211_CMD_DISASSOCIATE.
+  *
++ * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
++ *	connected to this BSS.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
   */
- struct ath_hw_private_ops {
- 	void (*init_cal_settings)(struct ath_hw *ah);
-@@ -483,6 +485,8 @@ struct ath_hw_private_ops {
- 	void (*enable_rfkill)(struct ath_hw *ah);
- 	void (*restore_chainmask)(struct ath_hw *ah);
- 	void (*set_diversity)(struct ath_hw *ah, bool value);
-+	u32 (*compute_pll_control)(struct ath_hw *ah,
-+				   struct ath9k_channel *chan);
+@@ -864,6 +867,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_LOCAL_STATE_CHANGE,
+ 
++	NL80211_ATTR_AP_ISOLATE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5a4efe5..f6b29bf 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -511,6 +511,7 @@ struct mpath_info {
+  * @basic_rates: basic rates in IEEE 802.11 format
+  *	(or NULL for no change)
+  * @basic_rates_len: number of basic rates
++ * @ap_isolate: do not forward packets between connected stations
+  */
+ struct bss_parameters {
+ 	int use_cts_prot;
+@@ -518,6 +519,7 @@ struct bss_parameters {
+ 	int use_short_slot_time;
+ 	u8 *basic_rates;
+ 	u8 basic_rates_len;
++	int ap_isolate;
  };
  
- /**
+ struct mesh_config {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 356a84a..01da83d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -152,6 +152,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_PS_STATE] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_CQM] = { .type = NLA_NESTED, },
+ 	[NL80211_ATTR_LOCAL_STATE_CHANGE] = { .type = NLA_FLAG },
++	[NL80211_ATTR_AP_ISOLATE] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the attributes */
+@@ -2442,6 +2443,7 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
+ 	params.use_cts_prot = -1;
+ 	params.use_short_preamble = -1;
+ 	params.use_short_slot_time = -1;
++	params.ap_isolate = -1;
+ 
+ 	if (info->attrs[NL80211_ATTR_BSS_CTS_PROT])
+ 		params.use_cts_prot =
+@@ -2458,6 +2460,8 @@ static int nl80211_set_bss(struct sk_buff *skb, struct genl_info *info)
+ 		params.basic_rates_len =
+ 			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
+ 	}
++	if (info->attrs[NL80211_ATTR_AP_ISOLATE])
++		params.ap_isolate = !!nla_get_u8(info->attrs[NL80211_ATTR_AP_ISOLATE]);
+ 
+ 	rtnl_lock();
+ 
 -- 
-1.6.3.3
+1.6.4.2
 
