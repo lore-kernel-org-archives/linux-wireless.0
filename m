@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:2244 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754509Ab0DZVnv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34497 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753371Ab0DZUK0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 17:43:51 -0400
-Message-ID: <4BD60914.1070200@gmail.com>
-Date: Mon, 26 Apr 2010 23:43:48 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register
- initialization.
-References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <201004261302.14682.helmut.schaa@googlemail.com> <4BD5EEFC.6050003@gmail.com> <201004262159.34077.helmut.schaa@googlemail.com>
-In-Reply-To: <201004262159.34077.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 26 Apr 2010 16:10:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mwl8k: remove usage of deprecated noise value
+Date: Mon, 26 Apr 2010 16:09:16 -0400
+Message-Id: <1272312556-22525-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/10 21:59, Helmut Schaa wrote:
-> Am Montag 26 April 2010 schrieb Gertjan van Wingerde:
->> On 04/26/10 13:02, Helmut Schaa wrote:
->>> Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/mwl8k.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-<snip>
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 4e58ebe..9af6c94 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -749,7 +749,6 @@ mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
+ 	memset(status, 0, sizeof(*status));
+ 
+ 	status->signal = -rxd->rssi;
+-	status->noise = -rxd->noise_floor;
+ 
+ 	if (rxd->rate & MWL8K_8366_AP_RATE_INFO_MCS_FORMAT) {
+ 		status->flag |= RX_FLAG_HT;
+@@ -851,7 +850,6 @@ mwl8k_rxd_sta_process(void *_rxd, struct ieee80211_rx_status *status,
+ 	memset(status, 0, sizeof(*status));
+ 
+ 	status->signal = -rxd->rssi;
+-	status->noise = -rxd->noise_level;
+ 	status->antenna = MWL8K_STA_RATE_INFO_ANTSELECT(rate_info);
+ 	status->rate_idx = MWL8K_STA_RATE_INFO_RATEID(rate_info);
+ 
+-- 
+1.6.6.1
 
->>>
->>> This part is actually needed for getting rx to work on the SoC devices.
->>
->> Hmm, interesting, as I don't know where this code actually came from. It isn't needed for
->> PCI devices in general (at least not the PCI devices I've checked), so it may be specific to SoC.
->>
->>>
->>> Should I post a patch that adds this code again and is only executed on SoC
->>> devices with rf3020, 3021 and 3022?
->>>
->>
->> OK. I have just checked the two RT2872 based devices I have (one PCI one and one USB one),
->> and both of them act very strangely.
-> 
-> Strangely ;) ? The SoC device was basically able to transmit frames but
-> could't receive at all (at least that was my impression). Do you have a
-> different issue?
-
-Turns out I forgot to enable the PCIe one in my AP's ACL, so it simply was refused by the AP.
-This card now works perfectly without your patch. Now, the difference is that my RT2872 is actually
-accompanied by an RF2720 RF chipset, so there is a difference there.
-
-> 
->> I'll check against the Ralink SoC driver code that I've got as to how the initialization should actually
->> be.
-> 
-> Ok.
-> 
-
-The Ralink SoC driver code that I have follows exactly the procedure that was removed. So, I guess the original
-code came from there, but it actually isn't needed for RT2860 devices. The Ralink code only runs this when an
-RT2872 revision 0x0200 is accompanied with an RF3020, an RF3021 or an RF3022. For the benefit of correctness
-I suggest we mimmick this in rt2x00, and only execute the sequence in those cases.
-And, BTW, we can stop RF CSR initialization right after programming these static values. The Ralink driver doesn't
-do anything else as well.
-Finally, the Ralink driver has two more RF CSR writes in this sequence. It writes the value 0x00 to both RF CSR 30
-and RF CSR 31. I suggest we add that to the sequence that will be added to rt2x00.
-
---
-Gertjan.
