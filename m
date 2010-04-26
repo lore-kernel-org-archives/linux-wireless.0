@@ -1,71 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out26.alice.it ([85.33.2.26]:4262 "EHLO
-	smtp-out26.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753380Ab0D0RGP (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34505 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754945Ab0DZUK2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Apr 2010 13:06:15 -0400
-Subject: Re: wl1251_sdio PSM
-From: GNUtoo <GNUtoo@no-log.org>
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1272384504.2434.9.camel@gnutoo-desktop>
-References: <1272230300.2349.23.camel@gnutoo-desktop>
-	 <1272232671.2349.25.camel@gnutoo-desktop>
-	 <1272235632.2349.28.camel@gnutoo-desktop>
-	 <1272285416.2364.1.camel@gnutoo-desktop>
-	 <loom.20100427T143119-272@post.gmane.org>
-	 <1272374877.2434.0.camel@gnutoo-desktop>
-	 <1272384213.2434.8.camel@gnutoo-desktop>
-	 <1272384504.2434.9.camel@gnutoo-desktop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Apr 2010 19:05:27 +0200
-Message-ID: <1272387927.2434.11.camel@gnutoo-desktop>
-Mime-Version: 1.0
+	Mon, 26 Apr 2010 16:10:28 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: remove usage of deprecated noise value
+Date: Mon, 26 Apr 2010 16:09:22 -0400
+Message-Id: <1272312562-22689-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-04-27 at 18:08 +0200, GNUtoo wrote:
-> On Tue, 2010-04-27 at 18:03 +0200, GNUtoo wrote:
-> > On Tue, 2010-04-27 at 15:27 +0200, GNUtoo wrote:
-> > > > You need a few more patches for PS to work (on top of current compat-wireless):
-> > > > http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-kernel.git;a=commitdiff;h=8eb97a1915ae2ab0a19cc6eef1a2753b9514017d
-> > > > http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-wifi.git;a=commitdiff;h=d16ed8871faa892f5fd4e8161412051ee11c5ecb
-> > > > 
-> > > > I'm working on mainline mergeable versions of those..
-> > > Denis.
-> > oops I don't know why the message wasn't included,maybe I made an error.
-> > Anyway it last much longer,but sometimes it only last for about 50 pings
-> > and after that no more network,tough iwconfig still say that it's
-> > associated.
-> > I'll check my hostapd router logs and try to put a wakelock
-> Apr 27 18:02:18 router hostapd: wlan0: STA 00:1f:df:f8:ac:7f RADIUS:
-> starting accounting session 4BA21E4D-000007D8
-> Apr 27 18:03:24 router hostapd: wlan0: STA 00:1f:df:24:0b:7f IEEE
-> 802.11: disassociated due to inactivity
-> Apr 27 18:03:25 router hostapd: wlan0: STA 00:1f:df:24:0b:7f IEEE
-> 802.11: deauthenticated due to inactivity
-hmmm....
-now it does that:
-Apr 27 18:12:43 router hostapd: wlan0: STA 00:1f:df:65:25:23 IEEE
-802.11: authenticated
-Apr 27 18:12:43 router hostapd: wlan0: STA 00:1f:df:65:25:23 IEEE
-802.11: associated (aid 2)
-Apr 27 18:12:43 router hostapd: wlan0: STA 00:1f:df:65:25:23 RADIUS:
-starting accounting session 4BA21E4D-000007D9
-Apr 27 18:13:11 router hostapd: wlan0: STA 00:1f:df:65:25:23 IEEE
-802.11: authenticated
-Apr 27 18:13:11 router hostapd: wlan0: STA 00:1f:df:65:25:23 IEEE
-802.11: associated (aid 2)
-Apr 27 18:13:11 router hostapd: wlan0: STA 00:1f:df:65:25:23 RADIUS:
-starting accounting session 4BA21E4D-000007DA
---->start pinging
---->ping stopping
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/b43/xmit.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-with no messages just after the ping stopping,so maybe I need some more
-patches...
-
-Denis.
-
-
-
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index eda0652..e6b0528 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -610,7 +610,6 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 	}
+ 
+ 	/* Link quality statistics */
+-	status.noise = dev->stats.link_noise;
+ 	if ((chanstat & B43_RX_CHAN_PHYTYPE) == B43_PHYTYPE_N) {
+ //		s8 rssi = max(rxhdr->power0, rxhdr->power1);
+ 		//TODO: Find out what the rssi value is (dBm or percentage?)
+-- 
+1.6.6.1
 
