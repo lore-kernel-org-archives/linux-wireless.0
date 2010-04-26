@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:24632 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753663Ab0DULuN (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39336 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753909Ab0DZTEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Apr 2010 07:50:13 -0400
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o3LBnIbH019584
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 14:50:10 +0300
-Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
-	by mgw-sa01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o3LBnavp016358
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Apr 2010 14:49:37 +0300
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCHv4 2/2] cfg80211: Remove default dynamic PS timeout value
-Date: Wed, 21 Apr 2010 14:47:38 +0300
-Message-Id: <1271850458-32437-3-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1271850458-32437-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1271850458-32437-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 26 Apr 2010 15:04:41 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 09/13] ath9k_hw: use the configured power limit for AR9003
+Date: Mon, 26 Apr 2010 15:04:37 -0400
+Message-Id: <1272308681-32396-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+References: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that the mac80211 is choosing dynamic ps timeouts based on the ps-qos
-network latency configuration, configure a default value of -1 as the dynamic
-ps timeout in cfg80211. This value allows the mac80211 to determine the value
-to be used.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Since the new AR9003 EEPROM code does tune the card for the configured
+tx power level, we need to fill in the correct power limits in the TPC
+part of the DMA descriptor.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/net/cfg80211.h |    2 ++
- net/wireless/core.c    |    3 ++-
- 2 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c    |    3 +++
+ drivers/net/wireless/ath/ath9k/hw.h            |    1 +
+ 3 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 37cebd3..873edf9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1018,6 +1018,8 @@ struct cfg80211_pmksa {
-  *	RSN IE. It allows for faster roaming between WPA2 BSSIDs.
-  * @del_pmksa: Delete a cached PMKID.
-  * @flush_pmksa: Flush all cached PMKIDs.
-+ * @set_power_mgmt: Configure WLAN power management. A timeout value of -1
-+ *	allows the driver to adjust the dynamic ps timeout value.
-  * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
-  *
-  */
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 6ac70c1..37d0e0a 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -705,7 +705,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
- 			wdev->ps = true;
- 		else
- 			wdev->ps = false;
--		wdev->ps_timeout = 100;
-+		/* allow mac80211 to determine the timeout */
-+		wdev->ps_timeout = -1;
- 		if (rdev->ops->set_power_mgmt)
- 			if (rdev->ops->set_power_mgmt(wdev->wiphy, dev,
- 						      wdev->ps,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 5d92be4..79b0e28 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -1817,6 +1817,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 					u8 twiceMaxRegulatoryPower,
+ 					u8 powerLimit)
+ {
++	ah->txpower_limit = powerLimit;
+ 	ar9003_hw_set_target_power_eeprom(ah, chan->channel);
+ 	ar9003_hw_calibration_apply(ah, chan->channel);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 7d111fb..37ba374 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -311,6 +311,9 @@ static void ar9003_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
+ {
+ 	struct ar9003_txc *ads = (struct ar9003_txc *) ds;
+ 
++	if (txpower > ah->txpower_limit)
++		txpower = ah->txpower_limit;
++
+ 	txpower += ah->txpower_indexoffset;
+ 	if (txpower > 63)
+ 		txpower = 63;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index bc682da..77245df 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -719,6 +719,7 @@ struct ath_hw {
+ 	u32 *addac5416_21;
+ 	u32 *bank6Temp;
+ 
++	u8 txpower_limit;
+ 	int16_t txpower_indexoffset;
+ 	int coverage_class;
+ 	u32 beacon_interval;
 -- 
 1.6.3.3
 
