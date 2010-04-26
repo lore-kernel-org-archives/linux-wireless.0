@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:39591 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756161Ab0DAMvr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Apr 2010 08:51:47 -0400
-Received: by ey-out-2122.google.com with SMTP id d26so75111eyd.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Apr 2010 05:51:46 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: [PATCH] Remove MCU requests for SoC platforms
-Date: Thu, 1 Apr 2010 14:51:43 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-References: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com>
-In-Reply-To: <t2yefe7343f1004010548tdb2db0a3h9570da736a269352@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201004011451.44204.IvDoorn@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:32568 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754475Ab0DZDYU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Apr 2010 23:24:20 -0400
+Subject: Re: bug report: potential ERR_PTR dereference in iwm_debugfs_init()
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Carpenter <error27@gmail.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1272024227.17055.0.camel@jlt3.sipsolutions.net>
+References: <20100422095929.GS29647@bicker>
+	 <1271990911.14773.24.camel@debian>  <20100423114358.GD29093@bicker>
+	 <1272024227.17055.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Apr 2010 11:22:23 +0800
+Message-ID: <1272252143.14773.4126.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2010-04-23 at 20:03 +0800, Johannes Berg wrote:
+> > The bit that was problematic in this code for me is that passing
+> > ERR_PTR(-ENODEV) to debugfs_create_dir() on line 447 will cause an
+> oops.
+> > But, as you point out, the check on line 442 is never true because
+> we
+> > already established that debugfs is enabled.
+> 
+> I don't think so. See, that function will only return -ENODEV when
+> debugfs is not compiled into the kernel, and in that case the argument
+> to debugfs_create_dir is never used anyway. 
 
-> @@ -1100,8 +1106,10 @@
->  	/*
->  	 * This device requires firmware and MCU access.
->  	 */
+Yes, there won't be any kernel oops anyway. But the iwm debugfs code is
+a little misleading. Dan, please feel free to send a patch to clean up
+this. On the error path, either NULL or ERR_PTR(-ENODEV) (no other
+errno) is returned. Since all the debugfs functions are defined as no-op
+if CONFIG_DEBUG_FS is not selected, maybe we only check against NULL is
+enough.
 
-You manually edited your patch didn't you? :P
-This doesn't apply since you changed the comment line.
-
-Ivo
+Thanks,
+-yi
 
