@@ -1,116 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50208 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932379Ab0DPURt (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39327 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480Ab0DZTEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 16:17:49 -0400
-Subject: Re: [RFC PATCH] mac80211: Prevent running sta_cleanup timer
- unnecessarily
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1271403308-23416-2-git-send-email-juuso.oikarinen@nokia.com>
-References: <1271403308-23416-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1271403308-23416-2-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Apr 2010 22:17:40 +0200
-Message-ID: <1271449060.4184.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 26 Apr 2010 15:04:41 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [PATCH 05/13] ath9k_hw: Fix usec to hw clock conversion in 5Ghz for ar9003
+Date: Mon, 26 Apr 2010 15:04:33 -0400
+Message-Id: <1272308681-32396-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+References: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-04-16 at 10:35 +0300, Juuso Oikarinen wrote:
-> The sta_cleanup timer is used to periodically expire buffered frames from the
-> tx buf. The timer is executing periodically, regardless of the need for it.
-> This is wasting resources.
-> 
-> Fix this simply by not restarting the sta_cleanup timer if the tx buffer was
-> empty. Restart the timer when there is some more tx-traffic.
-> 
-> Cc: Janne Ylälehto <janne.ylalehto@nokia.com>
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
->  net/mac80211/sta_info.c |   13 ++++++++++---
->  net/mac80211/tx.c       |    7 +++++++
->  2 files changed, 17 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index ff0eb94..3de7a22 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -575,7 +575,7 @@ static int sta_info_buffer_expired(struct sta_info *sta,
->  }
->  
-> 
-> -static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
-> +static bool sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
->  					     struct sta_info *sta)
->  {
->  	unsigned long flags;
-> @@ -583,7 +583,7 @@ static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
->  	struct ieee80211_sub_if_data *sdata;
->  
->  	if (skb_queue_empty(&sta->ps_tx_buf))
-> -		return;
-> +		return false;
->  
->  	for (;;) {
->  		spin_lock_irqsave(&sta->ps_tx_buf.lock, flags);
-> @@ -608,6 +608,8 @@ static void sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
->  		if (skb_queue_empty(&sta->ps_tx_buf))
->  			sta_info_clear_tim_bit(sta);
->  	}
-> +
-> +	return true;
->  }
->  
->  static int __must_check __sta_info_destroy(struct sta_info *sta)
-> @@ -755,15 +757,20 @@ static void sta_info_cleanup(unsigned long data)
->  {
->  	struct ieee80211_local *local = (struct ieee80211_local *) data;
->  	struct sta_info *sta;
-> +	bool timer_needed = false;
->  
->  	rcu_read_lock();
->  	list_for_each_entry_rcu(sta, &local->sta_list, list)
-> -		sta_info_cleanup_expire_buffered(local, sta);
-> +		if (sta_info_cleanup_expire_buffered(local, sta))
-> +			timer_needed = true;
->  	rcu_read_unlock();
->  
->  	if (local->quiescing)
->  		return;
->  
-> +	if (!timer_needed)
-> +		return;
-> +
->  	local->sta_cleanup.expires =
->  		round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL);
->  	add_timer(&local->sta_cleanup);
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 2cb7726..e2aa972 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -429,6 +429,7 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
->  	struct sta_info *sta = tx->sta;
->  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
->  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-> +	struct ieee80211_local *local = tx->local;
->  	u32 staflags;
->  
->  	if (unlikely(!sta ||
-> @@ -476,6 +477,12 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
->  		info->control.vif = &tx->sdata->vif;
->  		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
->  		skb_queue_tail(&sta->ps_tx_buf, tx->skb);
-> +
-> +		if (!timer_pending(&local->sta_cleanup))
-> +			mod_timer(&local->sta_cleanup,
-> +				  round_jiffies(jiffies +
-> +						STA_INFO_CLEANUP_INTERVAL));
-> +
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Why bother to check !timer_pending?
+Fast clock operation (44Mhz) is enabled for 5Ghz in ar9003, so
+take care of the conversion from usec to hw clock.
 
-johannes
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   10 ++++++++--
+ drivers/net/wireless/ath/ath9k/hw.h |    1 +
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9af83e5..ca676cd 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -26,6 +26,7 @@
+ #define ATH9K_CLOCK_RATE_CCK		22
+ #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
+ #define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
++#define ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM 44
+ 
+ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type);
+ 
+@@ -91,7 +92,11 @@ static u32 ath9k_hw_mac_clks(struct ath_hw *ah, u32 usecs)
+ 		return usecs *ATH9K_CLOCK_RATE_CCK;
+ 	if (conf->channel->band == IEEE80211_BAND_2GHZ)
+ 		return usecs *ATH9K_CLOCK_RATE_2GHZ_OFDM;
+-	return usecs *ATH9K_CLOCK_RATE_5GHZ_OFDM;
++
++	if (ah->caps.hw_caps & ATH9K_HW_CAP_FASTCLOCK)
++		return usecs * ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
++	else
++		return usecs * ATH9K_CLOCK_RATE_5GHZ_OFDM;
+ }
+ 
+ static u32 ath9k_hw_mac_to_clks(struct ath_hw *ah, u32 usecs)
+@@ -2192,7 +2197,8 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_LDPC;
++		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_LDPC |
++				 ATH9K_HW_CAP_FASTCLOCK;
+ 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
+ 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
+ 		pCap->rx_status_len = sizeof(struct ar9003_rxs);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6c84d31..7a1347b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -198,6 +198,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_EDMA			= BIT(17),
+ 	ATH9K_HW_CAP_RAC_SUPPORTED		= BIT(18),
+ 	ATH9K_HW_CAP_LDPC			= BIT(19),
++	ATH9K_HW_CAP_FASTCLOCK			= BIT(20),
+ };
+ 
+ enum ath9k_capability_type {
+-- 
+1.6.3.3
 
