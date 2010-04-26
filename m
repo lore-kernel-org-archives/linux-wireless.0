@@ -1,45 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:33510 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754606Ab0DPHi7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48334 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581Ab0DZRaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 03:38:59 -0400
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o3G7cP4D022511
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 10:38:56 +0300
-Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
-	by mgw-sa01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o3G7cZv1003637
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Apr 2010 10:38:35 +0300
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH] mac80211: sta_cleanup timer handling
-Date: Fri, 16 Apr 2010 10:35:07 +0300
-Message-Id: <1271403308-23416-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 26 Apr 2010 13:30:13 -0400
+Date: Mon, 26 Apr 2010 13:15:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] ssb: Avoid system hang when SPROM read fails
+Message-ID: <20100426171505.GC2387@tuxdriver.com>
+References: <4bd4c284.WBohOsmgdwRzw5JC%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4bd4c284.WBohOsmgdwRzw5JC%Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sta_cleanup timer is used to expire frames in the sta structure ps_tx_buf 
--list. To perform this, the timer is executed periodically.
+On Sun, Apr 25, 2010 at 05:30:28PM -0500, Larry Finger wrote:
+> In kernel Bugzilla #15825, the OP reports a case of intermittent reading
+> of the SPROM. If such reads fail, the box hangs. Thanks to careful testing
+> by bugzillakernelorg@lez.ath.cx has shown that the first read of the
+> SPROM returns 0xFFFF with the hang happening on the next read.
+> 
+> The source of the read failure is still under investigation; however,
+> this patch does avoid the system hang.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> John,
+> 
+> Does this patch avoid the system hang on your box?
+> 
+> Larry
+> ---
+> 
+> ===================================================================
+> --- wireless-testing.orig/drivers/ssb/pci.c
+> +++ wireless-testing/drivers/ssb/pci.c
+> @@ -253,6 +253,11 @@ static int sprom_do_read(struct ssb_bus
+>  {
+>  	int i;
+>  
+> +	/* Check if SPROM can be read */
+> +	if (ioread16(bus->mmio + SSB_SPROM_BASE) == 0xFFFF) {
+> +		ssb_printk(KERN_ERR PFX "Unable to read SPROM\n");
+> +		return -ENODEV;
+> +	}
+>  	for (i = 0; i < bus->sprom_size; i++)
+>  		sprom[i] = ioread16(bus->mmio + SSB_SPROM_BASE + (i * 2));
+>  
 
-The timer is executed periodically, regardless if there are frames in the
-buffer or not. As a result, the system gets periodically woken up for no
-reason at all, wasting precious resources.
+Well, the "good" news is that I hit the "Unable to read SPROM" case.
+The bad news is that the box still hangs after the -ENODEV.  I have
+not yet tracked-down the exact location of the current hang.
 
-This patch proposes a simple fix. It prevent rescheduling the sta_cleanup
-timer if on the particular invocation the ps_tx_buf buffers for all sta's 
-were empty. On the TX path, the timer is restarted upon queueing frames to
-those buffers.
+John
 
-Due to the way checking is performed, this approach will "leak" a few 
-unnecessary invocations of the timer handler, but in the big picture those
-do not matter.
-
-Comments are appreciated.
-
-Juuso Oikarinen (1):
-  mac80211: Prevent running sta_cleanup timer unnecessarily
-
- net/mac80211/sta_info.c |   13 ++++++++++---
- net/mac80211/tx.c       |    7 +++++++
- 2 files changed, 17 insertions(+), 3 deletions(-)
-
+P.S.  Sorry about the 'radio silence' -- I've been distracted with
+some other things.  Also, the box in question originally belonged
+to someone else who had configured it in a way that was less than
+friendly to kernel development.  I finally reinstalled it...
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
