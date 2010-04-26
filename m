@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54852 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756897Ab0DODaz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34503 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754809Ab0DZUK2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:55 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 52/97] ath9k_hw: rename the PA calib routines to match their families
-Date: Wed, 14 Apr 2010 23:30:06 -0400
-Message-Id: <1271302251-9075-53-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 26 Apr 2010 16:10:28 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: remove usage of deprecated noise value
+Date: Mon, 26 Apr 2010 16:09:21 -0400
+Message-Id: <1272312561-22648-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/ath/ath9k/calib.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/common.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index b44b305..4018074 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -730,7 +730,7 @@ static void ar9280_hw_olc_temp_compensation(struct ath_hw *ah)
- 	}
- }
- 
--static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
-+static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- {
- 	u32 regVal;
- 	unsigned int i;
-@@ -831,7 +831,7 @@ static void ath9k_hw_9271_pa_cal(struct ath_hw *ah, bool is_reset)
- 		REG_WRITE(ah, regList[i][0], regList[i][1]);
- }
- 
--static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
-+static inline void ar9285_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 regVal;
-@@ -948,12 +948,12 @@ static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- {
- 	if (AR_SREV_9271(ah)) {
- 		if (is_reset || !ah->pacal_info.skipcount)
--			ath9k_hw_9271_pa_cal(ah, is_reset);
-+			ar9271_hw_pa_cal(ah, is_reset);
- 		else
- 			ah->pacal_info.skipcount--;
- 	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
- 		if (is_reset || !ah->pacal_info.skipcount)
--			ath9k_hw_9285_pa_cal(ah, is_reset);
-+			ar9285_hw_pa_cal(ah, is_reset);
- 		else
- 			ah->pacal_info.skipcount--;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 09effde..b4424a6 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -212,7 +212,6 @@ int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
+ 	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
+ 	rx_status->freq = hw->conf.channel->center_freq;
+-	rx_status->noise = common->ani.noise_floor;
+ 	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+ 	rx_status->flag |= RX_FLAG_TSFT;
 -- 
-1.6.3.3
+1.6.6.1
 
