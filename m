@@ -1,77 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752841Ab0DVIuS (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39329 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753673Ab0DZTEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Apr 2010 04:50:18 -0400
-Subject: Re: mac80211 and asymmetric 802.11n TX/RX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <6D966E94-4FD1-4675-B39B-296B4D82D2AB@cs.washington.edu>
-References: <48BAD814-F653-4CE3-85E0-A9D82EC31D53@cs.washington.edu>
-	 <1271751747.8954.3.camel@jlt3.sipsolutions.net>
-	 <6D966E94-4FD1-4675-B39B-296B4D82D2AB@cs.washington.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Apr 2010 10:50:10 +0200
-Message-ID: <1271926210.3605.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 26 Apr 2010 15:04:41 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 06/13] ath9k_hw: update EEPROM data structure for AR9280
+Date: Mon, 26 Apr 2010 15:04:34 -0400
+Message-Id: <1272308681-32396-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+References: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan,
+From: Felix Fietkau <nbd@openwrt.org>
 
-> > I'm not sure. Reading 7.3.2.56.4 seems to imply that, but I'm not sure
-> > about the "Rx Highest Supported Data Rate" field. Seems like maybe you
-> > could set the "RX MCS bitmask" to more than is supported, limit it by
-> > the highest supported data rate, and then use the bitmask for TX?
-> 
-> First, did you mean 7.3.2.57.4? (I'm using IEEE P802.11n/D7.0, but I
-> assume the section numbers haven't changed). For me that section
-> represents the "Supported MCS Set field".
+Adds read access for the 5 GHz fast clock flag
 
-I guess they did change then :)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.h     |    3 ++-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |    2 ++
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-> (An aside: I don't actually *have* 7.3.2.56. I'm using IEEE
-> 802.11-2007 [has up to 7.3.2.35] and IEEE P802.11n/D7.0 [has 7.3.2.57
-> and beyond] --- In which document are the missing sections?)
-
-I am looking at 802.11n final.
-
-> Can you point me at which text in the section you think implies this
-> requirement?
-
-It has a lot of tables .. not easily copied.
-
-> In any case, maybe this discussion is silly: I don't know of any
-> devices with this strange configuration. Typically clients assume
-> downlink-heavy and might support a 1x2 connection but 2x1, i.e.
-> designed for uplink, seems unlikely.
-
-And APs would typically be symmetric, countering Gabor's argument :)
-
-But I don't really understand the standard text here, we'll have to find
-somebody more familiar with 11n details.
-
-> >> A second question: my understanding is that if I am a 2x2 node and I
-> >> associate to a 3x3 AP, the same code will mask out the fact that the
-> >> AP can receive 3 streams since I can't transmit 3 streams. Is there a
-> >> way to access this info from the driver if I want it?
-> > 
-> > Unfortunately not, at this point. We could keep track of it, what would
-> > you need it for?
-> 
-> Okay, that's what I figured; I can hack around it locally. I'm working
-> on an alternative rate selection algorithm that at one point tries to
-> take into account how much receive diversity the other endpoint has.
-> The intuition is that how well (e.g.) 2-stream rates work is going to
-> depend not just on the channel, but also on how many excess antennas
-> the receiver has. I would benefit from knowing whether they have 2 or
-> 3 antennas even if I can only send them at most 2 streams.
-
-Ah. That makes some sense. So far nothing has needed it, but it _could_
-also be useful for debugging, so I wouldn't necessarily mind tracking it
-in mac80211.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index fb9c8c9..21354c1 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -300,7 +300,8 @@ struct base_eep_header {
+ 	u32 binBuildNumber;
+ 	u8 deviceType;
+ 	u8 pwdclkind;
+-	u8 futureBase_1[2];
++	u8 fastClk5g;
++	u8 divChain;
+ 	u8 rxGainType;
+ 	u8 dacHiPwrMode_5G;
+ 	u8 openLoopPwrCntl;
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index cf59799..e591ad6 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -274,6 +274,8 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
+ 		return pBase->txMask;
+ 	case EEP_RX_MASK:
+ 		return pBase->rxMask;
++	case EEP_FSTCLK_5G:
++		return pBase->fastClk5g;
+ 	case EEP_RXGAIN_TYPE:
+ 		return pBase->rxGainType;
+ 	case EEP_TXGAIN_TYPE:
+-- 
+1.6.3.3
 
