@@ -1,52 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33221 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162Ab0DSGAV (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:33448 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751924Ab0DZLC2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 02:00:21 -0400
-Subject: Re: [PATCH 7/9] mac80211: add flags for STBC (Space-Time Block
- Coding)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-In-Reply-To: <4BCB2DB3.3020700@openwrt.org>
-References: <1271602602-8538-1-git-send-email-nbd@openwrt.org>
-	 <1271602602-8538-2-git-send-email-nbd@openwrt.org>
-	 <1271602602-8538-3-git-send-email-nbd@openwrt.org>
-	 <1271602602-8538-4-git-send-email-nbd@openwrt.org>
-	 <1271602602-8538-5-git-send-email-nbd@openwrt.org>
-	 <1271602602-8538-6-git-send-email-nbd@openwrt.org>
-	 <1271602602-8538-7-git-send-email-nbd@openwrt.org>
-	 <1271606009.3873.0.camel@jlt3.sipsolutions.net>
-	 <4BCB2DB3.3020700@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Apr 2010 07:57:57 +0200
-Message-ID: <1271656677.3873.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 26 Apr 2010 07:02:28 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so1957183fgg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 04:02:26 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
+Date: Mon, 26 Apr 2010 13:02:14 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Luis Correia <luis.f.correia@gmail.com>
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-7-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1270989075-2267-7-git-send-email-gwingerde@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004261302.14682.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-04-18 at 18:05 +0200, Felix Fietkau wrote:
+Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
+> rt2x00 had preliminary support for RT3070 based devices, but the support was
+> incomplete.
+> Update the RT3070 register initialization to be similar to the latest Ralink
+> vendor driver.
+> 
+> With this patch my rt3070 based devices start showing a sign of life.
 
-> >> + * @IEEE80211_TX_CTL_STBC: tells the driver to use Space-Time Block Coding
-> >> + *  (STBC) for this frame.
-> >>   */
-> >>  enum mac80211_tx_control_flags {
-> >>  	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
-> >> @@ -299,6 +301,7 @@ enum mac80211_tx_control_flags {
-> >>  	IEEE80211_TX_INTFL_HAS_RADIOTAP		= BIT(20),
-> >>  	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
-> >>  	IEEE80211_TX_CTL_LDPC			= BIT(22),
-> >> +	IEEE80211_TX_CTL_STBC			= BIT(23),
-> > 
-> > What if the # of streams is different? That doesn't look sufficient.
+Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
+more details.
 
-> Hm, you're right. I initially thought the combination of the MCS index
-> and the STBC flag would be enough, but there are still some corner cases.
+[...]
 
-Hm actually I guess that should be sufficient? What corner case are you
-thinking of?
+> @@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>  {
+>  	u8 rfcsr;
+>  	u8 bbp;
+> +	u32 reg;
+> +	u16 eeprom;
+>  
+> -	if (rt2x00_is_usb(rt2x00dev) &&
+> -	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
+> +	if (!rt2x00_rt(rt2x00dev, RT3070))
+>  		return 0;
+>  
+> -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+> -		if (!rt2x00_rf(rt2x00dev, RF3020) &&
+> -		    !rt2x00_rf(rt2x00dev, RF3021) &&
+> -		    !rt2x00_rf(rt2x00dev, RF3022))
+> -			return 0;
+> -	}
 
-johannes
+Any reason why you've removed this part? The following code was executed on
+pci and soc devices when they had an 3020, 3021 or 3022 rf.
 
+>  	/*
+>  	 * Init RF calibration.
+>  	 */
+> @@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>  	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+>  	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+>  
+> -	if (rt2x00_is_usb(rt2x00dev)) {
+> +	if (rt2x00_rt(rt2x00dev, RT3070)) {
+>  		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+>  		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+>  		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+>  		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
+>  		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+> -		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
+> +		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
+>  		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+>  		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
+>  		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+> @@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>  		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+>  		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
+>  		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+> -		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+>  		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
+> -	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+> -		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+> -		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+> -		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+> -		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
+> -		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+> -		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+> -		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+> -		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
+> -		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
+> -		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+> -		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
+> -		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+> -		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
+> -		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
+> -		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+> -		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
+> -		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
+> -		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
+> -		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
+> -		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
+> -		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
+> -		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+> -		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
+> -		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
+> -		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
+> -		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+> -		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
+> -		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
+> -		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
+> -		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
+
+This part is actually needed for getting rx to work on the SoC devices.
+
+Should I post a patch that adds this code again and is only executed on SoC
+devices with rf3020, 3021 and 3022?
+
+Thanks,
+Helmut
