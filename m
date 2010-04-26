@@ -1,86 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:20649 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756458Ab0DNRaq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 13:30:46 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Apr 2010 10:30:46 -0700
-Date: Wed, 14 Apr 2010 10:30:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Holger Schurig <holgerschurig@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Anton Puolakka <Anton.Puolakka@7signal.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Survey mode volunteers
-Message-ID: <20100414173044.GA2841@tux>
-References: <0290AB2F0A8E124B9FFC144088A1A95609D6029647@EX-MBS04.nbl.local>
- <0290AB2F0A8E124B9FFC144088A1A95609D6096AB9@EX-MBS04.nbl.local>
- <20100412180424.GB2920@tux>
- <201004140911.11459.holgerschurig@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:54118 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751924Ab0DZLLe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Apr 2010 07:11:34 -0400
+From: Helmut Schaa <Helmut.Schaa@gmx.de>
+To: Antonio Quartulli <ordex@ritirata.org>
+Subject: Re: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
+Date: Mon, 26 Apr 2010 13:11:20 +0200
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Luis Correia <luis.f.correia@gmail.com>
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <1270989075-2267-7-git-send-email-gwingerde@gmail.com> <201004261302.14682.helmut.schaa@googlemail.com>
+In-Reply-To: <201004261302.14682.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201004140911.11459.holgerschurig@gmail.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004261311.20834.Helmut.Schaa@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 14, 2010 at 12:11:11AM -0700, Holger Schurig wrote:
-> I've some preliminary patch for ath5k.
+Am Montag 26 April 2010 schrieb Helmut Schaa:
+> Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
+> > rt2x00 had preliminary support for RT3070 based devices, but the support was
+> > incomplete.
+> > Update the RT3070 register initialization to be similar to the latest Ralink
+> > vendor driver.
+> > 
+> > With this patch my rt3070 based devices start showing a sign of life.
 > 
-> ---
-> Subject: [ath5k] add noise reporting to survey
-> 
-> Signed-off-by: Holger Schurig <holgerschurig@gmail.com>
-> 
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |   19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
-> 
-> --- compat-wireless-2010-03-15.orig/drivers/net/wireless/ath/ath5k/base.c
-> +++ compat-wireless-2010-03-15/drivers/net/wireless/ath/ath5k/base.c
-> @@ -273,6 +273,8 @@ static int ath5k_set_key(struct ieee8021
->  		struct ieee80211_key_conf *key);
->  static int ath5k_get_stats(struct ieee80211_hw *hw,
->  		struct ieee80211_low_level_stats *stats);
-> +static int ath5k_get_survey(struct ieee80211_hw *hw,
-> +		int idx, struct survey_info *survey);
->  static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
->  static void ath5k_set_tsf(struct ieee80211_hw *hw, u64 tsf);
->  static void ath5k_reset_tsf(struct ieee80211_hw *hw);
-> @@ -298,6 +300,7 @@ static const struct ieee80211_ops ath5k_
->  	.configure_filter = ath5k_configure_filter,
->  	.set_key 	= ath5k_set_key,
->  	.get_stats 	= ath5k_get_stats,
-> +	.get_survey	= ath5k_get_survey,
->  	.conf_tx 	= NULL,
->  	.get_tsf 	= ath5k_get_tsf,
->  	.set_tsf 	= ath5k_set_tsf,
-> @@ -3250,6 +3253,22 @@ ath5k_get_stats(struct ieee80211_hw *hw,
->  
->  	return 0;
->  }
-> +
-> +static int ath5k_get_survey(struct ieee80211_hw *hw, int idx,
-> +		struct survey_info *survey)
-> +{
-> +	struct ath5k_softc *sc = hw->priv;
-> +	struct ieee80211_conf *conf = &hw->conf;
-> +
-> +	 if (idx != 0)
-> +		return -ENOENT;
-> +
-> +	survey->channel = conf->channel;
-> +	survey->filled = SURVEY_INFO_NOISE_DBM;
-> +	survey->noise = sc->ah->ah_noise_floor;
-> +
-> +	return 0;
-> +}
+> Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
+> more details.
 
-Nice, it should be very similar for ath9k BTW, one enhancement which we've
-been meanint to address but haven't had the time yet is to split noise floor
-per channel. This can be seen how its done on the legacy HAL with the code
-sprinkled with the ATH_NF_PER_CHAN ifdef.
+Antonio, did that patch also break rx on your PCI device with rt2872?
+If not this is only needed for SoC.
 
-  Luis
+Thanks,
+Helmut
+ 
+> [...]
+> 
+> > @@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> >  {
+> >  	u8 rfcsr;
+> >  	u8 bbp;
+> > +	u32 reg;
+> > +	u16 eeprom;
+> >  
+> > -	if (rt2x00_is_usb(rt2x00dev) &&
+> > -	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
+> > +	if (!rt2x00_rt(rt2x00dev, RT3070))
+> >  		return 0;
+> >  
+> > -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+> > -		if (!rt2x00_rf(rt2x00dev, RF3020) &&
+> > -		    !rt2x00_rf(rt2x00dev, RF3021) &&
+> > -		    !rt2x00_rf(rt2x00dev, RF3022))
+> > -			return 0;
+> > -	}
+> 
+> Any reason why you've removed this part? The following code was executed on
+> pci and soc devices when they had an 3020, 3021 or 3022 rf.
+> 
+> >  	/*
+> >  	 * Init RF calibration.
+> >  	 */
+> > @@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> >  	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+> >  	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+> >  
+> > -	if (rt2x00_is_usb(rt2x00dev)) {
+> > +	if (rt2x00_rt(rt2x00dev, RT3070)) {
+> >  		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+> >  		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+> >  		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+> >  		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
+> >  		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+> > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
+> > +		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
+> >  		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+> >  		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
+> >  		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+> > @@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> >  		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+> >  		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
+> >  		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+> > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+> >  		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
+> > -	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+> > -		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+> > -		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+> > -		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+> > -		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
+> > -		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+> > -		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+> > -		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+> > -		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
+> > -		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
+> > -		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+> > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
+> > -		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+> > -		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
+> > -		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
+> > -		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+> > -		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
+> > -		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
+> > -		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
+> > -		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
+> > -		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
+> > -		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
+> > -		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+> > -		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
+> > -		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
+> > -		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
+> > -		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+> > -		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
+> > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
+> > -		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
+> > -		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
+> 
+> This part is actually needed for getting rx to work on the SoC devices.
+> 
+> Should I post a patch that adds this code again and is only executed on SoC
+> devices with rf3020, 3021 and 3022?
+> 
+> Thanks,
+> Helmut
+> 
 
