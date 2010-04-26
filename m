@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:50780 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752901Ab0DWHWV (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34502 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754734Ab0DZUK1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 03:22:21 -0400
-Received: by vws14 with SMTP id 14so467014vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 00:22:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1272006625-6136-1-git-send-email-vnatarajan@atheros.com>
-References: <1272006625-6136-1-git-send-email-vnatarajan@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 23 Apr 2010 00:22:00 -0700
-Message-ID: <x2w43e72e891004230022ie6ecf227gc4a8989329c70165@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: Avoid corrupt frames being forwarded to mac80211.
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 26 Apr 2010 16:10:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libertas_tf: remove usage of deprecated noise value
+Date: Mon, 26 Apr 2010 16:09:25 -0400
+Message-Id: <1272312565-22771-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 23, 2010 at 12:10 AM, Vivek Natarajan
-<vnatarajan@atheros.com> wrote:
-> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
-> with WEP or TKIP, eventhough the received frame may be a CRC failed
-> corrupted frame.
->
-> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/libertas_tf/main.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Is this a stable fix? If so please indicate. If not, please indicate why not :)
+diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
+index 3b1db84..a6b30d7 100644
+--- a/drivers/net/wireless/libertas_tf/main.c
++++ b/drivers/net/wireless/libertas_tf/main.c
+@@ -555,7 +555,6 @@ int lbtf_rx(struct lbtf_private *priv, struct sk_buff *skb)
+ 	stats.freq = priv->cur_freq;
+ 	stats.band = IEEE80211_BAND_2GHZ;
+ 	stats.signal = prxpd->snr;
+-	stats.noise = prxpd->nf;
+ 	/* Marvell rate index has a hole at value 4 */
+ 	if (prxpd->rx_rate > 4)
+ 		--prxpd->rx_rate;
+-- 
+1.6.6.1
 
-  Luis
