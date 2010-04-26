@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50798 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932983Ab0DHTPY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44122 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753311Ab0DZJxK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:15:24 -0400
-Date: Thu, 8 Apr 2010 15:03:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Daniel Mack <daniel@caiaq.de>,
-	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net/wireless/libertas: do not call wiphy_unregister()
-	w/o wiphy_register()
-Message-ID: <20100408190358.GB2999@tuxdriver.com>
-References: <1269875658-3324-1-git-send-email-daniel@caiaq.de> <201003301149.13462.hs4233@mail.mn-solutions.de> <20100330105029.GO30801@buzzloop.caiaq.de> <201003301259.23973.hs4233@mail.mn-solutions.de> <1269968673.3019.37.camel@localhost.localdomain> <20100330172008.GD13120@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100330172008.GD13120@tuxdriver.com>
+	Mon, 26 Apr 2010 05:53:10 -0400
+Subject: Re: [RFC PATCH 1/1] mac80211: Disable cfg80211 assoc timeout
+ warning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1272275367-7532-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
+References: <1272275367-7532-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Apr 2010 11:53:06 +0200
+Message-ID: <1272275586.3619.13.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 30, 2010 at 01:20:08PM -0400, John W. Linville wrote:
-> On Tue, Mar 30, 2010 at 10:04:33AM -0700, Dan Williams wrote:
-> > On Tue, 2010-03-30 at 12:59 +0200, Holger Schurig wrote:
-> > > > I don't get your point. The patch I submitted fixes an Ooops in the
-> > > > driver, due to wrong handling of an API. What does that have to do with
-> > > > principle discussions about the frameworks in use?
-> > > 
-> > > I asked if there is a better method, and you said that you would test a better 
-> > > solution. That means that someone else should make a better solution.
-> > > 
-> > > I just pointed out that I won't be the one who creates the better solution, 
-> > > because for fundamental reasons I don't see the libertas+cfg80211 approach 
-> > > going forward. That issue has nothing to do with you or your patch, so please 
-> > > don't feel offended or confused.
-> > 
-> > Fine; just rip out the mesh code and do the vanilla cfg80211 conversion
-> > for infra & adhoc, and we'll add the mesh code back later.  I don't have
-> > time to do the cfg80211 bits, neither do the OLPC guys (AFAIK), so lets
-> > take advantage of your willingness to do this and just move the driver
-> > forward.
+On Mon, 2010-04-26 at 12:49 +0300, Saravanan Dhanabal wrote:
+> While the association response is queued and yet to be
+> processed, if the interface goes down, ieee80211_stop
+> marks work queue items as IEEE80211_WORK_ABORT. This
+> creates assoc timeout warnings which are actually caused
+> by if down. Those warnings could be avoided, since they
+> are not beacuse of association response.
 > 
-> Someone post a feature removal patch, please?
+> This patch disables assoc timeout warnings if interface is
+> not running.
 
-Ping?
+I don't think this is the right fix, we just debated exactly this
+problem too.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The right fix would be to make mac80211 kill the association work when
+deauthentication is requested. We're testing that fix right now.
+
+johannes
+
+> Signed-off-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+> ---
+>  net/wireless/mlme.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+> index 0855f0d..a3ab86c 100644
+> --- a/net/wireless/mlme.c
+> +++ b/net/wireless/mlme.c
+> @@ -337,7 +337,7 @@ void cfg80211_send_assoc_timeout(struct net_device *dev, const u8 *addr)
+>  		}
+>  	}
+>  
+> -	WARN_ON(!done);
+> +	WARN_ON(netif_running(dev) && !done);
+>  
+>  	wdev_unlock(wdev);
+>  }
+
+
