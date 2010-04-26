@@ -1,62 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:17903 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753301Ab0DGGvr (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:54380 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752390Ab0DZT7s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 02:51:47 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so272333qwh.37
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Apr 2010 23:51:46 -0700 (PDT)
+	Mon, 26 Apr 2010 15:59:48 -0400
+Received: by bwz19 with SMTP id 19so498bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 12:59:45 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
+Date: Mon, 26 Apr 2010 21:59:34 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Luis Correia <luis.f.correia@gmail.com>
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <201004261302.14682.helmut.schaa@googlemail.com> <4BD5EEFC.6050003@gmail.com>
+In-Reply-To: <4BD5EEFC.6050003@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <19388.4470.438422.209224@gargle.gargle.HOWL>
-References: <19387.1459.438884.832345@gargle.gargle.HOWL>
-	 <p2od82e647a1004060618vc8b95400hbaf1cfaecc2defd3@mail.gmail.com>
-	 <19388.4470.438422.209224@gargle.gargle.HOWL>
-Date: Wed, 7 Apr 2010 14:51:43 +0800
-Message-ID: <n2gd82e647a1004062351o1d7c68c7j79c6bf253363254b@mail.gmail.com>
-Subject: Re: [PATCH 1/5] ath9k_htc: Protect RX stream variables
-From: Ming Lei <tom.leiming@gmail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004262159.34077.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/7 Sujith <Sujith.Manoharan@atheros.com>:
-> Ming Lei wrote:
->> 2010/4/6 Sujith <Sujith.Manoharan@atheros.com>:
->> > Use a spin lock to prevent concurrent access
->> > to variables dealing with RX stream mode handling.
->>
->> which variables are needed to be protected?
->>
->> It seems hif_dev->rx_transfer_len, hif_dev->remain_skb
->> and hif_dev->rx_pkt_len are only accessed in ath9k_hif_usb_rx_stream,
->> which is only called in hard irq(urb->complete) context and now is
->> serialized strictly, so the protection is useless, isn't it?
->
-> On a SMP machine, the RX callback can run on two CPUs, in this case,
-> appropriate protection is needed between the two hard-irq handlers.
+Am Montag 26 April 2010 schrieb Gertjan van Wingerde:
+> On 04/26/10 13:02, Helmut Schaa wrote:
+> > Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
+> >> rt2x00 had preliminary support for RT3070 based devices, but the support was
+> >> incomplete.
+> >> Update the RT3070 register initialization to be similar to the latest Ralink
+> >> vendor driver.
+> >>
+> >> With this patch my rt3070 based devices start showing a sign of life.
+> > 
+> > Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
+> > more details.
+> > 
+> > [...]
+> > 
+> >> @@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> >>  {
+> >>  	u8 rfcsr;
+> >>  	u8 bbp;
+> >> +	u32 reg;
+> >> +	u16 eeprom;
+> >>  
+> >> -	if (rt2x00_is_usb(rt2x00dev) &&
+> >> -	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
+> >> +	if (!rt2x00_rt(rt2x00dev, RT3070))
+> >>  		return 0;
+> >>  
+> >> -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+> >> -		if (!rt2x00_rf(rt2x00dev, RF3020) &&
+> >> -		    !rt2x00_rf(rt2x00dev, RF3021) &&
+> >> -		    !rt2x00_rf(rt2x00dev, RF3022))
+> >> -			return 0;
+> >> -	}
+> > 
+> > Any reason why you've removed this part? The following code was executed on
+> > pci and soc devices when they had an 3020, 3021 or 3022 rf.
+> 
+> I removed it because the Ralink driver only checks for RT chipset type, not for
+> the RF chipset type. Looks like that in the conversion the unmentioned RT2872
+> got lost.
+> 
+> > 
+> >>  	/*
+> >>  	 * Init RF calibration.
+> >>  	 */
+> >> @@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> >>  	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+> >>  	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+> >>  
+> >> -	if (rt2x00_is_usb(rt2x00dev)) {
+> >> +	if (rt2x00_rt(rt2x00dev, RT3070)) {
+> >>  		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
+> >> +		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+> >> @@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> >>  		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+> >>  		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
+> >> -	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+> >> -		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
+> >> -		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
+> > 
+> > This part is actually needed for getting rx to work on the SoC devices.
+> 
+> Hmm, interesting, as I don't know where this code actually came from. It isn't needed for
+> PCI devices in general (at least not the PCI devices I've checked), so it may be specific to SoC.
+> 
+> > 
+> > Should I post a patch that adds this code again and is only executed on SoC
+> > devices with rf3020, 3021 and 3022?
+> > 
+> 
+> OK. I have just checked the two RT2872 based devices I have (one PCI one and one USB one),
+> and both of them act very strangely.
 
-I am not sure if the same irq handler can run concurrently on different CPUs.
-Even though it is, ehci/uhci handler have done such protection, so it
-is not necessary to add such protection in the complete handler of usb
-interface driver.
+Strangely ;) ? The SoC device was basically able to transmit frames but
+could't receive at all (at least that was my impression). Do you have a
+different issue?
 
->
->> > Currently, no protection is implemented - which
->> > causes problems in RX.
->>
->> which problems? Could you describe them in detail?
->
-> The RX stream position-hooks would get mangled up if two
-> IRQ handlers access them without any kind of protection.
-> This corrupts the stream data - causing data loss.
->
-> Sujith
->
+> I'll check against the Ralink SoC driver code that I've got as to how the initialization should actually
+> be.
 
+Ok.
 
-
--- 
-Lei Ming
+Helmut
