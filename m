@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:55172 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932222Ab0DPTyN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 15:54:13 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 16 Apr 2010 12:53:52 -0700
-Message-ID: <n2q43e72e891004161253wbb9afe61y539206f010e91a78@mail.gmail.com>
-Subject: Power consumption on 802.11 / ASPM / device measurements
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org, yanmin.zhang@intel.com,
-	shaohua.li@intel.com, Sameer Nanda <snanda@google.com>,
-	Jonathan May <Jonathan.May@atheros.com>,
-	David Quan <David.Quan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:43540 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753933Ab0D0UXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Apr 2010 16:23:08 -0400
+Subject: Re: [Fwd: 2.6.34-rc4/5: iwlagn unusable until reload]
+From: reinette chatre <reinette.chatre@intel.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "Zhao, Shanyu" <shanyu.zhao@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <1272399067.4381.10749.camel@rchatre-DESK>
+References: <1272399067.4381.10749.camel@rchatre-DESK>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Apr 2010 13:23:07 -0700
+Message-ID: <1272399787.4381.10768.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've been accumulating a few power consumption related documents on
-the wireless wiki for a while now. One which I saw was missing was for
-actual power consumption and review of new PCI-E features which should
-be taken into consideration when debugging power consumption or
-reviewing it. ASPM is something that I can say I found little to no
-documentation for when looking into it so I've done a brain dump of
-what I recall from it, the code review of it, and some e-mail
-exchanges I've had with Jonathan May @ Atheros.
+I see now that a new kernel.org bug
+(https://bugzilla.kernel.org/show_bug.cgi?id=15862 ) has been created
+for this issue. We'll track it there.
 
-I've stashed together all the power consumption docs at:
+Reinette
 
-http://wireless.kernel.org/en/users/Documentation/Power-consumption
+On Tue, 2010-04-27 at 13:11 -0700, reinette chatre wrote:
+> Nico,
+> 
+> The wireless folks don't really hang out on lkml. I'm forwarding your
+> message to the linux-wireless mailing list.
+> 
+> Reinette
+> 
+> 
+> -------- Forwarded Message --------
+> > From: Nico Schottelius <nico-linux-20100427@schottelius.org>
+> > To: LKML <linux-kernel@vger.kernel.org>
+> > Subject: 2.6.34-rc4/5: iwlagn unusable until reload
+> > Date: Tue, 27 Apr 2010 00:49:34 -0700
+> > 
+> > Hello again!
+> > 
+> > If I try to use iwlagn on the X201 with
+> > 
+> > 02:00.0 Network controller: Intel Corporation WiFi Link 6000 Series (rev 35)
+> > 
+> > and 2.6.34-rc5-00211-gb91ce4d, I get a lot of error and no connection,
+> > until I
+> > 
+> > [root@kr ~]# rmmod iwlagn
+> > [root@kr ~]# modprobe iwlagn
+> > 
+> > Attached dmesg before & after.
+> > 
+> > Cheers,
+> > 
+> > Nico
+> > 
+> 
 
-You'll see there some ASPM docs now and some ath9k specific power
-consumption metrics/ASPM details. Please review and enhance as you see
-fit.
 
-Yanmin, Shaohua, I see CONFIG_PCIEASPM still marked as experimental,
-I'm curious if this is still really that experimental and if there are
-plans for it go out of experimental. Also I am little puzzled with
-some of the aspm.c code, I see we fill the pci device struct with
-capability stuff via pcie_aspm_cap_init() but I also see ASPM
-capability stuff exposed on kernels without CONFIG_PCIEASPM (albeit I
-see it always disabled on my system at home), so are we filling the
-capability elsewhere? I think there are some boxes without this kernel
-config enabled and where ASPM capability info is exposed and does show
-up as enabled, could be wrong.
-
-Also curious -- how often are BIOSes buggy enough for ASPM to get
-disabled by mistake on the modern devices? And for systems that have
-no Bios (*cough* ChromeOS) how is this handled?
-
- Luis
