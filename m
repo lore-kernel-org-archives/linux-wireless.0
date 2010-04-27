@@ -1,192 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43239 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756706Ab0DOU2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 16:28:20 -0400
-Subject: [PATCH 1/2] libertas: consolidate SDIO firmware wait code
-From: Dan Williams <dcbw@redhat.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Alagu Sankar <alagusankar@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Apr 2010 13:27:44 -0700
-Message-ID: <1271363264.10765.3.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48275 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753766Ab0D0TPL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Apr 2010 15:15:11 -0400
+Date: Tue, 27 Apr 2010 15:13:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: rt2800lib: Fix rx path on SoC devices
+Message-ID: <20100427191349.GB32012@tuxdriver.com>
+References: <201004261348.45044.helmut.schaa@googlemail.com>
+ <201004270828.17303.helmut.schaa@googlemail.com>
+ <4BD7270B.6050000@gmail.com>
+ <201004272112.26905.helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201004272112.26905.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Consolidate a bunch of C&P code that waits for the firmware to be ready.
+On Tue, Apr 27, 2010 at 09:12:26PM +0200, Helmut Schaa wrote:
+> Am Dienstag 27 April 2010 schrieb Gertjan van Wingerde:
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+> John, would you like me to send a followup patch or would you like to
+> revert that one and apply a fixed one?
 
----
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 7a73f62..dcd14da 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -312,12 +312,28 @@ out:
- 	return ret;
- }
- 
-+static int if_sdio_wait_status(struct if_sdio_card *card, const u8 condition)
-+{
-+	u8 status;
-+	unsigned long timeout;
-+	int ret = 0;
-+
-+	timeout = jiffies + HZ;
-+	while (1) {
-+		status = sdio_readb(card->func, IF_SDIO_STATUS, &ret);
-+		if (ret || (status & condition))
-+			break;
-+		if (time_after(jiffies, timeout))
-+			return -ETIMEDOUT;
-+		mdelay(1);
-+	}
-+	return ret;
-+}
-+
- static int if_sdio_card_to_host(struct if_sdio_card *card)
- {
- 	int ret;
--	u8 status;
- 	u16 size, type, chunk;
--	unsigned long timeout;
- 
- 	lbs_deb_enter(LBS_DEB_SDIO);
- 
-@@ -332,19 +348,9 @@ static int if_sdio_card_to_host(struct if_sdio_card *card)
- 		goto out;
- 	}
- 
--	timeout = jiffies + HZ;
--	while (1) {
--		status = sdio_readb(card->func, IF_SDIO_STATUS, &ret);
--		if (ret)
--			goto out;
--		if (status & IF_SDIO_IO_RDY)
--			break;
--		if (time_after(jiffies, timeout)) {
--			ret = -ETIMEDOUT;
--			goto out;
--		}
--		mdelay(1);
--	}
-+	ret = if_sdio_wait_status(card, IF_SDIO_IO_RDY);
-+	if (ret)
-+		goto out;
- 
- 	/*
- 	 * The transfer must be in one transaction or the firmware
-@@ -411,8 +417,6 @@ static void if_sdio_host_to_card_worker(struct work_struct *work)
- {
- 	struct if_sdio_card *card;
- 	struct if_sdio_packet *packet;
--	unsigned long timeout;
--	u8 status;
- 	int ret;
- 	unsigned long flags;
- 
-@@ -432,25 +436,15 @@ static void if_sdio_host_to_card_worker(struct work_struct *work)
- 
- 		sdio_claim_host(card->func);
- 
--		timeout = jiffies + HZ;
--		while (1) {
--			status = sdio_readb(card->func, IF_SDIO_STATUS, &ret);
--			if (ret)
--				goto release;
--			if (status & IF_SDIO_IO_RDY)
--				break;
--			if (time_after(jiffies, timeout)) {
--				ret = -ETIMEDOUT;
--				goto release;
--			}
--			mdelay(1);
-+		ret = if_sdio_wait_status(card, IF_SDIO_IO_RDY);
-+		if (ret == 0) {
-+			ret = sdio_writesb(card->func, card->ioport,
-+					   packet->buffer, packet->nb);
- 		}
- 
--		ret = sdio_writesb(card->func, card->ioport,
--				packet->buffer, packet->nb);
- 		if (ret)
--			goto release;
--release:
-+			lbs_pr_err("error %d sending packet to firmware\n", ret);
-+
- 		sdio_release_host(card->func);
- 
- 		kfree(packet);
-@@ -463,10 +457,11 @@ release:
- /* Firmware                                                         */
- /********************************************************************/
- 
-+#define FW_DL_READY_STATUS (IF_SDIO_IO_RDY | IF_SDIO_DL_RDY)
-+
- static int if_sdio_prog_helper(struct if_sdio_card *card)
- {
- 	int ret;
--	u8 status;
- 	const struct firmware *fw;
- 	unsigned long timeout;
- 	u8 *chunk_buffer;
-@@ -498,20 +493,9 @@ static int if_sdio_prog_helper(struct if_sdio_card *card)
- 	size = fw->size;
- 
- 	while (size) {
--		timeout = jiffies + HZ;
--		while (1) {
--			status = sdio_readb(card->func, IF_SDIO_STATUS, &ret);
--			if (ret)
--				goto release;
--			if ((status & IF_SDIO_IO_RDY) &&
--					(status & IF_SDIO_DL_RDY))
--				break;
--			if (time_after(jiffies, timeout)) {
--				ret = -ETIMEDOUT;
--				goto release;
--			}
--			mdelay(1);
--		}
-+		ret = if_sdio_wait_status(card, FW_DL_READY_STATUS);
-+		if (ret)
-+			goto release;
- 
- 		chunk_size = min(size, (size_t)60);
- 
-@@ -581,7 +565,6 @@ out:
- static int if_sdio_prog_real(struct if_sdio_card *card)
- {
- 	int ret;
--	u8 status;
- 	const struct firmware *fw;
- 	unsigned long timeout;
- 	u8 *chunk_buffer;
-@@ -613,20 +596,9 @@ static int if_sdio_prog_real(struct if_sdio_card *card)
- 	size = fw->size;
- 
- 	while (size) {
--		timeout = jiffies + HZ;
--		while (1) {
--			status = sdio_readb(card->func, IF_SDIO_STATUS, &ret);
--			if (ret)
--				goto release;
--			if ((status & IF_SDIO_IO_RDY) &&
--					(status & IF_SDIO_DL_RDY))
--				break;
--			if (time_after(jiffies, timeout)) {
--				ret = -ETIMEDOUT;
--				goto release;
--			}
--			mdelay(1);
--		}
-+		ret = if_sdio_wait_status(card, FW_DL_READY_STATUS);
-+		if (ret)
-+			goto release;
- 
- 		req_size = sdio_readb(card->func, IF_SDIO_RD_BASE, &ret);
- 		if (ret)
+Follow-up patch, please...thanks!
 
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
