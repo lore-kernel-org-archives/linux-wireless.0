@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:51895 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754551Ab0DBUjL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Apr 2010 16:39:11 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/3] iwlwifi fixes for 2.6.34
-Date: Fri,  2 Apr 2010 13:39:05 -0700
-Message-Id: <1270240748-12865-1-git-send-email-reinette.chatre@intel.com>
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:3092 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754900Ab0D0Tlw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Apr 2010 15:41:52 -0400
+Message-ID: <4BD73DFE.3010502@gmail.com>
+Date: Tue, 27 Apr 2010 21:41:50 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: rt2800lib: Fix rx path on SoC devices
+References: <201004261348.45044.helmut.schaa@googlemail.com> <4BD609C9.1080005@gmail.com> <201004270828.17303.helmut.schaa@googlemail.com> <4BD7270B.6050000@gmail.com> <20100427181551.GA32012@tuxdriver.com>
+In-Reply-To: <20100427181551.GA32012@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include three fixes. Included is a fix for some DMA issues discovered
-while running with CONFIG_DMA_API_DEBUG where some memory was not unmapped
-when driver is unloaded. We also include a fix for a potential BUG_ON in
-rate scaling. The third fix eliminates the need for the driver to allocate
-a large memory area on resume, which has been causing some memory
-allocation issues.
+On 04/27/10 20:15, John W. Linville wrote:
+> On Tue, Apr 27, 2010 at 08:03:55PM +0200, Gertjan van Wingerde wrote:
+> 
+>> P.S. It seems that John already applied this patch without even Ivo or me Acking it, so I guess an
+>> incremental patch would be best now.
+> 
+> Yes, sorry if that offends -- "fix rx path" makes me take things seriously. :-)
+> 
 
-These patches are also available from wireless-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+Don't worry about it. No offense was taken. It was more a surprise to see it been applied before
+I even had to chance to review it, but the patch in itself is correct, it just needs a bit polishing.
 
-Shanyu Zhao (1):
-  iwlwifi: use consistent table for tx data collect
-
-Zhu Yi (2):
-  iwlwifi: fix DMA allocation warnings
-  iwlwifi: avoid Tx queue memory allocation in interface down
-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   55 +++++++--------
- drivers/net/wireless/iwlwifi/iwl-core.c   |   11 ++-
- drivers/net/wireless/iwlwifi/iwl-core.h   |    5 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c     |  107 +++++++++++++++++++++++++----
- 4 files changed, 129 insertions(+), 49 deletions(-)
-
+---
+Gertjan.
