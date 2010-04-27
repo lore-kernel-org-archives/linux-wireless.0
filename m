@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39320 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753190Ab0DZTEl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 15:04:41 -0400
+Received: from mail.atheros.com ([12.36.123.2]:52954 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757316Ab0D0WRE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Apr 2010 18:17:04 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Apr 2010 15:17:04 -0700
+Date: Tue, 27 Apr 2010 15:17:03 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 00/13] ath9k/ath9k_hw: AR9003 fixes for April
-Date: Mon, 26 Apr 2010 15:04:28 -0400
-Message-Id: <1272308681-32396-1-git-send-email-lrodriguez@atheros.com>
+To: Benoit Papillault <benoit.papillault@free.fr>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"ath9k-devel@lists.ath5k.org" <ath9k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Added get_survey callback in order to get
+ channel noise
+Message-ID: <20100427221703.GJ9046@tux>
+References: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, this series contains a few fixes we've made to AR9003 over
-the last few weeks. We've tested them considerably. Also included
-is a change for AR9280 2.0 to enable fast PLL clock.
+On Tue, Apr 27, 2010 at 03:08:24PM -0700, Benoit Papillault wrote:
+> 
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 
-Happy Monday.
+Looks good, thanks for this work.
 
-Felix Fietkau (10):
-  ath9k_hw: update initvals for AR9003
-  ath9k_hw: fix pll clock setting for 5ghz on AR9003
-  ath9k_hw: fix typo in the AR9003 EEPROM data structure definition
-  ath9k_hw: update EEPROM data structure for AR9280
-  ath9k_hw: fix fast clock handling for 5GHz channels
-  ath9k: wake queue after processing edma rx frames
-  ath9k_hw: use the configured power limit for AR9003
-  ath9k_hw: Fix typos in tx rate power level parsing for AR9003
-  ath9k_hw: Fix endian bug in an AR9003 EEPROM field
-  ath9k_hw: fix noisefloor timeout handling on AR9003
-
-Luis R. Rodriguez (2):
-  ath9k_hw: disable TX IQ calibration for AR9003
-  ath9k_hw: Fix TX interrupt mitigation settings
-
-Vasanthakumar Thiagarajan (1):
-  ath9k_hw: Fix usec to hw clock conversion in 5Ghz for ar9003
-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c      |    5 +-
- drivers/net/wireless/ath/ath9k/ar9002_phy.c      |   16 +-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c    |    3 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |    8 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h   |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_initvals.h |  265 +++++++++++-----------
- drivers/net/wireless/ath/ath9k/ar9003_mac.c      |    3 +
- drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   16 +-
- drivers/net/wireless/ath/ath9k/eeprom.h          |    3 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c      |    2 +
- drivers/net/wireless/ath/ath9k/hw.c              |   24 ++-
- drivers/net/wireless/ath/ath9k/hw.h              |    8 +-
- drivers/net/wireless/ath/ath9k/mac.c             |   10 +-
- drivers/net/wireless/ath/ath9k/xmit.c            |    2 +
- 14 files changed, 189 insertions(+), 178 deletions(-)
-
+  Luis
