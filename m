@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32701 "EHLO mga09.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:46443 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752604Ab0DZQmT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Apr 2010 12:42:19 -0400
-Subject: Re: iwl3945: Error sending REPLY_{RXON|SCAN_CMD|TX_PWR_TABLE_CMD}
- time out after 500ms
-From: reinette chatre <reinette.chatre@intel.com>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-In-Reply-To: <k2i2d0a357f1004260931l98ce66d2ia3422958779c64d7@mail.gmail.com>
-References: <n2g2d0a357f1004170705j6d0750fdkc4784f86aab51c97@mail.gmail.com>
-	 <1271782442.14052.19698.camel@rchatre-DESK>
-	 <s2j2d0a357f1004210006gc964e5edl672ec5406b892a9@mail.gmail.com>
-	 <1271883056.4381.1743.camel@rchatre-DESK>
-	 <m2s2d0a357f1004260120z30d8b3a3i2792cfa4bc390dcc@mail.gmail.com>
-	 <1272298097.4381.8765.camel@rchatre-DESK>
-	 <k2i2d0a357f1004260931l98ce66d2ia3422958779c64d7@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Apr 2010 09:42:18 -0700
-Message-ID: <1272300138.4381.8815.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1752005Ab0D0VF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Apr 2010 17:05:26 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Apr 2010 14:05:26 -0700
+Date: Tue, 27 Apr 2010 14:05:24 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Michael Sprecher <sprecher.m@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] wireless: ath9k: Fix most coding style issues in ath9k
+ This patch fixed up almost all coding style issues in the ath9k driver
+ found 	by the ceckpatch.pl tool. Signed-off-by: Michael Sprecher
+ <sprecher.m@gmail.com>
+Message-ID: <20100427210524.GD9046@tux>
+References: <1268161528-24028-1-git-send-email-sprecher.m@gmail.com>
+ <43e72e891003091133h31bfb1c5sceb4d3c9258792e6@mail.gmail.com>
+ <20100408184106.GA2999@tuxdriver.com>
+ <t2o43e72e891004081212j3af7a42uce345ca3ae3bb816@mail.gmail.com>
+ <h2xf42143521004271314rb3a000arba8f9df5846e71ab@mail.gmail.com>
+ <j2of42143521004271315ice41b0edtabf0ed4914342d41@mail.gmail.com>
+ <s2yf42143521004271321qe6522fdaia42f335575d4026@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <s2yf42143521004271321qe6522fdaia42f335575d4026@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-04-26 at 09:31 -0700, Sedat Dilek wrote:
-> I tested both .34-git4 kernels half a day and this was the only
-> problem I saw in the my system-logs.
+On Tue, Apr 27, 2010 at 01:21:21PM -0700, Michael Sprecher wrote:
+> Yes, i'm still intrested in fixing your coding style issues ;)
+> If it's now safe to check it again, i will find some time to look at it this week.
+> Michael
 
-This may indicate a problem in your environment since it just says that
-the station cannot communicate with the AP anymore. This occurs very
-often in various environments. This does not indicate a bug.
+Go for it, after John merges our latest batch you should be good to go
 
-> BTW, the WLAN connection did not crash as described in the initial
-> bug-report (logs see [1]).
-> At that time, I had to coldstart my machine - this was not the case
-> last weekend while testing.
-
-Either this issue is very hard to reproduce or it has been addressed
-with a change introduced between the kernels you are testing. Can you
-reproduce the issue when going back to earlier kernels? If so, then this
-may be a candidate for a bisect for us to find out what fixed it. 
-
-Reinette
-
+  Luis
