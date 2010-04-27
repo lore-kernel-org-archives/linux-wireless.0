@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46829 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933249Ab0DHT1p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 039/102] ath9k: Use abstraction to get link pointer
-Date: Thu,  8 Apr 2010 15:26:35 -0400
-Message-Id: <1270754858-26266-40-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from lo.gmane.org ([80.91.229.12]:54320 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751001Ab0D0Kz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Apr 2010 06:55:29 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1O6iRr-0004Op-PD
+	for linux-wireless@vger.kernel.org; Tue, 27 Apr 2010 12:55:27 +0200
+Received: from proxyext.iabg.de ([proxyext.iabg.de])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Apr 2010 12:55:27 +0200
+Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Apr 2010 12:55:27 +0200
+To: linux-wireless@vger.kernel.org
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [PATCH] ath9k: remove usage of deprecated noise value
+Date: Tue, 27 Apr 2010 10:55:19 +0000 (UTC)
+Message-ID: <loom.20100427T125258-288@post.gmane.org>
+References: <1272312561-22648-1-git-send-email-linville@tuxdriver.com> <4BD682AF.6030206@free.fr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Benoit PAPILLAULT <benoit.papillault@...> writes:
+> Before removing noise reporting and all related code, wouln't it be 
+> better to have a replacement API? 
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 4f12de9..16f7a3d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1242,7 +1242,7 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 			  txq->axq_qnum, txq->axq_link,
- 			  ito64(bf->bf_daddr), bf->bf_desc);
- 	}
--	txq->axq_link = &(bf->bf_lastbf->bf_desc->ds_link);
-+	ath9k_hw_get_desc_link(ah, bf->bf_lastbf->bf_desc, &txq->axq_link);
- 	ath9k_hw_txstart(ah, txq->axq_qnum);
- }
- 
--- 
-1.6.3.3
+I thought this is what NL80211_CMD_GET_SURVEY is supposed to do...
+See
+http://osdir.com/ml/linux-wireless/2009-11/msg00977.html
 
