@@ -1,465 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49708 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431Ab0DGOso (ORCPT
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:4344 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754082Ab0D0SD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Apr 2010 10:48:44 -0400
-Subject: [PATCH] mac80211: enhance tracing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Apr 2010 16:48:40 +0200
-Message-ID: <1270651720.3858.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 27 Apr 2010 14:03:58 -0400
+Message-ID: <4BD7270B.6050000@gmail.com>
+Date: Tue, 27 Apr 2010 20:03:55 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>,
+	John Linville <linville@tuxdriver.com>
+CC: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: rt2800lib: Fix rx path on SoC devices
+References: <201004261348.45044.helmut.schaa@googlemail.com> <4BD609C9.1080005@gmail.com> <201004270828.17303.helmut.schaa@googlemail.com>
+In-Reply-To: <201004270828.17303.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enhance tracing by adding tracing for a variety of
-callbacks that the drivers call, and also for
-internal calls (currently limited to queue status).
-This can aid debugging what is going on in mac80211
-in interaction with drivers, since we can now see
-what drivers call and not just what mac80211 calls
-in the driver.
+On 04/27/10 08:28, Helmut Schaa wrote:
+> Am Montag 26 April 2010 schrieb Gertjan van Wingerde:
+>> On 04/26/10 13:48, Helmut Schaa wrote:
+>>> Restore the rfcsr initialization for RT305x SoC devices which was removed
+>>> by "rt2x00: Finish rt3070 support in rt2800 register initialization.".
+>>>
+>>> This fixes the rx path on SoC devices.
+>>>
+>>> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>>> ---
+>>>  drivers/net/wireless/rt2x00/rt2800lib.c |   34 ++++++++++++++++++++++++++++++-
+>>>  1 files changed, 33 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> index 2648f31..1358d9a 100644
+>>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> @@ -1703,7 +1703,8 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>>>  	if (!rt2x00_rt(rt2x00dev, RT3070) &&
+>>>  	    !rt2x00_rt(rt2x00dev, RT3071) &&
+>>>  	    !rt2x00_rt(rt2x00dev, RT3090) &&
+>>> -	    !rt2x00_rt(rt2x00dev, RT3390))
+>>> +	    !rt2x00_rt(rt2x00dev, RT3390) &&
+>>> +	    !(rt2x00_is_soc(rt2x00dev) && rt2x00_rt(rt2x00dev, RT2872)))
+>>>  		return 0;
+>>
+>> As indicated in the separate email, we should also check for the presence of an RF3020, RF3021
+>> or RF3022 RF chipset for the RT2872 case (maybe this should be more generic, because I'm sure
+>> this will also hold for the other RT chipsets).
+> 
+> Ok, do you mean we should only check for rfXXX instead of checking for SoC
+> and rt2872? Or should we check for SoC + rfXXX?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+I think that at the moment we should be looking at checking for SoC, RT2872 and RFxxxx.
+To be honest I don't completely know what these RF CSR values represent, we can only find them
+in a SoC Ralink driver, so FWIW it may simply be good settings for an AP (the main use case for
+a SoC device) but not so good for an STA.
+
+So properly applying this only to SoC devices with the right RT chipset and right RF chipset
+seems to be the proper thing here.
+
+> 
+>>>  	/*
+>>> @@ -1771,6 +1772,37 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>>>  		rt2800_rfcsr_write(rt2x00dev, 29, 0x8f);
+>>>  		rt2800_rfcsr_write(rt2x00dev, 30, 0x20);
+>>>  		rt2800_rfcsr_write(rt2x00dev, 31, 0x0f);
+>>> +	} else if (rt2x00_rt(rt2x00dev, RT2872)) {
+>>> +		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
+>>> +		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
+>>>  	}
+>>>  
+>>>  	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
+>>
+>> Here we need 2 additional rfcsr_writes, for RF CSR 30 and RF CSR 31, both set to value 0x00.
+>> Also, we can add an "return 0" at the end of the sequence, as nothing more needs to be done for RT2872.
+> 
+> Ok, thanks for looking that up.
+
+And please add the rt2x00_is_soc(rt2x00dev) test to that hunk as well. It makes it easier to see that
+that piece is for SoC RT2872 devices only.
+
+P.S. It seems that John already applied this patch without even Ivo or me Acking it, so I guess an
+incremental patch would be best now.
+
 ---
- net/mac80211/Kconfig        |    8 -
- net/mac80211/agg-tx.c       |    8 +
- net/mac80211/driver-trace.h |  275 ++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/main.c         |    2 
- net/mac80211/mlme.c         |    6 
- net/mac80211/scan.c         |    2 
- net/mac80211/sta_info.c     |    2 
- net/mac80211/util.c         |    4 
- 8 files changed, 303 insertions(+), 4 deletions(-)
-
---- wireless-testing.orig/net/mac80211/Kconfig	2010-04-05 15:58:47.000000000 +0200
-+++ wireless-testing/net/mac80211/Kconfig	2010-04-07 16:28:16.000000000 +0200
-@@ -221,8 +221,8 @@ config MAC80211_DRIVER_API_TRACER
- 	depends on EVENT_TRACING
- 	help
- 	  Say Y here to make mac80211 register with the ftrace
--	  framework for the driver API -- you can see which
--	  driver methods it is calling then by looking at the
--	  trace.
-+	  framework for the driver API -- you can then see which
-+	  driver methods it is calling and which API functions
-+	  drivers are calling by looking at the trace.
- 
--	  If unsure, say N.
-+	  If unsure, say Y.
---- wireless-testing.orig/net/mac80211/agg-tx.c	2010-04-06 09:09:49.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-tx.c	2010-04-07 16:30:01.000000000 +0200
-@@ -214,6 +214,8 @@ int ieee80211_start_tx_ba_session(struct
- 	int ret = 0;
- 	u16 start_seq_num;
- 
-+	trace_api_start_tx_ba_session(pubsta, tid);
-+
- 	if (WARN_ON(!local->ops->ampdu_action))
- 		return -EINVAL;
- 
-@@ -440,6 +442,8 @@ void ieee80211_start_tx_ba_cb(struct iee
- 	struct sta_info *sta;
- 	u8 *state;
- 
-+	trace_api_start_tx_ba_cb(sdata, ra, tid);
-+
- 	if (tid >= STA_TID_NUM) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "Bad TID value: tid = %d (>= %d)\n",
-@@ -541,6 +545,8 @@ int ieee80211_stop_tx_ba_session(struct
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 
-+	trace_api_stop_tx_ba_session(pubsta, tid, initiator);
-+
- 	if (!local->ops->ampdu_action)
- 		return -EINVAL;
- 
-@@ -558,6 +564,8 @@ void ieee80211_stop_tx_ba_cb(struct ieee
- 	struct sta_info *sta;
- 	u8 *state;
- 
-+	trace_api_stop_tx_ba_cb(sdata, ra, tid);
-+
- 	if (tid >= STA_TID_NUM) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "Bad TID value: tid = %d (>= %d)\n",
---- wireless-testing.orig/net/mac80211/driver-trace.h	2010-04-05 15:58:47.000000000 +0200
-+++ wireless-testing/net/mac80211/driver-trace.h	2010-04-07 16:47:46.000000000 +0200
-@@ -32,6 +32,10 @@ static inline void trace_ ## name(proto)
- #define VIF_PR_FMT	" vif:%s(%d)"
- #define VIF_PR_ARG	__get_str(vif_name), __entry->vif_type
- 
-+/*
-+ * Tracing for driver callbacks.
-+ */
-+
- TRACE_EVENT(drv_start,
- 	TP_PROTO(struct ieee80211_local *local, int ret),
- 
-@@ -766,6 +770,277 @@ TRACE_EVENT(drv_flush,
- 		LOCAL_PR_ARG, __entry->drop
- 	)
- );
-+
-+/*
-+ * Tracing for API calls that drivers call.
-+ */
-+
-+TRACE_EVENT(api_start_tx_ba_session,
-+	TP_PROTO(struct ieee80211_sta *sta, u16 tid),
-+
-+	TP_ARGS(sta, tid),
-+
-+	TP_STRUCT__entry(
-+		STA_ENTRY
-+		__field(u16, tid)
-+	),
-+
-+	TP_fast_assign(
-+		STA_ASSIGN;
-+		__entry->tid = tid;
-+	),
-+
-+	TP_printk(
-+		STA_PR_FMT " tid:%d",
-+		STA_PR_ARG, __entry->tid
-+	)
-+);
-+
-+TRACE_EVENT(api_start_tx_ba_cb,
-+	TP_PROTO(struct ieee80211_sub_if_data *sdata, const u8 *ra, u16 tid),
-+
-+	TP_ARGS(sdata, ra, tid),
-+
-+	TP_STRUCT__entry(
-+		VIF_ENTRY
-+		__array(u8, ra, ETH_ALEN)
-+		__field(u16, tid)
-+	),
-+
-+	TP_fast_assign(
-+		VIF_ASSIGN;
-+		memcpy(__entry->ra, ra, ETH_ALEN);
-+		__entry->tid = tid;
-+	),
-+
-+	TP_printk(
-+		VIF_PR_FMT " ra:%pM tid:%d",
-+		VIF_PR_ARG, __entry->ra, __entry->tid
-+	)
-+);
-+
-+TRACE_EVENT(api_stop_tx_ba_session,
-+	TP_PROTO(struct ieee80211_sta *sta, u16 tid, u16 initiator),
-+
-+	TP_ARGS(sta, tid, initiator),
-+
-+	TP_STRUCT__entry(
-+		STA_ENTRY
-+		__field(u16, tid)
-+		__field(u16, initiator)
-+	),
-+
-+	TP_fast_assign(
-+		STA_ASSIGN;
-+		__entry->tid = tid;
-+		__entry->initiator = initiator;
-+	),
-+
-+	TP_printk(
-+		STA_PR_FMT " tid:%d initiator:%d",
-+		STA_PR_ARG, __entry->tid, __entry->initiator
-+	)
-+);
-+
-+TRACE_EVENT(api_stop_tx_ba_cb,
-+	TP_PROTO(struct ieee80211_sub_if_data *sdata, const u8 *ra, u16 tid),
-+
-+	TP_ARGS(sdata, ra, tid),
-+
-+	TP_STRUCT__entry(
-+		VIF_ENTRY
-+		__array(u8, ra, ETH_ALEN)
-+		__field(u16, tid)
-+	),
-+
-+	TP_fast_assign(
-+		VIF_ASSIGN;
-+		memcpy(__entry->ra, ra, ETH_ALEN);
-+		__entry->tid = tid;
-+	),
-+
-+	TP_printk(
-+		VIF_PR_FMT " ra:%pM tid:%d",
-+		VIF_PR_ARG, __entry->ra, __entry->tid
-+	)
-+);
-+
-+TRACE_EVENT(api_restart_hw,
-+	TP_PROTO(struct ieee80211_local *local),
-+
-+	TP_ARGS(local),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT,
-+		LOCAL_PR_ARG
-+	)
-+);
-+
-+TRACE_EVENT(api_beacon_loss,
-+	TP_PROTO(struct ieee80211_sub_if_data *sdata),
-+
-+	TP_ARGS(sdata),
-+
-+	TP_STRUCT__entry(
-+		VIF_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		VIF_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		VIF_PR_FMT,
-+		VIF_PR_ARG
-+	)
-+);
-+
-+TRACE_EVENT(api_connection_loss,
-+	TP_PROTO(struct ieee80211_sub_if_data *sdata),
-+
-+	TP_ARGS(sdata),
-+
-+	TP_STRUCT__entry(
-+		VIF_ENTRY
-+	),
-+
-+	TP_fast_assign(
-+		VIF_ASSIGN;
-+	),
-+
-+	TP_printk(
-+		VIF_PR_FMT,
-+		VIF_PR_ARG
-+	)
-+);
-+
-+TRACE_EVENT(api_cqm_rssi_notify,
-+	TP_PROTO(struct ieee80211_sub_if_data *sdata,
-+		 enum nl80211_cqm_rssi_threshold_event rssi_event),
-+
-+	TP_ARGS(sdata, rssi_event),
-+
-+	TP_STRUCT__entry(
-+		VIF_ENTRY
-+		__field(u32, rssi_event)
-+	),
-+
-+	TP_fast_assign(
-+		VIF_ASSIGN;
-+		__entry->rssi_event = rssi_event;
-+	),
-+
-+	TP_printk(
-+		VIF_PR_FMT " event:%d",
-+		VIF_PR_ARG, __entry->rssi_event
-+	)
-+);
-+
-+TRACE_EVENT(api_scan_completed,
-+	TP_PROTO(struct ieee80211_local *local, bool aborted),
-+
-+	TP_ARGS(local, aborted),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(bool, aborted)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->aborted = aborted;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " aborted:%d",
-+		LOCAL_PR_ARG, __entry->aborted
-+	)
-+);
-+
-+TRACE_EVENT(api_sta_block_awake,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sta *sta, bool block),
-+
-+	TP_ARGS(local, sta, block),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		STA_ENTRY
-+		__field(bool, block)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->block = block;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT STA_PR_FMT " block:%d",
-+		LOCAL_PR_ARG, STA_PR_FMT, __entry->block
-+	)
-+);
-+
-+/*
-+ * Tracing for internal functions
-+ * (which may also be called in response to driver calls)
-+ */
-+
-+TRACE_EVENT(wake_queue,
-+	TP_PROTO(struct ieee80211_local *local, u16 queue,
-+		 enum queue_stop_reason reason),
-+
-+	TP_ARGS(local, queue, reason),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(u16, queue)
-+		__field(u32, reason)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->queue = queue;
-+		__entry->reason = reason;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " queue:%d, reason:%d",
-+		LOCAL_PR_ARG, __entry->queue, __entry->reason
-+	)
-+);
-+
-+TRACE_EVENT(stop_queue,
-+	TP_PROTO(struct ieee80211_local *local, u16 queue,
-+		 enum queue_stop_reason reason),
-+
-+	TP_ARGS(local, queue, reason),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(u16, queue)
-+		__field(u32, reason)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->queue = queue;
-+		__entry->reason = reason;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " queue:%d, reason:%d",
-+		LOCAL_PR_ARG, __entry->queue, __entry->reason
-+	)
-+);
- #endif /* !__MAC80211_DRIVER_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
---- wireless-testing.orig/net/mac80211/main.c	2010-04-07 16:31:52.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2010-04-07 16:32:02.000000000 +0200
-@@ -309,6 +309,8 @@ void ieee80211_restart_hw(struct ieee802
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 
-+	trace_api_restart_hw(local);
-+
- 	/* use this reason, __ieee80211_resume will unblock it */
- 	ieee80211_stop_queues_by_reason(hw,
- 		IEEE80211_QUEUE_STOP_REASON_SUSPEND);
---- wireless-testing.orig/net/mac80211/mlme.c	2010-04-07 16:32:52.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-04-07 16:35:14.000000000 +0200
-@@ -1003,6 +1003,8 @@ void ieee80211_beacon_loss(struct ieee80
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct ieee80211_hw *hw = &sdata->local->hw;
- 
-+	trace_api_beacon_loss(sdata);
-+
- 	WARN_ON(hw->flags & IEEE80211_HW_CONNECTION_MONITOR);
- 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
- }
-@@ -1013,6 +1015,8 @@ void ieee80211_connection_loss(struct ie
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct ieee80211_hw *hw = &sdata->local->hw;
- 
-+	trace_api_connection_loss(sdata);
-+
- 	WARN_ON(!(hw->flags & IEEE80211_HW_CONNECTION_MONITOR));
- 	ieee80211_queue_work(hw, &sdata->u.mgd.beacon_connection_loss_work);
- }
-@@ -2254,6 +2258,8 @@ void ieee80211_cqm_rssi_notify(struct ie
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 
-+	trace_api_cqm_rssi_notify(sdata, rssi_event);
-+
- 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
- }
- EXPORT_SYMBOL(ieee80211_cqm_rssi_notify);
---- wireless-testing.orig/net/mac80211/scan.c	2010-04-07 16:35:44.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2010-04-07 16:36:43.000000000 +0200
-@@ -247,6 +247,8 @@ void ieee80211_scan_completed(struct iee
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	bool was_hw_scan;
- 
-+	trace_api_scan_completed(local, aborted);
-+
- 	mutex_lock(&local->scan_mtx);
- 
- 	/*
---- wireless-testing.orig/net/mac80211/sta_info.c	2010-04-07 16:36:53.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.c	2010-04-07 16:38:12.000000000 +0200
-@@ -957,6 +957,8 @@ void ieee80211_sta_block_awake(struct ie
- {
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
- 
-+	trace_api_sta_block_awake(sta->local, pubsta, block);
-+
- 	if (block)
- 		set_sta_flags(sta, WLAN_STA_PS_DRIVER);
- 	else
---- wireless-testing.orig/net/mac80211/util.c	2010-04-07 16:39:20.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2010-04-07 16:41:16.000000000 +0200
-@@ -270,6 +270,8 @@ static void __ieee80211_wake_queue(struc
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
- 
-+	trace_wake_queue(local, queue, reason);
-+
- 	if (WARN_ON(queue >= hw->queues))
- 		return;
- 
-@@ -312,6 +314,8 @@ static void __ieee80211_stop_queue(struc
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
- 
-+	trace_stop_queue(local, queue, reason);
-+
- 	if (WARN_ON(queue >= hw->queues))
- 		return;
- 
-
-
+Gertjan
