@@ -1,81 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:60988 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757294Ab0DOVjn (ORCPT
+Received: from smtp-out26.alice.it ([85.33.2.26]:4262 "EHLO
+	smtp-out26.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753380Ab0D0RGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:43 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 29/97] ath9k_hw: Implement PLL control on AR9003
-Date: Thu, 15 Apr 2010 17:38:34 -0400
-Message-Id: <1271367582-992-30-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 27 Apr 2010 13:06:15 -0400
+Subject: Re: wl1251_sdio PSM
+From: GNUtoo <GNUtoo@no-log.org>
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1272384504.2434.9.camel@gnutoo-desktop>
+References: <1272230300.2349.23.camel@gnutoo-desktop>
+	 <1272232671.2349.25.camel@gnutoo-desktop>
+	 <1272235632.2349.28.camel@gnutoo-desktop>
+	 <1272285416.2364.1.camel@gnutoo-desktop>
+	 <loom.20100427T143119-272@post.gmane.org>
+	 <1272374877.2434.0.camel@gnutoo-desktop>
+	 <1272384213.2434.8.camel@gnutoo-desktop>
+	 <1272384504.2434.9.camel@gnutoo-desktop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Apr 2010 19:05:27 +0200
+Message-ID: <1272387927.2434.11.camel@gnutoo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Tue, 2010-04-27 at 18:08 +0200, GNUtoo wrote:
+> On Tue, 2010-04-27 at 18:03 +0200, GNUtoo wrote:
+> > On Tue, 2010-04-27 at 15:27 +0200, GNUtoo wrote:
+> > > > You need a few more patches for PS to work (on top of current compat-wireless):
+> > > > http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-kernel.git;a=commitdiff;h=8eb97a1915ae2ab0a19cc6eef1a2753b9514017d
+> > > > http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-wifi.git;a=commitdiff;h=d16ed8871faa892f5fd4e8161412051ee11c5ecb
+> > > > 
+> > > > I'm working on mainline mergeable versions of those..
+> > > Denis.
+> > oops I don't know why the message wasn't included,maybe I made an error.
+> > Anyway it last much longer,but sometimes it only last for about 50 pings
+> > and after that no more network,tough iwconfig still say that it's
+> > associated.
+> > I'll check my hostapd router logs and try to put a wakelock
+> Apr 27 18:02:18 router hostapd: wlan0: STA 00:1f:df:f8:ac:7f RADIUS:
+> starting accounting session 4BA21E4D-000007D8
+> Apr 27 18:03:24 router hostapd: wlan0: STA 00:1f:df:24:0b:7f IEEE
+> 802.11: disassociated due to inactivity
+> Apr 27 18:03:25 router hostapd: wlan0: STA 00:1f:df:24:0b:7f IEEE
+> 802.11: deauthenticated due to inactivity
+hmmm....
+now it does that:
+Apr 27 18:12:43 router hostapd: wlan0: STA 00:1f:df:65:25:23 IEEE
+802.11: authenticated
+Apr 27 18:12:43 router hostapd: wlan0: STA 00:1f:df:65:25:23 IEEE
+802.11: associated (aid 2)
+Apr 27 18:12:43 router hostapd: wlan0: STA 00:1f:df:65:25:23 RADIUS:
+starting accounting session 4BA21E4D-000007D9
+Apr 27 18:13:11 router hostapd: wlan0: STA 00:1f:df:65:25:23 IEEE
+802.11: authenticated
+Apr 27 18:13:11 router hostapd: wlan0: STA 00:1f:df:65:25:23 IEEE
+802.11: associated (aid 2)
+Apr 27 18:13:11 router hostapd: wlan0: STA 00:1f:df:65:25:23 RADIUS:
+starting accounting session 4BA21E4D-000007DA
+--->start pinging
+--->ping stopping
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   23 +++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/reg.h        |    6 ++++++
- 2 files changed, 27 insertions(+), 2 deletions(-)
+with no messages just after the ping stopping,so maybe I need some more
+patches...
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index f1632ab..9767265 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -112,8 +112,27 @@ static void ar9003_hw_spur_mitigate(struct ath_hw *ah,
- static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
- 					 struct ath9k_channel *chan)
- {
--	/* TODO */
--	return 0;
-+	u32 pll;
-+
-+	pll = SM(0x5, AR_RTC_9300_PLL_REFDIV);
-+
-+	if (chan && IS_CHAN_HALF_RATE(chan))
-+		pll |= SM(0x1, AR_RTC_9300_PLL_CLKSEL);
-+	else if (chan && IS_CHAN_QUARTER_RATE(chan))
-+		pll |= SM(0x2, AR_RTC_9300_PLL_CLKSEL);
-+
-+	if (chan && IS_CHAN_5GHZ(chan)) {
-+		pll |= SM(0x28, AR_RTC_9300_PLL_DIV);
-+
-+		/*
-+		 * When doing fast clock, set PLL to 0x142c
-+		 */
-+		if (IS_CHAN_A_5MHZ_SPACED(chan))
-+			pll = 0x142c;
-+	} else
-+		pll |= SM(0x2c, AR_RTC_9300_PLL_DIV);
-+
-+	return pll;
- }
- 
- static void ar9003_hw_set_channel_regs(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index bc48bc9..9d63286 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1040,6 +1040,12 @@ enum {
- #define AR_PCIE_MSI                              (AR_SREV_9300_20_OR_LATER(ah) ? 0x40a4 : 0x4094)
- #define AR_PCIE_MSI_ENABLE                       0x00000001
- 
-+#define AR_RTC_9300_PLL_DIV          0x000003ff
-+#define AR_RTC_9300_PLL_DIV_S        0
-+#define AR_RTC_9300_PLL_REFDIV       0x00003C00
-+#define AR_RTC_9300_PLL_REFDIV_S     10
-+#define AR_RTC_9300_PLL_CLKSEL       0x0000C000
-+#define AR_RTC_9300_PLL_CLKSEL_S     14
- 
- #define AR_RTC_9160_PLL_DIV	0x000003ff
- #define AR_RTC_9160_PLL_DIV_S   0
--- 
-1.6.3.3
+Denis.
+
+
+
 
