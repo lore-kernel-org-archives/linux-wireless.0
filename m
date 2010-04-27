@@ -1,86 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32826 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757317Ab0DOVjo (ORCPT
+Received: from smtp-out01.alice.it ([85.33.2.12]:3287 "EHLO
+	smtp-out01.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755607Ab0D0QI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:44 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 46/97] ath9k_hw: add a helper for Power Amplifier calibration for AR9002
-Date: Thu, 15 Apr 2010 17:38:51 -0400
-Message-Id: <1271367582-992-47-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 27 Apr 2010 12:08:28 -0400
+Subject: Re: wl1251_sdio PSM
+From: GNUtoo <GNUtoo@no-log.org>
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1272384213.2434.8.camel@gnutoo-desktop>
+References: <1272230300.2349.23.camel@gnutoo-desktop>
+	 <1272232671.2349.25.camel@gnutoo-desktop>
+	 <1272235632.2349.28.camel@gnutoo-desktop>
+	 <1272285416.2364.1.camel@gnutoo-desktop>
+	 <loom.20100427T143119-272@post.gmane.org>
+	 <1272374877.2434.0.camel@gnutoo-desktop>
+	 <1272384213.2434.8.camel@gnutoo-desktop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Apr 2010 18:08:24 +0200
+Message-ID: <1272384504.2434.9.camel@gnutoo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code can be simplified and shared between two locations if we bring
-this into a helper. During reset we do not account for the skip count.
+On Tue, 2010-04-27 at 18:03 +0200, GNUtoo wrote:
+> On Tue, 2010-04-27 at 15:27 +0200, GNUtoo wrote:
+> > > You need a few more patches for PS to work (on top of current compat-wireless):
+> > > http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-kernel.git;a=commitdiff;h=8eb97a1915ae2ab0a19cc6eef1a2753b9514017d
+> > > http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-wifi.git;a=commitdiff;h=d16ed8871faa892f5fd4e8161412051ee11c5ecb
+> > > 
+> > > I'm working on mainline mergeable versions of those..
+> > Denis.
+> oops I don't know why the message wasn't included,maybe I made an error.
+> Anyway it last much longer,but sometimes it only last for about 50 pings
+> and after that no more network,tough iwconfig still say that it's
+> associated.
+> I'll check my hostapd router logs and try to put a wakelock
+Apr 27 18:02:18 router hostapd: wlan0: STA 00:1f:df:f8:ac:7f RADIUS:
+starting accounting session 4BA21E4D-000007D8
+Apr 27 18:03:24 router hostapd: wlan0: STA 00:1f:df:24:0b:7f IEEE
+802.11: disassociated due to inactivity
+Apr 27 18:03:25 router hostapd: wlan0: STA 00:1f:df:24:0b:7f IEEE
+802.11: deauthenticated due to inactivity
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |   32 +++++++++++++++++---------------
- 1 files changed, 17 insertions(+), 15 deletions(-)
+So I think it's not the driver...
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index eed2c76..26bc381 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -949,6 +949,21 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
- 
- }
- 
-+static void ar9002_hw_pa_cal(struct ath_hw *ah, bool is_reset)
-+{
-+	if (AR_SREV_9271(ah)) {
-+		if (is_reset || !ah->pacal_info.skipcount)
-+			ath9k_hw_9271_pa_cal(ah, is_reset);
-+		else
-+			ah->pacal_info.skipcount--;
-+	} else if (AR_SREV_9285_11_OR_LATER(ah)) {
-+		if (is_reset || !ah->pacal_info.skipcount)
-+			ath9k_hw_9285_pa_cal(ah, is_reset);
-+		else
-+			ah->pacal_info.skipcount--;
-+	}
-+}
-+
- bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 			u8 rxchainmask, bool longcal)
- {
-@@ -973,17 +988,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
- 	/* Do NF cal only at longer intervals */
- 	if (longcal) {
- 		/* Do periodic PAOffset Cal */
--		if (AR_SREV_9271(ah)) {
--			if (!ah->pacal_info.skipcount)
--				ath9k_hw_9271_pa_cal(ah, false);
--			else
--				ah->pacal_info.skipcount--;
--		} else if (AR_SREV_9285_11_OR_LATER(ah)) {
--			if (!ah->pacal_info.skipcount)
--				ath9k_hw_9285_pa_cal(ah, false);
--			else
--				ah->pacal_info.skipcount--;
--		}
-+		ar9002_hw_pa_cal(ah, false);
- 
- 		if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
- 			ath9k_olc_temp_compensation(ah);
-@@ -1142,10 +1147,7 @@ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 	}
- 
- 	/* Do PA Calibration */
--	if (AR_SREV_9271(ah))
--		ath9k_hw_9271_pa_cal(ah, true);
--	else if (AR_SREV_9285_11_OR_LATER(ah))
--		ath9k_hw_9285_pa_cal(ah, true);
-+	ar9002_hw_pa_cal(ah, true);
- 
- 	/* Do NF Calibration after DC offset and other calibrations */
- 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
--- 
-1.6.3.3
+By the way,the thanks were lost in the mail containing only a quote and
+"Denis."
+so thanks a lot for the patch!!!
+
+Denis
 
