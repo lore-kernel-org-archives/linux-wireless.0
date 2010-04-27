@@ -1,138 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46968 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933290Ab0DHT1s (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:61166 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752918Ab0D0BfA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 078/102] ath9k_hw: add TX/RX gain register initialization for AR9003
-Date: Thu,  8 Apr 2010 15:27:14 -0400
-Message-Id: <1270754858-26266-79-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 26 Apr 2010 21:35:00 -0400
+Received: by pxi17 with SMTP id 17so1942993pxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Apr 2010 18:34:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <t2i43e72e891004261725kdd3c1388jc2758db8a0b7e82@mail.gmail.com>
+References: <1272324216-73349-1-git-send-email-nbd@openwrt.org>
+	<20100426232332.GA2079@tuxdriver.com> <4BD621FA.1000405@openwrt.org>
+	<20100427001233.GB2079@tuxdriver.com> <t2i43e72e891004261725kdd3c1388jc2758db8a0b7e82@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Apr 2010 18:34:39 -0700
+Message-ID: <k2y43e72e891004261834w1eb604d0q83f9cd80820e3d8@mail.gmail.com>
+Subject: Re: [PATCH 1/2] cfg80211: add ap isolation support
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is done depending on what the EEPROM settings indicates.
+On Mon, Apr 26, 2010 at 5:25 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Apr 26, 2010 at 5:12 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> On Tue, Apr 27, 2010 at 01:30:02AM +0200, Felix Fietkau wrote:
+>>> On 2010-04-27 1:23 AM, John W. Linville wrote:
+>>> > On Tue, Apr 27, 2010 at 01:23:35AM +0200, Felix Fietkau wrote:
+>>> >> This is used to configure APs to not bridge traffic between connected stations.
+>>> >>
+>>> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>> >
+>>> > Is this useful?
+>>> Yes, if you have an AP with lots of users that aren't expected to
+>>> communicate with each other (e.g. only for internet access), it can save
+>>> a lot of airtime by not forwarding every broadcast message emitted from
+>>> any station.
+>>> I'm sure there are a more situations where this can be useful.
+>>
+>> Ah, OK -- I suppose that makes sense.
+>
+> In fact technically IEEE-802.11 2007 section 11.7 states "STAs are not
+> allowed to transmit frames directly to other STAs in a BSS and should
+> always rely
+> on the AP for the delivery of the frames", with the exception being
+> using DLS direct links for QoS STAs.  This would prevent the STAs from
+> going into PS mode for as long duration of the stream.
+>
+> If the AP does not support this it would just set the result code for
+> DLS requests to "Not allowed in the BSS". It does not seem the
+> standard has a way for an AP to teardown an existing DLS links though
+> (at no reason code for it), so I guess if we ever support DLS we won't
+> be able to enable this option if a direct links is already
+> established.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    4 ++
- drivers/net/wireless/ath/ath9k/ar9003_hw.c     |   52 ++++++++++++++++++++++++
- 3 files changed, 70 insertions(+), 0 deletions(-)
+Now that I think about it, why is this even required, why not just
+enforce this all the time and have an option to disable DLS? Are there
+ways to enable direct STA <--> STA communication on a BSS other than
+DLS?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index e1ed846..55e31a5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -1810,6 +1810,20 @@ static u16 ath9k_hw_ar9300_get_spur_channel(struct ath_hw *ah,
- 	return AR_NO_SPUR;
- }
- 
-+s32 ar9003_hw_get_tx_gain_idx(struct ath_hw *ah)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+
-+	return (eep->baseEepHeader.txrxgain >> 4) & 0xf; /* bits 7:4 */
-+}
-+
-+s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+
-+	return (eep->baseEepHeader.txrxgain) & 0xf; /* bits 3:0 */
-+}
-+
- const struct eeprom_ops eep_ar9300_ops = {
- 	.check_eeprom = ath9k_hw_ar9300_check_eeprom,
- 	.get_eeprom = ath9k_hw_ar9300_get_eeprom,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 2749915..c3e330a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -316,4 +316,8 @@ struct ar9300_eeprom {
- 	u8 ctl_freqbin_5G[AR9300_NUM_CTLS_5G][AR9300_NUM_BAND_EDGES_5G];
- 	struct cal_ctl_data_5g ctlPowerData_5G[AR9300_NUM_CTLS_5G];
- } __packed;
-+
-+s32 ar9003_hw_get_tx_gain_idx(struct ath_hw *ah);
-+s32 ar9003_hw_get_rx_gain_idx(struct ath_hw *ah);
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 1984b4f..95edd25 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -105,6 +105,57 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 		       3);
- }
- 
-+static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
-+{
-+	switch(ar9003_hw_get_tx_gain_idx(ah)) {
-+	case 0:
-+	default:
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       ar9300Modes_lowest_ob_db_tx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p0),
-+			       5);
-+		break;
-+	case 1:
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       ar9300Modes_high_ob_db_tx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p0),
-+			       5);
-+		break;
-+	case 2:
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       ar9300Modes_low_ob_db_tx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p0),
-+			       5);
-+		break;
-+	}
-+}
-+
-+static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
-+{
-+	switch(ar9003_hw_get_rx_gain_idx(ah))
-+	{
-+	case 0:
-+	default:
-+		INIT_INI_ARRAY(&ah->iniModesRxGain, ar9300Common_rx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Common_rx_gain_table_2p0),
-+			       2);
-+		break;
-+	case 1:
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       ar9300Common_wo_xlna_rx_gain_table_2p0,
-+			       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p0),
-+			       2);
-+		break;
-+	}
-+}
-+
-+/* set gain table pointers according to values read from the eeprom */
-+static void ar9003_hw_init_mode_gain_regs(struct ath_hw *ah)
-+{
-+	ar9003_tx_gain_table_apply(ah);
-+	ar9003_rx_gain_table_apply(ah);
-+}
-+
- /*
-  * Helper for ASPM support.
-  *
-@@ -143,6 +194,7 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
- 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
- 
- 	priv_ops->init_mode_regs = ar9003_hw_init_mode_regs;
-+	priv_ops->init_mode_gain_regs = ar9003_hw_init_mode_gain_regs;
- 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
- 
- 	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
--- 
-1.6.3.3
-
+  Luis
