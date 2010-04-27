@@ -1,93 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54968 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756990Ab0DODa4 (ORCPT
+Received: from 29.mail-out.ovh.net ([87.98.216.213]:49294 "HELO
+	29.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750735Ab0D0GWn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Apr 2010 23:30:56 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 77/97] ath9k_hw: Update ath9k_hw_set_dma for AR9300
-Date: Wed, 14 Apr 2010 23:30:31 -0400
-Message-Id: <1271302251-9075-78-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
-References: <1271302251-9075-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 27 Apr 2010 02:22:43 -0400
+Message-ID: <4BD682AF.6030206@free.fr>
+Date: Tue, 27 Apr 2010 08:22:39 +0200
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: remove usage of deprecated noise value
+References: <1272312561-22648-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1272312561-22648-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+John W. Linville a écrit :
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/common.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+> index 09effde..b4424a6 100644
+> --- a/drivers/net/wireless/ath/ath9k/common.c
+> +++ b/drivers/net/wireless/ath/ath9k/common.c
+> @@ -212,7 +212,6 @@ int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
+>  	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
+>  	rx_status->band = hw->conf.channel->band;
+>  	rx_status->freq = hw->conf.channel->center_freq;
+> -	rx_status->noise = common->ani.noise_floor;
+>  	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
+>  	rx_status->antenna = rx_stats->rs_antenna;
+>  	rx_status->flag |= RX_FLAG_TSFT;
+>   
+Hey, I'm still using this value here in my setup (I've done some work on 
+noise floor calibration and can submit a patch that report noise & 
+signal values that makes more sense to me). I mentioned in an earlier 
+patch that I was using the {last_signal, last_noise} debugfs file as 
+well (in February, 17th).
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c  |   18 +++++++++++++++---
- drivers/net/wireless/ath/ath9k/reg.h |    6 ++++++
- 2 files changed, 21 insertions(+), 3 deletions(-)
+Before removing noise reporting and all related code, wouln't it be 
+better to have a replacement API? I was told that noise reporting is 
+buggy for most chipset, but that's a bug in each driver, not in mac80211 
+then. Such bugs could be fixed by using a default value of -101dBm 
+(thermal noise at room temperature over a 20 MHz channel) if they are 
+unable to determine a correct value.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index de7ee90..953911d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -837,13 +837,16 @@ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan)
- 
- static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- {
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 regval;
- 
- 	/*
- 	 * set AHB_MODE not to do cacheline prefetches
- 	*/
--	regval = REG_READ(ah, AR_AHB_MODE);
--	REG_WRITE(ah, AR_AHB_MODE, regval | AR_AHB_PREFETCH_RD_EN);
-+	if (!AR_SREV_9300_20_OR_LATER(ah)) {
-+		regval = REG_READ(ah, AR_AHB_MODE);
-+		REG_WRITE(ah, AR_AHB_MODE, regval | AR_AHB_PREFETCH_RD_EN);
-+	}
- 
- 	/*
- 	 * let mac dma reads be in 128 byte chunks
-@@ -856,7 +859,8 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- 	 * The initial value depends on whether aggregation is enabled, and is
- 	 * adjusted whenever underruns are detected.
- 	 */
--	REG_RMW_FIELD(ah, AR_TXCFG, AR_FTRIG, ah->tx_trig_level);
-+	if (!AR_SREV_9300_20_OR_LATER(ah))
-+		REG_RMW_FIELD(ah, AR_TXCFG, AR_FTRIG, ah->tx_trig_level);
- 
- 	/*
- 	 * let mac dma writes be in 128 byte chunks
-@@ -869,6 +873,14 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- 	 */
- 	REG_WRITE(ah, AR_RXFIFO_CFG, 0x200);
- 
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		REG_RMW_FIELD(ah, AR_RXBP_THRESH, AR_RXBP_THRESH_HP, 0x1);
-+		REG_RMW_FIELD(ah, AR_RXBP_THRESH, AR_RXBP_THRESH_LP, 0x1);
-+
-+		ath9k_hw_set_rx_bufsize(ah, common->rx_bufsize -
-+			ah->caps.rx_status_len);
-+	}
-+
- 	/*
- 	 * reduce the number of usable entries in PCU TXBUF to avoid
- 	 * wrap around issues.
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 12f1621..2ca478c 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -39,6 +39,12 @@
- #define AR_CFG_PCI_MASTER_REQ_Q_THRESH         0x00060000
- #define AR_CFG_PCI_MASTER_REQ_Q_THRESH_S       17
- 
-+#define AR_RXBP_THRESH       0x0018
-+#define AR_RXBP_THRESH_HP    0x0000000f
-+#define AR_RXBP_THRESH_HP_S  0
-+#define AR_RXBP_THRESH_LP    0x00003f00
-+#define AR_RXBP_THRESH_LP_S  8
-+
- #define AR_MIRT              0x0020
- #define AR_MIRT_VAL          0x0000ffff
- #define AR_MIRT_VAL_S        16
--- 
-1.6.3.3
+Moreover, it is very convenient to have the {last_signal, last_noise} 
+sampled at the same time and be in the same location. Likewise for the 
+radiotap header, it is very easy to plot noise value over time if it is 
+stored on a per packet basis. Of course, I know noise is a global 
+property of the channel and not DEFINED on a per packet basis, but once 
+you know that, it's still useful to have it REPORTED on a per packet basis.
+
+So far, the solution for me was to revert the single patch for making 
+the noise field deprecated, but I'm not going to revert each & every 
+patches related to noise. After all, isn't it the purpose of peer review?
+
+Regards,
+Benoit
 
