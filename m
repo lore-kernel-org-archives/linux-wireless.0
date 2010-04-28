@@ -1,166 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:42394 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752757Ab0DLQ3j (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:52689 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753502Ab0D1H7P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 12:29:39 -0400
-Received: by pwj9 with SMTP id 9so4505922pwj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 09:29:38 -0700 (PDT)
-From: tom.leiming@gmail.com
-To: Sujith.Manoharan@atheros.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCHv2 3/4] ath9k-htc:respect usb buffer cacheline alignment in reg out path
-Date: Tue, 13 Apr 2010 00:29:15 +0800
-Message-Id: <1271089755-7966-1-git-send-email-tom.leiming@gmail.com>
+	Wed, 28 Apr 2010 03:59:15 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so3143656fgg.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 00:59:13 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: rt2800lib: update rfcsr & bbp init code for SoC devices
+Date: Wed, 28 Apr 2010 09:58:59 +0200
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004280958.59704.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
+Update the rfcsr and bbp init code for SoC devices to match with the
+latest Ralink driver.
 
-In ath9k-htc register out path, ath9k-htc will pass skb->data into
-usb hcd and usb hcd will do dma mapping and unmapping to the buffer
-pointed by skb->data, so we should pass a cache-line aligned address.
+To have better control over which values are used for the register
+initialization create a new function rt2800_is_305x_soc which checks
+for SoC interface type, the correct RT chipset and the correct RF
+chipset. This is based on the assumption that all rt305x SoC devices
+use a rt2872 and rf3020/rf3021/rf3022.
 
-This patch replace __dev_alloc_skb with alloc_skb to make skb->data
-pointed to a cacheline aligned address simply since ath9k-htc does not
-skb_push on the skb and pass it to mac80211, also use kfree_skb to free
-the skb allocated by alloc_skb(we can use kfree_skb safely in hardirq
-context since skb->destructor is NULL always in the path).
+In case an unknown RF chipset is found on a SoC device with a rt2872
+don't treat it as rt305x and just print a message.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |    2 +-
- drivers/net/wireless/ath/ath9k/htc_hst.c |   21 ++++++++++++---------
- drivers/net/wireless/ath/ath9k/wmi.c     |    6 +++---
- 3 files changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 259de17..3d8f0f4 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -53,7 +53,7 @@ static void hif_usb_regout_cb(struct urb *urb)
+Gertjan, this approach should be pretty safe and if there really exists
+a rt305x board with a different rf chipset we'll get a log message.
+
+At the moment rt2800_is_305x_soc is only used in rt2800lib.c but maybe
+it's worth to move it to one of the headers?
+
+ drivers/net/wireless/rt2x00/rt2800lib.c |   43 ++++++++++++++++++++++++------
+ 1 files changed, 34 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 50f4451..e7a61a3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -76,6 +76,23 @@ MODULE_LICENSE("GPL");
+ 	rt2800_regbusy_read((__dev), H2M_MAILBOX_CSR, \
+ 			    H2M_MAILBOX_CSR_OWNER, (__reg))
  
- 	return;
- free:
--	dev_kfree_skb_any(cmd->skb);
-+	kfree_skb(cmd->skb);
- 	kfree(cmd);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index d1fa5bd..587d98e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -146,7 +146,7 @@ static int htc_config_pipe_credits(struct htc_target *target)
- 	struct htc_config_pipe_msg *cp_msg;
- 	int ret, time_left;
- 
--	skb = dev_alloc_skb(50 + sizeof(struct htc_frame_hdr));
-+	skb = alloc_skb(50 + sizeof(struct htc_frame_hdr), GFP_ATOMIC);
- 	if (!skb) {
- 		dev_err(target->dev, "failed to allocate send buffer\n");
- 		return -ENOMEM;
-@@ -174,7 +174,7 @@ static int htc_config_pipe_credits(struct htc_target *target)
- 
- 	return 0;
- err:
--	dev_kfree_skb(skb);
-+	kfree_skb(skb);
- 	return -EINVAL;
- }
- 
-@@ -184,7 +184,7 @@ static int htc_setup_complete(struct htc_target *target)
- 	struct htc_comp_msg *comp_msg;
- 	int ret = 0, time_left;
- 
--	skb = dev_alloc_skb(50 + sizeof(struct htc_frame_hdr));
-+	skb = alloc_skb(50 + sizeof(struct htc_frame_hdr), GFP_ATOMIC);
- 	if (!skb) {
- 		dev_err(target->dev, "failed to allocate send buffer\n");
- 		return -ENOMEM;
-@@ -210,7 +210,7 @@ static int htc_setup_complete(struct htc_target *target)
- 	return 0;
- 
- err:
--	dev_kfree_skb(skb);
-+	kfree_skb(skb);
- 	return -EINVAL;
- }
- 
-@@ -250,8 +250,8 @@ int htc_connect_service(struct htc_target *target,
- 	endpoint->dl_pipeid = service_to_dlpipe(service_connreq->service_id);
- 	endpoint->ep_callbacks = service_connreq->ep_callbacks;
- 
--	skb = dev_alloc_skb(sizeof(struct htc_conn_svc_msg) +
--			    sizeof(struct htc_frame_hdr));
-+	skb = alloc_skb(sizeof(struct htc_conn_svc_msg) +
-+			    sizeof(struct htc_frame_hdr), GFP_ATOMIC);
- 	if (!skb) {
- 		dev_err(target->dev, "Failed to allocate buf to send"
- 			"service connect req\n");
-@@ -282,7 +282,7 @@ int htc_connect_service(struct htc_target *target,
- 	*conn_rsp_epid = target->conn_rsp_epid;
- 	return 0;
- err:
--	dev_kfree_skb(skb);
-+	kfree_skb(skb);
- 	return ret;
- }
- 
-@@ -321,7 +321,7 @@ void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
- 			       struct sk_buff *skb, bool txok)
++static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
++{
++	/* check for rt2872 on SoC */
++	if (!rt2x00_is_soc(rt2x00dev) ||
++	    !rt2x00_rt(rt2x00dev, RT2872))
++		return false;
++
++	/* we know for sure that these rf chipsets are used on rt305x boards */
++	if (rt2x00_rf(rt2x00dev, RF3020) ||
++	    rt2x00_rf(rt2x00dev, RF3021) ||
++	    rt2x00_rf(rt2x00dev, RF3022))
++		return true;
++
++	NOTICE(rt2x00dev, "Unknown RF chipset on rt305x\n");
++	return false;
++}
++
+ static void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
+ 			     const unsigned int word, const u8 value)
  {
- 	struct htc_endpoint *endpoint;
--	struct htc_frame_hdr *htc_hdr;
-+	struct htc_frame_hdr *htc_hdr = NULL;
+@@ -1556,6 +1573,9 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		     rt2800_wait_bbp_ready(rt2x00dev)))
+ 		return -EACCES;
  
- 	if (htc_handle->htc_flags & HTC_OP_CONFIG_PIPE_CREDITS) {
- 		complete(&htc_handle->cmd_wait);
-@@ -349,7 +349,10 @@ void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
- 	return;
- ret:
- 	/* HTC-generated packets are freed here. */
--	dev_kfree_skb_any(skb);
-+	if (htc_hdr && htc_hdr->endpoint_id != ENDPOINT0)
-+		dev_kfree_skb_any(skb);
++	if (rt2800_is_305x_soc(rt2x00dev))
++		rt2800_bbp_write(rt2x00dev, 31, 0x08);
++
+ 	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
+ 	rt2800_bbp_write(rt2x00dev, 66, 0x38);
+ 
+@@ -1576,6 +1596,9 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 79, 0x13);
+ 		rt2800_bbp_write(rt2x00dev, 80, 0x05);
+ 		rt2800_bbp_write(rt2x00dev, 81, 0x33);
++	} else if (rt2800_is_305x_soc(rt2x00dev)) {
++		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
++		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+ 	} else {
+ 		rt2800_bbp_write(rt2x00dev, 81, 0x37);
+ 	}
+@@ -1596,12 +1619,16 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
+ 	    rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E) ||
+ 	    rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E) ||
+-	    rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E))
++	    rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E) ||
++	    rt2800_is_305x_soc(rt2x00dev))
+ 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+ 	else
+ 		rt2800_bbp_write(rt2x00dev, 103, 0x00);
+ 
+-	rt2800_bbp_write(rt2x00dev, 105, 0x05);
++	if (rt2800_is_305x_soc(rt2x00dev))
++		rt2800_bbp_write(rt2x00dev, 105, 0x01);
 +	else
-+		kfree_skb(skb);
- }
++		rt2800_bbp_write(rt2x00dev, 105, 0x05);
+ 	rt2800_bbp_write(rt2x00dev, 106, 0x35);
  
- /*
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index acb6654..f2ff18c 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -213,7 +213,7 @@ free_skb:
- static void ath9k_wmi_ctrl_tx(void *priv, struct sk_buff *skb,
- 			      enum htc_endpoint_id epid, bool txok)
- {
--	dev_kfree_skb_any(skb);
-+	kfree_skb(skb);
- }
+ 	if (rt2x00_rt(rt2x00dev, RT3071) ||
+@@ -1618,11 +1645,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_bbp_write(rt2x00dev, 138, value);
+ 	}
  
- int ath9k_wmi_connect(struct htc_target *htc, struct wmi *wmi,
-@@ -269,7 +269,7 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 	if (!wmi)
- 		return -EINVAL;
+-	if (rt2x00_rt(rt2x00dev, RT2872)) {
+-		rt2800_bbp_write(rt2x00dev, 31, 0x08);
+-		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+-		rt2800_bbp_write(rt2x00dev, 80, 0x08);
+-	}
  
--	skb = dev_alloc_skb(headroom + cmd_len);
-+	skb = alloc_skb(headroom + cmd_len, GFP_ATOMIC);
- 	if (!skb)
- 		return -ENOMEM;
+ 	for (i = 0; i < EEPROM_BBP_SIZE; i++) {
+ 		rt2x00_eeprom_read(rt2x00dev, EEPROM_BBP_START + i, &eeprom);
+@@ -1709,7 +1731,7 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	    !rt2x00_rt(rt2x00dev, RT3071) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3090) &&
+ 	    !rt2x00_rt(rt2x00dev, RT3390) &&
+-	    !(rt2x00_is_soc(rt2x00dev) && rt2x00_rt(rt2x00dev, RT2872)))
++	    !rt2800_is_305x_soc(rt2x00dev))
+ 		return 0;
  
-@@ -313,7 +313,7 @@ out:
- 	ath_print(common, ATH_DBG_WMI,
- 		  "WMI failure for: %s\n", wmi_cmd_to_name(cmd_id));
- 	mutex_unlock(&wmi->op_mutex);
--	dev_kfree_skb_any(skb);
-+	kfree_skb(skb);
+ 	/*
+@@ -1777,7 +1799,7 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 29, 0x8f);
+ 		rt2800_rfcsr_write(rt2x00dev, 30, 0x20);
+ 		rt2800_rfcsr_write(rt2x00dev, 31, 0x0f);
+-	} else if (rt2x00_rt(rt2x00dev, RT2872)) {
++	} else if (rt2800_is_305x_soc(rt2x00dev)) {
+ 		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+ 		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+ 		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+@@ -1808,6 +1830,9 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
+ 		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
+ 		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
++		rt2800_rfcsr_write(rt2x00dev, 30, 0x00);
++		rt2800_rfcsr_write(rt2x00dev, 31, 0x00);
++		return 0;
+ 	}
  
- 	return ret;
- }
+ 	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
 -- 
-1.6.2.5
+1.6.4.2
 
