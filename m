@@ -1,913 +1,465 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46986 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933296Ab0DHT1s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:48 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 085/102] ath9k_hw: Define abstraction for tx desc access
-Date: Thu,  8 Apr 2010 15:27:21 -0400
-Message-Id: <1270754858-26266-86-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50221 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932188Ab0D1V2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 17:28:20 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat: update compat_firmware_class.c to new version
+Date: Wed, 28 Apr 2010 23:28:11 +0200
+Message-Id: <1272490092-31341-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   78 +++++
- drivers/net/wireless/ath/ath9k/beacon.c     |    3 +-
- drivers/net/wireless/ath/ath9k/hw-ops.h     |   76 +++++
- drivers/net/wireless/ath/ath9k/hw.h         |   28 ++
- drivers/net/wireless/ath/ath9k/mac.c        |  488 ++++++++++++++-------------
- drivers/net/wireless/ath/ath9k/mac.h        |   26 --
- drivers/net/wireless/ath/ath9k/xmit.c       |    3 +-
- 7 files changed, 431 insertions(+), 271 deletions(-)
+ compat/compat_firmware_class.c |  191 +++++++++++++++++++++-------------------
+ include/linux/compat-2.6.30.h  |    7 ++
+ include/linux/compat-2.6.34.h  |   33 +++++++
+ 3 files changed, 140 insertions(+), 91 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 2319456..9fcac16 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -167,6 +167,73 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 	return true;
- }
+diff --git a/compat/compat_firmware_class.c b/compat/compat_firmware_class.c
+index 54ee8b9..02f38a2 100644
+--- a/compat/compat_firmware_class.c
++++ b/compat/compat_firmware_class.c
+@@ -19,6 +19,7 @@
+ #include <linux/kthread.h>
+ #include <linux/highmem.h>
+ #include <linux/firmware.h>
++#include <linux/slab.h>
  
-+static void ar9003_hw_fill_txdesc(struct ath_hw *ah, void *ds, u32 seglen,
-+				  bool is_firstseg, bool is_lastseg,
-+				  const void *ds0, dma_addr_t buf_addr,
-+				  unsigned int qcu)
-+{
-+}
-+
-+static void ar9003_hw_clear_txdesc(struct ath_hw *ah, void *ds)
-+{
-+}
-+
-+static int ar9003_hw_proc_txdesc(struct ath_hw *ah, void *ds,
-+				 struct ath_tx_status *ts)
-+{
-+	return 0;
-+}
-+static void ar9003_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
-+			    u32 pktLen, enum ath9k_pkt_type type, u32 txPower,
-+			    u32 keyIx, enum ath9k_key_type keyType, u32 flags)
-+{
-+
-+}
-+
-+static void ar9003_hw_set11n_ratescenario(struct ath_hw *ah, void *ds,
-+					  void *lastds,
-+					  u32 durUpdateEn, u32 rtsctsRate,
-+					  u32 rtsctsDuration,
-+					  struct ath9k_11n_rate_series series[],
-+					  u32 nseries, u32 flags)
-+{
-+
-+}
-+
-+static void ar9003_hw_set11n_aggr_first(struct ath_hw *ah, void *ds,
-+					u32 aggrLen)
-+{
-+
-+}
-+
-+static void ar9003_hw_set11n_aggr_middle(struct ath_hw *ah, void *ds,
-+					 u32 numDelims)
-+{
-+
-+}
-+
-+static void ar9003_hw_set11n_aggr_last(struct ath_hw *ah, void *ds)
-+{
-+
-+}
-+
-+static void ar9003_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
-+{
-+
-+}
-+
-+static void ar9003_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
-+					   u32 burstDuration)
-+{
-+
-+}
-+
-+static void ar9003_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
-+					    u32 vmf)
-+{
-+
-+}
-+
- void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
- {
- 	struct ath_hw_ops *ops = ath9k_hw_ops(hw);
-@@ -175,6 +242,17 @@ void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
- 	ops->set_desc_link = ar9003_hw_set_desc_link;
- 	ops->get_desc_link = ar9003_hw_get_desc_link;
- 	ops->get_isr = ar9003_hw_get_isr;
-+	ops->fill_txdesc = ar9003_hw_fill_txdesc;
-+	ops->clear_txdesc = ar9003_hw_clear_txdesc;
-+	ops->proc_txdesc = ar9003_hw_proc_txdesc;
-+	ops->set11n_txdesc = ar9003_hw_set11n_txdesc;
-+	ops->set11n_ratescenario = ar9003_hw_set11n_ratescenario;
-+	ops->set11n_aggr_first = ar9003_hw_set11n_aggr_first;
-+	ops->set11n_aggr_middle = ar9003_hw_set11n_aggr_middle;
-+	ops->set11n_aggr_last = ar9003_hw_set11n_aggr_last;
-+	ops->clr11n_aggr = ar9003_hw_clr11n_aggr;
-+	ops->set11n_burstduration = ar9003_hw_set11n_burstduration;
-+	ops->set11n_virtualmorefrag = ar9003_hw_set11n_virtualmorefrag;
- }
+ #define to_dev(obj) container_of(obj, struct device, kobj)
  
- void ath9k_hw_set_rx_bufsize(struct ath_hw *ah, u16 buf_size)
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 268b598..c8a4558 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -107,7 +107,8 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+@@ -26,6 +27,53 @@ MODULE_AUTHOR("Manuel Estrada Sainz");
+ MODULE_DESCRIPTION("Multi purpose firmware loading support");
+ MODULE_LICENSE("GPL");
  
- 	/* NB: beacon's BufLen must be a multiple of 4 bytes */
- 	ath9k_hw_filltxdesc(ah, ds, roundup(skb->len, 4),
--			    true, true, ds, bf->bf_buf_addr);
-+			    true, true, ds, bf->bf_buf_addr,
-+			    sc->beacon.beaconq);
++/* Builtin firmware support */
++
++//#ifdef CONFIG_FW_LOADER
++#if 0
++
++extern struct builtin_fw __start_builtin_fw[];
++extern struct builtin_fw __end_builtin_fw[];
++
++static bool fw_get_builtin_firmware(struct firmware *fw, const char *name)
++{
++	struct builtin_fw *b_fw;
++
++	for (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++) {
++		if (strcmp(name, b_fw->name) == 0) {
++			fw->size = b_fw->size;
++			fw->data = b_fw->data;
++			return true;
++		}
++	}
++
++	return false;
++}
++
++static bool fw_is_builtin_firmware(const struct firmware *fw)
++{
++	struct builtin_fw *b_fw;
++
++	for (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++)
++		if (fw->data == b_fw->data)
++			return true;
++
++	return false;
++}
++
++#else /* Module case - no builtin firmware support */
++
++static inline bool fw_get_builtin_firmware(struct firmware *fw, const char *name)
++{
++	return false;
++}
++
++static inline bool fw_is_builtin_firmware(const struct firmware *fw)
++{
++	return false;
++}
++#endif
++
+ enum {
+ 	FW_STATUS_LOADING,
+ 	FW_STATUS_DONE,
+@@ -39,7 +87,6 @@ static int loading_timeout = 60;	/* In seconds */
+ static DEFINE_MUTEX(fw_lock);
  
- 	memset(series, 0, sizeof(struct ath9k_11n_rate_series) * 4);
- 	series[0].Tries = 1;
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 2c3171d..8463cb2 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -57,6 +57,82 @@ static inline bool ath9k_hw_getisr(struct ath_hw *ah, enum ath9k_int *masked)
- 	return ath9k_hw_ops(ah)->get_isr(ah, masked);
- }
- 
-+static inline void ath9k_hw_filltxdesc(struct ath_hw *ah, void *ds, u32 seglen,
-+				  bool is_firstseg, bool is_lastseg,
-+				  const void *ds0, dma_addr_t buf_addr,
-+				  unsigned int qcu)
-+{
-+	ath9k_hw_ops(ah)->fill_txdesc(ah, ds, seglen, is_firstseg, is_lastseg,
-+				      ds0, buf_addr, qcu);
-+}
-+
-+static inline void ath9k_hw_cleartxdesc(struct ath_hw *ah, void *ds)
-+{
-+	ath9k_hw_ops(ah)->clear_txdesc(ah, ds);
-+}
-+
-+static inline int ath9k_hw_txprocdesc(struct ath_hw *ah, void *ds,
-+				      struct ath_tx_status *ts)
-+{
-+	return ath9k_hw_ops(ah)->proc_txdesc(ah, ds, ts);
-+}
-+
-+static inline void ath9k_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
-+					  u32 pktLen, enum ath9k_pkt_type type,
-+					  u32 txPower, u32 keyIx,
-+					  enum ath9k_key_type keyType,
-+					  u32 flags)
-+{
-+	ath9k_hw_ops(ah)->set11n_txdesc(ah, ds, pktLen, type, txPower, keyIx,
-+				      keyType, flags);
-+}
-+
-+static inline void ath9k_hw_set11n_ratescenario(struct ath_hw *ah, void *ds,
-+					void *lastds,
-+					u32 durUpdateEn, u32 rtsctsRate,
-+					u32 rtsctsDuration,
-+					struct ath9k_11n_rate_series series[],
-+					u32 nseries, u32 flags)
-+{
-+	ath9k_hw_ops(ah)->set11n_ratescenario(ah, ds, lastds, durUpdateEn,
-+					    rtsctsRate, rtsctsDuration, series,
-+					    nseries, flags);
-+}
-+
-+static inline void ath9k_hw_set11n_aggr_first(struct ath_hw *ah, void *ds,
-+					u32 aggrLen)
-+{
-+	ath9k_hw_ops(ah)->set11n_aggr_first(ah, ds, aggrLen);
-+}
-+
-+static inline void ath9k_hw_set11n_aggr_middle(struct ath_hw *ah, void *ds,
-+					       u32 numDelims)
-+{
-+	ath9k_hw_ops(ah)->set11n_aggr_middle(ah, ds, numDelims);
-+}
-+
-+static inline void ath9k_hw_set11n_aggr_last(struct ath_hw *ah, void *ds)
-+{
-+	ath9k_hw_ops(ah)->set11n_aggr_last(ah, ds);
-+}
-+
-+static inline void ath9k_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
-+{
-+	ath9k_hw_ops(ah)->clr11n_aggr(ah, ds);
-+}
-+
-+static inline void ath9k_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
-+						 u32 burstDuration)
-+{
-+	ath9k_hw_ops(ah)->set11n_burstduration(ah, ds, burstDuration);
-+}
-+
-+static inline void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
-+						   u32 vmf)
-+{
-+	ath9k_hw_ops(ah)->set11n_virtualmorefrag(ah, ds, vmf);
-+}
-+
- /* Private hardware call ops */
- 
- /* PHY ops */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index ade4a6c..121a268 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -551,6 +551,34 @@ struct ath_hw_ops {
- 			  u8 rxchainmask,
- 			  bool longcal);
- 	bool (*get_isr)(struct ath_hw *ah, enum ath9k_int *masked);
-+	void (*fill_txdesc)(struct ath_hw *ah, void *ds, u32 seglen,
-+			    bool is_firstseg, bool is_is_lastseg,
-+			    const void *ds0, dma_addr_t buf_addr,
-+			    unsigned int qcu);
-+	void (*clear_txdesc)(struct ath_hw *ah, void *ds);
-+	int (*proc_txdesc)(struct ath_hw *ah, void *ds,
-+			   struct ath_tx_status *ts);
-+	void (*set11n_txdesc)(struct ath_hw *ah, void *ds,
-+			      u32 pktLen, enum ath9k_pkt_type type,
-+			      u32 txPower, u32 keyIx,
-+			      enum ath9k_key_type keyType,
-+			      u32 flags);
-+	void (*set11n_ratescenario)(struct ath_hw *ah, void *ds,
-+				void *lastds,
-+				u32 durUpdateEn, u32 rtsctsRate,
-+				u32 rtsctsDuration,
-+				struct ath9k_11n_rate_series series[],
-+				u32 nseries, u32 flags);
-+	void (*set11n_aggr_first)(struct ath_hw *ah, void *ds,
-+				  u32 aggrLen);
-+	void (*set11n_aggr_middle)(struct ath_hw *ah, void *ds,
-+				   u32 numDelims);
-+	void (*set11n_aggr_last)(struct ath_hw *ah, void *ds);
-+	void (*clr11n_aggr)(struct ath_hw *ah, void *ds);
-+	void (*set11n_burstduration)(struct ath_hw *ah, void *ds,
-+				     u32 burstDuration);
-+	void (*set11n_virtualmorefrag)(struct ath_hw *ah, void *ds,
-+				       u32 vmf);
+ struct firmware_priv {
+-	char *fw_id;
+ 	struct completion completion;
+ 	struct bin_attribute attr_data;
+ 	struct firmware *fw;
+@@ -47,19 +94,11 @@ struct firmware_priv {
+ 	struct page **pages;
+ 	int nr_pages;
+ 	int page_array_size;
+-	const char *vdata;
+ 	struct timer_list timeout;
++	bool nowait;
++	char fw_id[];
  };
  
- struct ath_hw {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 8e81c7a..aa5efa7 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -183,226 +183,25 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 	return true;
+-//#ifdef CONFIG_FW_LOADER
+-#if 0
+-extern struct builtin_fw __start_builtin_fw[];
+-extern struct builtin_fw __end_builtin_fw[];
+-#else /* Module case. Avoid ifdefs later; it'll all optimise out */
+-static struct builtin_fw *__start_builtin_fw;
+-static struct builtin_fw *__end_builtin_fw;
+-#endif
+-
+ static void
+ fw_load_abort(struct firmware_priv *fw_priv)
+ {
+@@ -95,9 +134,25 @@ firmware_timeout_store(struct class *class, const char *buf, size_t count)
+ 	return count;
  }
  
--void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
--{
--	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
--
--	ops->rx_enable = ar9002_hw_rx_enable;
--	ops->set_desc_link = ar9002_hw_set_desc_link;
--	ops->get_desc_link = ar9002_hw_get_desc_link;
--	ops->get_isr = ar9002_hw_get_isr;
--}
--
--static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
--					struct ath9k_tx_queue_info *qi)
--{
--	ath_print(ath9k_hw_common(ah), ATH_DBG_INTERRUPT,
--		  "tx ok 0x%x err 0x%x desc 0x%x eol 0x%x urn 0x%x\n",
--		  ah->txok_interrupt_mask, ah->txerr_interrupt_mask,
--		  ah->txdesc_interrupt_mask, ah->txeol_interrupt_mask,
--		  ah->txurn_interrupt_mask);
--
--	REG_WRITE(ah, AR_IMR_S0,
--		  SM(ah->txok_interrupt_mask, AR_IMR_S0_QCU_TXOK)
--		  | SM(ah->txdesc_interrupt_mask, AR_IMR_S0_QCU_TXDESC));
--	REG_WRITE(ah, AR_IMR_S1,
--		  SM(ah->txerr_interrupt_mask, AR_IMR_S1_QCU_TXERR)
--		  | SM(ah->txeol_interrupt_mask, AR_IMR_S1_QCU_TXEOL));
--
--	ah->imrs2_reg &= ~AR_IMR_S2_QCU_TXURN;
--	ah->imrs2_reg |= (ah->txurn_interrupt_mask & AR_IMR_S2_QCU_TXURN);
--	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
--}
--
--u32 ath9k_hw_gettxbuf(struct ath_hw *ah, u32 q)
--{
--	return REG_READ(ah, AR_QTXDP(q));
--}
--EXPORT_SYMBOL(ath9k_hw_gettxbuf);
--
--void ath9k_hw_puttxbuf(struct ath_hw *ah, u32 q, u32 txdp)
--{
--	REG_WRITE(ah, AR_QTXDP(q), txdp);
--}
--EXPORT_SYMBOL(ath9k_hw_puttxbuf);
--
--void ath9k_hw_txstart(struct ath_hw *ah, u32 q)
--{
--	ath_print(ath9k_hw_common(ah), ATH_DBG_QUEUE,
--		  "Enable TXE on queue: %u\n", q);
--	REG_WRITE(ah, AR_Q_TXE, 1 << q);
--}
--EXPORT_SYMBOL(ath9k_hw_txstart);
--
--u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q)
--{
--	u32 npend;
--
--	npend = REG_READ(ah, AR_QSTS(q)) & AR_Q_STS_PEND_FR_CNT;
--	if (npend == 0) {
--
--		if (REG_READ(ah, AR_Q_TXE) & (1 << q))
--			npend = 1;
--	}
--
--	return npend;
--}
--EXPORT_SYMBOL(ath9k_hw_numtxpending);
--
--/**
-- * ath9k_hw_updatetxtriglevel - adjusts the frame trigger level
-- *
-- * @ah: atheros hardware struct
-- * @bIncTrigLevel: whether or not the frame trigger level should be updated
-- *
-- * The frame trigger level specifies the minimum number of bytes,
-- * in units of 64 bytes, that must be DMA'ed into the PCU TX FIFO
-- * before the PCU will initiate sending the frame on the air. This can
-- * mean we initiate transmit before a full frame is on the PCU TX FIFO.
-- * Resets to 0x1 (meaning 64 bytes or a full frame, whichever occurs
-- * first)
-- *
-- * Caution must be taken to ensure to set the frame trigger level based
-- * on the DMA request size. For example if the DMA request size is set to
-- * 128 bytes the trigger level cannot exceed 6 * 64 = 384. This is because
-- * there need to be enough space in the tx FIFO for the requested transfer
-- * size. Hence the tx FIFO will stop with 512 - 128 = 384 bytes. If we set
-- * the threshold to a value beyond 6, then the transmit will hang.
-- *
-- * Current dual   stream devices have a PCU TX FIFO size of 8 KB.
-- * Current single stream devices have a PCU TX FIFO size of 4 KB, however,
-- * there is a hardware issue which forces us to use 2 KB instead so the
-- * frame trigger level must not exceed 2 KB for these chipsets.
-- */
--bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
--{
--	u32 txcfg, curLevel, newLevel;
--	enum ath9k_int omask;
--
--	if (ah->tx_trig_level >= ah->config.max_txtrig_level)
--		return false;
--
--	omask = ath9k_hw_set_interrupts(ah, ah->imask & ~ATH9K_INT_GLOBAL);
--
--	txcfg = REG_READ(ah, AR_TXCFG);
--	curLevel = MS(txcfg, AR_FTRIG);
--	newLevel = curLevel;
--	if (bIncTrigLevel) {
--		if (curLevel < ah->config.max_txtrig_level)
--			newLevel++;
--	} else if (curLevel > MIN_TX_FIFO_THRESHOLD)
--		newLevel--;
--	if (newLevel != curLevel)
--		REG_WRITE(ah, AR_TXCFG,
--			  (txcfg & ~AR_FTRIG) | SM(newLevel, AR_FTRIG));
--
--	ath9k_hw_set_interrupts(ah, omask);
--
--	ah->tx_trig_level = newLevel;
--
--	return newLevel != curLevel;
--}
--EXPORT_SYMBOL(ath9k_hw_updatetxtriglevel);
--
--bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q)
--{
--#define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
--#define ATH9K_TIME_QUANTUM		100     /* usec */
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ath9k_hw_capabilities *pCap = &ah->caps;
--	struct ath9k_tx_queue_info *qi;
--	u32 tsfLow, j, wait;
--	u32 wait_time = ATH9K_TX_STOP_DMA_TIMEOUT / ATH9K_TIME_QUANTUM;
--
--	if (q >= pCap->total_queues) {
--		ath_print(common, ATH_DBG_QUEUE, "Stopping TX DMA, "
--			  "invalid queue: %u\n", q);
--		return false;
--	}
--
--	qi = &ah->txq[q];
--	if (qi->tqi_type == ATH9K_TX_QUEUE_INACTIVE) {
--		ath_print(common, ATH_DBG_QUEUE, "Stopping TX DMA, "
--			  "inactive queue: %u\n", q);
--		return false;
--	}
--
--	REG_WRITE(ah, AR_Q_TXD, 1 << q);
--
--	for (wait = wait_time; wait != 0; wait--) {
--		if (ath9k_hw_numtxpending(ah, q) == 0)
--			break;
--		udelay(ATH9K_TIME_QUANTUM);
--	}
--
--	if (ath9k_hw_numtxpending(ah, q)) {
--		ath_print(common, ATH_DBG_QUEUE,
--			  "%s: Num of pending TX Frames %d on Q %d\n",
--			  __func__, ath9k_hw_numtxpending(ah, q), q);
--
--		for (j = 0; j < 2; j++) {
--			tsfLow = REG_READ(ah, AR_TSF_L32);
--			REG_WRITE(ah, AR_QUIET2,
--				  SM(10, AR_QUIET2_QUIET_DUR));
--			REG_WRITE(ah, AR_QUIET_PERIOD, 100);
--			REG_WRITE(ah, AR_NEXT_QUIET_TIMER, tsfLow >> 10);
--			REG_SET_BIT(ah, AR_TIMER_MODE,
--				       AR_QUIET_TIMER_EN);
--
--			if ((REG_READ(ah, AR_TSF_L32) >> 10) == (tsfLow >> 10))
--				break;
--
--			ath_print(common, ATH_DBG_QUEUE,
--				  "TSF has moved while trying to set "
--				  "quiet time TSF: 0x%08x\n", tsfLow);
--		}
--
--		REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
--
--		udelay(200);
--		REG_CLR_BIT(ah, AR_TIMER_MODE, AR_QUIET_TIMER_EN);
--
--		wait = wait_time;
--		while (ath9k_hw_numtxpending(ah, q)) {
--			if ((--wait) == 0) {
--				ath_print(common, ATH_DBG_FATAL,
--					  "Failed to stop TX DMA in 100 "
--					  "msec after killing last frame\n");
--				break;
--			}
--			udelay(ATH9K_TIME_QUANTUM);
--		}
--
--		REG_CLR_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
--	}
--
--	REG_WRITE(ah, AR_Q_TXD, 0);
--	return wait != 0;
--
--#undef ATH9K_TX_STOP_DMA_TIMEOUT
--#undef ATH9K_TIME_QUANTUM
--}
--EXPORT_SYMBOL(ath9k_hw_stoptxdma);
--
--void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
--			 u32 segLen, bool firstSeg,
--			 bool lastSeg, const struct ath_desc *ds0,
--			 dma_addr_t buf_addr)
-+static void ar9002_hw_fill_txdesc(struct ath_hw *ah, void *ds, u32 seglen,
-+				  bool is_firstseg, bool is_lastseg,
-+				  const void *ds0, dma_addr_t buf_addr,
-+				  unsigned int qcu)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
+-static CLASS_ATTR(timeout, 0644, firmware_timeout_show, firmware_timeout_store);
++static struct class_attribute firmware_class_attrs[] = {
++	__ATTR(timeout, S_IWUSR | S_IRUGO,
++		firmware_timeout_show, firmware_timeout_store),
++	__ATTR_NULL
++};
++
++static void fw_dev_release(struct device *dev)
++{
++	struct firmware_priv *fw_priv = dev_get_drvdata(dev);
++	int i;
++
++	for (i = 0; i < fw_priv->nr_pages; i++)
++		__free_page(fw_priv->pages[i]);
++	kfree(fw_priv->pages);
++	kfree(fw_priv);
++	kfree(dev);
  
- 	ads->ds_data = buf_addr;
+-static void fw_dev_release(struct device *dev);
++	module_put(THIS_MODULE);
++}
  
--	if (firstSeg) {
--		ads->ds_ctl1 |= segLen | (lastSeg ? 0 : AR_TxMore);
--	} else if (lastSeg) {
-+	if (is_firstseg) {
-+		ads->ds_ctl1 |= seglen | (is_lastseg ? 0 : AR_TxMore);
-+	} else if (is_lastseg) {
- 		ads->ds_ctl0 = 0;
--		ads->ds_ctl1 = segLen;
-+		ads->ds_ctl1 = seglen;
- 		ads->ds_ctl2 = AR5416DESC_CONST(ds0)->ds_ctl2;
- 		ads->ds_ctl3 = AR5416DESC_CONST(ds0)->ds_ctl3;
- 	} else {
- 		ads->ds_ctl0 = 0;
--		ads->ds_ctl1 = segLen | AR_TxMore;
-+		ads->ds_ctl1 = seglen | AR_TxMore;
- 		ads->ds_ctl2 = 0;
- 		ads->ds_ctl3 = 0;
- 	}
-@@ -412,9 +211,8 @@ void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
- 	ads->ds_txstatus6 = ads->ds_txstatus7 = 0;
- 	ads->ds_txstatus8 = ads->ds_txstatus9 = 0;
- }
--EXPORT_SYMBOL(ath9k_hw_filltxdesc);
- 
--void ath9k_hw_cleartxdesc(struct ath_hw *ah, struct ath_desc *ds)
-+static void ar9002_hw_clear_txdesc(struct ath_hw *ah, void *ds)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 
-@@ -424,10 +222,9 @@ void ath9k_hw_cleartxdesc(struct ath_hw *ah, struct ath_desc *ds)
- 	ads->ds_txstatus6 = ads->ds_txstatus7 = 0;
- 	ads->ds_txstatus8 = ads->ds_txstatus9 = 0;
- }
--EXPORT_SYMBOL(ath9k_hw_cleartxdesc);
- 
--int ath9k_hw_txprocdesc(struct ath_hw *ah, struct ath_desc *ds,
--			struct ath_tx_status *ts)
-+static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
-+				 struct ath_tx_status *ts)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 
-@@ -503,11 +300,11 @@ int ath9k_hw_txprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+ static int firmware_uevent(struct device *dev, struct kobj_uevent_env *env)
+@@ -108,6 +163,8 @@ static int firmware_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 		return -ENOMEM;
+ 	if (add_uevent_var(env, "TIMEOUT=%i", loading_timeout))
+ 		return -ENOMEM;
++	if (add_uevent_var(env, "ASYNC=%d", fw_priv->nowait))
++		return -ENOMEM;
  
  	return 0;
  }
--EXPORT_SYMBOL(ath9k_hw_txprocdesc);
+@@ -129,6 +186,11 @@ static int firmware_uevent(struct device *dev, char **envp,
+ 			       "TIMEOUT=%i", loading_timeout);
+ 	if (error)
+ 		goto exit;
++	error = add_uevent_var(envp, num_envp, &i,
++			       buf, size, &len,
++			       "ASYNC=%i", fw_priv->nowait);
++	if (error)
++		goto exit;
  
--void ath9k_hw_set11n_txdesc(struct ath_hw *ah, struct ath_desc *ds,
--			    u32 pktLen, enum ath9k_pkt_type type, u32 txPower,
--			    u32 keyIx, enum ath9k_key_type keyType, u32 flags)
-+static void ar9002_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
-+				    u32 pktLen, enum ath9k_pkt_type type,
-+				    u32 txPower, u32 keyIx,
-+				    enum ath9k_key_type keyType, u32 flags)
+ 	return 0;
+ exit:
+@@ -139,6 +201,7 @@ exit:
+ 
+ static struct class firmware_class = {
+ 	.name		= "compat_firmware",
++	.class_attrs	= firmware_class_attrs,
+ 	.dev_uevent	= firmware_uevent,
+ 	.dev_release	= fw_dev_release,
+ };
+@@ -374,21 +437,6 @@ static struct bin_attribute firmware_attr_data_tmpl = {
+ 	.write = firmware_data_write,
+ };
+ 
+-static void fw_dev_release(struct device *dev)
+-{
+-	struct firmware_priv *fw_priv = dev_get_drvdata(dev);
+-	int i;
+-
+-	for (i = 0; i < fw_priv->nr_pages; i++)
+-		__free_page(fw_priv->pages[i]);
+-	kfree(fw_priv->pages);
+-	kfree(fw_priv->fw_id);
+-	kfree(fw_priv);
+-	kfree(dev);
+-
+-	module_put(THIS_MODULE);
+-}
+-
+ static void
+ firmware_class_timeout(u_long data)
  {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
+@@ -400,8 +448,8 @@ static int fw_register_device(struct device **dev_p, const char *fw_name,
+ 			      struct device *device)
+ {
+ 	int retval;
+-	struct firmware_priv *fw_priv = kzalloc(sizeof(*fw_priv),
+-						GFP_KERNEL);
++	struct firmware_priv *fw_priv =
++		kzalloc(sizeof(*fw_priv) + strlen(fw_name) + 1 , GFP_KERNEL);
+ 	struct device *f_dev = kzalloc(sizeof(*f_dev), GFP_KERNEL);
  
-@@ -540,14 +337,13 @@ void ath9k_hw_set11n_txdesc(struct ath_hw *ah, struct ath_desc *ds,
- 		ads->ds_ctl11 = 0;
+ 	*dev_p = NULL;
+@@ -412,16 +460,9 @@ static int fw_register_device(struct device **dev_p, const char *fw_name,
+ 		goto error_kfree;
+ 	}
+ 
++	strcpy(fw_priv->fw_id, fw_name);
+ 	init_completion(&fw_priv->completion);
+ 	fw_priv->attr_data = firmware_attr_data_tmpl;
+-	fw_priv->fw_id = kstrdup(fw_name, GFP_KERNEL);
+-	if (!fw_priv->fw_id) {
+-		dev_err(device, "%s: Firmware name allocation failed\n",
+-			__func__);
+-		retval = -ENOMEM;
+-		goto error_kfree;
+-	}
+-
+ 	fw_priv->timeout.function = firmware_class_timeout;
+ 	fw_priv->timeout.data = (u_long) fw_priv;
+ 	init_timer(&fw_priv->timeout);
+@@ -430,11 +471,7 @@ static int fw_register_device(struct device **dev_p, const char *fw_name,
+ 	f_dev->parent = device;
+ 	f_dev->class = &firmware_class;
+ 	dev_set_drvdata(f_dev, fw_priv);
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+ 	dev_set_uevent_suppress(f_dev, 1);
+-#else
+-	f_dev->uevent_suppress = 1;
+-#endif
+ 	retval = device_register(f_dev);
+ 	if (retval) {
+ 		dev_err(device, "%s: device_register failed\n", __func__);
+@@ -452,7 +489,7 @@ error_kfree:
+ 
+ static int fw_setup_device(struct firmware *fw, struct device **dev_p,
+ 			   const char *fw_name, struct device *device,
+-			   int uevent)
++			   int uevent, bool nowait)
+ {
+ 	struct device *f_dev;
+ 	struct firmware_priv *fw_priv;
+@@ -468,7 +505,10 @@ static int fw_setup_device(struct firmware *fw, struct device **dev_p,
+ 
+ 	fw_priv = dev_get_drvdata(f_dev);
+ 
++	fw_priv->nowait = nowait;
++
+ 	fw_priv->fw = fw;
++	sysfs_bin_attr_init(&fw_priv->attr_data);
+ 	retval = sysfs_create_bin_file(&f_dev->kobj, &fw_priv->attr_data);
+ 	if (retval) {
+ 		dev_err(device, "%s: sysfs_create_bin_file failed\n", __func__);
+@@ -482,11 +522,7 @@ static int fw_setup_device(struct firmware *fw, struct device **dev_p,
+ 	}
+ 
+ 	if (uevent)
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+ 		dev_set_uevent_suppress(f_dev, 0);
+-#else
+-		f_dev->uevent_suppress = 0;
+-#endif
+ 	*dev_p = f_dev;
+ 	goto out;
+ 
+@@ -498,12 +534,11 @@ out:
+ 
+ static int
+ _request_firmware(const struct firmware **firmware_p, const char *name,
+-		 struct device *device, int uevent)
++		 struct device *device, int uevent, bool nowait)
+ {
+ 	struct device *f_dev;
+ 	struct firmware_priv *fw_priv;
+ 	struct firmware *firmware;
+-	struct builtin_fw *builtin;
+ 	int retval;
+ 
+ 	if (!firmware_p)
+@@ -517,21 +552,16 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
+ 		goto out;
+ 	}
+ 
+-	for (builtin = __start_builtin_fw; builtin != __end_builtin_fw;
+-	     builtin++) {
+-		if (strcmp(name, builtin->name))
+-			continue;
+-		dev_info(device, "firmware: using built-in firmware %s\n",
+-			 name);
+-		firmware->size = builtin->size;
+-		firmware->data = builtin->data;
++	if (fw_get_builtin_firmware(firmware, name)) {
++		dev_dbg(device, "firmware: using built-in firmware %s\n", name);
+ 		return 0;
+ 	}
+ 
+ 	if (uevent)
+-		dev_info(device, "firmware: requesting %s\n", name);
++		dev_dbg(device, "firmware: requesting %s\n", name);
+ 
+-	retval = fw_setup_device(firmware, &f_dev, name, device, uevent);
++	retval = fw_setup_device(firmware, &f_dev, name, device,
++				 uevent, nowait);
+ 	if (retval)
+ 		goto error_kfree_fw;
+ 
+@@ -588,26 +618,19 @@ request_firmware(const struct firmware **firmware_p, const char *name,
+                  struct device *device)
+ {
+         int uevent = 1;
+-        return _request_firmware(firmware_p, name, device, uevent);
++        return _request_firmware(firmware_p, name, device, uevent, false);
+ }
+ 
+ /**
+  * release_firmware: - release the resource associated with a firmware image
+  * @fw: firmware resource to release
+  **/
+-void
+-release_firmware(const struct firmware *fw)
++void release_firmware(const struct firmware *fw)
+ {
+-	struct builtin_fw *builtin;
+-
+ 	if (fw) {
+-		for (builtin = __start_builtin_fw; builtin != __end_builtin_fw;
+-		     builtin++) {
+-			if (fw->data == builtin->data)
+-				goto free_fw;
+-		}
+-		vfree(fw->data);
+-	free_fw:
++		if (!fw_is_builtin_firmware(fw))
++			vfree(fw->data);
++
+ 		kfree(fw);
  	}
  }
--EXPORT_SYMBOL(ath9k_hw_set11n_txdesc);
+@@ -634,7 +657,7 @@ request_firmware_work_func(void *arg)
+ 		return 0;
+ 	}
+ 	ret = _request_firmware(&fw, fw_work->name, fw_work->device,
+-		fw_work->uevent);
++		fw_work->uevent, true);
+ 
+ 	fw_work->cont(fw, fw_work->context);
+ 
+@@ -644,7 +667,7 @@ request_firmware_work_func(void *arg)
+ }
+ 
+ /**
+- * request_firmware_nowait: asynchronous version of request_firmware
++ * request_firmware_nowait - asynchronous version of request_firmware
+  * @module: module requesting the firmware
+  * @uevent: sends uevent to copy the firmware image if this flag
+  *	is non-zero else the firmware copy must be done manually.
+@@ -698,26 +721,12 @@ request_firmware_nowait(
+ 	return 0;
+ }
+ 
+-static int __init
+-firmware_class_init(void)
++static int __init firmware_class_init(void)
+ {
+-	int error;
+-	error = class_register(&firmware_class);
+-	if (error) {
+-		printk(KERN_ERR "%s: class_register failed\n", __func__);
+-		return error;
+-	}
+-	error = class_create_file(&firmware_class, &class_attr_timeout);
+-	if (error) {
+-		printk(KERN_ERR "%s: class_create_file failed\n",
+-		       __func__);
+-		class_unregister(&firmware_class);
+-	}
+-	return error;
 -
--void ath9k_hw_set11n_ratescenario(struct ath_hw *ah, struct ath_desc *ds,
--				  struct ath_desc *lastds,
--				  u32 durUpdateEn, u32 rtsctsRate,
--				  u32 rtsctsDuration,
--				  struct ath9k_11n_rate_series series[],
--				  u32 nseries, u32 flags)
++	return class_register(&firmware_class);
+ }
+-static void __exit
+-firmware_class_exit(void)
 +
-+static void ar9002_hw_set11n_ratescenario(struct ath_hw *ah, void *ds,
-+					  void *lastds,
-+					  u32 durUpdateEn, u32 rtsctsRate,
-+					  u32 rtsctsDuration,
-+					  struct ath9k_11n_rate_series series[],
-+					  u32 nseries, u32 flags)
++static void __exit firmware_class_exit(void)
  {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 	struct ar5416_desc *last_ads = AR5416DESC(lastds);
-@@ -596,10 +392,9 @@ void ath9k_hw_set11n_ratescenario(struct ath_hw *ah, struct ath_desc *ds,
- 	last_ads->ds_ctl2 = ads->ds_ctl2;
- 	last_ads->ds_ctl3 = ads->ds_ctl3;
+ 	class_unregister(&firmware_class);
  }
--EXPORT_SYMBOL(ath9k_hw_set11n_ratescenario);
+diff --git a/include/linux/compat-2.6.30.h b/include/linux/compat-2.6.30.h
+index f997d86..eface8c 100644
+--- a/include/linux/compat-2.6.30.h
++++ b/include/linux/compat-2.6.30.h
+@@ -5,6 +5,8 @@
  
--void ath9k_hw_set11n_aggr_first(struct ath_hw *ah, struct ath_desc *ds,
--				u32 aggrLen)
-+static void ar9002_hw_set11n_aggr_first(struct ath_hw *ah, void *ds,
-+					u32 aggrLen)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
  
-@@ -607,10 +402,9 @@ void ath9k_hw_set11n_aggr_first(struct ath_hw *ah, struct ath_desc *ds,
- 	ads->ds_ctl6 &= ~AR_AggrLen;
- 	ads->ds_ctl6 |= SM(aggrLen, AR_AggrLen);
- }
--EXPORT_SYMBOL(ath9k_hw_set11n_aggr_first);
++#include <linux/device.h>
++
+ #ifndef TP_PROTO
+ #define TP_PROTO(args...)	TPPROTO(args)
+ #endif
+@@ -23,6 +25,11 @@ enum dpm_order {
+ 	DPM_ORDER_DEV_LAST,
+ };
  
--void ath9k_hw_set11n_aggr_middle(struct ath_hw *ah, struct ath_desc *ds,
--				 u32 numDelims)
-+static void ar9002_hw_set11n_aggr_middle(struct ath_hw *ah, void *ds,
-+					 u32 numDelims)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 	unsigned int ctl6;
-@@ -622,9 +416,8 @@ void ath9k_hw_set11n_aggr_middle(struct ath_hw *ah, struct ath_desc *ds,
- 	ctl6 |= SM(numDelims, AR_PadDelim);
- 	ads->ds_ctl6 = ctl6;
- }
--EXPORT_SYMBOL(ath9k_hw_set11n_aggr_middle);
- 
--void ath9k_hw_set11n_aggr_last(struct ath_hw *ah, struct ath_desc *ds)
-+static void ar9002_hw_set11n_aggr_last(struct ath_hw *ah, void *ds)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 
-@@ -632,28 +425,25 @@ void ath9k_hw_set11n_aggr_last(struct ath_hw *ah, struct ath_desc *ds)
- 	ads->ds_ctl1 &= ~AR_MoreAggr;
- 	ads->ds_ctl6 &= ~AR_PadDelim;
- }
--EXPORT_SYMBOL(ath9k_hw_set11n_aggr_last);
- 
--void ath9k_hw_clr11n_aggr(struct ath_hw *ah, struct ath_desc *ds)
-+static void ar9002_hw_clr11n_aggr(struct ath_hw *ah, void *ds)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 
- 	ads->ds_ctl1 &= (~AR_IsAggr & ~AR_MoreAggr);
- }
--EXPORT_SYMBOL(ath9k_hw_clr11n_aggr);
- 
--void ath9k_hw_set11n_burstduration(struct ath_hw *ah, struct ath_desc *ds,
--				   u32 burstDuration)
-+static void ar9002_hw_set11n_burstduration(struct ath_hw *ah, void *ds,
-+					   u32 burstDuration)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 
- 	ads->ds_ctl2 &= ~AR_BurstDur;
- 	ads->ds_ctl2 |= SM(burstDuration, AR_BurstDur);
- }
--EXPORT_SYMBOL(ath9k_hw_set11n_burstduration);
- 
--void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, struct ath_desc *ds,
--				     u32 vmf)
-+static void ar9002_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
-+					    u32 vmf)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 
-@@ -663,6 +453,218 @@ void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, struct ath_desc *ds,
- 		ads->ds_ctl0 &= ~AR_VirtMoreFrag;
- }
- 
-+void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
++static inline void dev_set_uevent_suppress(struct device *dev, int val)
 +{
-+	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
-+
-+	ops->rx_enable = ar9002_hw_rx_enable;
-+	ops->set_desc_link = ar9002_hw_set_desc_link;
-+	ops->get_desc_link = ar9002_hw_get_desc_link;
-+	ops->get_isr = ar9002_hw_get_isr;
-+	ops->fill_txdesc = ar9002_hw_fill_txdesc;
-+	ops->clear_txdesc = ar9002_hw_clear_txdesc;
-+	ops->proc_txdesc = ar9002_hw_proc_txdesc;
-+	ops->set11n_txdesc = ar9002_hw_set11n_txdesc;
-+	ops->set11n_ratescenario = ar9002_hw_set11n_ratescenario;
-+	ops->set11n_aggr_first = ar9002_hw_set11n_aggr_first;
-+	ops->set11n_aggr_middle = ar9002_hw_set11n_aggr_middle;
-+	ops->set11n_aggr_last = ar9002_hw_set11n_aggr_last;
-+	ops->clr11n_aggr = ar9002_hw_clr11n_aggr;
-+	ops->set11n_burstduration = ar9002_hw_set11n_burstduration;
-+	ops->set11n_virtualmorefrag = ar9002_hw_set11n_virtualmorefrag;
++	dev->uevent_suppress = val;
 +}
 +
-+static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
-+					struct ath9k_tx_queue_info *qi)
-+{
-+	ath_print(ath9k_hw_common(ah), ATH_DBG_INTERRUPT,
-+		  "tx ok 0x%x err 0x%x desc 0x%x eol 0x%x urn 0x%x\n",
-+		  ah->txok_interrupt_mask, ah->txerr_interrupt_mask,
-+		  ah->txdesc_interrupt_mask, ah->txeol_interrupt_mask,
-+		  ah->txurn_interrupt_mask);
-+
-+	REG_WRITE(ah, AR_IMR_S0,
-+		  SM(ah->txok_interrupt_mask, AR_IMR_S0_QCU_TXOK)
-+		  | SM(ah->txdesc_interrupt_mask, AR_IMR_S0_QCU_TXDESC));
-+	REG_WRITE(ah, AR_IMR_S1,
-+		  SM(ah->txerr_interrupt_mask, AR_IMR_S1_QCU_TXERR)
-+		  | SM(ah->txeol_interrupt_mask, AR_IMR_S1_QCU_TXEOL));
-+
-+	ah->imrs2_reg &= ~AR_IMR_S2_QCU_TXURN;
-+	ah->imrs2_reg |= (ah->txurn_interrupt_mask & AR_IMR_S2_QCU_TXURN);
-+	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
-+}
-+
-+u32 ath9k_hw_gettxbuf(struct ath_hw *ah, u32 q)
-+{
-+	return REG_READ(ah, AR_QTXDP(q));
-+}
-+EXPORT_SYMBOL(ath9k_hw_gettxbuf);
-+
-+void ath9k_hw_puttxbuf(struct ath_hw *ah, u32 q, u32 txdp)
-+{
-+	REG_WRITE(ah, AR_QTXDP(q), txdp);
-+}
-+EXPORT_SYMBOL(ath9k_hw_puttxbuf);
-+
-+void ath9k_hw_txstart(struct ath_hw *ah, u32 q)
-+{
-+	ath_print(ath9k_hw_common(ah), ATH_DBG_QUEUE,
-+		  "Enable TXE on queue: %u\n", q);
-+	REG_WRITE(ah, AR_Q_TXE, 1 << q);
-+}
-+EXPORT_SYMBOL(ath9k_hw_txstart);
-+
-+u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q)
-+{
-+	u32 npend;
-+
-+	npend = REG_READ(ah, AR_QSTS(q)) & AR_Q_STS_PEND_FR_CNT;
-+	if (npend == 0) {
-+
-+		if (REG_READ(ah, AR_Q_TXE) & (1 << q))
-+			npend = 1;
-+	}
-+
-+	return npend;
-+}
-+EXPORT_SYMBOL(ath9k_hw_numtxpending);
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)) */
+ 
+ #endif /* LINUX_26_30_COMPAT_H */
+diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
+index 736a2f0..18ae456 100644
+--- a/include/linux/compat-2.6.34.h
++++ b/include/linux/compat-2.6.34.h
+@@ -164,6 +164,39 @@ static inline void device_unlock(struct device *dev)
+ 
+ #define rcu_dereference_check(p, c) rcu_dereference(p)
+ 
++/**
++ *	sysfs_attr_init - initialize a dynamically allocated sysfs attribute
++ *	@attr: struct attribute to initialize
++ *
++ *	Initialize a dynamically allocated struct attribute so we can
++ *	make lockdep happy.  This is a new requirement for attributes
++ *	and initially this is only needed when lockdep is enabled.
++ *	Lockdep gives a nice error when your attribute is added to
++ *	sysfs if you don't have this.
++ */
++#ifdef CONFIG_DEBUG_LOCK_ALLOC
++#define sysfs_attr_init(attr)				\
++do {							\
++	static struct lock_class_key __key;		\
++							\
++	(attr)->key = &__key;				\
++} while(0)
++#else
++#define sysfs_attr_init(attr) do {} while(0)
++#endif
 +
 +/**
-+ * ath9k_hw_updatetxtriglevel - adjusts the frame trigger level
++ *	sysfs_bin_attr_init - initialize a dynamically allocated bin_attribute
++ *	@attr: struct bin_attribute to initialize
 + *
-+ * @ah: atheros hardware struct
-+ * @bIncTrigLevel: whether or not the frame trigger level should be updated
-+ *
-+ * The frame trigger level specifies the minimum number of bytes,
-+ * in units of 64 bytes, that must be DMA'ed into the PCU TX FIFO
-+ * before the PCU will initiate sending the frame on the air. This can
-+ * mean we initiate transmit before a full frame is on the PCU TX FIFO.
-+ * Resets to 0x1 (meaning 64 bytes or a full frame, whichever occurs
-+ * first)
-+ *
-+ * Caution must be taken to ensure to set the frame trigger level based
-+ * on the DMA request size. For example if the DMA request size is set to
-+ * 128 bytes the trigger level cannot exceed 6 * 64 = 384. This is because
-+ * there need to be enough space in the tx FIFO for the requested transfer
-+ * size. Hence the tx FIFO will stop with 512 - 128 = 384 bytes. If we set
-+ * the threshold to a value beyond 6, then the transmit will hang.
-+ *
-+ * Current dual   stream devices have a PCU TX FIFO size of 8 KB.
-+ * Current single stream devices have a PCU TX FIFO size of 4 KB, however,
-+ * there is a hardware issue which forces us to use 2 KB instead so the
-+ * frame trigger level must not exceed 2 KB for these chipsets.
++ *	Initialize a dynamically allocated struct bin_attribute so we
++ *	can make lockdep happy.  This is a new requirement for
++ *	attributes and initially this is only needed when lockdep is
++ *	enabled.  Lockdep gives a nice error when your attribute is
++ *	added to sysfs if you don't have this.
 + */
-+bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
-+{
-+	u32 txcfg, curLevel, newLevel;
-+	enum ath9k_int omask;
++#define sysfs_bin_attr_init(bin_attr) sysfs_attr_init(&(bin_attr)->attr)
 +
-+	if (ah->tx_trig_level >= ah->config.max_txtrig_level)
-+		return false;
-+
-+	omask = ath9k_hw_set_interrupts(ah, ah->imask & ~ATH9K_INT_GLOBAL);
-+
-+	txcfg = REG_READ(ah, AR_TXCFG);
-+	curLevel = MS(txcfg, AR_FTRIG);
-+	newLevel = curLevel;
-+	if (bIncTrigLevel) {
-+		if (curLevel < ah->config.max_txtrig_level)
-+			newLevel++;
-+	} else if (curLevel > MIN_TX_FIFO_THRESHOLD)
-+		newLevel--;
-+	if (newLevel != curLevel)
-+		REG_WRITE(ah, AR_TXCFG,
-+			  (txcfg & ~AR_FTRIG) | SM(newLevel, AR_FTRIG));
-+
-+	ath9k_hw_set_interrupts(ah, omask);
-+
-+	ah->tx_trig_level = newLevel;
-+
-+	return newLevel != curLevel;
-+}
-+EXPORT_SYMBOL(ath9k_hw_updatetxtriglevel);
-+
-+bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q)
-+{
-+#define ATH9K_TX_STOP_DMA_TIMEOUT	4000    /* usec */
-+#define ATH9K_TIME_QUANTUM		100     /* usec */
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
-+	struct ath9k_tx_queue_info *qi;
-+	u32 tsfLow, j, wait;
-+	u32 wait_time = ATH9K_TX_STOP_DMA_TIMEOUT / ATH9K_TIME_QUANTUM;
-+
-+	if (q >= pCap->total_queues) {
-+		ath_print(common, ATH_DBG_QUEUE, "Stopping TX DMA, "
-+			  "invalid queue: %u\n", q);
-+		return false;
-+	}
-+
-+	qi = &ah->txq[q];
-+	if (qi->tqi_type == ATH9K_TX_QUEUE_INACTIVE) {
-+		ath_print(common, ATH_DBG_QUEUE, "Stopping TX DMA, "
-+			  "inactive queue: %u\n", q);
-+		return false;
-+	}
-+
-+	REG_WRITE(ah, AR_Q_TXD, 1 << q);
-+
-+	for (wait = wait_time; wait != 0; wait--) {
-+		if (ath9k_hw_numtxpending(ah, q) == 0)
-+			break;
-+		udelay(ATH9K_TIME_QUANTUM);
-+	}
-+
-+	if (ath9k_hw_numtxpending(ah, q)) {
-+		ath_print(common, ATH_DBG_QUEUE,
-+			  "%s: Num of pending TX Frames %d on Q %d\n",
-+			  __func__, ath9k_hw_numtxpending(ah, q), q);
-+
-+		for (j = 0; j < 2; j++) {
-+			tsfLow = REG_READ(ah, AR_TSF_L32);
-+			REG_WRITE(ah, AR_QUIET2,
-+				  SM(10, AR_QUIET2_QUIET_DUR));
-+			REG_WRITE(ah, AR_QUIET_PERIOD, 100);
-+			REG_WRITE(ah, AR_NEXT_QUIET_TIMER, tsfLow >> 10);
-+			REG_SET_BIT(ah, AR_TIMER_MODE,
-+				       AR_QUIET_TIMER_EN);
-+
-+			if ((REG_READ(ah, AR_TSF_L32) >> 10) == (tsfLow >> 10))
-+				break;
-+
-+			ath_print(common, ATH_DBG_QUEUE,
-+				  "TSF has moved while trying to set "
-+				  "quiet time TSF: 0x%08x\n", tsfLow);
-+		}
-+
-+		REG_SET_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
-+
-+		udelay(200);
-+		REG_CLR_BIT(ah, AR_TIMER_MODE, AR_QUIET_TIMER_EN);
-+
-+		wait = wait_time;
-+		while (ath9k_hw_numtxpending(ah, q)) {
-+			if ((--wait) == 0) {
-+				ath_print(common, ATH_DBG_FATAL,
-+					  "Failed to stop TX DMA in 100 "
-+					  "msec after killing last frame\n");
-+				break;
-+			}
-+			udelay(ATH9K_TIME_QUANTUM);
-+		}
-+
-+		REG_CLR_BIT(ah, AR_DIAG_SW, AR_DIAG_FORCE_CH_IDLE_HIGH);
-+	}
-+
-+	REG_WRITE(ah, AR_Q_TXD, 0);
-+	return wait != 0;
-+
-+#undef ATH9K_TX_STOP_DMA_TIMEOUT
-+#undef ATH9K_TIME_QUANTUM
-+}
-+EXPORT_SYMBOL(ath9k_hw_stoptxdma);
-+
- void ath9k_hw_gettxintrtxqs(struct ath_hw *ah, u32 *txqs)
- {
- 	*txqs &= ah->intr_txqs;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 7c0d754..8a6c416 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -690,32 +690,6 @@ void ath9k_hw_txstart(struct ath_hw *ah, u32 q);
- u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q);
- bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
- bool ath9k_hw_stoptxdma(struct ath_hw *ah, u32 q);
--void ath9k_hw_filltxdesc(struct ath_hw *ah, struct ath_desc *ds,
--			 u32 segLen, bool firstSeg,
--			 bool lastSeg, const struct ath_desc *ds0,
--			 dma_addr_t buf_addr);
--void ath9k_hw_cleartxdesc(struct ath_hw *ah, struct ath_desc *ds);
--int ath9k_hw_txprocdesc(struct ath_hw *ah, struct ath_desc *ds,
--			struct ath_tx_status *ts);
--void ath9k_hw_set11n_txdesc(struct ath_hw *ah, struct ath_desc *ds,
--			    u32 pktLen, enum ath9k_pkt_type type, u32 txPower,
--			    u32 keyIx, enum ath9k_key_type keyType, u32 flags);
--void ath9k_hw_set11n_ratescenario(struct ath_hw *ah, struct ath_desc *ds,
--				  struct ath_desc *lastds,
--				  u32 durUpdateEn, u32 rtsctsRate,
--				  u32 rtsctsDuration,
--				  struct ath9k_11n_rate_series series[],
--				  u32 nseries, u32 flags);
--void ath9k_hw_set11n_aggr_first(struct ath_hw *ah, struct ath_desc *ds,
--				u32 aggrLen);
--void ath9k_hw_set11n_aggr_middle(struct ath_hw *ah, struct ath_desc *ds,
--				 u32 numDelims);
--void ath9k_hw_set11n_aggr_last(struct ath_hw *ah, struct ath_desc *ds);
--void ath9k_hw_clr11n_aggr(struct ath_hw *ah, struct ath_desc *ds);
--void ath9k_hw_set11n_burstduration(struct ath_hw *ah, struct ath_desc *ds,
--				   u32 burstDuration);
--void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, struct ath_desc *ds,
--				     u32 vmf);
- void ath9k_hw_gettxintrtxqs(struct ath_hw *ah, u32 *txqs);
- bool ath9k_hw_set_txq_props(struct ath_hw *ah, int q,
- 			    const struct ath9k_tx_queue_info *qinfo);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index f6da511..5fc26f7 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1669,7 +1669,8 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 			    true,	/* first segment */
- 			    true,	/* last segment */
- 			    ds,		/* first descriptor */
--			    bf->bf_buf_addr);
-+			    bf->bf_buf_addr,
-+			    txctl->txq->axq_qnum);
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
  
- 	spin_lock_bh(&txctl->txq->axq_lock);
- 
+ #endif /* LINUX_26_34_COMPAT_H */
 -- 
 1.6.3.3
 
