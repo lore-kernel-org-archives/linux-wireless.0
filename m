@@ -1,101 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:45926 "EHLO ds10.nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:44944 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752940Ab0DSR5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Apr 2010 13:57:44 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v2 4/9] ath9k: update the ath_max_4ms_framelen table
-Date: Mon, 19 Apr 2010 19:57:32 +0200
-Message-Id: <1271699857-12366-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1271699857-12366-3-git-send-email-nbd@openwrt.org>
-References: <1271699857-12366-1-git-send-email-nbd@openwrt.org>
- <1271699857-12366-2-git-send-email-nbd@openwrt.org>
- <1271699857-12366-3-git-send-email-nbd@openwrt.org>
+	id S1752675Ab0D1Thu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 15:37:50 -0400
+Subject: [PATCH] libertas: fix 8686 firmware loading regression in
+ 96021f096e5178582af296a2fbb6df7dbd6b695c
+From: Dan Williams <dcbw@redhat.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Steve deRosier <steve@cozybit.com>,
+	Alagu Sankar <alagusankar@gmail.com>
+In-Reply-To: <1272413690.32717.10.camel@localhost.localdomain>
+References: <i2y446ae9281004271235sf6f04323j2faa28108481d81b@mail.gmail.com>
+	 <1272413690.32717.10.camel@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Apr 2010 12:37:46 -0700
+Message-ID: <1272483466.14103.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Include MCS0-31 and also add SGI for HT20. This makes it
-possible to support more different rate combinations with
-newer hardware.
+The 'ready' condition was incorrectly evaluated which sometimes lead to
+failures loading the second-stage firmware on 8686 devices.
 
-Based on a patch by Selvam. T.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |   41 +++++++++++++++++++++-----------
- 1 files changed, 27 insertions(+), 14 deletions(-)
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 13dfeda..64dd345 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -324,7 +324,9 @@ static int if_sdio_wait_status(struct if_sdio_card *card, const u8 condition)
+ 	timeout = jiffies + HZ;
+ 	while (1) {
+ 		status = sdio_readb(card->func, IF_SDIO_STATUS, &ret);
+-		if (ret || (status & condition))
++		if (ret)
++			return ret;
++		if ((status & condition) == condition)
+ 			break;
+ 		if (time_after(jiffies, timeout))
+ 			return -ETIMEDOUT;
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5d3d563..4078982 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -71,24 +71,36 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
- 			     int nbad, int txok, bool update_rc);
- 
- enum {
--	MCS_DEFAULT,
-+	MCS_HT20,
-+	MCS_HT20_SGI,
- 	MCS_HT40,
- 	MCS_HT40_SGI,
- };
- 
--static int ath_max_4ms_framelen[3][16] = {
--	[MCS_DEFAULT] = {
--		3216,  6434,  9650,  12868, 19304, 25740,  28956,  32180,
--		6430,  12860, 19300, 25736, 38600, 51472,  57890,  64320,
-+static int ath_max_4ms_framelen[4][32] = {
-+	[MCS_HT20] = {
-+		3212,  6432,  9648,  12864,  19300,  25736,  28952,  32172,
-+		6424,  12852, 19280, 25708,  38568,  51424,  57852,  64280,
-+		9628,  19260, 28896, 38528,  57792,  65532,  65532,  65532,
-+		12828, 25656, 38488, 51320,  65532,  65532,  65532,  65532,
-+	},
-+	[MCS_HT20_SGI] = {
-+		3572,  7144,  10720,  14296,  21444,  28596,  32172,  35744,
-+		7140,  14284, 21428,  28568,  42856,  57144,  64288,  65532,
-+		10700, 21408, 32112,  42816,  64228,  65532,  65532,  65532,
-+		14256, 28516, 42780,  57040,  65532,  65532,  65532,  65532,
- 	},
- 	[MCS_HT40] = {
--		6684,  13368, 20052, 26738, 40104, 53476,  60156,  66840,
--		13360, 26720, 40080, 53440, 80160, 106880, 120240, 133600,
-+		6680,  13360,  20044,  26724,  40092,  53456,  60140,  65532,
-+		13348, 26700,  40052,  53400,  65532,  65532,  65532,  65532,
-+		20004, 40008,  60016,  65532,  65532,  65532,  65532,  65532,
-+		26644, 53292,  65532,  65532,  65532,  65532,  65532,  65532,
- 	},
- 	[MCS_HT40_SGI] = {
--		/* TODO: Only MCS 7 and 15 updated, recalculate the rest */
--		6684,  13368, 20052, 26738, 40104, 53476,  60156,  74200,
--		13360, 26720, 40080, 53440, 80160, 106880, 120240, 148400,
-+		7420,  14844,  22272,  29696,  44544,  59396,  65532,  65532,
-+		14832, 29668,  44504,  59340,  65532,  65532,  65532,  65532,
-+		22232, 44464,  65532,  65532,  65532,  65532,  65532,  65532,
-+		29616, 59232,  65532,  65532,  65532,  65532,  65532,  65532,
- 	}
- };
- 
-@@ -538,12 +550,13 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 				break;
- 			}
- 
--			if (rates[i].flags & IEEE80211_TX_RC_SHORT_GI)
--				modeidx = MCS_HT40_SGI;
--			else if (rates[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+			if (rates[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
- 				modeidx = MCS_HT40;
- 			else
--				modeidx = MCS_DEFAULT;
-+				modeidx = MCS_HT20;
-+
-+			if (rates[i].flags & IEEE80211_TX_RC_SHORT_GI)
-+				modeidx++;
- 
- 			frmlen = ath_max_4ms_framelen[modeidx][rates[i].idx];
- 			max_4ms_framelen = min(max_4ms_framelen, frmlen);
--- 
-1.6.4.2
 
