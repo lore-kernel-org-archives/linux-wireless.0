@@ -1,41 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52978 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092Ab0D1Nf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Apr 2010 09:35:26 -0400
-Date: Wed, 28 Apr 2010 15:33:37 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: fix supported rates IE if AP doesn't
-	give us it's rates
-Message-ID: <20100428133336.GA2527@dhcp-lab-161.englab.brq.redhat.com>
-References: <1272460624-3611-1-git-send-email-sgruszka@redhat.com> <1272460624-3611-2-git-send-email-sgruszka@redhat.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:41773 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753405Ab0D1XXO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 19:23:14 -0400
+Received: by pxi17 with SMTP id 17so2993690pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 16:23:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1272460624-3611-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1272496482-12687-1-git-send-email-linville@tuxdriver.com>
+References: <1272496482-12687-1-git-send-email-linville@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 28 Apr 2010 16:22:53 -0700
+Message-ID: <o2o43e72e891004281622lea58777bjf054e8cc36929e07@mail.gmail.com>
+Subject: Re: [PATCH] rtl8180: fix tx status reporting
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 28, 2010 at 03:17:04PM +0200, Stanislaw Gruszka wrote:
-> If AP do not provide us supported rates before assiociation, send
-> all rates we are supporting instead of empty information element.
+On Wed, Apr 28, 2010 at 4:14 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> When reporting Tx status, indicate that only one rate was used.
+> Otherwise, the rate is frozen at rate index 0 (i.e. 1Mb/s).
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Please note these two patches together with "QoS fixes":
-- mac80211: explicitly disable/enable QoS
-- iwlwifi: manage QoS by mac stack
-resolve:
-https://bugzilla.redhat.com/show_bug.cgi?id=558002
+Stable fix?
 
-"QoS fixes" alone resolve:
-https://bugzilla.redhat.com/show_bug.cgi?id=539878
-
-So I think we want all 4 patches in stable.
-
-John,if possible push patches to Linus tree. When they lend there,
-I will post backported patches to stable ML. I have them already
-prepared ant tested for 2.6.32 :)
-
-Thanks
-Stanislaw
+  The stable whore, Luis
