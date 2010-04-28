@@ -1,82 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:32870 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757338Ab0DOVjp (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:23823 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371Ab0D1Guj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Apr 2010 17:39:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Wed, 28 Apr 2010 02:50:39 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 57/97] ath9k_hw: add the config_pci_powersave AR9003 callback
-Date: Thu, 15 Apr 2010 17:39:02 -0400
-Message-Id: <1271367582-992-58-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
-References: <1271367582-992-1-git-send-email-lrodriguez@atheros.com>
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 1/4] wl1271: Improve command polling
+Date: Wed, 28 Apr 2010 09:49:59 +0300
+Message-Id: <1272437402-28801-2-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1272437402-28801-1-git-send-email-luciano.coelho@nokia.com>
+References: <1272437402-28801-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   34 ++++++++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 6c092ee..240ca4c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2595,6 +2595,37 @@ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- }
- EXPORT_SYMBOL(ath9k_hw_set_interrupts);
+In testing I noticed that the wl1271 commands fall into two categories. In the
+first category are "fast" commands, these mostly take only 0 or 1 polls to
+complete, but occasionally upto 50 (giving a 0.5ms execution time.) In the
+second category, the command completion takes well more than 0.5ms (from
+1.5ms upwards.)
+
+This patch fixes command polling such that it is optimal for the fast commands,
+but also allows sleep for the longer ones.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 6b5ba8e..61fb774 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -37,7 +37,7 @@
+ #include "wl1271_cmd.h"
+ #include "wl1271_event.h"
  
-+/*
-+ * Helper for ASPM support.
-+ *
-+ * Disable PLL when in L0s as well as receiver clock when in L1.
-+ * This power saving option must be enabled through the SerDes.
-+ *
-+ * Programming the SerDes must go through the same 288 bit serial shift
-+ * register as the other analog registers.  Hence the 9 writes.
-+ */
-+static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
-+					 int restore,
-+					 int power_off)
-+{
-+	if (ah->is_pciexpress != true)
-+		return;
-+
-+	/* Do not touch SerDes registers */
-+	if (ah->config.pcie_powersave_enable == 2)
-+		return;
-+
-+	/* Nothing to do on restore for 11N */
-+	if (!restore) {
-+		/* set bit 19 to allow forcing of pcie core into L1 state */
-+		REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PCIE_PM_CTRL_ENA);
-+
-+		/* Several PCIe massages to ensure proper behaviour */
-+		if (ah->config.pcie_waen)
-+			REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
-+	}
-+}
-+
- /*******************/
- /* Beacon Handling */
- /*******************/
-@@ -3629,10 +3660,13 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
- static void ar9003_hw_attach_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-+	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+-#define WL1271_CMD_POLL_COUNT       5
++#define WL1271_CMD_FAST_POLL_COUNT       50
  
- 	priv_ops->init_mode_regs = ar9003_hw_init_mode_regs;
- 	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
+ /*
+  * send command to firmware
+@@ -77,11 +77,11 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 			goto out;
+ 		}
  
-+	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
-+
- 	ar9003_hw_attach_phy_ops(ah);
- 	ar9003_hw_attach_calib_ops(ah);
- 	ar9003_hw_attach_mac_ops(ah);
+-		udelay(10);
+ 		poll_count++;
+-		if (poll_count == WL1271_CMD_POLL_COUNT)
+-			wl1271_info("cmd polling took over %d cycles",
+-				    poll_count);
++		if (poll_count < WL1271_CMD_FAST_POLL_COUNT)
++			udelay(10);
++		else
++			msleep(1);
+ 
+ 		intr = wl1271_read32(wl, ACX_REG_INTERRUPT_NO_CLEAR);
+ 	}
 -- 
 1.6.3.3
 
