@@ -1,52 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:9978 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752725Ab0DLH6J (ORCPT
+Received: from vilipendio.investici.org ([216.17.193.153]:49852 "EHLO
+	vilipendio.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751370Ab0D1NJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Apr 2010 03:58:09 -0400
-Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0465869088
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Apr 2010 16:58:08 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: Initialize IBSS basic rates according to band
-Date: Mon, 12 Apr 2010 16:58:09 +0900
-References: <20100412073658.28078.32155.stgit@tt-desk> <20100412073703.28078.90501.stgit@tt-desk> <1271058082.3877.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1271058082.3877.3.camel@jlt3.sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+	Wed, 28 Apr 2010 09:09:43 -0400
+Date: Wed, 28 Apr 2010 14:47:36 +0200
+From: Antonio Quartulli <ordex@ritirata.org>
+To: Helmut Schaa <Helmut.Schaa@gmx.de>
+Cc: Luis Correia <luis.f.correia@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 6/9] rt2x00: Finish rt3070 support in
+ rt2800 register initialization.
+Message-ID: <20100428124736.GA8637@ritirata.org>
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com>
+ <1270989075-2267-7-git-send-email-gwingerde@gmail.com>
+ <201004261302.14682.helmut.schaa@googlemail.com>
+ <201004261311.20834.Helmut.Schaa@gmx.de>
+ <20100427111520.GA10969@ritirata.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201004121658.09189.br1@einfach.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100427111520.GA10969@ritirata.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 April 2010 16:41:22 you wrote:
-> On Mon, 2010-04-12 at 16:37 +0900, Bruno Randolf wrote:
-> > When we create an IBSS we are can define the basic rates according to the
-> > band in use. Previously only the B mode rates (1 and 2Mbps) were used
-> > unconditionally, which resulted in low thruput when using RTS/CTS.
+On mar, apr 27, 2010 at 01:15:21 +0200, Antonio Quartulli wrote:
+> On lun, apr 26, 2010 at 01:11:20 +0200, Helmut Schaa wrote:
+> > Am Montag 26 April 2010 schrieb Helmut Schaa:
+> > > Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
+> > > > rt2x00 had preliminary support for RT3070 based devices, but the support was
+> > > > incomplete.
+> > > > Update the RT3070 register initialization to be similar to the latest Ralink
+> > > > vendor driver.
+> > > > 
+> > > > With this patch my rt3070 based devices start showing a sign of life.
+> > > 
+> > > Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
+> > > more details.
 > > 
-> > Also we should save the IBSS basic rates configuration when we join an
-> > IBSS.
+> > Antonio, did that patch also break rx on your PCI device with rt2872?
+> > If not this is only needed for SoC.
+> Hi, I cloned the wireless-testing git a few minutes ago.
+> My card (rt2x00_set_chip: Info - Chipset detected - rt: 2872, rf: 0003,
+> rev: 0200) on miniPCI works correctly without any kind of problem.
+> No hangs at all.
+
+Hi all, I found out that after this commit:
+
+commit 23812383c6b03afef44c4aa642500f8235c3d079
+Author: Helmut Schaa <helmut.schaa@googlemail.com>
+Date:   Mon Apr 26 13:48:45 2010 +0200
+
+    rt2x00: rt2800lib: Fix rx path on SoC devices
+
+my card becomes unstable, I mean that the connection lose packets and
+sometimes it disassociates from the AP.
+I also found that the singnal level reported by iwconfig is wrong (it
+reports -191dBm)
+
+Regards
+
 > 
-> Again, this breaks things. If you feel this is necessary for some
-> reason, it needs to be configurable during the IBSS join by userspace.
+> Regards
+> 
+> > 
+> > Thanks,
+> > Helmut
+> >  
+> > > [...]
+> > > 
+> > > > @@ -1643,18 +1653,12 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> > > >  {
+> > > >  	u8 rfcsr;
+> > > >  	u8 bbp;
+> > > > +	u32 reg;
+> > > > +	u16 eeprom;
+> > > >  
+> > > > -	if (rt2x00_is_usb(rt2x00dev) &&
+> > > > -	    !rt2x00_rt_rev(rt2x00dev, RT3070, REV_RT3070E))
+> > > > +	if (!rt2x00_rt(rt2x00dev, RT3070))
+> > > >  		return 0;
+> > > >  
+> > > > -	if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+> > > > -		if (!rt2x00_rf(rt2x00dev, RF3020) &&
+> > > > -		    !rt2x00_rf(rt2x00dev, RF3021) &&
+> > > > -		    !rt2x00_rf(rt2x00dev, RF3022))
+> > > > -			return 0;
+> > > > -	}
+> > > 
+> > > Any reason why you've removed this part? The following code was executed on
+> > > pci and soc devices when they had an 3020, 3021 or 3022 rf.
+> > > 
+> > > >  	/*
+> > > >  	 * Init RF calibration.
+> > > >  	 */
+> > > > @@ -1665,13 +1669,13 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> > > >  	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+> > > >  	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+> > > >  
+> > > > -	if (rt2x00_is_usb(rt2x00dev)) {
+> > > > +	if (rt2x00_rt(rt2x00dev, RT3070)) {
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 7, 0x70);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x71);
+> > > > +		rt2800_rfcsr_write(rt2x00dev, 10, 0x41);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 12, 0x7b);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+> > > > @@ -1684,48 +1688,25 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 24, 0x16);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
+> > > >  		rt2800_rfcsr_write(rt2x00dev, 29, 0x1f);
+> > > > -	} else if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev)) {
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 3, 0x75);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 4, 0x40);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 5, 0x03);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 6, 0x02);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 7, 0x50);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 8, 0x39);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 9, 0x0f);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 10, 0x60);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 11, 0x21);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 12, 0x75);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 13, 0x75);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 14, 0x90);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 15, 0x58);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 16, 0xb3);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 17, 0x92);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 18, 0x2c);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 19, 0x02);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 20, 0xba);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 21, 0xdb);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 22, 0x00);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 23, 0x31);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 24, 0x08);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 25, 0x01);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 26, 0x25);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
+> > > > -		rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
+> > > 
+> > > This part is actually needed for getting rx to work on the SoC devices.
+> > > 
+> > > Should I post a patch that adds this code again and is only executed on SoC
+> > > devices with rf3020, 3021 and 3022?
+> > > 
+> > > Thanks,
+> > > Helmut
+> > > 
+> 
+> -- 
+> Antonio Quartulli
+> 
+> Ognuno di noi, da solo, non vale nulla 
+> Ernesto "Che" Guevara
+> 
+> _______________________________________________
+> users mailing list
+> users@rt2x00.serialmonkey.com
+> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
 
-without the previous patch (which you NACKed) this is still the correct thing 
-to do in B mode and will result in only 1Mbps as a basic rate. without this 
-patch it is definetly wrong for A mode.
+-- 
+Antonio Quartulli
 
-i can see the reason why you refused the first patch, but the main problem is 
-that there is no clear distiction between B and G in mac80211. there needs to 
-be a way to configure B-only, G-only and BG ERP mode. i don't believe this is 
-applicable to IBSS mode only... is it?
-
-btw: why is only 1Mbps used as a basic rate in B mode in 
-set_mandatory_flags_band()? i think 2Mbps should be there as well?
-
-anyhow, i wouldn't mind adding something to configure this from userspace. can 
-you point me to the right direction? i mean i can add something to IBSS setup 
-but as i said i can't believe this is only relevant to IBSS mode.
-
-bruno
+Ognuno di noi, da solo, non vale nulla 
+Ernesto "Che" Guevara
