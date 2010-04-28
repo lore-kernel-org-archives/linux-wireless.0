@@ -1,148 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14249 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932589Ab0DPVwn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:52:43 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 10/21] iwlwifi: remove duplicated debug functions
-Date: Fri, 16 Apr 2010 14:52:27 -0700
-Message-Id: <1271454758-14351-11-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
-References: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:46629 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859Ab0D1M4f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 08:56:35 -0400
+Received: by bwz19 with SMTP id 19so6313bwz.21
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 05:56:32 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Antonio Quartulli <ordex@ritirata.org>
+Subject: Re: [rt2x00-users] [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
+Date: Wed, 28 Apr 2010 14:56:16 +0200
+Cc: Luis Correia <luis.f.correia@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <20100427111520.GA10969@ritirata.org> <20100428124736.GA8637@ritirata.org>
+In-Reply-To: <20100428124736.GA8637@ritirata.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004281456.16600.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Am Mittwoch 28 April 2010 schrieb Antonio Quartulli:
+> On mar, apr 27, 2010 at 01:15:21 +0200, Antonio Quartulli wrote:
+> > On lun, apr 26, 2010 at 01:11:20 +0200, Helmut Schaa wrote:
+> > > Am Montag 26 April 2010 schrieb Helmut Schaa:
+> > > > Am Sonntag 11 April 2010 schrieb Gertjan van Wingerde:
+> > > > > rt2x00 had preliminary support for RT3070 based devices, but the support was
+> > > > > incomplete.
+> > > > > Update the RT3070 register initialization to be similar to the latest Ralink
+> > > > > vendor driver.
+> > > > > 
+> > > > > With this patch my rt3070 based devices start showing a sign of life.
+> > > > 
+> > > > Gertjan, this patch breaks rx on my 305x SoC device. See inline comments for
+> > > > more details.
+> > > 
+> > > Antonio, did that patch also break rx on your PCI device with rt2872?
+> > > If not this is only needed for SoC.
+> > Hi, I cloned the wireless-testing git a few minutes ago.
+> > My card (rt2x00_set_chip: Info - Chipset detected - rt: 2872, rf: 0003,
+> > rev: 0200) on miniPCI works correctly without any kind of problem.
+> > No hangs at all.
+> 
+> Hi all, I found out that after this commit:
+> 
+> commit 23812383c6b03afef44c4aa642500f8235c3d079
+> Author: Helmut Schaa <helmut.schaa@googlemail.com>
+> Date:   Mon Apr 26 13:48:45 2010 +0200
+> 
+>     rt2x00: rt2800lib: Fix rx path on SoC devices
+> 
+> my card becomes unstable, I mean that the connection lose packets and
+> sometimes it disassociates from the AP.
+> I also found that the singnal level reported by iwconfig is wrong (it
+> reports -191dBm)
 
-Use the show uCode statistics function for uCode debugging purposes only; it
-is being duplicated in both debugfs and sysfs. remove the one from sysfs.
+Uhhh, are you 100% sure? The patch doesn't touch any PCI code at all.
+Maybe the card was unstable before already? Could you please verify again?
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   39 ---------------------------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   39 ---------------------------
- 2 files changed, 0 insertions(+), 78 deletions(-)
+Thanks you very much for your testing, it's really appreciated.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e788722..8ac1546 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3177,44 +3177,6 @@ static ssize_t store_tx_power(struct device *d,
- 
- static DEVICE_ATTR(tx_power, S_IWUSR | S_IRUGO, show_tx_power, store_tx_power);
- 
--static ssize_t show_statistics(struct device *d,
--			       struct device_attribute *attr, char *buf)
--{
--	struct iwl_priv *priv = dev_get_drvdata(d);
--	u32 size = sizeof(struct iwl_notif_statistics);
--	u32 len = 0, ofs = 0;
--	u8 *data = (u8 *)&priv->statistics;
--	int rc = 0;
--
--	if (!iwl_is_alive(priv))
--		return -EAGAIN;
--
--	mutex_lock(&priv->mutex);
--	rc = iwl_send_statistics_request(priv, CMD_SYNC, false);
--	mutex_unlock(&priv->mutex);
--
--	if (rc) {
--		len = sprintf(buf,
--			      "Error sending statistics request: 0x%08X\n", rc);
--		return len;
--	}
--
--	while (size && (PAGE_SIZE - len)) {
--		hex_dump_to_buffer(data + ofs, size, 16, 1, buf + len,
--				   PAGE_SIZE - len, 1);
--		len = strlen(buf);
--		if (PAGE_SIZE - len)
--			buf[len++] = '\n';
--
--		ofs += 16;
--		size -= min(size, 16U);
--	}
--
--	return len;
--}
--
--static DEVICE_ATTR(statistics, S_IRUGO, show_statistics, NULL);
--
- static ssize_t show_rts_ht_protection(struct device *d,
- 			     struct device_attribute *attr, char *buf)
- {
-@@ -3404,7 +3366,6 @@ static void iwl_uninit_drv(struct iwl_priv *priv)
- }
- 
- static struct attribute *iwl_sysfs_entries[] = {
--	&dev_attr_statistics.attr,
- 	&dev_attr_temperature.attr,
- 	&dev_attr_tx_power.attr,
- 	&dev_attr_rts_ht_protection.attr,
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 06004d0..8da3375 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3657,44 +3657,6 @@ static ssize_t show_channels(struct device *d,
- 
- static DEVICE_ATTR(channels, S_IRUSR, show_channels, NULL);
- 
--static ssize_t show_statistics(struct device *d,
--			       struct device_attribute *attr, char *buf)
--{
--	struct iwl_priv *priv = dev_get_drvdata(d);
--	u32 size = sizeof(struct iwl3945_notif_statistics);
--	u32 len = 0, ofs = 0;
--	u8 *data = (u8 *)&priv->_3945.statistics;
--	int rc = 0;
--
--	if (!iwl_is_alive(priv))
--		return -EAGAIN;
--
--	mutex_lock(&priv->mutex);
--	rc = iwl_send_statistics_request(priv, CMD_SYNC, false);
--	mutex_unlock(&priv->mutex);
--
--	if (rc) {
--		len = sprintf(buf,
--			      "Error sending statistics request: 0x%08X\n", rc);
--		return len;
--	}
--
--	while (size && (PAGE_SIZE - len)) {
--		hex_dump_to_buffer(data + ofs, size, 16, 1, buf + len,
--				   PAGE_SIZE - len, 1);
--		len = strlen(buf);
--		if (PAGE_SIZE - len)
--			buf[len++] = '\n';
--
--		ofs += 16;
--		size -= min(size, 16U);
--	}
--
--	return len;
--}
--
--static DEVICE_ATTR(statistics, S_IRUGO, show_statistics, NULL);
--
- static ssize_t show_antenna(struct device *d,
- 			    struct device_attribute *attr, char *buf)
- {
-@@ -3814,7 +3776,6 @@ static struct attribute *iwl3945_sysfs_entries[] = {
- 	&dev_attr_filter_flags.attr,
- 	&dev_attr_measurement.attr,
- 	&dev_attr_retry_rate.attr,
--	&dev_attr_statistics.attr,
- 	&dev_attr_status.attr,
- 	&dev_attr_temperature.attr,
- 	&dev_attr_tx_power.attr,
--- 
-1.6.3.3
-
+Helmut
