@@ -1,157 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46824 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933242Ab0DHT1p (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48287 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312Ab0D1N7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
+	Wed, 28 Apr 2010 09:59:20 -0400
+Subject: Re: [PATCH 2/2] mac80211: fix supported rates IE if AP doesn't
+ give us it's rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
 Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 038/102] ath9k_hw: Add abstraction to set/get link pointer
-Date: Thu,  8 Apr 2010 15:26:34 -0400
-Message-Id: <1270754858-26266-39-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20100428155755.75f1dc5a@dhcp-lab-109.englab.brq.redhat.com>
+References: <1272460624-3611-1-git-send-email-sgruszka@redhat.com>
+	 <1272460624-3611-2-git-send-email-sgruszka@redhat.com>
+	 <1272461964.3565.21.camel@jlt3.sipsolutions.net>
+	 <20100428155755.75f1dc5a@dhcp-lab-109.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Apr 2010 15:59:17 +0200
+Message-ID: <1272463157.3565.22.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+On Wed, 2010-04-28 at 15:57 +0200, Stanislaw Gruszka wrote:
+> On Wed, 28 Apr 2010 15:39:24 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+> > Could you add a comment about what AP this is
+> 
+> Bug reporter don't know what AP it is. He fail to connect
+> to wireless network at school.
+> https://bugzilla.redhat.com/show_bug.cgi?id=558002
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   12 ++++++++++++
- drivers/net/wireless/ath/ath9k/hw-ops.h     |   11 +++++++++++
- drivers/net/wireless/ath/ath9k/hw.h         |    2 ++
- drivers/net/wireless/ath/ath9k/mac.c        |   13 +++++++++++++
- drivers/net/wireless/ath/ath9k/xmit.c       |    7 ++++---
- 5 files changed, 42 insertions(+), 3 deletions(-)
+Ah bugger.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 2089006..f28adb2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -20,11 +20,23 @@ static void ar9003_hw_rx_enable(struct ath_hw *hw)
- 	REG_WRITE(hw, AR_CR, 0);
- }
- 
-+static void ar9003_hw_set_desc_link(void *ds, u32 ds_link)
-+{
-+	((struct ar9003_txc *) ds)->link = ds_link;
-+}
-+
-+static void ar9003_hw_get_desc_link(void *ds, u32 **ds_link)
-+{
-+	*ds_link = &((struct ar9003_txc *) ds)->link;
-+}
-+
- void ar9003_hw_attach_mac_ops(struct ath_hw *hw)
- {
- 	struct ath_hw_ops *ops = ath9k_hw_ops(hw);
- 
- 	ops->rx_enable = ar9003_hw_rx_enable;
-+	ops->set_desc_link = ar9003_hw_set_desc_link;
-+	ops->get_desc_link = ar9003_hw_get_desc_link;
- }
- 
- void ath9k_hw_set_rx_bufsize(struct ath_hw *ah, u16 buf_size)
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 90feffa..3f566df 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -33,6 +33,17 @@ static inline void ath9k_hw_rxena(struct ath_hw *ah)
- 	ath9k_hw_ops(ah)->rx_enable(ah);
- }
- 
-+static inline void ath9k_hw_set_desc_link(struct ath_hw *ah, void *ds,
-+					  u32 link)
-+{
-+	ath9k_hw_ops(ah)->set_desc_link(ds, link);
-+}
-+
-+static inline void ath9k_hw_get_desc_link(struct ath_hw *ah, void *ds,
-+					  u32 **link)
-+{
-+	ath9k_hw_ops(ah)->get_desc_link(ds, link);
-+}
- /* Private hardware call ops */
- 
- /* PHY ops */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9abdfb7..a331786 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -521,6 +521,8 @@ struct ath_hw_ops {
- 				     int restore,
- 				     int power_off);
- 	void (*rx_enable)(struct ath_hw *ah);
-+	void (*set_desc_link)(void *ds, u32 link);
-+	void (*get_desc_link)(void *ds, u32 **link);
- };
- 
- struct ath_hw {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 5f4e2f3..d620398 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -21,12 +21,25 @@ static void ar9002_hw_rx_enable(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_CR, AR_CR_RXE);
- }
- 
-+static void ar9002_hw_set_desc_link(void *ds, u32 ds_link)
-+{
-+	((struct ath_desc*) ds)->ds_link = ds_link;
-+}
-+
-+static void ar9002_hw_get_desc_link(void *ds, u32 **ds_link)
-+{
-+	*ds_link = &((struct ath_desc *)ds)->ds_link;
-+}
-+
- void ar9002_hw_attach_mac_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
- 
- 	ops->rx_enable = ar9002_hw_rx_enable;
-+	ops->set_desc_link = ar9002_hw_set_desc_link;
-+	ops->get_desc_link = ar9002_hw_get_desc_link;
- }
-+
- static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
- 					struct ath9k_tx_queue_info *qi)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 7219e29..4f12de9 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -665,7 +665,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 		bpad = PADBYTES(al_delta) + (ndelim << 2);
- 
- 		bf->bf_next = NULL;
--		bf->bf_desc->ds_link = 0;
-+		ath9k_hw_set_desc_link(sc->sc_ah, bf->bf_desc, 0);
- 
- 		/* link buffers of this frame to the aggregate */
- 		ath_tx_addto_baw(sc, tid, bf);
-@@ -673,7 +673,8 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 		list_move_tail(&bf->list, bf_q);
- 		if (bf_prev) {
- 			bf_prev->bf_next = bf;
--			bf_prev->bf_desc->ds_link = bf->bf_daddr;
-+			ath9k_hw_set_desc_link(sc->sc_ah, bf_prev->bf_desc,
-+					       bf->bf_daddr);
- 		}
- 		bf_prev = bf;
- 
-@@ -1659,7 +1660,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 	list_add_tail(&bf->list, &bf_head);
- 
- 	ds = bf->bf_desc;
--	ds->ds_link = 0;
-+	ath9k_hw_set_desc_link(ah, ds, 0);
- 
- 	ath9k_hw_set11n_txdesc(ah, ds, bf->bf_frmlen, frm_type, MAX_RATE_POWER,
- 			       bf->bf_keyix, bf->bf_keytype, bf->bf_flags);
--- 
-1.6.3.3
+> >, and that it's a
+> > workaround please?
+> 
+> I don't think this is workaround. For me this is right behavior
+> and fix for workaround introduced in commit
+> 36d16ae73becc5978fe22866e9ab66b509211afe "mac80211: fix association
+> with some APs"
+
+Oh yeah so it's a workaround for a workaround. Oh well. Can we still
+have a comment about it in the else branch?
+
+johannes
 
