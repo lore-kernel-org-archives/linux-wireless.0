@@ -1,90 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14249 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932573Ab0DPVwo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:52:44 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 14/21] iwlwifi: PA type for 6000g2 series
-Date: Fri, 16 Apr 2010 14:52:31 -0700
-Message-Id: <1271454758-14351-15-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
-References: <1271454758-14351-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51341 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735Ab0D1IMH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 04:12:07 -0400
+Received: by wye20 with SMTP id 20so549896wye.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 01:12:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201004280958.59704.helmut.schaa@googlemail.com>
+References: <201004280958.59704.helmut.schaa@googlemail.com>
+Date: Wed, 28 Apr 2010 10:12:04 +0200
+Message-ID: <s2x14add3d11004280112o1012b76eq861fc7df27d361f5@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: rt2800lib: update rfcsr & bbp init code for SoC
+	devices
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+2010/4/28 Helmut Schaa <helmut.schaa@googlemail.com>:
+> Update the rfcsr and bbp init code for SoC devices to match with the
+> latest Ralink driver.
+>
+> To have better control over which values are used for the register
+> initialization create a new function rt2800_is_305x_soc which checks
+> for SoC interface type, the correct RT chipset and the correct RF
+> chipset. This is based on the assumption that all rt305x SoC devices
+> use a rt2872 and rf3020/rf3021/rf3022.
+>
+> In case an unknown RF chipset is found on a SoC device with a rt2872
+> don't treat it as rt305x and just print a message.
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-For 6000g2 series of NICs, PA type is determined by uCode, driver do not
-have to set the register for internal/external PA. It is a workaround
-just for 6000 series NICs.
+Looks good to me.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-6000.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    8 ++++----
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 7b695e7..7da23d3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -379,7 +379,7 @@ static const struct iwl_ops iwl6050_ops = {
- /*
-  * "i": Internal configuration, use internal Power Amplifier
-  */
--struct iwl_cfg iwl6000g2i_2agn_cfg = {
-+struct iwl_cfg iwl6000g2_2agn_cfg = {
- 	.name = "6000 Series 2x2 AGN Gen2",
- 	.fw_name_pre = IWL6000G2_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-@@ -397,7 +397,7 @@ struct iwl_cfg iwl6000g2i_2agn_cfg = {
- 	.pll_cfg_val = 0,
- 	.set_l0s = true,
- 	.use_bsm = false,
--	.pa_type = IWL_PA_INTERNAL,
-+	.pa_type = IWL_PA_SYSTEM,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
- 	.shadow_ram_support = true,
- 	.ht_greenfield_support = true,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8ac1546..1f3c5d5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3798,10 +3798,10 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x4239, 0x1316, iwl6000i_2abg_cfg)},
- 
- /* 6x00 Series Gen2 */
--	{IWL_PCI_DEVICE(0x0082, 0x1201, iwl6000g2i_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0082, 0x1301, iwl6000g2i_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0082, 0x1321, iwl6000g2i_2agn_cfg)},
--	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6000g2i_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1201, iwl6000g2_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1301, iwl6000g2_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1321, iwl6000g2_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6000g2_2agn_cfg)},
- 
- /* 6x50 WiFi/WiMax Series */
- 	{IWL_PCI_DEVICE(0x0087, 0x1301, iwl6050_2agn_cfg)},
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index ff4b47c..bdc60aa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -58,7 +58,7 @@ extern struct iwl_cfg iwl5100_abg_cfg;
- extern struct iwl_cfg iwl5150_agn_cfg;
- extern struct iwl_cfg iwl5150_abg_cfg;
- extern struct iwl_cfg iwl6000i_2agn_cfg;
--extern struct iwl_cfg iwl6000g2i_2agn_cfg;
-+extern struct iwl_cfg iwl6000g2_2agn_cfg;
- extern struct iwl_cfg iwl6000i_2abg_cfg;
- extern struct iwl_cfg iwl6000i_2bg_cfg;
- extern struct iwl_cfg iwl6000_3agn_cfg;
--- 
-1.6.3.3
+> ---
+>
+> Gertjan, this approach should be pretty safe and if there really exists
+> a rt305x board with a different rf chipset we'll get a log message.
+>
+> At the moment rt2800_is_305x_soc is only used in rt2800lib.c but maybe
+> it's worth to move it to one of the headers?
 
+Well, at the moment I don't see a use case beyond rt2800lib.c.
+So, let's leave it where it is now, and we'll move it when the need to
+move it to
+a header file when the need arises.
+
+>
+>  drivers/net/wireless/rt2x00/rt2800lib.c |   43 ++++++++++++++++++++++++------
+>  1 files changed, 34 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 50f4451..e7a61a3 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -76,6 +76,23 @@ MODULE_LICENSE("GPL");
+>        rt2800_regbusy_read((__dev), H2M_MAILBOX_CSR, \
+>                            H2M_MAILBOX_CSR_OWNER, (__reg))
+>
+> +static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
+> +{
+> +       /* check for rt2872 on SoC */
+> +       if (!rt2x00_is_soc(rt2x00dev) ||
+> +           !rt2x00_rt(rt2x00dev, RT2872))
+> +               return false;
+> +
+> +       /* we know for sure that these rf chipsets are used on rt305x boards */
+> +       if (rt2x00_rf(rt2x00dev, RF3020) ||
+> +           rt2x00_rf(rt2x00dev, RF3021) ||
+> +           rt2x00_rf(rt2x00dev, RF3022))
+> +               return true;
+> +
+> +       NOTICE(rt2x00dev, "Unknown RF chipset on rt305x\n");
+> +       return false;
+> +}
+> +
+>  static void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
+>                             const unsigned int word, const u8 value)
+>  {
+> @@ -1556,6 +1573,9 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>                     rt2800_wait_bbp_ready(rt2x00dev)))
+>                return -EACCES;
+>
+> +       if (rt2800_is_305x_soc(rt2x00dev))
+> +               rt2800_bbp_write(rt2x00dev, 31, 0x08);
+> +
+>        rt2800_bbp_write(rt2x00dev, 65, 0x2c);
+>        rt2800_bbp_write(rt2x00dev, 66, 0x38);
+>
+> @@ -1576,6 +1596,9 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>                rt2800_bbp_write(rt2x00dev, 79, 0x13);
+>                rt2800_bbp_write(rt2x00dev, 80, 0x05);
+>                rt2800_bbp_write(rt2x00dev, 81, 0x33);
+> +       } else if (rt2800_is_305x_soc(rt2x00dev)) {
+> +               rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+> +               rt2800_bbp_write(rt2x00dev, 80, 0x08);
+>        } else {
+>                rt2800_bbp_write(rt2x00dev, 81, 0x37);
+>        }
+> @@ -1596,12 +1619,16 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>        if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
+>            rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E) ||
+>            rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E) ||
+> -           rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E))
+> +           rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E) ||
+> +           rt2800_is_305x_soc(rt2x00dev))
+>                rt2800_bbp_write(rt2x00dev, 103, 0xc0);
+>        else
+>                rt2800_bbp_write(rt2x00dev, 103, 0x00);
+>
+> -       rt2800_bbp_write(rt2x00dev, 105, 0x05);
+> +       if (rt2800_is_305x_soc(rt2x00dev))
+> +               rt2800_bbp_write(rt2x00dev, 105, 0x01);
+> +       else
+> +               rt2800_bbp_write(rt2x00dev, 105, 0x05);
+>        rt2800_bbp_write(rt2x00dev, 106, 0x35);
+>
+>        if (rt2x00_rt(rt2x00dev, RT3071) ||
+> @@ -1618,11 +1645,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>                rt2800_bbp_write(rt2x00dev, 138, value);
+>        }
+>
+> -       if (rt2x00_rt(rt2x00dev, RT2872)) {
+> -               rt2800_bbp_write(rt2x00dev, 31, 0x08);
+> -               rt2800_bbp_write(rt2x00dev, 78, 0x0e);
+> -               rt2800_bbp_write(rt2x00dev, 80, 0x08);
+> -       }
+>
+>        for (i = 0; i < EEPROM_BBP_SIZE; i++) {
+>                rt2x00_eeprom_read(rt2x00dev, EEPROM_BBP_START + i, &eeprom);
+> @@ -1709,7 +1731,7 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>            !rt2x00_rt(rt2x00dev, RT3071) &&
+>            !rt2x00_rt(rt2x00dev, RT3090) &&
+>            !rt2x00_rt(rt2x00dev, RT3390) &&
+> -           !(rt2x00_is_soc(rt2x00dev) && rt2x00_rt(rt2x00dev, RT2872)))
+> +           !rt2800_is_305x_soc(rt2x00dev))
+>                return 0;
+>
+>        /*
+> @@ -1777,7 +1799,7 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>                rt2800_rfcsr_write(rt2x00dev, 29, 0x8f);
+>                rt2800_rfcsr_write(rt2x00dev, 30, 0x20);
+>                rt2800_rfcsr_write(rt2x00dev, 31, 0x0f);
+> -       } else if (rt2x00_rt(rt2x00dev, RT2872)) {
+> +       } else if (rt2800_is_305x_soc(rt2x00dev)) {
+>                rt2800_rfcsr_write(rt2x00dev, 0, 0x50);
+>                rt2800_rfcsr_write(rt2x00dev, 1, 0x01);
+>                rt2800_rfcsr_write(rt2x00dev, 2, 0xf7);
+> @@ -1808,6 +1830,9 @@ int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>                rt2800_rfcsr_write(rt2x00dev, 27, 0x23);
+>                rt2800_rfcsr_write(rt2x00dev, 28, 0x13);
+>                rt2800_rfcsr_write(rt2x00dev, 29, 0x83);
+> +               rt2800_rfcsr_write(rt2x00dev, 30, 0x00);
+> +               rt2800_rfcsr_write(rt2x00dev, 31, 0x00);
+> +               return 0;
+>        }
+>
+>        if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
+> --
+> 1.6.4.2
+>
+>
