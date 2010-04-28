@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46726 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933201Ab0DHT1k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:40 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 016/102] ath9k_hw: add the AR9003 ar9003_hw_macversion_supported()
-Date: Thu,  8 Apr 2010 15:26:12 -0400
-Message-Id: <1270754858-26266-17-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga03.intel.com ([143.182.124.21]:38859 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753008Ab0D1ICX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 04:02:23 -0400
+From: "Xu, Martin" <martin.xu@intel.com>
+To: "ath9k-devel@lists.ath5k.org" <ath9k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 28 Apr 2010 16:01:45 +0800
+Subject: kernel warning on 2.6.33 ath9k
+Message-ID: <FC2FB65B4D919844ADE4BE3C2BB739AD1E4FB31B@shsmsx501.ccr.corp.intel.com>
+References: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
+ <1272438045.2772.6.camel@jm-desktop>
+In-Reply-To: <1272438045.2772.6.camel@jm-desktop>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 5c267aa..97af905 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -576,6 +576,17 @@ static bool ar9002_hw_macversion_supported(u32 macversion)
- 	return false;
- }
- 
-+static bool ar9003_hw_macversion_supported(u32 macversion)
-+{
-+	switch (macversion) {
-+	case AR_SREV_VERSION_9300:
-+		return true;
-+	default:
-+		break;
-+	}
-+	return false;
-+}
-+
- static void ar9002_hw_init_cal_settings(struct ath_hw *ah)
- {
- 	if (AR_SREV_9160_10_OR_LATER(ah)) {
-@@ -3591,5 +3602,9 @@ static void ar9002_hw_attach_ops(struct ath_hw *ah)
- /* Sets up the AR9003 hardware familiy callbacks */
- static void ar9003_hw_attach_ops(struct ath_hw *ah)
- {
-+	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-+
-+	priv_ops->macversion_supported = ar9003_hw_macversion_supported;
-+
- 	ar9003_hw_attach_phy_ops(ah);
- }
--- 
-1.6.3.3
-
+SGkNCkkgZm91bmQgdGhhdCBrZXJuZWwgcmVwb3J0cyBiZWxvdyB3YXJuaW5nIHdoZW4gdXNpbmcg
+YXRoOWsgaW4ga2VybmVsIDIuNi4zMy4NClNvbWVvbmUgY2FuIGtpbmRseSB0ZWxsIG1lIHdoZXRo
+ZXIgaXQgaXMgdGhlIG5ldyBmb3VuZCBpc3N1ZSBvciB0aGUgaXNzdWUgaXMga25vd24gYW5kIGhh
+cyBiZWVuIGZpeGVkIGluIGxhdGVyIGNvbW1pdCBpbiBnaXQgdHJlZT8NClRoYW5rcyENCg0KLS0t
+LS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tDQpXQVJOSU5HOiBhdCBrZXJuZWwvc29m
+dGlycS5jOjE0MyBsb2NhbF9iaF9lbmFibGVfaXArMHgzMi8weDc2KCkNCkhhcmR3YXJlIG5hbWU6
+IEFPNTMyaCAgICAgICAgICANCk1vZHVsZXMgbGlua2VkIGluOiBjYmMgZWNyeXB0ZnMgYXRoOWsg
+YXRoOWtfY29tbW9uIGJhdHRlcnkgYXRsMWMgam95ZGV2IGF0aDlrX2h3IHV2Y3ZpZGVvDQpQaWQ6
+IDg1MCwgY29tbTogd3BhX3N1cHBsaWNhbnQgTm90IHRhaW50ZWQgMi42LjMzLjItOC4xLW5ldGJv
+b2sgIzENCkNhbGwgVHJhY2U6DQogWzxjMTAzMDk3OD5dIHdhcm5fc2xvd3BhdGhfY29tbW9uKzB4
+NjYvMHg3ZA0KIFs8YzEwMzVhNzQ+XSA/IGxvY2FsX2JoX2VuYWJsZV9pcCsweDMyLzB4NzYNCiBb
+PGMxMDMwOTljPl0gd2Fybl9zbG93cGF0aF9udWxsKzB4ZC8weDEwDQogWzxjMTAzNWE3ND5dIGxv
+Y2FsX2JoX2VuYWJsZV9pcCsweDMyLzB4NzYNCiBbPGMxNDc4OWMwPl0gX3Jhd19zcGluX3VubG9j
+a19iaCsweDE3LzB4MTkNCiBbPGY4NzFkYmQzPl0gYXRoX3R4X25vZGVfY2xlYW51cCsweGUwLzB4
+ZjkgW2F0aDlrXQ0KIFs8YzEwM2FlNDY+XSA/IGxvY2tfdGltZXJfYmFzZSsweDIyLzB4NDENCiBb
+PGY4NzFhMDA1Pl0gYXRoOWtfc3RhX25vdGlmeSsweDc0LzB4NzggW2F0aDlrXQ0KIFs8YzE0NDM5
+ODc+XSBfX3N0YV9pbmZvX3VubGluaysweDEzOS8weDE4OQ0KIFs8Zjg3MTlmOTE+XSA/IGF0aDlr
+X3N0YV9ub3RpZnkrMHgwLzB4NzggW2F0aDlrXQ0KIFs8YzE0NDM5ZmE+XSBzdGFfaW5mb191bmxp
+bmsrMHgyMy8weDMxDQogWzxjMTQ0ODgzND5dIGllZWU4MDIxMV9zZXRfZGlzYXNzb2MrMHgxYmQv
+MHgxZTMNCiBbPGMxNDQ4Y2Y4Pl0gaWVlZTgwMjExX21nZF9kZWF1dGgrMHgzYy8weGZlDQogWzxj
+MTQ0ZGYyMT5dIGllZWU4MDIxMV9kZWF1dGgrMHgxNC8weDE2DQogWzxjMTQzYzNmYz5dIF9fY2Zn
+ODAyMTFfbWxtZV9kZWF1dGgrMHhlOS8weGYyDQogWzxjMTQzZWVhMT5dIF9fY2ZnODAyMTFfZGlz
+Y29ubmVjdCsweGNiLzB4MTJlDQogWzxjMTQ0MGI3ND5dIGNmZzgwMjExX3dleHRfc2l3bWxtZSsw
+eDY0LzB4ODANCiBbPGMxNDQxY2Y2Pl0gaW9jdGxfc3RhbmRhcmRfY2FsbCsweDFkNy8weDI2Zg0K
+IFs8YzEzOTI4MWI+XSA/IGRldl9nZXRfYnlfbmFtZV9yY3UrMHg3My8weDgwDQogWzxjMTM5Mjhk
+OT5dID8gX19kZXZfZ2V0X2J5X25hbWUrMHg3MS8weDdlDQogWzxjMTQ0MWU4MT5dIHdleHRfaGFu
+ZGxlX2lvY3RsKzB4ZjMvMHgxN2UNCiBbPGMxNDQwYjEwPl0gPyBjZmc4MDIxMV93ZXh0X3Npd21s
+bWUrMHgwLzB4ODANCiBbPGMxMzk2NDEwPl0gZGV2X2lvY3RsKzB4NTc4LzB4NTk4DQogWzxjMTAw
+OTFiOT5dID8gcmVzdG9yZV9pMzg3X2Z4c2F2ZSsweDU0LzB4NjYNCiBbPGMxMzg3YjQ0Pl0gc29j
+a19pb2N0bCsweDFjZi8weDFkYg0KIFs8YzEwYjA5Nzk+XSB2ZnNfaW9jdGwrMHgyOC8weDkyDQog
+WzxjMTM4Nzk3NT5dID8gc29ja19pb2N0bCsweDAvMHgxZGINCiBbPGMxMGIwZWQ2Pl0gZG9fdmZz
+X2lvY3RsKzB4NDUzLzB4NDkxDQogWzxjMTM4ODIzMz5dID8gc3lzX3JlY3Ztc2crMHgyYy8weDQ3
+DQogWzxjMTM4OTU0Mj5dID8gc3lzX3NvY2tldGNhbGwrMHgxNDcvMHgxOGMNCiBbPGMxMGIwZjQz
+Pl0gc3lzX2lvY3RsKzB4MmYvMHg0OQ0KIFs8YzEwMDI3ZDA+XSBzeXNlbnRlcl9kb19jYWxsKzB4
+MTIvMHgyNg0KDQo=
