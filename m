@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:48683 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827Ab0DTHqk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Apr 2010 03:46:40 -0400
-Received: by pwj9 with SMTP id 9so4001355pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Apr 2010 00:46:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <19405.19620.199172.233574@gargle.gargle.HOWL>
-References: <1271691883-13133-1-git-send-email-tom.leiming@gmail.com>
-	 <19405.11838.119234.371361@gargle.gargle.HOWL>
-	 <y2ud82e647a1004192259nec8aad6dy836b76b2211b6a40@mail.gmail.com>
-	 <19405.19620.199172.233574@gargle.gargle.HOWL>
-Date: Tue, 20 Apr 2010 15:46:38 +0800
-Message-ID: <w2wd82e647a1004200046gecfbc655y889759c27caad557@mail.gmail.com>
-Subject: Re: [PATCH] ath9k-htc: speedup disconnect handling
-From: Ming Lei <tom.leiming@gmail.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:63978 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752636Ab0D1UtJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 16:49:09 -0400
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Subject: [PATCH] mac80211: fix paged defragmentation
+Date: Wed, 28 Apr 2010 13:59:22 -0700
+Message-Id: <1272488362-14603-1-git-send-email-abhijeet.kolekar@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/20 Sujith <Sujith.Manoharan@atheros.com>:
-> Ming Lei wrote:
->> If ATH_DBG_RESET is enabled, you will find the debug messages
->> below[1] during disconnecting.  From the messages, the short hang should
->> be caused by the 'RTC stuck in MAC reset'. Once the patch is applied,
->> no such issue will happen.
->
-> I take it that you didn't have ATH_DBG_WMI in your debug mask.
-> A simpler way to fix this issue is to deny all WMI commands once
-> the target has been unplugged - something like the attached patch.
->
-> Can you check if it fixes your issue ?
+Fix the bug at
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2194
 
-Yes,  the patch does fix the issue.
+Paged RX skb patch broke the fragmentation while checking the sequnce
+control bit in headers. Instead of doing linearization of all the frames
+to check seq_ctrl bit just copy the bits.
 
-Thanks,
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+---
+ net/mac80211/rx.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 72efbd8..4126392 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1234,14 +1234,16 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_hdr *hdr;
+ 	u16 sc;
+-	__le16 fc;
++	__le16 fc, seq_ctrl;
+ 	unsigned int frag, seq;
+ 	struct ieee80211_fragment_entry *entry;
+ 	struct sk_buff *skb;
+ 
+ 	hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	fc = hdr->frame_control;
+-	sc = le16_to_cpu(hdr->seq_ctrl);
++	skb_copy_bits(rx->skb, offsetof(struct ieee80211_hdr, seq_ctrl),
++			&seq_ctrl, sizeof(seq_ctrl));
++	sc = le16_to_cpu(seq_ctrl);
+ 	frag = sc & IEEE80211_SCTL_FRAG;
+ 
+ 	if (likely((!ieee80211_has_morefrags(fc) && frag == 0) ||
 -- 
-Lei Ming
+1.6.3.3
+
