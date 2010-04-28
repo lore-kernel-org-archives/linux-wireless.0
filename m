@@ -1,73 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46927 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933272Ab0DHT1r (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:25504 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396Ab0D1Gu5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Apr 2010 15:27:47 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Wed, 28 Apr 2010 02:50:57 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 066/102] ath9k_hw: add a helper for changing the TX/RX masks
-Date: Thu,  8 Apr 2010 15:27:02 -0400
-Message-Id: <1270754858-26266-67-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
-References: <1270754858-26266-1-git-send-email-lrodriguez@atheros.com>
+	Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Subject: [PATCH 2/4] wl1271: Configure QOS nullfunc template for U-APSD
+Date: Wed, 28 Apr 2010 09:50:00 +0300
+Message-Id: <1272437402-28801-3-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1272437402-28801-1-git-send-email-luciano.coelho@nokia.com>
+References: <1272437402-28801-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   14 ++++++++------
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |    4 ++++
- 2 files changed, 12 insertions(+), 6 deletions(-)
+From: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index e73b07a..faa7d0f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -247,13 +247,10 @@ static void ar9003_hw_init_bb(struct ath_hw *ah,
- 	udelay(synthDelay + BASE_ACTIVATE_DELAY);
- }
+When U-APSD is enabled, device is not sending power save
+state notifications to AP using QOS nullfunc frames.
+
+This patch configures nullfunc templates needed for U-APSD.
+
+Signed-off-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index e53dfc9..26e8fb1 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1708,6 +1708,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			if (ret < 0)
+ 				goto out_sleep;
  
--static void ar9003_hw_init_chain_masks(struct ath_hw *ah)
-+void ar9003_hw_modify_chain_masks(struct ath_hw *ah,
-+				  u8 rx_chainmask,
-+				  u8 tx_chainmask)
- {
--	int rx_chainmask, tx_chainmask;
--
--	rx_chainmask = ah->rxchainmask;
--	tx_chainmask = ah->txchainmask;
--
- 	switch (rx_chainmask) {
- 	case 0x5:
- 		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
-@@ -276,6 +273,11 @@ static void ar9003_hw_init_chain_masks(struct ath_hw *ah)
- 	}
- }
- 
-+static void ar9003_hw_init_chain_masks(struct ath_hw *ah)
-+{
-+	ar9003_hw_modify_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
-+}
++			ret = wl1271_build_qos_null_data(wl);
++			if (ret < 0)
++				goto out_sleep;
 +
- /*
-  * Override INI values with chip specific configuration.
-  */
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index b9a76d3..1aeeba3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -788,4 +788,8 @@
+ 			/* filter out all packets not from this BSSID */
+ 			wl1271_configure_filters(wl, 0);
  
- #define AR_PHY_BB_WD_STATUS_CLR         0x00000008
- 
-+void ar9003_hw_modify_chain_masks(struct ath_hw *ah,
-+				  u8 rx_chainmask,
-+				  u8 tx_chainmask);
-+
- #endif  /* AR9003_PHY_H */
 -- 
 1.6.3.3
 
