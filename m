@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:37334 "EHLO purkki.valot.fi"
+Received: from mail.atheros.com ([12.36.123.2]:18677 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751059Ab0DMJHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Apr 2010 05:07:12 -0400
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: ext Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ylalehto Janne \(Nokia-D\/Tampere\)" <janne.ylalehto@nokia.com>
-Subject: Re: [RFC PATCH] nl80211: Add support for dynamic ps timeout configuration
-References: <1271059902-27788-1-git-send-email-juuso.oikarinen@nokia.com>
-	<1271061120.3877.6.camel@jlt3.sipsolutions.net>
-	<1271062589.10120.1169.camel@wimaxnb.nmp.nokia.com>
-	<1271063175.3877.13.camel@jlt3.sipsolutions.net>
-	<1271065535.10120.1191.camel@wimaxnb.nmp.nokia.com>
-	<871vekpexo.fsf@purkki.valot.fi>
-	<1271143746.10120.1232.camel@wimaxnb.nmp.nokia.com>
-	<87wrwboirr.fsf@purkki.valot.fi>
-	<1271148573.10120.1257.camel@wimaxnb.nmp.nokia.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 13 Apr 2010 12:07:10 +0300
-In-Reply-To: <1271148573.10120.1257.camel@wimaxnb.nmp.nokia.com> (Juuso Oikarinen's message of "Tue\, 13 Apr 2010 11\:49\:33 +0300")
-Message-ID: <87sk6zoh4x.fsf@purkki.valot.fi>
+	id S1751168Ab0D1HAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 03:00:50 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Apr 2010 00:00:50 -0700
+Subject: Re: [PATCH] ath9k: Added get_survey callback in order to get
+ channel noise
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: Benoit Papillault <benoit.papillault@free.fr>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"ath9k-devel@lists.ath5k.org" <ath9k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
+References: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Apr 2010 10:00:45 +0300
+Message-ID: <1272438045.2772.6.camel@jm-desktop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+On Tue, 2010-04-27 at 15:08 -0700, Benoit Papillault wrote:
+> +static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
+> +			     struct survey_info *survey)
 
->> > The problem here is that the latency at least cannot be used in any
->> > simple and/or general way I can think of to control the dynamic PS
->> > timeout.
->> 
->> Can't you do something like this:
->> 
->> pm_qos >= 1000 -> timeout 0 ms (aka. full power save)
->> pm_qos <= 100 -> timeout 100 ms
->> pm_qos <= 50 -> timeout 300 ms
->> 
->> That is, just some arbitrary numbers but which affect dynamic ps
->> timeout. I haven't thought about the numbers at all, but they actually
->> don't matter because it's easy to change them inside mac80211.
->
-> Theoretically I could, but I'm pretty sure whatever values I would
-> choose would be unacceptable by others, as they would be tuned for a
-> specific use.
+> +	struct ieee80211_conf *conf = &hw->conf;
+> +
+> +	 if (idx != 0)
+> +		return -ENOENT;
+> +
+> +	survey->channel = conf->channel;
 
-I don't see a problem with that. The current use of pm_qos is very
-limited, I think it's all positive if we start using it more.
+Are there any plans on providing this information from all channels? I
+have assumed that the survey command was supposed to be used for
+surveying all channels (e.g., to get information for auto-channel
+selection) and returning something for the current channel is quite
+limited subset of that. In other words, I would like to be able to run a
+scan of all channels and then use NL80211_CMD_GET_SURVEY to fetch
+additional per-channel information like noise (and also channel usage
+statistics in case of ath9k) from the scanned channels.
 
-> Also, although AFAIK barely anyone uses the DTIM interval which is
-> determined based on th pm_qos, adding arbitrary rules like this to the
-> side risks breaking something for someone.
+- Jouni
 
-AFAIK the pm_qos values are not set in stone in any. Applications just
-request something and kernel can do whatever it wants, even ignore it.
-So I don't see any harm if we change how mac80211 uses pm_qos values.
-And most probably this will change many times in the future.
 
--- 
-Kalle Valo
