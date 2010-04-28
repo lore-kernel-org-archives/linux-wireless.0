@@ -1,78 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:57175 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754600Ab0DIFnS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Apr 2010 01:43:18 -0400
-Message-ID: <4BBEBE6B.20209@openwrt.org>
-Date: Fri, 09 Apr 2010 07:43:07 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 3/9] rt2x00: Align RT chipset definitions with vendor
- driver.
-References: <1270763437-29526-1-git-send-email-gwingerde@gmail.com> <1270763437-29526-4-git-send-email-gwingerde@gmail.com> <4BBE5879.8000304@openwrt.org> <4BBEB6E1.70300@gmail.com>
-In-Reply-To: <4BBEB6E1.70300@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([192.100.105.134]:46519 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751168Ab0D1GuW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 02:50:22 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] wl1271: fix a bunch of sparse warnings
+Date: Wed, 28 Apr 2010 09:50:02 +0300
+Message-Id: <1272437402-28801-5-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1272437402-28801-1-git-send-email-luciano.coelho@nokia.com>
+References: <1272437402-28801-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-04-09 7:10 AM, Gertjan van Wingerde wrote:
-> On 04/09/10 00:28, Felix Fietkau wrote:
->> On 2010-04-08 11:50 PM, Gertjan van Wingerde wrote:
->>> Only include definitions for RT chipsets that are also used inside the
->>> Ralink vendor drivers.
->>>
->>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>> ---
->>>  drivers/net/wireless/rt2x00/rt2800lib.c |   13 -------------
->>>  drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++----
->>>  2 files changed, 3 insertions(+), 17 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> index 394c8e4..4bc7e09 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> @@ -1209,10 +1209,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->>>  	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
->>>  	if ((rt2x00_rt(rt2x00dev, RT2872) &&
->>>  	     (rt2x00_rev(rt2x00dev) >= RT2880E_VERSION)) ||
->>> -	    rt2x00_rt(rt2x00dev, RT2880) ||
->>>  	    rt2x00_rt(rt2x00dev, RT2883) ||
->>> -	    rt2x00_rt(rt2x00dev, RT2890) ||
->>> -	    rt2x00_rt(rt2x00dev, RT3052) ||
->>>  	    (rt2x00_rt(rt2x00dev, RT3070) &&
->>>  	     (rt2x00_rev(rt2x00dev) < RT3070_VERSION)))
->>>  		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
->>> @@ -1511,12 +1508,6 @@ int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->>>  		rt2800_bbp_write(rt2x00dev, 105, 0x05);
->>>  	}
->>>  
->>> -	if (rt2x00_rt(rt2x00dev, RT3052)) {
->>> -		rt2800_bbp_write(rt2x00dev, 31, 0x08);
->>> -		rt2800_bbp_write(rt2x00dev, 78, 0x0e);
->>> -		rt2800_bbp_write(rt2x00dev, 80, 0x08);
->>> -	}
->>> -
->> Why are you removing support for RT3052? IMHO those writes were
->> necessary, last time I tested the rt2800pci code on the RT3052 WiSoC.
-> 
-> That is because I have not been able to find them in any of the Ralink vendor drivers.
-> Actually, none of the Ralink vendor drivers mention an RT chipset that identifies itself
-> as a RT3052. The only mentioning Ive seen is RT305x devices that identify themselves as
-> RT2872 devices, but even for them I haven't found these BBP initializations.
-> That's why I removed this part.
-> 
-> I have no problem re-instating this if I can find some evidence that these devices
-> actually exist.
-These chipsets won't show up in STA-only drivers, because they belong to
-embedded APs. If you download GPL sources for devices such as ASUS
-RT-N15 you will find ifdefs for CONFIG_RALINK_RT3052 and the above
-values in BBPRegTable in the driver sources.
-I have a few devices based on RT3052, which is why I added this code.
-At some point I even had basic Rx/Tx working on it, but haven't tested
-in a while.
+A couple of sparse warnings in some rate settings (missing cpu_to_le32) were
+fixed.  Changed the conf_sg_settings struct from le to native endianess.  The
+values are converted to le when copying them to the acx command instead.
 
-- Felix
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_acx.c  |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    8 ++++----
+ drivers/net/wireless/wl12xx/wl1271_cmd.c  |    4 ++--
+ drivers/net/wireless/wl12xx/wl1271_conf.h |    2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index 2ad086e..e19e2f8 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -590,7 +590,7 @@ int wl1271_acx_sg_cfg(struct wl1271 *wl)
+ 
+ 	/* BT-WLAN coext parameters */
+ 	for (i = 0; i < CONF_SG_PARAMS_MAX; i++)
+-		param->params[i] = c->params[i];
++		param->params[i] = cpu_to_le32(c->params[i]);
+ 	param->param_idx = CONF_SG_PARAMS_ALL;
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_SG_CFG, param, sizeof(*param));
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index 8087dc1..acb1d9e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -351,7 +351,7 @@ static int wl1271_boot_soft_reset(struct wl1271 *wl)
+ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ {
+ 	int loop, ret;
+-	u32 chip_id, interrupt;
++	u32 chip_id, intr;
+ 
+ 	wl1271_boot_set_ecpu_ctrl(wl, ECPU_CONTROL_HALT);
+ 
+@@ -368,15 +368,15 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 	loop = 0;
+ 	while (loop++ < INIT_LOOP) {
+ 		udelay(INIT_LOOP_DELAY);
+-		interrupt = wl1271_read32(wl, ACX_REG_INTERRUPT_NO_CLEAR);
++		intr = wl1271_read32(wl, ACX_REG_INTERRUPT_NO_CLEAR);
+ 
+-		if (interrupt == 0xffffffff) {
++		if (intr == 0xffffffff) {
+ 			wl1271_error("error reading hardware complete "
+ 				     "init indication");
+ 			return -EIO;
+ 		}
+ 		/* check that ACX_INTR_INIT_COMPLETE is enabled */
+-		else if (interrupt & WL1271_ACX_INTR_INIT_COMPLETE) {
++		else if (intr & WL1271_ACX_INTR_INIT_COMPLETE) {
+ 			wl1271_write32(wl, ACX_REG_INTERRUPT_ACK,
+ 				       WL1271_ACX_INTR_INIT_COMPLETE);
+ 			break;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 61fb774..62c11af 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -318,7 +318,7 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
+ 	join->rx_config_options = cpu_to_le32(wl->rx_config);
+ 	join->rx_filter_options = cpu_to_le32(wl->rx_filter);
+ 	join->bss_type = bss_type;
+-	join->basic_rate_set = wl->basic_rate_set;
++	join->basic_rate_set = cpu_to_le32(wl->basic_rate_set);
+ 
+ 	if (wl->band == IEEE80211_BAND_5GHZ)
+ 		join->bss_type |= WL1271_JOIN_CMD_BSS_TYPE_5GHZ;
+@@ -615,7 +615,7 @@ int wl1271_cmd_scan(struct wl1271 *wl, const u8 *ssid, size_t ssid_len,
+ 	params->params.scan_options = cpu_to_le16(scan_options);
+ 
+ 	params->params.num_probe_requests = probe_requests;
+-	params->params.tx_rate = rate;
++	params->params.tx_rate = cpu_to_le32(rate);
+ 	params->params.tid_trigger = 0;
+ 	params->params.scan_tag = WL1271_SCAN_DEFAULT_TAG;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
+index c44307c..d046d04 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_conf.h
++++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+@@ -401,7 +401,7 @@ enum {
+ };
+ 
+ struct conf_sg_settings {
+-	__le32 params[CONF_SG_PARAMS_MAX];
++	u32 params[CONF_SG_PARAMS_MAX];
+ 	u8 state;
+ };
+ 
+-- 
+1.6.3.3
+
