@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36750 "EHLO purkki.valot.fi"
+Received: from mga01.intel.com ([192.55.52.88]:24489 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933085Ab0D3Ud4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 16:33:56 -0400
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCHv4 0/2] mac80211: cfg80211: dynamic ps timeout based on pm-qos
-References: <1271850458-32437-1-git-send-email-juuso.oikarinen@nokia.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 29 Apr 2010 16:45:29 +0300
-In-Reply-To: <1271850458-32437-1-git-send-email-juuso.oikarinen@nokia.com> (Juuso Oikarinen's message of "Wed\, 21 Apr 2010 14\:47\:36 +0300")
-Message-ID: <87633al6di.fsf@purkki.valot.fi>
+	id S1751025Ab0D2AjJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Apr 2010 20:39:09 -0400
+From: "Xu, Martin" <martin.xu@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "ath9k-devel@lists.ath5k.org" <ath9k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 29 Apr 2010 08:39:02 +0800
+Subject: RE: kernel warning on 2.6.33 ath9k
+Message-ID: <FC2FB65B4D919844ADE4BE3C2BB739AD1E4FB5B1@shsmsx501.ccr.corp.intel.com>
+References: <1272406104-6870-1-git-send-email-benoit.papillault@free.fr>
+ <1272438045.2772.6.camel@jm-desktop>
+ <FC2FB65B4D919844ADE4BE3C2BB739AD1E4FB31B@shsmsx501.ccr.corp.intel.com>
+ <20100428140446.GA2912@tuxdriver.com>
+In-Reply-To: <20100428140446.GA2912@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+> -----Original Message-----
+> From: John W. Linville [mailto:linville@tuxdriver.com]
+> Sent: Wednesday, April 28, 2010 10:05 PM
+> To: Xu, Martin
+> Cc: ath9k-devel@lists.ath5k.org; linux-wireless@vger.kernel.org
+> Subject: Re: kernel warning on 2.6.33 ath9k
+> 
+> On Wed, Apr 28, 2010 at 04:01:45PM +0800, Xu, Martin wrote:
+> > Hi
+> > I found that kernel reports below warning when using ath9k in kernel 2.6.33.
+> > Someone can kindly tell me whether it is the new found issue or the issue is
+> known and has been fixed in later commit in git tree?
+> > Thanks!
+> 
+> Looks like this:
+Yes, just this, thanks. 
 
-> These patches propose a way to adjust the dynamic ps timeout in the
-> mac80211 based on the pm-qos network latency value. This allows user
-> space to influence the level of power saving performed by the
-> mac80211.
->
-> v4 of these patches change the way pm qos network latency ranges
-> converted to dynamic ps timeout values a little bit saner. Unlike
-> the previous set of patches, now the latancy values make sense in a
-> wider scope than this ps timeout thing only. I hope this makes them
-> somewhat more future-proof.
-
-This looks very good now. Bonus points for adding the comment about
-the two second value!
-
-Thank you for implementing this.
-
--- 
-Kalle Valo
