@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53266 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754649Ab0DFTpI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43714 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758626Ab0D3SIl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 15:45:08 -0400
-Date: Tue, 6 Apr 2010 15:34:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/4] rt2x00: Powersave fixes.
-Message-ID: <20100406193409.GA3017@tuxdriver.com>
-References: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1269985826-17438-1-git-send-email-gwingerde@gmail.com>
+	Fri, 30 Apr 2010 14:08:41 -0400
+Subject: [PATCH] mac80211: tell driver about IBSS merge
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1272532707.3736.14.camel@jlt3.sipsolutions.net>
+References: <1272469243.3565.27.camel@jlt3.sipsolutions.net>
+	 <1272532707.3736.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 29 Apr 2010 21:34:01 +0200
+Message-ID: <1272569641.27378.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 30, 2010 at 11:50:22PM +0200, Gertjan van Wingerde wrote:
-> The following 4 patches fix powersave behavior of rt2x00.
-> The first patch fixes the rt2500usb powersave issues found lately.
-> The second on enables powersave for rt2500usb again, now it is fixed.
-> The third and fourth are ongoing work to bring the other PCI drivers
-> in a better shape.
-> 
-> All patches are against wireless-2.6.
-> 
-> The patch series is also available via:
-> 
-> 	git://git.gwingerde.nl/rt2x00-2.6.git
-> 
-> Gertjan van Wingerde (4):
->   rt2x00: Disable auto wakeup before waking up device.
->   rt2x00: Enable powersaving by default again on rt2500usb.
->   rt2x00: Add wakeup interrupt handler to rt61pci.
->   rt2x00: Add wakeup interrupt handler to rt2800pci.
+My previous patch "mac80211: notify driver about
+IBSS status" left a problem -- when we merge with
+a new BSSID, we never tell the driver that we left
+the old one. Fix that.
 
-I don't have any objection to these patches, but they don't
-seem appropriate for 2.6.34 to me.  As such, basing them on
-wireless-next-2.6 seems more appropriate.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Incremental patch since you already have the other one.
 
-Any objection to me applying them for 2.6.35?
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -92,6 +92,12 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	if (memcmp(ifibss->bssid, bssid, ETH_ALEN))
+ 		sta_info_flush(sdata->local, sdata);
+ 
++	/* if merging, indicate to driver that we leave the old IBSS */
++	if (sdata->vif.bss_conf.ibss_joined) {
++		sdata->vif.bss_conf.ibss_joined = false;
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_IBSS);
++	}
++
+ 	memcpy(ifibss->bssid, bssid, ETH_ALEN);
+ 
+ 	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
