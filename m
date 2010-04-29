@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:23955 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134Ab0DFI71 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58771 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759160Ab0D3SPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Apr 2010 04:59:27 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH] mac80211: check whether scan is in progress before queueing scan_work
-Date: Tue,  6 Apr 2010 11:54:54 +0300
-Message-Id: <1270544094-20980-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Fri, 30 Apr 2010 14:15:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43legacy: Added get_survey callback in order to get channel noise
+Date: Thu, 29 Apr 2010 15:56:25 -0400
+Message-Id: <1272570985-11291-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As scan_work is queued from work_work it needs to be checked if scan
-has been started during execution of work_work. Otherwise, when hw
-scan is used, the stack gets error about hw being busy with ongoing
-scan. This causes the stack to abort scan without notifying the driver
-about it. This leads to a situation where the hw is scanning and the stack
-thinks it's not. Then when the scan finishes, the stack will complain by
-warnings.
-
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/work.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/b43legacy/main.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 1e1ea30..7bd8670 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -919,11 +919,16 @@ static void ieee80211_work_work(struct work_struct *work)
- 		run_again(local, jiffies + HZ/2);
- 	}
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index 1d070be..6e9e0df 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -3481,6 +3481,23 @@ static int b43legacy_op_beacon_set_tim(struct ieee80211_hw *hw,
+ 	return 0;
+ }
  
--	if (list_empty(&local->work_list) && local->scan_req)
-+	mutex_lock(&local->scan_mtx);
++static int b43legacy_op_get_survey(struct ieee80211_hw *hw, int idx,
++				   struct survey_info *survey)
++{
++	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
++	struct b43legacy_wldev *dev = wl->current_dev;
++	struct ieee80211_conf *conf = &hw->conf;
 +
-+	if (list_empty(&local->work_list) && local->scan_req &&
-+	    !local->scanning)
- 		ieee80211_queue_delayed_work(&local->hw,
- 					     &local->scan_work,
- 					     round_jiffies_relative(0));
- 
-+	mutex_unlock(&local->scan_mtx);
++	if (idx != 0)
++		return -ENOENT;
 +
- 	mutex_unlock(&local->work_mtx);
++	survey->channel = conf->channel;
++	survey->filled = SURVEY_INFO_NOISE_DBM;
++	survey->noise = dev->stats.link_noise;
++
++	return 0;
++}
++
+ static const struct ieee80211_ops b43legacy_hw_ops = {
+ 	.tx			= b43legacy_op_tx,
+ 	.conf_tx		= b43legacy_op_conf_tx,
+@@ -3493,6 +3510,7 @@ static const struct ieee80211_ops b43legacy_hw_ops = {
+ 	.start			= b43legacy_op_start,
+ 	.stop			= b43legacy_op_stop,
+ 	.set_tim		= b43legacy_op_beacon_set_tim,
++	.get_survey		= b43legacy_op_get_survey,
+ 	.rfkill_poll		= b43legacy_rfkill_poll,
+ };
  
- 	ieee80211_recalc_idle(local);
 -- 
-1.5.6.3
+1.6.6.1
 
