@@ -1,34 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nlpi129.sbcis.sbc.com ([207.115.36.143]:41569 "EHLO
-	nlpi129.prodigy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755319Ab0ENOaA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 10:30:00 -0400
-Date: Fri, 14 May 2010 09:26:44 -0500 (CDT)
-From: Christoph Lameter <cl@linux.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-cc: Pekka Enberg <penberg@cs.helsinki.fi>,
-	"Justin P. Mattock" <justinmattock@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-In-Reply-To: <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.1005140926180.7867@router.home>
-References: <4BEC7A84.3010503@gmail.com> <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>  <AANLkTim7fnKebMoEu1DjD3S-15ZqlTUez3Lpp0wGVJQ6@mail.gmail.com> <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mga09.intel.com ([134.134.136.24]:64061 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757557Ab0D3XAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Apr 2010 19:00:37 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 8/8] iwlwifi: greenfield support only true for 11n devices
+Date: Fri, 30 Apr 2010 16:00:25 -0700
+Message-Id: <1272668425-3753-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
+References: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 13 May 2010, Luis R. Rodriguez wrote:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> > CONFIG_SLUB_DEBUG and then either CONFIG_SLUB_DEBUG_ON or pass
-> > 'slub_debug' as kernel parameter.
->
-> Ah OK I had CONFIG_SLUB_DEBUG but not  CONFIG_SLUB_DEBUG_ON, will
-> enable it from here on.
+Greenfield is a 11n feature, remove it from non-11n devices
+configuration parameters list
 
-The slub_debug kernel parameter is there so that you can avoid having to
-set CONFIG_SLUB_DEBUG_ON.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    3 ---
+ 2 files changed, 0 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 8431ffc..fb59af2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -282,7 +282,6 @@ struct iwl_cfg iwl1000_bg_cfg = {
+ 	.use_bsm = false,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
+ 	.shadow_ram_support = false,
+-	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.support_ct_kill_exit = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index c492650..7acef70 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -500,7 +500,6 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.pa_type = IWL_PA_INTERNAL,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+-	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+@@ -533,7 +532,6 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.pa_type = IWL_PA_INTERNAL,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+-	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+@@ -600,7 +598,6 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.pa_type = IWL_PA_SYSTEM,
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x50,
+ 	.shadow_ram_support = true,
+-	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.supports_idle = true,
+-- 
+1.6.3.3
 
