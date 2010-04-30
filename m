@@ -1,41 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:55360 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758593Ab0DPVNG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Apr 2010 17:13:06 -0400
-Subject: Re: [ath5k-devel] [PATCH] ath5k/ath9k: Fix 64 bits TSF reads
-From: Pavel Roskin <proski@gnu.org>
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath5k.org
-In-Reply-To: <1271369246-6892-1-git-send-email-benoit.papillault@free.fr>
-References: <1271369246-6892-1-git-send-email-benoit.papillault@free.fr>
-Content-Type: text/plain
-Date: Fri, 16 Apr 2010 17:13:04 -0400
-Message-Id: <1271452384.16507.16.camel@mj>
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.153]:47124 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758884Ab0D3Rye (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Apr 2010 13:54:34 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so2601fgg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Apr 2010 10:54:32 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Antonio Quartulli <ordex@ritirata.org>
+Subject: Re: [rt2x00-users] [PATCH 6/9] rt2x00: Finish rt3070 support in rt2800 register initialization.
+Date: Fri, 30 Apr 2010 14:20:38 +0200
+Cc: Luis Correia <luis.f.correia@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1270989075-2267-1-git-send-email-gwingerde@gmail.com> <201004281456.16600.helmut.schaa@googlemail.com> <20100428172319.GA19393@ritirata.org>
+In-Reply-To: <20100428172319.GA19393@ritirata.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201004301420.38190.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-04-16 at 00:07 +0200, Benoit Papillault wrote:
+Am Mittwoch 28 April 2010 schrieb Antonio Quartulli:
+> On mer, apr 28, 2010 at 02:56:16 +0200, Helmut Schaa wrote:
+> > Am Mittwoch 28 April 2010 schrieb Antonio Quartulli:
+> > > Hi all, I found out that after this commit:
+> > > 
+> > > commit 23812383c6b03afef44c4aa642500f8235c3d079
+> > > Author: Helmut Schaa <helmut.schaa@googlemail.com>
+> > > Date:   Mon Apr 26 13:48:45 2010 +0200
+> > > 
+> > >     rt2x00: rt2800lib: Fix rx path on SoC devices
+> > > 
+> > > my card becomes unstable, I mean that the connection lose packets and
+> > > sometimes it disassociates from the AP.
+> > > I also found that the singnal level reported by iwconfig is wrong (it
+> > > reports -191dBm)
+> > 
+> > Uhhh, are you 100% sure? The patch doesn't touch any PCI code at all.
+> > Maybe the card was unstable before already? Could you please verify again?
+> > 
+> > Thanks you very much for your testing, it's really appreciated.
+> > 
+> 
+> I pull the latest commit on wireless-testing. Now it seems to work well.
+> I cannot understand what happened. Anyway the signal level is still
+> wrong because iwconfig shows a positive value instead of a negative one
+> (the absolute value seems plausible).
 
-> It follows the logic mentionned by Derek, with only 2 register reads
-> needed at each additional steps instead of 3 (the minimum number of
-> register reads is still 3).
+Hmm, my connection isn't always stable. Either the reception or the
+transmission of frames still causes trouble sometimes.
 
-I would prefer an approach whereas tsf_upper2 or tsf_upper1 is chosen
-based on whether tsf_lower is more or less than 0x80000000 if
-(tsf_upper2 - tsf_upper1) is 1.  If the difference is not 0 or 1, either
-the hardware is broken or the kernel was stuck for so long (71 minutes!)
-that getting the exact tsf should be the least worry.  That's when
-WARN_ON would be appropriate.
+When I force the device to use a fixed rate I can get a pretty stable
+connection.
 
-The problem with overengineered code is that it doesn't break when it's
-better to break and expose the problem :-)
+- 11g rates seem to work only when I'm really close to the AP (~1m)
+- 11b rates seem to work much better but I can also see retries sometimes.
+- 11n rates seem to work as well (but are not used by the default rate control
+  algorithm yet).
 
-But it's just a suggestion, not a NACK.  It's better to have some fix
-than no fix at all.
- 
--- 
-Regards,
-Pavel Roskin
+So, could you please try different fixed rates and see what results you get?
+
+iwconfig wlan0 rate 11M
+
+should do the trick. Replace 11M in subsequent tests with 1M or 6M or 54M to
+get different results.
+
+Btw. does anybody know how I can force a fixed rate without Wext?
+
+> On 2.6.34-rc* kernel I still have the same issue I noticed some times
+> ago:
+> 
+> Apr 28 00:10:18 eagle3 kernel: [ 1359.907914] rt2800pci 0000:06:00.0: firmware: requesting rt2860.bin
+> Apr 28 00:10:18 eagle3 kernel: [ 1360.033584] phy1 -> rt2x00lib_request_firmware: Info - Firmware detected - version: 0.26.
+> Apr 28 00:10:18 eagle3 kernel: [ 1360.043280] phy1 -> rt2800pci_load_firmware: Error - PBF system register not ready.
+> Apr 28 00:10:18 eagle3 kernel: [ 1360.043793] phy1 -> rt2x00pci_regbusy_read: Error - Indirect register access failed:
+> 	offset=0x00007010, value=0x3dca191a
+
+Can't help you with these, sorry.
+
+Helmut
