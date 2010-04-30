@@ -1,100 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3233 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758641Ab0EMLEp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 07:04:45 -0400
-Message-ID: <4BEBDCCA.1040004@gmail.com>
-Date: Thu, 13 May 2010 13:04:42 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH v2 04/10] rt2x00: Move rt2x00debug_dump_frame declaration
- 	to rt2x00.h.
-References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>	 <1273743418-28383-5-git-send-email-gwingerde@gmail.com> <AANLkTilbzQ1_16u2hjkh6pFSnUmjg8bNRHiJf_g1hPPb@mail.gmail.com>
-In-Reply-To: <AANLkTilbzQ1_16u2hjkh6pFSnUmjg8bNRHiJf_g1hPPb@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:19515 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757075Ab0D3XAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Apr 2010 19:00:36 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/8] iwlwifi: set AMPDU status variables correctly
+Date: Fri, 30 Apr 2010 16:00:23 -0700
+Message-Id: <1272668425-3753-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
+References: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/10 11:45, Ivo Van Doorn wrote:
-> On Thu, May 13, 2010 at 11:36 AM, Gertjan van Wingerde
-> <gwingerde@gmail.com> wrote:
->> This allows rt2x00debug_dump_frame to be used from everywhere.
->>
->> This is preparation for beacon writing clean ups.
->>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->> ---
->>  drivers/net/wireless/rt2x00/rt2x00.h      |   35 +++++++++++++++++++++++++++++
->>  drivers/net/wireless/rt2x00/rt2x00debug.c |    1 +
->>  drivers/net/wireless/rt2x00/rt2x00dump.h  |   20 ----------------
->>  drivers/net/wireless/rt2x00/rt2x00lib.h   |   10 --------
->>  4 files changed, 36 insertions(+), 30 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
->> index 6c1ff4c..1329f6c 100644
->> --- a/drivers/net/wireless/rt2x00/rt2x00.h
->> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
->> @@ -1015,6 +1015,41 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
->>                                          enum queue_index index);
->>
->>  /*
->> + * Debugfs handlers.
->> + */
->> +/**
->> + * enum rt2x00_dump_type - Frame type
->> + *
->> + * These values are used for the indicate the type of frame that is being
->> + * dumped:
->> + * @DUMP_FRAME_RXDONE: This frame has been received by the hardware.
->> + * @DUMP_FRAME_TX: This frame is queued for transmission to the hardware.
->> + * @DUMP_FRAME_TXDONE: This frame indicates the device has handled
->> + *     the tx event which has either succeeded or failed. A frame
->> + *     with this type should also have been reported with as a
->> + *     %DUMP_FRAME_TX frame.
->> + * @DUMP_FRAME_BEACON: This beacon frame is queued for transmission to the
->> + *     hardware.
->> + */
->> +enum rt2x00_dump_type {
->> +       DUMP_FRAME_RXDONE = 1,
->> +       DUMP_FRAME_TX = 2,
->> +       DUMP_FRAME_TXDONE = 3,
->> +       DUMP_FRAME_BEACON = 4,
->> +};
-> 
-> Can't this stay in rt2x00dump.h? The rt2x00dump.h is part of the
-> public interface towards
-> userspace which can use these defined to determine the frame type.
-> We can safely include this header in rt2x00.h since it contains the
-> public interface anyway.
+From: Daniel Halperin <dhalperi@cs.washington.edu>
 
-Hmpf, it looks like there is a lot of unspecified assumptions about the placement
-of information in files and for some functionality. We must get better in documenting
-this.
-Although it is a bit strange to have a public interface to userspace defined this deep
-in the kernel source tree, I'll move it back and put a big fat comment is there that this
-actually is the public interface towards userspace and that all this information is to
-be kept together.
+The TX status code is currently abusing the ampdu_ack_map field (a bitmap) to
+count the number of successfully received frames.  The comments in mac80211.h
+show there are actually three different, relevant variables, of which we are
+currently using two, both incorrectly. Fix this by making
 
-> 
->> +#ifdef CONFIG_RT2X00_LIB_DEBUGFS
->> +void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
->> +                           enum rt2x00_dump_type type, struct sk_buff *skb);
->> +#else
->> +static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
->> +                                         enum rt2x00_dump_type type,
->> +                                         struct sk_buff *skb)
->> +{
->> +}
->> +#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
-> 
-> Could you add some documentation to this function?
-> 
+- ampdu_ack_len -> the number of ACKed frames (i.e. successes)
+- ampdu_ack_map -> the bitmap
+- ampdu_len -> the total number of frames sent (i.e., attempts)
 
-Off course I can; although that is a bit more than just moving declarations ;-)
+to match the header file (and verified with ath9k's usage) and updating Intel's
+RS code to match.
 
+Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
-Gertjan.
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   10 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    5 +++--
+ 2 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 8f8d5e3..f01f242 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -867,14 +867,14 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
+ 		rs_get_tbl_info_from_mcs(tx_rate, priv->band, &tbl_type,
+ 				&rs_index);
+ 		rs_collect_tx_data(curr_tbl, rs_index,
+-				   info->status.ampdu_ack_len,
+-				   info->status.ampdu_ack_map);
++				   info->status.ampdu_len,
++				   info->status.ampdu_ack_len);
+ 
+ 		/* Update success/fail counts if not searching for new mode */
+ 		if (lq_sta->stay_in_tbl) {
+-			lq_sta->total_success += info->status.ampdu_ack_map;
+-			lq_sta->total_failed += (info->status.ampdu_ack_len -
+-					info->status.ampdu_ack_map);
++			lq_sta->total_success += info->status.ampdu_ack_len;
++			lq_sta->total_failed += (info->status.ampdu_len -
++					info->status.ampdu_ack_len);
+ 		}
+ 	} else {
+ 	/*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 95e263f..c2a5c85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -1233,8 +1233,9 @@ static int iwlagn_tx_status_reply_compressed_ba(struct iwl_priv *priv,
+ 	memset(&info->status, 0, sizeof(info->status));
+ 	info->flags |= IEEE80211_TX_STAT_ACK;
+ 	info->flags |= IEEE80211_TX_STAT_AMPDU;
+-	info->status.ampdu_ack_map = successes;
+-	info->status.ampdu_ack_len = agg->frame_count;
++	info->status.ampdu_ack_len = successes;
++	info->status.ampdu_ack_map = bitmap;
++	info->status.ampdu_len = agg->frame_count;
+ 	iwlagn_hwrate_to_tx_control(priv, agg->rate_n_flags, info);
+ 
+ 	IWL_DEBUG_TX_REPLY(priv, "Bitmap %llx\n", (unsigned long long)bitmap);
+-- 
+1.6.3.3
+
