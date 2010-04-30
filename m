@@ -1,656 +1,826 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:35447 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754387Ab0ELJkS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 05:40:18 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0917907217
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:40:17 +0900 (JST)
-Subject: [PATCH 07/12] ath5k: remove ATH_TRACE macro
+Received: from mga09.intel.com ([134.134.136.24]:19515 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757628Ab0D3XAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Apr 2010 19:00:37 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 12 May 2010 18:40:18 +0900
-Message-ID: <20100512094018.6575.93712.stgit@tt-desk>
-In-Reply-To: <20100512093947.6575.99595.stgit@tt-desk>
-References: <20100512093947.6575.99595.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 5/8] iwl3945: add ucode statistics
+Date: Fri, 30 Apr 2010 16:00:22 -0700
+Message-Id: <1272668425-3753-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
+References: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that we have ftrace, it is not needed any more.
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Add general, rx and tx uCode statistics to 3945. This will help
+in debugging
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/attach.c |    2 --
- drivers/net/wireless/ath/ath5k/caps.c   |    7 -------
- drivers/net/wireless/ath/ath5k/debug.c  |    1 -
- drivers/net/wireless/ath/ath5k/debug.h  |    8 --------
- drivers/net/wireless/ath/ath5k/desc.c   |    7 -------
- drivers/net/wireless/ath/ath5k/dma.c    |   13 -------------
- drivers/net/wireless/ath/ath5k/eeprom.c |    1 -
- drivers/net/wireless/ath/ath5k/gpio.c   |    7 -------
- drivers/net/wireless/ath/ath5k/pcu.c    |   24 ------------------------
- drivers/net/wireless/ath/ath5k/phy.c    |   13 -------------
- drivers/net/wireless/ath/ath5k/qcu.c    |    9 ---------
- drivers/net/wireless/ath/ath5k/reset.c  |    7 -------
- 12 files changed, 0 insertions(+), 99 deletions(-)
+ drivers/net/wireless/iwlwifi/Makefile           |    1 +
+ drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c |  500 +++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h |   60 +++
+ drivers/net/wireless/iwlwifi/iwl-3945.c         |   72 ++++-
+ drivers/net/wireless/iwlwifi/iwl-3945.h         |    2 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c      |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h          |    5 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c     |    2 +-
+ 8 files changed, 646 insertions(+), 14 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h
 
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index e0c244b..ef2dc1d 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -351,8 +351,6 @@ err_free:
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index 5ed2dcb..7c72353 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -22,5 +22,6 @@ iwlagn-$(CONFIG_IWL5000) += iwl-1000.o
+ # 3945
+ obj-$(CONFIG_IWL3945)	+= iwl3945.o
+ iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o iwl-3945-led.o
++iwl3945-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-3945-debugfs.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
+new file mode 100644
+index 0000000..6a9c64a
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
+@@ -0,0 +1,500 @@
++/******************************************************************************
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *****************************************************************************/
++
++#include "iwl-3945-debugfs.h"
++
++ssize_t iwl3945_ucode_rx_stats_read(struct file *file,
++				    char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = file->private_data;
++	int pos = 0;
++	char *buf;
++	int bufsz = sizeof(struct iwl39_statistics_rx_phy) * 40 +
++		    sizeof(struct iwl39_statistics_rx_non_phy) * 40 + 400;
++	ssize_t ret;
++	struct iwl39_statistics_rx_phy *ofdm, *accum_ofdm, *delta_ofdm, *max_ofdm;
++	struct iwl39_statistics_rx_phy *cck, *accum_cck, *delta_cck, *max_cck;
++	struct iwl39_statistics_rx_non_phy *general, *accum_general;
++	struct iwl39_statistics_rx_non_phy *delta_general, *max_general;
++
++	if (!iwl_is_alive(priv))
++		return -EAGAIN;
++
++	buf = kzalloc(bufsz, GFP_KERNEL);
++	if (!buf) {
++		IWL_ERR(priv, "Can not allocate Buffer\n");
++		return -ENOMEM;
++	}
++
++	/*
++	 * The statistic information display here is based on
++	 * the last statistics notification from uCode
++	 * might not reflect the current uCode activity
++	 */
++	ofdm = &priv->_3945.statistics.rx.ofdm;
++	cck = &priv->_3945.statistics.rx.cck;
++	general = &priv->_3945.statistics.rx.general;
++	accum_ofdm = &priv->_3945.accum_statistics.rx.ofdm;
++	accum_cck = &priv->_3945.accum_statistics.rx.cck;
++	accum_general = &priv->_3945.accum_statistics.rx.general;
++	delta_ofdm = &priv->_3945.delta_statistics.rx.ofdm;
++	delta_cck = &priv->_3945.delta_statistics.rx.cck;
++	delta_general = &priv->_3945.delta_statistics.rx.general;
++	max_ofdm = &priv->_3945.max_delta.rx.ofdm;
++	max_cck = &priv->_3945.max_delta.rx.cck;
++	max_general = &priv->_3945.max_delta.rx.general;
++
++	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
++			 "acumulative       delta         max\n",
++			 "Statistics_Rx - OFDM:");
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "ina_cnt:", le32_to_cpu(ofdm->ina_cnt),
++			 accum_ofdm->ina_cnt,
++			 delta_ofdm->ina_cnt, max_ofdm->ina_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "fina_cnt:",
++			 le32_to_cpu(ofdm->fina_cnt), accum_ofdm->fina_cnt,
++			 delta_ofdm->fina_cnt, max_ofdm->fina_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n", "plcp_err:",
++			 le32_to_cpu(ofdm->plcp_err), accum_ofdm->plcp_err,
++			 delta_ofdm->plcp_err, max_ofdm->plcp_err);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",  "crc32_err:",
++			 le32_to_cpu(ofdm->crc32_err), accum_ofdm->crc32_err,
++			 delta_ofdm->crc32_err, max_ofdm->crc32_err);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n", "overrun_err:",
++			 le32_to_cpu(ofdm->overrun_err),
++			 accum_ofdm->overrun_err, delta_ofdm->overrun_err,
++			 max_ofdm->overrun_err);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "early_overrun_err:",
++			 le32_to_cpu(ofdm->early_overrun_err),
++			 accum_ofdm->early_overrun_err,
++			 delta_ofdm->early_overrun_err,
++			 max_ofdm->early_overrun_err);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "crc32_good:", le32_to_cpu(ofdm->crc32_good),
++			 accum_ofdm->crc32_good, delta_ofdm->crc32_good,
++			 max_ofdm->crc32_good);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n", "false_alarm_cnt:",
++			 le32_to_cpu(ofdm->false_alarm_cnt),
++			 accum_ofdm->false_alarm_cnt,
++			 delta_ofdm->false_alarm_cnt,
++			 max_ofdm->false_alarm_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "fina_sync_err_cnt:",
++			 le32_to_cpu(ofdm->fina_sync_err_cnt),
++			 accum_ofdm->fina_sync_err_cnt,
++			 delta_ofdm->fina_sync_err_cnt,
++			 max_ofdm->fina_sync_err_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "sfd_timeout:",
++			 le32_to_cpu(ofdm->sfd_timeout),
++			 accum_ofdm->sfd_timeout,
++			 delta_ofdm->sfd_timeout,
++			 max_ofdm->sfd_timeout);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "fina_timeout:",
++			 le32_to_cpu(ofdm->fina_timeout),
++			 accum_ofdm->fina_timeout,
++			 delta_ofdm->fina_timeout,
++			 max_ofdm->fina_timeout);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "unresponded_rts:",
++			 le32_to_cpu(ofdm->unresponded_rts),
++			 accum_ofdm->unresponded_rts,
++			 delta_ofdm->unresponded_rts,
++			 max_ofdm->unresponded_rts);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "rxe_frame_lmt_ovrun:",
++			 le32_to_cpu(ofdm->rxe_frame_limit_overrun),
++			 accum_ofdm->rxe_frame_limit_overrun,
++			 delta_ofdm->rxe_frame_limit_overrun,
++			 max_ofdm->rxe_frame_limit_overrun);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "sent_ack_cnt:",
++			 le32_to_cpu(ofdm->sent_ack_cnt),
++			 accum_ofdm->sent_ack_cnt,
++			 delta_ofdm->sent_ack_cnt,
++			 max_ofdm->sent_ack_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "sent_cts_cnt:",
++			 le32_to_cpu(ofdm->sent_cts_cnt),
++			 accum_ofdm->sent_cts_cnt,
++			 delta_ofdm->sent_cts_cnt, max_ofdm->sent_cts_cnt);
++
++	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
++			 "acumulative       delta         max\n",
++			 "Statistics_Rx - CCK:");
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "ina_cnt:",
++			 le32_to_cpu(cck->ina_cnt), accum_cck->ina_cnt,
++			 delta_cck->ina_cnt, max_cck->ina_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "fina_cnt:",
++			 le32_to_cpu(cck->fina_cnt), accum_cck->fina_cnt,
++			 delta_cck->fina_cnt, max_cck->fina_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "plcp_err:",
++			 le32_to_cpu(cck->plcp_err), accum_cck->plcp_err,
++			 delta_cck->plcp_err, max_cck->plcp_err);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "crc32_err:",
++			 le32_to_cpu(cck->crc32_err), accum_cck->crc32_err,
++			 delta_cck->crc32_err, max_cck->crc32_err);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "overrun_err:",
++			 le32_to_cpu(cck->overrun_err),
++			 accum_cck->overrun_err,
++			 delta_cck->overrun_err, max_cck->overrun_err);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "early_overrun_err:",
++			 le32_to_cpu(cck->early_overrun_err),
++			 accum_cck->early_overrun_err,
++			 delta_cck->early_overrun_err,
++			 max_cck->early_overrun_err);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "crc32_good:",
++			 le32_to_cpu(cck->crc32_good), accum_cck->crc32_good,
++			 delta_cck->crc32_good,
++			 max_cck->crc32_good);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "false_alarm_cnt:",
++			 le32_to_cpu(cck->false_alarm_cnt),
++			 accum_cck->false_alarm_cnt,
++			 delta_cck->false_alarm_cnt, max_cck->false_alarm_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "fina_sync_err_cnt:",
++			 le32_to_cpu(cck->fina_sync_err_cnt),
++			 accum_cck->fina_sync_err_cnt,
++			 delta_cck->fina_sync_err_cnt,
++			 max_cck->fina_sync_err_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "sfd_timeout:",
++			 le32_to_cpu(cck->sfd_timeout),
++			 accum_cck->sfd_timeout,
++			 delta_cck->sfd_timeout, max_cck->sfd_timeout);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "fina_timeout:",
++			 le32_to_cpu(cck->fina_timeout),
++			 accum_cck->fina_timeout,
++			 delta_cck->fina_timeout, max_cck->fina_timeout);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "unresponded_rts:",
++			 le32_to_cpu(cck->unresponded_rts),
++			 accum_cck->unresponded_rts,
++			 delta_cck->unresponded_rts,
++			 max_cck->unresponded_rts);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "rxe_frame_lmt_ovrun:",
++			 le32_to_cpu(cck->rxe_frame_limit_overrun),
++			 accum_cck->rxe_frame_limit_overrun,
++			 delta_cck->rxe_frame_limit_overrun,
++			 max_cck->rxe_frame_limit_overrun);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "sent_ack_cnt:",
++			 le32_to_cpu(cck->sent_ack_cnt),
++			 accum_cck->sent_ack_cnt,
++			 delta_cck->sent_ack_cnt,
++			 max_cck->sent_ack_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "sent_cts_cnt:",
++			 le32_to_cpu(cck->sent_cts_cnt),
++			 accum_cck->sent_cts_cnt,
++			 delta_cck->sent_cts_cnt,
++			 max_cck->sent_cts_cnt);
++
++	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
++			 "acumulative       delta         max\n",
++			 "Statistics_Rx - GENERAL:");
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "bogus_cts:",
++			 le32_to_cpu(general->bogus_cts),
++			 accum_general->bogus_cts,
++			 delta_general->bogus_cts, max_general->bogus_cts);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "bogus_ack:",
++			 le32_to_cpu(general->bogus_ack),
++			 accum_general->bogus_ack,
++			 delta_general->bogus_ack, max_general->bogus_ack);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "non_bssid_frames:",
++			 le32_to_cpu(general->non_bssid_frames),
++			 accum_general->non_bssid_frames,
++			 delta_general->non_bssid_frames,
++			 max_general->non_bssid_frames);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "filtered_frames:",
++			 le32_to_cpu(general->filtered_frames),
++			 accum_general->filtered_frames,
++			 delta_general->filtered_frames,
++			 max_general->filtered_frames);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "non_channel_beacons:",
++			 le32_to_cpu(general->non_channel_beacons),
++			 accum_general->non_channel_beacons,
++			 delta_general->non_channel_beacons,
++			 max_general->non_channel_beacons);
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++	kfree(buf);
++	return ret;
++}
++
++ssize_t iwl3945_ucode_tx_stats_read(struct file *file,
++				    char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = file->private_data;
++	int pos = 0;
++	char *buf;
++	int bufsz = (sizeof(struct iwl39_statistics_tx) * 48) + 250;
++	ssize_t ret;
++	struct iwl39_statistics_tx *tx, *accum_tx, *delta_tx, *max_tx;
++
++	if (!iwl_is_alive(priv))
++		return -EAGAIN;
++
++	buf = kzalloc(bufsz, GFP_KERNEL);
++	if (!buf) {
++		IWL_ERR(priv, "Can not allocate Buffer\n");
++		return -ENOMEM;
++	}
++
++	/*
++	 * The statistic information display here is based on
++	 * the last statistics notification from uCode
++	 * might not reflect the current uCode activity
++	 */
++	tx = &priv->_3945.statistics.tx;
++	accum_tx = &priv->_3945.accum_statistics.tx;
++	delta_tx = &priv->_3945.delta_statistics.tx;
++	max_tx = &priv->_3945.max_delta.tx;
++	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
++			 "acumulative       delta         max\n",
++			 "Statistics_Tx:");
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "preamble:",
++			 le32_to_cpu(tx->preamble_cnt),
++			 accum_tx->preamble_cnt,
++			 delta_tx->preamble_cnt, max_tx->preamble_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "rx_detected_cnt:",
++			 le32_to_cpu(tx->rx_detected_cnt),
++			 accum_tx->rx_detected_cnt,
++			 delta_tx->rx_detected_cnt, max_tx->rx_detected_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "bt_prio_defer_cnt:",
++			 le32_to_cpu(tx->bt_prio_defer_cnt),
++			 accum_tx->bt_prio_defer_cnt,
++			 delta_tx->bt_prio_defer_cnt,
++			 max_tx->bt_prio_defer_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "bt_prio_kill_cnt:",
++			 le32_to_cpu(tx->bt_prio_kill_cnt),
++			 accum_tx->bt_prio_kill_cnt,
++			 delta_tx->bt_prio_kill_cnt,
++			 max_tx->bt_prio_kill_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "few_bytes_cnt:",
++			 le32_to_cpu(tx->few_bytes_cnt),
++			 accum_tx->few_bytes_cnt,
++			 delta_tx->few_bytes_cnt, max_tx->few_bytes_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "cts_timeout:",
++			 le32_to_cpu(tx->cts_timeout), accum_tx->cts_timeout,
++			 delta_tx->cts_timeout, max_tx->cts_timeout);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "ack_timeout:",
++			 le32_to_cpu(tx->ack_timeout),
++			 accum_tx->ack_timeout,
++			 delta_tx->ack_timeout, max_tx->ack_timeout);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "expected_ack_cnt:",
++			 le32_to_cpu(tx->expected_ack_cnt),
++			 accum_tx->expected_ack_cnt,
++			 delta_tx->expected_ack_cnt,
++			 max_tx->expected_ack_cnt);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "actual_ack_cnt:",
++			 le32_to_cpu(tx->actual_ack_cnt),
++			 accum_tx->actual_ack_cnt,
++			 delta_tx->actual_ack_cnt,
++			 max_tx->actual_ack_cnt);
++
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++	kfree(buf);
++	return ret;
++}
++
++ssize_t iwl3945_ucode_general_stats_read(struct file *file,
++					 char __user *user_buf,
++					 size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = file->private_data;
++	int pos = 0;
++	char *buf;
++	int bufsz = sizeof(struct iwl39_statistics_general) * 10 + 300;
++	ssize_t ret;
++	struct iwl39_statistics_general *general, *accum_general;
++	struct iwl39_statistics_general *delta_general, *max_general;
++	struct statistics_dbg *dbg, *accum_dbg, *delta_dbg, *max_dbg;
++	struct iwl39_statistics_div *div, *accum_div, *delta_div, *max_div;
++
++	if (!iwl_is_alive(priv))
++		return -EAGAIN;
++
++	buf = kzalloc(bufsz, GFP_KERNEL);
++	if (!buf) {
++		IWL_ERR(priv, "Can not allocate Buffer\n");
++		return -ENOMEM;
++	}
++
++	/*
++	 * The statistic information display here is based on
++	 * the last statistics notification from uCode
++	 * might not reflect the current uCode activity
++	 */
++	general = &priv->_3945.statistics.general;
++	dbg = &priv->_3945.statistics.general.dbg;
++	div = &priv->_3945.statistics.general.div;
++	accum_general = &priv->_3945.accum_statistics.general;
++	delta_general = &priv->_3945.delta_statistics.general;
++	max_general = &priv->_3945.max_delta.general;
++	accum_dbg = &priv->_3945.accum_statistics.general.dbg;
++	delta_dbg = &priv->_3945.delta_statistics.general.dbg;
++	max_dbg = &priv->_3945.max_delta.general.dbg;
++	accum_div = &priv->_3945.accum_statistics.general.div;
++	delta_div = &priv->_3945.delta_statistics.general.div;
++	max_div = &priv->_3945.max_delta.general.div;
++	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
++			 "acumulative       delta         max\n",
++			 "Statistics_General:");
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "burst_check:",
++			 le32_to_cpu(dbg->burst_check),
++			 accum_dbg->burst_check,
++			 delta_dbg->burst_check, max_dbg->burst_check);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "burst_count:",
++			 le32_to_cpu(dbg->burst_count),
++			 accum_dbg->burst_count,
++			 delta_dbg->burst_count, max_dbg->burst_count);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "sleep_time:",
++			 le32_to_cpu(general->sleep_time),
++			 accum_general->sleep_time,
++			 delta_general->sleep_time, max_general->sleep_time);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "slots_out:",
++			 le32_to_cpu(general->slots_out),
++			 accum_general->slots_out,
++			 delta_general->slots_out, max_general->slots_out);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "slots_idle:",
++			 le32_to_cpu(general->slots_idle),
++			 accum_general->slots_idle,
++			 delta_general->slots_idle, max_general->slots_idle);
++	pos += scnprintf(buf + pos, bufsz - pos, "ttl_timestamp:\t\t\t%u\n",
++			 le32_to_cpu(general->ttl_timestamp));
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "tx_on_a:",
++			 le32_to_cpu(div->tx_on_a), accum_div->tx_on_a,
++			 delta_div->tx_on_a, max_div->tx_on_a);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "tx_on_b:",
++			 le32_to_cpu(div->tx_on_b), accum_div->tx_on_b,
++			 delta_div->tx_on_b, max_div->tx_on_b);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "exec_time:",
++			 le32_to_cpu(div->exec_time), accum_div->exec_time,
++			 delta_div->exec_time, max_div->exec_time);
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "  %-30s %10u  %10u  %10u  %10u\n",
++			 "probe_time:",
++			 le32_to_cpu(div->probe_time), accum_div->probe_time,
++			 delta_div->probe_time, max_div->probe_time);
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++	kfree(buf);
++	return ret;
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h b/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h
+new file mode 100644
+index 0000000..70809c5
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h
+@@ -0,0 +1,60 @@
++/******************************************************************************
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2010 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *****************************************************************************/
++
++#include "iwl-dev.h"
++#include "iwl-core.h"
++#include "iwl-debug.h"
++
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++ssize_t iwl3945_ucode_rx_stats_read(struct file *file, char __user *user_buf,
++				    size_t count, loff_t *ppos);
++ssize_t iwl3945_ucode_tx_stats_read(struct file *file, char __user *user_buf,
++				    size_t count, loff_t *ppos);
++ssize_t iwl3945_ucode_general_stats_read(struct file *file,
++					 char __user *user_buf, size_t count,
++					 loff_t *ppos);
++#else
++static ssize_t iwl3945_ucode_rx_stats_read(struct file *file,
++					   char __user *user_buf, size_t count,
++					   loff_t *ppos)
++{
++	return 0;
++}
++static ssize_t iwl3945_ucode_tx_stats_read(struct file *file,
++					   char __user *user_buf, size_t count,
++					   loff_t *ppos)
++{
++	return 0;
++}
++static ssize_t iwl3945_ucode_general_stats_read(struct file *file,
++						char __user *user_buf,
++						size_t count, loff_t *ppos)
++{
++	return 0;
++}
++#endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index d10e59d..9dad867 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -49,6 +49,7 @@
+ #include "iwl-helpers.h"
+ #include "iwl-led.h"
+ #include "iwl-3945-led.h"
++#include "iwl-3945-debugfs.h"
+ 
+ #define IWL_DECLARE_RATE_INFO(r, ip, in, rp, rn, pp, np)    \
+ 	[IWL_RATE_##r##M_INDEX] = { IWL_RATE_##r##M_PLCP,   \
+@@ -292,7 +293,7 @@ static void iwl3945_tx_queue_reclaim(struct iwl_priv *priv,
+  * iwl3945_rx_reply_tx - Handle Tx response
   */
- void ath5k_hw_detach(struct ath5k_hw *ah)
+ static void iwl3945_rx_reply_tx(struct iwl_priv *priv,
+-			    struct iwl_rx_mem_buffer *rxb)
++				struct iwl_rx_mem_buffer *rxb)
  {
--	ATH5K_TRACE(ah->ah_sc);
--
- 	__set_bit(ATH_STAT_INVALID, ah->ah_sc->status);
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
+@@ -350,18 +351,81 @@ static void iwl3945_rx_reply_tx(struct iwl_priv *priv,
+  *  RX handler implementations
+  *
+  *****************************************************************************/
++#ifdef CONFIG_IWLWIFI_DEBUG
++/*
++ *  based on the assumption of all statistics counter are in DWORD
++ *  FIXME: This function is for debugging, do not deal with
++ *  the case of counters roll-over.
++ */
++static void iwl3945_accumulative_statistics(struct iwl_priv *priv,
++					    __le32 *stats)
++{
++	int i;
++	__le32 *prev_stats;
++	u32 *accum_stats;
++	u32 *delta, *max_delta;
++
++	prev_stats = (__le32 *)&priv->_3945.statistics;
++	accum_stats = (u32 *)&priv->_3945.accum_statistics;
++	delta = (u32 *)&priv->_3945.delta_statistics;
++	max_delta = (u32 *)&priv->_3945.max_delta;
++
++	for (i = sizeof(__le32); i < sizeof(struct iwl3945_notif_statistics);
++	     i += sizeof(__le32), stats++, prev_stats++, delta++,
++	     max_delta++, accum_stats++) {
++		if (le32_to_cpu(*stats) > le32_to_cpu(*prev_stats)) {
++			*delta = (le32_to_cpu(*stats) -
++				le32_to_cpu(*prev_stats));
++			*accum_stats += *delta;
++			if (*delta > *max_delta)
++				*max_delta = *delta;
++		}
++	}
++
++	/* reset accumulative statistics for "no-counter" type statistics */
++	priv->_3945.accum_statistics.general.temperature =
++		priv->_3945.statistics.general.temperature;
++	priv->_3945.accum_statistics.general.ttl_timestamp =
++		priv->_3945.statistics.general.ttl_timestamp;
++}
++#endif
  
- 	if (ah->ah_rf_banks != NULL)
-diff --git a/drivers/net/wireless/ath/ath5k/caps.c b/drivers/net/wireless/ath/ath5k/caps.c
-index 74f0071..beae519 100644
---- a/drivers/net/wireless/ath/ath5k/caps.c
-+++ b/drivers/net/wireless/ath/ath5k/caps.c
-@@ -34,7 +34,6 @@ int ath5k_hw_set_capabilities(struct ath5k_hw *ah)
+ void iwl3945_hw_rx_statistics(struct iwl_priv *priv,
+ 		struct iwl_rx_mem_buffer *rxb)
  {
- 	u16 ee_header;
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++
+ 	IWL_DEBUG_RX(priv, "Statistics notification received (%d vs %d).\n",
+ 		     (int)sizeof(struct iwl3945_notif_statistics),
+ 		     le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK);
++#ifdef CONFIG_IWLWIFI_DEBUG
++	iwl3945_accumulative_statistics(priv, (__le32 *)&pkt->u.raw);
++#endif
  
--	ATH5K_TRACE(ah->ah_sc);
- 	/* Capabilities stored in the EEPROM */
- 	ee_header = ah->ah_capabilities.cap_eeprom.ee_header;
+ 	memcpy(&priv->_3945.statistics, pkt->u.raw, sizeof(priv->_3945.statistics));
+ }
  
-@@ -123,8 +122,6 @@ int ath5k_hw_get_capability(struct ath5k_hw *ah,
- 		enum ath5k_capability_type cap_type,
- 		u32 capability, u32 *result)
- {
--	ATH5K_TRACE(ah->ah_sc);
--
- 	switch (cap_type) {
- 	case AR5K_CAP_NUM_TXQUEUES:
- 		if (result) {
-@@ -173,8 +170,6 @@ yes:
- int ath5k_hw_enable_pspoll(struct ath5k_hw *ah, u8 *bssid,
- 		u16 assoc_id)
- {
--	ATH5K_TRACE(ah->ah_sc);
--
- 	if (ah->ah_version == AR5K_AR5210) {
- 		AR5K_REG_DISABLE_BITS(ah, AR5K_STA_ID1,
- 			AR5K_STA_ID1_NO_PSPOLL | AR5K_STA_ID1_DEFAULT_ANTENNA);
-@@ -186,8 +181,6 @@ int ath5k_hw_enable_pspoll(struct ath5k_hw *ah, u8 *bssid,
- 
- int ath5k_hw_disable_pspoll(struct ath5k_hw *ah)
- {
--	ATH5K_TRACE(ah->ah_sc);
--
- 	if (ah->ah_version == AR5K_AR5210) {
- 		AR5K_REG_ENABLE_BITS(ah, AR5K_STA_ID1,
- 			AR5K_STA_ID1_NO_PSPOLL | AR5K_STA_ID1_DEFAULT_ANTENNA);
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index c77a6ad..97c5ada 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -307,7 +307,6 @@ static const struct {
- 	{ ATH5K_DEBUG_DUMP_RX,	"dumprx",	"print received skb content" },
- 	{ ATH5K_DEBUG_DUMP_TX,	"dumptx",	"print transmit skb content" },
- 	{ ATH5K_DEBUG_DUMPBANDS, "dumpbands",	"dump bands" },
--	{ ATH5K_DEBUG_TRACE,	"trace",	"trace function calls" },
- 	{ ATH5K_DEBUG_ANI,	"ani",		"adaptive noise immunity" },
- 	{ ATH5K_DEBUG_ANY,	"all",		"show all debug levels" },
++void iwl3945_reply_statistics(struct iwl_priv *priv,
++			      struct iwl_rx_mem_buffer *rxb)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	__le32 *flag = (__le32 *)&pkt->u.raw;
++
++	if (le32_to_cpu(*flag) & UCODE_STATISTICS_CLEAR_MSK) {
++#ifdef CONFIG_IWLWIFI_DEBUG
++		memset(&priv->_3945.accum_statistics, 0,
++			sizeof(struct iwl3945_notif_statistics));
++		memset(&priv->_3945.delta_statistics, 0,
++			sizeof(struct iwl3945_notif_statistics));
++		memset(&priv->_3945.max_delta, 0,
++			sizeof(struct iwl3945_notif_statistics));
++#endif
++		IWL_DEBUG_RX(priv, "Statistics have been cleared\n");
++	}
++	iwl3945_hw_rx_statistics(priv, rxb);
++}
++
++
+ /******************************************************************************
+  *
+  * Misc. internal state and helper functions
+@@ -2735,6 +2799,12 @@ static struct iwl_lib_ops iwl3945_lib = {
+ 	.isr = iwl_isr_legacy,
+ 	.config_ap = iwl3945_config_ap,
+ 	.add_bcast_station = iwl3945_add_bcast_station,
++
++	.debugfs_ops = {
++		.rx_stats_read = iwl3945_ucode_rx_stats_read,
++		.tx_stats_read = iwl3945_ucode_tx_stats_read,
++		.general_stats_read = iwl3945_ucode_general_stats_read,
++	},
  };
-diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
-index c7a0769..606ae94 100644
---- a/drivers/net/wireless/ath/ath5k/debug.h
-+++ b/drivers/net/wireless/ath/ath5k/debug.h
-@@ -116,18 +116,12 @@ enum ath5k_debug_level {
- 	ATH5K_DEBUG_DUMP_RX	= 0x00000100,
- 	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
- 	ATH5K_DEBUG_DUMPBANDS	= 0x00000400,
--	ATH5K_DEBUG_TRACE	= 0x00001000,
- 	ATH5K_DEBUG_ANI		= 0x00002000,
- 	ATH5K_DEBUG_ANY		= 0xffffffff
- };
  
- #ifdef CONFIG_ATH5K_DEBUG
- 
--#define ATH5K_TRACE(_sc) do { \
--	if (unlikely((_sc)->debug.level & ATH5K_DEBUG_TRACE)) \
--		printk(KERN_DEBUG "ath5k trace %s:%d\n", __func__, __LINE__); \
--	} while (0)
--
- #define ATH5K_DBG(_sc, _m, _fmt, ...) do { \
- 	if (unlikely((_sc)->debug.level & (_m) && net_ratelimit())) \
- 		ATH5K_PRINTK(_sc, KERN_DEBUG, "(%s:%d): " _fmt, \
-@@ -169,8 +163,6 @@ ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf);
- 
- #include <linux/compiler.h>
- 
--#define ATH5K_TRACE(_sc) typecheck(struct ath5k_softc *, (_sc))
--
- static inline void __attribute__ ((format (printf, 3, 4)))
- ATH5K_DBG(struct ath5k_softc *sc, unsigned int m, const char *fmt, ...) {}
- 
-diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
-index 7d7b646..da5dbb6 100644
---- a/drivers/net/wireless/ath/ath5k/desc.c
-+++ b/drivers/net/wireless/ath/ath5k/desc.c
-@@ -176,7 +176,6 @@ static int ath5k_hw_setup_4word_tx_desc(struct ath5k_hw *ah,
- 	struct ath5k_hw_4w_tx_ctl *tx_ctl;
- 	unsigned int frame_len;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	tx_ctl = &desc->ud.ds_tx5212.tx_ctl;
- 
- 	/*
-@@ -342,8 +341,6 @@ static int ath5k_hw_proc_2word_tx_status(struct ath5k_hw *ah,
- 	struct ath5k_hw_2w_tx_ctl *tx_ctl;
- 	struct ath5k_hw_tx_status *tx_status;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	tx_ctl = &desc->ud.ds_tx5210.tx_ctl;
- 	tx_status = &desc->ud.ds_tx5210.tx_stat;
- 
-@@ -396,8 +393,6 @@ static int ath5k_hw_proc_4word_tx_status(struct ath5k_hw *ah,
- 	struct ath5k_hw_4w_tx_ctl *tx_ctl;
- 	struct ath5k_hw_tx_status *tx_status;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	tx_ctl = &desc->ud.ds_tx5212.tx_ctl;
- 	tx_status = &desc->ud.ds_tx5212.tx_stat;
- 
-@@ -490,7 +485,6 @@ static int ath5k_hw_setup_rx_desc(struct ath5k_hw *ah, struct ath5k_desc *desc,
+ static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index e9674f0..643adb6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -264,6 +264,8 @@ extern int iwl3945_hw_reg_send_txpower(struct iwl_priv *priv);
+ extern int iwl3945_hw_reg_set_txpower(struct iwl_priv *priv, s8 power);
+ extern void iwl3945_hw_rx_statistics(struct iwl_priv *priv,
+ 				 struct iwl_rx_mem_buffer *rxb);
++void iwl3945_reply_statistics(struct iwl_priv *priv,
++			      struct iwl_rx_mem_buffer *rxb);
+ extern void iwl3945_disable_events(struct iwl_priv *priv);
+ extern int iwl4965_get_temperature(const struct iwl_priv *priv);
+ extern void iwl3945_post_associate(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index d789f8d..0aedbec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1053,10 +1053,8 @@ static ssize_t iwl_dbgfs_ucode_rx_stats_read(struct file *file,
+ 					size_t count, loff_t *ppos)
  {
- 	struct ath5k_hw_rx_ctl *rx_ctl;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	rx_ctl = &desc->ud.ds_rx.rx_ctl;
- 
- 	/*
-@@ -593,7 +587,6 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
- 	struct ath5k_hw_rx_status *rx_status;
- 	struct ath5k_hw_rx_error *rx_err;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	rx_status = &desc->ud.ds_rx.u.rx_stat;
- 
- 	/* Overlay on error */
-diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
-index 941b511..484f318 100644
---- a/drivers/net/wireless/ath/ath5k/dma.c
-+++ b/drivers/net/wireless/ath/ath5k/dma.c
-@@ -48,7 +48,6 @@
-  */
- void ath5k_hw_start_rx_dma(struct ath5k_hw *ah)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	ath5k_hw_reg_write(ah, AR5K_CR_RXE, AR5K_CR);
- 	ath5k_hw_reg_read(ah, AR5K_CR);
- }
-@@ -62,7 +61,6 @@ int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
- {
- 	unsigned int i;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	ath5k_hw_reg_write(ah, AR5K_CR_RXD, AR5K_CR);
- 
- 	/*
-@@ -96,8 +94,6 @@ u32 ath5k_hw_get_rxdp(struct ath5k_hw *ah)
-  */
- void ath5k_hw_set_rxdp(struct ath5k_hw *ah, u32 phys_addr)
- {
--	ATH5K_TRACE(ah->ah_sc);
--
- 	ath5k_hw_reg_write(ah, phys_addr, AR5K_RXDP);
+ 	struct iwl_priv *priv = file->private_data;
+-	if (priv->cfg->ops->lib->debugfs_ops.rx_stats_read)
+-		return priv->cfg->ops->lib->debugfs_ops.rx_stats_read(file,
+-						user_buf, count, ppos);
+-	return 0;
++	return priv->cfg->ops->lib->debugfs_ops.rx_stats_read(file,
++			user_buf, count, ppos);
  }
  
-@@ -125,7 +121,6 @@ int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ static ssize_t iwl_dbgfs_ucode_tx_stats_read(struct file *file,
+@@ -1064,10 +1062,8 @@ static ssize_t iwl_dbgfs_ucode_tx_stats_read(struct file *file,
+ 					size_t count, loff_t *ppos)
  {
- 	u32 tx_queue;
+ 	struct iwl_priv *priv = file->private_data;
+-	if (priv->cfg->ops->lib->debugfs_ops.tx_stats_read)
+-		return priv->cfg->ops->lib->debugfs_ops.tx_stats_read(file,
+-						user_buf, count, ppos);
+-	return 0;
++	return priv->cfg->ops->lib->debugfs_ops.tx_stats_read(file,
++			user_buf, count, ppos);
+ }
  
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
- 
- 	/* Return if queue is declared inactive */
-@@ -186,7 +181,6 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
- 	unsigned int i = 40;
- 	u32 tx_queue, pending;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
- 
- 	/* Return if queue is declared inactive */
-@@ -297,7 +291,6 @@ u32 ath5k_hw_get_txdp(struct ath5k_hw *ah, unsigned int queue)
+ static ssize_t iwl_dbgfs_ucode_general_stats_read(struct file *file,
+@@ -1075,10 +1071,8 @@ static ssize_t iwl_dbgfs_ucode_general_stats_read(struct file *file,
+ 					size_t count, loff_t *ppos)
  {
- 	u16 tx_reg;
+ 	struct iwl_priv *priv = file->private_data;
+-	if (priv->cfg->ops->lib->debugfs_ops.general_stats_read)
+-		return priv->cfg->ops->lib->debugfs_ops.general_stats_read(file,
+-						user_buf, count, ppos);
+-	return 0;
++	return priv->cfg->ops->lib->debugfs_ops.general_stats_read(file,
++			user_buf, count, ppos);
+ }
  
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
+ static ssize_t iwl_dbgfs_sensitivity_read(struct file *file,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index bdc60aa..58c69a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1202,6 +1202,11 @@ struct iwl_priv {
+ 			struct delayed_work rfkill_poll;
  
- 	/*
-@@ -340,7 +333,6 @@ int ath5k_hw_set_txdp(struct ath5k_hw *ah, unsigned int queue, u32 phys_addr)
- {
- 	u16 tx_reg;
+ 			struct iwl3945_notif_statistics statistics;
++#ifdef CONFIG_IWLWIFI_DEBUG
++			struct iwl3945_notif_statistics accum_statistics;
++			struct iwl3945_notif_statistics delta_statistics;
++			struct iwl3945_notif_statistics max_delta;
++#endif
  
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
- 
- 	/*
-@@ -400,8 +392,6 @@ int ath5k_hw_update_tx_triglevel(struct ath5k_hw *ah, bool increase)
- 	u32 trigger_level, imr;
- 	int ret = -EIO;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	/*
- 	 * Disable interrupts by setting the mask
+ 			u32 sta_supp_rates;
+ 			int last_rx_rssi;	/* From Rx packet statistics */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 789480b..98055fb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -956,7 +956,7 @@ static void iwl3945_setup_rx_handlers(struct iwl_priv *priv)
+ 	 * statistics request from the host as well as for the periodic
+ 	 * statistics notifications (after received beacons) from the uCode.
  	 */
-@@ -451,7 +441,6 @@ done:
-  */
- bool ath5k_hw_is_intr_pending(struct ath5k_hw *ah)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	return ath5k_hw_reg_read(ah, AR5K_INTPEND) == 1 ? 1 : 0;
- }
+-	priv->rx_handlers[REPLY_STATISTICS_CMD] = iwl3945_hw_rx_statistics;
++	priv->rx_handlers[REPLY_STATISTICS_CMD] = iwl3945_reply_statistics;
+ 	priv->rx_handlers[STATISTICS_NOTIFICATION] = iwl3945_hw_rx_statistics;
  
-@@ -475,8 +464,6 @@ int ath5k_hw_get_isr(struct ath5k_hw *ah, enum ath5k_int *interrupt_mask)
- {
- 	u32 data;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	/*
- 	 * Read interrupt status from the Interrupt Status register
- 	 * on 5210
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index ed02636..155a82c 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -35,7 +35,6 @@ static int ath5k_hw_eeprom_read(struct ath5k_hw *ah, u32 offset, u16 *data)
- {
- 	u32 status, timeout;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	/*
- 	 * Initialize EEPROM access
- 	 */
-diff --git a/drivers/net/wireless/ath/ath5k/gpio.c b/drivers/net/wireless/ath/ath5k/gpio.c
-index 64a27e7..bc90503 100644
---- a/drivers/net/wireless/ath/ath5k/gpio.c
-+++ b/drivers/net/wireless/ath/ath5k/gpio.c
-@@ -34,8 +34,6 @@ void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state)
- 	/*5210 has different led mode handling*/
- 	u32 led_5210;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	/*Reset led status*/
- 	if (ah->ah_version != AR5K_AR5210)
- 		AR5K_REG_DISABLE_BITS(ah, AR5K_PCICFG,
-@@ -82,7 +80,6 @@ void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state)
-  */
- int ath5k_hw_set_gpio_input(struct ath5k_hw *ah, u32 gpio)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	if (gpio >= AR5K_NUM_GPIO)
- 		return -EINVAL;
- 
-@@ -98,7 +95,6 @@ int ath5k_hw_set_gpio_input(struct ath5k_hw *ah, u32 gpio)
-  */
- int ath5k_hw_set_gpio_output(struct ath5k_hw *ah, u32 gpio)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	if (gpio >= AR5K_NUM_GPIO)
- 		return -EINVAL;
- 
-@@ -114,7 +110,6 @@ int ath5k_hw_set_gpio_output(struct ath5k_hw *ah, u32 gpio)
-  */
- u32 ath5k_hw_get_gpio(struct ath5k_hw *ah, u32 gpio)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	if (gpio >= AR5K_NUM_GPIO)
- 		return 0xffffffff;
- 
-@@ -129,7 +124,6 @@ u32 ath5k_hw_get_gpio(struct ath5k_hw *ah, u32 gpio)
- int ath5k_hw_set_gpio(struct ath5k_hw *ah, u32 gpio, u32 val)
- {
- 	u32 data;
--	ATH5K_TRACE(ah->ah_sc);
- 
- 	if (gpio >= AR5K_NUM_GPIO)
- 		return -EINVAL;
-@@ -153,7 +147,6 @@ void ath5k_hw_set_gpio_intr(struct ath5k_hw *ah, unsigned int gpio,
- {
- 	u32 data;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	if (gpio >= AR5K_NUM_GPIO)
- 		return;
- 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 5212e27..86fdb6d 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -59,8 +59,6 @@ int ath5k_hw_set_opmode(struct ath5k_hw *ah, enum nl80211_iftype op_mode)
- 
- 	beacon_reg = 0;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	switch (op_mode) {
- 	case NL80211_IFTYPE_ADHOC:
- 		pcu_reg |= AR5K_STA_ID1_ADHOC | AR5K_STA_ID1_KEYSRCH_MODE;
-@@ -173,7 +171,6 @@ void ath5k_hw_set_ack_bitrate_high(struct ath5k_hw *ah, bool high)
-  */
- static int ath5k_hw_set_ack_timeout(struct ath5k_hw *ah, unsigned int timeout)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	if (ath5k_hw_clocktoh(ah, AR5K_REG_MS(0xffffffff, AR5K_TIME_OUT_ACK))
- 			<= timeout)
- 		return -EINVAL;
-@@ -192,7 +189,6 @@ static int ath5k_hw_set_ack_timeout(struct ath5k_hw *ah, unsigned int timeout)
-  */
- static int ath5k_hw_set_cts_timeout(struct ath5k_hw *ah, unsigned int timeout)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	if (ath5k_hw_clocktoh(ah, AR5K_REG_MS(0xffffffff, AR5K_TIME_OUT_CTS))
- 			<= timeout)
- 		return -EINVAL;
-@@ -297,7 +293,6 @@ int ath5k_hw_set_lladdr(struct ath5k_hw *ah, const u8 *mac)
- 	u32 low_id, high_id;
- 	u32 pcu_reg;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	/* Set new station ID */
- 	memcpy(common->macaddr, mac, ETH_ALEN);
- 
-@@ -357,7 +352,6 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah)
- void ath5k_hw_set_bssid_mask(struct ath5k_hw *ah, const u8 *mask)
- {
- 	struct ath_common *common = ath5k_hw_common(ah);
--	ATH5K_TRACE(ah->ah_sc);
- 
- 	/* Cache bssid mask so that we can restore it
- 	 * on reset */
-@@ -382,7 +376,6 @@ void ath5k_hw_set_bssid_mask(struct ath5k_hw *ah, const u8 *mask)
-  */
- void ath5k_hw_start_rx_pcu(struct ath5k_hw *ah)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_REG_DISABLE_BITS(ah, AR5K_DIAG_SW, AR5K_DIAG_SW_DIS_RX);
- }
- 
-@@ -397,7 +390,6 @@ void ath5k_hw_start_rx_pcu(struct ath5k_hw *ah)
-  */
- void ath5k_hw_stop_rx_pcu(struct ath5k_hw *ah)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_REG_ENABLE_BITS(ah, AR5K_DIAG_SW, AR5K_DIAG_SW_DIS_RX);
- }
- 
-@@ -406,8 +398,6 @@ void ath5k_hw_stop_rx_pcu(struct ath5k_hw *ah)
-  */
- void ath5k_hw_set_mcast_filter(struct ath5k_hw *ah, u32 filter0, u32 filter1)
- {
--	ATH5K_TRACE(ah->ah_sc);
--	/* Set the multicat filter */
- 	ath5k_hw_reg_write(ah, filter0, AR5K_MCAST_FILTER0);
- 	ath5k_hw_reg_write(ah, filter1, AR5K_MCAST_FILTER1);
- }
-@@ -427,7 +417,6 @@ u32 ath5k_hw_get_rx_filter(struct ath5k_hw *ah)
- {
- 	u32 data, filter = 0;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	filter = ath5k_hw_reg_read(ah, AR5K_RX_FILTER);
- 
- 	/*Radar detection for 5212*/
-@@ -457,8 +446,6 @@ void ath5k_hw_set_rx_filter(struct ath5k_hw *ah, u32 filter)
- {
- 	u32 data = 0;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	/* Set PHY error filter register on 5212*/
- 	if (ah->ah_version == AR5K_AR5212) {
- 		if (filter & AR5K_RX_FILTER_RADARERR)
-@@ -533,8 +520,6 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
- 
- 	WARN_ON( i == ATH5K_MAX_TSF_READ );
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	return (((u64)tsf_upper1 << 32) | tsf_lower);
- }
- 
-@@ -548,8 +533,6 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
-  */
- void ath5k_hw_set_tsf64(struct ath5k_hw *ah, u64 tsf64)
- {
--	ATH5K_TRACE(ah->ah_sc);
--
- 	ath5k_hw_reg_write(ah, tsf64 & 0xffffffff, AR5K_TSF_L32);
- 	ath5k_hw_reg_write(ah, (tsf64 >> 32) & 0xffffffff, AR5K_TSF_U32);
- }
-@@ -565,8 +548,6 @@ void ath5k_hw_reset_tsf(struct ath5k_hw *ah)
- {
- 	u32 val;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	val = ath5k_hw_reg_read(ah, AR5K_BEACON) | AR5K_BEACON_RESET_TSF;
- 
- 	/*
-@@ -586,7 +567,6 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 next_beacon, u32 interval)
- {
- 	u32 timer1, timer2, timer3;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	/*
- 	 * Set the additional timers by mode
- 	 */
-@@ -674,7 +654,6 @@ int ath5k_hw_reset_key(struct ath5k_hw *ah, u16 entry)
- 	unsigned int i, type;
- 	u16 micentry = entry + AR5K_KEYTABLE_MIC_OFFSET;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
- 
- 	type = ath5k_hw_reg_read(ah, AR5K_KEYTABLE_TYPE(entry));
-@@ -749,8 +728,6 @@ int ath5k_hw_set_key(struct ath5k_hw *ah, u16 entry,
- 	bool is_tkip;
- 	const u8 *key_ptr;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	is_tkip = (key->alg == ALG_TKIP);
- 
- 	/*
-@@ -836,7 +813,6 @@ int ath5k_hw_set_key_lladdr(struct ath5k_hw *ah, u16 entry, const u8 *mac)
- {
- 	u32 low_id, high_id;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	 /* Invalid entry (key table overflow) */
- 	AR5K_ASSERT_ENTRY(entry, AR5K_KEYTABLE_SIZE);
- 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 0b24081..f369e7e 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -378,8 +378,6 @@ enum ath5k_rfgain ath5k_hw_gainf_calibrate(struct ath5k_hw *ah)
- 	u32 data, type;
- 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	if (ah->ah_rf_banks == NULL ||
- 	ah->ah_gain.g_state == AR5K_RFGAIN_INACTIVE)
- 		return AR5K_RFGAIN_INACTIVE;
-@@ -1353,7 +1351,6 @@ ath5k_hw_rf511x_iq_calibrate(struct ath5k_hw *ah)
- 	u32 i_pwr, q_pwr;
- 	s32 iq_corr, i_coff, i_coffd, q_coff, q_coffd;
- 	int i;
--	ATH5K_TRACE(ah->ah_sc);
- 
- 	if (!ah->ah_calibration ||
- 		ath5k_hw_reg_read(ah, AR5K_PHY_IQ) & AR5K_PHY_IQ_RUN)
-@@ -1680,7 +1677,6 @@ ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
- 
- int ath5k_hw_phy_disable(struct ath5k_hw *ah)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	/*Just a try M.F.*/
- 	ath5k_hw_reg_write(ah, AR5K_PHY_ACT_DISABLE, AR5K_PHY_ACT);
- 
-@@ -1696,8 +1692,6 @@ u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan)
- 	u32 srev;
- 	u16 ret;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	/*
- 	 * Set the radio chip access register
- 	 */
-@@ -1742,8 +1736,6 @@ u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan)
- static void /*TODO:Boundary check*/
- ath5k_hw_set_def_antenna(struct ath5k_hw *ah, u8 ant)
- {
--	ATH5K_TRACE(ah->ah_sc);
--
- 	if (ah->ah_version != AR5K_AR5210)
- 		ath5k_hw_reg_write(ah, ant & 0x7, AR5K_DEFAULT_ANTENNA);
- }
-@@ -1803,8 +1795,6 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
- 
- 	def_ant = ah->ah_def_ant;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	switch (channel->hw_value & CHANNEL_MODES) {
- 	case CHANNEL_A:
- 	case CHANNEL_T:
-@@ -2970,7 +2960,6 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 	u8 type;
- 	int ret;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	if (txpower > AR5K_TUNE_MAX_TXPOWER) {
- 		ATH5K_ERR(ah->ah_sc, "invalid tx power: %u\n", txpower);
- 		return -EINVAL;
-@@ -3066,8 +3055,6 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
- 	struct ieee80211_channel *channel = ah->ah_current_channel;
- 	u8 ee_mode;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	switch (channel->hw_value & CHANNEL_MODES) {
- 	case CHANNEL_A:
- 	case CHANNEL_T:
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index f5831da..4186ff4 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -31,7 +31,6 @@ Queue Control Unit, DFS Control Unit Functions
- int ath5k_hw_get_tx_queueprops(struct ath5k_hw *ah, int queue,
- 		struct ath5k_txq_info *queue_info)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	memcpy(queue_info, &ah->ah_txq[queue], sizeof(struct ath5k_txq_info));
- 	return 0;
- }
-@@ -42,7 +41,6 @@ int ath5k_hw_get_tx_queueprops(struct ath5k_hw *ah, int queue,
- int ath5k_hw_set_tx_queueprops(struct ath5k_hw *ah, int queue,
- 				const struct ath5k_txq_info *queue_info)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
- 
- 	if (ah->ah_txq[queue].tqi_type == AR5K_TX_QUEUE_INACTIVE)
-@@ -69,8 +67,6 @@ int ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
- 	unsigned int queue;
- 	int ret;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	/*
- 	 * Get queue by type
- 	 */
-@@ -149,7 +145,6 @@ int ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
- u32 ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
- {
- 	u32 pending;
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
- 
- 	/* Return if queue is declared inactive */
-@@ -177,7 +172,6 @@ u32 ath5k_hw_num_tx_pending(struct ath5k_hw *ah, unsigned int queue)
-  */
- void ath5k_hw_release_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- {
--	ATH5K_TRACE(ah->ah_sc);
- 	if (WARN_ON(queue >= ah->ah_capabilities.cap_queues.q_tx_num))
- 		return;
- 
-@@ -195,7 +189,6 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 	u32 cw_min, cw_max, retry_lg, retry_sh;
- 	struct ath5k_txq_info *tq = &ah->ah_txq[queue];
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	AR5K_ASSERT_ENTRY(queue, ah->ah_capabilities.cap_queues.q_tx_num);
- 
- 	tq = &ah->ah_txq[queue];
-@@ -523,8 +516,6 @@ int ath5k_hw_set_slot_time(struct ath5k_hw *ah, unsigned int slot_time)
- {
- 	u32 slot_time_clock = ath5k_hw_htoclock(ah, slot_time);
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	if (slot_time < 6 || slot_time_clock > AR5K_SLOT_TIME_MAX)
- 		return -EINVAL;
- 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 44bbbf2..5e23e61 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -201,8 +201,6 @@ static int ath5k_hw_nic_reset(struct ath5k_hw *ah, u32 val)
- 	int ret;
- 	u32 mask = val ? val : ~0U;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	/* Read-and-clear RX Descriptor Pointer*/
- 	ath5k_hw_reg_read(ah, AR5K_RXDP);
- 
-@@ -246,7 +244,6 @@ static int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
- 	unsigned int i;
- 	u32 staid, data;
- 
--	ATH5K_TRACE(ah->ah_sc);
- 	staid = ath5k_hw_reg_read(ah, AR5K_STA_ID1);
- 
- 	switch (mode) {
-@@ -393,8 +390,6 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
- 	mode = 0;
- 	clock = 0;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	/* Wakeup the device */
- 	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
- 	if (ret) {
-@@ -899,8 +894,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	u8 mode, freq, ee_mode, ant[2];
- 	int i, ret;
- 
--	ATH5K_TRACE(ah->ah_sc);
--
- 	s_ant = 0;
- 	ee_mode = 0;
- 	staid1_flags = 0;
+ 	iwl_setup_rx_scan_handlers(priv);
+-- 
+1.6.3.3
 
