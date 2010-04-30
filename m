@@ -1,152 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:51633 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559Ab0DWUQb convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42441 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324Ab0D3TpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Apr 2010 16:16:31 -0400
-Received: by bwz25 with SMTP id 25so11681108bwz.28
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Apr 2010 13:16:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <u2k917a57cb1004221345i19eb6354yffdc302f6a9b74c6@mail.gmail.com>
-References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
-	<4BB7660A.3030900@lwfinger.net> <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
-	<4BB773A9.2070703@lwfinger.net> <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
-	<q2k917a57cb1004100507s17249540xfb11a2e2f0a2dd76@mail.gmail.com>
-	<w2i69e28c911004101150h9db59aa1x2f9d12964f3c3fc1@mail.gmail.com>
-	<y2g917a57cb1004101240g8033e225n57bf68b6d37b5431@mail.gmail.com>
-	<q2k69e28c911004110635nac8100f6pe014361ed0a516a5@mail.gmail.com>
-	<u2k917a57cb1004221345i19eb6354yffdc302f6a9b74c6@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 23 Apr 2010 22:16:09 +0200
-Message-ID: <k2s69e28c911004231316u7fd3118qe971919ed8a433d7@mail.gmail.com>
-Subject: Re: RTL 8187b - naughty behaviour
-To: Rogerio Luz Coelho <rogluz.news@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 30 Apr 2010 15:45:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: remove deprecated noise field from ieee80211_rx_status
+Date: Fri, 30 Apr 2010 15:39:11 -0400
+Message-Id: <1272656351-5983-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/4/22 Rogerio Luz Coelho <rogluz.news@gmail.com>:
-> 2010/4/11 Gábor Stefanik <netrolller.3d@gmail.com>:
->> 2010/4/10 Rogerio Luz Coelho <rogluz.news@gmail.com>:
->>> 2010/4/10 Gábor Stefanik <netrolller.3d@gmail.com>:
->>>> On Sat, Apr 10, 2010 at 2:07 PM, Rogerio Luz Coelho
->>>> <rogluz.news@gmail.com> wrote:
->>>>> 2010/4/3 Rogerio Luz Coelho <rogluz.news@gmail.com>:
->>>>>> 2010/4/3 Larry Finger <Larry.Finger@lwfinger.net>:
->>>>>>> On 04/03/2010 11:49 AM, Rogerio Luz Coelho wrote:
->>>>>>>>
->>>>>>>> I have a MS-Win7 instalation on this Laptop and it works 100% even at
->>>>>>>> longer distances than you report,even with walls in between.
->>>>>>>>
->>>>>>>> Will do the tcpperf test as soon as I get home. There are other with
->>>>>>>> the same problem with my exact chip here in Brasil , that is because
->>>>>>>> one of our leading Laptop vendors uses this config.
->>>>>>>
->>>>>>> What is the exact make and model of the device? It might be difficult
->>>>>>> for me to get one in the US, but one of the rtl8187 developers lives in
->>>>>>> Brazil. He should be able to find one.
->>>>>>>
->>>>>>
->>>>>> It愀 a POSITIVO R430L - Core 2 Duo 4GB RAM
->>>>>>
->>>>>>
->>>>>>>> Does it matter that the USB port used in this setting is a connected
->>>>>>>> to a USB HUB and then to the mother board?
->>>>>>>
->>>>>>> Is the hub passive, or is it powered? If the hub is good and not
->>>>>>> underpowered, it should be OK.
->>>>>>>
->>>>>>>> More details and tests will come your way in a day or two ... will
->>>>>>>> reinstall Mandriva 2010 and do some tests with older kernels.
->>>>>>>
->>>>>>> If you can download an openSUSE 11.2 Live CD and burn it, you would not
->>>>>>> even have to do an installation. That one has a 2.6.31 kernel.
->>>>>>>
->>>>>>> Larry
->>>>>
->>>>>
->>>>> Downloaded and installed:
->>>>>
->>>>> OpenSuse 11.2 - LiveCD  result: Gnome Network-Manager tells me there
->>>>> is connection but no ping resposes, Firefox complains about conections
->>>>> errors.
->>>>>
->>>>> Mandriva 2010.0 (kernel 2.6.31-12) result: concection comes and goes
->>>>> ... generally the first boot of the day connects, but it lasts less
->>>>> than 5min. The error code is the "deauthentication by local reason
->>>>> (reason=3) again.
->>>>>
->>>>> MS-Win7 : connects and is as fast as ever.
->>>>>
->>>>> -- Any other suggestions?
->>>>>
->>>>> Rogerio
->>>>>
->>>>> PS: Will give OpenSuse a HD install atempt and will try to debug the
->>>>> Mandriva for some time, future tries involve Debian Stable (old
->>>>> kernel) and some Fedora (any suggestions?) and the NDISwrapper drive
->>>>> in a Debian Testing (the Distro I need working)
->>>>
->>>> Hi,
->>>>
->>>> Please also test Realtek's official r8187b driver. If possible, please
->>>> do an mmiotrace on that driver.
->>>
->>> Ok ... The official Realtek is only for 32bits systems right ? ( At
->>> least the guys at Realtek support told me so... ) and this mmiotrace
->>> can be accomplished how? Is it a program, a command, a debug message
->>> in some form? Sorry, as I said earlier I am NOT a kernel programer.
->>>
->>> Rogerio
->>>
->>
->> You need to enable MMIO tracing support in your kernel config, and
->> recompile your kernel (assuming it is not enabled already - distros
->> usually disable the entire tracing framework by default). Then:
->> -Mount debugfs to /debug. (Usually it is mounted by default, but some
->> distros like to mount it @ /sys/kernel/debug instead - remount it to
->> /debug.)
->> -"echo mmiotrace > /debug/tracing/current_tracer"
->> -"cat /debug/tracing/trace_pipe >  trace.txt &" - at this point, tracing begins.
->> -Load r8187b and connect.
->> -"echo "Driver loaded!" > /debug/tracing/trace_marker"
->> -"echo nop > /debug/tracing/current_tracer" - tracing ends here.
->>
->> Do this for rtl8187 as well.
->> After each trace, check if "grep -i lost trace.txt" returns anything.
->> If it does, enlarge the trace buffer and retry:
->> -"cat /debug/tracing/trace_buffer_kb"
->> -"echo [BUFSIZE] > /debug/tracing/trace_buffer_kb", where [BUFSIZE] is
->> recommended to be about twice the number returned by the previous
->> command.
->
-> I installed a vanilla kernel 2.6.32.11 , config to rum mmio , but my
-> rtl818x modules are loaded by default and the modprobe -r command
-> doesn't seem to change this ... any ideas ?
->
-> Rogerio
+Also remove associated IEEE80211_HW_NOISE_DBM from ieee80211_hw_flags.
 
-Did you build rtl8187 as a module? Otherwise modprobe -r can do nothing.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ath/ar9170/main.c      |    3 +--
+ drivers/net/wireless/ath/ath5k/base.c       |    3 +--
+ drivers/net/wireless/b43/main.c             |    3 +--
+ drivers/net/wireless/b43legacy/main.c       |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 -
+ drivers/net/wireless/mwl8k.c                |    4 ++--
+ drivers/net/wireless/p54/main.c             |    3 +--
+ drivers/net/wireless/wl12xx/wl1251_main.c   |    1 -
+ drivers/net/wireless/wl12xx/wl1271_main.c   |    1 -
+ include/net/mac80211.h                      |    8 +-------
+ net/mac80211/rx.c                           |    2 --
+ 12 files changed, 8 insertions(+), 25 deletions(-)
 
->
->
->>
->> Repeat these steps until the "lost events" warning disappears. Once
->> you find the right BUFSIZE for one driver, you can use the same size
->> for the other one too.
->>
->> Hth,
->> Gábor
->>
->> --
->> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->>
->
-
-
-
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index cfc6a35..dfcc055 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2550,8 +2550,7 @@ void *ar9170_alloc(size_t priv_size)
+ 					 BIT(NL80211_IFTYPE_ADHOC);
+ 	ar->hw->flags |= IEEE80211_HW_RX_INCLUDES_FCS |
+ 			 IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+-			 IEEE80211_HW_SIGNAL_DBM |
+-			 IEEE80211_HW_NOISE_DBM;
++			 IEEE80211_HW_SIGNAL_DBM;
+ 
+ 	if (modparam_ht) {
+ 		ar->hw->flags |= IEEE80211_HW_AMPDU_AGGREGATION;
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 1f3e5b0..feb7b9e 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -547,8 +547,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 		    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+-		    IEEE80211_HW_SIGNAL_DBM |
+-		    IEEE80211_HW_NOISE_DBM;
++		    IEEE80211_HW_SIGNAL_DBM;
+ 
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 14cf3bd..e057559 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4904,8 +4904,7 @@ static int b43_wireless_init(struct ssb_device *dev)
+ 
+ 	/* fill hw info */
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+-		    IEEE80211_HW_SIGNAL_DBM |
+-		    IEEE80211_HW_NOISE_DBM;
++		    IEEE80211_HW_SIGNAL_DBM;
+ 
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index 1d070be..b2df432 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -3768,8 +3768,7 @@ static int b43legacy_wireless_init(struct ssb_device *dev)
+ 
+ 	/* fill hw info */
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+-		    IEEE80211_HW_SIGNAL_DBM |
+-		    IEEE80211_HW_NOISE_DBM;
++		    IEEE80211_HW_SIGNAL_DBM;
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_STATION) |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c22d3d8..0cd3386 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2653,7 +2653,6 @@ static int iwl_mac_setup_register(struct iwl_priv *priv)
+ 
+ 	/* Tell mac80211 our characteristics */
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
+-		    IEEE80211_HW_NOISE_DBM |
+ 		    IEEE80211_HW_AMPDU_AGGREGATION |
+ 		    IEEE80211_HW_SPECTRUM_MGMT;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index e7263ed..c9da39d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3872,7 +3872,6 @@ static int iwl3945_setup_mac(struct iwl_priv *priv)
+ 
+ 	/* Tell mac80211 our characteristics */
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
+-		    IEEE80211_HW_NOISE_DBM |
+ 		    IEEE80211_HW_SPECTRUM_MGMT;
+ 
+ 	if (!priv->cfg->broken_powersave)
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 9af6c94..a90bb6d 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3981,8 +3981,8 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 
+ 	hw->queues = MWL8K_TX_QUEUES;
+ 
+-	/* Set rssi and noise values to dBm */
+-	hw->flags |= IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_NOISE_DBM;
++	/* Set rssi values to dBm */
++	hw->flags |= IEEE80211_HW_SIGNAL_DBM;
+ 	hw->vif_data_size = sizeof(struct mwl8k_vif);
+ 	hw->sta_data_size = sizeof(struct mwl8k_sta);
+ 
+diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+index 36f4c82..10a4b16 100644
+--- a/drivers/net/wireless/p54/main.c
++++ b/drivers/net/wireless/p54/main.c
+@@ -545,8 +545,7 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
+ 		     IEEE80211_HW_SUPPORTS_PS |
+ 		     IEEE80211_HW_PS_NULLFUNC_STACK |
+ 		     IEEE80211_HW_BEACON_FILTER |
+-		     IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+-		     IEEE80211_HW_NOISE_DBM;
++		     IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+ 
+ 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 				      BIT(NL80211_IFTYPE_ADHOC) |
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 4d3be80..b70621f 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1291,7 +1291,6 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 	wl->hw->channel_change_time = 10000;
+ 
+ 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+-		IEEE80211_HW_NOISE_DBM |
+ 		IEEE80211_HW_SUPPORTS_PS |
+ 		IEEE80211_HW_BEACON_FILTER |
+ 		IEEE80211_HW_SUPPORTS_UAPSD;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index a794d5e..b083725 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2275,7 +2275,6 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->max_listen_interval = wl->conf.conn.max_listen_interval;
+ 
+ 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
+-		IEEE80211_HW_NOISE_DBM |
+ 		IEEE80211_HW_BEACON_FILTER |
+ 		IEEE80211_HW_SUPPORTS_PS |
+ 		IEEE80211_HW_SUPPORTS_UAPSD |
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2879c8e..00502b1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -560,7 +560,6 @@ enum mac80211_rx_flags {
+  * @signal: signal strength when receiving this frame, either in dBm, in dB or
+  *	unspecified depending on the hardware capabilities flags
+  *	@IEEE80211_HW_SIGNAL_*
+- * @noise: noise when receiving this frame, in dBm (DEPRECATED).
+  * @antenna: antenna used
+  * @rate_idx: index of data rate into band's supported rates or MCS index if
+  *	HT rates are use (RX_FLAG_HT)
+@@ -571,7 +570,6 @@ struct ieee80211_rx_status {
+ 	enum ieee80211_band band;
+ 	int freq;
+ 	int signal;
+-	int noise __deprecated;
+ 	int antenna;
+ 	int rate_idx;
+ 	int flag;
+@@ -934,10 +932,6 @@ enum ieee80211_tkip_key_type {
+  *	one milliwatt. This is the preferred method since it is standardized
+  *	between different devices. @max_signal does not need to be set.
+  *
+- * @IEEE80211_HW_NOISE_DBM:
+- *	Hardware can provide noise (radio interference) values in units dBm,
+- *      decibel difference from one milliwatt.
+- *
+  * @IEEE80211_HW_SPECTRUM_MGMT:
+  * 	Hardware supports spectrum management defined in 802.11h
+  * 	Measurement, Channel Switch, Quieting, TPC
+@@ -1001,7 +995,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_2GHZ_SHORT_PREAMBLE_INCAPABLE	= 1<<4,
+ 	IEEE80211_HW_SIGNAL_UNSPEC			= 1<<5,
+ 	IEEE80211_HW_SIGNAL_DBM				= 1<<6,
+-	IEEE80211_HW_NOISE_DBM				= 1<<7,
++	/* use this hole */
+ 	IEEE80211_HW_SPECTRUM_MGMT			= 1<<8,
+ 	IEEE80211_HW_AMPDU_AGGREGATION			= 1<<9,
+ 	IEEE80211_HW_SUPPORTS_PS			= 1<<10,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8ee7db1..e4f325f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -80,8 +80,6 @@ ieee80211_rx_radiotap_len(struct ieee80211_local *local,
+ 		len += 8;
+ 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+ 		len += 1;
+-	if (local->hw.flags & IEEE80211_HW_NOISE_DBM)
+-		len += 1;
+ 
+ 	if (len & 1) /* padding for RX_FLAGS if necessary */
+ 		len++;
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.6.1
+
