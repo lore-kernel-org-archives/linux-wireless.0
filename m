@@ -1,86 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:38776 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757021Ab0EZSKE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 14:10:04 -0400
-Received: by pwi7 with SMTP id 7so320654pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:10:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4BFD636B.3070607@gmail.com>
-References: <1274896804-19441-1-git-send-email-justinmattock@gmail.com>
-	<AANLkTilII7C41BTshkXyCmAU81LQ3fJF0ogq_BLVv6w-@mail.gmail.com>
-	<4BFD636B.3070607@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 May 2010 11:09:43 -0700
-Message-ID: <AANLkTikIfbrD7t122jJG-ODU5qb9sbGVIGrHlNJ7w2ia@mail.gmail.com>
-Subject: Re: [PATCH][RESEND] ath9k: Fix ath_print in xmit for hardware reset.
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linville@tuxdriver.com, arnd@arndnet.de,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:50644 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757104Ab0D3XAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Apr 2010 19:00:36 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 7/8] iwlwifi: set hw parameters based on device type
+Date: Fri, 30 Apr 2010 16:00:24 -0700
+Message-Id: <1272668425-3753-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
+References: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 26, 2010 at 11:07 AM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> On 05/26/2010 11:02 AM, Luis R. Rodriguez wrote:
->>
->> On Wed, May 26, 2010 at 11:00 AM, Justin P. Mattock
->> <justinmattock@gmail.com>  wrote:
->>
->>>
->>> ath_print in xmit.c should say "Reseting hardware"
->>> instead of Resetting HAL!(since HAL is being fazed out).
->>> dmesg shows:
->>> [ 8660.899624] ath: Failed to stop TX DMA in 100 msec after killing last
->>> frame
->>> [ 8660.899676] ath: Unable to stop TxDMA. Reset HAL!
->>>
->>>  Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>>
->>>
->>
->> For next time, no need for extra spaces between the SOB and the ---.
->> And instead of RESEND do [PATCH v2]. Please read:
->>
->> http://wireless.kernel.org/en/developers/Documentation/git-guide
->>
->>
->
-> o.k.!!
->>>
->>> ---
->>>  drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
->>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c
->>> b/drivers/net/wireless/ath/ath9k/xmit.c
->>> index 3db1917..09cb13c 100644
->>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
->>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
->>> @@ -1198,7 +1198,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool
->>> retry_tx)
->>>                int r;
->>>
->>>                ath_print(common, ATH_DBG_FATAL,
->>> -                         "Unable to stop TxDMA. Reset HAL!\n");
->>> +                         "Failed to stop TX DMA. Resetting
->>> hardware!\n");
->>>
->>>                spin_lock_bh(&sc->sc_resetlock);
->>>                r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
->>>
->>
->> Thanks, this is good.
->>
->>   Luis
->>
->>
->
-> what about all the signed-off's? should I
-> resend with all of those, or no?
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I do not get what you are asking.
+Separate the hw_set_hw_params() function to per device based; different
+devices can have different hardware parameters set, when separate the
+function based on device type can avoid mistakes, give more flexibilities and
+easier to read.
 
-  Luis
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   73 ++++++++++++++++++++++---------
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   70 +++++++++++++++++++++--------
+ 2 files changed, 103 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index e434936..115d3ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -200,26 +200,57 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ 	/* Set initial sensitivity parameters */
+ 	/* Set initial calibration set */
+-	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+-	case CSR_HW_REV_TYPE_5150:
+-		priv->hw_params.sens = &iwl5150_sensitivity;
+-		priv->hw_params.calib_init_cfg =
+-			BIT(IWL_CALIB_DC)		|
+-			BIT(IWL_CALIB_LO)		|
+-			BIT(IWL_CALIB_TX_IQ) 		|
+-			BIT(IWL_CALIB_BASE_BAND);
+-
+-		break;
+-	default:
+-		priv->hw_params.sens = &iwl5000_sensitivity;
+-		priv->hw_params.calib_init_cfg =
+-			BIT(IWL_CALIB_XTAL)		|
+-			BIT(IWL_CALIB_LO)		|
+-			BIT(IWL_CALIB_TX_IQ) 		|
+-			BIT(IWL_CALIB_TX_IQ_PERD)	|
+-			BIT(IWL_CALIB_BASE_BAND);
+-		break;
+-	}
++	priv->hw_params.sens = &iwl5000_sensitivity;
++	priv->hw_params.calib_init_cfg =
++		BIT(IWL_CALIB_XTAL)		|
++		BIT(IWL_CALIB_LO)		|
++		BIT(IWL_CALIB_TX_IQ)		|
++		BIT(IWL_CALIB_TX_IQ_PERD)	|
++		BIT(IWL_CALIB_BASE_BAND);
++
++	return 0;
++}
++
++static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
++{
++	if (priv->cfg->mod_params->num_of_queues >= IWL_MIN_NUM_QUEUES &&
++	    priv->cfg->mod_params->num_of_queues <= IWLAGN_NUM_QUEUES)
++		priv->cfg->num_of_queues =
++			priv->cfg->mod_params->num_of_queues;
++
++	priv->hw_params.max_txq_num = priv->cfg->num_of_queues;
++	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
++	priv->hw_params.scd_bc_tbls_size =
++			priv->cfg->num_of_queues *
++			sizeof(struct iwlagn_scd_bc_tbl);
++	priv->hw_params.tfd_size = sizeof(struct iwl_tfd);
++	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
++	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
++
++	priv->hw_params.max_data_size = IWLAGN_RTC_DATA_SIZE;
++	priv->hw_params.max_inst_size = IWLAGN_RTC_INST_SIZE;
++
++	priv->hw_params.max_bsm_size = 0;
++	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
++					BIT(IEEE80211_BAND_5GHZ);
++	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
++
++	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
++	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
++	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
++	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
++
++	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
++		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
++
++	/* Set initial sensitivity parameters */
++	/* Set initial calibration set */
++	priv->hw_params.sens = &iwl5150_sensitivity;
++	priv->hw_params.calib_init_cfg =
++		BIT(IWL_CALIB_DC)		|
++		BIT(IWL_CALIB_LO)		|
++		BIT(IWL_CALIB_TX_IQ)		|
++		BIT(IWL_CALIB_BASE_BAND);
+ 
+ 	return 0;
+ }
+@@ -332,7 +363,7 @@ static struct iwl_lib_ops iwl5000_lib = {
+ };
+ 
+ static struct iwl_lib_ops iwl5150_lib = {
+-	.set_hw_params = iwl5000_hw_set_hw_params,
++	.set_hw_params = iwl5150_hw_set_hw_params,
+ 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwlagn_txq_set_sched,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 7da23d3..c492650 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -176,24 +176,56 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
+ 	/* Set initial sensitivity parameters */
+ 	/* Set initial calibration set */
+ 	priv->hw_params.sens = &iwl6000_sensitivity;
+-	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+-	case CSR_HW_REV_TYPE_6x50:
+-		priv->hw_params.calib_init_cfg =
+-			BIT(IWL_CALIB_XTAL)		|
+-			BIT(IWL_CALIB_DC)		|
+-			BIT(IWL_CALIB_LO)		|
+-			BIT(IWL_CALIB_TX_IQ) 		|
+-			BIT(IWL_CALIB_BASE_BAND);
+-
+-		break;
+-	default:
+-		priv->hw_params.calib_init_cfg =
+-			BIT(IWL_CALIB_XTAL)		|
+-			BIT(IWL_CALIB_LO)		|
+-			BIT(IWL_CALIB_TX_IQ) 		|
+-			BIT(IWL_CALIB_BASE_BAND);
+-		break;
+-	}
++	priv->hw_params.calib_init_cfg =
++		BIT(IWL_CALIB_XTAL)		|
++		BIT(IWL_CALIB_LO)		|
++		BIT(IWL_CALIB_TX_IQ)		|
++		BIT(IWL_CALIB_BASE_BAND);
++
++	return 0;
++}
++
++static int iwl6050_hw_set_hw_params(struct iwl_priv *priv)
++{
++	if (priv->cfg->mod_params->num_of_queues >= IWL_MIN_NUM_QUEUES &&
++	    priv->cfg->mod_params->num_of_queues <= IWLAGN_NUM_QUEUES)
++		priv->cfg->num_of_queues =
++			priv->cfg->mod_params->num_of_queues;
++
++	priv->hw_params.max_txq_num = priv->cfg->num_of_queues;
++	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
++	priv->hw_params.scd_bc_tbls_size =
++			priv->cfg->num_of_queues *
++			sizeof(struct iwlagn_scd_bc_tbl);
++	priv->hw_params.tfd_size = sizeof(struct iwl_tfd);
++	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
++	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
++
++	priv->hw_params.max_data_size = IWL60_RTC_DATA_SIZE;
++	priv->hw_params.max_inst_size = IWL60_RTC_INST_SIZE;
++
++	priv->hw_params.max_bsm_size = 0;
++	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
++					BIT(IEEE80211_BAND_5GHZ);
++	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
++
++	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
++	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
++	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
++	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
++
++	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
++		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
++
++	/* Set initial sensitivity parameters */
++	/* Set initial calibration set */
++	priv->hw_params.sens = &iwl6000_sensitivity;
++	priv->hw_params.calib_init_cfg =
++		BIT(IWL_CALIB_XTAL)		|
++		BIT(IWL_CALIB_DC)		|
++		BIT(IWL_CALIB_LO)		|
++		BIT(IWL_CALIB_TX_IQ)		|
++		BIT(IWL_CALIB_BASE_BAND);
+ 
+ 	return 0;
+ }
+@@ -304,7 +336,7 @@ static const struct iwl_ops iwl6000_ops = {
+ };
+ 
+ static struct iwl_lib_ops iwl6050_lib = {
+-	.set_hw_params = iwl6000_hw_set_hw_params,
++	.set_hw_params = iwl6050_hw_set_hw_params,
+ 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
+ 	.txq_inval_byte_cnt_tbl = iwlagn_txq_inval_byte_cnt_tbl,
+ 	.txq_set_sched = iwlagn_txq_set_sched,
+-- 
+1.6.3.3
+
