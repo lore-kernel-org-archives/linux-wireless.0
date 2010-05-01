@@ -1,145 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47560 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751667Ab0EKPXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 11:23:12 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 3/4] ath9k: add debugfs files for reading/writing registers
-Date: Tue, 11 May 2010 17:23:02 +0200
-Message-Id: <1273591383-76696-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1273591383-76696-2-git-send-email-nbd@openwrt.org>
-References: <1273591383-76696-1-git-send-email-nbd@openwrt.org>
- <1273591383-76696-2-git-send-email-nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:52421 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753776Ab0EARTj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 May 2010 13:19:39 -0400
+Received: by fxm10 with SMTP id 10so1056805fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2010 10:19:37 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "David H. Lynch Jr." <dhlii@dlasys.net>
+Subject: Re: ar9170-fw II
+Date: Sat, 1 May 2010 19:19:31 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <4BDC001F.9050202@dlasys.net>
+In-Reply-To: <4BDC001F.9050202@dlasys.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201005011919.32016.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/debug.c |   89 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/debug.h |    1 +
- 2 files changed, 90 insertions(+), 0 deletions(-)
+On Saturday 01 May 2010 12:19:11 David H. Lynch Jr. wrote:
+> I have ethernet driver experience but not wifi. I have a project to 
+> add some features to the ar9170 that will require additions to the 
+> firmware. I would appreciate pointers for docs etc. to get me started.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 8d7c046..29898f8 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -795,6 +795,86 @@ static const struct file_operations fops_recv = {
- 	.owner = THIS_MODULE
- };
- 
-+static ssize_t read_file_regidx(struct file *file, char __user *user_buf,
-+                                size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	char buf[32];
-+	unsigned int len;
-+
-+	len = snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.regidx);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	unsigned long regidx;
-+	char buf[32];
-+	ssize_t len;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EINVAL;
-+
-+	buf[len] = '\0';
-+	if (strict_strtoul(buf, 0, &regidx))
-+		return -EINVAL;
-+
-+	sc->debug.regidx = regidx;
-+	return count;
-+}
-+
-+static const struct file_operations fops_regidx = {
-+	.read = read_file_regidx,
-+	.write = write_file_regidx,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE
-+};
-+
-+static ssize_t read_file_regval(struct file *file, char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	char buf[32];
-+	unsigned int len;
-+	u32 regval;
-+
-+	regval = REG_READ_D(ah, sc->debug.regidx);
-+	len = snprintf(buf, sizeof(buf), "0x%08x\n", regval);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	unsigned long regval;
-+	char buf[32];
-+	ssize_t len;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EINVAL;
-+
-+	buf[len] = '\0';
-+	if (strict_strtoul(buf, 0, &regval))
-+		return -EINVAL;
-+
-+	REG_WRITE_D(ah, sc->debug.regidx, regval);
-+	return count;
-+}
-+
-+static const struct file_operations fops_regval = {
-+	.read = read_file_regval,
-+	.write = write_file_regval,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE
-+};
-+
- int ath9k_init_debug(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -846,6 +926,15 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			sc->debug.debugfs_phy, sc, &fops_tx_chainmask))
- 		goto err;
- 
-+	if (!debugfs_create_file("regidx", S_IRUSR | S_IWUSR,
-+			sc->debug.debugfs_phy, sc, &fops_regidx))
-+		goto err;
-+
-+	if (!debugfs_create_file("regval", S_IRUSR | S_IWUSR,
-+			sc->debug.debugfs_phy, sc, &fops_regval))
-+		goto err;
-+
-+	sc->debug.regidx = 0;
- 	return 0;
- err:
- 	ath9k_exit_debug(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index 7314360..5147b87 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -153,6 +153,7 @@ struct ath_stats {
- 
- struct ath9k_debug {
- 	struct dentry *debugfs_phy;
-+	u32 regidx;
- 	struct ath_stats stats;
- };
- 
--- 
-1.6.4.2
+Well, for starters the ar9170 uses a ZyDas MAC (aka ZD1221)
+and a AR900x PHY/Radio. Therefore the phy code and registers
+are very similar to those #definitions you can find in ath9k.
+And for the MAC code & registers you can look into zd1211rw,
+or look into drivers/staging/otus (original vendor driver,
+shares some code with their windows drivers)
 
+AFAICT, there are no technical documents about the AR9170 
+solution available w/o signing a NDA with Atheros
+(probably because the devices are still produced and sold in high quantities?).
+
+> What is available for the ar9170 itself ?
+> How does the firmware and the linux driver communicate?
+>   Is there an overview of the firmware - what is where ?
+
+not really, apart from the headers of the original firmware 
+and vendor drivers.
+
+But if you really need to implement some of your 'features'
+(what are they, if I may ask?) into the firmware you could
+save some time by migrating to carl9170 code base:
+( http://www.kernel.org/pub/linux/kernel/people/chr/carl9170/1.0.5 
+  + linville's wireless-testing.git )
+
+The advantages over the original firmware code (from a developers POV) are:
+ * customizable/configurable fw
+	+ driver can auto detect all selected fw features
+
+ * userspace testbench ( carlu ) for the usb subsystem
+   (allows you to run usb stress-test, dump the device's eeprom content
+    to stdout and of course: you can implement your own routines
+    and test & develop without crashing the kernel)
+
+ * all hardware & firmware interface definitions are all located 
+   in a single directory /include/shared/*.h
+
+	version.h	- carl9170 API/ABI version
+	eeprom.h	- eeprom layout
+	phy.h		- AR900x PHY/Radio definitions
+	fwcmd.h		- implemented firmware commands
+	fwdesc.h	- layout of the firmware descriptor (e.g. available/activated features)
+	hw.h		- ZD1221 MAC + (Faraday USB) definitions
+		wlan.h	- (part of hw.h & phy.h) contains all the information about
+				  tx & rx frame formats.
+
+ * (tiny) printf + hexdump (obviously, you want those ;-) )
+
+ * follows linux' kernel coding style :-D
+
+Regards,
+	Chr
