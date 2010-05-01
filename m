@@ -1,38 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy1-pub.bluehost.com ([69.89.21.11]:48091 "HELO
-	outbound-mail-01.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750832Ab0EAKTT (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:62151 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754161Ab0EAQdJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 06:19:19 -0400
-Received: from [72.25.58.52] (helo=[206.223.20.32])
-	by host200.hostmonster.com with esmtpa (Exim 4.69)
-	(envelope-from <dhlii@dlasys.net>)
-	id 1O89n4-0004KX-D0
-	for linux-wireless@vger.kernel.org; Sat, 01 May 2010 04:19:19 -0600
-Message-ID: <4BDC001F.9050202@dlasys.net>
-Date: Sat, 01 May 2010 06:19:11 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
+	Sat, 1 May 2010 12:33:09 -0400
+Received: by fxm10 with SMTP id 10so1038483fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2010 09:33:07 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ar9170-fw II
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4BDC56D2.5060605@gmail.com>
+References: <4BDC56D2.5060605@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 1 May 2010 18:32:47 +0200
+Message-ID: <AANLkTinJVm-6o8tVLesiOeiYGgvy8vYSpXPtcAh0CQ5D@mail.gmail.com>
+Subject: Re: [PATCH] ssb: Implement fast powerup delay calculation
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <larry.finger@lwfinger.net>
+Content-Type: multipart/mixed; boundary=001485f19a3029499504858aea64
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-     I have ethernet driver experience but not wifi. I have a project to 
-add some features to the ar9170 that will require additions to the 
-firmware. I would appreciate pointers for docs etc. to get me started.
+--001485f19a3029499504858aea64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-What is available for the ar9170 itself ?
-How does the firmware and the linux driver communicate?
-  Is there an overview of the firmware - what is where ?
+2010/5/1 G=E1bor Stefanik <netrolller.3d@gmail.com>:
+> Implement fast powerup delay calculation, as described
+> in the recently updated specs. The 4325 part is coming soon.
+>
+> Signed-off-by: G=E1bor Stefanik<netrolller.3d@gmail.com>
+> ---
+>
+> To people experiencing DMA errors: please test this patch, it touches
+> the PMU code, one of the suspected problem areas.
+>
+> I'm submitting this patch using Thunderbird 3; so I cannot be held liable
+> if it gets damaged in transit. Blame Mozilla. :-)
 
--- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies too numerous to list.
+Apparently the nasty space-doubling issue seen in the Tb3 beta is
+still present in the final version... here is the patch as an
+attachment.
 
-"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
-Albert Einstein
+--G=E1bor
 
+--001485f19a3029499504858aea64
+Content-Type: application/octet-stream; name="ssb_fast_pwrup_delay.patch"
+Content-Disposition: attachment; filename="ssb_fast_pwrup_delay.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g8onidcx0
+
+SW1wbGVtZW50IGZhc3QgcG93ZXJ1cCBkZWxheSBjYWxjdWxhdGlvbiwgYXMgZGVzY3JpYmVkCmlu
+IHRoZSByZWNlbnRseSB1cGRhdGVkIHNwZWNzLiBUaGUgNDMyNSBwYXJ0IGlzIGNvbWluZyBzb29u
+LgoKU2lnbmVkLW9mZi1ieTogR+Fib3IgU3RlZmFuaWsgPG5ldHJvbGxsZXIuM2RAZ21haWwuY29t
+PgotLS0KCkluZGV4OiB3aXJlbGVzcy10ZXN0aW5nL2RyaXZlcnMvc3NiL2RyaXZlcl9jaGlwY29t
+bW9uLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PQotLS0gd2lyZWxlc3MtdGVzdGluZy5vcmlnL2RyaXZlcnMvc3NiL2Ry
+aXZlcl9jaGlwY29tbW9uLmMKKysrIHdpcmVsZXNzLXRlc3RpbmcvZHJpdmVycy9zc2IvZHJpdmVy
+X2NoaXBjb21tb24uYwpAQCAtMjA5LDcgKzIwOSwyNCBAQCBzdGF0aWMgdm9pZCBjaGlwY29fcG93
+ZXJjb250cm9sX2luaXQoc3RyCiAJfQogfQogCi1zdGF0aWMgdm9pZCBjYWxjX2Zhc3RfcG93ZXJ1
+cF9kZWxheShzdHJ1Y3Qgc3NiX2NoaXBjb21tb24gKmNjKQorc3RhdGljIHUxNiBwbXVfZmFzdF9w
+b3dlcnVwX2RlbGF5KHN0cnVjdCBzc2JfY2hpcGNvbW1vbiAqY2MpCit7CisJc3RydWN0IHNzYl9i
+dXMgKmJ1cyA9IGNjLT5kZXYtPmJ1czsKKworCXN3aXRjaCAoYnVzLT5jaGlwX2lkKSB7CisJY2Fz
+ZSAweDQzMTI6CisJY2FzZSAweDQzMjI6CisJY2FzZSAweDQzMjg6CisJCXJldHVybiA3MDAwOwor
+CWNhc2UgMHg0MzI1OgorCQkvKiBUT0RPOiAqLworCWRlZmF1bHQ6CisJCWJyZWFrOworCX0KKwly
+ZXR1cm4gMTUwMDA7Cit9CisKK3N0YXRpYyB1MTYgY2FsY19mYXN0X3Bvd2VydXBfZGVsYXkoc3Ry
+dWN0IHNzYl9jaGlwY29tbW9uICpjYykKIHsKIAlzdHJ1Y3Qgc3NiX2J1cyAqYnVzID0gY2MtPmRl
+di0+YnVzOwogCWludCBtaW5mcmVxOwpAQCAtMjE3LDI2ICsyMzQsMzMgQEAgc3RhdGljIHZvaWQg
+Y2FsY19mYXN0X3Bvd2VydXBfZGVsYXkoc3RydQogCXUzMiBwbGxfb25fZGVsYXk7CiAKIAlpZiAo
+YnVzLT5idXN0eXBlICE9IFNTQl9CVVNUWVBFX1BDSSkKLQkJcmV0dXJuOworCQlyZXR1cm4gMDsK
+KwlpZiAoY2MtPmNhcGFiaWxpdGllcyAmIFNTQl9DSElQQ09fQ0FQX1BNVSkKKwkJcmV0dXJuIHBt
+dV9mYXN0X3Bvd2VydXBfZGVsYXkoY2MpOwogCWlmICghKGNjLT5jYXBhYmlsaXRpZXMgJiBTU0Jf
+Q0hJUENPX0NBUF9QQ1RMKSkKLQkJcmV0dXJuOworCQlyZXR1cm4gMDsKIAogCW1pbmZyZXEgPSBj
+aGlwY29fcGN0bF9jbG9ja2ZyZXFsaW1pdChjYywgMCk7CiAJcGxsX29uX2RlbGF5ID0gY2hpcGNv
+X3JlYWQzMihjYywgU1NCX0NISVBDT19QTExPTkRFTEFZKTsKIAl0bXAgPSAoKChwbGxfb25fZGVs
+YXkgKyAyKSAqIDEwMDAwMDApICsgKG1pbmZyZXEgLSAxKSkgLyBtaW5mcmVxOwogCVNTQl9XQVJO
+X09OKHRtcCAmIH4weEZGRkYpOwogCi0JY2MtPmZhc3RfcHdydXBfZGVsYXkgPSB0bXA7CisJcmV0
+dXJuIHRtcDsKIH0KIAogdm9pZCBzc2JfY2hpcGNvbW1vbl9pbml0KHN0cnVjdCBzc2JfY2hpcGNv
+bW1vbiAqY2MpCiB7CisJdTE2IGRlbGF5OworCiAJaWYgKCFjYy0+ZGV2KQogCQlyZXR1cm47IC8q
+IFdlIGRvbid0IGhhdmUgYSBDaGlwQ29tbW9uICovCiAJc3NiX3BtdV9pbml0KGNjKTsKIAljaGlw
+Y29fcG93ZXJjb250cm9sX2luaXQoY2MpOwogCXNzYl9jaGlwY29fc2V0X2Nsb2NrbW9kZShjYywg
+U1NCX0NMS01PREVfRkFTVCk7Ci0JY2FsY19mYXN0X3Bvd2VydXBfZGVsYXkoY2MpOworCWRlbGF5
+ID0gY2FsY19mYXN0X3Bvd2VydXBfZGVsYXkoY2MpOworCXNzYl9wcmludGsoS0VSTl9JTkZPIFBG
+WCAiZmFzdF9wd3J1cF9kZWxheSBpcyAlZFxuIiwgZGVsYXkpOworCWNjLT5mYXN0X3B3cnVwX2Rl
+bGF5ID0gZGVsYXk7CisJc3NiX3dyaXRlMTYoY2MtPmRldiwgU1NCX01NSU9fUE9XRVJVUF9ERUxB
+WSwgZGVsYXkpOwogfQogCiB2b2lkIHNzYl9jaGlwY29fc3VzcGVuZChzdHJ1Y3Qgc3NiX2NoaXBj
+b21tb24gKmNjKQpJbmRleDogd2lyZWxlc3MtdGVzdGluZy9pbmNsdWRlL2xpbnV4L3NzYi9zc2Jf
+cmVncy5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0KLS0tIHdpcmVsZXNzLXRlc3Rpbmcub3JpZy9pbmNsdWRlL2xpbnV4
+L3NzYi9zc2JfcmVncy5oCisrKyB3aXJlbGVzcy10ZXN0aW5nL2luY2x1ZGUvbGludXgvc3NiL3Nz
+Yl9yZWdzLmgKQEAgLTI2LDYgKzI2LDcgQEAKICNkZWZpbmUJU1NCX0VVQVJUCQkoU1NCX0VYVElG
+X0JBU0UgKyAweDAwODAwMDAwKQogI2RlZmluZQlTU0JfTEVECQkJKFNTQl9FWFRJRl9CQVNFICsg
+MHgwMDkwMDAwMCkKIAorI2RlZmluZSBTU0JfTU1JT19QT1dFUlVQX0RFTEFZCTB4MDZBOAogCiAv
+KiBFbnVtZXJhdGlvbiBzcGFjZSBjb25zdGFudHMgKi8KICNkZWZpbmUgU1NCX0NPUkVfU0laRQkJ
+MHgxMDAwCS8qIFNpemUgb2YgYSBjb3JlIE1NSU8gYXJlYSAqLwo=
+--001485f19a3029499504858aea64--
