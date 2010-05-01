@@ -1,83 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19515 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757075Ab0D3XAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 19:00:36 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/8] iwlwifi: set AMPDU status variables correctly
-Date: Fri, 30 Apr 2010 16:00:23 -0700
-Message-Id: <1272668425-3753-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
-References: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail.gmx.net ([213.165.64.20]:36802 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750800Ab0EALmf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 May 2010 07:42:35 -0400
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: "David H. Lynch Jr." <dhlii@dlasys.net>
+Subject: Re: ar9170-fw
+Date: Sat, 1 May 2010 13:42:27 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <4BDB72AA.7000203@dlasys.net> <201005010323.53295.s.L-H@gmx.de> <4BDBFE51.2010305@dlasys.net>
+In-Reply-To: <4BDBFE51.2010305@dlasys.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="windows-1252"
+Message-Id: <201005011342.30412.s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Halperin <dhalperi@cs.washington.edu>
+Hi
 
-The TX status code is currently abusing the ampdu_ack_map field (a bitmap) to
-count the number of successfully received frames.  The comments in mac80211.h
-show there are actually three different, relevant variables, of which we are
-currently using two, both incorrectly. Fix this by making
+On Saturday 01 May 2010, David H. Lynch Jr. wrote:
+>   Did a git pull and picked up the bashisms and versions update.
+> At HEAD I get build failures in bfd
+> 
+> ----------------------------------
+> make[5]: Entering directory 
+> `/usr/src/ar9170-fw/toolchain/build/binutils/bfd'
+> 1011 /bin/sh ./libtool --tag=CC --mode=compile gcc -DHAVE_CONFIG_H -I. 
+> -I/usr/src/ar9170-fw/toolchain/src/binutils-2.20.1/bfd
+> 1012 libtool: compile: gcc -DHAVE_CONFIG_H -I. 
+> -I/usr/src/ar9170-fw/toolchain/src/binutils-2.20.1/bfd -I. 
+> -I/usr/src/ar9170-fw/
+> 1013 cc1: warnings being treated as errors
+> 1014 In file included from 
+> /usr/src/ar9170-fw/toolchain/src/binutils-2.20.1/bfd/elf32-sh.c:6055:
+> 1015 ./elf32-target.h:718: error: initialization makes pointer from 
+> integer without a cast
+> 1016 ./elf32-target.h:731: error: large integer implicitly truncated to 
+> unsigned type
+> 1017 ./elf32-target.h:738: error: missing initializer
+> 1018 ./elf32-target.h:738: error: (near initialization for 
+> ‘elf32_bed.want_p_paddr_set_to_zero’)
+> 1019 ./elf32-target.h:826: error: ‘bfd_elf32_bfd_define_common_symbol’ 
+> undeclared here (not in a function)
+> 1020 In file included from 
+> /usr/src/ar9170-fw/toolchain/src/binutils-2.20.1/bfd/elf32-sh.c:6074:
+> ------------------------------------
+> 
+> If I back off to
+> dc858db5b191d70362d30f90906d68c1c3c2c972
+> the bashism fixes I get the same build errors in libssp in my first email.
+> 
+> In an unrelated toolchain build project (buildroot for a ppc405) I get 
+> libssp errors if I enable SSP.
+> 
+> I am reading the errors is a failure to properly include standard headers.
+> 
+> I am working under ubuntu lucid
+[...]
+> Alternately maybe I am missing some development dependency that 
+> configure is not warning about
 
-- ampdu_ack_len -> the number of ACKed frames (i.e. successes)
-- ampdu_ack_map -> the bitmap
-- ampdu_len -> the total number of frames sent (i.e., attempts)
+I have verified before sending the mail yesterday that ar9170.fw still 
+builds fine on current Debian unstable (gcc-4.4, but it also worked on 
+4.4.2, 4.4.3 before; confirmed in a minimal build chroot (pbuilder) 
+environment), so you're likely just missing build dependencies.
 
-to match the header file (and verified with ath9k's usage) and updating Intel's
-RS code to match.
+# apt-get install build-essential
+# apt-get build-dep gcc-4.4 binutils newlib
 
-Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   10 +++++-----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    5 +++--
- 2 files changed, 8 insertions(+), 7 deletions(-)
+While this pulls a little more than you'd absolutely need, it still makes
+sure that all eventual build dependencies are covered.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 8f8d5e3..f01f242 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -867,14 +867,14 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
- 		rs_get_tbl_info_from_mcs(tx_rate, priv->band, &tbl_type,
- 				&rs_index);
- 		rs_collect_tx_data(curr_tbl, rs_index,
--				   info->status.ampdu_ack_len,
--				   info->status.ampdu_ack_map);
-+				   info->status.ampdu_len,
-+				   info->status.ampdu_ack_len);
- 
- 		/* Update success/fail counts if not searching for new mode */
- 		if (lq_sta->stay_in_tbl) {
--			lq_sta->total_success += info->status.ampdu_ack_map;
--			lq_sta->total_failed += (info->status.ampdu_ack_len -
--					info->status.ampdu_ack_map);
-+			lq_sta->total_success += info->status.ampdu_ack_len;
-+			lq_sta->total_failed += (info->status.ampdu_len -
-+					info->status.ampdu_ack_len);
- 		}
- 	} else {
- 	/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 95e263f..c2a5c85 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -1233,8 +1233,9 @@ static int iwlagn_tx_status_reply_compressed_ba(struct iwl_priv *priv,
- 	memset(&info->status, 0, sizeof(info->status));
- 	info->flags |= IEEE80211_TX_STAT_ACK;
- 	info->flags |= IEEE80211_TX_STAT_AMPDU;
--	info->status.ampdu_ack_map = successes;
--	info->status.ampdu_ack_len = agg->frame_count;
-+	info->status.ampdu_ack_len = successes;
-+	info->status.ampdu_ack_map = bitmap;
-+	info->status.ampdu_len = agg->frame_count;
- 	iwlagn_hwrate_to_tx_control(priv, agg->rate_n_flags, info);
- 
- 	IWL_DEBUG_TX_REPLY(priv, "Bitmap %llx\n", (unsigned long long)bitmap);
--- 
-1.6.3.3
-
+Regards
+	Stefan Lippers-Hollmann
