@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:53938 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754044Ab0ESTFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 15:05:54 -0400
-Subject: Re: [PATCH] cfg80211: make action channel type optional
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274294939.19404.4.camel@jlt3.sipsolutions.net>
-References: <1274264232.3874.7.camel@jlt3.sipsolutions.net>
-	 <1274293152.8463.2.camel@mj>
-	 <1274294939.19404.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Wed, 19 May 2010 15:05:52 -0400
-Message-Id: <1274295952.9409.3.camel@mj>
-Mime-Version: 1.0
+Received: from mail-pz0-f204.google.com ([209.85.222.204]:35067 "EHLO
+	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752561Ab0EARmc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 May 2010 13:42:32 -0400
+Received: by pzk42 with SMTP id 42so651912pzk.4
+        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2010 10:42:31 -0700 (PDT)
+Message-ID: <4BDC6803.9030805@lwfinger.net>
+Date: Sat, 01 May 2010 12:42:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH] ssb: Implement fast powerup delay calculation
+References: <4BDC56D2.5060605@gmail.com> <201005011907.05603.mb@bu3sch.de> <AANLkTimXBlIETHVLapuSrkI8uTIU8JPepLWvAEq6_D4T@mail.gmail.com> (sfid-20100501_171356_780008_6E95C7C2) <201005011919.42294.mb@bu3sch.de>
+In-Reply-To: <201005011919.42294.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-19 at 20:48 +0200, Johannes Berg wrote:
-> On Wed, 2010-05-19 at 14:19 -0400, Pavel Roskin wrote:
-> > On Wed, 2010-05-19 at 12:17 +0200, Johannes Berg wrote:
-> > 
-> > > @@ -1168,6 +1168,7 @@ struct cfg80211_ops {
-> > >  	int	(*action)(struct wiphy *wiphy, struct net_device *dev,
-> > >  			  struct ieee80211_channel *chan,
-> > >  			  enum nl80211_channel_type channel_type,
-> > > +			  bool channel_type_valid,
-> > >  			  const u8 *buf, size_t len, u64 *cookie);
-> > 
-> > Would not it be easier to introduce NL80211_CHAN_UNSPECIFIED in enum
-> > nl80211_channel_type?
+On 05/01/2010 12:19 PM, Michael Buesch wrote:
+> On Saturday 01 May 2010 19:13:31 Gábor Stefanik wrote:
+>> 2010/5/1 Michael Buesch <mb@bu3sch.de>:
+>>> On Saturday 01 May 2010 18:29:06 Gábor Stefanik wrote:
+>>>> +     ssb_write16(cc->dev, SSB_MMIO_POWERUP_DELAY, delay);
+>>>>   }
+>>>>
+>>>>   void ssb_chipco_suspend(struct ssb_chipcommon *cc)
+>>>> Index: wireless-testing/include/linux/ssb/ssb_regs.h
+>>>> ===================================================================
+>>>> --- wireless-testing.orig/include/linux/ssb/ssb_regs.h
+>>>> +++ wireless-testing/include/linux/ssb/ssb_regs.h
+>>>> @@ -26,6 +26,7 @@
+>>>>   #define     SSB_EUART               (SSB_EXTIF_BASE + 0x00800000)
+>>>>   #define     SSB_LED                 (SSB_EXTIF_BASE + 0x00900000)
+>>>>
+>>>> +#define SSB_MMIO_POWERUP_DELAY       0x06A8
+>>>
+>>> I think you are really confusing something here.
+>>> That register is a wireless core register and we already write it in b43.
+>>>
+>>> --
+>>> Greetings, Michael.
+>>>
+>>
+>> This is what I am implementing: http://bcm-v4.sipsolutions.net/802.11/Init
+>> Here, it clearly says MMIO offset. 
 > 
-> Yes, but it would change the userspace API so we can't do that.
+> Yeah. Just what I said. It is an 802.11 core register.
+> We already write it in b43/main.c/b43_chip_init().
+> It is _wrong_ to write to the chipcommon at that offset.
 
-I believe the new API would be a superset of the old API.  No userspace
-caller would need to be changed.
+I may have gotten the MMIO offset part wrong in the specs, but the
+Broadcom driver definitely writes to offset 0x648 at that point.
 
-Anyway, I just wanted to be sure that a simpler solution was considered.
+I know that b43 writes that location; however, it is much later in the
+startup sequence. Whether that is important is unknown at this point.
 
--- 
-Regards,
-Pavel Roskin
+The previous code resulted in a value of zero being written to the
+location in question, but the value for the 4315 is 7000.
+
+Larry
