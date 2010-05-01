@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:55174 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578Ab0ESGsK (ORCPT
+Received: from smtp-out116.alice.it ([85.37.17.116]:2484 "EHLO
+	smtp-out116.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539Ab0EALx5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 02:48:10 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so1426965fge.1
-        for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 23:48:08 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: don't use to_pci_dev in rt2x00pci_uninitialize
-Date: Wed, 19 May 2010 08:47:59 +0200
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201005190847.59068.helmut.schaa@googlemail.com>
+	Sat, 1 May 2010 07:53:57 -0400
+Subject: Re: wl1251_sdio PSM
+From: GNUtoo <GNUtoo@no-log.org>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <87sk6cjj20.fsf@purkki.valot.fi>
+References: <1272230300.2349.23.camel@gnutoo-desktop>
+	 <87sk6cjj20.fsf@purkki.valot.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 01 May 2010 13:53:49 +0200
+Message-ID: <1272714829.2456.14.camel@gnutoo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't use to_pci_dev in rt2x00pci_uninitialize to get the allocated irq
-as it won't work for platform devices (SoC). Instead, use the irq field
-that's already used everywhere else.
+On Sat, 2010-05-01 at 08:19 +0300, Kalle Valo wrote:
+> GNUtoo <GNUtoo@no-log.org> writes:
+> 
+> > Hi,
+> 
+> Hi Mr. GNUtoo,
+> 
+> > We are trying to make the htc dream(also known as G1) android phone
+> > usable with a standard GNU(non android) userland.
+> 
+> I'm interested about this. Are there any references about this? For
+> example, instructions how to install etc.
+There is a status at
+http://www.htc-linux.org/wiki/index.php?title=Dream#Status
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2x00pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Here are preview images with FSO:
+http://downloads.freesmartphone.org/releases/fso2-preview-1/htcdream/
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index a016f7c..f71eee6 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -206,7 +206,7 @@ void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Free irq line.
- 	 */
--	free_irq(to_pci_dev(rt2x00dev->dev)->irq, rt2x00dev);
-+	free_irq(rt2x00dev->irq, rt2x00dev);
- 
- 	/*
- 	 * Free DMA
--- 
-1.6.4.2
+Zhone is only a test program,it's not our goal.
+Our goal is targetting the SHR distribution instead
+( http://trac.shr-project.org/trac )
+
+For now In order to have a SHR image,for now you have to build one
+yourself using openembedded
+Select htcdream as the machine and shr as the distribution
+also include that in the local.conf:
+require conf/distro/include/fso-autorev.inc
+require conf/distro/include/shr-autorev.inc
+
+http://docs.openembedded.org/usermanual/usermanual.html#chapter_getting_oe
+Contains some information on how to get the build system setup.
+
+Denis.
+
 
