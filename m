@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out116.alice.it ([85.37.17.116]:2484 "EHLO
-	smtp-out116.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab0EALx5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36591 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084Ab0EAFnK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 07:53:57 -0400
-Subject: Re: wl1251_sdio PSM
-From: GNUtoo <GNUtoo@no-log.org>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <87sk6cjj20.fsf@purkki.valot.fi>
-References: <1272230300.2349.23.camel@gnutoo-desktop>
-	 <87sk6cjj20.fsf@purkki.valot.fi>
+	Sat, 1 May 2010 01:43:10 -0400
+Subject: Re: ar9170-fw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
+Cc: "David H. Lynch Jr." <dhlii@dlasys.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201005010323.53295.s.L-H@gmx.de>
+References: <4BDB72AA.7000203@dlasys.net>  <201005010323.53295.s.L-H@gmx.de>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 01 May 2010 13:53:49 +0200
-Message-ID: <1272714829.2456.14.camel@gnutoo-desktop>
+Date: Sat, 01 May 2010 07:43:03 +0200
+Message-ID: <1272692583.3556.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-05-01 at 08:19 +0300, Kalle Valo wrote:
-> GNUtoo <GNUtoo@no-log.org> writes:
-> 
-> > Hi,
-> 
-> Hi Mr. GNUtoo,
-> 
-> > We are trying to make the htc dream(also known as G1) android phone
-> > usable with a standard GNU(non android) userland.
-> 
-> I'm interested about this. Are there any references about this? For
-> example, instructions how to install etc.
-There is a status at
-http://www.htc-linux.org/wiki/index.php?title=Dream#Status
+Hi,
 
-Here are preview images with FSO:
-http://downloads.freesmartphone.org/releases/fso2-preview-1/htcdream/
+> >      I tried to build the toolchain from an uptodate pull of the git 
+> > repository,
 
-Zhone is only a test program,it's not our goal.
-Our goal is targetting the SHR distribution instead
-( http://trac.shr-project.org/trac )
+Not sure if that's still my repository, but
 
-For now In order to have a SHR image,for now you have to build one
-yourself using openembedded
-Select htcdream as the machine and shr as the distribution
-also include that in the local.conf:
-require conf/distro/include/fso-autorev.inc
-require conf/distro/include/shr-autorev.inc
 
-http://docs.openembedded.org/usermanual/usermanual.html#chapter_getting_oe
-Contains some information on how to get the build system setup.
+> ar9170.fw: fix bashisms while building the cross toolchain.
 
-Denis.
+> ar9170.fw: update cross-toolchain.
 
+I applied both your patches to it.
+
+johannes
 
