@@ -1,60 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f183.google.com ([209.85.221.183]:33999 "EHLO
-	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702Ab0EHQY4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52526 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770Ab0EAQx5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 May 2010 12:24:56 -0400
-Received: by qyk13 with SMTP id 13so3448325qyk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 08 May 2010 09:24:55 -0700 (PDT)
-Date: Sat, 8 May 2010 18:24:38 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Bruno Randolf <br1@einfach.org>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [patch 6/9] ath5k: several off by one range checks
-Message-ID: <20100508162438.GR27064@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 1 May 2010 12:53:57 -0400
+Subject: [PATCH] mac80211: allow controlling aggregation manually
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 01 May 2010 18:53:51 +0200
+Message-ID: <1272732831.4628.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are several places that use > ARRAY_SIZE() instead of 
->= ARRAY_SIZE().
+This allows enabling TX and disabling both TX and
+RX aggregation sessions manually in debugfs. It is
+very useful for debugging session initiation and
+teardown problems since with this you don't have
+to force a lot of traffic to get aggregation and
+thus have less data to analyse.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+Also, to debug mac80211 code itself, make hwsim
+"support" aggregation sessions. It will still just
+transfer the frame, but go through the setup and
+teardown handshakes.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ani.c b/drivers/net/wireless/ath/ath5k/ani.c
-index 584a328..f2311ab 100644
---- a/drivers/net/wireless/ath/ath5k/ani.c
-+++ b/drivers/net/wireless/ath/ath5k/ani.c
-@@ -73,7 +73,7 @@ ath5k_ani_set_noise_immunity_level(struct ath5k_hw *ah, int level)
- 	const s8 hi[] = { -14, -12 };
- 	const s8 fr[] = { -78, -80 };
- #endif
--	if (level < 0 || level > ARRAY_SIZE(sz)) {
-+	if (level < 0 || level >= ARRAY_SIZE(sz)) {
- 		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
- 			"level out of range %d", level);
- 		return;
-@@ -104,7 +104,7 @@ ath5k_ani_set_spur_immunity_level(struct ath5k_hw *ah, int level)
- {
- 	const int val[] = { 2, 4, 6, 8, 10, 12, 14, 16 };
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Ok so I do want it in the tree... had another
+situation where I needed it and don't want to
+have to patch all the time.
+
+Unless anyone objects?
+
+ drivers/net/wireless/mac80211_hwsim.c |    3 +
+ net/mac80211/debugfs_sta.c            |   65 +++++++++++++++++++++++++++++++++-
+ 2 files changed, 66 insertions(+), 2 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2010-05-01 08:47:54.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2010-05-01 08:47:56.000000000 +0200
+@@ -1317,7 +1317,8 @@ static int __init init_mac80211_hwsim(vo
+ 		hw->flags = IEEE80211_HW_MFP_CAPABLE |
+ 			    IEEE80211_HW_SIGNAL_DBM |
+ 			    IEEE80211_HW_SUPPORTS_STATIC_SMPS |
+-			    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS;
++			    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
++			    IEEE80211_HW_AMPDU_AGGREGATION;
  
--	if (level < 0 || level > ARRAY_SIZE(val) ||
-+	if (level < 0 || level >= ARRAY_SIZE(val) ||
- 	    level > ah->ah_sc->ani_state.max_spur_level) {
- 		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
- 			"level out of range %d", level);
-@@ -129,7 +129,7 @@ ath5k_ani_set_firstep_level(struct ath5k_hw *ah, int level)
- {
- 	const int val[] = { 0, 4, 8 };
+ 		/* ask mac80211 to reserve space for magic */
+ 		hw->vif_data_size = sizeof(struct hwsim_vif_priv);
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-05-01 08:46:26.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2010-05-01 08:47:56.000000000 +0200
+@@ -39,6 +39,13 @@ static const struct file_operations sta_
+ 	.open = mac80211_open_file_generic,				\
+ }
  
--	if (level < 0 || level > ARRAY_SIZE(val)) {
-+	if (level < 0 || level >= ARRAY_SIZE(val)) {
- 		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
- 			"level out of range %d", level);
- 		return;
++#define STA_OPS_RW(name)						\
++static const struct file_operations sta_ ##name## _ops = {		\
++	.read = sta_##name##_read,					\
++	.write = sta_##name##_write,					\
++	.open = mac80211_open_file_generic,				\
++}
++
+ #define STA_FILE(name, field, format)					\
+ 		STA_READ_##format(name, field)				\
+ 		STA_OPS(name)
+@@ -156,7 +163,63 @@ static ssize_t sta_agg_status_read(struc
+ 
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
+ }
+-STA_OPS(agg_status);
++
++static ssize_t sta_agg_status_write(struct file *file, const char __user *userbuf,
++				    size_t count, loff_t *ppos)
++{
++	char _buf[12], *buf = _buf;
++	struct sta_info *sta = file->private_data;
++	bool start, tx;
++	unsigned long tid;
++	int ret;
++
++	if (count > sizeof(_buf))
++		return -EINVAL;
++
++	if (copy_from_user(buf, userbuf, count))
++		return -EFAULT;
++
++	buf[sizeof(_buf) - 1] = '\0';
++
++	if (strncmp(buf, "tx ", 3) == 0) {
++		buf += 3;
++		tx = true;
++	} else if (strncmp(buf, "rx ", 3) == 0) {
++		buf += 3;
++		tx = false;
++	} else
++		return -EINVAL;
++
++	if (strncmp(buf, "start ", 6) == 0) {
++		buf += 6;
++		start = true;
++		if (!tx)
++			return -EINVAL;
++	} else if (strncmp(buf, "stop ", 5) == 0) {
++		buf += 5;
++		start = false;
++	} else
++		return -EINVAL;
++
++	tid = simple_strtoul(buf, NULL, 0);
++
++	if (tid >= STA_TID_NUM)
++		return -EINVAL;
++
++	if (tx) {
++		if (start)
++			ret = ieee80211_start_tx_ba_session(&sta->sta, tid);
++		else
++			ret = ieee80211_stop_tx_ba_session(&sta->sta, tid,
++							   WLAN_BACK_RECIPIENT);
++	} else {
++		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT, 3);
++		ret = 0;
++	}
++
++	return ret ?: count;
++}
++STA_OPS_RW(agg_status);
+ 
+ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+ 				size_t count, loff_t *ppos)
+
+
+
