@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:58382 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754317Ab0EYOxs convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:37271 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800Ab0EASen convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 10:53:48 -0400
-Received: by gyg13 with SMTP id 13so2018192gyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 07:53:48 -0700 (PDT)
+	Sat, 1 May 2010 14:34:43 -0400
+Received: by pvg7 with SMTP id 7so674369pvg.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2010 11:34:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinynNqs6_zyTJcpi7yKiSvC5fBhbM2tVZcnoNUq@mail.gmail.com>
-References: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>
-	 <AANLkTimaLEQYH4Y7HO4Fv4zT8w8AsPkaAQtk9EauX4Bt@mail.gmail.com>
-	 <AANLkTikRt1fUgngBQxEoEFe1VDrYVFRAoMSR53et7gxf@mail.gmail.com>
-	 <AANLkTim-A_TWT-flrW88gJGan47Xhm7llyrQE3ehDKU6@mail.gmail.com>
-	 <AANLkTim4zLxIQH2r76WZRh9kNigVNAngcK1d9-Cu65Ag@mail.gmail.com>
-	 <AANLkTimH3p-dBA_6ee2a0iCnPDhtPZONzCEVkzMHrUWo@mail.gmail.com>
-	 <AANLkTim-4UNn8acYvF7AF2FDzdC9xRY-9JS0lSurwBc6@mail.gmail.com>
-	 <AANLkTimYeL4KQozuTl4le9WUpObsjwp0YAx7eAYq6MBr@mail.gmail.com>
-	 <AANLkTikOgv6d0FlXu2-smnYPApeehjRq_j8UxEealqFC@mail.gmail.com>
-	 <AANLkTinynNqs6_zyTJcpi7yKiSvC5fBhbM2tVZcnoNUq@mail.gmail.com>
-Date: Tue, 25 May 2010 10:53:47 -0400
-Message-ID: <AANLkTinyGlwqq4xshLU5Ol74p0VfcUXBjBGKXlsB2pMy@mail.gmail.com>
-Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
-	suite)
-From: Bob Copeland <me@bobcopeland.com>
-To: Weedy <weedy2887@gmail.com>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <7F414AFA-E125-40AD-A745-30AEC442B1E8@kaon.com>
+References: <7F414AFA-E125-40AD-A745-30AEC442B1E8@kaon.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 1 May 2010 11:34:23 -0700
+Message-ID: <s2s43e72e891005011134p3c1c7362x4ae8afa5265d060b@mail.gmail.com>
+Subject: Re: Issues setting up a 5GHz 802.11N AP
+To: Joshua Smith <jesmith@kaon.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/5/25 Weedy <weedy2887@gmail.com>:
-> 2010/5/24 Gábor Stefanik <netrolller.3d@gmail.com>:
->> 2010/5/25 Weedy <weedy2887@gmail.com>:
->>> 2010/5/23 Gábor Stefanik <netrolller.3d@gmail.com>:
->>>> In the meantime, one thing to test: Add a printk of sc->opmode.
->>>
->>> May 24 22:04:20 tiny-h4x kernel: [41147.243149] sc->opmode: 02 (over9000 times)
->>>
->>> So i'm guessing I did it wrong (I don't know C).
->>>        printk(KERN_NOTICE "sc->opmode: %02x\n", sc->opmode);
->>>
->>
->> No, that is correct, and proves my theory (2 is NL80211_IFTYPE_STATION
->> - it should be 6 for monitor mode).
->>
->> BTW, please use "Reply to all".
->>
-> gmail got rid of the "Reply to all by default" option :<
+On Thu, Apr 29, 2010 at 10:17 AM, Joshua Smith <jesmith@kaon.com> wrote:
+> Hello! Â I hope this is the right mailing this for this question. Â If not, please redirect me as you see fit!
 >
-> When you have a patch I will be waiting.
+> I am trying to put together a Linux PC that can act as a 5 GHz 802.11N Access Point. Â I got a lot of conflicting info in my searches, so I figured I'd just buy some hardware and figure out what works.
+>
+> I am using this kernel:
+>
+> Â Linux vosk 2.6.27.8 #1 SMP Sun Dec 7 08:30:31 i686 Intel(R) Core(TM) i7 CPU 930 Â @ 2.80GHz GenuineIntel GNU/Linux
+>
+> And I am using compat-wireless 2010-04-26 (complete build).
+>
+> So far, I have an Intel Wi-Fi Link 6300AGN:
+>
+> Â iwlagn 0000:07:00.0: Detected Intel(R) Centrino(R) Ultimate-N 6300 AGN, REV=0x74
+>
+> An Atheros-based Belkin N1 Wireless ExpressCard:
+>
+> Â phy1: Atheros AR5418 MAC/BB Rev:2 AR2122 RF Rev:81 mem=0xf9fa0000, irq=16
+>
+> And an RaLink-based Asus PCE-N13 PCI adapter:
+>
+> Â 03:00.0 Network controller: RaLink RT2860
+>
+> When I do 'iw list' for these three cards, I find:
+>
+> Intel: has 5GHz band, but does not support AP mode
+> Atheros: supports AP mode, but does not show 5GHz band
+> RaLink: supports AP mode, but does not show 5GHz band
+>
+> I think the Intel is correct. Â I've found many sources that say this chipset simply does not support AP/Master mode.
+>
+> However, both the Atheros and RaLink claim to support 300Mbps speeds, which I believe means they should have some 5Ghz channels, right?
 
-Sorry, I missed this thread somehow.  Thanks for the detective
-work and apologies for my stupid goof.  Gábor, are you prepping
-a patch?  I can fix it if you like.
+No, if you see no 5GHz information with 'iw list' then it means your
+cards do not support 5 GHz. Its a physical limitation of the actual
+hardware. To support 5 GHz your card would need a 5 GHz radio, and it
+simply does not come with one. For your Atheros card specifically the
+output shows a AR2122 RF, this is a 2.4 GHz radio only.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+  Luis
