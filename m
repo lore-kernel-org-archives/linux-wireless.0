@@ -1,282 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50486 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758871Ab0EYRm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 13:42:58 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 3/3] ath9k: use the key handling code from ath9k_common instead of duplicating it
-Date: Tue, 25 May 2010 19:42:46 +0200
-Message-Id: <1274809366-73422-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1274809366-73422-2-git-send-email-nbd@openwrt.org>
-References: <1274809366-73422-1-git-send-email-nbd@openwrt.org>
- <1274809366-73422-2-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:48898 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751719Ab0EARNx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 May 2010 13:13:53 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1O8GGG-0005WI-RK
+	for linux-wireless@vger.kernel.org; Sat, 01 May 2010 19:13:52 +0200
+Subject: [RFC] mac80211: radiotap vendor data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 01 May 2010 19:13:51 +0200
+Message-ID: <1272734031.8461.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c |  232 +--------------------------------
- 1 files changed, 2 insertions(+), 230 deletions(-)
+This allows drivers to add radiotap vendor data
+to any received frame, which will be simply
+passed into userspace and ignored by the kernel.
+Can be used by drivers to convey hw-specific
+information.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index abfa049..135eb4c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -615,234 +615,6 @@ static u32 ath_get_extchanmode(struct ath_softc *sc,
- 	return chanmode;
+Note: 11n shouldn't be done there, in case somebody
+got ideas!!
+
+Note: didn't test this after the paged RX changes
+---
+ drivers/net/wireless/mac80211_hwsim.c |   17 ++++++++++
+ include/net/mac80211.h                |   12 +++++++
+ net/mac80211/rx.c                     |   53 ++++++++++++++++++++++++++++++----
+ 3 files changed, 77 insertions(+), 5 deletions(-)
+
+--- wireless-testing.orig/include/net/mac80211.h	2010-05-01 08:46:26.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-05-01 08:47:54.000000000 +0200
+@@ -565,6 +565,13 @@ enum mac80211_rx_flags {
+  * @rate_idx: index of data rate into band's supported rates or MCS index if
+  *	HT rates are use (RX_FLAG_HT)
+  * @flag: %RX_FLAG_*
++ * @vendor_radiotap_bitmap: radiotap vendor namespace presence bitmap
++ * @vendor_radiotap_len: radiotap vendor namespace length
++ * @vendor_radiotap_align: radiotap vendor namespace alignment. Note
++ *	that the actual data must be at the start of the SKB data
++ *	already.
++ * @vendor_radiotap_oui: radiotap vendor namespace OUI
++ * @vendor_radiotap_subns: radiotap vendor sub namespace
+  */
+ struct ieee80211_rx_status {
+ 	u64 mactime;
+@@ -575,6 +582,11 @@ struct ieee80211_rx_status {
+ 	int antenna;
+ 	int rate_idx;
+ 	int flag;
++	u32 vendor_radiotap_bitmap;
++	u16 vendor_radiotap_len;
++	u8 vendor_radiotap_align;
++	u8 vendor_radiotap_oui[3];
++	u8 vendor_radiotap_subns;
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/rx.c	2010-05-01 08:46:26.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-05-01 08:47:54.000000000 +0200
+@@ -37,6 +37,8 @@
+ static struct sk_buff *remove_monitor_info(struct ieee80211_local *local,
+ 					   struct sk_buff *skb)
+ {
++	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
++
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS) {
+ 		if (likely(skb->len > FCS_LEN))
+ 			__pskb_trim(skb, skb->len - FCS_LEN);
+@@ -48,6 +50,9 @@ static struct sk_buff *remove_monitor_in
+ 		}
+ 	}
+ 
++	if (status->vendor_radiotap_len)
++		__pskb_pull(skb, status->vendor_radiotap_len);
++
+ 	return skb;
  }
  
--static int ath_setkey_tkip(struct ath_common *common, u16 keyix, const u8 *key,
--			   struct ath9k_keyval *hk, const u8 *addr,
--			   bool authenticator)
--{
--	struct ath_hw *ah = common->ah;
--	const u8 *key_rxmic;
--	const u8 *key_txmic;
--
--	key_txmic = key + NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY;
--	key_rxmic = key + NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY;
--
--	if (addr == NULL) {
--		/*
--		 * Group key installation - only two key cache entries are used
--		 * regardless of splitmic capability since group key is only
--		 * used either for TX or RX.
--		 */
--		if (authenticator) {
--			memcpy(hk->kv_mic, key_txmic, sizeof(hk->kv_mic));
--			memcpy(hk->kv_txmic, key_txmic, sizeof(hk->kv_mic));
--		} else {
--			memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
--			memcpy(hk->kv_txmic, key_rxmic, sizeof(hk->kv_mic));
--		}
--		return ath9k_hw_set_keycache_entry(ah, keyix, hk, addr);
--	}
--	if (!common->splitmic) {
--		/* TX and RX keys share the same key cache entry. */
--		memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
--		memcpy(hk->kv_txmic, key_txmic, sizeof(hk->kv_txmic));
--		return ath9k_hw_set_keycache_entry(ah, keyix, hk, addr);
--	}
--
--	/* Separate key cache entries for TX and RX */
--
--	/* TX key goes at first index, RX key at +32. */
--	memcpy(hk->kv_mic, key_txmic, sizeof(hk->kv_mic));
--	if (!ath9k_hw_set_keycache_entry(ah, keyix, hk, NULL)) {
--		/* TX MIC entry failed. No need to proceed further */
--		ath_print(common, ATH_DBG_FATAL,
--			  "Setting TX MIC Key Failed\n");
--		return 0;
--	}
--
--	memcpy(hk->kv_mic, key_rxmic, sizeof(hk->kv_mic));
--	/* XXX delete tx key on failure? */
--	return ath9k_hw_set_keycache_entry(ah, keyix + 32, hk, addr);
--}
--
--static int ath_reserve_key_cache_slot_tkip(struct ath_common *common)
--{
--	int i;
--
--	for (i = IEEE80211_WEP_NKID; i < common->keymax / 2; i++) {
--		if (test_bit(i, common->keymap) ||
--		    test_bit(i + 64, common->keymap))
--			continue; /* At least one part of TKIP key allocated */
--		if (common->splitmic &&
--		    (test_bit(i + 32, common->keymap) ||
--		     test_bit(i + 64 + 32, common->keymap)))
--			continue; /* At least one part of TKIP key allocated */
--
--		/* Found a free slot for a TKIP key */
--		return i;
--	}
--	return -1;
--}
--
--static int ath_reserve_key_cache_slot(struct ath_common *common)
--{
--	int i;
--
--	/* First, try to find slots that would not be available for TKIP. */
--	if (common->splitmic) {
--		for (i = IEEE80211_WEP_NKID; i < common->keymax / 4; i++) {
--			if (!test_bit(i, common->keymap) &&
--			    (test_bit(i + 32, common->keymap) ||
--			     test_bit(i + 64, common->keymap) ||
--			     test_bit(i + 64 + 32, common->keymap)))
--				return i;
--			if (!test_bit(i + 32, common->keymap) &&
--			    (test_bit(i, common->keymap) ||
--			     test_bit(i + 64, common->keymap) ||
--			     test_bit(i + 64 + 32, common->keymap)))
--				return i + 32;
--			if (!test_bit(i + 64, common->keymap) &&
--			    (test_bit(i , common->keymap) ||
--			     test_bit(i + 32, common->keymap) ||
--			     test_bit(i + 64 + 32, common->keymap)))
--				return i + 64;
--			if (!test_bit(i + 64 + 32, common->keymap) &&
--			    (test_bit(i, common->keymap) ||
--			     test_bit(i + 32, common->keymap) ||
--			     test_bit(i + 64, common->keymap)))
--				return i + 64 + 32;
--		}
--	} else {
--		for (i = IEEE80211_WEP_NKID; i < common->keymax / 2; i++) {
--			if (!test_bit(i, common->keymap) &&
--			    test_bit(i + 64, common->keymap))
--				return i;
--			if (test_bit(i, common->keymap) &&
--			    !test_bit(i + 64, common->keymap))
--				return i + 64;
--		}
--	}
--
--	/* No partially used TKIP slots, pick any available slot */
--	for (i = IEEE80211_WEP_NKID; i < common->keymax; i++) {
--		/* Do not allow slots that could be needed for TKIP group keys
--		 * to be used. This limitation could be removed if we know that
--		 * TKIP will not be used. */
--		if (i >= 64 && i < 64 + IEEE80211_WEP_NKID)
--			continue;
--		if (common->splitmic) {
--			if (i >= 32 && i < 32 + IEEE80211_WEP_NKID)
--				continue;
--			if (i >= 64 + 32 && i < 64 + 32 + IEEE80211_WEP_NKID)
--				continue;
--		}
--
--		if (!test_bit(i, common->keymap))
--			return i; /* Found a free slot for a key */
--	}
--
--	/* No free slot found */
--	return -1;
--}
--
--static int ath_key_config(struct ath_common *common,
--			  struct ieee80211_vif *vif,
--			  struct ieee80211_sta *sta,
--			  struct ieee80211_key_conf *key)
--{
--	struct ath_hw *ah = common->ah;
--	struct ath9k_keyval hk;
--	const u8 *mac = NULL;
--	int ret = 0;
--	int idx;
--
--	memset(&hk, 0, sizeof(hk));
--
--	switch (key->alg) {
--	case ALG_WEP:
--		hk.kv_type = ATH9K_CIPHER_WEP;
--		break;
--	case ALG_TKIP:
--		hk.kv_type = ATH9K_CIPHER_TKIP;
--		break;
--	case ALG_CCMP:
--		hk.kv_type = ATH9K_CIPHER_AES_CCM;
--		break;
--	default:
--		return -EOPNOTSUPP;
--	}
--
--	hk.kv_len = key->keylen;
--	memcpy(hk.kv_val, key->key, key->keylen);
--
--	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
--		/* For now, use the default keys for broadcast keys. This may
--		 * need to change with virtual interfaces. */
--		idx = key->keyidx;
--	} else if (key->keyidx) {
--		if (WARN_ON(!sta))
--			return -EOPNOTSUPP;
--		mac = sta->addr;
--
--		if (vif->type != NL80211_IFTYPE_AP) {
--			/* Only keyidx 0 should be used with unicast key, but
--			 * allow this for client mode for now. */
--			idx = key->keyidx;
--		} else
--			return -EIO;
--	} else {
--		if (WARN_ON(!sta))
--			return -EOPNOTSUPP;
--		mac = sta->addr;
--
--		if (key->alg == ALG_TKIP)
--			idx = ath_reserve_key_cache_slot_tkip(common);
--		else
--			idx = ath_reserve_key_cache_slot(common);
--		if (idx < 0)
--			return -ENOSPC; /* no free key cache entries */
--	}
--
--	if (key->alg == ALG_TKIP)
--		ret = ath_setkey_tkip(common, idx, key->key, &hk, mac,
--				      vif->type == NL80211_IFTYPE_AP);
--	else
--		ret = ath9k_hw_set_keycache_entry(ah, idx, &hk, mac);
--
--	if (!ret)
--		return -EIO;
--
--	set_bit(idx, common->keymap);
--	if (key->alg == ALG_TKIP) {
--		set_bit(idx + 64, common->keymap);
--		if (common->splitmic) {
--			set_bit(idx + 32, common->keymap);
--			set_bit(idx + 64 + 32, common->keymap);
--		}
--	}
--
--	return idx;
--}
--
--static void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf *key)
--{
--	struct ath_hw *ah = common->ah;
--
--	ath9k_hw_keyreset(ah, key->hw_key_idx);
--	if (key->hw_key_idx < IEEE80211_WEP_NKID)
--		return;
--
--	clear_bit(key->hw_key_idx, common->keymap);
--	if (key->alg != ALG_TKIP)
--		return;
--
--	clear_bit(key->hw_key_idx + 64, common->keymap);
--	if (common->splitmic) {
--		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
--		clear_bit(key->hw_key_idx + 32, common->keymap);
--		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
--	}
--}
--
- static void ath9k_bss_assoc_info(struct ath_softc *sc,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_bss_conf *bss_conf)
-@@ -1804,7 +1576,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
+@@ -69,8 +74,8 @@ static inline int should_drop_frame(stru
+ }
  
- 	switch (cmd) {
- 	case SET_KEY:
--		ret = ath_key_config(common, vif, sta, key);
-+		ret = ath9k_cmn_key_config(common, vif, sta, key);
- 		if (ret >= 0) {
- 			key->hw_key_idx = ret;
- 			/* push IV and Michael MIC generation to stack */
-@@ -1817,7 +1589,7 @@ static int ath9k_set_key(struct ieee80211_hw *hw,
- 		}
- 		break;
- 	case DISABLE_KEY:
--		ath_key_delete(common, key);
-+		ath9k_cmn_key_delete(common, key);
- 		break;
- 	default:
- 		ret = -EINVAL;
--- 
-1.6.4.2
+ static int
+-ieee80211_rx_radiotap_len(struct ieee80211_local *local,
+-			  struct ieee80211_rx_status *status)
++ieee80211_rx_radiotap_space(struct ieee80211_local *local,
++			    struct ieee80211_rx_status *status)
+ {
+ 	int len;
+ 
+@@ -87,6 +92,21 @@ ieee80211_rx_radiotap_len(struct ieee802
+ 	if (len & 1) /* padding for RX_FLAGS if necessary */
+ 		len++;
+ 
++	if (status->vendor_radiotap_len) {
++		/* allocate extra bitmap */
++		len += 4;
++
++		if (WARN_ON(status->vendor_radiotap_align == 0))
++			status->vendor_radiotap_align = 1;
++		/* align standard part of vendor namespace */
++		len = ALIGN(len, 2);
++		/* allocate standard part of vendor namespace */
++		len += 6;
++		/* align vendor-defined part */
++		len = ALIGN(len, status->vendor_radiotap_align);
++		/* vendor-defined part is already in skb */
++	}
++
+ 	return len;
+ }
+ 
+@@ -115,10 +135,18 @@ ieee80211_add_rx_radiotap_header(struct
+ 			    (1 << IEEE80211_RADIOTAP_CHANNEL) |
+ 			    (1 << IEEE80211_RADIOTAP_ANTENNA) |
+ 			    (1 << IEEE80211_RADIOTAP_RX_FLAGS));
+-	rthdr->it_len = cpu_to_le16(rtap_len);
++	rthdr->it_len = cpu_to_le16(rtap_len + status->vendor_radiotap_len);
+ 
+ 	pos = (unsigned char *)(rthdr+1);
+ 
++	if (status->vendor_radiotap_len) {
++		rthdr->it_present |=
++			cpu_to_le32(BIT(IEEE80211_RADIOTAP_VENDOR_NAMESPACE)) |
++			cpu_to_le32(BIT(IEEE80211_RADIOTAP_EXT));
++		put_unaligned_le32(status->vendor_radiotap_bitmap, pos);
++		pos += 4;
++	}
++
+ 	/* the order of the following fields is important */
+ 
+ 	/* IEEE80211_RADIOTAP_TSFT */
+@@ -190,11 +218,26 @@ ieee80211_add_rx_radiotap_header(struct
+ 	/* IEEE80211_RADIOTAP_RX_FLAGS */
+ 	/* ensure 2 byte alignment for the 2 byte field as required */
+ 	if ((pos - (u8 *)rthdr) & 1)
+-		pos++;
++		*pos++ = 0;
+ 	if (status->flag & RX_FLAG_FAILED_PLCP_CRC)
+ 		rx_flags |= IEEE80211_RADIOTAP_F_RX_BADPLCP;
+ 	put_unaligned_le16(rx_flags, pos);
+ 	pos += 2;
++
++	if (status->vendor_radiotap_len) {
++		/* ensure 2 byte alignment for the vendor field as required */
++		if ((pos - (u8 *)rthdr) & 1)
++			*pos++ = 0;
++		*pos++ = status->vendor_radiotap_oui[0];
++		*pos++ = status->vendor_radiotap_oui[1];
++		*pos++ = status->vendor_radiotap_oui[2];
++		*pos++ = status->vendor_radiotap_subns;
++		put_unaligned_le16(status->vendor_radiotap_len, pos);
++		pos += 2;
++		/* align the actual payload as requested */
++		while ((pos - (u8 *)rthdr) & (status->vendor_radiotap_align - 1))
++			*pos++ = 0;
++	}
+ }
+ 
+ /*
+@@ -223,7 +266,7 @@ ieee80211_rx_monitor(struct ieee80211_lo
+ 	 */
+ 
+ 	/* room for the radiotap header based on driver features */
+-	needed_headroom = ieee80211_rx_radiotap_len(local, status);
++	needed_headroom = ieee80211_rx_radiotap_space(local, status);
+ 
+ 	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
+ 		present_fcs_len = FCS_LEN;
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2010-05-01 08:46:27.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2010-05-01 19:04:57.000000000 +0200
+@@ -484,6 +484,7 @@ static bool mac80211_hwsim_tx_frame(stru
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_rx_status rx_status;
++	u8 *vendor_data;
+ 
+ 	if (data->idle) {
+ 		printk(KERN_DEBUG "%s: Trying to TX when idle - reject\n",
+@@ -509,6 +510,20 @@ static bool mac80211_hwsim_tx_frame(stru
+ 	secpath_reset(skb);
+ 	nf_reset(skb);
+ 
++	vendor_data = skb_push(skb, 4);
++	rx_status.vendor_radiotap_len = 4;
++	rx_status.vendor_radiotap_align = 4;
++	rx_status.vendor_radiotap_oui[0] = 0xff;
++	rx_status.vendor_radiotap_oui[1] = 0xff;
++	rx_status.vendor_radiotap_oui[2] = 0xff;
++	rx_status.vendor_radiotap_subns = 129;
++	rx_status.vendor_radiotap_bitmap = 0x1;
++
++	*vendor_data++ = 1;
++	*vendor_data++ = 2;
++	*vendor_data++ = 3;
++	*vendor_data++ = 4;
++
+ 	/* Copy skb to all enabled radios that are on the current frequency */
+ 	spin_lock(&hwsim_radio_lock);
+ 	list_for_each_entry(data2, &hwsim_radios, list) {
+@@ -535,6 +550,8 @@ static bool mac80211_hwsim_tx_frame(stru
+ 	}
+ 	spin_unlock(&hwsim_radio_lock);
+ 
++	skb_pull(skb, 4);
++
+ 	return ack;
+ }
+ 
+
 
