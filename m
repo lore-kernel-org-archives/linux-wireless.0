@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:41708 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753833Ab0EOVRD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 17:17:03 -0400
-Date: Sat, 15 May 2010 23:16:58 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Samuel Ortiz <samuel.ortiz@intel.com>, Zhu Yi <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 13/37] drivers/net/wireless/iwmc3200wifi: Use kmemdup
-Message-ID: <Pine.LNX.4.64.1005152316400.21345@ask.diku.dk>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:55757 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753662Ab0EASn4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 May 2010 14:43:56 -0400
+Received: by fxm10 with SMTP id 10so1089137fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2010 11:43:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <201005012040.42916.mb@bu3sch.de>
+References: <4BDC56D2.5060605@gmail.com> <201005012015.50601.mb@bu3sch.de>
+	<4BDC729E.5060202@lwfinger.net> <201005012040.42916.mb@bu3sch.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 1 May 2010 20:43:33 +0200
+Message-ID: <AANLkTimV8oZ1k0pgAItFpRDEGWEo4YQAvZZvxvJZEXko@mail.gmail.com>
+Subject: Re: [PATCH] ssb: Implement fast powerup delay calculation
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Sat, May 1, 2010 at 8:40 PM, Michael Buesch <mb@bu3sch.de> wrote:
+> On Saturday 01 May 2010 20:27:42 Larry Finger wrote:
+>> OK, I changed the spec to remove the write.
+>
+> Uhm, I think the spec was perfecly fine.
+>
+> --
+> Greetings, Michael.
+>
 
-Use kmemdup when some other buffer is immediately copied into the
-allocated region.
+Yes. The specs stated "do this during 802.11 core init", the problem
+was the patch doing the write during ChipCommon init, much earlier.
 
-A simplified version of the semantic patch that makes this change is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression from,to,size,flag;
-statement S;
-@@
-
--  to = \(kmalloc\|kzalloc\)(size,flag);
-+  to = kmemdup(from,size,flag);
-   if (to==NULL || ...) S
--  memcpy(to, from, size);
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/net/wireless/iwmc3200wifi/rx.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff -u -p a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -321,14 +321,14 @@ iwm_rx_ticket_node_alloc(struct iwm_priv
- 		return ERR_PTR(-ENOMEM);
- 	}
- 
--	ticket_node->ticket = kzalloc(sizeof(struct iwm_rx_ticket), GFP_KERNEL);
-+	ticket_node->ticket = kmemdup(ticket, sizeof(struct iwm_rx_ticket),
-+				      GFP_KERNEL);
- 	if (!ticket_node->ticket) {
- 		IWM_ERR(iwm, "Couldn't allocate RX ticket\n");
- 		kfree(ticket_node);
- 		return ERR_PTR(-ENOMEM);
- 	}
- 
--	memcpy(ticket_node->ticket, ticket, sizeof(struct iwm_rx_ticket));
- 	INIT_LIST_HEAD(&ticket_node->node);
- 
- 	return ticket_node;
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
