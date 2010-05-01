@@ -1,76 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3203 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756381Ab0ECUnV (ORCPT
+Received: from mailrelay004.isp.belgacom.be ([195.238.6.170]:20216 "EHLO
+	mailrelay004.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752270Ab0EAMRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 16:43:21 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 3/4] rt2x00: Fix HT40+/HT40- setting in rt2800.
-Date: Mon,  3 May 2010 22:43:04 +0200
-Message-Id: <1272919385-18004-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1272919385-18004-1-git-send-email-gwingerde@gmail.com>
-References: <1272919385-18004-1-git-send-email-gwingerde@gmail.com>
+	Sat, 1 May 2010 08:17:11 -0400
+Date: Sat, 1 May 2010 14:17:06 +0200
+From: Philippe De Muyter <phdm@macqel.be>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Matthew Garrett <mjg@redhat.com>, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org
+Subject: BCM4312 802.11b/g LP-PHY (rev 01) dma & led problems
+Message-ID: <20100501121706.GA32719@frolo.macqel>
+References: <20100419115329.GA5306@frolo.macqel> <20100419145107.GB8017@srcf.ucam.org> <20100419150050.GA28290@frolo.macqel> <20100419150627.GA10680@srcf.ucam.org> <20100424054210.GA23836@frolo.macqel> <20100424152107.GA13417@srcf.ucam.org> <20100424195630.GA15053@frolo.macqel> <20100424200218.GA16084@srcf.ucam.org> <20100425195058.GA12916@frolo.macqel> <4BD4A1D8.8000203@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4BD4A1D8.8000203@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inspection of the Ralink vendor driver shows that the TX_BAND_CFG register
-and BBP register 3 are about HT40- indication, not about HT40+ indication.
-Inverse the meaning of these fields in the code.
+This is a followup on my attempt to use b43 (now from 2.6.34-rc6) on
+a HP Pavilion dv6-1300sb.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h    |    4 ++--
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+With 2.6.34-rc6, I have not had any boot problem (blocking around ssb/b43)
+so far.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 4c0b481..2aa0375 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -845,7 +845,7 @@
-  * TX_BAND_CFG: 0x1 use upper 20MHz, 0x0 use lower 20MHz
-  */
- #define TX_BAND_CFG			0x132c
--#define TX_BAND_CFG_HT40_PLUS		FIELD32(0x00000001)
-+#define TX_BAND_CFG_HT40_MINUS		FIELD32(0x00000001)
- #define TX_BAND_CFG_A			FIELD32(0x00000002)
- #define TX_BAND_CFG_BG			FIELD32(0x00000004)
- 
-@@ -1519,7 +1519,7 @@ struct mac_iveiv_entry {
-  * BBP 3: RX Antenna
-  */
- #define BBP3_RX_ANTENNA			FIELD8(0x18)
--#define BBP3_HT40_PLUS			FIELD8(0x20)
-+#define BBP3_HT40_MINUS			FIELD8(0x20)
- 
- /*
-  * BBP 4: Bandwidth
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 7310f34..6d2c66d 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -867,7 +867,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	}
- 
- 	rt2800_register_read(rt2x00dev, TX_BAND_CFG, &reg);
--	rt2x00_set_field32(&reg, TX_BAND_CFG_HT40_PLUS, conf_is_ht40_plus(conf));
-+	rt2x00_set_field32(&reg, TX_BAND_CFG_HT40_MINUS, conf_is_ht40_minus(conf));
- 	rt2x00_set_field32(&reg, TX_BAND_CFG_A, rf->channel > 14);
- 	rt2x00_set_field32(&reg, TX_BAND_CFG_BG, rf->channel <= 14);
- 	rt2800_register_write(rt2x00dev, TX_BAND_CFG, reg);
-@@ -900,7 +900,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	rt2800_bbp_write(rt2x00dev, 4, bbp);
- 
- 	rt2800_bbp_read(rt2x00dev, 3, &bbp);
--	rt2x00_set_field8(&bbp, BBP3_HT40_PLUS, conf_is_ht40_plus(conf));
-+	rt2x00_set_field8(&bbp, BBP3_HT40_MINUS, conf_is_ht40_minus(conf));
- 	rt2800_bbp_write(rt2x00dev, 3, bbp);
- 
- 	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860C)) {
--- 
-1.7.1
+But, dma mode gives an error (like before) and driver now switches
+automatically to PIO mode (new).  
 
+	[   89.830222] device mon0 entered promiscuous mode
+	[  101.965896] NOHZ: local_softirq_pending 08
+	[  101.969431] NOHZ: local_softirq_pending 08
+	[  101.972230] NOHZ: local_softirq_pending 08
+	[  101.975041] NOHZ: local_softirq_pending 08
+	[  101.977771] NOHZ: local_softirq_pending 08
+	[  101.984651] NOHZ: local_softirq_pending 08
+	[  101.988808] NOHZ: local_softirq_pending 08
+	[  101.991562] NOHZ: local_softirq_pending 08
+	[  101.994363] NOHZ: local_softirq_pending 08
+	[  101.997116] NOHZ: local_softirq_pending 08
+	[  111.816257] hpet1: lost 1 rtc interrupts
+	[  112.131040] hpet1: lost 1 rtc interrupts
+	[  112.133343] hpet1: lost 1 rtc interrupts
+	[  112.135528] hpet1: lost 1 rtc interrupts
+	[  112.137722] hpet1: lost 1 rtc interrupts
+	[  112.139911] hpet1: lost 1 rtc interrupts
+	[  112.142089] hpet1: lost 1 rtc interrupts
+	[  112.146370] hpet1: lost 1 rtc interrupts
+	[  112.150637] hpet1: lost 1 rtc interrupts
+	[  112.152849] hpet1: lost 1 rtc interrupts
+	[  113.100932] b43-phy0 ERROR: Fatal DMA error: 0x00000000, 0x00000800, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+	[  113.100949] b43-phy0 ERROR: This device does not support DMA on your system. Please use PIO instead.
+	[  113.100957] b43-phy0: Controller RESET (DMA error) ...
+	[  113.336119] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+	[  118.853353] b43-phy0: Controller restarted
+
+During the switch, the led switches from blue to red and returns to blue
+after some seconds.  Touching the led switches the hardware blocking on
+and off, but the led color does not change.
+
+I then tried with the broadcom supplied hybrid driver, and there the
+touch/led functionality works as expected : led is red whenever
+I touch the button (enabling hardware blocking) or when I issue
+a rfkill block 0 (enabling software blocking).  Led is blue only when
+both blocking are disabled.  But, hybrid driver does not give monitor
+functionality :( (and of course, also no injection).
+	[10703.172776] wl: module license 'unspecified' taints kernel.
+	[10703.172791] Disabling lock debugging due to kernel taint
+	[10703.174286] wl: Unknown symbol lib80211_get_crypto_ops
+	[10778.692746] lib80211: common routines for IEEE802.11 drivers
+	[10778.692759] lib80211_crypt: registered algorithm 'NULL'
+	[10783.823152] wl 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+	[10783.823188] wl 0000:02:00.0: setting latency timer to 64
+	[10783.921236] lib80211_crypt: registered algorithm 'TKIP'
+	[10783.921623] eth1: Broadcom BCM4315 802.11 Hybrid Wireless Controller 5.60.48.36
+
+Any idea on what I could do to debug more / fix the dma and led problems ?
+
+Philippe
+
+Here the output of lspci -nvv for that chip :
+
+linux-m1ew:~ # lspci -nvv -s 02:00.0                                            
+02:00.0 0280: 14e4:4315 (rev 01)                                                
+        Subsystem: 103c:1508                                                    
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 16
+        Region 0: Memory at d9000000 (64-bit, non-prefetchable) [size=16K]
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=2 PME-
+        Capabilities: [58] Vendor Specific Information: Len=78 <?>
+        Capabilities: [e8] MSI: Enable- Count=1/1 Maskable- 64bit+
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [d0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
+                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <64us
+                        ClockPM+ Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout+ NonFatalErr+
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [13c v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=01
+                        Status: NegoPending- InProgress-
+        Capabilities: [160 v1] Device Serial Number 00-00-00-ff-ff-00-ff-ff
+        Capabilities: [16c v1] Power Budgeting <?>
+        Kernel driver in use: b43-pci-bridge
