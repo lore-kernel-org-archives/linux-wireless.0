@@ -1,58 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28466 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759902Ab0ENUwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 16:52:55 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 13:52:55 -0700
-Date: Fri, 14 May 2010 13:52:53 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-Message-ID: <20100514205253.GC28198@tux>
-References: <201005141520.30802.br1@einfach.org>
- <4BECEE3E.6090303@gmail.com>
- <201005141538.43416.br1@einfach.org>
- <4BED6F19.3040608@gmail.com>
- <20100514165325.GA28198@tux>
- <4BED8765.8040307@gmail.com>
- <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com>
- <67773379-350A-42D4-BEB5-DAC7D8277615@gmail.com>
- <20100514201339.GB28198@tux>
- <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:35810 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1758585Ab0ECWIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 18:08:47 -0400
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [PATCH 2/4] rt2x00: Enable RT30xx by default.
+Date: Tue, 4 May 2010 00:08:34 +0200
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <1272919385-18004-1-git-send-email-gwingerde@gmail.com> <1272919385-18004-3-git-send-email-gwingerde@gmail.com> <1272920358.4907.3.camel@mj>
+In-Reply-To: <1272920358.4907.3.camel@mj>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201005040008.36956.s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 14, 2010 at 01:21:34PM -0700, Justin P. Mattock wrote:
-> Eveything is on except ath5k
-> For debugging.
+Hi
 
-Bleh, try this.
+On Monday 03 May 2010, Pavel Roskin wrote:
+> On Mon, 2010-05-03 at 22:43 +0200, Gertjan van Wingerde wrote:
+> > Now that RT30xx support is at the same level as RT28xx support we can enable
+> > these devices by default.
+[...]
+> > --- a/drivers/net/wireless/rt2x00/Kconfig
+> > +++ b/drivers/net/wireless/rt2x00/Kconfig
+> > @@ -87,7 +87,7 @@ if RT2800PCI
+> >  
+> >  config RT2800PCI_RT30XX
+> >  	bool "rt2800pci - Include support for rt30xx (PCI/PCIe/PCMCIA) devices"
+> > -	default n
+> > +	default y
+> 
+> I believe defaulting booleans to "y" is discouraged, especially for
+> drivers.  Most users don't have any particular hardware device.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 1ca42e5..3404198 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -129,7 +129,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN,
- 				     min(common->cachelsz, (u16)64));
+[disclaimer, I have no access to any rt30xx USB/ PCI devices, so I'm not 
+proposing the attached patch, as I can't evaluate the stability of 
+rt2800pci's rt30xx support myself but merely use it for demonstration 
+purposes]
+
+RT2800PCI_RT30XX is not a new/ separate module, its only function is to 
+limit the PCI ID space (to not claim PCI IDs for chipset generations not
+yet debugged properly) of rt2800pci.ko; this symbol isn't even used 
+anywhere else than within the PCI table. A 100% equivalent patch would be 
+to just drop the config option completely. I doubt that doing that would 
+meet resistance, as it merely adds previously 'unknown' (to be supported) 
+PCI IDs.
+
+[However if RT2800PCI_RT30XX is going to be kept, but changed to default 
+to 'y', I'd propose to drop the 'Support for these devices is 
+non-functional at the moment and is intended for testers and developers" 
+paragraph at the same time.]
+
+Regards
+	Stefan Lippers-Hollmann
+
+
+rt2x00: claim RT30xx PCI IDs in rt2800pci
+
+Now that RT30xx support is at the same level as RT28xx, it can be enabled 
+unconditionally.
+
+Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 5239e08..ee088ac 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -85,17 +85,6 @@ config RT2800PCI
  
--	ath_print(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
-+	printk("ATH9K: cachelsz %u rxbufsize %u\n",
- 		  common->cachelsz, common->rx_bufsize);
+ if RT2800PCI
  
- 	/* Initialize rx descriptors */
-
-Not sure why this is not printing, the common debug_mask should
-already be set here prior to this. Anyway this would force the
-print I want.
-
-  Luis
+-config RT2800PCI_RT30XX
+-	bool "rt2800pci - Include support for rt30xx (PCI/PCIe/PCMCIA) devices"
+-	default n
+-	---help---
+-	  This adds support for rt30xx wireless chipset family to the
+-	  rt2800pci driver.
+-	  Supported chips: RT3090, RT3091 & RT3092
+-
+-	  Support for these devices is non-functional at the moment and is
+-	  intended for testers and developers.
+-
+ config RT2800PCI_RT35XX
+ 	bool "rt2800pci - Include support for rt35xx (PCI/PCIe/PCMCIA) devices"
+ 	default n
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 0e52f17..9efd4fb 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1225,12 +1225,10 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+ 	{ PCI_DEVICE(0x1432, 0x7758), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1432, 0x7768), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1a3b, 0x1059), PCI_DEVICE_DATA(&rt2800pci_ops) },
+-#ifdef CONFIG_RT2800PCI_RT30XX
+ 	{ PCI_DEVICE(0x1814, 0x3090), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3091), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3092), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1462, 0x891a), PCI_DEVICE_DATA(&rt2800pci_ops) },
+-#endif
+ #ifdef CONFIG_RT2800PCI_RT35XX
+ 	{ PCI_DEVICE(0x1814, 0x3060), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x3062), PCI_DEVICE_DATA(&rt2800pci_ops) },
