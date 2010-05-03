@@ -1,106 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39917 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756892Ab0EJW2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:32 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 45/47] iwlwifi: rename iwl_add_local_station
-Date: Mon, 10 May 2010 15:28:16 -0700
-Message-Id: <1273530498-11876-46-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44504 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759037Ab0ECPAL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 11:00:11 -0400
+Date: Mon, 3 May 2010 10:58:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "rain_maker@root-forum.org" <rain_maker@root-forum.org>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH] rt2x00: remove USB-ID 148f:2573 from rt2500usb driver
+Message-ID: <20100503145815.GA24781@tuxdriver.com>
+References: <201005031624.45409.rain_maker@root-forum.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201005031624.45409.rain_maker@root-forum.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, May 03, 2010 at 04:24:45PM +0200, rain_maker@root-forum.org wrote:
+> The drivers rt2500usb and rt73usb both contain the usb id 148f:2573 while only 
+> the latter is suitable for devices with that id.
+> 
+> As a consequence, both drivers will be loaded and system log shows messages 
+> like "rt2500usb_init_eeprom: Error - Invalid RT chipset detected".
+> 
+> If you use the above search term, you will find more than 1500 hits with a 
+> well known search engine, confirming that rt2500usb is always the wrong 
+> driver for devices with usb id 148f:2573 and quite often as a side effect 
+> confusion arose about this -non fatal but misleading- error message in the 
+> respective bug reports or threads.
 
-This function is now only used for the special
-IBSS BSSID station, so rename it to indicate
-this. The new name is iwl_add_bssid_station.
+I also get more than 100 hits from (probably the same) well-known
+search engine for "rt73usb_init_eeprom: Error - Invalid RT chipset
+detected".  I'm sure those aren't all for the same USB ID, and perhaps
+none of them are.  Then again, not all of the 1500+ that you cite
+are for the same USB ID either.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c     |    9 +++------
- drivers/net/wireless/iwlwifi/iwl-sta.h     |    2 +-
- 4 files changed, 6 insertions(+), 9 deletions(-)
+So I'm curious, how can you be sure that 148f:2573 is _always_ wrong
+for rt2500usb?  I do acknowledge that the "73" part makes it suspicious...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 306e23a..0eb0faa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2465,7 +2465,7 @@ static int iwl3945_manage_ibss_station(struct iwl_priv *priv,
- 	int ret;
- 
- 	if (add) {
--		ret = iwl_add_local_station(priv, vif->bss_conf.bssid, false,
-+		ret = iwl_add_bssid_station(priv, vif->bss_conf.bssid, false,
- 					    &vif_priv->ibss_bssid_sta_id);
- 		if (ret)
- 			return ret;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 81de88e..637d7b6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1523,7 +1523,7 @@ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
- 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
- 
- 	if (add)
--		return iwl_add_local_station(priv, vif->bss_conf.bssid, true,
-+		return iwl_add_bssid_station(priv, vif->bss_conf.bssid, true,
- 					     &vif_priv->ibss_bssid_sta_id);
- 	return iwl_remove_station(priv, vif_priv->ibss_bssid_sta_id,
- 				  vif->bss_conf.bssid);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index ba36df5..c15098e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -417,14 +417,11 @@ static struct iwl_link_quality_cmd *iwl_sta_alloc_lq(struct iwl_priv *priv,
- }
- 
- /*
-- * iwl_add_local_station - Add stations not requested by mac80211
-- *
-- * This will be either the broadcast station or the bssid station needed by
-- * ad-hoc.
-+ * iwl_add_bssid_station - Add the special IBSS BSSID station
-  *
-  * Function sleeps.
-  */
--int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
-+int iwl_add_bssid_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
- 			  u8 *sta_id_r)
- {
- 	int ret;
-@@ -468,7 +465,7 @@ int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
- 
- 	return 0;
- }
--EXPORT_SYMBOL(iwl_add_local_station);
-+EXPORT_SYMBOL(iwl_add_bssid_station);
- 
- /**
-  * iwl_sta_ucode_deactivate - deactivate ucode status for a station
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 6872bcf..6427148 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -63,7 +63,7 @@ void iwl_dealloc_bcast_station(struct iwl_priv *priv);
- int iwl_get_free_ucode_key_index(struct iwl_priv *priv);
- int iwl_send_add_sta(struct iwl_priv *priv,
- 		     struct iwl_addsta_cmd *sta, u8 flags);
--int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
-+int iwl_add_bssid_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
- 			  u8 *sta_id_r);
- int iwl_add_station_common(struct iwl_priv *priv, const u8 *addr,
- 				  bool is_ap,
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
