@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33314 "EHLO vs166246.vserver.de"
+Received: from mail.ip84.de ([212.122.42.5]:38468 "EHLO bart.ip84.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751641Ab0EARHL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 13:07:11 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?iso-8859-2?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] ssb: Implement fast powerup delay calculation
-Date: Sat, 1 May 2010 19:07:05 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"b43-dev" <b43-dev@lists.infradead.org>,
-	Larry Finger <larry.finger@lwfinger.net>
-References: <4BDC56D2.5060605@gmail.com> (sfid-20100501_162911_047976_71201E1E)
-In-Reply-To: <4BDC56D2.5060605@gmail.com>
+	id S1750755Ab0ECQyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 12:54:09 -0400
+From: "rain_maker@root-forum.org" <rain_maker@root-forum.org>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: remove USB-ID 148f:2573 from rt2500usb driver
+Date: Mon, 3 May 2010 18:53:56 +0200
+References: <201005031624.45409.rain_maker@root-forum.org> <201005031720.36288.rain_maker@root-forum.org> <20100503154745.GB24781@tuxdriver.com>
+In-Reply-To: <20100503154745.GB24781@tuxdriver.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201005011907.05603.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201005031853.56995.rain_maker@root-forum.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 01 May 2010 18:29:06 Gábor Stefanik wrote:
-> +	ssb_write16(cc->dev, SSB_MMIO_POWERUP_DELAY, delay);
->   }
-> 
->   void ssb_chipco_suspend(struct ssb_chipcommon *cc)
-> Index: wireless-testing/include/linux/ssb/ssb_regs.h
-> ===================================================================
-> --- wireless-testing.orig/include/linux/ssb/ssb_regs.h
-> +++ wireless-testing/include/linux/ssb/ssb_regs.h
-> @@ -26,6 +26,7 @@
->   #define	SSB_EUART		(SSB_EXTIF_BASE + 0x00800000)
->   #define	SSB_LED			(SSB_EXTIF_BASE + 0x00900000)
-> 
-> +#define SSB_MMIO_POWERUP_DELAY	0x06A8
+Am Monday 03 May 2010 17:47:46 schrieben Sie:
+>
+> http://osdir.com/ml/linux-wireless/2009-07/msg00267.html
+>
+> This seems to be such an example?
 
-I think you are really confusing something here.
-That register is a wireless core register and we already write it in b43.
+Yeah, I also found that one before, but the message about missing firmware 
+(which is the most common user's error with rt73usb) and lack of feedback 
+from the person opening the thread if rt2500usb got  the device working made 
+it "inconclusive" to me.
 
--- 
-Greetings, Michael.
+But maybe this is the main reason one finds so many threads about problems 
+with this device id and rt73usb being the correct driver.
+
+If it works out of the box (no matter which driver), nobody starts a thread, 
+if it doesn't work, in most cases it's missing firmware and if rt2500usb 
+works instead of rt73usb, you can't miss that as it does not need 
+installation of extra firmware.
+
+I CCed Ivo instead of first sending him this mail only personally, because 
+although I knew he would be the most likely person to know if my idea was 
+good or bad (which was exactly what happened), I expected that if there 
+really are a few devices with 148f:2573 needing rt2500usb instead of rt73usb, 
+the more likely somebody else actually will know about such a (rare) 
+exception.
+
+Maybe that was not too clever, sorry for this rather useless thread.
+
+Greetings,
+
+Axel K
