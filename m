@@ -1,70 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:57026 "EHLO mgw1.diku.dk"
+Received: from mx1.redhat.com ([209.132.183.28]:56855 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932295Ab0EKS0D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 14:26:03 -0400
-Date: Tue, 11 May 2010 20:25:56 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 1/5] drivers/net/wireless/hostap: Drop memory allocation cast
-Message-ID: <Pine.LNX.4.64.1005112025280.4330@ask.diku.dk>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	id S1753551Ab0ECUfr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 16:35:47 -0400
+Subject: Re: [ANN] Mendiosus rt2800usb project
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: info@mendiosus.nl, linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+In-Reply-To: <20100503165246.GC24781@tuxdriver.com>
+References: <38430.62.163.0.236.1272900540.squirrel@www.mendiosus.nl>
+	 <20100503165246.GC24781@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 03 May 2010 13:34:53 -0700
+Message-ID: <1272918893.5632.2.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Mon, 2010-05-03 at 12:52 -0400, John W. Linville wrote:
+> On Mon, May 03, 2010 at 05:29:00PM +0200, info@mendiosus.nl wrote:
+> > The Dutch company Mendiosus is pleased to announce that, with support
+> > of an United States based open-source development house, it will
+> > be working on the rt2800usb drivers. Development will focus on
+> > improving support for the rt2870 and rt2770 chipsets.
+> > Besides improvements of the basic functionality development will also
+> > focus on adding hardware cryptography and better 11n support.
+> 
+> Excellent!  I look forward to seeing some good results from this!
 
-Drop cast on the result of kmalloc and similar functions.
+Yeah, this is excellent news.  It's been great to see rt2800 and later
+chipsets getting a lot of attention recently.
 
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
+Dan
 
-// <smpl>
-@@
-type T;
-@@
 
-- (T *)
-  (\(kmalloc\|kzalloc\|kcalloc\|kmem_cache_alloc\|kmem_cache_zalloc\|
-   kmem_cache_alloc_node\|kmalloc_node\|kzalloc_node\)(...))
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/net/wireless/hostap/hostap_80211_rx.c |    3 +--
- drivers/net/wireless/hostap/hostap_ioctl.c    |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/hostap/hostap_80211_rx.c b/drivers/net/wireless/hostap/hostap_80211_rx.c
-index f4c5612..e0b3e8d 100644
---- a/drivers/net/wireless/hostap/hostap_80211_rx.c
-+++ b/drivers/net/wireless/hostap/hostap_80211_rx.c
-@@ -355,8 +355,7 @@ static struct hostap_bss_info *__hostap_add_bss(local_info_t *local, u8 *bssid,
- 		list_del(&bss->list);
- 		local->num_bss_info--;
- 	} else {
--		bss = (struct hostap_bss_info *)
--			kmalloc(sizeof(*bss), GFP_ATOMIC);
-+		bss = kmalloc(sizeof(*bss), GFP_ATOMIC);
- 		if (bss == NULL)
- 			return NULL;
- 	}
-diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
-index 9a08230..a85e43a 100644
---- a/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -3039,8 +3039,7 @@ static int prism2_ioctl_priv_download(local_info_t *local, struct iw_point *p)
- 	    p->length > 1024 || !p->pointer)
- 		return -EINVAL;
- 
--	param = (struct prism2_download_param *)
--		kmalloc(p->length, GFP_KERNEL);
-+	param = kmalloc(p->length, GFP_KERNEL);
- 	if (param == NULL)
- 		return -ENOMEM;
- 
