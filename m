@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:32442 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362Ab0EFPKI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33189 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250Ab0ECHVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 11:10:08 -0400
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: 2.6.34-rc6 pci bridge problems
-Date: Thu, 6 May 2010 09:09:58 -0600
-Cc: dhlii@dlasys.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-References: <4BDC001F.9050202@dlasys.net> <4BE1BBD6.3030505@dlasys.net> <201005052159.55871.chunkeey@googlemail.com>
-In-Reply-To: <201005052159.55871.chunkeey@googlemail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005060909.58503.bjorn.helgaas@hp.com>
+	Mon, 3 May 2010 03:21:20 -0400
+Subject: [PATCH] mac80211_hwsim: fix double-scan detection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 03 May 2010 09:21:14 +0200
+Message-ID: <1272871274.3614.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, May 05, 2010 01:59:55 pm Christian Lamparter wrote:
-> On Wednesday 05 May 2010 20:41:26 David H. Lynch Jr. wrote:
-> > When I build out of the wireless-testing git tree (puled today) 
-> > 2.6.34-rc6 using my current systems .config I get a very quick error
-> > on boot about PCI bridge windows.
-> > googling the error indicates this is a know 2.6.34 problem and that 
-> > there are fixes in other 2.6.34 trees.
-> > I have been unable to find the actual patches or I would just apply 
-> > them to wireless-testing.
+Currently, hwsim will always detect a double scan
+after the first one has finished ...
 
-I made significant changes in the way we handle PCI bridge windows,
-and I'm eager to fix any issues in that area.  But "very quick error
-on boot" doesn't give me any information to work with.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Please attach your complete dmesg output, serial console log (with
-"ignore_loglevel"), digital photo of the error, or other specific
-details.
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2010-05-03 09:19:54.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2010-05-03 09:20:01.000000000 +0200
+@@ -1021,7 +1021,7 @@ static void mac80211_hwsim_sw_scan_compl
+ 	mutex_lock(&hwsim->mutex);
+ 
+ 	printk(KERN_DEBUG "hwsim sw_scan_complete\n");
+-	hwsim->scanning = true;
++	hwsim->scanning = false;
+ 
+ 	mutex_unlock(&hwsim->mutex);
+ }
 
-Bjorn
+
