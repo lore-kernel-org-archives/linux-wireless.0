@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:51986 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757587Ab0E0UO6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 16:14:58 -0400
-Received: by ewy8 with SMTP id 8so116912ewy.28
-        for <linux-wireless@vger.kernel.org>; Thu, 27 May 2010 13:14:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1274740231.2091.15472.camel@rchatre-DESK>
-References: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
-	<1274465242.12391.0.camel@abhi-desktop>
-	<AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
-	<1274740231.2091.15472.camel@rchatre-DESK>
-Date: Thu, 27 May 2010 22:14:54 +0200
-Message-ID: <AANLkTilfa4YPPiroX5yfJ2BNRUVZH6imTvG4I8ukGjBC@mail.gmail.com>
-Subject: Re: Iwlwifi and LEDS?
-From: Gregy <p.gregy@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:56429 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754022Ab0ECNpE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 09:45:04 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1O8vxH-0001Vn-FC
+	for linux-wireless@vger.kernel.org; Mon, 03 May 2010 15:45:03 +0200
+Received: from proxyext.iabg.de ([proxyext.iabg.de])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 15:45:03 +0200
+Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 15:45:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [PATCH] mac80211: improve IBSS scanning
+Date: Mon, 3 May 2010 13:43:03 +0000 (UTC)
+Message-ID: <loom.20100503T154149-617@post.gmane.org>
+References: <469051.90774.qm@web51402.mail.re2.yahoo.com> <1272893084.3614.37.camel@jlt3.sipsolutions.net> <loom.20100503T153803-630@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> What did you do before that does not work anymore?
->
-> Reinette
+Johannes Berg <johannes@...> writes:
+> Hidden SSID is a hack (which doesn't work with IBSS obviously), but this
+> kinda seems worse.
+ 
+Actually, it does (work on IBSS, that is). And because I thought what you think
+I have the
+radiotap traces to prove it. 
 
-No, led never gets registered in /sys/class/leds. Also I found this:
-http://article.gmane.org/gmane.linux.kernel.wireless.general/40328/
+
+
+
