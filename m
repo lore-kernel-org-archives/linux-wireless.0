@@ -1,113 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34819 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753324Ab0EGCtD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 22:49:03 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/3] ath9k_common: move the rate status setting into ath9k_process_rate()
-Date: Thu,  6 May 2010 22:49:02 -0400
-Message-Id: <1273200542-22088-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga01.intel.com ([192.55.52.88]:13041 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754166Ab0ECRzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 13:55:08 -0400
+Subject: [PATCH] iwlwifi: recalculate average tpt if not current
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	johannes@sipsolutions.net, Adel Gadllah <adel.gadllah@gmail.com>
+In-Reply-To: <1272908934.7879.5748.camel@rchatre-DESK>
+References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
+	 <1272908934.7879.5748.camel@rchatre-DESK>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 03 May 2010 10:55:07 -0700
+Message-ID: <1272909307.7879.5759.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This has no real functional change, this just moves the setting the
-the mac80211 rate index into ath9k_process_rate(). This allows us
-to eventually make ath9k_process_rate() return a negative value
-in case we have detected a specific case rate situation which should
-have been ignored.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+We currently have this check as a BUG_ON, which is being hit by people.
+Previously it was an error with a recalculation if not current, return that
+code.
+
+The BUG_ON was introduced by:
+commit 3110bef78cb4282c58245bc8fd6d95d9ccb19749
+Author: Guy Cohen <guy.cohen@intel.com>
+Date:   Tue Sep 9 10:54:54 2008 +0800
+
+    iwlwifi: Added support for 3 antennas
+
+... the portion adding the BUG_ON is reverted since we are encountering the error
+and BUG_ON was created with assumption that error is not encountered.
+
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/common.c |   40 +++++++++++++++++++++----------
- 1 files changed, 27 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index b4424a6..9a33c3a 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -102,11 +102,11 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	return true;
- }
- 
--static u8 ath9k_process_rate(struct ath_common *common,
--			     struct ieee80211_hw *hw,
--			     struct ath_rx_status *rx_stats,
--			     struct ieee80211_rx_status *rxs,
--			     struct sk_buff *skb)
-+static int ath9k_process_rate(struct ath_common *common,
-+			      struct ieee80211_hw *hw,
-+			      struct ath_rx_status *rx_stats,
-+			      struct ieee80211_rx_status *rxs,
-+			      struct sk_buff *skb)
- {
- 	struct ieee80211_supported_band *sband;
- 	enum ieee80211_band band;
-@@ -122,25 +122,33 @@ static u8 ath9k_process_rate(struct ath_common *common,
- 			rxs->flag |= RX_FLAG_40MHZ;
- 		if (rx_stats->rs_flags & ATH9K_RX_GI)
- 			rxs->flag |= RX_FLAG_SHORT_GI;
--		return rx_stats->rs_rate & 0x7f;
-+		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
-+		return 0;
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index b93e491..75a145c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2070,10 +2070,12 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
  	}
+ 	/* Else we have enough samples; calculate estimate of
+ 	 * actual average throughput */
+-
+-	/* Sanity-check TPT calculations */
+-	BUG_ON(window->average_tpt != ((window->success_ratio *
+-			tbl->expected_tpt[index] + 64) / 128));
++	if (window->average_tpt != ((window->success_ratio *
++			tbl->expected_tpt[index] + 64) / 128)) {
++		IWL_ERR(priv, "expected_tpt should have been calculated by now\n");
++		window->average_tpt = ((window->success_ratio *
++					tbl->expected_tpt[index] + 64) / 128);
++	}
  
- 	for (i = 0; i < sband->n_bitrates; i++) {
--		if (sband->bitrates[i].hw_value == rx_stats->rs_rate)
--			return i;
-+		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
-+			rxs->rate_idx = i;
-+			return 0;
-+		}
- 		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
- 			rxs->flag |= RX_FLAG_SHORTPRE;
--			return i;
-+			rxs->rate_idx = i;
-+			return 0;
- 		}
- 	}
- 
--	/* No valid hardware bitrate found -- we should not get here */
-+	/*
-+	 * No valid hardware bitrate found -- we should not get here
-+	 * because hardware has already validated this frame as OK.
-+	 */
- 	ath_print(common, ATH_DBG_XMIT, "unsupported hw bitrate detected "
- 		  "0x%02x using 1 Mbit\n", rx_stats->rs_rate);
- 	if ((common->debug_mask & ATH_DBG_XMIT))
- 		print_hex_dump_bytes("", DUMP_PREFIX_NONE, skb->data, skb->len);
- 
--        return 0;
-+	rxs->rate_idx = 0;
-+	return 0;
- }
- 
- static void ath9k_process_rssi(struct ath_common *common,
-@@ -202,13 +210,19 @@ int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
- 	struct ath_hw *ah = common->ah;
- 
- 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-+
-+	/*
-+	 * everything but the rate is checked here, the rate check is done
-+	 * separately to avoid doing two lookups for a rate for each frame.
-+	 */
- 	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
- 		return -EINVAL;
- 
- 	ath9k_process_rssi(common, hw, skb, rx_stats);
- 
--	rx_status->rate_idx = ath9k_process_rate(common, hw,
--						 rx_stats, rx_status, skb);
-+	if (ath9k_process_rate(common, hw, rx_stats, rx_status, skb))
-+		return -EINVAL;
-+
- 	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
+ 	/* If we are searching for better modulation mode, check success. */
+ 	if (lq_sta->search_better_tbl &&
 -- 
 1.6.3.3
+
+
 
