@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49728 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756630Ab0ELQqt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 12:46:49 -0400
-Subject: Re: Packet injection with ath9k
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Roberto Riggio <roberto.riggio@create-net.org>
-Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4BEADA79.5050000@create-net.org>
-References: <4BE43C18.2030806@create-net.org>
-	 <j2v69e28c911005070935wb720d757labf3a0484aedefb8@mail.gmail.com>
-	 <4BE46584.5060304@create-net.org>
-	 <r2y69e28c911005091324sbff07538i28babb432e6751db@mail.gmail.com>
-	 <4BEADA79.5050000@create-net.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 May 2010 18:46:46 +0200
-Message-ID: <1273682806.3979.7.camel@jlt3.sipsolutions.net>
+Received: from lo.gmane.org ([80.91.229.12]:57003 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759141Ab0ECNK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 09:10:29 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1O8vPo-0008RN-02
+	for linux-wireless@vger.kernel.org; Mon, 03 May 2010 15:10:28 +0200
+Received: from proxyext.iabg.de ([proxyext.iabg.de])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 15:10:27 +0200
+Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 15:10:27 +0200
+To: linux-wireless@vger.kernel.org
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: [PATCH] mac80211: improve IBSS scanning
+Date: Mon, 3 May 2010 13:10:19 +0000 (UTC)
+Message-ID: <loom.20100503T150104-147@post.gmane.org>
+References: <1272869388.3614.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-12 at 18:42 +0200, Roberto Riggio wrote:
-> On 05/09/2010 10:24 PM, Gábor Stefanik wrote:
-> >>     u_int16_t       it_len;
-> >>     u_int32_t       it_present;
-> >>      
-> > AFAIK these 2 fields need to be little-endian even on big-endian
-> > machines. If your system is big-endian, this can cause problems.
-> >    
-> 
-> Thanks, that was indeed the issue. I totally missed this info
-> in the radiotap website. Everything is working fine now.
+Johannes Berg <johannes@...> writes:
+> Note that this can be further improved to start
+> the IBSS right away if both frequency and BSSID
+> are fixed.
 
-I'd make it more prominent, but ... this is what it says now:
+Doing this and switching off beaconing would be the same as
+the infamous AH-Demo mode supported by Madwifi and creeping
+into the current kernel, no?
 
-Important Radiotap Characteristics
+see http://madwifi-project.org/wiki/UserDocs/AhdemoInterface
+and HTC_M_AHDEMO in enum htc_opmode.
 
-      * Fields are strictly ordered; The developer can specify any
-        combination of fields, but the data must appear following the
-        radiotap header in the order they are specified in the
-        it_present bitmask (or more accurately, in the order the bit
-        numbers for the it_present bitmask are defined).
-      * Data is specified in little endian byte-order, all data fields
-        including the it_version, it_len and it_present fields in the
-        radiotap header are to be specified in little endian byte-order.
-        This wiki has adopted the Linux convention of using __le64,
-        __le32 and __le16 for 64-, 32- and 16-bit little endian
-        quantities.
+For me, AH-Demo is required to ditch Madwifi, so are you still
+opposed to its integration? It seems that the pieces of the
+puzzle are almost there now.
 
-johannes
+Regards
+  Joerg
 
