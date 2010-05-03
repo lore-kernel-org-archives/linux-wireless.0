@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:55834 "HELO
-	outbound-mail-313.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757737Ab0EXVQt (ORCPT
+Received: from mail-pz0-f204.google.com ([209.85.222.204]:53623 "EHLO
+	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754882Ab0ECVja convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 17:16:49 -0400
-Message-ID: <4BFAECC0.2000007@dlasys.net>
-Date: Mon, 24 May 2010 17:16:48 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
+	Mon, 3 May 2010 17:39:30 -0400
+Received: by pzk42 with SMTP id 42so394957pzk.4
+        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 14:39:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>,
+In-Reply-To: <4BDC719E.3060505@dlasys.net>
+References: <4BDC001F.9050202@dlasys.net> <201005011919.32016.chunkeey@googlemail.com>
+	<4BDC719E.3060505@dlasys.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 3 May 2010 14:39:09 -0700
+Message-ID: <l2l43e72e891005031439k261715c3rd453a38b68b44c92@mail.gmail.com>
+Subject: Re: ar9170-fw II
+To: "David H. Lynch Jr." <dhlii@dlasys.net>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
 	linux-wireless@vger.kernel.org
-Subject: CARL9170 features
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-     I am trying to kick carl9170 1.0.9 into either add-hoc or monitor 
-mode or anything else where I can xmit to any wireless device. I do not 
-care if the receiving device is interested - so long as the radio ACK's 
-the packet, which it should do automatically.
+On Sat, May 1, 2010 at 11:23 AM, David H. Lynch Jr. <dhlii@dlasys.net> wrote:
+> On 05/01/2010 01:19 PM, Christian Lamparter wrote:
+>>
+>> Well, for starters the ar9170 uses a ZyDas MAC (aka ZD1221)
+>> and a AR900x PHY/Radio. Therefore the phy code and registers
+>> are very similar to those #definitions you can find in ath9k.
+>> And for the MAC code&  registers you can look into zd1211rw,
+>> or look into drivers/staging/otus (original vendor driver,
+>> shares some code with their windows drivers)
+>>
+>> AFAICT, there are no technical documents about the AR9170
+>> solution available w/o signing a NDA with Atheros
+>> (probably because the devices are still produced and sold in high
+>> quantities?).
+>>
+>
+>    Thanks;
+>        I did just discover a reasonably good 150p spec. in what I received
+> from my client. If I can I will share it. I am under an NDA, but the client also told
+> me that they received no cooperation from atheros.
 
-     I tried iwconfig wl_ath mode ad-hoc
-     And I get and errror:
+You should be more specific. Atheros did GPL their ar9170 driver after
+all, so it is in fact the first hardware vendor to ever have GPL'd
+firmware for *any* device driver upstream. Releasing more docs takes
+time, you are better off working directly with the upstream Atheros
+developers than just subjectively claiming lack of cooperation.
 
-root# iwconfig wl_ath mode ad-hoc
-Error for wireless request "Set Mode" (8B06) :
-     SET failed on device wl_ath ; Device or resource busy.
-
-root# iwconfig wl_ath mode monitor
-Error for wireless request "Set Mode" (8B06) :
-     SET failed on device wl_ath ; Device or resource busy.
-
-root# iwconfig wl_ath mode master
-Error for wireless request "Set Mode" (8B06) :
-     SET failed on device wl_ath ; Invalid argument.
-
-I can add something to the driver if needed if you coul recomend another 
-wireless driver for a reference.
-
-
--- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies too numerous to list.
-
-"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
-Albert Einstein
-
+  Luis
