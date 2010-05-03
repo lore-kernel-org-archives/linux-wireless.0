@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:18317 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756819Ab0ESBcz (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:35099 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932507Ab0ECPae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 21:32:55 -0400
-Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0969472774
-	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:32:54 +0900 (JST)
-Subject: [PATCH v2 12/20] ath5k: print error message if ANI levels are out of
-	range
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 19 May 2010 10:31:42 +0900
-Message-ID: <20100519013142.22206.87279.stgit@tt-desk>
-In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
-References: <20100519012528.22206.77550.stgit@tt-desk>
+	Mon, 3 May 2010 11:30:34 -0400
+Received: by bwz19 with SMTP id 19so1380148bwz.21
+        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 08:30:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1272900556.3614.42.camel@jlt3.sipsolutions.net>
+References: <201005031624.45409.rain_maker@root-forum.org>
+	 <v2wa32f33a41005030813m36cbea0blf3963369a934cdac@mail.gmail.com>
+	 <1272900556.3614.42.camel@jlt3.sipsolutions.net>
+Date: Mon, 3 May 2010 17:30:32 +0200
+Message-ID: <w2ka32f33a41005030830y5a79fba2nde23c8bd425c0663@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: remove USB-ID 148f:2573 from rt2500usb driver
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "rain_maker@root-forum.org" <rain_maker@root-forum.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we have sysfs to manually set the ANI levels, we should print errors to
-the kernel log if the values are out of bounds.
+On 5/3/10, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2010-05-03 at 17:13 +0200, Ivo Van Doorn wrote:
+>> > This trivial patch removes the id 148f:2573 from rt2500usb driver.
+>
+>> The ID is confusing indeed, but unfortunately we can't remove this ID,
+>> since in the early days people did report they had to use the rt2500usb
+>> driver
+>> for these devices. So the majority of devices with this ID is indeed
+>> rt73usb, but not for all.
+>
+> Since this seems to come up every couple of weeks, and none of us will
+> always be around to remember and answer it, how about capturing that in
+> a comment in the code? :)
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/ani.c |   11 +++++------
- 1 files changed, 5 insertions(+), 6 deletions(-)
+Good point. :)
+I;ll send a patch later today.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ani.c b/drivers/net/wireless/ath/ath5k/ani.c
-index 987e3d3..26dbe65 100644
---- a/drivers/net/wireless/ath/ath5k/ani.c
-+++ b/drivers/net/wireless/ath/ath5k/ani.c
-@@ -74,8 +74,8 @@ ath5k_ani_set_noise_immunity_level(struct ath5k_hw *ah, int level)
- 	const s8 fr[] = { -78, -80 };
- #endif
- 	if (level < 0 || level >= ARRAY_SIZE(sz)) {
--		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
--			"level out of range %d", level);
-+		ATH5K_ERR(ah->ah_sc, "noise immuniy level %d out of range",
-+			  level);
- 		return;
- 	}
- 
-@@ -106,8 +106,8 @@ ath5k_ani_set_spur_immunity_level(struct ath5k_hw *ah, int level)
- 
- 	if (level < 0 || level >= ARRAY_SIZE(val) ||
- 	    level > ah->ah_sc->ani_state.max_spur_level) {
--		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
--			"level out of range %d", level);
-+		ATH5K_ERR(ah->ah_sc, "spur immunity level %d out of range",
-+			  level);
- 		return;
- 	}
- 
-@@ -130,8 +130,7 @@ ath5k_ani_set_firstep_level(struct ath5k_hw *ah, int level)
- 	const int val[] = { 0, 4, 8 };
- 
- 	if (level < 0 || level >= ARRAY_SIZE(val)) {
--		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
--			"level out of range %d", level);
-+		ATH5K_ERR(ah->ah_sc, "firstep level %d out of range", level);
- 		return;
- 	}
- 
-
+Ivo
