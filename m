@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:35842 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756891Ab0E0PeS (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:2977 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751371Ab0ECUnT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 11:34:18 -0400
-Subject: Re: A mailing list for regulatory wireless-regdb changes
-From: David Woodhouse <dwmw2@infradead.org>
+	Mon, 3 May 2010 16:43:19 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>,
-	David Quan <David.Quan@atheros.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <20100527150515.GB2486@tuxdriver.com>
-References: <AANLkTik_bztAq5aLTHTlcD3ug0QeXfkEf-vPhkzEUA_6@mail.gmail.com>
-	 <20100527150515.GB2486@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 16:34:12 +0100
-Message-ID: <1274974452.20576.20410.camel@macbook.infradead.org>
-Mime-Version: 1.0
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 0/4] rt2x00: Assorted fixes and cleanups.
+Date: Mon,  3 May 2010 22:43:01 +0200
+Message-Id: <1272919385-18004-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 11:05 -0400, John W. Linville wrote:
-> On Thu, May 27, 2010 at 01:15:50AM -0700, Luis R. Rodriguez wrote:
-> > David, can I trouble you for a mailman wireless-regdb mailing list on
-> > infradead.org? This would be used by those who are not developers and
-> > do not need to be subscribed to linux-wireless. An example are
-> > regulatory guys at different companies and generally interested
-> > people/developers on the topic. This should hopefully accelerate the
-> > turn around time for reviewing of patches and also a good placeholder
-> > for us to go back and check the discussions that went on about this.
-> 
-> Is this really necessary?
+Just a random set up fixes and cleanups for rt2x00.
+All patches are against wireless-next-2.6.
 
-Feel free not to use it :)
+The 3rd patch doesn't actually fix our HT40 issue for rt2800, but should
+be a step in the right direction.
 
--- 
-dwmw2
+Gertjan van Wingerde (4):
+  rt2x00: Remove rt2x00pci.h include from rt2800lib.
+  rt2x00: Enable RT30xx by default.
+  rt2x00: Fix HT40+/HT40- setting in rt2800.
+  rt2x00: Register frame length in TX entry descriptor instead of L2PAD.
+
+ drivers/net/wireless/rt2x00/Kconfig       |    4 ++--
+ drivers/net/wireless/rt2x00/rt2400pci.c   |    4 ++--
+ drivers/net/wireless/rt2x00/rt2500pci.c   |    2 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c   |    2 +-
+ drivers/net/wireless/rt2x00/rt2800.h      |    4 ++--
+ drivers/net/wireless/rt2x00/rt2800lib.c   |    7 ++-----
+ drivers/net/wireless/rt2x00/rt2800pci.c   |    2 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c   |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    6 ++----
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    4 ++--
+ drivers/net/wireless/rt2x00/rt61pci.c     |    5 +++--
+ drivers/net/wireless/rt2x00/rt73usb.c     |    2 +-
+ 12 files changed, 20 insertions(+), 24 deletions(-)
 
