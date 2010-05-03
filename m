@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f204.google.com ([209.85.222.204]:35462 "EHLO
-	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757342Ab0ENNP5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 09:15:57 -0400
-Received: by pzk42 with SMTP id 42so1329911pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 06:15:55 -0700 (PDT)
-From: tom.leiming@gmail.com
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 1/2] ath9k: fix dma direction for map/unmap in ath_rx_tasklet
-Date: Fri, 14 May 2010 21:15:38 +0800
-Message-Id: <1273842938-3401-1-git-send-email-tom.leiming@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:26731 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754208Ab0ECUuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 16:50:17 -0400
+Subject: Re: [PATCH wireless-2.6] iwlwifi: work around passive scan issue
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+In-Reply-To: <20100503180659.GC25748@tuxdriver.com>
+References: <1272668402-3722-1-git-send-email-reinette.chatre@intel.com>
+	 <20100503180659.GC25748@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 03 May 2010 13:50:16 -0700
+Message-ID: <1272919816.7879.5955.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
+Hi John,
 
-For edma, we should use DMA_BIDIRECTIONAL, or else use
-DMA_FROM_DEVICE.
+On Mon, 2010-05-03 at 11:07 -0700, John W. Linville wrote:
+> On Fri, Apr 30, 2010 at 04:00:02PM -0700, Reinette Chatre wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Some firmware versions don't behave properly when
+> > passive scanning is requested on radar channels
+> > without enabling active scanning on receiving a
+> > good frame. Work around that issue by asking the
+> > firmware to only enable the active scanning after
+> > receiving a huge number of good frames, a number
+> > that can never be reached during our dwell time.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> 
+> What is the consequence of this bug?  It is very late in the 2.6.34
+> cycle and it isn't obvious to me that this is something that has to
+> be fixed in this cycle.  I see the comment about "sysassert", but I
+> don't know if that leads to something inconvenient (like restarting
+> the firmware) or something much worse?
 
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Unfortunately a sysassert does lead to firmware restart.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ba13913..a3fe6e1 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -838,9 +838,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	int dma_type;
- 
- 	if (edma)
--		dma_type = DMA_FROM_DEVICE;
--	else
- 		dma_type = DMA_BIDIRECTIONAL;
-+	else
-+		dma_type = DMA_FROM_DEVICE;
- 
- 	qtype = hp ? ATH9K_RX_QUEUE_HP : ATH9K_RX_QUEUE_LP;
- 	spin_lock_bh(&sc->rx.rxbuflock);
--- 
-1.6.2.5
+Reinette
+
 
