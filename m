@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58302 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758052Ab0ESNAM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52290 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754051Ab0ECP3T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 09:00:12 -0400
-Date: Wed, 19 May 2010 08:59:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 00/20] pending ath5k + antenna patches
-Message-ID: <20100519125941.GA2412@tuxdriver.com>
-References: <20100519012528.22206.77550.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
+	Mon, 3 May 2010 11:29:19 -0400
+Subject: Re: [PATCH] rt2x00: remove USB-ID 148f:2573 from rt2500usb driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: "rain_maker@root-forum.org" <rain_maker@root-forum.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <v2wa32f33a41005030813m36cbea0blf3963369a934cdac@mail.gmail.com>
+References: <201005031624.45409.rain_maker@root-forum.org>
+	 <v2wa32f33a41005030813m36cbea0blf3963369a934cdac@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 03 May 2010 17:29:15 +0200
+Message-ID: <1272900556.3614.42.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 19, 2010 at 10:30:39AM +0900, Bruno Randolf wrote:
+On Mon, 2010-05-03 at 17:13 +0200, Ivo Van Doorn wrote:
+> > This trivial patch removes the id 148f:2573 from rt2500usb driver.
 
-> Also i'd like to note that there are quite a few ath5k patches which haven't
-> made it into linux-next yet. It would be great to get them into 2.6.35...
+> The ID is confusing indeed, but unfortunately we can't remove this ID,
+> since in the early days people did report they had to use the rt2500usb driver
+> for these devices. So the majority of devices with this ID is indeed
+> rt73usb, but not for all.
 
-That probably won't happen.  The exception would be for self-contained
-bug fixes.  As for linux-next, Stephen usually asks not to merge
-anything into linux-next feeder trees during the merge window unless
-they are intended to go to the current release.  So, non-bugfix patches
-probably won't be going to linux-next either for another week or so.
+Since this seems to come up every couple of weeks, and none of us will
+always be around to remember and answer it, how about capturing that in
+a comment in the code? :)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
