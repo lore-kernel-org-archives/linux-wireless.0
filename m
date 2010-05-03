@@ -1,131 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:55225 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759239Ab0EMShc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 14:37:32 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45105 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756535Ab0ECUPL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 16:15:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 2/2] ath9k: remove VEOL support for ad-hoc
-Date: Thu, 13 May 2010 20:37:25 +0200
-Message-Id: <1273775845-10056-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1273775845-10056-1-git-send-email-nbd@openwrt.org>
-References: <1273775845-10056-1-git-send-email-nbd@openwrt.org>
+Cc: chunkeey@googlemail.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] p54: Added get_survey callback in order to get channel noise
+Date: Mon,  3 May 2010 16:06:47 -0400
+Message-Id: <1272917207-12077-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With VEOL, Beacon transmission in ad-hoc does not currently work.
-I believe for larger ad-hoc networks, VEOL is too unreliable, as
-it can get beacon transmissions stuck during synchronization.
-Use SWBA based beacon trasmission similar to AP mode instead.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/ath/ath9k/beacon.c |   63 +++++--------------------------
- 1 files changed, 10 insertions(+), 53 deletions(-)
+The code seems correct, but the value reported seems to swing between
+127 dBm and -1 dBm?
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 77face7..f43d85a 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -76,22 +76,13 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 	ds = bf->bf_desc;
- 	flags = ATH9K_TXDESC_NOACK;
- 
--	if (((sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
--	     (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) &&
--	    (ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)) {
--		ds->ds_link = bf->bf_daddr; /* self-linked */
--		flags |= ATH9K_TXDESC_VEOL;
--		/* Let hardware handle antenna switching. */
--		antenna = 0;
--	} else {
--		ds->ds_link = 0;
--		/*
--		 * Switch antenna every beacon.
--		 * Should only switch every beacon period, not for every SWBA
--		 * XXX assumes two antennae
--		 */
--		antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs) & 1 ? 2 : 1);
--	}
-+	ds->ds_link = 0;
-+	/*
-+	 * Switch antenna every beacon.
-+	 * Should only switch every beacon period, not for every SWBA
-+	 * XXX assumes two antennae
-+	 */
-+	antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs) & 1 ? 2 : 1);
- 
- 	sband = &sc->sbands[common->hw->conf.channel->band];
- 	rate = sband->bitrates[rateidx].hw_value;
-@@ -215,36 +206,6 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 	return bf;
+ drivers/net/wireless/p54/main.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+index 10a4b16..3da46ef 100644
+--- a/drivers/net/wireless/p54/main.c
++++ b/drivers/net/wireless/p54/main.c
+@@ -506,6 +506,22 @@ out_unlock:
+ 	return ret;
  }
  
--/*
-- * Startup beacon transmission for adhoc mode when they are sent entirely
-- * by the hardware using the self-linked descriptor + veol trick.
--*/
--static void ath_beacon_start_adhoc(struct ath_softc *sc,
--				   struct ieee80211_vif *vif)
--{
--	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ath_buf *bf;
--	struct ath_vif *avp;
--	struct sk_buff *skb;
--
--	avp = (void *)vif->drv_priv;
--
--	if (avp->av_bcbuf == NULL)
--		return;
--
--	bf = avp->av_bcbuf;
--	skb = bf->bf_mpdu;
--
--	ath_beacon_setup(sc, avp, bf, 0);
--
--	/* NB: caller is known to have already stopped tx dma */
--	ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bf->bf_daddr);
--	ath9k_hw_txstart(ah, sc->beacon.beaconq);
--	ath_print(common, ATH_DBG_BEACON, "TXDP%u = %llx (%p)\n",
--		  sc->beacon.beaconq, ito64(bf->bf_daddr), bf->bf_desc);
--}
--
- int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
- {
- 	struct ath_softc *sc = aphy->sc;
-@@ -265,7 +226,8 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
- 		list_del(&avp->av_bcbuf->list);
++static int p54_get_survey(struct ieee80211_hw *dev, int idx,
++				struct survey_info *survey)
++{
++	struct p54_common *priv = dev->priv;
++	struct ieee80211_conf *conf = &dev->conf;
++
++	if (idx != 0)
++		return -ENOENT;
++
++	survey->channel = conf->channel;
++	survey->filled = SURVEY_INFO_NOISE_DBM;
++	survey->noise = priv->noise;
++
++	return 0;
++}
++
+ static const struct ieee80211_ops p54_ops = {
+ 	.tx			= p54_tx_80211,
+ 	.start			= p54_start,
+@@ -522,6 +538,7 @@ static const struct ieee80211_ops p54_ops = {
+ 	.configure_filter	= p54_configure_filter,
+ 	.conf_tx		= p54_conf_tx,
+ 	.get_stats		= p54_get_stats,
++	.get_survey		= p54_get_survey,
+ };
  
- 		if (sc->sc_ah->opmode == NL80211_IFTYPE_AP ||
--		    !(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)) {
-+		    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC ||
-+		    sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) {
- 			int slot;
- 			/*
- 			 * Assign the vif to a beacon xmit slot. As
-@@ -715,8 +677,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 	 * self-linked tx descriptor and let the hardware deal with things.
- 	 */
- 	intval |= ATH9K_BEACON_ENA;
--	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_VEOL))
--		ah->imask |= ATH9K_INT_SWBA;
-+	ah->imask |= ATH9K_INT_SWBA;
- 
- 	ath_beaconq_config(sc);
- 
-@@ -726,10 +687,6 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- 	sc->beacon.bmisscnt = 0;
- 	ath9k_hw_set_interrupts(ah, ah->imask);
--
--	/* FIXME: Handle properly when vif is NULL */
--	if (vif && ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)
--		ath_beacon_start_adhoc(sc, vif);
- }
- 
- void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
 -- 
-1.6.4.2
+1.6.6.1
 
