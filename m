@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aurora.create-net.org ([193.206.22.116]:38216 "EHLO
-	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932157Ab0EMQEn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 12:04:43 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by aurora.create-net.org (Postfix) with ESMTP id 09D4238478
-	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 18:04:42 +0200 (CEST)
-Received: from aurora.create-net.org ([127.0.0.1])
-	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id t-ZNodV3emjk for <linux-wireless@vger.kernel.org>;
-	Thu, 13 May 2010 18:04:40 +0200 (CEST)
-Received: from [192.168.9.133] (unknown [192.168.9.133])
-	by aurora.create-net.org (Postfix) with ESMTPSA id C78A838476
-	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 18:04:40 +0200 (CEST)
-Message-ID: <4BEC2318.5050701@create-net.org>
-Date: Thu, 13 May 2010 18:04:40 +0200
-From: Roberto Riggio <roberto.riggio@create-net.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Strange ACK Behaviour with ath9k
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:56493 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754099Ab0ECRsz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 13:48:55 -0400
+Subject: Re: [PATCH] iwlagn: Change the TPT calculations sanity-check to
+ WARN_ON
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johill@sipsolutions.net" <johill@sipsolutions.net>,
+	Adel Gadllah <adel.gadllah@gmail.com>
+In-Reply-To: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
+References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 03 May 2010 10:48:54 -0700
+Message-ID: <1272908934.7879.5748.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2010-05-03 at 10:25 -0700, John W. Linville wrote:
+> From: Adel Gadllah <adel.gadllah@gmail.com>
+> 
+> Currently it is a BUG_ON() which will hang the machine once triggered.
+> 
+> (Changed from WARN_ON to WARN_ON_ONCE. -- JWL)
+> 
+> Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Hi,
+I can see a potential race condition here in the calculation of the
+average throughput so a BUG_ON seems extreme.
 
-I'm having a very strange behaviour between two sr71a (ath9k) cards
-operating in monitor mode. I'm using the following patch to specify
-the transmission rate frame by frame:
+I looked at the history of this code and it seems as though the BUG_ON was
+added as a sidenote to a patch implementing something else. 
 
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/47441
+The patch adding this BUG_ON is:
+
+commit 3110bef78cb4282c58245bc8fd6d95d9ccb19749
+Author: Guy Cohen <guy.cohen@intel.com>
+Date:   Tue Sep 9 10:54:54 2008 +0800
+
+    iwlwifi: Added support for 3 antennas
 
 
-However if I try to send some traffic between the two nodes with both
-interfaces operating in monitor mode I can see from a third machine
-using wireshark that albeit the frame is sent and the corresponding
-ack generated, the originator seems to ignore the ACK and keepts
-retransmitting the frame. This is happening on both ends of the
-communication (i'm ping one node from the other).
+... and it thus seems as though this BUG_ON was added along the way while doing
+something else ... especially considering that the comments describing the
+original code has not been removed yet. Since the current code still contains:
 
-As a matter of fact i thought that ACK are handled directly by the
-firmware. Any hints?
+        /* Else we have enough samples; calculate estimate of
+         * actual average throughput */
 
-R.
+.. .which is obviously not done right now.
+
+I looked at the original code and think we can revert the portion of this patch
+adding the BUG_ON. Since users have not encountered the error I assume the
+author considered that a BUG_ON was warranted, but now we know that users do
+indeed encounter the error and we should return the original code.
+
+I'll send the revert as a separate patch.
+
+Reinette
+
+
