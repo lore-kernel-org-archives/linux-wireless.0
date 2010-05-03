@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58781 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753830Ab0EZRw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 13:52:57 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>,
-	David Quan <David.Quan@atheros.com>
-Date: Wed, 26 May 2010 20:51:51 +0300
-Subject: RE: [RFC] wireless-regdb: Add A band in IL
-Message-ID: <4825B8A2C4E264489E57869F0DCFB22343E33E6133@hasmsx502.ger.corp.intel.com>
-References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
- 	<AANLkTikzEywcDi9zyJknMWkKymCVYnWQa2YXbbSDVx5o@mail.gmail.com>
- 	<4825B8A2C4E264489E57869F0DCFB22343E33E611F@hasmsx502.ger.corp.intel.com>
- <AANLkTinG2zWHE8l-ZPBnyrFq5gs4nZX59zhF3AVh7h_4@mail.gmail.com>
-In-Reply-To: <AANLkTinG2zWHE8l-ZPBnyrFq5gs4nZX59zhF3AVh7h_4@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:1586 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754897Ab0ECUnT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 16:43:19 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2/4] rt2x00: Enable RT30xx by default.
+Date: Mon,  3 May 2010 22:43:03 +0200
+Message-Id: <1272919385-18004-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1272919385-18004-1-git-send-email-gwingerde@gmail.com>
+References: <1272919385-18004-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pk9uIFdlZCwgTWF5IDI2LCAyMDEwIGF0IDEwOjMyIEFNLCBHcnVtYmFjaCwgRW1tYW51ZWwNCj48
-ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4+Pj4gwqBjb3VudHJ5IElMOg0K
-Pj4+PiDCoCDCoCDCoCDCoCgyNDAyIC0gMjQ4MiBAIDQwKSwgKE4vQSwgMjApDQo+Pj4+ICsgwqAg
-wqAgwqAgKDUxNTAgLSA1MjUwIEAgNDApLiAoTi9BLCAyMDAgbVcpLCBOTy1PVVRET09SDQo+Pj4+
-ICsgwqAgwqAgwqAgKDUyNTAgLSA1MzUwIEAgNDApLiAoTi9BLCAyMDAgbVcpLCBOTy1PVVRET09S
-LCBERlMNCj4+Pg0KPj4+SSBiZWxpZXZlIHRoZSBvbmUgc3RhbmRpbmcgaXNzdWUgaGVyZSBpcyB5
-b3UgYXJlIGVuYWJsaW5nIEhUNDAgb24gNQ0KPj4+R0h6LCBob3cgYWJvdXQgZW5hYmxpbmcgMi40
-IEdIeiBmaXJzdCwgYW5kIHRoZW4gdGhyb3VnaCBhIHNlcGFyYXRlDQo+Pj5wYXRjaCBhbmQgdGlt
-ZS9yZXZpZXcgd2UgcmV2aWV3IHRoZSBIVDQwIHN0dWZmLCB1bmxlc3MgeW91IGFyZSBpbiBubw0K
-Pj4+cnVzaCB0byBnZXQgMi40IEdIeiBlbmFibGVkLg0KPj4+DQo+Pg0KPj4gSSBhbSBub3QgZm9s
-bG93aW5nLi4uIEhUNDAgb24gMi40IEdIeiBpcyBhbHJlYWR5IGVuYWJsZWQuLi4NCj4+IFdoYXQg
-c2hvdWxkIEkgZW5hYmxlIGluIDIuNCBHSHogPw0KPg0KPlNvcnJ5IEkgbWVhbnQgNSBHSHouDQoN
-CkFjdHVhbGx5IDQwR0h6IGlzIGxlc3MgYSBwcm9ibGVtIGluIDVHSHogdGhhbiBpbiAyLjRHSHog
-c2luY2UgaW4gMi40R0h6DQpJIG5lZWQgdG8gaGF2ZSBhICJDb2V4aXN0ZW5jZSBtZWNoYW5pc20i
-LCB3aGljaCBpcyBub3QgcmVxdWlyZWQgaW4gNUdIei4NClRoaXMgQ29leGlzdGVuY2UgbWVjaGFu
-aXNtIGlzIGFwcGFyZW50bHkgaW1wbGVtZW50ZWQgYnkgb25lIE9FTSB1bmRlciB0aGUNCm5hbWUg
-IkNsZWFyIENoYW5uZWwgQXNzZXNzbWVudCAoQ0NBKSIuDQoNCkluIHNob3J0LCBJIGRvbid0IHRo
-aW5rIHRoZXJlIGlzIGFueSBzcGVjaWFsIGlzc3VlIHdpdGggNDBNSHogaW4gNUdIeiwgYnV0DQpJ
-IG1heSBtaXNzIHNvbWV0aGluZyBoZXJlLi4uIEluIGFueSBjYXNlLCBJIGhhdmUgbm8gcHJvYmxl
-bSB3aXRoIHNlbmRpbmcNCmEgcGF0Y2ggdGhhdCBhbGxvd3MgNUdIeiBpbiAyME1IeiBmb3IgdGhl
-IG1vbWVudC4NCkkgY2FuIGFsc28gaGF2ZSBhIGxvb2sgYXQgdGhlIEVFUFJPTSBpbiBvdXIgTklD
-cyB3aGljaCBpcyBzdXBwb3NlZCB0byBoYXZlDQphbGwgdGhlIG5lZWRlZCBsaW1pdGF0aW9ucy4g
-RGV0YWlscyB0byBmb2xsb3cgdG9tb3Jyb3cuDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KSW50ZWwgSXNyYWVsICg3
-NCkgTGltaXRlZAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBj
-b25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVj
-aXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0
-bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxl
-YXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3BpZXMuCg==
+Now that RT30xx support is at the same level as RT28xx support we can enable
+these devices by default.
+
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/Kconfig |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index 5239e08..eea1ef2 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -87,7 +87,7 @@ if RT2800PCI
+ 
+ config RT2800PCI_RT30XX
+ 	bool "rt2800pci - Include support for rt30xx (PCI/PCIe/PCMCIA) devices"
+-	default n
++	default y
+ 	---help---
+ 	  This adds support for rt30xx wireless chipset family to the
+ 	  rt2800pci driver.
+@@ -156,7 +156,7 @@ if RT2800USB
+ 
+ config RT2800USB_RT30XX
+ 	bool "rt2800usb - Include support for rt30xx (USB) devices"
+-	default n
++	default y
+ 	---help---
+ 	  This adds support for rt30xx wireless chipset family to the
+ 	  rt2800usb driver.
+-- 
+1.7.1
 
