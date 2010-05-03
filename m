@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57832 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753935Ab0EYRAM (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:50569 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755302Ab0ECVKf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 13:00:12 -0400
-Date: Tue, 25 May 2010 12:55:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: iwl3945 dies (oops) in post 2.6.34 kernels
-Message-ID: <20100525165524.GD31753@tuxdriver.com>
-References: <20100525163920.GA2730@core.coreip.homeip.net>
+	Mon, 3 May 2010 17:10:35 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so1252331fga.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 14:10:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100525163920.GA2730@core.coreip.homeip.net>
+In-Reply-To: <1272920504.4907.5.camel@mj>
+References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
+	 <87k4rkk9tz.fsf@purkki.valot.fi>
+	 <AANLkTimf_aZyUSZInOzUPZ8KRR6oDs3Re4pSGGn541fM@mail.gmail.com>
+	 <1272920504.4907.5.camel@mj>
+Date: Mon, 3 May 2010 23:10:33 +0200
+Message-ID: <l2m6cf6b73e1005031410t7c6d3148x832ddd405fc482ec@mail.gmail.com>
+Subject: Re: [PATCH] iwlagn: Change the TPT calculations sanity-check to
+	WARN_ON
+From: Adel Gadllah <adel.gadllah@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, johill@sipsolutions.net,
+	reinette.chatre@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 25, 2010 at 09:39:20AM -0700, Dmitry Torokhov wrote:
-> Hi,
-> 
-> I am getting the following crashers in iwl3945 after updating to
-> post-2.6.34 kernels. This is with the pull from Linus's tree as of last
-> night (the taint is from nvidia module):
+2010/5/3 Pavel Roskin <proski@gnu.org>:
+> On Mon, 2010-05-03 at 22:48 +0200, Gábor Stefanik wrote:
+>
+>> One exception I can think of: major misconfiguration can cause a
+>> wireless device to DMA data into sensitive memory locations. When
+>> evidence of this is detected, it might make sense to BUG_ON()
+>> (especially if the bogus DMA operations can be exploited remotely to
+>> overwrite arbitrary memory addresses). However, in that case, the
+>> attacker may have already overwritten panic() with malicious code as
+>> well, so even this case doesn't hold.
+>
+> And then there is a case when encryption fails and there is a risk of
+> transmitting data without encryption or accepting data without
+> verification.
 
-Linus doesn't have this one yet:
-
-commit 073d5eab6fc85b6c278d507a5633b759a85dc878
-Author: Reinette Chatre <reinette.chatre@intel.com>
-Date:   Thu May 13 14:49:44 2010 -0700
-
-    iwlwifi: fix internal scan race
-    
-    It is possible for internal scan to race against itself if the device is
-    not returning the scan results from first requests. What happens in this
-    case is the cleanup done during the abort of the first internal scan also
-    cleans up part of the new scan, causing it to access memory it shouldn't.
-...
-
-I suspect it might be related.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+So kill the connection rather than the whole system.
