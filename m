@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39017 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751645Ab0EJVW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 17:22:59 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: move usb_{alloc,free}_coherent
-Date: Mon, 10 May 2010 23:22:49 +0200
-Message-Id: <1273526569-22845-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1273526569-22845-1-git-send-email-hauke@hauke-m.de>
-References: <1273526569-22845-1-git-send-email-hauke@hauke-m.de>
+Received: from c60.cesmail.net ([216.154.195.49]:64663 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754921Ab0ECU7U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 16:59:20 -0400
+Subject: Re: [PATCH 2/4] rt2x00: Enable RT30xx by default.
+From: Pavel Roskin <proski@gnu.org>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+In-Reply-To: <1272919385-18004-3-git-send-email-gwingerde@gmail.com>
+References: <1272919385-18004-1-git-send-email-gwingerde@gmail.com>
+	 <1272919385-18004-3-git-send-email-gwingerde@gmail.com>
+Content-Type: text/plain
+Date: Mon, 03 May 2010 16:59:18 -0400
+Message-Id: <1272920358.4907.3.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-usb_alloc_coherent and usb_free_coherent were introduced in kernel 2.6.34.
+On Mon, 2010-05-03 at 22:43 +0200, Gertjan van Wingerde wrote:
+> Now that RT30xx support is at the same level as RT28xx support we can enable
+> these devices by default.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/Kconfig |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+> index 5239e08..eea1ef2 100644
+> --- a/drivers/net/wireless/rt2x00/Kconfig
+> +++ b/drivers/net/wireless/rt2x00/Kconfig
+> @@ -87,7 +87,7 @@ if RT2800PCI
+>  
+>  config RT2800PCI_RT30XX
+>  	bool "rt2800pci - Include support for rt30xx (PCI/PCIe/PCMCIA) devices"
+> -	default n
+> +	default y
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.34.h |    3 +++
- include/linux/compat-2.6.35.h |    3 ---
- 2 files changed, 3 insertions(+), 3 deletions(-)
+I believe defaulting booleans to "y" is discouraged, especially for
+drivers.  Most users don't have any particular hardware device.
 
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index 18ae456..2870a3b 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -197,6 +197,9 @@ do {							\
-  */
- #define sysfs_bin_attr_init(bin_attr) sysfs_attr_init(&(bin_attr)->attr)
- 
-+#define usb_alloc_coherent(dev, size, mem_flags, dma) usb_buffer_alloc(dev, size, mem_flags, dma)
-+#define usb_free_coherent(dev, size, addr, dma) usb_buffer_free(dev, size, addr, dma)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
- 
- #endif /* LINUX_26_34_COMPAT_H */
-diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-index 278af5e..b850f8a 100644
---- a/include/linux/compat-2.6.35.h
-+++ b/include/linux/compat-2.6.35.h
-@@ -20,9 +20,6 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
- 	return sk->sk_sleep;
- }
- 
--#define usb_alloc_coherent(dev, size, mem_flags, dma) usb_buffer_alloc(dev, size, mem_flags, dma)
--#define usb_free_coherent(dev, size, addr, dma) usb_buffer_free(dev, size, addr, dma)
--
- #define kparam_block_sysfs_write(a)
- #define kparam_unblock_sysfs_write(a)
- 
 -- 
-1.7.0.4
-
+Regards,
+Pavel Roskin
