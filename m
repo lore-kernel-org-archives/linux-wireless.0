@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26171 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752338Ab0ESAbF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 20:31:05 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 17:31:05 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Fix rx of mcast/bcast frames in PS mode with auto sleep
-Date: Tue, 18 May 2010 17:31:02 -0700
-Message-ID: <1274229062-10412-1-git-send-email-vasanth@atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49781 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093Ab0ECUsi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 May 2010 16:48:38 -0400
+Received: by fxm10 with SMTP id 10so2550987fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 13:48:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87k4rkk9tz.fsf@purkki.valot.fi>
+References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
+	<87k4rkk9tz.fsf@purkki.valot.fi>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 3 May 2010 22:48:16 +0200
+Message-ID: <AANLkTimf_aZyUSZInOzUPZ8KRR6oDs3Re4pSGGn541fM@mail.gmail.com>
+Subject: Re: [PATCH] iwlagn: Change the TPT calculations sanity-check to
+	WARN_ON
+To: Kalle Valo <kvalo@adurom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, johill@sipsolutions.net,
+	reinette.chatre@intel.com, Adel Gadllah <adel.gadllah@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+On Mon, May 3, 2010 at 10:29 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> "John W. Linville" <linville@tuxdriver.com> writes:
+>
+>> From: Adel Gadllah <adel.gadllah@gmail.com>
+>>
+>> Currently it is a BUG_ON() which will hang the machine once triggered.
+>
+> Related to this: can we have a rule that no wireless driver should
+> ever use BUG_ON()? I think we could extend this even to cfg80211 and
+> mac80211.
+>
+> BUG_ON() is valid whenever there's a risk of corrupting data, for
+> example on a filesystem, but I really don't see the point of using
+> them in wireless drivers. They just make things miserable, especially
+> for the normal users. Printing a warning and handling the case as
+> gracefully as possible is much better IMHO.
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index f0f5f5e..146e79d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -18,6 +18,9 @@
- #include "ar9003_mac.h"
- 
- #define SKB_CB_ATHBUF(__skb)	(*((struct ath_buf **)__skb->cb))
-+#define ATH9K_CHECK_AUTO_SLEEP(__sc) \
-+	(__sc->ps_enabled && \
-+	(__sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
- 
- static struct ieee80211_hw * ath_get_virt_hw(struct ath_softc *sc,
- 					     struct ieee80211_hdr *hdr)
-@@ -616,8 +619,8 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 
- 	/* Process Beacon and CAB receive in PS state */
--	if ((sc->ps_flags & PS_WAIT_FOR_BEACON) &&
--	    ieee80211_is_beacon(hdr->frame_control))
-+	if (((sc->ps_flags & PS_WAIT_FOR_BEACON) || ATH9K_CHECK_AUTO_SLEEP(sc))
-+	    && ieee80211_is_beacon(hdr->frame_control))
- 		ath_rx_ps_beacon(sc, skb);
- 	else if ((sc->ps_flags & PS_WAIT_FOR_CAB) &&
- 		 (ieee80211_is_data(hdr->frame_control) ||
-@@ -945,9 +948,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			sc->rx.rxotherant = 0;
- 		}
- 
--		if (unlikely(sc->ps_flags & (PS_WAIT_FOR_BEACON |
--					     PS_WAIT_FOR_CAB |
--					     PS_WAIT_FOR_PSPOLL_DATA)))
-+		if (unlikely(ATH9K_CHECK_AUTO_SLEEP(sc) ||
-+			     (sc->ps_flags & (PS_WAIT_FOR_BEACON |
-+					      PS_WAIT_FOR_CAB |
-+					      PS_WAIT_FOR_PSPOLL_DATA))))
- 			ath_rx_ps(sc, skb);
- 
- 		ath_rx_send_to_mac80211(hw, sc, skb, rxs);
+One exception I can think of: major misconfiguration can cause a
+wireless device to DMA data into sensitive memory locations. When
+evidence of this is detected, it might make sense to BUG_ON()
+(especially if the bogus DMA operations can be exploited remotely to
+overwrite arbitrary memory addresses). However, in that case, the
+attacker may have already overwritten panic() with malicious code as
+well, so even this case doesn't hold.
+
+The other thing that comes to my mind is when there is a risk of
+physically frying the card, but given that BUG_ON() doesn't cut power
+to the PCI bus (at least not on x86 - dunno about other platforms),
+this one falls down pretty easily too.
+
+> --
+> Kalle Valo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.0.4
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
