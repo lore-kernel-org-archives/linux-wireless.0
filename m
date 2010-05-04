@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54268 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756201Ab0EaTad convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:64419 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110Ab0EDXaI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 May 2010 15:30:33 -0400
+	Tue, 4 May 2010 19:30:08 -0400
+Received: by pwi5 with SMTP id 5so529924pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 16:30:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4BF32B2B.6010202@redfish-solutions.com>
-References: <87my01m0zm.fsf@purkki.valot.fi>
-	<4B5EF5DF.2070005@lemonia.org>
-	<4B9942A7.40205@redfish-solutions.com>
-	<20100311.112754.142886660.davem@davemloft.net>
-	<4B9944A0.5080308@redfish-solutions.com>
-	<4BF32B2B.6010202@redfish-solutions.com>
-Date: Mon, 31 May 2010 15:30:31 -0400
-Message-ID: <AANLkTindWCmxtAJU5R3ey_18_3wNUuMGc-jq_EY_itiN@mail.gmail.com>
-Subject: Re: Network QoS support in applications
-From: Ben Gardiner <bengardiner@nanometrics.ca>
-To: "Philip A. Prindeville" <philipp@redfish-solutions.com>
-Cc: David Miller <davem@davemloft.net>, dunc@lemonia.org,
-	kalle.valo@iki.fi, kaber@trash.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1273012837-8325-1-git-send-email-hauke@hauke-m.de>
+References: <1273012837-8325-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 4 May 2010 16:29:44 -0700
+Message-ID: <n2t43e72e891005041629h21fe4a79ta2328d114ea7c1f3@mail.gmail.com>
+Subject: Re: [PATCH] compat: backport orinoco updates
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 18, 2010 at 8:04 PM, Philip A. Prindeville
-<philipp@redfish-solutions.com> wrote:
-> On 03/11/2010 12:29 PM, Philip A. Prindeville wrote:
->> On 03/11/2010 12:27 PM, David Miller wrote:
->>
->>> From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
->>> Date: Thu, 11 Mar 2010 12:21:11 -0700
->>>
->>>
->>>> And yes, there will always be misbehaving users. �They are a fact of
->>>> life. �That doesn't mean we should lobotomize the network. �We don't
->>>> have an authentication mechanism on ICMP Redirects or Source-Quench,
->>>>
->>> Which is why most networks block those packets from the outside.
->>>
->>>
->>>> Nor is ARP authenticated.
->>>>
->>> Which is why people control who can plug into their physical
->>> network.
->>>
->>> None of the things you are saying support the idea of having
->>> applications decide what the DSCP marking should be.
->>>
->>
->> Does "decide what the DSCP marking should be" include complying to the recommendations of RFC-4594?
->>
+On Tue, May 4, 2010 at 3:40 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
 >
-> If anyone cares, here's an update:
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  include/linux/compat-2.6.29.h |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 >
-> I've submitted patches for QoS configuration for:
+> diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+> index c3572a2..2709953 100644
+> --- a/include/linux/compat-2.6.29.h
+> +++ b/include/linux/compat-2.6.29.h
+> @@ -61,6 +61,8 @@ extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
 >
-> APR/Apache (stalled);
-> Proftpd (committed);
-> Openssh (pending review);
-> Firefox/Thunderbird (reviewed and on-track for commit);
-> Cyrus (committed);
-> Sendmail (submittted and acknowledged, but not yet reviewed);
-> Curl (stalled);
+>  extern int eth_mac_addr(struct net_device *dev, void *p);
 >
-> All, as per the request of the maintainers, default to either no QoS
-> markings or previous RFC-791 QoS markings if that's what they already
-> supported (Proftpd and Openssh).
->
-> If anyone can think of anything else that needs to be supported to
-> impact a significant portion of network (or enterprise intranet)
-> traffic, please call it out.
+> +#define orinoco_if_add(priv, base_addr, irq, ops) orinoco_if_add(priv, base_addr, irq)
+> +
+>  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
 
-wget [1], like curl, is used for downloads of artifacts by some build systems.
+Since we're going to have the netdevice ops available on older kernels
+I'll skip this patch and first try by just backporting the netdevice
+ops a bit differently. Thanks though.
 
-[1] http://www.gnu.org/software/wget/
-
--- 
-Ben Gardiner
-Nanometrics Inc.
-+1 (613) 592-6776 x239
-http://www.nanometrics.ca
+  Luis
