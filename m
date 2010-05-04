@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:44079 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751591Ab0ESS07 (ORCPT
+Received: from smtp-out110.alice.it ([85.37.17.110]:2763 "EHLO
+	smtp-out110.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932491Ab0EDPYX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 14:26:59 -0400
-Received: by ewy8 with SMTP id 8so2790025ewy.28
-        for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 11:26:56 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 5/7] rt2x00: Move PCI/USB specific register initializations to rt2800{pci,usb}.
-Date: Wed, 19 May 2010 20:26:52 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1274282769-19244-1-git-send-email-gwingerde@gmail.com> <1274282769-19244-6-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1274282769-19244-6-git-send-email-gwingerde@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201005192026.53773.IvDoorn@gmail.com>
+	Tue, 4 May 2010 11:24:23 -0400
+Subject: Re: wl1251_sdio PSM
+From: gnutoo <GNUtoo@no-log.org>
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20100427T143119-272@post.gmane.org>
+References: <1272230300.2349.23.camel@gnutoo-desktop>
+	 <1272232671.2349.25.camel@gnutoo-desktop>
+	 <1272235632.2349.28.camel@gnutoo-desktop>
+	 <1272285416.2364.1.camel@gnutoo-desktop>
+	 <loom.20100427T143119-272@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 04 May 2010 17:24:15 +0200
+Message-ID: <1272986655.2486.42.camel@gnutoo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 19 May 2010 17:26:07 Gertjan van Wingerde wrote:
-> This prevents us having common code depend on PCI or USB specific code.
+
+> You need a few more patches for PS to work (on top of current compat-wireless):
+> http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-kernel.git;a=commitdiff;h=8eb97a1915ae2ab0a19cc6eef1a2753b9514017d
+> http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-wifi.git;a=commitdiff;h=d16ed8871faa892f5fd4e8161412051ee11c5ecb
 > 
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
+> I'm working on mainline mergeable versions of those..
+2 things:
+*I rebased the patches against lastest compat wireless but I don't know
+where to send them...
+Basically or they apply or they are already in compat-wireless(verified)
+here are the one which applies:
+0007-wl1251-read-default-MAC-address-from-EEPROM-when-ava.patch
+0008-wl1251-register-platform_device-to-pass-board-data.patch
+0009-wl1251-add-support-for-dedicated-IRQ-line.patch
+0010-wl1251-use-sdio_readb_ext-for-ELP-to-work.patch
+0011-wl1251-add-reset-handling.patch
+0013-wl1251-prevent-scan-when-connected.patch
 
-To which tree are you creating your diffs?
-This one doesn't apply to latest wireless-testing.git or rt2x00,git
+against compat-wireless-2010-04-26
 
-Ivo
+By the way we can't make ad-hoc work,Is ad-hoc supported by the driver?
+
+Denis.
+
+
