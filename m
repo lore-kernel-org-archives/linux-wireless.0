@@ -1,152 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3-g21.free.fr ([212.27.42.3]:53738 "EHLO smtp3-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753115Ab0ELGEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 02:04:13 -0400
-Message-ID: <4BEA44C8.4040200@free.fr>
-Date: Wed, 12 May 2010 08:03:52 +0200
-From: Benoit Papillault <benoit.papillault@free.fr>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48820 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753742Ab0EDSpL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 14:45:11 -0400
+Date: Tue, 4 May 2010 14:36:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: fix another source of corrupt frames
+Message-ID: <20100504183613.GC21043@tuxdriver.com>
+References: <4BDFD3C1.4000209@openwrt.org>
+ <u2q43e72e891005041109i5106ba24ma7345c4f4c4fde21@mail.gmail.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
-	linville@tuxdriver.com
-Subject: Re: [PATCH 3/4] ath9k: add debugfs files for reading/writing registers
-References: <1273591383-76696-1-git-send-email-nbd@openwrt.org> <1273591383-76696-2-git-send-email-nbd@openwrt.org> <1273591383-76696-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1273591383-76696-3-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <u2q43e72e891005041109i5106ba24ma7345c4f4c4fde21@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 11/05/2010 17:23, Felix Fietkau a écrit :
-> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+On Tue, May 04, 2010 at 11:09:32AM -0700, Luis R. Rodriguez wrote:
+> On Tue, May 4, 2010 at 12:58 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> > Atheros hardware supports receiving frames that span multiple
+> > descriptors and buffers. In this case, the rx status of every
+> > descriptor except for the last one is invalid and may contain random
+> > data. Because the driver does not support this, it needs to drop such
+> > frames.
+> >
+> > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> > ---
+> > --- a/drivers/net/wireless/ath/ath9k/common.c
+> > +++ b/drivers/net/wireless/ath/ath9k/common.c
+> > @@ -57,13 +57,19 @@ static bool ath9k_rx_accept(struct ath_c
+> >         * rs_more indicates chained descriptors which can be used
+> >         * to link buffers together for a sort of scatter-gather
+> >         * operation.
+> > -        *
+> > +        * reject the frame, we don't support scatter-gather yet and
+> > +        * the frame is probably corrupt anyway
+> > +        */
+> > +       if (rx_stats->rs_more)
+> > +               return false;
+> 
+> Actually this is required by ath9k_htc, it does process these, but
+> ath9k doesn't so this could be done within ath9k itself.
 
-This patch has been around in my tree for quite a long time and it's 
-really helpful to play with registers.
+I'm sorry, that is a bit unclear to me.  Are you NAKing the patch?
+Or saying that the patch is fine but another patch is needed on top?
 
-Acked-by: Benoit Papillault <benoit.papillault@free.fr>
-
-> ---
->   drivers/net/wireless/ath/ath9k/debug.c |   89 ++++++++++++++++++++++++++++++++
->   drivers/net/wireless/ath/ath9k/debug.h |    1 +
->   2 files changed, 90 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-> index 8d7c046..29898f8 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.c
-> +++ b/drivers/net/wireless/ath/ath9k/debug.c
-> @@ -795,6 +795,86 @@ static const struct file_operations fops_recv = {
->   	.owner = THIS_MODULE
->   };
->
-> +static ssize_t read_file_regidx(struct file *file, char __user *user_buf,
-> +                                size_t count, loff_t *ppos)
-> +{
-> +	struct ath_softc *sc = file->private_data;
-> +	char buf[32];
-> +	unsigned int len;
-> +
-> +	len = snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.regidx);
-> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-> +}
-> +
-> +static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
-> +			     size_t count, loff_t *ppos)
-> +{
-> +	struct ath_softc *sc = file->private_data;
-> +	unsigned long regidx;
-> +	char buf[32];
-> +	ssize_t len;
-> +
-> +	len = min(count, sizeof(buf) - 1);
-> +	if (copy_from_user(buf, user_buf, len))
-> +		return -EINVAL;
-> +
-> +	buf[len] = '\0';
-> +	if (strict_strtoul(buf, 0,&regidx))
-> +		return -EINVAL;
-> +
-> +	sc->debug.regidx = regidx;
-> +	return count;
-> +}
-> +
-> +static const struct file_operations fops_regidx = {
-> +	.read = read_file_regidx,
-> +	.write = write_file_regidx,
-> +	.open = ath9k_debugfs_open,
-> +	.owner = THIS_MODULE
-> +};
-> +
-> +static ssize_t read_file_regval(struct file *file, char __user *user_buf,
-> +			     size_t count, loff_t *ppos)
-> +{
-> +	struct ath_softc *sc = file->private_data;
-> +	struct ath_hw *ah = sc->sc_ah;
-> +	char buf[32];
-> +	unsigned int len;
-> +	u32 regval;
-> +
-> +	regval = REG_READ_D(ah, sc->debug.regidx);
-> +	len = snprintf(buf, sizeof(buf), "0x%08x\n", regval);
-> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-> +}
-> +
-> +static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
-> +			     size_t count, loff_t *ppos)
-> +{
-> +	struct ath_softc *sc = file->private_data;
-> +	struct ath_hw *ah = sc->sc_ah;
-> +	unsigned long regval;
-> +	char buf[32];
-> +	ssize_t len;
-> +
-> +	len = min(count, sizeof(buf) - 1);
-> +	if (copy_from_user(buf, user_buf, len))
-> +		return -EINVAL;
-> +
-> +	buf[len] = '\0';
-> +	if (strict_strtoul(buf, 0,&regval))
-> +		return -EINVAL;
-> +
-> +	REG_WRITE_D(ah, sc->debug.regidx, regval);
-> +	return count;
-> +}
-> +
-> +static const struct file_operations fops_regval = {
-> +	.read = read_file_regval,
-> +	.write = write_file_regval,
-> +	.open = ath9k_debugfs_open,
-> +	.owner = THIS_MODULE
-> +};
-> +
->   int ath9k_init_debug(struct ath_hw *ah)
->   {
->   	struct ath_common *common = ath9k_hw_common(ah);
-> @@ -846,6 +926,15 @@ int ath9k_init_debug(struct ath_hw *ah)
->   			sc->debug.debugfs_phy, sc,&fops_tx_chainmask))
->   		goto err;
->
-> +	if (!debugfs_create_file("regidx", S_IRUSR | S_IWUSR,
-> +			sc->debug.debugfs_phy, sc,&fops_regidx))
-> +		goto err;
-> +
-> +	if (!debugfs_create_file("regval", S_IRUSR | S_IWUSR,
-> +			sc->debug.debugfs_phy, sc,&fops_regval))
-> +		goto err;
-> +
-> +	sc->debug.regidx = 0;
->   	return 0;
->   err:
->   	ath9k_exit_debug(ah);
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-> index 7314360..5147b87 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.h
-> +++ b/drivers/net/wireless/ath/ath9k/debug.h
-> @@ -153,6 +153,7 @@ struct ath_stats {
->
->   struct ath9k_debug {
->   	struct dentry *debugfs_phy;
-> +	u32 regidx;
->   	struct ath_stats stats;
->   };
->
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
