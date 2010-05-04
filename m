@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48547 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611Ab0EZNaM (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:49388 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755245Ab0EDTpq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 09:30:12 -0400
-Date: Wed, 26 May 2010 09:28:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Gordon, Charles" <Charles.Gordon@digi.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Is there a bug in 2.6.29-rc8 support of Ad-Hoc mode?
-Message-ID: <20100526132811.GA5823@tuxdriver.com>
-References: <8DCC153EAFE67A4B990A840E829F704B017C658D5E6C@mtk-sms-exch01.digi.com>
+	Tue, 4 May 2010 15:45:46 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 12:45:46 -0700
+Date: Tue, 4 May 2010 12:45:44 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: fix another source of corrupt frames
+Message-ID: <20100504194544.GE2624@tux>
+References: <4BDFD3C1.4000209@openwrt.org>
+ <u2q43e72e891005041109i5106ba24ma7345c4f4c4fde21@mail.gmail.com>
+ <20100504183613.GC21043@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <8DCC153EAFE67A4B990A840E829F704B017C658D5E6C@mtk-sms-exch01.digi.com>
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <20100504183613.GC21043@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 26, 2010 at 06:57:31AM -0500, Gordon, Charles wrote:
-> I am trying to get a driver I'm developing to work with Ad-Hoc mode on
-> Linux 2.6.29-rc8.  I am running into a problem.  I have traced it down
-> to the routine ieee80211_scan_work.  I use the following commands to
-> start Ad-Hoc mode:
+On Tue, May 04, 2010 at 11:36:13AM -0700, John W. Linville wrote:
+> On Tue, May 04, 2010 at 11:09:32AM -0700, Luis R. Rodriguez wrote:
+> > On Tue, May 4, 2010 at 12:58 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> > > Atheros hardware supports receiving frames that span multiple
+> > > descriptors and buffers. In this case, the rx status of every
+> > > descriptor except for the last one is invalid and may contain random
+> > > data. Because the driver does not support this, it needs to drop such
+> > > frames.
+> > >
+> > > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> > > ---
+> > > --- a/drivers/net/wireless/ath/ath9k/common.c
+> > > +++ b/drivers/net/wireless/ath/ath9k/common.c
+> > > @@ -57,13 +57,19 @@ static bool ath9k_rx_accept(struct ath_c
+> > >         * rs_more indicates chained descriptors which can be used
+> > >         * to link buffers together for a sort of scatter-gather
+> > >         * operation.
+> > > -        *
+> > > +        * reject the frame, we don't support scatter-gather yet and
+> > > +        * the frame is probably corrupt anyway
+> > > +        */
+> > > +       if (rx_stats->rs_more)
+> > > +               return false;
+> > 
+> > Actually this is required by ath9k_htc, it does process these, but
+> > ath9k doesn't so this could be done within ath9k itself.
 > 
-> ifconfig wlan0 down
-> iwconfig wlan0 mode Ad-Hoc essid "AdHocID"
-> ifconfig wlan0 up
+> I'm sorry, that is a bit unclear to me.  Are you NAKing the patch?
 
-FWIW, this should probably look more like the following:
+Yes, I am NAK'ing it, I should have been clearer about that, sorry.
+The reason is that ath9k_htc *depends* on rs_more stuff because the
+USB frames it receives *are* split up and to RX them we decouple
+them. With this patch you'd break ath9k_htc considerably.
 
-	ifconfig wlan0 down
-	iwconfig wlan0 mode Ad-Hoc
-	ifconfig wlan0 up
-	iwconfig wlan0 essid "AdHocID"
+> Or saying that the patch is fine but another patch is needed on top?
 
-If that doesn't work, you may be experiencing some bug.  But...
+My suggestion is that this change can be made but only on the
+ath9k RX path, instead of the comon path so a separate patch would
+be needed.
 
-> Can someone either confirm that this is a known problem with
-> 2.6.28-rc8, or tell me what my driver could be doing to cause this
-> problem?
-
-This kernel is ancient, even if you meant 2.6.29-rc8 like you
-said originally.  And it is not even an actual release version
-(e.g. 2.6.29).  I could be wrong, but I doubt there will be much
-interest among the people here in working on the internals of such
-an old kernel.  Is there some reason you can't try something newer?
-2.6.34 was just released...
-
-Good luck!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
