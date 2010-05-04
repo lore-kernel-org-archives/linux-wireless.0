@@ -1,86 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51538 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755961Ab0EEHoN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 May 2010 03:44:13 -0400
-Subject: [PATCH] mac80211: fix BSS info reconfiguration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 05 May 2010 09:44:02 +0200
-Message-ID: <1273045442.3728.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:47276 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751472Ab0EDH7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 03:59:06 -0400
+Message-ID: <4BDFD3C1.4000209@openwrt.org>
+Date: Tue, 04 May 2010 09:58:57 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: fix another source of corrupt frames
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When reconfiguring an interface due to a previous
-hardware restart, mac80211 will currently include
-the new IBSS flag on non-IBSS interfaces which may
-confuse drivers.
+Atheros hardware supports receiving frames that span multiple
+descriptors and buffers. In this case, the rx status of every
+descriptor except for the last one is invalid and may contain random
+data. Because the driver does not support this, it needs to drop such
+frames.
 
-Instead of doing the ~0 trick, simply spell out
-which things are going to be reconfigured.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/net/mac80211.h |    2 ++
- net/mac80211/util.c    |   25 ++++++++++++++++++++-----
- 2 files changed, 22 insertions(+), 5 deletions(-)
-
---- wireless-testing.orig/include/net/mac80211.h	2010-05-01 08:47:54.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2010-05-05 09:41:46.000000000 +0200
-@@ -160,6 +160,8 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
- 	BSS_CHANGED_CQM			= 1<<10,
- 	BSS_CHANGED_IBSS		= 1<<11,
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -57,13 +57,19 @@ static bool ath9k_rx_accept(struct ath_c
+ 	 * rs_more indicates chained descriptors which can be used
+ 	 * to link buffers together for a sort of scatter-gather
+ 	 * operation.
+-	 *
++	 * reject the frame, we don't support scatter-gather yet and
++	 * the frame is probably corrupt anyway
++	 */
++	if (rx_stats->rs_more)
++		return false;
 +
-+	/* when adding here, make sure to change ieee80211_reconfig */
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/util.c	2010-04-09 11:46:46.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2010-05-05 09:41:46.000000000 +0200
-@@ -1160,18 +1160,33 @@ int ieee80211_reconfig(struct ieee80211_
- 
- 	/* Finally also reconfigure all the BSS information */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		u32 changed = ~0;
-+		u32 changed;
-+
- 		if (!ieee80211_sdata_running(sdata))
- 			continue;
-+
-+		/* common change flags for all interface types */
-+		changed = BSS_CHANGED_ERP_CTS_PROT |
-+			  BSS_CHANGED_ERP_PREAMBLE |
-+			  BSS_CHANGED_ERP_SLOT |
-+			  BSS_CHANGED_HT |
-+			  BSS_CHANGED_BASIC_RATES |
-+			  BSS_CHANGED_BEACON_INT |
-+			  BSS_CHANGED_BSSID |
-+			  BSS_CHANGED_CQM;
-+
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
--			/* disable beacon change bits */
--			changed &= ~(BSS_CHANGED_BEACON |
--				     BSS_CHANGED_BEACON_ENABLED);
--			/* fall through */
-+			changed |= BSS_CHANGED_ASSOC;
-+			ieee80211_bss_info_change_notify(sdata, changed);
-+			break;
- 		case NL80211_IFTYPE_ADHOC:
-+			changed |= BSS_CHANGED_IBSS;
-+			/* fall through */
- 		case NL80211_IFTYPE_AP:
- 		case NL80211_IFTYPE_MESH_POINT:
-+			changed |= BSS_CHANGED_BEACON |
-+				   BSS_CHANGED_BEACON_ENABLED;
- 			ieee80211_bss_info_change_notify(sdata, changed);
- 			break;
- 		case NL80211_IFTYPE_WDS:
-
++	/*
+ 	 * The rx_stats->rs_status will not be set until the end of the
+ 	 * chained descriptors so it can be ignored if rs_more is set. The
+ 	 * rs_more will be false at the last element of the chained
+ 	 * descriptors.
+ 	 */
+-	if (!rx_stats->rs_more && rx_stats->rs_status != 0) {
++	if (rx_stats->rs_status != 0) {
+ 		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
+ 			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
+ 		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
 
