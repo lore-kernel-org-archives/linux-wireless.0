@@ -1,152 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:4174 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752237Ab0ESP0Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 11:26:16 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 7/7] rt2x00: Fix HT40 operation in rt2800.
-Date: Wed, 19 May 2010 17:26:09 +0200
-Message-Id: <1274282769-19244-8-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
-References: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:24258 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933766Ab0EDVLw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 17:11:52 -0400
+Subject: Re: A file to print the release of loaded compat-wireless stuff
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <x2q43e72e891005041344gb9945d73p3d97e648fd13aa85@mail.gmail.com>
+References: <x2q43e72e891005041344gb9945d73p3d97e648fd13aa85@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 04 May 2010 17:11:49 -0400
+Message-Id: <1273007509.12618.1.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Closer inspection of the legacy Ralink driver reveals that in case of HT40+
-or HT40- we must adjust the frequency settings that we program to the device.
-Implement the same adjustment in the rt2x00 code.
+On Tue, 2010-05-04 at 13:44 -0700, Luis R. Rodriguez wrote:
+> It seems there is a reasonable need to find out what version of
+> compat-wireless you have running. This will be a dated thing when
+> based on linux-next but more importantly it will contain the 2.6.3x.y
+> release the release was based on for the stable releases. Any ideas of
+> what filesystem API to use for this, I was thinking maybe a simple
+> sysfs entry for the compat module. Thoughts, preferences?
 
-With this HT40 seems to work for all devices supported by rt2800pci and
-rt2800usb.
+We could use a read-only parameter of the compat module.  Then the
+version would be in /sys/module/compat/parameters/version
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c    |    5 +----
- drivers/net/wireless/rt2x00/rt2x00config.c |   12 ++++++++----
- drivers/net/wireless/rt2x00/rt2x00ht.c     |   27 +++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00lib.h    |    9 +++++++++
- 4 files changed, 45 insertions(+), 8 deletions(-)
+Module parameters are visible in sysfs even if the code is compiled into
+the kernel.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 8ffbc3c..15322f0 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2530,11 +2530,8 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	else
- 		spec->ht.ht_supported = false;
- 
--	/*
--	 * Don't set IEEE80211_HT_CAP_SUP_WIDTH_20_40 for now as it causes
--	 * reception problems with HT40 capable 11n APs
--	 */
- 	spec->ht.cap =
-+	    IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
- 	    IEEE80211_HT_CAP_GRN_FLD |
- 	    IEEE80211_HT_CAP_SGI_20 |
- 	    IEEE80211_HT_CAP_SGI_40 |
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 098315a..8dbd634 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -170,23 +170,27 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 		      unsigned int ieee80211_flags)
- {
- 	struct rt2x00lib_conf libconf;
-+	u16 hw_value;
- 
- 	memset(&libconf, 0, sizeof(libconf));
- 
- 	libconf.conf = conf;
- 
- 	if (ieee80211_flags & IEEE80211_CONF_CHANGE_CHANNEL) {
--		if (conf_is_ht40(conf))
-+		if (conf_is_ht40(conf)) {
- 			__set_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
--		else
-+			hw_value = rt2x00ht_center_channel(rt2x00dev, conf);
-+		} else {
- 			__clear_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
-+			hw_value = conf->channel->hw_value;
-+		}
- 
- 		memcpy(&libconf.rf,
--		       &rt2x00dev->spec.channels[conf->channel->hw_value],
-+		       &rt2x00dev->spec.channels[hw_value],
- 		       sizeof(libconf.rf));
- 
- 		memcpy(&libconf.channel,
--		       &rt2x00dev->spec.channels_info[conf->channel->hw_value],
-+		       &rt2x00dev->spec.channels_info[hw_value],
- 		       sizeof(libconf.channel));
- 	}
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
-index 5a40760..588c766 100644
---- a/drivers/net/wireless/rt2x00/rt2x00ht.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
-@@ -84,3 +84,30 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 	else
- 		txdesc->txop = TXOP_HTTXOP;
- }
-+
-+u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
-+			    struct ieee80211_conf *conf)
-+{
-+	struct hw_mode_spec *spec = &rt2x00dev->spec;
-+	int center_channel;
-+	u16 i;
-+
-+	/*
-+	 * Initialize center channel to current channel.
-+	 */
-+	center_channel = spec->channels[conf->channel->hw_value].channel;
-+
-+	/*
-+	 * Adjust center channel to HT40+ and HT40- operation.
-+	 */
-+	if (conf_is_ht40_plus(conf))
-+		center_channel += 2;
-+	else if (conf_is_ht40_minus(conf))
-+		center_channel -= (center_channel == 14) ? 1 : 2;
-+
-+	for (i = 0; i < spec->num_channels; i++)
-+		if (spec->channels[i].channel == center_channel)
-+			return i;
-+
-+	BUG();
-+}
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 822affc..ed27de1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -367,12 +367,21 @@ static inline void rt2x00crypto_rx_insert_iv(struct sk_buff *skb,
- void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc,
- 				   const struct rt2x00_rate *hwrate);
-+
-+u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
-+			    struct ieee80211_conf *conf);
- #else
- static inline void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 						 struct txentry_desc *txdesc,
- 						 const struct rt2x00_rate *hwrate)
- {
- }
-+
-+static inline u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
-+					  struct ieee80211_conf *conf)
-+{
-+	return conf->channel->hw_value;
-+}
- #endif /* CONFIG_RT2X00_LIB_HT */
- 
- /*
 -- 
-1.7.1
-
+Regards,
+Pavel Roskin
