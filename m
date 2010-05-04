@@ -1,42 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f183.google.com ([209.85.221.183]:51222 "EHLO
-	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702Ab0EHQXf (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:51323 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752112Ab0EDUoq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 May 2010 12:23:35 -0400
-Received: by mail-qy0-f183.google.com with SMTP id 13so3446177qyk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 08 May 2010 09:23:34 -0700 (PDT)
-Date: Sat, 8 May 2010 18:23:20 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Vivek Natarajan <vnatarajan@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [patch 4/9] ath9k/htc_drv_main: null dereference typo
-Message-ID: <20100508162320.GP27064@bicker>
+	Tue, 4 May 2010 16:44:46 -0400
+Received: by pxi5 with SMTP id 5so1124623pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 13:44:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 4 May 2010 13:44:26 -0700
+Message-ID: <x2q43e72e891005041344gb9945d73p3d97e648fd13aa85@mail.gmail.com>
+Subject: A file to print the release of loaded compat-wireless stuff
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a stray null dereference.  We initialize "ista" properly later on.
+It seems there is a reasonable need to find out what version of
+compat-wireless you have running. This will be a dated thing when
+based on linux-next but more importantly it will contain the 2.6.3x.y
+release the release was based on for the stable releases. Any ideas of
+what filesystem API to use for this, I was thinking maybe a simple
+sysfs entry for the compat module. Thoughts, preferences?
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index f503586..e75db06 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -461,7 +461,7 @@ static int ath9k_htc_aggr_oper(struct ath9k_htc_priv *priv,
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath9k_htc_target_aggr aggr;
- 	struct ieee80211_sta *sta = NULL;
--	struct ath9k_htc_sta *ista = (struct ath9k_htc_sta *) sta->drv_priv;
-+	struct ath9k_htc_sta *ista;
- 	int ret = 0;
- 	u8 cmd_rsp;
- 
+  Luis
