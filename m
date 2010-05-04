@@ -1,146 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:43432 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250Ab0ENCOP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40079 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756882Ab0EDHxB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 22:14:15 -0400
-Message-ID: <4BECB1F2.5050900@gmail.com>
-Date: Thu, 13 May 2010 19:14:10 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-References: <4BEC7A84.3010503@gmail.com> <AANLkTinKoMxdkPYQA_AblpByL6zAiAP5hv2M3Jn2R3hM@mail.gmail.com> <4BEC9E6B.30809@gmail.com> <201005141008.20667.br1@einfach.org> <4BECA3AE.4070607@gmail.com> <20100514012314.GA2170@tux> <4BECA6AC.9060609@gmail.com> <20100514014311.GC2170@tux> <20100514014553.GD2170@tux>
-In-Reply-To: <20100514014553.GD2170@tux>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 4 May 2010 03:53:01 -0400
+Subject: Re: [RFC] mac80211: radiotap vendor data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Joshua Zhao <Joshua.Zhao@atheros.com>,
+	Matt Smith <Matt.Smith@atheros.com>
+In-Reply-To: <o2k43e72e891005031516g31c22cdbt3ee5d766e63b3f2c@mail.gmail.com>
+References: <1272734031.8461.0.camel@jlt3.sipsolutions.net>
+	 <o2k43e72e891005031516g31c22cdbt3ee5d766e63b3f2c@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 04 May 2010 09:52:56 +0200
+Message-ID: <1272959576.3673.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/10 18:45, Luis R. Rodriguez wrote:
-> On Thu, May 13, 2010 at 06:43:11PM -0700, Luis Rodriguez wrote:
->> On Thu, May 13, 2010 at 06:26:04PM -0700, Justin P. Mattock wrote:
->>> On 05/13/10 18:23, Luis R. Rodriguez wrote:
->>>> On Thu, May 13, 2010 at 06:13:18PM -0700, Justin P. Mattock wrote:
->>>>> On 05/13/10 18:08, Bruno Randolf wrote:
->>>>>> On Friday 14 May 2010 09:50:51 Justin P. Mattock wrote:
->>>>>>> On 05/13/10 17:28, Luis R. Rodriguez wrote:
->>>>>>>> On Thu, May 13, 2010 at 5:21 PM, Justin P. Mattock
->>>>>>>>
->>>>>>>> <justinmattock@gmail.com>     wrote:
->>>>>>>>> On 05/13/10 16:01, Luis R. Rodriguez wrote:
->>>>>>>>>> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
->>>>>>>>>>
->>>>>>>>>> <justinmattock@gmail.com>       wrote:
->>>>>>>>>>> not sure what this is, but while at a convention
->>>>>>>>>>> I was trying to access the internet and(below is
->>>>>>>>>>> full dmesg) this showed up.
->>>>>>>>>>>
->>>>>>>>>>> After receiving this, I sat and tried to re-create
->>>>>>>>>>> my steps to reproduce but had no luck(was even going
->>>>>>>>>>> todo a bisect n the spot if I could re-create).
->>>>>>>>>>
->>>>>>>>>> OK this stuff is hard to reproduce it seems.. you have an Atheros
->>>>>>>>>> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
->>>>>>>>>> to get the poison stuff? I am just surprised we haven't seen it
->>>>>>>>>> ourselves yet. Let me make sure all of us get this kconfig option
->>>>>>>>>> enabled.
->>>>>>>>>>
->>>>>>>>>>       Luis
->>>>>>>>>
->>>>>>>>> CONFIG_ATH_COMMON=m
->>>>>>>>> # CONFIG_ATH_DEBUG is not set
->>>>>>>>> CONFIG_ATH5K=m
->>>>>>>>> # CONFIG_ATH5K_DEBUG is not set
->>>>>>>>> CONFIG_ATH9K_HW=m
->>>>>>>>> CONFIG_ATH9K_COMMON=m
->>>>>>>>> CONFIG_ATH9K=m
->>>>>>>>> # CONFIG_ATH9K_DEBUGFS is not set
->>>>>>>>>
->>>>>>>>> if you need my .config let me know.
->>>>>>>>> (I can try again reproducing, but man
->>>>>>>>> just doesn't easily fire off).
->>>>>>>>
->>>>>>>> Oh I mean the config options to enable the poison rant.
->>>>>>>>
->>>>>>>>       Luis
->>>>>>>
->>>>>>> shoot.. not sure how to grep for the right info
->>>>>>> in the .config for you, heres what grepping for COFIG_DEBUG
->>>>>>> looks like:
->>>>>>> CONFIG_DEBUG_FS=y
->>>>>>> CONFIG_DEBUG_KERNEL=y
->>>>>>> CONFIG_DEBUG_RT_MUTEXES=y
->>>>>>> CONFIG_DEBUG_PI_LIST=y
->>>>>>> CONFIG_DEBUG_SPINLOCK=y
->>>>>>> CONFIG_DEBUG_MUTEXES=y
->>>>>>> CONFIG_DEBUG_BUGVERBOSE=y
->>>>>>> CONFIG_DEBUG_MEMORY_INIT=y
->>>>>>> CONFIG_DEBUG_STACKOVERFLOW=y
->>>>>>
->>>>>> oh, this reminds me of a similar report we had for ath5k:
->>>>>>
->>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=15861
->>>>>>
->>>>>> the subject on this mailing list was "ath5k misbehaving affecting other kernel
->>>>>> parts unrelated?"
->>>>>>
->>>>>> bruno
->>>>>>
->>>>>
->>>>> Could be.. From what I remember
->>>>> all I was doing was switching from
->>>>> one wireless network to another
->>>>> (then opening firefox to sign my life away).
->>>>
->>>> Were you using network-manager? Or the supplicant manually?
->>>>
->>>>     Luis
->>>>
->>>
->>> I've got wicd(1.5.9) manager
->>> running over here.
->>
->> Can you try this:
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
->> index 8c79548..a372f2c 100644
->> --- a/drivers/net/wireless/ath/ath9k/init.c
->> +++ b/drivers/net/wireless/ath/ath9k/init.c
->> @@ -599,6 +599,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
->>   	 */
->>   	ath_read_cachesize(common,&csz);
->>   	common->cachelsz = csz<<  2; /* convert to bytes */
->> +	printk("ATH9K: cachelsz: %d\n", common->cachelsz);
->>
->>   	/* Initializes the hardware for all supported chipsets */
->>   	ret = ath9k_hw_init(ah);
->>
->>
->> Would like to see what you get there on dmesg upon load.
->
-> Actually don't bother I just realized you can get this with
-> ATH_DBG_CONFIG enabled.
->
->                  ath_print(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
->                                  common->cachelsz, common->rx_bufsize);
->
->
-> This is already in the code so just
->
-> modprobe ath9k debug=0x00000200
->
->    Luis
->
+On Mon, 2010-05-03 at 15:16 -0700, Luis R. Rodriguez wrote:
 
+> > Note: 11n shouldn't be done there, in case somebody
+> > got ideas!!
+> 
+> Well you mean 802.11n standard stuff, I take it, because there are
+> vendor 802.11n specific stuff.
 
-what I can try, is(not at the convention, on eth0
-at the moment), but when I get back to the convention
-center place I can try your patch as well as the
-modprobe option, to see if I can get any signs of
-a recreation(if so I'll bisect there).
+Well most of it should really be standardised :)
 
-Justin P. Mattock
+> > + * @vendor_radiotap_bitmap: radiotap vendor namespace presence bitmap
+> > + * @vendor_radiotap_len: radiotap vendor namespace length
+> > + * @vendor_radiotap_align: radiotap vendor namespace alignment. Note
+> > + *     that the actual data must be at the start of the SKB data
+> > + *     already.
+> 
+> I see your WARN_ON() on the alignment being set to 0 and set it to 1
+> then. Can you clarify a little more on this here. If there is no
+> strict alignment requirements why not just treat 0 as 1 then?
+
+Just want people to be aware that they need to think about alignment --
+zero being the default value for most things here due to kzalloc would
+mean accepting it people wouldn't think about allocations. And most of
+the time alignment should be required.
+
+> > @@ -190,11 +218,26 @@ ieee80211_add_rx_radiotap_header(struct
+> >        /* IEEE80211_RADIOTAP_RX_FLAGS */
+> >        /* ensure 2 byte alignment for the 2 byte field as required */
+> >        if ((pos - (u8 *)rthdr) & 1)
+> > -               pos++;
+> > +               *pos++ = 0;
+> 
+> Why is this needed though? We already memset(rthdr, 0, rtap_len); above.
+
+Yeah you're probably right, dunno.
+
+> > +       vendor_data = skb_push(skb, 4);
+> > +       rx_status.vendor_radiotap_len = 4;
+> > +       rx_status.vendor_radiotap_align = 4;
+> > +       rx_status.vendor_radiotap_oui[0] = 0xff;
+> > +       rx_status.vendor_radiotap_oui[1] = 0xff;
+> > +       rx_status.vendor_radiotap_oui[2] = 0xff;
+> > +       rx_status.vendor_radiotap_subns = 129;
+> > +       rx_status.vendor_radiotap_bitmap = 0x1;
+> > +
+> > +       *vendor_data++ = 1;
+> > +       *vendor_data++ = 2;
+> > +       *vendor_data++ = 3;
+> > +       *vendor_data++ = 4;
+> > +
+> 
+> Heh nice, now we just need a sample radiotap vendor extension parser example.
+
+http://git.sipsolutions.net/?p=radiotap.git;a=summary
+https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=4421
+
+johannes
+
