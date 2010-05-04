@@ -1,81 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3-g21.free.fr ([212.27.42.3]:44088 "EHLO smtp3-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757913Ab0EBQIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 May 2010 12:08:14 -0400
-From: Benoit Papillault <benoit.papillault@free.fr>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-Subject: [RFC] ibss: Added channel type in order to create HT IBSS
-Date: Sun,  2 May 2010 16:12:08 +0200
-Message-Id: <1272809528-11000-1-git-send-email-benoit.papillault@free.fr>
+Received: from he.sipsolutions.net ([78.46.109.217]:54105 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257Ab0EDI0x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 04:26:53 -0400
+Subject: Re: [PATCH] mac80211: Add HT IE to IBSS beacons and probe
+ responses.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1272955622-6987-3-git-send-email-benoit.papillault@free.fr>
+References: <1272955622-6987-1-git-send-email-benoit.papillault@free.fr>
+	 <1272955622-6987-2-git-send-email-benoit.papillault@free.fr>
+	 <1272955622-6987-3-git-send-email-benoit.papillault@free.fr>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 04 May 2010 10:26:48 +0200
+Message-ID: <1272961608.3673.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When joining an IBSS, the parameters can be used to create the IBSS. As
-such, we need to know if the user wants to create an HT IBSS or not.
-This is accomplish by passing the channel type (ie ht20, ht40- or
-ht40+). Default is to create a non HT IBSS.
 
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
----
-It is needed for upcoming patches regarding HT IBSS
- ibss.c |   27 ++++++++++++++++++++++++++-
- 1 files changed, 26 insertions(+), 1 deletions(-)
+> @@ -118,7 +119,10 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+>  		*pos++ = basic | (u8) (rate / 5);
+>  	}
+>  
+> -	/* Build IBSS probe response */
+> +	/* 
+> +	 * Build IBSS probe response template (also used for beacon template
+> +	 * in ieee80211_beacon_get_tim())
+> +	 */
 
-diff --git a/ibss.c b/ibss.c
-index 4715ac8..4003a38 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -18,6 +18,15 @@ static int join_ibss(struct nl80211_state *state,
- {
- 	char *end;
- 	unsigned char abssid[6];
-+	int i;
-+	static const struct {
-+		const char *name;
-+		unsigned int val;
-+	} htmap[] = {
-+		{ .name = "HT20", .val = NL80211_CHAN_HT20, },
-+		{ .name = "HT40+", .val = NL80211_CHAN_HT40PLUS, },
-+		{ .name = "HT40-", .val = NL80211_CHAN_HT40MINUS, },
-+	};
- 
- 	if (argc < 2)
- 		return 1;
-@@ -52,6 +61,22 @@ static int join_ibss(struct nl80211_state *state,
- 	if (!argc)
- 		return 0;
- 
-+	if (argc) {
-+		for (i = 0; i < ARRAY_SIZE(htmap); i++) {
-+			if (strcasecmp(htmap[i].name, argv[1]) == 0) {
-+				NLA_PUT_U32(msg,
-+					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+					    htmap[i].val);
-+				argv++;
-+				argc--;
-+				break;
-+			}
-+		}
-+	}
-+
-+	if (!argc)
-+		return 0;
-+
- 	if (strcmp(*argv, "key") != 0 && strcmp(*argv, "keys") != 0)
- 		return 1;
- 
-@@ -73,7 +98,7 @@ static int leave_ibss(struct nl80211_state *state,
- COMMAND(ibss, leave, NULL,
- 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
- 	"Leave the current IBSS cell.");
--COMMAND(ibss, join, "<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [key d:0:abcde]",
-+COMMAND(ibss, join, "<SSID> <freq in MHz> [HT20|HT40+|HT40-] [fixed-freq] [<fixed bssid>] [key d:0:abcde]",
- 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
- 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
- 	"it on the given frequency. When fixed frequency is requested, don't\n"
--- 
-1.7.0.4
+That change is wrong -- no way beacon code can call into IBSS code.
+
+I think you meant to say "I need to create a common helper function that
+I call here and in the beacon code."
+
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -967,7 +967,7 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+>  
+>  	if (sband->ht_cap.ht_supported) {
+>  		u16 cap = sband->ht_cap.cap;
+> -		__le16 tmp;
+> +		struct ieee80211_ht_cap ht_cap;
+>  
+>  		if (ieee80211_disable_40mhz_24ghz &&
+>  		    sband->band == IEEE80211_BAND_2GHZ) {
+> @@ -975,18 +975,19 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+>  			cap &= ~IEEE80211_HT_CAP_SGI_40;
+>  		}
+>  
+> +		ht_cap.cap_info = cpu_to_le16(cap);
+> +		ht_cap.ampdu_params_info = sband->ht_cap.ampdu_factor |
+> +			(sband->ht_cap.ampdu_density <<
+> +			 IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+> +		ht_cap.mcs = sband->ht_cap.mcs;
+> +		ht_cap.extended_ht_cap_info = cpu_to_le16(0);
+> +		ht_cap.tx_BF_cap_info = cpu_to_le32(0);
+> +		ht_cap.antenna_selection_info = 0;
+> +
+>  		*pos++ = WLAN_EID_HT_CAPABILITY;
+>  		*pos++ = sizeof(struct ieee80211_ht_cap);
+> -		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
+> -		tmp = cpu_to_le16(cap);
+> -		memcpy(pos, &tmp, sizeof(u16));
+> -		pos += sizeof(u16);
+> -		*pos++ = sband->ht_cap.ampdu_factor |
+> -			 (sband->ht_cap.ampdu_density <<
+> -				IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+> -		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
+> -		pos += sizeof(sband->ht_cap.mcs);
+> -		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
+> +		memcpy(pos, &ht_cap, sizeof(struct ieee80211_ht_cap));
+> +		pos += sizeof(struct ieee80211_ht_cap);
+
+And this is an unrelated change that doesn't belong into this patch at
+all.
+
+johannes
 
