@@ -1,72 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3-g21.free.fr ([212.27.42.3]:40099 "EHLO smtp3-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754696Ab0EDGwb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 02:52:31 -0400
-From: Benoit Papillault <benoit.papillault@free.fr>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-Subject: [PATCH] cfg80211: Parse channel_type in NL80211_CMD_JOIN_IBSS
-Date: Tue,  4 May 2010 08:47:00 +0200
-Message-Id: <1272955622-6987-1-git-send-email-benoit.papillault@free.fr>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:58373 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754465Ab0EDVy7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 17:54:59 -0400
+Received: by wye20 with SMTP id 20so2797546wye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 14:54:56 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net, linville@tuxdriver.com,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: orinoco_usb: support wpa
+Date: Tue,  4 May 2010 22:54:40 +0100
+Message-Id: <1273010082-15871-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This field is filled by iw and parse by cfg80211 before being sent to
-mac80211 for instance. This information is needed to properly configure
-an HT IBSS.
+The following patches enable WPA for the orinoco_usb cards. The first
+patch contains all the code required to use WPA. The second patch
+neatens things up but doesn't work so well, since it relies on having
+spare tailroom in the SKB to store the MIC.
 
-It requires a patch to iw to fill this field.
+In order to use WPA with these cards, the following is required:
+ * Agere firmware 9.42 or better (as with other orinoco cards)
+ * compatible bridge firmware
 
-Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+The bridge firmware currently extracted by the orinoco-fwutils scripts
+is not compatible with WPA. Instead you'll need to find the v7.82
+Agere driver containing the WPA-enabled USB driver (containing the
+appropriate bridge firmware and Agere fw 9.42). I'm not sure if there
+is still a reliable source on the net. Further details about
+extracting the firmware below.
+
+John: 1st patch should be OK for w-t if there are no objections. I'm
+expecting to redo or drop the second, depending on feedback.
+
+
+
+Regards,
+
+Dave.
+
+The bridge firmware is in WLAGS51.SYS. The firmware will be 6976 bytes
+long, starting with the bytes 0x02 0x10 at an offset around 0x028480.
+I used the following command to extract it (you may need to modify
+this if you get something different from what I have):
+
+dd if=WLAGS51.SYS of=orinoco_ezusb_fw skip=10312 count=436 bs=16
+
 ---
- include/net/cfg80211.h |    1 +
- net/wireless/nl80211.c |   12 ++++++++++++
- 2 files changed, 13 insertions(+), 0 deletions(-)
+David Kilroy (2):
+  orinoco: refactor xmit path
+  orinoco: use SKB tail for MIC
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7d10c01..93e5558 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -806,6 +806,7 @@ struct cfg80211_ibss_params {
- 	u8 *ssid;
- 	u8 *bssid;
- 	struct ieee80211_channel *channel;
-+	enum nl80211_channel_type channel_type;
- 	u8 *ie;
- 	u8 ssid_len, ie_len;
- 	u16 beacon_interval;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 01da83d..8da9823 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3792,6 +3792,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_ibss_params ibss;
- 	struct wiphy *wiphy;
- 	struct cfg80211_cached_keys *connkeys = NULL;
-+	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
- 	int err;
- 
- 	memset(&ibss, 0, sizeof(ibss));
-@@ -3813,6 +3814,17 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
-+		channel_type = nla_get_u32(
-+			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
-+		if (channel_type != NL80211_CHAN_NO_HT &&
-+		    channel_type != NL80211_CHAN_HT20 &&
-+		    channel_type != NL80211_CHAN_HT40PLUS &&
-+		    channel_type != NL80211_CHAN_HT40MINUS)
-+			return -EINVAL;
-+	}
-+	ibss.channel_type = channel_type;
-+
- 	rtnl_lock();
- 
- 	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
--- 
-1.5.6.5
+ drivers/net/wireless/orinoco/main.c        |  175 ++++++++++++++++------------
+ drivers/net/wireless/orinoco/orinoco.h     |    5 +
+ drivers/net/wireless/orinoco/orinoco_usb.c |   77 +++++--------
+ 3 files changed, 135 insertions(+), 122 deletions(-)
 
