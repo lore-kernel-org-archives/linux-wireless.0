@@ -1,106 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:48951 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:50485 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752132Ab0EKLdQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 07:33:16 -0400
+	id S1752888Ab0EDTzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 15:55:01 -0400
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 04:33:16 -0700
+	for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 12:55:01 -0700
+Date: Tue, 4 May 2010 12:55:00 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath9k: fix another source of corrupt frames
+Message-ID: <20100504195500.GH2624@tux>
+References: <4BDFD3C1.4000209@openwrt.org>
+ <u2q43e72e891005041109i5106ba24ma7345c4f4c4fde21@mail.gmail.com>
+ <4BE0773A.8090009@openwrt.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19433.16528.664690.921021@gargle.gargle.HOWL>
-Date: Tue, 11 May 2010 17:03:36 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <error27@gmail.com>
-Subject: [PATCH v2 5/5] ath9k_htc: Fix array overflow
-From: <Sujith.Manoharan@atheros.com>
+In-Reply-To: <4BE0773A.8090009@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use ENDPOINT_MAX instead of HST_ENDPOINT_MAX.
-This fixes a stack corruption issue.
+On Tue, May 04, 2010 at 12:36:26PM -0700, Felix Fietkau wrote:
+> On 2010-05-04 8:09 PM, Luis R. Rodriguez wrote:
+> > On Tue, May 4, 2010 at 12:58 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> >> Atheros hardware supports receiving frames that span multiple
+> >> descriptors and buffers. In this case, the rx status of every
+> >> descriptor except for the last one is invalid and may contain random
+> >> data. Because the driver does not support this, it needs to drop such
+> >> frames.
+> >>
+> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> >> ---
+> >> --- a/drivers/net/wireless/ath/ath9k/common.c
+> >> +++ b/drivers/net/wireless/ath/ath9k/common.c
+> >> @@ -57,13 +57,19 @@ static bool ath9k_rx_accept(struct ath_c
+> >>         * rs_more indicates chained descriptors which can be used
+> >>         * to link buffers together for a sort of scatter-gather
+> >>         * operation.
+> >> -        *
+> >> +        * reject the frame, we don't support scatter-gather yet and
+> >> +        * the frame is probably corrupt anyway
+> >> +        */
+> >> +       if (rx_stats->rs_more)
+> >> +               return false;
+> > 
+> > Actually this is required by ath9k_htc, it does process these, but
+> > ath9k doesn't so this could be done within ath9k itself.
+> I don't see any place in ath9k_htc that processes rs_more.
 
-This is based on a patch sent by Dan Carpenter <error27@gmail.com>.
+Odd, when I worked on it, I had to use this, let me check with today's
+code and get back to this thread.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_hst.c |   10 +++++-----
- drivers/net/wireless/ath/ath9k/htc_hst.h |    5 +----
- 2 files changed, 6 insertions(+), 9 deletions(-)
+> And even if
+> it did, processing the rx status of a frame that has more descriptors
+> chained after it would be wrong, since the rx status is only valid for
+> the last frame of the descriptor chain.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index e86e172..064397f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -39,7 +39,7 @@ static struct htc_endpoint *get_next_avail_ep(struct htc_endpoint *endpoint)
- {
- 	enum htc_endpoint_id avail_epid;
- 
--	for (avail_epid = ENDPOINT_MAX; avail_epid > ENDPOINT0; avail_epid--)
-+	for (avail_epid = (ENDPOINT_MAX - 1); avail_epid > ENDPOINT0; avail_epid--)
- 		if (endpoint[avail_epid].service_id == 0)
- 			return &endpoint[avail_epid];
- 	return NULL;
-@@ -117,7 +117,7 @@ static void htc_process_conn_rsp(struct htc_target *target,
- 		max_msglen = be16_to_cpu(svc_rspmsg->max_msg_len);
- 		endpoint = &target->endpoint[epid];
- 
--		for (tepid = ENDPOINT_MAX; tepid > ENDPOINT0; tepid--) {
-+		for (tepid = (ENDPOINT_MAX - 1); tepid > ENDPOINT0; tepid--) {
- 			tmp_endpoint = &target->endpoint[tepid];
- 			if (tmp_endpoint->service_id == service_id) {
- 				tmp_endpoint->service_id = 0;
-@@ -125,7 +125,7 @@ static void htc_process_conn_rsp(struct htc_target *target,
- 			}
- 		}
- 
--		if (!tmp_endpoint)
-+		if (tepid == ENDPOINT0)
- 			return;
- 
- 		endpoint->service_id = service_id;
-@@ -298,7 +298,7 @@ void htc_stop(struct htc_target *target)
- 	enum htc_endpoint_id epid;
- 	struct htc_endpoint *endpoint;
- 
--	for (epid = ENDPOINT0; epid <= ENDPOINT_MAX; epid++) {
-+	for (epid = ENDPOINT0; epid < ENDPOINT_MAX; epid++) {
- 		endpoint = &target->endpoint[epid];
- 		if (endpoint->service_id != 0)
- 			target->hif->stop(target->hif_dev, endpoint->ul_pipeid);
-@@ -310,7 +310,7 @@ void htc_start(struct htc_target *target)
- 	enum htc_endpoint_id epid;
- 	struct htc_endpoint *endpoint;
- 
--	for (epid = ENDPOINT0; epid <= ENDPOINT_MAX; epid++) {
-+	for (epid = ENDPOINT0; epid < ENDPOINT_MAX; epid++) {
- 		endpoint = &target->endpoint[epid];
- 		if (endpoint->service_id != 0)
- 			target->hif->start(target->hif_dev,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index 4f1cdb0..faba679 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -123,9 +123,6 @@ struct htc_endpoint {
- #define HTC_CONTROL_BUFFER_SIZE	\
- 	(HTC_MAX_CONTROL_MESSAGE_LENGTH + sizeof(struct htc_frame_hdr))
- 
--#define NUM_CONTROL_BUFFERS 8
--#define HST_ENDPOINT_MAX 8
--
- struct htc_control_buf {
- 	struct htc_packet htc_pkt;
- 	u8 buf[HTC_CONTROL_BUFFER_SIZE];
-@@ -139,7 +136,7 @@ struct htc_target {
- 	struct ath9k_htc_priv *drv_priv;
- 	struct device *dev;
- 	struct ath9k_htc_hif *hif;
--	struct htc_endpoint endpoint[HST_ENDPOINT_MAX];
-+	struct htc_endpoint endpoint[ENDPOINT_MAX];
- 	struct completion target_wait;
- 	struct completion cmd_wait;
- 	struct list_head list;
--- 
-1.7.1
+This is true.
 
+> I think my patch would work fine for ath9k_htc as well.
+
+We should test just to be sure. Would hate to request for a revert
+for something we could have just prevented with proper testing/review.
+I can test this in a bit I think.
+
+  Luis
