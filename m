@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:59682 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751705Ab0EKE2D (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:38211 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759678Ab0EDSO1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 00:28:03 -0400
-Subject: Re: [patch 8/9] wl1271: fix notifier interface supported test
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Dan Carpenter <error27@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Oikarinen Juuso (Nokia-D/Tampere)" <juuso.oikarinen@nokia.com>,
-	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
-	<ext-teemu.3.paasikivi@nokia.com>, Kalle Valo <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100508162551.GT27064@bicker>
-References: <20100508162551.GT27064@bicker>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 May 2010 07:27:42 +0300
-Message-ID: <1273552062.2021.26.camel@powerslave>
-Mime-Version: 1.0
+	Tue, 4 May 2010 14:14:27 -0400
+Received: by pwi5 with SMTP id 5so380321pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 11:14:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1272955622-6987-2-git-send-email-benoit.papillault@free.fr>
+References: <1272955622-6987-1-git-send-email-benoit.papillault@free.fr>
+	<1272955622-6987-2-git-send-email-benoit.papillault@free.fr>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 4 May 2010 11:14:07 -0700
+Message-ID: <o2h43e72e891005041114sb04fbfcbl7e1f144826a02479@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: Check for channel HT capabilities in an IBSS
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-05-08 at 18:25 +0200, ext Dan Carpenter wrote:
-> The "(wl == NULL)" test doesn't work here because "wl" is always
-> non-null.  The intent of the code is to return if the interface
-> was not supported by the driver.
-> 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-> 
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-> index b61cd10..55aa813 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-> @@ -852,7 +852,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
->  		if (wl == wl_temp)
->  			break;
->  	}
-> -	if (wl == NULL)
-> +	if (wl != wl_temp)
->  		return NOTIFY_DONE;
->  
->  	/* Get the interface IP address for the device. "ifa" will become
+On Mon, May 3, 2010 at 11:47 PM, Benoit Papillault
+<benoit.papillault@free.fr> wrote:
+> When configuring an HT IBSS, we need to check if the specified channel
+> is capable of ht40+, ht40- or ht20.
+>
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> ---
+>  net/wireless/nl80211.c |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 8da9823..0a82623 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -3858,11 +3858,11 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+>                ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+>        }
+>
+> -       ibss.channel = ieee80211_get_channel(wiphy,
+> -               nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
+> +       ibss.channel = rdev_freq_to_chan(rdev,
+> +               nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
+> +               channel_type);
+>        if (!ibss.channel ||
+> -           ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+> -           ibss.channel->flags & IEEE80211_CHAN_DISABLED) {
+> +           ibss.channel->flags & IEEE80211_CHAN_NO_IBSS) {
+>                err = -EINVAL;
 
-Thanks for the fix.
+Why is the disabled channel check being removed here?
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
-
-
--- 
-Cheers,
-Luca.
-
-
+  Luis
