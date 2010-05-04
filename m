@@ -1,79 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:35032 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755675Ab0EVIZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 May 2010 04:25:50 -0400
-Date: Sat, 22 May 2010 10:25:44 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 23/27] drivers/net/wireless/prism54: Use memdup_user
-Message-ID: <Pine.LNX.4.64.1005221025200.13021@ask.diku.dk>
+Received: from web56808.mail.re3.yahoo.com ([66.196.97.82]:37046 "HELO
+	web56808.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932345Ab0EDOaL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 10:30:11 -0400
+Message-ID: <829828.92087.qm@web56808.mail.re3.yahoo.com>
+Date: Tue, 4 May 2010 07:30:10 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH] compat-wireless, unload rt2800usb 
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
 
-Use memdup_user when user data is immediately copied into the
-allocated region.
-
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression from,to,size,flag;
-position p;
-identifier l1,l2;
-@@
-
--  to = \(kmalloc@p\|kzalloc@p\)(size,flag);
-+  to = memdup_user(from,size);
-   if (
--      to==NULL
-+      IS_ERR(to)
-                 || ...) {
-   <+... when != goto l1;
--  -ENOMEM
-+  PTR_ERR(to)
-   ...+>
-   }
--  if (copy_from_user(to, from, size) != 0) {
--    <+... when != goto l2;
--    -EFAULT
--    ...+>
--  }
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Walter Goldens <goldenstranger@yahoo,com>
 ---
- drivers/net/wireless/prism54/isl_ioctl.c |   11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index 8d1190c..2a62c60 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -2751,14 +2751,9 @@ prism54_hostapd(struct net_device *ndev, struct iw_point *p)
-            p->length > PRISM2_HOSTAPD_MAX_BUF_SIZE || !p->pointer)
-                return -EINVAL;
- 
--       param = kmalloc(p->length, GFP_KERNEL);
--       if (param == NULL)
--               return -ENOMEM;
--
--       if (copy_from_user(param, p->pointer, p->length)) {
--               kfree(param);
--               return -EFAULT;
--       }
-+	param = memdup_user(p->pointer, p->length);
-+	if (IS_ERR(param))
-+		return PTR_ERR(param);
- 
-        switch (param->cmd) {
-        case PRISM2_SET_ENCRYPTION:
+If rt2800usb is already loaded, calling scripts 'unload' and 'wlunload' from compat-wireless will complain of "FATAL: Module rt2xXXXX is in use." This patch will solve the unloading issue.
+
+--- a/scripts/wlunload.sh	2010-05-04 16:51:50.000000000 +0300
++++ b/scripts/wlunload.sh	2010-05-04 16:51:40.000000000 +0300
+@@ -17,6 +17,7 @@ MODULES="$MODULES ath9k ath5k ar9170usb 
+ MODULES="$MODULES p54pci p54usb p54spi p54common"
+ MODULES="$MODULES rt2400pci rt2500pci rt61pci"
+ MODULES="$MODULES rt2500usb rt73usb"
++MODULES="$MODULES rt2800usb rt2800lib"
+ MODULES="$MODULES rt2x00usb rt2x00lib"
+ MODULES="$MODULES rtl8180 rtl8187"
+ MODULES="$MODULES mwl8k mac80211_hwsim"
+--- a/scripts/unload.sh	2010-05-04 16:56:43.000000000 +0300
++++ b/scripts/unload.sh	2010-05-04 16:56:44.000000000 +0300
+@@ -17,6 +17,7 @@ MODULES="$MODULES ath9k ath5k ar9170usb 
+ MODULES="$MODULES p54pci p54usb p54spi p54common"
+ MODULES="$MODULES rt2400pci rt2500pci rt61pci"
+ MODULES="$MODULES rt2500usb rt73usb"
++MODULES="$MODULES rt2800usb rt2800lib"
+ MODULES="$MODULES rt2x00usb rt2x00lib"
+ MODULES="$MODULES rtl8180 rtl8187"
+ MODULES="$MODULES mwl8k mac80211_hwsim"
+
+
+
+      
