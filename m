@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:61735 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956Ab0EHAlY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 May 2010 20:41:24 -0400
-Received: by bwz19 with SMTP id 19so868345bwz.21
-        for <linux-wireless@vger.kernel.org>; Fri, 07 May 2010 17:41:22 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: [RFC] minstrel_ht: refine STBC handling
-Date: Sat, 8 May 2010 02:41:16 +0200
-Cc: linux-wireless@vger.kernel.org
+Received: from mail.atheros.com ([12.36.123.2]:53271 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932267Ab0EDUUC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 16:20:02 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 13:20:02 -0700
+Date: Tue, 4 May 2010 13:20:00 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Javier Cardona <javier@cozybit.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Mathieu Olivari <Mathieu.Olivari@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211/ath9k: HT rates in Mesh
+Message-ID: <20100504202000.GK2624@tux>
+References: <93781E992CBA7843962D8B0E7D683F3C1116C465A6@SC1EXMB-MBCL.global.atheros.com>
+ <20100504194348.GD2624@tux>
+ <93781E992CBA7843962D8B0E7D683F3C1116C465EA@SC1EXMB-MBCL.global.atheros.com>
+ <20100504195211.GG2624@tux>
+ <1273004047.3673.26.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201005080241.16634.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1273004047.3673.26.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The maximum number of space time streams should be determined
-by the RX STBC bits in the HT capabilities of the HT peer.
+Adding Javier.
 
-Note 1:
-	The specification (I've 802.11n D8.0) also states	that the
-	Rx MCS Bitmask subfield of the Supported MCS Set field also
-	has some weight in the STBC stream equation.
-	But unless I'm totally wrong here, minstrel_ht already takes
-	that into account by filtering out unsupported MCS rates, right?
+On Tue, May 04, 2010 at 01:14:07PM -0700, Johannes Berg wrote:
+> On Tue, 2010-05-04 at 12:52 -0700, Luis R. Rodriguez wrote:
+> > Cc'ing linux-wireless.
+> > 
+> > On Tue, May 04, 2010 at 12:45:36PM -0700, Mathieu Olivari wrote:
+> > > BTW, do you know if HT is supported in Mesh ?
+> > 
+> > This would involve doing the same as for IBSS that Benoit
+> > is doing, someone with good will would have to do it. It should
+> > be fairly easy to review the patches implemented by Benoit to
+> > port to Mesh but there may be some unresolved things I may be
+> > overlooking.
+> 
+> Last I heard mesh wasn't supporting HT at all due to whatever issues?
+> Maybe protection or something?
 
-Note 2:
-	The "if" check looks suspicious, OUR hardware must be have the
-	IEEE80211_HT_CAP_TX_STBC capability and not the peer?!
----
-And now to something completely different:
+Oh .. yeah... it was aggregation that was not allowed. So the only
+other change you'd have to do is to disable aggregation IIRC unless
+something else has changed on the latest 11s drafts.
 
-I noticed that only the peer's HT capabilities are fully evaluated,
-but the actual capabilities of the sending device (stored
-in sband->ht_cap.cap) are not considered.
-
-Theoretically, this shouldn't be an issue, simply because if the
-hardware does not support the feature, the driver will almost
-certainly ignore the spurious flag.
----
---- a/net/mac80211/rc80211_minstrel_ht.c	2010-05-08 01:46:14.000000000 +0200
-+++ b/net/mac80211/rc80211_minstrel_ht.c	2010-05-08 01:45:17.000000000 +0200
-@@ -663,8 +663,10 @@ minstrel_ht_update_caps(void *priv, stru
- 	}
- 	mi->sample_tries = 4;
- 
--	if (sta_cap & IEEE80211_HT_CAP_TX_STBC)
--		mi->tx_flags |= IEEE80211_TX_CTL_STBC;
-+	if (sband->ht_cap.cap & IEEE80211_HT_CAP_TX_STBC) {
-+		mi->tx_flags |= ((sta_cap >> IEEE80211_HT_CAP_RX_STBC_SHIFT)
-+				& 3) << IEEE80211_TX_CTL_STBC_SHIFT;
-+	}
- 
- 	if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
- 		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
+  Luis
