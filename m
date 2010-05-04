@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49448 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60442 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932881Ab0E0JYV (ORCPT
+	with ESMTP id S933642Ab0EDUOM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 05:24:21 -0400
-Subject: Re: [RFC PATCHv4] mac80211: Add support for hardware ARP query
- filtering
+	Tue, 4 May 2010 16:14:12 -0400
+Subject: Re: mac80211/ath9k: HT rates in Mesh
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1274951799-18615-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1274951799-18615-1-git-send-email-juuso.oikarinen@nokia.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Mathieu Olivari <Mathieu.Olivari@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100504195211.GG2624@tux>
+References: <93781E992CBA7843962D8B0E7D683F3C1116C465A6@SC1EXMB-MBCL.global.atheros.com>
+	 <20100504194348.GD2624@tux>
+	 <93781E992CBA7843962D8B0E7D683F3C1116C465EA@SC1EXMB-MBCL.global.atheros.com>
+	 <20100504195211.GG2624@tux>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 11:24:19 +0200
-Message-ID: <1274952259.3669.27.camel@jlt3.sipsolutions.net>
+Date: Tue, 04 May 2010 22:14:07 +0200
+Message-ID: <1273004047.3673.26.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 12:16 +0300, Juuso Oikarinen wrote:
+On Tue, 2010-05-04 at 12:52 -0700, Luis R. Rodriguez wrote:
+> Cc'ing linux-wireless.
+> 
+> On Tue, May 04, 2010 at 12:45:36PM -0700, Mathieu Olivari wrote:
+> > BTW, do you know if HT is supported in Mesh ?
+> 
+> This would involve doing the same as for IBSS that Benoit
+> is doing, someone with good will would have to do it. It should
+> be fairly easy to review the patches implemented by Benoit to
+> port to Mesh but there may be some unresolved things I may be
+> overlooking.
 
-> +static int ieee80211_ifa_changed(struct notifier_block *nb,
-> +				 unsigned long data, void *arg)
-> +{
-> +	struct in_ifaddr *ifa = arg;
-> +	struct ieee80211_local *local =
-> +		container_of(nb, struct ieee80211_local,
-> +			     ifa_notifier);
-> +	struct net_device *ndev = ifa->ifa_dev->dev;
-> +	struct wireless_dev *wdev = ndev->ieee80211_ptr;
-> +	struct ieee80211_sub_if_data *sdata;
-> +	struct ieee80211_if_managed *ifmgd;
-> +
-> +	/* Make sure it's our interface that got changed */
-> +	if (!wdev)
-> +		return NOTIFY_DONE;
-> +
-> +	if (wdev->wiphy != local->hw.wiphy)
-> +		return NOTIFY_DONE;
-> +
-> +	/* We are concerned about IP addresses only when associated */
-> +	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
-> +	ifmgd = &sdata->u.mgd;
-> +	mutex_lock(&ifmgd->mtx);
-> +	if (ifmgd->associated)
-> +		ieee80211_set_arp_filter(sdata);
-> +	mutex_unlock(&ifmgd->mtx);
-> +
-> +	return NOTIFY_DONE;
-> +}
-
-Still broken, you misunderstood my comment.
+Last I heard mesh wasn't supporting HT at all due to whatever issues?
+Maybe protection or something?
 
 johannes
 
