@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:63760 "EHLO mga09.intel.com"
+Received: from smtp3-g21.free.fr ([212.27.42.3]:51205 "EHLO smtp3-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756858Ab0EJW2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:31 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
+	id S1755923Ab0EDGrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 02:47:10 -0400
+From: Benoit Papillault <benoit.papillault@free.fr>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 40/47] iwlwifi: add iwl_sta_id()
-Date: Mon, 10 May 2010 15:28:11 -0700
-Message-Id: <1273530498-11876-41-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+	Benoit Papillault <benoit.papillault@free.fr>
+Subject: [PATCH] cfg80211: Check for channel HT capabilities in an IBSS
+Date: Tue,  4 May 2010 08:47:01 +0200
+Message-Id: <1272955622-6987-2-git-send-email-benoit.papillault@free.fr>
+In-Reply-To: <1272955622-6987-1-git-send-email-benoit.papillault@free.fr>
+References: <1272955622-6987-1-git-send-email-benoit.papillault@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+When configuring an HT IBSS, we need to check if the specified channel
+is capable of ht40+, ht40- or ht20.
 
-In places where the station struct is
-guaranteed to exist (presumably), use
-this helper to get the station ID out
-of it (and warn if there's no station
-struct after all).
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
 ---
- drivers/net/wireless/iwlwifi/iwl-sta.h |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ net/wireless/nl80211.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 8efb83d..7229e2c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -84,4 +84,12 @@ int iwl_sta_rx_agg_start(struct iwl_priv *priv,
- int iwl_sta_rx_agg_stop(struct iwl_priv *priv, const u8 *addr, int tid);
- void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id);
- void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt);
-+
-+static inline int iwl_sta_id(struct ieee80211_sta *sta)
-+{
-+	if (WARN_ON(!sta))
-+		return IWL_INVALID_STATION;
-+
-+	return ((struct iwl_station_priv_common *)sta->drv_priv)->sta_id;
-+}
- #endif /* __iwl_sta_h__ */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8da9823..0a82623 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3858,11 +3858,11 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+ 	}
+ 
+-	ibss.channel = ieee80211_get_channel(wiphy,
+-		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
++	ibss.channel = rdev_freq_to_chan(rdev,
++		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
++		channel_type);
+ 	if (!ibss.channel ||
+-	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+-	    ibss.channel->flags & IEEE80211_CHAN_DISABLED) {
++	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS) {
+ 		err = -EINVAL;
+ 		goto out;
+ 	}
 -- 
-1.6.3.3
+1.5.6.5
 
