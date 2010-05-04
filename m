@@ -1,132 +1,426 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:47141 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758729Ab0EFRg1 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:58373 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934205Ab0EDVzA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 13:36:27 -0400
-To: Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: 2.6.34-rc5-mmotm0428 - 2 RCU whinges in mac80211
-From: Valdis.Kletnieks@vt.edu
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1273167313_4094P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Thu, 06 May 2010 13:35:13 -0400
-Message-ID: <5820.1273167313@localhost>
+	Tue, 4 May 2010 17:55:00 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 20so2797546wye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 14:54:59 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net, linville@tuxdriver.com,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH] orinoco: refactor xmit path
+Date: Tue,  4 May 2010 22:54:41 +0100
+Message-Id: <1273010082-15871-2-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1273010082-15871-1-git-send-email-kilroyd@googlemail.com>
+References: <1273010082-15871-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1273167313_4094P
-Content-Type: text/plain; charset=us-ascii
+... so orinoco_usb can share some common functionality.
 
-Spotted these in my dmesg, hopefully somebody is interested...
+Handle 802.2 encapsulation and MIC calculation in that function.
+The 802.3 header is prepended to the SKB. The calculated MIC is written
+to a specified buffer. Also modify the transmit control word that will
+be passed onto the hardware to specify whether the MIC is present, and
+the key used.
 
-[   54.076863] wlan0: deauthenticating from 00:11:20:a4:4c:11 by local choice (reason=3)
-[   54.080580] 
-[   54.080581] ===================================================
-[   54.080584] [ INFO: suspicious rcu_dereference_check() usage. ]
-[   54.080586] ---------------------------------------------------
-[   54.080589] net/mac80211/sta_info.c:858 invoked rcu_dereference_check() without protection!
-[   54.080591] 
-[   54.080591] other info that might help us debug this:
-[   54.080592] 
-[   54.080594] 
-[   54.080595] rcu_scheduler_active = 1, debug_locks = 1
-[   54.080597] no locks held by hald/3362.
-[   54.080599] 
-[   54.080599] stack backtrace:
-[   54.080602] Pid: 3362, comm: hald Not tainted 2.6.34-rc5-mmotm0428 #1
-[   54.080604] Call Trace:
-[   54.080607]  <IRQ>  [<ffffffff81064eb9>] lockdep_rcu_dereference+0x9d/0xa5
-[   54.080619]  [<ffffffff815649f9>] ieee80211_find_sta_by_hw+0x46/0x10f
-[   54.080623]  [<ffffffff81564ad9>] ieee80211_find_sta+0x17/0x19
-[   54.080628]  [<ffffffff8136e1ee>] iwlagn_tx_queue_reclaim+0xe7/0x1bd
-[   54.080632]  [<ffffffff81371da3>] iwlagn_rx_reply_tx+0x4e9/0x5a6
-[   54.080638]  [<ffffffff8136501f>] iwl_rx_handle+0x268/0x3fe
-[   54.080642]  [<ffffffff813664ea>] iwl_irq_tasklet+0x2d3/0x3e4
-[   54.080647]  [<ffffffff8103e337>] tasklet_action+0x79/0xd7
-[   54.080651]  [<ffffffff8103fd54>] __do_softirq+0x15a/0x2a2
-[   54.080656]  [<ffffffff8100358c>] call_softirq+0x1c/0x34
-[   54.080659]  [<ffffffff81004ad8>] do_softirq+0x44/0xf0
-[   54.080663]  [<ffffffff8103f3ba>] irq_exit+0x4a/0xb3
-[   54.080667]  [<ffffffff81004211>] do_IRQ+0xa7/0xbe
-[   54.080671]  [<ffffffff8159cd93>] ret_from_intr+0x0/0xf
-[   54.080673]  <EOI> 
-[   54.114898] wlan0: authenticate with 00:11:20:a4:4c:11 (try 1)
-[   54.122103] wlan0: authenticated
-[   54.122472] wlan0: associate with 00:11:20:a4:4c:11 (try 1)
-[   54.128267] wlan0: RX AssocResp from 00:11:20:a4:4c:11 (capab=0x31 status=0 aid=10)
-[   54.128271] wlan0: associated
-[   54.132990] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[   54.133333] cfg80211: Calling CRDA for country: US
-[   54.135752] 
-[   54.135753] ===================================================
-[   54.135756] [ INFO: suspicious rcu_dereference_check() usage. ]
-[   54.135758] ---------------------------------------------------
-[   54.135760] net/mac80211/sta_info.c:858 invoked rcu_dereference_check() without protection!
-[   54.135763] 
-[   54.135763] other info that might help us debug this:
-[   54.135764] 
-[   54.135766] 
-[   54.135767] rcu_scheduler_active = 1, debug_locks = 1
-[   54.135769] 1 lock held by udevd/2933:
-[   54.135771]  #0:  (policy_rwlock){.+.+..}, at: [<ffffffff811d4f60>] security_compute_av+0x29/0x259
-[   54.135781] 
-[   54.135782] stack backtrace:
-[   54.135785] Pid: 2933, comm: udevd Not tainted 2.6.34-rc5-mmotm0428 #1
-[   54.135787] Call Trace:
-[   54.135790]  <IRQ>  [<ffffffff81064eb9>] lockdep_rcu_dereference+0x9d/0xa5
-[   54.135800]  [<ffffffff81564a49>] ieee80211_find_sta_by_hw+0x96/0x10f
-[   54.135804]  [<ffffffff81564ad9>] ieee80211_find_sta+0x17/0x19
-[   54.135809]  [<ffffffff8136e1ee>] iwlagn_tx_queue_reclaim+0xe7/0x1bd
-[   54.135813]  [<ffffffff81371da3>] iwlagn_rx_reply_tx+0x4e9/0x5a6
-[   54.135819]  [<ffffffff8136501f>] iwl_rx_handle+0x268/0x3fe
-[   54.135823]  [<ffffffff813664ea>] iwl_irq_tasklet+0x2d3/0x3e4
-[   54.135828]  [<ffffffff8103e337>] tasklet_action+0x79/0xd7
-[   54.135832]  [<ffffffff8103fd54>] __do_softirq+0x15a/0x2a2
-[   54.135837]  [<ffffffff8100358c>] call_softirq+0x1c/0x34
-[   54.135841]  [<ffffffff81004ad8>] do_softirq+0x44/0xf0
-[   54.135844]  [<ffffffff8103f3ba>] irq_exit+0x4a/0xb3
-[   54.135847]  [<ffffffff81004211>] do_IRQ+0xa7/0xbe
-[   54.135852]  [<ffffffff8159cd93>] ret_from_intr+0x0/0xf
-[   54.135854]  <EOI>  [<ffffffff811ce48b>] ? avtab_search_node+0x6c/0x7b
-[   54.135862]  [<ffffffff811d4cdb>] context_struct_compute_av+0x136/0x271
-[   54.135867]  [<ffffffff811d506b>] security_compute_av+0x134/0x259
-[   54.135872]  [<ffffffff811c2560>] avc_has_perm_noaudit+0x22e/0x537
-[   54.135876]  [<ffffffff811c289f>] avc_has_perm+0x36/0x69
-[   54.135880]  [<ffffffff810c52cd>] ? __do_fault+0x254/0x3f1
-[   54.135885]  [<ffffffff811c4bca>] current_has_perm+0x3a/0x3f
-[   54.135888]  [<ffffffff811c4c7d>] selinux_task_create+0x17/0x19
-[   54.135893]  [<ffffffff811beced>] security_task_create+0x11/0x13
-[   54.135898]  [<ffffffff81036dae>] copy_process+0x8d/0x11ed
-[   54.135901]  [<ffffffff810c5434>] ? __do_fault+0x3bb/0x3f1
-[   54.135905]  [<ffffffff8107c26b>] ? rcu_read_lock+0x0/0x35
-[   54.135909]  [<ffffffff810380b2>] do_fork+0x1a4/0x3b5
-[   54.135913]  [<ffffffff8107c2c1>] ? rcu_read_unlock+0x21/0x23
-[   54.135917]  [<ffffffff8107dc56>] ? audit_filter_syscall+0xb4/0xc8
-[   54.135921]  [<ffffffff81059044>] ? up_read+0x1e/0x36
-[   54.135924]  [<ffffffff8105d760>] ? current_kernel_time+0x28/0x50
-[   54.135929]  [<ffffffff81009705>] sys_clone+0x23/0x25
-[   54.135933]  [<ffffffff810029d3>] stub_clone+0x13/0x20
-[   54.135936]  [<ffffffff8100266b>] ? system_call_fastpath+0x16/0x1b
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/main.c        |  169 +++++++++++++++++----------
+ drivers/net/wireless/orinoco/orinoco.h     |    6 +
+ drivers/net/wireless/orinoco/orinoco_usb.c |   91 +++++++--------
+ 3 files changed, 155 insertions(+), 111 deletions(-)
 
-
-
---==_Exmh_1273167313_4094P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFL4v3RcC3lWbTT17ARAshDAKCFiBojOS41qx3hPXB++zZVAn5TvwCg77HD
-H0rtTAidfFc1nQ6+QzyL370=
-=hvy8
------END PGP SIGNATURE-----
-
---==_Exmh_1273167313_4094P--
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index 1d60c7e..3b9a5fb 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -340,18 +340,109 @@ EXPORT_SYMBOL(orinoco_change_mtu);
+ /* Tx path                                                          */
+ /********************************************************************/
+ 
++/* Add encapsulation and MIC to the existing SKB.
++ * The main xmit routine will then send the whole lot to the card.
++ * Need 8 bytes headroom
++ * Need 8 bytes tailroom
++ *
++ *                          With encapsulated ethernet II frame
++ *                          --------
++ *                          803.3 header (14 bytes)
++ *                           dst[6]
++ * --------                  src[6]
++ * 803.3 header (14 bytes)   len[2]
++ *  dst[6]                  803.2 header (8 bytes)
++ *  src[6]                   encaps[6]
++ *  len[2] <- leave alone -> len[2]
++ * --------                 -------- <-- 0
++ * Payload                  Payload
++ * ...                      ...
++ *
++ * --------                 --------
++ *                          MIC (8 bytes)
++ *                          --------
++ *
++ * returns 0 on success, -ENOMEM on error.
++ */
++int orinoco_process_xmit_skb(struct sk_buff *skb,
++			     struct net_device *dev,
++			     struct orinoco_private *priv,
++			     int *tx_control,
++			     u8 *mic_buf)
++{
++	struct orinoco_tkip_key *key;
++	struct ethhdr *eh;
++	int do_mic;
++
++	key = (struct orinoco_tkip_key *) priv->keys[priv->tx_key].key;
++
++	do_mic = ((priv->encode_alg == ORINOCO_ALG_TKIP) &&
++		  (key != NULL));
++
++	if (do_mic)
++		*tx_control |= (priv->tx_key << HERMES_MIC_KEY_ID_SHIFT) |
++			HERMES_TXCTRL_MIC;
++
++	eh = (struct ethhdr *)skb->data;
++
++	/* Encapsulate Ethernet-II frames */
++	if (ntohs(eh->h_proto) > ETH_DATA_LEN) { /* Ethernet-II frame */
++		struct header_struct {
++			struct ethhdr eth;	/* 802.3 header */
++			u8 encap[6];		/* 802.2 header */
++		} __attribute__ ((packed)) hdr;
++		int len = skb->len + sizeof(encaps_hdr) - (2 * ETH_ALEN);
++
++		if (skb_headroom(skb) < ENCAPS_OVERHEAD) {
++			if (net_ratelimit())
++				printk(KERN_ERR
++				       "%s: Not enough headroom for 802.2 headers %d\n",
++				       dev->name, skb_headroom(skb));
++			return -ENOMEM;
++		}
++
++		/* Fill in new header */
++		memcpy(&hdr.eth, eh, 2 * ETH_ALEN);
++		hdr.eth.h_proto = htons(len);
++		memcpy(hdr.encap, encaps_hdr, sizeof(encaps_hdr));
++
++		/* Make room for the new header, and copy it in */
++		eh = (struct ethhdr *) skb_push(skb, ENCAPS_OVERHEAD);
++		memcpy(eh, &hdr, sizeof(hdr));
++	}
++
++	/* Calculate Michael MIC */
++	if (do_mic) {
++		size_t len = skb->len - ETH_HLEN;
++		u8 *mic = &mic_buf[0];
++
++		/* Have to write to an even address, so copy the spare
++		 * byte across */
++		if (skb->len % 2) {
++			*mic = skb->data[skb->len - 1];
++			mic++;
++		}
++
++		orinoco_mic(priv->tx_tfm_mic, key->tx_mic,
++			    eh->h_dest, eh->h_source, 0 /* priority */,
++			    skb->data + ETH_HLEN,
++			    len, mic);
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(orinoco_process_xmit_skb);
++
+ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
+ 	struct net_device_stats *stats = &priv->stats;
+-	struct orinoco_tkip_key *key;
+ 	hermes_t *hw = &priv->hw;
+ 	int err = 0;
+ 	u16 txfid = priv->txfid;
+-	struct ethhdr *eh;
+ 	int tx_control;
+ 	unsigned long flags;
+-	int do_mic;
++	u8 mic_buf[MICHAEL_MIC_LEN+1];
+ 
+ 	if (!netif_running(dev)) {
+ 		printk(KERN_ERR "%s: Tx on stopped device!\n",
+@@ -383,16 +474,12 @@ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	if (skb->len < ETH_HLEN)
+ 		goto drop;
+ 
+-	key = (struct orinoco_tkip_key *) priv->keys[priv->tx_key].key;
+-
+-	do_mic = ((priv->encode_alg == ORINOCO_ALG_TKIP) &&
+-		  (key != NULL));
+-
+ 	tx_control = HERMES_TXCTRL_TX_OK | HERMES_TXCTRL_TX_EX;
+ 
+-	if (do_mic)
+-		tx_control |= (priv->tx_key << HERMES_MIC_KEY_ID_SHIFT) |
+-			HERMES_TXCTRL_MIC;
++	err = orinoco_process_xmit_skb(skb, dev, priv, &tx_control,
++				       &mic_buf[0]);
++	if (err)
++		goto drop;
+ 
+ 	if (priv->has_alt_txcntl) {
+ 		/* WPA enabled firmwares have tx_cntl at the end of
+@@ -435,34 +522,6 @@ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
+ 				   HERMES_802_3_OFFSET - HERMES_802_11_OFFSET);
+ 	}
+ 
+-	eh = (struct ethhdr *)skb->data;
+-
+-	/* Encapsulate Ethernet-II frames */
+-	if (ntohs(eh->h_proto) > ETH_DATA_LEN) { /* Ethernet-II frame */
+-		struct header_struct {
+-			struct ethhdr eth;	/* 802.3 header */
+-			u8 encap[6];		/* 802.2 header */
+-		} __attribute__ ((packed)) hdr;
+-
+-		/* Strip destination and source from the data */
+-		skb_pull(skb, 2 * ETH_ALEN);
+-
+-		/* And move them to a separate header */
+-		memcpy(&hdr.eth, eh, 2 * ETH_ALEN);
+-		hdr.eth.h_proto = htons(sizeof(encaps_hdr) + skb->len);
+-		memcpy(hdr.encap, encaps_hdr, sizeof(encaps_hdr));
+-
+-		/* Insert the SNAP header */
+-		if (skb_headroom(skb) < sizeof(hdr)) {
+-			printk(KERN_ERR
+-			       "%s: Not enough headroom for 802.2 headers %d\n",
+-			       dev->name, skb_headroom(skb));
+-			goto drop;
+-		}
+-		eh = (struct ethhdr *) skb_push(skb, sizeof(hdr));
+-		memcpy(eh, &hdr, sizeof(hdr));
+-	}
+-
+ 	err = hw->ops->bap_pwrite(hw, USER_BAP, skb->data, skb->len,
+ 				  txfid, HERMES_802_3_OFFSET);
+ 	if (err) {
+@@ -471,32 +530,16 @@ static netdev_tx_t orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
+ 		goto busy;
+ 	}
+ 
+-	/* Calculate Michael MIC */
+-	if (do_mic) {
+-		u8 mic_buf[MICHAEL_MIC_LEN + 1];
+-		u8 *mic;
+-		size_t offset;
+-		size_t len;
++	if (tx_control & HERMES_TXCTRL_MIC) {
++		size_t offset = HERMES_802_3_OFFSET + skb->len;
++		size_t len = MICHAEL_MIC_LEN;
+ 
+-		if (skb->len % 2) {
+-			/* MIC start is on an odd boundary */
+-			mic_buf[0] = skb->data[skb->len - 1];
+-			mic = &mic_buf[1];
+-			offset = skb->len - 1;
+-			len = MICHAEL_MIC_LEN + 1;
+-		} else {
+-			mic = &mic_buf[0];
+-			offset = skb->len;
+-			len = MICHAEL_MIC_LEN;
++		if (offset % 2) {
++			offset--;
++			len++;
+ 		}
+-
+-		orinoco_mic(priv->tx_tfm_mic, key->tx_mic,
+-			    eh->h_dest, eh->h_source, 0 /* priority */,
+-			    skb->data + ETH_HLEN, skb->len - ETH_HLEN, mic);
+-
+-		/* Write the MIC */
+ 		err = hw->ops->bap_pwrite(hw, USER_BAP, &mic_buf[0], len,
+-					  txfid, HERMES_802_3_OFFSET + offset);
++					  txfid, offset);
+ 		if (err) {
+ 			printk(KERN_ERR "%s: Error %d writing MIC to BAP\n",
+ 			       dev->name, err);
+@@ -2235,7 +2278,7 @@ int orinoco_if_add(struct orinoco_private *priv,
+ 	/* we use the default eth_mac_addr for setting the MAC addr */
+ 
+ 	/* Reserve space in skb for the SNAP header */
+-	dev->hard_header_len += ENCAPS_OVERHEAD;
++	dev->needed_headroom = ENCAPS_OVERHEAD;
+ 
+ 	netif_carrier_off(dev);
+ 
+diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
+index e9f415a..a6da86e 100644
+--- a/drivers/net/wireless/orinoco/orinoco.h
++++ b/drivers/net/wireless/orinoco/orinoco.h
+@@ -200,6 +200,12 @@ extern irqreturn_t orinoco_interrupt(int irq, void *dev_id);
+ extern void __orinoco_ev_info(struct net_device *dev, hermes_t *hw);
+ extern void __orinoco_ev_rx(struct net_device *dev, hermes_t *hw);
+ 
++int orinoco_process_xmit_skb(struct sk_buff *skb,
++			     struct net_device *dev,
++			     struct orinoco_private *priv,
++			     int *tx_control,
++			     u8 *mic);
++
+ /* Common ndo functions exported for reuse by orinoco_usb */
+ int orinoco_open(struct net_device *dev);
+ int orinoco_stop(struct net_device *dev);
+diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+index e220933..78f089b 100644
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -67,6 +67,7 @@
+ #include <linux/wireless.h>
+ #include <linux/firmware.h>
+ 
++#include "mic.h"
+ #include "orinoco.h"
+ 
+ #ifndef URB_ASYNC_UNLINK
+@@ -1198,11 +1199,9 @@ static netdev_tx_t ezusb_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	struct orinoco_private *priv = ndev_priv(dev);
+ 	struct net_device_stats *stats = &priv->stats;
+ 	struct ezusb_priv *upriv = priv->card;
++	u8 mic[MICHAEL_MIC_LEN+1];
+ 	int err = 0;
+-	char *p;
+-	struct ethhdr *eh;
+-	int len, data_len, data_off;
+-	__le16 tx_control;
++	int tx_control;
+ 	unsigned long flags;
+ 	struct request_context *ctx;
+ 	u8 *buf;
+@@ -1222,7 +1221,7 @@ static netdev_tx_t ezusb_xmit(struct sk_buff *skb, struct net_device *dev)
+ 
+ 	if (orinoco_lock(priv, &flags) != 0) {
+ 		printk(KERN_ERR
+-		       "%s: orinoco_xmit() called while hw_unavailable\n",
++		       "%s: ezusb_xmit() called while hw_unavailable\n",
+ 		       dev->name);
+ 		return NETDEV_TX_BUSY;
+ 	}
+@@ -1232,53 +1231,46 @@ static netdev_tx_t ezusb_xmit(struct sk_buff *skb, struct net_device *dev)
+ 		/* Oops, the firmware hasn't established a connection,
+ 		   silently drop the packet (this seems to be the
+ 		   safest approach). */
+-		stats->tx_errors++;
+-		orinoco_unlock(priv, &flags);
+-		dev_kfree_skb(skb);
+-		return NETDEV_TX_OK;
++		goto drop;
+ 	}
+ 
++	/* Check packet length */
++	if (skb->len < ETH_HLEN)
++		goto drop;
++
+ 	ctx = ezusb_alloc_ctx(upriv, EZUSB_RID_TX, 0);
+ 	if (!ctx)
+-		goto fail;
++		goto busy;
+ 
+ 	memset(ctx->buf, 0, BULK_BUF_SIZE);
+ 	buf = ctx->buf->data;
+ 
+-	/* Length of the packet body */
+-	/* FIXME: what if the skb is smaller than this? */
+-	len = max_t(int, skb->len - ETH_HLEN, ETH_ZLEN - ETH_HLEN);
+-
+-	eh = (struct ethhdr *) skb->data;
+-
+-	tx_control = cpu_to_le16(0);
+-	memcpy(buf, &tx_control, sizeof(tx_control));
+-	buf += sizeof(tx_control);
+-	/* Encapsulate Ethernet-II frames */
+-	if (ntohs(eh->h_proto) > ETH_DATA_LEN) {	/* Ethernet-II frame */
+-		struct header_struct *hdr = (void *) buf;
+-		buf += sizeof(*hdr);
+-		data_len = len;
+-		data_off = sizeof(tx_control) + sizeof(*hdr);
+-		p = skb->data + ETH_HLEN;
+-
+-		/* 802.3 header */
+-		memcpy(hdr->dest, eh->h_dest, ETH_ALEN);
+-		memcpy(hdr->src, eh->h_source, ETH_ALEN);
+-		hdr->len = htons(data_len + ENCAPS_OVERHEAD);
+-
+-		/* 802.2 header */
+-		memcpy(&hdr->dsap, &encaps_hdr, sizeof(encaps_hdr));
+-
+-		hdr->ethertype = eh->h_proto;
+-	} else {		/* IEEE 802.3 frame */
+-		data_len = len + ETH_HLEN;
+-		data_off = sizeof(tx_control);
+-		p = skb->data;
++	tx_control = 0;
++
++	err = orinoco_process_xmit_skb(skb, dev, priv, &tx_control,
++				       &mic[0]);
++	if (err)
++		goto drop;
++
++	{
++		__le16 *tx_cntl = (__le16 *)buf;
++		*tx_cntl = cpu_to_le16(tx_control);
++		buf += sizeof(*tx_cntl);
+ 	}
+ 
+-	memcpy(buf, p, data_len);
+-	buf += data_len;
++	memcpy(buf, skb->data, skb->len);
++	buf += skb->len;
++
++	if (tx_control & HERMES_TXCTRL_MIC) {
++		u8 *m = mic;
++		/* Mic has been offset so it can be copied to an even
++		 * address. We're copying eveything anyway, so we
++		 * don't need to copy that first byte. */
++		if (skb->len % 2)
++			m++;
++		memcpy(buf, m, MICHAEL_MIC_LEN);
++		buf += MICHAEL_MIC_LEN;
++	}
+ 
+ 	/* Finally, we actually initiate the send */
+ 	netif_stop_queue(dev);
+@@ -1294,20 +1286,23 @@ static netdev_tx_t ezusb_xmit(struct sk_buff *skb, struct net_device *dev)
+ 		if (net_ratelimit())
+ 			printk(KERN_ERR "%s: Error %d transmitting packet\n",
+ 				dev->name, err);
+-		stats->tx_errors++;
+-		goto fail;
++		goto busy;
+ 	}
+ 
+ 	dev->trans_start = jiffies;
+-	stats->tx_bytes += data_off + data_len;
++	stats->tx_bytes += skb->len;
++	goto ok;
+ 
+-	orinoco_unlock(priv, &flags);
++ drop:
++	stats->tx_errors++;
++	stats->tx_dropped++;
+ 
++ ok:
++	orinoco_unlock(priv, &flags);
+ 	dev_kfree_skb(skb);
+-
+ 	return NETDEV_TX_OK;
+ 
+- fail:
++ busy:
+ 	orinoco_unlock(priv, &flags);
+ 	return NETDEV_TX_BUSY;
+ }
+-- 
+1.6.4.4
 
