@@ -1,30 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751514Ab0EAIrH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 04:47:07 -0400
-Subject: RE: [RFC PATCH 1/1] mac80211: Disable cfg80211 assoc timeout
- warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ext-saravanan.dhanabal@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <04BB8F4F2843A24294353CA037CA5B585DAF132911@NOK-EUMSG-01.mgdnok.nokia.com>
-References: <1272275367-7532-1-git-send-email-ext-saravanan.dhanabal@nokia.com>
-	 ,<1272275586.3619.13.camel@jlt3.sipsolutions.net>
-	 <04BB8F4F2843A24294353CA037CA5B585DAF132911@NOK-EUMSG-01.mgdnok.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 01 May 2010 10:47:03 +0200
-Message-ID: <1272703623.4005.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from smtp3-g21.free.fr ([212.27.42.3]:57843 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752752Ab0EEVhR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 May 2010 17:37:17 -0400
+Message-ID: <4BE1E505.5030008@free.fr>
+Date: Wed, 05 May 2010 23:37:09 +0200
+From: Benoit Papillault <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add HT IE to IBSS beacons and probe responses.
+References: <1272955622-6987-1-git-send-email-benoit.papillault@free.fr>	 <1272955622-6987-2-git-send-email-benoit.papillault@free.fr>	 <1272955622-6987-3-git-send-email-benoit.papillault@free.fr> <1273060014.3728.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1273060014.3728.15.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-04-28 at 15:12 +0200, ext-saravanan.dhanabal@nokia.com
-wrote:
-> OK. Please let me know about that fix after testing, so that I could follow it up.
+Le 05/05/2010 13:46, Johannes Berg a écrit :
+> On Tue, 2010-05-04 at 08:47 +0200, Benoit Papillault wrote:
+>> When an HT IBSS is configured, we add HT Information and HT Capabilities
+>> IE to beacon&  probe responses. This is done according to channel_type
+>> transmitted by iw/cfg80211.
+>
+> Just noticed something else -- this allows creating an HT40 IBSS on an
+> invalid channel pair -- do we want to catch that?
+>
+> johannse
+>
 
-This is tracked here: https://bugzilla.kernel.org/show_bug.cgi?id=15794
+Do you mean creating an ht40+ over channel 112, where only ht40- is 
+allowed by 802.11 ? Since it's the same for AP & IBSS, maybe it could be 
+done in the regulatory code?
 
-johannes
+Anyway, since this latter issue was already there for a while, it could 
+be fixed in a follow up patch.
 
+Regards,
+Benoit
