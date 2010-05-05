@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:65527 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754352Ab0EQLVu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 07:21:50 -0400
-Received: by fxm6 with SMTP id 6so3689509fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 May 2010 04:21:49 -0700 (PDT)
+Received: from smtp3-g21.free.fr ([212.27.42.3]:59499 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756420Ab0EEU6r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 May 2010 16:58:47 -0400
+Message-ID: <4BE1DBFE.2060909@free.fr>
+Date: Wed, 05 May 2010 22:58:38 +0200
+From: Benoit Papillault <benoit.papillault@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinYZ-_DkNZweDFfdf_DdDJGMNhgQwppDnVo_Duj@mail.gmail.com>
-References: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>
-	<AANLkTim1i3oB10rydr8ezyCjher1yctqKcVt9Ct1Bze0@mail.gmail.com>
-	<AANLkTinYZ-_DkNZweDFfdf_DdDJGMNhgQwppDnVo_Duj@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 17 May 2010 13:21:29 +0200
-Message-ID: <AANLkTimaLEQYH4Y7HO4Fv4zT8w8AsPkaAQtk9EauX4Bt@mail.gmail.com>
-Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
-	suite)
-To: Weedy <weedy2887@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] cfg80211/mac80211: better channel handling
+References: <1273055797.3728.14.camel@jlt3.sipsolutions.net>	 <1273061543.3728.16.camel@jlt3.sipsolutions.net> <1273065902.3728.17.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1273065902.3728.17.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/5/17 Weedy <weedy2887@gmail.com>:
-> 2010/5/16 Gábor Stefanik <netrolller.3d@gmail.com>:
->> On Sun, May 16, 2010 at 10:41 PM, Weedy <weedy2887@gmail.com> wrote:
->>> Running airodump on ubuntus 2.6.30 kernel works as expected. The
->>> 2.6.32 kernel shipped in lucid never sees data packets.
->>>
->>> I have narrowed it down to channel hopping. modprobing the driver and
->>> starting mon0 on a fixed channel works as expected, but allowing
->>> airodump to channel hop breaks the interface until the driver is
->>> reset.
->>>
->>> I wrote a script to download and build compat wireless starting from
->>> 2009-01-01 (granted everything fails until half way through october),
->>> but every version that is successfully installed also show the same
->>> bug.
->>>
->>> Further instructions welcome.
->>
->> Try checking out linux-2.6, and doing a bisect between 2.6.30 and 2.6.32.
+Le 05/05/2010 15:25, Johannes Berg a Ã©crit :
+> Currently (all tested with hwsim) you can do stupid
+> things like setting up an AP on a certain channel,
+> then adding another virtual interface and making
+> that associate on another channel -- this will make
+> the beaconing to move channel but obviously without
+> the necessary IEs data update.
 >
-> Do I have to check out the entire kernel? even with scripting my
-> netbook would take forever to do this.
->
+> In order to improve this situation, first make the
+> configuration APIs (cfg80211 and nl80211) aware of
+> multi-channel operation -- we'll eventually need
+> that in the future anyway. There's one userland API
+> change and one API addition. The API change is that
+> now SET_WIPHY must be called with virtual interface
+> index rather than only wiphy index in order to take
+> effect for that interface -- luckily all current
+> users (hostapd) do that. For monitor interfaces, the
+> old setting is preserved, but monitors are always
+> slaved to other devices anyway so no guarantees.
 
-Yes, you need to check out the entire repo - but with git, you do not
-need to re-download the whole tree everytime you check out a new
-revision; it is a distributed system. git is not CVS. :-)
+Real hardware are not capable of listening on multiple channels (except 
+2 ht20 channels in ht40 mode, maybe?). So I don't understand why we 
+should have a per-interface channel.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+I think we should either have two strategies :
+
+- "first one is the winner" : once a channel has been set, it cannot be 
+changed. For instance, if you create an AP interface (with hostapd) and 
+latter a STA interface, the STA interface can only scan on the channel 
+the AP is.
+
+- "last one is the winner" : in this case, the last call to set the 
+channel is always successful. Of course, this will change channel on 
+existing interfaces which might change their IE accordingly, through an 
+appropriate API.
+
+I might be wrong, but I don't see this multi-channel usage...
+
+Regards,
+Benoit
