@@ -1,52 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:56093 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999Ab0ENOv3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 10:51:29 -0400
-Received: by wwi18 with SMTP id 18so599560wwi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 07:51:27 -0700 (PDT)
-Date: Fri, 14 May 2010 16:50:56 +0200
-From: Dan Carpenter <error27@gmail.com>
+Received: from mail.vyatta.com ([76.74.103.46]:53720 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932705Ab0EEAEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 May 2010 20:04:23 -0400
+Date: Tue, 4 May 2010 17:04:09 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ming Lei <tom.leiming@gmail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [patch -next 1/2] ath9k_htc: dereferencing before check in
-	hif_usb_tx_cb()
-Message-ID: <20100514145056.GE17487@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, mcgrof@kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] compat-wireless: updates for orinoco
+Message-ID: <20100504170409.46914a88@nehalam>
+In-Reply-To: <v2u43e72e891005041626n14deaca5z284f2472e909c923@mail.gmail.com>
+References: <1273012850-8359-1-git-send-email-hauke@hauke-m.de>
+	<v2u43e72e891005041626n14deaca5z284f2472e909c923@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After c11d8f89d3b7: "ath9k_htc: Simplify TX URB management" we no longer
-assume that tx_buf is a non-null pointer.
+On Tue, 4 May 2010 16:26:53 -0700
+"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+> First of all, thanks a lot! Some comments below.
+> 
+> On Tue, May 4, 2010 at 3:40 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> > * Make all the patches apply again.
+> > * rename read_pda to avoid conflicts with definitions in kernel <= 2.6.29
+> 
+> I'm going to apply these two changes, if you get time can you send a
+> patch to rename read_pda upstream as well, that way we don't have to
+> carry this?
+> 
+> > * add orinoco usb
+> 
+> Thanks for this but I've grown tired of updating these netdev ops and
+> I think we can do better. I'll add a netdev_attach_ops() which would
+> simply do all the backport stuff for us, this way for backporting
+> purposes all we have to do is replace the old lines with a
+> netdev_attach_ops() call. In fact if we *really* wanted to we could
+> add a dummy netdev_attach_ops() upstream and just backport that on
+> older kernels, this would mean 0 line changes to backport a newer
+> driver.
+> 
+> Something like this maybe on the generic compat module, it builds for
+> me, will commit soon.
+> 
+> /*
+>  * Expand this as drivers require more ops, for now this
+>  * only sets the ones we need.
+>  */
+> void netdev_attach_ops(struct net_device *dev,
+>                       const struct net_device_ops *ops)
+> {
+> #define SET_NETDEVOP(_op) (_op ? _op : NULL)
+>        dev->open = SET_NETDEVOP(ops->ndo_open);
+>        dev->stop = SET_NETDEVOP(ops->ndo_stop);
+>        dev->hard_start_xmit = SET_NETDEVOP(ops->ndo_start_xmit);
+>        dev->set_multicast_list = SET_NETDEVOP(ops->ndo_set_multicast_list);
+>        dev->change_mtu = SET_NETDEVOP(ops->ndo_change_mtu);
+>        dev->set_mac_address = SET_NETDEVOP(ops->ndo_set_mac_address);
+>        dev->tx_timeout = SET_NETDEVOP(ops->ndo_tx_timeout);
+>        dev->get_stats = SET_NETDEVOP(ops->ndo_get_stats);
+> #undef SET_NETDEVOP
+> }
+> EXPORT_SYMBOL(netdev_attach_ops);
+> 
+> For newer kernels then this would just be:
+> 
+> static inline void netdev_attach_ops(struct net_device *dev,
+>                       const struct net_device_ops *ops)
+> {
+>        dev->netdev_ops = ops;
+> }
+> 
+> Stephen, would the above be acceptable upstream on netdevice.h ? It
+> would eliminate all needs from having to #ifdef network drivers when
+> backporting. If so I can send a respective patch and spatch all the
+> setters I think. An example of the nasty ifdef crap we have to do for
+> the current backport of netdevop'able drivers is below.
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 46dc41a..ac82911 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -107,12 +107,14 @@ static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
- static void hif_usb_tx_cb(struct urb *urb)
- {
- 	struct tx_buf *tx_buf = (struct tx_buf *) urb->context;
--	struct hif_device_usb *hif_dev = tx_buf->hif_dev;
-+	struct hif_device_usb *hif_dev;
- 	struct sk_buff *skb;
- 
--	if (!hif_dev || !tx_buf)
-+	if (!tx_buf || !tx_buf->hif_dev)
- 		return;
- 
-+	hif_dev = tx_buf->hif_dev;
-+
- 	switch (urb->status) {
- 	case 0:
- 		break;
+No. supporting backporting is not part of the upstream kernel
+mission. Honestly, we try for forward compatibility but intentionally
+ignore carrying extra backport baggage.
