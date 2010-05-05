@@ -1,62 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:52333 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130Ab0EFSa3 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:19143 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752689Ab0EEK01 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 14:30:29 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: 2.6.34-rc5-mmotm0428 - 2 RCU whinges in mac80211
-In-Reply-To: Your message of "Thu, 06 May 2010 19:58:16 +0200."
-             <1273168696.23199.0.camel@jlt3.sipsolutions.net>
-From: Valdis.Kletnieks@vt.edu
-References: <5820.1273167313@localhost>
-            <1273168696.23199.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1273170584_4094P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Thu, 06 May 2010 14:29:44 -0400
-Message-ID: <8269.1273170584@localhost>
+	Wed, 5 May 2010 06:26:27 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so208384eyd.5
+        for <linux-wireless@vger.kernel.org>; Wed, 05 May 2010 03:26:26 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 5 May 2010 12:26:25 +0200
+Message-ID: <r2xf69abfc31005050326oe123cb60s131ab4969341ef57@mail.gmail.com>
+Subject: 2.6.33.2: Turn tx power off/on for Atheros card
+From: Yegor Yefremov <yegorslists@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1273170584_4094P
-Content-Type: text/plain; charset=us-ascii
+I'm using kernel 2.6.33.2 with AR2413 WLAN card. Issuing
 
-On Thu, 06 May 2010 19:58:16 +0200, Johannes Berg said:
-> On Thu, 2010-05-06 at 13:35 -0400, Valdis.Kletnieks@vt.edu wrote:
-> > Spotted these in my dmesg, hopefully somebody is interested...
-> > 
-> > [   54.076863] wlan0: deauthenticating from 00:11:20:a4:4c:11 by local choice (reason=3)
-> > [   54.080580] 
-> > [   54.080581] ===================================================
-> > [   54.080584] [ INFO: suspicious rcu_dereference_check() usage. ]
-> > [   54.080586] ---------------------------------------------------
-> > [   54.080589] net/mac80211/sta_info.c:858 invoked rcu_dereference_check() without protection!
-> 
-> I'm pretty sure I fixed those so there should be a patch on its way to
-> or in mainline somewhere.
+iwconfig wlan0 txpower off
 
-Oh,  OK.  I didn't remember seeing them mentioned before, but I must have
-missed somebody else's post about it due to the lkml firehose effect. I've
-moved these to my "whinge if it isn't fixed in the next -mmotm" queue.
+turns txpower off. I can see this status by iwconfig wlan0 and the
+communication with AP terminates. But when I turn the txpower on
 
+iwconfig wlan0 txpower on
 
---==_Exmh_1273170584_4094P
-Content-Type: application/pgp-signature
+nothing happens. Though iwconfig shows the previous tx power value.
+Only ifconfig wlan0 down and then up recovers the transmission.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
+Is it a known bug or I'm doing something wrong?
 
-iD8DBQFL4wqYcC3lWbTT17ARArwmAJ9LGHTpYagAUMm99LssnBt4wXq9TACffiKa
-sLhU9+s1wcwIGoTU9C7LjK0=
-=dTom
------END PGP SIGNATURE-----
-
---==_Exmh_1273170584_4094P--
-
+Regards,
+Yegor
