@@ -1,127 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay004.isp.belgacom.be ([195.238.6.170]:20216 "EHLO
-	mailrelay004.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752270Ab0EAMRL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 08:17:11 -0400
-Date: Sat, 1 May 2010 14:17:06 +0200
-From: Philippe De Muyter <phdm@macqel.be>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Matthew Garrett <mjg@redhat.com>, Dan Williams <dcbw@redhat.com>,
-	linux-wireless@vger.kernel.org
-Subject: BCM4312 802.11b/g LP-PHY (rev 01) dma & led problems
-Message-ID: <20100501121706.GA32719@frolo.macqel>
-References: <20100419115329.GA5306@frolo.macqel> <20100419145107.GB8017@srcf.ucam.org> <20100419150050.GA28290@frolo.macqel> <20100419150627.GA10680@srcf.ucam.org> <20100424054210.GA23836@frolo.macqel> <20100424152107.GA13417@srcf.ucam.org> <20100424195630.GA15053@frolo.macqel> <20100424200218.GA16084@srcf.ucam.org> <20100425195058.GA12916@frolo.macqel> <4BD4A1D8.8000203@lwfinger.net>
+Received: from smtp3-g21.free.fr ([212.27.42.3]:56961 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755842Ab0EEGhf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 May 2010 02:37:35 -0400
+Message-ID: <4BE11227.9020502@free.fr>
+Date: Wed, 05 May 2010 08:37:27 +0200
+From: Benoit Papillault <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4BD4A1D8.8000203@lwfinger.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Add HT IE to IBSS beacons and probe responses.
+References: <1272955622-6987-1-git-send-email-benoit.papillault@free.fr>	 <1272955622-6987-2-git-send-email-benoit.papillault@free.fr>	 <1272955622-6987-3-git-send-email-benoit.papillault@free.fr> <1272961608.3673.7.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1272961608.3673.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a followup on my attempt to use b43 (now from 2.6.34-rc6) on
-a HP Pavilion dv6-1300sb.
+Le 04/05/2010 10:26, Johannes Berg a écrit :
+>
+>> @@ -118,7 +119,10 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+>>   		*pos++ = basic | (u8) (rate / 5);
+>>   	}
+>>
+>> -	/* Build IBSS probe response */
+>> +	/*
+>> +	 * Build IBSS probe response template (also used for beacon template
+>> +	 * in ieee80211_beacon_get_tim())
+>> +	 */
+>
+> That change is wrong -- no way beacon code can call into IBSS code.
 
-With 2.6.34-rc6, I have not had any boot problem (blocking around ssb/b43)
-so far.
+I meant the skb that is produced here and stored in ifibss->presp is 
+then used both for sending beacons in ieee80211_beacon_get_tim and for 
+sending probe response in ieee80211_rx_mgmt_probe_req
 
-But, dma mode gives an error (like before) and driver now switches
-automatically to PIO mode (new).  
+>
+> I think you meant to say "I need to create a common helper function that
+> I call here and in the beacon code."
 
-	[   89.830222] device mon0 entered promiscuous mode
-	[  101.965896] NOHZ: local_softirq_pending 08
-	[  101.969431] NOHZ: local_softirq_pending 08
-	[  101.972230] NOHZ: local_softirq_pending 08
-	[  101.975041] NOHZ: local_softirq_pending 08
-	[  101.977771] NOHZ: local_softirq_pending 08
-	[  101.984651] NOHZ: local_softirq_pending 08
-	[  101.988808] NOHZ: local_softirq_pending 08
-	[  101.991562] NOHZ: local_softirq_pending 08
-	[  101.994363] NOHZ: local_softirq_pending 08
-	[  101.997116] NOHZ: local_softirq_pending 08
-	[  111.816257] hpet1: lost 1 rtc interrupts
-	[  112.131040] hpet1: lost 1 rtc interrupts
-	[  112.133343] hpet1: lost 1 rtc interrupts
-	[  112.135528] hpet1: lost 1 rtc interrupts
-	[  112.137722] hpet1: lost 1 rtc interrupts
-	[  112.139911] hpet1: lost 1 rtc interrupts
-	[  112.142089] hpet1: lost 1 rtc interrupts
-	[  112.146370] hpet1: lost 1 rtc interrupts
-	[  112.150637] hpet1: lost 1 rtc interrupts
-	[  112.152849] hpet1: lost 1 rtc interrupts
-	[  113.100932] b43-phy0 ERROR: Fatal DMA error: 0x00000000, 0x00000800, 0x00000000, 0x00000000, 0x00000000, 0x00000000
-	[  113.100949] b43-phy0 ERROR: This device does not support DMA on your system. Please use PIO instead.
-	[  113.100957] b43-phy0: Controller RESET (DMA error) ...
-	[  113.336119] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
-	[  118.853353] b43-phy0: Controller restarted
+You are right : I will add a helper function to create HT Capability IE.
 
-During the switch, the led switches from blue to red and returns to blue
-after some seconds.  Touching the led switches the hardware blocking on
-and off, but the led color does not change.
+>
+>> --- a/net/mac80211/util.c
+>> +++ b/net/mac80211/util.c
+>> @@ -967,7 +967,7 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+>>
+>>   	if (sband->ht_cap.ht_supported) {
+>>   		u16 cap = sband->ht_cap.cap;
+>> -		__le16 tmp;
+>> +		struct ieee80211_ht_cap ht_cap;
+>>
+>>   		if (ieee80211_disable_40mhz_24ghz&&
+>>   		sband->band == IEEE80211_BAND_2GHZ) {
+>> @@ -975,18 +975,19 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+>>   			cap&= ~IEEE80211_HT_CAP_SGI_40;
+>>   		}
+>>
+>> +		ht_cap.cap_info = cpu_to_le16(cap);
+>> +		ht_cap.ampdu_params_info = sband->ht_cap.ampdu_factor |
+>> +			(sband->ht_cap.ampdu_density<<
+>> +			 IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+>> +		ht_cap.mcs = sband->ht_cap.mcs;
+>> +		ht_cap.extended_ht_cap_info = cpu_to_le16(0);
+>> +		ht_cap.tx_BF_cap_info = cpu_to_le32(0);
+>> +		ht_cap.antenna_selection_info = 0;
+>> +
+>>   		*pos++ = WLAN_EID_HT_CAPABILITY;
+>>   		*pos++ = sizeof(struct ieee80211_ht_cap);
+>> -		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
+>> -		tmp = cpu_to_le16(cap);
+>> -		memcpy(pos,&tmp, sizeof(u16));
+>> -		pos += sizeof(u16);
+>> -		*pos++ = sband->ht_cap.ampdu_factor |
+>> -			 (sband->ht_cap.ampdu_density<<
+>> -				IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+>> -		memcpy(pos,&sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
+>> -		pos += sizeof(sband->ht_cap.mcs);
+>> -		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
+>> +		memcpy(pos,&ht_cap, sizeof(struct ieee80211_ht_cap));
+>> +		pos += sizeof(struct ieee80211_ht_cap);
+>
+> And this is an unrelated change that doesn't belong into this patch at
+> all.
+>
+> johannes
+>
+>
 
-I then tried with the broadcom supplied hybrid driver, and there the
-touch/led functionality works as expected : led is red whenever
-I touch the button (enabling hardware blocking) or when I issue
-a rfkill block 0 (enabling software blocking).  Led is blue only when
-both blocking are disabled.  But, hybrid driver does not give monitor
-functionality :( (and of course, also no injection).
-	[10703.172776] wl: module license 'unspecified' taints kernel.
-	[10703.172791] Disabling lock debugging due to kernel taint
-	[10703.174286] wl: Unknown symbol lib80211_get_crypto_ops
-	[10778.692746] lib80211: common routines for IEEE802.11 drivers
-	[10778.692759] lib80211_crypt: registered algorithm 'NULL'
-	[10783.823152] wl 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-	[10783.823188] wl 0000:02:00.0: setting latency timer to 64
-	[10783.921236] lib80211_crypt: registered algorithm 'TKIP'
-	[10783.921623] eth1: Broadcom BCM4315 802.11 Hybrid Wireless Controller 5.60.48.36
-
-Any idea on what I could do to debug more / fix the dma and led problems ?
-
-Philippe
-
-Here the output of lspci -nvv for that chip :
-
-linux-m1ew:~ # lspci -nvv -s 02:00.0                                            
-02:00.0 0280: 14e4:4315 (rev 01)                                                
-        Subsystem: 103c:1508                                                    
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: Memory at d9000000 (64-bit, non-prefetchable) [size=16K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=2 PME-
-        Capabilities: [58] Vendor Specific Information: Len=78 <?>
-        Capabilities: [e8] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [d0] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
-                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <64us
-                        ClockPM+ Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout+ NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
-        Capabilities: [13c v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=01
-                        Status: NegoPending- InProgress-
-        Capabilities: [160 v1] Device Serial Number 00-00-00-ff-ff-00-ff-ff
-        Capabilities: [16c v1] Power Budgeting <?>
-        Kernel driver in use: b43-pci-bridge
+Regards,
+Benoit
