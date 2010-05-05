@@ -1,402 +1,361 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60714 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932560Ab0EMVuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:50:22 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Jay Sternberg <jay.e.sternberg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 11/17] iwlwifi: enable remaining 6000 Gen2 devices
-Date: Thu, 13 May 2010 14:49:53 -0700
-Message-Id: <1273787399-9280-12-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
-References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40137 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756078Ab0EEUpM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 May 2010 16:45:12 -0400
+Date: Wed, 5 May 2010 16:35:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2010-05-05
+Message-ID: <20100505203528.GB2603@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+Dave,
 
-This patch enables all remaining 6000 series Gen2 devices.
-To work-around a firmware crash problem, we disable sending
-bt coex command for 6000g2b series devices.
+Another enormous batch intended for 2.6.35...  This is mostly the 'usual
+suspects' -- driver updates from Intel, Atheros, Nokia, and the rt2x00
+guys, mac80211 stuff from Johannes, and a variety of other bits.  One
+noteworth bit is the addition of the orinoco_usb driver.
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Please let me know if there are problems!
+
+¡Olé!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c     |  252 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   17 ++
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    4 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    7 +
- 5 files changed, 282 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 9fbf54c..9247594 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -71,6 +71,10 @@
- #define _IWL6000G2A_MODULE_FIRMWARE(api) IWL6000G2A_FW_PRE #api ".ucode"
- #define IWL6000G2A_MODULE_FIRMWARE(api) _IWL6000G2A_MODULE_FIRMWARE(api)
- 
-+#define IWL6000G2B_FW_PRE "iwlwifi-6000g2b-"
-+#define _IWL6000G2B_MODULE_FIRMWARE(api) IWL6000G2B_FW_PRE #api ".ucode"
-+#define IWL6000G2B_MODULE_FIRMWARE(api) _IWL6000G2B_MODULE_FIRMWARE(api)
-+
- 
- static void iwl6000_set_ct_threshold(struct iwl_priv *priv)
- {
-@@ -335,6 +339,25 @@ static const struct iwl_ops iwl6000_ops = {
- 	.led = &iwlagn_led_ops,
- };
- 
-+static void do_not_send_bt_config(struct iwl_priv *priv)
-+{
-+}
-+
-+static struct iwl_hcmd_ops iwl6000g2b_hcmd = {
-+	.rxon_assoc = iwlagn_send_rxon_assoc,
-+	.commit_rxon = iwl_commit_rxon,
-+	.set_rxon_chain = iwl_set_rxon_chain,
-+	.set_tx_ant = iwlagn_send_tx_ant_config,
-+	.send_bt_config = do_not_send_bt_config,
-+};
-+
-+static const struct iwl_ops iwl6000g2b_ops = {
-+	.lib = &iwl6000_lib,
-+	.hcmd = &iwl6000g2b_hcmd,
-+	.utils = &iwlagn_hcmd_utils,
-+	.led = &iwlagn_led_ops,
-+};
-+
- static struct iwl_lib_ops iwl6050_lib = {
- 	.set_hw_params = iwl6050_hw_set_hw_params,
- 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
-@@ -445,6 +468,234 @@ struct iwl_cfg iwl6000g2a_2agn_cfg = {
- 	.chain_noise_calib_by_driver = true,
- };
- 
-+struct iwl_cfg iwl6000g2a_2abg_cfg = {
-+	.name = "6000 Series 2x2 ABG Gen2a",
-+	.fw_name_pre = IWL6000G2A_FW_PRE,
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-+	.sku = IWL_SKU_A|IWL_SKU_G,
-+	.ops = &iwl6000_ops,
-+	.eeprom_size = OTP_LOW_IMAGE_SIZE,
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
-+	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
-+	.mod_params = &iwlagn_mod_params,
-+	.valid_tx_ant = ANT_AB,
-+	.valid_rx_ant = ANT_AB,
-+	.pll_cfg_val = 0,
-+	.set_l0s = true,
-+	.use_bsm = false,
-+	.pa_type = IWL_PA_SYSTEM,
-+	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-+	.shadow_ram_support = true,
-+	.led_compensation = 51,
-+	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-+	.supports_idle = true,
-+	.adv_thermal_throttle = true,
-+	.support_ct_kill_exit = true,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.chain_noise_scale = 1000,
-+	.monitor_recover_period = IWL_MONITORING_PERIOD,
-+	.max_event_log_size = 512,
-+};
-+
-+struct iwl_cfg iwl6000g2a_2bg_cfg = {
-+	.name = "6000 Series 2x2 BG Gen2a",
-+	.fw_name_pre = IWL6000G2A_FW_PRE,
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-+	.sku = IWL_SKU_G,
-+	.ops = &iwl6000_ops,
-+	.eeprom_size = OTP_LOW_IMAGE_SIZE,
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
-+	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
-+	.mod_params = &iwlagn_mod_params,
-+	.valid_tx_ant = ANT_AB,
-+	.valid_rx_ant = ANT_AB,
-+	.pll_cfg_val = 0,
-+	.set_l0s = true,
-+	.use_bsm = false,
-+	.pa_type = IWL_PA_SYSTEM,
-+	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-+	.shadow_ram_support = true,
-+	.led_compensation = 51,
-+	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-+	.supports_idle = true,
-+	.adv_thermal_throttle = true,
-+	.support_ct_kill_exit = true,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.chain_noise_scale = 1000,
-+	.monitor_recover_period = IWL_MONITORING_PERIOD,
-+	.max_event_log_size = 512,
-+};
-+
-+struct iwl_cfg iwl6000g2b_2agn_cfg = {
-+	.name = "6000 Series 2x2 AGN Gen2b",
-+	.fw_name_pre = IWL6000G2B_FW_PRE,
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-+	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
-+	.ops = &iwl6000g2b_ops,
-+	.eeprom_size = OTP_LOW_IMAGE_SIZE,
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
-+	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
-+	.mod_params = &iwlagn_mod_params,
-+	.valid_tx_ant = ANT_AB,
-+	.valid_rx_ant = ANT_AB,
-+	.pll_cfg_val = 0,
-+	.set_l0s = true,
-+	.use_bsm = false,
-+	.pa_type = IWL_PA_SYSTEM,
-+	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-+	.shadow_ram_support = true,
-+	.ht_greenfield_support = true,
-+	.led_compensation = 51,
-+	.use_rts_for_ht = true, /* use rts/cts protection */
-+	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-+	.supports_idle = true,
-+	.adv_thermal_throttle = true,
-+	.support_ct_kill_exit = true,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.chain_noise_scale = 1000,
-+	.monitor_recover_period = IWL_MONITORING_PERIOD,
-+	.max_event_log_size = 512,
-+};
-+
-+struct iwl_cfg iwl6000g2b_2abg_cfg = {
-+	.name = "6000 Series 2x2 ABG Gen2b",
-+	.fw_name_pre = IWL6000G2B_FW_PRE,
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-+	.sku = IWL_SKU_A|IWL_SKU_G,
-+	.ops = &iwl6000g2b_ops,
-+	.eeprom_size = OTP_LOW_IMAGE_SIZE,
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
-+	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
-+	.mod_params = &iwlagn_mod_params,
-+	.valid_tx_ant = ANT_AB,
-+	.valid_rx_ant = ANT_AB,
-+	.pll_cfg_val = 0,
-+	.set_l0s = true,
-+	.use_bsm = false,
-+	.pa_type = IWL_PA_SYSTEM,
-+	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-+	.shadow_ram_support = true,
-+	.led_compensation = 51,
-+	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-+	.supports_idle = true,
-+	.adv_thermal_throttle = true,
-+	.support_ct_kill_exit = true,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.chain_noise_scale = 1000,
-+	.monitor_recover_period = IWL_MONITORING_PERIOD,
-+	.max_event_log_size = 512,
-+};
-+
-+struct iwl_cfg iwl6000g2b_2bg_cfg = {
-+	.name = "6000 Series 2x2 BG Gen2b",
-+	.fw_name_pre = IWL6000G2B_FW_PRE,
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-+	.sku = IWL_SKU_G,
-+	.ops = &iwl6000g2b_ops,
-+	.eeprom_size = OTP_LOW_IMAGE_SIZE,
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
-+	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
-+	.mod_params = &iwlagn_mod_params,
-+	.valid_tx_ant = ANT_AB,
-+	.valid_rx_ant = ANT_AB,
-+	.pll_cfg_val = 0,
-+	.set_l0s = true,
-+	.use_bsm = false,
-+	.pa_type = IWL_PA_SYSTEM,
-+	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-+	.shadow_ram_support = true,
-+	.led_compensation = 51,
-+	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-+	.supports_idle = true,
-+	.adv_thermal_throttle = true,
-+	.support_ct_kill_exit = true,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.chain_noise_scale = 1000,
-+	.monitor_recover_period = IWL_MONITORING_PERIOD,
-+	.max_event_log_size = 512,
-+};
-+
-+struct iwl_cfg iwl6000g2b_bgn_cfg = {
-+	.name = "6000 Series 1x2 BGN Gen2b",
-+	.fw_name_pre = IWL6000G2B_FW_PRE,
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-+	.sku = IWL_SKU_G|IWL_SKU_N,
-+	.ops = &iwl6000g2b_ops,
-+	.eeprom_size = OTP_LOW_IMAGE_SIZE,
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
-+	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
-+	.mod_params = &iwlagn_mod_params,
-+	.valid_tx_ant = ANT_A,
-+	.valid_rx_ant = ANT_AB,
-+	.pll_cfg_val = 0,
-+	.set_l0s = true,
-+	.use_bsm = false,
-+	.pa_type = IWL_PA_SYSTEM,
-+	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-+	.shadow_ram_support = true,
-+	.ht_greenfield_support = true,
-+	.led_compensation = 51,
-+	.use_rts_for_ht = true, /* use rts/cts protection */
-+	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-+	.supports_idle = true,
-+	.adv_thermal_throttle = true,
-+	.support_ct_kill_exit = true,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.chain_noise_scale = 1000,
-+	.monitor_recover_period = IWL_MONITORING_PERIOD,
-+	.max_event_log_size = 512,
-+};
-+
-+struct iwl_cfg iwl6000g2b_bg_cfg = {
-+	.name = "6000 Series 1x2 BG Gen2b",
-+	.fw_name_pre = IWL6000G2B_FW_PRE,
-+	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
-+	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-+	.sku = IWL_SKU_G,
-+	.ops = &iwl6000g2b_ops,
-+	.eeprom_size = OTP_LOW_IMAGE_SIZE,
-+	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
-+	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
-+	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
-+	.mod_params = &iwlagn_mod_params,
-+	.valid_tx_ant = ANT_A,
-+	.valid_rx_ant = ANT_AB,
-+	.pll_cfg_val = 0,
-+	.set_l0s = true,
-+	.use_bsm = false,
-+	.pa_type = IWL_PA_SYSTEM,
-+	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-+	.shadow_ram_support = true,
-+	.led_compensation = 51,
-+	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-+	.supports_idle = true,
-+	.adv_thermal_throttle = true,
-+	.support_ct_kill_exit = true,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.chain_noise_scale = 1000,
-+	.monitor_recover_period = IWL_MONITORING_PERIOD,
-+	.max_event_log_size = 512,
-+};
-+
- /*
-  * "i": Internal configuration, use internal Power Amplifier
-  */
-@@ -667,3 +918,4 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6000G2A_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL6000G2B_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index 44ef5d9..25851ec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -37,7 +37,7 @@
- #include "iwl-io.h"
- #include "iwl-agn.h"
- 
--static int iwlagn_send_rxon_assoc(struct iwl_priv *priv)
-+int iwlagn_send_rxon_assoc(struct iwl_priv *priv)
- {
- 	int ret = 0;
- 	struct iwl5000_rxon_assoc_cmd rxon_assoc;
-@@ -84,7 +84,7 @@ static int iwlagn_send_rxon_assoc(struct iwl_priv *priv)
- 	return ret;
- }
- 
--static int iwlagn_send_tx_ant_config(struct iwl_priv *priv, u8 valid_tx_ant)
-+int iwlagn_send_tx_ant_config(struct iwl_priv *priv, u8 valid_tx_ant)
- {
- 	struct iwl_tx_ant_config_cmd tx_ant_cmd = {
- 	  .valid = cpu_to_le32(valid_tx_ant),
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 845d0ee..f910246 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4059,6 +4059,23 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x0082, 0x1201, iwl6000g2a_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0085, 0x1211, iwl6000g2a_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0082, 0x1221, iwl6000g2a_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1206, iwl6000g2a_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0085, 0x1216, iwl6000g2a_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1226, iwl6000g2a_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0x1207, iwl6000g2a_2bg_cfg)},
-+
-+/* 6x00 Series Gen2b */
-+	{IWL_PCI_DEVICE(0x008F, 0x5105, iwl6000g2b_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x0090, 0x5115, iwl6000g2b_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x008F, 0x5125, iwl6000g2b_bgn_cfg)},
-+	{IWL_PCI_DEVICE(0x008F, 0x5107, iwl6000g2b_bg_cfg)},
-+	{IWL_PCI_DEVICE(0x008F, 0x5201, iwl6000g2b_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x0090, 0x5211, iwl6000g2b_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x008F, 0x5221, iwl6000g2b_2agn_cfg)},
-+	{IWL_PCI_DEVICE(0x008F, 0x5206, iwl6000g2b_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0090, 0x5216, iwl6000g2b_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x008F, 0x5226, iwl6000g2b_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x008F, 0x5207, iwl6000g2b_2bg_cfg)},
- 
- /* 6x50 WiFi/WiMax Series */
- 	{IWL_PCI_DEVICE(0x0087, 0x1301, iwl6050_2agn_cfg)},
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index fbbefe1..12c198f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -180,4 +180,8 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
- int iwlagn_manage_ibss_station(struct iwl_priv *priv,
- 			       struct ieee80211_vif *vif, bool add);
- 
-+/* hcmd */
-+int iwlagn_send_rxon_assoc(struct iwl_priv *priv);
-+int iwlagn_send_tx_ant_config(struct iwl_priv *priv, u8 valid_tx_ant);
-+
- #endif /* __iwl_agn_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index fdd0430..04296fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -58,6 +58,13 @@ extern struct iwl_cfg iwl5100_abg_cfg;
- extern struct iwl_cfg iwl5150_agn_cfg;
- extern struct iwl_cfg iwl5150_abg_cfg;
- extern struct iwl_cfg iwl6000g2a_2agn_cfg;
-+extern struct iwl_cfg iwl6000g2a_2abg_cfg;
-+extern struct iwl_cfg iwl6000g2a_2bg_cfg;
-+extern struct iwl_cfg iwl6000g2b_bgn_cfg;
-+extern struct iwl_cfg iwl6000g2b_bg_cfg;
-+extern struct iwl_cfg iwl6000g2b_2agn_cfg;
-+extern struct iwl_cfg iwl6000g2b_2abg_cfg;
-+extern struct iwl_cfg iwl6000g2b_2bg_cfg;
- extern struct iwl_cfg iwl6000i_2agn_cfg;
- extern struct iwl_cfg iwl6000i_2abg_cfg;
- extern struct iwl_cfg iwl6000i_2bg_cfg;
+The following changes since commit 0a12761bcd5646691c5d16dd93df84d1b8849285:
+  David S. Miller (1):
+        forcedeth: Kill NAPI config options.
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6 for-davem
+
+Abhijeet Kolekar (2):
+      iwlwifi: reset pci retry timeout
+      iwl3945: add ucode statistics
+
+Benoit Papillault (1):
+      ath9k: Added get_survey callback in order to get channel noise
+
+Dan Carpenter (1):
+      iwl: cleanup: remove unneeded error handling
+
+Dan Williams (1):
+      libertas: fix 8686 firmware loading regression
+
+Daniel Halperin (1):
+      iwlwifi: set AMPDU status variables correctly
+
+David Kilroy (6):
+      orinoco: add hermes_ops
+      orinoco: allow driver to specify netdev_ops
+      orinoco: encapsulate driver locking
+      orinoco: add orinoco_usb driver
+      orinoco_usb: avoid in_atomic
+      orinoco_usb: implement fw download
+
+Felix Fietkau (13):
+      mac80211: fix handling of 4-address-mode in ieee80211_change_iface
+      ath9k_hw: update initvals for AR9003
+      ath9k_hw: fix pll clock setting for 5ghz on AR9003
+      ath9k_hw: fix typo in the AR9003 EEPROM data structure definition
+      ath9k_hw: update EEPROM data structure for AR9280
+      ath9k_hw: fix fast clock handling for 5GHz channels
+      ath9k: wake queue after processing edma rx frames
+      ath9k_hw: use the configured power limit for AR9003
+      ath9k_hw: Fix typos in tx rate power level parsing for AR9003
+      ath9k_hw: Fix endian bug in an AR9003 EEPROM field
+      ath9k_hw: fix noisefloor timeout handling on AR9003
+      cfg80211: add ap isolation support
+      mac80211: implement ap isolation support
+
+Gertjan van Wingerde (4):
+      rt2x00: Remove rt2x00pci.h include from rt2800lib.
+      rt2x00: Enable RT30xx by default.
+      rt2x00: Fix HT40+/HT40- setting in rt2800.
+      rt2x00: Register frame length in TX entry descriptor instead of L2PAD.
+
+Hans de Goede (1):
+      p54pci: fix regression from prevent stuck rx-ring on slow system
+
+Helmut Schaa (6):
+      rt2x00: rt2800lib: disable HT40 for now as it causes reception problems
+      rt2x00: rt2800: use tx_power2 in rt2800_config_channel_rf3xxx
+      rt2x00: fix typo in rt2800.h
+      rt2x00: rt2800lib: Fix rx path on SoC devices
+      rt2x00: rt2800lib: Remove redundant check for RT2872
+      rt2x00: rt2800lib: update rfcsr & bbp init code for SoC devices
+
+Johannes Berg (9):
+      mac80211: give virtual interface to hw_scan
+      mac80211: notify driver about IBSS status
+      mac80211: tell driver about IBSS merge
+      iwlwifi: work around passive scan issue
+      mac80211: fix ieee80211_find_sta[_by_hw]
+      mac80211: allow controlling aggregation manually
+      mac80211: improve IBSS scanning
+      mac80211_hwsim: fix double-scan detection
+      mac80211: use fixed channel in ibss join when appropriate
+
+John W. Linville (25):
+      ssb: do not read SPROM if it does not exist
+      MAINTAINERS: add entry for include/linux/iw_handler.h
+      mwl8k: remove usage of deprecated noise value
+      ar9170: remove usage of deprecated noise value
+      ath5k: remove usage of deprecated noise value
+      ath9k: remove usage of deprecated noise value
+      b43: remove usage of deprecated noise value
+      b43legacy: remove usage of deprecated noise value
+      libertas_tf: remove usage of deprecated noise value
+      p54: remove usage of deprecated noise value
+      rt2x00: remove usage of deprecated noise value
+      wl1251: remove usage of deprecated noise value
+      rtl8180: use cached queue mapping for skb in rtl8180_tx
+      rtl8180: fix tx status reporting
+      libertas_tf: avoid warning about pr_fmt redefinition
+      mac80211: remove deprecated noise field from ieee80211_rx_status
+      iwmc3200wifi: cleanup unneeded debugfs error handling
+      rt2x00: remove now unused noise field from struct rxdone_entry_desc
+      b43: Added get_survey callback in order to get channel noise
+      b43legacy: Added get_survey callback in order to get channel noise
+      Merge branch 'wireless-next-2.6' of git://git.kernel.org/.../iwlwifi/iwlwifi-2.6
+      iwmc3200wifi: fix busted iwm_debugfs_init definition
+      rtl8180: use SET_IEEE80211_PERM_ADDR
+      rtl8187: use SET_IEEE80211_PERM_ADDR
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
+
+Juuso Oikarinen (5):
+      mac80211: Fix sta->last_tx_rate setting with no-op rate control devices
+      mac80211: Determine dynamic PS timeout based on ps-qos network latency
+      cfg80211: Remove default dynamic PS timeout value
+      wl1271: Improve command polling
+      wl1271: Rewrite hardware keep-alive handling
+
+Larry Finger (1):
+      ssb: Make bus registration failure not be silent
+
+Luciano Coelho (1):
+      wl1271: fix a bunch of sparse warnings
+
+Luis R. Rodriguez (2):
+      ath9k_hw: disable TX IQ calibration for AR9003
+      ath9k_hw: Fix TX interrupt mitigation settings
+
+Rafał Miłecki (3):
+      ssb: Look for SPROM at different offset on higher rev CC
+      ssb: Use relative offsets for SPROM
+      ssb: Fix order of definitions and some text space indents
+
+Reinette Chatre (2):
+      Merge branch 'wireless-2.6' into wireless-next-2.6
+      iwlwifi: recalculate average tpt if not current
+
+Saravanan Dhanabal (1):
+      wl1271: Configure QOS nullfunc template for U-APSD
+
+Shanyu Zhao (2):
+      mac80211: fix rts threshold check
+      iwlwifi: set correct AC to swq_id for aggregation
+
+Stanislaw Gruszka (2):
+      mac80211: do not wip out old supported rates
+      mac80211: fix supported rates IE if AP doesn't give us it's rates
+
+Steve deRosier (1):
+      libertastf: add configurable debug messages
+
+Sujith (14):
+      ath9k_htc: Simplify TX URB management
+      ath9k_htc: Handle device unplug properly
+      ath9k_htc: Use multiple register writes
+      ath9k_htc: Cancel running timers before disabling HW
+      ath9k_hw: Remove pointless ANI deinit
+      ath9k_htc: Pass correct private pointer
+      ath9k_htc: Use USB reboot
+      ath9k_htc: Process command data properly
+      ath9k_htc: Increase WMI timeout value
+      ath9k_htc: Fix WMI command race
+      ath9k_htc: Really fix device hotunplug
+      ath9k_htc: Remove unnecessary powersave restore
+      ath9k_htc: Validate TX Endpoint ID
+      ath9k_htc: Simplify RX IRQ handler
+
+Vasanthakumar Thiagarajan (1):
+      ath9k_hw: Fix usec to hw clock conversion in 5Ghz for ar9003
+
+Vivek Natarajan (2):
+      ath9k_htc: Handle CONF_IDLE during unassociated state to save power.
+      ath9k: Avoid corrupt frames being forwarded to mac80211.
+
+Wey-Yi Guy (4):
+      iwlwifi: remove get_stats callback function
+      iwlwifi: remove outdated comments
+      iwlwifi: set hw parameters based on device type
+      iwlwifi: greenfield support only true for 11n devices
+
+Xose Vazquez Perez (1):
+      wireless: rt2x00: rt2800usb: be in sync with latest windows drivers.
+
+ MAINTAINERS                                      |    1 +
+ drivers/net/wireless/Kconfig                     |    6 +
+ drivers/net/wireless/at76c50x-usb.c              |    1 +
+ drivers/net/wireless/ath/ar9170/main.c           |    4 +-
+ drivers/net/wireless/ath/ath5k/base.c            |    6 +-
+ drivers/net/wireless/ath/ath9k/ani.c             |    9 -
+ drivers/net/wireless/ath/ath9k/ani.h             |    1 -
+ drivers/net/wireless/ath/ath9k/ar5008_initvals.h |    2 +-
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c      |    5 +-
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c       |    5 +
+ drivers/net/wireless/ath/ath9k/ar9002_initvals.h |    8 +-
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c      |   16 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c    |    3 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |    8 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_initvals.h |  265 ++--
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c      |    3 +
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   16 +-
+ drivers/net/wireless/ath/ath9k/common.c          |    1 -
+ drivers/net/wireless/ath/ath9k/eeprom.h          |    3 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c      |    2 +
+ drivers/net/wireless/ath/ath9k/hif_usb.c         |  149 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.h         |    1 -
+ drivers/net/wireless/ath/ath9k/htc.h             |    2 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c    |    8 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c    |   84 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c    |   59 +-
+ drivers/net/wireless/ath/ath9k/htc_hst.c         |    5 +-
+ drivers/net/wireless/ath/ath9k/hw.c              |   27 +-
+ drivers/net/wireless/ath/ath9k/hw.h              |    8 +-
+ drivers/net/wireless/ath/ath9k/mac.c             |   10 +-
+ drivers/net/wireless/ath/ath9k/main.c            |   20 +
+ drivers/net/wireless/ath/ath9k/wmi.c             |   11 +-
+ drivers/net/wireless/ath/ath9k/wmi.h             |    4 +-
+ drivers/net/wireless/ath/ath9k/xmit.c            |    2 +
+ drivers/net/wireless/b43/main.c                  |   21 +-
+ drivers/net/wireless/b43/xmit.c                  |    1 -
+ drivers/net/wireless/b43legacy/main.c            |   21 +-
+ drivers/net/wireless/b43legacy/xmit.c            |    1 -
+ drivers/net/wireless/iwlwifi/Makefile            |    1 +
+ drivers/net/wireless/iwlwifi/iwl-1000.c          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c  |  500 ++++++
+ drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h  |   60 +
+ drivers/net/wireless/iwlwifi/iwl-3945.c          |   72 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h          |    2 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c          |   73 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c          |   73 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c        |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c        |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |   14 -
+ drivers/net/wireless/iwlwifi/iwl-commands.h      |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c          |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h          |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c       |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h           |    5 +
+ drivers/net/wireless/iwlwifi/iwl-scan.c          |    3 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c      |    6 +-
+ drivers/net/wireless/iwmc3200wifi/bus.h          |    2 +-
+ drivers/net/wireless/iwmc3200wifi/debug.h        |    7 +-
+ drivers/net/wireless/iwmc3200wifi/debugfs.c      |  110 +--
+ drivers/net/wireless/iwmc3200wifi/sdio.c         |   17 +-
+ drivers/net/wireless/libertas/if_sdio.c          |    4 +-
+ drivers/net/wireless/libertas_tf/cmd.c           |  203 ++-
+ drivers/net/wireless/libertas_tf/deb_defs.h      |  104 ++
+ drivers/net/wireless/libertas_tf/if_usb.c        |  251 +++-
+ drivers/net/wireless/libertas_tf/libertas_tf.h   |    2 +
+ drivers/net/wireless/libertas_tf/main.c          |   91 +-
+ drivers/net/wireless/mac80211_hwsim.c            |    6 +-
+ drivers/net/wireless/mwl8k.c                     |    6 +-
+ drivers/net/wireless/orinoco/Kconfig             |    7 +
+ drivers/net/wireless/orinoco/Makefile            |    1 +
+ drivers/net/wireless/orinoco/airport.c           |    8 +-
+ drivers/net/wireless/orinoco/cfg.c               |    2 +-
+ drivers/net/wireless/orinoco/fw.c                |   10 +-
+ drivers/net/wireless/orinoco/hermes.c            |  286 ++++-
+ drivers/net/wireless/orinoco/hermes.h            |   62 +-
+ drivers/net/wireless/orinoco/hermes_dld.c        |  243 +---
+ drivers/net/wireless/orinoco/hw.c                |   63 +-
+ drivers/net/wireless/orinoco/main.c              |  137 +-
+ drivers/net/wireless/orinoco/orinoco.h           |   30 +-
+ drivers/net/wireless/orinoco/orinoco_cs.c        |    6 +-
+ drivers/net/wireless/orinoco/orinoco_nortel.c    |    2 +-
+ drivers/net/wireless/orinoco/orinoco_pci.c       |    2 +-
+ drivers/net/wireless/orinoco/orinoco_plx.c       |    2 +-
+ drivers/net/wireless/orinoco/orinoco_tmd.c       |    2 +-
+ drivers/net/wireless/orinoco/orinoco_usb.c       | 1800 ++++++++++++++++++++++
+ drivers/net/wireless/orinoco/spectrum_cs.c       |    7 +-
+ drivers/net/wireless/orinoco/wext.c              |    6 +-
+ drivers/net/wireless/p54/main.c                  |    3 +-
+ drivers/net/wireless/p54/p54pci.c                |   16 +-
+ drivers/net/wireless/p54/txrx.c                  |    1 -
+ drivers/net/wireless/rt2x00/Kconfig              |    4 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c          |    4 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c          |    2 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c          |    2 +-
+ drivers/net/wireless/rt2x00/rt2800.h             |   11 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c          |   91 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c          |    6 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c          |   13 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c          |    1 -
+ drivers/net/wireless/rt2x00/rt2x00queue.c        |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.h        |    6 +-
+ drivers/net/wireless/rt2x00/rt61pci.c            |    5 +-
+ drivers/net/wireless/rt2x00/rt73usb.c            |    2 +-
+ drivers/net/wireless/rtl818x/rtl8180_dev.c       |   13 +-
+ drivers/net/wireless/rtl818x/rtl8187_dev.c       |   10 +-
+ drivers/net/wireless/wl12xx/wl1251_main.c        |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_rx.c          |    6 -
+ drivers/net/wireless/wl12xx/wl1271_acx.c         |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_boot.c        |    8 +-
+ drivers/net/wireless/wl12xx/wl1271_cmd.c         |   14 +-
+ drivers/net/wireless/wl12xx/wl1271_conf.h        |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c        |   97 +-
+ drivers/ssb/driver_chipcommon.c                  |    2 +
+ drivers/ssb/main.c                               |    3 +
+ drivers/ssb/pci.c                                |   14 +-
+ drivers/ssb/sprom.c                              |   14 +
+ include/linux/nl80211.h                          |    5 +
+ include/linux/ssb/ssb.h                          |    4 +
+ include/linux/ssb/ssb_driver_chipcommon.h        |   15 +
+ include/linux/ssb/ssb_regs.h                     |  239 ++--
+ include/net/cfg80211.h                           |    4 +
+ include/net/mac80211.h                           |   21 +-
+ net/mac80211/cfg.c                               |   18 +-
+ net/mac80211/debugfs_sta.c                       |   65 +-
+ net/mac80211/driver-ops.h                        |    5 +-
+ net/mac80211/driver-trace.h                      |    9 +-
+ net/mac80211/ibss.c                              |   27 +-
+ net/mac80211/ieee80211_i.h                       |    3 +-
+ net/mac80211/main.c                              |   19 +-
+ net/mac80211/mlme.c                              |   21 +
+ net/mac80211/rx.c                                |    2 -
+ net/mac80211/scan.c                              |   53 +-
+ net/mac80211/sta_info.c                          |   17 +-
+ net/mac80211/status.c                            |    7 +
+ net/mac80211/tx.c                                |    5 +-
+ net/mac80211/work.c                              |   28 +-
+ net/wireless/core.c                              |    3 +-
+ net/wireless/nl80211.c                           |    4 +
+ 140 files changed, 4751 insertions(+), 1368 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-3945-debugfs.h
+ create mode 100644 drivers/net/wireless/libertas_tf/deb_defs.h
+ create mode 100644 drivers/net/wireless/orinoco/orinoco_usb.c
+
+Omnibus patch is available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-04-23.patch.bz2
+
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
