@@ -1,55 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:58431 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499Ab0ENInh convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51538 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755961Ab0EEHoN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 04:43:37 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: 'Sascha Silbe' <sascha-ml-reply-to-2010-2@silbe.org>,
-	Kiran Divekar <dkiran@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
-Date: Fri, 14 May 2010 01:43:35 -0700
-Subject: RE: [PATCH v2] Libertas: Added callback functions to support SDIO
-	suspend/resume.
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF595056D1B6FCB@SC-VEXCH1.marvell.com>
-In-Reply-To: <20100513092013.GA22652@twin.sascha.silbe.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 5 May 2010 03:44:13 -0400
+Subject: [PATCH] mac80211: fix BSS info reconfiguration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 05 May 2010 09:44:02 +0200
+Message-ID: <1273045442.3728.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When reconfiguring an interface due to a previous
+hardware restart, mac80211 will currently include
+the new IBSS flag on non-IBSS interfaces which may
+confuse drivers.
 
-Hi Sascha,
+Instead of doing the ~0 trick, simply spell out
+which things are going to be reconfigured.
 
-> -----Original Message-----
-> From: libertas-dev-bounces@lists.infradead.org [mailto:libertas-dev- 
-> bounces@lists.infradead.org] On Behalf Of Sascha Silbe
-> 
-> On Wed, May 12, 2010 at 10:07:55PM -0700, Kiran Divekar wrote:
-> [if_usb_suspend()]
-> > +	if (priv->wol_criteria == 0xffffffff) {
-> Again, s/0xffffffff/EHS_REMOVE_WAKEUP/.
-> 
-> > +		lbs_pr_info("Suspend attempt without "
-> > +						"configuring wake params!\n");
-> > +		return -ENOSYS;
-> > +	}
-> AFAICT this would cause a USB-connected libertas chip with WOL 
-> disabled ("ethtool eth0 d") to prevent suspend, instead of just 
-> powering down like an SDIO-connected chip. So instead of failing 
-> during
-> lbs_host_sleep_cfg() because the 8388 doesn't support 
-> EHS_REMOVE_WAKEUP, you just bail out earlier, still breaking suspend.
-> 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/util.c    |   25 ++++++++++++++++++++-----
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-Earlier also this check was there in lbs_suspend() (in main.c). I just moved it to if_usb_suspend (in if_usb.c). In both the cases It's going to bail out earlier. So I don't see any side affects on USB suspend due to this patch.
+--- wireless-testing.orig/include/net/mac80211.h	2010-05-01 08:47:54.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-05-05 09:41:46.000000000 +0200
+@@ -160,6 +160,8 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
+ 	BSS_CHANGED_CQM			= 1<<10,
+ 	BSS_CHANGED_IBSS		= 1<<11,
++
++	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/util.c	2010-04-09 11:46:46.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2010-05-05 09:41:46.000000000 +0200
+@@ -1160,18 +1160,33 @@ int ieee80211_reconfig(struct ieee80211_
+ 
+ 	/* Finally also reconfigure all the BSS information */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		u32 changed = ~0;
++		u32 changed;
++
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
++
++		/* common change flags for all interface types */
++		changed = BSS_CHANGED_ERP_CTS_PROT |
++			  BSS_CHANGED_ERP_PREAMBLE |
++			  BSS_CHANGED_ERP_SLOT |
++			  BSS_CHANGED_HT |
++			  BSS_CHANGED_BASIC_RATES |
++			  BSS_CHANGED_BEACON_INT |
++			  BSS_CHANGED_BSSID |
++			  BSS_CHANGED_CQM;
++
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+-			/* disable beacon change bits */
+-			changed &= ~(BSS_CHANGED_BEACON |
+-				     BSS_CHANGED_BEACON_ENABLED);
+-			/* fall through */
++			changed |= BSS_CHANGED_ASSOC;
++			ieee80211_bss_info_change_notify(sdata, changed);
++			break;
+ 		case NL80211_IFTYPE_ADHOC:
++			changed |= BSS_CHANGED_IBSS;
++			/* fall through */
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_MESH_POINT:
++			changed |= BSS_CHANGED_BEACON |
++				   BSS_CHANGED_BEACON_ENABLED;
+ 			ieee80211_bss_info_change_notify(sdata, changed);
+ 			break;
+ 		case NL80211_IFTYPE_WDS:
 
-Your other comments looks fine to me. I will modify the patch accordingly.
 
-> 
-> > diff --git a/drivers/net/wireless/libertas/main.c
-> > b/drivers/net/wireless/libertas/main.c
-
-Thanks,
-Amit
