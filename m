@@ -1,55 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:55074 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312Ab0EIPHu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51545 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752688Ab0EEHr0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 May 2010 11:07:50 -0400
-Received: by pxi5 with SMTP id 5so1269911pxi.19
-        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 08:07:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100509004006.GA5790@tuxdriver.com>
-References: <20100505120131.2b9f4e06@atom.pigiron.org>
-	 <t2j446ae9281005061112z6eee4126z673947eb02dc4f12@mail.gmail.com>
-	 <20100506215613.43477434@atom.pigiron.org>
-	 <w2r445f43ac1005070929uacb5472dj231ff72ef0343860@mail.gmail.com>
-	 <20100508093445.581e180e@atom.pigiron.org>
-	 <20100509004006.GA5790@tuxdriver.com>
-Date: Sun, 9 May 2010 08:07:49 -0700
-Message-ID: <v2u445f43ac1005090807k1b4e653dy9b80a0c87067df0e@mail.gmail.com>
-Subject: Re: The case of the bogus SSID
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: pigiron <pigiron@gmx.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 May 2010 03:47:26 -0400
+Subject: Re: [PATCH] mac80211: fix BSS info reconfiguration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1273045442.3728.1.camel@jlt3.sipsolutions.net>
+References: <1273045442.3728.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 05 May 2010 09:47:20 +0200
+Message-ID: <1273045640.3728.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+On Wed, 2010-05-05 at 09:44 +0200, Johannes Berg wrote:
+> When reconfiguring an interface due to a previous
+> hardware restart, mac80211 will currently include
+> the new IBSS flag on non-IBSS interfaces which may
+> confuse drivers.
+> 
+> Instead of doing the ~0 trick, simply spell out
+> which things are going to be reconfigured.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-On Sat, May 8, 2010 at 5:40 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Sat, May 08, 2010 at 09:34:45AM -0500, pigiron wrote:
->> On Fri, 7 May 2010 09:29:18 -0700 Javier Cardona <javier@cozybit.com> wrote:
->
->> > I don't know about the router, nor if the IE ID clash is causing your
->> > problem, but moving the mesh codes somewhere else in the unassigned ID
->> > space would be a "A Good Thing To Do (tm)".
->
->> Really?
->>
->> Wouldn't that cause a problem for the kids running OLPC? For instance, where
->> some of the laptops are running an old level of code where WLAN_EID_MESH_ID=52
->> and others are running new code where WLAN_EID_MESH_ID=X.
->
-> If I'm not mistaken, the mesh done in OLPC is already incompatible w/
-> 802.11s anyway.
+Oops, that might get confusing.
 
-Yes, the currently deployed laptops implement an earlier version of
-the 802.11s draft that's not compatible with what's in the kernel now.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Javier
+though I'm still me either way I think.
+
+> ---
+>  include/net/mac80211.h |    2 ++
+>  net/mac80211/util.c    |   25 ++++++++++++++++++++-----
+>  2 files changed, 22 insertions(+), 5 deletions(-)
+> 
+> --- wireless-testing.orig/include/net/mac80211.h	2010-05-01 08:47:54.000000000 +0200
+> +++ wireless-testing/include/net/mac80211.h	2010-05-05 09:41:46.000000000 +0200
+> @@ -160,6 +160,8 @@ enum ieee80211_bss_change {
+>  	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
+>  	BSS_CHANGED_CQM			= 1<<10,
+>  	BSS_CHANGED_IBSS		= 1<<11,
+> +
+> +	/* when adding here, make sure to change ieee80211_reconfig */
+>  };
+>  
+>  /**
+> --- wireless-testing.orig/net/mac80211/util.c	2010-04-09 11:46:46.000000000 +0200
+> +++ wireless-testing/net/mac80211/util.c	2010-05-05 09:41:46.000000000 +0200
+> @@ -1160,18 +1160,33 @@ int ieee80211_reconfig(struct ieee80211_
+>  
+>  	/* Finally also reconfigure all the BSS information */
+>  	list_for_each_entry(sdata, &local->interfaces, list) {
+> -		u32 changed = ~0;
+> +		u32 changed;
+> +
+>  		if (!ieee80211_sdata_running(sdata))
+>  			continue;
+> +
+> +		/* common change flags for all interface types */
+> +		changed = BSS_CHANGED_ERP_CTS_PROT |
+> +			  BSS_CHANGED_ERP_PREAMBLE |
+> +			  BSS_CHANGED_ERP_SLOT |
+> +			  BSS_CHANGED_HT |
+> +			  BSS_CHANGED_BASIC_RATES |
+> +			  BSS_CHANGED_BEACON_INT |
+> +			  BSS_CHANGED_BSSID |
+> +			  BSS_CHANGED_CQM;
+> +
+>  		switch (sdata->vif.type) {
+>  		case NL80211_IFTYPE_STATION:
+> -			/* disable beacon change bits */
+> -			changed &= ~(BSS_CHANGED_BEACON |
+> -				     BSS_CHANGED_BEACON_ENABLED);
+> -			/* fall through */
+> +			changed |= BSS_CHANGED_ASSOC;
+> +			ieee80211_bss_info_change_notify(sdata, changed);
+> +			break;
+>  		case NL80211_IFTYPE_ADHOC:
+> +			changed |= BSS_CHANGED_IBSS;
+> +			/* fall through */
+>  		case NL80211_IFTYPE_AP:
+>  		case NL80211_IFTYPE_MESH_POINT:
+> +			changed |= BSS_CHANGED_BEACON |
+> +				   BSS_CHANGED_BEACON_ENABLED;
+>  			ieee80211_bss_info_change_notify(sdata, changed);
+>  			break;
+>  		case NL80211_IFTYPE_WDS:
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
