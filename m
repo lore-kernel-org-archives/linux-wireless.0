@@ -1,35 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52823 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751184Ab0EGAPM (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:46189 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846Ab0EFFAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 20:15:12 -0400
-Date: Thu, 6 May 2010 20:13:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: set IEEE80211_TX_CTL_FIRST_FRAGMENT for beacons
-Message-ID: <20100507001319.GA6990@tuxdriver.com>
-References: <1273171517-6264-1-git-send-email-linville@tuxdriver.com>
- <k2t43e72e891005061501h91e475f6q6cb8bc7c3bbec990@mail.gmail.com>
+	Thu, 6 May 2010 01:00:16 -0400
+Date: Thu, 06 May 2010 00:00:13 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [RFC/RFT] ssb: resolve alternate SPROM offset for 14e4:4315
+Message-ID: <4be24cdd.Yg6pH2Z4OwSotB+K%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <k2t43e72e891005061501h91e475f6q6cb8bc7c3bbec990@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 06, 2010 at 03:01:25PM -0700, Luis R. Rodriguez wrote:
-> On Thu, May 6, 2010 at 11:45 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> 
-> Why though?
+This patch and the patch by Gabor entitled "[PATCH] ssb: Implement
+fast powerup delay calculation" are enough to allow the netbook from
+John to work with ssb/b43. As this patch tampers with the SPROM offset for
+14e4:4315 devices, it should be tested by anyone with an LP PHY that works
+to ensure that it is not killed.
 
-Because it is correct, appropriate, and zero additional cost.  And
-because if you use the same tx path for beacons as you use for normal
-frames and if in that path you manage the sequence number in software
-you should be checking that flag before bumping the sequence number.
+The essential elements of this patch will also be tested as part of kernel Bug
+#15825.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Larry
+ 
+Index: wireless-testing/drivers/ssb/pci.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pci.c
++++ wireless-testing/drivers/ssb/pci.c
+@@ -631,8 +631,17 @@ static int ssb_pci_sprom_get(struct ssb_
+ 		return -ENODEV;
+ 	}
+ 
+-	bus->sprom_offset = (bus->chipco.dev->id.revision < 31) ?
+-		SSB_SPROM_BASE1 : SSB_SPROM_BASE31;
++	/* get SPROM offset: SSB_SPROM_BASE1 except for chipcommon rev >= 31
++	 * or chip ID is 0x4312 and bit 0x2 is set in chipcommon status
++	 */
++	if (bus->chipco.dev->id.revision >= 31)
++		bus->sprom_offset = SSB_SPROM_BASE31;
++	else if (bus->chip_id == 0x4312 && (bus->chipco.status & 0x02))
++		bus->sprom_offset = SSB_SPROM_BASE31;
++	else
++		bus->sprom_offset = SSB_SPROM_BASE1;
++
++	ssb_dprintk(KERN_INFO PFX "SPROM offset is 0x%x\n", bus->sprom_offset);
+ 
+ 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+ 	if (!buf)
+Index: wireless-testing/drivers/ssb/scan.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/scan.c
++++ wireless-testing/drivers/ssb/scan.c
+@@ -306,6 +306,11 @@ int ssb_bus_scan(struct ssb_bus *bus,
+ 		}
+ 		tmp = scan_read32(bus, 0, SSB_CHIPCO_CAP);
+ 		bus->chipco.capabilities = tmp;
++		if (bus->chip_rev >= 11)
++			bus->chipco.status = scan_read32(bus, 0,
++					     SSB_CHIPCO_CHIPSTAT);
++		else
++			bus->chipco.status = 0;
+ 	} else {
+ 		if (bus->bustype == SSB_BUSTYPE_PCI) {
+ 			bus->chip_id = pcidev_to_chipid(bus->host_pci);
