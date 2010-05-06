@@ -1,132 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:42759 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756428Ab0ESBb5 (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3782 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751135Ab0EFQ5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 21:31:57 -0400
-Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-087562716
-	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:31:56 +0900 (JST)
-Subject: [PATCH v2 01/20] ath5k: add debugfs file for queue debugging
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 19 May 2010 10:30:44 +0900
-Message-ID: <20100519013044.22206.90019.stgit@tt-desk>
-In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
-References: <20100519012528.22206.77550.stgit@tt-desk>
+	Thu, 6 May 2010 12:57:04 -0400
+Message-ID: <4BE2F4DD.3050307@gmail.com>
+Date: Thu, 06 May 2010 18:57:01 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Helmut Schaa <helmut.schaa@googlemail.com>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH 1/3] rt2x00: rt2800: update initial SIFS values
+References: <201005061229.04897.helmut.schaa@googlemail.com>
+In-Reply-To: <201005061229.04897.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/debug.c |   66 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath5k/debug.h |    1 
- 2 files changed, 67 insertions(+), 0 deletions(-)
+On 05/06/10 12:29, Helmut Schaa wrote:
+> Currently the CCK and OFDM SIFS value is set to 32us. This value is neither
+> used by the Ralink driver nor specified in 802.11.
+> 
+> Instead of using 10us for CCK SIFS (as defined in 802.11) use 16us like in the
+> Ralink drivers. And indeed using a SIFS value of 10us breaks connectivity with
+> 11g + CTS protected connections. Add a comment to the code why we don't use 10us
+> for CCK SIFS value.
+> 
+> The OFDM SIFS value is set to 16us (as defined in 802.11 and also used by the
+> Ralink drivers).
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 6fb5c5f..c77a6ad 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -729,6 +729,66 @@ static const struct file_operations fops_ani = {
- };
- 
- 
-+/* debugfs: queues etc */
-+
-+static ssize_t read_file_queue(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	char buf[700];
-+	unsigned int len = 0;
-+
-+	struct ath5k_txq *txq;
-+	struct ath5k_buf *bf, *bf0;
-+	int i, n = 0;
-+
-+	len += snprintf(buf+len, sizeof(buf)-len,
-+			"available txbuffers: %d\n", sc->txbuf_len);
-+
-+	for (i = 0; i < ARRAY_SIZE(sc->txqs); i++) {
-+		txq = &sc->txqs[i];
-+
-+		len += snprintf(buf+len, sizeof(buf)-len,
-+			"%02d: %ssetup\n", i, txq->setup ? "" : "not ");
-+
-+		if (!txq->setup)
-+			continue;
-+
-+		list_for_each_entry_safe(bf, bf0, &txq->q, list)
-+			n++;
-+		len += snprintf(buf+len, sizeof(buf)-len, "  len: %d\n", n);
-+	}
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_queue(struct file *file,
-+				 const char __user *userbuf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	char buf[20];
-+
-+	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+		return -EFAULT;
-+
-+	if (strncmp(buf, "start", 5) == 0)
-+		ieee80211_wake_queues(sc->hw);
-+	else if (strncmp(buf, "stop", 4) == 0)
-+		ieee80211_stop_queues(sc->hw);
-+
-+	return count;
-+}
-+
-+
-+static const struct file_operations fops_queue = {
-+	.read = read_file_queue,
-+	.write = write_file_queue,
-+	.open = ath5k_debugfs_open,
-+	.owner = THIS_MODULE,
-+};
-+
-+
- /* init */
- 
- void
-@@ -772,6 +832,11 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
- 				S_IWUSR | S_IRUSR,
- 				sc->debug.debugfs_phydir, sc,
- 				&fops_ani);
-+
-+	sc->debug.debugfs_queue = debugfs_create_file("queue",
-+				S_IWUSR | S_IRUSR,
-+				sc->debug.debugfs_phydir, sc,
-+				&fops_queue);
- }
- 
- void
-@@ -790,6 +855,7 @@ ath5k_debug_finish_device(struct ath5k_softc *sc)
- 	debugfs_remove(sc->debug.debugfs_antenna);
- 	debugfs_remove(sc->debug.debugfs_frameerrors);
- 	debugfs_remove(sc->debug.debugfs_ani);
-+	debugfs_remove(sc->debug.debugfs_queue);
- 	debugfs_remove(sc->debug.debugfs_phydir);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
-index ddd5b3a..c7a0769 100644
---- a/drivers/net/wireless/ath/ath5k/debug.h
-+++ b/drivers/net/wireless/ath/ath5k/debug.h
-@@ -77,6 +77,7 @@ struct ath5k_dbg_info {
- 	struct dentry		*debugfs_antenna;
- 	struct dentry		*debugfs_frameerrors;
- 	struct dentry		*debugfs_ani;
-+	struct dentry		*debugfs_queue;
- };
- 
- /**
+Good catch.
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |   11 +++++++++--
+>  1 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index e37bbea..f786068 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -1415,9 +1415,16 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>  
+>  	rt2800_register_write(rt2x00dev, EXP_ACK_TIME, 0x002400ca);
+>  
+> +	/*
+> +	 * Usually the CCK SIFS time should be set to 10 and the OFDM SIFS
+> +	 * time should be set to 16. However, the original Ralink driver uses
+> +	 * 16 for both and indeed using a value of 10 for CCK SIFS results in
+> +	 * connection problems with 11g + CTS protection. Hence, use the same
+> +	 * defaults as the Ralink driver: 16 for both, CCK and OFDM SIFS.
+> +	 */
+>  	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
+> -	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, 32);
+> -	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, 32);
+> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, 16);
+> +	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, 16);
+>  	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_XIFS_TIME, 4);
+>  	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, 314);
+>  	rt2x00_set_field32(&reg, XIFS_TIME_CFG_BB_RXEND_ENABLE, 1);
 
