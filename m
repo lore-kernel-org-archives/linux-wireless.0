@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40868 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756520Ab0D3Xt7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46203 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757530Ab0EFUbq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 19:49:59 -0400
-Received: by vws19 with SMTP id 19so593188vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Apr 2010 16:49:58 -0700 (PDT)
-From: Ben Gamari <bgamari.foss@gmail.com>
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	linux-wireless@vger.kernel.org
-Cc: yi.zhu@intel.com, Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Subject: Re: [PATCH V2] mac80211: fix paged defragmentation
-In-Reply-To: <1272668279-6065-1-git-send-email-abhijeet.kolekar@intel.com>
-References: <1272668279-6065-1-git-send-email-abhijeet.kolekar@intel.com>
-Date: Fri, 30 Apr 2010 19:49:52 -0400
-Message-ID: <87hbmsa4bj.fsf@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 6 May 2010 16:31:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/2] rtl8180: assign sequence numbers in the driver
+Date: Thu,  6 May 2010 16:26:23 -0400
+Message-Id: <1273177583-10643-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 30 Apr 2010 15:57:59 -0700, Abhijeet Kolekar <abhijeet.kolekar@intel.com> wrote:
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 72efbd8..e7217e2 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1255,6 +1255,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
->  	if (skb_linearize(rx->skb))
->  		return RX_DROP_UNUSABLE;
->  
-> +	hdr = (struct ieee80211_hdr *)rx->skb->data;
->  	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
->  
-It seems to me that this might deserve a comment describing exactly why
-hdr needs to be set twice in one function. To the uninformed outsider
-the code simply seems redundant. It's unclear semantics like this that
-could cause nasty issues when someone goes back for housecleaning. Just
-a thought.
+This is a step towards support for beaconing modes of operation.
 
-- Ben
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180.h     |    3 +++
+ drivers/net/wireless/rtl818x/rtl8180_dev.c |   10 ++++++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180.h
+index de3844f..b92d678 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180.h
++++ b/drivers/net/wireless/rtl818x/rtl8180.h
+@@ -78,6 +78,9 @@ struct rtl8180_priv {
+ 	u32 anaparam;
+ 	u16 rfparam;
+ 	u8 csthreshold;
++
++	/* sequence # */
++	u16 seqno;
+ };
+ 
+ void rtl8180_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+index a93eedc..a6fb9a6 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -234,6 +234,7 @@ static irqreturn_t rtl8180_interrupt(int irq, void *dev_id)
+ static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct rtl8180_priv *priv = dev->priv;
+ 	struct rtl8180_tx_ring *ring;
+ 	struct rtl8180_tx_desc *entry;
+@@ -285,6 +286,14 @@ static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	}
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
++
++	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
++		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
++			priv->seqno += 0x10;
++		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
++		hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
++	}
++
+ 	idx = (ring->idx + skb_queue_len(&ring->queue)) % ring->entries;
+ 	entry = &ring->desc[idx];
+ 
+@@ -299,6 +308,7 @@ static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 	__skb_queue_tail(&ring->queue, skb);
+ 	if (ring->entries - skb_queue_len(&ring->queue) < 2)
+ 		ieee80211_stop_queue(dev, prio);
++
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 	rtl818x_iowrite8(priv, &priv->map->TX_DMA_POLLING, (1 << (prio + 4)));
+-- 
+1.6.6.1
+
