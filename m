@@ -1,185 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60664 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754022Ab0E1S5n (ORCPT
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:1644 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751501Ab0EFSc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 14:57:43 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OI4kY-00048q-Ad
-	for linux-wireless@vger.kernel.org; Fri, 28 May 2010 20:57:42 +0200
-Message-Id: <20100528185505.622028361@sipsolutions.net>
-Date: Fri, 28 May 2010 20:53:09 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 7/7] mac80211: always process blockack action from workqueue
-References: <20100528185302.639535282@sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 6 May 2010 14:32:29 -0400
+Message-ID: <4BE30B3B.2000900@gmail.com>
+Date: Thu, 06 May 2010 20:32:27 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: [PATCH 3/3] rt2x00: rt2800: use correct txop value in tx descriptor
+References: <201005061229.58509.helmut.schaa@googlemail.com>
+In-Reply-To: <201005061229.58509.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 05/06/10 12:29, Helmut Schaa wrote:
+> rt2800 devices use a different enumeration to specify what IFS values should
+> be used on frame transmission compared to the other rt2x00 devices. Hence,
+> create a new enum called txop that contains the valid values.
+> 
+> Furthermore use TXOP_HTTXOP as default on HT devices which means that the
+> hardware should select the correct IFS value on its own.
+> 
+> I'm not sure if we have the need to specify one of the other txop values
+> in the future but as far as I could see TXOP_HTTXOP is used by the Ralink
+> drivers for all normal data frames and should be a reasonable default.
+> 
+> This patch doesn't really fix anything as until now the IFS_BACKOFF(=0)
+> value was used as txop which luckily mapped to TXOP_HTTXOP(=0).
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c   |    2 +-
+>  drivers/net/wireless/rt2x00/rt2800usb.c   |    2 +-
+>  drivers/net/wireless/rt2x00/rt2x00ht.c    |    2 ++
+>  drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
+>  drivers/net/wireless/rt2x00/rt2x00reg.h   |   10 ++++++++++
+>  5 files changed, 16 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index f08b6a3..df2c3fb 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -643,7 +643,7 @@ static int rt2800pci_write_tx_data(struct queue_entry* entry,
+>  	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
+>  			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
+>  	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
+> -	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->ifs);
+> +	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
+>  	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
+>  	rt2x00_set_field32(&word, TXWI_W0_BW,
+>  			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index e3f3a97..c9e1320 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -417,7 +417,7 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+>  	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
+>  			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
+>  	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
+> -	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->ifs);
+> +	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
+>  	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
+>  	rt2x00_set_field32(&word, TXWI_W0_BW,
+>  			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
+> index 1056c92..5483fec 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00ht.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
+> @@ -66,4 +66,6 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+>  		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
+>  	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
+>  		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
+> +
+> +	txdesc->txop = TXOP_HTTXOP;
+>  }
 
-To prepare for making the ampdu_action callback
-sleep, make mac80211 always process blockack
-action frames from the skb queue. This gets rid
-of the current special case for managed mode
-interfaces as well.
+I am not too sure about this part. If I look at the Ralink vendor driver, they are most of the time
+using IFS_BACKOFF (value 3). Why did you put this on TXOP_HTTXOP?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c |   35 ++++++++++++++++++++++++++++++++++-
- net/mac80211/mlme.c  |   38 --------------------------------------
- net/mac80211/rx.c    |   29 +++++++++++++----------------
- 3 files changed, 47 insertions(+), 55 deletions(-)
-
---- wireless-testing.orig/net/mac80211/iface.c	2010-05-28 20:37:10.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-05-28 20:37:13.000000000 +0200
-@@ -727,7 +727,40 @@ static void ieee80211_iface_work(struct
- 
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		switch (sdata->vif.type) {
-+		struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+
-+		if (ieee80211_is_action(mgmt->frame_control) &&
-+		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
-+			int len = skb->len;
-+			struct sta_info *sta;
-+
-+			rcu_read_lock();
-+			sta = sta_info_get(sdata, mgmt->sa);
-+			if (sta) {
-+				local_bh_disable();
-+
-+				switch (mgmt->u.action.u.addba_req.action_code) {
-+				case WLAN_ACTION_ADDBA_REQ:
-+					ieee80211_process_addba_request(
-+							local, sta, mgmt, len);
-+					break;
-+				case WLAN_ACTION_ADDBA_RESP:
-+					ieee80211_process_addba_resp(local, sta,
-+								     mgmt, len);
-+					break;
-+				case WLAN_ACTION_DELBA:
-+					ieee80211_process_delba(sdata, sta,
-+								mgmt, len);
-+					break;
-+				default:
-+					WARN_ON(1);
-+					break;
-+				}
-+
-+				local_bh_enable();
-+			}
-+			rcu_read_unlock();
-+		} else switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
- 			break;
---- wireless-testing.orig/net/mac80211/mlme.c	2010-05-28 20:37:11.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-05-28 20:37:13.000000000 +0200
-@@ -1666,44 +1666,6 @@ void ieee80211_sta_rx_queued_mgmt(struct
- 			break;
- 		case IEEE80211_STYPE_ACTION:
- 			switch (mgmt->u.action.category) {
--			case WLAN_CATEGORY_BACK: {
--				struct ieee80211_local *local = sdata->local;
--				int len = skb->len;
--				struct sta_info *sta;
--
--				rcu_read_lock();
--				sta = sta_info_get(sdata, mgmt->sa);
--				if (!sta) {
--					rcu_read_unlock();
--					break;
--				}
--
--				local_bh_disable();
--
--				switch (mgmt->u.action.u.addba_req.action_code) {
--				case WLAN_ACTION_ADDBA_REQ:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.addba_req)))
--						break;
--					ieee80211_process_addba_request(local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_ADDBA_RESP:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.addba_resp)))
--						break;
--					ieee80211_process_addba_resp(local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_DELBA:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.delba)))
--						break;
--					ieee80211_process_delba(sdata, sta, mgmt, len);
--					break;
--				}
--				local_bh_enable();
--				rcu_read_unlock();
--				break;
--				}
- 			case WLAN_CATEGORY_SPECTRUM_MGMT:
- 				ieee80211_sta_process_chanswitch(sdata,
- 						&mgmt->u.action.u.chan_switch.sw_elem,
---- wireless-testing.orig/net/mac80211/rx.c	2010-05-28 20:37:11.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-05-28 20:37:13.000000000 +0200
-@@ -1936,33 +1936,29 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
- 			break;
- 
--		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--			skb_queue_tail(&sdata->skb_queue, rx->skb);
--			ieee80211_queue_work(&local->hw, &sdata->work);
--			return RX_QUEUED;
--		}
--
- 		switch (mgmt->u.action.u.addba_req.action_code) {
- 		case WLAN_ACTION_ADDBA_REQ:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.addba_req)))
--				return RX_DROP_MONITOR;
--			ieee80211_process_addba_request(local, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
- 		case WLAN_ACTION_ADDBA_RESP:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.addba_resp)))
--				break;
--			ieee80211_process_addba_resp(local, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
- 		case WLAN_ACTION_DELBA:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.delba)))
--				break;
--			ieee80211_process_delba(sdata, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
-+		default:
-+			goto invalid;
- 		}
--		break;
-+
-+		skb_queue_tail(&sdata->skb_queue, rx->skb);
-+		ieee80211_queue_work(&local->hw, &sdata->work);
-+		return RX_QUEUED;
- 	case WLAN_CATEGORY_SPECTRUM_MGMT:
- 		if (local->hw.conf.channel->band != IEEE80211_BAND_5GHZ)
- 			break;
-@@ -2019,6 +2015,7 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		return RX_QUEUED;
- 	}
- 
-+ invalid:
- 	/*
- 	 * For AP mode, hostapd is responsible for handling any action
- 	 * frames that we didn't handle, including returning unknown
-
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+> index 94a48c1..36a957a 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+> @@ -299,6 +299,7 @@ enum txentry_desc_flags {
+>   * @retry_limit: Max number of retries.
+>   * @aifs: AIFS value.
+>   * @ifs: IFS value.
+> + * @txop: IFS value for 11n capable chips.
+>   * @cw_min: cwmin value.
+>   * @cw_max: cwmax value.
+>   * @cipher: Cipher type used for encryption.
+> @@ -328,6 +329,7 @@ struct txentry_desc {
+>  	short retry_limit;
+>  	short aifs;
+>  	short ifs;
+> +	short txop;
+>  	short cw_min;
+>  	short cw_max;
+>  
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+> index 603bfc0..894ff78 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00reg.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+> @@ -101,6 +101,16 @@ enum ifs {
+>  };
+>  
+>  /*
+> + * IFS values for HT devices
+> + */
+> +enum txop {
+> +	TXOP_HTTXOP = 0,
+> +	TXOP_PIFS = 1,
+> +	TXOP_SIFS = 2,
+> +	TXOP_BACKOFF = 3,
+> +};
+> +
+> +/*
+>   * Cipher types for hardware encryption
+>   */
+>  enum cipher {
 
