@@ -1,115 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38715 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752972Ab0EGClP (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:40998 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754768Ab0EFAMP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 22:41:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/3] ath9k_common: move the rate status setting into ath9k_process_rate()
-Date: Thu,  6 May 2010 22:41:12 -0400
-Message-Id: <1273200074-9127-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1273200074-9127-1-git-send-email-lrodriguez@atheros.com>
-References: <1273200074-9127-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 5 May 2010 20:12:15 -0400
+Received: by pwi5 with SMTP id 5so984990pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 05 May 2010 17:12:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4BE1BBD6.3030505@dlasys.net>
+References: <4BDC001F.9050202@dlasys.net> <4BDD2E05.40203@free.fr>
+	<4BDD5EB3.7020802@dlasys.net> <201005021452.01101.chunkeey@googlemail.com>
+	<4BE1BBD6.3030505@dlasys.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 5 May 2010 17:11:54 -0700
+Message-ID: <n2o43e72e891005051711i2e820ccdw2bd699bdfbe6a36f@mail.gmail.com>
+Subject: Re: carl9170 1.0.5.1
+To: dhlii@dlasys.net
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This has no real functional change, this just moves the setting the
-the mac80211 rate index into ath9k_process_rate(). This allows us
-to eventually make ath9k_process_rate() return a negative value
-in case we have detected a specific case rate situation which should
-have been ignored.
+On Wed, May 5, 2010 at 11:41 AM, David H. Lynch Jr. <dhlii@dlasys.net> wrote:
+>    I am trying to build a kernel using the carl9170 driver/firmware.
+>    I am not particular about what kernel or how so long as I can get it
+> running.
+>
+>    When I build out of the wireless-testing git tree (puled today)
+> 2.6.34-rc6
+>    using my current systems .config I get a very quick error on boot about
+> PCI bridge windows.
+>    googling the error indicates this is a know 2.6.34 problem and that there
+> are fixes in other 2.6.34 trees.
+>    I have been unable to find the actual patches or I would just apply them
+> to wireless-testing.
+>
+>    Alternately, I tried to build out of the ubuntu-lucid git tree. 2.6.32
+> again with my existing .config.
+>    I the carl9170 driver does not build. While I found patches at OpenWRT
+> that are supposed to allow building carl9170 with 2.6.33 or less,
+>    the errors are unrelated to what is changed by those patches.
+>
+>    I have also tried using linux-source-2.6.32 pulled from cannonical via
+> apt for my install rather than the ubuntu-lucid git tree
+>    with similar results.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/common.c |   40 +++++++++++++++++++++----------
- 1 files changed, 27 insertions(+), 13 deletions(-)
+You can build the driver with compat-wireless so that way you can keep
+your existing functional kernel and only backport the driver. We did
+this way back when we first started doing development on ath9k and it
+worked well.
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index b4424a6..9a33c3a 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -102,11 +102,11 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	return true;
- }
- 
--static u8 ath9k_process_rate(struct ath_common *common,
--			     struct ieee80211_hw *hw,
--			     struct ath_rx_status *rx_stats,
--			     struct ieee80211_rx_status *rxs,
--			     struct sk_buff *skb)
-+static int ath9k_process_rate(struct ath_common *common,
-+			      struct ieee80211_hw *hw,
-+			      struct ath_rx_status *rx_stats,
-+			      struct ieee80211_rx_status *rxs,
-+			      struct sk_buff *skb)
- {
- 	struct ieee80211_supported_band *sband;
- 	enum ieee80211_band band;
-@@ -122,25 +122,33 @@ static u8 ath9k_process_rate(struct ath_common *common,
- 			rxs->flag |= RX_FLAG_40MHZ;
- 		if (rx_stats->rs_flags & ATH9K_RX_GI)
- 			rxs->flag |= RX_FLAG_SHORT_GI;
--		return rx_stats->rs_rate & 0x7f;
-+		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
-+		return 0;
- 	}
- 
- 	for (i = 0; i < sband->n_bitrates; i++) {
--		if (sband->bitrates[i].hw_value == rx_stats->rs_rate)
--			return i;
-+		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
-+			rxs->rate_idx = i;
-+			return 0;
-+		}
- 		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
- 			rxs->flag |= RX_FLAG_SHORTPRE;
--			return i;
-+			rxs->rate_idx = i;
-+			return 0;
- 		}
- 	}
- 
--	/* No valid hardware bitrate found -- we should not get here */
-+	/*
-+	 * No valid hardware bitrate found -- we should not get here
-+	 * because hardware has already validated this frame as OK.
-+	 */
- 	ath_print(common, ATH_DBG_XMIT, "unsupported hw bitrate detected "
- 		  "0x%02x using 1 Mbit\n", rx_stats->rs_rate);
- 	if ((common->debug_mask & ATH_DBG_XMIT))
- 		print_hex_dump_bytes("", DUMP_PREFIX_NONE, skb->data, skb->len);
- 
--        return 0;
-+	rxs->rate_idx = 0;
-+	return 0;
- }
- 
- static void ath9k_process_rssi(struct ath_common *common,
-@@ -202,13 +210,19 @@ int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
- 	struct ath_hw *ah = common->ah;
- 
- 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-+
-+	/*
-+	 * everything but the rate is checked here, the rate check is done
-+	 * separately to avoid doing two lookups for a rate for each frame.
-+	 */
- 	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
- 		return -EINVAL;
- 
- 	ath9k_process_rssi(common, hw, skb, rx_stats);
- 
--	rx_status->rate_idx = ath9k_process_rate(common, hw,
--						 rx_stats, rx_status, skb);
-+	if (ath9k_process_rate(common, hw, rx_stats, rx_status, skb))
-+		return -EINVAL;
-+
- 	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
--- 
-1.6.3.3
-
+  Luis
