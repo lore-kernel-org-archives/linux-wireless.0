@@ -1,30 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47357 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759903Ab0ECXzS (ORCPT
+Received: from lennier.cc.vt.edu ([198.82.162.213]:52333 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752130Ab0EFSa3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 19:55:18 -0400
-Received: by pwj9 with SMTP id 9so1514894pwj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 16:55:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <w2q43e72e891005031610uf6b912aduf271b0a97933d68a@mail.gmail.com>
-References: <87och0j7jj.fsf@purkki.valot.fi> <w2q43e72e891005031610uf6b912aduf271b0a97933d68a@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 3 May 2010 16:54:56 -0700
-Message-ID: <w2z43e72e891005031654rea8e3628i6906895089bd6b03@mail.gmail.com>
-Subject: Re: HT rate warning with openwrt AP using wireless-compat and ath9k
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 6 May 2010 14:30:29 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: 2.6.34-rc5-mmotm0428 - 2 RCU whinges in mac80211
+In-Reply-To: Your message of "Thu, 06 May 2010 19:58:16 +0200."
+             <1273168696.23199.0.camel@jlt3.sipsolutions.net>
+From: Valdis.Kletnieks@vt.edu
+References: <5820.1273167313@localhost>
+            <1273168696.23199.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1273170584_4094P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Thu, 06 May 2010 14:29:44 -0400
+Message-ID: <8269.1273170584@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 3, 2010 at 4:10 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> 0x7b
+--==_Exmh_1273170584_4094P
+Content-Type: text/plain; charset=us-ascii
 
-Actually 0x7b fits 0x7f if the rate was marked as an HT rate by
-hardware (0x80) so technically it could have been an HT rate marked as
-0x7b and that is why you get the warning. So I wonder what hardware
-rate 0xfb should be mapping to (0x7b | 0x80).
+On Thu, 06 May 2010 19:58:16 +0200, Johannes Berg said:
+> On Thu, 2010-05-06 at 13:35 -0400, Valdis.Kletnieks@vt.edu wrote:
+> > Spotted these in my dmesg, hopefully somebody is interested...
+> > 
+> > [   54.076863] wlan0: deauthenticating from 00:11:20:a4:4c:11 by local choice (reason=3)
+> > [   54.080580] 
+> > [   54.080581] ===================================================
+> > [   54.080584] [ INFO: suspicious rcu_dereference_check() usage. ]
+> > [   54.080586] ---------------------------------------------------
+> > [   54.080589] net/mac80211/sta_info.c:858 invoked rcu_dereference_check() without protection!
+> 
+> I'm pretty sure I fixed those so there should be a patch on its way to
+> or in mainline somewhere.
 
-  Luis
+Oh,  OK.  I didn't remember seeing them mentioned before, but I must have
+missed somebody else's post about it due to the lkml firehose effect. I've
+moved these to my "whinge if it isn't fixed in the next -mmotm" queue.
+
+
+--==_Exmh_1273170584_4094P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFL4wqYcC3lWbTT17ARArwmAJ9LGHTpYagAUMm99LssnBt4wXq9TACffiKa
+sLhU9+s1wcwIGoTU9C7LjK0=
+=dTom
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1273170584_4094P--
+
