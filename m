@@ -1,121 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39046 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750824Ab0EJVYR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 17:24:17 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: backport pm_qos_{add,remove,update}_request
-Date: Mon, 10 May 2010 23:24:09 +0200
-Message-Id: <1273526650-26282-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:60091 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757025Ab0EFSMQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 14:12:16 -0400
+Received: by ywh36 with SMTP id 36so164401ywh.4
+        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 11:12:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100505120131.2b9f4e06@atom.pigiron.org>
+References: <20100505120131.2b9f4e06@atom.pigiron.org>
+Date: Thu, 6 May 2010 11:12:15 -0700
+Message-ID: <t2j446ae9281005061112z6eee4126z673947eb02dc4f12@mail.gmail.com>
+Subject: Re: The case of the bogus SSID
+From: Steve deRosier <steve@cozybit.com>
+To: pigiron <pigiron@gmx.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 5, 2010 at 10:01 AM, pigiron <pigiron@gmx.com> wrote:
+> I noticed that decimal 52 is assigned to WLAN_EID_MESH_ID in the ieee80211.h file, and recently the same 52 was also assigned to WLAN_EID_NEIGHBOR_REPORT in the same enumerated ieee80211_eid{} structure.
+>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
-I have not found a way to backport these changes without using these ifdef.
- patches/28-pm-qos-params.patch |   89 ++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 89 insertions(+), 0 deletions(-)
- create mode 100644 patches/28-pm-qos-params.patch
+I can't answer the rest of your question, but AFAIK, the element IDs
+for 802.11s mesh haven't been approved yet as the 802.11s draft
+contains a note to that effect.  The current ANA database sheet I
+could find (Feb 2010) does have 52 assigned to Neighbor Report, and
+the mesh element IDs are nowhere to be found.
 
-diff --git a/patches/28-pm-qos-params.patch b/patches/28-pm-qos-params.patch
-new file mode 100644
-index 0000000..4c3966a
---- /dev/null
-+++ b/patches/28-pm-qos-params.patch
-@@ -0,0 +1,89 @@
-+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
-++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-+@@ -174,7 +174,9 @@ that only one external action is invoked
-+ #define DRV_DESCRIPTION	"Intel(R) PRO/Wireless 2100 Network Driver"
-+ #define DRV_COPYRIGHT	"Copyright(c) 2003-2006 Intel Corporation"
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ struct pm_qos_request_list *ipw2100_pm_qos_req;
-++#endif
-+ 
-+ /* Debugging stuff */
-+ #ifdef CONFIG_IPW2100_DEBUG
-+@@ -1741,7 +1743,11 @@ static int ipw2100_up(struct ipw2100_pri
-+ 	/* the ipw2100 hardware really doesn't want power management delays
-+ 	 * longer than 175usec
-+ 	 */
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 	pm_qos_update_request(ipw2100_pm_qos_req, 175);
-++#else
-++	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100", 175);
-++#endif
-+ 
-+ 	/* If the interrupt is enabled, turn it off... */
-+ 	spin_lock_irqsave(&priv->low_lock, flags);
-+@@ -1889,7 +1895,12 @@ static void ipw2100_down(struct ipw2100_
-+ 	ipw2100_disable_interrupts(priv);
-+ 	spin_unlock_irqrestore(&priv->low_lock, flags);
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 	pm_qos_update_request(ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
-++#else
-++	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
-++			PM_QOS_DEFAULT_VALUE);
-++#endif
-+ 
-+ 	/* We have to signal any supplicant if we are disassociating */
-+ 	if (associated)
-+@@ -6674,7 +6685,11 @@ static int __init ipw2100_init(void)
-+ 	if (ret)
-+ 		goto out;
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 	ipw2100_pm_qos_req = pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
-++#else
-++	pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
-++#endif
-+ 			PM_QOS_DEFAULT_VALUE);
-+ #ifdef CONFIG_IPW2100_DEBUG
-+ 	ipw2100_debug_level = debug;
-+@@ -6697,7 +6712,11 @@ static void __exit ipw2100_exit(void)
-+ 			   &driver_attr_debug_level);
-+ #endif
-+ 	pci_unregister_driver(&ipw2100_pci_driver);
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 	pm_qos_remove_request(ipw2100_pm_qos_req);
-++#else
-++	pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100");
-++#endif
-+ }
-+ 
-+ module_init(ipw2100_init);
-+--- a/net/mac80211/mlme.c
-++++ b/net/mac80211/mlme.c
-+@@ -509,7 +509,11 @@ void ieee80211_recalc_ps(struct ieee8021
-+ 		s32 beaconint_us;
-+ 
-+ 		if (latency < 0)
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 			latency = pm_qos_request(PM_QOS_NETWORK_LATENCY);
-++#else
-++			latency = pm_qos_requirement(PM_QOS_NETWORK_LATENCY);
-++#endif
-+ 
-+ 		beaconint_us = ieee80211_tu_to_usec(
-+ 					found->vif.bss_conf.beacon_int);
-+--- a/net/mac80211/scan.c
-++++ b/net/mac80211/scan.c
-+@@ -510,7 +510,11 @@ static int ieee80211_scan_state_decision
-+ 		bad_latency = time_after(jiffies +
-+ 				ieee80211_scan_get_channel_time(next_chan),
-+ 				local->leave_oper_channel_time +
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 				usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
-++#else
-++				usecs_to_jiffies(pm_qos_requirement(PM_QOS_NETWORK_LATENCY)));
-++#endif
-+ 
-+ 		listen_int_exceeded = time_after(jiffies +
-+ 				ieee80211_scan_get_channel_time(next_chan),
--- 
-1.7.0.4
-
+- Steve
