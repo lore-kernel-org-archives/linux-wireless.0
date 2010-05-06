@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:61807 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069Ab0EUUtd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 May 2010 16:49:33 -0400
-Received: by wwi18 with SMTP id 18so1021866wwi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 13:49:32 -0700 (PDT)
+Received: from mga14.intel.com ([143.182.124.37]:7207 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758455Ab0EFOJI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 10:09:08 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 6 May 2010 07:09:04 -0700
+Subject: RE: [PATCH 1/2] mac80211: add offload channel switch support
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A35CA7B3A8B@orsmsx506.amr.corp.intel.com>
+References: <1273116842-27189-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1273131876.3573.28.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1273131876.3573.28.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1274465242.12391.0.camel@abhi-desktop>
-References: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
-	 <1274465242.12391.0.camel@abhi-desktop>
-Date: Fri, 21 May 2010 22:49:31 +0200
-Message-ID: <AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
-Subject: Re: Iwlwifi and LEDS?
-From: Gregy <p.gregy@gmail.com>
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 May 2010 20:07, Abhijeet Kolekar <abhijeet.kolekar@intel.com> wrote:
-> On Fri, 2010-05-21 at 02:11 -0700, Gregy wrote:
->> Hello, I noticed you removed support for led subsystem from iwlwifi. I
->> have used it to control wifi led from userspace. Is it still possible
->> somehow?
->>
-> There is module parameter for iwlcore called 'led_mode'.
-
-Yes but I cannot control the led through it. I can only set one of two
-modes. Before I could  use it as "connected to internet" indicator or
-I could turn it off completely.
-
-Gregy
+SGkgSm9oYW5uZXMsDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5l
+cyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBUaHVyc2Rh
+eSwgTWF5IDA2LCAyMDEwIDEyOjQ1IEFNDQpUbzogR3V5LCBXZXktWWkgVw0KQ2M6IGxpbnV4LXdp
+cmVsZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSCAxLzJdIG1hYzgwMjEx
+OiBhZGQgb2ZmbG9hZCBjaGFubmVsIHN3aXRjaCBzdXBwb3J0DQoNClNvcnJ5LCBqdXN0IHRob3Vn
+aHQgb2Ygc29tZXRoaW5nLg0KDQpPbiBXZWQsIDIwMTAtMDUtMDUgYXQgMjA6MzQgLTA3MDAsIHdl
+eS15aS53Lmd1eUBpbnRlbC5jb20gd3JvdGU6DQoNCj4gKyAqIEB0aW1lc3RhbXA6IHZhbHVlIGlu
+IG1pY3Jvc2Vjb25kcyBvZiB0aGUgNjQtYml0IFRpbWUgU3luY2hyb25pemF0aW9uDQo+ICsgKglG
+dW5jdGlvbiAoVFNGKSB0aW1lciB3aGVuIHRoZSBjaGFubmVsIHN3aXRjaCBpZSByZWNlaXZlZC4N
+Cg0KVGhpcyBpcyBub3QgYWNjdXJhdGUgbm93IGJ1dCBzZWUgYmVsb3cuDQoNCj4gKwkJaWYgKGJl
+YWNvbikNCj4gKwkJCXRpbWVzdGFtcCA9IGxlNjRfdG9fY3B1KG1nbXQtPnUuYmVhY29uLnRpbWVz
+dGFtcCk7DQo+ICsJCWVsc2UNCj4gKwkJCXRpbWVzdGFtcCA9IGxlNjRfdG9fY3B1KG1nbXQtPnUu
+cHJvYmVfcmVzcC50aW1lc3RhbXApOw0KPiArCQlpZWVlODAyMTFfc3RhX3Byb2Nlc3NfY2hhbnN3
+aXRjaChzZGF0YSwgc3dfZWxlbSwNCj4gKwkJCQkJCSBic3MsIHRpbWVzdGFtcCk7DQo+ICAJfQ0K
+PiAgfQ0KPiAgDQo+IEBAIC0xNjQ3LDcgKzE2OTEsOCBAQCBzdGF0aWMgdm9pZCBpZWVlODAyMTFf
+c3RhX3J4X3F1ZXVlZF9tZ210KHN0cnVjdCBpZWVlODAyMTFfc3ViX2lmX2RhdGEgKnNkYXRhLA0K
+PiAgDQo+ICAJCQlpZWVlODAyMTFfc3RhX3Byb2Nlc3NfY2hhbnN3aXRjaChzZGF0YSwNCj4gIAkJ
+CQkJJm1nbXQtPnUuYWN0aW9uLnUuY2hhbl9zd2l0Y2guc3dfZWxlbSwNCj4gLQkJCQkJKHZvaWQg
+KilpZm1nZC0+YXNzb2NpYXRlZC0+cHJpdik7DQo+ICsJCQkJCSh2b2lkICopaWZtZ2QtPmFzc29j
+aWF0ZWQtPnByaXYsDQo+ICsJCQkJCXJ4X3N0YXR1cy0+bWFjdGltZSk7DQoNCkZvciBzb21lIHJl
+YXNvbiBJIGRpZG4ndCBub3RpY2UgdGhlIGFjdGlvbiBmcmFtZSBoYW5kbGluZyBiZWZvcmUuIE1h
+eWJlDQppdCB3b3VsZCBiZSBtb3JlIGNvbnNpc3RlbnQgdG8ga2VlcCB1c2luZyByeF9zdGF0dXMt
+Pm1hY3RpbWUgZXZlbiBmb3INCmJlYWNvbnM/IEkgYXBvbG9naXNlLCB0aGlzIGlzIHRvdGFsbHkg
+bXkgZmF1bHQgc2luY2UgSSBzdWdnZXN0ZWQgdXNpbmcNCnRoZSBiZWFjb24gdGltZSBiZWZvcmUs
+IGJ1dCB0aGF0IGhhcyBhIHNsaWdodGx5IGRpZmZlcmVudCB2YWx1ZSByZWxhdGl2ZQ0KdG8gdGhl
+IGZyYW1lLi4uIEhtbS4gTWF5YmUgaXQgd291bGQgYmUgYmV0dGVyIGFmdGVyIGFsbCB0byByZXF1
+aXJlDQpkcml2ZXJzIHRvIHByb3ZpZGUgbWFjdGltZSBhdCBsZWFzdCBmb3IgbWdtdCBmcmFtZXMg
+KGJlYWNvbnMgKyBhY3Rpb25zKQ0Kd2hlbiB0aGV5IHdhbnQgdG8gaW1wbGVtZW50IHRoaXMgY2Fs
+bGJhY2suDQoNCkFueW9uZSBlbHNlIGhhdmUgaWRlYXM/DQoNCkl0IG1ha2VzIG1vcmUgc2Vuc2Ug
+dG8gdXNlIG1hY3RpbWUsIHNvIGRyaXZlciBkbyBub3QgaGF2ZSB0byBwZWVrIGludG8gdGhlIGZy
+YW1lIGJvZHkuIE5vdCBhIHByb2JsZW0sIEkgY2FuIG1ha2UgdGhlIGNoYW5nZXMgYW5kIHJlLXN1
+Ym1pdC4NCg0KVGhhbmtzDQpXZXkNCg0K
