@@ -1,88 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:7358 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756708Ab0ESBdL (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:33391 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753085Ab0EFWRI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 21:33:11 -0400
-Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0971332790
-	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:33:10 +0900 (JST)
-Subject: [PATCH v2 15/20] ath5k: Add support for antenna configuration
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 19 May 2010 10:31:58 +0900
-Message-ID: <20100519013158.22206.95448.stgit@tt-desk>
-In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
-References: <20100519012528.22206.77550.stgit@tt-desk>
+	Thu, 6 May 2010 18:17:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <g2wf69abfc31005060752w6876439cm45f5be68001c8382@mail.gmail.com>
+References: <r2xf69abfc31005050326oe123cb60s131ab4969341ef57@mail.gmail.com>
+	<g2wf69abfc31005060752w6876439cm45f5be68001c8382@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 6 May 2010 15:16:48 -0700
+Message-ID: <p2l43e72e891005061516o4c274892n6d1edf08ead74a4@mail.gmail.com>
+Subject: Re: 2.6.33.2: Turn tx power off/on for Atheros card
+To: Yegor Yefremov <yegorslists@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support setting the antenna configuration via cfg/mac80211. At the moment only
-allow the simple pre-defined configurations we already have (fixed antenna A/B
-or diversity), but more advanced settings should be possible later.
+On Thu, May 6, 2010 at 7:52 AM, Yegor Yefremov
+<yegorslists@googlemail.com> wrote:
+> On Wed, May 5, 2010 at 12:26 PM, Yegor Yefremov
+> <yegorslists@googlemail.com> wrote:
+>> I'm using kernel 2.6.33.2 with AR2413 WLAN card. Issuing
+>>
+>> iwconfig wlan0 txpower off
+>>
+>> turns txpower off. I can see this status by iwconfig wlan0 and the
+>> communication with AP terminates. But when I turn the txpower on
+>>
+>> iwconfig wlan0 txpower on
+>>
+>> nothing happens. Though iwconfig shows the previous tx power value.
+>> Only ifconfig wlan0 down and then up recovers the transmission.
+>>
+>> Is it a known bug or I'm doing something wrong?
+>
+> I made some debugging and found out that after iwconfig wlan0 txpower
+> off dev_close() will be invoked, so that local->open_count will be 0.
+> The next time txpower on will be called, it will be checked if
+> local->open_count > 0 and this conditions fails, so no  hardware
+> configuration will be made.
+>
+> I've made a quick and dirty hack, that opens the wireless device by
+> enabling the txpower, if it was closed before. Is there any proper
+> solution? Is it really necessary to close device to tunr txpower off?
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   34 +++++++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+Depends on the type of interfaces you have. For a monitor device it
+makes no sense to close the device as you should be able to still RX.
+It also is possible to TX over a monitor device using frame injection
+so technically setting tx power to off would just mute it and would
+seem useful.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index d5d514f..5f24e4a 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -256,6 +256,8 @@ static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
- static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
- static void ath5k_set_coverage_class(struct ieee80211_hw *hw,
- 		u8 coverage_class);
-+static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant);
-+static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant);
- 
- static const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
-@@ -277,6 +279,8 @@ static const struct ieee80211_ops ath5k_hw_ops = {
- 	.sw_scan_start	= ath5k_sw_scan_start,
- 	.sw_scan_complete = ath5k_sw_scan_complete,
- 	.set_coverage_class = ath5k_set_coverage_class,
-+	.set_antenna	= ath5k_set_antenna,
-+	.get_antenna	= ath5k_get_antenna,
- };
- 
- /*
-@@ -3483,3 +3487,33 @@ static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
- 	ath5k_hw_set_coverage_class(sc->ah, coverage_class);
- 	mutex_unlock(&sc->lock);
- }
-+
-+static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	if (tx_ant == 1 && rx_ant == 1)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_A);
-+	else if (tx_ant == 2 && rx_ant == 2)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_B);
-+	else if (tx_ant == 3 && rx_ant == 3)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_DEFAULT);
-+	else
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	switch (sc->ah->ah_ant_mode) {
-+	case AR5K_ANTMODE_FIXED_A:
-+		*tx_ant = 1; *rx_ant = 1; break;
-+	case AR5K_ANTMODE_FIXED_B:
-+		*tx_ant = 2; *rx_ant = 2; break;
-+	case AR5K_ANTMODE_DEFAULT:
-+		*tx_ant = 3; *rx_ant = 3; break;
-+	}
-+	return 0;
-+}
-
+  Luis
