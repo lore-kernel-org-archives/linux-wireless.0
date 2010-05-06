@@ -1,45 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43055 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753561Ab0EKCli (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 22:41:38 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 10 May 2010 19:41:38 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] ath9k: Remove unused rx_edma in ath_rx_addbuffer_edma()
-Date: Mon, 10 May 2010 19:41:35 -0700
-Message-ID: <1273545695-2987-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1273545695-2987-1-git-send-email-vasanth@atheros.com>
-References: <1273545695-2987-1-git-send-email-vasanth@atheros.com>
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:1950 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759195Ab0EFQtr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 12:49:47 -0400
+Message-ID: <4BE2F328.4090403@gmail.com>
+Date: Thu, 06 May 2010 18:49:44 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH] rt2x00: Fix RF3052 channel initialization
+References: <201005061445.47170.IvDoorn@gmail.com>
+In-Reply-To: <201005061445.47170.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+On 05/06/10 14:45, Ivo van Doorn wrote:
+> Update channel initialization for the RF3052 chipset.
+> According to the Ralink drivers, the rt3x array must be
+> used for this chipset, rather then the rt2x array.
+> 
+> Furthermore RF3052 supports the 5GHz band, extend
+> the rt3x array with the 5GHz channels, and use them
+> for the RF3052 chip.
+> 
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index da54ff5..ba13913 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -150,11 +150,9 @@ static bool ath_rx_edma_buf_link(struct ath_softc *sc,
- static void ath_rx_addbuffer_edma(struct ath_softc *sc,
- 				  enum ath9k_rx_qtype qtype, int size)
- {
--	struct ath_rx_edma *rx_edma;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	u32 nbuf = 0;
- 
--	rx_edma = &sc->rx.rx_edma[qtype];
- 	if (list_empty(&sc->rx.rxbuf)) {
- 		ath_print(common, ATH_DBG_QUEUE, "No free rx buf available\n");
- 		return;
--- 
-1.7.0.4
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |   67 ++++++++++++++++++++++++++----
+>  1 files changed, 58 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index e37bbea..6c0abc3 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2219,7 +2219,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  EXPORT_SYMBOL_GPL(rt2800_init_eeprom);
+>  
+>  /*
+> - * RF value list for rt28x0
+> + * RF value list for rt28xx
+>   * Supports: 2.4 GHz (all) & 5.2 GHz (RF2850 & RF2750)
+>   */
+>  static const struct rf_channel rf_vals[] = {
+> @@ -2294,10 +2294,10 @@ static const struct rf_channel rf_vals[] = {
+>  };
+>  
+>  /*
+> - * RF value list for rt3070
+> - * Supports: 2.4 GHz
+> + * RF value list for rt3xxx
+> + * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052)
+>   */
+> -static const struct rf_channel rf_vals_302x[] = {
+> +static const struct rf_channel rf_vals_3x[] = {
+>  	{1,  241, 2, 2 },
+>  	{2,  241, 2, 7 },
+>  	{3,  242, 2, 2 },
+> @@ -2312,6 +2312,51 @@ static const struct rf_channel rf_vals_302x[] = {
+>  	{12, 246, 2, 7 },
+>  	{13, 247, 2, 2 },
+>  	{14, 248, 2, 4 },
+> +
+> +	/* 802.11 UNI / HyperLan 2 */
+> +	{36, 0x56, 0, 4},
+> +	{38, 0x56, 0, 6},
+> +	{40, 0x56, 0, 8},
+> +	{44, 0x57, 0, 0},
+> +	{46, 0x57, 0, 2},
+> +	{48, 0x57, 0, 4},
+> +	{52, 0x57, 0, 8},
+> +	{54, 0x57, 0, 10},
+> +	{56, 0x58, 0, 0},
+> +	{60, 0x58, 0, 4},
+> +	{62, 0x58, 0, 6},
+> +	{64, 0x58, 0, 8},
+> +
+> +	/* 802.11 HyperLan 2 */
+> +	{100, 0x5b, 0, 8},
+> +	{102, 0x5b, 0, 10},
+> +	{104, 0x5c, 0, 0},
+> +	{108, 0x5c, 0, 4},
+> +	{110, 0x5c, 0, 6},
+> +	{112, 0x5c, 0, 8},
+> +	{116, 0x5d, 0, 0},
+> +	{118, 0x5d, 0, 2},
+> +	{120, 0x5d, 0, 4},
+> +	{124, 0x5d, 0, 8},
+> +	{126, 0x5d, 0, 10},
+> +	{128, 0x5e, 0, 0},
+> +	{132, 0x5e, 0, 4},
+> +	{134, 0x5e, 0, 6},
+> +	{136, 0x5e, 0, 8},
+> +	{140, 0x5f, 0, 0},
+> +
+> +	/* 802.11 UNII */
+> +	{149, 0x5f, 0, 9},
+> +	{151, 0x5f, 0, 11},
+> +	{153, 0x60, 0, 1},
+> +	{157, 0x60, 0, 5},
+> +	{159, 0x60, 0, 7},
+> +	{161, 0x60, 0, 9},
+> +	{165, 0x61, 0, 1},
+> +	{167, 0x61, 0, 3},
+> +	{169, 0x61, 0, 5},
+> +	{171, 0x61, 0, 7},
+> +	{173, 0x61, 0, 9},
+>  };
+>  
+>  int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+> @@ -2352,11 +2397,11 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>  	spec->supported_rates = SUPPORT_RATE_CCK | SUPPORT_RATE_OFDM;
+>  
+>  	if (rt2x00_rf(rt2x00dev, RF2820) ||
+> -	    rt2x00_rf(rt2x00dev, RF2720) ||
+> -	    rt2x00_rf(rt2x00dev, RF3052)) {
+> +	    rt2x00_rf(rt2x00dev, RF2720)) {
+>  		spec->num_channels = 14;
+>  		spec->channels = rf_vals;
+> -	} else if (rt2x00_rf(rt2x00dev, RF2850) || rt2x00_rf(rt2x00dev, RF2750)) {
+> +	} else if (rt2x00_rf(rt2x00dev, RF2850) ||
+> +		   rt2x00_rf(rt2x00dev, RF2750)) {
+>  		spec->supported_bands |= SUPPORT_BAND_5GHZ;
+>  		spec->num_channels = ARRAY_SIZE(rf_vals);
+>  		spec->channels = rf_vals;
+> @@ -2364,8 +2409,12 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>  		   rt2x00_rf(rt2x00dev, RF2020) ||
+>  		   rt2x00_rf(rt2x00dev, RF3021) ||
+>  		   rt2x00_rf(rt2x00dev, RF3022)) {
+> -		spec->num_channels = ARRAY_SIZE(rf_vals_302x);
+> -		spec->channels = rf_vals_302x;
+> +		spec->num_channels = 14;
+> +		spec->channels = rf_vals_3x;
+> +	} else if (rt2x00_rf(rt2x00dev, RF3052)) {
+> +		spec->supported_bands |= SUPPORT_BAND_5GHZ;
+> +		spec->num_channels = ARRAY_SIZE(rf_vals_3x);
+> +		spec->channels = rf_vals_3x;
+>  	}
+>  
+>  	/*
 
