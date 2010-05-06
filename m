@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.elliptictech.com ([209.217.122.41]:48250 "EHLO
-	emergent.ellipticsemi.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752594Ab0EJQNh (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:2520 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751135Ab0EFQ7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 12:13:37 -0400
-Date: Mon, 10 May 2010 12:07:24 -0400
-From: Nick Bowler <nbowler@elliptictech.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.34-rc6-git6: Reported regressions from 2.6.33
-Message-ID: <20100510160724.GA31416@elliptictech.com>
-References: <10aqDnTJcLO.A.mLE.48y5LB@chimera>
+	Thu, 6 May 2010 12:59:13 -0400
+Message-ID: <4BE2F55F.8010109@gmail.com>
+Date: Thu, 06 May 2010 18:59:11 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <10aqDnTJcLO.A.mLE.48y5LB@chimera>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 2/3] rt2x00: rt2800: don't overwrite SIFS values on erp
+ changes
+References: <201005061229.44923.helmut.schaa@googlemail.com>
+In-Reply-To: <201005061229.44923.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23:13 Sun 09 May     , Rafael J. Wysocki wrote:
-> This message contains a list of some regressions from 2.6.33,
-> for which there are no fixes in the mainline known to the tracking team.
-> If any of them have been fixed already, please let us know.
+On 05/06/10 12:29, Helmut Schaa wrote:
+> The SIFS value is a constant and doesn't need to be updated on erp changes.
+> Furthermore the code used 10us for both, the OFDM SIFS and CCK SIFS time
+> which broke CTS protected 11g connections (see patch "rt2x00: rt2800: update
+> initial SIFS values" for details).
 > 
-> If you know of any other unresolved regressions from 2.6.33, please let us
-> know either and we'll add them to the list.  Also, please let us know
-> if any of the entries below are invalid.
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Seems that
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-  r600 CS checker rejects narrow FBO renderbuffers
-  https://bugs.freedesktop.org/show_bug.cgi?id=27609
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index f786068..858455f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -640,8 +640,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
+>  	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
+>  
+>  	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
+> -	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, erp->sifs);
+> -	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, erp->sifs);
+>  	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
+>  	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
+>  
 
-never got added to the list.  It is still an issue as of 2.6.34-rc7.
-
--- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
