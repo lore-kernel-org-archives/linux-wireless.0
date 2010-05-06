@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:2520 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751135Ab0EFQ7N (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55426 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752181Ab0EFHol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 12:59:13 -0400
-Message-ID: <4BE2F55F.8010109@gmail.com>
-Date: Thu, 06 May 2010 18:59:11 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 2/3] rt2x00: rt2800: don't overwrite SIFS values on erp
- changes
-References: <201005061229.44923.helmut.schaa@googlemail.com>
-In-Reply-To: <201005061229.44923.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 May 2010 03:44:41 -0400
+Subject: Re: [PATCH 1/2] mac80211: add offload channel switch support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: wey-yi.w.guy@intel.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1273116842-27189-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1273116842-27189-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 06 May 2010 09:44:36 +0200
+Message-ID: <1273131876.3573.28.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/06/10 12:29, Helmut Schaa wrote:
-> The SIFS value is a constant and doesn't need to be updated on erp changes.
-> Furthermore the code used 10us for both, the OFDM SIFS and CCK SIFS time
-> which broke CTS protected 11g connections (see patch "rt2x00: rt2800: update
-> initial SIFS values" for details).
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Sorry, just thought of something.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Wed, 2010-05-05 at 20:34 -0700, wey-yi.w.guy@intel.com wrote:
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index f786068..858455f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -640,8 +640,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
->  	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
+> + * @timestamp: value in microseconds of the 64-bit Time Synchronization
+> + *	Function (TSF) timer when the channel switch ie received.
+
+This is not accurate now but see below.
+
+> +		if (beacon)
+> +			timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
+> +		else
+> +			timestamp = le64_to_cpu(mgmt->u.probe_resp.timestamp);
+> +		ieee80211_sta_process_chanswitch(sdata, sw_elem,
+> +						 bss, timestamp);
+>  	}
+>  }
 >  
->  	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
-> -	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, erp->sifs);
-> -	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, erp->sifs);
->  	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
->  	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
+> @@ -1647,7 +1691,8 @@ static void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
 >  
+>  			ieee80211_sta_process_chanswitch(sdata,
+>  					&mgmt->u.action.u.chan_switch.sw_elem,
+> -					(void *)ifmgd->associated->priv);
+> +					(void *)ifmgd->associated->priv,
+> +					rx_status->mactime);
+
+For some reason I didn't notice the action frame handling before. Maybe
+it would be more consistent to keep using rx_status->mactime even for
+beacons? I apologise, this is totally my fault since I suggested using
+the beacon time before, but that has a slightly different value relative
+to the frame... Hmm. Maybe it would be better after all to require
+drivers to provide mactime at least for mgmt frames (beacons + actions)
+when they want to implement this callback.
+
+Anyone else have ideas?
+
+johannes
 
