@@ -1,55 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60516 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756607Ab0EEACt (ORCPT
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:41076 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757374Ab0EFMpw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 20:02:49 -0400
-Date: Tue, 4 May 2010 17:00:32 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.34-rc6-git2: Reported regressions from 2.6.33
-In-Reply-To: <JzEGxUyyQHG.A.ZtH.YHJ4LB@chimera>
-Message-ID: <alpine.LFD.2.00.1005041654400.5478@i5.linux-foundation.org>
-References: <JzEGxUyyQHG.A.ZtH.YHJ4LB@chimera>
+	Thu, 6 May 2010 08:45:52 -0400
+Received: by ewy20 with SMTP id 20so1654706ewy.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 05:45:50 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Fix RF3052 channel initialization
+Date: Thu, 6 May 2010 14:45:46 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201005061445.47170.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Update channel initialization for the RF3052 chipset.
+According to the Ralink drivers, the rt3x array must be
+used for this chipset, rather then the rt2x array.
 
+Furthermore RF3052 supports the 5GHz band, extend
+the rt3x array with the 5GHz channels, and use them
+for the RF3052 chip.
 
-On Tue, 4 May 2010, Rafael J. Wysocki wrote:
-> 
-> Unresolved regressions
-> ----------------------
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15880
-> Subject		: Very bad regression from 2.6.33 as of 1600f9def
-> Submitter	: Alex Elsayed <eternaleye@gmail.com>
-> Date		: 2010-04-29 2:28 (6 days old)
-> Message-ID	: <loom.20100429T041908-663@post.gmane.org>
-> References	: http://marc.info/?l=linux-kernel&m=127250825306178&w=2
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   67 ++++++++++++++++++++++++++----
+ 1 files changed, 58 insertions(+), 9 deletions(-)
 
-This looks like it wasn't a regression, but some other compile/install 
-issue. See
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index e37bbea..6c0abc3 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2219,7 +2219,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ EXPORT_SYMBOL_GPL(rt2800_init_eeprom);
+ 
+ /*
+- * RF value list for rt28x0
++ * RF value list for rt28xx
+  * Supports: 2.4 GHz (all) & 5.2 GHz (RF2850 & RF2750)
+  */
+ static const struct rf_channel rf_vals[] = {
+@@ -2294,10 +2294,10 @@ static const struct rf_channel rf_vals[] = {
+ };
+ 
+ /*
+- * RF value list for rt3070
+- * Supports: 2.4 GHz
++ * RF value list for rt3xxx
++ * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052)
+  */
+-static const struct rf_channel rf_vals_302x[] = {
++static const struct rf_channel rf_vals_3x[] = {
+ 	{1,  241, 2, 2 },
+ 	{2,  241, 2, 7 },
+ 	{3,  242, 2, 2 },
+@@ -2312,6 +2312,51 @@ static const struct rf_channel rf_vals_302x[] = {
+ 	{12, 246, 2, 7 },
+ 	{13, 247, 2, 2 },
+ 	{14, 248, 2, 4 },
++
++	/* 802.11 UNI / HyperLan 2 */
++	{36, 0x56, 0, 4},
++	{38, 0x56, 0, 6},
++	{40, 0x56, 0, 8},
++	{44, 0x57, 0, 0},
++	{46, 0x57, 0, 2},
++	{48, 0x57, 0, 4},
++	{52, 0x57, 0, 8},
++	{54, 0x57, 0, 10},
++	{56, 0x58, 0, 0},
++	{60, 0x58, 0, 4},
++	{62, 0x58, 0, 6},
++	{64, 0x58, 0, 8},
++
++	/* 802.11 HyperLan 2 */
++	{100, 0x5b, 0, 8},
++	{102, 0x5b, 0, 10},
++	{104, 0x5c, 0, 0},
++	{108, 0x5c, 0, 4},
++	{110, 0x5c, 0, 6},
++	{112, 0x5c, 0, 8},
++	{116, 0x5d, 0, 0},
++	{118, 0x5d, 0, 2},
++	{120, 0x5d, 0, 4},
++	{124, 0x5d, 0, 8},
++	{126, 0x5d, 0, 10},
++	{128, 0x5e, 0, 0},
++	{132, 0x5e, 0, 4},
++	{134, 0x5e, 0, 6},
++	{136, 0x5e, 0, 8},
++	{140, 0x5f, 0, 0},
++
++	/* 802.11 UNII */
++	{149, 0x5f, 0, 9},
++	{151, 0x5f, 0, 11},
++	{153, 0x60, 0, 1},
++	{157, 0x60, 0, 5},
++	{159, 0x60, 0, 7},
++	{161, 0x60, 0, 9},
++	{165, 0x61, 0, 1},
++	{167, 0x61, 0, 3},
++	{169, 0x61, 0, 5},
++	{171, 0x61, 0, 7},
++	{173, 0x61, 0, 9},
+ };
+ 
+ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+@@ -2352,11 +2397,11 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	spec->supported_rates = SUPPORT_RATE_CCK | SUPPORT_RATE_OFDM;
+ 
+ 	if (rt2x00_rf(rt2x00dev, RF2820) ||
+-	    rt2x00_rf(rt2x00dev, RF2720) ||
+-	    rt2x00_rf(rt2x00dev, RF3052)) {
++	    rt2x00_rf(rt2x00dev, RF2720)) {
+ 		spec->num_channels = 14;
+ 		spec->channels = rf_vals;
+-	} else if (rt2x00_rf(rt2x00dev, RF2850) || rt2x00_rf(rt2x00dev, RF2750)) {
++	} else if (rt2x00_rf(rt2x00dev, RF2850) ||
++		   rt2x00_rf(rt2x00dev, RF2750)) {
+ 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
+ 		spec->num_channels = ARRAY_SIZE(rf_vals);
+ 		spec->channels = rf_vals;
+@@ -2364,8 +2409,12 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		   rt2x00_rf(rt2x00dev, RF2020) ||
+ 		   rt2x00_rf(rt2x00dev, RF3021) ||
+ 		   rt2x00_rf(rt2x00dev, RF3022)) {
+-		spec->num_channels = ARRAY_SIZE(rf_vals_302x);
+-		spec->channels = rf_vals_302x;
++		spec->num_channels = 14;
++		spec->channels = rf_vals_3x;
++	} else if (rt2x00_rf(rt2x00dev, RF3052)) {
++		spec->supported_bands |= SUPPORT_BAND_5GHZ;
++		spec->num_channels = ARRAY_SIZE(rf_vals_3x);
++		spec->channels = rf_vals_3x;
+ 	}
+ 
+ 	/*
+-- 
+1.6.6.1
 
-	http://marc.info/?l=linux-kernel&m=127274294422719&w=2
-
-where he reports that his self-compiled 2.6.33 doesn't boot either. 
-
-There's some confusion about .config, but it might well be an install 
-problem too (in fact, that sounds more likely - the original bug-report 
-seems to reboot before the kernel has really even booted - it apparently 
-hasn't done the graphics mode switch by the early bootloader)
-
-		Linus
