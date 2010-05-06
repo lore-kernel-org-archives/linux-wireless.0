@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36921 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758123Ab0EFNpM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49033 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755128Ab0EFR6o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 09:45:12 -0400
-Date: Thu, 6 May 2010 09:43:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rt61pci: WEP broken in current wireless-testing
-Message-ID: <20100506134335.GA4167@tuxdriver.com>
-References: <20100506075157.whuptq9jgzkww4gs-cebfxv@webmail.spamcop.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100506075157.whuptq9jgzkww4gs-cebfxv@webmail.spamcop.net>
+	Thu, 6 May 2010 13:58:44 -0400
+Subject: Re: 2.6.34-rc5-mmotm0428 - 2 RCU whinges in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Valdis.Kletnieks@vt.edu
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <5820.1273167313@localhost>
+References: <5820.1273167313@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 06 May 2010 19:58:16 +0200
+Message-ID: <1273168696.23199.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 06, 2010 at 07:51:57AM -0400, Pavel Roskin wrote:
+On Thu, 2010-05-06 at 13:35 -0400, Valdis.Kletnieks@vt.edu wrote:
+> Spotted these in my dmesg, hopefully somebody is interested...
+> 
+> [   54.076863] wlan0: deauthenticating from 00:11:20:a4:4c:11 by local choice (reason=3)
+> [   54.080580] 
+> [   54.080581] ===================================================
+> [   54.080584] [ INFO: suspicious rcu_dereference_check() usage. ]
+> [   54.080586] ---------------------------------------------------
+> [   54.080589] net/mac80211/sta_info.c:858 invoked rcu_dereference_check() without protection!
 
-> Recent changes in wireless-testing have broken WEP support in rt61pci.  
->   An older kernel from wireless-testing identified as 2.6.34-rc5-wl is  
-> working fine.
+I'm pretty sure I fixed those so there should be a patch on its way to
+or in mainline somewhere.
 
-> It's should be rather straightforward to bisect, but I'll be away from  
-> that system until next Monday.
+johannes
 
-When you get to this, you probably should use wireless-next-2.6
-(or wireless-2.6) for the bisection.  The pulls from linux-2.6 in
-wireless-testing make bisection much more painful than necessary
-(as long as the problem is actually evident in the other kernels).
-You can use the 'master-<date>' tags as guidelines for matching
-wireless-testing versions to representative wireless-next-2.6 (or
-wireless-2.6) tree versions.
-
-Hth!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
