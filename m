@@ -1,82 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42059 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932554Ab0EMVuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:50:17 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 00/17] iwlwifi updates for 2.6.35
-Date: Thu, 13 May 2010 14:49:42 -0700
-Message-Id: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:52386 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753084Ab0EFKaK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 06:30:10 -0400
+Received: by mail-bw0-f219.google.com with SMTP id 19so400457bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 03:30:10 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 3/3] rt2x00: rt2800: use correct txop value in tx descriptor
+Date: Thu, 6 May 2010 12:29:58 +0200
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201005061229.58509.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series includes a lot of driver cleanup. Driver is made more robust to
-be able to deal with firmware that miss some information. Duplicate code
-scattered in driver is moved to a function. Structures and code specific to
-some devices are moved to be only accessible to these devices. We include
-better station debug information and make it possible to compile driver
-with debugfs support without needing debug support.
+rt2800 devices use a different enumeration to specify what IFS values should
+be used on frame transmission compared to the other rt2x00 devices. Hence,
+create a new enum called txop that contains the valid values.
 
-We also include some fixes which include the usage of the correct mac80211
-variables and fixing of station locking.
+Furthermore use TXOP_HTTXOP as default on HT devices which means that the
+hardware should select the correct IFS value on its own.
 
-We continue the recognition and enabling of some new iwlwifi devices.
+I'm not sure if we have the need to specify one of the other txop values
+in the future but as far as I could see TXOP_HTTXOP is used by the Ralink
+drivers for all normal data frames and should be a reasonable default.
 
-These patches are also available from wireless-next-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+This patch doesn't really fix anything as until now the IFS_BACKOFF(=0)
+value was used as txop which luckily mapped to TXOP_HTTXOP(=0).
 
-Johannes Berg (9):
-  iwlwifi: introduce iwl_sta_id_or_broadcast
-  iwlwifi: don't crash on firmware file missing info
-  iwl3945: remove sequence number assignment
-  iwlwifi: move iwl_free_tfds_in_queue to iwlagn
-  iwlwifi: improve station debugfs
-  iwlwifi: remove IWL_MULTICAST_ID
-  iwlagn: use firmware event/error log information
-  iwlwifi: split debug and debugfs options
-  iwlwifi: use proper short slot/preamble settings
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c   |    2 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c   |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00ht.c    |    2 ++
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
+ drivers/net/wireless/rt2x00/rt2x00reg.h   |   10 ++++++++++
+ 5 files changed, 16 insertions(+), 2 deletions(-)
 
-Reinette Chatre (1):
-  iwlwifi: fix and add missing sta_lock usage
-
-Shanyu Zhao (2):
-  iwlwifi: enable remaining 6000 Gen2 devices
-  iwlwifi: add new PCI IDs for 6000g2 devices
-
-Wey-Yi Guy (5):
-  iwlwifi: move _agn statistics related structure
-  iwlwifi: separate statistics flag function for agn & 3945
-  iwlwifi: code cleanup for _agn devices
-  iwlwifi: modify out-dated comments
-  iwlwifi: move ucode related function to iwl-agn-ucode.c
-
- drivers/net/wireless/iwlwifi/Kconfig            |    6 +-
- drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c |   28 ++-
- drivers/net/wireless/iwlwifi/iwl-3945.c         |   15 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c         |    9 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c         |  286 +++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c  |   91 +++++---
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c      |   23 ++-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c       |   46 +++-
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c    |  123 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c          |  196 ++++++++++++----
- drivers/net/wireless/iwlwifi/iwl-agn.h          |   34 +++
- drivers/net/wireless/iwlwifi/iwl-commands.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.c         |  131 +----------
- drivers/net/wireless/iwlwifi/iwl-core.h         |    3 -
- drivers/net/wireless/iwlwifi/iwl-debugfs.c      |   81 ++-----
- drivers/net/wireless/iwlwifi/iwl-dev.h          |   58 ++---
- drivers/net/wireless/iwlwifi/iwl-helpers.h      |    5 +
- drivers/net/wireless/iwlwifi/iwl-rx.c           |   63 +++---
- drivers/net/wireless/iwlwifi/iwl-sta.c          |   72 +++---
- drivers/net/wireless/iwlwifi/iwl-sta.h          |   29 +++
- drivers/net/wireless/iwlwifi/iwl-tx.c           |   15 --
- drivers/net/wireless/iwlwifi/iwl3945-base.c     |   53 +----
- 24 files changed, 916 insertions(+), 458 deletions(-)
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index f08b6a3..df2c3fb 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -643,7 +643,7 @@ static int rt2800pci_write_tx_data(struct queue_entry* entry,
+ 	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
+ 			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
+ 	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
+-	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->ifs);
++	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
+ 	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
+ 	rt2x00_set_field32(&word, TXWI_W0_BW,
+ 			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index e3f3a97..c9e1320 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -417,7 +417,7 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
+ 			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
+ 	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
+-	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->ifs);
++	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
+ 	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
+ 	rt2x00_set_field32(&word, TXWI_W0_BW,
+ 			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
+diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
+index 1056c92..5483fec 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00ht.c
++++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
+@@ -66,4 +66,6 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
+ 	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
+ 		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
++
++	txdesc->txop = TXOP_HTTXOP;
+ }
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 94a48c1..36a957a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -299,6 +299,7 @@ enum txentry_desc_flags {
+  * @retry_limit: Max number of retries.
+  * @aifs: AIFS value.
+  * @ifs: IFS value.
++ * @txop: IFS value for 11n capable chips.
+  * @cw_min: cwmin value.
+  * @cw_max: cwmax value.
+  * @cipher: Cipher type used for encryption.
+@@ -328,6 +329,7 @@ struct txentry_desc {
+ 	short retry_limit;
+ 	short aifs;
+ 	short ifs;
++	short txop;
+ 	short cw_min;
+ 	short cw_max;
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+index 603bfc0..894ff78 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00reg.h
++++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+@@ -101,6 +101,16 @@ enum ifs {
+ };
+ 
+ /*
++ * IFS values for HT devices
++ */
++enum txop {
++	TXOP_HTTXOP = 0,
++	TXOP_PIFS = 1,
++	TXOP_SIFS = 2,
++	TXOP_BACKOFF = 3,
++};
++
++/*
+  * Cipher types for hardware encryption
+  */
+ enum cipher {
+-- 
+1.6.4.2
 
