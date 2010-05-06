@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64653 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841Ab0ELHMI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59863 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753570Ab0EFTAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 03:12:08 -0400
-Received: by fxm4 with SMTP id 4so234048fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 00:12:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1273614705-25118-8-git-send-email-gwingerde@gmail.com>
-References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-	 <1273614705-25118-8-git-send-email-gwingerde@gmail.com>
-Date: Wed, 12 May 2010 09:12:05 +0200
-Message-ID: <AANLkTikNRG9q8C8D8E2pZ5bRcIB86SCP8K1kcYAbXj4f@mail.gmail.com>
-Subject: Re: [PATCH 7/9] rt2x00: In debugfs frame dumping allow the TX
-	descriptor to be part of the skb.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 May 2010 15:00:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: set IEEE80211_TX_CTL_FIRST_FRAGMENT for beacons
+Date: Thu,  6 May 2010 14:45:17 -0400
+Message-Id: <1273171517-6264-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Preparation for futher cleanups in the area of properly maintaining the skb
-> data without fiddling with the skb->data pointer.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Also simplify the flags assignment into a single statement at the
+end of ieee80211_beacon_get_tim.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/tx.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index f3841f4..6bd2492 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2251,8 +2251,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 
+ 	info->control.vif = vif;
+ 
+-	info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
+-	info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
++	info->flags |= (IEEE80211_TX_CTL_CLEAR_PS_FILT |
++			IEEE80211_TX_CTL_ASSIGN_SEQ |
++			IEEE80211_TX_CTL_FIRST_FRAGMENT);
+  out:
+ 	rcu_read_unlock();
+ 	return skb;
+-- 
+1.6.6.1
+
