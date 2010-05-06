@@ -1,99 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22129 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753501Ab0EEASc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 20:18:32 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 17:18:32 -0700
-Date: Tue, 4 May 2010 17:18:30 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Stephen Hemminger <shemminger@vyatta.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	David Miller <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@kernel.org" <mcgrof@kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH] compat-wireless: updates for orinoco
-Message-ID: <20100505001830.GO2624@tux>
-References: <1273012850-8359-1-git-send-email-hauke@hauke-m.de>
- <v2u43e72e891005041626n14deaca5z284f2472e909c923@mail.gmail.com>
- <20100504170409.46914a88@nehalam>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43963 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755032Ab0EFK43 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 06:56:29 -0400
+Received: by fxm10 with SMTP id 10so5000849fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 03:56:27 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/3] rt2x00: rt2800: don't overwrite SIFS values on erp changes
+Date: Thu, 6 May 2010 12:56:15 +0200
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201005061229.44923.helmut.schaa@googlemail.com> <201005061251.09142.helmut.schaa@googlemail.com>
+In-Reply-To: <201005061251.09142.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20100504170409.46914a88@nehalam>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201005061256.15682.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 04, 2010 at 05:04:09PM -0700, Stephen Hemminger wrote:
-> On Tue, 4 May 2010 16:26:53 -0700
-> "Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
-> 
-> > First of all, thanks a lot! Some comments below.
-> > 
-> > On Tue, May 4, 2010 at 3:40 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> > > * Make all the patches apply again.
-> > > * rename read_pda to avoid conflicts with definitions in kernel <= 2.6.29
-> > 
-> > I'm going to apply these two changes, if you get time can you send a
-> > patch to rename read_pda upstream as well, that way we don't have to
-> > carry this?
-> > 
-> > > * add orinoco usb
-> > 
-> > Thanks for this but I've grown tired of updating these netdev ops and
-> > I think we can do better. I'll add a netdev_attach_ops() which would
-> > simply do all the backport stuff for us, this way for backporting
-> > purposes all we have to do is replace the old lines with a
-> > netdev_attach_ops() call. In fact if we *really* wanted to we could
-> > add a dummy netdev_attach_ops() upstream and just backport that on
-> > older kernels, this would mean 0 line changes to backport a newer
-> > driver.
-> > 
-> > Something like this maybe on the generic compat module, it builds for
-> > me, will commit soon.
-> > 
-> > /*
-> >  * Expand this as drivers require more ops, for now this
-> >  * only sets the ones we need.
-> >  */
-> > void netdev_attach_ops(struct net_device *dev,
-> >                       const struct net_device_ops *ops)
-> > {
-> > #define SET_NETDEVOP(_op) (_op ? _op : NULL)
-> >        dev->open = SET_NETDEVOP(ops->ndo_open);
-> >        dev->stop = SET_NETDEVOP(ops->ndo_stop);
-> >        dev->hard_start_xmit = SET_NETDEVOP(ops->ndo_start_xmit);
-> >        dev->set_multicast_list = SET_NETDEVOP(ops->ndo_set_multicast_list);
-> >        dev->change_mtu = SET_NETDEVOP(ops->ndo_change_mtu);
-> >        dev->set_mac_address = SET_NETDEVOP(ops->ndo_set_mac_address);
-> >        dev->tx_timeout = SET_NETDEVOP(ops->ndo_tx_timeout);
-> >        dev->get_stats = SET_NETDEVOP(ops->ndo_get_stats);
-> > #undef SET_NETDEVOP
-> > }
-> > EXPORT_SYMBOL(netdev_attach_ops);
-> > 
-> > For newer kernels then this would just be:
-> > 
-> > static inline void netdev_attach_ops(struct net_device *dev,
-> >                       const struct net_device_ops *ops)
-> > {
-> >        dev->netdev_ops = ops;
-> > }
-> > 
-> > Stephen, would the above be acceptable upstream on netdevice.h ? It
-> > would eliminate all needs from having to #ifdef network drivers when
-> > backporting. If so I can send a respective patch and spatch all the
-> > setters I think. An example of the nasty ifdef crap we have to do for
-> > the current backport of netdevop'able drivers is below.
-> > 
-> 
-> No. supporting backporting is not part of the upstream kernel
-> mission. Honestly, we try for forward compatibility but intentionally
-> ignore carrying extra backport baggage.
+Am Donnerstag 06 Mai 2010 schrieb Helmut Schaa:
+> Nevertheless I don't get good transfer speeds. I didn't measure exactly but
+> just with scp. And I got ~600-700 KByte/s for TX and 400-500KByte/s for RX.
+> This is still quite low.
 
-Sure, understood, just had to try :), if only I could find a *good*
-non-backport reason to have the netdev_attach_ops()...
+Nevermind, tested on a MIPS board. So maybe it's not the wireless but the CPU
+that's limiting scp performance.
 
-  Luis
+When I find some time I'll try plain TCP connections.
+
+Helmut
