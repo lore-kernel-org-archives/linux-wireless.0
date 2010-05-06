@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43391 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754902Ab0E0ILl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43905 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752130Ab0EFSaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 04:11:41 -0400
-Subject: Re: [PATCHv2] mac80211: Fix basic rates for created IBSS networks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274936780.5277.2879.camel@wimaxnb.nmp.nokia.com>
-References: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1274878391.3658.9.camel@jlt3.sipsolutions.net>
-	 <1274879624.5277.1917.camel@wimaxnb.nmp.nokia.com>
-	 <1274883276.3658.15.camel@jlt3.sipsolutions.net>
-	 <1274936780.5277.2879.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 10:11:35 +0200
-Message-ID: <1274947895.3669.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 6 May 2010 14:30:22 -0400
+Date: Thu, 6 May 2010 14:22:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Adel Gadllah <adel.gadllah@gmail.com>
+Subject: Re: [PATCH] iwlwifi: recalculate average tpt if not current
+Message-ID: <20100506182232.GB4167@tuxdriver.com>
+References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
+ <1272908934.7879.5748.camel@rchatre-DESK>
+ <1272909307.7879.5759.camel@rchatre-DESK>
+ <1273162268.2226.2503.camel@rchatre-DESK>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1273162268.2226.2503.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 08:06 +0300, Juuso Oikarinen wrote:
-> On Wed, 2010-05-26 at 16:14 +0200, ext Johannes Berg wrote:
-> > TBD
+On Thu, May 06, 2010 at 09:11:08AM -0700, reinette chatre wrote:
+> On Mon, 2010-05-03 at 10:55 -0700, reinette chatre wrote:
+> > From: Reinette Chatre <reinette.chatre@intel.com>
 > > 
-> > Needs to be split up (setting bss_conf and the bss_change flag is a
-> > separate bugfix) and tested but this is what I think it should be like.
+> > We currently have this check as a BUG_ON, which is being hit by people.
+> > Previously it was an error with a recalculation if not current, return that
+> > code.
+> > 
+> > The BUG_ON was introduced by:
+> > commit 3110bef78cb4282c58245bc8fd6d95d9ccb19749
+> > Author: Guy Cohen <guy.cohen@intel.com>
+> > Date:   Tue Sep 9 10:54:54 2008 +0800
+> > 
+> >     iwlwifi: Added support for 3 antennas
+> > 
+> > ... the portion adding the BUG_ON is reverted since we are encountering the error
+> > and BUG_ON was created with assumption that error is not encountered.
+> > 
+> > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> > ---
 > 
-> Yes, I think this would work. Are you planning on working on this patch?
+> I noticed this patch in your wireless-next-2.6 pull request. Since it is
+> addressing a system hang issue, could it perhaps be included in
+> wireless-2.6 also? I should have included the bug report reference for
+> this purpose, sorry ... it is
+> https://bugzilla.redhat.com/show_bug.cgi?id=588021
 
-No.
+I didn't send it that way because a) that code has been there for a
+really long time; and b) the reporter couldn't reliably reproduce
+the bug and therefore can't reliably test the fix.  While I agree
+that the fix looks harmless, no update is zero-risk.
 
-johannes
+Can you reliably hit that code?  Has it been tested enough that we
+should risk holding-up 2.6.34's release for it?
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
