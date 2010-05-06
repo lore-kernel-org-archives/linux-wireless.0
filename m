@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:2885 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932503Ab0EMUD2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 16:03:28 -0400
-Message-ID: <4BEC5B0D.9060900@gmail.com>
-Date: Thu, 13 May 2010 22:03:25 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 1/4] rt2x00: Fix failed SLEEP->AWAKE and AWAKE->SLEEP
- 	transitions.
-References: <1273778166-3833-1-git-send-email-gwingerde@gmail.com>	 <1273778166-3833-2-git-send-email-gwingerde@gmail.com> <AANLkTilccqteZvPru-_q1tRqcDLpAqE2DjIdMoUC0Ij_@mail.gmail.com>
-In-Reply-To: <AANLkTilccqteZvPru-_q1tRqcDLpAqE2DjIdMoUC0Ij_@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:34905 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758977Ab0EFQ2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 12:28:49 -0400
+Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
+ accesspoint == hardlock
+From: reinette chatre <reinette.chatre@intel.com>
+To: Christian Borntraeger <borntraeger@de.ibm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"NilsRadtkelkml@think-future.de" <NilsRadtkelkml@think-future.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <201005061114.35480.borntraeger@de.ibm.com>
+References: <20100503191756.GA3479@localhost>
+	 <20100503192219.GE25748@tuxdriver.com>
+	 <201005061114.35480.borntraeger@de.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 06 May 2010 09:28:48 -0700
+Message-ID: <1273163328.2226.2530.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/10 21:30, Ivo Van Doorn wrote:
-> On Thu, May 13, 2010 at 9:16 PM, Gertjan van Wingerde
-> <gwingerde@gmail.com> wrote:
->> (Based on a patch created by Ondrej Zary)
->>
->> In some circumstances the Ralink devices do not properly go to sleep
->> or wake up, with timeouts occurring.
->> Fix this by retrying telling the device that it has to wake up or
->> sleep.
->>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> 
-> Nice catch, I think the legacy drivers also did this, but not too sure
-> about that.
-> Does this mean we can reenable the flag to enable powersaving by default?
-> 
+Hi Christian,
 
-Not sure of that yet. There's one more thing that is on my TODO list on powersaving,
-namely to not go to sleep if there are still active entries in the TX queues. This is
-also done by the legacy, so we should check for that as well. The only issue is how to
-make the device go to sleep once the TX queues are empty, as mac80211 will not inform
-us again that we need to sleep.
+On Thu, 2010-05-06 at 02:14 -0700, Christian Borntraeger wrote:
+> Am Montag 03 Mai 2010 21:22:19 schrieb John W. Linville:
+> > >   /* Sanity-check TPT calculations */
+> > >   BUG_ON(window->average_tpt != ((window->success_ratio *
+> > >       tbl->expected_tpt[index] + 64) / 128));
+> > 
+> > Interestingly enough, we have been discussing this line of code today.  Could you try the patch here?
+> > 
+> > 	http://marc.info/?l=linux-wireless&m=127290931304496&w=2
+> 
+> I also see a hard lockup some time after connection to my companies
+> wireless network. My private network does not seem to trigger that bug.
+> Unfortunately the kernel is not able to switch back graphics, so I 
+> cannot tell if I see the same BUG - even if the problem description is 
+> the same.
 
----
-Gertjan.
+It will be hard to debug this without some logs. Can you perhaps run
+with netconsole for a while? Is it possible to trigger this when not in
+X to be able to get some information about where issue is?
+
+> For reference, the patch above  does not help on my T61p.
+> 
+> It started soon after 2.6.34-rc4. Before and with rc4 I had to
+> apply this http://patchwork.ozlabs.org/patch/49850/mbox/ patch to avoid
+> the other crash. With only this patch on top of rc4 everything seemed to
+> work fine, so the lockup seems to be triggered by one of the other patches.
+> Sometimes it takes some minutes to crash, which makes it hard to bisect
+> the problem.
+
+Below seven iwlwifi patches were added after rc4. If you are unable to
+bisect ... perhaps you can run a while by reverting more and more from
+this list?
+
+f2fa1b015e9c199e45c836c769d94db595150731 iwlwifi: correct 6000 EEPROM regulatory address
+88be026490ed89c2ffead81a52531fbac5507e01 iwlwifi: fix scan races
+8b9fce77737ae9983f61ec56cd53f52fb738b2c7 iwlwifi: work around bogus active chains detection
+ece6444c2fe80dab679beb5f0d58b091f1933b00 iwlwifi: need check for valid qos packet before free
+de0f60ea94e132c858caa64a44b2012e1e8580b0 iwlwifi: avoid Tx queue memory allocation in interface down
+04f2dec1c3d375c4072613880f28f43b66524876 iwlwifi: use consistent table for tx data collect
+dd48744964296b5713032ea1d66eb9e3d990e287 iwlwifi: fix DMA allocation warnings
+
+Reinette
+
+
