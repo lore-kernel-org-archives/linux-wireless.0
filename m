@@ -1,48 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53034 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756104Ab0EXIYV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:24:21 -0400
-Subject: Re: [PATCH] Silence debug prints when using adhoc mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mikko Rapeli <mikko.rapeli@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100524081455.GB19669@nalle>
-References: <20100523162240.GZ19669@nalle>
-	 <1274688345.3743.2.camel@jlt3.sipsolutions.net>
-	 <20100524081455.GB19669@nalle>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 May 2010 10:24:17 +0200
-Message-ID: <1274689457.3743.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:50226 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751665Ab0EFKBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 06:01:21 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: b43-dev@lists.infradead.org
+Subject: Re: [RFC/RFT] ssb: resolve alternate SPROM offset for 14e4:4315
+Date: Thu, 6 May 2010 12:01:18 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+References: <4be24cdd.Yg6pH2Z4OwSotB+K%Larry.Finger@lwfinger.net> <201005061153.01488.mb@bu3sch.de> (sfid-20100506_055308_804338_0079B086)
+In-Reply-To: <201005061153.01488.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201005061201.18469.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-24 at 11:14 +0300, Mikko Rapeli wrote:
-
-> > > $ dmesg | tail -10
-> > > [ 1986.772018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.776149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.780076] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.784020] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.788149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.792108] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.796070] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.800018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.804186] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > > [ 1986.808072] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+On Thursday 06 May 2010 11:53:01 Michael Buesch wrote:
+> On Thursday 06 May 2010 07:00:13 Larry Finger wrote:
+> > This patch and the patch by Gabor entitled "[PATCH] ssb: Implement
+> > fast powerup delay calculation" are enough to allow the netbook from
+> > John to work with ssb/b43. As this patch tampers with the SPROM offset for
+> > 14e4:4315 devices, it should be tested by anyone with an LP PHY that works
+> > to ensure that it is not killed.
 > > 
-> > Hm. That's not supposed to happen over and over again that quickly, only
-> > every few seconds. I wonder if that's related to the other timer issue
-> > that we saw in ibss.
+> > The essential elements of this patch will also be tested as part of kernel Bug
+> > #15825.
+> > 
+> > Larry
+> >  
+> > Index: wireless-testing/drivers/ssb/pci.c
+> > ===================================================================
+> > --- wireless-testing.orig/drivers/ssb/pci.c
+> > +++ wireless-testing/drivers/ssb/pci.c
+> > @@ -631,8 +631,17 @@ static int ssb_pci_sprom_get(struct ssb_
+> >  		return -ENODEV;
+> >  	}
+> >  
+> > -	bus->sprom_offset = (bus->chipco.dev->id.revision < 31) ?
+> > -		SSB_SPROM_BASE1 : SSB_SPROM_BASE31;
+> > +	/* get SPROM offset: SSB_SPROM_BASE1 except for chipcommon rev >= 31
+> > +	 * or chip ID is 0x4312 and bit 0x2 is set in chipcommon status
+> > +	 */
+> > +	if (bus->chipco.dev->id.revision >= 31)
+> > +		bus->sprom_offset = SSB_SPROM_BASE31;
+> > +	else if (bus->chip_id == 0x4312 && (bus->chipco.status & 0x02))
+> > +		bus->sprom_offset = SSB_SPROM_BASE31;
+> > +	else
+> > +		bus->sprom_offset = SSB_SPROM_BASE1;
+> > +
+> > +	ssb_dprintk(KERN_INFO PFX "SPROM offset is 0x%x\n", bus->sprom_offset);
+> >  
+> >  	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+> >  	if (!buf)
+> > Index: wireless-testing/drivers/ssb/scan.c
+> > ===================================================================
+> > --- wireless-testing.orig/drivers/ssb/scan.c
+> > +++ wireless-testing/drivers/ssb/scan.c
+> > @@ -306,6 +306,11 @@ int ssb_bus_scan(struct ssb_bus *bus,
+> >  		}
+> >  		tmp = scan_read32(bus, 0, SSB_CHIPCO_CAP);
+> >  		bus->chipco.capabilities = tmp;
+> > +		if (bus->chip_rev >= 11)
 > 
-> I've had this spamming problem since December 2009 with all 2.6.32 kernels
-> from Debian unstable, so this not something new from 2.6.34.
+> This still is wrong. the chip_rev is not the chipcommon core revision.
 
-Do I even want to comment on that? In any case -- it's not supposed to
-be spamming you so we want to find the root cause. Can you enable
-verbose IBSS debug to hopefully see why it's happening?
+Although technically in most (all?) cases it might be the same number.
+I'm not sure on that one.
+But it is read from an entirely different register and I think it's plain
+wrong to assume that chip_rev equals the chipcommon core rev.
 
-johannes
+> We already went through this and we decided to read the chipstat later.
+> Read it in chipcommon init. The bus scan is _way_ too early to read this.
+> 
+> > +			bus->chipco.status = scan_read32(bus, 0,
+> > +					     SSB_CHIPCO_CHIPSTAT);
+> > +		else
+> > +			bus->chipco.status = 0;
+> >  	} else {
+> >  		if (bus->bustype == SSB_BUSTYPE_PCI) {
+> >  			bus->chip_id = pcidev_to_chipid(bus->host_pci);
+> > 
+> > 
+> 
+> 
 
+-- 
+Greetings, Michael.
