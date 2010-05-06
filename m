@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f186.google.com ([209.85.222.186]:38847 "EHLO
-	mail-pz0-f186.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757881Ab0EDSJy convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:52386 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753084Ab0EFK35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 14:09:54 -0400
-Received: by pzk16 with SMTP id 16so2041996pzk.22
-        for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 11:09:54 -0700 (PDT)
+	Thu, 6 May 2010 06:29:57 -0400
+Received: by bwz19 with SMTP id 19so400457bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 03:29:56 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 2/3] rt2x00: rt2800: don't overwrite SIFS values on erp changes
+Date: Thu, 6 May 2010 12:29:44 +0200
 MIME-Version: 1.0
-In-Reply-To: <4BDFD3C1.4000209@openwrt.org>
-References: <4BDFD3C1.4000209@openwrt.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 4 May 2010 11:09:32 -0700
-Message-ID: <u2q43e72e891005041109i5106ba24ma7345c4f4c4fde21@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: fix another source of corrupt frames
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201005061229.44923.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 4, 2010 at 12:58 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Atheros hardware supports receiving frames that span multiple
-> descriptors and buffers. In this case, the rx status of every
-> descriptor except for the last one is invalid and may contain random
-> data. Because the driver does not support this, it needs to drop such
-> frames.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
-> --- a/drivers/net/wireless/ath/ath9k/common.c
-> +++ b/drivers/net/wireless/ath/ath9k/common.c
-> @@ -57,13 +57,19 @@ static bool ath9k_rx_accept(struct ath_c
->         * rs_more indicates chained descriptors which can be used
->         * to link buffers together for a sort of scatter-gather
->         * operation.
-> -        *
-> +        * reject the frame, we don't support scatter-gather yet and
-> +        * the frame is probably corrupt anyway
-> +        */
-> +       if (rx_stats->rs_more)
-> +               return false;
+The SIFS value is a constant and doesn't need to be updated on erp changes.
+Furthermore the code used 10us for both, the OFDM SIFS and CCK SIFS time
+which broke CTS protected 11g connections (see patch "rt2x00: rt2800: update
+initial SIFS values" for details).
 
-Actually this is required by ath9k_htc, it does process these, but
-ath9k doesn't so this could be done within ath9k itself.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index f786068..858455f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -640,8 +640,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
+ 	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
+-	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, erp->sifs);
+-	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, erp->sifs);
+ 	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
+ 	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
+ 
+-- 
+1.6.4.2
+
