@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49315 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932651Ab0EMVuT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:50:19 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/17] iwlwifi: modify out-dated comments
-Date: Thu, 13 May 2010 14:49:55 -0700
-Message-Id: <1273787399-9280-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
-References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:34511 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754676Ab0EFRCW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 13:02:22 -0400
+Received: by bwz19 with SMTP id 19so108023bwz.21
+        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 10:02:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201005061229.44923.helmut.schaa@googlemail.com>
+References: <201005061229.44923.helmut.schaa@googlemail.com>
+Date: Thu, 6 May 2010 19:02:20 +0200
+Message-ID: <k2ta32f33a41005061002j6f32d4a9zbd13c9e002e8a04@mail.gmail.com>
+Subject: Re: [PATCH 2/3] rt2x00: rt2800: don't overwrite SIFS values on erp
+	changes
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Thu, May 6, 2010 at 12:29 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> The SIFS value is a constant and doesn't need to be updated on erp changes.
+> Furthermore the code used 10us for both, the OFDM SIFS and CCK SIFS time
+> which broke CTS protected 11g connections (see patch "rt2x00: rt2800: update
+> initial SIFS values" for details).
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Some comments in iwl-dev.h still refer to 4965 but used by all the _agn
-devices.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 8b2d06c..05a7a0d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1096,7 +1096,7 @@ struct iwl_priv {
- 	/* force reset */
- 	struct iwl_force_reset force_reset[IWL_MAX_FORCE_RESET];
- 
--	/* we allocate array of iwl4965_channel_info for NIC's valid channels.
-+	/* we allocate array of iwl_channel_info for NIC's valid channels.
- 	 *    Access via channel # using indirect index array */
- 	struct iwl_channel_info *channel_info;	/* channel info array */
- 	u8 channel_count;	/* # of channels */
-@@ -1161,7 +1161,7 @@ struct iwl_priv {
- 	struct iwl_switch_rxon switch_rxon;
- 
- 	/* 1st responses from initialize and runtime uCode images.
--	 * 4965's initialize alive response contains some calibration data. */
-+	 * _agn's initialize alive response contains some calibration data. */
- 	struct iwl_init_alive_resp card_alive_init;
- 	struct iwl_alive_resp card_alive;
- 
--- 
-1.6.3.3
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index f786068..858455f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -640,8 +640,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
+>        rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
+>
+>        rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
+> -       rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, erp->sifs);
+> -       rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, erp->sifs);
+>        rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
+>        rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
+>
+> --
+> 1.6.4.2
+>
+>
