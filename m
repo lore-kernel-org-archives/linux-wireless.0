@@ -1,37 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3559 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757948Ab0EXSdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 14:33:55 -0400
-Subject: Re: iwl3945 bug in 2.6.34
-From: reinette chatre <reinette.chatre@intel.com>
-To: Satish Eerpini <eerpini@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
-References: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 May 2010 11:33:49 -0700
-Message-ID: <1274726029.2091.15160.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:52828 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756078Ab0EFAlx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 May 2010 20:41:53 -0400
+Received: by pzk34 with SMTP id 34so2953215pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 05 May 2010 17:41:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1273098457-21658-1-git-send-email-hauke@hauke-m.de>
+References: <1273098457-21658-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 5 May 2010 17:41:32 -0700
+Message-ID: <r2i43e72e891005051741v8a432a31j39a9ec099b5f021f@mail.gmail.com>
+Subject: Re: [PATCH] compat: backport eth_change_mtu and eth_validate_addr
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 5, 2010 at 3:27 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-On Sat, 2010-05-22 at 23:25 -0700, Satish Eerpini wrote:
+Awesome, thanks.
 
-> No probe response from AP 00:1b:da:2a:a1:53 after 500ms, disconnecting.
-> iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
-> iwl3945 0000:10:00.0: Error setting new configuration (-110).
-> iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
-> iwl3945 0000:10:00.0: Error setting new configuration (-110).
-
-This did not use to be an issue with 3945 and unfortunately we do not
-know what is triggering it now. Please try the "Enable stuck queue
-detection on 3945" patch that is attached to
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1834 as a
-workaround.
-
-Reinette
-
-
+  Luis
