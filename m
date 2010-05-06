@@ -1,116 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58193 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757006Ab0ENN00 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 09:26:26 -0400
-Received: by wyb36 with SMTP id 36so20668wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 06:26:19 -0700 (PDT)
-Date: Fri, 14 May 2010 15:25:39 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Jeff Hansen <x@jeffhansen.com>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: [patch -next 2/2] ath9k/debug: fixup the return codes
-Message-ID: <20100514132539.GH5695@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([143.182.124.21]:7354 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751501Ab0EFSuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 14:50:17 -0400
+Subject: Re: [PATCH] iwlwifi: recalculate average tpt if not current
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Adel Gadllah <adel.gadllah@gmail.com>
+In-Reply-To: <20100506182232.GB4167@tuxdriver.com>
+References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
+	 <1272908934.7879.5748.camel@rchatre-DESK>
+	 <1272909307.7879.5759.camel@rchatre-DESK>
+	 <1273162268.2226.2503.camel@rchatre-DESK>
+	 <20100506182232.GB4167@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 06 May 2010 11:50:15 -0700
+Message-ID: <1273171815.2370.247.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed -EINVAL to -EFAULT if copy_to_user() failed.
-Changed 0 to -ENOMEM if allocations failed.
+Hi John,
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+On Thu, 2010-05-06 at 11:22 -0700, John W. Linville wrote:
+> On Thu, May 06, 2010 at 09:11:08AM -0700, reinette chatre wrote:
+> > I noticed this patch in your wireless-next-2.6 pull request. Since it is
+> > addressing a system hang issue, could it perhaps be included in
+> > wireless-2.6 also? I should have included the bug report reference for
+> > this purpose, sorry ... it is
+> > https://bugzilla.redhat.com/show_bug.cgi?id=588021
+> 
+> I didn't send it that way because a) that code has been there for a
+> really long time; and b) the reporter couldn't reliably reproduce
+> the bug and therefore can't reliably test the fix.  While I agree
+> that the fix looks harmless, no update is zero-risk.
+> 
+> Can you reliably hit that code?  Has it been tested enough that we
+> should risk holding-up 2.6.34's release for it?
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index f344128..3123d16 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -56,7 +56,7 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
+Good point ... we have not seen this BUG being hit before and it seems
+to have been there since 2.6.28.  In addition to the report in RedHat
+bugzilla there is a lkml thread that seems to be related to this code
+also (http://lkml.org/lkml/2010/5/3/229 ) ... but that reporter did not
+seem to test this patch and my last reply to that thread bounced to his
+email address.
+
+We thus seem to have two recent reports of users hitting the BUG, which
+may mean some other recent change in driver causes this BUG to be hit,
+not really just the presence of the BUG code itself.
+
+As far as testing goes ... this patch has just been merged and will from
+now on be included in our regression testing. Unfortunately this had not
+been exercised much yet since I just merged.
+
+I guess we will proceed with the "wait and see" here and forward this
+patch to stable if the BUG is encountered again.
+
+Reinette
  
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &mask))
-@@ -100,7 +100,7 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &mask))
-@@ -142,7 +142,7 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &mask))
-@@ -175,7 +175,7 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 
- 	buf = kmalloc(DMA_BUF_LEN, GFP_KERNEL);
- 	if (!buf)
--		return 0;
-+		return -ENOMEM;
- 
- 	ath9k_ps_wakeup(sc);
- 
-@@ -405,7 +405,7 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- 	max = 80 + sc->cur_rate_table->rate_cnt * 1024 + 1;
- 	buf = kmalloc(max, GFP_KERNEL);
- 	if (buf == NULL)
--		return 0;
-+		return -ENOMEM;
- 
- 	len += sprintf(buf, "%6s %6s %6s "
- 		       "%10s %10s %10s %10s\n",
-@@ -640,7 +640,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 
- 	buf = kzalloc(size, GFP_KERNEL);
- 	if (buf == NULL)
--		return 0;
-+		return -ENOMEM;
- 
- 	len += sprintf(buf, "%30s %10s%10s%10s\n\n", "BE", "BK", "VI", "VO");
- 
-@@ -713,7 +713,7 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 
- 	buf = kzalloc(size, GFP_KERNEL);
- 	if (buf == NULL)
--		return 0;
-+		return -ENOMEM;
- 
- 	len += snprintf(buf + len, size - len,
- 			"%18s : %10u\n", "CRC ERR",
-@@ -832,7 +832,7 @@ static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &regidx))
-@@ -874,7 +874,7 @@ static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &regval))
+
+
