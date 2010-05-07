@@ -1,43 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8804 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756007Ab0EXWIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 18:08:17 -0400
-Subject: Re: iwl3945 bug in 2.6.34
-From: reinette chatre <reinette.chatre@intel.com>
-To: Satish Eerpini <eerpini@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274726029.2091.15160.camel@rchatre-DESK>
-References: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
-	 <1274726029.2091.15160.camel@rchatre-DESK>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 May 2010 15:08:16 -0700
-Message-ID: <1274738896.2091.15438.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from aurora.create-net.org ([193.206.22.116]:48896 "EHLO
+	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757799Ab0EGTKT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 May 2010 15:10:19 -0400
+Message-ID: <4BE46584.5060304@create-net.org>
+Date: Fri, 07 May 2010 21:09:56 +0200
+From: Roberto Riggio <roberto.riggio@create-net.org>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Packet injection with ath9k
+References: <4BE43C18.2030806@create-net.org> <j2v69e28c911005070935wb720d757labf3a0484aedefb8@mail.gmail.com>
+In-Reply-To: <j2v69e28c911005070935wb720d757labf3a0484aedefb8@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-24 at 11:33 -0700, reinette chatre wrote:
-> On Sat, 2010-05-22 at 23:25 -0700, Satish Eerpini wrote:
-> 
-> > No probe response from AP 00:1b:da:2a:a1:53 after 500ms, disconnecting.
-> > iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
-> > iwl3945 0000:10:00.0: Error setting new configuration (-110).
-> > iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
-> > iwl3945 0000:10:00.0: Error setting new configuration (-110).
-> 
-> This did not use to be an issue with 3945 and unfortunately we do not
-> know what is triggering it now. Please try the "Enable stuck queue
-> detection on 3945" patch that is attached to
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1834 as a
-> workaround.
+Hi,
 
-Actually, sorry, but that patch will not work on 2.6.34 since the
-feature it enables is not present there - it will be in 2.6.35 though.
-To enable the feature in 2.6.34 will take some more backporting effort
-that I'm looking into now.
+well, that is what i wanted to understand. These are the struct
+that I'm using to compose the rediotap header:
 
-Reinette
+struct ieee80211_radiotap_header {
+     u_int8_t    it_version;
+     u_int8_t    it_pad;
+     u_int16_t       it_len;
+     u_int32_t       it_present;
+} __attribute__((__packed__));
 
+struct click_radiotap_header {
+     struct ieee80211_radiotap_header wt_ihdr;
+     u_int8_t    wt_rate;
+     u_int8_t    wt_txpower;
+     u_int8_t        wt_rts_retries;
+     u_int8_t        wt_data_retries;
+};
+
+The flags are set in order to take into account the fields that I
+specify. But i do not know at which point the frame are
+dropped.
+
+R.
+
+On 05/07/2010 06:35 PM, Gábor Stefanik wrote:
+> Hi!
+> Are you sure it is not your injector that is having alignment issues?
+> AFAIK the radiotap parser explicitly uses endianness-aware function
+> everywhere.
+>
+> On Fri, May 7, 2010 at 6:13 PM, Roberto Riggio
+> <roberto.riggio@create-net.org>  wrote:
+>    
+>> Hi,
+>>
+>> I'm writing an application to inject traffic over a wireless interface. This
+>> app
+>> is working fine on an x86 machine. However if i compile the same app for
+>> an arm platform, no frame are sent over the wireless interface (ath9k).
+>>
+>> I'm guessing that this is because of some alignment issues but i cannot
+>> track
+>> the piece of code that is actually parsing the frame. I've found the
+>> __ieee80211_parse_tx_radiotap in net/mac80211/tx.c function, but it is
+>> not called when i try to inject some traffic, so the frame are dropped
+>> before that.
+>>
+>> Any hints?
+>>
+>> Thanks
+>> R.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>      
+>
+>
+>    
 
