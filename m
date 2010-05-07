@@ -1,44 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f176.google.com ([209.85.222.176]:46259 "EHLO
-	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755994Ab0EZSPK convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:4242 "EHLO
+	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756557Ab0EGLEi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 14:15:10 -0400
-Received: by pzk6 with SMTP id 6so2902415pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:15:09 -0700 (PDT)
+	Fri, 7 May 2010 07:04:38 -0400
+Message-ID: <4BE3F3C3.8090205@gmail.com>
+Date: Fri, 07 May 2010 13:04:35 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4BFD6478.8090700@gmail.com>
-References: <1274896804-19441-1-git-send-email-justinmattock@gmail.com>
-	<AANLkTilII7C41BTshkXyCmAU81LQ3fJF0ogq_BLVv6w-@mail.gmail.com>
-	<4BFD636B.3070607@gmail.com> <AANLkTikIfbrD7t122jJG-ODU5qb9sbGVIGrHlNJ7w2ia@mail.gmail.com>
-	<4BFD6478.8090700@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 May 2010 11:14:48 -0700
-Message-ID: <AANLkTinjgtKhQJ1UoQPY8aUFxhb3qrKrYjBgAZz1asZ_@mail.gmail.com>
-Subject: Re: [PATCH][RESEND] ath9k: Fix ath_print in xmit for hardware reset.
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linville@tuxdriver.com, arnd@arndnet.de,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Helmut Schaa <helmut.schaa@googlemail.com>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCHv2] rt2x00: rt2800: use correct txop value in tx descriptor
+References: <201005071103.08186.helmut.schaa@googlemail.com>
+In-Reply-To: <201005071103.08186.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 26, 2010 at 11:12 AM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> On 05/26/2010 11:09 AM, Luis R. Rodriguez wrote:
->> On Wed, May 26, 2010 at 11:07 AM, Justin P. Mattock
->> <justinmattock@gmail.com>  wrote:
+On 05/07/10 11:03, Helmut Schaa wrote:
+> rt2800 devices use a different enumeration to specify what IFS values should
+> be used on frame transmission compared to the other rt2x00 devices. Hence,
+> create a new enum called txop that contains the valid values.
+> 
+> Furthermore use the appropriate txop values as found in the ralink drivers:
+> - TXOP_BACKOFF for management frames
+> - TXOP_SIFS for subsequent fragments in a burst
+> - TXOP_HTTXOP for all data frames
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
->>> what about all the signed-off's? should I
->>> resend with all of those, or no?
->
->> I do not get what you are asking.
->
-> all the people that gave there 00.02$ on this to
-> make it all-good
+Thanks for doing the proper patch.
 
-Heh... no. SOBs are just for the authors of the code. The real purpose
-of SOB is explained on Documentation/SubmittingPatches, read
-"Developer's Certificate of Origin 1.1".
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-  Luis
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c   |    2 +-
+>  drivers/net/wireless/rt2x00/rt2800usb.c   |    2 +-
+>  drivers/net/wireless/rt2x00/rt2x00ht.c    |   17 +++++++++++++++++
+>  drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
+>  drivers/net/wireless/rt2x00/rt2x00reg.h   |   10 ++++++++++
+>  5 files changed, 31 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index f08b6a3..df2c3fb 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -643,7 +643,7 @@ static int rt2800pci_write_tx_data(struct queue_entry* entry,
+>  	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
+>  			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
+>  	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
+> -	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->ifs);
+> +	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
+>  	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
+>  	rt2x00_set_field32(&word, TXWI_W0_BW,
+>  			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index e3f3a97..c9e1320 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -417,7 +417,7 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+>  	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
+>  			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
+>  	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
+> -	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->ifs);
+> +	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
+>  	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
+>  	rt2x00_set_field32(&word, TXWI_W0_BW,
+>  			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
+> index 1056c92..5a40760 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00ht.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
+> @@ -35,6 +35,7 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+>  {
+>  	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
+>  	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)entry->skb->data;
+>  
+>  	if (tx_info->control.sta)
+>  		txdesc->mpdu_density =
+> @@ -66,4 +67,20 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+>  		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
+>  	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
+>  		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
+> +
+> +	/*
+> +	 * Determine IFS values
+> +	 * - Use TXOP_BACKOFF for management frames
+> +	 * - Use TXOP_SIFS for fragment bursts
+> +	 * - Use TXOP_HTTXOP for everything else
+> +	 *
+> +	 * Note: rt2800 devices won't use CTS protection (if used)
+> +	 * for frames not transmitted with TXOP_HTTXOP
+> +	 */
+> +	if (ieee80211_is_mgmt(hdr->frame_control))
+> +		txdesc->txop = TXOP_BACKOFF;
+> +	else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
+> +		txdesc->txop = TXOP_SIFS;
+> +	else
+> +		txdesc->txop = TXOP_HTTXOP;
+>  }
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+> index 94a48c1..36a957a 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+> @@ -299,6 +299,7 @@ enum txentry_desc_flags {
+>   * @retry_limit: Max number of retries.
+>   * @aifs: AIFS value.
+>   * @ifs: IFS value.
+> + * @txop: IFS value for 11n capable chips.
+>   * @cw_min: cwmin value.
+>   * @cw_max: cwmax value.
+>   * @cipher: Cipher type used for encryption.
+> @@ -328,6 +329,7 @@ struct txentry_desc {
+>  	short retry_limit;
+>  	short aifs;
+>  	short ifs;
+> +	short txop;
+>  	short cw_min;
+>  	short cw_max;
+>  
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+> index 603bfc0..b9fe948 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00reg.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+> @@ -101,6 +101,16 @@ enum ifs {
+>  };
+>  
+>  /*
+> + * IFS backoff values for HT devices
+> + */
+> +enum txop {
+> +	TXOP_HTTXOP = 0,
+> +	TXOP_PIFS = 1,
+> +	TXOP_SIFS = 2,
+> +	TXOP_BACKOFF = 3,
+> +};
+> +
+> +/*
+>   * Cipher types for hardware encryption
+>   */
+>  enum cipher {
+
