@@ -1,105 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:44730 "HELO
-	outbound-mail-313.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751086Ab0EAIjE (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:47677 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753398Ab0EGVoE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 04:39:04 -0400
-Message-ID: <4BDBE89C.20406@dlasys.net>
-Date: Sat, 01 May 2010 04:38:52 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
+	Fri, 7 May 2010 17:44:04 -0400
+Received: by pwi5 with SMTP id 5so745589pwi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 May 2010 14:44:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ar9170-fw
-References: <4BDB72AA.7000203@dlasys.net> <201005010323.53295.s.L-H@gmx.de>
-In-Reply-To: <201005010323.53295.s.L-H@gmx.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20100507023519.GA7240@tuxdriver.com>
+References: <1273171517-6264-1-git-send-email-linville@tuxdriver.com>
+	<k2t43e72e891005061501h91e475f6q6cb8bc7c3bbec990@mail.gmail.com>
+	<20100507001319.GA6990@tuxdriver.com> <20100507023519.GA7240@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 7 May 2010 14:43:44 -0700
+Message-ID: <p2s43e72e891005071443k348a2802u51dcdc8a549ed84c@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: set IEEE80211_TX_CTL_FIRST_FRAGMENT for beacons
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/30/2010 09:23 PM, Stefan Lippers-Hollmann wrote:
-> Hi
+On Thu, May 6, 2010 at 7:35 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Thu, May 06, 2010 at 08:13:20PM -0400, John W. Linville wrote:
+>> On Thu, May 06, 2010 at 03:01:25PM -0700, Luis R. Rodriguez wrote:
+>> > On Thu, May 6, 2010 at 11:45 AM, John W. Linville
+>> > <linville@tuxdriver.com> wrote:
+>> >
+>> > Why though?
+>>
+>> Because it is correct, appropriate, and zero additional cost.  And
+>> because if you use the same tx path for beacons as you use for normal
+>> frames and if in that path you manage the sequence number in software
+>> you should be checking that flag before bumping the sequence number.
 >
-> I assume your host's /bin/sh is not bash.
->    
-ubuntu default
+> That isn't worded too clearly...  If you manage the sequence number
+> in software then you should be checking that flag before bumping
+> the sequence number.  If you use the same tx path for beacons as is
+> used for normal frames and you don't set that flag for beacons,
+> then beacons will reuse the sequence number from the previous frame.
+>
+> Does that make sense?
 
-ls -al /bin/sh
-lrwxrwxrwx 1 root root 4 2010-04-02 01:25 sh -> dash
+Yeah, thanks, perhaps the documentation should be expanded for this on
+the mac80211.h. This verbiage might also come in handy on the commit
+log. What do you think?
 
-I have bumped into similar problems with buildroot.
-
-Is there a serious downside to linking /bin/sh to bash ?
-
-> ---------------------------------------------------------------------------
->
-> ar9170.fw: fix bashisms while building the cross toolchain.
->
-> Signed-off-by: Stefan Lippers-Hollmann<s.l-h@gmx.de>
->
-> --- a/toolchain/Makefile
-> +++ b/toolchain/Makefile
-> @@ -31,7 +31,8 @@ src/newlib-$(NEWLIB_VER): src/$(NEWLIB_T
->
->   src/gcc-$(GCC_VER): src/$(GCC_TAR) src/newlib-$(NEWLIB_VER)
->   	tar -C src -xjf $<
-> -	ln -s $(BASEDIR)/src/newlib-$(NEWLIB_VER)/{newlib,libgloss} $@
-> +	ln -s $(BASEDIR)/src/newlib-$(NEWLIB_VER)/newlib $@
-> +	ln -s $(BASEDIR)/src/newlib-$(NEWLIB_VER)/libgloss $@
->
->   binutils: src/binutils-$(BINUTILS_VER)
->   	mkdir -p build/binutils
->
-> ---------------------------------------------------------------------------
->
-> While you're at it, I'd suggest to bump the versions for the required
-> cross-build environment as well, as it noticably improves stability of the
-> firmware images built by it (still not perfectly, but better).
->
-> ---------------------------------------------------------------------------
->
-> ar9170.fw: update cross-toolchain.
->
-> Updating the toolchain improves stability of the built firmware images
-> significantly.
->
-> * gcc-4.4.4
-> * binutils-2.20.1
-> * newlib 1.18.0
->
-> Signed-off-by: Stefan Lippers-Hollmann<s.l-h@gmx.de>
->
-> --- a/toolchain/Makefile
-> +++ b/toolchain/Makefile
-> @@ -1,12 +1,12 @@
-> -BINUTILS_VER=2.19.1
-> +BINUTILS_VER=2.20.1
->   BINUTILS_URL=http://mirrors.kernel.org/gnu/binutils/binutils-$(BINUTILS_VER).tar.bz2
->   BINUTILS_TAR=binutils-$(BINUTILS_VER).tar.bz2
->
-> -NEWLIB_VER=1.17.0
-> +NEWLIB_VER=1.18.0
->   NEWLIB_URL=ftp://sources.redhat.com/pub/newlib/newlib-$(NEWLIB_VER).tar.gz
->   NEWLIB_TAR=newlib-$(NEWLIB_VER).tar.gz
->
-> -GCC_VER=4.3.3
-> +GCC_VER=4.4.4
->   GCC_URL=http://mirrors.kernel.org/gnu/gcc/gcc-$(GCC_VER)/gcc-core-$(GCC_VER).tar.bz2
->   GCC_TAR=gcc-core-$(GCC_VER).tar.bz2
->
-> ---------------------------------------------------------------------------
->
-> Regards
-> 	Stefan Lippers-Hollmann
->    
-
-
--- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies too numerous to list.
-
-"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
-Albert Einstein
-
+  Luis
