@@ -1,75 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46203 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757530Ab0EFUbq (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:2484 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752596Ab0EGF5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 16:31:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/2] rtl8180: assign sequence numbers in the driver
-Date: Thu,  6 May 2010 16:26:23 -0400
-Message-Id: <1273177583-10643-1-git-send-email-linville@tuxdriver.com>
+	Fri, 7 May 2010 01:57:06 -0400
+Message-ID: <4BE3ABB0.9040506@gmail.com>
+Date: Fri, 07 May 2010 07:57:04 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt61pci: WEP broken in current wireless-testing
+References: <20100506075157.whuptq9jgzkww4gs-cebfxv@webmail.spamcop.net>	<20100506134335.GA4167@tuxdriver.com> <20100506211435.1nfaq83vkg4ccc0g-cebfxv@webmail.spamcop.net>
+In-Reply-To: <20100506211435.1nfaq83vkg4ccc0g-cebfxv@webmail.spamcop.net>
+Content-Type: multipart/mixed;
+ boundary="------------020009080000050405000608"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a step towards support for beaconing modes of operation.
+This is a multi-part message in MIME format.
+--------------020009080000050405000608
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On 05/07/10 03:14, Pavel Roskin wrote:
+> Quoting "John W. Linville" <linville@tuxdriver.com>:
+> 
+>> When you get to this, you probably should use wireless-next-2.6
+>> (or wireless-2.6) for the bisection.  The pulls from linux-2.6 in
+>> wireless-testing make bisection much more painful than necessary
+>> (as long as the problem is actually evident in the other kernels).
+> 
+> I know it's painful!
+> 
+>> You can use the 'master-<date>' tags as guidelines for matching
+>> wireless-testing versions to representative wireless-next-2.6 (or
+>> wireless-2.6) tree versions.
+> 
+> Thank you for the tips!
+> 
+
+Hi,
+
+It might be that one of my recent patches broke this. Can you try the
+attached patch?
+
 ---
- drivers/net/wireless/rtl818x/rtl8180.h     |    3 +++
- drivers/net/wireless/rtl818x/rtl8180_dev.c |   10 ++++++++++
- 2 files changed, 13 insertions(+), 0 deletions(-)
+Gertjan
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180.h b/drivers/net/wireless/rtl818x/rtl8180.h
-index de3844f..b92d678 100644
---- a/drivers/net/wireless/rtl818x/rtl8180.h
-+++ b/drivers/net/wireless/rtl818x/rtl8180.h
-@@ -78,6 +78,9 @@ struct rtl8180_priv {
- 	u32 anaparam;
- 	u16 rfparam;
- 	u8 csthreshold;
-+
-+	/* sequence # */
-+	u16 seqno;
- };
- 
- void rtl8180_write_phy(struct ieee80211_hw *dev, u8 addr, u32 data);
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index a93eedc..a6fb9a6 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -234,6 +234,7 @@ static irqreturn_t rtl8180_interrupt(int irq, void *dev_id)
- static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct rtl8180_priv *priv = dev->priv;
- 	struct rtl8180_tx_ring *ring;
- 	struct rtl8180_tx_desc *entry;
-@@ -285,6 +286,14 @@ static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	}
- 
- 	spin_lock_irqsave(&priv->lock, flags);
-+
-+	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ) {
-+		if (info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
-+			priv->seqno += 0x10;
-+		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-+		hdr->seq_ctrl |= cpu_to_le16(priv->seqno);
-+	}
-+
- 	idx = (ring->idx + skb_queue_len(&ring->queue)) % ring->entries;
- 	entry = &ring->desc[idx];
- 
-@@ -299,6 +308,7 @@ static int rtl8180_tx(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	__skb_queue_tail(&ring->queue, skb);
- 	if (ring->entries - skb_queue_len(&ring->queue) < 2)
- 		ieee80211_stop_queue(dev, prio);
-+
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 	rtl818x_iowrite8(priv, &priv->map->TX_DMA_POLLING, (1 << (prio + 4)));
--- 
-1.6.6.1
+--------------020009080000050405000608
+Content-Type: text/plain;
+ name="rt61pci-wep-fix.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="rt61pci-wep-fix.diff"
 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00crypto.c b/drivers/net/wireless/rt2x00/rt2x00crypto.c
+index d291c78..583dacd 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
++++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
+@@ -128,6 +128,7 @@ void rt2x00crypto_tx_remove_iv(struct sk_buff *skb, struct txentry_desc *txdesc)
+ 
+ 	/* Pull buffer to correct size */
+ 	skb_pull(skb, txdesc->iv_len);
++	txdesc->length -= txdesc->iv_len;
+ 
+ 	/* IV/EIV data has officially been stripped */
+ 	skbdesc->flags |= SKBDESC_IV_STRIPPED;
+
+--------------020009080000050405000608--
