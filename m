@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web23107.mail.ird.yahoo.com ([217.146.189.47]:29184 "HELO
-	web23107.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933429Ab0EDVjt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 17:39:49 -0400
-Message-ID: <28272.18599.qm@web23107.mail.ird.yahoo.com>
-Date: Tue, 4 May 2010 21:33:05 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: use SET_IEEE80211_PERM_ADDR
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: herton@mandriva.com.br, Larry.Finger@lwfinger.net,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1273002809-8595-1-git-send-email-linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from bombadil.infradead.org ([18.85.46.34]:39581 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743Ab0EGWXX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 May 2010 18:23:23 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Paul Shaw <paul.shaw@atheros.com>,
+	Don Breslin <don.breslin@atheros.com>
+Subject: [PATCH] ath9k_hw: enable PCIe low power mode for AR9003
+Date: Fri,  7 May 2010 18:23:22 -0400
+Message-Id: <1273271002-7377-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Tue, 4/5/10, John W. Linville <linville@tuxdriver.com> wrote:
+Cc: Paul Shaw <paul.shaw@atheros.com>
+Cc: Don Breslin <don.breslin@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-> Signed-off-by: John W. Linville
-> <linville@tuxdriver.com>
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5590192..c33f17d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -574,6 +574,26 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 
+ 	ath9k_hw_init_mode_regs(ah);
+ 
++	/*
++	 * Configire PCIE after Ini init. SERDES values now come from ini file
++	 * This enables PCIe low power mode.
++	 */
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		u32 regval;
++		unsigned int i;
++
++		/* Set Bits 16 and 17 in the AR_WA register. */
++		regval = REG_READ(ah, AR_WA);
++		regval |= 0x00030000;
++		REG_WRITE(ah, AR_WA, regval);
++
++		for (i = 0; i < ah->iniPcieSerdesLowPower.ia_rows; i++) {
++			REG_WRITE(ah,
++				  INI_RA(&ah->iniPcieSerdesLowPower, i, 0),
++				  INI_RA(&ah->iniPcieSerdesLowPower, i, 1));
++		}
++	}
++
+ 	if (ah->is_pciexpress)
+ 		ath9k_hw_configpcipowersave(ah, 0, 0);
+ 	else
+-- 
+1.6.3.3
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-
-Look likes a good direction of change to hide the wiphy details.
-
-Hin-Tak
-
-
-      
