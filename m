@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f183.google.com ([209.85.221.183]:56473 "EHLO
-	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751650Ab0EJOrF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 10:47:05 -0400
-Received: by qyk13 with SMTP id 13so6247098qyk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 May 2010 07:47:04 -0700 (PDT)
-Date: Mon, 10 May 2010 16:46:26 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [patch 3/9] ath9k: cleanup: u32 => bool
-Message-ID: <20100510144625.GW27064@bicker>
-References: <20100508162247.GO27064@bicker> <1273477106.3573.0.camel@jlt3.sipsolutions.net>
+Received: from c60.cesmail.net ([216.154.195.49]:12787 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751772Ab0EGNYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 May 2010 09:24:42 -0400
+Message-ID: <20100507092441.a7ewigtp7o4ow0gs-cebfxv@webmail.spamcop.net>
+Date: Fri, 07 May 2010 09:24:41 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt61pci: WEP broken in current wireless-testing
+References: <20100506075157.whuptq9jgzkww4gs-cebfxv@webmail.spamcop.net>
+	<20100506134335.GA4167@tuxdriver.com>
+	<20100506211435.1nfaq83vkg4ccc0g-cebfxv@webmail.spamcop.net>
+	<4BE3ABB0.9040506@gmail.com>
+In-Reply-To: <4BE3ABB0.9040506@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1273477106.3573.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 10, 2010 at 09:38:26AM +0200, Johannes Berg wrote:
-> On Sat, 2010-05-08 at 18:22 +0200, Dan Carpenter wrote:
-> 
-> > +		bool on = param ? 1 : 0;
-> 
-> umm, if you're going to use bool then use true/false too.
-> 
-> johannes
+Quoting Gertjan van Wingerde <gwingerde@gmail.com>:
 
-The 1 and 0 are used as array indexes so it looks funny to use true and
-false.
+> It might be that one of my recent patches broke this. Can you try the
+> attached patch?
 
-Let's just drop this patch.  I wrote it to silence a smatch false 
-positive but I should/will just fix smatch instead.
+I'm not sure I'll be able to test it before Monday.
 
-Smatch complains we negate a non-boolean type here:
+But the patch looks good.  If the encrypted Tx is broken, it would be  
+entirely consistent with my observations (monitor mode works,  
+association works, but no data flowing).
 
-                if (!on != aniState->ofdmWeakSigDetectOff) {
-
-It's a quite common bug to forget that negation has higher precendence 
-than compare operations.  In this case, it's clear from code that "on" is
-either 1 or 0 so smatch should not complain.
-
-regards,
-dan carpenter
+-- 
+Regards,
+Pavel Roskin
