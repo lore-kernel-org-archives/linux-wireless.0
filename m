@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:34966 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454Ab0ETMyY convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:17761 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754568Ab0EGIjh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 May 2010 08:54:24 -0400
-Received: by ewy8 with SMTP id 8so3004257ewy.28
-        for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 05:54:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100519013214.22206.43556.stgit@tt-desk>
-References: <20100519012528.22206.77550.stgit@tt-desk>
-	 <20100519013214.22206.43556.stgit@tt-desk>
-Date: Thu, 20 May 2010 15:54:22 +0300
-Message-ID: <AANLkTilswnY6oFifj4_iWRqrWTw7U1rtlQmSgrHbbtKT@mail.gmail.com>
-Subject: Re: [PATCH v2 18/20] ath5k: update AR5K_PHY_RESTART_DIV_GC values to
-	match masks
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 7 May 2010 04:39:37 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 5/5] wl1271: Reduce PSM entry hang over period from 128 => 1 ms
+Date: Fri,  7 May 2010 11:39:02 +0300
+Message-Id: <1273221542-14283-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1273221542-14283-1-git-send-email-luciano.coelho@nokia.com>
+References: <1273221542-14283-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/5/19 Bruno Randolf <br1@einfach.org>:
-> #define AR5K_PHY_RESTART_DIV_GC               0x001c0000
-> is 3 bit wide.
->
-> The previous values of 0xc and 0x8 are 4bit wide and bigger than the mask.
->
-> Writing 0 and 1 to AR5K_PHY_RESTART_DIV_GC is consistent with the comments and
-> initvals we have in the HAL.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath5k/phy.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index d9506e7..2136930 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -1768,13 +1768,13 @@ ath5k_hw_set_fast_div(struct ath5k_hw *ah, u8 ee_mode, bool enable)
->
->        if (enable) {
->                AR5K_REG_WRITE_BITS(ah, AR5K_PHY_RESTART,
-> -                               AR5K_PHY_RESTART_DIV_GC, 0xc);
-> +                               AR5K_PHY_RESTART_DIV_GC, 1);
->
->                AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_FAST_ANT_DIV,
->                                        AR5K_PHY_FAST_ANT_DIV_EN);
->        } else {
->                AR5K_REG_WRITE_BITS(ah, AR5K_PHY_RESTART,
-> -                               AR5K_PHY_RESTART_DIV_GC, 0x8);
-> +                               AR5K_PHY_RESTART_DIV_GC, 0);
->
->                AR5K_REG_DISABLE_BITS(ah, AR5K_PHY_FAST_ANT_DIV,
->                                        AR5K_PHY_FAST_ANT_DIV_EN);
->
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Currently, we configure a 128ms hang over period for the PSM entry
+(the firmware will remain active for 128ms after sending the null func for
+PSM and getting an ack for it.) This is a huge power consumption issue, and
+appears unnecessary. So, configure the value to 1 ms.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Janne Ylalehto <janne.ylalehto@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 62c11af..19393e2 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -516,7 +516,7 @@ int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, bool send)
+ 	ps_params->ps_mode = ps_mode;
+ 	ps_params->send_null_data = send;
+ 	ps_params->retries = 5;
+-	ps_params->hang_over_period = 128;
++	ps_params->hang_over_period = 1;
+ 	ps_params->null_data_rate = cpu_to_le32(1); /* 1 Mbps */
+ 
+ 	ret = wl1271_cmd_send(wl, CMD_SET_PS_MODE, ps_params,
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.3.3
+
