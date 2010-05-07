@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39917 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756244Ab0EJW2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:25 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 12/47] iwlwifi: dump firmware build info in error case
-Date: Mon, 10 May 2010 15:27:43 -0700
-Message-Id: <1273530498-11876-13-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:59154 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754328Ab0EGILe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 May 2010 04:11:34 -0400
+Received: by bwz19 with SMTP id 19so420419bwz.21
+        for <linux-wireless@vger.kernel.org>; Fri, 07 May 2010 01:11:32 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 3/3] rt2x00: rt2800: use correct txop value in tx descriptor
+Date: Fri, 7 May 2010 10:11:19 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
+References: <201005061229.58509.helmut.schaa@googlemail.com> <4BE30B3B.2000900@gmail.com> <201005062057.38692.helmut.schaa@googlemail.com>
+In-Reply-To: <201005062057.38692.helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201005071011.19735.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+Am Donnerstag 06 Mai 2010 schrieb Helmut Schaa:
+> Am Donnerstag 06 Mai 2010 schrieb Gertjan van Wingerde:
+> > On 05/06/10 12:29, Helmut Schaa wrote:
+> 
+> [...]
+> 
+> > > diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
+> > > index 1056c92..5483fec 100644
+> > > --- a/drivers/net/wireless/rt2x00/rt2x00ht.c
+> > > +++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
+> > > @@ -66,4 +66,6 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+> > >  		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
+> > >  	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
+> > >  		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
+> > > +
+> > > +	txdesc->txop = TXOP_HTTXOP;
+> > >  }
+> > 
+> > I am not too sure about this part. If I look at the Ralink vendor driver, they are most of the time
+> > using IFS_BACKOFF (value 3). Why did you put this on TXOP_HTTXOP?
+> 
+> From what I saw in the ralink driver IFS_BACKOFF is only used for management frames, IFS_SIFS only
+> for subsequent frames in a fragment burst and IFS_HTTXOPS for "normal" data frames. But that's
+> just the result of a _quick_ review. So I might be wrong here as well :)
+> 
+> To be honest I don't really know what the device does in case IFS_HTTXOPS is set but that was
+> the value we've passed to the driver before ;) (==IFS_BACKOFF on all other ralink chips) and it 
+> works quite well. I also tried IFS_BACKOFF and I wasn't able to see a difference when using
+> legacy (11b & 11g) rates (neither on the device itself nor with a second machine monitoring
+> the traffic).
 
-Dump the firmware version and build number in case of firmware SW
-error. This would help firmware engineer analyze the error log.
+Ok, after further examination it turns out to be:
 
-Requested-by: Jay Sternberg <jay.e.sternberg@intel.com>
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+- Management frames are sent with IFS_BACKOFF
+- Special case for PsPoll frames also with IFS_BACKOFF
+- Data frames are sent with IFS_HTTXOP
+- Data frame subsequent fragments are send with IFS_SIFS
+- CTS frames (in AP mode) use IFS_SIFS
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 0c3b984..d609414 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1068,6 +1068,9 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
- 	/* Cancel currently queued command. */
- 	clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
- 
-+	IWL_ERR(priv, "Loaded firmware version: %s\n",
-+		priv->hw->wiphy->fw_version);
-+
- 	priv->cfg->ops->lib->dump_nic_error_log(priv);
- 	if (priv->cfg->ops->lib->dump_csr)
- 		priv->cfg->ops->lib->dump_csr(priv);
--- 
-1.6.3.3
+So, I guess I resend this patch after some testing with IFS_BACKOFF for
+management frames and IFS_HTTXOP for data frames and SIFS for subsequent
+fragments.
 
+John, please don't merge this patch yet. Thanks.
+
+Helmut
