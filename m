@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:46326 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757821Ab0EFMGj (ORCPT
+Received: from mailout-us.gmx.com ([74.208.5.67]:47771 "HELO
+	mailout-us.gmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750874Ab0EGC4t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 08:06:39 -0400
-Received: by mail-bw0-f219.google.com with SMTP id 19so448375bwz.21
-        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 05:06:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <p2ha32f33a41005060422xe89addc7s1e4de3f36ebd3278@mail.gmail.com>
-References: <201005061301.22323.IvDoorn@gmail.com>
-	 <s2o14add3d11005060412xf64df988x239517f049930d58@mail.gmail.com>
-	 <p2ha32f33a41005060422xe89addc7s1e4de3f36ebd3278@mail.gmail.com>
-Date: Thu, 6 May 2010 14:06:38 +0200
-Message-ID: <z2ua32f33a41005060506haab3bkf008e23d6a42a48c@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: Add 5GHz support for RF3052 devices
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 6 May 2010 22:56:49 -0400
+Date: Thu, 6 May 2010 21:56:13 -0500
+From: pigiron <pigiron@gmx.com>
+To: Steve deRosier <steve@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: The case of the bogus SSID
+Message-ID: <20100506215613.43477434@atom.pigiron.org>
+In-Reply-To: <t2j446ae9281005061112z6eee4126z673947eb02dc4f12@mail.gmail.com>
+References: <20100505120131.2b9f4e06@atom.pigiron.org>
+	<t2j446ae9281005061112z6eee4126z673947eb02dc4f12@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+On Thu, 6 May 2010 11:12:15 -0700 Steve deRosier <steve@cozybit.com> wrote:
 
-Please drop this patch. I just talked with Gertjan and I will be
-sending an updated patch in a few minutes.
+> On Wed, May 5, 2010 at 10:01 AM, pigiron <pigiron@gmx.com> wrote:
+> > I noticed that decimal 52 is assigned to WLAN_EID_MESH_ID in the
+> > ieee80211.h file, and recently the same 52 was also assigned to
+> > WLAN_EID_NEIGHBOR_REPORT in the same enumerated ieee80211_eid{} structure.
+> >
+> 
+> I can't answer the rest of your question, but AFAIK, the element IDs
+> for 802.11s mesh haven't been approved yet as the 802.11s draft
+> contains a note to that effect.  The current ANA database sheet I
+> could find (Feb 2010) does have 52 assigned to Neighbor Report, and
+> the mesh element IDs are nowhere to be found.
+> 
+> - Steve
 
-Ivo
+I agree. The 802.11k-2008 standard has already been approved with Element ID
+52 = Neighbor Report, so it's probably almost a guarantee that 802.11s won't be
+assigning 52 to anything in the future.
 
-On Thu, May 6, 2010 at 1:22 PM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> On Thu, May 6, 2010 at 1:12 PM, Gertjan van Wingerde
-> <gwingerde@gmail.com> wrote:
->> On Thu, May 6, 2010 at 1:01 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
->>> According to the Ralink drivers, the RF3052 chipset
->>> supports the 5GHz band. Update channel initialization
->>> to add the corresponding channels for this chip.
->>>
->>> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
->>
->> Actually, I believe that this is not correct (sorry I don't have the
->> Ralink driver at hand at the moment, nor the rt2x00 tree).
->
-> Well the original Ralink driver does state this device is a 5GHz device.
->
->> AFAIK the RF3052 needs the same initialization as for RF3020, RF3021,
->> RF3022, etc extended with the correct values for
->> 5GHz band.
->
-> RF3020 and RF3021 are 2.4GHz devices.
->
->> So, NAK for this patch.
->>
->> Also, please keep in mind that for proper RT3572 support more needs to
->> be done, also in the register, BPP, and RFCSR initializations.
->
-> It could be that the initialization of RF3052 is incomplete, however that is not
-> limited to the 5GHz feature, but for both bands. Note that the
-> difference in initialization
-> only exists for settings the antenna and channel which already detect
-> if the initialization
-> should be done on the 2.4 or 5 GHz band.
-> So this argument shouldn't block this patch...
->
-> Ivo
->
+I'm kind of stuck on this problem. I could probably find out what's causing the
+failure and create a patch... but the patch wouldn't be "The Right Thing To
+Do(tm)" if the router isn't supposed to be spewing that data to begin with.
+
+And at this point I've sort of convinced myself that the router is misbehaving.
+When I combine Table 7-15 in the 802.11k-2008 standard with the same table in
+the 802.11-2007 standard (Table 7-15 describes a "Probe Response frame body"), I
+just can't find a way for it to contain a Neighbor Report.
+
+I've had to code to a lot of standards/specifications over the years, but this
+is my first trip into the 802.11 world... so I guess I'm just looking for some
+confirmation from someone who has been living in the wireless world for awhile.
+That, and I'd have to do a *bunch* of war driving to prove that no other routers
+spew a Neighbor Report.
