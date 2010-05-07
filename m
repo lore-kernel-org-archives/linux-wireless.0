@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:59008 "EHLO ogre.sisk.pl"
+Received: from c60.cesmail.net ([216.154.195.49]:15206 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758278Ab0EVVwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 May 2010 17:52:24 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: linux-wireless@vger.kernel.org
-Subject: [Regression][git head f4b87dee9] ath9k doesn't work correctly after resume from suspend to RAM
-Date: Sat, 22 May 2010 23:53:26 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	pm list <linux-pm@lists.linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
+	id S1750868Ab0EGBOi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 May 2010 21:14:38 -0400
+Message-ID: <20100506211435.1nfaq83vkg4ccc0g-cebfxv@webmail.spamcop.net>
+Date: Thu, 06 May 2010 21:14:35 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt61pci: WEP broken in current wireless-testing
+References: <20100506075157.whuptq9jgzkww4gs-cebfxv@webmail.spamcop.net>
+	<20100506134335.GA4167@tuxdriver.com>
+In-Reply-To: <20100506134335.GA4167@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201005222353.26920.rjw@sisk.pl>
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Quoting "John W. Linville" <linville@tuxdriver.com>:
 
-With current -git on Acer Ferrari One the ath9k driver doesn't seem to work
-after resume from suspend to RAM.  NetworkManager seems to think that it works,
-but it doesn't really connect with the AP and doesn't try to obtain an IP
-address.  Reloading the driver makes it work again.
+> When you get to this, you probably should use wireless-next-2.6
+> (or wireless-2.6) for the bisection.  The pulls from linux-2.6 in
+> wireless-testing make bisection much more painful than necessary
+> (as long as the problem is actually evident in the other kernels).
 
-The 2.6.34 (final) version works flawlessly with STR.
+I know it's painful!
 
-The user space is openSUSE 11.3 Milestone 6, so it may be somewhat unstable
-in general, but this particular feature does work with 2.6.34.
+> You can use the 'master-<date>' tags as guidelines for matching
+> wireless-testing versions to representative wireless-next-2.6 (or
+> wireless-2.6) tree versions.
 
-Thanks,
-Rafael
+Thank you for the tips!
+
+-- 
+Regards,
+Pavel Roskin
