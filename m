@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f176.google.com ([209.85.222.176]:56142 "EHLO
-	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756282Ab0EZAlw (ORCPT
+Received: from aurora.create-net.org ([193.206.22.116]:43787 "EHLO
+	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756699Ab0EGQW5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 20:41:52 -0400
+	Fri, 7 May 2010 12:22:57 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by aurora.create-net.org (Postfix) with ESMTP id B2C1C3842C
+	for <linux-wireless@vger.kernel.org>; Fri,  7 May 2010 18:13:13 +0200 (CEST)
+Received: from aurora.create-net.org ([127.0.0.1])
+	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id axbTC99k4R4v for <linux-wireless@vger.kernel.org>;
+	Fri,  7 May 2010 18:13:13 +0200 (CEST)
+Received: from [192.168.9.133] (unknown [192.168.9.133])
+	by aurora.create-net.org (Postfix) with ESMTPSA id 0F1BF38422
+	for <linux-wireless@vger.kernel.org>; Fri,  7 May 2010 18:13:13 +0200 (CEST)
+Message-ID: <4BE43C18.2030806@create-net.org>
+Date: Fri, 07 May 2010 18:13:12 +0200
+From: Roberto Riggio <roberto.riggio@create-net.org>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 25 May 2010 17:41:28 -0700
-Message-ID: <AANLkTilZCdt-YGLsAOd14qvaGRzl7iJa2r-wi5xljhTr@mail.gmail.com>
-Subject: Compat-wireless tarballs with pending and crap patches
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>,
-	Shridatt James Sugrim <shridatt.sugrim@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: Packet injection with ath9k
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since I added a way for compat-wireless to have pending and crap
-patches applied I figured I'd automate the creation of the same
-tarballs. The tarballs are hosted on Orbit as well in the same
-location as the regular tarballs. So we have for today for example:
+Hi,
 
-compat-wireless-2010-05-25.tar.bz2       - The usual linux-next based
-tarball for 802.11 and BT
-compat-wireless-2010-05-25-p.tar.bz2	 - The usual linux-next based
-tarball + patches from linux-next-pending/
-compat-wireless-2010-05-25-pc.tar.bz2  -
-compat-wireless-2010-05-25-p.tar.bz2 + patches from crap/
+I'm writing an application to inject traffic over a wireless interface. 
+This app
+is working fine on an x86 machine. However if i compile the same app for
+an arm platform, no frame are sent over the wireless interface (ath9k).
 
-Since we're in the merge window the pending stuff is a bit big and it
-just includes stuff in Atheros' queue. Feel free to poke at me to
-apply anything else, just e-mail me, hopefully in reply to the
-upstream posted patch. If there's a better way to do this we will
-figure it out I guess.
+I'm guessing that this is because of some alignment issues but i cannot 
+track
+the piece of code that is actually parsing the frame. I've found the
+__ieee80211_parse_tx_radiotap in net/mac80211/tx.c function, but it is
+not called when i try to inject some traffic, so the frame are dropped
+before that.
 
-FWIW the new code metrics for the pc release is:
+Any hints?
 
-compat-wireless code metrics
-
-    491620 - Total upstream code being pulled
-      1393 - backport code changes
-      1163 - backport code additions
-       230 - backport code deletions
-      5679 - backport from compat module
-      7072 - total backport code
-      1.44 - % of code consists of backport work
-      7132 - Code changes posted but not yet merged
-      4449 - Code additions posted but not yet merged
-      2683 - Code deletions posted but not yet merged
-      1.45 - % of code not yet merged
-      1225 - Crap changes not yet posted
-      1181 - Crap additions not yet merged
-        44 - Crap deletions not yet posted
-      0.25 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20100525
-compat-wireless release: compat-wireless-20100525
-
-The backport metrics should now be a bit more correct, so I do guess
-1.44% code for this release is backport work, this includes C code,
-header files and the code changed by the patches. The pending code is
-a bit high due to the merge window, and the crap stuff hasn't moved.
-These stats will always be available on the code-metrics.txt file for
-each tarball. For the "p" release you will not see the metrics for the
-crap, and for the regular tarball you will not see the pending stats
-nor the crap stats.
-
-  Luis
+Thanks
+R.
