@@ -1,81 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from setoy.chost.de ([217.160.209.225]:35481 "EHLO smtp.chost.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756149Ab0E0IFh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 04:05:37 -0400
-From: Sascha Silbe <sascha-pgp@silbe.org>
-To: linux-wireless@vger.kernel.org
-Date: Sun, 23 May 2010 10:03:29 +0200
-Subject: [PATCH] libertas: Fix ethtool reporting no WOL options supported if WOL is not already active
-Reply-To: Sascha Silbe <sascha-ml-reply-to-2010-2@silbe.org>
-Message-Id: <1274806808-24185-1-git-send-email-sascha-pgp@silbe.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60546 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757244Ab0EGQgD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 May 2010 12:36:03 -0400
+Received: by fxm10 with SMTP id 10so930377fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 07 May 2010 09:36:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4BE43C18.2030806@create-net.org>
+References: <4BE43C18.2030806@create-net.org>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 7 May 2010 18:35:41 +0200
+Message-ID: <j2v69e28c911005070935wb720d757labf3a0484aedefb8@mail.gmail.com>
+Subject: Re: Packet injection with ath9k
+To: Roberto Riggio <roberto.riggio@create-net.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the libertas driver incorrectly reporting that Wake-on-LAN
-is not supported if Wake-on-LAN is currently disabled.
----
- drivers/net/wireless/libertas/ethtool.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+Hi!
+Are you sure it is not your injector that is having alignment issues?
+AFAIK the radiotap parser explicitly uses endianness-aware function
+everywhere.
 
-Without patch:
+On Fri, May 7, 2010 at 6:13 PM, Roberto Riggio
+<roberto.riggio@create-net.org> wrote:
+> Hi,
+>
+> I'm writing an application to inject traffic over a wireless interface. This
+> app
+> is working fine on an x86 machine. However if i compile the same app for
+> an arm platform, no frame are sent over the wireless interface (ath9k).
+>
+> I'm guessing that this is because of some alignment issues but i cannot
+> track
+> the piece of code that is actually parsing the frame. I've found the
+> __ieee80211_parse_tx_radiotap in net/mac80211/tx.c function, but it is
+> not called when i try to inject some traffic, so the frame are dropped
+> before that.
+>
+> Any hints?
+>
+> Thanks
+> R.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-root@xo15-minimal:~# ethtool wlan0
-Settings for wlan0:
-        Supports Wake-on: d
-        Wake-on: d
-root@xo15-minimal:~# ethtool -s wlan0 wol pum
-root@xo15-minimal:~# ethtool wlan0
-Settings for wlan0:
-        Supports Wake-on: pumb
-        Wake-on: pum
-root@xo15-minimal:~# ethtool -s wlan0 wol d
-root@xo15-minimal:~# ethtool wlan0
-Settings for wlan0:
-        Supports Wake-on: d
-        Wake-on: d
-root@xo15-minimal:~# 
 
 
-With patch:
-
-xo-sascha:~# ethtool eth0
-Settings for eth0:
-        Supports Wake-on: pumb
-        Wake-on: d
-xo-sascha:~# ethtool -s eth0 wol pum
-xo-sascha:~# ethtool eth0
-Settings for eth0:
-        Supports Wake-on: pumb
-        Wake-on: pum
-xo-sascha:~# ethtool -s eth0 wol d
-xo-sascha:~# ethtool eth0
-Settings for eth0:
-        Supports Wake-on: pumb
-        Wake-on: d
-
-diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
-index 6eb9a88..4a337b7 100644
---- a/drivers/net/wireless/libertas/ethtool.c
-+++ b/drivers/net/wireless/libertas/ethtool.c
-@@ -145,14 +145,11 @@ static void lbs_ethtool_get_wol(struct net_device *dev,
- {
- 	struct lbs_private *priv = dev->ml_priv;
- 
--	if (priv->wol_criteria == 0xffffffff) {
--		/* Interface driver didn't configure wake */
--		wol->supported = wol->wolopts = 0;
--		return;
--	}
--
- 	wol->supported = WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY;
- 
-+	if (priv->wol_criteria == EHS_REMOVE_WAKEUP)
-+		return;
-+
- 	if (priv->wol_criteria & EHS_WAKE_ON_UNICAST_DATA)
- 		wol->wolopts |= WAKE_UCAST;
- 	if (priv->wol_criteria & EHS_WAKE_ON_MULTICAST_DATA)
 -- 
-1.6.5
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
