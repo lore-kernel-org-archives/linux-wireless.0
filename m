@@ -1,47 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59632 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753608Ab0E0Ksi (ORCPT
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:4192 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754028Ab0EHVkf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 06:48:38 -0400
-Subject: Re: new bluetooth id for lenovo T410s?
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Martin Vogt <martin.vogt@itwm.fraunhofer.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4BFE4124.2090601@itwm.fraunhofer.de>
-References: <4BFE4124.2090601@itwm.fraunhofer.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 12:47:56 +0200
-Message-ID: <1274957276.4706.4.camel@aeonflux.t-mobile.de>
-Mime-Version: 1.0
+	Sat, 8 May 2010 17:40:35 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 4/9] rt2x00: Factor out TXWI writing to common rt2800 code.
+Date: Sat,  8 May 2010 23:40:21 +0200
+Message-Id: <1273354826-4335-5-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
+References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Martin,
+TXWI writing is exactly the same for rt2800pci and rt2800usb, so
+make it common code.
 
-so first of all, this is the wrong mailing list. You should be using
-linux-bluetooth@vger.kernel.org.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   54 +++++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2800lib.h |    2 +
+ drivers/net/wireless/rt2x00/rt2800pci.c |   56 +------------------------------
+ drivers/net/wireless/rt2x00/rt2800usb.c |   50 ++--------------------------
+ 4 files changed, 60 insertions(+), 102 deletions(-)
 
-> I have a new Lenovo T410s with the compat-wireless package for 2.6.34.
-> 
-> My bluetooh chip seems not to work:
-> 
-> linux-4box:~ # lsusb | grep Broadcom
-> Bus 001 Device 005: ID 0a5c:217f Broadcom Corp.
-> 
-> This device id (from lsub) is missing in ./drivers/bluetooth/btusb.c:
-> 
-> /* IBM/Lenovo ThinkPad with Broadcom chip */
-> { USB_DEVICE(0x0a5c, 0x201e), .driver_info = BTUSB_WRONG_SCO_MTU },
-> { USB_DEVICE(0x0a5c, 0x2110), .driver_info = BTUSB_WRONG_SCO_MTU },
-
-Please send in the output of /proc/bus/usb/devices for your devices
-since I doubt it is not supported. There are general interface
-descriptors that make the devices work. Only if Lenovo screwed something
-up, then this is needed.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 525267d..28d82ce 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -281,6 +281,60 @@ int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
+ }
+ EXPORT_SYMBOL_GPL(rt2800_wait_wpdma_ready);
+ 
++void rt2800_write_txwi(struct sk_buff *skb, struct txentry_desc *txdesc)
++{
++	__le32 *txwi = (__le32 *)(skb->data - TXWI_DESC_SIZE);
++	u32 word;
++
++	/*
++	 * Initialize TX Info descriptor
++	 */
++	rt2x00_desc_read(txwi, 0, &word);
++	rt2x00_set_field32(&word, TXWI_W0_FRAG,
++			   test_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags));
++	rt2x00_set_field32(&word, TXWI_W0_MIMO_PS, 0);
++	rt2x00_set_field32(&word, TXWI_W0_CF_ACK, 0);
++	rt2x00_set_field32(&word, TXWI_W0_TS,
++			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
++	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
++			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
++	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
++	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
++	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
++	rt2x00_set_field32(&word, TXWI_W0_BW,
++			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
++	rt2x00_set_field32(&word, TXWI_W0_SHORT_GI,
++			   test_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags));
++	rt2x00_set_field32(&word, TXWI_W0_STBC, txdesc->stbc);
++	rt2x00_set_field32(&word, TXWI_W0_PHYMODE, txdesc->rate_mode);
++	rt2x00_desc_write(txwi, 0, word);
++
++	rt2x00_desc_read(txwi, 1, &word);
++	rt2x00_set_field32(&word, TXWI_W1_ACK,
++			   test_bit(ENTRY_TXD_ACK, &txdesc->flags));
++	rt2x00_set_field32(&word, TXWI_W1_NSEQ,
++			   test_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags));
++	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
++	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
++			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
++			   txdesc->key_idx : 0xff);
++	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
++			   txdesc->length);
++	rt2x00_set_field32(&word, TXWI_W1_PACKETID, txdesc->queue + 1);
++	rt2x00_desc_write(txwi, 1, word);
++
++	/*
++	 * Always write 0 to IV/EIV fields, hardware will insert the IV
++	 * from the IVEIV register when TXD_W3_WIV is set to 0.
++	 * When TXD_W3_WIV is set to 1 it will use the IV data
++	 * from the descriptor. The TXWI_W1_WIRELESS_CLI_ID indicates which
++	 * crypto entry in the registers should be used to encrypt the frame.
++	 */
++	_rt2x00_desc_write(txwi, 2, 0 /* skbdesc->iv[0] */);
++	_rt2x00_desc_write(txwi, 3, 0 /* skbdesc->iv[1] */);
++}
++EXPORT_SYMBOL_GPL(rt2800_write_txwi);
++
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+ const struct rt2x00debug rt2800_rt2x00debug = {
+ 	.owner	= THIS_MODULE,
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+index ebabeae..b805310 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+@@ -111,6 +111,8 @@ void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
+ 			const u8 command, const u8 token,
+ 			const u8 arg0, const u8 arg1);
+ 
++void rt2800_write_txwi(struct sk_buff *skb, struct txentry_desc *txdesc);
++
+ extern const struct rt2x00debug rt2800_rt2x00debug;
+ 
+ int rt2800_rfkill_poll(struct rt2x00_dev *rt2x00dev);
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index b9ec081..bd56cd1 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -616,67 +616,13 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+ static int rt2800pci_write_tx_data(struct queue_entry* entry,
+ 				   struct txentry_desc *txdesc)
+ {
+-	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+-	struct sk_buff *skb = entry->skb;
+-	struct skb_frame_desc *skbdesc;
+ 	int ret;
+-	__le32 *txwi;
+-	u32 word;
+ 
+ 	ret = rt2x00pci_write_tx_data(entry, txdesc);
+ 	if (ret)
+ 		return ret;
+ 
+-	skbdesc = get_skb_frame_desc(skb);
+-	txwi = (__le32 *)(skb->data - rt2x00dev->ops->extra_tx_headroom);
+-
+-	/*
+-	 * Initialize TX Info descriptor
+-	 */
+-	rt2x00_desc_read(txwi, 0, &word);
+-	rt2x00_set_field32(&word, TXWI_W0_FRAG,
+-			   test_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_MIMO_PS, 0);
+-	rt2x00_set_field32(&word, TXWI_W0_CF_ACK, 0);
+-	rt2x00_set_field32(&word, TXWI_W0_TS,
+-			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
+-			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
+-	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
+-	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
+-	rt2x00_set_field32(&word, TXWI_W0_BW,
+-			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_SHORT_GI,
+-			   test_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_STBC, txdesc->stbc);
+-	rt2x00_set_field32(&word, TXWI_W0_PHYMODE, txdesc->rate_mode);
+-	rt2x00_desc_write(txwi, 0, word);
+-
+-	rt2x00_desc_read(txwi, 1, &word);
+-	rt2x00_set_field32(&word, TXWI_W1_ACK,
+-			   test_bit(ENTRY_TXD_ACK, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W1_NSEQ,
+-			   test_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
+-	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
+-			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
+-			   txdesc->key_idx : 0xff);
+-	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
+-			   txdesc->length);
+-	rt2x00_set_field32(&word, TXWI_W1_PACKETID,
+-			   skbdesc->entry->queue->qid + 1);
+-	rt2x00_desc_write(txwi, 1, word);
+-
+-	/*
+-	 * Always write 0 to IV/EIV fields, hardware will insert the IV
+-	 * from the IVEIV register when TXD_W3_WIV is set to 0.
+-	 * When TXD_W3_WIV is set to 1 it will use the IV data
+-	 * from the descriptor. The TXWI_W1_WIRELESS_CLI_ID indicates which
+-	 * crypto entry in the registers should be used to encrypt the frame.
+-	 */
+-	_rt2x00_desc_write(txwi, 2, 0 /* skbdesc->iv[0] */);
+-	_rt2x00_desc_write(txwi, 3, 0 /* skbdesc->iv[1] */);
++	rt2800_write_txwi(entry->skb, txdesc);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index df7ad98..b39b858 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -401,59 +401,15 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ {
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
+ 	__le32 *txi = skbdesc->desc;
+-	__le32 *txwi = &txi[TXINFO_DESC_SIZE / sizeof(__le32)];
+ 	u32 word;
+ 
+ 	/*
+-	 * Initialize TX Info descriptor
++	 * Initialize TXWI descriptor
+ 	 */
+-	rt2x00_desc_read(txwi, 0, &word);
+-	rt2x00_set_field32(&word, TXWI_W0_FRAG,
+-			   test_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_MIMO_PS, 0);
+-	rt2x00_set_field32(&word, TXWI_W0_CF_ACK, 0);
+-	rt2x00_set_field32(&word, TXWI_W0_TS,
+-			   test_bit(ENTRY_TXD_REQ_TIMESTAMP, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
+-			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
+-	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
+-	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
+-	rt2x00_set_field32(&word, TXWI_W0_BW,
+-			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_SHORT_GI,
+-			   test_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W0_STBC, txdesc->stbc);
+-	rt2x00_set_field32(&word, TXWI_W0_PHYMODE, txdesc->rate_mode);
+-	rt2x00_desc_write(txwi, 0, word);
+-
+-	rt2x00_desc_read(txwi, 1, &word);
+-	rt2x00_set_field32(&word, TXWI_W1_ACK,
+-			   test_bit(ENTRY_TXD_ACK, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W1_NSEQ,
+-			   test_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags));
+-	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
+-	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
+-			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
+-			   txdesc->key_idx : 0xff);
+-	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
+-			   txdesc->length);
+-	rt2x00_set_field32(&word, TXWI_W1_PACKETID,
+-			   skbdesc->entry->queue->qid + 1);
+-	rt2x00_desc_write(txwi, 1, word);
++	rt2800_write_txwi(skb, txdesc);
+ 
+ 	/*
+-	 * Always write 0 to IV/EIV fields, hardware will insert the IV
+-	 * from the IVEIV register when TXINFO_W0_WIV is set to 0.
+-	 * When TXINFO_W0_WIV is set to 1 it will use the IV data
+-	 * from the descriptor. The TXWI_W1_WIRELESS_CLI_ID indicates which
+-	 * crypto entry in the registers should be used to encrypt the frame.
+-	 */
+-	_rt2x00_desc_write(txwi, 2, 0 /* skbdesc->iv[0] */);
+-	_rt2x00_desc_write(txwi, 3, 0 /* skbdesc->iv[1] */);
+-
+-	/*
+-	 * Initialize TX descriptor
++	 * Initialize TXINFO descriptor
+ 	 */
+ 	rt2x00_desc_read(txi, 0, &word);
+ 	rt2x00_set_field32(&word, TXINFO_W0_USB_DMA_TX_PKT_LEN,
+-- 
+1.7.1
 
