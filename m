@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38043 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754287Ab0EMJrf (ORCPT
+Received: from mail-qy0-f183.google.com ([209.85.221.183]:33999 "EHLO
+	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753702Ab0EHQY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 05:47:35 -0400
-Received: by fxm6 with SMTP id 6so112131fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 02:47:34 -0700 (PDT)
+	Sat, 8 May 2010 12:24:56 -0400
+Received: by qyk13 with SMTP id 13so3448325qyk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 08 May 2010 09:24:55 -0700 (PDT)
+Date: Sat, 8 May 2010 18:24:38 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Bruno Randolf <br1@einfach.org>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: [patch 6/9] ath5k: several off by one range checks
+Message-ID: <20100508162438.GR27064@bicker>
 MIME-Version: 1.0
-In-Reply-To: <1273743418-28383-10-git-send-email-gwingerde@gmail.com>
-References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
-	 <1273743418-28383-10-git-send-email-gwingerde@gmail.com>
-Date: Thu, 13 May 2010 11:47:33 +0200
-Message-ID: <AANLkTikLSLA_vCs8Wv5Xpxea406Kcjovp4r10S9BaPce@mail.gmail.com>
-Subject: Re: [PATCH v2 09/10] rt2x00: Reverse calling order of bus
-	write_tx_desc and driver write_tx_desc.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 13, 2010 at 11:36 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> For rt2800 reverse the calling order of rt2x00pci_write_data and
-> rt2800pci_write_data. Currently rt2800pci_write_data calls rt2x00pci_write_data
-> as there can be only 1 driver callback function specified by the driver.
-> Reverse this calling order by introducing a new driver callback function,
-> called write_tx_datadesc, which is called from the bus-specific write_tx_data
-> functions.
-> Preparation for futher cleanups in the skb data handling of rt2x00.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+There are several places that use > ARRAY_SIZE() instead of 
+>= ARRAY_SIZE().
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+
+diff --git a/drivers/net/wireless/ath/ath5k/ani.c b/drivers/net/wireless/ath/ath5k/ani.c
+index 584a328..f2311ab 100644
+--- a/drivers/net/wireless/ath/ath5k/ani.c
++++ b/drivers/net/wireless/ath/ath5k/ani.c
+@@ -73,7 +73,7 @@ ath5k_ani_set_noise_immunity_level(struct ath5k_hw *ah, int level)
+ 	const s8 hi[] = { -14, -12 };
+ 	const s8 fr[] = { -78, -80 };
+ #endif
+-	if (level < 0 || level > ARRAY_SIZE(sz)) {
++	if (level < 0 || level >= ARRAY_SIZE(sz)) {
+ 		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
+ 			"level out of range %d", level);
+ 		return;
+@@ -104,7 +104,7 @@ ath5k_ani_set_spur_immunity_level(struct ath5k_hw *ah, int level)
+ {
+ 	const int val[] = { 2, 4, 6, 8, 10, 12, 14, 16 };
+ 
+-	if (level < 0 || level > ARRAY_SIZE(val) ||
++	if (level < 0 || level >= ARRAY_SIZE(val) ||
+ 	    level > ah->ah_sc->ani_state.max_spur_level) {
+ 		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
+ 			"level out of range %d", level);
+@@ -129,7 +129,7 @@ ath5k_ani_set_firstep_level(struct ath5k_hw *ah, int level)
+ {
+ 	const int val[] = { 0, 4, 8 };
+ 
+-	if (level < 0 || level > ARRAY_SIZE(val)) {
++	if (level < 0 || level >= ARRAY_SIZE(val)) {
+ 		ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI,
+ 			"level out of range %d", level);
+ 		return;
