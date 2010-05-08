@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:39027 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932347Ab0EZSdy (ORCPT
+Received: from mail-qy0-f183.google.com ([209.85.221.183]:51222 "EHLO
+	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753702Ab0EHQXf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 14:33:54 -0400
-Received: by pwi7 with SMTP id 7so331016pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:33:54 -0700 (PDT)
-Message-ID: <4BFD69A2.2040808@gmail.com>
-Date: Wed, 26 May 2010 11:34:10 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Sat, 8 May 2010 12:23:35 -0400
+Received: by mail-qy0-f183.google.com with SMTP id 13so3446177qyk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 08 May 2010 09:23:34 -0700 (PDT)
+Date: Sat, 8 May 2010 18:23:20 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Vivek Natarajan <vnatarajan@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [patch 4/9] ath9k/htc_drv_main: null dereference typo
+Message-ID: <20100508162320.GP27064@bicker>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linville@tuxdriver.com, arnd@arndnet.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH][RESEND] ath9k: Fix ath_print in xmit for hardware reset.
-References: <1274896804-19441-1-git-send-email-justinmattock@gmail.com> 	<AANLkTilII7C41BTshkXyCmAU81LQ3fJF0ogq_BLVv6w-@mail.gmail.com> 	<4BFD636B.3070607@gmail.com> <AANLkTikIfbrD7t122jJG-ODU5qb9sbGVIGrHlNJ7w2ia@mail.gmail.com> 	<4BFD6478.8090700@gmail.com> <AANLkTinjgtKhQJ1UoQPY8aUFxhb3qrKrYjBgAZz1asZ_@mail.gmail.com>
-In-Reply-To: <AANLkTinjgtKhQJ1UoQPY8aUFxhb3qrKrYjBgAZz1asZ_@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/2010 11:14 AM, Luis R. Rodriguez wrote:
-> On Wed, May 26, 2010 at 11:12 AM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->    
->> On 05/26/2010 11:09 AM, Luis R. Rodriguez wrote:
->>      
->>> On Wed, May 26, 2010 at 11:07 AM, Justin P. Mattock
->>> <justinmattock@gmail.com>    wrote:
->>>        
->    
->>>> what about all the signed-off's? should I
->>>> resend with all of those, or no?
->>>>          
->>      
->>> I do not get what you are asking.
->>>        
->> all the people that gave there 00.02$ on this to
->> make it all-good
->>      
-> Heh... no. SOBs are just for the authors of the code. The real purpose
-> of SOB is explained on Documentation/SubmittingPatches, read
-> "Developer's Certificate of Origin 1.1".
->
->    Luis
->
->    
-I thought you were talking about
-Son of a bit*h(was like what's this guy
-talkin about man!!
+This is a stray null dereference.  We initialize "ista" properly later on.
 
-I'll read up today!!
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-Justin P. Mattock
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index f503586..e75db06 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -461,7 +461,7 @@ static int ath9k_htc_aggr_oper(struct ath9k_htc_priv *priv,
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ath9k_htc_target_aggr aggr;
+ 	struct ieee80211_sta *sta = NULL;
+-	struct ath9k_htc_sta *ista = (struct ath9k_htc_sta *) sta->drv_priv;
++	struct ath9k_htc_sta *ista;
+ 	int ret = 0;
+ 	u8 cmd_rsp;
+ 
