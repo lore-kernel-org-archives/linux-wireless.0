@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21358 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752669Ab0EKUOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 16:14:22 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 13:14:22 -0700
-Date: Tue, 11 May 2010 13:14:20 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/4] ath9k: add debugfs files for reading/writing the
- rx and tx chainmask
-Message-ID: <20100511201420.GC24447@tux>
-References: <1273591383-76696-1-git-send-email-nbd@openwrt.org>
- <1273591383-76696-2-git-send-email-nbd@openwrt.org>
- <AANLkTilDwhBErduNt_vZLSsEVVkC1SDMwUPkoumym1o3@mail.gmail.com>
- <4BE9B61A.2090708@openwrt.org>
+Received: from mail-qy0-f183.google.com ([209.85.221.183]:51222 "EHLO
+	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753702Ab0EHQXC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 May 2010 12:23:02 -0400
+Received: by qyk13 with SMTP id 13so3446177qyk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 08 May 2010 09:23:01 -0700 (PDT)
+Date: Sat, 8 May 2010 18:22:47 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [patch 3/9] ath9k: cleanup: u32 => bool
+Message-ID: <20100508162247.GO27064@bicker>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4BE9B61A.2090708@openwrt.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 11, 2010 at 12:55:06PM -0700, Felix Fietkau wrote:
-> On 2010-05-11 8:15 PM, Luis R. Rodriguez wrote:
-> > On Tue, May 11, 2010 at 8:23 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> > 
-> > How about we use bruno's patch instead and we help review it for
-> > 802.11n? Then this would not be needed?
-> I'd like to keep those separate. I've seen cards where the wrong
-> chainmask was programmed into the eeprom, this debugfs file is for
-> detecting that and trying other settings.
-> When Bruno's patch gets implemented for ath9k, the values that it can
-> set should be masked by the internal value, while the debugfs file can
-> override the internal value.
+This is used as a boolean variable so changing it to a boolean type is a
+cleanup.
 
-Fair enough, thanks.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index b2c17c9..f685b8b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1082,7 +1082,7 @@ static bool ar5008_hw_ani_control(struct ath_hw *ah,
+ 		const int m2Thresh[] = { 127, 0x40 };
+ 		const int m2CountThr[] = { 31, 16 };
+ 		const int m2CountThrLow[] = { 63, 48 };
+-		u32 on = param ? 1 : 0;
++		bool on = param ? 1 : 0;
+ 
+ 		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
+ 			      AR_PHY_SFCORR_LOW_M1_THRESH_LOW,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 80431a2..0c34154 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -771,7 +771,7 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
+ 		const int m2Thresh[] = { 127, 0x40 };
+ 		const int m2CountThr[] = { 31, 16 };
+ 		const int m2CountThrLow[] = { 63, 48 };
+-		u32 on = param ? 1 : 0;
++		bool on = param ? 1 : 0;
+ 
+ 		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
+ 			      AR_PHY_SFCORR_LOW_M1_THRESH_LOW,
