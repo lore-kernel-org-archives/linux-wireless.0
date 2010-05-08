@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f204.google.com ([209.85.222.204]:38905 "EHLO
-	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932258Ab0EDABg (ORCPT
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:2018 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753597Ab0EHVkc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 20:01:36 -0400
-Received: by pzk42 with SMTP id 42so462624pzk.4
-        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 17:01:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1272911746-17268-1-git-send-email-hauke@hauke-m.de>
-References: <1272911746-17268-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 3 May 2010 17:01:15 -0700
-Message-ID: <u2p43e72e891005031701ma53cbd59r1601d685cb992044@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: refresh patches
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Sat, 8 May 2010 17:40:32 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 1/9] rt2x00: Fix setting of txdesc->length field.
+Date: Sat,  8 May 2010 23:40:18 +0200
+Message-Id: <1273354826-4335-2-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
+References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 3, 2010 at 11:35 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Make the patches apply cleanly again.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+We should take the stripping of the IV into account for the txdesc->length
+field.
 
-Applied, thanks!
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00crypto.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/rt2x00/rt2x00crypto.c b/drivers/net/wireless/rt2x00/rt2x00crypto.c
+index d291c78..583dacd 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
++++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
+@@ -128,6 +128,7 @@ void rt2x00crypto_tx_remove_iv(struct sk_buff *skb, struct txentry_desc *txdesc)
+ 
+ 	/* Pull buffer to correct size */
+ 	skb_pull(skb, txdesc->iv_len);
++	txdesc->length -= txdesc->iv_len;
+ 
+ 	/* IV/EIV data has officially been stripped */
+ 	skbdesc->flags |= SKBDESC_IV_STRIPPED;
+-- 
+1.7.1
+
