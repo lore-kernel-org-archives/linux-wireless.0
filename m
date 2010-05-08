@@ -1,95 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47728 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757030Ab0EKKyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 06:54:24 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 03:54:24 -0700
+Received: from relay01.mx.bawue.net ([193.7.176.67]:37584 "EHLO
+	relay01.mx.bawue.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342Ab0EHOLw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 May 2010 10:11:52 -0400
+Date: Sat, 8 May 2010 16:11:44 +0200
+From: Nils Radtke <Nils.Radtke@Think-Future.de>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: ath5k deadlock w/ blob transfer
+Message-ID: <20100508141144.GA30514@localhost>
+Reply-To: Nils Radtke <Nils.Radtke@Think-Future.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19433.14195.321284.643261@gargle.gargle.HOWL>
-Date: Tue, 11 May 2010 16:24:43 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/5] ath9k_htc: Fix target ready race condition
-From: <Sujith.Manoharan@atheros.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <p2pb6c5339f1005071818u489804e7ud40fe3feb5459bb8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ready message from the target could be processed
-before the host HW init has completed. In this case,
-htc_process_target_rdy() would assume the target has timed
-out, when it hasn't. Fix this by checking if the target
-has sent the ready message properly.
+  Hi,
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    7 +++++++
- drivers/net/wireless/ath/ath9k/htc_hst.c      |    3 +++
- drivers/net/wireless/ath/ath9k/htc_hst.h      |    1 +
- 3 files changed, 11 insertions(+), 0 deletions(-)
+> I missed the first email.  What type of machine?  System lockup
+> or the connection drops?  Do you get any output on the console or
+> in dmesg? (try switching to a text console before your scp test.)
+> If not, any output after lockup booting with nmi_watchdog=1?
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 17111fc..dc01507 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -81,6 +81,11 @@ static int ath9k_htc_wait_for_target(struct ath9k_htc_priv *priv)
- {
- 	int time_left;
- 
-+	if (atomic_read(&priv->htc->tgt_ready) > 0) {
-+		atomic_dec(&priv->htc->tgt_ready);
-+		return 0;
-+	}
-+
- 	/* Firmware can take up to 50ms to get ready, to be safe use 1 second */
- 	time_left = wait_for_completion_timeout(&priv->htc->target_wait, HZ);
- 	if (!time_left) {
-@@ -88,6 +93,8 @@ static int ath9k_htc_wait_for_target(struct ath9k_htc_priv *priv)
- 		return -ETIMEDOUT;
- 	}
- 
-+	atomic_dec(&priv->htc->tgt_ready);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 2c8006a..e86e172 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -95,6 +95,7 @@ static void htc_process_target_rdy(struct htc_target *target,
- 	endpoint = &target->endpoint[ENDPOINT0];
- 	endpoint->service_id = HTC_CTRL_RSVD_SVC;
- 	endpoint->max_msglen = HTC_MAX_CONTROL_MESSAGE_LENGTH;
-+	atomic_inc(&target->tgt_ready);
- 	complete(&target->target_wait);
- }
- 
-@@ -451,6 +452,8 @@ struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
- 	endpoint->ul_pipeid = hif->control_ul_pipe;
- 	endpoint->dl_pipeid = hif->control_dl_pipe;
- 
-+	atomic_set(&target->tgt_ready, 0);
-+
- 	return target;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index d216c0f..4f1cdb0 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -147,6 +147,7 @@ struct htc_target {
- 	u16 credits;
- 	u16 credit_size;
- 	u8 htc_flags;
-+	atomic_t tgt_ready;
- };
- 
- enum htc_msg_id {
--- 
-1.7.1
+IRC, no system lockup, only driver lockup. But I avoided using wireless for
+blob transfer for the reliability of the lockups, so it's a couple of months
+since I deliberately crashed it.. Maybe once in a while it lead to a complete
+system lockup, but treat this as rumble in my memories (and could be due to
+the other BUGs reported, also)..
 
+notebook: ACER Extensa 5220
+kernels since  Linux host 2.6.32.2 #4 PREEMPT Wed Dec 30 15:19:58 CET 2009 i686 and even before
+lspci:
+04:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless Network Adapter (rev 01)
+        Subsystem: Device 1a32:0105
+        Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+
++FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR-
++<PERR- INTx-
+        Interrupt: pin A routed to IRQ 17
+        Region 0: Memory at f8000000 (64-bit, non-prefetchable) [size=64K]
+        Capabilities: <access denied>
 
--- 
+There's another bugreport for this machine, w/ hw info: http://lkml.org/lkml/2010/2/18/104
+
+Ok, trying to lockup the machine once more, will report back then.
+
+  Thanks,
+
+  Nils
+
