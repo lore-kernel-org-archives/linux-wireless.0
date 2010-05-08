@@ -1,104 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f204.google.com ([209.85.222.204]:39093 "EHLO
-	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751967Ab0ENEoO (ORCPT
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:3753 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753441Ab0EHVkc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 00:44:14 -0400
-Message-ID: <4BECD518.6040801@gmail.com>
-Date: Thu, 13 May 2010 21:44:08 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-References: <4BEC7A84.3010503@gmail.com> <AANLkTinKoMxdkPYQA_AblpByL6zAiAP5hv2M3Jn2R3hM@mail.gmail.com> 	<4BEC9E6B.30809@gmail.com> <201005141008.20667.br1@einfach.org> 	<4BECA3AE.4070607@gmail.com> <20100514012314.GA2170@tux> <4BECA6AC.9060609@gmail.com> 	<20100514014311.GC2170@tux> <20100514014553.GD2170@tux> <4BECB1F2.5050900@gmail.com> <AANLkTilOJMtg1EIlDgY3_T5Xb6Zed0tbqkD7CGr7utol@mail.gmail.com>
-In-Reply-To: <AANLkTilOJMtg1EIlDgY3_T5Xb6Zed0tbqkD7CGr7utol@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sat, 8 May 2010 17:40:32 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2/9] rt2x00: Clean up rt2800usb.h.
+Date: Sat,  8 May 2010 23:40:19 +0200
+Message-Id: <1273354826-4335-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
+References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/10 21:01, Luis R. Rodriguez wrote:
-> On Thu, May 13, 2010 at 7:14 PM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->
->>
->> what I can try, is(not at the convention, on eth0
->> at the moment), but when I get back to the convention
->> center place I can try your patch as well as the
->> modprobe option, to see if I can get any signs of
->> a recreation(if so I'll bisect there).
->
-> The debug info I just need upon load of the module, I don't need you
-> to run the debug stuff to try to reproduce. The debug print upon load
-> will tell us the rxbuf size and cache line size.
->
->    Luis
->
+Remove unused RXD_DESC_SIZE define and remove duplicated RXWI definitions
+from rt2800.h.
 
-o.k. it's not pretty due
-to loads of avc's for SELinux:
-(I run a rootless system).
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.h |   40 -------------------------------
+ 1 files changed, 0 insertions(+), 40 deletions(-)
 
-[   84.172649] ath9k: Driver unloaded
-[  100.675300] audit_printk_skb: 6 callbacks suppressed
-[  100.675306] type=1400 audit(1273811633.675:20): avc:  denied  { 
-search } for  pid=2168 comm="modprobe" name="modules" dev=sda3 ino=2500 
-scontext=name:staff_r:staff_sudo_t:s0 
-tcontext=system_u:object_r:modules_object_t:s0 tclass=dir
-[  100.675408] type=1400 audit(1273811633.675:20): avc:  denied  { 
-search } for  pid=2168 comm="modprobe" name="2.6.34-rc7-00057-gcdfda35" 
-dev=sda3 ino=524392 scontext=name:staff_r:staff_sudo_t:s0 
-tcontext=name:object_r:modules_object_t:s0 tclass=dir
-[  100.675552] type=1400 audit(1273811633.675:20): avc:  denied  { read 
-} for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3 
-ino=525251 scontext=name:staff_r:staff_sudo_t:s0 
-tcontext=name:object_r:modules_object_t:s0 tclass=file
-[  100.675598] type=1400 audit(1273811633.675:20): avc:  denied  { open 
-} for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3 
-ino=525251 scontext=name:staff_r:staff_sudo_t:s0 
-tcontext=name:object_r:modules_object_t:s0 tclass=file
-[  100.675748] type=1300 audit(1273811633.675:20): arch=c000003e 
-syscall=2 success=yes exit=3 a0=60d140 a1=0 a2=1b6 a3=0 items=0 
-ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 
-sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" exe="/sbin/modprobe" 
-subj=name:staff_r:staff_sudo_t:s0 key=(null)
-[  100.675902] type=1400 audit(1273811633.675:21): avc:  denied  { 
-getattr } for  pid=2168 comm="modprobe" 
-path="/lib/modules/2.6.34-rc7-00057-gcdfda35/modules.dep.bin" dev=sda3 
-ino=525251 scontext=name:staff_r:staff_sudo_t:s0 
-tcontext=name:object_r:modules_object_t:s0 tclass=file
-[  100.676052] type=1300 audit(1273811633.675:21): arch=c000003e 
-syscall=5 success=yes exit=0 a0=3 a1=7fffd2d1dd70 a2=7fffd2d1dd70 a3=0 
-items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 
-egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" 
-exe="/sbin/modprobe" subj=name:staff_r:staff_sudo_t:s0 key=(null)
-[  100.698392] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> 
-IRQ 17
-[  100.698409] ath9k 0000:03:00.0: setting latency timer to 64
-[  100.828787] ath: EEPROM regdomain: 0x64
-[  100.828790] ath: EEPROM indicates we should expect a direct regpair map
-[  100.828793] ath: Country alpha2 being used: 00
-[  100.828795] ath: Regpair used: 0x64
-[  100.848609] type=1400 audit(1273811633.678:22): avc:  denied  { 
-search } for  pid=2168 comm="modprobe" name="ieee80211" dev=debugfs 
-ino=18 scontext=name:staff_r:staff_sudo_t:s0 
-tcontext=system_u:object_r:debugfs_t:s0 tclass=dir
-[  100.848788] phy1: Selected rate control algorithm 'ath9k_rate_control'
-[  100.850035] Registered led device: ath9k-phy1::radio
-[  100.850488] Registered led device: ath9k-phy1::assoc
-[  100.851227] Registered led device: ath9k-phy1::tx
-[  100.851633] Registered led device: ath9k-phy1::rx
-[  100.851640] phy1: Atheros AR5418 MAC/BB Rev:2 AR5133 RF Rev:81 
-mem=0xffffc900005a0000, irq=17
-[  100.852240] type=1300 audit(1273811633.678:22): arch=c000003e 
-syscall=175 success=yes exit=0 a0=7f1e9d6ab010 a1=19580 a2=60d920 a3=0 
-items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 
-egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" 
-exe="/sbin/modprobe" subj=name:staff_r:staff_sudo_t:s0 key=(null)
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.h b/drivers/net/wireless/rt2x00/rt2800usb.h
+index d1d8ae9..2bca6a7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.h
++++ b/drivers/net/wireless/rt2x00/rt2800usb.h
+@@ -79,8 +79,6 @@
+  */
+ #define TXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
+ #define RXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
+-#define RXWI_DESC_SIZE			( 4 * sizeof(__le32) )
+-#define RXD_DESC_SIZE			( 1 * sizeof(__le32) )
+ 
+ /*
+  * TX Info structure
+@@ -113,44 +111,6 @@
+ #define RXINFO_W0_USB_DMA_RX_PKT_LEN	FIELD32(0x0000ffff)
+ 
+ /*
+- * RX WI structure
+- */
+-
+-/*
+- * Word0
+- */
+-#define RXWI_W0_WIRELESS_CLI_ID		FIELD32(0x000000ff)
+-#define RXWI_W0_KEY_INDEX		FIELD32(0x00000300)
+-#define RXWI_W0_BSSID			FIELD32(0x00001c00)
+-#define RXWI_W0_UDF			FIELD32(0x0000e000)
+-#define RXWI_W0_MPDU_TOTAL_BYTE_COUNT	FIELD32(0x0fff0000)
+-#define RXWI_W0_TID			FIELD32(0xf0000000)
+-
+-/*
+- * Word1
+- */
+-#define RXWI_W1_FRAG			FIELD32(0x0000000f)
+-#define RXWI_W1_SEQUENCE		FIELD32(0x0000fff0)
+-#define RXWI_W1_MCS			FIELD32(0x007f0000)
+-#define RXWI_W1_BW			FIELD32(0x00800000)
+-#define RXWI_W1_SHORT_GI		FIELD32(0x01000000)
+-#define RXWI_W1_STBC			FIELD32(0x06000000)
+-#define RXWI_W1_PHYMODE			FIELD32(0xc0000000)
+-
+-/*
+- * Word2
+- */
+-#define RXWI_W2_RSSI0			FIELD32(0x000000ff)
+-#define RXWI_W2_RSSI1			FIELD32(0x0000ff00)
+-#define RXWI_W2_RSSI2			FIELD32(0x00ff0000)
+-
+-/*
+- * Word3
+- */
+-#define RXWI_W3_SNR0			FIELD32(0x000000ff)
+-#define RXWI_W3_SNR1			FIELD32(0x0000ff00)
+-
+-/*
+  * RX descriptor format for RX Ring.
+  */
+ 
+-- 
+1.7.1
 
-but there you go dmesg of the debug info for you
-
-Justin P. Mattock
