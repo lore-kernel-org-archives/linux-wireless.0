@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31569 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932431Ab0EMVtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:49:50 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/2] iwlwifi fixes for 2.6.34
-Date: Thu, 13 May 2010 14:49:43 -0700
-Message-Id: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
+Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:2109 "EHLO
+	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753285Ab0EHVkc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 May 2010 17:40:32 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 0/9] rt2x00: Cleanups and fixes.
+Date: Sat,  8 May 2010 23:40:17 +0200
+Message-Id: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include two late fixes hoping to make it into 2.6.34.
+Some assorted cleanups and fixes for rt2x00.
+First patch fixes the rt61pci security issues reported by Pavel Roskin.
+The remaining patches clean up the code and work towards the final patch
+which fixes beaconing on rt2800.
 
-"iwlwifi: fix internal scan race" fixes a kernel crash caused by
-accessing a NULL pointer. More can be read in
-https://bugzilla.kernel.org/show_bug.cgi?id=15824
+Gertjan van Wingerde (9):
+  rt2x00: Fix setting of txdesc->length field.
+  rt2x00: Clean up rt2800usb.h.
+  rt2x00: Don't check whether hardware crypto is enabled when reading
+    RXD.
+  rt2x00: Factor out TXWI writing to common rt2800 code.
+  rt2x00: Factor out RXWI processing to common rt2800 code.
+  rt2x00: Clean up generic procedures on descriptor writing.
+  rt2x00: Clean up all driver's kick_tx_queue callback functions.
+  rt2x00: provide beacon's txdesc to write_beacon callback function.
+  rt2x00: Fix beaconing on rt2800.
 
-"iwlagn: work around rate scaling reset delay" is already in
-wireless-next-2.6 but has since been shown to be an issue in 2.6.34 also.
-This fixes spurious firmware restarts that has been documented in
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2173 , but it is the
-community report tracked in
-https://bugzilla.kernel.org/show_bug.cgi?id=15782 that prompted us sending
-this fix to wireless-2.6 also.
-
-These patches are also available from wireless-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
-Reinette Chatre (2):
-  iwlwifi: fix internal scan race
-  iwlagn: work around rate scaling reset delay
-
- drivers/net/wireless/iwlwifi/iwl-scan.c |   21 +++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-sta.c  |   37 ++++++++++++++++++++++++++++++-
- 2 files changed, 54 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rt2x00/rt2400pci.c    |   22 ++--
+ drivers/net/wireless/rt2x00/rt2500pci.c    |   22 ++--
+ drivers/net/wireless/rt2x00/rt2500usb.c    |   66 ++++------
+ drivers/net/wireless/rt2x00/rt2800lib.c    |   98 +++++++++++++++
+ drivers/net/wireless/rt2x00/rt2800lib.h    |    3 +
+ drivers/net/wireless/rt2x00/rt2800pci.c    |  166 ++++++--------------------
+ drivers/net/wireless/rt2x00/rt2800usb.c    |  180 +++++++---------------------
+ drivers/net/wireless/rt2x00/rt2800usb.h    |   40 ------
+ drivers/net/wireless/rt2x00/rt2x00.h       |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00crypto.c |    1 +
+ drivers/net/wireless/rt2x00/rt2x00queue.c  |   23 ++--
+ drivers/net/wireless/rt2x00/rt61pci.c      |   41 +++----
+ drivers/net/wireless/rt2x00/rt73usb.c      |   51 +++-----
+ 13 files changed, 280 insertions(+), 436 deletions(-)
 
