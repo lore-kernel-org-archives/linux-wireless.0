@@ -1,85 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.zhaw.ch ([160.85.104.50]:41689 "EHLO mx1.zhaw.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000Ab0ETIiN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 May 2010 04:38:13 -0400
-From: Tobias Klauser <tklauser@distanz.ch>
-To: linville@tuxdriver.com, ilw@linux.intel.com,
-	reinette.chatre@intel.com, yi.zhu@intel.com,
-	luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Tobias Klauser <tklauser@distanz.ch>
-Subject: [PATCH 07/11] drivers/net/wireless: Storage class should be before const qualifier
-Date: Thu, 20 May 2010 10:38:11 +0200
-Message-Id: <1274344691-9095-1-git-send-email-tklauser@distanz.ch>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:55074 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312Ab0EIPHu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 May 2010 11:07:50 -0400
+Received: by pxi5 with SMTP id 5so1269911pxi.19
+        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 08:07:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100509004006.GA5790@tuxdriver.com>
+References: <20100505120131.2b9f4e06@atom.pigiron.org>
+	 <t2j446ae9281005061112z6eee4126z673947eb02dc4f12@mail.gmail.com>
+	 <20100506215613.43477434@atom.pigiron.org>
+	 <w2r445f43ac1005070929uacb5472dj231ff72ef0343860@mail.gmail.com>
+	 <20100508093445.581e180e@atom.pigiron.org>
+	 <20100509004006.GA5790@tuxdriver.com>
+Date: Sun, 9 May 2010 08:07:49 -0700
+Message-ID: <v2u445f43ac1005090807k1b4e653dy9b80a0c87067df0e@mail.gmail.com>
+Subject: Re: The case of the bogus SSID
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: pigiron <pigiron@gmx.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The C99 specification states in section 6.11.5:
+John,
 
-The placement of a storage-class specifier other than at the beginning
-of the declaration specifiers in a declaration is an obsolescent
-feature.
+On Sat, May 8, 2010 at 5:40 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Sat, May 08, 2010 at 09:34:45AM -0500, pigiron wrote:
+>> On Fri, 7 May 2010 09:29:18 -0700 Javier Cardona <javier@cozybit.com> wrote:
+>
+>> > I don't know about the router, nor if the IE ID clash is causing your
+>> > problem, but moving the mesh codes somewhere else in the unassigned ID
+>> > space would be a "A Good Thing To Do (tm)".
+>
+>> Really?
+>>
+>> Wouldn't that cause a problem for the kids running OLPC? For instance, where
+>> some of the laptops are running an old level of code where WLAN_EID_MESH_ID=52
+>> and others are running new code where WLAN_EID_MESH_ID=X.
+>
+> If I'm not mistaken, the mesh done in OLPC is already incompatible w/
+> 802.11s anyway.
 
-Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
----
- drivers/net/wireless/iwlwifi/iwl-core.c   |    4 ++--
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Yes, the currently deployed laptops implement an earlier version of
+the 802.11s draft that's not compatible with what's in the kernel now.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5a7eca8..5df3f88 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2544,7 +2544,7 @@ void iwl_update_stats(struct iwl_priv *priv, bool is_tx, __le16 fc, u16 len)
- EXPORT_SYMBOL(iwl_update_stats);
- #endif
- 
--const static char *get_csr_string(int cmd)
-+static const char *get_csr_string(int cmd)
- {
- 	switch (cmd) {
- 		IWL_CMD(CSR_HW_IF_CONFIG_REG);
-@@ -2615,7 +2615,7 @@ void iwl_dump_csr(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_dump_csr);
- 
--const static char *get_fh_string(int cmd)
-+static const char *get_fh_string(int cmd)
- {
- 	switch (cmd) {
- 		IWL_CMD(FH_RSCSR_CHNL0_STTS_WPTR_REG);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index b7d9137..b7a78e2 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1991,7 +1991,7 @@ static struct ieee80211_channel wl1271_channels[] = {
- };
- 
- /* mapping to indexes for wl1271_rates */
--const static u8 wl1271_rate_to_idx_2ghz[] = {
-+static const u8 wl1271_rate_to_idx_2ghz[] = {
- 	/* MCS rates are used only with 11n */
- 	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS7 */
- 	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS6 */
-@@ -2103,7 +2103,7 @@ static struct ieee80211_channel wl1271_channels_5ghz[] = {
- };
- 
- /* mapping to indexes for wl1271_rates_5ghz */
--const static u8 wl1271_rate_to_idx_5ghz[] = {
-+static const u8 wl1271_rate_to_idx_5ghz[] = {
- 	/* MCS rates are used only with 11n */
- 	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS7 */
- 	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS6 */
-@@ -2139,7 +2139,7 @@ static struct ieee80211_supported_band wl1271_band_5ghz = {
- 	.n_bitrates = ARRAY_SIZE(wl1271_rates_5ghz),
- };
- 
--const static u8 *wl1271_band_rate_to_idx[] = {
-+static const u8 *wl1271_band_rate_to_idx[] = {
- 	[IEEE80211_BAND_2GHZ] = wl1271_rate_to_idx_2ghz,
- 	[IEEE80211_BAND_5GHZ] = wl1271_rate_to_idx_5ghz
- };
+Javier
+
+
 -- 
-1.6.3.3
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
