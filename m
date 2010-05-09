@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:48449 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332Ab0EKLRj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 07:17:39 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 04:17:39 -0700
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:63099 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564Ab0EIJKO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 May 2010 05:10:14 -0400
+Received: by bwz19 with SMTP id 19so1241087bwz.21
+        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 02:10:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19433.15591.251225.477469@gargle.gargle.HOWL>
-Date: Tue, 11 May 2010 16:47:59 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/5] ath9k_htc: Lock sta_notify() callback
-In-Reply-To: <1273575453.3669.55.camel@jlt3.sipsolutions.net>
-References: <19433.14190.31764.174876@gargle.gargle.HOWL>
-	<1273575453.3669.55.camel@jlt3.sipsolutions.net>
-From: <Sujith.Manoharan@atheros.com>
+In-Reply-To: <1273354826-4335-6-git-send-email-gwingerde@gmail.com>
+References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
+	 <1273354826-4335-6-git-send-email-gwingerde@gmail.com>
+Date: Sun, 9 May 2010 11:10:12 +0200
+Message-ID: <AANLkTilo9epmkDp__KxBVHv7BO3XQkR-knmiinKGlmgS@mail.gmail.com>
+Subject: Re: [PATCH 5/9] rt2x00: Factor out RXWI processing to common rt2800
+	code.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2010-05-11 at 16:24 +0530, Sujith.Manoharan@atheros.com wrote:
-> > Since ->sta_notify() can sleep, protect
-> > the callback with a mutex.
-> 
-> While this may be a correct change, it's not a correct description :)
-> 
-> You should be locking _data_, not _code_, and due to mac80211 the
-> callback cannot be invoked twice at the same time anyway.
+On Sat, May 8, 2010 at 11:40 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> RXWI processing is exactly the same for rt2800pci and rt2800usb, so
+> make it common code.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-It protects all the binary data between lock and unlock. :-)
-
-I encountered a problem with sta_notify() with a script doing
-a load/scan/connect/unload cycle and NetworkManager also running,
-doing its own scan/connect processing. And at some point,
-ath9k_htc_remove_station() failed. Which led me to suspect overlapping
-calls to sta_notify().
-
-I do see sta_mtx being taken at all the places where sta_remove() is called
-in mac80211, so am not sure how I managed to hit it.
-
-Sujith
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
