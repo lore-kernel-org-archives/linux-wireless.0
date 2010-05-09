@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60714 "EHLO mga02.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:34512 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932654Ab0EMVuT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:50:19 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 08/17] iwlwifi: remove IWL_MULTICAST_ID
-Date: Thu, 13 May 2010 14:49:50 -0700
-Message-Id: <1273787399-9280-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
-References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+	id S1751722Ab0EIJSe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 May 2010 05:18:34 -0400
+Subject: Re: [PATCH 1/9] rt2x00: Fix setting of txdesc->length field.
+From: Pavel Roskin <proski@gnu.org>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+In-Reply-To: <AANLkTikWtLvG-J9UclCEsp7V1B7_J69eujVseWVsZk2y@mail.gmail.com>
+References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
+	 <1273354826-4335-2-git-send-email-gwingerde@gmail.com>
+	 <AANLkTikWtLvG-J9UclCEsp7V1B7_J69eujVseWVsZk2y@mail.gmail.com>
+Content-Type: text/plain
+Date: Sun, 09 May 2010 05:18:29 -0400
+Message-Id: <1273396709.11380.0.camel@ct>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, 2010-05-09 at 11:03 +0200, Ivo Van Doorn wrote:
+> On Sat, May 8, 2010 at 11:40 PM, Gertjan van Wingerde
+> <gwingerde@gmail.com> wrote:
+> > We should take the stripping of the IV into account for the txdesc->length
+> > field.
+> >
+> > Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> 
+> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-This constant is not used, and incorrect, since
-the broadcast ID must be used for multicast too.
+Tested-by: Pavel Roskin <proski@gnu.org>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+It's working.  Thank you!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 9aab020..4790571 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -952,7 +952,6 @@ struct iwl_qosparam_cmd {
- 
- /* Special, dedicated locations within device's station table */
- #define	IWL_AP_ID		0
--#define IWL_MULTICAST_ID	1
- #define	IWL_STA_ID		2
- #define	IWL3945_BROADCAST_ID	24
- #define IWL3945_STATION_COUNT	25
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
