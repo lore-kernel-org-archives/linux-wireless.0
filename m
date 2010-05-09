@@ -1,129 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47561 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752858Ab0EKPXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 11:23:12 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 1/4] ath9k: use debugfs_remove_recursive() instead of keeping pointers to all entries
-Date: Tue, 11 May 2010 17:23:00 +0200
-Message-Id: <1273591383-76696-1-git-send-email-nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:54172 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826Ab0EIUYa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 May 2010 16:24:30 -0400
+Received: by fxm10 with SMTP id 10so1866997fxm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 13:24:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4BE46584.5060304@create-net.org>
+References: <4BE43C18.2030806@create-net.org> <j2v69e28c911005070935wb720d757labf3a0484aedefb8@mail.gmail.com>
+	<4BE46584.5060304@create-net.org>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 9 May 2010 22:24:08 +0200
+Message-ID: <r2y69e28c911005091324sbff07538i28babb432e6751db@mail.gmail.com>
+Subject: Re: Packet injection with ath9k
+To: Roberto Riggio <roberto.riggio@create-net.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/debug.c |   55 +++++++++----------------------
- drivers/net/wireless/ath/ath9k/debug.h |    7 ----
- 2 files changed, 16 insertions(+), 46 deletions(-)
+2010/5/7 Roberto Riggio <roberto.riggio@create-net.org>:
+> Hi,
+>
+> well, that is what i wanted to understand. These are the struct
+> that I'm using to compose the rediotap header:
+>
+> struct ieee80211_radiotap_header {
+>    u_int8_t    it_version;
+>    u_int8_t    it_pad;
+>    u_int16_t       it_len;
+>    u_int32_t       it_present;
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 64e30cd..679257c 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -722,52 +722,36 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	sc->debug.debugfs_phy = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
- 						      ath9k_debugfs_root);
- 	if (!sc->debug.debugfs_phy)
--		goto err;
-+		return -ENOMEM;
- 
- #ifdef CONFIG_ATH_DEBUG
--	sc->debug.debugfs_debug = debugfs_create_file("debug",
--		S_IRUSR | S_IWUSR, sc->debug.debugfs_phy, sc, &fops_debug);
--	if (!sc->debug.debugfs_debug)
-+	if (!debugfs_create_file("debug", S_IRUSR | S_IWUSR,
-+			sc->debug.debugfs_phy, sc, &fops_debug))
- 		goto err;
- #endif
- 
--	sc->debug.debugfs_dma = debugfs_create_file("dma", S_IRUSR,
--				       sc->debug.debugfs_phy, sc, &fops_dma);
--	if (!sc->debug.debugfs_dma)
-+	if (!debugfs_create_file("dma", S_IRUSR, sc->debug.debugfs_phy,
-+			sc, &fops_dma))
- 		goto err;
- 
--	sc->debug.debugfs_interrupt = debugfs_create_file("interrupt",
--						     S_IRUSR,
--						     sc->debug.debugfs_phy,
--						     sc, &fops_interrupt);
--	if (!sc->debug.debugfs_interrupt)
-+	if (!debugfs_create_file("interrupt", S_IRUSR, sc->debug.debugfs_phy,
-+			sc, &fops_interrupt))
- 		goto err;
- 
--	sc->debug.debugfs_rcstat = debugfs_create_file("rcstat",
--						  S_IRUSR,
--						  sc->debug.debugfs_phy,
--						  sc, &fops_rcstat);
--	if (!sc->debug.debugfs_rcstat)
-+	if (!debugfs_create_file("rcstat", S_IRUSR, sc->debug.debugfs_phy,
-+			sc, &fops_rcstat))
- 		goto err;
- 
--	sc->debug.debugfs_wiphy = debugfs_create_file(
--		"wiphy", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy, sc,
--		&fops_wiphy);
--	if (!sc->debug.debugfs_wiphy)
-+	if (!debugfs_create_file("wiphy", S_IRUSR | S_IWUSR,
-+			sc->debug.debugfs_phy, sc, &fops_wiphy))
- 		goto err;
- 
--	sc->debug.debugfs_xmit = debugfs_create_file("xmit",
--						     S_IRUSR,
--						     sc->debug.debugfs_phy,
--						     sc, &fops_xmit);
--	if (!sc->debug.debugfs_xmit)
-+	if (!debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy,
-+			sc, &fops_xmit))
- 		goto err;
- 
--	sc->debug.debugfs_recv = debugfs_create_file("recv",
--						     S_IRUSR,
--						     sc->debug.debugfs_phy,
--						     sc, &fops_recv);
--	if (!sc->debug.debugfs_recv)
-+	if (!debugfs_create_file("recv", S_IRUSR, sc->debug.debugfs_phy,
-+			sc, &fops_recv))
- 		goto err;
- 
- 	return 0;
-@@ -781,14 +765,7 @@ void ath9k_exit_debug(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_softc *sc = (struct ath_softc *) common->priv;
- 
--	debugfs_remove(sc->debug.debugfs_recv);
--	debugfs_remove(sc->debug.debugfs_xmit);
--	debugfs_remove(sc->debug.debugfs_wiphy);
--	debugfs_remove(sc->debug.debugfs_rcstat);
--	debugfs_remove(sc->debug.debugfs_interrupt);
--	debugfs_remove(sc->debug.debugfs_dma);
--	debugfs_remove(sc->debug.debugfs_debug);
--	debugfs_remove(sc->debug.debugfs_phy);
-+	debugfs_remove_recursive(sc->debug.debugfs_phy);
- }
- 
- int ath9k_debug_create_root(void)
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index c545960..7314360 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -153,13 +153,6 @@ struct ath_stats {
- 
- struct ath9k_debug {
- 	struct dentry *debugfs_phy;
--	struct dentry *debugfs_debug;
--	struct dentry *debugfs_dma;
--	struct dentry *debugfs_interrupt;
--	struct dentry *debugfs_rcstat;
--	struct dentry *debugfs_wiphy;
--	struct dentry *debugfs_xmit;
--	struct dentry *debugfs_recv;
- 	struct ath_stats stats;
- };
- 
+AFAIK these 2 fields need to be little-endian even on big-endian
+machines. If your system is big-endian, this can cause problems.
+
+> } __attribute__((__packed__));
+>
+> struct click_radiotap_header {
+>    struct ieee80211_radiotap_header wt_ihdr;
+>    u_int8_t    wt_rate;
+>    u_int8_t    wt_txpower;
+>    u_int8_t        wt_rts_retries;
+>    u_int8_t        wt_data_retries;
+> };
+>
+> The flags are set in order to take into account the fields that I
+> specify. But i do not know at which point the frame are
+> dropped.
+>
+> R.
+>
+> On 05/07/2010 06:35 PM, Gábor Stefanik wrote:
+>>
+>> Hi!
+>> Are you sure it is not your injector that is having alignment issues?
+>> AFAIK the radiotap parser explicitly uses endianness-aware function
+>> everywhere.
+>>
+>> On Fri, May 7, 2010 at 6:13 PM, Roberto Riggio
+>> <roberto.riggio@create-net.org>  wrote:
+>>
+>>>
+>>> Hi,
+>>>
+>>> I'm writing an application to inject traffic over a wireless interface.
+>>> This
+>>> app
+>>> is working fine on an x86 machine. However if i compile the same app for
+>>> an arm platform, no frame are sent over the wireless interface (ath9k).
+>>>
+>>> I'm guessing that this is because of some alignment issues but i cannot
+>>> track
+>>> the piece of code that is actually parsing the frame. I've found the
+>>> __ieee80211_parse_tx_radiotap in net/mac80211/tx.c function, but it is
+>>> not called when i try to inject some traffic, so the frame are dropped
+>>> before that.
+>>>
+>>> Any hints?
+>>>
+>>> Thanks
+>>> R.
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>
+>>
+>>
+>
+>
+
+
+
 -- 
-1.6.4.2
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
