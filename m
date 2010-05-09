@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:15704 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754811Ab0EJBPv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 May 2010 21:15:51 -0400
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0730604149
-	for <linux-wireless@vger.kernel.org>; Mon, 10 May 2010 10:15:50 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>,
-	Dan Carpenter <error27@gmail.com>
-Subject: Re: [patch 6/9] ath5k: several off by one range checks
-Date: Mon, 10 May 2010 10:18:40 +0900
-References: <20100508162438.GR27064@bicker> <20100508223319.GA6377@hash.localnet>
-In-Reply-To: <20100508223319.GA6377@hash.localnet>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bruno Randolf <br1@einfach.org>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005101018.40169.br1@einfach.org>
+Received: from lo.gmane.org ([80.91.229.12]:57792 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750920Ab0EISy6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 May 2010 14:54:58 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OBBeP-00015m-3c
+	for linux-wireless@vger.kernel.org; Sun, 09 May 2010 20:54:53 +0200
+Received: from 94-192-45-120.zone6.bethere.co.uk ([94.192.45.120])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 20:54:53 +0200
+Received: from linux by 94-192-45-120.zone6.bethere.co.uk with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 20:54:53 +0200
+To: linux-wireless@vger.kernel.org
+From: Adam Baker <linux@baker-net.org.uk>
+Subject: Re: [PATCH 6/9] rt2x00: Clean up generic procedures on descriptor writing.
+Date: Sun, 9 May 2010 18:54:43 +0000 (UTC)
+Message-ID: <loom.20100509T205352-131@post.gmane.org>
+References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com> <1273354826-4335-7-git-send-email-gwingerde@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 09 May 2010 07:33:19 you wrote:
-> On Sat, May 08, 2010 at 06:24:38PM +0200, Dan Carpenter wrote:
-> > There are several places that use > ARRAY_SIZE() instead of
-> > 
-> > >= ARRAY_SIZE().
-> > 
-> > Signed-off-by: Dan Carpenter <error27@gmail.com>
-> 
-> Thanks,
-> Acked-by: Bob Copeland <me@bobcopeland.com>
+Gertjan van Wingerde <gwingerde@...> writes:
 
-ah, yes. found these too, but haven't sent the patch yet.
+> -	 *	3) Rule 2 can be broken when the available entries
+> +	 *	2) Rule 2 can be broken when the available entries
+>  	 *	   in the queue are less then a certain threshold.
+>  	 */
 
-Acked-by: Bruno Randolf <br1@einfach.org>
+shouldn't this say Rule 1 can be broken now?
+
+Adam
+
