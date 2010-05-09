@@ -1,66 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f204.google.com ([209.85.222.204]:35067 "EHLO
-	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561Ab0EARmc (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:38709 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752573Ab0EIJIH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 13:42:32 -0400
-Received: by pzk42 with SMTP id 42so651912pzk.4
-        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2010 10:42:31 -0700 (PDT)
-Message-ID: <4BDC6803.9030805@lwfinger.net>
-Date: Sat, 01 May 2010 12:42:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 9 May 2010 05:08:07 -0400
+Received: by bwz19 with SMTP id 19so1240565bwz.21
+        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 02:08:03 -0700 (PDT)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] ssb: Implement fast powerup delay calculation
-References: <4BDC56D2.5060605@gmail.com> <201005011907.05603.mb@bu3sch.de> <AANLkTimXBlIETHVLapuSrkI8uTIU8JPepLWvAEq6_D4T@mail.gmail.com> (sfid-20100501_171356_780008_6E95C7C2) <201005011919.42294.mb@bu3sch.de>
-In-Reply-To: <201005011919.42294.mb@bu3sch.de>
+In-Reply-To: <1273354826-4335-4-git-send-email-gwingerde@gmail.com>
+References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
+	 <1273354826-4335-4-git-send-email-gwingerde@gmail.com>
+Date: Sun, 9 May 2010 11:08:03 +0200
+Message-ID: <AANLkTimlBPsMcdT952H2xS5Ncpj_V808kYcyN6h5Vh-B@mail.gmail.com>
+Subject: Re: [PATCH 3/9] rt2x00: Don't check whether hardware crypto is
+	enabled when reading RXD.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/01/2010 12:19 PM, Michael Buesch wrote:
-> On Saturday 01 May 2010 19:13:31 Gábor Stefanik wrote:
->> 2010/5/1 Michael Buesch <mb@bu3sch.de>:
->>> On Saturday 01 May 2010 18:29:06 Gábor Stefanik wrote:
->>>> +     ssb_write16(cc->dev, SSB_MMIO_POWERUP_DELAY, delay);
->>>>   }
->>>>
->>>>   void ssb_chipco_suspend(struct ssb_chipcommon *cc)
->>>> Index: wireless-testing/include/linux/ssb/ssb_regs.h
->>>> ===================================================================
->>>> --- wireless-testing.orig/include/linux/ssb/ssb_regs.h
->>>> +++ wireless-testing/include/linux/ssb/ssb_regs.h
->>>> @@ -26,6 +26,7 @@
->>>>   #define     SSB_EUART               (SSB_EXTIF_BASE + 0x00800000)
->>>>   #define     SSB_LED                 (SSB_EXTIF_BASE + 0x00900000)
->>>>
->>>> +#define SSB_MMIO_POWERUP_DELAY       0x06A8
->>>
->>> I think you are really confusing something here.
->>> That register is a wireless core register and we already write it in b43.
->>>
->>> --
->>> Greetings, Michael.
->>>
->>
->> This is what I am implementing: http://bcm-v4.sipsolutions.net/802.11/Init
->> Here, it clearly says MMIO offset. 
-> 
-> Yeah. Just what I said. It is an 802.11 core register.
-> We already write it in b43/main.c/b43_chip_init().
-> It is _wrong_ to write to the chipcommon at that offset.
+On Sat, May 8, 2010 at 11:40 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> We should simply follow what the hardware told us it has done.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-I may have gotten the MMIO offset part wrong in the specs, but the
-Broadcom driver definitely writes to offset 0x648 at that point.
-
-I know that b43 writes that location; however, it is much later in the
-startup sequence. Whether that is important is unknown at this point.
-
-The previous code resulted in a value of zero being written to the
-location in question, but the value for the 4315 is 7000.
-
-Larry
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
