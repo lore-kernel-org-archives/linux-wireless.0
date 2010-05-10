@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:16110 "EHLO c60.cesmail.net"
+Received: from mga02.intel.com ([134.134.136.20]:65350 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756464Ab0ECWoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 18:44:08 -0400
-Subject: Re: [PATCH 2/4] rt2x00: Enable RT30xx by default.
-From: Pavel Roskin <proski@gnu.org>
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-In-Reply-To: <201005040008.36956.s.L-H@gmx.de>
-References: <1272919385-18004-1-git-send-email-gwingerde@gmail.com>
-	 <1272919385-18004-3-git-send-email-gwingerde@gmail.com>
-	 <1272920358.4907.3.camel@mj>  <201005040008.36956.s.L-H@gmx.de>
-Content-Type: text/plain
-Date: Mon, 03 May 2010 18:44:03 -0400
-Message-Id: <1272926643.6239.1.camel@mj>
-Mime-Version: 1.0
+	id S1756464Ab0EJW20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:26 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 25/47] iwlagn: move iwl_get_ra_sta_id to 4965
+Date: Mon, 10 May 2010 15:27:56 -0700
+Message-Id: <1273530498-11876-26-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-05-04 at 00:08 +0200, Stefan Lippers-Hollmann wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> RT2800PCI_RT30XX is not a new/ separate module, its only function is to 
-> limit the PCI ID space (to not claim PCI IDs for chipset generations not
-> yet debugged properly) of rt2800pci.ko; this symbol isn't even used 
-> anywhere else than within the PCI table.
+This function is only needed by 4965, so
+it need not be in core code and can be
+made static.
 
-I realize that.  Still, somebody upstream can object.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-sta.c  |   11 -----------
+ drivers/net/wireless/iwlwifi/iwl-sta.h  |    1 -
+ 3 files changed, 10 insertions(+), 12 deletions(-)
 
->  A 100% equivalent patch would be 
-> to just drop the config option completely. I doubt that doing that would 
-> meet resistance, as it merely adds previously 'unknown' (to be supported) 
-> PCI IDs.
-
-That's what I would do.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index a3562a1..b8bf837 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1953,6 +1953,16 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
+ 	return 0;
+ }
+ 
++static int iwl_get_ra_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
++{
++	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
++		return IWL_AP_ID;
++	} else {
++		u8 *da = ieee80211_get_DA(hdr);
++		return iwl_find_station(priv, da);
++	}
++}
++
+ /**
+  * iwl4965_rx_reply_tx - Handle standard (non-aggregation) Tx response
+  */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 7da8ede..0db742c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -80,17 +80,6 @@ u8 iwl_find_station(struct iwl_priv *priv, const u8 *addr)
+ }
+ EXPORT_SYMBOL(iwl_find_station);
+ 
+-int iwl_get_ra_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
+-{
+-	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
+-		return IWL_AP_ID;
+-	} else {
+-		u8 *da = ieee80211_get_DA(hdr);
+-		return iwl_find_station(priv, da);
+-	}
+-}
+-EXPORT_SYMBOL(iwl_get_ra_sta_id);
+-
+ /* priv->sta_lock must be held */
+ static void iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 9a869f1..1a0e590 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -66,7 +66,6 @@ void iwl_restore_stations(struct iwl_priv *priv);
+ void iwl_clear_ucode_stations(struct iwl_priv *priv, bool force);
+ int iwl_get_free_ucode_key_index(struct iwl_priv *priv);
+ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr);
+-int iwl_get_ra_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr);
+ int iwl_send_add_sta(struct iwl_priv *priv,
+ 		     struct iwl_addsta_cmd *sta, u8 flags);
+ int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs);
 -- 
-Regards,
-Pavel Roskin
+1.6.3.3
+
