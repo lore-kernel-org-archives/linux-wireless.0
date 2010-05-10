@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60503 "EHLO ogre.sisk.pl"
+Received: from c60.cesmail.net ([216.154.195.49]:60963 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754511Ab0EWWj5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 May 2010 18:39:57 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [linux-pm] [Regression][git head f4b87dee9] ath9k doesn't work correctly after resume from suspend to RAM
-Date: Mon, 24 May 2010 00:40:57 +0200
-Cc: linux-pm@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Daniel Yingqiang ma <yma.cool@gmail.com>,
-	David Miller <davem@davemloft.net>
-References: <201005222353.26920.rjw@sisk.pl> <201005230013.37578.rjw@sisk.pl>
-In-Reply-To: <201005230013.37578.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005240040.57443.rjw@sisk.pl>
+	id S1752694Ab0EJMRc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 08:17:32 -0400
+Subject: Re: [ath9k-devel] [patch 2/9] ath9k: range checking issues in
+ htc_hst.c
+From: Pavel Roskin <proski@gnu.org>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: Dan Carpenter <error27@gmail.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>
+In-Reply-To: <19431.58619.856626.694277@gargle.gargle.HOWL>
+References: <20100508162201.GN27064@bicker>
+	 <19431.36216.198492.247202@gargle.gargle.HOWL>
+	 <20100510102319.GV27064@bicker>
+	 <19431.58619.856626.694277@gargle.gargle.HOWL>
+Content-Type: text/plain
+Date: Mon, 10 May 2010 08:17:28 -0400
+Message-Id: <1273493848.2783.3.camel@ct>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 23 May 2010, Rafael J. Wysocki wrote:
-> On Saturday 22 May 2010, Rafael J. Wysocki wrote:
-> > Hi,
-> > 
-> > With current -git on Acer Ferrari One the ath9k driver doesn't seem to work
-> > after resume from suspend to RAM.  NetworkManager seems to think that it works,
-> > but it doesn't really connect with the AP and doesn't try to obtain an IP
-> > address.
-> 
-> Sorry, this was incorrect.  It actually tries to obtain an IP address, but
-> fails.  Apparently, it can't obtain the address without being reloaded.
+On Mon, 2010-05-10 at 16:20 +0530, Sujith wrote:
 
-This issue can be fixed by reverting:
+> Ah right. That should be fixed.
 
-commit 03ceedea972a82d343fa5c2528b3952fa9e615d5
-Author: Daniel Yingqiang Ma <yma.cool@gmail.com>
-Date:   Tue Apr 13 15:12:07 2010 +0800
+I suggest using ARRAY_SIZE(target->endpoint) to be sure.
 
-    ath9k: Group Key fix for VAPs
-
-Thanks,
-Rafael
+-- 
+Regards,
+Pavel Roskin
