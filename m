@@ -1,42 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out110.alice.it ([85.37.17.110]:3141 "EHLO
-	smtp-out110.alice.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757805Ab0EDReH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 13:34:07 -0400
-Subject: Re: [Fwd: USB AP card and/or rt2870 issue]
-From: GNUtoo <GNUtoo@no-log.org>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <q2na32f33a41005040832n7d50a934q4ff0a6a4dde53f28@mail.gmail.com>
-References: <1272986923.2486.45.camel@gnutoo-desktop>
-	 <q2na32f33a41005040832n7d50a934q4ff0a6a4dde53f28@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 04 May 2010 19:33:51 +0200
-Message-ID: <1272994431.2447.0.camel@gnutoo-desktop>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:65350 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755782Ab0EJW21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:27 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 27/47] iwlwifi: apply filter flags directly
+Date: Mon, 10 May 2010 15:27:58 -0700
+Message-Id: <1273530498-11876-28-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-05-04 at 17:32 +0200, Ivo Van Doorn wrote:
-> On Tue, May 4, 2010 at 5:28 PM, GNUtoo <GNUtoo@no-log.org> wrote:
-> > hi, I sent the following mail(attached) to the hostapd mailing list,but
-> > Now I think It's a driver issue.
-> > Is it possible to make an access point with a rt2870 card.
-> > Does the driver support it?
-> > I don't have much hope for now as it is a staging driver...and it
-> > displayed a warning about that in dmesg...
-> 
-> You could try compat-wireless and the rt2800usb driver.
-> That one actually does have Master mode support, but doesn't work
-> on all cards yet. rt2800usb is also found in the main kernel tree, but
-> using compat-wireless will give you the most recent version with
-> _many_ fixes applied to it. :)
-I tried that,
-hostapd put the card in master mode
-unfortunately once in master mode,impossible to find the essid when
-scanning.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Denis.
+Since iwl_configure_filter can now sleep since
+the mac80211 callback was changed, we can now
+apply filter flags changes directly.
 
+Also, while at it, make the code a bit more
+generic with a local macro. There's no need
+to check changed_flags since we apply all at
+the same time anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   52 +++++++++++++------------------
+ 1 files changed, 22 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5c6f254..246538a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1257,41 +1257,33 @@ void iwl_configure_filter(struct ieee80211_hw *hw,
+ 			  u64 multicast)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+-	__le32 *filter_flags = &priv->staging_rxon.filter_flags;
++	__le32 filter_or = 0, filter_nand = 0;
++
++#define CHK(test, flag)	do { \
++	if (*total_flags & (test))		\
++		filter_or |= (flag);		\
++	else					\
++		filter_nand |= (flag);		\
++	} while (0)
+ 
+ 	IWL_DEBUG_MAC80211(priv, "Enter: changed: 0x%x, total: 0x%x\n",
+ 			changed_flags, *total_flags);
+ 
+-	if (changed_flags & (FIF_OTHER_BSS | FIF_PROMISC_IN_BSS)) {
+-		if (*total_flags & (FIF_OTHER_BSS | FIF_PROMISC_IN_BSS))
+-			*filter_flags |= RXON_FILTER_PROMISC_MSK;
+-		else
+-			*filter_flags &= ~RXON_FILTER_PROMISC_MSK;
+-	}
+-	if (changed_flags & FIF_ALLMULTI) {
+-		if (*total_flags & FIF_ALLMULTI)
+-			*filter_flags |= RXON_FILTER_ACCEPT_GRP_MSK;
+-		else
+-			*filter_flags &= ~RXON_FILTER_ACCEPT_GRP_MSK;
+-	}
+-	if (changed_flags & FIF_CONTROL) {
+-		if (*total_flags & FIF_CONTROL)
+-			*filter_flags |= RXON_FILTER_CTL2HOST_MSK;
+-		else
+-			*filter_flags &= ~RXON_FILTER_CTL2HOST_MSK;
+-	}
+-	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+-		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
+-			*filter_flags |= RXON_FILTER_BCON_AWARE_MSK;
+-		else
+-			*filter_flags &= ~RXON_FILTER_BCON_AWARE_MSK;
+-	}
++	CHK(FIF_OTHER_BSS | FIF_PROMISC_IN_BSS, RXON_FILTER_PROMISC_MSK);
++	CHK(FIF_ALLMULTI, RXON_FILTER_ACCEPT_GRP_MSK);
++	CHK(FIF_CONTROL, RXON_FILTER_CTL2HOST_MSK);
++	CHK(FIF_BCN_PRBRESP_PROMISC, RXON_FILTER_BCON_AWARE_MSK);
+ 
+-	/* We avoid iwl_commit_rxon here to commit the new filter flags
+-	 * since mac80211 will call ieee80211_hw_config immediately.
+-	 * (mc_list is not supported at this time). Otherwise, we need to
+-	 * queue a background iwl_commit_rxon work.
+-	 */
++#undef CHK
++
++	mutex_lock(&priv->mutex);
++
++	priv->staging_rxon.filter_flags &= ~filter_nand;
++	priv->staging_rxon.filter_flags |= filter_or;
++
++	iwlcore_commit_rxon(priv);
++
++	mutex_unlock(&priv->mutex);
+ 
+ 	*total_flags &= FIF_OTHER_BSS | FIF_ALLMULTI | FIF_PROMISC_IN_BSS |
+ 			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL;
+-- 
+1.6.3.3
 
