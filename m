@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:48751 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754791Ab0EMBRU (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:45430 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753072Ab0EJJfr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 21:17:20 -0400
-Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0667463438
-	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 10:17:18 +0900 (JST)
-Subject: [PATCH] compat-wireless: fix 07-change-default-rate-alg.patch
-To: lrodriguez@atheros.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: hauke@hauke-m.de, linux-wireless@vger.kernel.org
-Date: Thu, 13 May 2010 10:17:11 +0900
-Message-ID: <20100513011711.13007.45318.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 10 May 2010 05:35:47 -0400
+Received: by wyf19 with SMTP id 19so699532wyf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 May 2010 02:35:45 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, linville@tuxdriver.com,
+	IvDoorn@gmail.com, gwingerde@gmail.com,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH] [PATCH 1/1] wireless: rt2x00: rt2800usb: replace X by x
+Date: Mon, 10 May 2010 11:35:36 +0200
+Message-Id: <1273484136-1969-1-git-send-email-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-i need this change to make it apply again
+s/X/x
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- patches/07-change-default-rate-alg.patch |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/patches/07-change-default-rate-alg.patch b/patches/07-change-default-rate-alg.patch
-index f0ccbce..f73a4c5 100644
---- a/patches/07-change-default-rate-alg.patch
-+++ b/patches/07-change-default-rate-alg.patch
-@@ -10,9 +10,9 @@ and define CONFIG_COMPAT_MAC80211_RC_DEFAULT on config.mk.
- Through the compat autoconf we then get it also defined there
- at compilation time.
- 
----- a/net/mac80211/rate.c
--+++ b/net/mac80211/rate.c
--@@ -23,7 +23,7 @@ struct rate_control_alg {
-+--- a/net/mac80211/rate.c	2010-05-12 16:27:02.245747971 +0900
-++++ b/net/mac80211/rate.c	2010-05-12 17:00:45.855748158 +0900
-+@@ -23,7 +23,7 @@
-  static LIST_HEAD(rate_ctrl_algs);
-  static DEFINE_MUTEX(rate_ctrl_mutex);
-  
-@@ -21,7 +21,7 @@ at compilation time.
-  module_param(ieee80211_default_rc_algo, charp, 0644);
-  MODULE_PARM_DESC(ieee80211_default_rc_algo,
-  		 "Default rate control algorithm for mac80211 to use");
--@@ -119,8 +119,8 @@ ieee80211_rate_control_ops_get(const cha
-+@@ -118,8 +118,8 @@
-  		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
-  
-  	/* try built-in one if specific alg requested but not found */
-@@ -29,6 +29,6 @@ at compilation time.
- -		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
- +	if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
- +		ops = ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT);
-- 	kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
-  
-  	return ops;
-+ }
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index e3f3a97..456d265 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -841,7 +841,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x7392, 0x7717), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x7392, 0x7718), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* EnGenius */
+-	{ USB_DEVICE(0X1740, 0x9701), USB_DEVICE_DATA(&rt2800usb_ops) },
++	{ USB_DEVICE(0x1740, 0x9701), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	{ USB_DEVICE(0x1740, 0x9702), USB_DEVICE_DATA(&rt2800usb_ops) },
+ 	/* Gigabyte */
+ 	{ USB_DEVICE(0x1044, 0x800b), USB_DEVICE_DATA(&rt2800usb_ops) },
+-- 
+1.6.6.1
 
