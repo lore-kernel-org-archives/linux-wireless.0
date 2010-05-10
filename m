@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38441 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757082Ab0E0JRi (ORCPT
+Received: from mail-qy0-f183.google.com ([209.85.221.183]:56473 "EHLO
+	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650Ab0EJOrF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 05:17:38 -0400
-Subject: Re: [RFC PATCHv3] mac80211: Add support for hardware ARP query
- filtering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274951117.5277.3155.camel@wimaxnb.nmp.nokia.com>
-References: <1274940287-18980-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1274948667.3669.19.camel@jlt3.sipsolutions.net>
-	 <1274951117.5277.3155.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 11:17:34 +0200
-Message-ID: <1274951854.3669.25.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 10 May 2010 10:47:05 -0400
+Received: by qyk13 with SMTP id 13so6247098qyk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 May 2010 07:47:04 -0700 (PDT)
+Date: Mon, 10 May 2010 16:46:26 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [patch 3/9] ath9k: cleanup: u32 => bool
+Message-ID: <20100510144625.GW27064@bicker>
+References: <20100508162247.GO27064@bicker> <1273477106.3573.0.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1273477106.3573.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 12:05 +0300, Juuso Oikarinen wrote:
-
-> > > +	/* We are concerned about IP addresses only when associated */
-> > > +	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
-> > > +	mutex_lock(&sdata->u.mgd.mtx);
-> > > +	ifmgd = &sdata->u.mgd;
-> > > +	if (ifmgd->associated)
-> > > +		ieee80211_set_arp_filter(sdata);
-> > > +	mutex_unlock(&sdata->u.mgd.mtx);
-> > 
-> > I'm sure this will fail in interesting ways since nothing guarantees
-> > that this interface is in managed mode.
+On Mon, May 10, 2010 at 09:38:26AM +0200, Johannes Berg wrote:
+> On Sat, 2010-05-08 at 18:22 +0200, Dan Carpenter wrote:
 > 
-> S***, I need a vacation. This is bound to fail even if the interface is
-> in managed mode, as it's not protecting the right thing. 
+> > +		bool on = param ? 1 : 0;
 > 
-> I was already looking at the ifmgd->mtx but somehow managed to
-> copy-paste this one :(
+> umm, if you're going to use bool then use true/false too.
+> 
+> johannes
 
-Hm? If you bail out on non-managed or something like that, it should be
-fine? ifmgd->mtx is the same as sdata->u.mgd.mtx, you just don't need
-the ifmgd variable here.
+The 1 and 0 are used as array indexes so it looks funny to use true and
+false.
 
-johannes
+Let's just drop this patch.  I wrote it to silence a smatch false 
+positive but I should/will just fix smatch instead.
 
+Smatch complains we negate a non-boolean type here:
+
+                if (!on != aniState->ofdmWeakSigDetectOff) {
+
+It's a quite common bug to forget that negation has higher precendence 
+than compare operations.  In this case, it's clear from code that "on" is
+either 1 or 0 so smatch should not complain.
+
+regards,
+dan carpenter
