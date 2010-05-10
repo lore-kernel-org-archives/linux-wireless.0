@@ -1,98 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:65087 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756775Ab0ELRra convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 13:47:30 -0400
-Received: by fxm15 with SMTP id 15so347671fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 10:47:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinzPPIbH6bivhjTF1jB6R2mZ5e9rnhX23Yr8bJ7@mail.gmail.com>
-References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-	 <1273614705-25118-9-git-send-email-gwingerde@gmail.com>
-	 <AANLkTinMB9AThStTLQ5vkRrKJgDz84n447kFcTwQaQvQ@mail.gmail.com>
-	 <AANLkTinzPPIbH6bivhjTF1jB6R2mZ5e9rnhX23Yr8bJ7@mail.gmail.com>
-Date: Wed, 12 May 2010 19:47:27 +0200
-Message-ID: <AANLkTilKi1zKyRWUNuBoQnHaTy2UdX05Pd2E2gOvygrJ@mail.gmail.com>
-Subject: Re: [PATCH 8/9] rt2x00: Reverse calling order of bus write_tx_desc
-	and driver write_tx_desc.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:63760 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756858Ab0EJW2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:31 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 40/47] iwlwifi: add iwl_sta_id()
+Date: Mon, 10 May 2010 15:28:11 -0700
+Message-Id: <1273530498-11876-41-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 12, 2010 at 11:55 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> On Wed, May 12, 2010 at 9:02 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
->> On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
->> <gwingerde@gmail.com> wrote:
->>> For rt2800 reverse the calling order of rt2x00pci_write_data and
->>> rt2800pci_write_data. Currently rt2800pci_write_data calls rt2x00pci_write_data
->>> as there can be only 1 driver callback function specified by the driver.
->>> Reverse this calling order by introducing a new driver callback function,
->>> called add_tx_datadesc, which is called from the bus-specific write_tx_data
->>> functions.
->>> Preparation for futher cleanups in the skb data handling of rt2x00.
->>>
->>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>> ---
->>>  drivers/net/wireless/rt2x00/rt2800pci.c |   15 ++++-----------
->>>  drivers/net/wireless/rt2x00/rt2x00.h    |    2 ++
->>>  drivers/net/wireless/rt2x00/rt2x00pci.c |    6 ++++++
->>>  drivers/net/wireless/rt2x00/rt2x00usb.c |    6 ++++++
->>>  4 files changed, 18 insertions(+), 11 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
->>> index fcca30c..bbd6481 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
->>> @@ -614,18 +614,10 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
->>>  /*
->>>  * TX descriptor initialization
->>>  */
->>> -static int rt2800pci_write_tx_data(struct queue_entry* entry,
->>> -                                  struct txentry_desc *txdesc)
->>> +static void rt2800pci_add_tx_datadesc(struct queue_entry* entry,
->>> +                                     struct txentry_desc *txdesc)
->>>  {
->>> -       int ret;
->>> -
->>> -       ret = rt2x00pci_write_tx_data(entry, txdesc);
->>> -       if (ret)
->>> -               return ret;
->>> -
->>>        rt2800_write_txwi(entry->skb, txdesc);
->>> -
->>> -       return 0;
->>>  }
->>>
->>>
->>> @@ -1080,7 +1072,8 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
->>>        .reset_tuner            = rt2800_reset_tuner,
->>>        .link_tuner             = rt2800_link_tuner,
->>>        .write_tx_desc          = rt2800pci_write_tx_desc,
->>> -       .write_tx_data          = rt2800pci_write_tx_data,
->>> +       .write_tx_data          = rt2x00pci_write_tx_data,
->>> +       .add_tx_datadesc        = rt2800pci_add_tx_datadesc,
->>>        .write_beacon           = rt2800pci_write_beacon,
->>>        .kick_tx_queue          = rt2800pci_kick_tx_queue,
->>>        .kill_tx_queue          = rt2800pci_kill_tx_queue,
->>
->> Doesn't the name write_tx_datadesc make more sense?
->>
->
-> The names are equivalent to me. But if that name makes more sense to
-> you then I have no problem with changing the name of the callback
-> function.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes please rename it. That way it fits in the
-write_tx_desc
-write_tx_data
-write_tx_datadesc
+In places where the station struct is
+guaranteed to exist (presumably), use
+this helper to get the station ID out
+of it (and warn if there's no station
+struct after all).
 
-Thanks,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-sta.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-Ivo
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 8efb83d..7229e2c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -84,4 +84,12 @@ int iwl_sta_rx_agg_start(struct iwl_priv *priv,
+ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, const u8 *addr, int tid);
+ void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id);
+ void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt);
++
++static inline int iwl_sta_id(struct ieee80211_sta *sta)
++{
++	if (WARN_ON(!sta))
++		return IWL_INVALID_STATION;
++
++	return ((struct iwl_station_priv_common *)sta->drv_priv)->sta_id;
++}
+ #endif /* __iwl_sta_h__ */
+-- 
+1.6.3.3
+
