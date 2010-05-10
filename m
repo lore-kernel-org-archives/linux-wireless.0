@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53917 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757120Ab0ENSUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 14:20:30 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] Revert "compat-wireless: fix 07-change-default-rate-alg.patch"
-Date: Fri, 14 May 2010 20:20:15 +0200
-Message-Id: <1273861216-12195-1-git-send-email-hauke@hauke-m.de>
+Received: from mga02.intel.com ([134.134.136.20]:48051 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756179Ab0EJW2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:25 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/47] iwlwifi: checking for all the possible failure cases
+Date: Mon, 10 May 2010 15:27:42 -0700
+Message-Id: <1273530498-11876-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit fc4ed11ef1265b43e14bb3aa5bb4c6bd788ba65a.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-In the linux-next tree there is this line
-kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
-it was introduced 2 days ago. In wireless-text this does not exist for now.
+Multiple error condition require fw/rf reset, driver should check all
+the possible errors as long as the error checking functions for the
+devices are available.
 
-This patch was added because it was not clear that compat-wireless is build on
-linux-next.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- patches/07-change-default-rate-alg.patch |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-rx.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/patches/07-change-default-rate-alg.patch b/patches/07-change-default-rate-alg.patch
-index f73a4c5..f0ccbce 100644
---- a/patches/07-change-default-rate-alg.patch
-+++ b/patches/07-change-default-rate-alg.patch
-@@ -10,9 +10,9 @@ and define CONFIG_COMPAT_MAC80211_RC_DEFAULT on config.mk.
- Through the compat autoconf we then get it also defined there
- at compilation time.
- 
----- a/net/mac80211/rate.c	2010-05-12 16:27:02.245747971 +0900
--+++ b/net/mac80211/rate.c	2010-05-12 17:00:45.855748158 +0900
--@@ -23,7 +23,7 @@
-+--- a/net/mac80211/rate.c
-++++ b/net/mac80211/rate.c
-+@@ -23,7 +23,7 @@ struct rate_control_alg {
-  static LIST_HEAD(rate_ctrl_algs);
-  static DEFINE_MUTEX(rate_ctrl_mutex);
-  
-@@ -21,7 +21,7 @@ at compilation time.
-  module_param(ieee80211_default_rc_algo, charp, 0644);
-  MODULE_PARM_DESC(ieee80211_default_rc_algo,
-  		 "Default rate control algorithm for mac80211 to use");
--@@ -118,8 +118,8 @@
-+@@ -119,8 +119,8 @@ ieee80211_rate_control_ops_get(const cha
-  		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
-  
-  	/* try built-in one if specific alg requested but not found */
-@@ -29,6 +29,6 @@ at compilation time.
- -		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
- +	if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
- +		ops = ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT);
-+ 	kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
-  
-  	return ops;
-- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 1dff14a..d661fce 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -412,9 +412,11 @@ static void iwl_recover_from_statistics(struct iwl_priv *priv,
+ 				 */
+ 				IWL_ERR(priv, "low ack count detected, "
+ 					"restart firmware\n");
+-				iwl_force_reset(priv, IWL_FW_RESET);
++				if (!iwl_force_reset(priv, IWL_FW_RESET))
++					return;
+ 			}
+-		} else if (priv->cfg->ops->lib->check_plcp_health) {
++		}
++		if (priv->cfg->ops->lib->check_plcp_health) {
+ 			if (!priv->cfg->ops->lib->check_plcp_health(
+ 			    priv, pkt)) {
+ 				/*
 -- 
-1.7.0.4
+1.6.3.3
 
