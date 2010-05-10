@@ -1,93 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48983 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752Ab0EKTpK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 15:45:10 -0400
-Date: Tue, 11 May 2010 15:43:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-Subject: Re: [PATCH V3] mac80211: fix paged defragmentation
-Message-ID: <20100511194329.GF2400@tuxdriver.com>
-References: <1273602131-9188-1-git-send-email-abhijeet.kolekar@intel.com>
- <20100511181439.GB2400@tuxdriver.com>
- <1273601810.5955.44.camel@abhi-desktop>
- <20100511182423.GC2400@tuxdriver.com>
- <1273603952.5955.45.camel@abhi-desktop>
- <1273604696.20312.29.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1273604696.20312.29.camel@jlt3.sipsolutions.net>
+Received: from mga02.intel.com ([134.134.136.20]:39917 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756244Ab0EJW2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:25 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/47] iwlwifi: dump firmware build info in error case
+Date: Mon, 10 May 2010 15:27:43 -0700
+Message-Id: <1273530498-11876-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 11, 2010 at 09:04:56PM +0200, Johannes Berg wrote:
-> On Tue, 2010-05-11 at 11:52 -0700, Abhijeet Kolekar wrote:
-> > Hello John,
-> > On Tue, 2010-05-11 at 11:24 -0700, John W. Linville wrote:
-> > > On Tue, May 11, 2010 at 11:16:50AM -0700, Abhijeet Kolekar wrote:
-> > > > Hello John,
-> > > > On Tue, 2010-05-11 at 11:14 -0700, John W. Linville wrote:
-> > > > > On Tue, May 11, 2010 at 11:22:11AM -0700, Abhijeet Kolekar wrote:
-> > > > > > Paged RX skb patch broke the defragmentation. We need to read hdr again
-> > > > > > after linearization.
-> > > > > > 
-> > > > > > It fixes following bug
-> > > > > > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2194
-> > > > > > 
-> > > > > > Signed-off-by: Zhu, Yi <yi.zhu@intel.com>
-> > > > > > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> > > > > > ---
-> > > > > > v2: Changed hdr reading.
-> > > > > > v3: Added more comments.
-> > > > > >  net/mac80211/rx.c |    6 ++++++
-> > > > > >  1 files changed, 6 insertions(+), 0 deletions(-)
-> > > > > > 
-> > > > > > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> > > > > > index 9a08f2c..6e2a7bc 100644
-> > > > > > --- a/net/mac80211/rx.c
-> > > > > > +++ b/net/mac80211/rx.c
-> > > > > > @@ -1253,6 +1253,12 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
-> > > > > >  	if (skb_linearize(rx->skb))
-> > > > > >  		return RX_DROP_UNUSABLE;
-> > > > > >  
-> > > > > > +	/*
-> > > > > > +	 *  skb_linearize() might change the skb->data and
-> > > > > > +	 *  previously cached variables (in this case, hdr) need to
-> > > > > > +	 *  be refreshed with the new data.
-> > > > > > +	 */
-> > > > > > +	hdr = (struct ieee80211_hdr *)rx->skb->data;
-> > > > > >  	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
-> > > > > >  
-> > > > > >  	if (frag == 0) {
-> > > > > 
-> > > > > And what about making sure the compiler doesn't optimize this away?
-> > > > > 
-> > > >  To avoid the double assignment, there is one more approach is to
-> > > > directly read fc and seq_ctrl  using skb_data. I will send that in the
-> > > > next version.
-> > > 
-> > > I don't think the double assignment is so bad, I just think that a
-> > > compiler might decide to ignore the second assignment.  Am I wrong?
-> > > 
-> > I don't understand why compiler will ignore the second assignment other
-> > than the above reason. What will be the solution in this case?
-> 
-> ACCESS_ONCE()? I have no idea why/if the compiler would actually do this
-> though.
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-I don't know about "if", but "why" might be that as far as the compiler
-can see you have two identical assignments without an obvious change to
-the data source in between.  But maybe passing rx->skb to skb_linearize
-is enough information to make the compiler aware that rx->skb->data
-might have changed?  Any better language lawyers than me around?
+Dump the firmware version and build number in case of firmware SW
+error. This would help firmware engineer analyze the error log.
 
-I think ACCESS_ONCE would be enough, but maybe it isn't necessary...?
+Requested-by: Jay Sternberg <jay.e.sternberg@intel.com>
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 0c3b984..d609414 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1068,6 +1068,9 @@ void iwl_irq_handle_error(struct iwl_priv *priv)
+ 	/* Cancel currently queued command. */
+ 	clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
+ 
++	IWL_ERR(priv, "Loaded firmware version: %s\n",
++		priv->hw->wiphy->fw_version);
++
+ 	priv->cfg->ops->lib->dump_nic_error_log(priv);
+ 	if (priv->cfg->ops->lib->dump_csr)
+ 		priv->cfg->ops->lib->dump_csr(priv);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
