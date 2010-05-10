@@ -1,42 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy1-pub.bluehost.com ([69.89.21.11]:60999 "HELO
-	outbound-mail-01.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752967Ab0EWGat (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 May 2010 02:30:49 -0400
-Message-ID: <4BF8CB98.8030903@dlasys.net>
-Date: Sun, 23 May 2010 02:30:48 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: carl9170 1.0.9.1
-References: <4BDC001F.9050202@dlasys.net> <201005021452.01101.chunkeey@googlemail.com> <4BF82CEE.8020502@dlasys.net> <201005230334.29866.chunkeey@googlemail.com>
-In-Reply-To: <201005230334.29866.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:39917 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756892Ab0EJW2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:32 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 45/47] iwlwifi: rename iwl_add_local_station
+Date: Mon, 10 May 2010 15:28:16 -0700
+Message-Id: <1273530498-11876-46-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-     When I was attempting to push my ll_temac driver, I was told to use 
-dev_err(), dev_warn(), and dev_info() rather than printk(KERN_XXXX. I 
-beleive the ar9170 driver already in the kernel tree is doing that. I 
-beleive these I tend to create DBG(), ERR() and WARN() macros, because 
-during debugging I have been known to reroute the error handling through 
-a uart or some other debug port - kind of like you are printf'ing 
-through USB in the firmware. Putting it in a macro makes global changes 
-easier. Though I think heavy use of macros is now frowned on.
+From: Johannes Berg <johannes.berg@intel.com>
 
-     Just my .02
+This function is now only used for the special
+IBSS BSSID station, so rename it to indicate
+this. The new name is iwl_add_bssid_station.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    9 +++------
+ drivers/net/wireless/iwlwifi/iwl-sta.h     |    2 +-
+ 4 files changed, 6 insertions(+), 9 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 306e23a..0eb0faa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2465,7 +2465,7 @@ static int iwl3945_manage_ibss_station(struct iwl_priv *priv,
+ 	int ret;
+ 
+ 	if (add) {
+-		ret = iwl_add_local_station(priv, vif->bss_conf.bssid, false,
++		ret = iwl_add_bssid_station(priv, vif->bss_conf.bssid, false,
+ 					    &vif_priv->ibss_bssid_sta_id);
+ 		if (ret)
+ 			return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 81de88e..637d7b6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1523,7 +1523,7 @@ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
+ 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
+ 
+ 	if (add)
+-		return iwl_add_local_station(priv, vif->bss_conf.bssid, true,
++		return iwl_add_bssid_station(priv, vif->bss_conf.bssid, true,
+ 					     &vif_priv->ibss_bssid_sta_id);
+ 	return iwl_remove_station(priv, vif_priv->ibss_bssid_sta_id,
+ 				  vif->bss_conf.bssid);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index ba36df5..c15098e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -417,14 +417,11 @@ static struct iwl_link_quality_cmd *iwl_sta_alloc_lq(struct iwl_priv *priv,
+ }
+ 
+ /*
+- * iwl_add_local_station - Add stations not requested by mac80211
+- *
+- * This will be either the broadcast station or the bssid station needed by
+- * ad-hoc.
++ * iwl_add_bssid_station - Add the special IBSS BSSID station
+  *
+  * Function sleeps.
+  */
+-int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
++int iwl_add_bssid_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
+ 			  u8 *sta_id_r)
+ {
+ 	int ret;
+@@ -468,7 +465,7 @@ int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(iwl_add_local_station);
++EXPORT_SYMBOL(iwl_add_bssid_station);
+ 
+ /**
+  * iwl_sta_ucode_deactivate - deactivate ucode status for a station
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 6872bcf..6427148 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -63,7 +63,7 @@ void iwl_dealloc_bcast_station(struct iwl_priv *priv);
+ int iwl_get_free_ucode_key_index(struct iwl_priv *priv);
+ int iwl_send_add_sta(struct iwl_priv *priv,
+ 		     struct iwl_addsta_cmd *sta, u8 flags);
+-int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
++int iwl_add_bssid_station(struct iwl_priv *priv, const u8 *addr, bool init_rs,
+ 			  u8 *sta_id_r);
+ int iwl_add_station_common(struct iwl_priv *priv, const u8 *addr,
+ 				  bool is_ap,
 -- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies too numerous to list.
-
-"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
-Albert Einstein
+1.6.3.3
 
