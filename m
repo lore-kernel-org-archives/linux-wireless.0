@@ -1,53 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:29262 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756228Ab0ERBfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 21:35:40 -0400
-Subject: Re: [PATCH 26/37] drivers/net/wireless/ipw2x00: Use kmemdup
-From: Zhu Yi <yi.zhu@intel.com>
-To: Julia Lawall <julia@diku.dk>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.1005152320450.21345@ask.diku.dk>
-References: <Pine.LNX.4.64.1005152320450.21345@ask.diku.dk>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 May 2010 09:26:52 +0800
-Message-ID: <1274146012.27831.2484.camel@debian>
-Mime-Version: 1.0
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:64067 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755098Ab0EJDCB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 May 2010 23:02:01 -0400
+Date: Sun, 09 May 2010 22:01:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ssb: Handle alternate SSPROM location
+Message-ID: <4be77726.2Sqkr0ilm/WZUNRg%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-05-16 at 05:21 +0800, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Use kmemdup when some other buffer is immediately copied into the
-> allocated region.
-> 
-> A simplified version of the semantic patch that makes this change is
-> as
-> follows: (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @@
-> expression from,to,size,flag;
-> statement S;
-> @@
-> 
-> -  to = \(kmalloc\|kzalloc\)(size,flag);
-> +  to = kmemdup(from,size,flag);
->    if (to==NULL || ...) S
-> -  memcpy(to, from, size);
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk> 
+In kernel Bugzilla #15825 (2 users), in a wireless mailing list thread
+(http://lists.infradead.org/pipermail/b43-dev/2010-May/000124.html), and on a
+netbook owned by John Linville
+(http://marc.info/?l=linux-wireless&m=127230751408818&w=4), there are reports
+of ssb failing to detect an SPROM at the normal location. After studying the
+MMIO trace dump for the Broadcom wl driver, it was determined that the affected
+boxes had a relocated SPROM.
 
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+This patch fixes all systems that have reported this problem.
 
-Thanks,
--yi
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@kernel.org>
+---
 
+John,
+
+This patch and the one by Gabor entitled "[PATCH] ssb: Implement
+fast powerup delay calculation" are needed to fix these systems. As there is the
+possibility that this patch will break some 14e4:4315 devices, it should stew in
+testing for a while. I am confident enough in it to add the Cc for stable.
+
+Larry
+---
+ 
+Index: wireless-testing/drivers/ssb/pci.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pci.c
++++ wireless-testing/drivers/ssb/pci.c
+@@ -631,8 +631,17 @@ static int ssb_pci_sprom_get(struct ssb_
+ 		return -ENODEV;
+ 	}
+ 
+-	bus->sprom_offset = (bus->chipco.dev->id.revision < 31) ?
+-		SSB_SPROM_BASE1 : SSB_SPROM_BASE31;
++	/* get SPROM offset: SSB_SPROM_BASE1 except for chipcommon rev >= 31
++	 * or chip ID is 0x4312 and chipcommon status & 3 == 2
++	 */
++	if (bus->chipco.dev->id.revision >= 31)
++		bus->sprom_offset = SSB_SPROM_BASE31;
++	else if (bus->chip_id == 0x4312 && (bus->chipco.status & 0x03) == 2)
++		bus->sprom_offset = SSB_SPROM_BASE31;
++	else
++		bus->sprom_offset = SSB_SPROM_BASE1;
++
++	ssb_dprintk(KERN_INFO PFX "SPROM offset is 0x%x\n", bus->sprom_offset);
+ 
+ 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+ 	if (!buf)
+Index: wireless-testing/drivers/ssb/driver_chipcommon.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/driver_chipcommon.c
++++ wireless-testing/drivers/ssb/driver_chipcommon.c
+@@ -252,15 +252,17 @@ void ssb_chipcommon_init(struct ssb_chip
+ {
+ 	u16 delay;
+ 
++	cc->status = 0;
+ 	if (!cc->dev)
+ 		return; /* We don't have a ChipCommon */
+ 	if (cc->dev->id.revision >= 11)
+ 		cc->status = chipco_read32(cc, SSB_CHIPCO_CHIPSTAT);
++	ssb_dprintk(KERN_INFO PFX "chipcommon status is 0x%x\n", cc->status);
+ 	ssb_pmu_init(cc);
+ 	chipco_powercontrol_init(cc);
+ 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_FAST);
+ 	delay = calc_fast_powerup_delay(cc);
+-	ssb_printk(KERN_INFO PFX "fast_pwrup_delay is %d\n", delay);
++	ssb_dprintk(KERN_INFO PFX "fast_pwrup_delay is %d\n", delay);
+ 	cc->fast_pwrup_delay = delay;
+ 	ssb_write16(cc->dev, SSB_MMIO_POWERUP_DELAY, delay);
+ }
