@@ -1,77 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44050 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756551Ab0EMLsi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 07:48:38 -0400
-Message-ID: <4BEBE70E.60500@hauke-m.de>
-Date: Thu, 13 May 2010 13:48:30 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>
-CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] compat-wireless: fix 07-change-default-rate-alg.patch
-References: <20100513011711.13007.45318.stgit@tt-desk>
-In-Reply-To: <20100513011711.13007.45318.stgit@tt-desk>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:39917 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756730Ab0EJW23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:29 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 34/47] iwlwifi: split allocation/sending local station LQ
+Date: Mon, 10 May 2010 15:28:05 -0700
+Message-Id: <1273530498-11876-35-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 13.05.2010 03:17, schrieb Bruno Randolf:
-> i need this change to make it apply again
-> 
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  patches/07-change-default-rate-alg.patch |   10 +++++-----
->  1 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/patches/07-change-default-rate-alg.patch b/patches/07-change-default-rate-alg.patch
-> index f0ccbce..f73a4c5 100644
-> --- a/patches/07-change-default-rate-alg.patch
-> +++ b/patches/07-change-default-rate-alg.patch
-> @@ -10,9 +10,9 @@ and define CONFIG_COMPAT_MAC80211_RC_DEFAULT on config.mk.
->  Through the compat autoconf we then get it also defined there
->  at compilation time.
->  
-> ---- a/net/mac80211/rate.c
-> -+++ b/net/mac80211/rate.c
-> -@@ -23,7 +23,7 @@ struct rate_control_alg {
-> +--- a/net/mac80211/rate.c	2010-05-12 16:27:02.245747971 +0900
-> ++++ b/net/mac80211/rate.c	2010-05-12 17:00:45.855748158 +0900
-> +@@ -23,7 +23,7 @@
->   static LIST_HEAD(rate_ctrl_algs);
->   static DEFINE_MUTEX(rate_ctrl_mutex);
->   
-> @@ -21,7 +21,7 @@ at compilation time.
->   module_param(ieee80211_default_rc_algo, charp, 0644);
->   MODULE_PARM_DESC(ieee80211_default_rc_algo,
->   		 "Default rate control algorithm for mac80211 to use");
-> -@@ -119,8 +119,8 @@ ieee80211_rate_control_ops_get(const cha
-> +@@ -118,8 +118,8 @@
->   		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
->   
->   	/* try built-in one if specific alg requested but not found */
-> @@ -29,6 +29,6 @@ at compilation time.
->  -		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
->  +	if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
->  +		ops = ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT);
-> - 	kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
->   
->   	return ops;
-> + }
-> 
-Hi Bruno,
+From: Johannes Berg <johannes.berg@intel.com>
 
-For me it does not apply any more against linux-next with your patch,
-without your patch it still applies.
+Rename iwl_sta_init_lq to iwl_sta_alloc_lq and
+move sending it out into the caller.
 
-In the linux-next tree there is this line
-kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
-it was introduced 2 days ago. In wireless-text this does not exist for now.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-sta.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-Could it be that you tried to generate compat-wireless out of
-wireless-testing and not linux-next?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index dd1c639..5bf82b9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -407,13 +407,12 @@ int iwl_add_station_common(struct iwl_priv *priv, const u8 *addr,
+ }
+ EXPORT_SYMBOL(iwl_add_station_common);
+ 
+-static struct iwl_link_quality_cmd *iwl_sta_init_lq(struct iwl_priv *priv,
+-						    u8 sta_id)
++static struct iwl_link_quality_cmd *iwl_sta_alloc_lq(struct iwl_priv *priv,
++						     u8 sta_id)
+ {
+ 	int i, r;
+ 	struct iwl_link_quality_cmd *link_cmd;
+ 	u32 rate_flags;
+-	int ret = 0;
+ 
+ 	link_cmd = kzalloc(sizeof(struct iwl_link_quality_cmd), GFP_KERNEL);
+ 	if (!link_cmd) {
+@@ -459,10 +458,6 @@ static struct iwl_link_quality_cmd *iwl_sta_init_lq(struct iwl_priv *priv,
+ 
+ 	link_cmd->sta_id = sta_id;
+ 
+-	ret = iwl_send_lq_cmd(priv, link_cmd, CMD_SYNC, true);
+-	if (ret)
+-		IWL_ERR(priv, "Link quality command failed (%d)\n", ret);
+-
+ 	return link_cmd;
+ }
+ 
+@@ -493,12 +488,17 @@ int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs)
+ 
+ 	if (init_rs) {
+ 		/* Set up default rate scaling table in device's station table */
+-		link_cmd = iwl_sta_init_lq(priv, sta_id);
++		link_cmd = iwl_sta_alloc_lq(priv, sta_id);
+ 		if (!link_cmd) {
+ 			IWL_ERR(priv, "Unable to initialize rate scaling for station %pM.\n",
+ 				addr);
+ 			return -ENOMEM;
+ 		}
++
++		ret = iwl_send_lq_cmd(priv, link_cmd, CMD_SYNC, true);
++		if (ret)
++			IWL_ERR(priv, "Link quality command failed (%d)\n", ret);
++
+ 		spin_lock_irqsave(&priv->sta_lock, flags);
+ 		priv->stations[sta_id].lq = link_cmd;
+ 		spin_unlock_irqrestore(&priv->sta_lock, flags);
+-- 
+1.6.3.3
 
-Please run "./scripts/admin-refresh.sh refresh" after changing a patch
-to format it automatically in a common way.
-
-Hauke
