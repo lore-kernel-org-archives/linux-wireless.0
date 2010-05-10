@@ -1,126 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57507 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755466Ab0EKKmI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 06:42:08 -0400
-Subject: [PATCH 2.6.34] mac80211: don't process work item with wrong frame
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 May 2010 12:42:04 +0200
-Message-ID: <1273574524.3669.51.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:48051 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756506Ab0EJW20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:26 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 20/47] iwlwifi: move eeprom version printout to eeprom init
+Date: Mon, 10 May 2010 15:27:51 -0700
+Message-Id: <1273530498-11876-21-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we process a frame, we currently just match it
-to the work struct by the MAC addresses, and not by
-the work type. This means that we can end up doing
-the work for an association request item when (for
-whatever reason) we receive another frame type, for
-example a probe response. Processing the wrong type
-of frame will lead to completely invalid data being
-processed, and will lead to various problems like
-thinking the association was successful even if the
-AP never sent an assocation response.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fix this by making each processing function check
-that it is invoked for the right work struct type
-only and continue processing otherwise (and drop
-frames that we didn't expect).
+It doesn't belong into firmware loading,
+it should instead be printed after loading
+the EEPROM.
 
-This bug was uncovered during the debugging for
-https://bugzilla.kernel.org/show_bug.cgi?id=15862
-but doesn't seem to be the cause for any of the
-various problems reported there.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
-Sorry. This is a dumb bug :(
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    6 ------
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    7 +++++++
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
- net/mac80211/work.c |   27 +++++++++++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
-
---- wireless-testing.orig/net/mac80211/work.c	2010-05-11 09:56:43.000000000 +0200
-+++ wireless-testing/net/mac80211/work.c	2010-05-11 10:04:13.000000000 +0200
-@@ -33,6 +33,7 @@
- #define IEEE80211_MAX_PROBE_TRIES 5
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 7bcc8a3..70094bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1551,7 +1551,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	u32 api_ver, build;
+ 	u32 inst_size, data_size, init_size, init_data_size, boot_size;
+ 	int err, hdr_size;
+-	u16 eeprom_ver;
+ 	char buildstr[25];
  
- enum work_action {
-+	WORK_ACT_MISMATCH,
- 	WORK_ACT_NONE,
- 	WORK_ACT_TIMEOUT,
- 	WORK_ACT_DONE,
-@@ -585,7 +586,7 @@ ieee80211_rx_mgmt_auth(struct ieee80211_
- 	u16 auth_alg, auth_transaction, status_code;
+ 	if (!ucode_raw) {
+@@ -1654,11 +1653,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		 IWL_UCODE_SERIAL(priv->ucode_ver),
+ 		 buildstr);
  
- 	if (wk->type != IEEE80211_WORK_AUTH)
--		return WORK_ACT_NONE;
-+		return WORK_ACT_MISMATCH;
- 
- 	if (len < 24 + 6)
- 		return WORK_ACT_NONE;
-@@ -636,6 +637,9 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee
- 	struct ieee802_11_elems elems;
- 	u8 *pos;
- 
-+	if (wk->type != IEEE80211_WORK_ASSOC)
-+		return WORK_ACT_MISMATCH;
-+
- 	/*
- 	 * AssocResp and ReassocResp have identical structure, so process both
- 	 * of them in this function.
-@@ -691,6 +695,12 @@ ieee80211_rx_mgmt_probe_resp(struct ieee
- 
- 	ASSERT_WORK_MTX(local);
- 
-+	if (wk->type != IEEE80211_WORK_DIRECT_PROBE)
-+		return WORK_ACT_MISMATCH;
-+
-+	if (len < 24 + 12)
-+		return WORK_ACT_NONE;
-+
- 	baselen = (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
- 	if (baselen > len)
- 		return WORK_ACT_NONE;
-@@ -705,7 +715,7 @@ static void ieee80211_work_rx_queued_mgm
- 	struct ieee80211_rx_status *rx_status;
- 	struct ieee80211_mgmt *mgmt;
- 	struct ieee80211_work *wk;
--	enum work_action rma = WORK_ACT_NONE;
-+	enum work_action rma;
- 	u16 fc;
- 
- 	rx_status = (struct ieee80211_rx_status *) skb->cb;
-@@ -752,7 +762,17 @@ static void ieee80211_work_rx_queued_mgm
- 			break;
- 		default:
- 			WARN_ON(1);
-+			rma = WORK_ACT_NONE;
+-	eeprom_ver = iwl_eeprom_query16(priv, EEPROM_VERSION);
+-	IWL_DEBUG_INFO(priv, "NVM Type: %s, version: 0x%x\n",
+-		       (priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
+-		       ? "OTP" : "EEPROM", eeprom_ver);
+-
+ 	IWL_DEBUG_INFO(priv, "f/w package hdr ucode version raw = 0x%x\n",
+ 		       priv->ucode_ver);
+ 	IWL_DEBUG_INFO(priv, "f/w package hdr runtime inst size = %u\n",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index fd37152..a8dd2fd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -589,9 +589,16 @@ int iwl_eeprom_init(struct iwl_priv *priv)
+ 			e[addr / 2] = cpu_to_le16(r >> 16);
  		}
-+
-+		/*
-+		 * We've either received an unexpected frame, or we have
-+		 * multiple work items and need to match the frame to the
-+		 * right one.
-+		 */
-+		if (rma == WORK_ACT_MISMATCH)
-+			continue;
-+
- 		/*
- 		 * We've processed this frame for that work, so it can't
- 		 * belong to another work struct.
-@@ -762,6 +782,9 @@ static void ieee80211_work_rx_queued_mgm
  	}
- 
- 	switch (rma) {
-+	case WORK_ACT_MISMATCH:
-+		/* ignore this unmatched frame */
-+		break;
- 	case WORK_ACT_NONE:
- 		break;
- 	case WORK_ACT_DONE:
-
++
++	IWL_DEBUG_INFO(priv, "NVM Type: %s, version: 0x%x\n",
++		       (priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
++		       ? "OTP" : "EEPROM",
++		       iwl_eeprom_query16(priv, EEPROM_VERSION));
++
+ 	ret = 0;
+ done:
+ 	priv->cfg->ops->lib->eeprom_ops.release_semaphore(priv);
++
+ err:
+ 	if (ret)
+ 		iwl_eeprom_free(priv);
+-- 
+1.6.3.3
 
