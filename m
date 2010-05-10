@@ -1,103 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51545 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688Ab0EEHr0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 May 2010 03:47:26 -0400
-Subject: Re: [PATCH] mac80211: fix BSS info reconfiguration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+Received: from mga09.intel.com ([134.134.136.24]:49208 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755203Ab0EJW2a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:30 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1273045442.3728.1.camel@jlt3.sipsolutions.net>
-References: <1273045442.3728.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 05 May 2010 09:47:20 +0200
-Message-ID: <1273045640.3728.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Subject: [PATCH 37/47] iwlwifi: "tx power per chain" are part of ucode_tx_stats
+Date: Mon, 10 May 2010 15:28:08 -0700
+Message-Id: <1273530498-11876-38-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-05 at 09:44 +0200, Johannes Berg wrote:
-> When reconfiguring an interface due to a previous
-> hardware restart, mac80211 will currently include
-> the new IBSS flag on non-IBSS interfaces which may
-> confuse drivers.
-> 
-> Instead of doing the ~0 trick, simply spell out
-> which things are going to be reconfigured.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Oops, that might get confusing.
+Move "tx power per chain" into ucode_tx_stats, it is debugging
+information provided by uCode as part of statistics notification.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+The "tx power per chain" parameters are optional parameters which only
+supported by 6000 series device today; those are reserved fields for all
+the other devices.
 
-though I'm still me either way I think.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |   16 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-commands.h    |    5 +++
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c     |   42 ------------------------
+ 3 files changed, 21 insertions(+), 42 deletions(-)
 
-> ---
->  include/net/mac80211.h |    2 ++
->  net/mac80211/util.c    |   25 ++++++++++++++++++++-----
->  2 files changed, 22 insertions(+), 5 deletions(-)
-> 
-> --- wireless-testing.orig/include/net/mac80211.h	2010-05-01 08:47:54.000000000 +0200
-> +++ wireless-testing/include/net/mac80211.h	2010-05-05 09:41:46.000000000 +0200
-> @@ -160,6 +160,8 @@ enum ieee80211_bss_change {
->  	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
->  	BSS_CHANGED_CQM			= 1<<10,
->  	BSS_CHANGED_IBSS		= 1<<11,
-> +
-> +	/* when adding here, make sure to change ieee80211_reconfig */
->  };
->  
->  /**
-> --- wireless-testing.orig/net/mac80211/util.c	2010-04-09 11:46:46.000000000 +0200
-> +++ wireless-testing/net/mac80211/util.c	2010-05-05 09:41:46.000000000 +0200
-> @@ -1160,18 +1160,33 @@ int ieee80211_reconfig(struct ieee80211_
->  
->  	/* Finally also reconfigure all the BSS information */
->  	list_for_each_entry(sdata, &local->interfaces, list) {
-> -		u32 changed = ~0;
-> +		u32 changed;
-> +
->  		if (!ieee80211_sdata_running(sdata))
->  			continue;
-> +
-> +		/* common change flags for all interface types */
-> +		changed = BSS_CHANGED_ERP_CTS_PROT |
-> +			  BSS_CHANGED_ERP_PREAMBLE |
-> +			  BSS_CHANGED_ERP_SLOT |
-> +			  BSS_CHANGED_HT |
-> +			  BSS_CHANGED_BASIC_RATES |
-> +			  BSS_CHANGED_BEACON_INT |
-> +			  BSS_CHANGED_BSSID |
-> +			  BSS_CHANGED_CQM;
-> +
->  		switch (sdata->vif.type) {
->  		case NL80211_IFTYPE_STATION:
-> -			/* disable beacon change bits */
-> -			changed &= ~(BSS_CHANGED_BEACON |
-> -				     BSS_CHANGED_BEACON_ENABLED);
-> -			/* fall through */
-> +			changed |= BSS_CHANGED_ASSOC;
-> +			ieee80211_bss_info_change_notify(sdata, changed);
-> +			break;
->  		case NL80211_IFTYPE_ADHOC:
-> +			changed |= BSS_CHANGED_IBSS;
-> +			/* fall through */
->  		case NL80211_IFTYPE_AP:
->  		case NL80211_IFTYPE_MESH_POINT:
-> +			changed |= BSS_CHANGED_BEACON |
-> +				   BSS_CHANGED_BEACON_ENABLED;
->  			ieee80211_bss_info_change_notify(sdata, changed);
->  			break;
->  		case NL80211_IFTYPE_WDS:
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+index f249b70..48c023b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+@@ -709,6 +709,22 @@ ssize_t iwl_ucode_tx_stats_read(struct file *file,
+ 			 delta_tx->agg.rx_ba_rsp_cnt,
+ 			 max_tx->agg.rx_ba_rsp_cnt);
+ 
++	if (tx->tx_power.ant_a || tx->tx_power.ant_b || tx->tx_power.ant_c) {
++		pos += scnprintf(buf + pos, bufsz - pos,
++			"tx power: (1/2 dB step)\n");
++		if ((priv->cfg->valid_tx_ant & ANT_A) && tx->tx_power.ant_a)
++			pos += scnprintf(buf + pos, bufsz - pos,
++					"\tantenna A: 0x%X\n",
++					tx->tx_power.ant_a);
++		if ((priv->cfg->valid_tx_ant & ANT_B) && tx->tx_power.ant_b)
++			pos += scnprintf(buf + pos, bufsz - pos,
++					"\tantenna B: 0x%X\n",
++					tx->tx_power.ant_b);
++		if ((priv->cfg->valid_tx_ant & ANT_C) && tx->tx_power.ant_c)
++			pos += scnprintf(buf + pos, bufsz - pos,
++					"\tantenna C: 0x%X\n",
++					tx->tx_power.ant_c);
++	}
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ 	kfree(buf);
+ 	return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 449d41f..9aab020 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -3127,6 +3127,11 @@ struct statistics_tx {
+ 	__le32 cts_timeout_collision;
+ 	__le32 ack_or_ba_timeout_collision;
+ 	struct statistics_tx_non_phy_agg agg;
++	/*
++	 * "tx_power" are optional parameters provided by uCode,
++	 * 6000 series is the only device provide the information,
++	 * Those are reserved fields for all the other devices
++	 */
+ 	struct statistics_tx_power tx_power;
+ 	__le32 reserved1;
+ } __attribute__ ((packed));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 06905bb..4d6de2d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1214,46 +1214,6 @@ static ssize_t iwl_dbgfs_chain_noise_read(struct file *file,
+ 	return ret;
+ }
+ 
+-static ssize_t iwl_dbgfs_chain_tx_power_read(struct file *file,
+-					char __user *user_buf,
+-					size_t count, loff_t *ppos) {
+-
+-	struct iwl_priv *priv = file->private_data;
+-	char buf[128];
+-	int pos = 0;
+-	const size_t bufsz = sizeof(buf);
+-	struct statistics_tx *tx;
+-
+-	if (!iwl_is_alive(priv))
+-		return -EAGAIN;
+-	else {
+-		tx = &priv->statistics.tx;
+-		if (tx->tx_power.ant_a ||
+-		    tx->tx_power.ant_b ||
+-		    tx->tx_power.ant_c) {
+-			pos += scnprintf(buf + pos, bufsz - pos,
+-				"tx power: (1/2 dB step)\n");
+-			if ((priv->cfg->valid_tx_ant & ANT_A) &&
+-			    tx->tx_power.ant_a)
+-				pos += scnprintf(buf + pos, bufsz - pos,
+-						"\tantenna A: 0x%X\n",
+-						tx->tx_power.ant_a);
+-			if ((priv->cfg->valid_tx_ant & ANT_B) &&
+-			    tx->tx_power.ant_b)
+-				pos += scnprintf(buf + pos, bufsz - pos,
+-						"\tantenna B: 0x%X\n",
+-						tx->tx_power.ant_b);
+-			if ((priv->cfg->valid_tx_ant & ANT_C) &&
+-			    tx->tx_power.ant_c)
+-				pos += scnprintf(buf + pos, bufsz - pos,
+-						"\tantenna C: 0x%X\n",
+-						tx->tx_power.ant_c);
+-		} else
+-			pos += scnprintf(buf + pos, bufsz - pos, "N/A\n");
+-	}
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+-}
+-
+ static ssize_t iwl_dbgfs_power_save_status_read(struct file *file,
+ 						    char __user *user_buf,
+ 						    size_t count, loff_t *ppos)
+@@ -1565,7 +1525,6 @@ DEBUGFS_READ_FILE_OPS(ucode_tx_stats);
+ DEBUGFS_READ_FILE_OPS(ucode_general_stats);
+ DEBUGFS_READ_FILE_OPS(sensitivity);
+ DEBUGFS_READ_FILE_OPS(chain_noise);
+-DEBUGFS_READ_FILE_OPS(chain_tx_power);
+ DEBUGFS_READ_FILE_OPS(power_save_status);
+ DEBUGFS_WRITE_FILE_OPS(clear_ucode_statistics);
+ DEBUGFS_WRITE_FILE_OPS(clear_traffic_statistics);
+@@ -1624,7 +1583,6 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(traffic_log, dir_debug, S_IWUSR | S_IRUSR);
+ 	DEBUGFS_ADD_FILE(rx_queue, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(tx_queue, dir_debug, S_IRUSR);
+-	DEBUGFS_ADD_FILE(chain_tx_power, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(power_save_status, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(clear_ucode_statistics, dir_debug, S_IWUSR);
+ 	DEBUGFS_ADD_FILE(clear_traffic_statistics, dir_debug, S_IWUSR);
+-- 
+1.6.3.3
 
