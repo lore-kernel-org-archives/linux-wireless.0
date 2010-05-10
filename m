@@ -1,31 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38805 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754608Ab0ELI37 (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:62151 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754996Ab0EJQZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 04:29:59 -0400
-Subject: Re: [PATCH 1/3] cfg80211: Add nl80211 antenna configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	holgerschurig@gmail.com
-In-Reply-To: <20100512082325.26565.46809.stgit@tt-desk>
-References: <20100512082231.26565.16730.stgit@tt-desk>
-	 <20100512082325.26565.46809.stgit@tt-desk>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 12 May 2010 10:29:54 +0200
-Message-ID: <1273652994.3979.0.camel@jlt3.sipsolutions.net>
+	Mon, 10 May 2010 12:25:03 -0400
+Date: Mon, 10 May 2010 09:24:29 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net
+Subject: [PATCH] wireless: depends on NET
+Message-Id: <20100510092429.a8ddcc8d.randy.dunlap@oracle.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-12 at 17:23 +0900, Bruno Randolf wrote:
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-> +	CMD(get_antenna, GET_ANTENNA);
+When CONFIG_NET is disabled, the attempt to build wext-priv.c
+fails with:
 
-I'm wondering ... does get_antenna really make sense as a separate
-command? Seems like we could just as well report it as part of the wiphy
-information dump?
+net/wireless/wext-priv.c: In function 'ioctl_private_call':
+net/wireless/wext-priv.c:207: error: implicit declaration of function 'call_commit_handler'
 
-johannes
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+Has this been omitted on purpose??
 
+ drivers/net/wireless/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- lnx-2634-rc7.orig/drivers/net/wireless/Kconfig
++++ lnx-2634-rc7/drivers/net/wireless/Kconfig
+@@ -5,6 +5,7 @@
+ menuconfig WLAN
+ 	bool "Wireless LAN"
+ 	depends on !S390
++	depends on NET
+ 	select WIRELESS
+ 	default y
+ 	---help---
