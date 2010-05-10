@@ -1,216 +1,293 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51672 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830Ab0EQSaL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 14:30:11 -0400
-Date: Mon, 17 May 2010 14:26:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2010-05-17
-Message-ID: <20100517182653.GC2436@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:49208 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756777Ab0EJW23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:29 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 13/47] iwlwifi: make bcast LQ command available for later restore actions
+Date: Mon, 10 May 2010 15:27:44 -0700
+Message-Id: <1273530498-11876-14-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-One last big batch intended for 2.6.35 -- these have all been in
-linux-next for several days.  Included are the usual driver updates for
-iwlwifi, ath9k, and rt2x00 along with a smattering of other bits
-(including some trivial fixups).
+When adding the broadcast station the link quality command is
+generated on demand, sent to device, and disappears. It is thus not
+available for later cases when we need to restore stations and need
+to send the link quality command afterwards. Now, when first adding the
+broadcast station, also generate its link quality command to always be
+available for later restoring.
 
-Please let me know if there are problems!
+Also fix an issue when adding local stations where the "in progress" state
+is never cleared.
 
-Thanks,
-
-John
-
+Reported-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c  |   91 ++++++++++++++++++++++---------
+ drivers/net/wireless/iwlwifi/iwl-sta.h  |    7 ++-
+ 4 files changed, 75 insertions(+), 29 deletions(-)
 
-The following changes since commit 278554bd6579206921f5d8a523649a7a57f8850d:
-  David S. Miller (1):
-        Merge branch 'master' of master.kernel.org:/.../davem/net-2.6
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
-
-Abhijeet Kolekar (3):
-      iwl3945: fix scan races
-      iwl3945: add plcp error checking
-      mac80211: fix paged defragmentation
-
-Dan Carpenter (3):
-      wl1271: add missing spin_lock()
-      wl1271: fix notifier interface supported test
-      wl1271: remove some unneeded code
-
-Felix Fietkau (4):
-      ath9k: use debugfs_remove_recursive() instead of keeping pointers to all entries
-      ath9k: add debugfs files for reading/writing the rx and tx chainmask
-      ath9k: add debugfs files for reading/writing registers
-      ath9k_hw: clean up EEPROM endian handling on AR9003
-
-Gertjan van Wingerde (6):
-      rt2x00: Consistently name skb frame descriptor skbdesc.
-      rt2x00: Fix beacon descriptor writing for rt61pci.
-      rt2x00: Re-order tx descriptor writing code in drivers.
-      rt2x00: Simplify TXD handling of beacons.
-      rt2x00: Dump beacons under a different identifier than TX frames.
-      rt2x00: In debugfs frame dumping allow the TX descriptor to be part of the skb.
-
-Johannes Berg (34):
-      iwlagn: wait for asynchronous firmware loading
-      iwlwifi: use vif iwl_bss_info_changed
-      iwl3945: use iwl3945_add_bcast_station
-      iwlwifi: pass address to iwl_remove_station
-      iwlwifi: manage IBSS station properly
-      iwlagn: show and store firmware build number
-      iwl3945: remove ucode access indirection
-      iwlwifi: remove ucode virtual functions
-      iwlwifi: move eeprom version printout to eeprom init
-      iwlagn: prepare for new firmware file format
-      iwlagn: implement loading a new firmware file type
-      iwlwifi: remove rts_threshold
-      iwlagn: move iwl_get_ra_sta_id to 4965
-      iwlagn: use vif->type to check station
-      iwlwifi: apply filter flags directly
-      iwlwifi: push virtual interface through
-      iwlagn: use virtual interface in TX aggregation handling
-      iwlwifi: remove useless priv->vif check
-      iwlwifi: use vif in iwl_ht_conf
-      iwlwifi: note that priv->bssid is used only by 3945
-      iwlwifi: fix iwl_sta_init_lq station ID
-      iwlwifi: split allocation/sending local station LQ
-      iwlwifi: rework broadcast station management
-      iwlwifi: track station IDs
-      iwlwifi: add iwl_sta_id()
-      iwlwifi: use iwl_find_station less
-      iwlagn: use iwl_sta_id() for aggregation
-      iwlwifi: use iwl_sta_id() for TKIP key update
-      iwlwifi: move iwl_find_station() to 4965
-      iwlwifi: rename iwl_add_local_station
-      iwlwifi: remove pointless HT check
-      iwlwifi: clear driver stations when going down
-      mac80211: don't process work item with wrong frame
-      mac80211: add offload channel switch support
-
-John W. Linville (2):
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
-
-Julia Lawall (1):
-      drivers/net/wireless/hostap: Drop memory allocation cast
-
-Luis R. Rodriguez (2):
-      ath5k: drop warning on jumbo frames
-      ath9k_hw: new initialization values for AR9003
-
-Reinette Chatre (3):
-      Merge branch 'wireless-2.6' into wireless-next-2.6
-      iwlwifi: make bcast LQ command available for later restore actions
-      iwlagn: work around rate scaling reset delay
-
-Shanyu Zhao (2):
-      iwlwifi: rename 6000 series Gen2 devices to Gen2a
-      iwlwifi: dump firmware build info in error case
-
-Steve Tanner (1):
-      ar9170usb: add vendor and device ID for Qwest/Actiontec 802AIN Wireless N USB Network Adapter
-
-Sujith.Manoharan@atheros.com (5):
-      ath9k_htc: Lock sta_notify() callback
-      ath9k_htc: Allocate URBs properly
-      ath9k_htc: Reorder HTC initialization
-      ath9k_htc: Fix target ready race condition
-      ath9k_htc: Fix array overflow
-
-Vasanthakumar Thiagarajan (2):
-      ath9k: Fix bug in handling rx frames with invalid descriptor content
-      ath9k: Remove unused rx_edma in ath_rx_addbuffer_edma()
-
-Wey-Yi Guy (11):
-      iwlwifi: remove powersave debugfs if it is not supported
-      iwlwifi: rename "tx_power" to "chain_tx_power"
-      iwlwifi: remove device type checking for tx power in debugfs
-      iwlwifi: use .cfg to enable/disable continuous ucode trace
-      iwlwifi: use cfg to configure calibration operation
-      iwlwifi: give correct return information for tx power debugfs
-      iwlwifi: wimax co-exist code clean up
-      iwlwifi: checking for all the possible failure cases
-      iwlwifi: "tx power per chain" are part of ucode_tx_stats
-      iwlwifi: provide more comments for cfg structure
-      mac80211: check channel switch mode for future frames transmit
-
- drivers/net/wireless/ath/ar9170/usb.c            |    2 +
- drivers/net/wireless/ath/ath5k/base.c            |   12 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |  174 +++----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h   |   10 +-
- drivers/net/wireless/ath/ath9k/ar9003_initvals.h |  268 ++++++------
- drivers/net/wireless/ath/ath9k/debug.c           |  236 ++++++++--
- drivers/net/wireless/ath/ath9k/debug.h           |    8 +-
- drivers/net/wireless/ath/ath9k/hif_usb.c         |   58 ++--
- drivers/net/wireless/ath/ath9k/htc_drv_init.c    |    7 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c    |    4 +
- drivers/net/wireless/ath/ath9k/htc_hst.c         |   51 +-
- drivers/net/wireless/ath/ath9k/htc_hst.h         |   15 +-
- drivers/net/wireless/ath/ath9k/recv.c            |    3 +-
- drivers/net/wireless/hostap/hostap_80211_rx.c    |    3 +-
- drivers/net/wireless/hostap/hostap_ioctl.c       |    3 +-
- drivers/net/wireless/iwlwifi/iwl-1000.c          |    9 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c          |  147 ++++--
- drivers/net/wireless/iwlwifi/iwl-3945.h          |   22 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c          |  100 +++--
- drivers/net/wireless/iwlwifi/iwl-5000.c          |   27 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c          |   51 ++-
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c   |   16 +
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |   31 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c        |   29 +-
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c     |  109 +++--
- drivers/net/wireless/iwlwifi/iwl-agn.c           |  556 +++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn.h           |   14 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h      |    6 +-
- drivers/net/wireless/iwlwifi/iwl-core.c          |  199 +++-----
- drivers/net/wireless/iwlwifi/iwl-core.h          |   60 ++-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c       |   66 +--
- drivers/net/wireless/iwlwifi/iwl-dev.h           |   89 +++-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c        |    7 +
- drivers/net/wireless/iwlwifi/iwl-power.c         |    5 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c            |    9 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c          |   16 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c           |  456 ++++++++----------
- drivers/net/wireless/iwlwifi/iwl-sta.h           |   60 ++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c      |  163 ++++---
- drivers/net/wireless/rt2x00/rt2400pci.c          |   26 +-
- drivers/net/wireless/rt2x00/rt2500pci.c          |   26 +-
- drivers/net/wireless/rt2x00/rt2500usb.c          |   55 ++-
- drivers/net/wireless/rt2x00/rt2800pci.c          |   14 +-
- drivers/net/wireless/rt2x00/rt2800usb.c          |    8 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c        |   21 +-
- drivers/net/wireless/rt2x00/rt2x00dump.h         |    3 +
- drivers/net/wireless/rt2x00/rt2x00pci.c          |    9 -
- drivers/net/wireless/rt2x00/rt2x00queue.c        |   15 +-
- drivers/net/wireless/rt2x00/rt2x00queue.h        |    3 +
- drivers/net/wireless/rt2x00/rt2x00usb.c          |    8 -
- drivers/net/wireless/rt2x00/rt61pci.c            |   35 +-
- drivers/net/wireless/rt2x00/rt73usb.c            |   71 ++--
- drivers/net/wireless/wl12xx/wl1271_main.c        |    5 +-
- include/net/mac80211.h                           |   39 ++
- net/mac80211/driver-ops.h                        |   11 +
- net/mac80211/driver-trace.h                      |   49 ++
- net/mac80211/ieee80211_i.h                       |    3 +-
- net/mac80211/mlme.c                              |   59 +++-
- net/mac80211/rx.c                                |    6 +
- net/mac80211/work.c                              |   27 +-
- 60 files changed, 2152 insertions(+), 1442 deletions(-)
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-05-17.patch.bz2
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index d609414..e8c9bca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2042,7 +2042,9 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 		goto out_err;
+ 
+ 	/* Add the broadcast address so we can send broadcast frames */
+-	priv->cfg->ops->lib->add_bcast_station(priv);
++	err = priv->cfg->ops->lib->add_bcast_station(priv);
++	if (err)
++		goto out_err;
+ 
+ 	goto out;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index f66c1c1..8d53fc9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -201,7 +201,7 @@ struct iwl_lib_ops {
+ 	/* temperature */
+ 	struct iwl_temp_ops temp_ops;
+ 	/* station management */
+-	void (*add_bcast_station)(struct iwl_priv *priv);
++	int (*add_bcast_station)(struct iwl_priv *priv);
+ 	/* recover from tx queue stall */
+ 	void (*recover_from_tx_stall)(unsigned long data);
+ 	/* check for plcp health */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index db93447..5c6b326 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -418,15 +418,19 @@ int iwl_add_station_common(struct iwl_priv *priv, const u8 *addr,
+ }
+ EXPORT_SYMBOL(iwl_add_station_common);
+ 
+-static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, bool is_ap)
++static struct iwl_link_quality_cmd *iwl_sta_init_lq(struct iwl_priv *priv,
++						    const u8 *addr, bool is_ap)
+ {
+ 	int i, r;
+-	struct iwl_link_quality_cmd link_cmd = {
+-		.reserved1 = 0,
+-	};
++	struct iwl_link_quality_cmd *link_cmd;
+ 	u32 rate_flags;
+ 	int ret = 0;
+ 
++	link_cmd = kzalloc(sizeof(struct iwl_link_quality_cmd), GFP_KERNEL);
++	if (!link_cmd) {
++		IWL_ERR(priv, "Unable to allocate memory for LQ cmd.\n");
++		return NULL;
++	}
+ 	/* Set up the rate scaling to start at selected rate, fall back
+ 	 * all the way down to 1M in IEEE order, and then spin on 1M */
+ 	if (is_ap)
+@@ -444,35 +448,36 @@ static void iwl_sta_init_lq(struct iwl_priv *priv, const u8 *addr, bool is_ap)
+ 		rate_flags |= first_antenna(priv->hw_params.valid_tx_ant) <<
+ 				RATE_MCS_ANT_POS;
+ 
+-		link_cmd.rs_table[i].rate_n_flags =
++		link_cmd->rs_table[i].rate_n_flags =
+ 			iwl_hw_set_rate_n_flags(iwl_rates[r].plcp, rate_flags);
+ 		r = iwl_get_prev_ieee_rate(r);
+ 	}
+ 
+-	link_cmd.general_params.single_stream_ant_msk =
++	link_cmd->general_params.single_stream_ant_msk =
+ 				first_antenna(priv->hw_params.valid_tx_ant);
+ 
+-	link_cmd.general_params.dual_stream_ant_msk =
++	link_cmd->general_params.dual_stream_ant_msk =
+ 		priv->hw_params.valid_tx_ant &
+ 		~first_antenna(priv->hw_params.valid_tx_ant);
+-	if (!link_cmd.general_params.dual_stream_ant_msk) {
+-		link_cmd.general_params.dual_stream_ant_msk = ANT_AB;
++	if (!link_cmd->general_params.dual_stream_ant_msk) {
++		link_cmd->general_params.dual_stream_ant_msk = ANT_AB;
+ 	} else if (num_of_ant(priv->hw_params.valid_tx_ant) == 2) {
+-		link_cmd.general_params.dual_stream_ant_msk =
++		link_cmd->general_params.dual_stream_ant_msk =
+ 			priv->hw_params.valid_tx_ant;
+ 	}
+ 
+-	link_cmd.agg_params.agg_dis_start_th = LINK_QUAL_AGG_DISABLE_START_DEF;
+-	link_cmd.agg_params.agg_time_limit =
++	link_cmd->agg_params.agg_dis_start_th = LINK_QUAL_AGG_DISABLE_START_DEF;
++	link_cmd->agg_params.agg_time_limit =
+ 		cpu_to_le16(LINK_QUAL_AGG_TIME_LIMIT_DEF);
+ 
+ 	/* Update the rate scaling for control frame Tx to AP */
+-	link_cmd.sta_id = is_ap ? IWL_AP_ID : priv->hw_params.bcast_sta_id;
++	link_cmd->sta_id = is_ap ? IWL_AP_ID : priv->hw_params.bcast_sta_id;
+ 
+-	ret = iwl_send_cmd_pdu(priv, REPLY_TX_LINK_QUALITY_CMD,
+-			       sizeof(link_cmd), &link_cmd);
++	ret = iwl_send_lq_cmd(priv, link_cmd, CMD_SYNC, true);
+ 	if (ret)
+-		IWL_ERR(priv, "REPLY_TX_LINK_QUALITY_CMD failed (%d)\n", ret);
++		IWL_ERR(priv, "Link quality command failed (%d)\n", ret);
++
++	return link_cmd;
+ }
+ 
+ /*
+@@ -487,6 +492,8 @@ int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs)
+ {
+ 	int ret;
+ 	u8 sta_id;
++	struct iwl_link_quality_cmd *link_cmd;
++	unsigned long flags;
+ 
+ 	ret = iwl_add_station_common(priv, addr, 0, NULL, &sta_id);
+ 	if (ret) {
+@@ -494,9 +501,23 @@ int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs)
+ 		return ret;
+ 	}
+ 
+-	if (init_rs)
++	spin_lock_irqsave(&priv->sta_lock, flags);
++	priv->stations[sta_id].used |= IWL_STA_LOCAL;
++	spin_unlock_irqrestore(&priv->sta_lock, flags);
++
++	if (init_rs) {
+ 		/* Set up default rate scaling table in device's station table */
+-		iwl_sta_init_lq(priv, addr, false);
++		link_cmd = iwl_sta_init_lq(priv, addr, false);
++		if (!link_cmd) {
++			IWL_ERR(priv, "Unable to initialize rate scaling for station %pM.\n",
++				addr);
++			return -ENOMEM;
++		}
++		spin_lock_irqsave(&priv->sta_lock, flags);
++		priv->stations[sta_id].lq = link_cmd;
++		spin_unlock_irqrestore(&priv->sta_lock, flags);
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(iwl_add_local_station);
+@@ -509,7 +530,8 @@ EXPORT_SYMBOL(iwl_add_local_station);
+ static void iwl_sta_ucode_deactivate(struct iwl_priv *priv, u8 sta_id)
+ {
+ 	/* Ucode must be active and driver must be non active */
+-	if (priv->stations[sta_id].used != IWL_STA_UCODE_ACTIVE)
++	if ((priv->stations[sta_id].used &
++	     (IWL_STA_UCODE_ACTIVE | IWL_STA_DRIVER_ACTIVE)) != IWL_STA_UCODE_ACTIVE)
+ 		IWL_ERR(priv, "removed non active STA %u\n", sta_id);
+ 
+ 	priv->stations[sta_id].used &= ~IWL_STA_UCODE_ACTIVE;
+@@ -676,8 +698,23 @@ void iwl_clear_ucode_stations(struct iwl_priv *priv, bool force)
+ 	spin_lock_irqsave(&priv->sta_lock, flags_spin);
+ 	if (force) {
+ 		IWL_DEBUG_INFO(priv, "Clearing all station information in driver\n");
++		/*
++		 * The station entry contains a link to the LQ command. For
++		 * all stations managed by mac80211 this memory will be
++		 * managed by it also. For local stations (broadcast and
++		 * bssid station when in adhoc mode) we need to maintain
++		 * this lq command separately. This memory is created when
++		 * these stations are added.
++		 */
++		for (i = 0; i < priv->hw_params.max_stations; i++) {
++			if (priv->stations[i].used & IWL_STA_LOCAL) {
++				kfree(priv->stations[i].lq);
++				priv->stations[i].lq = NULL;
++			}
++		}
+ 		priv->num_stations = 0;
+ 		memset(priv->stations, 0, sizeof(priv->stations));
++		cleared = true;
+ 	} else {
+ 		for (i = 0; i < priv->hw_params.max_stations; i++) {
+ 			if (priv->stations[i].used & IWL_STA_UCODE_ACTIVE) {
+@@ -1207,7 +1244,8 @@ int iwl_send_lq_cmd(struct iwl_priv *priv,
+ 	BUG_ON(init && (cmd.flags & CMD_ASYNC));
+ 
+ 	ret = iwl_send_cmd(priv, &cmd);
+-	if (ret || (cmd.flags & CMD_ASYNC))
++
++	if (cmd.flags & CMD_ASYNC)
+ 		return ret;
+ 
+ 	if (init) {
+@@ -1217,33 +1255,36 @@ int iwl_send_lq_cmd(struct iwl_priv *priv,
+ 		priv->stations[lq->sta_id].used &= ~IWL_STA_UCODE_INPROGRESS;
+ 		spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
+ 	}
+-	return 0;
++	return ret;
+ }
+ EXPORT_SYMBOL(iwl_send_lq_cmd);
+ 
+ /**
+  * iwl_add_bcast_station - add broadcast station into station table.
+  */
+-void iwl_add_bcast_station(struct iwl_priv *priv)
++int iwl_add_bcast_station(struct iwl_priv *priv)
+ {
+ 	IWL_DEBUG_INFO(priv, "Adding broadcast station to station table\n");
+-	iwl_add_local_station(priv, iwl_bcast_addr, true);
++	return iwl_add_local_station(priv, iwl_bcast_addr, true);
+ }
+ EXPORT_SYMBOL(iwl_add_bcast_station);
+ 
+ /**
+  * iwl3945_add_bcast_station - add broadcast station into station table.
+  */
+-void iwl3945_add_bcast_station(struct iwl_priv *priv)
++int iwl3945_add_bcast_station(struct iwl_priv *priv)
+ {
++	int ret;
++
+ 	IWL_DEBUG_INFO(priv, "Adding broadcast station to station table\n");
+-	iwl_add_local_station(priv, iwl_bcast_addr, false);
++	ret = iwl_add_local_station(priv, iwl_bcast_addr, false);
+ 	/*
+ 	 * It is assumed that when station is added more initialization
+ 	 * needs to be done, but for 3945 it is not the case and we can
+ 	 * just release station table access right here.
+ 	 */
+ 	priv->stations[priv->hw_params.bcast_sta_id].used &= ~IWL_STA_UCODE_INPROGRESS;
++	return ret;
+ 
+ }
+ EXPORT_SYMBOL(iwl3945_add_bcast_station);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 42cd2f4..b0ed2eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -36,6 +36,9 @@
+ #define IWL_STA_UCODE_ACTIVE  BIT(1) /* ucode entry is active */
+ #define IWL_STA_UCODE_INPROGRESS  BIT(2) /* ucode entry is in process of
+ 					    being activated */
++#define IWL_STA_LOCAL BIT(3) /* station state not directed by mac80211
++			     this is for bcast and bssid (when adhoc)
++			     stations */
+ 
+ 
+ /**
+@@ -57,8 +60,8 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
+ 			struct ieee80211_key_conf *keyconf,
+ 			const u8 *addr, u32 iv32, u16 *phase1key);
+ 
+-void iwl_add_bcast_station(struct iwl_priv *priv);
+-void iwl3945_add_bcast_station(struct iwl_priv *priv);
++int iwl_add_bcast_station(struct iwl_priv *priv);
++int iwl3945_add_bcast_station(struct iwl_priv *priv);
+ void iwl_restore_stations(struct iwl_priv *priv);
+ void iwl_clear_ucode_stations(struct iwl_priv *priv, bool force);
+ int iwl_get_free_ucode_key_index(struct iwl_priv *priv);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
