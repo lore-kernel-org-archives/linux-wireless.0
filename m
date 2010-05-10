@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:44856 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756847Ab0EZROf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 13:14:35 -0400
-Received: by pxi18 with SMTP id 18so2619874pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:14:34 -0700 (PDT)
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@gmail.com,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH]wireless:ath9k Fix ath_print in xmit.c
-Date: Wed, 26 May 2010 10:14:15 -0700
-Message-Id: <1274894056-2866-1-git-send-email-justinmattock@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39018 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752077Ab0EJVW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 17:22:59 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat: move kparam_{block,unblock}_sysfs_write
+Date: Mon, 10 May 2010 23:22:48 +0200
+Message-Id: <1273526569-22845-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_print in xmit.c should say "Reseting hardware"
-instead of Reaseting HAL!(since HAL is being fazed out).
-dmesg shows:
-[ 8660.899624] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[ 8660.899676] ath: Unable to stop TxDMA. Reset HAL!
+kparam_block_sysfs_write and kparam_unblock_sysfs_write will introduced
+in kernel 2.6.35 and not 2.6.33.
 
- 
- Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/linux/compat-2.6.33.h |    3 ---
+ include/linux/compat-2.6.35.h |    3 +++
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3db1917..2a0558e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1198,7 +1198,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 		int r;
+diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
+index 70e5f98..0b434fc 100644
+--- a/include/linux/compat-2.6.33.h
++++ b/include/linux/compat-2.6.33.h
+@@ -54,9 +54,6 @@ static inline void compat_release_firmware(const struct firmware *fw)
+ #define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
+ /* source: include/linux/if.h */
  
- 		ath_print(common, ATH_DBG_FATAL,
--			  "Unable to stop TxDMA. Reset HAL!\n");
-+			  "Unable to stop TxDMA. Reseting hardware!\n");
+-#define kparam_block_sysfs_write(a)
+-#define kparam_unblock_sysfs_write(a)
+-
+ /* this will never happen on older kernels */
+ #define NETDEV_POST_INIT 0xffff
  
- 		spin_lock_bh(&sc->sc_resetlock);
- 		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
+diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
+index 9c6e696..278af5e 100644
+--- a/include/linux/compat-2.6.35.h
++++ b/include/linux/compat-2.6.35.h
+@@ -23,6 +23,9 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
+ #define usb_alloc_coherent(dev, size, mem_flags, dma) usb_buffer_alloc(dev, size, mem_flags, dma)
+ #define usb_free_coherent(dev, size, addr, dma) usb_buffer_free(dev, size, addr, dma)
+ 
++#define kparam_block_sysfs_write(a)
++#define kparam_unblock_sysfs_write(a)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
+ 
+ #endif /* LINUX_26_35_COMPAT_H */
 -- 
-1.6.5.GIT
+1.7.0.4
 
