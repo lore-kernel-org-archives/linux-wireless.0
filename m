@@ -1,56 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3-g21.free.fr ([212.27.42.3]:43074 "EHLO smtp3-g21.free.fr"
+Received: from mga09.intel.com ([134.134.136.24]:63760 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751022Ab0EFFrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 01:47:00 -0400
-Message-ID: <4BE257CC.7030308@free.fr>
-Date: Thu, 06 May 2010 07:46:52 +0200
-From: Benoit Papillault <benoit.papillault@free.fr>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] cfg80211/mac80211: better channel handling
-References: <1273055797.3728.14.camel@jlt3.sipsolutions.net>	 <1273061543.3728.16.camel@jlt3.sipsolutions.net>	 <1273065902.3728.17.camel@jlt3.sipsolutions.net> <4BE1DBFE.2060909@free.fr> <1273124159.3573.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1273124159.3573.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1756585Ab0EJW20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:26 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 17/47] iwlagn: show and store firmware build number
+Date: Mon, 10 May 2010 15:27:48 -0700
+Message-Id: <1273530498-11876-18-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 06/05/2010 07:35, Johannes Berg a écrit :
-> On Wed, 2010-05-05 at 22:58 +0200, Benoit Papillault wrote:
->
->> Real hardware are not capable of listening on multiple channels (except
->> 2 ht20 channels in ht40 mode, maybe?). So I don't understand why we
->> should have a per-interface channel.
->>
->> I think we should either have two strategies :
->>
->> - "first one is the winner" : once a channel has been set, it cannot be
->> changed. For instance, if you create an AP interface (with hostapd) and
->> latter a STA interface, the STA interface can only scan on the channel
->> the AP is.
->
-> That's what you get now.
->
->> - "last one is the winner" : in this case, the last call to set the
->> channel is always successful. Of course, this will change channel on
->> existing interfaces which might change their IE accordingly, through an
->> appropriate API.
->
-> That's pretty much impossible to implement with the current split
-> between user and kernel space.
->
->> I might be wrong, but I don't see this multi-channel usage...
->
-> Say you have two stations associated to two different APs. They can
-> powersave while they are on the channel for the other AP. It'll be done,
-> rather soon, trust me :)
->
-> johannes
+From: Johannes Berg <johannes.berg@intel.com>
 
-I understand now and I am impressed as well! I don't know how this could 
-work in the details, but I trust you on this :-)
+We currently display the build number only if debugging
+is enabled, but it is really helpful so show it all the
+time. Also store it so it can be retrieved later via
+ethtool.
 
-Regards,
-Benoit
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   25 +++++++++++++++----------
+ 1 files changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index dd1324d..f9c9c08 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1552,6 +1552,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	u32 inst_size, data_size, init_size, init_data_size, boot_size;
+ 	int err;
+ 	u16 eeprom_ver;
++	char buildstr[25];
+ 
+ 	if (!ucode_raw) {
+ 		IWL_ERR(priv, "request for firmware file '%s' failed.\n",
+@@ -1599,22 +1600,26 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 			  "from http://www.intellinuxwireless.org.\n",
+ 			  api_max, api_ver);
+ 
+-	IWL_INFO(priv, "loaded firmware version %u.%u.%u.%u\n",
+-	       IWL_UCODE_MAJOR(priv->ucode_ver),
+-	       IWL_UCODE_MINOR(priv->ucode_ver),
+-	       IWL_UCODE_API(priv->ucode_ver),
+-	       IWL_UCODE_SERIAL(priv->ucode_ver));
++	if (build)
++		sprintf(buildstr, " build %u", build);
++	else
++		buildstr[0] = '\0';
++
++	IWL_INFO(priv, "loaded firmware version %u.%u.%u.%u%s\n",
++		 IWL_UCODE_MAJOR(priv->ucode_ver),
++		 IWL_UCODE_MINOR(priv->ucode_ver),
++		 IWL_UCODE_API(priv->ucode_ver),
++		 IWL_UCODE_SERIAL(priv->ucode_ver),
++		 buildstr);
+ 
+ 	snprintf(priv->hw->wiphy->fw_version,
+ 		 sizeof(priv->hw->wiphy->fw_version),
+-		 "%u.%u.%u.%u",
++		 "%u.%u.%u.%u%s",
+ 		 IWL_UCODE_MAJOR(priv->ucode_ver),
+ 		 IWL_UCODE_MINOR(priv->ucode_ver),
+ 		 IWL_UCODE_API(priv->ucode_ver),
+-		 IWL_UCODE_SERIAL(priv->ucode_ver));
+-
+-	if (build)
+-		IWL_DEBUG_INFO(priv, "Build %u\n", build);
++		 IWL_UCODE_SERIAL(priv->ucode_ver),
++		 buildstr);
+ 
+ 	eeprom_ver = iwl_eeprom_query16(priv, EEPROM_VERSION);
+ 	IWL_DEBUG_INFO(priv, "NVM Type: %s, version: 0x%x\n",
+-- 
+1.6.3.3
+
