@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:4067 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758683Ab0EMTQJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 15:16:09 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 0/4] Final set of fixes and cleanups for 2.6.35.
-Date: Thu, 13 May 2010 21:16:02 +0200
-Message-Id: <1273778166-3833-1-git-send-email-gwingerde@gmail.com>
+Received: from c60.cesmail.net ([216.154.195.49]:20357 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750971Ab0EJPAW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 11:00:22 -0400
+Message-ID: <20100510110020.ggi5l062gw0csg0g-cebfxv@webmail.spamcop.net>
+Date: Mon, 10 May 2010 11:00:20 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Dan Carpenter <error27@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [patch 3/9] ath9k: cleanup: u32 => bool
+References: <20100508162247.GO27064@bicker>
+	<1273477106.3573.0.camel@jlt3.sipsolutions.net>
+	<20100510144625.GW27064@bicker>
+In-Reply-To: <20100510144625.GW27064@bicker>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are the final set of fixes and cleanups for 2.6.35 from my side.
-The first one is a powersave fixlet that was off my radar for a while but
-got dusted off. One is a fix of a bug introduced in a previous patch series
-and the final two are clean-ups that make it easier to use rt2x00usb
-functionality.
+Quoting Dan Carpenter <error27@gmail.com>:
 
-This is on top of the last patch series I sent out.
+> Smatch complains we negate a non-boolean type here:
+>
+>                 if (!on != aniState->ofdmWeakSigDetectOff) {
+>
+> It's a quite common bug to forget that negation has higher precendence
+> than compare operations.  In this case, it's clear from code that "on" is
+> either 1 or 0 so smatch should not complain.
 
-These patches (and the ones of the previous series) can also be pulled from:
+We could rename ofdmWeakSigDetectOff to ofdmWeakSigDetectOn and change  
+the logic appropriately.  Positive logic is easier to understand in  
+the long run.
 
-	git://git.gwingerde.nl/rt2x00-next-2.6.git
+ofdmWeakSigDetectOn could be boolean and "on" could be int, since it's  
+an index.  The comparison could use !!on to convert int to boolean.
 
-Gertjan van Wingerde (4):
-  rt2x00: Fix failed SLEEP->AWAKE and AWAKE->SLEEP transitions.
-  rt2x00: Fix rt2800usb TX descriptor writing.
-  rt2x00: Clean up USB vendor request buffer functions.
-  rt2x00: Centralize rt2800 beacon writing.
-
- drivers/net/wireless/rt2x00/rt2400pci.c |    9 ++--
- drivers/net/wireless/rt2x00/rt2500pci.c |    9 ++--
- drivers/net/wireless/rt2x00/rt2500usb.c |   14 +-----
- drivers/net/wireless/rt2x00/rt2800lib.c |   61 +++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800lib.h |    2 +
- drivers/net/wireless/rt2x00/rt2800pci.c |   63 +--------------------------
- drivers/net/wireless/rt2x00/rt2800usb.c |   74 ++-----------------------------
- drivers/net/wireless/rt2x00/rt2x00usb.c |   22 +---------
- drivers/net/wireless/rt2x00/rt2x00usb.h |   19 --------
- drivers/net/wireless/rt2x00/rt61pci.c   |    7 ++-
- drivers/net/wireless/rt2x00/rt73usb.c   |   39 +++++------------
- 11 files changed, 96 insertions(+), 223 deletions(-)
-
+-- 
+Regards,
+Pavel Roskin
