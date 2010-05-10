@@ -1,45 +1,430 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44504 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759037Ab0ECPAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 11:00:11 -0400
-Date: Mon, 3 May 2010 10:58:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "rain_maker@root-forum.org" <rain_maker@root-forum.org>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH] rt2x00: remove USB-ID 148f:2573 from rt2500usb driver
-Message-ID: <20100503145815.GA24781@tuxdriver.com>
-References: <201005031624.45409.rain_maker@root-forum.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201005031624.45409.rain_maker@root-forum.org>
+Received: from mga09.intel.com ([134.134.136.24]:63760 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756689Ab0EJW22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:28 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 21/47] iwlagn: prepare for new firmware file format
+Date: Mon, 10 May 2010 15:27:52 -0700
+Message-Id: <1273530498-11876-22-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 03, 2010 at 04:24:45PM +0200, rain_maker@root-forum.org wrote:
-> The drivers rt2500usb and rt73usb both contain the usb id 148f:2573 while only 
-> the latter is suitable for devices with that id.
-> 
-> As a consequence, both drivers will be loaded and system log shows messages 
-> like "rt2500usb_init_eeprom: Error - Invalid RT chipset detected".
-> 
-> If you use the above search term, you will find more than 1500 hits with a 
-> well known search engine, confirming that rt2500usb is always the wrong 
-> driver for devices with usb id 148f:2573 and quite often as a side effect 
-> confusion arose about this -non fatal but misleading- error message in the 
-> respective bug reports or threads.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I also get more than 100 hits from (probably the same) well-known
-search engine for "rt73usb_init_eeprom: Error - Invalid RT chipset
-detected".  I'm sure those aren't all for the same USB ID, and perhaps
-none of them are.  Then again, not all of the 1500+ that you cite
-are for the same USB ID either.
+Currently the first four bytes in a firmware file
+indicate the major, minor and api versions as well
+as the serial number. These combined can never be
+zero, so we can use that special case for a new,
+future, file format.
 
-So I'm curious, how can you be sure that 148f:2573 is _always_ wrong
-for rt2500usb?  I do acknowledge that the "73" part makes it suspicious...
+This patch simply shuffles the code and prepares
+for that new format.
 
-John
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |  291 ++++++++++++++++++--------------
+ 1 files changed, 168 insertions(+), 123 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 70094bb..65ae636 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1534,6 +1534,91 @@ static int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
+ 				       iwl_ucode_callback);
+ }
+ 
++struct iwlagn_firmware_pieces {
++	const void *inst, *data, *init, *init_data, *boot;
++	size_t inst_size, data_size, init_size, init_data_size, boot_size;
++
++	u32 build;
++};
++
++static int iwlagn_load_legacy_firmware(struct iwl_priv *priv,
++				       const struct firmware *ucode_raw,
++				       struct iwlagn_firmware_pieces *pieces)
++{
++	struct iwl_ucode_header *ucode = (void *)ucode_raw->data;
++	u32 api_ver, hdr_size;
++	const u8 *src;
++
++	priv->ucode_ver = le32_to_cpu(ucode->ver);
++	api_ver = IWL_UCODE_API(priv->ucode_ver);
++
++	switch (api_ver) {
++	default:
++		/*
++		 * 4965 doesn't revision the firmware file format
++		 * along with the API version, it always uses v1
++		 * file format.
++		 */
++		if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) !=
++				CSR_HW_REV_TYPE_4965) {
++			hdr_size = 28;
++			if (ucode_raw->size < hdr_size) {
++				IWL_ERR(priv, "File size too small!\n");
++				return -EINVAL;
++			}
++			pieces->build = le32_to_cpu(ucode->u.v2.build);
++			pieces->inst_size = le32_to_cpu(ucode->u.v2.inst_size);
++			pieces->data_size = le32_to_cpu(ucode->u.v2.data_size);
++			pieces->init_size = le32_to_cpu(ucode->u.v2.init_size);
++			pieces->init_data_size = le32_to_cpu(ucode->u.v2.init_data_size);
++			pieces->boot_size = le32_to_cpu(ucode->u.v2.boot_size);
++			src = ucode->u.v2.data;
++			break;
++		}
++		/* fall through for 4965 */
++	case 0:
++	case 1:
++	case 2:
++		hdr_size = 24;
++		if (ucode_raw->size < hdr_size) {
++			IWL_ERR(priv, "File size too small!\n");
++			return -EINVAL;
++		}
++		pieces->build = 0;
++		pieces->inst_size = le32_to_cpu(ucode->u.v1.inst_size);
++		pieces->data_size = le32_to_cpu(ucode->u.v1.data_size);
++		pieces->init_size = le32_to_cpu(ucode->u.v1.init_size);
++		pieces->init_data_size = le32_to_cpu(ucode->u.v1.init_data_size);
++		pieces->boot_size = le32_to_cpu(ucode->u.v1.boot_size);
++		src = ucode->u.v1.data;
++		break;
++	}
++
++	/* Verify size of file vs. image size info in file's header */
++	if (ucode_raw->size != hdr_size + pieces->inst_size +
++				pieces->data_size + pieces->init_size +
++				pieces->init_data_size + pieces->boot_size) {
++
++		IWL_ERR(priv,
++			"uCode file size %d does not match expected size\n",
++			(int)ucode_raw->size);
++		return -EINVAL;
++	}
++
++	pieces->inst = src;
++	src += pieces->inst_size;
++	pieces->data = src;
++	src += pieces->data_size;
++	pieces->init = src;
++	src += pieces->init_size;
++	pieces->init_data = src;
++	src += pieces->init_data_size;
++	pieces->boot = src;
++	src += pieces->boot_size;
++
++	return 0;
++}
++
+ /**
+  * iwl_ucode_callback - callback when firmware was loaded
+  *
+@@ -1544,14 +1629,15 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ {
+ 	struct iwl_priv *priv = context;
+ 	struct iwl_ucode_header *ucode;
++	int err;
++	struct iwlagn_firmware_pieces pieces;
+ 	const unsigned int api_max = priv->cfg->ucode_api_max;
+ 	const unsigned int api_min = priv->cfg->ucode_api_min;
+-	u8 *src;
+-	size_t len;
+-	u32 api_ver, build;
+-	u32 inst_size, data_size, init_size, init_data_size, boot_size;
+-	int err, hdr_size;
++	u32 api_ver;
+ 	char buildstr[25];
++	u32 build;
++
++	memset(&pieces, 0, sizeof(pieces));
+ 
+ 	if (!ucode_raw) {
+ 		IWL_ERR(priv, "request for firmware file '%s' failed.\n",
+@@ -1571,54 +1657,22 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	/* Data from ucode file:  header followed by uCode images */
+ 	ucode = (struct iwl_ucode_header *)ucode_raw->data;
+ 
+-	priv->ucode_ver = le32_to_cpu(ucode->ver);
+-	api_ver = IWL_UCODE_API(priv->ucode_ver);
++	if (ucode->ver)
++		err = iwlagn_load_legacy_firmware(priv, ucode_raw, &pieces);
++	else
++		err = -EINVAL;
+ 
+-	switch (api_ver) {
+-	default:
+-		/*
+-		 * 4965 doesn't revision the firmware file format
+-		 * along with the API version, it always uses v1
+-		 * file format.
+-		 */
+-		if (priv->cfg != &iwl4965_agn_cfg) {
+-			hdr_size = 28;
+-			if (ucode_raw->size < hdr_size) {
+-				IWL_ERR(priv, "File size too small!\n");
+-				goto try_again;
+-			}
+-			build = ucode->u.v2.build;
+-			inst_size = ucode->u.v2.inst_size;
+-			data_size = ucode->u.v2.data_size;
+-			init_size = ucode->u.v2.init_size;
+-			init_data_size = ucode->u.v2.init_data_size;
+-			boot_size = ucode->u.v2.boot_size;
+-			src = ucode->u.v2.data;
+-			break;
+-		}
+-		/* fall through for 4965 */
+-	case 0:
+-	case 1:
+-	case 2:
+-		hdr_size = 24;
+-		if (ucode_raw->size < hdr_size) {
+-			IWL_ERR(priv, "File size too small!\n");
+-			goto try_again;
+-		}
+-		build = 0;
+-		inst_size = ucode->u.v1.inst_size;
+-		data_size = ucode->u.v1.data_size;
+-		init_size = ucode->u.v1.init_size;
+-		init_data_size = ucode->u.v1.init_data_size;
+-		boot_size = ucode->u.v1.boot_size;
+-		src = ucode->u.v1.data;
+-		break;
+-	}
++	if (err)
++		goto try_again;
+ 
+-	/* api_ver should match the api version forming part of the
+-	 * firmware filename ... but we don't check for that and only rely
+-	 * on the API version read from firmware header from here on forward */
++	api_ver = IWL_UCODE_API(priv->ucode_ver);
++	build = pieces.build;
+ 
++	/*
++	 * api_ver should match the api version forming part of the
++	 * firmware filename ... but we don't check for that and only rely
++	 * on the API version read from firmware header from here on forward
++	 */
+ 	if (api_ver < api_min || api_ver > api_max) {
+ 		IWL_ERR(priv, "Driver unable to support your firmware API. "
+ 			  "Driver supports v%u, firmware is v%u.\n",
+@@ -1653,75 +1707,69 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		 IWL_UCODE_SERIAL(priv->ucode_ver),
+ 		 buildstr);
+ 
+-	IWL_DEBUG_INFO(priv, "f/w package hdr ucode version raw = 0x%x\n",
+-		       priv->ucode_ver);
+-	IWL_DEBUG_INFO(priv, "f/w package hdr runtime inst size = %u\n",
+-		       inst_size);
+-	IWL_DEBUG_INFO(priv, "f/w package hdr runtime data size = %u\n",
+-		       data_size);
+-	IWL_DEBUG_INFO(priv, "f/w package hdr init inst size = %u\n",
+-		       init_size);
+-	IWL_DEBUG_INFO(priv, "f/w package hdr init data size = %u\n",
+-		       init_data_size);
+-	IWL_DEBUG_INFO(priv, "f/w package hdr boot inst size = %u\n",
+-		       boot_size);
+-
+ 	/*
+ 	 * For any of the failures below (before allocating pci memory)
+ 	 * we will try to load a version with a smaller API -- maybe the
+ 	 * user just got a corrupted version of the latest API.
+ 	 */
+ 
+-	/* Verify size of file vs. image size info in file's header */
+-	if (ucode_raw->size != hdr_size + inst_size + data_size + init_size +
+-				init_data_size + boot_size) {
+-
+-		IWL_DEBUG_INFO(priv,
+-			"uCode file size %d does not match expected size\n",
+-			(int)ucode_raw->size);
+-		goto try_again;
+-	}
++	IWL_DEBUG_INFO(priv, "f/w package hdr ucode version raw = 0x%x\n",
++		       priv->ucode_ver);
++	IWL_DEBUG_INFO(priv, "f/w package hdr runtime inst size = %Zd\n",
++		       pieces.inst_size);
++	IWL_DEBUG_INFO(priv, "f/w package hdr runtime data size = %Zd\n",
++		       pieces.data_size);
++	IWL_DEBUG_INFO(priv, "f/w package hdr init inst size = %Zd\n",
++		       pieces.init_size);
++	IWL_DEBUG_INFO(priv, "f/w package hdr init data size = %Zd\n",
++		       pieces.init_data_size);
++	IWL_DEBUG_INFO(priv, "f/w package hdr boot inst size = %Zd\n",
++		       pieces.boot_size);
+ 
+ 	/* Verify that uCode images will fit in card's SRAM */
+-	if (inst_size > priv->hw_params.max_inst_size) {
+-		IWL_DEBUG_INFO(priv, "uCode instr len %d too large to fit in\n",
+-			       inst_size);
++	if (pieces.inst_size > priv->hw_params.max_inst_size) {
++		IWL_ERR(priv, "uCode instr len %Zd too large to fit in\n",
++			pieces.inst_size);
+ 		goto try_again;
+ 	}
+ 
+-	if (data_size > priv->hw_params.max_data_size) {
+-		IWL_DEBUG_INFO(priv, "uCode data len %d too large to fit in\n",
+-				data_size);
++	if (pieces.data_size > priv->hw_params.max_data_size) {
++		IWL_ERR(priv, "uCode data len %Zd too large to fit in\n",
++			pieces.data_size);
+ 		goto try_again;
+ 	}
+-	if (init_size > priv->hw_params.max_inst_size) {
+-		IWL_INFO(priv, "uCode init instr len %d too large to fit in\n",
+-			init_size);
++
++	if (pieces.init_size > priv->hw_params.max_inst_size) {
++		IWL_ERR(priv, "uCode init instr len %Zd too large to fit in\n",
++			pieces.init_size);
+ 		goto try_again;
+ 	}
+-	if (init_data_size > priv->hw_params.max_data_size) {
+-		IWL_INFO(priv, "uCode init data len %d too large to fit in\n",
+-		      init_data_size);
++
++	if (pieces.init_data_size > priv->hw_params.max_data_size) {
++		IWL_ERR(priv, "uCode init data len %Zd too large to fit in\n",
++			pieces.init_data_size);
+ 		goto try_again;
+ 	}
+-	if (boot_size > priv->hw_params.max_bsm_size) {
+-		IWL_INFO(priv, "uCode boot instr len %d too large to fit in\n",
+-			boot_size);
++
++	if (pieces.boot_size > priv->hw_params.max_bsm_size) {
++		IWL_ERR(priv, "uCode boot instr len %Zd too large to fit in\n",
++			pieces.boot_size);
+ 		goto try_again;
+ 	}
+ 
++
+ 	/* Allocate ucode buffers for card's bus-master loading ... */
+ 
+ 	/* Runtime instructions and 2 copies of data:
+ 	 * 1) unmodified from disk
+ 	 * 2) backup cache for save/restore during power-downs */
+-	priv->ucode_code.len = inst_size;
++	priv->ucode_code.len = pieces.inst_size;
+ 	iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_code);
+ 
+-	priv->ucode_data.len = data_size;
++	priv->ucode_data.len = pieces.data_size;
+ 	iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_data);
+ 
+-	priv->ucode_data_backup.len = data_size;
++	priv->ucode_data_backup.len = pieces.data_size;
+ 	iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_data_backup);
+ 
+ 	if (!priv->ucode_code.v_addr || !priv->ucode_data.v_addr ||
+@@ -1729,11 +1777,11 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		goto err_pci_alloc;
+ 
+ 	/* Initialization instructions and data */
+-	if (init_size && init_data_size) {
+-		priv->ucode_init.len = init_size;
++	if (pieces.init_size && pieces.init_data_size) {
++		priv->ucode_init.len = pieces.init_size;
+ 		iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_init);
+ 
+-		priv->ucode_init_data.len = init_data_size;
++		priv->ucode_init_data.len = pieces.init_data_size;
+ 		iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_init_data);
+ 
+ 		if (!priv->ucode_init.v_addr || !priv->ucode_init_data.v_addr)
+@@ -1741,8 +1789,8 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	}
+ 
+ 	/* Bootstrap (instructions only, no data) */
+-	if (boot_size) {
+-		priv->ucode_boot.len = boot_size;
++	if (pieces.boot_size) {
++		priv->ucode_boot.len = pieces.boot_size;
+ 		iwl_alloc_fw_desc(priv->pci_dev, &priv->ucode_boot);
+ 
+ 		if (!priv->ucode_boot.v_addr)
+@@ -1752,44 +1800,41 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	/* Copy images into buffers for card's bus-master reads ... */
+ 
+ 	/* Runtime instructions (first block of data in file) */
+-	len = inst_size;
+-	IWL_DEBUG_INFO(priv, "Copying (but not loading) uCode instr len %Zd\n", len);
+-	memcpy(priv->ucode_code.v_addr, src, len);
+-	src += len;
++	IWL_DEBUG_INFO(priv, "Copying (but not loading) uCode instr len %Zd\n",
++			pieces.inst_size);
++	memcpy(priv->ucode_code.v_addr, pieces.inst, pieces.inst_size);
+ 
+ 	IWL_DEBUG_INFO(priv, "uCode instr buf vaddr = 0x%p, paddr = 0x%08x\n",
+ 		priv->ucode_code.v_addr, (u32)priv->ucode_code.p_addr);
+ 
+-	/* Runtime data (2nd block)
+-	 * NOTE:  Copy into backup buffer will be done in iwl_up()  */
+-	len = data_size;
+-	IWL_DEBUG_INFO(priv, "Copying (but not loading) uCode data len %Zd\n", len);
+-	memcpy(priv->ucode_data.v_addr, src, len);
+-	memcpy(priv->ucode_data_backup.v_addr, src, len);
+-	src += len;
+-
+-	/* Initialization instructions (3rd block) */
+-	if (init_size) {
+-		len = init_size;
++	/*
++	 * Runtime data
++	 * NOTE:  Copy into backup buffer will be done in iwl_up()
++	 */
++	IWL_DEBUG_INFO(priv, "Copying (but not loading) uCode data len %Zd\n",
++			pieces.data_size);
++	memcpy(priv->ucode_data.v_addr, pieces.data, pieces.data_size);
++	memcpy(priv->ucode_data_backup.v_addr, pieces.data, pieces.data_size);
++
++	/* Initialization instructions */
++	if (pieces.init_size) {
+ 		IWL_DEBUG_INFO(priv, "Copying (but not loading) init instr len %Zd\n",
+-				len);
+-		memcpy(priv->ucode_init.v_addr, src, len);
+-		src += len;
++				pieces.init_size);
++		memcpy(priv->ucode_init.v_addr, pieces.init, pieces.init_size);
+ 	}
+ 
+-	/* Initialization data (4th block) */
+-	if (init_data_size) {
+-		len = init_data_size;
++	/* Initialization data */
++	if (pieces.init_data_size) {
+ 		IWL_DEBUG_INFO(priv, "Copying (but not loading) init data len %Zd\n",
+-			       len);
+-		memcpy(priv->ucode_init_data.v_addr, src, len);
+-		src += len;
++			       pieces.init_data_size);
++		memcpy(priv->ucode_init_data.v_addr, pieces.init_data,
++		       pieces.init_data_size);
+ 	}
+ 
+-	/* Bootstrap instructions (5th block) */
+-	len = boot_size;
+-	IWL_DEBUG_INFO(priv, "Copying (but not loading) boot instr len %Zd\n", len);
+-	memcpy(priv->ucode_boot.v_addr, src, len);
++	/* Bootstrap instructions */
++	IWL_DEBUG_INFO(priv, "Copying (but not loading) boot instr len %Zd\n",
++			pieces.boot_size);
++	memcpy(priv->ucode_boot.v_addr, pieces.boot, pieces.boot_size);
+ 
+ 	/**************************************************
+ 	 * This is still part of probe() in a sense...
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
