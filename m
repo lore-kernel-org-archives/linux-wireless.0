@@ -1,84 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:20102 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754915Ab0ELJkb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 05:40:31 -0400
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0394197229
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:40:29 +0900 (JST)
-Subject: [PATCH 09/12] ath5k: use ath5k_softc as driver data
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 12 May 2010 18:40:28 +0900
-Message-ID: <20100512094028.6575.51945.stgit@tt-desk>
-In-Reply-To: <20100512093947.6575.99595.stgit@tt-desk>
-References: <20100512093947.6575.99595.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga02.intel.com ([134.134.136.20]:8055 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757982Ab0EJXcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 19:32:06 -0400
+Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
+ accesspoint == hardlock
+From: reinette chatre <reinette.chatre@intel.com>
+To: Nils Radtke <lkml@Think-Future.de>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100510183639.GA17523@localhost>
+References: <20100510183639.GA17523@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 10 May 2010 16:32:04 -0700
+Message-ID: <1273534324.2370.6740.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's our "private driver data"... It's used more often and hw is the mac80211
-part. This makes more sense with the next (sysfs) patch.
+On Mon, 2010-05-10 at 11:36 -0700, Nils Radtke wrote:
+>   Today weather was fine again, finally. So testing with .33.3 w/ the patch applied: 
+> 
+>   http://marc.info/?l=linux-wireless&m=127290931304496&w=2
+> 
+> The kernel kernel .32 was still running before it crashed immediately on wireless activation.
+> The crash log showed again at least two messages, the last was as already described in my first
+> message, bug from 2010-04-30: I think even the 0x2030 was the same:
+> 
+> EIP rs_tx_status +x8f/x2030 
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   15 ++++++---------
- 1 files changed, 6 insertions(+), 9 deletions(-)
+You report an issue on 2.6.32 ...
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index e3803ba..3fcf220 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -578,7 +578,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 	spin_lock_init(&sc->block);
- 
- 	/* Set private data */
--	pci_set_drvdata(pdev, hw);
-+	pci_set_drvdata(pdev, sc);
- 
- 	/* Setup interrupt handler */
- 	ret = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
-@@ -694,25 +694,23 @@ err:
- static void __devexit
- ath5k_pci_remove(struct pci_dev *pdev)
- {
--	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
--	struct ath5k_softc *sc = hw->priv;
-+	struct ath5k_softc *sc = pci_get_drvdata(pdev);
- 
- 	ath5k_debug_finish_device(sc);
--	ath5k_detach(pdev, hw);
-+	ath5k_detach(pdev, sc->hw);
- 	ath5k_hw_detach(sc->ah);
- 	kfree(sc->ah);
- 	free_irq(pdev->irq, sc);
- 	pci_iounmap(pdev, sc->iobase);
- 	pci_release_region(pdev, 0);
- 	pci_disable_device(pdev);
--	ieee80211_free_hw(hw);
-+	ieee80211_free_hw(sc->hw);
- }
- 
- #ifdef CONFIG_PM
- static int ath5k_pci_suspend(struct device *dev)
- {
--	struct ieee80211_hw *hw = pci_get_drvdata(to_pci_dev(dev));
--	struct ath5k_softc *sc = hw->priv;
-+	struct ath5k_softc *sc = pci_get_drvdata(to_pci_dev(dev));
- 
- 	ath5k_led_off(sc);
- 	return 0;
-@@ -721,8 +719,7 @@ static int ath5k_pci_suspend(struct device *dev)
- static int ath5k_pci_resume(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
--	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
--	struct ath5k_softc *sc = hw->priv;
-+	struct ath5k_softc *sc = pci_get_drvdata(pdev);
- 
- 	/*
- 	 * Suspend/Resume resets the PCI configuration space, so we have to
+> 
+> W/ .33.3 and the above patch applied:
+
+... but then test the patch with 2.6.33.
+
+Which kernel are you focused on?
+
+
+> Linux mypole 2.6.33.3 #18 SMP PREEMPT Thu May 6 21:51:37 CEST 2010 i686 GNU/Linux
+> 
+> May 10 19:14:11 [   80.586637] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+> May 10 19:23:17 [  626.476078] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+> May 10 19:23:30 [  638.913740] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+> May 10 19:23:32 [  641.232425] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+> May 10 19:23:54 [  663.392697] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+> May 10 19:23:58 [  666.980247] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+> May 10 19:24:02 [  671.121826] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+
+Can you see any impact on your connection speed that can be connected to
+these messages?
+
+> Additionally these were logged, could you tell why they're there and what to do? (also .33.3 w/ patch)
+> 
+> May 10 19:24:16 [  685.079617] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
+> May 10 19:24:22 [  691.026737] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
+> May 10 19:28:02 [  911.406162] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
+> May 10 19:35:38 [ 1367.251240] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
+> 
+> The above "iwl_tx_agg_start" lines happen when connecting - again to a Cisco AP - and the connection gets
+> dropped the exact moment when a download is started. It even often drops when dhcp is still negotiating, has
+> got it's IP but the nego isn't finished yet. Conn drops, same procedure again and again. This happens only
+> with this Cisco AP (which is BTW another one from the "expected_tpt should have been calculated by now" 
+> problem).
+
+It could be that some of the queues get stuck. Can you try with the
+patches in
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2037#c113 ? They
+are based on 2.6.33.
+
+Reinette
+
+
 
