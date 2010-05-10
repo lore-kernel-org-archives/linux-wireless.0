@@ -1,134 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47562 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752823Ab0EKPXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 11:23:12 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 2/4] ath9k: add debugfs files for reading/writing the rx and tx chainmask
-Date: Tue, 11 May 2010 17:23:01 +0200
-Message-Id: <1273591383-76696-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1273591383-76696-1-git-send-email-nbd@openwrt.org>
-References: <1273591383-76696-1-git-send-email-nbd@openwrt.org>
+Received: from mail.elliptictech.com ([209.217.122.41]:48250 "EHLO
+	emergent.ellipticsemi.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752594Ab0EJQNh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 12:13:37 -0400
+Date: Mon, 10 May 2010 12:07:24 -0400
+From: Nick Bowler <nbowler@elliptictech.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.34-rc6-git6: Reported regressions from 2.6.33
+Message-ID: <20100510160724.GA31416@elliptictech.com>
+References: <10aqDnTJcLO.A.mLE.48y5LB@chimera>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <10aqDnTJcLO.A.mLE.48y5LB@chimera>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/debug.c |   92 ++++++++++++++++++++++++++++++++
- 1 files changed, 92 insertions(+), 0 deletions(-)
+On 23:13 Sun 09 May     , Rafael J. Wysocki wrote:
+> This message contains a list of some regressions from 2.6.33,
+> for which there are no fixes in the mainline known to the tracking team.
+> If any of them have been fixed already, please let us know.
+> 
+> If you know of any other unresolved regressions from 2.6.33, please let us
+> know either and we'll add them to the list.  Also, please let us know
+> if any of the entries below are invalid.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 679257c..8d7c046 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -78,6 +78,90 @@ static const struct file_operations fops_debug = {
- 
- #define DMA_BUF_LEN 1024
- 
-+static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	char buf[32];
-+	unsigned int len;
-+
-+	len = snprintf(buf, sizeof(buf), "0x%08x\n", common->tx_chainmask);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_tx_chainmask(struct file *file, const char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	unsigned long mask;
-+	char buf[32];
-+	ssize_t len;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EINVAL;
-+
-+	buf[len] = '\0';
-+	if (strict_strtoul(buf, 0, &mask))
-+		return -EINVAL;
-+
-+	common->tx_chainmask = mask;
-+	sc->sc_ah->caps.tx_chainmask = mask;
-+	return count;
-+}
-+
-+static const struct file_operations fops_tx_chainmask = {
-+	.read = read_file_tx_chainmask,
-+	.write = write_file_tx_chainmask,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE
-+};
-+
-+
-+static ssize_t read_file_rx_chainmask(struct file *file, char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	char buf[32];
-+	unsigned int len;
-+
-+	len = snprintf(buf, sizeof(buf), "0x%08x\n", common->rx_chainmask);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_rx_chainmask(struct file *file, const char __user *user_buf,
-+			     size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	unsigned long mask;
-+	char buf[32];
-+	ssize_t len;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EINVAL;
-+
-+	buf[len] = '\0';
-+	if (strict_strtoul(buf, 0, &mask))
-+		return -EINVAL;
-+
-+	common->rx_chainmask = mask;
-+	sc->sc_ah->caps.rx_chainmask = mask;
-+	return count;
-+}
-+
-+static const struct file_operations fops_rx_chainmask = {
-+	.read = read_file_rx_chainmask,
-+	.write = write_file_rx_chainmask,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE
-+};
-+
-+
- static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 			     size_t count, loff_t *ppos)
- {
-@@ -754,6 +838,14 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			sc, &fops_recv))
- 		goto err;
- 
-+	if (!debugfs_create_file("rx_chainmask", S_IRUSR | S_IWUSR,
-+			sc->debug.debugfs_phy, sc, &fops_rx_chainmask))
-+		goto err;
-+
-+	if (!debugfs_create_file("tx_chainmask", S_IRUSR | S_IWUSR,
-+			sc->debug.debugfs_phy, sc, &fops_tx_chainmask))
-+		goto err;
-+
- 	return 0;
- err:
- 	ath9k_exit_debug(ah);
+Seems that
+
+  r600 CS checker rejects narrow FBO renderbuffers
+  https://bugs.freedesktop.org/show_bug.cgi?id=27609
+
+never got added to the list.  It is still an issue as of 2.6.34-rc7.
+
 -- 
-1.6.4.2
-
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
