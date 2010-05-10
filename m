@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:50933 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932483Ab0EKS02 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 14:26:28 -0400
-Received: by pxi5 with SMTP id 5so2397805pxi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 11:26:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1273601969.20312.23.camel@jlt3.sipsolutions.net>
-References: <20100511083121.28289.96180.stgit@tt-desk> <20100511083900.28289.43864.stgit@tt-desk>
-	<AANLkTilowwAyqLrIJ0_mlZxnqY-TqSHM3xdXkbO8aH6-@mail.gmail.com>
-	<1273601969.20312.23.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 11 May 2010 11:26:07 -0700
-Message-ID: <AANLkTikqxiIjmQw2e8ucu8whKVRETunF92dPfWu2391s@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] mac80211: Add nl80211 antenna configuration
-To: Johannes Berg <johannes@sipsolutions.net>, ic.felix@gmail.com
-Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, holgerschurig@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:65350 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754362Ab0EJW2X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:23 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/47] iwlwifi: use vif iwl_bss_info_changed
+Date: Mon, 10 May 2010 15:27:36 -0700
+Message-Id: <1273530498-11876-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 11, 2010 at 11:19 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2010-05-11 at 11:14 -0700, Luis R. Rodriguez wrote:
->
->> > Allow setting TX and RX antenna configuration via nl80211/cfg80211.
->>
->> I think we should call this TX / RX chainmask given that with 802.11n
->> hardware this is what this is called.
->
-> Well, but even with 11n hw you might be able to select _antennas_ rather
-> than chains. I'm convinced we'll need to differentiate that very
-> closely, and 11g hw has only antenna, not chain, selection.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Heh you're right, you might have for example 3 antennas but only two
-RX chains, for example. I still think it would be good for us to
-figure out a way to bring these two notions together on a standard API
-for both 11n and legacy, if possible.
+The iw_mode will always follow the only vif we
+have, but using the vif directly seems easier.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 1e11706..d8ee528 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1857,8 +1857,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&priv->mutex);
+ 
+-	if (changes & BSS_CHANGED_BEACON &&
+-	    priv->iw_mode == NL80211_IFTYPE_AP) {
++	if (changes & BSS_CHANGED_BEACON && vif->type == NL80211_IFTYPE_AP) {
+ 		dev_kfree_skb(priv->ibss_beacon);
+ 		priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
+ 	}
+@@ -1884,8 +1883,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 
+ 		/* mac80211 only sets assoc when in STATION mode */
+-		if (priv->iw_mode == NL80211_IFTYPE_ADHOC ||
+-		    bss_conf->assoc) {
++		if (vif->type == NL80211_IFTYPE_ADHOC || bss_conf->assoc) {
+ 			memcpy(priv->staging_rxon.bssid_addr,
+ 			       bss_conf->bssid, ETH_ALEN);
+ 
+@@ -1903,7 +1901,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 	 * mac80211 decides to do both changes at once because
+ 	 * it will invoke post_associate.
+ 	 */
+-	if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
++	if (vif->type == NL80211_IFTYPE_ADHOC &&
+ 	    changes & BSS_CHANGED_BEACON) {
+ 		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
+ 
+-- 
+1.6.3.3
+
