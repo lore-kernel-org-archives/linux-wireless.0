@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:48478 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752334Ab0E1SU3 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:44818 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390Ab0EJKYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 14:20:29 -0400
-Message-ID: <20100528212027.208560d9qwrmgjnk@hayate.sektori.org>
-Date: Fri, 28 May 2010 21:20:27 +0300
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"David Quan" <David.Quan@atheros.com>
-Subject: Re: [PATCH] ath5k: disable ASPM
-References: <20100528100901.14580.1322.stgit@fate.lan>
-	<AANLkTim27Widx4NuaN_C6XqeLkCahRA8zTEDuDtxi_vM@mail.gmail.com>
-In-Reply-To: <AANLkTim27Widx4NuaN_C6XqeLkCahRA8zTEDuDtxi_vM@mail.gmail.com>
+	Mon, 10 May 2010 06:24:25 -0400
+Received: by vws3 with SMTP id 3so1251288vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 10 May 2010 03:24:24 -0700 (PDT)
+Date: Mon, 10 May 2010 12:23:19 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ming Lei <tom.leiming@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: Re: [patch 2/9] ath9k: range checking issues in htc_hst.c
+Message-ID: <20100510102319.GV27064@bicker>
+References: <20100508162201.GN27064@bicker> <19431.36216.198492.247202@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <19431.36216.198492.247202@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
 
-> On Fri, May 28, 2010 at 3:09 AM, Jussi Kivilinna
-> <jussi.kivilinna@mbnet.fi> wrote:
->> Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
->> Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
->> enabled. With ASPM ath5k will eventually stall on heavy traffic with often
->> 'unsupported jumbo' warnings appearing. Disabling ASPM L0s/L1 in ath5k fixes
->> these problems.
->
-> So you disable ASPM all together on the entire driver?
->
+On Mon, May 10, 2010 at 10:07:12AM +0530, Sujith wrote:
+> Dan Carpenter wrote:
+> > The original code had ENDPOINT_MAX and HST_ENDPOINT_MAX switched.
+> 
+> Hm, no.
+> 
 
-Sorry, I meant to this to be RFC patch. I'm not familiar with PCI  
-devices/drivers.. How should I pinpoint this patch? To 168c:001c? only  
-rev 1? Is there other revs that don't mix with ASPM? Is this AOA150  
-problem only? Use AOA150 specific quirk?
+I'm afraid I don't understand.  ENDPOINT_MAX is 22 and HST_ENDPOINT_MAX
+is 8.  The htc_target struct is defined as having 8 endpoints.
 
--Jussi
+drivers/net/wireless/ath/ath9k/htc_hst.h
+   137  struct htc_target {
+   138          void *hif_dev;
+   139          struct ath9k_htc_priv *drv_priv;
+   140          struct device *dev;
+   141          struct ath9k_htc_hif *hif;
+   142          struct htc_endpoint endpoint[HST_ENDPOINT_MAX];
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+So in the original code:
+drivers/net/wireless/ath/ath9k/htc_hst.c
+   119                  for (tepid = ENDPOINT_MAX; tepid > ENDPOINT0; tepid--) {
+   120                          tmp_endpoint = &target->endpoint[tepid];
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+	We are past the end of the array here.  22 vs 7.
+
+Perhaps the htc_target struct should be changed to ENDPOINT_MAX?
+
+regards,
+dan carpenter
