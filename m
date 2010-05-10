@@ -1,52 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24937 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:50740 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932074Ab0EFQLM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 12:11:12 -0400
-Subject: Re: [PATCH] iwlwifi: recalculate average tpt if not current
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	Adel Gadllah <adel.gadllah@gmail.com>
-In-Reply-To: <1272909307.7879.5759.camel@rchatre-DESK>
-References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
-	 <1272908934.7879.5748.camel@rchatre-DESK>
-	 <1272909307.7879.5759.camel@rchatre-DESK>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 06 May 2010 09:11:08 -0700
-Message-ID: <1273162268.2226.2503.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1756901Ab0EJW2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:32 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 47/47] iwlwifi: clear driver stations when going down
+Date: Mon, 10 May 2010 15:28:18 -0700
+Message-Id: <1273530498-11876-48-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Mon, 2010-05-03 at 10:55 -0700, reinette chatre wrote:
-> From: Reinette Chatre <reinette.chatre@intel.com>
-> 
-> We currently have this check as a BUG_ON, which is being hit by people.
-> Previously it was an error with a recalculation if not current, return that
-> code.
-> 
-> The BUG_ON was introduced by:
-> commit 3110bef78cb4282c58245bc8fd6d95d9ccb19749
-> Author: Guy Cohen <guy.cohen@intel.com>
-> Date:   Tue Sep 9 10:54:54 2008 +0800
-> 
->     iwlwifi: Added support for 3 antennas
-> 
-> ... the portion adding the BUG_ON is reverted since we are encountering the error
-> and BUG_ON was created with assumption that error is not encountered.
-> 
-> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-> ---
+During a hw restart, mac80211 will attempt to
+reconfigure all stations. Currently, that fails
+and leads to warnings because we still have the
+stations marked active. Therefore, clear all
+stations when doing down.
 
-I noticed this patch in your wireless-next-2.6 pull request. Since it is
-addressing a system hang issue, could it perhaps be included in
-wireless-2.6 also? I should have included the bug report reference for
-this purpose, sorry ... it is
-https://bugzilla.redhat.com/show_bug.cgi?id=588021
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |   19 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
+ 3 files changed, 21 insertions(+), 0 deletions(-)
 
-Reinette
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index dd26965..47563cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2405,6 +2405,7 @@ static void __iwl_down(struct iwl_priv *priv)
+ 
+ 	iwl_clear_ucode_stations(priv);
+ 	iwl_dealloc_bcast_station(priv);
++	iwl_clear_driver_stations(priv);
+ 
+ 	/* Unblock any waiting calls */
+ 	wake_up_interruptible_all(&priv->wait_command_queue);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 6427148..c2a453a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -81,6 +81,25 @@ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
+ void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id);
+ void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt);
+ 
++/**
++ * iwl_clear_driver_stations - clear knowledge of all stations from driver
++ * @priv: iwl priv struct
++ *
++ * This is called during iwl_down() to make sure that in the case
++ * we're coming there from a hardware restart mac80211 will be
++ * able to reconfigure stations -- if we're getting there in the
++ * normal down flow then the stations will already be cleared.
++ */
++static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->sta_lock, flags);
++	memset(priv->stations, 0, sizeof(priv->stations));
++	priv->num_stations = 0;
++	spin_unlock_irqrestore(&priv->sta_lock, flags);
++}
++
+ static inline int iwl_sta_id(struct ieee80211_sta *sta)
+ {
+ 	if (WARN_ON(!sta))
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 4916f23..4c78783 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2585,6 +2585,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ 	/* Station information will now be cleared in device */
+ 	iwl_clear_ucode_stations(priv);
+ 	iwl_dealloc_bcast_station(priv);
++	iwl_clear_driver_stations(priv);
+ 
+ 	/* Unblock any waiting calls */
+ 	wake_up_interruptible_all(&priv->wait_command_queue);
+-- 
+1.6.3.3
 
