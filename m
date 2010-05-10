@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:2403 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751522Ab0ESSdW (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:46392 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755052Ab0EJTqD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 14:33:22 -0400
-Message-ID: <4BF42EEF.6020900@gmail.com>
-Date: Wed, 19 May 2010 20:33:19 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Mon, 10 May 2010 15:46:03 -0400
 MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 5/7] rt2x00: Move PCI/USB specific register initializations
- to rt2800{pci,usb}.
-References: <1274282769-19244-1-git-send-email-gwingerde@gmail.com> <1274282769-19244-6-git-send-email-gwingerde@gmail.com> <201005192026.53773.IvDoorn@gmail.com>
-In-Reply-To: <201005192026.53773.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 10 May 2010 12:45:41 -0700
+Message-ID: <k2z43e72e891005101245se32796ex47a17683ab05d8b5@mail.gmail.com>
+Subject: Using wireless.kernel.org for Bluetooth documentation as well ?
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/19/10 20:26, Ivo van Doorn wrote:
-> On Wednesday 19 May 2010 17:26:07 Gertjan van Wingerde wrote:
->> This prevents us having common code depend on PCI or USB specific code.
->>
->> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->> ---
-> 
-> To which tree are you creating your diffs?
-> This one doesn't apply to latest wireless-testing.git or rt2x00,git
-> 
+Today we have a wealth of information on 802.11 Linux wireless on
+http://wireless.kernel.org and I think the wiki model has worked
+wonders for us. I wanted to see what you thought of using the same
+site as a source of documentation for Bluetooth as well. We already
+have *some* Bluetooth documentation [1], and we could just point to
+the BlueZ pages for other docs but it doesn't seem to use a wiki and
+those google ads do blind my right eye.
 
-All my patches are against wireless-next-2.6.git, as that is the tree John will use to merge patches
-in.
+Thoughts?
 
-I believe there indeed is a slight difference between that tree and wireless-testing.git
-with respect to the <linux/slab.h> inclusion, causing applying errors against wireless-testing.
+[1] http://wireless.kernel.org/en/users/Documentation/Bluetooth-coexistence
+[2] http://www.bluez.org
 
----
-Gertjan.
-
+  Luis
