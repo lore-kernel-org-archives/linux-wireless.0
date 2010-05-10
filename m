@@ -1,66 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:15366 "EHLO mga03.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:63760 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932226Ab0EKSU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 14:20:56 -0400
-Subject: Re: [PATCH V3] mac80211: fix paged defragmentation
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <20100511181439.GB2400@tuxdriver.com>
-References: <1273602131-9188-1-git-send-email-abhijeet.kolekar@intel.com>
-	 <20100511181439.GB2400@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 May 2010 11:16:50 -0700
-Message-ID: <1273601810.5955.44.camel@abhi-desktop>
-Mime-Version: 1.0
+	id S1754096Ab0EJW2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:25 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 15/47] iwlwifi: pass address to iwl_remove_station
+Date: Mon, 10 May 2010 15:27:46 -0700
+Message-Id: <1273530498-11876-16-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello John,
-On Tue, 2010-05-11 at 11:14 -0700, John W. Linville wrote:
-> On Tue, May 11, 2010 at 11:22:11AM -0700, Abhijeet Kolekar wrote:
-> > Paged RX skb patch broke the defragmentation. We need to read hdr again
-> > after linearization.
-> > 
-> > It fixes following bug
-> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2194
-> > 
-> > Signed-off-by: Zhu, Yi <yi.zhu@intel.com>
-> > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> > ---
-> > v2: Changed hdr reading.
-> > v3: Added more comments.
-> >  net/mac80211/rx.c |    6 ++++++
-> >  1 files changed, 6 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> > index 9a08f2c..6e2a7bc 100644
-> > --- a/net/mac80211/rx.c
-> > +++ b/net/mac80211/rx.c
-> > @@ -1253,6 +1253,12 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
-> >  	if (skb_linearize(rx->skb))
-> >  		return RX_DROP_UNUSABLE;
-> >  
-> > +	/*
-> > +	 *  skb_linearize() might change the skb->data and
-> > +	 *  previously cached variables (in this case, hdr) need to
-> > +	 *  be refreshed with the new data.
-> > +	 */
-> > +	hdr = (struct ieee80211_hdr *)rx->skb->data;
-> >  	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
-> >  
-> >  	if (frag == 0) {
-> 
-> And what about making sure the compiler doesn't optimize this away?
-> 
- To avoid the double assignment, there is one more approach is to
-directly read fc and seq_ctrl  using skb_data. I will send that in the
-next version.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Abhijeet
+We'll need that function for IBSS station management,
+so pass it the address, which is the only thing it
+uses from the station struct.
 
-> John
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-sta.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 5c6b326..354eb13 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -596,7 +596,7 @@ static int iwl_send_remove_station(struct iwl_priv *priv,
+ /**
+  * iwl_remove_station - Remove driver's knowledge of station.
+  */
+-static int iwl_remove_station(struct iwl_priv *priv, struct ieee80211_sta *sta)
++static int iwl_remove_station(struct iwl_priv *priv, const u8 *addr)
+ {
+ 	int sta_id = IWL_INVALID_STATION;
+ 	int i, ret = -EINVAL;
+@@ -607,7 +607,7 @@ static int iwl_remove_station(struct iwl_priv *priv, struct ieee80211_sta *sta)
+ 	if (!iwl_is_ready(priv)) {
+ 		IWL_DEBUG_INFO(priv,
+ 			"Unable to remove station %pM, device not ready.\n",
+-			sta->addr);
++			addr);
+ 		/*
+ 		 * It is typical for stations to be removed when we are
+ 		 * going down. Return success since device will be down
+@@ -624,7 +624,7 @@ static int iwl_remove_station(struct iwl_priv *priv, struct ieee80211_sta *sta)
+ 		for (i = IWL_STA_ID; i < priv->hw_params.max_stations; i++)
+ 			if (priv->stations[i].used &&
+ 			    !compare_ether_addr(priv->stations[i].sta.sta.addr,
+-						sta->addr)) {
++						addr)) {
+ 				sta_id = i;
+ 				break;
+ 			}
+@@ -633,17 +633,17 @@ static int iwl_remove_station(struct iwl_priv *priv, struct ieee80211_sta *sta)
+ 		goto out;
+ 
+ 	IWL_DEBUG_ASSOC(priv, "Removing STA from driver:%d  %pM\n",
+-		sta_id, sta->addr);
++		sta_id, addr);
+ 
+ 	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
+ 		IWL_DEBUG_INFO(priv, "Removing %pM but non DRIVER active\n",
+-				sta->addr);
++				addr);
+ 		goto out;
+ 	}
+ 
+ 	if (!(priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE)) {
+ 		IWL_DEBUG_INFO(priv, "Removing %pM but non UCODE active\n",
+-				sta->addr);
++				addr);
+ 		goto out;
+ 	}
+ 
+@@ -1450,7 +1450,7 @@ int iwl_mac_sta_remove(struct ieee80211_hw *hw,
+ 	struct iwl_priv *priv = hw->priv;
+ 	IWL_DEBUG_INFO(priv, "received request to remove station %pM\n",
+ 			sta->addr);
+-	ret = iwl_remove_station(priv, sta);
++	ret = iwl_remove_station(priv, sta->addr);
+ 	if (ret)
+ 		IWL_ERR(priv, "Error removing station %pM\n",
+ 			sta->addr);
+-- 
+1.6.3.3
 
