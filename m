@@ -1,29 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:42119 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753165Ab0EASks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 14:40:48 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] ssb: Implement fast powerup delay calculation
-Date: Sat, 1 May 2010 20:40:42 +0200
-Cc: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"b43-dev" <b43-dev@lists.infradead.org>
-References: <4BDC56D2.5060605@gmail.com> <201005012015.50601.mb@bu3sch.de> <4BDC729E.5060202@lwfinger.net> (sfid-20100501_182752_757736_DDC8209F)
-In-Reply-To: <4BDC729E.5060202@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005012040.42916.mb@bu3sch.de>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39046 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750824Ab0EJVYR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 17:24:17 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: backport pm_qos_{add,remove,update}_request
+Date: Mon, 10 May 2010 23:24:09 +0200
+Message-Id: <1273526650-26282-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 01 May 2010 20:27:42 Larry Finger wrote:
-> OK, I changed the spec to remove the write.
 
-Uhm, I think the spec was perfecly fine.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+I have not found a way to backport these changes without using these ifdef.
+ patches/28-pm-qos-params.patch |   89 ++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 89 insertions(+), 0 deletions(-)
+ create mode 100644 patches/28-pm-qos-params.patch
 
+diff --git a/patches/28-pm-qos-params.patch b/patches/28-pm-qos-params.patch
+new file mode 100644
+index 0000000..4c3966a
+--- /dev/null
++++ b/patches/28-pm-qos-params.patch
+@@ -0,0 +1,89 @@
++--- a/drivers/net/wireless/ipw2x00/ipw2100.c
+++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
++@@ -174,7 +174,9 @@ that only one external action is invoked
++ #define DRV_DESCRIPTION	"Intel(R) PRO/Wireless 2100 Network Driver"
++ #define DRV_COPYRIGHT	"Copyright(c) 2003-2006 Intel Corporation"
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ struct pm_qos_request_list *ipw2100_pm_qos_req;
+++#endif
++ 
++ /* Debugging stuff */
++ #ifdef CONFIG_IPW2100_DEBUG
++@@ -1741,7 +1743,11 @@ static int ipw2100_up(struct ipw2100_pri
++ 	/* the ipw2100 hardware really doesn't want power management delays
++ 	 * longer than 175usec
++ 	 */
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 	pm_qos_update_request(ipw2100_pm_qos_req, 175);
+++#else
+++	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100", 175);
+++#endif
++ 
++ 	/* If the interrupt is enabled, turn it off... */
++ 	spin_lock_irqsave(&priv->low_lock, flags);
++@@ -1889,7 +1895,12 @@ static void ipw2100_down(struct ipw2100_
++ 	ipw2100_disable_interrupts(priv);
++ 	spin_unlock_irqrestore(&priv->low_lock, flags);
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 	pm_qos_update_request(ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
+++#else
+++	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
+++			PM_QOS_DEFAULT_VALUE);
+++#endif
++ 
++ 	/* We have to signal any supplicant if we are disassociating */
++ 	if (associated)
++@@ -6674,7 +6685,11 @@ static int __init ipw2100_init(void)
++ 	if (ret)
++ 		goto out;
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 	ipw2100_pm_qos_req = pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
+++#else
+++	pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
+++#endif
++ 			PM_QOS_DEFAULT_VALUE);
++ #ifdef CONFIG_IPW2100_DEBUG
++ 	ipw2100_debug_level = debug;
++@@ -6697,7 +6712,11 @@ static void __exit ipw2100_exit(void)
++ 			   &driver_attr_debug_level);
++ #endif
++ 	pci_unregister_driver(&ipw2100_pci_driver);
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 	pm_qos_remove_request(ipw2100_pm_qos_req);
+++#else
+++	pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100");
+++#endif
++ }
++ 
++ module_init(ipw2100_init);
++--- a/net/mac80211/mlme.c
+++++ b/net/mac80211/mlme.c
++@@ -509,7 +509,11 @@ void ieee80211_recalc_ps(struct ieee8021
++ 		s32 beaconint_us;
++ 
++ 		if (latency < 0)
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 			latency = pm_qos_request(PM_QOS_NETWORK_LATENCY);
+++#else
+++			latency = pm_qos_requirement(PM_QOS_NETWORK_LATENCY);
+++#endif
++ 
++ 		beaconint_us = ieee80211_tu_to_usec(
++ 					found->vif.bss_conf.beacon_int);
++--- a/net/mac80211/scan.c
+++++ b/net/mac80211/scan.c
++@@ -510,7 +510,11 @@ static int ieee80211_scan_state_decision
++ 		bad_latency = time_after(jiffies +
++ 				ieee80211_scan_get_channel_time(next_chan),
++ 				local->leave_oper_channel_time +
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 				usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
+++#else
+++				usecs_to_jiffies(pm_qos_requirement(PM_QOS_NETWORK_LATENCY)));
+++#endif
++ 
++ 		listen_int_exceeded = time_after(jiffies +
++ 				ieee80211_scan_get_channel_time(next_chan),
 -- 
-Greetings, Michael.
+1.7.0.4
+
