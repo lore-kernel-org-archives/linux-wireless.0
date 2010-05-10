@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58409 "EHLO purkki.valot.fi"
+Received: from mga09.intel.com ([134.134.136.24]:63760 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753732Ab0EVOGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 May 2010 10:06:16 -0400
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 1/1] cfg80211: Fix user-space crda query stall
-References: <1274438539-11259-1-git-send-email-juuso.oikarinen@nokia.com>
-	<1274438539-11259-2-git-send-email-juuso.oikarinen@nokia.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sat, 22 May 2010 17:06:14 +0300
-In-Reply-To: <1274438539-11259-2-git-send-email-juuso.oikarinen@nokia.com> (Juuso Oikarinen's message of "Fri\, 21 May 2010 13\:42\:19 +0300")
-Message-ID: <87eih4hvzd.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1756738Ab0EJW23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 18:28:29 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 26/47] iwlagn: use vif->type to check station
+Date: Mon, 10 May 2010 15:27:57 -0700
+Message-Id: <1273530498-11876-27-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moi Juuso,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+We need not check iw_mode, since we have
+the vif pointer available.
 
-> The userspace crda utility can fail to respond to kernel requests in (at least)
-> two scenarios: it is not runnable for any reason, or it is invoked with a
-> country code not in its database.
->
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-[...]
-
-> +	printk(KERN_INFO "cfg80211: Call crda daemon timed out for country: "
-> +	       "%c%c\n", last_request->alpha2[0], last_request->alpha2[1]);
-
-I would prefer to mention in the print that kernel will revert back to
-world domain. Nicer for the users.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 97184e1..7c3363a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3223,7 +3223,7 @@ static int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
+-	bool is_ap = priv->iw_mode == NL80211_IFTYPE_STATION;
++	bool is_ap = vif->type == NL80211_IFTYPE_STATION;
+ 	int ret;
+ 	u8 sta_id;
+ 
 -- 
-Kalle Valo
+1.6.3.3
+
