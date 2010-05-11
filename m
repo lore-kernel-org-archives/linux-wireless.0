@@ -1,41 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.digadd.de ([195.47.195.236]:41885 "EHLO mx2.digadd.de"
+Received: from mail.atheros.com ([12.36.123.2]:47727 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751126Ab0E1KuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 06:50:18 -0400
-Message-ID: <4BFF9FC6.4030101@digadd.de>
-Date: Fri, 28 May 2010 12:49:42 +0200
-From: "Christian P. Schmidt" <schmidt@digadd.de>
+	id S1757267Ab0EKKyW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 06:54:22 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 03:54:22 -0700
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Problems connectring to an AP with Acer Aspire Revo
-References: <4BF795EB.9070902@digadd.de>	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de> <1275043274.3909.71.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1275043274.3909.71.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19433.14193.579653.665234@gargle.gargle.HOWL>
+Date: Tue, 11 May 2010 16:24:41 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/5] ath9k_htc: Reorder HTC initialization
+From: <Sujith.Manoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/28/2010 12:41 PM, Johannes Berg wrote:
-> On Fri, 2010-05-28 at 12:31 +0200, Christian P. Schmidt wrote:
-> 
->> After looking up the specs for the mini pci express port I'm gonna
->> disassemble the HTPC tonight and will figure out if that thing asserts
->> the RFKILL signal... even though there's no RFKILL switch.
-> 
-> That isn't useful I think since the rfkill line would disable the
-> hardware, which we'd know in software and never get this far. Maybe
-> better check if the antennas are connected properly and are dual-band
-> antennas if you use 5ghz? :)
+The HTC state has to be setup before initializing
+the target because the ready message could possibly
+come before the control endpoints in HTC have been
+identified.
 
-I was wondering about that part, admitted. The original card (ath9k) was
-an AGN two-antenna dual-band as well, came vendor fitted - and had the
-same issue. I was considering trying different antennas, admittedly, but
-I have none at hand.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   22 ++++++++--------
+ drivers/net/wireless/ath/ath9k/htc_hst.c |   38 +++++++++++++++---------------
+ drivers/net/wireless/ath/ath9k/htc_hst.h |    9 ++++---
+ 3 files changed, 35 insertions(+), 34 deletions(-)
 
-I see a bunch of WLANs with levels between 180 and 225. I'll compare the
-values to disconnected antennas while disassembling.
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 453cf56..46dc41a 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -859,21 +859,21 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+ #endif
+ 	usb_set_intfdata(interface, hif_dev);
+ 
++	hif_dev->htc_handle = ath9k_htc_hw_alloc(hif_dev, &hif_usb,
++						 &hif_dev->udev->dev);
++	if (hif_dev->htc_handle == NULL) {
++		ret = -ENOMEM;
++		goto err_htc_hw_alloc;
++	}
++
+ 	ret = ath9k_hif_usb_dev_init(hif_dev, fw_name);
+ 	if (ret) {
+ 		ret = -EINVAL;
+ 		goto err_hif_init_usb;
+ 	}
+ 
+-	hif_dev->htc_handle = ath9k_htc_hw_alloc(hif_dev);
+-	if (hif_dev->htc_handle == NULL) {
+-		ret = -ENOMEM;
+-		goto err_htc_hw_alloc;
+-	}
+-
+-	ret = ath9k_htc_hw_init(&hif_usb, hif_dev->htc_handle, hif_dev,
+-				&hif_dev->udev->dev, hif_dev->device_id,
+-				ATH9K_HIF_USB);
++	ret = ath9k_htc_hw_init(hif_dev->htc_handle,
++				&hif_dev->udev->dev, hif_dev->device_id);
+ 	if (ret) {
+ 		ret = -EINVAL;
+ 		goto err_htc_hw_init;
+@@ -884,10 +884,10 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+ 	return 0;
+ 
+ err_htc_hw_init:
+-	ath9k_htc_hw_free(hif_dev->htc_handle);
+-err_htc_hw_alloc:
+ 	ath9k_hif_usb_dev_deinit(hif_dev);
+ err_hif_init_usb:
++	ath9k_htc_hw_free(hif_dev->htc_handle);
++err_htc_hw_alloc:
+ 	usb_set_intfdata(interface, NULL);
+ 	kfree(hif_dev);
+ 	usb_put_dev(udev);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index 7bf6ce1..2c8006a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -425,29 +425,19 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
+ 	}
+ }
+ 
+-struct htc_target *ath9k_htc_hw_alloc(void *hif_handle)
++struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
++				      struct ath9k_htc_hif *hif,
++				      struct device *dev)
+ {
++	struct htc_endpoint *endpoint;
+ 	struct htc_target *target;
+ 
+ 	target = kzalloc(sizeof(struct htc_target), GFP_KERNEL);
+-	if (!target)
++	if (!target) {
+ 		printk(KERN_ERR "Unable to allocate memory for"
+ 			"target device\n");
+-
+-	return target;
+-}
+-
+-void ath9k_htc_hw_free(struct htc_target *htc)
+-{
+-	kfree(htc);
+-}
+-
+-int ath9k_htc_hw_init(struct ath9k_htc_hif *hif, struct htc_target *target,
+-		      void *hif_handle, struct device *dev, u16 devid,
+-		      enum ath9k_hif_transports transport)
+-{
+-	struct htc_endpoint *endpoint;
+-	int err = 0;
++		return NULL;
++	}
+ 
+ 	init_completion(&target->target_wait);
+ 	init_completion(&target->cmd_wait);
+@@ -461,8 +451,18 @@ int ath9k_htc_hw_init(struct ath9k_htc_hif *hif, struct htc_target *target,
+ 	endpoint->ul_pipeid = hif->control_ul_pipe;
+ 	endpoint->dl_pipeid = hif->control_dl_pipe;
+ 
+-	err = ath9k_htc_probe_device(target, dev, devid);
+-	if (err) {
++	return target;
++}
++
++void ath9k_htc_hw_free(struct htc_target *htc)
++{
++	kfree(htc);
++}
++
++int ath9k_htc_hw_init(struct htc_target *target,
++		      struct device *dev, u16 devid)
++{
++	if (ath9k_htc_probe_device(target, dev, devid)) {
+ 		printk(KERN_ERR "Failed to initialize the device\n");
+ 		return -ENODEV;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
+index ea50ab0..d216c0f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.h
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
+@@ -236,11 +236,12 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
+ void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
+ 			       struct sk_buff *skb, bool txok);
+ 
+-struct htc_target *ath9k_htc_hw_alloc(void *hif_handle);
++struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
++				      struct ath9k_htc_hif *hif,
++				      struct device *dev);
+ void ath9k_htc_hw_free(struct htc_target *htc);
+-int ath9k_htc_hw_init(struct ath9k_htc_hif *hif, struct htc_target *target,
+-		      void *hif_handle, struct device *dev, u16 devid,
+-		      enum ath9k_hif_transports transport);
++int ath9k_htc_hw_init(struct htc_target *target,
++		      struct device *dev, u16 devid);
+ void ath9k_htc_hw_deinit(struct htc_target *target, bool hot_unplug);
+ 
+ #endif /* HTC_HST_H */
+-- 
+1.7.1
 
-Regards,
-Christian
+
+-- 
