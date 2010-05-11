@@ -1,89 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60124 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303Ab0E1LXD (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:51326 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757070Ab0EKSSR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 07:23:03 -0400
-Subject: Re: Iwlwifi and LEDS?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Gregy <p.gregy@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Richard Purdie <rpurdie@openedhand.com>
-In-Reply-To: <AANLkTim86ILiQu0BNzUAkUV6lg1-mXt5UBJ0C9gGcgaI@mail.gmail.com>
-References: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
-	 <1274465242.12391.0.camel@abhi-desktop>
-	 <AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
-	 <1274740231.2091.15472.camel@rchatre-DESK>
-	 <AANLkTilfa4YPPiroX5yfJ2BNRUVZH6imTvG4I8ukGjBC@mail.gmail.com>
-	 <1275025163.2091.20502.camel@rchatre-DESK>
-	 <AANLkTim86ILiQu0BNzUAkUV6lg1-mXt5UBJ0C9gGcgaI@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 May 2010 13:22:59 +0200
-Message-ID: <1275045779.3909.90.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 11 May 2010 14:18:17 -0400
+Received: by pwi5 with SMTP id 5so2406967pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 11:18:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201005111834.36879.br1@einfach.org>
+References: <20100511083121.28289.96180.stgit@tt-desk> <1273567999.3669.27.camel@jlt3.sipsolutions.net>
+	<201005111834.36879.br1@einfach.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 11 May 2010 11:17:57 -0700
+Message-ID: <AANLkTinovE4SfYj3bzVo1GJcSciiT0Tt1RB8Mz-rXWeR@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/2] mac80211: antenna configuration
+To: Bruno Randolf <br1@einfach.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Richard, please see below after the *** -- I have a question for you.
+On Tue, May 11, 2010 at 2:34 AM, Bruno Randolf <br1@einfach.org> wrote:
+> On Tuesday 11 May 2010 17:53:19 you wrote:
+>> On Tue, 2010-05-11 at 17:38 +0900, Bruno Randolf wrote:
+>> > i have followed holger schurig's suggestion to use a bitmap for allowed
+>> > antennas. when multiple antennas are selected in the bitmap, the driver
+>> > may use diversity. i think that this allows for the most flexible, yet
+>> > simple configuration of antennas, and drivers can just reject
+>> > configurations they cannot support. i hope that this will also be
+>> > generic enough for 802.11n with multiple antennas
+>>
+>> Not sure ... 11n has antennas and chains, but people mix them up
+>> frequently. Does this API even make sense for 11n? Use cases? Should it
+>> be about *antennas*, or about *chains*?
+>
+> thanks for the review! i'll resend tomorrow.
+>
+> i personally don't know about 802.11n - and what i need is about *antennas* :)
 
-On Fri, 2010-05-28 at 13:01 +0200, Gregy wrote:
-> > If you want to be able to manipulate the LED in other ways than the
-> > driver supports you could look into adding a debugfs file that
-> > manipulates the driver's led variables (allow_blinking,
-> > last_blink_time, ...). There is already a readable led file in debugfs,
-> > but not writable.
-> >
-> > Reinette
-> 
-> Ok, I have tried that with partial success. It allows me to change led
-> status "mid-flight" but if led is blinking it sometimes works only
-> after second try. Also my understanding of C and kernel programming is
-> very limited so I probably made some mistakes. Could you please look
-> at it?
+I figured, let us help you with the 11n review.
 
-I don't think this is the correct approach. I guess since the patch you
-referenced is mine, I should comment.
-
-Prior to my patch, iwlwifi would register LEDs in the LED subsystem, but
-it didn't really properly do that since a lot of internal code just
-updates the LEDs. Additionally, by default the requirement is that the
-LED blinks according to traffic. Also, the blinking itself is done by
-the device, it is not done by the host CPU.
-
-At the time of the patch, the LED subsystem didn't support blinking.
-This has changed now, I think, but previously it was not possible to set
-the LED to "blinking" like we need to have it. Additionally the LED
-trigger registration code that I removed was way more code for much less
-functionality than it should have been.
-
-There's one proper way to fix this, but it is somewhat involved. Yes, I
-could have implemented that, but under the given time constraints, I
-opted for the cleanup that simply removed functionality that wasn't
-fully functional.
-
-(*** mark for Richard)
-
-The proper way to do this now would be to rewrite the LED code in
-iwlwifi to:
-
-1) register an LED again, which implements the blink_set() callback and
-programs the hw accordingly. This is essentially implementing
-iwl_led_pattern(), but with on_time/off_time parameters.
-
-2) Convert the current caller of iwl_led_pattern() to be an LED trigger
-that registers with the LED system. It would call the blink_set() for
-the LED it is connected to. Ideally, there should be some common
-software emulation if the LED has no blink_set(). Richard, is there a
-"make LED blink" callback that would start a timer for that LED? The
-timer trigger uses it but doesn't seem to be usable itself for other
-triggers?
-
-3) start the LED on device start, stop it on device stop
-
-4) depending on the module's led_mode, connect the LED to the
-appropriate default trigger, e.g. mac80211's assoc trigger or normally
-of course the new iwlwifi-blink trigger.
-
-johannes
-
+  Luis
