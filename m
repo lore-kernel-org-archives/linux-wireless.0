@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:35647 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753899Ab0ELJjy (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:59787 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877Ab0EKVei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 05:39:54 -0400
-Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0739207191
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:39:53 +0900 (JST)
-Subject: [PATCH 02/12] ath5k: wake queues on reset
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 12 May 2010 18:39:52 +0900
-Message-ID: <20100512093952.6575.5791.stgit@tt-desk>
-In-Reply-To: <20100512093947.6575.99595.stgit@tt-desk>
-References: <20100512093947.6575.99595.stgit@tt-desk>
+	Tue, 11 May 2010 17:34:38 -0400
+Received: by pvh11 with SMTP id 11so48453pvh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 14:34:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Steve Tanner <steve.tanner@gmail.com>
+Date: Tue, 11 May 2010 14:34:16 -0700
+Message-ID: <AANLkTikc-ywwl9R1Sn4PMh_GkD3l8mS3POK-gTaYm6hs@mail.gmail.com>
+Subject: [PATCH 2.6.32 1/1] ar9170usb: add vendor and device ID for
+	Qwest/Actiontec 802AIN Wireless N USB Network Adapter
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can wake all queues after a chip reset since everything should be set up and
-we are ready to transmit. If we don't do that we might end up starting up with
-stopped queues, not beeing able to transmit. (This started to happen after
-"ath5k: clean up queue manipulation" but since periodic calibration also
-stopped and started the queues this effect was hidden most of the time).
+* add support for the Qwest/Actiontec 802AIN Wireless N USB Network Adapter.
 
-This way we can also get rid of the superfluous ath5k_reset_wake() function.
+lsusb identifies the device as: "ID 1668:1200 Actiontec Electronics, Inc. [hex]"
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+usb_modeswitch package and appropriate rules are required to switch
+the device from "ID 0ace:20ff ZyDas"
+
+Changes-licensed-under: GPL
+Signed-off-by: Steve Tanner <steve.tanner@gmail.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |   17 +++--------------
- 1 files changed, 3 insertions(+), 14 deletions(-)
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c
+b/drivers/net/wireless/ath/ar9170/usb.c
+index f141a4f..1070313 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -94,6 +94,8 @@ static struct usb_device_id ar9170_usb_ids[] = {
+        { USB_DEVICE(0x057C, 0x8401) },
+        /* AVM FRITZ!WLAN USB Stick N 2.4 */
+        { USB_DEVICE(0x057C, 0x8402), .driver_info = AR9170_REQ_FW1_ONLY },
++       /* Qwest/Actiontec 802AIN Wireless N USB Network Adapter */
++       { USB_DEVICE(0x1668, 0x1200) },
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 9c27623..732a2c1 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -222,7 +222,6 @@ static int ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
- static int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		struct ath5k_txq *txq);
- static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan);
--static int ath5k_reset_wake(struct ath5k_softc *sc);
- static int ath5k_start(struct ieee80211_hw *hw);
- static void ath5k_stop(struct ieee80211_hw *hw);
- static int ath5k_add_interface(struct ieee80211_hw *hw,
-@@ -2769,7 +2768,7 @@ ath5k_tasklet_reset(unsigned long data)
- {
- 	struct ath5k_softc *sc = (void *)data;
- 
--	ath5k_reset_wake(sc);
-+	ath5k_reset(sc, sc->curchan);
- }
- 
- /*
-@@ -2940,23 +2939,13 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
- 	ath5k_beacon_config(sc);
- 	/* intrs are enabled by ath5k_beacon_config */
- 
-+	ieee80211_wake_queues(sc->hw);
-+
- 	return 0;
- err:
- 	return ret;
- }
- 
--static int
--ath5k_reset_wake(struct ath5k_softc *sc)
--{
--	int ret;
--
--	ret = ath5k_reset(sc, sc->curchan);
--	if (!ret)
--		ieee80211_wake_queues(sc->hw);
--
--	return ret;
--}
--
- static int ath5k_start(struct ieee80211_hw *hw)
- {
- 	return ath5k_init(hw->priv);
-
+        /* terminate */
+        {}
