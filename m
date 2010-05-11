@@ -1,70 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:34905 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758977Ab0EFQ2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 12:28:49 -0400
-Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
- accesspoint == hardlock
-From: reinette chatre <reinette.chatre@intel.com>
-To: Christian Borntraeger <borntraeger@de.ibm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"NilsRadtkelkml@think-future.de" <NilsRadtkelkml@think-future.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <201005061114.35480.borntraeger@de.ibm.com>
-References: <20100503191756.GA3479@localhost>
-	 <20100503192219.GE25748@tuxdriver.com>
-	 <201005061114.35480.borntraeger@de.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 06 May 2010 09:28:48 -0700
-Message-ID: <1273163328.2226.2530.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:36899 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752373Ab0EKIj0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 04:39:26 -0400
+Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0797827164
+	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 17:39:25 +0900 (JST)
+Subject: [RFC PATCH 3/3] iw: Add antenna set/get
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+Date: Tue, 11 May 2010 17:39:44 +0900
+Message-ID: <20100511083944.28347.21514.stgit@tt-desk>
+In-Reply-To: <20100511083933.28347.37155.stgit@tt-desk>
+References: <20100511083933.28347.37155.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christian,
+Add commands to set and get the antenna configuration. The antenna
+configuration is defined as a bitmap of 8 antennas. When multiple antennas are
+selected the driver may use diversity. Also the driver may reject antenna
+configurations it cannot support.
 
-On Thu, 2010-05-06 at 02:14 -0700, Christian Borntraeger wrote:
-> Am Montag 03 Mai 2010 21:22:19 schrieb John W. Linville:
-> > >   /* Sanity-check TPT calculations */
-> > >   BUG_ON(window->average_tpt != ((window->success_ratio *
-> > >       tbl->expected_tpt[index] + 64) / 128));
-> > 
-> > Interestingly enough, we have been discussing this line of code today.  Could you try the patch here?
-> > 
-> > 	http://marc.info/?l=linux-wireless&m=127290931304496&w=2
-> 
-> I also see a hard lockup some time after connection to my companies
-> wireless network. My private network does not seem to trigger that bug.
-> Unfortunately the kernel is not able to switch back graphics, so I 
-> cannot tell if I see the same BUG - even if the problem description is 
-> the same.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ Makefile  |    2 +
+ antenna.c |   92 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 93 insertions(+), 1 deletions(-)
+ create mode 100644 antenna.c
 
-It will be hard to debug this without some logs. Can you perhaps run
-with netconsole for a while? Is it possible to trigger this when not in
-X to be able to get some information about where issue is?
-
-> For reference, the patch above  does not help on my T61p.
-> 
-> It started soon after 2.6.34-rc4. Before and with rc4 I had to
-> apply this http://patchwork.ozlabs.org/patch/49850/mbox/ patch to avoid
-> the other crash. With only this patch on top of rc4 everything seemed to
-> work fine, so the lockup seems to be triggered by one of the other patches.
-> Sometimes it takes some minutes to crash, which makes it hard to bisect
-> the problem.
-
-Below seven iwlwifi patches were added after rc4. If you are unable to
-bisect ... perhaps you can run a while by reverting more and more from
-this list?
-
-f2fa1b015e9c199e45c836c769d94db595150731 iwlwifi: correct 6000 EEPROM regulatory address
-88be026490ed89c2ffead81a52531fbac5507e01 iwlwifi: fix scan races
-8b9fce77737ae9983f61ec56cd53f52fb738b2c7 iwlwifi: work around bogus active chains detection
-ece6444c2fe80dab679beb5f0d58b091f1933b00 iwlwifi: need check for valid qos packet before free
-de0f60ea94e132c858caa64a44b2012e1e8580b0 iwlwifi: avoid Tx queue memory allocation in interface down
-04f2dec1c3d375c4072613880f28f43b66524876 iwlwifi: use consistent table for tx data collect
-dd48744964296b5713032ea1d66eb9e3d990e287 iwlwifi: fix DMA allocation warnings
-
-Reinette
-
+diff --git a/Makefile b/Makefile
+index d303f45..e526cda 100644
+--- a/Makefile
++++ b/Makefile
+@@ -17,7 +17,7 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing
+ OBJS = iw.o genl.o event.o info.o phy.o \
+ 	interface.o ibss.o station.o survey.o util.o \
+ 	mesh.o mpath.o scan.o reg.o version.o \
+-	reason.o status.o connect.o link.o offch.o ps.o cqm.o
++	reason.o status.o connect.o link.o offch.o ps.o cqm.o antenna.o
+ OBJS += sections.o
+ ALL = iw
+ 
+diff --git a/antenna.c b/antenna.c
+new file mode 100644
+index 0000000..dd59c76
+--- /dev/null
++++ b/antenna.c
+@@ -0,0 +1,92 @@
++#include <net/if.h>
++#include <errno.h>
++#include <string.h>
++
++#include <netlink/genl/genl.h>
++#include <netlink/genl/family.h>
++#include <netlink/genl/ctrl.h>
++#include <netlink/msg.h>
++#include <netlink/attr.h>
++
++#include "nl80211.h"
++#include "iw.h"
++
++SECTION(antenna);
++
++static int set_antenna(struct nl80211_state *state,
++			struct nl_cb *cb,
++			struct nl_msg *msg,
++			int argc, char **argv)
++{
++	char *end;
++	uint8_t tx_ant, rx_ant;
++
++	if (argc != 4)
++		return 1;
++
++	if (strcmp(*argv, "tx") == 0) {
++		argv++;
++		argc--;
++
++		tx_ant = strtoul(argv[0], &end, 10);
++		argv++;
++		argc--;
++	}
++
++	if (strcmp(*argv, "rx") == 0) {
++		argv++;
++		argc--;
++
++		rx_ant = strtoul(argv[0], &end, 10);
++		argv++;
++		argc--;
++	}
++
++	if (*end)
++		return 1;
++
++	NLA_PUT_U8(msg, NL80211_ATTR_ANTENNA_TX, tx_ant);
++	NLA_PUT_U8(msg, NL80211_ATTR_ANTENNA_RX, rx_ant);
++	return 0;
++
++ nla_put_failure:
++	return -ENOBUFS;
++}
++
++COMMAND(antenna, set, "tx <bitmap> rx <bitmap>",
++	NL80211_CMD_SET_ANTENNA, 0, CIB_PHY, set_antenna,
++	"Set a bitmap of allowed antennas to use for TX and RX.\n"
++	"The driver may reject antenna configurations it cannot support.");
++
++
++static int print_antenna_handler(struct nl_msg *msg, void *arg)
++{
++	struct nlattr *attrs[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	uint8_t tx_ant, rx_ant;
++
++	nla_parse(attrs, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++
++	if (!attrs[NL80211_ATTR_ANTENNA_TX] || !attrs[NL80211_ATTR_ANTENNA_RX])
++		return NL_SKIP;
++
++	tx_ant = nla_get_u8(attrs[NL80211_ATTR_ANTENNA_TX]);
++	rx_ant = nla_get_u8(attrs[NL80211_ATTR_ANTENNA_RX]);
++
++	printf("Antenna configuration: tx %d rx %d\n", tx_ant, rx_ant);
++
++	return NL_SKIP;
++}
++
++static int get_antenna(struct nl80211_state *state,
++			struct nl_cb *cb,
++			struct nl_msg *msg,
++			int argc, char **argv)
++{
++	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_antenna_handler, NULL);
++	return 0;
++}
++
++COMMAND(antenna, get, NULL, NL80211_CMD_GET_ANTENNA, 0, CIB_PHY, get_antenna,
++	"Retrieve antenna configuration.");
 
