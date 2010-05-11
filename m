@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40645
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751230Ab0E2GBt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 May 2010 02:01:49 -0400
-Date: Fri, 28 May 2010 23:01:58 -0700 (PDT)
-Message-Id: <20100528.230158.191386259.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-05-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100528180952.GC2405@tuxdriver.com>
-References: <20100528180952.GC2405@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:7751 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752834Ab0EKRVe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 13:21:34 -0400
+Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
+ accesspoint == hardlock
+From: reinette chatre <reinette.chatre@intel.com>
+To: Christian Borntraeger <borntraeger@de.ibm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"NilsRadtkelkml@think-future.de" <NilsRadtkelkml@think-future.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <201005111750.08533.borntraeger@de.ibm.com>
+References: <20100503191756.GA3479@localhost>
+	 <201005061114.35480.borntraeger@de.ibm.com>
+	 <1273163328.2226.2530.camel@rchatre-DESK>
+	 <201005111750.08533.borntraeger@de.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 May 2010 10:21:33 -0700
+Message-ID: <1273598493.2370.7891.camel@rchatre-DESK>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 28 May 2010 14:09:53 -0400
-
-> Here are a few small fixes intended for 2.6.35.  Included are a null
-> pointer dereference fix, and a use-after-free fix, as well as some more
-> minor stuff.  It also include the revert of a earlier patch that I
-> inadvertantly merged out of order, effectively creating a bug rather
-> than fixing one.  The reverted patch will now be pointed at 2.6.36
-> instead.
+On Tue, 2010-05-11 at 08:50 -0700, Christian Borntraeger wrote:
+> Am Donnerstag 06 Mai 2010 18:28:48 schrieb reinette chatre:
+> > Below seven iwlwifi patches were added after rc4. If you are unable to
+> > bisect ... perhaps you can run a while by reverting more and more from
+> > this list?
+> > 
+> > f2fa1b015e9c199e45c836c769d94db595150731 iwlwifi: correct 6000 EEPROM regulatory address
+> > 88be026490ed89c2ffead81a52531fbac5507e01 iwlwifi: fix scan races
+> > 8b9fce77737ae9983f61ec56cd53f52fb738b2c7 iwlwifi: work around bogus active chains detection
+> > ece6444c2fe80dab679beb5f0d58b091f1933b00 iwlwifi: need check for valid qos packet before free
+> > de0f60ea94e132c858caa64a44b2012e1e8580b0 iwlwifi: avoid Tx queue memory allocation in interface down
+> > 04f2dec1c3d375c4072613880f28f43b66524876 iwlwifi: use consistent table for tx data collect
+> > dd48744964296b5713032ea1d66eb9e3d990e287 iwlwifi: fix DMA allocation warnings
 > 
-> Please let me know if there are problems!
+> Just to give you some feedback. Sometimes it takes a while until it crashes.
+> My hand made bisect is currently at two remaining patches:
+> 
+> de0f60ea94e132c858caa64a44b2012e1e8580b0
+> 8b9fce77737ae9983f61ec56cd53f52fb738b2c7
+> 
+> reverting both solves my hard lockup. I will try to isolate the "bad" patch
+> but this takes some more days since I wont be in the "hazardous environment"
+> this week.
 
-Pulled, thanks John.
+Thank you for digging into this. It will be very helpful it you can get
+us a trace of the crash - any chance that netconsole may work?
+
+Reinette
+
+
