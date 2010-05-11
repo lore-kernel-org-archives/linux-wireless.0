@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:61775 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228Ab0EFSii (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 14:38:38 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so479777fga.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 11:38:37 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 1/3] rt2x00: rt2800: update initial SIFS values
-Date: Thu, 6 May 2010 20:38:24 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201005061229.04897.helmut.schaa@googlemail.com> <s2ma32f33a41005061001w5e7258f0p3715ec238a00a4f4@mail.gmail.com>
-In-Reply-To: <s2ma32f33a41005061001w5e7258f0p3715ec238a00a4f4@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201005062038.24982.helmut.schaa@googlemail.com>
+Received: from mga11.intel.com ([192.55.52.93]:55313 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754330Ab0EKS4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 14:56:37 -0400
+Subject: Re: [PATCH V3] mac80211: fix paged defragmentation
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <20100511182423.GC2400@tuxdriver.com>
+References: <1273602131-9188-1-git-send-email-abhijeet.kolekar@intel.com>
+	 <20100511181439.GB2400@tuxdriver.com>
+	 <1273601810.5955.44.camel@abhi-desktop>
+	 <20100511182423.GC2400@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 May 2010 11:52:32 -0700
+Message-ID: <1273603952.5955.45.camel@abhi-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag 06 Mai 2010 schrieb Ivo Van Doorn:
-> On Thu, May 6, 2010 at 12:29 PM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
-> > Currently the CCK and OFDM SIFS value is set to 32us. This value is neither
-> > used by the Ralink driver nor specified in 802.11.
-> >
-> > Instead of using 10us for CCK SIFS (as defined in 802.11) use 16us like in the
-> > Ralink drivers. And indeed using a SIFS value of 10us breaks connectivity with
-> > 11g + CTS protected connections. Add a comment to the code why we don't use 10us
-> > for CCK SIFS value.
-> >
-> > The OFDM SIFS value is set to 16us (as defined in 802.11 and also used by the
-> > Ralink drivers).
+Hello John,
+On Tue, 2010-05-11 at 11:24 -0700, John W. Linville wrote:
+> On Tue, May 11, 2010 at 11:16:50AM -0700, Abhijeet Kolekar wrote:
+> > Hello John,
+> > On Tue, 2010-05-11 at 11:14 -0700, John W. Linville wrote:
+> > > On Tue, May 11, 2010 at 11:22:11AM -0700, Abhijeet Kolekar wrote:
+> > > > Paged RX skb patch broke the defragmentation. We need to read hdr again
+> > > > after linearization.
+> > > > 
+> > > > It fixes following bug
+> > > > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2194
+> > > > 
+> > > > Signed-off-by: Zhu, Yi <yi.zhu@intel.com>
+> > > > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> > > > ---
+> > > > v2: Changed hdr reading.
+> > > > v3: Added more comments.
+> > > >  net/mac80211/rx.c |    6 ++++++
+> > > >  1 files changed, 6 insertions(+), 0 deletions(-)
+> > > > 
+> > > > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> > > > index 9a08f2c..6e2a7bc 100644
+> > > > --- a/net/mac80211/rx.c
+> > > > +++ b/net/mac80211/rx.c
+> > > > @@ -1253,6 +1253,12 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+> > > >  	if (skb_linearize(rx->skb))
+> > > >  		return RX_DROP_UNUSABLE;
+> > > >  
+> > > > +	/*
+> > > > +	 *  skb_linearize() might change the skb->data and
+> > > > +	 *  previously cached variables (in this case, hdr) need to
+> > > > +	 *  be refreshed with the new data.
+> > > > +	 */
+> > > > +	hdr = (struct ieee80211_hdr *)rx->skb->data;
+> > > >  	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
+> > > >  
+> > > >  	if (frag == 0) {
+> > > 
+> > > And what about making sure the compiler doesn't optimize this away?
+> > > 
+> >  To avoid the double assignment, there is one more approach is to
+> > directly read fc and seq_ctrl  using skb_data. I will send that in the
+> > next version.
 > 
-> Just wondering, but we hardcode the SIFS value in the rt2x00.h file.
-> Perhaps we should remove it in there, and no longer pass it from
-> rt2x00lib. That way there can't be any confusion about which drivers
-> uses the sifs field and whcih do not.
+> I don't think the double assignment is so bad, I just think that a
+> compiler might decide to ignore the second assignment.  Am I wrong?
+> 
+I don't understand why compiler will ignore the second assignment other
+than the above reason. What will be the solution in this case?
 
-Yes, wouldn't be too bad I guess. But all non 2800 drivers use the same sifs
-value, so we could just leave the define in rt2x00.h and remove the sifs value
-from the config_erp calback and use the define in all other places?
+Abhijeet
 
-Nevertheless, I'm not sure why the rt2800 devices don't like the 10us CCK
-SIFS value (which is defined in 802.11) but I wasn't able to get CTS to self
-working correctly with it set to 10 (the actual data frame was sent out
-way too late after the CTS frame, somtimes with delays >100us). Using the 16us
-also for CCK (as the ralink drivers do) results in perfect CTS & data frame
-timing. Maybe it's a hardware issue and the (ralink) driver just works around
-it?
+> John
 
-Helmut
+
