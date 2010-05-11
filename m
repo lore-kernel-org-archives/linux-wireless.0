@@ -1,196 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:2940 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752122Ab0ESP0O (ORCPT
+Received: from mtagate6.de.ibm.com ([195.212.17.166]:38251 "EHLO
+	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894Ab0EKPuT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 11:26:14 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 2/7] rt2x00: Move all register definitions for rt2800 to rt2800.h.
-Date: Wed, 19 May 2010 17:26:04 +0200
-Message-Id: <1274282769-19244-3-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
-References: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
+	Tue, 11 May 2010 11:50:19 -0400
+From: Christian Borntraeger <borntraeger@de.ibm.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some accesspoint == hardlock
+Date: Tue, 11 May 2010 17:50:08 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"NilsRadtkelkml@think-future.de" <NilsRadtkelkml@think-future.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <20100503191756.GA3479@localhost> <201005061114.35480.borntraeger@de.ibm.com> <1273163328.2226.2530.camel@rchatre-DESK>
+In-Reply-To: <1273163328.2226.2530.camel@rchatre-DESK>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201005111750.08533.borntraeger@de.ibm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no point on having them separated across 3 files.
-At the same time rename USB_CYC_CFG to its proper name US_CYC_CNT
-(as per the datasheet).
+Am Donnerstag 06 Mai 2010 18:28:48 schrieb reinette chatre:
+> Below seven iwlwifi patches were added after rc4. If you are unable to
+> bisect ... perhaps you can run a while by reverting more and more from
+> this list?
+> 
+> f2fa1b015e9c199e45c836c769d94db595150731 iwlwifi: correct 6000 EEPROM regulatory address
+> 88be026490ed89c2ffead81a52531fbac5507e01 iwlwifi: fix scan races
+> 8b9fce77737ae9983f61ec56cd53f52fb738b2c7 iwlwifi: work around bogus active chains detection
+> ece6444c2fe80dab679beb5f0d58b091f1933b00 iwlwifi: need check for valid qos packet before free
+> de0f60ea94e132c858caa64a44b2012e1e8580b0 iwlwifi: avoid Tx queue memory allocation in interface down
+> 04f2dec1c3d375c4072613880f28f43b66524876 iwlwifi: use consistent table for tx data collect
+> dd48744964296b5713032ea1d66eb9e3d990e287 iwlwifi: fix DMA allocation warnings
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h    |   48 +++++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800lib.c |    6 ++--
- drivers/net/wireless/rt2x00/rt2800pci.h |   19 ------------
- drivers/net/wireless/rt2x00/rt2800usb.h |   37 -----------------------
- 4 files changed, 51 insertions(+), 59 deletions(-)
+Just to give you some feedback. Sometimes it takes a while until it crashes.
+My hand made bisect is currently at two remaining patches:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 35afe63..16bfaa8 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -98,6 +98,21 @@
-  */
- 
- /*
-+ * E2PROM_CSR: PCI EEPROM control register.
-+ * RELOAD: Write 1 to reload eeprom content.
-+ * TYPE: 0: 93c46, 1:93c66.
-+ * LOAD_STATUS: 1:loading, 0:done.
-+ */
-+#define E2PROM_CSR			0x0004
-+#define E2PROM_CSR_DATA_CLOCK		FIELD32(0x00000001)
-+#define E2PROM_CSR_CHIP_SELECT		FIELD32(0x00000002)
-+#define E2PROM_CSR_DATA_IN		FIELD32(0x00000004)
-+#define E2PROM_CSR_DATA_OUT		FIELD32(0x00000008)
-+#define E2PROM_CSR_TYPE			FIELD32(0x00000030)
-+#define E2PROM_CSR_LOAD_STATUS		FIELD32(0x00000040)
-+#define E2PROM_CSR_RELOAD		FIELD32(0x00000080)
-+
-+/*
-  * OPT_14: Unknown register used by rt3xxx devices.
-  */
- #define OPT_14_CSR			0x0114
-@@ -321,6 +336,39 @@
- #define RX_DRX_IDX			0x029c
- 
- /*
-+ * USB_DMA_CFG
-+ * RX_BULK_AGG_TIMEOUT: Rx Bulk Aggregation TimeOut in unit of 33ns.
-+ * RX_BULK_AGG_LIMIT: Rx Bulk Aggregation Limit in unit of 256 bytes.
-+ * PHY_CLEAR: phy watch dog enable.
-+ * TX_CLEAR: Clear USB DMA TX path.
-+ * TXOP_HALT: Halt TXOP count down when TX buffer is full.
-+ * RX_BULK_AGG_EN: Enable Rx Bulk Aggregation.
-+ * RX_BULK_EN: Enable USB DMA Rx.
-+ * TX_BULK_EN: Enable USB DMA Tx.
-+ * EP_OUT_VALID: OUT endpoint data valid.
-+ * RX_BUSY: USB DMA RX FSM busy.
-+ * TX_BUSY: USB DMA TX FSM busy.
-+ */
-+#define USB_DMA_CFG			0x02a0
-+#define USB_DMA_CFG_RX_BULK_AGG_TIMEOUT	FIELD32(0x000000ff)
-+#define USB_DMA_CFG_RX_BULK_AGG_LIMIT	FIELD32(0x0000ff00)
-+#define USB_DMA_CFG_PHY_CLEAR		FIELD32(0x00010000)
-+#define USB_DMA_CFG_TX_CLEAR		FIELD32(0x00080000)
-+#define USB_DMA_CFG_TXOP_HALT		FIELD32(0x00100000)
-+#define USB_DMA_CFG_RX_BULK_AGG_EN	FIELD32(0x00200000)
-+#define USB_DMA_CFG_RX_BULK_EN		FIELD32(0x00400000)
-+#define USB_DMA_CFG_TX_BULK_EN		FIELD32(0x00800000)
-+#define USB_DMA_CFG_EP_OUT_VALID	FIELD32(0x3f000000)
-+#define USB_DMA_CFG_RX_BUSY		FIELD32(0x40000000)
-+#define USB_DMA_CFG_TX_BUSY		FIELD32(0x80000000)
-+
-+/*
-+ * US_CYC_CNT
-+ */
-+#define US_CYC_CNT			0x02a4
-+#define US_CYC_CNT_CLOCK_CYCLE		FIELD32(0x000000ff)
-+
-+/*
-  * PBF_SYS_CTRL
-  * HOST_RAM_WRITE: enable Host program ram write selection
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index b1dfb57..5183249 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1619,9 +1619,9 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, HW_BEACON_BASE7, 0);
- 
- 	if (rt2x00_is_usb(rt2x00dev)) {
--		rt2800_register_read(rt2x00dev, USB_CYC_CFG, &reg);
--		rt2x00_set_field32(&reg, USB_CYC_CFG_CLOCK_CYCLE, 30);
--		rt2800_register_write(rt2x00dev, USB_CYC_CFG, reg);
-+		rt2800_register_read(rt2x00dev, US_CYC_CNT, &reg);
-+		rt2x00_set_field32(&reg, US_CYC_CNT_CLOCK_CYCLE, 30);
-+		rt2800_register_write(rt2x00dev, US_CYC_CNT, reg);
- 	}
- 
- 	rt2800_register_read(rt2x00dev, HT_FBK_CFG0, &reg);
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.h b/drivers/net/wireless/rt2x00/rt2800pci.h
-index afc8e7d..5a8dda9 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.h
-@@ -35,25 +35,6 @@
- #define RT2800PCI_H
- 
- /*
-- * PCI registers.
-- */
--
--/*
-- * E2PROM_CSR: EEPROM control register.
-- * RELOAD: Write 1 to reload eeprom content.
-- * TYPE: 0: 93c46, 1:93c66.
-- * LOAD_STATUS: 1:loading, 0:done.
-- */
--#define E2PROM_CSR			0x0004
--#define E2PROM_CSR_DATA_CLOCK		FIELD32(0x00000001)
--#define E2PROM_CSR_CHIP_SELECT		FIELD32(0x00000002)
--#define E2PROM_CSR_DATA_IN		FIELD32(0x00000004)
--#define E2PROM_CSR_DATA_OUT		FIELD32(0x00000008)
--#define E2PROM_CSR_TYPE			FIELD32(0x00000030)
--#define E2PROM_CSR_LOAD_STATUS		FIELD32(0x00000040)
--#define E2PROM_CSR_RELOAD		FIELD32(0x00000080)
--
--/*
-  * Queue register offset macros
-  */
- #define TX_QUEUE_REG_OFFSET		0x10
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.h b/drivers/net/wireless/rt2x00/rt2800usb.h
-index 2bca6a7..0722bad 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.h
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.h
-@@ -32,43 +32,6 @@
- #define RT2800USB_H
- 
- /*
-- * USB registers.
-- */
--
--/*
-- * USB_DMA_CFG
-- * RX_BULK_AGG_TIMEOUT: Rx Bulk Aggregation TimeOut in unit of 33ns.
-- * RX_BULK_AGG_LIMIT: Rx Bulk Aggregation Limit in unit of 256 bytes.
-- * PHY_CLEAR: phy watch dog enable.
-- * TX_CLEAR: Clear USB DMA TX path.
-- * TXOP_HALT: Halt TXOP count down when TX buffer is full.
-- * RX_BULK_AGG_EN: Enable Rx Bulk Aggregation.
-- * RX_BULK_EN: Enable USB DMA Rx.
-- * TX_BULK_EN: Enable USB DMA Tx.
-- * EP_OUT_VALID: OUT endpoint data valid.
-- * RX_BUSY: USB DMA RX FSM busy.
-- * TX_BUSY: USB DMA TX FSM busy.
-- */
--#define USB_DMA_CFG			0x02a0
--#define USB_DMA_CFG_RX_BULK_AGG_TIMEOUT	FIELD32(0x000000ff)
--#define USB_DMA_CFG_RX_BULK_AGG_LIMIT	FIELD32(0x0000ff00)
--#define USB_DMA_CFG_PHY_CLEAR		FIELD32(0x00010000)
--#define USB_DMA_CFG_TX_CLEAR		FIELD32(0x00080000)
--#define USB_DMA_CFG_TXOP_HALT		FIELD32(0x00100000)
--#define USB_DMA_CFG_RX_BULK_AGG_EN	FIELD32(0x00200000)
--#define USB_DMA_CFG_RX_BULK_EN		FIELD32(0x00400000)
--#define USB_DMA_CFG_TX_BULK_EN		FIELD32(0x00800000)
--#define USB_DMA_CFG_EP_OUT_VALID	FIELD32(0x3f000000)
--#define USB_DMA_CFG_RX_BUSY		FIELD32(0x40000000)
--#define USB_DMA_CFG_TX_BUSY		FIELD32(0x80000000)
--
--/*
-- * USB_CYC_CFG
-- */
--#define USB_CYC_CFG			0x02a4
--#define USB_CYC_CFG_CLOCK_CYCLE		FIELD32(0x000000ff)
--
--/*
-  * 8051 firmware image.
-  */
- #define FIRMWARE_RT2870			"rt2870.bin"
--- 
-1.7.1
+de0f60ea94e132c858caa64a44b2012e1e8580b0
+8b9fce77737ae9983f61ec56cd53f52fb738b2c7
 
+reverting both solves my hard lockup. I will try to isolate the "bad" patch
+but this takes some more days since I wont be in the "hazardous environment"
+this week.
+
+Christian
