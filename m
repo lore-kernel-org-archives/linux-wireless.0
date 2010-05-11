@@ -1,117 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:16397 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753250Ab0ETCV7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 22:21:59 -0400
-Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0831132115
-	for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 11:21:57 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [ath5k-devel] [PATCH v2 13/20] cfg80211: Add nl80211 antenna configuration
-Date: Thu, 20 May 2010 11:21:49 +0900
-References: <20100519012528.22206.77550.stgit@tt-desk> <201005201012.12045.br1@einfach.org> <AANLkTimso6hoef9IG2VtRQsHQiOVTQF-dwNZEooZTb3Y@mail.gmail.com>
-In-Reply-To: <AANLkTimso6hoef9IG2VtRQsHQiOVTQF-dwNZEooZTb3Y@mail.gmail.com>
-Cc: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201005201121.49846.br1@einfach.org>
+Received: from nbd.name ([88.198.39.176]:47560 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667Ab0EKPXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 11:23:12 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 3/4] ath9k: add debugfs files for reading/writing registers
+Date: Tue, 11 May 2010 17:23:02 +0200
+Message-Id: <1273591383-76696-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1273591383-76696-2-git-send-email-nbd@openwrt.org>
+References: <1273591383-76696-1-git-send-email-nbd@openwrt.org>
+ <1273591383-76696-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 May 2010 10:26:29 you wrote:
-> >> > > > + * @NL80211_ATTR_ANTENNA_TX: Bitmap of antennas to use for
-> >> > > > transmitting. + * @NL80211_ATTR_ANTENNA_RX: Bitmap of antennas to
-> >> > > > use for receiving.
-> >> > > 
-> >> > > This gets the job done, but that's it. The API defined allows for a
-> >> > > hugely loose implementation on each driver.
-> >> > 
-> >> > i tried to define it like this, in the commit log:
-> >> >     The antenna configuration is defined as a bitmap of allowed
-> >> > antennas. This bitmap is 8 bit at the moment, each bit representing
-> >> > one antenna. If multiple antennas are selected, the driver may use
-> >> > diversity for receive and transmit.
-> >> > 
-> >> > is this not precise enough?
-> >> 
-> >> No, the commit log is just a placeholder of information, if you want to
-> >> define API you do it through the kdoc so you can slap people when then
-> >> submit patches that do not follow it. The kdoc above allows the
-> >> flexibility you were looking for but that I do not think we should have
-> >> since it will confuse the users who want to tune antenna settings on
-> >> different drivers.
-> > 
-> > you are talking about the place where to put the definition, not about
-> > the definition itself. i agree, the definition should be in the kdoc,
-> > and i'll update the patch. what's wrong with the definition itself?
-> 
-> Why are you using a bitmask for only 3 possibly different settings?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   89 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/debug.h |    1 +
+ 2 files changed, 90 insertions(+), 0 deletions(-)
 
-because there are more than 3 different settings, like i mentioned at the end 
-of my last mail.
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 8d7c046..29898f8 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -795,6 +795,86 @@ static const struct file_operations fops_recv = {
+ 	.owner = THIS_MODULE
+ };
+ 
++static ssize_t read_file_regidx(struct file *file, char __user *user_buf,
++                                size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	char buf[32];
++	unsigned int len;
++
++	len = snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.regidx);
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
++			     size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	unsigned long regidx;
++	char buf[32];
++	ssize_t len;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EINVAL;
++
++	buf[len] = '\0';
++	if (strict_strtoul(buf, 0, &regidx))
++		return -EINVAL;
++
++	sc->debug.regidx = regidx;
++	return count;
++}
++
++static const struct file_operations fops_regidx = {
++	.read = read_file_regidx,
++	.write = write_file_regidx,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE
++};
++
++static ssize_t read_file_regval(struct file *file, char __user *user_buf,
++			     size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_hw *ah = sc->sc_ah;
++	char buf[32];
++	unsigned int len;
++	u32 regval;
++
++	regval = REG_READ_D(ah, sc->debug.regidx);
++	len = snprintf(buf, sizeof(buf), "0x%08x\n", regval);
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
++			     size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	struct ath_hw *ah = sc->sc_ah;
++	unsigned long regval;
++	char buf[32];
++	ssize_t len;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EINVAL;
++
++	buf[len] = '\0';
++	if (strict_strtoul(buf, 0, &regval))
++		return -EINVAL;
++
++	REG_WRITE_D(ah, sc->debug.regidx, regval);
++	return count;
++}
++
++static const struct file_operations fops_regval = {
++	.read = read_file_regval,
++	.write = write_file_regval,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE
++};
++
+ int ath9k_init_debug(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -846,6 +926,15 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			sc->debug.debugfs_phy, sc, &fops_tx_chainmask))
+ 		goto err;
+ 
++	if (!debugfs_create_file("regidx", S_IRUSR | S_IWUSR,
++			sc->debug.debugfs_phy, sc, &fops_regidx))
++		goto err;
++
++	if (!debugfs_create_file("regval", S_IRUSR | S_IWUSR,
++			sc->debug.debugfs_phy, sc, &fops_regval))
++		goto err;
++
++	sc->debug.regidx = 0;
+ 	return 0;
+ err:
+ 	ath9k_exit_debug(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 7314360..5147b87 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -153,6 +153,7 @@ struct ath_stats {
+ 
+ struct ath9k_debug {
+ 	struct dentry *debugfs_phy;
++	u32 regidx;
+ 	struct ath_stats stats;
+ };
+ 
+-- 
+1.6.4.2
 
-so, just talking about ath5k, right now we support only the 3 different 
-settings, you mentioned (fixed a, fixed b, default: diversity), true. other 
-drivers might support a different number of settings though, so just assuming 
-everyone follows these 3 definitions would be not enough, imho.
-
-and it's very easy to add to ath5k:
- - "RX on A, TX on B" or "RX on B, TX on A" (this makes sense if you want to 
-use a "big" (high dB) antenna for listening, but use a "small" (low dB) 
-antenna for sending within the regulatory limits).
- - TX on a fixed antenna, while using RX diversity
-
-that's why i decided for a bitmap.
-
-> >> > > And yet for another driver it could be something completely
-> >> > > different in usersepace.
-> >> > 
-> >> > what do you think that could be, realistically, given the above
-> >> > definition?
-> >> 
-> >> Well, anything that has to do with tx / rx antennas.
-> > 
-> > that's not very clear. can you give me an example?
-> 
-> iw dev wlan0 set_tx_antenna 4
-
-so you want to transmit on antenna 3. if the card has 3 antennas - 
-why not?
-
-> > what if there is a 'legacy' hardware with 3 or more antennas?
-> 
-> Like what?
-
-i can't find an actual real world example for that, but it thought it might be 
-possible, from what i know from the atheros eeprom which seems to be prepared 
-for up to 6 antennas.
-
-> > what if we want to configure RX on antenna 1, TX on antenna 2?
-> 
-> Are you not using a value for TX and RX? Would that now allow for this?
-
-there are different values for TX and RX, so it would allow for that.
-
-> > i don't see how "my" API is too complicated, and i think it allows for a
-> > clear configuration of these cases as well.
-> > 
-> > your criticism seems to be based on the fact that it's not clear how to
-> > handle 802.11n chainmask + antenna configuration, but this is not what
-> > my patch is concerned about. let's go step by step...
-> 
-> No no, that is my fault, I brought that up, I was hoping we could
-> address it but it seems that we can't as I don't have time to think
-> about this further in a unified clean API. But if its just going to be
-> legacy then I don't see why we would use a large bitmap.
-
-i wanted it to be easily extensibe for 802.11n and possibly 'legacy' with more 
-antennas in the future. if there really are not any pre-N cards with more than 
-2 antennas out there, and we are sure we don't want to support more than 2 
-antennas - well, we could save 6 bits... is it really worth it?
-
-bruno
