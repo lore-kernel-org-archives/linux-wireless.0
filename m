@@ -1,470 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:3245 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752580Ab0EKVvx (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44651 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757387Ab0EKTPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 17:51:53 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 4/9] rt2x00: Simplify TXD handling of beacons.
-Date: Tue, 11 May 2010 23:51:40 +0200
-Message-Id: <1273614705-25118-5-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
+	Tue, 11 May 2010 15:15:12 -0400
+Date: Tue, 11 May 2010 15:05:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2010-05-11
+Message-ID: <20100511190510.GD2400@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The handling of tx descriptors for beacons can be simplified by updating
-write_tx_desc implementations of each driver to write directly to the
-queue entry descriptor instead of to a provided memory area.
-This is also a preparation for further clean ups where descriptors are
-properly reserved in the skb instead of fiddling with the skb data
-pointer.
+Dave,
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Another round of bits intended for 2.6.35...mostly driver updates this
+time.  The biggest item of note is some continued attention for rt2800
+from the rt2x00 team.
+
+Please let me know if there are problems!
+
+John
+
 ---
- drivers/net/wireless/rt2x00/rt2400pci.c   |   21 +++++++++------------
- drivers/net/wireless/rt2x00/rt2500pci.c   |   21 +++++++++------------
- drivers/net/wireless/rt2x00/rt2500usb.c   |   21 ++++++++++++---------
- drivers/net/wireless/rt2x00/rt2800pci.c   |   14 ++++++++++----
- drivers/net/wireless/rt2x00/rt2800usb.c   |    8 +++++++-
- drivers/net/wireless/rt2x00/rt2x00pci.c   |    9 ---------
- drivers/net/wireless/rt2x00/rt2x00queue.c |   10 ----------
- drivers/net/wireless/rt2x00/rt2x00usb.c   |    8 --------
- drivers/net/wireless/rt2x00/rt61pci.c     |   20 +++++++++++++-------
- drivers/net/wireless/rt2x00/rt73usb.c     |   21 ++++++++++++---------
- 10 files changed, 72 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 1eff6ec..def3fa4 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1006,15 +1006,15 @@ static void rt2400pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
- 	struct queue_entry_priv_pci *entry_priv = skbdesc->entry->priv_data;
--	__le32 *txd = skbdesc->desc;
-+	__le32 *txd = entry_priv->desc;
- 	u32 word;
+The following changes since commit d250fe91ae129bff0968e685cc9c466d3a5e3482:
+  David S. Miller (1):
+        Merge branch 'master' of git://git.kernel.org/.../kaber/nf-next-2.6
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+
+Christian Lamparter (1):
+      ar9170usb: remove deprecated aggregation code
+
+Dan Carpenter (4):
+      iwlwifi: remove stray mutex_unlock()
+      ath9k/htc_drv_main: null dereference typo
+      ath9k/htc_drv_main: off by one error
+      ath5k: several off by one range checks
+
+David Kilroy (1):
+      orinoco: refactor xmit path
+
+Felix Fietkau (1):
+      ath9k: fix another source of corrupt frames
+
+Gertjan van Wingerde (9):
+      rt2x00: Fix setting of txdesc->length field.
+      rt2x00: Clean up rt2800usb.h.
+      rt2x00: Don't check whether hardware crypto is enabled when reading RXD.
+      rt2x00: Factor out TXWI writing to common rt2800 code.
+      rt2x00: Factor out RXWI processing to common rt2800 code.
+      rt2x00: Clean up all driver's kick_tx_queue callback functions.
+      rt2x00: provide beacon's txdesc to write_beacon callback function.
+      rt2x00: Fix beaconing on rt2800.
+      rt2x00: Clean up generic procedures on descriptor writing.
+
+Helmut Schaa (3):
+      rt2x00: rt2800: update initial SIFS values
+      rt2x00: rt2800: don't overwrite SIFS values on erp changes
+      rt2x00: rt2800: use correct txop value in tx descriptor
+
+Ivo van Doorn (1):
+      rt2x00: Fix RF3052 channel initialization
+
+Johannes Berg (3):
+      mac80211: fix BSS info reconfiguration
+      cfg80211/mac80211: better channel handling
+      mac80211: improve HT channel handling
+
+John W. Linville (5):
+      mac80211: set IEEE80211_TX_CTL_FIRST_FRAGMENT for beacons
+      rtl8180: assign sequence numbers in the driver
+      rtl8180: add software-based support for IBSS mode
+      rtl8180: change PCI DMA mask to DMA_BIT_MASK(32)
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
+
+Juuso Oikarinen (4):
+      wl1271: Add sysfs file to retrieve HW PG-version and ROM-version
+      wl1271: Fix 32 bit register read related endiannes bug
+      wl1271: Fix to join and channel number handling
+      wl1271: Reduce PSM entry hang over period from 128 => 1 ms
+
+Luis R. Rodriguez (4):
+      ath9k_common: move the rate status setting into ath9k_process_rate()
+      ath9k_common: drop incomming frames with an invalid hardware rate
+      ath9k_hw: Update initvals for AR9003 for xb113
+      ath9k_hw: enable PCIe low power mode for AR9003
+
+Randy Dunlap (1):
+      wireless: depends on NET
+
+Stephen Rothwell (1):
+      ar9170: fix for driver-core ABI change
+
+Sujith (2):
+      ath9k_htc: Fix beaconing in IBSS mode
+      ath9k_htc: Handle IDLE LED properly
+
+Teemu Paasikivi (1):
+      wl1271: Increase timeout for command event waiting
+
+Xose Vazquez Perez (1):
+      wireless: rt2x00: rt2800usb: replace X by x
+
+ drivers/net/wireless/Kconfig                     |    1 +
+ drivers/net/wireless/ath/ar9170/ar9170.h         |   52 +--
+ drivers/net/wireless/ath/ar9170/main.c           |  558 +---------------------
+ drivers/net/wireless/ath/ar9170/usb.c            |    5 +-
+ drivers/net/wireless/ath/ath5k/ani.c             |    6 +-
+ drivers/net/wireless/ath/ath9k/ar9003_initvals.h |  204 ++++----
+ drivers/net/wireless/ath/ath9k/common.c          |   49 ++-
+ drivers/net/wireless/ath/ath9k/htc.h             |    5 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c  |   39 +--
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c    |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c    |   42 +-
+ drivers/net/wireless/ath/ath9k/hw.c              |   20 +
+ drivers/net/wireless/iwlwifi/iwl-3945.c          |    1 -
+ drivers/net/wireless/libertas/cfg.c              |    1 +
+ drivers/net/wireless/mac80211_hwsim.c            |   19 +-
+ drivers/net/wireless/orinoco/cfg.c               |    1 +
+ drivers/net/wireless/orinoco/main.c              |  169 ++++---
+ drivers/net/wireless/orinoco/orinoco.h           |    6 +
+ drivers/net/wireless/orinoco/orinoco_usb.c       |   91 ++--
+ drivers/net/wireless/rndis_wlan.c                |    4 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c          |   22 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c          |   22 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c          |   66 +--
+ drivers/net/wireless/rt2x00/rt2800lib.c          |  178 +++++++-
+ drivers/net/wireless/rt2x00/rt2800lib.h          |    3 +
+ drivers/net/wireless/rt2x00/rt2800pci.c          |  166 ++-----
+ drivers/net/wireless/rt2x00/rt2800usb.c          |  182 ++------
+ drivers/net/wireless/rt2x00/rt2800usb.h          |   40 --
+ drivers/net/wireless/rt2x00/rt2x00.h             |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00crypto.c       |    1 +
+ drivers/net/wireless/rt2x00/rt2x00ht.c           |   17 +
+ drivers/net/wireless/rt2x00/rt2x00queue.c        |   23 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.h        |    2 +
+ drivers/net/wireless/rt2x00/rt2x00reg.h          |   10 +
+ drivers/net/wireless/rt2x00/rt61pci.c            |   41 +-
+ drivers/net/wireless/rt2x00/rt73usb.c            |   51 +--
+ drivers/net/wireless/rtl818x/rtl8180.h           |   11 +
+ drivers/net/wireless/rtl818x/rtl8180_dev.c       |   96 ++++-
+ drivers/net/wireless/wl12xx/wl1271.h             |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_boot.c        |   12 +
+ drivers/net/wireless/wl12xx/wl1271_boot.h        |    3 +
+ drivers/net/wireless/wl12xx/wl1271_cmd.c         |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_cmd.h         |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_io.h          |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c        |   63 +++-
+ include/linux/nl80211.h                          |   13 +
+ include/net/cfg80211.h                           |   11 +-
+ include/net/mac80211.h                           |    6 +
+ net/mac80211/Makefile                            |    3 +-
+ net/mac80211/cfg.c                               |   58 +++-
+ net/mac80211/chan.c                              |  127 +++++
+ net/mac80211/ibss.c                              |    5 +-
+ net/mac80211/ieee80211_i.h                       |   16 +-
+ net/mac80211/main.c                              |    2 +-
+ net/mac80211/mlme.c                              |   44 +-
+ net/mac80211/tx.c                                |    5 +-
+ net/mac80211/util.c                              |   25 +-
+ net/wireless/chan.c                              |   56 +--
+ net/wireless/core.h                              |   12 +-
+ net/wireless/ibss.c                              |    5 -
+ net/wireless/nl80211.c                           |  171 +++++--
+ net/wireless/sme.c                               |    5 -
+ net/wireless/wext-compat.c                       |   15 +-
+ net/wireless/wext-sme.c                          |    2 +-
+ 64 files changed, 1369 insertions(+), 1511 deletions(-)
+ create mode 100644 net/mac80211/chan.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-05-11.patch.bz2
  
- 	/*
- 	 * Start writing the descriptor words.
- 	 */
--	rt2x00_desc_read(entry_priv->desc, 1, &word);
-+	rt2x00_desc_read(txd, 1, &word);
- 	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
--	rt2x00_desc_write(entry_priv->desc, 1, word);
-+	rt2x00_desc_write(txd, 1, word);
- 
- 	rt2x00_desc_read(txd, 2, &word);
- 	rt2x00_set_field32(&word, TXD_W2_BUFFER_LENGTH, txdesc->length);
-@@ -1059,6 +1059,12 @@ static void rt2400pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W0_RETRY_MODE,
- 			   test_bit(ENTRY_TXD_RETRY_MODE, &txdesc->flags));
- 	rt2x00_desc_write(txd, 0, word);
-+
-+	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = txd;
-+	skbdesc->desc_len = TXD_DESC_SIZE;
- }
- 
- /*
-@@ -1081,15 +1087,6 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
- 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
- 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- 
--	/*
--	 * Replace rt2x00lib allocated descriptor with the
--	 * pointer to the _real_ hardware descriptor.
--	 * After that, map the beacon to DMA and update the
--	 * descriptor.
--	 */
--	memcpy(entry_priv->desc, skbdesc->desc, skbdesc->desc_len);
--	skbdesc->desc = entry_priv->desc;
--
- 	rt2x00queue_map_txskb(rt2x00dev, entry->skb);
- 
- 	rt2x00_desc_read(entry_priv->desc, 1, &word);
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 8d3e95e..070c23e 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1164,15 +1164,15 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
- 	struct queue_entry_priv_pci *entry_priv = skbdesc->entry->priv_data;
--	__le32 *txd = skbdesc->desc;
-+	__le32 *txd = entry_priv->desc;
- 	u32 word;
- 
- 	/*
- 	 * Start writing the descriptor words.
- 	 */
--	rt2x00_desc_read(entry_priv->desc, 1, &word);
-+	rt2x00_desc_read(txd, 1, &word);
- 	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
--	rt2x00_desc_write(entry_priv->desc, 1, word);
-+	rt2x00_desc_write(txd, 1, word);
- 
- 	rt2x00_desc_read(txd, 2, &word);
- 	rt2x00_set_field32(&word, TXD_W2_IV_OFFSET, IEEE80211_HEADER);
-@@ -1216,6 +1216,12 @@ static void rt2500pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W0_DATABYTE_COUNT, txdesc->length);
- 	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, CIPHER_NONE);
- 	rt2x00_desc_write(txd, 0, word);
-+
-+	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = txd;
-+	skbdesc->desc_len = TXD_DESC_SIZE;
- }
- 
- /*
-@@ -1238,15 +1244,6 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
- 	rt2x00_set_field32(&reg, CSR14_BEACON_GEN, 0);
- 	rt2x00pci_register_write(rt2x00dev, CSR14, reg);
- 
--	/*
--	 * Replace rt2x00lib allocated descriptor with the
--	 * pointer to the _real_ hardware descriptor.
--	 * After that, map the beacon to DMA and update the
--	 * descriptor.
--	 */
--	memcpy(entry_priv->desc, skbdesc->desc, skbdesc->desc_len);
--	skbdesc->desc = entry_priv->desc;
--
- 	rt2x00queue_map_txskb(rt2x00dev, entry->skb);
- 
- 	rt2x00_desc_read(entry_priv->desc, 1, &word);
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 9a915be..b985d8f 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1033,7 +1033,7 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 				    struct txentry_desc *txdesc)
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	__le32 *txd = skbdesc->desc;
-+	__le32 *txd = (__le32 *)(skb->data - TXD_DESC_SIZE);
- 	u32 word;
- 
- 	/*
-@@ -1075,6 +1075,12 @@ static void rt2500usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 		_rt2x00_desc_write(txd, 3, skbdesc->iv[0]);
- 		_rt2x00_desc_write(txd, 4, skbdesc->iv[1]);
- 	}
-+
-+	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = txd;
-+	skbdesc->desc_len = TXD_DESC_SIZE;
- }
- 
- /*
-@@ -1088,19 +1094,11 @@ static void rt2500usb_write_beacon(struct queue_entry *entry,
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
- 	struct queue_entry_priv_usb_bcn *bcn_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	int pipe = usb_sndbulkpipe(usb_dev, entry->queue->usb_endpoint);
- 	int length;
- 	u16 reg, reg0;
- 
- 	/*
--	 * Add the descriptor in front of the skb.
--	 */
--	skb_push(entry->skb, entry->queue->desc_size);
--	memcpy(entry->skb->data, skbdesc->desc, skbdesc->desc_len);
--	skbdesc->desc = entry->skb->data;
--
--	/*
- 	 * Disable beaconing while we are reloading the beacon data,
- 	 * otherwise we might be sending out invalid data.
- 	 */
-@@ -1109,6 +1107,11 @@ static void rt2500usb_write_beacon(struct queue_entry *entry,
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
- 
- 	/*
-+	 * Take the descriptor in front of the skb into account.
-+	 */
-+	skb_push(entry->skb, TXD_DESC_SIZE);
-+
-+	/*
- 	 * USB devices cannot blindly pass the skb->len as the
- 	 * length of the data to usb_fill_bulk_urb. Pass the skb
- 	 * to the driver to determine what the length should be.
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 7d4778d..b2f2327 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -633,7 +633,8 @@ static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 				    struct txentry_desc *txdesc)
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	__le32 *txd = skbdesc->desc;
-+	struct queue_entry_priv_pci *entry_priv = skbdesc->entry->priv_data;
-+	__le32 *txd = entry_priv->desc;
- 	u32 word;
- 
- 	/*
-@@ -657,15 +658,14 @@ static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 			   !test_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W1_BURST,
- 			   test_bit(ENTRY_TXD_BURST, &txdesc->flags));
--	rt2x00_set_field32(&word, TXD_W1_SD_LEN0,
--			   rt2x00dev->ops->extra_tx_headroom);
-+	rt2x00_set_field32(&word, TXD_W1_SD_LEN0, TXWI_DESC_SIZE);
- 	rt2x00_set_field32(&word, TXD_W1_LAST_SEC0, 0);
- 	rt2x00_set_field32(&word, TXD_W1_DMA_DONE, 0);
- 	rt2x00_desc_write(txd, 1, word);
- 
- 	rt2x00_desc_read(txd, 2, &word);
- 	rt2x00_set_field32(&word, TXD_W2_SD_PTR1,
--			   skbdesc->skb_dma + rt2x00dev->ops->extra_tx_headroom);
-+			   skbdesc->skb_dma + TXWI_DESC_SIZE);
- 	rt2x00_desc_write(txd, 2, word);
- 
- 	rt2x00_desc_read(txd, 3, &word);
-@@ -673,6 +673,12 @@ static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 			   !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W3_QSEL, 2);
- 	rt2x00_desc_write(txd, 3, word);
-+
-+	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = txd;
-+	skbdesc->desc_len = TXD_DESC_SIZE;
- }
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index d48d705..1b87daa 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -400,7 +400,7 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 				    struct txentry_desc *txdesc)
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	__le32 *txi = skbdesc->desc;
-+	__le32 *txi = (__le32 *)(skb->data - TXWI_DESC_SIZE - TXINFO_DESC_SIZE);
- 	u32 word;
- 
- 	/*
-@@ -422,6 +422,12 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXINFO_W0_USB_DMA_TX_BURST,
- 			   test_bit(ENTRY_TXD_BURST, &txdesc->flags));
- 	rt2x00_desc_write(txi, 0, word);
-+
-+	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = txi;
-+	skbdesc->desc_len = TXINFO_DESC_SIZE + TXWI_DESC_SIZE;
- }
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index 2fe9f29..ff80ef7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -66,8 +66,6 @@ int rt2x00pci_write_tx_data(struct queue_entry *entry,
- 			    struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc;
- 
- 	/*
- 	 * This should not happen, we already checked the entry
-@@ -82,13 +80,6 @@ int rt2x00pci_write_tx_data(struct queue_entry *entry,
- 		return -EINVAL;
- 	}
- 
--	/*
--	 * Fill in skb descriptor
--	 */
--	skbdesc = get_skb_frame_desc(entry->skb);
--	skbdesc->desc = entry_priv->desc;
--	skbdesc->desc_len = entry->queue->desc_size;
--
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(rt2x00pci_write_tx_data);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 97b2c76..891d5f7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -552,7 +552,6 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
- 	struct skb_frame_desc *skbdesc;
- 	struct txentry_desc txdesc;
--	__le32 desc[16];
- 
- 	if (unlikely(!intf->beacon))
- 		return -ENOBUFS;
-@@ -585,19 +584,10 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 	rt2x00queue_create_tx_descriptor(intf->beacon, &txdesc);
- 
- 	/*
--	 * For the descriptor we use a local array from where the
--	 * driver can move it to the correct location required for
--	 * the hardware.
--	 */
--	memset(desc, 0, sizeof(desc));
--
--	/*
- 	 * Fill in skb descriptor
- 	 */
- 	skbdesc = get_skb_frame_desc(intf->beacon->skb);
- 	memset(skbdesc, 0, sizeof(*skbdesc));
--	skbdesc->desc = desc;
--	skbdesc->desc_len = intf->beacon->queue->desc_size;
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index acf3282..a4f0551 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -221,7 +221,6 @@ int rt2x00usb_write_tx_data(struct queue_entry *entry,
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
- 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc;
- 	u32 length;
- 
- 	/*
-@@ -231,13 +230,6 @@ int rt2x00usb_write_tx_data(struct queue_entry *entry,
- 	memset(entry->skb->data, 0, entry->queue->desc_size);
- 
- 	/*
--	 * Fill in skb descriptor
--	 */
--	skbdesc = get_skb_frame_desc(entry->skb);
--	skbdesc->desc = entry->skb->data;
--	skbdesc->desc_len = entry->queue->desc_size;
--
--	/*
- 	 * USB devices cannot blindly pass the skb->len as the
- 	 * length of the data to usb_fill_bulk_urb. Pass the skb
- 	 * to the driver to determine what the length should be.
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 55aa010..1be1d7d 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1763,7 +1763,8 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 				  struct txentry_desc *txdesc)
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	__le32 *txd = skbdesc->desc;
-+	struct queue_entry_priv_pci *entry_priv = skbdesc->entry->priv_data;
-+	__le32 *txd = entry_priv->desc;
- 	u32 word;
- 
- 	/*
-@@ -1842,6 +1843,13 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 			   test_bit(ENTRY_TXD_BURST, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXD_W0_CIPHER_ALG, txdesc->cipher);
- 	rt2x00_desc_write(txd, 0, word);
-+
-+	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = txd;
-+	skbdesc->desc_len =
-+		(txdesc->queue == QID_BEACON) ?  TXINFO_SIZE : TXD_DESC_SIZE;
- }
- 
- /*
-@@ -1851,7 +1859,7 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
- 				 struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
-+	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
- 	unsigned int beacon_base;
- 	u32 reg;
- 
-@@ -1867,11 +1875,9 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
- 	 * Write entire beacon with descriptor to register.
- 	 */
- 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
--	rt2x00pci_register_multiwrite(rt2x00dev,
--				      beacon_base,
--				      skbdesc->desc, skbdesc->desc_len);
--	rt2x00pci_register_multiwrite(rt2x00dev,
--				      beacon_base + skbdesc->desc_len,
-+	rt2x00pci_register_multiwrite(rt2x00dev, beacon_base,
-+				      entry_priv->desc, TXINFO_SIZE);
-+	rt2x00pci_register_multiwrite(rt2x00dev, beacon_base + TXINFO_SIZE,
- 				      entry->skb->data, entry->skb->len);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index fa40d43..fca661c 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1440,7 +1440,7 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 				  struct txentry_desc *txdesc)
- {
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
--	__le32 *txd = skbdesc->desc;
-+	__le32 *txd = (__le32 *)(skb->data - TXD_DESC_SIZE);
- 	u32 word;
- 
- 	/*
-@@ -1499,6 +1499,12 @@ static void rt73usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 			   TXPOWER_TO_DEV(rt2x00dev->tx_power));
- 	rt2x00_set_field32(&word, TXD_W5_WAITING_DMA_DONE_INT, 1);
- 	rt2x00_desc_write(txd, 5, word);
-+
-+	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = txd;
-+	skbdesc->desc_len = TXD_DESC_SIZE;
- }
- 
- /*
-@@ -1508,18 +1514,10 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
- 				 struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
- 
- 	/*
--	 * Add the descriptor in front of the skb.
--	 */
--	skb_push(entry->skb, entry->queue->desc_size);
--	memcpy(entry->skb->data, skbdesc->desc, skbdesc->desc_len);
--	skbdesc->desc = entry->skb->data;
--
--	/*
- 	 * Disable beaconing while we are reloading the beacon data,
- 	 * otherwise we might be sending out invalid data.
- 	 */
-@@ -1528,6 +1526,11 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
- 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
- 
- 	/*
-+	 * Take the descriptor in front of the skb into account.
-+	 */
-+	skb_push(entry->skb, TXD_DESC_SIZE);
-+
-+	/*
- 	 * Write entire beacon with descriptor to register.
- 	 */
- 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
