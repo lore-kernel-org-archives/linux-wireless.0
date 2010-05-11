@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42170 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757597Ab0ERMgj (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:59682 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751705Ab0EKE2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 08:36:39 -0400
-Subject: [PATCH] cfg80211: add missing braces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274181194.3762.77.camel@jlt3.sipsolutions.net>
-References: <1274181194.3762.77.camel@jlt3.sipsolutions.net>
+	Tue, 11 May 2010 00:28:03 -0400
+Subject: Re: [patch 8/9] wl1271: fix notifier interface supported test
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Dan Carpenter <error27@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Oikarinen Juuso (Nokia-D/Tampere)" <juuso.oikarinen@nokia.com>,
+	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
+	<ext-teemu.3.paasikivi@nokia.com>, Kalle Valo <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100508162551.GT27064@bicker>
+References: <20100508162551.GT27064@bicker>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 May 2010 14:36:34 +0200
-Message-ID: <1274186194.3762.79.camel@jlt3.sipsolutions.net>
+Date: Tue, 11 May 2010 07:27:42 +0300
+Message-ID: <1273552062.2021.26.camel@powerslave>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Specifying a valid channel type will get
-goto out rather than continuing, due to
-missing braces. This affects both remain
-on channel and action frame TX commands.
+On Sat, 2010-05-08 at 18:25 +0200, ext Dan Carpenter wrote:
+> The "(wl == NULL)" test doesn't work here because "wl" is always
+> non-null.  The intent of the code is to return if the interface
+> was not supported by the driver.
+> 
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> 
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+> index b61cd10..55aa813 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+> @@ -852,7 +852,7 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+>  		if (wl == wl_temp)
+>  			break;
+>  	}
+> -	if (wl == NULL)
+> +	if (wl != wl_temp)
+>  		return NOTIFY_DONE;
+>  
+>  	/* Get the interface IP address for the device. "ifa" will become
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-replaces the earlier patch
+Thanks for the fix.
 
- net/wireless/nl80211.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
 
---- wireless-testing.orig/net/wireless/nl80211.c	2010-05-18 13:09:26.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2010-05-18 14:35:20.000000000 +0200
-@@ -4443,9 +4443,10 @@ static int nl80211_remain_on_channel(str
- 		if (channel_type != NL80211_CHAN_NO_HT &&
- 		    channel_type != NL80211_CHAN_HT20 &&
- 		    channel_type != NL80211_CHAN_HT40PLUS &&
--		    channel_type != NL80211_CHAN_HT40MINUS)
-+		    channel_type != NL80211_CHAN_HT40MINUS) {
- 			err = -EINVAL;
- 			goto out;
-+		}
- 	}
- 
- 	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-@@ -4717,9 +4718,10 @@ static int nl80211_action(struct sk_buff
- 		if (channel_type != NL80211_CHAN_NO_HT &&
- 		    channel_type != NL80211_CHAN_HT20 &&
- 		    channel_type != NL80211_CHAN_HT40PLUS &&
--		    channel_type != NL80211_CHAN_HT40MINUS)
-+		    channel_type != NL80211_CHAN_HT40MINUS) {
- 			err = -EINVAL;
- 			goto out;
-+		}
- 	}
- 
- 	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
+
+-- 
+Cheers,
+Luca.
 
 
