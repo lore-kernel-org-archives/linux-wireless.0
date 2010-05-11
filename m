@@ -1,102 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f176.google.com ([209.85.222.176]:33052 "EHLO
-	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546Ab0EZVeI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 17:34:08 -0400
-Received: by pzk6 with SMTP id 6so3000740pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 14:34:06 -0700 (PDT)
-Message-ID: <4BFD93E0.5080506@gmail.com>
-Date: Wed, 26 May 2010 14:34:24 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:47728 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757030Ab0EKKyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 06:54:24 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 03:54:24 -0700
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH]wireless:ath9k Disable leds for Apple products.
-References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com> 	<1274894056-2866-2-git-send-email-justinmattock@gmail.com> 	<20100526171844.GB5823@tuxdriver.com> <4BFD5C89.8000308@gmail.com> <AANLkTim6ef__fNdXUyP1T4HB7jxbyt-Jlqi3Xa5Y_whm@mail.gmail.com>
-In-Reply-To: <AANLkTim6ef__fNdXUyP1T4HB7jxbyt-Jlqi3Xa5Y_whm@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19433.14195.321284.643261@gargle.gargle.HOWL>
+Date: Tue, 11 May 2010 16:24:43 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/5] ath9k_htc: Fix target ready race condition
+From: <Sujith.Manoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/2010 02:05 PM, Luis R. Rodriguez wrote:
-> On Wed, May 26, 2010 at 10:38 AM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->    
->> On 05/26/2010 10:18 AM, John W. Linville wrote:
->>      
->>> On Wed, May 26, 2010 at 10:14:16AM -0700, Justin P. Mattock wrote:
->>>
->>>        
->>>> Disable the leds on ath9k for Apple products, since
->>>> there is no leds on any of there machines(or non that I can find!!).
->>>>
->>>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>>>          
-> Our team has confirmed Apple devices do not have LEDs so a change like
-> this is OK but this patch is wrong anyway. More details below.
->
->    
->>>>   void ath_init_leds(struct ath_softc *sc)
->>>>   {
->>>>         char *trigger;
->>>>         int ret;
->>>>
->>>> +       /* Apple has no leds lights for their wireless.  */
->>>> +       if (dmi_check_system(dmi_system_table)>    0)
->>>> +               return -ENODEV;
->>>> +       else
->>>> +
->>>>         if (AR_SREV_9287(sc->sc_ah))
->>>>                 sc->sc_ah->led_pin = ATH_LED_PIN_9287;
->>>>         else
->>>>
->>>>          
->>> Surely we don't need the 'else'.
->>>
->>> Does enabling the LEDs on these systems cause any problems?
->>>
->>> John
->>>
->>>        
->> I picked up the idea, from this patch:
->> http://kerneltrap.org/mailarchive/linux-kernel/2010/1/20/4530535
->> while looking into a bug for ath9k(thinking maybe leds
->> are causing something, which want  the case)
->>
->> so Id have to say I don't think the leds cause issue's,
->> if anything just a wasted symlink, call, or whatever
->> in /sys/class/leds/*
->>      
-> The patch is wrong anyway, ath_init_leds() is void and yet you return
-> a value. If this is really needed I'd also prefer if you define a bool
-> or something and use a ah->ignore_leds and set this to true if the DMI
-> stuff checks out for Apple up hw init. Then check for ignore_leds
-> prior to calling ath_init_leds() and also avoid it if set. Also check
-> for ingore_leds upon device cleanup and ignore the
-> acancel_delayed_work_sync(&sc->ath_led_blink_work) and
-> ath_deinit_leds() and skip that.
->
-> But given that it is not needed it seems a lot of work for something
-> that is a non-issue.
->
->    Luis
->
->    
-tough to say!! I was looking into a bug a few months back, and
-thought hmm.. maybe something is being called with the leds
-but the leds are not there causing some thing to crap out..
+The ready message from the target could be processed
+before the host HW init has completed. In this case,
+htc_process_target_rdy() would assume the target has timed
+out, when it hasn't. Fix this by checking if the target
+has sent the ready message properly.
 
-so out of curiosity I remembered the dmi disable patch, and
-semi somewhat pieced it together(just to see the results of disabling 
-the leds).
-unfortunately still hit the strange thing with wpa_supplicant and 
-ath9k(the disconnect thing).
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    7 +++++++
+ drivers/net/wireless/ath/ath9k/htc_hst.c      |    3 +++
+ drivers/net/wireless/ath/ath9k/htc_hst.h      |    1 +
+ 3 files changed, 11 insertions(+), 0 deletions(-)
 
-as for the above procedure(I can give that a try.. but it might
-take a while...)
-
-Justin P. Mattock
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 17111fc..dc01507 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -81,6 +81,11 @@ static int ath9k_htc_wait_for_target(struct ath9k_htc_priv *priv)
+ {
+ 	int time_left;
+ 
++	if (atomic_read(&priv->htc->tgt_ready) > 0) {
++		atomic_dec(&priv->htc->tgt_ready);
++		return 0;
++	}
++
+ 	/* Firmware can take up to 50ms to get ready, to be safe use 1 second */
+ 	time_left = wait_for_completion_timeout(&priv->htc->target_wait, HZ);
+ 	if (!time_left) {
+@@ -88,6 +93,8 @@ static int ath9k_htc_wait_for_target(struct ath9k_htc_priv *priv)
+ 		return -ETIMEDOUT;
+ 	}
+ 
++	atomic_dec(&priv->htc->tgt_ready);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index 2c8006a..e86e172 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -95,6 +95,7 @@ static void htc_process_target_rdy(struct htc_target *target,
+ 	endpoint = &target->endpoint[ENDPOINT0];
+ 	endpoint->service_id = HTC_CTRL_RSVD_SVC;
+ 	endpoint->max_msglen = HTC_MAX_CONTROL_MESSAGE_LENGTH;
++	atomic_inc(&target->tgt_ready);
+ 	complete(&target->target_wait);
+ }
+ 
+@@ -451,6 +452,8 @@ struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
+ 	endpoint->ul_pipeid = hif->control_ul_pipe;
+ 	endpoint->dl_pipeid = hif->control_dl_pipe;
+ 
++	atomic_set(&target->tgt_ready, 0);
++
+ 	return target;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
+index d216c0f..4f1cdb0 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.h
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
+@@ -147,6 +147,7 @@ struct htc_target {
+ 	u16 credits;
+ 	u16 credit_size;
+ 	u8 htc_flags;
++	atomic_t tgt_ready;
+ };
+ 
+ enum htc_msg_id {
+-- 
+1.7.1
 
 
+-- 
