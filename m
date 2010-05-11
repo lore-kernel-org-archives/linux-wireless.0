@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56546 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932372Ab0ECNYq (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:20279 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841Ab0EKE2F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 09:24:46 -0400
-Subject: Re: [PATCH] mac80211: improve IBSS scanning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <469051.90774.qm@web51402.mail.re2.yahoo.com>
-References: <469051.90774.qm@web51402.mail.re2.yahoo.com>
+	Tue, 11 May 2010 00:28:05 -0400
+Subject: Re: [patch 9/9] wl1271: remove some unneeded code
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Dan Carpenter <error27@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Oikarinen Juuso (Nokia-D/Tampere)" <juuso.oikarinen@nokia.com>,
+	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
+	<ext-teemu.3.paasikivi@nokia.com>, Kalle Valo <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100508162638.GU27064@bicker>
+References: <20100508162638.GU27064@bicker>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 03 May 2010 15:24:44 +0200
-Message-ID: <1272893084.3614.37.camel@jlt3.sipsolutions.net>
+Date: Tue, 11 May 2010 07:28:03 +0300
+Message-ID: <1273552083.2021.27.camel@powerslave>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-03 at 06:20 -0700, Joerg Pommnitz wrote:
-> > WHY is it required for you? And yeah, I _am_ still opposed
-> > to that.
+On Sat, 2010-05-08 at 18:26 +0200, ext Dan Carpenter wrote:
+> The goto and the break are equivelent.  I removed the goto in memory of
+> Edsger Dijkstra who famously hated gotos and who would have been eighty
+> years old next Tuesday.
 > 
-> Please don't laugh! Really, don't!
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
 > 
-> We have an embedded system that normally uses an IBSS network
-> as a delivery system (can be deployed for field measurements).
-> Some customers were unhappy that the networks could be detected
-> on WLAN snoopers like Netstumbler. The quick and dirty solution
-> to make the networks invisible was using the AH-demo mode.
-> 
-> Now "invisible on Netstumbler" is an advertised feature that
-> must be maintained for ever after (the GUI has a checkbox 
-> "hide from Netstumbler").
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+> index 55aa813..da40cee 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+> @@ -1563,8 +1563,6 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+>  	default:
+>  		wl1271_error("Unsupported key cmd 0x%x", cmd);
+>  		ret = -EOPNOTSUPP;
+> -		goto out_sleep;
+> -
+>  		break;
+>  	}
 
-Ok ... I'll go improve netstumbler instead of laughing ... if there's
-any traffic it can trivially be detected anyway, so what's the point?
-Hidden SSID is a hack (which doesn't work with IBSS obviously), but this
-kinda seems worse.
+We use goto out_* in error cases throughout our code (sorry Edsger!) and
+in many cases they are not needed because they're the last check in the
+function, but we still use them for consistency.
 
-Seriously though, why should the upstream kernel support such bad design
-decisions...? :)
+In this case, there are two "consistency" items conflicting with each
+other (ie. the "break" in the last case entry is not needed, but it's
+there for consistency).  Your change indeed makes the code look cleaner,
+so I think the "keep-the-break-in-the-default-case" rule should win
+here. ;)
 
-johannes
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+ 
+
+
+-- 
+Cheers,
+Luca.
+
 
