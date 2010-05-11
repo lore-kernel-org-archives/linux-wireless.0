@@ -1,32 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:60091 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757025Ab0EFSMQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45663 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932499Ab0EKSaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 14:12:16 -0400
-Received: by ywh36 with SMTP id 36so164401ywh.4
-        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 11:12:15 -0700 (PDT)
+	Tue, 11 May 2010 14:30:11 -0400
+Date: Tue, 11 May 2010 14:24:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Subject: Re: [PATCH V3] mac80211: fix paged defragmentation
+Message-ID: <20100511182423.GC2400@tuxdriver.com>
+References: <1273602131-9188-1-git-send-email-abhijeet.kolekar@intel.com>
+ <20100511181439.GB2400@tuxdriver.com>
+ <1273601810.5955.44.camel@abhi-desktop>
 MIME-Version: 1.0
-In-Reply-To: <20100505120131.2b9f4e06@atom.pigiron.org>
-References: <20100505120131.2b9f4e06@atom.pigiron.org>
-Date: Thu, 6 May 2010 11:12:15 -0700
-Message-ID: <t2j446ae9281005061112z6eee4126z673947eb02dc4f12@mail.gmail.com>
-Subject: Re: The case of the bogus SSID
-From: Steve deRosier <steve@cozybit.com>
-To: pigiron <pigiron@gmx.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1273601810.5955.44.camel@abhi-desktop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 5, 2010 at 10:01 AM, pigiron <pigiron@gmx.com> wrote:
-> I noticed that decimal 52 is assigned to WLAN_EID_MESH_ID in the ieee80211.h file, and recently the same 52 was also assigned to WLAN_EID_NEIGHBOR_REPORT in the same enumerated ieee80211_eid{} structure.
->
+On Tue, May 11, 2010 at 11:16:50AM -0700, Abhijeet Kolekar wrote:
+> Hello John,
+> On Tue, 2010-05-11 at 11:14 -0700, John W. Linville wrote:
+> > On Tue, May 11, 2010 at 11:22:11AM -0700, Abhijeet Kolekar wrote:
+> > > Paged RX skb patch broke the defragmentation. We need to read hdr again
+> > > after linearization.
+> > > 
+> > > It fixes following bug
+> > > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2194
+> > > 
+> > > Signed-off-by: Zhu, Yi <yi.zhu@intel.com>
+> > > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> > > ---
+> > > v2: Changed hdr reading.
+> > > v3: Added more comments.
+> > >  net/mac80211/rx.c |    6 ++++++
+> > >  1 files changed, 6 insertions(+), 0 deletions(-)
+> > > 
+> > > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> > > index 9a08f2c..6e2a7bc 100644
+> > > --- a/net/mac80211/rx.c
+> > > +++ b/net/mac80211/rx.c
+> > > @@ -1253,6 +1253,12 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+> > >  	if (skb_linearize(rx->skb))
+> > >  		return RX_DROP_UNUSABLE;
+> > >  
+> > > +	/*
+> > > +	 *  skb_linearize() might change the skb->data and
+> > > +	 *  previously cached variables (in this case, hdr) need to
+> > > +	 *  be refreshed with the new data.
+> > > +	 */
+> > > +	hdr = (struct ieee80211_hdr *)rx->skb->data;
+> > >  	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
+> > >  
+> > >  	if (frag == 0) {
+> > 
+> > And what about making sure the compiler doesn't optimize this away?
+> > 
+>  To avoid the double assignment, there is one more approach is to
+> directly read fc and seq_ctrl  using skb_data. I will send that in the
+> next version.
 
-I can't answer the rest of your question, but AFAIK, the element IDs
-for 802.11s mesh haven't been approved yet as the 802.11s draft
-contains a note to that effect.  The current ANA database sheet I
-could find (Feb 2010) does have 52 assigned to Neighbor Report, and
-the mesh element IDs are nowhere to be found.
+I don't think the double assignment is so bad, I just think that a
+compiler might decide to ignore the second assignment.  Am I wrong?
 
-- Steve
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
