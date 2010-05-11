@@ -1,133 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:53627 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757177Ab0ERMdL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 08:33:11 -0400
-From: Kiran Divekar <dkiran@marvell.com>
-To: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>
-Date: Tue, 18 May 2010 05:33:09 -0700
-Subject: [PATCH 2/3] Libertas: fix WARN_ON issues in cfg80211 support
-Message-ID: <25B60CDC2F704E4E9D88FFD52780CB4C04D627399C@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:47561 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752858Ab0EKPXM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 11:23:12 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 1/4] ath9k: use debugfs_remove_recursive() instead of keeping pointers to all entries
+Date: Tue, 11 May 2010 17:23:00 +0200
+Message-Id: <1273591383-76696-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In following scenarios WARN_ON() in cfg80211 code was triggered.
-a) Driver unload or card removal.
-b) Disconnect from infra network
-c) Adhoc start/join
-d) Adhoc stop
-Added following fixes to avoid WARN_ON() in cfg80211 code.
-a) Ensured that cfg80211_disconnected() function defined in cfg80211
-code will be called only in infra mode.
-b) Solved timing issue by moving cfg80211_disconnected() call inside
-lbs_cfg_disconnect().
-c) Updated "wdev->ssid" in driver code after Adhoc join/start
-d) Removed unnecessory cfg80211_disconnected() call in lbs_remove_card.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/libertas/cfg.c     |   37 ++++++++++---------------------
- drivers/net/wireless/libertas/cmdresp.c |    4 ++-
- drivers/net/wireless/libertas/main.c    |    2 -
- 3 files changed, 15 insertions(+), 28 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |   55 +++++++++----------------------
+ drivers/net/wireless/ath/ath9k/debug.h |    7 ----
+ 2 files changed, 16 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 7322e0d..e4b0409 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -1238,28 +1238,6 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 64e30cd..679257c 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -722,52 +722,36 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 	sc->debug.debugfs_phy = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
+ 						      ath9k_debugfs_root);
+ 	if (!sc->debug.debugfs_phy)
+-		goto err;
++		return -ENOMEM;
  
--
--
--
--/* callback from lbs_cfg_disconnect() */
--static int lbs_cfg_ret_disconnect(struct lbs_private *priv, unsigned long dummy,
--			      struct cmd_header *resp)
--{
--	lbs_deb_enter(LBS_DEB_CFG80211);
--
--	cfg80211_disconnected(priv->dev,
--			      priv->disassoc_reason,
--			      NULL, 0, /* TODO? */
--			      GFP_KERNEL);
--
--	/* TODO: get rid of priv->connect_status */
--	priv->connect_status = LBS_CONNECTED;
--
--	lbs_deb_leave(LBS_DEB_CFG80211);
--	return 0;
--}
--
--
- static int lbs_cfg_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	u16 reason_code)
- {
-@@ -1277,9 +1255,14 @@ static int lbs_cfg_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	memcpy(cmd.macaddr, &priv->assoc_bss, ETH_ALEN);
- 	cmd.reasoncode = cpu_to_le16(reason_code);
+ #ifdef CONFIG_ATH_DEBUG
+-	sc->debug.debugfs_debug = debugfs_create_file("debug",
+-		S_IRUSR | S_IWUSR, sc->debug.debugfs_phy, sc, &fops_debug);
+-	if (!sc->debug.debugfs_debug)
++	if (!debugfs_create_file("debug", S_IRUSR | S_IWUSR,
++			sc->debug.debugfs_phy, sc, &fops_debug))
+ 		goto err;
+ #endif
  
--	__lbs_cmd_async(priv, CMD_802_11_DEAUTHENTICATE,
--			&cmd.hdr, sizeof(cmd),
--			lbs_cfg_ret_disconnect, 0);
-+	if (lbs_cmd_with_response(priv, CMD_802_11_DEAUTHENTICATE, &cmd))
-+		return -EFAULT;
-+
-+	cfg80211_disconnected(priv->dev,
-+			priv->disassoc_reason,
-+			NULL, 0,
-+			GFP_KERNEL);
-+	priv->connect_status = LBS_DISCONNECTED;
+-	sc->debug.debugfs_dma = debugfs_create_file("dma", S_IRUSR,
+-				       sc->debug.debugfs_phy, sc, &fops_dma);
+-	if (!sc->debug.debugfs_dma)
++	if (!debugfs_create_file("dma", S_IRUSR, sc->debug.debugfs_phy,
++			sc, &fops_dma))
+ 		goto err;
+ 
+-	sc->debug.debugfs_interrupt = debugfs_create_file("interrupt",
+-						     S_IRUSR,
+-						     sc->debug.debugfs_phy,
+-						     sc, &fops_interrupt);
+-	if (!sc->debug.debugfs_interrupt)
++	if (!debugfs_create_file("interrupt", S_IRUSR, sc->debug.debugfs_phy,
++			sc, &fops_interrupt))
+ 		goto err;
+ 
+-	sc->debug.debugfs_rcstat = debugfs_create_file("rcstat",
+-						  S_IRUSR,
+-						  sc->debug.debugfs_phy,
+-						  sc, &fops_rcstat);
+-	if (!sc->debug.debugfs_rcstat)
++	if (!debugfs_create_file("rcstat", S_IRUSR, sc->debug.debugfs_phy,
++			sc, &fops_rcstat))
+ 		goto err;
+ 
+-	sc->debug.debugfs_wiphy = debugfs_create_file(
+-		"wiphy", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy, sc,
+-		&fops_wiphy);
+-	if (!sc->debug.debugfs_wiphy)
++	if (!debugfs_create_file("wiphy", S_IRUSR | S_IWUSR,
++			sc->debug.debugfs_phy, sc, &fops_wiphy))
+ 		goto err;
+ 
+-	sc->debug.debugfs_xmit = debugfs_create_file("xmit",
+-						     S_IRUSR,
+-						     sc->debug.debugfs_phy,
+-						     sc, &fops_xmit);
+-	if (!sc->debug.debugfs_xmit)
++	if (!debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy,
++			sc, &fops_xmit))
+ 		goto err;
+ 
+-	sc->debug.debugfs_recv = debugfs_create_file("recv",
+-						     S_IRUSR,
+-						     sc->debug.debugfs_phy,
+-						     sc, &fops_recv);
+-	if (!sc->debug.debugfs_recv)
++	if (!debugfs_create_file("recv", S_IRUSR, sc->debug.debugfs_phy,
++			sc, &fops_recv))
+ 		goto err;
  
  	return 0;
+@@ -781,14 +765,7 @@ void ath9k_exit_debug(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath_softc *sc = (struct ath_softc *) common->priv;
+ 
+-	debugfs_remove(sc->debug.debugfs_recv);
+-	debugfs_remove(sc->debug.debugfs_xmit);
+-	debugfs_remove(sc->debug.debugfs_wiphy);
+-	debugfs_remove(sc->debug.debugfs_rcstat);
+-	debugfs_remove(sc->debug.debugfs_interrupt);
+-	debugfs_remove(sc->debug.debugfs_dma);
+-	debugfs_remove(sc->debug.debugfs_debug);
+-	debugfs_remove(sc->debug.debugfs_phy);
++	debugfs_remove_recursive(sc->debug.debugfs_phy);
  }
-@@ -1673,6 +1656,10 @@ static void lbs_join_post(struct lbs_private *priv,
- 			    params->beacon_interval,
- 			    fake_ie, fake - fake_ie,
- 			    0, GFP_KERNEL);
-+
-+	memcpy(priv->wdev->ssid, params->ssid, params->ssid_len);
-+	priv->wdev->ssid_len = params->ssid_len;
-+
- 	cfg80211_ibss_joined(priv->dev, bssid, GFP_KERNEL);
  
- 	/* TODO: consider doing this at MACREG_INT_CODE_LINK_SENSED time */
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 3f1f333..d6c61bd 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -31,7 +31,9 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
- 	 * It causes problem in the Supplicant
- 	 */
- 	msleep_interruptible(1000);
--	lbs_send_disconnect_notification(priv);
-+
-+	if (priv->wdev->iftype == NL80211_IFTYPE_STATION)
-+		lbs_send_disconnect_notification(priv);
+ int ath9k_debug_create_root(void)
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index c545960..7314360 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -153,13 +153,6 @@ struct ath_stats {
  
- 	/* report disconnect to upper layer */
- 	netif_stop_queue(priv->dev);
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index cb8b04d..2fd5042 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -905,8 +905,6 @@ void lbs_remove_card(struct lbs_private *priv)
- 		lbs_ps_wakeup(priv, CMD_OPTION_WAITFORRSP);
- 	}
+ struct ath9k_debug {
+ 	struct dentry *debugfs_phy;
+-	struct dentry *debugfs_debug;
+-	struct dentry *debugfs_dma;
+-	struct dentry *debugfs_interrupt;
+-	struct dentry *debugfs_rcstat;
+-	struct dentry *debugfs_wiphy;
+-	struct dentry *debugfs_xmit;
+-	struct dentry *debugfs_recv;
+ 	struct ath_stats stats;
+ };
  
--	lbs_send_disconnect_notification(priv);
--
- 	if (priv->is_deep_sleep) {
- 		priv->is_deep_sleep = 0;
- 		wake_up_interruptible(&priv->ds_awake_q);
 -- 
-1.7.0.1
+1.6.4.2
 
