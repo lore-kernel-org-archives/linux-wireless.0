@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:55002 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933711Ab0EZRqZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 13:46:25 -0400
-Received: by mail-px0-f174.google.com with SMTP id 18so2635034pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:46:25 -0700 (PDT)
+Received: from mgw1.diku.dk ([130.225.96.91]:57026 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932295Ab0EKS0D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 14:26:03 -0400
+Date: Tue, 11 May 2010 20:25:56 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 1/5] drivers/net/wireless/hostap: Drop memory allocation cast
+Message-ID: <Pine.LNX.4.64.1005112025280.4330@ask.diku.dk>
 MIME-Version: 1.0
-In-Reply-To: <4825B8A2C4E264489E57869F0DCFB22343E33E611F@hasmsx502.ger.corp.intel.com>
-References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
-	<AANLkTikzEywcDi9zyJknMWkKymCVYnWQa2YXbbSDVx5o@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22343E33E611F@hasmsx502.ger.corp.intel.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 May 2010 10:46:05 -0700
-Message-ID: <AANLkTinG2zWHE8l-ZPBnyrFq5gs4nZX59zhF3AVh7h_4@mail.gmail.com>
-Subject: Re: [RFC] wireless-regdb: Add A band in IL
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>,
-	David Quan <David.Quan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 26, 2010 at 10:32 AM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
->>>  country IL:
->>>        (2402 - 2482 @ 40), (N/A, 20)
->>> +       (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
->>> +       (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
->>
->>I believe the one standing issue here is you are enabling HT40 on 5
->>GHz, how about enabling 2.4 GHz first, and then through a separate
->>patch and time/review we review the HT40 stuff, unless you are in no
->>rush to get 2.4 GHz enabled.
->>
->
-> I am not following... HT40 on 2.4 GHz is already enabled...
-> What should I enable in 2.4 GHz ?
+From: Julia Lawall <julia@diku.dk>
 
-Sorry I meant 5 GHz.
+Drop cast on the result of kmalloc and similar functions.
 
-  Luis
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+type T;
+@@
+
+- (T *)
+  (\(kmalloc\|kzalloc\|kcalloc\|kmem_cache_alloc\|kmem_cache_zalloc\|
+   kmem_cache_alloc_node\|kmalloc_node\|kzalloc_node\)(...))
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/net/wireless/hostap/hostap_80211_rx.c |    3 +--
+ drivers/net/wireless/hostap/hostap_ioctl.c    |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_80211_rx.c b/drivers/net/wireless/hostap/hostap_80211_rx.c
+index f4c5612..e0b3e8d 100644
+--- a/drivers/net/wireless/hostap/hostap_80211_rx.c
++++ b/drivers/net/wireless/hostap/hostap_80211_rx.c
+@@ -355,8 +355,7 @@ static struct hostap_bss_info *__hostap_add_bss(local_info_t *local, u8 *bssid,
+ 		list_del(&bss->list);
+ 		local->num_bss_info--;
+ 	} else {
+-		bss = (struct hostap_bss_info *)
+-			kmalloc(sizeof(*bss), GFP_ATOMIC);
++		bss = kmalloc(sizeof(*bss), GFP_ATOMIC);
+ 		if (bss == NULL)
+ 			return NULL;
+ 	}
+diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
+index 9a08230..a85e43a 100644
+--- a/drivers/net/wireless/hostap/hostap_ioctl.c
++++ b/drivers/net/wireless/hostap/hostap_ioctl.c
+@@ -3039,8 +3039,7 @@ static int prism2_ioctl_priv_download(local_info_t *local, struct iw_point *p)
+ 	    p->length > 1024 || !p->pointer)
+ 		return -EINVAL;
+ 
+-	param = (struct prism2_download_param *)
+-		kmalloc(p->length, GFP_KERNEL);
++	param = kmalloc(p->length, GFP_KERNEL);
+ 	if (param == NULL)
+ 		return -ENOMEM;
+ 
