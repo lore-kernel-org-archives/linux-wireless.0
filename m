@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55426 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752181Ab0EFHol (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:34370 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615Ab0EKX12 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 03:44:41 -0400
-Subject: Re: [PATCH 1/2] mac80211: add offload channel switch support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: wey-yi.w.guy@intel.com
+	Tue, 11 May 2010 19:27:28 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so231861fga.1
+        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 16:27:26 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "David H. Lynch Jr." <dhlii@dlasys.net>
+Subject: Re: ar9170-fw II
+Date: Wed, 12 May 2010 01:27:17 +0200
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1273116842-27189-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1273116842-27189-1-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 06 May 2010 09:44:36 +0200
-Message-ID: <1273131876.3573.28.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+References: <4BDC001F.9050202@dlasys.net> <201005021452.01101.chunkeey@googlemail.com> <4BE9D3DB.7040005@dlasys.net>
+In-Reply-To: <4BE9D3DB.7040005@dlasys.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201005120127.18837.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, just thought of something.
+On Wednesday 12 May 2010 00:02:03 David H. Lynch Jr. wrote:
+> On 05/02/2010 08:52 AM, Christian Lamparter wrote:
+> > Well, then you have two more good reasons why to use carl9170:
+> >   * carl9170 has the ability to store additional per-frame data.
+> >     In fact, if you don't need to have a different retry rates
+> >     you could realloc the 3 * 32 bit "rr" (as in retry rate)
+> >     array in the carl9170_tx_superdesc and _carl9170_tx_superdesc
+> >     struct (see wlan.h) for your purposes (storage for your time values).
+> >
+> >     And if you fetched all the data, everything will be sent
+> >     with an ordinary tx status feedback report to the application
+> >     (add the timer fields into carl9170_tx_status and _carl9170_tx_status
+> >      struct - see fwcmd.h)
+>      cmd.h __check() tests for sizeof(carl9170_tx_status) != 2
+>      is there an assumption somewhere that carl9170_tx_status == 2 ?
+good catch!
 
-On Wed, 2010-05-05 at 20:34 -0700, wey-yi.w.guy@intel.com wrote:
+I have now replace some of those meaningless numerical values with
+precalculated #defines *_SIZE.
 
-> + * @timestamp: value in microseconds of the 64-bit Time Synchronization
-> + *	Function (TSF) timer when the channel switch ie received.
+This way, firmware and drivers can verify the structs sizes
+and check whenever the compiler really did what it was supposed
+to do.
 
-This is not accurate now but see below.
-
-> +		if (beacon)
-> +			timestamp = le64_to_cpu(mgmt->u.beacon.timestamp);
-> +		else
-> +			timestamp = le64_to_cpu(mgmt->u.probe_resp.timestamp);
-> +		ieee80211_sta_process_chanswitch(sdata, sw_elem,
-> +						 bss, timestamp);
->  	}
->  }
->  
-> @@ -1647,7 +1691,8 @@ static void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
->  
->  			ieee80211_sta_process_chanswitch(sdata,
->  					&mgmt->u.action.u.chan_switch.sw_elem,
-> -					(void *)ifmgd->associated->priv);
-> +					(void *)ifmgd->associated->priv,
-> +					rx_status->mactime);
-
-For some reason I didn't notice the action frame handling before. Maybe
-it would be more consistent to keep using rx_status->mactime even for
-beacons? I apologise, this is totally my fault since I suggested using
-the beacon time before, but that has a slightly different value relative
-to the frame... Hmm. Maybe it would be better after all to require
-drivers to provide mactime at least for mgmt frames (beacons + actions)
-when they want to implement this callback.
-
-Anyone else have ideas?
-
-johannes
-
+Regards,
+	Chr
