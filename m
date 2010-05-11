@@ -1,113 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:18560 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753163Ab0EZVrA convert rfc822-to-8bit (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:36489 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755959Ab0EKIiu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 17:47:00 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 14:46:59 -0700
-Date: Wed, 26 May 2010 14:46:58 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: =?utf-8?B?THVrw6HFoQ==?= Turek <8an@praha12.net>
-CC: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath5k-devel] Race condition in CRDA calls?
-Message-ID: <20100526214658.GB10931@tux>
-References: <201003251801.57951.8an@praha12.net>
+	Tue, 11 May 2010 04:38:50 -0400
+Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0793377126
+	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 17:38:49 +0900 (JST)
+Subject: [RFC PATCH 1/2] mac80211: Add nl80211 antenna configuration
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+Date: Tue, 11 May 2010 17:39:02 +0900
+Message-ID: <20100511083900.28289.43864.stgit@tt-desk>
+In-Reply-To: <20100511083121.28289.96180.stgit@tt-desk>
+References: <20100511083121.28289.96180.stgit@tt-desk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <201003251801.57951.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just FYI, you want to use linux-wireless for reporting such things,
-not ath5k-devel. Also I have been real busy in March (and stil am but
-just trying to reply) so if I do not reply maybe others can. In
-linux-wireless you'll likely get much more review/help than ath5k-devel
-for this.
+Allow setting TX and RX antenna configuration via nl80211/cfg80211.
 
-More below.
+The antenna configuration is defined as a bitmap of allowed antennas. This
+bitmap is 8 bit at the moment, each bit representing one antenna. If multiple
+antennas are selected, the driver may use diversity for receive and transmit.
+This allows for a simple, yet flexible configuration interface for antennas,
+while drivers may reject configurations they cannot support.
 
-On Thu, Mar 25, 2010 at 10:01:54AM -0700, Lukáš Turek wrote:
-> Hi,
-> 
-> I've been testing current vanilla 2.6.34 from git today on a computer with 
-> three Atheros PCI cards and noticed a strange behavior: although all the 
-> cards have the same regulatory domain (0x36), only the last one (phy2) had 
-> the correct channels enabled, the other two (phy0 and phy1) stayed in US 
-> regulatory domain with channels 52-140 disabled.
-> 
-> It seems the reply from CRDA for the first request gets into the kernel after 
-> the last card is detected and all the replies get mixed up some way:
-> 
-> ath5k 0000:02:01.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
-> ath5k 0000:02:01.0: registered as 'phy0'
-> ath: EEPROM regdomain: 0x36
-> ath: EEPROM indicates we should expect a direct regpair map
-> ath: Country alpha2 being used: CZ
-> ath: Regpair used: 0x36
-> udev: renamed network interface eth0 to eth2
-> udev: renamed network interface eth1_rename to eth0
-> phy0: Selected rate control algorithm 'minstrel'
-> ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
-> ath5k 0000:02:02.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> ath5k 0000:02:02.0: registered as 'phy1'
-> ath: EEPROM regdomain: 0x36
-> ath: EEPROM indicates we should expect a direct regpair map
-> ath: Country alpha2 being used: CZ
-> ath: Regpair used: 0x36
-> cfg80211: Calling CRDA for country: CZ
-> phy1: Selected rate control algorithm 'minstrel'
-> ath5k phy1: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
-> ath5k 0000:02:03.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-> ath5k 0000:02:03.0: registered as 'phy2'
-> ath: EEPROM regdomain: 0x36
-> ath: EEPROM indicates we should expect a direct regpair map
-> ath: Country alpha2 being used: CZ
-> ath: Regpair used: 0x36
-> cfg80211: Calling CRDA for country: CZ
-> udev: renamed network interface wlan1 to wlan3
-> phy2: Selected rate control algorithm 'minstrel'
-> ath5k phy2: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
-> cfg80211: Calling CRDA for country: CZ
-> udev: renamed network interface wlan1 to wlan2
-> cfg80211: Current regulatory domain intersected:
-> (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-> (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
-> (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> cfg80211: Current regulatory domain intersected:
-> (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-> (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
-> (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> cfg80211: Current regulatory domain intersected:
-> (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-> (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
-> (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> 
-> Another reason might be udev messing up with device names. I will try to debug 
-> this, but any hints would be greatly appreciated, because there's not much 
-> info about the CRDA <-> kernel interaction.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ include/linux/nl80211.h   |   12 +++++
+ include/net/cfg80211.h    |    3 +
+ include/net/mac80211.h    |    2 +
+ net/mac80211/cfg.c        |   16 ++++++
+ net/mac80211/driver-ops.h |   21 ++++++++
+ net/wireless/nl80211.c    |  114 +++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 168 insertions(+), 0 deletions(-)
 
-You forgot to supply the kernel log of when cfg80211 loads, that
-would have been helpful. After cfg80211 loads then leave a window
-open with 'iw event -t' running. Then load ath5k, and if you want to
-debug udev you can use udevadm, for example to debug only
-kernel messages:
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index b7c77f9..46a2c76 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -341,6 +341,9 @@
+  *	of any other interfaces, and other interfaces will again take
+  *	precedence when they are used.
+  *
++ * @NL80211_CMD_SET_ANTENNA: Set a bitmap of antennas to use.
++ * @NL80211_CMD_GET_ANTENNA: Get antenna configuration from driver.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -441,6 +444,9 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_CHANNEL,
+ 
++	NL80211_CMD_SET_ANTENNA,
++	NL80211_CMD_GET_ANTENNA,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -725,6 +731,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
+  *	connected to this BSS.
+  *
++ * @NL80211_ATTR_ANTENNA_TX: Bitmap of antennas to use for transmitting.
++ * @NL80211_ATTR_ANTENNA_RX: Bitmap of antennas to use for receiving.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -882,6 +891,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_AP_ISOLATE,
+ 
++	NL80211_ATTR_ANTENNA_TX,
++	NL80211_ATTR_ANTENNA_RX,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b44a2e5..8861f40 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1176,6 +1176,9 @@ struct cfg80211_ops {
+ 	int	(*set_cqm_rssi_config)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       s32 rssi_thold, u32 rssi_hyst);
++
++	int	(*set_antenna)(struct wiphy *wiphy, u8 tx_ant, u8 rx_ant);
++	int	(*get_antenna)(struct wiphy *wiphy, u8 *tx_ant, u8 *rx_ant);
+ };
+ 
+ /*
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9448a5b..1a8f97a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1694,6 +1694,8 @@ struct ieee80211_ops {
+ 	int (*testmode_cmd)(struct ieee80211_hw *hw, void *data, int len);
+ #endif
+ 	void (*flush)(struct ieee80211_hw *hw, bool drop);
++	int (*set_antenna)(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant);
++	int (*get_antenna)(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c7000a6..efd04bc 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1560,6 +1560,20 @@ static int ieee80211_action(struct wiphy *wiphy, struct net_device *dev,
+ 				    channel_type, buf, len, cookie);
+ }
+ 
++static int ieee80211_set_antenna(struct wiphy *wiphy, u8 tx_ant, u8 rx_ant)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_antenna(local, tx_ant, rx_ant);
++}
++
++static int ieee80211_get_antenna(struct wiphy *wiphy, u8 *tx_ant, u8 *rx_ant)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_get_antenna(local, tx_ant, rx_ant);
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1611,4 +1625,6 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.action = ieee80211_action,
+ 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
++	.set_antenna = ieee80211_set_antenna,
++	.get_antenna = ieee80211_get_antenna,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 997008e..d6fe1b7 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -373,4 +373,25 @@ static inline void drv_flush(struct ieee80211_local *local, bool drop)
+ 	if (local->ops->flush)
+ 		local->ops->flush(&local->hw, drop);
+ }
++
++static inline int drv_set_antenna(struct ieee80211_local *local,
++				  u8 tx_ant, u8 rx_ant)
++{
++	int ret = -EOPNOTSUPP;
++	might_sleep();
++	if (local->ops->set_antenna)
++		ret = local->ops->set_antenna(&local->hw, tx_ant, rx_ant);
++	return ret;
++}
++
++static inline int drv_get_antenna(struct ieee80211_local *local,
++				  u8 *tx_ant, u8 *rx_ant)
++{
++	int ret = -EOPNOTSUPP;
++	might_sleep();
++	if (local->ops->get_antenna)
++		ret = local->ops->get_antenna(&local->hw, tx_ant, rx_ant);
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index aaa1aad..dbfc126 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -153,6 +153,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_CQM] = { .type = NLA_NESTED, },
+ 	[NL80211_ATTR_LOCAL_STATE_CHANGE] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_AP_ISOLATE] = { .type = NLA_U8 },
++	[NL80211_ATTR_ANTENNA_TX] = { .type = NLA_U8 },
++	[NL80211_ATTR_ANTENNA_RX] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the attributes */
+@@ -4963,6 +4965,106 @@ out:
+ 	return err;
+ }
+ 
++static int nl80211_set_antenna(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev;
++	int res;
++	u8 rx_ant = 0, tx_ant = 0;
++
++	if (!info->attrs[NL80211_ATTR_WIPHY] ||
++	    !info->attrs[NL80211_ATTR_ANTENNA_TX] ||
++	    !info->attrs[NL80211_ATTR_ANTENNA_RX]) {
++		return -EINVAL;
++	}
++
++	tx_ant = nla_get_u8(info->attrs[NL80211_ATTR_ANTENNA_TX]);
++	rx_ant = nla_get_u8(info->attrs[NL80211_ATTR_ANTENNA_RX]);
++
++	rtnl_lock();
++
++	rdev = cfg80211_get_dev_from_info(info);
++	if (IS_ERR(rdev)) {
++		res = -ENODEV;
++		goto unlock_rtnl;
++	}
++
++	if (!rdev->ops->set_antenna) {
++		res = -EOPNOTSUPP;
++		goto unlock_rdev;
++	}
++
++	res = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
++
++ unlock_rdev:
++	cfg80211_unlock_rdev(rdev);
++
++ unlock_rtnl:
++	rtnl_unlock();
++	return res;
++}
++
++static int nl80211_get_antenna(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev;
++	struct sk_buff *msg;
++	void *hdr;
++	int res;
++	u8 tx_ant, rx_ant;
++
++	if (!info->attrs[NL80211_ATTR_WIPHY])
++		return -EINVAL;
++
++	rtnl_lock();
++
++	rdev = cfg80211_get_dev_from_info(info);
++	if (IS_ERR(rdev)) {
++		res = -ENODEV;
++		goto unlock_rtnl;
++	}
++
++	if (!rdev->ops->get_antenna) {
++		res = -EOPNOTSUPP;
++		goto unlock_rdev;
++	}
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg) {
++		res = -ENOMEM;
++		goto unlock_rdev;
++	}
++
++	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
++			     NL80211_CMD_GET_ANTENNA);
++	if (!hdr) {
++		res = -ENOMEM;
++		goto free_msg;
++	}
++
++	res = rdev->ops->get_antenna(&rdev->wiphy, &tx_ant, &rx_ant);
++	if (res)
++		goto free_msg;
++
++	NLA_PUT_U32(msg, NL80211_ATTR_ANTENNA_TX, tx_ant);
++	NLA_PUT_U32(msg, NL80211_ATTR_ANTENNA_RX, rx_ant);
++
++	genlmsg_end(msg, hdr);
++	res = genlmsg_reply(msg, info);
++	goto unlock_rdev;
++
++ nla_put_failure:
++	res = -ENOBUFS;
++
++ free_msg:
++	nlmsg_free(msg);
++
++ unlock_rdev:
++	cfg80211_unlock_rdev(rdev);
++
++ unlock_rtnl:
++	rtnl_unlock();
++	return res;
++}
++
+ static struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -5279,6 +5381,18 @@ static struct genl_ops nl80211_ops[] = {
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_ANTENNA,
++		.doit = nl80211_set_antenna,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++	},
++	{
++		.cmd = NL80211_CMD_GET_ANTENNA,
++		.doit = nl80211_get_antenna,
++		.policy = nl80211_policy,
++		/* can be retrieved by unprivileged users */
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
 
-udevadm monitor --environment kernel
-
-In short cfg80211 will do an intersection if the core had a regulatory
-domain set for some reason and then a driver suggested to use another
-country. If cfg80211 was world roaming and a driver then just used
-a request for CZ then it shuld stick to CZ. If a second device comes
-up with CZ then -EALREADY should be expected IIRC, if this is not happening
-it smells like a bug.
-
-  Luis
