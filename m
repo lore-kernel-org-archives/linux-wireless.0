@@ -1,37 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48669 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759395Ab0ECN5p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 09:57:45 -0400
-Subject: Re: [PATCH] mac80211: improve IBSS scanning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20100503T154149-617@post.gmane.org>
-References: <469051.90774.qm@web51402.mail.re2.yahoo.com>
-	 <1272893084.3614.37.camel@jlt3.sipsolutions.net>
-	 <loom.20100503T153803-630@post.gmane.org>
-	 <loom.20100503T154149-617@post.gmane.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 03 May 2010 15:57:42 +0200
-Message-ID: <1272895062.3614.39.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:47725 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757030Ab0EKKyV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 06:54:21 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 03:54:21 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19433.14192.60615.129429@gargle.gargle.HOWL>
+Date: Tue, 11 May 2010 16:24:40 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/5] ath9k_htc: Allocate URBs properly
+From: <Sujith.Manoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-03 at 13:43 +0000, Joerg Pommnitz wrote:
-> Johannes Berg <johannes@...> writes:
-> > Hidden SSID is a hack (which doesn't work with IBSS obviously), but this
-> > kinda seems worse.
->  
-> Actually, it does (work on IBSS, that is). And because I thought what you think
-> I have the
-> radiotap traces to prove it. 
+The URBs have to be allocated before uploading
+the firmware to the target. This is needed to process
+the target ready message properly.
 
-Interesting. I guess we never rejected it although it's invalid
-according to the standard. Yuck. I think I would like to make nl80211
-reject it, but maybe I'll forget about it and let you use it ;)
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   36 +++++++++++++++---------------
+ 1 files changed, 18 insertions(+), 18 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 74872ca..453cf56 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -735,6 +735,14 @@ err:
+ 	return -ENOMEM;
+ }
+ 
++static void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
++{
++	usb_kill_anchored_urbs(&hif_dev->regout_submitted);
++	ath9k_hif_usb_dealloc_reg_in_urb(hif_dev);
++	ath9k_hif_usb_dealloc_tx_urbs(hif_dev);
++	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
++}
++
+ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ {
+ 	int transfer, err;
+@@ -794,14 +802,6 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev,
+ 		goto err_fw_req;
+ 	}
+ 
+-	/* Download firmware */
+-	ret = ath9k_hif_usb_download_fw(hif_dev);
+-	if (ret) {
+-		dev_err(&hif_dev->udev->dev,
+-			"ath9k_htc: Firmware - %s download failed\n", fw_name);
+-		goto err_fw_download;
+-	}
+-
+ 	/* Alloc URBs */
+ 	ret = ath9k_hif_usb_alloc_urbs(hif_dev);
+ 	if (ret) {
+@@ -810,25 +810,25 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev,
+ 		goto err_urb;
+ 	}
+ 
++	/* Download firmware */
++	ret = ath9k_hif_usb_download_fw(hif_dev);
++	if (ret) {
++		dev_err(&hif_dev->udev->dev,
++			"ath9k_htc: Firmware - %s download failed\n", fw_name);
++		goto err_fw_download;
++	}
++
+ 	return 0;
+ 
+-err_urb:
+-	/* Nothing */
+ err_fw_download:
++	ath9k_hif_usb_dealloc_urbs(hif_dev);
++err_urb:
+ 	release_firmware(hif_dev->firmware);
+ err_fw_req:
+ 	hif_dev->firmware = NULL;
+ 	return ret;
+ }
+ 
+-static void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
+-{
+-	usb_kill_anchored_urbs(&hif_dev->regout_submitted);
+-	ath9k_hif_usb_dealloc_reg_in_urb(hif_dev);
+-	ath9k_hif_usb_dealloc_tx_urbs(hif_dev);
+-	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
+-}
+-
+ static void ath9k_hif_usb_dev_deinit(struct hif_device_usb *hif_dev)
+ {
+ 	ath9k_hif_usb_dealloc_urbs(hif_dev);
+-- 
+1.7.1
 
+
+-- 
