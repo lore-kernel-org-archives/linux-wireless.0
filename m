@@ -1,55 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42567 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751605Ab0ESSOq convert rfc822-to-8bit (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:24885 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756740Ab0EKIix (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 14:14:46 -0400
-Received: by fxm10 with SMTP id 10so2664366fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 11:14:44 -0700 (PDT)
+	Tue, 11 May 2010 04:38:53 -0400
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0663587131
+	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 17:38:52 +0900 (JST)
+Subject: [RFC PATCH 2/2] ath5k: Add support for cfg80211 antenna setting
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+Date: Tue, 11 May 2010 17:39:11 +0900
+Message-ID: <20100511083910.28289.71188.stgit@tt-desk>
+In-Reply-To: <20100511083121.28289.96180.stgit@tt-desk>
+References: <20100511083121.28289.96180.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <1274282769-19244-8-git-send-email-gwingerde@gmail.com>
-References: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
-	 <1274282769-19244-8-git-send-email-gwingerde@gmail.com>
-Date: Wed, 19 May 2010 20:14:44 +0200
-Message-ID: <AANLkTikIaVSC6ZXjRUKD7J1rbGdf-JWCO7H4TGU5KZnx@mail.gmail.com>
-Subject: Re: [PATCH 7/7] rt2x00: Fix HT40 operation in rt2800.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
-> +                           struct ieee80211_conf *conf)
-> +{
-> +       struct hw_mode_spec *spec = &rt2x00dev->spec;
-> +       int center_channel;
-> +       u16 i;
-> +
-> +       /*
-> +        * Initialize center channel to current channel.
-> +        */
-> +       center_channel = spec->channels[conf->channel->hw_value].channel;
-> +
-> +       /*
-> +        * Adjust center channel to HT40+ and HT40- operation.
-> +        */
-> +       if (conf_is_ht40_plus(conf))
-> +               center_channel += 2;
-> +       else if (conf_is_ht40_minus(conf))
-> +               center_channel -= (center_channel == 14) ? 1 : 2;
-> +
-> +       for (i = 0; i < spec->num_channels; i++)
-> +               if (spec->channels[i].channel == center_channel)
-> +                       return i;
-> +
-> +       BUG();
-> +}
+Support setting the antenna configuration via cfg80211. At the moment only
+allow the simple pre-defined configurations we already have (fixed antenna A/B
+or diversity), but more advanced settings should be possible later.
 
-This isn't worth a BUG(), perhaps a debug message or WARN(),
-I would say a debug message and retuning the hw_value.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   34 +++++++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-Ivo
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index a99f310..fbf3d45 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -256,6 +256,8 @@ static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
+ static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
+ static void ath5k_set_coverage_class(struct ieee80211_hw *hw,
+ 		u8 coverage_class);
++static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant);
++static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant);
+ 
+ static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.tx 		= ath5k_tx,
+@@ -277,6 +279,8 @@ static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.sw_scan_start	= ath5k_sw_scan_start,
+ 	.sw_scan_complete = ath5k_sw_scan_complete,
+ 	.set_coverage_class = ath5k_set_coverage_class,
++	.set_antenna	= ath5k_set_antenna,
++	.get_antenna	= ath5k_get_antenna,
+ };
+ 
+ /*
+@@ -3482,3 +3486,33 @@ static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 	ath5k_hw_set_coverage_class(sc->ah, coverage_class);
+ 	mutex_unlock(&sc->lock);
+ }
++
++static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant)
++{
++	struct ath5k_softc *sc = hw->priv;
++
++	if (tx_ant == 1 && rx_ant == 1)
++		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_A);
++	else if (tx_ant == 2 && rx_ant == 2)
++		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_B);
++	else if (tx_ant == 3 && rx_ant == 3)
++		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_DEFAULT);
++	else
++		return -EOPNOTSUPP;
++	return 0;
++}
++
++static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant)
++{
++	struct ath5k_softc *sc = hw->priv;
++
++	switch (sc->ah->ah_ant_mode) {
++	case AR5K_ANTMODE_FIXED_A:
++		*tx_ant = 1; *rx_ant = 1; break;
++	case AR5K_ANTMODE_FIXED_B:
++		*tx_ant = 2; *rx_ant = 2; break;
++	case AR5K_ANTMODE_DEFAULT:
++		*tx_ant = 3; *rx_ant = 3; break;
++	}
++	return 0;
++}
+
