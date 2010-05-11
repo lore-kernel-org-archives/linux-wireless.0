@@ -1,91 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41799 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753320Ab0EPXBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 May 2010 19:01:10 -0400
-Date: Mon, 17 May 2010 01:01:36 +0200
-From: Samuel Ortiz <samuel.ortiz@intel.com>
-To: Julia Lawall <julia@diku.dk>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH 13/37] drivers/net/wireless/iwmc3200wifi: Use kmemdup
-Message-ID: <20100516230135.GA3112@sortiz.org>
-References: <Pine.LNX.4.64.1005152316400.21345@ask.diku.dk>
-MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.64.1005152316400.21345@ask.diku.dk>
-Content-Type: text/plain; charset="us-ascii"
+Received: from he.sipsolutions.net ([78.46.109.217]:37778 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755938Ab0EKK5k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 May 2010 06:57:40 -0400
+Subject: Re: [PATCH 1/5] ath9k_htc: Lock sta_notify() callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith.Manoharan@atheros.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <19433.14190.31764.174876@gargle.gargle.HOWL>
+References: <19433.14190.31764.174876@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 May 2010 12:57:33 +0200
+Message-ID: <1273575453.3669.55.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 15, 2010 at 10:16:58PM +0100, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Use kmemdup when some other buffer is immediately copied into the
-> allocated region.
-> 
-> A simplified version of the semantic patch that makes this change is as
-> follows: (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @@
-> expression from,to,size,flag;
-> statement S;
-> @@
-> 
-> -  to = \(kmalloc\|kzalloc\)(size,flag);
-> +  to = kmemdup(from,size,flag);
->    if (to==NULL || ...) S
-> -  memcpy(to, from, size);
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+On Tue, 2010-05-11 at 16:24 +0530, Sujith.Manoharan@atheros.com wrote:
+> Since ->sta_notify() can sleep, protect
+> the callback with a mutex.
 
-Cheers,
-Samuel.
- 
-> ---
->  drivers/net/wireless/iwmc3200wifi/rx.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff -u -p a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-> --- a/drivers/net/wireless/iwmc3200wifi/rx.c
-> +++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-> @@ -321,14 +321,14 @@ iwm_rx_ticket_node_alloc(struct iwm_priv
->  		return ERR_PTR(-ENOMEM);
->  	}
->  
-> -	ticket_node->ticket = kzalloc(sizeof(struct iwm_rx_ticket), GFP_KERNEL);
-> +	ticket_node->ticket = kmemdup(ticket, sizeof(struct iwm_rx_ticket),
-> +				      GFP_KERNEL);
->  	if (!ticket_node->ticket) {
->  		IWM_ERR(iwm, "Couldn't allocate RX ticket\n");
->  		kfree(ticket_node);
->  		return ERR_PTR(-ENOMEM);
->  	}
->  
-> -	memcpy(ticket_node->ticket, ticket, sizeof(struct iwm_rx_ticket));
->  	INIT_LIST_HEAD(&ticket_node->node);
->  
->  	return ticket_node;
+While this may be a correct change, it's not a correct description :)
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
----------------------------------------------------------------------
-Intel Corporation SAS (French simplified joint stock company)
-Registered headquarters: "Les Montalets"- 2, rue de Paris, 
-92196 Meudon Cedex, France
-Registration Number:  302 456 199 R.C.S. NANTERRE
-Capital: 4,572,000 Euros
+You should be locking _data_, not _code_, and due to mac80211 the
+callback cannot be invoked twice at the same time anyway.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+johannes
+
 
