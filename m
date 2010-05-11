@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:65138 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828Ab0EIJDo convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48022 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757103Ab0EKIvj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 May 2010 05:03:44 -0400
-Received: by bwz19 with SMTP id 19so1239605bwz.21
-        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 02:03:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1273354826-4335-2-git-send-email-gwingerde@gmail.com>
-References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
-	 <1273354826-4335-2-git-send-email-gwingerde@gmail.com>
-Date: Sun, 9 May 2010 11:03:42 +0200
-Message-ID: <AANLkTikWtLvG-J9UclCEsp7V1B7_J69eujVseWVsZk2y@mail.gmail.com>
-Subject: Re: [PATCH 1/9] rt2x00: Fix setting of txdesc->length field.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 11 May 2010 04:51:39 -0400
+Subject: Re: [RFC PATCH 1/2] mac80211: Add nl80211 antenna configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	holgerschurig@gmail.com
+In-Reply-To: <20100511083900.28289.43864.stgit@tt-desk>
+References: <20100511083121.28289.96180.stgit@tt-desk>
+	 <20100511083900.28289.43864.stgit@tt-desk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 May 2010 10:51:35 +0200
+Message-ID: <1273567895.3669.25.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 8, 2010 at 11:40 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> We should take the stripping of the IV into account for the txdesc->length
-> field.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Tue, 2010-05-11 at 17:39 +0900, Bruno Randolf wrote:
+> Allow setting TX and RX antenna configuration via nl80211/cfg80211.
+> 
+> The antenna configuration is defined as a bitmap of allowed antennas. This
+> bitmap is 8 bit at the moment, each bit representing one antenna. If multiple
+> antennas are selected, the driver may use diversity for receive and transmit.
+> This allows for a simple, yet flexible configuration interface for antennas,
+> while drivers may reject configurations they cannot support.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+This is missing advertising whether or not the commands are available.
+Look for the CMD() macro.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00crypto.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00crypto.c b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-> index d291c78..583dacd 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-> @@ -128,6 +128,7 @@ void rt2x00crypto_tx_remove_iv(struct sk_buff *skb, struct txentry_desc *txdesc)
->
->        /* Pull buffer to correct size */
->        skb_pull(skb, txdesc->iv_len);
-> +       txdesc->length -= txdesc->iv_len;
->
->        /* IV/EIV data has officially been stripped */
->        skbdesc->flags |= SKBDESC_IV_STRIPPED;
-> --
-> 1.7.1
->
->
+johannes
+
