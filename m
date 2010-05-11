@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:58393 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956Ab0EXISc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44822 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614Ab0EKSTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:18:32 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/6] wl1271: patches for wk20
-Date: Mon, 24 May 2010 11:18:14 +0300
-Message-Id: <1274689100-14785-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 11 May 2010 14:19:32 -0400
+Subject: Re: [RFC PATCH 1/2] mac80211: Add nl80211 antenna configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+In-Reply-To: <AANLkTilowwAyqLrIJ0_mlZxnqY-TqSHM3xdXkbO8aH6-@mail.gmail.com>
+References: <20100511083121.28289.96180.stgit@tt-desk>
+	 <20100511083900.28289.43864.stgit@tt-desk>
+	 <AANLkTilowwAyqLrIJ0_mlZxnqY-TqSHM3xdXkbO8aH6-@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 11 May 2010 20:19:29 +0200
+Message-ID: <1273601969.20312.23.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, 2010-05-11 at 11:14 -0700, Luis R. Rodriguez wrote:
 
-Here's our weekly patchset for the wl1271 driver, which contains the changes we
-made last week.
+> > Allow setting TX and RX antenna configuration via nl80211/cfg80211.
+> 
+> I think we should call this TX / RX chainmask given that with 802.11n
+> hardware this is what this is called.
 
-Cheers,
-Luca.
+Well, but even with 11n hw you might be able to select _antennas_ rather
+than chains. I'm convinced we'll need to differentiate that very
+closely, and 11g hw has only antenna, not chain, selection.
 
-Juuso Oikarinen (5):
-  wl1271: Prevent dropping of TX frames in joins
-  wl1271: Idle handling into own function
-  wl1271: Flush TX buffers to air before going to idle
-  wl1271: Use proper rates for PSM entry/exit null-funcs for 5GHz
-  wl1271: Fix scan parameter handling for 5GHz
-
-Luciano Coelho (1):
-  wl1271: the core wl1271 module shouldn't depend on SPI_MASTER
-
- drivers/net/wireless/wl12xx/Kconfig        |    2 +-
- drivers/net/wireless/wl12xx/wl1271.h       |    3 +
- drivers/net/wireless/wl12xx/wl1271_cmd.c   |   16 ++----
- drivers/net/wireless/wl12xx/wl1271_cmd.h   |    2 +-
- drivers/net/wireless/wl12xx/wl1271_event.c |   10 ++--
- drivers/net/wireless/wl12xx/wl1271_main.c  |   76 +++++++++++++++++++--------
- drivers/net/wireless/wl12xx/wl1271_tx.c    |   36 ++++++++++++-
- drivers/net/wireless/wl12xx/wl1271_tx.h    |    1 +
- 8 files changed, 103 insertions(+), 43 deletions(-)
+johannes
 
