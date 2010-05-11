@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:22663 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755734Ab0EKIii (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36748 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753853Ab0EKSPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 04:38:38 -0400
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0298397115
-	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 17:38:36 +0900 (JST)
-Subject: [RFC PATCH 0/2] mac80211: antenna configuration
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
-Date: Tue, 11 May 2010 17:38:55 +0900
-Message-ID: <20100511083121.28289.96180.stgit@tt-desk>
+	Tue, 11 May 2010 14:15:12 -0400
+Date: Tue, 11 May 2010 14:14:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: linux-wireless@vger.kernel.org, yi.zhu@intel.com
+Subject: Re: [PATCH V3] mac80211: fix paged defragmentation
+Message-ID: <20100511181439.GB2400@tuxdriver.com>
+References: <1273602131-9188-1-git-send-email-abhijeet.kolekar@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1273602131-9188-1-git-send-email-abhijeet.kolekar@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi!
+On Tue, May 11, 2010 at 11:22:11AM -0700, Abhijeet Kolekar wrote:
+> Paged RX skb patch broke the defragmentation. We need to read hdr again
+> after linearization.
+> 
+> It fixes following bug
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2194
+> 
+> Signed-off-by: Zhu, Yi <yi.zhu@intel.com>
+> Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> ---
+> v2: Changed hdr reading.
+> v3: Added more comments.
+>  net/mac80211/rx.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 9a08f2c..6e2a7bc 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1253,6 +1253,12 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+>  	if (skb_linearize(rx->skb))
+>  		return RX_DROP_UNUSABLE;
+>  
+> +	/*
+> +	 *  skb_linearize() might change the skb->data and
+> +	 *  previously cached variables (in this case, hdr) need to
+> +	 *  be refreshed with the new data.
+> +	 */
+> +	hdr = (struct ieee80211_hdr *)rx->skb->data;
+>  	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
+>  
+>  	if (frag == 0) {
 
-this adds antenna configuration via nl80211. patches for iw will follow
-shortly.
+And what about making sure the compiler doesn't optimize this away?
 
-i have followed holger schurig's suggestion to use a bitmap for allowed
-antennas. when multiple antennas are selected in the bitmap, the driver may use
-diversity. i think that this allows for the most flexible, yet simple
-configuration of antennas, and drivers can just reject configurations they
-cannot support. i hope that this will also be generic enough for 802.11n with
-multiple antennas - but for the moment i think the most important use case is
-that we sometimes know that only one antenna is available and we want to
-disable diversity and use only one fixed antenna. at least for ath5k this is
-sometimes necessary to get good results with only one antenna.
-
-please check it out and let me know what you think,
-bruno
-
----
-
-Bruno Randolf (2):
-      mac80211: Add nl80211 antenna configuration
-      ath5k: Add support for cfg80211 antenna setting
-
-
- drivers/net/wireless/ath/ath5k/base.c |   34 ++++++++++
- include/linux/nl80211.h               |   12 +++
- include/net/cfg80211.h                |    3 +
- include/net/mac80211.h                |    2 +
- net/mac80211/cfg.c                    |   16 +++++
- net/mac80211/driver-ops.h             |   21 ++++++
- net/wireless/nl80211.c                |  114 +++++++++++++++++++++++++++++++++
- 7 files changed, 202 insertions(+), 0 deletions(-)
-
+John
 -- 
-Signature
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
