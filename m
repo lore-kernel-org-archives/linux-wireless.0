@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3392 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751567Ab0EYU3R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 16:29:17 -0400
-Message-ID: <4BFC331A.9030606@gmail.com>
-Date: Tue, 25 May 2010 22:29:14 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:43055 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753561Ab0EKCli (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 May 2010 22:41:38 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 10 May 2010 19:41:38 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath9k: Remove unused rx_edma in ath_rx_addbuffer_edma()
+Date: Mon, 10 May 2010 19:41:35 -0700
+Message-ID: <1273545695-2987-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1273545695-2987-1-git-send-email-vasanth@atheros.com>
+References: <1273545695-2987-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-05-25
-References: <20100525170401.GE31753@tuxdriver.com>
-In-Reply-To: <20100525170401.GE31753@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
-
-On 05/25/10 19:04, John W. Linville wrote:
-> Dave,
-> 
-> Here are a number of fixes intended for 2.6.35.  Included are some
-> warning fixes from Randy, some smatch-identified fixes from Dan, some
-> fixes for using ath9k and IBSS mode, the removal of a PCI ID that was
-> optimistically added to ath9k, and a smattering of other driver fixes.
-> This also includes a revert of "ath9k: Group Key fix for VAPs" which
-> was reported to cause regressions due to a mac80211 change inside it
-> that snuck past us... :-(
-> 
-> Anyway, these are mostly small(ish) and obvious.  Please let me know
-> if there are problems!
-> 
-> Thanks,
-> 
-> John
-> 
-> ---
-> 
-> The following changes since commit acfbe96a3035639619a6533e04d88ed4ef9ccb61:
-
-<snip>
-> 
-> Gertjan van Wingerde (2):
->       rt2x00: Fix rt2800usb TX descriptor writing.
-
-The patch causing the breakage this patch fixes wasn't actually upstream yet. So, 
-applying this patch only is now introducing a bug in 2.6.35. I guess it is better
-to revert this patch for 2.6.35.
-
-Sorry for not being clearer about it when sending the patch to you.
-
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
-Gertjan.
+ drivers/net/wireless/ath/ath9k/recv.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index da54ff5..ba13913 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -150,11 +150,9 @@ static bool ath_rx_edma_buf_link(struct ath_softc *sc,
+ static void ath_rx_addbuffer_edma(struct ath_softc *sc,
+ 				  enum ath9k_rx_qtype qtype, int size)
+ {
+-	struct ath_rx_edma *rx_edma;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	u32 nbuf = 0;
+ 
+-	rx_edma = &sc->rx.rx_edma[qtype];
+ 	if (list_empty(&sc->rx.rxbuf)) {
+ 		ath_print(common, ATH_DBG_QUEUE, "No free rx buf available\n");
+ 		return;
+-- 
+1.7.0.4
+
