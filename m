@@ -1,157 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57095 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:55405 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598Ab0ESKRS (ORCPT
+	with ESMTP id S1751171Ab0EKTFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 06:17:18 -0400
-Subject: [PATCH] cfg80211: make action channel type optional
+	Tue, 11 May 2010 15:05:01 -0400
+Subject: Re: [PATCH V3] mac80211: fix paged defragmentation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1273603952.5955.45.camel@abhi-desktop>
+References: <1273602131-9188-1-git-send-email-abhijeet.kolekar@intel.com>
+	 <20100511181439.GB2400@tuxdriver.com>
+	 <1273601810.5955.44.camel@abhi-desktop>
+	 <20100511182423.GC2400@tuxdriver.com>
+	 <1273603952.5955.45.camel@abhi-desktop>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 19 May 2010 12:17:12 +0200
-Message-ID: <1274264232.3874.7.camel@jlt3.sipsolutions.net>
+Date: Tue, 11 May 2010 21:04:56 +0200
+Message-ID: <1273604696.20312.29.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When sending action frames, we want to verify
-that we do that on the correct channel. However,
-checking the channel type in addition can get in
-the way, since the channel type could change on
-the fly during an association, and it's not
-useful to have the channel type anyway since it
-has no effect on the transmission. Therefore,
-make it optional to specify so that if wanted,
-it can still be checked, but is not required.
+On Tue, 2010-05-11 at 11:52 -0700, Abhijeet Kolekar wrote:
+> Hello John,
+> On Tue, 2010-05-11 at 11:24 -0700, John W. Linville wrote:
+> > On Tue, May 11, 2010 at 11:16:50AM -0700, Abhijeet Kolekar wrote:
+> > > Hello John,
+> > > On Tue, 2010-05-11 at 11:14 -0700, John W. Linville wrote:
+> > > > On Tue, May 11, 2010 at 11:22:11AM -0700, Abhijeet Kolekar wrote:
+> > > > > Paged RX skb patch broke the defragmentation. We need to read hdr again
+> > > > > after linearization.
+> > > > > 
+> > > > > It fixes following bug
+> > > > > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2194
+> > > > > 
+> > > > > Signed-off-by: Zhu, Yi <yi.zhu@intel.com>
+> > > > > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+> > > > > ---
+> > > > > v2: Changed hdr reading.
+> > > > > v3: Added more comments.
+> > > > >  net/mac80211/rx.c |    6 ++++++
+> > > > >  1 files changed, 6 insertions(+), 0 deletions(-)
+> > > > > 
+> > > > > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> > > > > index 9a08f2c..6e2a7bc 100644
+> > > > > --- a/net/mac80211/rx.c
+> > > > > +++ b/net/mac80211/rx.c
+> > > > > @@ -1253,6 +1253,12 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+> > > > >  	if (skb_linearize(rx->skb))
+> > > > >  		return RX_DROP_UNUSABLE;
+> > > > >  
+> > > > > +	/*
+> > > > > +	 *  skb_linearize() might change the skb->data and
+> > > > > +	 *  previously cached variables (in this case, hdr) need to
+> > > > > +	 *  be refreshed with the new data.
+> > > > > +	 */
+> > > > > +	hdr = (struct ieee80211_hdr *)rx->skb->data;
+> > > > >  	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
+> > > > >  
+> > > > >  	if (frag == 0) {
+> > > > 
+> > > > And what about making sure the compiler doesn't optimize this away?
+> > > > 
+> > >  To avoid the double assignment, there is one more approach is to
+> > > directly read fc and seq_ctrl  using skb_data. I will send that in the
+> > > next version.
+> > 
+> > I don't think the double assignment is so bad, I just think that a
+> > compiler might decide to ignore the second assignment.  Am I wrong?
+> > 
+> I don't understand why compiler will ignore the second assignment other
+> than the above reason. What will be the solution in this case?
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h     |    1 +
- net/mac80211/cfg.c         |    4 +++-
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    9 ++++++---
- net/wireless/core.h        |    1 +
- net/wireless/mlme.c        |    3 ++-
- net/wireless/nl80211.c     |    3 +++
- 7 files changed, 17 insertions(+), 5 deletions(-)
+ACCESS_ONCE()? I have no idea why/if the compiler would actually do this
+though.
 
---- wireless-testing.orig/include/net/cfg80211.h	2010-05-19 11:49:06.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2010-05-19 11:56:14.000000000 +0200
-@@ -1168,6 +1168,7 @@ struct cfg80211_ops {
- 	int	(*action)(struct wiphy *wiphy, struct net_device *dev,
- 			  struct ieee80211_channel *chan,
- 			  enum nl80211_channel_type channel_type,
-+			  bool channel_type_valid,
- 			  const u8 *buf, size_t len, u64 *cookie);
- 
- 	int	(*set_power_mgmt)(struct wiphy *wiphy, struct net_device *dev,
---- wireless-testing.orig/net/mac80211/cfg.c	2010-05-19 11:50:05.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2010-05-19 11:57:48.000000000 +0200
-@@ -1554,10 +1554,12 @@ static int ieee80211_cancel_remain_on_ch
- static int ieee80211_action(struct wiphy *wiphy, struct net_device *dev,
- 			    struct ieee80211_channel *chan,
- 			    enum nl80211_channel_type channel_type,
-+			    bool channel_type_valid,
- 			    const u8 *buf, size_t len, u64 *cookie)
- {
- 	return ieee80211_mgd_action(IEEE80211_DEV_TO_SUB_IF(dev), chan,
--				    channel_type, buf, len, cookie);
-+				    channel_type, channel_type_valid,
-+				    buf, len, cookie);
- }
- 
- struct cfg80211_ops mac80211_config_ops = {
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-05-19 11:50:19.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-05-19 11:57:53.000000000 +0200
-@@ -989,6 +989,7 @@ int ieee80211_mgd_disassoc(struct ieee80
- int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
- 			 struct ieee80211_channel *chan,
- 			 enum nl80211_channel_type channel_type,
-+			 bool channel_type_valid,
- 			 const u8 *buf, size_t len, u64 *cookie);
- ieee80211_rx_result ieee80211_sta_rx_mgmt(struct ieee80211_sub_if_data *sdata,
- 					  struct sk_buff *skb);
---- wireless-testing.orig/net/mac80211/mlme.c	2010-05-19 11:50:25.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-05-19 11:58:43.000000000 +0200
-@@ -2308,6 +2308,7 @@ int ieee80211_mgd_disassoc(struct ieee80
- int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
- 			 struct ieee80211_channel *chan,
- 			 enum nl80211_channel_type channel_type,
-+			 bool channel_type_valid,
- 			 const u8 *buf, size_t len, u64 *cookie)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -2315,9 +2316,11 @@ int ieee80211_mgd_action(struct ieee8021
- 	struct sk_buff *skb;
- 
- 	/* Check that we are on the requested channel for transmission */
--	if ((chan != local->tmp_channel ||
--	     channel_type != local->tmp_channel_type) &&
--	    (chan != local->oper_channel ||
-+	if (chan != local->tmp_channel &&
-+	    chan != local->oper_channel)
-+		return -EBUSY;
-+	if (channel_type_valid &&
-+	    (channel_type != local->tmp_channel_type &&
- 	     channel_type != local->_oper_channel_type))
- 		return -EBUSY;
- 
---- wireless-testing.orig/net/wireless/core.h	2010-05-19 11:49:43.000000000 +0200
-+++ wireless-testing/net/wireless/core.h	2010-05-19 11:57:23.000000000 +0200
-@@ -339,6 +339,7 @@ int cfg80211_mlme_action(struct cfg80211
- 			 struct net_device *dev,
- 			 struct ieee80211_channel *chan,
- 			 enum nl80211_channel_type channel_type,
-+			 bool channel_type_valid,
- 			 const u8 *buf, size_t len, u64 *cookie);
- 
- /* SME */
---- wireless-testing.orig/net/wireless/mlme.c	2010-05-19 11:49:51.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2010-05-19 11:57:07.000000000 +0200
-@@ -827,6 +827,7 @@ int cfg80211_mlme_action(struct cfg80211
- 			 struct net_device *dev,
- 			 struct ieee80211_channel *chan,
- 			 enum nl80211_channel_type channel_type,
-+			 bool channel_type_valid,
- 			 const u8 *buf, size_t len, u64 *cookie)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-@@ -855,7 +856,7 @@ int cfg80211_mlme_action(struct cfg80211
- 
- 	/* Transmit the Action frame as requested by user space */
- 	return rdev->ops->action(&rdev->wiphy, dev, chan, channel_type,
--				 buf, len, cookie);
-+				 channel_type_valid, buf, len, cookie);
- }
- 
- bool cfg80211_rx_action(struct net_device *dev, int freq, const u8 *buf,
---- wireless-testing.orig/net/wireless/nl80211.c	2010-05-19 11:49:11.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2010-05-19 11:56:47.000000000 +0200
-@@ -4681,6 +4681,7 @@ static int nl80211_action(struct sk_buff
- 	struct net_device *dev;
- 	struct ieee80211_channel *chan;
- 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-+	bool channel_type_valid = false;
- 	u32 freq;
- 	int err;
- 	void *hdr;
-@@ -4722,6 +4723,7 @@ static int nl80211_action(struct sk_buff
- 			err = -EINVAL;
- 			goto out;
- 		}
-+		channel_type_valid = true;
- 	}
- 
- 	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-@@ -4745,6 +4747,7 @@ static int nl80211_action(struct sk_buff
- 		goto free_msg;
- 	}
- 	err = cfg80211_mlme_action(rdev, dev, chan, channel_type,
-+				   channel_type_valid,
- 				   nla_data(info->attrs[NL80211_ATTR_FRAME]),
- 				   nla_len(info->attrs[NL80211_ATTR_FRAME]),
- 				   &cookie);
-
+johannes
 
