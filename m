@@ -1,56 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:34511 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754676Ab0EFRCW convert rfc822-to-8bit (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:42728 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754387Ab0ELJkO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 13:02:22 -0400
-Received: by bwz19 with SMTP id 19so108023bwz.21
-        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 10:02:21 -0700 (PDT)
+	Wed, 12 May 2010 05:40:14 -0400
+Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0392777211
+	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:40:12 +0900 (JST)
+Subject: [PATCH 06/12] ath5k: run NF calibration only every 60 seconds
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 12 May 2010 18:40:13 +0900
+Message-ID: <20100512094013.6575.9949.stgit@tt-desk>
+In-Reply-To: <20100512093947.6575.99595.stgit@tt-desk>
+References: <20100512093947.6575.99595.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <201005061229.44923.helmut.schaa@googlemail.com>
-References: <201005061229.44923.helmut.schaa@googlemail.com>
-Date: Thu, 6 May 2010 19:02:20 +0200
-Message-ID: <k2ta32f33a41005061002j6f32d4a9zbd13c9e002e8a04@mail.gmail.com>
-Subject: Re: [PATCH 2/3] rt2x00: rt2800: don't overwrite SIFS values on erp
-	changes
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 6, 2010 at 12:29 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> The SIFS value is a constant and doesn't need to be updated on erp changes.
-> Furthermore the code used 10us for both, the OFDM SIFS and CCK SIFS time
-> which broke CTS protected 11g connections (see patch "rt2x00: rt2800: update
-> initial SIFS values" for details).
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Since NF calibration interferes with TX and RX and also has been the cause of
+other problems (when it's run concurrently with ath5k_reset) we want to run it
+less often - every 60 seconds for now.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    2 ++
+ drivers/net/wireless/ath/ath5k/base.c  |   18 +++++++++++-------
+ 2 files changed, 13 insertions(+), 7 deletions(-)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index f786068..858455f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -640,8 +640,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
->        rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
->
->        rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
-> -       rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, erp->sifs);
-> -       rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, erp->sifs);
->        rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
->        rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
->
-> --
-> 1.6.4.2
->
->
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 131e8b3..d6f9afe 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -204,6 +204,7 @@
+ #define AR5K_TUNE_TPC_TXPOWER			false
+ #define ATH5K_TUNE_CALIBRATION_INTERVAL_FULL    10000   /* 10 sec */
+ #define ATH5K_TUNE_CALIBRATION_INTERVAL_ANI	1000	/* 1 sec */
++#define ATH5K_TUNE_CALIBRATION_INTERVAL_NF	60000	/* 60 sec */
+ 
+ #define AR5K_INIT_CARR_SENSE_EN			1
+ 
+@@ -1118,6 +1119,7 @@ struct ath5k_hw {
+ 	/* Calibration timestamp */
+ 	unsigned long		ah_cal_next_full;
+ 	unsigned long		ah_cal_next_ani;
++	unsigned long		ah_cal_next_nf;
+ 
+ 	/* Calibration mask */
+ 	u8			ah_cal_mask;
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index b15b9d6..e3803ba 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2801,14 +2801,16 @@ ath5k_tasklet_calibrate(unsigned long data)
+ 			ieee80211_frequency_to_channel(
+ 				sc->curchan->center_freq));
+ 
+-	/* TODO: We don't need to run noise floor calibration as often
+-	 * as I/Q calibration.*/
+-
+ 	/* Noise floor calibration interrupts rx/tx path while I/Q calibration
+-	 * doesn't. Stop queues so that calibration doesn't interfere with tx */
+-	ieee80211_stop_queues(sc->hw);
+-	ath5k_hw_update_noise_floor(ah);
+-	ieee80211_wake_queues(sc->hw);
++	 * doesn't. We stop the queues so that calibration doesn't interfere
++	 * with TX and don't run it as often */
++	if (time_is_before_eq_jiffies(ah->ah_cal_next_nf)) {
++		ah->ah_cal_next_nf = jiffies +
++			msecs_to_jiffies(ATH5K_TUNE_CALIBRATION_INTERVAL_NF);
++		ieee80211_stop_queues(sc->hw);
++		ath5k_hw_update_noise_floor(ah);
++		ieee80211_wake_queues(sc->hw);
++	}
+ 
+ 	ah->ah_cal_mask &= ~AR5K_CALIBRATION_FULL;
+ }
+@@ -2929,6 +2931,8 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 
+ 	ah->ah_cal_next_full = jiffies;
+ 	ah->ah_cal_next_ani = jiffies;
++	ah->ah_cal_next_nf = jiffies;
++
+ 	/*
+ 	 * Change channels and update the h/w rate map if we're switching;
+ 	 * e.g. 11a to 11b/g.
+
