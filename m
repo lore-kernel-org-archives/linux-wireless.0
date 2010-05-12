@@ -1,228 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65350 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756835Ab0EJW2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:31 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 42/47] iwlagn: use iwl_sta_id() for aggregation
-Date: Mon, 10 May 2010 15:28:13 -0700
-Message-Id: <1273530498-11876-43-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:4948 "EHLO
+	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756969Ab0ELTWm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 15:22:42 -0400
+Message-ID: <4BEB0000.7070600@gmail.com>
+Date: Wed, 12 May 2010 21:22:40 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 6/9] rt2x00: Push beacon TX descriptor writing to drivers.
+References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>	 <1273614705-25118-7-git-send-email-gwingerde@gmail.com>	 <AANLkTilYgBGsowRMhANjzNzv7IngLb0NZQR5QqSMDYc5@mail.gmail.com>	 <AANLkTikc49OYX7l9H1fpU0RCDU9cHAe4XAIr-nq1nWmq@mail.gmail.com>	 <AANLkTil8eCI40L90Siwpqh6qAx27IYJjVL9dCNl7o5Jm@mail.gmail.com>	 <4BEAFB90.3090301@gmail.com> <AANLkTinx3zLY3pPSfk93oaHBp_IlWuFGRJJoFiMIirws@mail.gmail.com>
+In-Reply-To: <AANLkTinx3zLY3pPSfk93oaHBp_IlWuFGRJJoFiMIirws@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 05/12/10 21:10, Ivo Van Doorn wrote:
+> On Wed, May 12, 2010 at 9:03 PM, Gertjan van Wingerde
+> <gwingerde@gmail.com> wrote:
+>> On 05/12/10 19:45, Ivo Van Doorn wrote:
+>>> On Wed, May 12, 2010 at 11:53 AM, Gertjan van Wingerde
+>>> <gwingerde@gmail.com> wrote:
+>>>> On Wed, May 12, 2010 at 9:06 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+>>>>> On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
+>>>>> <gwingerde@gmail.com> wrote:
+>>>>>> Not all the devices require a TX descriptor to be written (i.e. rt2800
+>>>>>> device don't require them). Push down the creation of the TX descriptor
+>>>>>> to the device drivers so that they can decide for themselves whether
+>>>>>> a TX descriptor is to be created.
+>>>>>>
+>>>>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>>>>> ---
+>>>>>>  drivers/net/wireless/rt2x00/rt2400pci.c   |   16 ++++++++++------
+>>>>>>  drivers/net/wireless/rt2x00/rt2500pci.c   |   16 ++++++++++------
+>>>>>>  drivers/net/wireless/rt2x00/rt2500usb.c   |   11 +++++++++++
+>>>>>>  drivers/net/wireless/rt2x00/rt2800pci.c   |   17 +++++++++++++++++
+>>>>>>  drivers/net/wireless/rt2x00/rt2800usb.c   |   17 +++++++++++++++++
+>>>>>>  drivers/net/wireless/rt2x00/rt2x00debug.c |    1 +
+>>>>>>  drivers/net/wireless/rt2x00/rt2x00queue.c |   10 +---------
+>>>>>>  drivers/net/wireless/rt2x00/rt61pci.c     |   11 +++++++++++
+>>>>>>  drivers/net/wireless/rt2x00/rt73usb.c     |   11 +++++++++++
+>>>>>>  9 files changed, 89 insertions(+), 21 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+>>>>>> index def3fa4..741c531 100644
+>>>>>> --- a/drivers/net/wireless/rt2x00/rt2400pci.c
+>>>>>> +++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+>>>>>> @@ -33,6 +33,7 @@
+>>>>>>  #include <linux/eeprom_93cx6.h>
+>>>>>>
+>>>>>>  #include "rt2x00.h"
+>>>>>> +#include "rt2x00lib.h"
+>>>>>>  #include "rt2x00pci.h"
+>>>>>>  #include "rt2400pci.h"
+>>>>>
+>>>>> rt2x00lib.h must not be used in the drivers. It is for the rt2x00lib
+>>>>> internal files only.
+>>>>
+>>>> OK. This include is/was necessary for the rt2x00debug_dump_frame call.
+>>>> So this may be handled with your next issue.
+>>>>
+>>>>>
+>>>>>> @@ -1074,9 +1075,6 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
+>>>>>>                                   struct txentry_desc *txdesc)
+>>>>>>  {
+>>>>>>        struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+>>>>>> -       struct queue_entry_priv_pci *entry_priv = entry->priv_data;
+>>>>>> -       struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+>>>>>> -       u32 word;
+>>>>>>        u32 reg;
+>>>>>>
+>>>>>>        /*
+>>>>>> @@ -1089,9 +1087,15 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
+>>>>>>
+>>>>>>        rt2x00queue_map_txskb(rt2x00dev, entry->skb);
+>>>>>>
+>>>>>> -       rt2x00_desc_read(entry_priv->desc, 1, &word);
+>>>>>> -       rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
+>>>>>> -       rt2x00_desc_write(entry_priv->desc, 1, word);
+>>>>>> +       /*
+>>>>>> +        * Write the TX descriptor for the beacon.
+>>>>>> +        */
+>>>>>> +       rt2400pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
+>>>>>> +
+>>>>>> +       /*
+>>>>>> +        * Dump beacon to userspace through debugfs.
+>>>>>> +        */
+>>>>>> +       rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
+>>>>>
+>>>>> The goal for rt2x00debug was that the logic must be inside rt2x00lib
+>>>>> as much as possible.
+>>>>> This can/should be moved into rt2x00lib where write_beacon() is being called.
+>>>>>
+>>>>
+>>>> Yes, I wasn't too happy about this part about the patch, but couldn't
+>>>> find a better solution. The problem is that with the patch the frame
+>>>> cannot be dumped before the call to write_beacon, as the descriptor
+>>>> hasn't been set up yet. Also, it cannot be dumped after the call to
+>>>> write_beacon as most of the write_beacon functions actually free the
+>>>> skb with the beacon.
+>>>> So, I ran out of ideas as to how to keep rt2x00debug only inside
+>>>> rt2x00lib. I'm open for suggestions, though.
+>>>
+>>> Well ok, if there aren't obvious alternatives this change is fine.
+>>> However, please move the declaration of rt2x00debug_dump_frame()
+>>> into rt2x00.h? That way we don't have to include the rt2x00lib.h header.
+>>>
+>>
+>> The only alternative I can think of is to have the chipset driver clone the skb to have
+>> a private copy of the skb, so that the original one can be freed in the generic code.
+>> In that case the rt2x00debug_dump_frame call can be done from rt2x00queue code, after
+>> the write_beacon function has been called.
+>>
+>> What do you think of that solution?
+> 
+> I think the extra cloning isn't really worth the effort. Since it is
+> only needed for debugfs,
+> so the code in rt2x00queue must check for debugfs support, and debugfs code must
+> be updated not to clone the frame again.
+> 
+> Overall I think it is in this case better to just do your change with calling
+> the debugfs function from the driver, but moving the declaration of the function
+> into rt2x00.h to prevent the inclusion of rt2x00lib.h into the drivers.
+> 
 
-With the station ID being stored in the
-station struct, which mac80211 gives us
-for aggregation callbacks, we can also
-remove the use of iwl_find_station() in
-those code paths.
+OK. I'll move the declaration to rt2x00.h.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   21 ++++++++-------------
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    8 ++++----
- drivers/net/wireless/iwlwifi/iwl-agn.h    |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-sta.c    |   13 +++++++------
- drivers/net/wireless/iwlwifi/iwl-sta.h    |    7 ++++---
- 5 files changed, 25 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 89c85d1..c402bfc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -962,7 +962,7 @@ static int iwlagn_txq_ctx_activate_free(struct iwl_priv *priv)
- }
- 
- int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
--			const u8 *ra, u16 tid, u16 *ssn)
-+			struct ieee80211_sta *sta, u16 tid, u16 *ssn)
- {
- 	int sta_id;
- 	int tx_fifo;
-@@ -976,9 +976,9 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 		return tx_fifo;
- 
- 	IWL_WARN(priv, "%s on ra = %pM tid = %d\n",
--			__func__, ra, tid);
-+			__func__, sta->addr, tid);
- 
--	sta_id = iwl_find_station(priv, ra);
-+	sta_id = iwl_sta_id(sta);
- 	if (sta_id == IWL_INVALID_STATION) {
- 		IWL_ERR(priv, "Start AGG on invalid station\n");
- 		return -ENXIO;
-@@ -1012,7 +1012,7 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 	if (tid_data->tfds_in_queue == 0) {
- 		IWL_DEBUG_HT(priv, "HW queue is empty\n");
- 		tid_data->agg.state = IWL_AGG_ON;
--		ieee80211_start_tx_ba_cb_irqsafe(vif, ra, tid);
-+		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 	} else {
- 		IWL_DEBUG_HT(priv, "HW queue is NOT empty: %d packets in HW queue\n",
- 			     tid_data->tfds_in_queue);
-@@ -1022,23 +1022,18 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
- }
- 
- int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
--		       const u8 *ra, u16 tid)
-+		       struct ieee80211_sta *sta, u16 tid)
- {
- 	int tx_fifo_id, txq_id, sta_id, ssn = -1;
- 	struct iwl_tid_data *tid_data;
- 	int write_ptr, read_ptr;
- 	unsigned long flags;
- 
--	if (!ra) {
--		IWL_ERR(priv, "ra = NULL\n");
--		return -EINVAL;
--	}
--
- 	tx_fifo_id = get_fifo_from_tid(tid);
- 	if (unlikely(tx_fifo_id < 0))
- 		return tx_fifo_id;
- 
--	sta_id = iwl_find_station(priv, ra);
-+	sta_id = iwl_sta_id(sta);
- 
- 	if (sta_id == IWL_INVALID_STATION) {
- 		IWL_ERR(priv, "Invalid station for AGG tid %d\n", tid);
-@@ -1048,7 +1043,7 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 	if (priv->stations[sta_id].tid[tid].agg.state ==
- 				IWL_EMPTYING_HW_QUEUE_ADDBA) {
- 		IWL_DEBUG_HT(priv, "AGG stop before setup done\n");
--		ieee80211_stop_tx_ba_cb_irqsafe(vif, ra, tid);
-+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		priv->stations[sta_id].tid[tid].agg.state = IWL_AGG_OFF;
- 		return 0;
- 	}
-@@ -1085,7 +1080,7 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 						   tx_fifo_id);
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	ieee80211_stop_tx_ba_cb_irqsafe(vif, ra, tid);
-+	ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8a4b830..3265b63 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3154,17 +3154,17 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		IWL_DEBUG_HT(priv, "start Rx\n");
--		return iwl_sta_rx_agg_start(priv, sta->addr, tid, *ssn);
-+		return iwl_sta_rx_agg_start(priv, sta, tid, *ssn);
- 	case IEEE80211_AMPDU_RX_STOP:
- 		IWL_DEBUG_HT(priv, "stop Rx\n");
--		ret = iwl_sta_rx_agg_stop(priv, sta->addr, tid);
-+		ret = iwl_sta_rx_agg_stop(priv, sta, tid);
- 		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 			return 0;
- 		else
- 			return ret;
- 	case IEEE80211_AMPDU_TX_START:
- 		IWL_DEBUG_HT(priv, "start Tx\n");
--		ret = iwlagn_tx_agg_start(priv, vif, sta->addr, tid, ssn);
-+		ret = iwlagn_tx_agg_start(priv, vif, sta, tid, ssn);
- 		if (ret == 0) {
- 			priv->_agn.agg_tids_count++;
- 			IWL_DEBUG_HT(priv, "priv->_agn.agg_tids_count = %u\n",
-@@ -3173,7 +3173,7 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 		return ret;
- 	case IEEE80211_AMPDU_TX_STOP:
- 		IWL_DEBUG_HT(priv, "stop Tx\n");
--		ret = iwlagn_tx_agg_stop(priv, vif, sta->addr, tid);
-+		ret = iwlagn_tx_agg_stop(priv, vif, sta, tid);
- 		if ((ret == 0) && (priv->_agn.agg_tids_count > 0)) {
- 			priv->_agn.agg_tids_count--;
- 			IWL_DEBUG_HT(priv, "priv->_agn.agg_tids_count = %u\n",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index c441773..2d74805 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -136,9 +136,9 @@ void iwlagn_hwrate_to_tx_control(struct iwl_priv *priv, u32 rate_n_flags,
- 			      struct ieee80211_tx_info *info);
- int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb);
- int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
--			const u8 *ra, u16 tid, u16 *ssn);
-+			struct ieee80211_sta *sta, u16 tid, u16 *ssn);
- int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
--		       const u8 *ra, u16 tid);
-+		       struct ieee80211_sta *sta, u16 tid);
- int iwlagn_txq_check_empty(struct iwl_priv *priv,
- 			   int sta_id, u8 tid, int txq_id);
- void iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 4be7940..8fec026 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1324,13 +1324,13 @@ void iwl_sta_tx_modify_enable_tid(struct iwl_priv *priv, int sta_id, int tid)
- }
- EXPORT_SYMBOL(iwl_sta_tx_modify_enable_tid);
- 
--int iwl_sta_rx_agg_start(struct iwl_priv *priv,
--			 const u8 *addr, int tid, u16 ssn)
-+int iwl_sta_rx_agg_start(struct iwl_priv *priv, struct ieee80211_sta *sta,
-+			 int tid, u16 ssn)
- {
- 	unsigned long flags;
- 	int sta_id;
- 
--	sta_id = iwl_find_station(priv, addr);
-+	sta_id = iwl_sta_id(sta);
- 	if (sta_id == IWL_INVALID_STATION)
- 		return -ENXIO;
- 
-@@ -1343,16 +1343,17 @@ int iwl_sta_rx_agg_start(struct iwl_priv *priv,
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
- 	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta,
--					CMD_ASYNC);
-+				CMD_ASYNC);
- }
- EXPORT_SYMBOL(iwl_sta_rx_agg_start);
- 
--int iwl_sta_rx_agg_stop(struct iwl_priv *priv, const u8 *addr, int tid)
-+int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
-+			int tid)
- {
- 	unsigned long flags;
- 	int sta_id;
- 
--	sta_id = iwl_find_station(priv, addr);
-+	sta_id = iwl_sta_id(sta);
- 	if (sta_id == IWL_INVALID_STATION) {
- 		IWL_ERR(priv, "Invalid station for AGG tid %d\n", tid);
- 		return -ENXIO;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 646f644..d0ab3f8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -80,9 +80,10 @@ int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
- int iwl_mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta);
- void iwl_sta_tx_modify_enable_tid(struct iwl_priv *priv, int sta_id, int tid);
--int iwl_sta_rx_agg_start(struct iwl_priv *priv,
--			 const u8 *addr, int tid, u16 ssn);
--int iwl_sta_rx_agg_stop(struct iwl_priv *priv, const u8 *addr, int tid);
-+int iwl_sta_rx_agg_start(struct iwl_priv *priv, struct ieee80211_sta *sta,
-+			 int tid, u16 ssn);
-+int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
-+			int tid);
- void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id);
- void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt);
- 
--- 
-1.6.3.3
-
+Gertjan.
