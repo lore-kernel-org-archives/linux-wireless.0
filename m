@@ -1,36 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:43679 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754095Ab0E2SFm convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:22605 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754495Ab0ELI1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 May 2010 14:05:42 -0400
-Received: by pxi18 with SMTP id 18so973372pxi.19
-        for <linux-wireless@vger.kernel.org>; Sat, 29 May 2010 11:05:42 -0700 (PDT)
+	Wed, 12 May 2010 04:27:46 -0400
+Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0451912865
+	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 17:27:45 +0900 (JST)
+Subject: [PATCH 2/3] iw: sync nl80211.h with wireless-testing
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+Date: Wed, 12 May 2010 17:27:46 +0900
+Message-ID: <20100512082746.26746.58172.stgit@tt-desk>
+In-Reply-To: <20100512082516.26746.19520.stgit@tt-desk>
+References: <20100512082516.26746.19520.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <1275140672-4785-1-git-send-email-hauke@hauke-m.de>
-References: <1275140107-4616-3-git-send-email-hauke@hauke-m.de>
-	<1275140672-4785-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 29 May 2010 11:05:22 -0700
-Message-ID: <AANLkTimshD7WqhsEU7Z_Q_iwzmOT4WziVWi4Fium6aoZ@mail.gmail.com>
-Subject: Re: [PATCH 3/3] compat-wireless: run refresh only on last applied
-	directory
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 29, 2010 at 6:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Running "./scripts/admin-refresh.sh -n -p -c refresh" failed because
-> patchRefresh refreshes and applies every patch form the series and
-> then  reverse them all. If a patch from the next series in an other
-> directory depends on that it will not apply any more.
->
-> Now only the last series/directory will be refresh.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+adding antenna settings
 
-All applied, thanks!
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ nl80211.h |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/nl80211.h b/nl80211.h
+index b7c77f9..46a2c76 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -341,6 +341,9 @@
+  *	of any other interfaces, and other interfaces will again take
+  *	precedence when they are used.
+  *
++ * @NL80211_CMD_SET_ANTENNA: Set a bitmap of antennas to use.
++ * @NL80211_CMD_GET_ANTENNA: Get antenna configuration from driver.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -441,6 +444,9 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_CHANNEL,
+ 
++	NL80211_CMD_SET_ANTENNA,
++	NL80211_CMD_GET_ANTENNA,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -725,6 +731,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
+  *	connected to this BSS.
+  *
++ * @NL80211_ATTR_ANTENNA_TX: Bitmap of antennas to use for transmitting.
++ * @NL80211_ATTR_ANTENNA_RX: Bitmap of antennas to use for receiving.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -882,6 +891,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_AP_ISOLATE,
+ 
++	NL80211_ATTR_ANTENNA_TX,
++	NL80211_ATTR_ANTENNA_RX,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+
