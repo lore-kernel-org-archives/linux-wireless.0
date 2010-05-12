@@ -1,62 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:57430 "HELO
-	outbound-mail-313.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752186Ab0ENQRk (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:65347 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754880Ab0ELSqg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 12:17:40 -0400
-Received: from h135.188.123.208.ip.windstream.net ([208.123.188.135] helo=[206.223.20.39])
-	by host200.hostmonster.com with esmtpa (Exim 4.69)
-	(envelope-from <dhlii@dlasys.net>)
-	id 1OCxZz-0006Wh-9P
-	for linux-wireless@vger.kernel.org; Fri, 14 May 2010 10:17:39 -0600
-Message-ID: <4BED77A2.7050105@dlasys.net>
-Date: Fri, 14 May 2010 12:17:38 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
+	Wed, 12 May 2010 14:46:36 -0400
+Received: by fxm15 with SMTP id 15so415006fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 11:46:34 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: compat-wireless
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4BEAF6B1.3000200@gmail.com>
+References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
+	 <1273614705-25118-3-git-send-email-gwingerde@gmail.com>
+	 <AANLkTikOV973PKZYkNyUoaFOXhSPOumhmHwQ7Ei8tvgv@mail.gmail.com>
+	 <AANLkTilDv-tY_UIbc_lh8EaNdV7MRNAbDA4Oe5nFiDNh@mail.gmail.com>
+	 <AANLkTimubF1UWmzLwhJ7vhquBHmRywJQTvJciU3D3SNx@mail.gmail.com>
+	 <4BEAF6B1.3000200@gmail.com>
+Date: Wed, 12 May 2010 20:46:34 +0200
+Message-ID: <AANLkTimk-LQlbFc3667oWBpEYJqIAgg76lNbQfF4001U@mail.gmail.com>
+Subject: Re: [PATCH 2/9] rt2x00: Fix beacon descriptor writing for rt61pci.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-     I am working with the carl9170 driver.
-     I have a working development environment based on wireless-testing.
+On Wed, May 12, 2010 at 8:42 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> On 05/12/10 19:43, Ivo Van Doorn wrote:
+>> On Wed, May 12, 2010 at 11:46 AM, Gertjan van Wingerde
+>> <gwingerde@gmail.com> wrote:
+>>> On Wed, May 12, 2010 at 8:59 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+>>>> On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
+>>>> <gwingerde@gmail.com> wrote:
+>>>>> The buffer address descriptor word is not part of the TXINFO structure
+>>>>> needed for beacons. The current writing of that word for beacons is
+>>>>> therefore an out-of-bounds write.
+>>>>> Fix this by only writing the buffer address descriptor word for TX
+>>>>> queues.
+>>>>>
+>>>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>>>> ---
+>>>>>  drivers/net/wireless/rt2x00/rt61pci.c |   10 +++++-----
+>>>>>  1 files changed, 5 insertions(+), 5 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+>>>>> index 2436363..99c2981 100644
+>>>>> --- a/drivers/net/wireless/rt2x00/rt61pci.c
+>>>>> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
+>>>>> @@ -1801,12 +1801,12 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+>>>>>        rt2x00_set_field32(&word, TXD_W5_WAITING_DMA_DONE_INT, 1);
+>>>>>        rt2x00_desc_write(txd, 5, word);
+>>>>>
+>>>>> -       rt2x00_desc_read(txd, 6, &word);
+>>>>> -       rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
+>>>>> -                          skbdesc->skb_dma);
+>>>>> -       rt2x00_desc_write(txd, 6, word);
+>>>>> +       if (txdesc->queue != QID_BEACON) {
+>>>>> +               rt2x00_desc_read(txd, 6, &word);
+>>>>> +               rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
+>>>>> +                                  skbdesc->skb_dma);
+>>>>> +               rt2x00_desc_write(txd, 6, word);
+>>>>>
+>>>>> -       if (skbdesc->desc_len > TXINFO_SIZE) {
+>>>>>                rt2x00_desc_read(txd, 11, &word);
+>>>>>                rt2x00_set_field32(&word, TXD_W11_BUFFER_LENGTH0,
+>>>>>                                   txdesc->length);
+>>>>
+>>>> Shouldn't the check for TXINFO_SIZE be used rather than explicitly
+>>>> checking for the QID?
+>>>>
+>>>
+>>> I agree that this is a change that didn't have to be made in this patch.
+>>> However, after patch 4 of the series we cannot depend on the
+>>> skbdesc->desc_len being set anymore, and we would have to depend on
+>>> checking the QID anyway.
+>>> Note that in reality these two checks are completely equivalent with
+>>> respect to the result.
+>>
+>> Hmm, is that a good idea? I mean we are using the skbdesc inside the
+>> function, but we can't be sure that one of the basic values contains the right
+>> value?
+>>
+>
+> To be honest, the chipset drivers don't need the skbdesc->desc and skbdesc->desc_len
+> at all. Based on the queue ID they already have everything they need to know to write
+> a descriptor. As far as I can tell the only code that really needs those two fields is
+> the rt2x00debug code, to dump a frame to userspace via debugfs.
+>
+> As the dumping through debugfs is done after writing the TX descriptor, with this patch
+> I changed the desc and desc_len fields of the skbdesc to be output of the write_tx_desc
+> function (for the generic parts of the rt2x00 code) rather than being input.
+>
+> Note that originally my plan was to get rid of the desc and desc_len field altogether,
+> but for now I refrained from doing that.
 
-     I am going to need to support carl9170 with older linux versions.
-     I pullled the compat-wireless git tree and can not figure out how 
-to build from it.
-         Is there any step by step instructions to get from the raw git 
-tree to being able to build against a specific kernel source ?
+Ah ok. Thanks for the explanation.
 
-     I DL'd the compat-wireless tarball for 2.6.32. I was able to get 
-that working against ubuntu lucid kernel sources.
-     When I add the carl9170 driver I get a large collection of errors 
-building it.
-             While some of these appear to be very specific to this 
-driver many seem specific to differences between 2.6.32 compat-wireless 
-and wireless testing. I was hoping moving to the compat-wireless git 
-tree would fix that, but I can not figure out how to build from it.
-
-     In an altogether different project it would be useful use 
-compat-wireless to support a newer wifi driver with a 2.6.27 kernel. 
-That seems fairly standard. But I need to cross compile the kernel. As 
-best as I can tell compat-wireless is setup  to work against your 
-current running kernel. Are there any pointers for cross-compiling with 
-compat-wireless, or for building against source other than that for the 
-running kernel ?
-
-Thanks
-
-
-
-
-
--- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies too numerous to list.
-
-"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
-Albert Einstein
-
+Ivo
