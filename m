@@ -1,156 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:1889 "HELO
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:24979 "HELO
 	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754608Ab0ELI1w (ORCPT
+	with SMTP id S1754156Ab0ELIUv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 04:27:52 -0400
-Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0442662870
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 17:27:50 +0900 (JST)
-Subject: [PATCH 3/3] iw: Add antenna set/get
-To: johannes@sipsolutions.net, linville@tuxdriver.com
+	Wed, 12 May 2010 04:20:51 -0400
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0395612449
+	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 17:20:50 +0900 (JST)
 From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
-Date: Wed, 12 May 2010 17:27:51 +0900
-Message-ID: <20100512082751.26746.43302.stgit@tt-desk>
-In-Reply-To: <20100512082516.26746.19520.stgit@tt-desk>
-References: <20100512082516.26746.19520.stgit@tt-desk>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH 2/2] compat-wireless: make patches apply again
+Date: Wed, 12 May 2010 17:20:50 +0900
+Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+References: <1273526650-26282-1-git-send-email-hauke@hauke-m.de> <1273526650-26282-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1273526650-26282-2-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201005121720.50514.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add commands to set and get the antenna configuration. The antenna
-configuration is defined as a bitmap of 8 antennas. When multiple antennas are
-selected the driver may use diversity. Also the driver may reject antenna
-configurations it cannot support.
+On Tuesday 11 May 2010 06:24:10 Hauke Mehrtens wrote:
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  patches/07-change-default-rate-alg.patch |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/patches/07-change-default-rate-alg.patch
+> b/patches/07-change-default-rate-alg.patch index af65207..f0ccbce 100644
+> --- a/patches/07-change-default-rate-alg.patch
+> +++ b/patches/07-change-default-rate-alg.patch
+> @@ -21,7 +21,7 @@ at compilation time.
+>   module_param(ieee80211_default_rc_algo, charp, 0644);
+>   MODULE_PARM_DESC(ieee80211_default_rc_algo,
+>   		 "Default rate control algorithm for mac80211 to use");
+> -@@ -118,8 +118,8 @@ ieee80211_rate_control_ops_get(const cha
+> +@@ -119,8 +119,8 @@ ieee80211_rate_control_ops_get(const cha
+>   		ops = 
+ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
+> 
+>   	/* try built-in one if specific alg requested but not found */
+> @@ -29,6 +29,6 @@ at compilation time.
+>  -		ops = 
+ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
+>  +	if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
+>  +		ops =
+> ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT); +
+> 	kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
+> 
+>   	return ops;
+> - }
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+this is somehow messed up and doesn't apply. here is a fixed version of the 
+patch (not a patch for a patch)...
+
 ---
- Makefile  |    2 +
- antenna.c |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- util.c    |    2 +
- 3 files changed, 91 insertions(+), 1 deletions(-)
- create mode 100644 antenna.c
 
-diff --git a/Makefile b/Makefile
-index d303f45..e526cda 100644
---- a/Makefile
-+++ b/Makefile
-@@ -17,7 +17,7 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing
- OBJS = iw.o genl.o event.o info.o phy.o \
- 	interface.o ibss.o station.o survey.o util.o \
- 	mesh.o mpath.o scan.o reg.o version.o \
--	reason.o status.o connect.o link.o offch.o ps.o cqm.o
-+	reason.o status.o connect.o link.o offch.o ps.o cqm.o antenna.o
- OBJS += sections.o
- ALL = iw
- 
-diff --git a/antenna.c b/antenna.c
-new file mode 100644
-index 0000000..5869aa6
---- /dev/null
-+++ b/antenna.c
-@@ -0,0 +1,88 @@
-+#include <net/if.h>
-+#include <errno.h>
-+#include <string.h>
-+
-+#include <netlink/genl/genl.h>
-+#include <netlink/genl/family.h>
-+#include <netlink/genl/ctrl.h>
-+#include <netlink/msg.h>
-+#include <netlink/attr.h>
-+
-+#include "nl80211.h"
-+#include "iw.h"
-+
-+SECTION(antenna);
-+
-+static int set_antenna(struct nl80211_state *state,
-+			struct nl_cb *cb,
-+			struct nl_msg *msg,
-+			int argc, char **argv)
-+{
-+	char *end;
-+	uint8_t tx_ant = 0, rx_ant = 0;
-+
-+	if (argc == 1)
-+		tx_ant = rx_ant = strtoul(argv[0], &end, 10);
-+	else if (argc == 4)
-+	{
-+		while (argc) {
-+			if (strcmp(*argv, "tx") == 0 ||
-+			    strcmp(*argv, "rx") == 0) {
-+				if (strcmp(*argv, "tx") == 0)
-+					tx_ant = strtoul(argv[1], &end, 10);
-+				else
-+					rx_ant = strtoul(argv[1], &end, 10);
-+				argv = argv + 2;
-+				argc = argc - 2;
-+			}
-+		}
-+	}
-+
-+	if (*end || !tx_ant || !rx_ant)
-+		return 1;
-+
-+	NLA_PUT_U8(msg, NL80211_ATTR_ANTENNA_TX, tx_ant);
-+	NLA_PUT_U8(msg, NL80211_ATTR_ANTENNA_RX, rx_ant);
-+	return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
-+COMMAND(antenna, set, "<bitmap> | tx <bitmap> rx <bitmap>",
-+	NL80211_CMD_SET_ANTENNA, 0, CIB_PHY, set_antenna,
-+	"Set a bitmap of allowed antennas to use for TX and RX.\n"
-+	"The driver may reject antenna configurations it cannot support.");
-+
-+
-+static int print_antenna_handler(struct nl_msg *msg, void *arg)
-+{
-+	struct nlattr *attrs[NL80211_ATTR_MAX + 1];
-+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-+	uint8_t tx_ant, rx_ant;
-+
-+	nla_parse(attrs, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-+		  genlmsg_attrlen(gnlh, 0), NULL);
-+
-+	if (!attrs[NL80211_ATTR_ANTENNA_TX] || !attrs[NL80211_ATTR_ANTENNA_RX])
-+		return NL_SKIP;
-+
-+	tx_ant = nla_get_u8(attrs[NL80211_ATTR_ANTENNA_TX]);
-+	rx_ant = nla_get_u8(attrs[NL80211_ATTR_ANTENNA_RX]);
-+
-+	printf("Antenna configuration: tx %d rx %d\n", tx_ant, rx_ant);
-+
-+	return NL_SKIP;
-+}
-+
-+static int get_antenna(struct nl80211_state *state,
-+			struct nl_cb *cb,
-+			struct nl_msg *msg,
-+			int argc, char **argv)
-+{
-+	nl_cb_set(cb, NL_CB_VALID, NL_CB_CUSTOM, print_antenna_handler, NULL);
-+	return 0;
-+}
-+
-+COMMAND(antenna, get, NULL, NL80211_CMD_GET_ANTENNA, 0, CIB_PHY, get_antenna,
-+	"Retrieve antenna configuration.");
-diff --git a/util.c b/util.c
-index 0c6d978..7d971ac 100644
---- a/util.c
-+++ b/util.c
-@@ -166,6 +166,8 @@ static const char *commands[NL80211_CMD_MAX + 1] = {
- 	[NL80211_CMD_REGISTER_ACTION] = "register_action",
- 	[NL80211_CMD_ACTION] = "action",
- 	[NL80211_CMD_SET_CHANNEL] = "set_channel",
-+	[NL80211_CMD_SET_ANTENNA] = "antenna_set",
-+	[NL80211_CMD_GET_ANTENNA] = "antenna_get",
- };
- 
- static char cmdbuf[100];
+Your current kernels configuration (.config and linux/autoconf.h)
+are always respected when compiling external modules. Because
+of this if you are using an old kernel which preferred the
+PID rate control algorithm we cannot force it to use minstrel
+instead. Minstrel is now the default rate control algorithm
+and we want you to use it. To let you use it we redefine here
+the CONFIG_MAC80211_RC_DEFAULT to CONFIG_COMPAT_MAC80211_RC_DEFAULT
+and define CONFIG_COMPAT_MAC80211_RC_DEFAULT on config.mk.
+Through the compat autoconf we then get it also defined there
+at compilation time.
 
+--- a/net/mac80211/rate.c	2010-05-12 16:27:02.245747971 +0900
++++ b/net/mac80211/rate.c	2010-05-12 17:00:45.855748158 +0900
+@@ -23,7 +23,7 @@
+ static LIST_HEAD(rate_ctrl_algs);
+ static DEFINE_MUTEX(rate_ctrl_mutex);
+ 
+-static char *ieee80211_default_rc_algo = CONFIG_MAC80211_RC_DEFAULT;
++static char *ieee80211_default_rc_algo = CONFIG_COMPAT_MAC80211_RC_DEFAULT;
+ module_param(ieee80211_default_rc_algo, charp, 0644);
+ MODULE_PARM_DESC(ieee80211_default_rc_algo,
+ 		 "Default rate control algorithm for mac80211 to use");
+@@ -118,8 +118,8 @@
+ 		ops = ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
+ 
+ 	/* try built-in one if specific alg requested but not found */
+-	if (!ops && strlen(CONFIG_MAC80211_RC_DEFAULT))
+-		ops = ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
++	if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
++		ops = 
+ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT);
+ 
+ 	return ops;
+ }
