@@ -1,20 +1,19 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:62905 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757061Ab0ELRnG convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60149 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752958Ab0ELHCT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 13:43:06 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so685921fga.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 10:43:05 -0700 (PDT)
+	Wed, 12 May 2010 03:02:19 -0400
+Received: by fxm4 with SMTP id 4so225847fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 00:02:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTilDv-tY_UIbc_lh8EaNdV7MRNAbDA4Oe5nFiDNh@mail.gmail.com>
+In-Reply-To: <1273614705-25118-9-git-send-email-gwingerde@gmail.com>
 References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-	 <1273614705-25118-3-git-send-email-gwingerde@gmail.com>
-	 <AANLkTikOV973PKZYkNyUoaFOXhSPOumhmHwQ7Ei8tvgv@mail.gmail.com>
-	 <AANLkTilDv-tY_UIbc_lh8EaNdV7MRNAbDA4Oe5nFiDNh@mail.gmail.com>
-Date: Wed, 12 May 2010 19:43:05 +0200
-Message-ID: <AANLkTimubF1UWmzLwhJ7vhquBHmRywJQTvJciU3D3SNx@mail.gmail.com>
-Subject: Re: [PATCH 2/9] rt2x00: Fix beacon descriptor writing for rt61pci.
+	 <1273614705-25118-9-git-send-email-gwingerde@gmail.com>
+Date: Wed, 12 May 2010 09:02:18 +0200
+Message-ID: <AANLkTinMB9AThStTLQ5vkRrKJgDz84n447kFcTwQaQvQ@mail.gmail.com>
+Subject: Re: [PATCH 8/9] rt2x00: Reverse calling order of bus write_tx_desc
+	and driver write_tx_desc.
 From: Ivo Van Doorn <ivdoorn@gmail.com>
 To: Gertjan van Wingerde <gwingerde@gmail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
@@ -23,58 +22,60 @@ Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 12, 2010 at 11:46 AM, Gertjan van Wingerde
+On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
 <gwingerde@gmail.com> wrote:
-> On Wed, May 12, 2010 at 8:59 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
->> On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
->> <gwingerde@gmail.com> wrote:
->>> The buffer address descriptor word is not part of the TXINFO structure
->>> needed for beacons. The current writing of that word for beacons is
->>> therefore an out-of-bounds write.
->>> Fix this by only writing the buffer address descriptor word for TX
->>> queues.
->>>
->>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>> ---
->>>  drivers/net/wireless/rt2x00/rt61pci.c |   10 +++++-----
->>>  1 files changed, 5 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
->>> index 2436363..99c2981 100644
->>> --- a/drivers/net/wireless/rt2x00/rt61pci.c
->>> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
->>> @@ -1801,12 +1801,12 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
->>>        rt2x00_set_field32(&word, TXD_W5_WAITING_DMA_DONE_INT, 1);
->>>        rt2x00_desc_write(txd, 5, word);
->>>
->>> -       rt2x00_desc_read(txd, 6, &word);
->>> -       rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
->>> -                          skbdesc->skb_dma);
->>> -       rt2x00_desc_write(txd, 6, word);
->>> +       if (txdesc->queue != QID_BEACON) {
->>> +               rt2x00_desc_read(txd, 6, &word);
->>> +               rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
->>> +                                  skbdesc->skb_dma);
->>> +               rt2x00_desc_write(txd, 6, word);
->>>
->>> -       if (skbdesc->desc_len > TXINFO_SIZE) {
->>>                rt2x00_desc_read(txd, 11, &word);
->>>                rt2x00_set_field32(&word, TXD_W11_BUFFER_LENGTH0,
->>>                                   txdesc->length);
->>
->> Shouldn't the check for TXINFO_SIZE be used rather than explicitly
->> checking for the QID?
->>
+> For rt2800 reverse the calling order of rt2x00pci_write_data and
+> rt2800pci_write_data. Currently rt2800pci_write_data calls rt2x00pci_write_data
+> as there can be only 1 driver callback function specified by the driver.
+> Reverse this calling order by introducing a new driver callback function,
+> called add_tx_datadesc, which is called from the bus-specific write_tx_data
+> functions.
+> Preparation for futher cleanups in the skb data handling of rt2x00.
 >
-> I agree that this is a change that didn't have to be made in this patch.
-> However, after patch 4 of the series we cannot depend on the
-> skbdesc->desc_len being set anymore, and we would have to depend on
-> checking the QID anyway.
-> Note that in reality these two checks are completely equivalent with
-> respect to the result.
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800pci.c |   15 ++++-----------
+>  drivers/net/wireless/rt2x00/rt2x00.h    |    2 ++
+>  drivers/net/wireless/rt2x00/rt2x00pci.c |    6 ++++++
+>  drivers/net/wireless/rt2x00/rt2x00usb.c |    6 ++++++
+>  4 files changed, 18 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index fcca30c..bbd6481 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -614,18 +614,10 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+>  /*
+>  * TX descriptor initialization
+>  */
+> -static int rt2800pci_write_tx_data(struct queue_entry* entry,
+> -                                  struct txentry_desc *txdesc)
+> +static void rt2800pci_add_tx_datadesc(struct queue_entry* entry,
+> +                                     struct txentry_desc *txdesc)
+>  {
+> -       int ret;
+> -
+> -       ret = rt2x00pci_write_tx_data(entry, txdesc);
+> -       if (ret)
+> -               return ret;
+> -
+>        rt2800_write_txwi(entry->skb, txdesc);
+> -
+> -       return 0;
+>  }
+>
+>
+> @@ -1080,7 +1072,8 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
+>        .reset_tuner            = rt2800_reset_tuner,
+>        .link_tuner             = rt2800_link_tuner,
+>        .write_tx_desc          = rt2800pci_write_tx_desc,
+> -       .write_tx_data          = rt2800pci_write_tx_data,
+> +       .write_tx_data          = rt2x00pci_write_tx_data,
+> +       .add_tx_datadesc        = rt2800pci_add_tx_datadesc,
+>        .write_beacon           = rt2800pci_write_beacon,
+>        .kick_tx_queue          = rt2800pci_kick_tx_queue,
+>        .kill_tx_queue          = rt2800pci_kill_tx_queue,
 
-Hmm, is that a good idea? I mean we are using the skbdesc inside the
-function, but we can't be sure that one of the basic values contains the right
-value?
+Doesn't the name write_tx_datadesc make more sense?
 
 Ivo
