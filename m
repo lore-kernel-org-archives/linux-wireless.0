@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:48179 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752564Ab0EOVMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 17:12:35 -0400
-Date: Sat, 15 May 2010 23:12:28 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH 1/37] drivers/net/wireless/libertas: Use kmemdup
-Message-ID: <Pine.LNX.4.64.1005152312060.21345@ask.diku.dk>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:26044 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754114Ab0ELI1l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 04:27:41 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0282042860
+	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 17:27:40 +0900 (JST)
+Subject: [PATCH 1/3] iw: add channel command name
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+Date: Wed, 12 May 2010 17:27:41 +0900
+Message-ID: <20100512082741.26746.78569.stgit@tt-desk>
+In-Reply-To: <20100512082516.26746.19520.stgit@tt-desk>
+References: <20100512082516.26746.19520.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
-
-Use kmemdup when some other buffer is immediately copied into the
-allocated region.
-
-A simplified version of the semantic patch that makes this change is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression from,to,size,flag;
-statement S;
-@@
-
--  to = \(kmalloc\|kzalloc\)(size,flag);
-+  to = kmemdup(from,size,flag);
-   if (to==NULL || ...) S
--  memcpy(to, from, size);
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/libertas/if_usb.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ util.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff -u -p a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -618,16 +618,14 @@ static void if_usb_receive_fwload(struct
- 		return;
- 	}
+diff --git a/util.c b/util.c
+index 42c992d..0c6d978 100644
+--- a/util.c
++++ b/util.c
+@@ -165,6 +165,7 @@ static const char *commands[NL80211_CMD_MAX + 1] = {
+ 	[NL80211_CMD_SET_TX_BITRATE_MASK] = "set_tx_bitrate_mask",
+ 	[NL80211_CMD_REGISTER_ACTION] = "register_action",
+ 	[NL80211_CMD_ACTION] = "action",
++	[NL80211_CMD_SET_CHANNEL] = "set_channel",
+ };
  
--	syncfwheader = kmalloc(sizeof(struct fwsyncheader), GFP_ATOMIC);
-+	syncfwheader = kmemdup(skb->data + IPFIELD_ALIGN_OFFSET,
-+			       sizeof(struct fwsyncheader), GFP_ATOMIC);
- 	if (!syncfwheader) {
- 		lbs_deb_usbd(&cardp->udev->dev, "Failure to allocate syncfwheader\n");
- 		kfree_skb(skb);
- 		return;
- 	}
- 
--	memcpy(syncfwheader, skb->data + IPFIELD_ALIGN_OFFSET,
--	       sizeof(struct fwsyncheader));
--
- 	if (!syncfwheader->cmd) {
- 		lbs_deb_usb2(&cardp->udev->dev, "FW received Blk with correct CRC\n");
- 		lbs_deb_usb2(&cardp->udev->dev, "FW received Blk seqnum = %d\n",
+ static char cmdbuf[100];
+
