@@ -1,88 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:33306 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754138Ab0ELIXk (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:32922 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756510Ab0ELQ2k convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 04:23:40 -0400
-Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0904482618
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 17:23:38 +0900 (JST)
-Subject: [PATCH 3/3] ath5k: Add support for antenna configuration
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
-Date: Wed, 12 May 2010 17:23:37 +0900
-Message-ID: <20100512082337.26565.79642.stgit@tt-desk>
-In-Reply-To: <20100512082231.26565.16730.stgit@tt-desk>
-References: <20100512082231.26565.16730.stgit@tt-desk>
+	Wed, 12 May 2010 12:28:40 -0400
+Received: by pxi5 with SMTP id 5so111234pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 09:28:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <201005121720.50514.br1@einfach.org>
+References: <1273526650-26282-1-git-send-email-hauke@hauke-m.de>
+	<1273526650-26282-2-git-send-email-hauke@hauke-m.de> <201005121720.50514.br1@einfach.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 12 May 2010 09:28:18 -0700
+Message-ID: <AANLkTinkg1lG6Zc-9CfxABp0DVpTsym1YFKlcFCHTMTE@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat-wireless: make patches apply again
+To: Bruno Randolf <br1@einfach.org>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support setting the antenna configuration via cfg/mac80211. At the moment only
-allow the simple pre-defined configurations we already have (fixed antenna A/B
-or diversity), but more advanced settings should be possible later.
+On Wed, May 12, 2010 at 1:20 AM, Bruno Randolf <br1@einfach.org> wrote:
+> On Tuesday 11 May 2010 06:24:10 Hauke Mehrtens wrote:
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  patches/07-change-default-rate-alg.patch |    4 ++--
+>>  1 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/patches/07-change-default-rate-alg.patch
+>> b/patches/07-change-default-rate-alg.patch index af65207..f0ccbce 100644
+>> --- a/patches/07-change-default-rate-alg.patch
+>> +++ b/patches/07-change-default-rate-alg.patch
+>> @@ -21,7 +21,7 @@ at compilation time.
+>>   module_param(ieee80211_default_rc_algo, charp, 0644);
+>>   MODULE_PARM_DESC(ieee80211_default_rc_algo,
+>>                "Default rate control algorithm for mac80211 to use");
+>> -@@ -118,8 +118,8 @@ ieee80211_rate_control_ops_get(const cha
+>> +@@ -119,8 +119,8 @@ ieee80211_rate_control_ops_get(const cha
+>>               ops =
+> ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
+>>
+>>       /* try built-in one if specific alg requested but not found */
+>> @@ -29,6 +29,6 @@ at compilation time.
+>>  -            ops =
+> ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
+>>  +    if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
+>>  +            ops =
+>> ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT); +
+>>       kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
+>>
+>>       return ops;
+>> - }
+>
+> this is somehow messed up and doesn't apply. here is a fixed version of the
+> patch (not a patch for a patch)...
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   34 +++++++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+Odd, it applied, here with git am and all. Hm, oh well.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 053cb36..9f42af7 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -256,6 +256,8 @@ static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
- static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
- static void ath5k_set_coverage_class(struct ieee80211_hw *hw,
- 		u8 coverage_class);
-+static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant);
-+static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant);
- 
- static const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
-@@ -277,6 +279,8 @@ static const struct ieee80211_ops ath5k_hw_ops = {
- 	.sw_scan_start	= ath5k_sw_scan_start,
- 	.sw_scan_complete = ath5k_sw_scan_complete,
- 	.set_coverage_class = ath5k_set_coverage_class,
-+	.set_antenna	= ath5k_set_antenna,
-+	.get_antenna	= ath5k_get_antenna,
- };
- 
- /*
-@@ -3482,3 +3486,33 @@ static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
- 	ath5k_hw_set_coverage_class(sc->ah, coverage_class);
- 	mutex_unlock(&sc->lock);
- }
-+
-+static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	if (tx_ant == 1 && rx_ant == 1)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_A);
-+	else if (tx_ant == 2 && rx_ant == 2)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_B);
-+	else if (tx_ant == 3 && rx_ant == 3)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_DEFAULT);
-+	else
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	switch (sc->ah->ah_ant_mode) {
-+	case AR5K_ANTMODE_FIXED_A:
-+		*tx_ant = 1; *rx_ant = 1; break;
-+	case AR5K_ANTMODE_FIXED_B:
-+		*tx_ant = 2; *rx_ant = 2; break;
-+	case AR5K_ANTMODE_DEFAULT:
-+		*tx_ant = 3; *rx_ant = 3; break;
-+	}
-+	return 0;
-+}
-
+  Luis
