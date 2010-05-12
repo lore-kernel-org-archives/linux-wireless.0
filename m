@@ -1,101 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-i4.informatik.RWTH-Aachen.DE ([137.226.12.21]:55113 "EHLO
-	MAIL-i4.nets.rwth-aachen.de" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933386Ab0EZLcs (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:43365 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754138Ab0ELIXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 07:32:48 -0400
-Message-ID: <4BFD04A4.4000403@nets.rwth-aachen.de>
-Date: Wed, 26 May 2010 13:23:16 +0200
-From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+	Wed, 12 May 2010 04:23:33 -0400
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0255192611
+	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 17:23:32 +0900 (JST)
+Subject: [PATCH 2/3] mac80211: Add antenna configuration
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+Date: Wed, 12 May 2010 17:23:31 +0900
+Message-ID: <20100512082331.26565.61521.stgit@tt-desk>
+In-Reply-To: <20100512082231.26565.16730.stgit@tt-desk>
+References: <20100512082231.26565.16730.stgit@tt-desk>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
-Subject: regulatory problems with ath5k
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Allow antenna configuration by calling driver's function for it.
 
-I'm trying to use 802.11a channels in AP mode with my ath5k nics with kernel 2.6.34.
-And after setting up crda, udev and wireless regdb, "iw list" still shows flags
-"passive scanning, no IBSS" for most of the 802.11a channels (see below.)
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ include/net/mac80211.h      |    2 ++
+ net/mac80211/cfg.c          |   16 ++++++++++++++
+ net/mac80211/driver-ops.h   |   23 ++++++++++++++++++++
+ net/mac80211/driver-trace.h |   50 +++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 91 insertions(+), 0 deletions(-)
 
-I wonder what I'm doing wrong here?
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9448a5b..1a8f97a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1694,6 +1694,8 @@ struct ieee80211_ops {
+ 	int (*testmode_cmd)(struct ieee80211_hw *hw, void *data, int len);
+ #endif
+ 	void (*flush)(struct ieee80211_hw *hw, bool drop);
++	int (*set_antenna)(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant);
++	int (*get_antenna)(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c7000a6..efd04bc 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1560,6 +1560,20 @@ static int ieee80211_action(struct wiphy *wiphy, struct net_device *dev,
+ 				    channel_type, buf, len, cookie);
+ }
+ 
++static int ieee80211_set_antenna(struct wiphy *wiphy, u8 tx_ant, u8 rx_ant)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_antenna(local, tx_ant, rx_ant);
++}
++
++static int ieee80211_get_antenna(struct wiphy *wiphy, u8 *tx_ant, u8 *rx_ant)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_get_antenna(local, tx_ant, rx_ant);
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1611,4 +1625,6 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.action = ieee80211_action,
+ 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
++	.set_antenna = ieee80211_set_antenna,
++	.get_antenna = ieee80211_get_antenna,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 997008e..f1b031a 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -373,4 +373,27 @@ static inline void drv_flush(struct ieee80211_local *local, bool drop)
+ 	if (local->ops->flush)
+ 		local->ops->flush(&local->hw, drop);
+ }
++
++static inline int drv_set_antenna(struct ieee80211_local *local,
++				  u8 tx_ant, u8 rx_ant)
++{
++	int ret = -EOPNOTSUPP;
++	might_sleep();
++	if (local->ops->set_antenna)
++		ret = local->ops->set_antenna(&local->hw, tx_ant, rx_ant);
++	trace_drv_set_antenna(local, tx_ant, rx_ant, ret);
++	return ret;
++}
++
++static inline int drv_get_antenna(struct ieee80211_local *local,
++				  u8 *tx_ant, u8 *rx_ant)
++{
++	int ret = -EOPNOTSUPP;
++	might_sleep();
++	if (local->ops->get_antenna)
++		ret = local->ops->get_antenna(&local->hw, tx_ant, rx_ant);
++	trace_drv_get_antenna(local, *tx_ant, *rx_ant, ret);
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index ce734b5..466a509 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -774,6 +774,56 @@ TRACE_EVENT(drv_flush,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_set_antenna,
++	TP_PROTO(struct ieee80211_local *local, u8 tx_ant, u8 rx_ant, int ret),
++
++	TP_ARGS(local, tx_ant, rx_ant, ret),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(u8, tx_ant)
++		__field(u8, rx_ant)
++		__field(int, ret)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->tx_ant = tx_ant;
++		__entry->rx_ant = rx_ant;
++		__entry->ret = ret;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " tx_ant:%d rx_ant:%d ret:%d",
++		LOCAL_PR_ARG, __entry->tx_ant, __entry->rx_ant, __entry->ret
++	)
++);
++
++TRACE_EVENT(drv_get_antenna,
++	TP_PROTO(struct ieee80211_local *local, u8 tx_ant, u8 rx_ant, int ret),
++
++	TP_ARGS(local, tx_ant, rx_ant, ret),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(u8, tx_ant)
++		__field(u8, rx_ant)
++		__field(int, ret)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->tx_ant = tx_ant;
++		__entry->rx_ant = rx_ant;
++		__entry->ret = ret;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " tx_ant:%d rx_ant:%d ret:%d",
++		LOCAL_PR_ARG, __entry->tx_ant, __entry->rx_ant, __entry->ret
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
 
-
-	Band 2:
-		Frequencies:
-			* 5180 MHz [36] (20.0 dBm) (radar detection)
-			* 5200 MHz [40] (20.0 dBm) (radar detection)
-			* 5220 MHz [44] (20.0 dBm) (radar detection)
-			* 5240 MHz [48] (20.0 dBm) (radar detection)
-			* 5260 MHz [52] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5280 MHz [56] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5300 MHz [60] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5320 MHz [64] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5500 MHz [100] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5520 MHz [104] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5540 MHz [108] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5560 MHz [112] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5580 MHz [116] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5600 MHz [120] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5620 MHz [124] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5640 MHz [128] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5660 MHz [132] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5680 MHz [136] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5700 MHz [140] (26.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5745 MHz [149] (disabled)
-			* 5765 MHz [153] (disabled)
-			* 5785 MHz [157] (disabled)
-			* 5805 MHz [161] (disabled)
-			* 5825 MHz [165] (disabled)
-
-hannemann@mrouter46:~ $ sudo iw reg get
-country DE:
-	(2400 - 2483 @ 40), (N/A, 20)
-	(5150 - 5350 @ 40), (N/A, 20), NO-OUTDOOR, DFS
-	(5470 - 5725 @ 40), (N/A, 26), NO-OUTDOOR, DFS
-
-dmesg snippet:
-
-May 26 12:10:36 mrouter46 kernel: [   30.023089] console [netcon0] enabled
-May 26 12:10:36 mrouter46 kernel: [   30.023103] netconsole: network logging started
-May 26 12:10:36 mrouter46 kernel: [   30.314702] cfg80211: Calling CRDA to update world regulatory domain
-May 26 12:10:37 mrouter46 kernel: [   30.555745] ath5k 0000:00:0c.0: registered as \'phy0\'
-May 26 12:10:37 mrouter46 kernel: [   31.039151] ath: EEPROM regdomain: 0x8114
-May 26 12:10:37 mrouter46 kernel: [   31.039168] ath: EEPROM indicates we should expect a country code
-May 26 12:10:37 mrouter46 kernel: [   31.039188] ath: doing EEPROM country->regdmn map search
-May 26 12:10:37 mrouter46 kernel: [   31.039205] ath: country maps to regdmn code: 0x37
-May 26 12:10:37 mrouter46 kernel: [   31.039222] ath: Country alpha2 being used: DE
-May 26 12:10:37 mrouter46 kernel: [   31.039237] ath: Regpair used: 0x37
-May 26 12:10:37 mrouter46 kernel: [   31.054155] cfg80211: World regulatory domain updated:
-May 26 12:10:37 mrouter46 kernel: [   31.054178]     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-May 26 12:10:37 mrouter46 kernel: [   31.054207]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-May 26 12:10:37 mrouter46 kernel: [   31.054232]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-May 26 12:10:37 mrouter46 kernel: [   31.054258]     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-May 26 12:10:37 mrouter46 kernel: [   31.054284]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-May 26 12:10:37 mrouter46 kernel: [   31.054310]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-May 26 12:10:38 mrouter46 kernel: [   31.212057] phy0: Selected rate control algorithm \'minstrel\'
-May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k phy0: RF5112B multiband radio found (0x36)
-May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k 0000:00:0e.0: registered as \'phy1\'
-May 26 12:10:38 mrouter46 kernel: [   31.622592] cfg80211: Calling CRDA for country: DE
-May 26 12:10:38 mrouter46 kernel: [   31.688006] cfg80211: Regulatory domain changed to country: DE
-May 26 12:10:38 mrouter46 kernel: [   31.688030]     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-May 26 12:10:38 mrouter46 kernel: [   31.688057]     (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-May 26 12:10:38 mrouter46 kernel: [   31.688080]     (5150000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-May 26 12:10:38 mrouter46 kernel: [   31.688103]     (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
-May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: EEPROM regdomain: 0x8114
-May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: EEPROM indicates we should expect a country code
-May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: doing EEPROM country->regdmn map search
-May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: country maps to regdmn code: 0x37
-May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: Country alpha2 being used: DE
-May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: Regpair used: 0x37
-May 26 12:10:38 mrouter46 kernel: [   31.758662] phy1: Selected rate control algorithm \'minstrel\'
-May 26 12:10:38 mrouter46 kernel: [   31.759383] ath5k phy1: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-May 26 12:10:38 mrouter46 kernel: [   31.759383] ath5k phy1: RF5112B multiband radio found (0x36)
-
-
-Best regards,
-Arnd
