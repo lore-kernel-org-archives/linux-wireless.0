@@ -1,40 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11084 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751290Ab0EQG4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 02:56:31 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 23:56:31 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:65087 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756775Ab0ELRra convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 13:47:30 -0400
+Received: by fxm15 with SMTP id 15so347671fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 10:47:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19440.59578.833265.73504@gargle.gargle.HOWL>
-Date: Mon, 17 May 2010 12:26:58 +0530
-To: David Woodhouse <dwmw2@infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Update AR9271 firmware.
-In-Reply-To: <1274078768.6930.6898.camel@macbook.infradead.org>
-References: <19440.58792.695144.835937@gargle.gargle.HOWL>
-	<1274078768.6930.6898.camel@macbook.infradead.org>
+In-Reply-To: <AANLkTinzPPIbH6bivhjTF1jB6R2mZ5e9rnhX23Yr8bJ7@mail.gmail.com>
+References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
+	 <1273614705-25118-9-git-send-email-gwingerde@gmail.com>
+	 <AANLkTinMB9AThStTLQ5vkRrKJgDz84n447kFcTwQaQvQ@mail.gmail.com>
+	 <AANLkTinzPPIbH6bivhjTF1jB6R2mZ5e9rnhX23Yr8bJ7@mail.gmail.com>
+Date: Wed, 12 May 2010 19:47:27 +0200
+Message-ID: <AANLkTilKi1zKyRWUNuBoQnHaTy2UdX05Pd2E2gOvygrJ@mail.gmail.com>
+Subject: Re: [PATCH 8/9] rt2x00: Reverse calling order of bus write_tx_desc
+	and driver write_tx_desc.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Woodhouse wrote:
-> On Mon, 2010-05-17 at 07:43 +0100, Sujith wrote:
-> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> > ---
-> >  ar9271.fw |  Bin 49280 -> 51280 bytes
-> >  1 files changed, 0 insertions(+), 0 deletions(-)
-> 
-> No changelog, no version number... is this really what you consider to
-> be good engineering practice?
+On Wed, May 12, 2010 at 11:55 AM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> On Wed, May 12, 2010 at 9:02 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+>> On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
+>> <gwingerde@gmail.com> wrote:
+>>> For rt2800 reverse the calling order of rt2x00pci_write_data and
+>>> rt2800pci_write_data. Currently rt2800pci_write_data calls rt2x00pci_write_data
+>>> as there can be only 1 driver callback function specified by the driver.
+>>> Reverse this calling order by introducing a new driver callback function,
+>>> called add_tx_datadesc, which is called from the bus-specific write_tx_data
+>>> functions.
+>>> Preparation for futher cleanups in the skb data handling of rt2x00.
+>>>
+>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/rt2x00/rt2800pci.c |   15 ++++-----------
+>>>  drivers/net/wireless/rt2x00/rt2x00.h    |    2 ++
+>>>  drivers/net/wireless/rt2x00/rt2x00pci.c |    6 ++++++
+>>>  drivers/net/wireless/rt2x00/rt2x00usb.c |    6 ++++++
+>>>  4 files changed, 18 insertions(+), 11 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+>>> index fcca30c..bbd6481 100644
+>>> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+>>> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+>>> @@ -614,18 +614,10 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+>>>  /*
+>>>  * TX descriptor initialization
+>>>  */
+>>> -static int rt2800pci_write_tx_data(struct queue_entry* entry,
+>>> -                                  struct txentry_desc *txdesc)
+>>> +static void rt2800pci_add_tx_datadesc(struct queue_entry* entry,
+>>> +                                     struct txentry_desc *txdesc)
+>>>  {
+>>> -       int ret;
+>>> -
+>>> -       ret = rt2x00pci_write_tx_data(entry, txdesc);
+>>> -       if (ret)
+>>> -               return ret;
+>>> -
+>>>        rt2800_write_txwi(entry->skb, txdesc);
+>>> -
+>>> -       return 0;
+>>>  }
+>>>
+>>>
+>>> @@ -1080,7 +1072,8 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
+>>>        .reset_tuner            = rt2800_reset_tuner,
+>>>        .link_tuner             = rt2800_link_tuner,
+>>>        .write_tx_desc          = rt2800pci_write_tx_desc,
+>>> -       .write_tx_data          = rt2800pci_write_tx_data,
+>>> +       .write_tx_data          = rt2x00pci_write_tx_data,
+>>> +       .add_tx_datadesc        = rt2800pci_add_tx_datadesc,
+>>>        .write_beacon           = rt2800pci_write_beacon,
+>>>        .kick_tx_queue          = rt2800pci_kick_tx_queue,
+>>>        .kill_tx_queue          = rt2800pci_kill_tx_queue,
+>>
+>> Doesn't the name write_tx_datadesc make more sense?
+>>
+>
+> The names are equivalent to me. But if that name makes more sense to
+> you then I have no problem with changing the name of the callback
+> function.
 
-Unfortunately, there is no versioning for the firmware.
+Yes please rename it. That way it fits in the
+write_tx_desc
+write_tx_data
+write_tx_datadesc
 
-The list of changes would be fairly large, since the last
-firmware release was ~4 months ago. Am not involved in
-firmware development, but I'll get a list of changes and
-resend the patch. Thanks.
+Thanks,
 
-Sujith
+Ivo
