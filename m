@@ -1,32 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45842
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754620Ab0EKFyh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 01:54:37 -0400
-Date: Mon, 10 May 2010 22:54:43 -0700 (PDT)
-Message-Id: <20100510.225443.56372549.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-05-10
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100510174329.GC11681@tuxdriver.com>
-References: <20100510174329.GC11681@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from smtp3-g21.free.fr ([212.27.42.3]:53738 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753115Ab0ELGEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 02:04:13 -0400
+Message-ID: <4BEA44C8.4040200@free.fr>
+Date: Wed, 12 May 2010 08:03:52 +0200
+From: Benoit Papillault <benoit.papillault@free.fr>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	linville@tuxdriver.com
+Subject: Re: [PATCH 3/4] ath9k: add debugfs files for reading/writing registers
+References: <1273591383-76696-1-git-send-email-nbd@openwrt.org> <1273591383-76696-2-git-send-email-nbd@openwrt.org> <1273591383-76696-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1273591383-76696-3-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 10 May 2010 13:43:29 -0400
+Le 11/05/2010 17:23, Felix Fietkau a écrit :
+> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
 
-> Here are three more candidates for 2.6.34.  I hesitated to push them,
-> but at least two of them are documented regressions and the other (i.e.
-> "iwlwifi: work around passive scan issue") avoids some rather annoying
-> firmware restarts at little or no risk.  I think it would be good to
-> take these now rather than later.
-> 
-> Please let me know if there are problems!
+This patch has been around in my tree for quite a long time and it's 
+really helpful to play with registers.
 
-Pulled, thanks John.
+Acked-by: Benoit Papillault <benoit.papillault@free.fr>
+
+> ---
+>   drivers/net/wireless/ath/ath9k/debug.c |   89 ++++++++++++++++++++++++++++++++
+>   drivers/net/wireless/ath/ath9k/debug.h |    1 +
+>   2 files changed, 90 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+> index 8d7c046..29898f8 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/debug.c
+> @@ -795,6 +795,86 @@ static const struct file_operations fops_recv = {
+>   	.owner = THIS_MODULE
+>   };
+>
+> +static ssize_t read_file_regidx(struct file *file, char __user *user_buf,
+> +                                size_t count, loff_t *ppos)
+> +{
+> +	struct ath_softc *sc = file->private_data;
+> +	char buf[32];
+> +	unsigned int len;
+> +
+> +	len = snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.regidx);
+> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> +}
+> +
+> +static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
+> +			     size_t count, loff_t *ppos)
+> +{
+> +	struct ath_softc *sc = file->private_data;
+> +	unsigned long regidx;
+> +	char buf[32];
+> +	ssize_t len;
+> +
+> +	len = min(count, sizeof(buf) - 1);
+> +	if (copy_from_user(buf, user_buf, len))
+> +		return -EINVAL;
+> +
+> +	buf[len] = '\0';
+> +	if (strict_strtoul(buf, 0,&regidx))
+> +		return -EINVAL;
+> +
+> +	sc->debug.regidx = regidx;
+> +	return count;
+> +}
+> +
+> +static const struct file_operations fops_regidx = {
+> +	.read = read_file_regidx,
+> +	.write = write_file_regidx,
+> +	.open = ath9k_debugfs_open,
+> +	.owner = THIS_MODULE
+> +};
+> +
+> +static ssize_t read_file_regval(struct file *file, char __user *user_buf,
+> +			     size_t count, loff_t *ppos)
+> +{
+> +	struct ath_softc *sc = file->private_data;
+> +	struct ath_hw *ah = sc->sc_ah;
+> +	char buf[32];
+> +	unsigned int len;
+> +	u32 regval;
+> +
+> +	regval = REG_READ_D(ah, sc->debug.regidx);
+> +	len = snprintf(buf, sizeof(buf), "0x%08x\n", regval);
+> +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> +}
+> +
+> +static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
+> +			     size_t count, loff_t *ppos)
+> +{
+> +	struct ath_softc *sc = file->private_data;
+> +	struct ath_hw *ah = sc->sc_ah;
+> +	unsigned long regval;
+> +	char buf[32];
+> +	ssize_t len;
+> +
+> +	len = min(count, sizeof(buf) - 1);
+> +	if (copy_from_user(buf, user_buf, len))
+> +		return -EINVAL;
+> +
+> +	buf[len] = '\0';
+> +	if (strict_strtoul(buf, 0,&regval))
+> +		return -EINVAL;
+> +
+> +	REG_WRITE_D(ah, sc->debug.regidx, regval);
+> +	return count;
+> +}
+> +
+> +static const struct file_operations fops_regval = {
+> +	.read = read_file_regval,
+> +	.write = write_file_regval,
+> +	.open = ath9k_debugfs_open,
+> +	.owner = THIS_MODULE
+> +};
+> +
+>   int ath9k_init_debug(struct ath_hw *ah)
+>   {
+>   	struct ath_common *common = ath9k_hw_common(ah);
+> @@ -846,6 +926,15 @@ int ath9k_init_debug(struct ath_hw *ah)
+>   			sc->debug.debugfs_phy, sc,&fops_tx_chainmask))
+>   		goto err;
+>
+> +	if (!debugfs_create_file("regidx", S_IRUSR | S_IWUSR,
+> +			sc->debug.debugfs_phy, sc,&fops_regidx))
+> +		goto err;
+> +
+> +	if (!debugfs_create_file("regval", S_IRUSR | S_IWUSR,
+> +			sc->debug.debugfs_phy, sc,&fops_regval))
+> +		goto err;
+> +
+> +	sc->debug.regidx = 0;
+>   	return 0;
+>   err:
+>   	ath9k_exit_debug(ah);
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+> index 7314360..5147b87 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.h
+> +++ b/drivers/net/wireless/ath/ath9k/debug.h
+> @@ -153,6 +153,7 @@ struct ath_stats {
+>
+>   struct ath9k_debug {
+>   	struct dentry *debugfs_phy;
+> +	u32 regidx;
+>   	struct ath_stats stats;
+>   };
+>
+
