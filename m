@@ -1,109 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49315 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932599Ab0EMVuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:50:18 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 06/17] iwlwifi: move iwl_free_tfds_in_queue to iwlagn
-Date: Thu, 13 May 2010 14:49:48 -0700
-Message-Id: <1273787399-9280-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
-References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4622 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755032Ab0ELSnG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 14:43:06 -0400
+Message-ID: <4BEAF6B1.3000200@gmail.com>
+Date: Wed, 12 May 2010 20:42:57 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 2/9] rt2x00: Fix beacon descriptor writing for rt61pci.
+References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>	 <1273614705-25118-3-git-send-email-gwingerde@gmail.com>	 <AANLkTikOV973PKZYkNyUoaFOXhSPOumhmHwQ7Ei8tvgv@mail.gmail.com>	 <AANLkTilDv-tY_UIbc_lh8EaNdV7MRNAbDA4Oe5nFiDNh@mail.gmail.com> <AANLkTimubF1UWmzLwhJ7vhquBHmRywJQTvJciU3D3SNx@mail.gmail.com>
+In-Reply-To: <AANLkTimubF1UWmzLwhJ7vhquBHmRywJQTvJciU3D3SNx@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 05/12/10 19:43, Ivo Van Doorn wrote:
+> On Wed, May 12, 2010 at 11:46 AM, Gertjan van Wingerde
+> <gwingerde@gmail.com> wrote:
+>> On Wed, May 12, 2010 at 8:59 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+>>> On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
+>>> <gwingerde@gmail.com> wrote:
+>>>> The buffer address descriptor word is not part of the TXINFO structure
+>>>> needed for beacons. The current writing of that word for beacons is
+>>>> therefore an out-of-bounds write.
+>>>> Fix this by only writing the buffer address descriptor word for TX
+>>>> queues.
+>>>>
+>>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>>>> ---
+>>>>  drivers/net/wireless/rt2x00/rt61pci.c |   10 +++++-----
+>>>>  1 files changed, 5 insertions(+), 5 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+>>>> index 2436363..99c2981 100644
+>>>> --- a/drivers/net/wireless/rt2x00/rt61pci.c
+>>>> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
+>>>> @@ -1801,12 +1801,12 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+>>>>        rt2x00_set_field32(&word, TXD_W5_WAITING_DMA_DONE_INT, 1);
+>>>>        rt2x00_desc_write(txd, 5, word);
+>>>>
+>>>> -       rt2x00_desc_read(txd, 6, &word);
+>>>> -       rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
+>>>> -                          skbdesc->skb_dma);
+>>>> -       rt2x00_desc_write(txd, 6, word);
+>>>> +       if (txdesc->queue != QID_BEACON) {
+>>>> +               rt2x00_desc_read(txd, 6, &word);
+>>>> +               rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
+>>>> +                                  skbdesc->skb_dma);
+>>>> +               rt2x00_desc_write(txd, 6, word);
+>>>>
+>>>> -       if (skbdesc->desc_len > TXINFO_SIZE) {
+>>>>                rt2x00_desc_read(txd, 11, &word);
+>>>>                rt2x00_set_field32(&word, TXD_W11_BUFFER_LENGTH0,
+>>>>                                   txdesc->length);
+>>>
+>>> Shouldn't the check for TXINFO_SIZE be used rather than explicitly
+>>> checking for the QID?
+>>>
+>>
+>> I agree that this is a change that didn't have to be made in this patch.
+>> However, after patch 4 of the series we cannot depend on the
+>> skbdesc->desc_len being set anymore, and we would have to depend on
+>> checking the QID anyway.
+>> Note that in reality these two checks are completely equivalent with
+>> respect to the result.
+> 
+> Hmm, is that a good idea? I mean we are using the skbdesc inside the
+> function, but we can't be sure that one of the basic values contains the right
+> value?
+> 
 
-This function is only used by the agn drivers,
-so doesn't have to be in core and exported.
+To be honest, the chipset drivers don't need the skbdesc->desc and skbdesc->desc_len
+at all. Based on the queue ID they already have everything they need to know to write
+a descriptor. As far as I can tell the only code that really needs those two fields is
+the rt2x00debug code, to dump a frame to userspace via debugfs.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+As the dumping through debugfs is done after writing the TX descriptor, with this patch
+I changed the desc and desc_len fields of the skbdesc to be output of the write_tx_desc
+function (for the generic parts of the rt2x00 code) rather than being input.
+
+Note that originally my plan was to get rid of the desc and desc_len field altogether,
+but for now I refrained from doing that.
+
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   13 +++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h     |    2 ++
- drivers/net/wireless/iwlwifi/iwl-core.h    |    2 --
- drivers/net/wireless/iwlwifi/iwl-tx.c      |   15 ---------------
- 4 files changed, 15 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index c7ce632..5f07bc2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1529,3 +1529,16 @@ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
- 	return iwl_remove_station(priv, vif_priv->ibss_bssid_sta_id,
- 				  vif->bss_conf.bssid);
- }
-+
-+void iwl_free_tfds_in_queue(struct iwl_priv *priv,
-+			    int sta_id, int tid, int freed)
-+{
-+	if (priv->stations[sta_id].tid[tid].tfds_in_queue >= freed)
-+		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
-+	else {
-+		IWL_DEBUG_TX(priv, "free more than tfds_in_queue (%u:%d)\n",
-+			priv->stations[sta_id].tid[tid].tfds_in_queue,
-+			freed);
-+		priv->stations[sta_id].tid[tid].tfds_in_queue = 0;
-+	}
-+}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 2d74805..fbbefe1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -93,6 +93,8 @@ int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id,
- int iwlagn_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
- 			   u16 ssn_idx, u8 tx_fifo);
- void iwlagn_txq_set_sched(struct iwl_priv *priv, u32 mask);
-+void iwl_free_tfds_in_queue(struct iwl_priv *priv,
-+			    int sta_id, int tid, int freed);
- 
- /* uCode */
- int iwlagn_load_ucode(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 7e5a5ba..63229dc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -472,8 +472,6 @@ int iwl_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv,
- 				 dma_addr_t addr, u16 len, u8 reset, u8 pad);
- int iwl_hw_tx_queue_init(struct iwl_priv *priv,
- 			 struct iwl_tx_queue *txq);
--void iwl_free_tfds_in_queue(struct iwl_priv *priv,
--			    int sta_id, int tid, int freed);
- void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq);
- int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
- 		      int slots_num, u32 txq_id);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index c3c6505..db83a0a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -76,21 +76,6 @@ void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- }
- EXPORT_SYMBOL(iwl_txq_update_write_ptr);
- 
--
--void iwl_free_tfds_in_queue(struct iwl_priv *priv,
--			    int sta_id, int tid, int freed)
--{
--	if (priv->stations[sta_id].tid[tid].tfds_in_queue >= freed)
--		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
--	else {
--		IWL_DEBUG_TX(priv, "free more than tfds_in_queue (%u:%d)\n",
--			priv->stations[sta_id].tid[tid].tfds_in_queue,
--			freed);
--		priv->stations[sta_id].tid[tid].tfds_in_queue = 0;
--	}
--}
--EXPORT_SYMBOL(iwl_free_tfds_in_queue);
--
- /**
-  * iwl_tx_queue_free - Deallocate DMA queue.
-  * @txq: Transmit queue to deallocate.
--- 
-1.6.3.3
+Gertjan.
 
