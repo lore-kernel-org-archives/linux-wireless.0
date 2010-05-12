@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50235 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754065Ab0ENO2f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 10:28:35 -0400
-Message-ID: <4BED5E08.3050000@openwrt.org>
-Date: Fri, 14 May 2010 16:28:24 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from fg-out-1718.google.com ([72.14.220.157]:38913 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754771Ab0ELSrI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 14:47:08 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so717053fga.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 11:47:07 -0700 (PDT)
 MIME-Version: 1.0
-To: tom.leiming@gmail.com
-CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH 2/2] ath9k: fix dma sync in rx path
-References: <1273842938-3401-1-git-send-email-tom.leiming@gmail.com> <1273842969-3435-1-git-send-email-tom.leiming@gmail.com>
-In-Reply-To: <1273842969-3435-1-git-send-email-tom.leiming@gmail.com>
+In-Reply-To: <1273614705-25118-3-git-send-email-gwingerde@gmail.com>
+References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
+	 <1273614705-25118-3-git-send-email-gwingerde@gmail.com>
+Date: Wed, 12 May 2010 20:47:05 +0200
+Message-ID: <AANLkTik_8-hSm7MDcHQzsFbinFqvQMc_vDMUbAfMdZDi@mail.gmail.com>
+Subject: Re: [PATCH 2/9] rt2x00: Fix beacon descriptor writing for rt61pci.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-05-14 3:16 PM, tom.leiming@gmail.com wrote:
-> From: Ming Lei <tom.leiming@gmail.com>
-> 
-> If buffer is to be accessed by cpu after dma transfer is over, but
-> between dma mapping and dma unmapping, we should use
-> dma_sync_single_for_cpu to sync the buffer between cpu with
-> device. And dma_sync_single_for_device is used to let
-> device gain the buffer again.
-I think this patch is wrong. On most MIPS devices,
-dma_sync_single_for_cpu is a no-op. In fact, with this patch, the rx
-path fails very quickly.
-I believe keeping the dma_sync_single_for_device variant is necessary
-for all syncs.
+On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> The buffer address descriptor word is not part of the TXINFO structure
+> needed for beacons. The current writing of that word for beacons is
+> therefore an out-of-bounds write.
+> Fix this by only writing the buffer address descriptor word for TX
+> queues.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-- Felix
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
