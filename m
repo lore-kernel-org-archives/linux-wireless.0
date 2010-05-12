@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37435 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49728 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753608Ab0E0LLk (ORCPT
+	with ESMTP id S1756630Ab0ELQqt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 07:11:40 -0400
-Subject: Re: [RFC PATCHv5] mac80211: Add support for hardware ARP query
- filtering
+	Wed, 12 May 2010 12:46:49 -0400
+Subject: Re: Packet injection with ath9k
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1274958042-25573-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1274958042-25573-1-git-send-email-juuso.oikarinen@nokia.com>
+To: Roberto Riggio <roberto.riggio@create-net.org>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4BEADA79.5050000@create-net.org>
+References: <4BE43C18.2030806@create-net.org>
+	 <j2v69e28c911005070935wb720d757labf3a0484aedefb8@mail.gmail.com>
+	 <4BE46584.5060304@create-net.org>
+	 <r2y69e28c911005091324sbff07538i28babb432e6751db@mail.gmail.com>
+	 <4BEADA79.5050000@create-net.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 13:11:37 +0200
-Message-ID: <1274958697.3669.33.camel@jlt3.sipsolutions.net>
+Date: Wed, 12 May 2010 18:46:46 +0200
+Message-ID: <1273682806.3979.7.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 14:00 +0300, Juuso Oikarinen wrote:
+On Wed, 2010-05-12 at 18:42 +0200, Roberto Riggio wrote:
+> On 05/09/2010 10:24 PM, Gábor Stefanik wrote:
+> >>     u_int16_t       it_len;
+> >>     u_int32_t       it_present;
+> >>      
+> > AFAIK these 2 fields need to be little-endian even on big-endian
+> > machines. If your system is big-endian, this can cause problems.
+> >    
+> 
+> Thanks, that was indeed the issue. I totally missed this info
+> in the radiotap website. Everything is working fine now.
 
-[...]
+I'd make it more prominent, but ... this is what it says now:
 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+Important Radiotap Characteristics
 
-Btw, a patch changelog after the --- would be good.
-
-Like, for example,
-
-v5: no changes, still don't fix interface type crash
-
-
-> +static int ieee80211_ifa_changed(struct notifier_block *nb,
-> +				 unsigned long data, void *arg)
-> +{
-> +	struct in_ifaddr *ifa = arg;
-> +	struct ieee80211_local *local =
-> +		container_of(nb, struct ieee80211_local,
-> +			     ifa_notifier);
-> +	struct net_device *ndev = ifa->ifa_dev->dev;
-> +	struct wireless_dev *wdev = ndev->ieee80211_ptr;
-> +	struct ieee80211_sub_if_data *sdata;
-> +	struct ieee80211_if_managed *ifmgd;
-> +
-> +	/* Make sure it's our interface that got changed */
-> +	if (!wdev)
-> +		return NOTIFY_DONE;
-> +
-> +	if (wdev->wiphy != local->hw.wiphy)
-> +		return NOTIFY_DONE;
-> +
-> +	/* We are concerned about IP addresses only when associated */
-> +	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
-> +	ifmgd = &sdata->u.mgd;
-> +	mutex_lock(&ifmgd->mtx);
-> +	if (ifmgd->associated)
-> +		ieee80211_set_arp_filter(sdata);
-> +	mutex_unlock(&ifmgd->mtx);
-> +
-> +	return NOTIFY_DONE;
-> +}
-
-Ok ...
-
-Was I not clear enough? I thought I was or you'd have asked, but I can
-spell it out too:
-
-        This *will* crash if you use an interface of a type other than
-        managed/station. You need to check the interface type here and
-        document that the callback will only be invoked for managed mode
-        interfaces.
+      * Fields are strictly ordered; The developer can specify any
+        combination of fields, but the data must appear following the
+        radiotap header in the order they are specified in the
+        it_present bitmask (or more accurately, in the order the bit
+        numbers for the it_present bitmask are defined).
+      * Data is specified in little endian byte-order, all data fields
+        including the it_version, it_len and it_present fields in the
+        radiotap header are to be specified in little endian byte-order.
+        This wiki has adopted the Linux convention of using __le64,
+        __le32 and __le16 for 64-, 32- and 16-bit little endian
+        quantities.
 
 johannes
 
