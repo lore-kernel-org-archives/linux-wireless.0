@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31287 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751126Ab0EJEir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 00:38:47 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 21:38:47 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:16895 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752349Ab0ELJkX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 05:40:23 -0400
+Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0393937222
+	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:40:22 +0900 (JST)
+Subject: [PATCH 08/12] ath5k: clarify logic when to enable spur mitigation
+	filter
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 12 May 2010 18:40:23 +0900
+Message-ID: <20100512094023.6575.80390.stgit@tt-desk>
+In-Reply-To: <20100512093947.6575.99595.stgit@tt-desk>
+References: <20100512093947.6575.99595.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19431.36325.489713.540417@gargle.gargle.HOWL>
-Date: Mon, 10 May 2010 10:09:01 +0530
-To: Dan Carpenter <error27@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: [patch 5/9] ath9k/htc_drv_main: off by one error
-In-Reply-To: <20100508162402.GQ27064@bicker>
-References: <20100508162402.GQ27064@bicker>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter wrote:
-> I changed "> ATH9K_HTC_MAX_TID" to ">= ATH9K_HTC_MAX_TID" to avoid a
-> potential overflow.
-> 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
+The old code logically did not make sense and seems to have been confused by
+the fact that we could have newer EEPROMs on older hardware. In any case the
+spur mitigation filter was set if the srev was >= AR5K_SREV_AR5424.
 
-Thanks.
+Spur info is available only from EEPROM versions bigger than 5.3 but but the
+EEPOM routines will use static values for older versions, so that should be
+o.k.
 
-Acked-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/reset.c |   15 +++++----------
+ 1 files changed, 5 insertions(+), 10 deletions(-)
 
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> index e75db06..6c386da 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> @@ -465,7 +465,7 @@ static int ath9k_htc_aggr_oper(struct ath9k_htc_priv *priv,
->  	int ret = 0;
->  	u8 cmd_rsp;
->  
-> -	if (tid > ATH9K_HTC_MAX_TID)
-> +	if (tid >= ATH9K_HTC_MAX_TID)
->  		return -EINVAL;
->  
->  	memset(&aggr, 0, sizeof(struct ath9k_htc_target_aggr));
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 5e23e61..2890a7f 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1090,22 +1090,17 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 		/* Write OFDM timings on 5212*/
+ 		if (ah->ah_version == AR5K_AR5212 &&
+ 			channel->hw_value & CHANNEL_OFDM) {
+-			struct ath5k_eeprom_info *ee =
+-					&ah->ah_capabilities.cap_eeprom;
+ 
+ 			ret = ath5k_hw_write_ofdm_timings(ah, channel);
+ 			if (ret)
+ 				return ret;
+ 
+-			/* Note: According to docs we can have a newer
+-			 * EEPROM on old hardware, so we need to verify
+-			 * that our hardware is new enough to have spur
+-			 * mitigation registers (delta phase etc) */
+-			if (ah->ah_mac_srev >= AR5K_SREV_AR5424 ||
+-			(ah->ah_mac_srev >= AR5K_SREV_AR5424 &&
+-			ee->ee_version >= AR5K_EEPROM_VERSION_5_3))
++			/* Spur info is available only from EEPROM versions
++			 * bigger than 5.3 but but the EEPOM routines will use
++			 * static values for older versions */
++			if (ah->ah_mac_srev >= AR5K_SREV_AR5424)
+ 				ath5k_hw_set_spur_mitigation_filter(ah,
+-								channel);
++								    channel);
+ 		}
+ 
+ 		/*Enable/disable 802.11b mode on 5111
+
