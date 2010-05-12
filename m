@@ -1,57 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34067 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752964Ab0EJKuZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 06:50:25 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 10 May 2010 03:50:25 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:35647 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753899Ab0ELJjy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 05:39:54 -0400
+Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0739207191
+	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:39:53 +0900 (JST)
+Subject: [PATCH 02/12] ath5k: wake queues on reset
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 12 May 2010 18:39:52 +0900
+Message-ID: <20100512093952.6575.5791.stgit@tt-desk>
+In-Reply-To: <20100512093947.6575.99595.stgit@tt-desk>
+References: <20100512093947.6575.99595.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19431.58619.856626.694277@gargle.gargle.HOWL>
-Date: Mon, 10 May 2010 16:20:35 +0530
-To: Dan Carpenter <error27@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ming Lei <tom.leiming@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [patch 2/9] ath9k: range checking issues in htc_hst.c
-In-Reply-To: <20100510102319.GV27064@bicker>
-References: <20100508162201.GN27064@bicker>
-	<19431.36216.198492.247202@gargle.gargle.HOWL>
-	<20100510102319.GV27064@bicker>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter wrote:
-> I'm afraid I don't understand.  ENDPOINT_MAX is 22 and HST_ENDPOINT_MAX
-> is 8.  The htc_target struct is defined as having 8 endpoints.
-> 
-> drivers/net/wireless/ath/ath9k/htc_hst.h
->    137  struct htc_target {
->    138          void *hif_dev;
->    139          struct ath9k_htc_priv *drv_priv;
->    140          struct device *dev;
->    141          struct ath9k_htc_hif *hif;
->    142          struct htc_endpoint endpoint[HST_ENDPOINT_MAX];
->                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 
-> So in the original code:
-> drivers/net/wireless/ath/ath9k/htc_hst.c
->    119                  for (tepid = ENDPOINT_MAX; tepid > ENDPOINT0; tepid--) {
->    120                          tmp_endpoint = &target->endpoint[tepid];
->                                                ^^^^^^^^^^^^^^^^^^^^^^^^^
-> 
-> 	We are past the end of the array here.  22 vs 7.
-> 
-> Perhaps the htc_target struct should be changed to ENDPOINT_MAX?
+We can wake all queues after a chip reset since everything should be set up and
+we are ready to transmit. If we don't do that we might end up starting up with
+stopped queues, not beeing able to transmit. (This started to happen after
+"ath5k: clean up queue manipulation" but since periodic calibration also
+stopped and started the queues this effect was hidden most of the time).
 
-Ah right. That should be fixed.
+This way we can also get rid of the superfluous ath5k_reset_wake() function.
 
-Sujith
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   17 +++--------------
+ 1 files changed, 3 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 9c27623..732a2c1 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -222,7 +222,6 @@ static int ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+ static int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		struct ath5k_txq *txq);
+ static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan);
+-static int ath5k_reset_wake(struct ath5k_softc *sc);
+ static int ath5k_start(struct ieee80211_hw *hw);
+ static void ath5k_stop(struct ieee80211_hw *hw);
+ static int ath5k_add_interface(struct ieee80211_hw *hw,
+@@ -2769,7 +2768,7 @@ ath5k_tasklet_reset(unsigned long data)
+ {
+ 	struct ath5k_softc *sc = (void *)data;
+ 
+-	ath5k_reset_wake(sc);
++	ath5k_reset(sc, sc->curchan);
+ }
+ 
+ /*
+@@ -2940,23 +2939,13 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 	ath5k_beacon_config(sc);
+ 	/* intrs are enabled by ath5k_beacon_config */
+ 
++	ieee80211_wake_queues(sc->hw);
++
+ 	return 0;
+ err:
+ 	return ret;
+ }
+ 
+-static int
+-ath5k_reset_wake(struct ath5k_softc *sc)
+-{
+-	int ret;
+-
+-	ret = ath5k_reset(sc, sc->curchan);
+-	if (!ret)
+-		ieee80211_wake_queues(sc->hw);
+-
+-	return ret;
+-}
+-
+ static int ath5k_start(struct ieee80211_hw *hw)
+ {
+ 	return ath5k_init(hw->priv);
+
