@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay11.uol.com.br ([200.147.1.1]:50771 "EHLO
-	relay11.uol.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113Ab0ERDQ4 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:60063 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756514Ab0EMJq5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 23:16:56 -0400
-Received: from smtp.uol.com.br (unknown [172.26.20.60])
-	by a1-sete4.uol.com.br (Postfix) with ESMTP id 4F79890000A15
-	for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 00:16:54 -0300 (BRT)
-Received: from localhost (localhost [127.0.0.1])
-	by socom2.uol.com.br (Postfix) with ESMTP id E4529EB4
-	for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 00:15:19 -0300 (BRT)
-Received: from chagas.nectar.ath.cx (unknown [187.22.165.163])
-	(Authenticated sender: rogerbrito@uol.com.br)
-	by socom2.uol.com.br (Postfix) with ESMTPA id D6AC8CE1
-	for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 00:14:56 -0300 (BRT)
-Date: Tue, 18 May 2010 00:14:36 -0300
-From: =?utf-8?Q?Rog=C3=A9rio?= Brito <rbrito@ime.usp.br>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] Select WIRELESS_EXT for the rndis_wlan driver to compile
-Message-ID: <20100518031436.GA6006@ime.usp.br>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Thu, 13 May 2010 05:46:57 -0400
+Received: by wyb32 with SMTP id 32so731401wyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 02:46:56 -0700 (PDT)
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH] wl1271: remove sdio ARM dependency
+Date: Thu, 13 May 2010 12:43:24 +0300
+Message-Id: <1273743804-11587-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rndis_wlan.ko module needs the function wireless_send_event, which
-is not included if the option WIRELESS_EXT is not selected by the
-driver.  Otherwise, the user gets compilation problems like:
+Make it possible to use wl1271's SDIO interface on non-ARM platforms.
 
-,----
-| (...)
-| Kernel: arch/x86/boot/bzImage is ready  (#3)
-|   Building modules, stage 2.
-|   MODPOST 427 modules
-| ERROR: "wireless_send_event" [drivers/net/wireless/rndis_wlan.ko] undefined!
-| make[1]: *** [__modpost] Error 1
-| make: *** [modules] Error 2
-`----
+Fully tested on a x86 platform, compile-tested on ARM.
+
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
+ drivers/net/wireless/wl12xx/Kconfig       |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-I don't know if this is a proper fix, but I would love to know a better
-solution to the problem.
-
- drivers/net/wireless/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 5889436..0d5fff4 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -186,6 +186,7 @@ config USB_NET_RNDIS_WLAN
- 	tristate "Wireless RNDIS USB support"
- 	depends on USB && EXPERIMENTAL
- 	depends on CFG80211
-+	select WIRELESS_EXT
- 	select USB_USBNET
- 	select USB_NET_CDCETHER
- 	select USB_NET_RNDIS_HOST
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 337fc7b..1516341 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -65,7 +65,7 @@ config WL1271_SPI
+ 
+ config WL1271_SDIO
+ 	tristate "TI wl1271 SDIO support"
+-	depends on WL1271 && MMC && ARM
++	depends on WL1271 && MMC
+ 	---help---
+ 	  This module adds support for the SDIO interface of adapters using
+ 	  TI wl1271 chipset.  Select this if your platform is using
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index d3d6f30..7059b5c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -28,7 +28,7 @@
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/card.h>
+-#include <plat/gpio.h>
++#include <linux/gpio.h>
+ 
+ #include "wl1271.h"
+ #include "wl12xx_80211.h"
 -- 
-1.7.1
+1.7.0.4
 
