@@ -1,81 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55405 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171Ab0EKTFB (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:58225 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677Ab0EMXPL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 15:05:01 -0400
-Subject: Re: [PATCH V3] mac80211: fix paged defragmentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <1273603952.5955.45.camel@abhi-desktop>
-References: <1273602131-9188-1-git-send-email-abhijeet.kolekar@intel.com>
-	 <20100511181439.GB2400@tuxdriver.com>
-	 <1273601810.5955.44.camel@abhi-desktop>
-	 <20100511182423.GC2400@tuxdriver.com>
-	 <1273603952.5955.45.camel@abhi-desktop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 May 2010 21:04:56 +0200
-Message-ID: <1273604696.20312.29.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 13 May 2010 19:15:11 -0400
+Received: by gyg13 with SMTP id 13so875222gyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 16:15:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4BEC2318.5050701@create-net.org>
+References: <4BEC2318.5050701@create-net.org>
+Date: Fri, 14 May 2010 01:15:08 +0200
+Message-ID: <AANLkTimnzAJd9Y02m8OBVLHphL5pbFw56M2LfB1L5oKz@mail.gmail.com>
+Subject: Re: Strange ACK Behaviour with ath9k
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Roberto Riggio <roberto.riggio@create-net.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-05-11 at 11:52 -0700, Abhijeet Kolekar wrote:
-> Hello John,
-> On Tue, 2010-05-11 at 11:24 -0700, John W. Linville wrote:
-> > On Tue, May 11, 2010 at 11:16:50AM -0700, Abhijeet Kolekar wrote:
-> > > Hello John,
-> > > On Tue, 2010-05-11 at 11:14 -0700, John W. Linville wrote:
-> > > > On Tue, May 11, 2010 at 11:22:11AM -0700, Abhijeet Kolekar wrote:
-> > > > > Paged RX skb patch broke the defragmentation. We need to read hdr again
-> > > > > after linearization.
-> > > > > 
-> > > > > It fixes following bug
-> > > > > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2194
-> > > > > 
-> > > > > Signed-off-by: Zhu, Yi <yi.zhu@intel.com>
-> > > > > Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-> > > > > ---
-> > > > > v2: Changed hdr reading.
-> > > > > v3: Added more comments.
-> > > > >  net/mac80211/rx.c |    6 ++++++
-> > > > >  1 files changed, 6 insertions(+), 0 deletions(-)
-> > > > > 
-> > > > > diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> > > > > index 9a08f2c..6e2a7bc 100644
-> > > > > --- a/net/mac80211/rx.c
-> > > > > +++ b/net/mac80211/rx.c
-> > > > > @@ -1253,6 +1253,12 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
-> > > > >  	if (skb_linearize(rx->skb))
-> > > > >  		return RX_DROP_UNUSABLE;
-> > > > >  
-> > > > > +	/*
-> > > > > +	 *  skb_linearize() might change the skb->data and
-> > > > > +	 *  previously cached variables (in this case, hdr) need to
-> > > > > +	 *  be refreshed with the new data.
-> > > > > +	 */
-> > > > > +	hdr = (struct ieee80211_hdr *)rx->skb->data;
-> > > > >  	seq = (sc & IEEE80211_SCTL_SEQ) >> 4;
-> > > > >  
-> > > > >  	if (frag == 0) {
-> > > > 
-> > > > And what about making sure the compiler doesn't optimize this away?
-> > > > 
-> > >  To avoid the double assignment, there is one more approach is to
-> > > directly read fc and seq_ctrl  using skb_data. I will send that in the
-> > > next version.
-> > 
-> > I don't think the double assignment is so bad, I just think that a
-> > compiler might decide to ignore the second assignment.  Am I wrong?
-> > 
-> I don't understand why compiler will ignore the second assignment other
-> than the above reason. What will be the solution in this case?
+Hi Roberto,
 
-ACCESS_ONCE()? I have no idea why/if the compiler would actually do this
-though.
+When I've seen this it has been caused by a mismatch between the
+addresses in the injected frame and that configured in the hardware.
+The transmitting radio doesn't understand it is the intended recipient
+of the ack and continues retrying.
 
-johannes
+/Björn
 
+On Thu, May 13, 2010 at 6:04 PM, Roberto Riggio
+<roberto.riggio@create-net.org> wrote:
+>
+> Hi,
+>
+> I'm having a very strange behaviour between two sr71a (ath9k) cards
+> operating in monitor mode. I'm using the following patch to specify
+> the transmission rate frame by frame:
+>
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/47441
+>
+>
+> However if I try to send some traffic between the two nodes with both
+> interfaces operating in monitor mode I can see from a third machine
+> using wireshark that albeit the frame is sent and the corresponding
+> ack generated, the originator seems to ignore the ACK and keepts
+> retransmitting the frame. This is happening on both ends of the
+> communication (i'm ping one node from the other).
+>
+> As a matter of fact i thought that ACK are handled directly by the
+> firmware. Any hints?
+>
+> R.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Venatech AB
+Ideon Innovation
+Ole Römers väg 12
+SE-22370 LUND
+Sweden
+
++46 (0) 46 286 86 20
+info@venatech.se
+http://www.venatech.se
