@@ -1,74 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:33475 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759505Ab0EMW6C (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:1227 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758045Ab0EMJhH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 18:58:02 -0400
-Received: by wyb32 with SMTP id 32so1319783wyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 15:58:01 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1273788932.7796.376.camel@rchatre-DESK>
-References: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
-	 <AANLkTilm7VDQkXBMWUeRtH634oq9i9AdUIsv6V3woRH_@mail.gmail.com>
-	 <1273788932.7796.376.camel@rchatre-DESK>
-Date: Fri, 14 May 2010 00:58:00 +0200
-Message-ID: <AANLkTilireLxaN70NBPVqZwugHoKk1Iy2_I-cg0ev2oq@mail.gmail.com>
-Subject: Re: [PATCH 0/2] iwlwifi fixes for 2.6.34
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 13 May 2010 05:37:07 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 08/10] rt2x00: Push beacon TX descriptor writing to drivers.
+Date: Thu, 13 May 2010 11:36:56 +0200
+Message-Id: <1273743418-28383-9-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
+References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, I was confused by the comments in [1] and I am especially
-interested in the internal scans stuff:
+Not all the devices require a TX descriptor to be written (i.e. rt2800
+device don't require them). Push down the creation of the TX descriptor
+to the device drivers so that they can decide for themselves whether
+a TX descriptor is to be created.
 
-Port following patch to 3945.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2400pci.c   |   15 +++++++++------
+ drivers/net/wireless/rt2x00/rt2500pci.c   |   15 +++++++++------
+ drivers/net/wireless/rt2x00/rt2500usb.c   |   10 ++++++++++
+ drivers/net/wireless/rt2x00/rt2800pci.c   |   16 ++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2800usb.c   |   16 ++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   10 +---------
+ drivers/net/wireless/rt2x00/rt61pci.c     |   10 ++++++++++
+ drivers/net/wireless/rt2x00/rt73usb.c     |   10 ++++++++++
+ 8 files changed, 81 insertions(+), 21 deletions(-)
 
-"commit 90c4162ff59a3281b6d2f7206740be6217bd6758
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Wed Apr 7 00:21:36 2010 -0700
-    iwlwifi: fix scan races"
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index def3fa4..66cff04 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1074,9 +1074,6 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
+ 				   struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+-	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
+-	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+-	u32 word;
+ 	u32 reg;
+ 
+ 	/*
+@@ -1089,9 +1086,15 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
+ 
+ 	rt2x00queue_map_txskb(rt2x00dev, entry->skb);
+ 
+-	rt2x00_desc_read(entry_priv->desc, 1, &word);
+-	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
+-	rt2x00_desc_write(entry_priv->desc, 1, word);
++	/*
++	 * Write the TX descriptor for the beacon.
++	 */
++	rt2400pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
++
++	/*
++	 * Dump beacon to userspace through debugfs.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
+ 
+ 	/*
+ 	 * Enable beaconing again.
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 070c23e..d30811c 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -1231,9 +1231,6 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
+ 				   struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+-	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
+-	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+-	u32 word;
+ 	u32 reg;
+ 
+ 	/*
+@@ -1246,9 +1243,15 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
+ 
+ 	rt2x00queue_map_txskb(rt2x00dev, entry->skb);
+ 
+-	rt2x00_desc_read(entry_priv->desc, 1, &word);
+-	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
+-	rt2x00_desc_write(entry_priv->desc, 1, word);
++	/*
++	 * Write the TX descriptor for the beacon.
++	 */
++	rt2500pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
++
++	/*
++	 * Dump beacon to userspace through debugfs.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
+ 
+ 	/*
+ 	 * Enable beaconing again.
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index b985d8f..dfaa948 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1107,6 +1107,16 @@ static void rt2500usb_write_beacon(struct queue_entry *entry,
+ 	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
+ 
+ 	/*
++	 * Write the TX descriptor for the beacon.
++	 */
++	rt2500usb_write_tx_desc(rt2x00dev, entry->skb, txdesc);
++
++	/*
++	 * Dump beacon to userspace through debugfs.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
++
++	/*
+ 	 * Take the descriptor in front of the skb into account.
+ 	 */
+ 	skb_push(entry->skb, TXD_DESC_SIZE);
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index b2f2327..88dba7f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -688,6 +688,7 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
+ 				   struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	unsigned int beacon_base;
+ 	u32 reg;
+ 
+@@ -700,9 +701,24 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
+ 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
+ 
+ 	/*
++	 * Register descriptor details in skb frame descriptor.
++	 */
++	skbdesc->desc = entry->skb->data - TXWI_DESC_SIZE;
++	skbdesc->desc_len = TXWI_DESC_SIZE;
++
++	/*
+ 	 * Add the TXWI for the beacon to the skb.
+ 	 */
+ 	rt2800_write_txwi(entry->skb, txdesc);
++
++	/*
++	 * Dump beacon to userspace through debugfs.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
++
++	/*
++	 * Adjust skb to take TXWI into account.
++	 */
+ 	skb_push(entry->skb, TXWI_DESC_SIZE);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 1b87daa..2ac1386 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -437,6 +437,7 @@ static void rt2800usb_write_beacon(struct queue_entry *entry,
+ 				   struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	unsigned int beacon_base;
+ 	u32 reg;
+ 
+@@ -449,9 +450,24 @@ static void rt2800usb_write_beacon(struct queue_entry *entry,
+ 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
+ 
+ 	/*
++	 * Register descriptor details in skb frame descriptor.
++	 */
++	skbdesc->desc = entry->skb->data - TXWI_DESC_SIZE;
++	skbdesc->desc_len = TXWI_DESC_SIZE;
++
++	/*
+ 	 * Add the TXWI for the beacon to the skb.
+ 	 */
+ 	rt2800_write_txwi(entry->skb, txdesc);
++
++	/*
++	 * Dump beacon to userspace through debugfs.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
++
++	/*
++	 * Adjust skb to take TXWI into account.
++	 */
+ 	skb_push(entry->skb, TXWI_DESC_SIZE);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index c68bf32..9e48bbc 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -420,7 +420,6 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
+ {
+ 	struct data_queue *queue = entry->queue;
+ 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
+-	enum rt2x00_dump_type dump_type;
+ 
+ 	rt2x00dev->ops->lib->write_tx_desc(rt2x00dev, entry->skb, txdesc);
+ 
+@@ -428,9 +427,7 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
+ 	 * All processing on the frame has been completed, this means
+ 	 * it is now ready to be dumped to userspace through debugfs.
+ 	 */
+-	dump_type = (txdesc->queue == QID_BEACON) ?
+-					DUMP_FRAME_BEACON : DUMP_FRAME_TX;
+-	rt2x00debug_dump_frame(rt2x00dev, dump_type, entry->skb);
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TX, entry->skb);
+ }
+ 
+ static void rt2x00queue_kick_tx_queue(struct queue_entry *entry,
+@@ -594,11 +591,6 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
+ 	skbdesc->entry = intf->beacon;
+ 
+ 	/*
+-	 * Write TX descriptor into reserved room in front of the beacon.
+-	 */
+-	rt2x00queue_write_tx_descriptor(intf->beacon, &txdesc);
+-
+-	/*
+ 	 * Send beacon to hardware and enable beacon genaration..
+ 	 */
+ 	rt2x00dev->ops->lib->write_beacon(intf->beacon, &txdesc);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 1be1d7d..643202f 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1872,6 +1872,16 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
+ 
+ 	/*
++	 * Write the TX descriptor for the beacon.
++	 */
++	rt61pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
++
++	/*
++	 * Dump beacon to userspace through debugfs.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
++
++	/*
+ 	 * Write entire beacon with descriptor to register.
+ 	 */
+ 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index fca661c..dcc46a2 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -1526,6 +1526,16 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
+ 
+ 	/*
++	 * Write the TX descriptor for the beacon.
++	 */
++	rt73usb_write_tx_desc(rt2x00dev, entry->skb, txdesc);
++
++	/*
++	 * Dump beacon to userspace through debugfs.
++	 */
++	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
++
++	/*
+ 	 * Take the descriptor in front of the skb into account.
+ 	 */
+ 	skb_push(entry->skb, TXD_DESC_SIZE);
+-- 
+1.7.1
 
-The above mentionned patch is already accepted to upstream (2.6.34)
-[2] and iwlagn _is_ already using internal scans. So why is iwl3945
-different in 2.6.34 especially in that case?
-
-On first sight, I can't see the correlation of "iwl3945: add plcp
-error checking" [3] and "iwl3945: fix scan races" [1].
-
-- Sedat -
-
-[1] https://patchwork.kernel.org/patch/98326/
-[2] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=88be026490ed89c2ffead81a52531fbac5507e01
-[3] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=a29576a7844326c5223f4d4adbfd3f4d64173d4c
-
-On Fri, May 14, 2010 at 12:15 AM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> On Thu, 2010-05-13 at 14:54 -0700, Sedat Dilek wrote:
->> Whats with "iwl3945: fix scan races"?
->
-> hmmm ... cryptic indeed ... I assume you are asking "Why is "iwl3945:
-> fix scan races" not part of a submission to 2.6.34?
->
-> If that is the case then yes, indeed , we did not submit "iwl3945: fix
-> scan races" to 2.6.34 since the scan races being fixed is between normal
-> (mac80211 initiated) and internal (as part of rf reset) scans. Like I
-> mention in the cover letter of the submission that includes that patch
-> (http://thread.gmane.org/gmane.linux.kernel.wireless.general/50651 ) we
-> introduce RF reset usage to 3945 through the new "plcp error checking"
-> patch and thus need the scan races fix for that. Before that patch
-> nothing in iwl3945 was using RF reset and thus no internal scanning that
-> could trigger a race.
->
-> Reinette
->
->
->
->
->
