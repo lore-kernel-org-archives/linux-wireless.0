@@ -1,55 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:53796 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755504Ab0EQSBj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 14:01:39 -0400
-Received: by pwi5 with SMTP id 5so581248pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 May 2010 11:01:38 -0700 (PDT)
+Received: from smtp3-g21.free.fr ([212.27.42.3]:36955 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752315Ab0EMVFo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:05:44 -0400
+Message-ID: <4BEC699E.4090308@free.fr>
+Date: Thu, 13 May 2010 23:05:34 +0200
+From: Benoit Papillault <benoit.papillault@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <z2o43e72e891005041451qa4ea338bu5a20171a82f13471@mail.gmail.com>
-References: <x2q43e72e891005041344gb9945d73p3d97e648fd13aa85@mail.gmail.com>
-	<1273007509.12618.1.camel@mj> <z2o43e72e891005041451qa4ea338bu5a20171a82f13471@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 17 May 2010 10:54:26 -0700
-Message-ID: <AANLkTilrjw-Jq4MEQPT35fHTTqsaSdU5Jc7lt_2lUH2V@mail.gmail.com>
-Subject: Re: A file to print the release of loaded compat-wireless stuff
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	linville@tuxdriver.com
+Subject: Re: [PATCH 2/2] ath9k: remove VEOL support for ad-hoc
+References: <1273775845-10056-1-git-send-email-nbd@openwrt.org> <1273775845-10056-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1273775845-10056-2-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 4, 2010 at 2:51 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, May 4, 2010 at 2:11 PM, Pavel Roskin <proski@gnu.org> wrote:
->> On Tue, 2010-05-04 at 13:44 -0700, Luis R. Rodriguez wrote:
->>> It seems there is a reasonable need to find out what version of
->>> compat-wireless you have running. This will be a dated thing when
->>> based on linux-next but more importantly it will contain the 2.6.3x.y
->>> release the release was based on for the stable releases. Any ideas of
->>> what filesystem API to use for this, I was thinking maybe a simple
->>> sysfs entry for the compat module. Thoughts, preferences?
->>
->> We could use a read-only parameter of the compat module. Â Then the
->> version would be in /sys/module/compat/parameters/version
->>
->> Module parameters are visible in sysfs even if the code is compiled into
->> the kernel.
+Le 13/05/2010 20:37, Felix Fietkau a écrit :
+> With VEOL, Beacon transmission in ad-hoc does not currently work.
+> I believe for larger ad-hoc networks, VEOL is too unreliable, as
+> it can get beacon transmissions stuck during synchronization.
+> Use SWBA based beacon trasmission similar to AP mode instead.
 >
-> Neat trick thanks for the tip, will give that a shot.
+> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
 
-Oh wow, and look at that, even if you enable the module as built-in to
-the kernel you still get the module parameter sysfs file for it. For
-example I just built-in cfg80211 on my kernel and I still see the
-ieee80211_regdom module parameter:
+This is very good step toward IBSS. Thanks Felix!
 
-mcgrof@tux ~ $ lsmod | grep cfg
-mcgrof@tux ~ $ cat /sys/module/cfg80211/parameters/ieee80211_regdom
-00
+Acked-by: Benoit Papillault <benoit.papillault@free.fr>
 
-This is important as some distributions [1] might built-in some stable
-compat-wireless releases into their older kernel releases.
+> ---
+>   drivers/net/wireless/ath/ath9k/beacon.c |   63 +++++--------------------------
+>   1 files changed, 10 insertions(+), 53 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+> index 77face7..f43d85a 100644
+> --- a/drivers/net/wireless/ath/ath9k/beacon.c
+> +++ b/drivers/net/wireless/ath/ath9k/beacon.c
+> @@ -76,22 +76,13 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+>   	ds = bf->bf_desc;
+>   	flags = ATH9K_TXDESC_NOACK;
+>
+> -	if (((sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
+> -	     (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT))&&
+> -	    (ah->caps.hw_caps&  ATH9K_HW_CAP_VEOL)) {
+> -		ds->ds_link = bf->bf_daddr; /* self-linked */
+> -		flags |= ATH9K_TXDESC_VEOL;
+> -		/* Let hardware handle antenna switching. */
+> -		antenna = 0;
+> -	} else {
+> -		ds->ds_link = 0;
+> -		/*
+> -		 * Switch antenna every beacon.
+> -		 * Should only switch every beacon period, not for every SWBA
+> -		 * XXX assumes two antennae
+> -		 */
+> -		antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs)&  1 ? 2 : 1);
+> -	}
+> +	ds->ds_link = 0;
+> +	/*
+> +	 * Switch antenna every beacon.
+> +	 * Should only switch every beacon period, not for every SWBA
+> +	 * XXX assumes two antennae
+> +	 */
+> +	antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs)&  1 ? 2 : 1);
+>
+>   	sband =&sc->sbands[common->hw->conf.channel->band];
+>   	rate = sband->bitrates[rateidx].hw_value;
+> @@ -215,36 +206,6 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+>   	return bf;
+>   }
+>
+> -/*
+> - * Startup beacon transmission for adhoc mode when they are sent entirely
+> - * by the hardware using the self-linked descriptor + veol trick.
+> -*/
+> -static void ath_beacon_start_adhoc(struct ath_softc *sc,
+> -				   struct ieee80211_vif *vif)
+> -{
+> -	struct ath_hw *ah = sc->sc_ah;
+> -	struct ath_common *common = ath9k_hw_common(ah);
+> -	struct ath_buf *bf;
+> -	struct ath_vif *avp;
+> -	struct sk_buff *skb;
+> -
+> -	avp = (void *)vif->drv_priv;
+> -
+> -	if (avp->av_bcbuf == NULL)
+> -		return;
+> -
+> -	bf = avp->av_bcbuf;
+> -	skb = bf->bf_mpdu;
+> -
+> -	ath_beacon_setup(sc, avp, bf, 0);
+> -
+> -	/* NB: caller is known to have already stopped tx dma */
+> -	ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bf->bf_daddr);
+> -	ath9k_hw_txstart(ah, sc->beacon.beaconq);
+> -	ath_print(common, ATH_DBG_BEACON, "TXDP%u = %llx (%p)\n",
+> -		  sc->beacon.beaconq, ito64(bf->bf_daddr), bf->bf_desc);
+> -}
+> -
+>   int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+>   {
+>   	struct ath_softc *sc = aphy->sc;
+> @@ -265,7 +226,8 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+>   		list_del(&avp->av_bcbuf->list);
+>
+>   		if (sc->sc_ah->opmode == NL80211_IFTYPE_AP ||
+> -		    !(sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_VEOL)) {
+> +		    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC ||
+> +		    sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) {
+>   			int slot;
+>   			/*
+>   			 * Assign the vif to a beacon xmit slot. As
+> @@ -715,8 +677,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+>   	 * self-linked tx descriptor and let the hardware deal with things.
+>   	 */
+>   	intval |= ATH9K_BEACON_ENA;
+> -	if (!(ah->caps.hw_caps&  ATH9K_HW_CAP_VEOL))
+> -		ah->imask |= ATH9K_INT_SWBA;
+> +	ah->imask |= ATH9K_INT_SWBA;
+>
+>   	ath_beaconq_config(sc);
+>
+> @@ -726,10 +687,6 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+>   	ath9k_beacon_init(sc, nexttbtt, intval);
+>   	sc->beacon.bmisscnt = 0;
+>   	ath9k_hw_set_interrupts(ah, ah->imask);
+> -
+> -	/* FIXME: Handle properly when vif is NULL */
+> -	if (vif&&  ah->caps.hw_caps&  ATH9K_HW_CAP_VEOL)
+> -		ath_beacon_start_adhoc(sc, vif);
+>   }
+>
+>   void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
 
-  Luis
-
-[1] http://src.chromium.org/cgi-bin/gitweb.cgi?p=kernel.git;a=commit;h=73ec6aa6d7ed254d235939bf00ea49cbb6526e6f
