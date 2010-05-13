@@ -1,76 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35562 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757090Ab0EYP0D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 11:26:03 -0400
-Subject: Re: WLAN Regulatory Domain Germany
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kurt Garloff <garloff@suse.de>
+Received: from mga02.intel.com ([134.134.136.20]:42059 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932457Ab0EMVuQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:50:16 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <20100525151429.GC6342@tpkurt2.garloff.de>
-References: <20100519172944.GB32757@tpkurt2.garloff.de>
-	 <1274690246.3743.20.camel@jlt3.sipsolutions.net>
-	 <20100525151429.GC6342@tpkurt2.garloff.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 25 May 2010 17:26:19 +0200
-Message-ID: <1274801179.3635.44.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 01/17] iwlwifi: introduce iwl_sta_id_or_broadcast
+Date: Thu, 13 May 2010 14:49:43 -0700
+Message-Id: <1273787399-9280-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-05-25 at 17:14 +0200, Kurt Garloff wrote:
->                                                                                               
-> OK, new suggestion.
-> 
-> 8<------------------------------------------------------------------------                    
-> 
-> # Data from "Frequenznutzungsplan" (as published in April 2008), downloaded from
-> # http://www.bundesnetzagentur.de/cae/servlet/contentblob/38448/publicationFile/2659/Frequenznutzungsplan2008_Id17448pdf.pdf
-> # For the 5GHz range also see
-> # http://www.bundesnetzagentur.de/cae/servlet/contentblob/38216/publicationFile/6579/WLAN5GHzVfg7_2010_28042010pdf.pdf
-> # The values have been reduced by a factor of 2 (3db) for non TPC devices
-> # (in other words: devices with TPC can use twice the tx power of this table).
-> # Note that the docs do not require TPC for 5150--5250; the reduction to
-> # 100mW thus is not strictly required -- however the conservative 100mW
-> # limit is used here as the non-interference with radar and satellite
-> # apps relies on the attenuation by the building walls only in the
-> # absence of DFS; the neighbour countries have 100mW limit here as well.
-> 
-> country DE:
-> 	# entries 279004 and 280006
->        (2400 - 2483.5 @ 40), (N/A, 100 mW)
->        # entry 303005
->        (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
->        # entries 304002 and 305002
->        (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
->        # entries 308002, 309001 and 310003
->        (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ok, that looks fine to me.
+There are now five places where we need to
+look up the station ID, but the sta pointer
+may be NULL due to mac80211 passing that to
+indicate a certain special state.
 
-> Can we actually put several entries covering the same frequency range?
-> Then we could put 200mW for DFS and 100mW for non-DFS.
-> This would also address the next issue you raise ...
+Replace all these by a new inline function,
+called iwl_sta_id_or_broadcast(), and add
+documentation about when to use it.
 
-I think you're confusing DFS and TPC requirements? Anyway, no, we can't
-right now.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    5 +---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 ++----------
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |   16 +++-----------
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |   29 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   19 +++--------------
+ 5 files changed, 41 insertions(+), 42 deletions(-)
 
-> > Also note that there are different requirements depending on the channel
-> > bandwidth, which will eventually come up in Linux too. But I think for
-> > that we need the new database format for that ... yet another thing to
-> > do before we can support 5/10 MHz channels.
-> 
-> Indeed. For 5150 -- 5350, the spectral power density may not exceed
-> 10mW/MHz (and overall emitted power in the range per device not 200mW);
-> this gives a limit of 200mW for 20MHz channels or 100mW if no TPC is 
-> used for 5250 -- 5350. (For 5470--5725 use 5x those values.)
-> I'm not aware of WLAN devices with narrower channels yet, but if they 
-> come into existence, we'd have to reflect it somehow ...
-
-They exist, we just don't support them right now ... I put it on the
-todo list for now.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index c402bfc..18b1546 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -567,10 +567,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	hdr_len = ieee80211_hdrlen(fc);
+ 
+ 	/* Find index into station table for destination station */
+-	if (!info->control.sta)
+-		sta_id = priv->hw_params.bcast_sta_id;
+-	else
+-		sta_id = iwl_sta_id(info->control.sta);
++	sta_id = iwl_sta_id_or_broadcast(priv, info->control.sta);
+ 	if (sta_id == IWL_INVALID_STATION) {
+ 		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
+ 			       hdr->addr1);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 47563cf..d7a9aea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3081,17 +3081,9 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	if (sta) {
+-		sta_id = iwl_sta_id(sta);
+-
+-		if (sta_id == IWL_INVALID_STATION) {
+-			IWL_DEBUG_MAC80211(priv, "leave - %pM not in station map.\n",
+-					   sta->addr);
+-			return -EINVAL;
+-		}
+-	} else {
+-		sta_id = priv->hw_params.bcast_sta_id;
+-	}
++	sta_id = iwl_sta_id_or_broadcast(priv, sta);
++	if (sta_id == IWL_INVALID_STATION)
++		return -EINVAL;
+ 
+ 	mutex_lock(&priv->mutex);
+ 	iwl_scan_cancel_timeout(priv, 100);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 85ed235..2eafba6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -972,24 +972,16 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
+ 	unsigned long flags;
+ 	int i;
+ 
+-	if (sta) {
+-		sta_id = iwl_sta_id(sta);
+-
+-		if (sta_id == IWL_INVALID_STATION) {
+-			IWL_DEBUG_MAC80211(priv, "leave - %pM not initialised.\n",
+-					   sta->addr);
+-			return;
+-		}
+-	} else
+-		sta_id = priv->hw_params.bcast_sta_id;
+-
+-
+ 	if (iwl_scan_cancel(priv)) {
+ 		/* cancel scan failed, just live w/ bad key and rely
+ 		   briefly on SW decryption */
+ 		return;
+ 	}
+ 
++	sta_id = iwl_sta_id_or_broadcast(priv, sta);
++	if (sta_id == IWL_INVALID_STATION)
++		return;
++
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
+ 
+ 	priv->stations[sta_id].sta.key.tkip_rx_tsc_byte2 = (u8) iv32;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index c2a453a..5b1b1e4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -107,4 +107,33 @@ static inline int iwl_sta_id(struct ieee80211_sta *sta)
+ 
+ 	return ((struct iwl_station_priv_common *)sta->drv_priv)->sta_id;
+ }
++
++/**
++ * iwl_sta_id_or_broadcast - return sta_id or broadcast sta
++ * @priv: iwl priv
++ * @sta: mac80211 station
++ *
++ * In certain circumstances mac80211 passes a station pointer
++ * that may be %NULL, for example during TX or key setup. In
++ * that case, we need to use the broadcast station, so this
++ * inline wraps that pattern.
++ */
++static inline int iwl_sta_id_or_broadcast(struct iwl_priv *priv,
++					  struct ieee80211_sta *sta)
++{
++	int sta_id;
++
++	if (!sta)
++		return priv->hw_params.bcast_sta_id;
++
++	sta_id = iwl_sta_id(sta);
++
++	/*
++	 * mac80211 should not be passing a partially
++	 * initialised station!
++	 */
++	WARN_ON(sta_id == IWL_INVALID_STATION);
++
++	return sta_id;
++}
+ #endif /* __iwl_sta_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 4c78783..68b8a1a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -509,10 +509,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	hdr_len = ieee80211_hdrlen(fc);
+ 
+ 	/* Find index into station table for destination station */
+-	if (!info->control.sta)
+-		sta_id = priv->hw_params.bcast_sta_id;
+-	else
+-		sta_id = iwl_sta_id(info->control.sta);
++	sta_id = iwl_sta_id_or_broadcast(priv, info->control.sta);
+ 	if (sta_id == IWL_INVALID_STATION) {
+ 		IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
+ 			       hdr->addr1);
+@@ -3336,17 +3333,9 @@ static int iwl3945_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	static_key = !iwl_is_associated(priv);
+ 
+ 	if (!static_key) {
+-		if (!sta) {
+-			sta_id = priv->hw_params.bcast_sta_id;
+-		} else {
+-			sta_id = iwl_sta_id(sta);
+-			if (sta_id == IWL_INVALID_STATION) {
+-				IWL_DEBUG_MAC80211(priv,
+-						   "leave - %pM not in station map.\n",
+-						   sta->addr);
+-				return -EINVAL;
+-			}
+-		}
++		sta_id = iwl_sta_id_or_broadcast(priv, sta);
++		if (sta_id == IWL_INVALID_STATION)
++			return -EINVAL;
+ 	}
+ 
+ 	mutex_lock(&priv->mutex);
+-- 
+1.6.3.3
 
