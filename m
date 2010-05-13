@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:4149 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752006Ab0EFKvW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 06:51:22 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so2155331fgg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 03:51:20 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/3] rt2x00: rt2800: don't overwrite SIFS values on erp changes
-Date: Thu, 6 May 2010 12:51:09 +0200
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201005061229.44923.helmut.schaa@googlemail.com>
-In-Reply-To: <201005061229.44923.helmut.schaa@googlemail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201005061251.09142.helmut.schaa@googlemail.com>
+Received: from mga02.intel.com ([134.134.136.20]:31569 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932431Ab0EMVtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:49:50 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/2] iwlwifi fixes for 2.6.34
+Date: Thu, 13 May 2010 14:49:43 -0700
+Message-Id: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-JFI, with this and the previous patch I can reliable transmit and receive
-data at 11b and 11g rates with only sporadic retries. Before that I had a
-huge amount of retries while transmitting with 11g rates (and enabled CTS
-protection).
+We include two late fixes hoping to make it into 2.6.34.
 
-Nevertheless I don't get good transfer speeds. I didn't measure exactly but
-just with scp. And I got ~600-700 KByte/s for TX and 400-500KByte/s for RX.
-This is still quite low.
+"iwlwifi: fix internal scan race" fixes a kernel crash caused by
+accessing a NULL pointer. More can be read in
+https://bugzilla.kernel.org/show_bug.cgi?id=15824
 
-Helmut
+"iwlagn: work around rate scaling reset delay" is already in
+wireless-next-2.6 but has since been shown to be an issue in 2.6.34 also.
+This fixes spurious firmware restarts that has been documented in
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2173 , but it is the
+community report tracked in
+https://bugzilla.kernel.org/show_bug.cgi?id=15782 that prompted us sending
+this fix to wireless-2.6 also.
 
-Am Donnerstag 06 Mai 2010 schrieb Helmut Schaa:
-> The SIFS value is a constant and doesn't need to be updated on erp changes.
-> Furthermore the code used 10us for both, the OFDM SIFS and CCK SIFS time
-> which broke CTS protected 11g connections (see patch "rt2x00: rt2800: update
-> initial SIFS values" for details).
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index f786068..858455f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -640,8 +640,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
->  	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
->  
->  	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
-> -	rt2x00_set_field32(&reg, XIFS_TIME_CFG_CCKM_SIFS_TIME, erp->sifs);
-> -	rt2x00_set_field32(&reg, XIFS_TIME_CFG_OFDM_SIFS_TIME, erp->sifs);
->  	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
->  	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
->  
-> 
+These patches are also available from wireless-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+Reinette Chatre (2):
+  iwlwifi: fix internal scan race
+  iwlagn: work around rate scaling reset delay
+
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   21 +++++++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-sta.c  |   37 ++++++++++++++++++++++++++++++-
+ 2 files changed, 54 insertions(+), 4 deletions(-)
 
