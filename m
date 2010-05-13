@@ -1,61 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:46971 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932710Ab0EMVyt convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3233 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758641Ab0EMLEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:54:49 -0400
-Received: by wwi18 with SMTP id 18so127022wwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 14:54:47 -0700 (PDT)
+	Thu, 13 May 2010 07:04:45 -0400
+Message-ID: <4BEBDCCA.1040004@gmail.com>
+Date: Thu, 13 May 2010 13:04:42 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
-References: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
-Date: Thu, 13 May 2010 23:54:47 +0200
-Message-ID: <AANLkTilm7VDQkXBMWUeRtH634oq9i9AdUIsv6V3woRH_@mail.gmail.com>
-Subject: Re: [PATCH 0/2] iwlwifi fixes for 2.6.34
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=UTF-8
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH v2 04/10] rt2x00: Move rt2x00debug_dump_frame declaration
+ 	to rt2x00.h.
+References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>	 <1273743418-28383-5-git-send-email-gwingerde@gmail.com> <AANLkTilbzQ1_16u2hjkh6pFSnUmjg8bNRHiJf_g1hPPb@mail.gmail.com>
+In-Reply-To: <AANLkTilbzQ1_16u2hjkh6pFSnUmjg8bNRHiJf_g1hPPb@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whats with "iwl3945: fix scan races"?
+On 05/13/10 11:45, Ivo Van Doorn wrote:
+> On Thu, May 13, 2010 at 11:36 AM, Gertjan van Wingerde
+> <gwingerde@gmail.com> wrote:
+>> This allows rt2x00debug_dump_frame to be used from everywhere.
+>>
+>> This is preparation for beacon writing clean ups.
+>>
+>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2x00.h      |   35 +++++++++++++++++++++++++++++
+>>  drivers/net/wireless/rt2x00/rt2x00debug.c |    1 +
+>>  drivers/net/wireless/rt2x00/rt2x00dump.h  |   20 ----------------
+>>  drivers/net/wireless/rt2x00/rt2x00lib.h   |   10 --------
+>>  4 files changed, 36 insertions(+), 30 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+>> index 6c1ff4c..1329f6c 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+>> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+>> @@ -1015,6 +1015,41 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
+>>                                          enum queue_index index);
+>>
+>>  /*
+>> + * Debugfs handlers.
+>> + */
+>> +/**
+>> + * enum rt2x00_dump_type - Frame type
+>> + *
+>> + * These values are used for the indicate the type of frame that is being
+>> + * dumped:
+>> + * @DUMP_FRAME_RXDONE: This frame has been received by the hardware.
+>> + * @DUMP_FRAME_TX: This frame is queued for transmission to the hardware.
+>> + * @DUMP_FRAME_TXDONE: This frame indicates the device has handled
+>> + *     the tx event which has either succeeded or failed. A frame
+>> + *     with this type should also have been reported with as a
+>> + *     %DUMP_FRAME_TX frame.
+>> + * @DUMP_FRAME_BEACON: This beacon frame is queued for transmission to the
+>> + *     hardware.
+>> + */
+>> +enum rt2x00_dump_type {
+>> +       DUMP_FRAME_RXDONE = 1,
+>> +       DUMP_FRAME_TX = 2,
+>> +       DUMP_FRAME_TXDONE = 3,
+>> +       DUMP_FRAME_BEACON = 4,
+>> +};
+> 
+> Can't this stay in rt2x00dump.h? The rt2x00dump.h is part of the
+> public interface towards
+> userspace which can use these defined to determine the frame type.
+> We can safely include this header in rt2x00.h since it contains the
+> public interface anyway.
 
-- Sedat -
+Hmpf, it looks like there is a lot of unspecified assumptions about the placement
+of information in files and for some functionality. We must get better in documenting
+this.
+Although it is a bit strange to have a public interface to userspace defined this deep
+in the kernel source tree, I'll move it back and put a big fat comment is there that this
+actually is the public interface towards userspace and that all this information is to
+be kept together.
 
-[1] https://patchwork.kernel.org/patch/98326/
+> 
+>> +#ifdef CONFIG_RT2X00_LIB_DEBUGFS
+>> +void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+>> +                           enum rt2x00_dump_type type, struct sk_buff *skb);
+>> +#else
+>> +static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+>> +                                         enum rt2x00_dump_type type,
+>> +                                         struct sk_buff *skb)
+>> +{
+>> +}
+>> +#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+> 
+> Could you add some documentation to this function?
+> 
 
-On Thu, May 13, 2010 at 11:49 PM, Reinette Chatre
-<reinette.chatre@intel.com> wrote:
-> We include two late fixes hoping to make it into 2.6.34.
->
-> "iwlwifi: fix internal scan race" fixes a kernel crash caused by
-> accessing a NULL pointer. More can be read in
-> https://bugzilla.kernel.org/show_bug.cgi?id=15824
->
-> "iwlagn: work around rate scaling reset delay" is already in
-> wireless-next-2.6 but has since been shown to be an issue in 2.6.34 also.
-> This fixes spurious firmware restarts that has been documented in
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2173 , but it is the
-> community report tracked in
-> https://bugzilla.kernel.org/show_bug.cgi?id=15782 that prompted us sending
-> this fix to wireless-2.6 also.
->
-> These patches are also available from wireless-2.6 branch on
-> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
->
-> Reinette Chatre (2):
->  iwlwifi: fix internal scan race
->  iwlagn: work around rate scaling reset delay
->
->  drivers/net/wireless/iwlwifi/iwl-scan.c |   21 +++++++++++++++--
->  drivers/net/wireless/iwlwifi/iwl-sta.c  |   37 ++++++++++++++++++++++++++++++-
->  2 files changed, 54 insertions(+), 4 deletions(-)
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Off course I can; although that is a bit more than just moving declarations ;-)
+
+---
+Gertjan.
