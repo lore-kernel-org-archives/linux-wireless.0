@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58249 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752141Ab0ERLNV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 07:13:21 -0400
-Subject: [PATCH] cfg80211: fix action frame TX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 May 2010 13:13:14 +0200
-Message-ID: <1274181194.3762.77.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:60714 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932639Ab0EMVuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:50:18 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 04/17] iwlwifi: don't crash on firmware file missing info
+Date: Thu, 13 May 2010 14:49:46 -0700
+Message-Id: <1273787399-9280-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Specifying a valid channel type will get
-goto out rather than continuing, due to
-missing braces.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+If a firmware file misses one of the required
+instruction or data pieces, the driver currently
+crashes. Let it gracefully refuse that firmware
+file instead.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/wireless/nl80211.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/iwl-helpers.h |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/net/wireless/nl80211.c	2010-05-18 13:09:26.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2010-05-18 13:09:37.000000000 +0200
-@@ -4717,9 +4717,10 @@ static int nl80211_action(struct sk_buff
- 		if (channel_type != NL80211_CHAN_NO_HT &&
- 		    channel_type != NL80211_CHAN_HT20 &&
- 		    channel_type != NL80211_CHAN_HT40PLUS &&
--		    channel_type != NL80211_CHAN_HT40MINUS)
-+		    channel_type != NL80211_CHAN_HT40MINUS) {
- 			err = -EINVAL;
- 			goto out;
-+		}
- 	}
- 
- 	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index 3ff6b9d..6984639 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -92,6 +92,11 @@ static inline void iwl_free_fw_desc(struct pci_dev *pci_dev,
+ static inline int iwl_alloc_fw_desc(struct pci_dev *pci_dev,
+ 				    struct fw_desc *desc)
+ {
++	if (!desc->len) {
++		desc->v_addr = NULL;
++		return -EINVAL;
++	}
++
+ 	desc->v_addr = dma_alloc_coherent(&pci_dev->dev, desc->len,
+ 					  &desc->p_addr, GFP_KERNEL);
+ 	return (desc->v_addr != NULL) ? 0 : -ENOMEM;
+-- 
+1.6.3.3
 
