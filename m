@@ -1,39 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox2.netikka.net ([213.250.81.203]:45981 "EHLO
-	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758317Ab0EYToW (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:24718 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752038Ab0EMA4g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 15:44:22 -0400
-Message-ID: <4BFC2677.7050509@mandriva.org>
-Date: Tue, 25 May 2010 22:35:19 +0300
-From: Thomas Backlund <tmb@mandriva.org>
+	Wed, 12 May 2010 20:56:36 -0400
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0880322192
+	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 09:56:35 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Subject: Re: [PATCH] cfg80211: Parse channel_type in NL80211_CMD_JOIN_IBSS
+Date: Thu, 13 May 2010 09:56:25 +0900
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+References: <1273698460-18061-1-git-send-email-benoit.papillault@free.fr>
+In-Reply-To: <1273698460-18061-1-git-send-email-benoit.papillault@free.fr>
 MIME-Version: 1.0
-To: sedat.dilek@gmail.com
-CC: Sedat Dilek <sedat.dilek@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-05-25
-References: <20100525170401.GE31753@tuxdriver.com> <AANLkTilMYGSprjMnmRHlZPMvk1KLd1Yeqd_l26yyVRT6@mail.gmail.com>
-In-Reply-To: <AANLkTilMYGSprjMnmRHlZPMvk1KLd1Yeqd_l26yyVRT6@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201005130956.25680.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-25.05.2010 22:23, Sedat Dilek skrev:
-> "[1/2] iwlwifi: fix internal scan race" [1] is in this pull request.
-> Isn't "[2/2] iwlagn: work around rate scaling reset delay" [2] missing?
-> IIRC, both fixes were sent as a double-patch.
->
+On Thursday 13 May 2010 06:07:37 Benoit Papillault wrote:
+> The channel_type field is filled by iw and parse by cfg80211 before
+> being sent to mac80211 for instance (we also check if the specified
+> channel is capable of ht40+, ht40- or ht20). This information is needed
+> to properly configure an HT IBSS.
+> 
+> It requires a patch to iw to fill this field.
+> 
+> Signed-off-by: Benoit Papillault <benoit.papillault@free.fr>
+> ---
+>  include/net/cfg80211.h |    1 +
+>  net/wireless/nl80211.c |   20 ++++++++++++++++----
+>  2 files changed, 17 insertions(+), 4 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index b44a2e5..5ead439 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -806,6 +806,7 @@ struct cfg80211_ibss_params {
+>  	u8 *ssid;
+>  	u8 *bssid;
+>  	struct ieee80211_channel *channel;
+> +	enum nl80211_channel_type channel_type;
+>  	u8 *ie;
+>  	u8 ssid_len, ie_len;
+>  	u16 beacon_interval;
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index aaa1aad..039c13f 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -3879,6 +3879,7 @@ static int nl80211_join_ibss(struct sk_buff *skb,
+> struct genl_info *info) struct cfg80211_ibss_params ibss;
+>  	struct wiphy *wiphy;
+>  	struct cfg80211_cached_keys *connkeys = NULL;
+> +	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
+>  	int err;
+> 
+>  	memset(&ibss, 0, sizeof(ibss));
+> @@ -3900,6 +3901,17 @@ static int nl80211_join_ibss(struct sk_buff *skb,
+> struct genl_info *info) return -EINVAL;
+>  	}
+> 
+> +	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
+> +		channel_type = nla_get_u32(
+> +			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
+> +		if (channel_type != NL80211_CHAN_NO_HT &&
+> +		    channel_type != NL80211_CHAN_HT20 &&
+> +		    channel_type != NL80211_CHAN_HT40PLUS &&
+> +		    channel_type != NL80211_CHAN_HT40MINUS)
+> +			return -EINVAL;
+> +	}
+> +	ibss.channel_type = channel_type;
+> +
+>  	rtnl_lock();
+> 
+>  	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
+> @@ -3933,11 +3945,11 @@ static int nl80211_join_ibss(struct sk_buff *skb,
+> struct genl_info *info) ibss.ie_len =
+> nla_len(info->attrs[NL80211_ATTR_IE]);
+>  	}
+> 
+> -	ibss.channel = ieee80211_get_channel(wiphy,
+> -		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
+> +	ibss.channel = rdev_freq_to_chan(rdev,
+> +		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
+> +		channel_type);
+>  	if (!ibss.channel ||
+> -	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+> -	    ibss.channel->flags & IEEE80211_CHAN_DISABLED) {
+> +	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS) {
+>  		err = -EINVAL;
+>  		goto out;
+>  	}
 
-It's already upstream:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=3bce6066263efb5733ee2141ac8b56684fb3b0a7
+do you think this could also be used to configure "pure G" channels? remember 
+the discussion we had about the basic rate set in IBSS? if we could use this 
+to configure the channel as "pure G" we could use a basic rate set with higher 
+rates (ERP mandatory rates: 1, 2, 5.5, 11, 6, 12, 24). i still need this 
+feature in order to configure higher-thruput G-only IBSS...
 
-> - Sedat -
->
-> [1] https://patchwork.kernel.org/patch/99439/
-> [2] https://patchwork.kernel.org/patch/99438/
->
-
---
-Thomas
+bruno
