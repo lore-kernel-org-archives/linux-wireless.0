@@ -1,54 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62396 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753288Ab0ESG5M convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4953 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752740Ab0EMJhD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 02:57:12 -0400
-Received: by fxm10 with SMTP id 10so1942860fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 23:57:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201005190847.59068.helmut.schaa@googlemail.com>
-References: <201005190847.59068.helmut.schaa@googlemail.com>
-Date: Wed, 19 May 2010 08:57:10 +0200
-Message-ID: <AANLkTikUBorBjZ03BR6m1X0vfVlLtunRQz1BD3mO0xAz@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: don't use to_pci_dev in rt2x00pci_uninitialize
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 13 May 2010 05:37:03 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 00/10] rt2x00: Further fixes and cleanups.
+Date: Thu, 13 May 2010 11:36:48 +0200
+Message-Id: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 19, 2010 at 8:47 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Don't use to_pci_dev in rt2x00pci_uninitialize to get the allocated irq
-> as it won't work for platform devices (SoC). Instead, use the irq field
-> that's already used everywhere else.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Another set of rt2x00 fixes and cleanups.
+Most of the patches are working towards a nice cleanup in which rt2x00 starts
+properly reserving room in skbs for descriptors instead of fiddling with
+pointers.
+Also one fix for rt61pci that no-one ever hit, whereby, for beacons, rt61pci
+wrote part of the tx descriptor out-of-bounds.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+These patches can also be pulled from:
+	git://git.gwingerde.nl/rt2x00-next-2.6.git
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00pci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-> index a016f7c..f71eee6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-> @@ -206,7 +206,7 @@ void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev)
->        /*
->         * Free irq line.
->         */
-> -       free_irq(to_pci_dev(rt2x00dev->dev)->irq, rt2x00dev);
-> +       free_irq(rt2x00dev->irq, rt2x00dev);
->
->        /*
->         * Free DMA
-> --
-> 1.6.4.2
->
->
+v2:
+- Handled Ivo's feedback.
+- Added a new patch to the series (as part of Ivo's feedback handling) on
+  moving declaration of rt2x00debug_dump_frame to rt2x00.h.
+- Reordered the patches to have the small preparatory patches in the beginning
+  of the series, and the real functional patches towards the end.
+
+
+Gertjan van Wingerde (10):
+  rt2x00: Consistently name skb frame descriptor skbdesc.
+  rt2x00: In debugfs frame dumping allow the TX descriptor to be part of the skb.
+  rt2x00: Dump beacons under a different identifier than TX frames.
+  rt2x00: Move rt2x00debug_dump_frame declaration to rt2x00.h.
+  rt2x00: Fix beacon descriptor writing for rt61pci.
+  rt2x00: Re-order tx descriptor writing code in drivers.
+  rt2x00: Simplify TXD handling of beacons.
+  rt2x00: Push beacon TX descriptor writing to drivers.
+  rt2x00: Reverse calling order of bus write_tx_desc and driver write_tx_desc.
+  rt2x00: Properly reserve room for descriptors in skbs.
+
+ drivers/net/wireless/rt2x00/rt2400pci.c   |   41 ++++++++------
+ drivers/net/wireless/rt2x00/rt2500pci.c   |   41 ++++++++------
+ drivers/net/wireless/rt2x00/rt2500usb.c   |   67 ++++++++++++++---------
+ drivers/net/wireless/rt2x00/rt2800lib.c   |    3 +-
+ drivers/net/wireless/rt2x00/rt2800lib.h   |    2 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c   |   58 +++++++++++++-------
+ drivers/net/wireless/rt2x00/rt2800usb.c   |   34 ++++++++++--
+ drivers/net/wireless/rt2x00/rt2x00.h      |    9 +++
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   23 +++++---
+ drivers/net/wireless/rt2x00/rt2x00debug.h |   34 ++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |    5 --
+ drivers/net/wireless/rt2x00/rt2x00dump.h  |    3 +
+ drivers/net/wireless/rt2x00/rt2x00lib.h   |   40 --------------
+ drivers/net/wireless/rt2x00/rt2x00pci.c   |   49 +++++++++++++++--
+ drivers/net/wireless/rt2x00/rt2x00pci.h   |    8 +++
+ drivers/net/wireless/rt2x00/rt2x00queue.c |   39 +-------------
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    3 +
+ drivers/net/wireless/rt2x00/rt2x00usb.c   |   19 +++----
+ drivers/net/wireless/rt2x00/rt61pci.c     |   49 ++++++++++++-----
+ drivers/net/wireless/rt2x00/rt73usb.c     |   83 +++++++++++++++++------------
+ 20 files changed, 365 insertions(+), 245 deletions(-)
+
