@@ -1,102 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:32594 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753251Ab0ENBUA (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:56199 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751875Ab0EMWIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 21:20:00 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0662619997
-	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 10:19:59 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH] compat-wireless: fix 07-change-default-rate-alg.patch
-Date: Fri, 14 May 2010 10:19:38 +0900
-Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
-References: <20100513011711.13007.45318.stgit@tt-desk> <4BEBE70E.60500@hauke-m.de>
-In-Reply-To: <4BEBE70E.60500@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201005141019.38464.br1@einfach.org>
+	Thu, 13 May 2010 18:08:18 -0400
+Subject: Re: Possible issue with mac80211 and certain access points
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Chad Koehler <chad.koehler@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTim6GiiFR0zWVqlmIJr-sk1ThwO3GAA97aJwWg3U@mail.gmail.com>
+References: <AANLkTim6GiiFR0zWVqlmIJr-sk1ThwO3GAA97aJwWg3U@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 14 May 2010 00:07:40 +0200
+Message-ID: <1273788460.375.76.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 13 May 2010 20:48:30 Hauke Mehrtens wrote:
-> Am 13.05.2010 03:17, schrieb Bruno Randolf:
-> > i need this change to make it apply again
-> > 
-> > Signed-off-by: Bruno Randolf <br1@einfach.org>
-> > ---
-> > 
-> >  patches/07-change-default-rate-alg.patch |   10 +++++-----
-> >  1 files changed, 5 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/patches/07-change-default-rate-alg.patch
-> > b/patches/07-change-default-rate-alg.patch index f0ccbce..f73a4c5 100644
-> > --- a/patches/07-change-default-rate-alg.patch
-> > +++ b/patches/07-change-default-rate-alg.patch
-> > @@ -10,9 +10,9 @@ and define CONFIG_COMPAT_MAC80211_RC_DEFAULT on
-> > config.mk.
-> > 
-> >  Through the compat autoconf we then get it also defined there
-> >  at compilation time.
-> > 
-> > ---- a/net/mac80211/rate.c
-> > -+++ b/net/mac80211/rate.c
-> > -@@ -23,7 +23,7 @@ struct rate_control_alg {
-> > +--- a/net/mac80211/rate.c	2010-05-12 16:27:02.245747971 +0900
-> > ++++ b/net/mac80211/rate.c	2010-05-12 17:00:45.855748158 +0900
-> > +@@ -23,7 +23,7 @@
-> > 
-> >   static LIST_HEAD(rate_ctrl_algs);
-> >   static DEFINE_MUTEX(rate_ctrl_mutex);
-> > 
-> > @@ -21,7 +21,7 @@ at compilation time.
-> > 
-> >   module_param(ieee80211_default_rc_algo, charp, 0644);
-> >   MODULE_PARM_DESC(ieee80211_default_rc_algo,
-> >   
-> >   		 "Default rate control algorithm for mac80211 to use");
-> > 
-> > -@@ -119,8 +119,8 @@ ieee80211_rate_control_ops_get(const cha
-> > +@@ -118,8 +118,8 @@
-> > 
-> >   		ops = 
-ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
-> >   	
-> >   	/* try built-in one if specific alg requested but not found */
-> > 
-> > @@ -29,6 +29,6 @@ at compilation time.
-> > 
-> >  -		ops = 
-ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
-> >  +	if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
-> >  +		ops =
-> >  ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT);
-> > 
-> > - 	kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
-> > 
-> >   	return ops;
-> > 
-> > + }
-> 
-> Hi Bruno,
-> 
-> For me it does not apply any more against linux-next with your patch,
-> without your patch it still applies.
-> 
-> In the linux-next tree there is this line
-> kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
-> it was introduced 2 days ago. In wireless-text this does not exist for now.
-> 
-> Could it be that you tried to generate compat-wireless out of
-> wireless-testing and not linux-next?
-> 
-> Please run "./scripts/admin-refresh.sh refresh" after changing a patch
-> to format it automatically in a common way.
+Hi Chad,
 
-yes, i used wireless-testing - sorry!
+> Recently purchased a Palm Pre and immediately found some issues with
+> connecting to the Wifi Hotspot.  Connecting to other access points
+> would work flawlessly.
+> 
+> Using the Palm Pre hotspot, I can get connected, but the connection
+> will drop after a very short period of time.  There are messages in
+> the system log whenever the connection drops:
+> 
+> No probe response from AP <address> after 500ms, disconnecting.
+> 
+> An internet search turned up several results for people with the same
+> issue, different wireless drivers and different access point types.
+> 
+> I traced this message down to mac80211/mlme.c, to the
+> ieee80211_sta_work() function, and was able to determine that for some
+> reason this particular AP was not responding to probe requests.  This
+> let me further on to the function ieee80211_mgd_probe_ap_send(), which
+> sends a direct probe request to the AP -- this probe request was being
+> sent and never responded to.
+> 
+> If I change this function to send a probe request to the broadcast
+> address, in a similar manner to what is done in
+> ieee80211_direct_probe(), then the access point responds and works
+> without issue.
+> 
+> Due to the volume of issues on the internet that I see with the same
+> underlying symptoms, I wonder if there are some small amount of access
+> points that will not respond to a direct packet probe request even
+> when associated.
+> 
+> I admittedly know very little about wireless networking internals, so
+> I am hesitant to state that this fix is necessary or appropriate, but
+> it does solve the issue for me and I am able to remain connected to
+> the Palm Pre hotspot, as well as other access points that I have
+> tried.
+> 
+> Please let me know if I can provide further information in this space.
 
-is compat-wireless meant to be used only with linux-next?
+actually I ran into the same issue two days ago and was going to post
+it. So what I am seeing with the Palm Pre is that when we actually scan
+while connected to the Palm Pre, a second later we end up disconnected.
 
-bruno
+Regards
+
+Marcel
+
+
