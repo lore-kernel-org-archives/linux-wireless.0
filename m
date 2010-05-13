@@ -1,92 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50740 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:42059 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756901Ab0EJW2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:32 -0400
+	id S932574Ab0EMVuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:50:18 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 47/47] iwlwifi: clear driver stations when going down
-Date: Mon, 10 May 2010 15:28:18 -0700
-Message-Id: <1273530498-11876-48-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 03/17] iwlwifi: separate statistics flag function for agn & 3945
+Date: Thu, 13 May 2010 14:49:45 -0700
+Message-Id: <1273787399-9280-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-During a hw restart, mac80211 will attempt to
-reconfigure all stations. Currently, that fails
-and leads to warnings because we still have the
-stations marked active. Therefore, clear all
-stations when doing down.
+Since agn and 3945 have different statistics_notif data structure, each
+should has its own statistics_flag function.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 +
- drivers/net/wireless/iwlwifi/iwl-sta.h      |   19 +++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
- 3 files changed, 21 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c |   28 ++++++++++++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c  |   27 +++++++++++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c      |   22 ------------------
+ 3 files changed, 49 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index dd26965..47563cf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2405,6 +2405,7 @@ static void __iwl_down(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
+index 6a9c64a..ef0835b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
+@@ -28,6 +28,28 @@
  
- 	iwl_clear_ucode_stations(priv);
- 	iwl_dealloc_bcast_station(priv);
-+	iwl_clear_driver_stations(priv);
+ #include "iwl-3945-debugfs.h"
  
- 	/* Unblock any waiting calls */
- 	wake_up_interruptible_all(&priv->wait_command_queue);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 6427148..c2a453a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -81,6 +81,25 @@ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
- void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id);
- void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt);
- 
-+/**
-+ * iwl_clear_driver_stations - clear knowledge of all stations from driver
-+ * @priv: iwl priv struct
-+ *
-+ * This is called during iwl_down() to make sure that in the case
-+ * we're coming there from a hardware restart mac80211 will be
-+ * able to reconfigure stations -- if we're getting there in the
-+ * normal down flow then the stations will already be cleared.
-+ */
-+static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
-+{
-+	unsigned long flags;
 +
-+	spin_lock_irqsave(&priv->sta_lock, flags);
-+	memset(priv->stations, 0, sizeof(priv->stations));
-+	priv->num_stations = 0;
-+	spin_unlock_irqrestore(&priv->sta_lock, flags);
++static int iwl3945_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
++{
++	int p = 0;
++
++	p += scnprintf(buf + p, bufsz - p, "Statistics Flag(0x%X):\n",
++		       le32_to_cpu(priv->_3945.statistics.flag));
++	if (le32_to_cpu(priv->_3945.statistics.flag) &
++			UCODE_STATISTICS_CLEAR_MSK)
++		p += scnprintf(buf + p, bufsz - p,
++			       "\tStatistics have been cleared\n");
++	p += scnprintf(buf + p, bufsz - p, "\tOperational Frequency: %s\n",
++		       (le32_to_cpu(priv->_3945.statistics.flag) &
++			UCODE_STATISTICS_FREQUENCY_MSK)
++			? "2.4 GHz" : "5.2 GHz");
++	p += scnprintf(buf + p, bufsz - p, "\tTGj Narrow Band: %s\n",
++		       (le32_to_cpu(priv->_3945.statistics.flag) &
++			UCODE_STATISTICS_NARROW_BAND_MSK)
++			? "enabled" : "disabled");
++	return p;
 +}
 +
- static inline int iwl_sta_id(struct ieee80211_sta *sta)
- {
- 	if (WARN_ON(!sta))
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 4916f23..4c78783 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2585,6 +2585,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
- 	/* Station information will now be cleared in device */
- 	iwl_clear_ucode_stations(priv);
- 	iwl_dealloc_bcast_station(priv);
-+	iwl_clear_driver_stations(priv);
+ ssize_t iwl3945_ucode_rx_stats_read(struct file *file,
+ 				    char __user *user_buf,
+ 				    size_t count, loff_t *ppos)
+@@ -70,7 +92,7 @@ ssize_t iwl3945_ucode_rx_stats_read(struct file *file,
+ 	max_cck = &priv->_3945.max_delta.rx.cck;
+ 	max_general = &priv->_3945.max_delta.rx.general;
  
- 	/* Unblock any waiting calls */
- 	wake_up_interruptible_all(&priv->wait_command_queue);
+-	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += iwl3945_statistics_flag(priv, buf, bufsz);
+ 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
+ 			 "acumulative       delta         max\n",
+ 			 "Statistics_Rx - OFDM:");
+@@ -331,7 +353,7 @@ ssize_t iwl3945_ucode_tx_stats_read(struct file *file,
+ 	accum_tx = &priv->_3945.accum_statistics.tx;
+ 	delta_tx = &priv->_3945.delta_statistics.tx;
+ 	max_tx = &priv->_3945.max_delta.tx;
+-	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += iwl3945_statistics_flag(priv, buf, bufsz);
+ 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
+ 			 "acumulative       delta         max\n",
+ 			 "Statistics_Tx:");
+@@ -438,7 +460,7 @@ ssize_t iwl3945_ucode_general_stats_read(struct file *file,
+ 	accum_div = &priv->_3945.accum_statistics.general.div;
+ 	delta_div = &priv->_3945.delta_statistics.general.div;
+ 	max_div = &priv->_3945.max_delta.general.div;
+-	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += iwl3945_statistics_flag(priv, buf, bufsz);
+ 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
+ 			 "acumulative       delta         max\n",
+ 			 "Statistics_General:");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+index 90be033..75d6bfc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+@@ -28,6 +28,27 @@
+ 
+ #include "iwl-agn-debugfs.h"
+ 
++static int iwl_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
++{
++	int p = 0;
++
++	p += scnprintf(buf + p, bufsz - p, "Statistics Flag(0x%X):\n",
++		       le32_to_cpu(priv->_agn.statistics.flag));
++	if (le32_to_cpu(priv->_agn.statistics.flag) &
++			UCODE_STATISTICS_CLEAR_MSK)
++		p += scnprintf(buf + p, bufsz - p,
++			       "\tStatistics have been cleared\n");
++	p += scnprintf(buf + p, bufsz - p, "\tOperational Frequency: %s\n",
++		       (le32_to_cpu(priv->_agn.statistics.flag) &
++			UCODE_STATISTICS_FREQUENCY_MSK)
++			? "2.4 GHz" : "5.2 GHz");
++	p += scnprintf(buf + p, bufsz - p, "\tTGj Narrow Band: %s\n",
++		       (le32_to_cpu(priv->_agn.statistics.flag) &
++			UCODE_STATISTICS_NARROW_BAND_MSK)
++			? "enabled" : "disabled");
++	return p;
++}
++
+ ssize_t iwl_ucode_rx_stats_read(struct file *file, char __user *user_buf,
+ 				size_t count, loff_t *ppos)
+   {
+@@ -75,7 +96,7 @@ ssize_t iwl_ucode_rx_stats_read(struct file *file, char __user *user_buf,
+ 	max_general = &priv->_agn.max_delta.rx.general;
+ 	max_ht = &priv->_agn.max_delta.rx.ofdm_ht;
+ 
+-	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += iwl_statistics_flag(priv, buf, bufsz);
+ 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
+ 			 "acumulative       delta         max\n",
+ 			 "Statistics_Rx - OFDM:");
+@@ -543,7 +564,7 @@ ssize_t iwl_ucode_tx_stats_read(struct file *file,
+ 	accum_tx = &priv->_agn.accum_statistics.tx;
+ 	delta_tx = &priv->_agn.delta_statistics.tx;
+ 	max_tx = &priv->_agn.max_delta.tx;
+-	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += iwl_statistics_flag(priv, buf, bufsz);
+ 	pos += scnprintf(buf + pos, bufsz - pos,  "%-32s     current"
+ 			 "acumulative       delta         max\n",
+ 			 "Statistics_Tx:");
+@@ -768,7 +789,7 @@ ssize_t iwl_ucode_general_stats_read(struct file *file, char __user *user_buf,
+ 	accum_div = &priv->_agn.accum_statistics.general.div;
+ 	delta_div = &priv->_agn.delta_statistics.general.div;
+ 	max_div = &priv->_agn.max_delta.general.div;
+-	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
++	pos += iwl_statistics_flag(priv, buf, bufsz);
+ 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
+ 			 "acumulative       delta         max\n",
+ 			 "Statistics_General:");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index c248373..9793050 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -100,28 +100,6 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
+ 	.open = iwl_dbgfs_open_file_generic,                            \
+ };
+ 
+-int iwl_dbgfs_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
+-{
+-	int p = 0;
+-
+-	p += scnprintf(buf + p, bufsz - p, "Statistics Flag(0x%X):\n",
+-		       le32_to_cpu(priv->_agn.statistics.flag));
+-	if (le32_to_cpu(priv->_agn.statistics.flag) &
+-			UCODE_STATISTICS_CLEAR_MSK)
+-		p += scnprintf(buf + p, bufsz - p,
+-			       "\tStatistics have been cleared\n");
+-	p += scnprintf(buf + p, bufsz - p, "\tOperational Frequency: %s\n",
+-		       (le32_to_cpu(priv->_agn.statistics.flag) &
+-			UCODE_STATISTICS_FREQUENCY_MSK)
+-			? "2.4 GHz" : "5.2 GHz");
+-	p += scnprintf(buf + p, bufsz - p, "\tTGj Narrow Band: %s\n",
+-		       (le32_to_cpu(priv->_agn.statistics.flag) &
+-			UCODE_STATISTICS_NARROW_BAND_MSK)
+-			? "enabled" : "disabled");
+-	return p;
+-}
+-EXPORT_SYMBOL(iwl_dbgfs_statistics_flag);
+-
+ static ssize_t iwl_dbgfs_tx_statistics_read(struct file *file,
+ 						char __user *user_buf,
+ 						size_t count, loff_t *ppos) {
 -- 
 1.6.3.3
 
