@@ -1,70 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:61031 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674Ab0EOB0S convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f204.google.com ([209.85.222.204]:61680 "EHLO
+	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755406Ab0EMOlz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 21:26:18 -0400
-References: <201005141538.43416.br1@einfach.org> <4BED6F19.3040608@gmail.com> <20100514165325.GA28198@tux> <4BED8765.8040307@gmail.com> <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com> <67773379-350A-42D4-BEB5-DAC7D8277615@gmail.com> <20100514201339.GB28198@tux> <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com> <20100514205253.GC28198@tux> <B796B1C7-D7CC-457A-9C86-7C70EA9451CF@gmail.com> <20100515005201.GH28198@tux>
-Message-Id: <99B6B8BB-F155-4B15-95AF-C8DF3F5B4382@gmail.com>
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <20100515005201.GH28198@tux>
-Content-Type: text/plain;
-	charset=utf-8;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7D11)
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-Date: Fri, 14 May 2010 18:26:33 -0700
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Miles Lane <miles.lane@gmail.com>
+	Thu, 13 May 2010 10:41:55 -0400
+Received: by pzk42 with SMTP id 42so741997pzk.4
+        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 07:41:54 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 13 May 2010 09:41:54 -0500
+Message-ID: <AANLkTim6GiiFR0zWVqlmIJr-sk1ThwO3GAA97aJwWg3U@mail.gmail.com>
+Subject: Possible issue with mac80211 and certain access points
+From: Chad Koehler <chad.koehler@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Recently purchased a Palm Pre and immediately found some issues with
+connecting to the Wifi Hotspot.  Connecting to other access points
+would work flawlessly.
+
+Using the Palm Pre hotspot, I can get connected, but the connection
+will drop after a very short period of time.  There are messages in
+the system log whenever the connection drops:
+
+No probe response from AP <address> after 500ms, disconnecting.
+
+An internet search turned up several results for people with the same
+issue, different wireless drivers and different access point types.
+
+I traced this message down to mac80211/mlme.c, to the
+ieee80211_sta_work() function, and was able to determine that for some
+reason this particular AP was not responding to probe requests.  This
+let me further on to the function ieee80211_mgd_probe_ap_send(), which
+sends a direct probe request to the AP -- this probe request was being
+sent and never responded to.
+
+If I change this function to send a probe request to the broadcast
+address, in a similar manner to what is done in
+ieee80211_direct_probe(), then the access point responds and works
+without issue.
+
+Due to the volume of issues on the internet that I see with the same
+underlying symptoms, I wonder if there are some small amount of access
+points that will not respond to a direct packet probe request even
+when associated.
+
+I admittedly know very little about wireless networking internals, so
+I am hesitant to state that this fix is necessary or appropriate, but
+it does solve the issue for me and I am able to remain connected to
+the Palm Pre hotspot, as well as other access points that I have
+tried.
+
+Please let me know if I can provide further information in this space.
 
 
-Justin P. Mattock
-
-
-
-On May 14, 2010, at 5:52 PM, "Luis R. Rodriguez"  
-<lrodriguez@atheros.com> wrote:
-
-> On Fri, May 14, 2010 at 03:32:48PM -0700, Justin P. Mattock wrote:
->> ATH9K: cachelsz 256 rxbufsize 3904
->
-> OK I see nothing odd with these values, and I do not see how
-> these values can make ath_rxbuf_alloc() barf. I'd like to
-> reproduce this myself at least once, I left iperf running over
-> night with no rants from SLAB. I should note this should be
-> reproducible with RX only if it is ath_rxbuf_alloc() to blame
-> but without a concrete reproducible instructions it is hard
-> to guess what to do and if this can only come up during RX.
->
-> Can you describe a little more when you have seen this? What
-> were you doing exactly, for how long? When was the last time
-> you saw this, what were you doing then?
->
->  Luis
-
-This is hard to reproduce(reason for looking a kmemchek).
-
-As for what I remember, walked into the las Vegas convention cntr 
-(Hilton),
-Found the Internet hub, scanned for networks, wicd said it was  
-connected, opened firefox to see the prices, ended up seeing a blank  
-page(at this point didn't look at dmesg(could have already happened)),  
-then switched to another network(did this a few times),
-Eventually opened firefox(saw the prices, said fuc*k this), then  
-started to read up on i8042.c(cause Linus was pull requesting and I  
-wanted to find out what was going on in that area), then
-Checked dmesg, and voilà there the bug is.
-
-After this rebooted, was hoping this was reproducable for a bisect,  
-but realized it's not the reproducable..
-
-
-Justin P. Mattock
+Thank You,
+Chad
