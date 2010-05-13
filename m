@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:37873 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754271Ab0ENIKj (ORCPT
+Received: from aurora.create-net.org ([193.206.22.116]:38216 "EHLO
+	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932157Ab0EMQEn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 04:10:39 -0400
-Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0691684637
-	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 17:10:37 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 1/3] cfg80211: Add nl80211 antenna configuration
-Date: Fri, 14 May 2010 17:10:16 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	holgerschurig@gmail.com
-References: <20100512082231.26565.16730.stgit@tt-desk> <20100512082325.26565.46809.stgit@tt-desk> <1273652994.3979.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1273652994.3979.0.camel@jlt3.sipsolutions.net>
+	Thu, 13 May 2010 12:04:43 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by aurora.create-net.org (Postfix) with ESMTP id 09D4238478
+	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 18:04:42 +0200 (CEST)
+Received: from aurora.create-net.org ([127.0.0.1])
+	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id t-ZNodV3emjk for <linux-wireless@vger.kernel.org>;
+	Thu, 13 May 2010 18:04:40 +0200 (CEST)
+Received: from [192.168.9.133] (unknown [192.168.9.133])
+	by aurora.create-net.org (Postfix) with ESMTPSA id C78A838476
+	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 18:04:40 +0200 (CEST)
+Message-ID: <4BEC2318.5050701@create-net.org>
+Date: Thu, 13 May 2010 18:04:40 +0200
+From: Roberto Riggio <roberto.riggio@create-net.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201005141710.16168.br1@einfach.org>
+To: linux-wireless@vger.kernel.org
+Subject: Strange ACK Behaviour with ath9k
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 12 May 2010 17:29:54 Johannes Berg wrote:
-> On Wed, 2010-05-12 at 17:23 +0900, Bruno Randolf wrote:
-> > +	CMD(get_antenna, GET_ANTENNA);
-> 
-> I'm wondering ... does get_antenna really make sense as a separate
-> command? Seems like we could just as well report it as part of the wiphy
-> information dump?
 
-i don't insist on a separate command, but i don't know where else to put it. 
+Hi,
 
-you mean "iw phy0 info"? that shows more a list of possible configuration 
-options than the actual current configuration: like the list of channels, 
-modes, bitrates, supported commands, etc... with the exception of coverage 
-class... i feel like it doesn't really fit in there. maybe iw needs some 
-command to show the device configuration (channel, antenna, essid, bssid, etc 
-...)???
+I'm having a very strange behaviour between two sr71a (ath9k) cards
+operating in monitor mode. I'm using the following patch to specify
+the transmission rate frame by frame:
 
-bruno
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/47441
+
+
+However if I try to send some traffic between the two nodes with both
+interfaces operating in monitor mode I can see from a third machine
+using wireshark that albeit the frame is sent and the corresponding
+ack generated, the originator seems to ignore the ACK and keepts
+retransmitting the frame. This is happening on both ends of the
+communication (i'm ping one node from the other).
+
+As a matter of fact i thought that ACK are handled directly by the
+firmware. Any hints?
+
+R.
