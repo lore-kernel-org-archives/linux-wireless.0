@@ -1,41 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:49806 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543Ab0ENQEz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 12:04:55 -0400
-Received: by pxi5 with SMTP id 5so1408479pxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 09:04:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100514074833.10333.81592.stgit@tt-desk>
-References: <20100514074833.10333.81592.stgit@tt-desk>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 14 May 2010 09:04:34 -0700
-Message-ID: <AANLkTik2XPwhtUkDo7gfJTVI401HG6qU_mYvGmKfEbG5@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: consistently use rx_bufsize for RX DMA
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	bob@bobcopeland.com, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:60714 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932702Ab0EMVuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:50:22 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/17] iwlwifi: code cleanup for _agn devices
+Date: Thu, 13 May 2010 14:49:54 -0700
+Message-Id: <1273787399-9280-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 14, 2010 at 12:50 AM, Bruno Randolf <br1@einfach.org> wrote:
-> We should use the same buffer size we set up for DMA also in the hardware
-> descriptor. Previously we used common->rx_bufsize for setting up the DMA
-> mapping, but skb_tailroom(skb) for the size we tell to the hardware in the
-> descriptor itself. The problem is that skb_tailroom(skb) can give us a larger
-> value than the size we set up for DMA before: In my case rx_bufsize is 2528,
-> and we allocated an skb of 2559 bytes length, including padding for cache
-> alignment, but sbk_tailroom() was 2592. Just consistently use rx_bufsize for
-> all RX DMA memory sizes.
->
-> Also check the return value of setup function.
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Cc: stable?
+Move configuration structure for _agn devices from iwl-dev.h to
+iwl-agn.h. Those data structures are for _agn devices and should be keep
+for _agn devices only.
 
-Is that other bug reproducible, can the user test this to cure it?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.h |   26 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h |   26 --------------------------
+ 2 files changed, 26 insertions(+), 26 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 12c198f..2ebbe81 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -65,6 +65,32 @@
+ 
+ #include "iwl-dev.h"
+ 
++/* configuration for the _agn devices */
++extern struct iwl_cfg iwl4965_agn_cfg;
++extern struct iwl_cfg iwl5300_agn_cfg;
++extern struct iwl_cfg iwl5100_agn_cfg;
++extern struct iwl_cfg iwl5350_agn_cfg;
++extern struct iwl_cfg iwl5100_bgn_cfg;
++extern struct iwl_cfg iwl5100_abg_cfg;
++extern struct iwl_cfg iwl5150_agn_cfg;
++extern struct iwl_cfg iwl5150_abg_cfg;
++extern struct iwl_cfg iwl6000g2a_2agn_cfg;
++extern struct iwl_cfg iwl6000g2a_2abg_cfg;
++extern struct iwl_cfg iwl6000g2a_2bg_cfg;
++extern struct iwl_cfg iwl6000g2b_bgn_cfg;
++extern struct iwl_cfg iwl6000g2b_bg_cfg;
++extern struct iwl_cfg iwl6000g2b_2agn_cfg;
++extern struct iwl_cfg iwl6000g2b_2abg_cfg;
++extern struct iwl_cfg iwl6000g2b_2bg_cfg;
++extern struct iwl_cfg iwl6000i_2agn_cfg;
++extern struct iwl_cfg iwl6000i_2abg_cfg;
++extern struct iwl_cfg iwl6000i_2bg_cfg;
++extern struct iwl_cfg iwl6000_3agn_cfg;
++extern struct iwl_cfg iwl6050_2agn_cfg;
++extern struct iwl_cfg iwl6050_2abg_cfg;
++extern struct iwl_cfg iwl1000_bgn_cfg;
++extern struct iwl_cfg iwl1000_bg_cfg;
++
+ extern struct iwl_mod_params iwlagn_mod_params;
+ extern struct iwl_hcmd_ops iwlagn_hcmd;
+ extern struct iwl_hcmd_utils_ops iwlagn_hcmd_utils;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 04296fd..8b2d06c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -48,32 +48,6 @@
+ #include "iwl-power.h"
+ #include "iwl-agn-rs.h"
+ 
+-/* configuration for the iwl4965 */
+-extern struct iwl_cfg iwl4965_agn_cfg;
+-extern struct iwl_cfg iwl5300_agn_cfg;
+-extern struct iwl_cfg iwl5100_agn_cfg;
+-extern struct iwl_cfg iwl5350_agn_cfg;
+-extern struct iwl_cfg iwl5100_bgn_cfg;
+-extern struct iwl_cfg iwl5100_abg_cfg;
+-extern struct iwl_cfg iwl5150_agn_cfg;
+-extern struct iwl_cfg iwl5150_abg_cfg;
+-extern struct iwl_cfg iwl6000g2a_2agn_cfg;
+-extern struct iwl_cfg iwl6000g2a_2abg_cfg;
+-extern struct iwl_cfg iwl6000g2a_2bg_cfg;
+-extern struct iwl_cfg iwl6000g2b_bgn_cfg;
+-extern struct iwl_cfg iwl6000g2b_bg_cfg;
+-extern struct iwl_cfg iwl6000g2b_2agn_cfg;
+-extern struct iwl_cfg iwl6000g2b_2abg_cfg;
+-extern struct iwl_cfg iwl6000g2b_2bg_cfg;
+-extern struct iwl_cfg iwl6000i_2agn_cfg;
+-extern struct iwl_cfg iwl6000i_2abg_cfg;
+-extern struct iwl_cfg iwl6000i_2bg_cfg;
+-extern struct iwl_cfg iwl6000_3agn_cfg;
+-extern struct iwl_cfg iwl6050_2agn_cfg;
+-extern struct iwl_cfg iwl6050_2abg_cfg;
+-extern struct iwl_cfg iwl1000_bgn_cfg;
+-extern struct iwl_cfg iwl1000_bg_cfg;
+-
+ struct iwl_tx_queue;
+ 
+ /* CT-KILL constants */
+-- 
+1.6.3.3
+
