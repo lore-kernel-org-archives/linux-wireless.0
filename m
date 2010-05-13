@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:24424 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752093Ab0E0MFM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 08:05:12 -0400
-Subject: Re: [RFC PATCHv6] mac80211: Add support for hardware ARP query
- filtering
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274960825.3669.37.camel@jlt3.sipsolutions.net>
-References: <1274960533-395-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1274960825.3669.37.camel@jlt3.sipsolutions.net>
+Received: from mga09.intel.com ([134.134.136.24]:18483 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758503Ab0EMWPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 18:15:33 -0400
+Subject: Re: [PATCH 0/2] iwlwifi fixes for 2.6.34
+From: reinette chatre <reinette.chatre@intel.com>
+To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <AANLkTilm7VDQkXBMWUeRtH634oq9i9AdUIsv6V3woRH_@mail.gmail.com>
+References: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
+	 <AANLkTilm7VDQkXBMWUeRtH634oq9i9AdUIsv6V3woRH_@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 15:07:01 +0300
-Message-ID: <1274962021.5277.3575.camel@wimaxnb.nmp.nokia.com>
+Date: Thu, 13 May 2010 15:15:32 -0700
+Message-ID: <1273788932.7796.376.camel@rchatre-DESK>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 13:47 +0200, ext Johannes Berg wrote:
-> On Thu, 2010-05-27 at 14:42 +0300, Juuso Oikarinen wrote:
-> > Some hardware allow extended filtering of ARP frames not intended for
-> > the host. To perform such filtering, the hardware needs to know the current
-> > IP address(es) of the host, bound to its interface.
-> > 
-> > Add support for ARP filtering to mac80211 by adding a new op to the driver
-> > interface, allowing to configure the current IP addresses. This op is called
-> > upon association with the currently configured address(es), and when
-> > associated whenever the IP address(es) change.
-> > 
-> > This patch adds configuration of IPv4 addresses only, as IPv6 addresses don't
-> > need ARP filtering.
-> > 
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> Yay.
-> 
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-> 
+On Thu, 2010-05-13 at 14:54 -0700, Sedat Dilek wrote:
+> Whats with "iwl3945: fix scan races"?
 
-YAY! :D
+hmmm ... cryptic indeed ... I assume you are asking "Why is "iwl3945:
+fix scan races" not part of a submission to 2.6.34?
 
-> 
-> Hmm. Actually, something I just thought of during our IRC discussion,
-> should we turn it off when we disassociate or something? Do we even
-> care? I guess not since it'll be reconfigured after the next
-> association?
-> 
+If that is the case then yes, indeed , we did not submit "iwl3945: fix
+scan races" to 2.6.34 since the scan races being fixed is between normal
+(mac80211 initiated) and internal (as part of rf reset) scans. Like I
+mention in the cover letter of the submission that includes that patch
+(http://thread.gmane.org/gmane.linux.kernel.wireless.general/50651 ) we
+introduce RF reset usage to 3945 through the new "plcp error checking"
+patch and thus need the scan races fix for that. Before that patch
+nothing in iwl3945 was using RF reset and thus no internal scanning that
+could trigger a race.
 
-This is how I was thinking. After disassociation we shouldn't be seeing
-data frames anyway, and on next assoc, we set the addresses again.
+Reinette
 
--Juuso
 
-> johannes
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
