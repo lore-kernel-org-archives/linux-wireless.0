@@ -1,38 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:36472 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751933Ab0EISVQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 May 2010 14:21:16 -0400
-Received: from [192.168.1.10] (builder.redfish-solutions.com [192.168.1.10])
-	(authenticated bits=0)
-	by mail.redfish-solutions.com (8.14.4/8.14.4) with ESMTP id o49IBvJl029160
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 9 May 2010 12:11:58 -0600
-Message-ID: <4BE6FAED.4030407@redfish-solutions.com>
-Date: Sun, 09 May 2010 12:11:57 -0600
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Jumbo frame messages?
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:8744 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932457Ab0EMVtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:49:50 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/2] iwlwifi: fix internal scan race
+Date: Thu, 13 May 2010 14:49:44 -0700
+Message-Id: <1273787385-9248-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
+References: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm running linux 2.6.27.42 with compat-wireless 2010-04-26 and using an
-AR-5413 card (ath5k).
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-I'm also running hostapd 0.7.1 with WPA2 authentication.
+It is possible for internal scan to race against itself if the device is
+not returning the scan results from first requests. What happens in this
+case is the cleanup done during the abort of the first internal scan also
+cleans up part of the new scan, causing it to access memory it shouldn't.
 
-I'm seeing a lot of:
+Here are details:
+* First internal scan is triggered and scan command sent to device.
+* After seven seconds there is no scan results so the watchdog timer
+  triggers a scan abort.
+* The scan abort succeeds and a SCAN_COMPLETE_NOTIFICATION is received for
+ failed scan.
+* During processing of SCAN_COMPLETE_NOTIFICATION we clear STATUS_SCANNING
+  and queue the "scan_completed" work.
+** At this time, since the problem that caused the internal scan in first
+   place is still present, a new internal scan is triggered.
+The behavior at this point is a bit different between 2.6.34 and 2.6.35
+since 2.6.35 has a lot of this synchronized. The rest of the race
+description will thus be generalized.
+** As part of preparing for the scan "is_internal_short_scan" is set to
+true.
+* At this point the completion work for fist scan is run. As part of this
+  there is some locking missing around the "is_internal_short_scan"
+  variable and it is set to "false".
+** Now the second scan runs and it considers itself a real (not internal0
+   scan and thus causes problems with wrong memory being accessed.
 
-May  9 12:07:21 pbx user.warn kernel: ath5k phy0: unsupported jumbo
+The fix is twofold.
+* Since "is_internal_short_scan" should be protected by mutex, fix this in
+  scan completion work so that changes to it can be serialized.
+* Do not queue a new internal scan if one is in progress.
 
-I thought this issue was resolved a while ago.
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=15824
 
-Anyone have a root cause on this, or a workaround?
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   21 ++++++++++++++++++---
+ 1 files changed, 18 insertions(+), 3 deletions(-)
 
-Thanks,
-
--Philip
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 2367286..a2c4855 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -560,6 +560,11 @@ static void iwl_bg_start_internal_scan(struct work_struct *work)
+ 
+ 	mutex_lock(&priv->mutex);
+ 
++	if (priv->is_internal_short_scan == true) {
++		IWL_DEBUG_SCAN(priv, "Internal scan already in progress\n");
++		goto unlock;
++	}
++
+ 	if (!iwl_is_ready_rf(priv)) {
+ 		IWL_DEBUG_SCAN(priv, "not ready or exit pending\n");
+ 		goto unlock;
+@@ -957,17 +962,27 @@ void iwl_bg_scan_completed(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv =
+ 	    container_of(work, struct iwl_priv, scan_completed);
++	bool internal = false;
+ 
+ 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+ 
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+-	if (!priv->is_internal_short_scan)
+-		ieee80211_scan_completed(priv->hw, false);
+-	else {
++	mutex_lock(&priv->mutex);
++	if (priv->is_internal_short_scan) {
+ 		priv->is_internal_short_scan = false;
+ 		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
++		internal = true;
+ 	}
++	mutex_unlock(&priv->mutex);
++
++	/*
++	 * Do not hold mutex here since this will cause mac80211 to call
++	 * into driver again into functions that will attempt to take
++	 * mutex.
++	 */
++	if (!internal)
++		ieee80211_scan_completed(priv->hw, false);
+ 
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+-- 
+1.6.3.3
 
