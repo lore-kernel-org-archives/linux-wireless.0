@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:27241 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751294Ab0EMArS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 20:47:18 -0400
-Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-033791634
-	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 09:47:16 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Benoit Papillault <benoit.papillault@free.fr>
-Subject: Re: [PATCH v2] mac80211: Add HT IE to IBSS beacons and probe responses.
-Date: Thu, 13 May 2010 09:47:07 +0900
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1273098986-19330-1-git-send-email-benoit.papillault@free.fr> <1273574892.3669.54.camel@jlt3.sipsolutions.net> <4BEB175F.7000001@free.fr>
-In-Reply-To: <4BEB175F.7000001@free.fr>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201005130947.07577.br1@einfach.org>
+Received: from mga02.intel.com ([134.134.136.20]:42059 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932554Ab0EMVuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:50:17 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 00/17] iwlwifi updates for 2.6.35
+Date: Thu, 13 May 2010 14:49:42 -0700
+Message-Id: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 13 May 2010 06:02:23 Benoit Papillault wrote:
-> > Also I just noticed that there's a TODO item in rx.c when we receive an
-> > HT frame from a peer we don't know about yet. Not sure what to do there,
-> > but you'll need to look at it.
-> 
-> I did some patch in this area in my tree. Basically, the peer STA is
-> created only on beacon/probe response since only those frames contains
-> peer capabilities. Any frames received before is simply ignored.
+This series includes a lot of driver cleanup. Driver is made more robust to
+be able to deal with firmware that miss some information. Duplicate code
+scattered in driver is moved to a function. Structures and code specific to
+some devices are moved to be only accessible to these devices. We include
+better station debug information and make it possible to compile driver
+with debugfs support without needing debug support.
 
-i think the same applies to non-HT. when we receive a frame from a STA we 
-haven't seen a beacon from yet, we just mark the rate at which we received the 
-frame and can use that for a reply. later, when we receive a beacon, the rate-
-set is updated. i guess the same can be done for HT and i'd argue that it 
-should be done like this in order to be able to communicate even though we 
-have not received a beacon from that particular STA yet - there are some 
-reasons why the beacon might not have reached us: 
+We also include some fixes which include the usage of the correct mac80211
+variables and fixing of station locking.
 
- * the STA might have deferred beacon sending for a few intervals as part of 
-the normal beacon backoff
+We continue the recognition and enabling of some new iwlwifi devices.
 
- * the beacon might have been lost due to interference
+These patches are also available from wireless-next-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
- * or the other STA might be a buggy implementation which doesn't send IBSS 
-beacons for a while, like some madwifi versions.
+Johannes Berg (9):
+  iwlwifi: introduce iwl_sta_id_or_broadcast
+  iwlwifi: don't crash on firmware file missing info
+  iwl3945: remove sequence number assignment
+  iwlwifi: move iwl_free_tfds_in_queue to iwlagn
+  iwlwifi: improve station debugfs
+  iwlwifi: remove IWL_MULTICAST_ID
+  iwlagn: use firmware event/error log information
+  iwlwifi: split debug and debugfs options
+  iwlwifi: use proper short slot/preamble settings
 
-in any case the ability to communicate is more important than a complete rate-
-set...
+Reinette Chatre (1):
+  iwlwifi: fix and add missing sta_lock usage
 
-bruno
+Shanyu Zhao (2):
+  iwlwifi: enable remaining 6000 Gen2 devices
+  iwlwifi: add new PCI IDs for 6000g2 devices
+
+Wey-Yi Guy (5):
+  iwlwifi: move _agn statistics related structure
+  iwlwifi: separate statistics flag function for agn & 3945
+  iwlwifi: code cleanup for _agn devices
+  iwlwifi: modify out-dated comments
+  iwlwifi: move ucode related function to iwl-agn-ucode.c
+
+ drivers/net/wireless/iwlwifi/Kconfig            |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c |   28 ++-
+ drivers/net/wireless/iwlwifi/iwl-3945.c         |   15 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c         |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c         |  286 +++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c  |   91 +++++---
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c      |   23 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c       |   46 +++-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c    |  123 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c          |  196 ++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-agn.h          |   34 +++
+ drivers/net/wireless/iwlwifi/iwl-commands.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-core.c         |  131 +----------
+ drivers/net/wireless/iwlwifi/iwl-core.h         |    3 -
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c      |   81 ++-----
+ drivers/net/wireless/iwlwifi/iwl-dev.h          |   58 ++---
+ drivers/net/wireless/iwlwifi/iwl-helpers.h      |    5 +
+ drivers/net/wireless/iwlwifi/iwl-rx.c           |   63 +++---
+ drivers/net/wireless/iwlwifi/iwl-sta.c          |   72 +++---
+ drivers/net/wireless/iwlwifi/iwl-sta.h          |   29 +++
+ drivers/net/wireless/iwlwifi/iwl-tx.c           |   15 --
+ drivers/net/wireless/iwlwifi/iwl3945-base.c     |   53 +----
+ 24 files changed, 916 insertions(+), 458 deletions(-)
+
