@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:63116 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757352Ab0ENHmt (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:45271 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756404Ab0EMBUq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 03:42:49 -0400
-Subject: Re: [PATCH 0/3] wl1271: patches for wk19
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1273822457-9194-1-git-send-email-luciano.coelho@nokia.com>
-References: <1273822457-9194-1-git-send-email-luciano.coelho@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 14 May 2010 10:42:51 +0300
-Message-ID: <1273822971.6318.55.camel@powerslave>
-Mime-Version: 1.0
+	Wed, 12 May 2010 21:20:46 -0400
+Received: by pvg12 with SMTP id 12so67632pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:20:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100513011711.13007.45318.stgit@tt-desk>
+References: <20100513011711.13007.45318.stgit@tt-desk>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 12 May 2010 18:20:25 -0700
+Message-ID: <AANLkTikL5FQ8SGES7v7ftxplTz3wloQ5mrbOx97Luw--@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: fix 07-change-default-rate-alg.patch
+To: Bruno Randolf <br1@einfach.org>
+Cc: hauke@hauke-m.de, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-05-14 at 09:34 +0200, Coelho Luciano (Nokia-D/Helsinki)
-wrote:
-> Hi John,
-> 
-> Here's our weekly patchset for the wl1271 driver.
+On Wed, May 12, 2010 at 6:17 PM, Bruno Randolf <br1@einfach.org> wrote:
+> i need this change to make it apply again
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
 
-Oops! Please ignore this patchset as one internal bugzilla tag slipped
-out.  I'll send v2 with the tag removed.
+Applied and pushed out, thanks!
 
-
--- 
-Cheers,
-Luca.
-
+  Luis
