@@ -1,89 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932370Ab0EYV6z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 17:58:55 -0400
-Received: by fxm5 with SMTP id 5so3765904fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 14:58:53 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
+Received: from nbd.name ([88.198.39.176]:55225 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759239Ab0EMShc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 14:37:32 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.35] ar9170usb: fix read from freed driver context
-Date: Tue, 25 May 2010 23:58:47 +0200
-Cc: linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201005252358.48435.chunkeey@googlemail.com>
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 2/2] ath9k: remove VEOL support for ad-hoc
+Date: Thu, 13 May 2010 20:37:25 +0200
+Message-Id: <1273775845-10056-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1273775845-10056-1-git-send-email-nbd@openwrt.org>
+References: <1273775845-10056-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit "ar9170: wait for asynchronous firmware loading"
-introduced a bug, which is triggered by fatal errors
-while the driver is initializing the device.
+With VEOL, Beacon transmission in ad-hoc does not currently work.
+I believe for larger ad-hoc networks, VEOL is too unreliable, as
+it can get beacon transmissions stuck during synchronization.
+Use SWBA based beacon trasmission similar to AP mode instead.
 
-BUG: unable to handle kernel paging request at 6b6b6bf7
-IP: [<c117b567>] kobject_put+0x7/0x70
-*pde = 00000000 
-Oops: 0000 [#1] PREEMPT 
-last sysfs file: /sys/devices/platform/hdaps/position
-Modules linked in: ar9170usb [...]
-
-Pid: 6246, comm: firmware/ar9170 Not tainted 2.6.34-wl #54
-EIP: 0060:[<c117b567>] EFLAGS: 00010206 CPU: 0
-EIP is at kobject_put+0x7/0x70
-EAX: 6b6b6bd7 EBX: f4d3d0e0 ECX: f5ba9124 EDX: f6af2a7c
-ESI: 00000000 EDI: f4d3d0e0 EBP: 00000000 ESP: f5e98f9c
- DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-Process firmware/ar9170 (pid: 6246)
-Stack:
- c12532ed 00000246 f5bfaa70 f8487353 f4d3d0e0
-Call Trace:
- [<c12532ed>] ? device_release_driver+0x1d/0x30
- [<f8487353>] ? ar9170_usb_firmware_failed+0x43/0x70 [ar9170usb]
- [<c125983c>] ? request_firmware_work_func+0x2c/0x70
- [<c1259810>] ? request_firmware_work_func+0x0/0x70
- [<c10413f4>] ? kthread+0x74/0x80
- [<c1041380>] ? kthread+0x0/0x80
- [<c1003136>] ? kernel_thread_helper+0x6/0x10
-Code: 40 d3 f2 ff 85 c0 89 c3 74 0a ba 44 86 4c c1 e8 [...]
-EIP: [<c117b567>] kobject_put+0x7/0x70 SS:ESP 0068:f5e98f9c
-CR2: 000000006b6b6bf7
----[ end trace e81abb992434b410 ]---
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-index 82ab532..a93dc18 100644
---- a/drivers/net/wireless/ath/ar9170/usb.c
-+++ b/drivers/net/wireless/ath/ar9170/usb.c
-@@ -739,17 +739,27 @@ err_out:
- static void ar9170_usb_firmware_failed(struct ar9170_usb *aru)
- {
- 	struct device *parent = aru->udev->dev.parent;
-+	struct usb_device *udev;
-+
+ drivers/net/wireless/ath/ath9k/beacon.c |   63 +++++--------------------------
+ 1 files changed, 10 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 77face7..f43d85a 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -76,22 +76,13 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 	ds = bf->bf_desc;
+ 	flags = ATH9K_TXDESC_NOACK;
+ 
+-	if (((sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
+-	     (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) &&
+-	    (ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)) {
+-		ds->ds_link = bf->bf_daddr; /* self-linked */
+-		flags |= ATH9K_TXDESC_VEOL;
+-		/* Let hardware handle antenna switching. */
+-		antenna = 0;
+-	} else {
+-		ds->ds_link = 0;
+-		/*
+-		 * Switch antenna every beacon.
+-		 * Should only switch every beacon period, not for every SWBA
+-		 * XXX assumes two antennae
+-		 */
+-		antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs) & 1 ? 2 : 1);
+-	}
++	ds->ds_link = 0;
 +	/*
-+	 * Store a copy of the usb_device pointer locally.
-+	 * This is because device_release_driver initiates
-+	 * ar9170_usb_disconnect, which in turn frees our
-+	 * driver context (aru).
++	 * Switch antenna every beacon.
++	 * Should only switch every beacon period, not for every SWBA
++	 * XXX assumes two antennae
 +	 */
-+	udev = aru->udev;
++	antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs) & 1 ? 2 : 1);
  
- 	complete(&aru->firmware_loading_complete);
- 
- 	/* unbind anything failed */
- 	if (parent)
- 		device_lock(parent);
--	device_release_driver(&aru->udev->dev);
-+
-+	device_release_driver(&udev->dev);
- 	if (parent)
- 		device_unlock(parent);
- 
--	usb_put_dev(aru->udev);
-+	usb_put_dev(udev);
+ 	sband = &sc->sbands[common->hw->conf.channel->band];
+ 	rate = sband->bitrates[rateidx].hw_value;
+@@ -215,36 +206,6 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 	return bf;
  }
  
- static void ar9170_usb_firmware_finish(const struct firmware *fw, void *context)
+-/*
+- * Startup beacon transmission for adhoc mode when they are sent entirely
+- * by the hardware using the self-linked descriptor + veol trick.
+-*/
+-static void ath_beacon_start_adhoc(struct ath_softc *sc,
+-				   struct ieee80211_vif *vif)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath_buf *bf;
+-	struct ath_vif *avp;
+-	struct sk_buff *skb;
+-
+-	avp = (void *)vif->drv_priv;
+-
+-	if (avp->av_bcbuf == NULL)
+-		return;
+-
+-	bf = avp->av_bcbuf;
+-	skb = bf->bf_mpdu;
+-
+-	ath_beacon_setup(sc, avp, bf, 0);
+-
+-	/* NB: caller is known to have already stopped tx dma */
+-	ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bf->bf_daddr);
+-	ath9k_hw_txstart(ah, sc->beacon.beaconq);
+-	ath_print(common, ATH_DBG_BEACON, "TXDP%u = %llx (%p)\n",
+-		  sc->beacon.beaconq, ito64(bf->bf_daddr), bf->bf_desc);
+-}
+-
+ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+ {
+ 	struct ath_softc *sc = aphy->sc;
+@@ -265,7 +226,8 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+ 		list_del(&avp->av_bcbuf->list);
+ 
+ 		if (sc->sc_ah->opmode == NL80211_IFTYPE_AP ||
+-		    !(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)) {
++		    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC ||
++		    sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) {
+ 			int slot;
+ 			/*
+ 			 * Assign the vif to a beacon xmit slot. As
+@@ -715,8 +677,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 	 * self-linked tx descriptor and let the hardware deal with things.
+ 	 */
+ 	intval |= ATH9K_BEACON_ENA;
+-	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_VEOL))
+-		ah->imask |= ATH9K_INT_SWBA;
++	ah->imask |= ATH9K_INT_SWBA;
+ 
+ 	ath_beaconq_config(sc);
+ 
+@@ -726,10 +687,6 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 	ath9k_beacon_init(sc, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+-
+-	/* FIXME: Handle properly when vif is NULL */
+-	if (vif && ah->caps.hw_caps & ATH9K_HW_CAP_VEOL)
+-		ath_beacon_start_adhoc(sc, vif);
+ }
+ 
+ void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+-- 
+1.6.4.2
+
