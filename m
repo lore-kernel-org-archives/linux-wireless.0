@@ -1,110 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:40049 "HELO
-	outbound-mail-313.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752345Ab0EASX0 (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:27241 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751294Ab0EMArS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 14:23:26 -0400
-Message-ID: <4BDC719E.3060505@dlasys.net>
-Date: Sat, 01 May 2010 14:23:26 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>,
+	Wed, 12 May 2010 20:47:18 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-033791634
+	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 09:47:16 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Subject: Re: [PATCH v2] mac80211: Add HT IE to IBSS beacons and probe responses.
+Date: Thu, 13 May 2010 09:47:07 +0900
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: ar9170-fw II
-References: <4BDC001F.9050202@dlasys.net> <201005011919.32016.chunkeey@googlemail.com>
-In-Reply-To: <201005011919.32016.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+References: <1273098986-19330-1-git-send-email-benoit.papillault@free.fr> <1273574892.3669.54.camel@jlt3.sipsolutions.net> <4BEB175F.7000001@free.fr>
+In-Reply-To: <4BEB175F.7000001@free.fr>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201005130947.07577.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/01/2010 01:19 PM, Christian Lamparter wrote:
->
-> Well, for starters the ar9170 uses a ZyDas MAC (aka ZD1221)
-> and a AR900x PHY/Radio. Therefore the phy code and registers
-> are very similar to those #definitions you can find in ath9k.
-> And for the MAC code&  registers you can look into zd1211rw,
-> or look into drivers/staging/otus (original vendor driver,
-> shares some code with their windows drivers)
->
-> AFAICT, there are no technical documents about the AR9170
-> solution available w/o signing a NDA with Atheros
-> (probably because the devices are still produced and sold in high quantities?).
->    
-     Thanks;
-         I did just discover a reasonably good 150p spec. in what I 
-received from my client.
-         If I can I will share it. I am under an NDA, but the client 
-also told me that they received no cooperation from atheros.
->> What is available for the ar9170 itself ?
->> How does the firmware and the linux driver communicate?
->>    Is there an overview of the firmware - what is where ?
->>      
-> not really, apart from the headers of the original firmware
-> and vendor drivers.
->
-> But if you really need to implement some of your 'features'
-> (what are they, if I may ask?)
-     I think I can tell you what I am supposed add - I need to be able 
-to provide userspace apps with precise timing information for each packet.
-     Since i am working on GPL'd code and the results are going to be 
-provided to third parties whatever I do is GPL'd too.
-     Why gets into the NDA.
+On Thursday 13 May 2010 06:02:23 Benoit Papillault wrote:
+> > Also I just noticed that there's a TODO item in rx.c when we receive an
+> > HT frame from a peer we don't know about yet. Not sure what to do there,
+> > but you'll need to look at it.
+> 
+> I did some patch in this area in my tree. Basically, the peer STA is
+> created only on beacon/probe response since only those frames contains
+> peer capabilities. Any frames received before is simply ignored.
 
-     Right now i have an NDA with a new client and though I am 
-exercising care. But they seem fairly mellow. I am probably just being 
-overly cautious.
+i think the same applies to non-HT. when we receive a frame from a STA we 
+haven't seen a beacon from yet, we just mark the rate at which we received the 
+frame and can use that for a reply. later, when we receive a beacon, the rate-
+set is updated. i guess the same can be done for HT and i'd argue that it 
+should be done like this in order to be able to communicate even though we 
+have not received a beacon from that particular STA yet - there are some 
+reasons why the beacon might not have reached us: 
 
+ * the STA might have deferred beacon sending for a few intervals as part of 
+the normal beacon backoff
 
-> into the firmware you could
-> save some time by migrating to carl9170 code base:
-> ( http://www.kernel.org/pub/linux/kernel/people/chr/carl9170/1.0.5
->    + linville's wireless-testing.git )
->    
-     The carl9170 code is the expected future of the ar9170 in Linux ?
-     If so that is where I want to be working.
-> The advantages over the original firmware code (from a developers POV) are:
->   * customizable/configurable fw
-> 	+ driver can auto detect all selected fw features
->
->   * userspace testbench ( carlu ) for the usb subsystem
->     (allows you to run usb stress-test, dump the device's eeprom content
->      to stdout and of course: you can implement your own routines
->      and test&  develop without crashing the kernel)
->
->   * all hardware&  firmware interface definitions are all located
->     in a single directory /include/shared/*.h
->
-> 	version.h	- carl9170 API/ABI version
-> 	eeprom.h	- eeprom layout
-> 	phy.h		- AR900x PHY/Radio definitions
-> 	fwcmd.h		- implemented firmware commands
-> 	fwdesc.h	- layout of the firmware descriptor (e.g. available/activated features)
-> 	hw.h		- ZD1221 MAC + (Faraday USB) definitions
-> 		wlan.h	- (part of hw.h&  phy.h) contains all the information about
-> 				  tx&  rx frame formats.
->
->   * (tiny) printf + hexdump (obviously, you want those ;-) )
->
->   * follows linux' kernel coding style :-D
->    
-     Thanks alot.
-         I will look seriously at that.
-         While I want to keep the scope of what I am doing small, and as 
-narrowly confined as a I can,
-     it would be nice if atleast some of my work was useful beyond the 
-unique needs of my client.
+ * the beacon might have been lost due to interference
 
-> Regards,
-> 	Chr
->    
+ * or the other STA might be a buggy implementation which doesn't send IBSS 
+beacons for a while, like some madwifi versions.
 
+in any case the ability to communicate is more important than a complete rate-
+set...
 
--- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies too numerous to list.
-
-"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
-Albert Einstein
-
+bruno
