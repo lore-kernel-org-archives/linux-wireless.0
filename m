@@ -1,48 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42812 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756336Ab0EYCYB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 22:24:01 -0400
-Received: by fxm5 with SMTP id 5so2815356fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 19:23:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimYeL4KQozuTl4le9WUpObsjwp0YAx7eAYq6MBr@mail.gmail.com>
-References: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>
-	<AANLkTim1i3oB10rydr8ezyCjher1yctqKcVt9Ct1Bze0@mail.gmail.com>
-	<AANLkTinYZ-_DkNZweDFfdf_DdDJGMNhgQwppDnVo_Duj@mail.gmail.com>
-	<AANLkTimaLEQYH4Y7HO4Fv4zT8w8AsPkaAQtk9EauX4Bt@mail.gmail.com>
-	<AANLkTikRt1fUgngBQxEoEFe1VDrYVFRAoMSR53et7gxf@mail.gmail.com>
-	<AANLkTim-A_TWT-flrW88gJGan47Xhm7llyrQE3ehDKU6@mail.gmail.com>
-	<AANLkTim4zLxIQH2r76WZRh9kNigVNAngcK1d9-Cu65Ag@mail.gmail.com>
-	<AANLkTimH3p-dBA_6ee2a0iCnPDhtPZONzCEVkzMHrUWo@mail.gmail.com>
-	<AANLkTim-4UNn8acYvF7AF2FDzdC9xRY-9JS0lSurwBc6@mail.gmail.com>
-	<AANLkTimYeL4KQozuTl4le9WUpObsjwp0YAx7eAYq6MBr@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 25 May 2010 04:23:39 +0200
-Message-ID: <AANLkTikOgv6d0FlXu2-smnYPApeehjRq_j8UxEealqFC@mail.gmail.com>
-Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
-	suite)
-To: Weedy <weedy2887@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:49315 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932714Ab0EMVuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:50:22 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 17/17] iwlwifi: add new PCI IDs for 6000g2 devices
+Date: Thu, 13 May 2010 14:49:59 -0700
+Message-Id: <1273787399-9280-18-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/5/25 Weedy <weedy2887@gmail.com>:
-> 2010/5/23 Gábor Stefanik <netrolller.3d@gmail.com>:
->> In the meantime, one thing to test: Add a printk of sc->opmode.
->
-> May 24 22:04:20 tiny-h4x kernel: [41147.243149] sc->opmode: 02 (over9000 times)
->
-> So i'm guessing I did it wrong (I don't know C).
->        printk(KERN_NOTICE "sc->opmode: %02x\n", sc->opmode);
->
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-No, that is correct, and proves my theory (2 is NL80211_IFTYPE_STATION
-- it should be 6 for monitor mode).
+Add new PCI IDs for 6000 Series Gen2 devices
+and also defines a new sku of device: 6000g2b 2x2 bgn.
 
-BTW, please use "Reply to all".
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   34 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   24 +++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h  |    1 +
+ 3 files changed, 59 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 9247594..73713f6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -598,6 +598,40 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
+ 	.max_event_log_size = 512,
+ };
+ 
++struct iwl_cfg iwl6000g2b_2bgn_cfg = {
++	.name = "6000 Series 2x2 BGN Gen2b",
++	.fw_name_pre = IWL6000G2B_FW_PRE,
++	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
++	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
++	.sku = IWL_SKU_G|IWL_SKU_N,
++	.ops = &iwl6000g2b_ops,
++	.eeprom_size = OTP_LOW_IMAGE_SIZE,
++	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
++	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
++	.num_of_queues = IWLAGN_NUM_QUEUES,
++	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
++	.mod_params = &iwlagn_mod_params,
++	.valid_tx_ant = ANT_AB,
++	.valid_rx_ant = ANT_AB,
++	.pll_cfg_val = 0,
++	.set_l0s = true,
++	.use_bsm = false,
++	.pa_type = IWL_PA_SYSTEM,
++	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
++	.shadow_ram_support = true,
++	.ht_greenfield_support = true,
++	.led_compensation = 51,
++	.use_rts_for_ht = true, /* use rts/cts protection */
++	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
++	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
++	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
++	.chain_noise_scale = 1000,
++	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.max_event_log_size = 512,
++};
++
+ struct iwl_cfg iwl6000g2b_2bg_cfg = {
+ 	.name = "6000 Series 2x2 BG Gen2b",
+ 	.fw_name_pre = IWL6000G2B_FW_PRE,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index eb74f28..84c1675 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4058,6 +4058,13 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x0085, 0x1216, iwl6000g2a_2abg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, 0x1226, iwl6000g2a_2abg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, 0x1207, iwl6000g2a_2bg_cfg)},
++	{IWL_PCI_DEVICE(0x0082, 0x1301, iwl6000g2a_2agn_cfg)},
++	{IWL_PCI_DEVICE(0x0082, 0x1306, iwl6000g2a_2abg_cfg)},
++	{IWL_PCI_DEVICE(0x0082, 0x1307, iwl6000g2a_2bg_cfg)},
++	{IWL_PCI_DEVICE(0x0082, 0x1321, iwl6000g2a_2agn_cfg)},
++	{IWL_PCI_DEVICE(0x0082, 0x1326, iwl6000g2a_2abg_cfg)},
++	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6000g2a_2agn_cfg)},
++	{IWL_PCI_DEVICE(0x0085, 0x1316, iwl6000g2a_2abg_cfg)},
+ 
+ /* 6x00 Series Gen2b */
+ 	{IWL_PCI_DEVICE(0x008F, 0x5105, iwl6000g2b_bgn_cfg)},
+@@ -4071,6 +4078,23 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x0090, 0x5216, iwl6000g2b_2abg_cfg)},
+ 	{IWL_PCI_DEVICE(0x008F, 0x5226, iwl6000g2b_2abg_cfg)},
+ 	{IWL_PCI_DEVICE(0x008F, 0x5207, iwl6000g2b_2bg_cfg)},
++	{IWL_PCI_DEVICE(0x008A, 0x5301, iwl6000g2b_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x008A, 0x5305, iwl6000g2b_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x008A, 0x5307, iwl6000g2b_bg_cfg)},
++	{IWL_PCI_DEVICE(0x008A, 0x5321, iwl6000g2b_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x008A, 0x5325, iwl6000g2b_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x008B, 0x5311, iwl6000g2b_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x008B, 0x5315, iwl6000g2b_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x0090, 0x5211, iwl6000g2b_2agn_cfg)},
++	{IWL_PCI_DEVICE(0x0090, 0x5215, iwl6000g2b_2bgn_cfg)},
++	{IWL_PCI_DEVICE(0x0090, 0x5216, iwl6000g2b_2abg_cfg)},
++	{IWL_PCI_DEVICE(0x0091, 0x5201, iwl6000g2b_2agn_cfg)},
++	{IWL_PCI_DEVICE(0x0091, 0x5205, iwl6000g2b_2bgn_cfg)},
++	{IWL_PCI_DEVICE(0x0091, 0x5206, iwl6000g2b_2abg_cfg)},
++	{IWL_PCI_DEVICE(0x0091, 0x5207, iwl6000g2b_2bg_cfg)},
++	{IWL_PCI_DEVICE(0x0091, 0x5221, iwl6000g2b_2agn_cfg)},
++	{IWL_PCI_DEVICE(0x0091, 0x5225, iwl6000g2b_2bgn_cfg)},
++	{IWL_PCI_DEVICE(0x0091, 0x5226, iwl6000g2b_2abg_cfg)},
+ 
+ /* 6x50 WiFi/WiMax Series */
+ 	{IWL_PCI_DEVICE(0x0087, 0x1301, iwl6050_2agn_cfg)},
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index f7ef893..5c32777 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -81,6 +81,7 @@ extern struct iwl_cfg iwl6000g2b_bgn_cfg;
+ extern struct iwl_cfg iwl6000g2b_bg_cfg;
+ extern struct iwl_cfg iwl6000g2b_2agn_cfg;
+ extern struct iwl_cfg iwl6000g2b_2abg_cfg;
++extern struct iwl_cfg iwl6000g2b_2bgn_cfg;
+ extern struct iwl_cfg iwl6000g2b_2bg_cfg;
+ extern struct iwl_cfg iwl6000i_2agn_cfg;
+ extern struct iwl_cfg iwl6000i_2abg_cfg;
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
