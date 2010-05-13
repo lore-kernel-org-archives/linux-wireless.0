@@ -1,140 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:46910 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756964Ab0EXWCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 18:02:25 -0400
-Date: Mon, 24 May 2010 14:52:16 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: stable@kernel.org, Ming Lei <tom.leiming@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [stable] [PATCH] Revert "ath9k: fix lockdep warning when
- unloading module" on stable kernels
-Message-ID: <20100524215216.GJ16655@kroah.com>
-References: <1274304829-14367-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1274304829-14367-1-git-send-email-lrodriguez@atheros.com>
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:4699 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756324Ab0EMJhE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 05:37:04 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 02/10] rt2x00: In debugfs frame dumping allow the TX descriptor to be part of the skb.
+Date: Thu, 13 May 2010 11:36:50 +0200
+Message-Id: <1273743418-28383-3-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
+References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 19, 2010 at 05:33:49PM -0400, Luis R. Rodriguez wrote:
-> Johannes' patch 34e8950 titled:
-> 
-> 	mac80211: allow station add/remove to sleep
-> 
-> changed the way mac80211 adds and removes peers. The new
-> sta_add() / sta_remove() callbacks allowed the driver callbacks
-> to sleep. Johannes also ported ath9k to use sta_add() / sta_remove()
-> via the patch 4ca7786 titled:
-> 
-> 	ath9k: convert to new station add/remove callbacks
-> 
-> but this patch forgot to address a change in locking issue which
-> Ming Lei eventually found on his 2.6.33-wl #12 build. The 2.6.33-wl
-> build includes code for the 802.11 subsystem for 2.6.34 though so did
-> already have the above two patches (ath9k_sta_remove() on his trace),
-> the 2.6.33 kernel did not however have these two patches. Ming eventually
-> cured his lockdep warnign via the patch a9f042c titled:
-> 
-> 	ath9k: fix lockdep warning when unloading module
-> 
-> This went in to 2.6.34 and although it was not marked as a stable
-> fix it did get trickled down and applied on both 2.6.33 and 2.6.32.
-> 
-> In review, the culprits:
-> 
-> 	mac80211: allow station add/remove to sleep
-> git describe --contains 34e895075e21be3e21e71d6317440d1ee7969ad0
-> v2.6.34-rc1~233^2~49^2~107
-> 
-> 	ath9k: convert to new station add/remove callbacks
-> git describe --contains 4ca778605cfec53d8a689f0b57babb93b030c784
-> v2.6.34-rc1~233^2~49^2~10
-> 
-> 	ath9k: fix lockdep warning when unloading module
-> 
-> This last one trickled down to 2.6.33 (OK), 2.6.33 (invalid) and 2.6.32 (invalid).
-> 
-> git describe --contains a9f042cbe5284f34ccff15f3084477e11b39b17b
-> v2.6.34-rc2~48^2~77^2~7
-> git describe --contains 0524bcfa80f1fffb4e1fe18a0a28900869a58a7c
-> v2.6.33.2~125
-> git describe --contains 0dcc9985f34aef3c60bffab3dfc7f7ba3748f35a
-> v2.6.32.11~79
-> 
-> The patch titled "ath9k: fix lockdep warning when unloading module"
-> should be reverted on both 2.6.33 and 2.6.32 as it is invalid and
-> actually ended up causing the following warning:
-> 
-> ADDRCONF(NETDEV_CHANGE): wlan31: link becomes ready
-> phy0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-> phy0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-> phy0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-> phy0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-> phy0: device now idle
-> ------------[ cut here ]------------
-> WARNING: at kernel/softirq.c:143 local_bh_enable_ip+0x7b/0xa0()
-> Hardware name: 7660A14
-> Modules linked in: ath9k(-) mac80211 ath cfg80211 <whatever-bleh-etc>
-> Pid: 2003, comm: rmmod Not tainted 2.6.32.11 #6
-> Call Trace:
->  [<ffffffff8105d178>] warn_slowpath_common+0x78/0xb0
->  [<ffffffff8105d1bf>] warn_slowpath_null+0xf/0x20
->  [<ffffffff81063f8b>] local_bh_enable_ip+0x7b/0xa0
->  [<ffffffff815121e4>] _spin_unlock_bh+0x14/0x20
->  [<ffffffffa034aea5>] ath_tx_node_cleanup+0x185/0x1b0 [ath9k]
->  [<ffffffffa0345597>] ath9k_sta_notify+0x57/0xb0 [ath9k]
->  [<ffffffffa02ac51a>] __sta_info_unlink+0x15a/0x260 [mac80211]
->  [<ffffffffa02ac658>] sta_info_unlink+0x38/0x60 [mac80211]
->  [<ffffffffa02b3fbe>] ieee80211_set_disassoc+0x1ae/0x210 [mac80211]
->  [<ffffffffa02b42d9>] ieee80211_mgd_deauth+0x109/0x110 [mac80211]
->  [<ffffffffa02ba409>] ieee80211_deauth+0x19/0x20 [mac80211]
->  [<ffffffffa028160e>] __cfg80211_mlme_deauth+0xee/0x130 [cfg80211]
->  [<ffffffff81118540>] ? init_object+0x50/0x90
->  [<ffffffffa0285429>] __cfg80211_disconnect+0x159/0x1d0 [cfg80211]
->  [<ffffffffa027125f>] cfg80211_netdev_notifier_call+0x10f/0x450 [cfg80211]
->  [<ffffffff81514ca7>] notifier_call_chain+0x47/0x90
->  [<ffffffff8107f501>] raw_notifier_call_chain+0x11/0x20
->  [<ffffffff81442d66>] call_netdevice_notifiers+0x16/0x20
->  [<ffffffff8144352d>] dev_close+0x4d/0xa0
->  [<ffffffff814439a8>] rollback_registered+0x48/0x120
->  [<ffffffff81443a9d>] unregister_netdevice+0x1d/0x70
->  [<ffffffffa02b6cc4>] ieee80211_remove_interfaces+0x84/0xc0 [mac80211]
->  [<ffffffffa02aa072>] ieee80211_unregister_hw+0x42/0xf0 [mac80211]
->  [<ffffffffa0347bde>] ath_detach+0x8e/0x180 [ath9k]
->  [<ffffffffa0347ce1>] ath_cleanup+0x11/0x50 [ath9k]
->  [<ffffffffa0351a2c>] ath_pci_remove+0x1c/0x20 [ath9k]
->  [<ffffffff8129d712>] pci_device_remove+0x32/0x60
->  [<ffffffff81332373>] __device_release_driver+0x53/0xb0
->  [<ffffffff81332498>] driver_detach+0xc8/0xd0
->  [<ffffffff81331405>] bus_remove_driver+0x85/0xe0
->  [<ffffffff81332a5a>] driver_unregister+0x5a/0x90
->  [<ffffffff8129da00>] pci_unregister_driver+0x40/0xb0
->  [<ffffffffa03518d0>] ath_pci_exit+0x10/0x20 [ath9k]
->  [<ffffffffa0353cd5>] ath9k_exit+0x9/0x2a [ath9k]
->  [<ffffffff81092838>] sys_delete_module+0x1a8/0x270
->  [<ffffffff8107ebe9>] ? up_read+0x9/0x10
->  [<ffffffff81011f82>] system_call_fastpath+0x16/0x1b
-> ---[ end trace fad957019ffdd40b ]---
-> phy0: Removed STA 00:22:6b:56:fd:e8
-> phy0: Destroyed STA 00:22:6b:56:fd:e8
-> wlan31: deauthenticating from 00:22:6b:56:fd:e8 by local choice (reason=3)
-> ath9k 0000:16:00.0: PCI INT A disabled
-> 
-> The original lockdep fixed an issue where due to the new changes
-> the driver was not disabling the bottom halves but it is incorrect
-> to do this on the older kernels since IRQs are already disabled.
-> 
-> Cc: Ming Lei <tom.leiming@gmail.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Cc: John W. Linville <linville@tuxdriver.com>
+Preparation for futher cleanups in the area of properly maintaining the skb
+data without fiddling with the skb->data pointer.
 
-For some reason, you never signed-off on this patch, why?  Care to send
-me a "Signed-off-by:" line so I can add it?
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   14 ++++++++++----
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    3 +++
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 9e2eed5..1e81eef 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -159,6 +159,7 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+ 	struct sk_buff *skbcopy;
+ 	struct rt2x00dump_hdr *dump_hdr;
+ 	struct timeval timestamp;
++	u32 data_len;
+ 
+ 	do_gettimeofday(&timestamp);
+ 
+@@ -170,7 +171,11 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+ 		return;
+ 	}
+ 
+-	skbcopy = alloc_skb(sizeof(*dump_hdr) + skbdesc->desc_len + skb->len,
++	data_len = skb->len;
++	if (skbdesc->flags & SKBDESC_DESC_IN_SKB)
++		data_len -= skbdesc->desc_len;
++
++	skbcopy = alloc_skb(sizeof(*dump_hdr) + skbdesc->desc_len + data_len,
+ 			    GFP_ATOMIC);
+ 	if (!skbcopy) {
+ 		DEBUG(rt2x00dev, "Failed to copy skb for dump.\n");
+@@ -181,7 +186,7 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+ 	dump_hdr->version = cpu_to_le32(DUMP_HEADER_VERSION);
+ 	dump_hdr->header_length = cpu_to_le32(sizeof(*dump_hdr));
+ 	dump_hdr->desc_length = cpu_to_le32(skbdesc->desc_len);
+-	dump_hdr->data_length = cpu_to_le32(skb->len);
++	dump_hdr->data_length = cpu_to_le32(data_len);
+ 	dump_hdr->chip_rt = cpu_to_le16(rt2x00dev->chip.rt);
+ 	dump_hdr->chip_rf = cpu_to_le16(rt2x00dev->chip.rf);
+ 	dump_hdr->chip_rev = cpu_to_le16(rt2x00dev->chip.rev);
+@@ -191,8 +196,9 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+ 	dump_hdr->timestamp_sec = cpu_to_le32(timestamp.tv_sec);
+ 	dump_hdr->timestamp_usec = cpu_to_le32(timestamp.tv_usec);
+ 
+-	memcpy(skb_put(skbcopy, skbdesc->desc_len), skbdesc->desc,
+-	       skbdesc->desc_len);
++	if (!(skbdesc->flags & SKBDESC_DESC_IN_SKB))
++		memcpy(skb_put(skbcopy, skbdesc->desc_len), skbdesc->desc,
++		       skbdesc->desc_len);
+ 	memcpy(skb_put(skbcopy, skb->len), skb->data, skb->len);
+ 
+ 	skb_queue_tail(&intf->frame_dump_skbqueue, skbcopy);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 36a957a..f791708 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -94,12 +94,15 @@ enum data_queue_qid {
+  *	mac80211 but was stripped for processing by the driver.
+  * @SKBDESC_NOT_MAC80211: Frame didn't originate from mac80211,
+  *	don't try to pass it back.
++ * @SKBDESC_DESC_IN_SKB: The descriptor is at the start of the
++ *	skb, instead of in the desc field.
+  */
+ enum skb_frame_desc_flags {
+ 	SKBDESC_DMA_MAPPED_RX = 1 << 0,
+ 	SKBDESC_DMA_MAPPED_TX = 1 << 1,
+ 	SKBDESC_IV_STRIPPED = 1 << 2,
+ 	SKBDESC_NOT_MAC80211 = 1 << 3,
++	SKBDESC_DESC_IN_SKB = 1 << 4,
+ };
+ 
+ /**
+-- 
+1.7.1
 
-greg k-h
