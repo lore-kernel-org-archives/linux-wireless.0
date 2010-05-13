@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44411 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932105Ab0EYUpM (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40022 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398Ab0EMTak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 16:45:12 -0400
-Date: Tue, 25 May 2010 16:42:36 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-05-25
-Message-ID: <20100525204235.GA27002@tuxdriver.com>
-References: <20100525170401.GE31753@tuxdriver.com>
- <4BFC331A.9030606@gmail.com>
+	Thu, 13 May 2010 15:30:40 -0400
+Received: by fxm6 with SMTP id 6so752896fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 12:30:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4BFC331A.9030606@gmail.com>
+In-Reply-To: <1273778166-3833-3-git-send-email-gwingerde@gmail.com>
+References: <1273778166-3833-1-git-send-email-gwingerde@gmail.com>
+	 <1273778166-3833-3-git-send-email-gwingerde@gmail.com>
+Date: Thu, 13 May 2010 21:30:39 +0200
+Message-ID: <AANLkTinMokg_RxT6y7NGmdh784nY2-bQbRSS9FwWezZT@mail.gmail.com>
+Subject: Re: [PATCH 2/4] rt2x00: Fix rt2800usb TX descriptor writing.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 25, 2010 at 10:29:14PM +0200, Gertjan van Wingerde wrote:
-> On 05/25/10 19:04, John W. Linville wrote:
+On Thu, May 13, 2010 at 9:16 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> The recent changes to skb handling introduced a bug in the rt2800usb
+> TX descriptor writing whereby the length of the USB packet wasn't
+> calculated correctly.
+> Found via code inspection, as the devices themselves didn't seem to mind.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-> > Gertjan van Wingerde (2):
-> >       rt2x00: Fix rt2800usb TX descriptor writing.
-> 
-> The patch causing the breakage this patch fixes wasn't actually upstream yet. So, 
-> applying this patch only is now introducing a bug in 2.6.35. I guess it is better
-> to revert this patch for 2.6.35.
-
-Hmmm...OK.  Which patch introduces the bug this was intended to fix?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
