@@ -1,33 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56804 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752827Ab0EKTzM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 15:55:12 -0400
-Message-ID: <4BE9B61A.2090708@openwrt.org>
-Date: Tue, 11 May 2010 21:55:06 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 2/4] ath9k: add debugfs files for reading/writing the
- rx and tx chainmask
-References: <1273591383-76696-1-git-send-email-nbd@openwrt.org> 	<1273591383-76696-2-git-send-email-nbd@openwrt.org> <AANLkTilDwhBErduNt_vZLSsEVVkC1SDMwUPkoumym1o3@mail.gmail.com>
-In-Reply-To: <AANLkTilDwhBErduNt_vZLSsEVVkC1SDMwUPkoumym1o3@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from bombadil.infradead.org ([18.85.46.34]:35260 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755810Ab0EMBPI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 May 2010 21:15:08 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/2] ath9k: Add AR9003 2.2 support
+Date: Wed, 12 May 2010 21:15:04 -0400
+Message-Id: <1273713306-13789-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-05-11 8:15 PM, Luis R. Rodriguez wrote:
-> On Tue, May 11, 2010 at 8:23 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> 
-> How about we use bruno's patch instead and we help review it for
-> 802.11n? Then this would not be needed?
-I'd like to keep those separate. I've seen cards where the wrong
-chainmask was programmed into the eeprom, this debugfs file is for
-detecting that and trying other settings.
-When Bruno's patch gets implemented for ath9k, the values that it can
-set should be masked by the internal value, while the debugfs file can
-override the internal value.
+These two patches address AR9300 2.2 support, the second
+one just renames the 2.0 initvals file.
 
-- Felix
+Luis R. Rodriguez (2):
+  ath9k_hw: add support for the AR9003 2.2
+  ath9k_hw: rename the ar9003_initvals.h to ar9003_2p0_initvals.h
+
+ .../{ar9003_initvals.h => ar9003_2p0_initvals.h}   |    6 +-
+ .../{ar9003_initvals.h => ar9003_2p2_initvals.h}   |  185 ++++++++++----------
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  163 +++++++++++++++---
+ 3 files changed, 233 insertions(+), 121 deletions(-)
+ copy drivers/net/wireless/ath/ath9k/{ar9003_initvals.h => ar9003_2p0_initvals.h} (99%)
+ rename drivers/net/wireless/ath/ath9k/{ar9003_initvals.h => ar9003_2p2_initvals.h} (91%)
+
