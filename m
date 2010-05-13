@@ -1,159 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:59490 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758572Ab0EURLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 May 2010 13:11:05 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 10:11:04 -0700
-Date: Fri, 21 May 2010 10:11:02 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bruno Randolf <br1@einfach.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	David Quan <David.Quan@Atheros.com>,
-	Sam Ng <Sam.Ng@Atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [ath5k-devel] [PATCH v2 13/20] cfg80211: Add nl80211 antenna
- configuration
-Message-ID: <20100521171102.GA27736@tux>
-References: <20100519012528.22206.77550.stgit@tt-desk>
- <AANLkTilk0CIkmmIsBzPwchd6EBIVavw9R1amiSgCZOrx@mail.gmail.com>
- <AANLkTinPVSkrawZ4OCjp6vb-f4bA7nSrmnXjRDi-Pvvm@mail.gmail.com>
- <201005211059.34081.br1@einfach.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201005211059.34081.br1@einfach.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:49510 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753712Ab0EMPnQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 11:43:16 -0400
+Received: by vws16 with SMTP id 16so46755vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 08:43:14 -0700 (PDT)
+From: Joshua Smith <jesmith@kaon.com>
+Content-Type: text/plain; charset=us-ascii
+Subject: compat-wireless 2010-05-12 is crashing
+Date: Thu, 13 May 2010 11:43:12 -0400
+Message-Id: <3A25FB02-BE72-4FF6-BC66-AA04E459A9C9@kaon.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Mime-Version: 1.0 (Apple Message framework v1078)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 20, 2010 at 06:59:33PM -0700, Bruno Randolf wrote:
-> On Friday 21 May 2010 07:05:48 Luis R. Rodriguez wrote:
-> > For legacy, keep it simple, use 3 settings, fixed_a, fixed_b,
-> > diversity, for all devices.
-> 
-> did you not understand my examples why i think it makes sense to use a bitmask 
-> for "legacy"? i think they are perfectly valid use-cases. do i need to re-
-> iterate them a third time?
+When I connect any rt2x00 device, I'm getting this crash:
 
-Hehe, well from what I gather is that you indicate some other legacy cards
-would have a very different setup than the typical two anntennas and
-diversity modes. I see those cases as being reallllllly rare and not
-worth considering. Did I miss anything, if so please smack me.
+usb 1-1.6: new high speed USB device using ehci_hcd and address 5
+usb 1-1.6: configuration #1 chosen from 1 choice
+Generic kernel compatibility enabled based on linux-next next-20100113
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: World regulatory domain updated:
+    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+    (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+    (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+    (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+    (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+phy0: Selected rate control algorithm 'minstrel'
+BUG: unable to handle kernel NULL pointer dereference at 00000000
+IP: [<00000000>]
+*pde = 00000000 
+Oops: 0000 [#1] SMP 
+Modules linked in: arc4 ecb rt2800usb(+) rt2800lib rt2x00usb rt2x00lib led_class compat_firmware_class mac80211 cfg80211 rfkill_backport compat crc_ccitt snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_mixer_oss pcmcia pcmcia_core agpgart ppdev lp parport_pc parport pcspkr psmouse sg snd_hda_intel snd_pcm snd_timer snd_page_alloc snd_hwdep snd soundcore e1000e evdev fuse aufs squashfs sqlzma unlzma [last unloaded: pcmcia_core]
 
-> > Lets use a different API for 802.11n. Reason being that even the case
-> > I mentioned of an 802.11n device connecting on a legacy network needs
-> > to be treated differently actually.
-> > 
-> > For 802.11n you have a few more considerations. You can actually TX at
-> > the same time on two or more different antennas at the same time. The
-> > data you transmit will be the contents on both chains on a dual stream
-> > device. So both antenna 0 and antenna 1 will both be transmitting the
-> > data for both stream 0 and stream 1. As it turns out the combination
-> > of TX'ing on two antennas at the same time at a certain dBm power will
-> > yield a higher received frame on the RX side. This is why when you use
-> > multiple chains you have to take regulatory rules into considerations
-> > as well, since adding more chains will increase the overall output
-> > power. Today ath9k handles this itself since this data is calibrated
-> > but the max EIRP is passed out from cfg80211. Devices which do not
-> > deal with these regulatory considerations likely won't support
-> > changing chainmasks unless they use an API to respect regulatory
-> > internally somehow. Perhaps the iwlagn firmware does this, beats me.
-> > 
-> > The right terminology for antenna control for both TX and RX is
-> > chainmask and a bitmap of 8 will suffice for existing hardware and up
-> > to the not-yet-existant 600mbps 4 stream devices. Supporting 8 bits
-> > will support up to 8 streams and we do not envision using beyond that
-> > at this point. There is some considerations in the future for
-> > supporting something other than HT40, like maybe HT80 and so forth but
-> > those things won't be using more streams it seems.
-> > 
-> > Then, some devices won't support all possible chainmask settings. This
-> > will vary depending on the chipset. I work for Atheros so I can only
-> > tell you what we can support, we'll have to check with the Intel folks
-> > about their chipset limitations and settings.
-> > 
-> > AR5416, AR5418 can only support chainmask settings which always keep
-> > the first chain on. The AR9001 family and beyond cannot support the
-> > 0b110 chaimask (David, you had pointed out some other restrictions,
-> > what were they again?), the details are complex and I did not get a
-> > chance to review them.
-> > 
-> > I would not be surprised if other vendors had similar restrictions so
-> > I'm thinking maybe we can express this as a requirement mask, or a set
-> > of requirement masks. This way userspace utilities for debugging would
-> > only expose certain chainmask settings.
-> > 
-> > Now technically then you can incorporate the legacy API with the
-> > 802.11n API here somehow but it just seems cleaner to keep them
-> > separate.
-> > 
-> > Also, David indicated that when we change the chainmask when are are
-> > associated we have to do an actual chip reset, this is different than
-> > the antenna diversity settings which an be done on the fly. We likely
-> > will need to reassociate for a chainmask setting, not sure.
-> 
-> so from my point of view this is not very different from what we can support 
-> with the API i suggested. for RX it seems to be 100% equivalent.
+Pid: 5340, comm: modprobe Not tainted (2.6.27.8 #1)
+EIP: 0060:[<00000000>] EFLAGS: 00010286 CPU: 2
+EIP is at 0x0
+EAX: f5012000 EBX: f7146890 ECX: 00000000 EDX: 00000000
+ESI: f7146800 EDI: f5084300 EBP: f5012000 ESP: f519bc54
+ DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+Process modprobe (pid: 5340, ti=f519a000 task=f6abb100 task.ti=f519a000)
+Stack: c067340f f5012160 00000282 00000292 f794ff60 00000000 00000000 00000000 
+       00000000 00000000 00000000 00000000 000005dc f5012000 f5084300 ffffffff 
+       00000010 c06738c9 00000000 00000000 ffffffff 00000000 c08eaa5c ffffffff 
+Call Trace:
+ [<c067340f>] rtnl_fill_ifinfo+0x2af/0x4a0
+ [<c06738c9>] rtmsg_ifinfo+0x69/0x100
+ [<c06739a4>] rtnetlink_event+0x44/0x60
+ [<c013ba50>] notifier_call_chain+0x30/0x60
+ [<c013baf7>] raw_notifier_call_chain+0x17/0x20
+ [<c066ad60>] register_netdevice+0x200/0x340
+ [<fa1a0030>] ieee80211_rx_mgmt_probe_resp+0xe0/0x170 [mac80211]
+ [<fa1a3aec>] ieee80211_setup_sdata+0x2c/0xf0 [mac80211]
+ [<fa1a424e>] ieee80211_if_add+0x47e/0x860 [mac80211]
+ [<c03ab109>] crypto_spawn_tfm+0x59/0xb0
+ [<fa1161aa>] crypto_ecb_init_tfm+0x1a/0x30 [ecb]
+ [<c01263db>] printk+0x1b/0x20
+ [<fa1a5a24>] ieee80211_init_rate_ctrl_alg+0xd4/0x1e0 [mac80211]
+ [<fa197b32>] ieee80211_register_hw+0x322/0x3b0 [mac80211]
+ [<fa11dc19>] rt2x00lib_probe_dev+0x2d9/0x390 [rt2x00lib]
+ [<fa067c83>] rt2x00usb_probe+0xb3/0x150 [rt2x00usb]
+ [<c05e8e67>] usb_match_one_id+0x27/0xb0
+ [<c05e9e1a>] usb_probe_interface+0x8a/0x130
+ [<c01b984f>] sysfs_create_link+0xf/0x20
+ [<c0435592>] driver_probe_device+0x82/0x180
+ [<c04356fc>] __driver_attach+0x6c/0x70
+ [<c0434d3b>] bus_for_each_dev+0x3b/0x60
+ [<c0435416>] driver_attach+0x16/0x20
+ [<c0435690>] __driver_attach+0x0/0x70
+ [<c0435271>] bus_add_driver+0x1a1/0x220
+ [<c04358fd>] driver_register+0x4d/0x120
+ [<c05e9451>] usb_register_driver+0x81/0x100
+ [<fa1283a0>] rt2800_config_erp+0x0/0x160 [rt2800lib]
+ [<f8d1c000>] rt2800usb_init+0x0/0x14 [rt2800usb]
+ [<c0101123>] _stext+0x33/0x160
+ [<c0146bb7>] sys_init_module+0x87/0x1b0
+ [<c01764d1>] sys_read+0x41/0x70
+ [<c0103262>] syscall_call+0x7/0xb
+ =======================
+Code:  Bad EIP value.
+EIP: [<00000000>] 0x0 SS:ESP 0068:f519bc54
+---[ end trace fbe1874eb5bb9481 ]---
 
-Well I agree, the API *supports it* but I want *clean, clear and consistant
-API*. And it just seems cleaner to separate the two.
+Is this a known problem?
 
-> the main difference as i see it is that with 802.11n you transmit on more than 
-> one antenna, while with 'legacy' we can only transmit on one antenna at a 
-> time.
+What other info would you like to help diagnose this?
 
-True, but note how the fact that you transmit over two antennas actually
-has regulatory implications. Now, ath9k handles this within ath9k_hw already
-but this itself seems like a worthy reason for this API to be separated.
-While I think it is great for ath9k_hw to do this, wouldn't it be nice
-if we can eventually instead expose the gain by using different chains
-at the same time and do the regulatory calculation for all devices within
-cfg80211?
+-Joshua
 
-> actually i have to admit that on legacy "antenna set tx 3 (b11)" (select two 
-> antennas for transmit) does not make much sense. i have defined it before as 
-> "use diversity" but what about a different definition: like "bitmap of 
-> antennas/chains to TRANSMIT".
-
-Right, and while that *works*, I think it would be clearer to just use a
-clear "diveristy" knob.
-
-> so for 802.11n that would allow you to select  multiple trasmit chains.
-
-Instead of leaving the API to be interpreted by the mode of operation
-I think it would be much cleaner to just make your desires clearer and
-have the API define it well, and let the driver reject/accept it.
-
-> on legacy you are only allowed to select one antenna 
-> in the bitmap. if it is set to "0" (or a separate flag) this could enable 
-> "follow RX antenna diversity" on legacy.
-
-Sure that is one way, but it seems cleaner and easier for legacy purposes
-to just define an API that only fits legacy.
-
-> most of the other things you mention (need a reset/reassociate, regulatory 
-> concerns...) are driver implementation issues, which can be dealt with in the 
-> driver.
-
-Well so some of these things *could* be handled in mac80211 as well. For
-example, we may want to just dissociate upon a tx/rx chain setting change
-for all devices, but not for legacy. The regulatory stuff is another thing
-which could eventually be made more generic accross the board.
-
-Additionally, suppose you write an iw-tweak-gui thingy, and you want to
-provide expose tx/rx chainmask settings. Since some cards do not support
-some chainmask settings we may want to allow for a query of unsupported
-chainmasks and that way the GUI application could just grey-out the
-unsupported chainmask settings instead of letting the user figure out
-by trial and error that they are indeed not supported.
-
-> i would just suggest to let the driver reject antenna/chainmask 
-> configurations which it cannot support.
-
-The unified API works, but I think we can provide a cleaner API
-if we split them. What real benefit do we get if we keep them together?
-I just imagine this resulting in more convoluted code.
-
-  Luis
