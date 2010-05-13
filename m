@@ -1,40 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58871 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752973Ab0ECQAN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 12:00:13 -0400
-Date: Mon, 3 May 2010 11:47:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "rain_maker@root-forum.org" <rain_maker@root-forum.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: remove USB-ID 148f:2573 from rt2500usb driver
-Message-ID: <20100503154745.GB24781@tuxdriver.com>
-References: <201005031624.45409.rain_maker@root-forum.org>
- <20100503145815.GA24781@tuxdriver.com>
- <201005031720.36288.rain_maker@root-forum.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201005031720.36288.rain_maker@root-forum.org>
+Received: from mga02.intel.com ([134.134.136.20]:49315 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932599Ab0EMVuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 17:50:18 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/17] iwlwifi: move iwl_free_tfds_in_queue to iwlagn
+Date: Thu, 13 May 2010 14:49:48 -0700
+Message-Id: <1273787399-9280-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 03, 2010 at 05:20:36PM +0200, rain_maker@root-forum.org wrote:
-> Am Monday 03 May 2010 16:58:16 schrieben Sie:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > So I'm curious, how can you be sure that 148f:2573 is _always_ wrong
-> > for rt2500usb?  I do acknowledge that the "73" part makes it suspicious...
+This function is only used by the agn drivers,
+so doesn't have to be in core and exported.
 
-> But of course the problem in such cases is, you can't prove it, you can only 
-> add more and more examples for "not being wrong" while finding one example 
-> where actually a device with 148f:2573 working with rt2500usb und not working 
-> with rt73usb would prove me wrong once and for all.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   13 +++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h     |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    2 --
+ drivers/net/wireless/iwlwifi/iwl-tx.c      |   15 ---------------
+ 4 files changed, 15 insertions(+), 17 deletions(-)
 
-http://osdir.com/ml/linux-wireless/2009-07/msg00267.html
-
-This seems to be such an example?
-
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index c7ce632..5f07bc2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1529,3 +1529,16 @@ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
+ 	return iwl_remove_station(priv, vif_priv->ibss_bssid_sta_id,
+ 				  vif->bss_conf.bssid);
+ }
++
++void iwl_free_tfds_in_queue(struct iwl_priv *priv,
++			    int sta_id, int tid, int freed)
++{
++	if (priv->stations[sta_id].tid[tid].tfds_in_queue >= freed)
++		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
++	else {
++		IWL_DEBUG_TX(priv, "free more than tfds_in_queue (%u:%d)\n",
++			priv->stations[sta_id].tid[tid].tfds_in_queue,
++			freed);
++		priv->stations[sta_id].tid[tid].tfds_in_queue = 0;
++	}
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 2d74805..fbbefe1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -93,6 +93,8 @@ int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id,
+ int iwlagn_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
+ 			   u16 ssn_idx, u8 tx_fifo);
+ void iwlagn_txq_set_sched(struct iwl_priv *priv, u32 mask);
++void iwl_free_tfds_in_queue(struct iwl_priv *priv,
++			    int sta_id, int tid, int freed);
+ 
+ /* uCode */
+ int iwlagn_load_ucode(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 7e5a5ba..63229dc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -472,8 +472,6 @@ int iwl_hw_txq_attach_buf_to_tfd(struct iwl_priv *priv,
+ 				 dma_addr_t addr, u16 len, u8 reset, u8 pad);
+ int iwl_hw_tx_queue_init(struct iwl_priv *priv,
+ 			 struct iwl_tx_queue *txq);
+-void iwl_free_tfds_in_queue(struct iwl_priv *priv,
+-			    int sta_id, int tid, int freed);
+ void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq);
+ int iwl_tx_queue_init(struct iwl_priv *priv, struct iwl_tx_queue *txq,
+ 		      int slots_num, u32 txq_id);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index c3c6505..db83a0a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -76,21 +76,6 @@ void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ }
+ EXPORT_SYMBOL(iwl_txq_update_write_ptr);
+ 
+-
+-void iwl_free_tfds_in_queue(struct iwl_priv *priv,
+-			    int sta_id, int tid, int freed)
+-{
+-	if (priv->stations[sta_id].tid[tid].tfds_in_queue >= freed)
+-		priv->stations[sta_id].tid[tid].tfds_in_queue -= freed;
+-	else {
+-		IWL_DEBUG_TX(priv, "free more than tfds_in_queue (%u:%d)\n",
+-			priv->stations[sta_id].tid[tid].tfds_in_queue,
+-			freed);
+-		priv->stations[sta_id].tid[tid].tfds_in_queue = 0;
+-	}
+-}
+-EXPORT_SYMBOL(iwl_free_tfds_in_queue);
+-
+ /**
+  * iwl_tx_queue_free - Deallocate DMA queue.
+  * @txq: Transmit queue to deallocate.
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
