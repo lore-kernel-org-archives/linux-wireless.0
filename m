@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56790 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785Ab0ENH75 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 03:59:57 -0400
-Subject: Re: Possible issue with mac80211 and certain access points
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Chad Koehler <chad.koehler@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1273788460.375.76.camel@localhost.localdomain>
-References: <AANLkTim6GiiFR0zWVqlmIJr-sk1ThwO3GAA97aJwWg3U@mail.gmail.com>
-	 <1273788460.375.76.camel@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 14 May 2010 09:59:54 +0200
-Message-ID: <1273823994.3865.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:55226 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759243Ab0EMShc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 14:37:32 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 1/2] ath9k: change beacon allocation to prefer the first beacon slot
+Date: Thu, 13 May 2010 20:37:24 +0200
+Message-Id: <1273775845-10056-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-05-14 at 00:07 +0200, Marcel Holtmann wrote:
+This fixes IBSS beacon transmissions without VEOL enabled
 
-> > Using the Palm Pre hotspot, I can get connected, but the connection
-> > will drop after a very short period of time.  There are messages in
-> > the system log whenever the connection drops:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |   12 +++---------
+ 1 files changed, 3 insertions(+), 9 deletions(-)
 
-> actually I ran into the same issue two days ago and was going to post
-> it. So what I am seeing with the Palm Pre is that when we actually scan
-> while connected to the Palm Pre, a second later we end up disconnected.
-
-So the Palm is acting as an AP? A beer for each of you says their AP
-implementation is buggy.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index c8a4558..77face7 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -274,17 +274,11 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+ 			avp->av_bslot = 0;
+ 			for (slot = 0; slot < ATH_BCBUF; slot++)
+ 				if (sc->beacon.bslot[slot] == NULL) {
+-					/*
+-					 * XXX hack, space out slots to better
+-					 * deal with misses
+-					 */
+-					if (slot+1 < ATH_BCBUF &&
+-					    sc->beacon.bslot[slot+1] == NULL) {
+-						avp->av_bslot = slot+1;
+-						break;
+-					}
+ 					avp->av_bslot = slot;
++
+ 					/* NB: keep looking for a double slot */
++					if (slot == 0 || !sc->beacon.bslot[slot-1])
++						break;
+ 				}
+ 			BUG_ON(sc->beacon.bslot[avp->av_bslot] != NULL);
+ 			sc->beacon.bslot[avp->av_bslot] = vif;
+-- 
+1.6.4.2
 
