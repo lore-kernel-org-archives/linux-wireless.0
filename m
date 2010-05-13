@@ -1,64 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:61389 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759195Ab0ENTD6 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:53644 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755514Ab0EMHhS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 15:03:58 -0400
-References: <4BEC7A84.3010503@gmail.com> <201005141520.30802.br1@einfach.org> <4BECEE3E.6090303@gmail.com> <201005141538.43416.br1@einfach.org> <4BED6F19.3040608@gmail.com> <20100514165325.GA28198@tux> <4BED8765.8040307@gmail.com> <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com>
-Message-Id: <67773379-350A-42D4-BEB5-DAC7D8277615@gmail.com>
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com>
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7D11)
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-Date: Fri, 14 May 2010 12:04:15 -0700
-Cc: Bruno Randolf <br1@einfach.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	Thu, 13 May 2010 03:37:18 -0400
+MIME-Version: 1.0
+In-Reply-To: <1273679336.10823.15.camel@mj>
+References: <4bea1f81.09b6660a.746e.1c12@mx.google.com> <1273679336.10823.15.camel@mj>
+From: Dmytro Milinevskyy <milinevskyy@gmail.com>
+Date: Thu, 13 May 2010 10:36:56 +0300
+Message-ID: <AANLkTinYfKlQ-MzkGV9o2qXUTeArYscfqoc8WS7SRjgz@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] [ath5k][leds] Ability to disable leds
+	support. If leds support enabled do not force mac802.11 leds layer selection.
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath5k-devel@lists.ath5k.org, Kalle Valo <kalle.valo@iki.fi>,
+	linux-wireless@vger.kernel.org,
+	GeunSik Lim <geunsik.lim@samsung.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Keng-Yu Lin <keng-yu.lin@canonical.com>,
+	netdev@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Shahar Or <shahar@shahar-or.co.il>,
+	linux-kernel@vger.kernel.org, Luca Verdesca <magooz@salug.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello, Pavel.
+
+I will rework the patch considering your suggestions.
+
+> I'm not sure this complexity is needed.  Are you going to support LEDs
+> if CONFIG_LEDS_CLASS is disabled?
+If there's any other place in driver that might want use LEDs w/o
+exporting the interface to the userspace.
+
+-- Dima Milinevskyy
 
 
-On May 14, 2010, at 10:29 AM, "Luis R. Rodriguez" <lrodriguez@atheros.com 
- > wrote:
-
-> On Fri, May 14, 2010 at 10:24 AM, Justin P. Mattock
-> <justinmattock@gmail.com> wrote:
+On Wed, May 12, 2010 at 6:48 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Wed, 2010-04-07 at 21:58 +0300, Dmytro Milinevskyy wrote:
 >
+>> Here is the patch to disable ath5k leds support on build stage.
+>> However if the leds support was enabled do not force selection of 802.11 leds layer.
+>
+> The idea is good, but the implementation could be improved.
+>
+> There are too many preprocessor conditionals in your patch.
+>
+>> +#ifdef CONFIG_ATH5K_LEDS
+>>  /*
+>>   * These match net80211 definitions (not used in
+>>   * mac80211).
+>> @@ -939,11 +940,7 @@ enum ath5k_power_mode {
+>>  #define AR5K_LED_AUTH        2 /*IEEE80211_S_AUTH*/
+>>  #define AR5K_LED_ASSOC       3 /*IEEE80211_S_ASSOC*/
+>>  #define AR5K_LED_RUN 4 /*IEEE80211_S_RUN*/
+>
+> It should be OK to leave the constants defined even if they are not
+> used.
+>
+>> +#ifdef CONFIG_ATH5K_LEDS
+>>  /* LED functions */
+>>  extern int ath5k_init_leds(struct ath5k_softc *sc);
+>>  extern void ath5k_led_enable(struct ath5k_softc *sc);
+>>  extern void ath5k_led_off(struct ath5k_softc *sc);
+>>  extern void ath5k_unregister_leds(struct ath5k_softc *sc);
+>> +#endif
+>
+> You could add inline functions for the case when CONFIG_ATH5K_LEDS is
+> not defined.  That would avoid may conditionals in the code.
+>
+>>  /* GPIO Functions */
+>> +#ifdef CONFIG_ATH5K_LEDS
+>>  extern void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state);
+>> +#endif
+>
+> The same comment applies.
+>
+> Also, there is nothing wrong with having an external declaration that is
+> not used in some particular configuration.
+>
+>> +#ifdef CONFIG_ATH5K_LEDS
+>>       /* turn on HW LEDs */
+>>       ath5k_hw_set_ledstate(ah, AR5K_LED_INIT);
+>> +#endif
+>
+> This is avoidable by having an inline ath5k_hw_set_ledstate() that does
+> nothing.
+>
+>> +#ifdef CONFIG_ATH5K_LEDS
+>>       struct ieee80211_hw *hw = pci_get_drvdata(to_pci_dev(dev));
+>>       struct ath5k_softc *sc = hw->priv;
 >>
->> here you go:
->> (I was grabbing the info
->> after rmmod and modprobe)
+>>       ath5k_led_off(sc);
+>> +#endif
+>
+> Even this is avoidable if ath5k_led_off() does nothing.  gcc should be
+> smart enough to optimize out unneeded function calls.
+>
+>> +#ifdef CONFIG_ATH5K_LEDS
+>>  /*
+>>   * State for LED triggers
+>>   */
+>>  struct ath5k_led
+>>  {
+>> +#ifdef CONFIG_LEDS_CLASS
+>
+> I'm not sure this complexity is needed.  Are you going to support LEDs
+> if CONFIG_LEDS_CLASS is disabled?
+>
+>> +#ifdef CONFIG_ATH5K_LEDS
+>>       unsigned int            led_pin,        /* GPIO pin for driving LED */
+>>                               led_on;         /* pin setting for LED on */
+>> +#endif
 >>
->> [    7.034242] ATH9K: cachelsz: 256
->> [   69.175348] ATH9K: cachelsz: 256
+>>       struct tasklet_struct   restq;          /* reset tasklet */
+>>
+>> @@ -164,7 +172,9 @@ struct ath5k_softc {
+>>       spinlock_t              rxbuflock;
+>>       u32                     *rxlink;        /* link ptr in last RX desc */
+>>       struct tasklet_struct   rxtq;           /* rx intr tasklet */
+>> +#ifdef CONFIG_ATH5K_LEDS
+>>       struct ath5k_led        rx_led;         /* rx led */
+>> +#endif
 >
-> Close, so I without any patches applied, and by just running  
-> modprobe as below:
+> You may want to group those fields together to make the code more
+> readable.
 >
+>> --- a/drivers/net/wireless/ath/ath5k/led.c
+>> +++ b/drivers/net/wireless/ath/ath5k/led.c
 >
-> modprobe ath9k debug=0x00000200
+> I wonder if you could omit led.c completely in the Makefile.  If there
+> are some parts of led.c that are needed without CONFIG_ATH5K_LEDS, maybe
+> they belong elsewhere?
 >
->               ath_print(common, ATH_DBG_CONFIG, "cachelsz %u  
-> rxbufsize %u\n",
->                               common->cachelsz, common->rx_bufsize);
+> --
+> Regards,
+> Pavel Roskin
 >
->
-> This is already in the code so just please do this:
->
-> rmmod ath9k
-> modprobe ath9k debug=0x00000200
-> dmesg | grep cachelsz
-
-O.k. I did a git reset to the origin
-Then the above, unfortunantly nothing
-Shows up when grepping
-Any CONFIG options I might be missing?
-
-Justin P. Mattock
