@@ -1,107 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34940 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757559Ab0EABX6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 21:23:58 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: "David H. Lynch Jr." <dhlii@dlasys.net>
-Subject: Re: ar9170-fw
-Date: Sat, 1 May 2010 03:23:49 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <4BDB72AA.7000203@dlasys.net>
-In-Reply-To: <4BDB72AA.7000203@dlasys.net>
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:61069 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752874Ab0ENNbt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 09:31:49 -0400
+Received: by wwi18 with SMTP id 18so531044wwi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 06:31:48 -0700 (PDT)
+Date: Fri, 14 May 2010 15:24:37 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Jeff Hansen <x@jeffhansen.com>, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: [patch -next 1/2] ath9k/debug: improve the snprintf() handling
+Message-ID: <20100514132437.GG5695@bicker>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005010323.53295.s.L-H@gmx.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+The snprintf() function returns the number of bytes that *would* have
+been written (not counting the NULL terminator) and that can potentally
+be more than the size of the buffer.
 
-On Saturday 01 May 2010, David H. Lynch Jr. wrote:
->      I tried to build the toolchain from an uptodate pull of the git 
-> repository,
-> 
->      I am getting a sequence of errors when the build reach libssp.
-> 
->      My guess would be that libssp is not needed for the ar9170 firmware.
-> 
->      Is this correct and I would appreciate an easy suguestion to 
-> disable it if so.
-> 
-> make[3]: Entering directory `/usr/src/ar9170-fw/toolchain/build/gcc/sh-elf/libssp'
-[...]
-> -I/usr/src/ar9170-fw/toolchain/src/gcc-4.3.3/libssp -I. -Wall -O2 -g -g -O2 -MT
-> ssp.lo -MD -MP -MF .deps/ssp.Tpo -c
-> /usr/src/ar9170-fw/toolchain/src/gcc-4.3.3/libssp/ssp.c -o ssp.o
-> /usr/src/ar9170-fw/toolchain/src/gcc-4.3.3/libssp/ssp.c: In function
-> '__guard_setup':
-> /usr/src/ar9170-fw/toolchain/src/gcc-4.3.3/libssp/ssp.c:70: warning: implicit
-> declaration of function 'open'
-> /usr/src/ar9170-fw/toolchain/src/gcc-4.3.3/libssp/ssp.c:70: error: 'O_RDONLY'
-> undeclared (first use in this function)
-[...]
+In this patch if there were one liners where string clearly fits into
+the buffer, then I changed snprintf to sprintf().  It's confusing to use
+the return value of snprintf() as a limitter without verifying that it's 
+smaller than size.  This is what initially caught my attention here.
+If we use the return value of sprintf() instead future code auditors will
+assume we've verified that it fits already.
 
-I assume your host's /bin/sh is not bash.
+Also I did find some places where it made sense to use the return value 
+after we've verified that it is smaller than the buffer size.
 
----------------------------------------------------------------------------
+Finally the read_file_rcstat() function added an explicit NULL terminator
+before calling snprintf().  That's unnecessary because snprintf() will 
+add the null terminator automatically.
 
-ar9170.fw: fix bashisms while building the cross toolchain.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-
---- a/toolchain/Makefile
-+++ b/toolchain/Makefile
-@@ -31,7 +31,8 @@ src/newlib-$(NEWLIB_VER): src/$(NEWLIB_T
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 2ca9bba..f344128 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -41,7 +41,7 @@ static ssize_t read_file_debug(struct file *file, char __user *user_buf,
+ 	char buf[32];
+ 	unsigned int len;
  
- src/gcc-$(GCC_VER): src/$(GCC_TAR) src/newlib-$(NEWLIB_VER)
- 	tar -C src -xjf $<
--	ln -s $(BASEDIR)/src/newlib-$(NEWLIB_VER)/{newlib,libgloss} $@
-+	ln -s $(BASEDIR)/src/newlib-$(NEWLIB_VER)/newlib $@
-+	ln -s $(BASEDIR)/src/newlib-$(NEWLIB_VER)/libgloss $@
+-	len = snprintf(buf, sizeof(buf), "0x%08x\n", common->debug_mask);
++	len = sprintf(buf, "0x%08x\n", common->debug_mask);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
  
- binutils: src/binutils-$(BINUTILS_VER)
- 	mkdir -p build/binutils
-
----------------------------------------------------------------------------
-
-While you're at it, I'd suggest to bump the versions for the required 
-cross-build environment as well, as it noticably improves stability of the 
-firmware images built by it (still not perfectly, but better).
-
----------------------------------------------------------------------------
-
-ar9170.fw: update cross-toolchain.
-
-Updating the toolchain improves stability of the built firmware images 
-significantly.
-
-* gcc-4.4.4
-* binutils-2.20.1
-* newlib 1.18.0
-
-Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-
---- a/toolchain/Makefile
-+++ b/toolchain/Makefile
-@@ -1,12 +1,12 @@
--BINUTILS_VER=2.19.1
-+BINUTILS_VER=2.20.1
- BINUTILS_URL=http://mirrors.kernel.org/gnu/binutils/binutils-$(BINUTILS_VER).tar.bz2
- BINUTILS_TAR=binutils-$(BINUTILS_VER).tar.bz2
+@@ -85,7 +85,7 @@ static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
+ 	char buf[32];
+ 	unsigned int len;
  
--NEWLIB_VER=1.17.0
-+NEWLIB_VER=1.18.0
- NEWLIB_URL=ftp://sources.redhat.com/pub/newlib/newlib-$(NEWLIB_VER).tar.gz
- NEWLIB_TAR=newlib-$(NEWLIB_VER).tar.gz
+-	len = snprintf(buf, sizeof(buf), "0x%08x\n", common->tx_chainmask);
++	len = sprintf(buf, "0x%08x\n", common->tx_chainmask);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
  
--GCC_VER=4.3.3
-+GCC_VER=4.4.4
- GCC_URL=http://mirrors.kernel.org/gnu/gcc/gcc-$(GCC_VER)/gcc-core-$(GCC_VER).tar.bz2
- GCC_TAR=gcc-core-$(GCC_VER).tar.bz2
+@@ -127,7 +127,7 @@ static ssize_t read_file_rx_chainmask(struct file *file, char __user *user_buf,
+ 	char buf[32];
+ 	unsigned int len;
  
----------------------------------------------------------------------------
-
-Regards
-	Stefan Lippers-Hollmann
+-	len = snprintf(buf, sizeof(buf), "0x%08x\n", common->rx_chainmask);
++	len = sprintf(buf, "0x%08x\n", common->rx_chainmask);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+@@ -247,6 +247,9 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
+ 
+ 	ath9k_ps_restore(sc);
+ 
++	if (len > DMA_BUF_LEN)
++		len = DMA_BUF_LEN;
++
+ 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ 	kfree(buf);
+ 	return retval;
+@@ -357,6 +360,9 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 		"%8s: %10u\n", "TOTAL", sc->debug.stats.istats.total);
+ 
++	if (len > sizeof(buf))
++		len = sizeof(buf);
++
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+@@ -396,11 +402,10 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+ 	if (sc->cur_rate_table == NULL)
+ 		return 0;
+ 
+-	max = 80 + sc->cur_rate_table->rate_cnt * 1024;
+-	buf = kmalloc(max + 1, GFP_KERNEL);
++	max = 80 + sc->cur_rate_table->rate_cnt * 1024 + 1;
++	buf = kmalloc(max, GFP_KERNEL);
+ 	if (buf == NULL)
+ 		return 0;
+-	buf[max] = 0;
+ 
+ 	len += sprintf(buf, "%6s %6s %6s "
+ 		       "%10s %10s %10s %10s\n",
+@@ -442,6 +447,9 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+ 			stats->per);
+ 	}
+ 
++	if (len > max)
++		len = max;
++
+ 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ 	kfree(buf);
+ 	return retval;
+@@ -504,6 +512,9 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"addrmask: %pM\n", addr);
+ 
++	if (len > sizeof(buf))
++		len = sizeof(buf);
++
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+@@ -647,6 +658,9 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("DATA Underrun:   ", data_underrun);
+ 	PR("DELIM Underrun:  ", delim_underrun);
+ 
++	if (len > size)
++		len = size;
++
+ 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ 	kfree(buf);
+ 
+@@ -750,6 +764,9 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	PHY_ERR("HT-LENGTH", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
+ 	PHY_ERR("HT-RATE", ATH9K_PHYERR_HT_RATE_ILLEGAL);
+ 
++	if (len > size)
++		len = size;
++
+ 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ 	kfree(buf);
+ 
+@@ -801,7 +818,7 @@ static ssize_t read_file_regidx(struct file *file, char __user *user_buf,
+ 	char buf[32];
+ 	unsigned int len;
+ 
+-	len = snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.regidx);
++	len = sprintf(buf, "0x%08x\n", sc->debug.regidx);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+@@ -842,7 +859,7 @@ static ssize_t read_file_regval(struct file *file, char __user *user_buf,
+ 	u32 regval;
+ 
+ 	regval = REG_READ_D(ah, sc->debug.regidx);
+-	len = snprintf(buf, sizeof(buf), "0x%08x\n", regval);
++	len = sprintf(buf, "0x%08x\n", regval);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
