@@ -1,30 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:55428 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753853Ab0EKSQI (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:42648 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332Ab0ENFTa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 14:16:08 -0400
-Received: by pva18 with SMTP id 18so147855pva.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 11:16:06 -0700 (PDT)
+	Fri, 14 May 2010 01:19:30 -0400
+Message-ID: <4BECDD5D.9010609@gmail.com>
+Date: Thu, 13 May 2010 22:19:25 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1273591383-76696-2-git-send-email-nbd@openwrt.org>
-References: <1273591383-76696-1-git-send-email-nbd@openwrt.org>
-	<1273591383-76696-2-git-send-email-nbd@openwrt.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 11 May 2010 11:15:46 -0700
-Message-ID: <AANLkTilDwhBErduNt_vZLSsEVVkC1SDMwUPkoumym1o3@mail.gmail.com>
-Subject: Re: [PATCH 2/4] ath9k: add debugfs files for reading/writing the rx
-	and tx chainmask
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Pekka Enberg <penberg@cs.helsinki.fi>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Christoph Lameter <cl@linux-foundation.org>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+References: <4BEC7A84.3010503@gmail.com> <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com> 	<AANLkTim7fnKebMoEu1DjD3S-15ZqlTUez3Lpp0wGVJQ6@mail.gmail.com> <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com>
+In-Reply-To: <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 11, 2010 at 8:23 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+On 05/13/10 22:07, Luis R. Rodriguez wrote:
+> On Thu, May 13, 2010 at 9:55 PM, Pekka Enberg<penberg@cs.helsinki.fi>  wrote:
+>> Hi Luis,
+>>
+>> On Fri, May 14, 2010 at 2:01 AM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com>  wrote:
+>>> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
+>>> <justinmattock@gmail.com>  wrote:
+>>>> not sure what this is, but while at a convention
+>>>> I was trying to access the internet and(below is
+>>>> full dmesg) this showed up.
+>>>>
+>>>> After receiving this, I sat and tried to re-create
+>>>> my steps to reproduce but had no luck(was even going
+>>>> todo a bisect n the spot if I could re-create).
+>>>
+>>> OK this stuff is hard to reproduce it seems.. you have an Atheros
+>>> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
+>>> to get the poison stuff? I am just surprised we haven't seen it
+>>> ourselves yet. Let me make sure all of us get this kconfig option
+>>> enabled.
+>>
+>> CONFIG_SLUB_DEBUG and then either CONFIG_SLUB_DEBUG_ON or pass
+>> 'slub_debug' as kernel parameter.
+>
+> Ah OK I had CONFIG_SLUB_DEBUG but not  CONFIG_SLUB_DEBUG_ON, will
+> enable it from here on.
+>
+>    Luis
+>
 
-How about we use bruno's patch instead and we help review it for
-802.11n? Then this would not be needed?
+I enable these options as well..
+(then see If I can(hopefully)re-create this
+then I'll bisect it).
 
-  Luis
+Justin P. Mattock
