@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f183.google.com ([209.85.221.183]:46983 "EHLO
-	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277Ab0ETPWZ (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40237 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976Ab0ENEzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 May 2010 11:22:25 -0400
-Received: by qyk13 with SMTP id 13so13159374qyk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 08:22:25 -0700 (PDT)
+	Fri, 14 May 2010 00:55:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinRbL-9udra90QbgYxr1x3VVgzNZI82xfbrg9PB@mail.gmail.com>
-References: <AANLkTimKdb5sUCSq1i3gfeV0GLNiNFyfK057q26Kw67n@mail.gmail.com>
-	 <AANLkTimly6U5ZIYR8epN1povTgoCEG3STEuy2-1T-9Gq@mail.gmail.com>
-	 <AANLkTinRbL-9udra90QbgYxr1x3VVgzNZI82xfbrg9PB@mail.gmail.com>
-Date: Thu, 20 May 2010 20:52:24 +0530
-Message-ID: <AANLkTil6F_08X1Cpf0XK-TCZWvJHZU3jcjaQ-FqmcZzM@mail.gmail.com>
-Subject: Re: wireless card that support master mode
-From: VivekKumar Singh <vivekkumar.singh@iiitb.net>
-To: Bob Beers <bob.beers@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>
+References: <4BEC7A84.3010503@gmail.com>
+	 <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>
+Date: Fri, 14 May 2010 07:55:37 +0300
+Message-ID: <AANLkTim7fnKebMoEu1DjD3S-15ZqlTUez3Lpp0wGVJQ6@mail.gmail.com>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+From: Pekka Enberg <penberg@cs.helsinki.fi>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Christoph Lameter <cl@linux-foundation.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bob,
+Hi Luis,
 
-Thanks a lot for your help.
-
-I want to ask that is it possible to change the tranmission power of a
-athros card without rebooting the card?
-
-
-Thanks,
-
-Vivek
-
-On Thu, May 20, 2010 at 7:54 PM, Bob Beers <bob.beers@gmail.com> wrote:
-> On Thu, May 20, 2010 at 8:12 AM, VivekKumar Singh
-> <vivekkumar.singh@iiitb.net> wrote:
->> Dear Friends,
+On Fri, May 14, 2010 at 2:01 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
+> <justinmattock@gmail.com> wrote:
+>> not sure what this is, but while at a convention
+>> I was trying to access the internet and(below is
+>> full dmesg) this showed up.
 >>
->> I have to purchase a PCI based wireless card that can support "master
->> mode" in linux. I want to make it to work like an access point. But
->> not all cards support "master mode".
->>
->> Please mail me some wireless cards (PCI / USB) model number/company
->> name that supports "master mode".
+>> After receiving this, I sat and tried to re-create
+>> my steps to reproduce but had no luck(was even going
+>> todo a bisect n the spot if I could re-create).
 >
-> Maybe this is helpful?
-> <http://linuxwireless.org/en/users/Drivers>
->
-> -Bob Beers
->
+> OK this stuff is hard to reproduce it seems.. you have an Atheros
+> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
+> to get the poison stuff? I am just surprised we haven't seen it
+> ourselves yet. Let me make sure all of us get this kconfig option
+> enabled.
 
-
-
--- 
-Thanks and Regards,
-
-Vivek Kumar Singh
-MT-2009146
-IIITB, Bangalore
-
-(91)9886317184
+CONFIG_SLUB_DEBUG and then either CONFIG_SLUB_DEBUG_ON or pass
+'slub_debug' as kernel parameter.
