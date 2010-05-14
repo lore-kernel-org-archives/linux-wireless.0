@@ -1,130 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jack.hrz.tu-chemnitz.de ([134.109.132.46]:41613 "EHLO
-	jack.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755595Ab0E2WIH (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:20739 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755368Ab0ENGUy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 May 2010 18:08:07 -0400
-From: Tobias Doerffel <tobias.doerffel@gmail.com>
-To: ath5k-devel@lists.ath5k.org
-Subject: Commit 6b5d11 breaks association with WPA enabled APs
-Date: Sat, 29 May 2010 23:36:20 +0200
-Cc: linux-wireless@vger.kernel.org
+	Fri, 14 May 2010 02:20:54 -0400
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0316618051
+	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 15:20:52 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+Date: Fri, 14 May 2010 15:20:30 +0900
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <4BEC7A84.3010503@gmail.com> <4BECD518.6040801@gmail.com> <AANLkTinE1q2K3j-IwCa3IPzTUChgi9wKTqBrVR1mGlv9@mail.gmail.com>
+In-Reply-To: <AANLkTinE1q2K3j-IwCa3IPzTUChgi9wKTqBrVR1mGlv9@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2346918.EW6y1LvLup";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201005292336.37765.tobias.doerffel@gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201005141520.30802.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2346918.EW6y1LvLup
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Friday 14 May 2010 15:16:22 Luis R. Rodriguez wrote:
+> On Thu, May 13, 2010 at 9:44 PM, Justin P. Mattock
+> 
+> <justinmattock@gmail.com> wrote:
+> > On 05/13/10 21:01, Luis R. Rodriguez wrote:
+> >> On Thu, May 13, 2010 at 7:14 PM, Justin P. Mattock
+> >> 
+> >> <justinmattock@gmail.com>  wrote:
+> >>> what I can try, is(not at the convention, on eth0
+> >>> at the moment), but when I get back to the convention
+> >>> center place I can try your patch as well as the
+> >>> modprobe option, to see if I can get any signs of
+> >>> a recreation(if so I'll bisect there).
+> >> 
+> >> The debug info I just need upon load of the module, I don't need you
+> >> to run the debug stuff to try to reproduce. The debug print upon load
+> >> will tell us the rxbuf size and cache line size.
+> >> 
+> >>   Luis
+> > 
+> > o.k. it's not pretty due
+> > to loads of avc's for SELinux:
+> > (I run a rootless system).
+> > 
+> > [   84.172649] ath9k: Driver unloaded
+> > [  100.675300] audit_printk_skb: 6 callbacks suppressed
+> > [  100.675306] type=1400 audit(1273811633.675:20): avc:  denied  { search
+> > } for  pid=2168 comm="modprobe" name="modules" dev=sda3 ino=2500
+> > scontext=name:staff_r:staff_sudo_t:s0
+> > tcontext=system_u:object_r:modules_object_t:s0 tclass=dir
+> > [  100.675408] type=1400 audit(1273811633.675:20): avc:  denied  { search
+> > } for  pid=2168 comm="modprobe" name="2.6.34-rc7-00057-gcdfda35"
+> > dev=sda3 ino=524392 scontext=name:staff_r:staff_sudo_t:s0
+> > tcontext=name:object_r:modules_object_t:s0 tclass=dir
+> > [  100.675552] type=1400 audit(1273811633.675:20): avc:  denied  { read }
+> > for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3 ino=525251
+> > scontext=name:staff_r:staff_sudo_t:s0
+> > tcontext=name:object_r:modules_object_t:s0 tclass=file
+> > [  100.675598] type=1400 audit(1273811633.675:20): avc:  denied  { open }
+> > for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3 ino=525251
+> > scontext=name:staff_r:staff_sudo_t:s0
+> > tcontext=name:object_r:modules_object_t:s0 tclass=file
+> > [  100.675748] type=1300 audit(1273811633.675:20): arch=c000003e
+> > syscall=2 success=yes exit=3 a0=60d140 a1=0 a2=1b6 a3=0 items=0
+> > ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0
+> > sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" exe="/sbin/modprobe"
+> > subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> > [  100.675902] type=1400 audit(1273811633.675:21): avc:  denied  {
+> > getattr } for  pid=2168 comm="modprobe"
+> > path="/lib/modules/2.6.34-rc7-00057-gcdfda35/modules.dep.bin" dev=sda3
+> > ino=525251 scontext=name:staff_r:staff_sudo_t:s0
+> > tcontext=name:object_r:modules_object_t:s0 tclass=file
+> > [  100.676052] type=1300 audit(1273811633.675:21): arch=c000003e
+> > syscall=5 success=yes exit=0 a0=3 a1=7fffd2d1dd70 a2=7fffd2d1dd70 a3=0
+> > items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0
+> > egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe"
+> > exe="/sbin/modprobe"
+> > subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> > [  100.698392] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) ->
+> > IRQ 17
+> > [  100.698409] ath9k 0000:03:00.0: setting latency timer to 64
+> > [  100.828787] ath: EEPROM regdomain: 0x64
+> > [  100.828790] ath: EEPROM indicates we should expect a direct regpair
+> > map [  100.828793] ath: Country alpha2 being used: 00
+> > [  100.828795] ath: Regpair used: 0x64
+> > [  100.848609] type=1400 audit(1273811633.678:22): avc:  denied  { search
+> > } for  pid=2168 comm="modprobe" name="ieee80211" dev=debugfs ino=18
+> > scontext=name:staff_r:staff_sudo_t:s0
+> > tcontext=system_u:object_r:debugfs_t:s0 tclass=dir
+> > [  100.848788] phy1: Selected rate control algorithm 'ath9k_rate_control'
+> > [  100.850035] Registered led device: ath9k-phy1::radio
+> > [  100.850488] Registered led device: ath9k-phy1::assoc
+> > [  100.851227] Registered led device: ath9k-phy1::tx
+> > [  100.851633] Registered led device: ath9k-phy1::rx
+> > [  100.851640] phy1: Atheros AR5418 MAC/BB Rev:2 AR5133 RF Rev:81
+> > mem=0xffffc900005a0000, irq=17
+> > [  100.852240] type=1300 audit(1273811633.678:22): arch=c000003e
+> > syscall=175 success=yes exit=0 a0=7f1e9d6ab010 a1=19580 a2=60d920 a3=0
+> > items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0
+> > egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe"
+> > exe="/sbin/modprobe"
+> > subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> > 
+> > but there you go dmesg of the debug info for you
+> 
+> Justin, did you forget to use the debug parameter on modprobe ath9k?
+> 
+> modprobe ath9k debug=0x0000020
+> 
+> I do not see the output I expected.
 
-Hi,
+i think you have to do at least "ifconfig wlan0 up" to see it - (at least for 
+ath5k).
 
-using the latest kernel (Linus master branch) breaks my wireless connection=
-=20
-(ath5k/AR5001), i.e. I'm not able to connect to my WPA-secured AP anymore.=
-=20
-It's been working fine up to (and including) 2.6.34.
-
-Verbose output of wpa_supplicant:
-
-Selecting BSS from priority group 0
-Try to find WPA-enabled AP
-0: 00:XX:XX:XX:XX:c6 ssid=3D'myAP' wpa_ie_len=3D0 rsn_ie_len=3D20 caps=3D0x=
-11
-   skip - SSID mismatch
-   selected based on RSN IE
-   selected WPA AP 00:XX:11:XX:XX:c6 ssid=3D'myAP'
-Trying to associate with 00:XX:XX:XX:XX:c6 (SSID=3D'myAP' freq=3D2462 MHz)
-Cancelling scan request
-WPA: clearing own WPA/RSN IE
-Automatic auth_alg selection: 0x1
-RSN: using IEEE 802.11i/D9.0
-WPA: Selected cipher suites: group 16 pairwise 16 key_mgmt 2 proto 2
-WPA: clearing AP WPA IE
-WPA: set AP RSN IE - hexdump(len=3D22): 30 14 01 00 00 0f ac 04 01 00 00 0f=
- ac=20
-04 01 00 00 0f ac 02 00 00
-WPA: using GTK CCMP
-WPA: using PTK CCMP
-WPA: using KEY_MGMT WPA-PSK
-WPA: not using MGMT group cipher
-WPA: Set own WPA IE default - hexdump(len=3D22): 30 14 01 00 00 0f ac 04 01=
- 00=20
-00 0f ac 04 01 00 00 0f ac 02 00 00
-No keys have been configured - skip key clearing
-wpa_driver_wext_set_drop_unencrypted
-State: SCANNING -> ASSOCIATING
-wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
-WEXT: Operstate: linkmode=3D-1, operstate=3D5
-wpa_driver_wext_associate
-wpa_driver_wext_set_psk
-Setting authentication timeout: 10 sec 0 usec
-EAPOL: External notification - EAP success=3D0
-EAPOL: External notification - EAP fail=3D0
-EAPOL: External notification - portControl=3DAuto
-RSN: Ignored PMKID candidate without preauth flag
-RTM_NEWLINK: operstate=3D0 ifi_flags=3D0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-Wireless event: cmd=3D0x8b06 len=3D8
-RTM_NEWLINK: operstate=3D0 ifi_flags=3D0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-Wireless event: cmd=3D0x8b04 len=3D12
-RTM_NEWLINK: operstate=3D0 ifi_flags=3D0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-Wireless event: cmd=3D0x8b1a len=3D15
-
-[delay of some seconds]
-
-Authentication with 00:XX:X:XX:XX:c6 timed out.
-Added BSSID 00:XX:XX:XX:XX:c6 into blacklist
-No keys have been configured - skip key clearing
-State: ASSOCIATING -> DISCONNECTED
-wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
-WEXT: Operstate: linkmode=3D-1, operstate=3D5
-EAPOL: External notification - portEnabled=3D0
-EAPOL: External notification - portValid=3D0
-EAPOL: External notification - EAP success=3D0
-Setting scan request: 0 sec 0 usec
-State: DISCONNECTED -> SCANNING
-Starting AP scan (broadcast SSID)
-Scan requested (ret=3D0) - scan timeout 30 seconds
-RTM_NEWLINK: operstate=3D0 ifi_flags=3D0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
-Wireless event: cmd=3D0x8b19 len=3D8
-Received 3379 bytes of scan results (10 BSSes)
-New scan results available
-Selecting BSS from priority group 2
-Try to find WPA-enabled AP
-=2E..
-
-and the whole procedure starts over and over again. I therefore started to=
-=20
-bisect the issue and finally was able to blame commit=20
-6b5d117eddc09cd976ad8030d715f4350f598a22 ("ath5k: clean up queue=20
-manipulation"). After reverting the commit on-top of my branch, everything=
-=20
-works fine again! So please have a look at it and/or revert the commit.
-
-Regards
-
-Toby
-
---nextPart2346918.EW6y1LvLup
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEABECAAYFAkwBiNQACgkQHsjdpw2OaafqwQCfQlHCqNyK9/FBzJwK76pnsjhC
-piQAoKHrQQa2bPyIyH6VzA/7VF8EFPP+
-=f+6o
------END PGP SIGNATURE-----
-
---nextPart2346918.EW6y1LvLup--
+bruno
