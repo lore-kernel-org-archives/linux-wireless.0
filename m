@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:53625 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752557Ab0EANGN (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:46861 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880Ab0ENAV1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 09:06:13 -0400
-Received: by wye20 with SMTP id 20so765670wye.19
-        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2010 06:06:12 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net, linville@tuxdriver.com,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 5/6] orinoco_usb: avoid in_atomic
-Date: Sat,  1 May 2010 14:05:42 +0100
-Message-Id: <1272719143-26171-6-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1272719143-26171-1-git-send-email-kilroyd@googlemail.com>
-References: <1272719143-26171-1-git-send-email-kilroyd@googlemail.com>
+	Thu, 13 May 2010 20:21:27 -0400
+Message-ID: <4BEC9782.2040705@gmail.com>
+Date: Thu, 13 May 2010 17:21:22 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+References: <4BEC7A84.3010503@gmail.com> <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>
+In-Reply-To: <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We expect to be either in process contect or soft interrupt context. So
-use in_softirq instead.
+On 05/13/10 16:01, Luis R. Rodriguez wrote:
+> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
+> <justinmattock@gmail.com>  wrote:
+>> not sure what this is, but while at a convention
+>> I was trying to access the internet and(below is
+>> full dmesg) this showed up.
+>>
+>> After receiving this, I sat and tried to re-create
+>> my steps to reproduce but had no luck(was even going
+>> todo a bisect n the spot if I could re-create).
+>
+> OK this stuff is hard to reproduce it seems.. you have an Atheros
+> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
+> to get the poison stuff? I am just surprised we haven't seen it
+> ourselves yet. Let me make sure all of us get this kconfig option
+> enabled.
+>
+>    Luis
+>
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/orinoco_usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index ce0069d..8e1b31c 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -701,7 +701,7 @@ static void ezusb_req_ctx_wait(struct ezusb_priv *upriv,
- 	case EZUSB_CTX_REQ_SUBMITTED:
- 	case EZUSB_CTX_REQ_COMPLETE:
- 	case EZUSB_CTX_RESP_RECEIVED:
--		if (in_atomic()) {
-+		if (in_softirq()) {
- 			/* If we get called from a timer, timeout timers don't
- 			 * get the chance to run themselves. So we make sure
- 			 * that we don't sleep for ever */
--- 
-1.6.4.4
 
+CONFIG_ATH_COMMON=m
+# CONFIG_ATH_DEBUG is not set
+CONFIG_ATH5K=m
+# CONFIG_ATH5K_DEBUG is not set
+CONFIG_ATH9K_HW=m
+CONFIG_ATH9K_COMMON=m
+CONFIG_ATH9K=m
+# CONFIG_ATH9K_DEBUGFS is not set
+
+if you need my .config let me know.
+(I can try again reproducing, but man
+just doesn't easily fire off).
+
+Justin P. Mattock
