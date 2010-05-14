@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:30802 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755178Ab0ELJkk (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56959 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544Ab0ENP1G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 05:40:40 -0400
-Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0395227238
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:40:38 +0900 (JST)
-Subject: [PATCH 11/12] ath5k: always calculate ANI listen time
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 12 May 2010 18:40:39 +0900
-Message-ID: <20100512094039.6575.9705.stgit@tt-desk>
-In-Reply-To: <20100512093947.6575.99595.stgit@tt-desk>
-References: <20100512093947.6575.99595.stgit@tt-desk>
+	Fri, 14 May 2010 11:27:06 -0400
+Received: by vws9 with SMTP id 9so159999vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 08:27:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4BED5E08.3050000@openwrt.org>
+References: <1273842938-3401-1-git-send-email-tom.leiming@gmail.com>
+	 <1273842969-3435-1-git-send-email-tom.leiming@gmail.com>
+	 <4BED5E08.3050000@openwrt.org>
+Date: Fri, 14 May 2010 23:27:03 +0800
+Message-ID: <AANLkTikVkBdTopPJlU2lGkafLIkiiviUHe8J-lTy67y9@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ath9k: fix dma sync in rx path
+From: Ming Lei <tom.leiming@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calculate 'listen' time also when automatic ANI is off, since this and the
-"busy" time is useful information also in manual mode.
+2010/5/14 Felix Fietkau <nbd@openwrt.org>:
+> On 2010-05-14 3:16 PM, tom.leiming@gmail.com wrote:
+>> From: Ming Lei <tom.leiming@gmail.com>
+>>
+>> If buffer is to be accessed by cpu after dma transfer is over, but
+>> between dma mapping and dma unmapping, we should use
+>> dma_sync_single_for_cpu to sync the buffer between cpu with
+>> device. And dma_sync_single_for_device is used to let
+>> device gain the buffer again.
+> I think this patch is wrong. On most MIPS devices,
+> dma_sync_single_for_cpu is a no-op. In fact, with this patch, the rx
+> path fails very quickly.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/ani.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+Sorry for  my  bad email client.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ani.c b/drivers/net/wireless/ath/ath5k/ani.c
-index f2311ab..987e3d3 100644
---- a/drivers/net/wireless/ath/ath5k/ani.c
-+++ b/drivers/net/wireless/ath/ath5k/ani.c
-@@ -481,14 +481,15 @@ ath5k_ani_calibration(struct ath5k_hw *ah)
- 	struct ath5k_ani_state *as = &ah->ah_sc->ani_state;
- 	int listen, ofdm_high, ofdm_low, cck_high, cck_low;
- 
--	if (as->ani_mode != ATH5K_ANI_MODE_AUTO)
--		return;
--
- 	/* get listen time since last call and add it to the counter because we
--	 * might not have restarted the "ani period" last time */
-+	 * might not have restarted the "ani period" last time.
-+	 * always do this to calculate the busy time also in manual mode */
- 	listen = ath5k_hw_ani_get_listen_time(ah, as);
- 	as->listen_time += listen;
- 
-+	if (as->ani_mode != ATH5K_ANI_MODE_AUTO)
-+		return;
-+
- 	ath5k_ani_save_and_clear_phy_errors(ah, as);
- 
- 	ofdm_high = as->listen_time * ATH5K_ANI_OFDM_TRIG_HIGH / 1000;
+On most MIPS devices,  dma_sync_single_for_cpu does same things
+almost with dma_unmap_single(plat_unmap_dma_mem is no-op). If
+dma_unmap_single is enough, dma_sync_single_for_cpu is certainly
+enough,
+isn't it?
 
+For the usage of dma_sync_single_for_cpu or dma_sync_single_for_device,
+Documentation/DMA-API*.txt give more details.
+
+> I believe keeping the dma_sync_single_for_device variant is necessary
+> for all syncs.
+
+Thanks,
+
+-- 
+Lei Ming
