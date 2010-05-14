@@ -1,80 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40079 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756882Ab0EDHxB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 03:53:01 -0400
-Subject: Re: [RFC] mac80211: radiotap vendor data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Joshua Zhao <Joshua.Zhao@atheros.com>,
-	Matt Smith <Matt.Smith@atheros.com>
-In-Reply-To: <o2k43e72e891005031516g31c22cdbt3ee5d766e63b3f2c@mail.gmail.com>
-References: <1272734031.8461.0.camel@jlt3.sipsolutions.net>
-	 <o2k43e72e891005031516g31c22cdbt3ee5d766e63b3f2c@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 04 May 2010 09:52:56 +0200
-Message-ID: <1272959576.3673.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:59784 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070Ab0ENFsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 01:48:30 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 22:48:30 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19436.58440.277148.994193@gargle.gargle.HOWL>
+Date: Fri, 14 May 2010 11:18:56 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/4] ath9k_htc: Initialize beacon/CAB queues
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-03 at 15:16 -0700, Luis R. Rodriguez wrote:
+This patch initializes the beacon and CAB HW queues
+when the driver is loaded.
 
-> > Note: 11n shouldn't be done there, in case somebody
-> > got ideas!!
-> 
-> Well you mean 802.11n standard stuff, I take it, because there are
-> vendor 802.11n specific stuff.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          |    4 +++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   14 ++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   28 ++++++++++++++++++------
+ 3 files changed, 39 insertions(+), 7 deletions(-)
 
-Well most of it should really be standardised :)
-
-> > + * @vendor_radiotap_bitmap: radiotap vendor namespace presence bitmap
-> > + * @vendor_radiotap_len: radiotap vendor namespace length
-> > + * @vendor_radiotap_align: radiotap vendor namespace alignment. Note
-> > + *     that the actual data must be at the start of the SKB data
-> > + *     already.
-> 
-> I see your WARN_ON() on the alignment being set to 0 and set it to 1
-> then. Can you clarify a little more on this here. If there is no
-> strict alignment requirements why not just treat 0 as 1 then?
-
-Just want people to be aware that they need to think about alignment --
-zero being the default value for most things here due to kzalloc would
-mean accepting it people wouldn't think about allocations. And most of
-the time alignment should be required.
-
-> > @@ -190,11 +218,26 @@ ieee80211_add_rx_radiotap_header(struct
-> >        /* IEEE80211_RADIOTAP_RX_FLAGS */
-> >        /* ensure 2 byte alignment for the 2 byte field as required */
-> >        if ((pos - (u8 *)rthdr) & 1)
-> > -               pos++;
-> > +               *pos++ = 0;
-> 
-> Why is this needed though? We already memset(rthdr, 0, rtap_len); above.
-
-Yeah you're probably right, dunno.
-
-> > +       vendor_data = skb_push(skb, 4);
-> > +       rx_status.vendor_radiotap_len = 4;
-> > +       rx_status.vendor_radiotap_align = 4;
-> > +       rx_status.vendor_radiotap_oui[0] = 0xff;
-> > +       rx_status.vendor_radiotap_oui[1] = 0xff;
-> > +       rx_status.vendor_radiotap_oui[2] = 0xff;
-> > +       rx_status.vendor_radiotap_subns = 129;
-> > +       rx_status.vendor_radiotap_bitmap = 0x1;
-> > +
-> > +       *vendor_data++ = 1;
-> > +       *vendor_data++ = 2;
-> > +       *vendor_data++ = 3;
-> > +       *vendor_data++ = 4;
-> > +
-> 
-> Heh nice, now we just need a sample radiotap vendor extension parser example.
-
-http://git.sipsolutions.net/?p=radiotap.git;a=summary
-https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=4421
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 2dd9ad3..47255c8 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -392,6 +392,9 @@ struct ath9k_htc_priv {
+ 	int led_off_duration;
+ 	int led_on_cnt;
+ 	int led_off_cnt;
++
++	int beaconq;
++	int cabq;
+ 	int hwq_map[ATH9K_WME_AC_VO+1];
+ 
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+@@ -428,6 +431,7 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb);
+ void ath9k_tx_cleanup(struct ath9k_htc_priv *priv);
+ bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
+ 			 enum ath9k_tx_queue_subtype qtype);
++int ath9k_htc_cabq_setup(struct ath9k_htc_priv *priv);
+ int get_hw_qnum(u16 queue, int *hwq_map);
+ int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
+ 		       struct ath9k_tx_queue_info *qinfo);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index dc01507..7ec2c2e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -420,6 +420,20 @@ static int ath9k_init_queues(struct ath9k_htc_priv *priv)
+ 	for (i = 0; i < ARRAY_SIZE(priv->hwq_map); i++)
+ 		priv->hwq_map[i] = -1;
+ 
++	priv->beaconq = ath9k_hw_beaconq_setup(priv->ah);
++	if (priv->beaconq == -1) {
++		ath_print(common, ATH_DBG_FATAL,
++			  "Unable to setup BEACON xmit queue\n");
++		goto err;
++	}
++
++	priv->cabq = ath9k_htc_cabq_setup(priv);
++	if (priv->cabq == -1) {
++		ath_print(common, ATH_DBG_FATAL,
++			  "Unable to setup CAB xmit queue\n");
++		goto err;
++	}
++
+ 	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_BE)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for BE traffic\n");
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 2a0585d..15e716a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -20,6 +20,16 @@
+ /* TX */
+ /******/
+ 
++#define ATH9K_HTC_INIT_TXQ(subtype) do {			\
++		qi.tqi_subtype = subtype;			\
++		qi.tqi_aifs = ATH9K_TXQ_USEDEFAULT;		\
++		qi.tqi_cwmin = ATH9K_TXQ_USEDEFAULT;		\
++		qi.tqi_cwmax = ATH9K_TXQ_USEDEFAULT;		\
++		qi.tqi_physCompBuf = 0;				\
++		qi.tqi_qflags = TXQ_FLAG_TXEOLINT_ENABLE |	\
++			TXQ_FLAG_TXDESCINT_ENABLE;		\
++	} while (0)
++
+ int get_hw_qnum(u16 queue, int *hwq_map)
+ {
+ 	switch (queue) {
+@@ -297,13 +307,7 @@ bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
+ 	int qnum;
+ 
+ 	memset(&qi, 0, sizeof(qi));
+-
+-	qi.tqi_subtype = subtype;
+-	qi.tqi_aifs = ATH9K_TXQ_USEDEFAULT;
+-	qi.tqi_cwmin = ATH9K_TXQ_USEDEFAULT;
+-	qi.tqi_cwmax = ATH9K_TXQ_USEDEFAULT;
+-	qi.tqi_physCompBuf = 0;
+-	qi.tqi_qflags = TXQ_FLAG_TXEOLINT_ENABLE | TXQ_FLAG_TXDESCINT_ENABLE;
++	ATH9K_HTC_INIT_TXQ(subtype);
+ 
+ 	qnum = ath9k_hw_setuptxqueue(priv->ah, ATH9K_TX_QUEUE_DATA, &qi);
+ 	if (qnum == -1)
+@@ -321,6 +325,16 @@ bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
+ 	return true;
+ }
+ 
++int ath9k_htc_cabq_setup(struct ath9k_htc_priv *priv)
++{
++	struct ath9k_tx_queue_info qi;
++
++	memset(&qi, 0, sizeof(qi));
++	ATH9K_HTC_INIT_TXQ(0);
++
++	return ath9k_hw_setuptxqueue(priv->ah, ATH9K_TX_QUEUE_CAB, &qi);
++}
++
+ /******/
+ /* RX */
+ /******/
+-- 
+1.7.1
 
