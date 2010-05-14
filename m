@@ -1,74 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:46162 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754153Ab0ESAWs (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:56093 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999Ab0ENOv3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 20:22:48 -0400
-Message-ID: <4BF32B2B.6010202@redfish-solutions.com>
-Date: Tue, 18 May 2010 18:04:59 -0600
-From: "Philip A. Prindeville" <philipp@redfish-solutions.com>
+	Fri, 14 May 2010 10:51:29 -0400
+Received: by wwi18 with SMTP id 18so599560wwi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 07:51:27 -0700 (PDT)
+Date: Fri, 14 May 2010 16:50:56 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ming Lei <tom.leiming@gmail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [patch -next 1/2] ath9k_htc: dereferencing before check in
+	hif_usb_tx_cb()
+Message-ID: <20100514145056.GE17487@bicker>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: dunc@lemonia.org, kalle.valo@iki.fi, kaber@trash.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-References: <87my01m0zm.fsf@purkki.valot.fi>	<4B5EF5DF.2070005@lemonia.org>	<4B9942A7.40205@redfish-solutions.com> <20100311.112754.142886660.davem@davemloft.net> <4B9944A0.5080308@redfish-solutions.com>
-In-Reply-To: <4B9944A0.5080308@redfish-solutions.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/2010 12:29 PM, Philip A. Prindeville wrote:
-> On 03/11/2010 12:27 PM, David Miller wrote:
->   
->> From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
->> Date: Thu, 11 Mar 2010 12:21:11 -0700
->>
->>     
->>> And yes, there will always be misbehaving users.  They are a fact of
->>> life.  That doesn't mean we should lobotomize the network.  We don't
->>> have an authentication mechanism on ICMP Redirects or Source-Quench,
->>>       
->> Which is why most networks block those packets from the outside.
->>
->>     
->>> Nor is ARP authenticated.
->>>       
->> Which is why people control who can plug into their physical
->> network.
->>
->> None of the things you are saying support the idea of having
->> applications decide what the DSCP marking should be.
->>     
->
-> Does "decide what the DSCP marking should be" include complying to the recommendations of RFC-4594?
->   
+After c11d8f89d3b7: "ath9k_htc: Simplify TX URB management" we no longer
+assume that tx_buf is a non-null pointer.
 
-If anyone cares, here's an update:
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-I've submitted patches for QoS configuration for:
-
-APR/Apache (stalled);
-Proftpd (committed);
-Openssh (pending review);
-Firefox/Thunderbird (reviewed and on-track for commit);
-Cyrus (committed);
-Sendmail (submittted and acknowledged, but not yet reviewed);
-Curl (stalled);
-
-All, as per the request of the maintainers, default to either no QoS
-markings or previous RFC-791 QoS markings if that's what they already
-supported (Proftpd and Openssh).
-
-If anyone can think of anything else that needs to be supported to
-impact a significant portion of network (or enterprise intranet)
-traffic, please call it out.
-
-And if anyone wants to see if they can help get Apache unstalled (it's
-mostly an autoconf issue with Solaris that's holding things up), please
-give me a holler offline.
-
-Thanks.
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 46dc41a..ac82911 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -107,12 +107,14 @@ static inline void ath9k_skb_queue_purge(struct hif_device_usb *hif_dev,
+ static void hif_usb_tx_cb(struct urb *urb)
+ {
+ 	struct tx_buf *tx_buf = (struct tx_buf *) urb->context;
+-	struct hif_device_usb *hif_dev = tx_buf->hif_dev;
++	struct hif_device_usb *hif_dev;
+ 	struct sk_buff *skb;
+ 
+-	if (!hif_dev || !tx_buf)
++	if (!tx_buf || !tx_buf->hif_dev)
+ 		return;
+ 
++	hif_dev = tx_buf->hif_dev;
++
+ 	switch (urb->status) {
+ 	case 0:
+ 		break;
