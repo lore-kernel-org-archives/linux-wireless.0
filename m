@@ -1,187 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42059 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932574Ab0EMVuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:50:18 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:10030 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752671Ab0ENHvW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 03:51:22 -0400
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0526163477
+	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 16:51:19 +0900 (JST)
+Subject: [PATCH] ath5k: consistently use rx_bufsize for RX DMA
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/17] iwlwifi: separate statistics flag function for agn & 3945
-Date: Thu, 13 May 2010 14:49:45 -0700
-Message-Id: <1273787399-9280-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
-References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
+	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com
+Date: Fri, 14 May 2010 16:50:56 +0900
+Message-ID: <20100514074833.10333.81592.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+We should use the same buffer size we set up for DMA also in the hardware
+descriptor. Previously we used common->rx_bufsize for setting up the DMA
+mapping, but skb_tailroom(skb) for the size we tell to the hardware in the
+descriptor itself. The problem is that skb_tailroom(skb) can give us a larger
+value than the size we set up for DMA before: In my case rx_bufsize is 2528,
+and we allocated an skb of 2559 bytes length, including padding for cache
+alignment, but sbk_tailroom() was 2592. Just consistently use rx_bufsize for
+all RX DMA memory sizes.
 
-Since agn and 3945 have different statistics_notif data structure, each
-should has its own statistics_flag function.
+Also check the return value of setup function.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c |   28 ++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c  |   27 +++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-debugfs.c      |   22 ------------------
- 3 files changed, 49 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
-index 6a9c64a..ef0835b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-debugfs.c
-@@ -28,6 +28,28 @@
+PS: I'm not sure if this is enough to fix bug 15861, but it's definetly one
+possibility where the hardware could write out of bounds. But the bug report
+looks too similar to the ath9k one, so i suspect a common bug between ath5k and
+ath9k. (?)
+
+---
+ drivers/net/wireless/ath/ath5k/base.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 9f42af7..5f24e4a 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1217,6 +1217,7 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 	struct ath5k_hw *ah = sc->ah;
+ 	struct sk_buff *skb = bf->skb;
+ 	struct ath5k_desc *ds;
++	int ret;
  
- #include "iwl-3945-debugfs.h"
+ 	if (!skb) {
+ 		skb = ath5k_rx_skb_alloc(sc, &bf->skbaddr);
+@@ -1243,9 +1244,9 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 	ds = bf->desc;
+ 	ds->ds_link = bf->daddr;	/* link to self */
+ 	ds->ds_data = bf->skbaddr;
+-	ah->ah_setup_rx_desc(ah, ds,
+-		skb_tailroom(skb),	/* buffer size */
+-		0);
++	ret = ah->ah_setup_rx_desc(ah, ds, ah->common.rx_bufsize, 0);
++	if (ret)
++		return ret;
  
-+
-+static int iwl3945_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
-+{
-+	int p = 0;
-+
-+	p += scnprintf(buf + p, bufsz - p, "Statistics Flag(0x%X):\n",
-+		       le32_to_cpu(priv->_3945.statistics.flag));
-+	if (le32_to_cpu(priv->_3945.statistics.flag) &
-+			UCODE_STATISTICS_CLEAR_MSK)
-+		p += scnprintf(buf + p, bufsz - p,
-+			       "\tStatistics have been cleared\n");
-+	p += scnprintf(buf + p, bufsz - p, "\tOperational Frequency: %s\n",
-+		       (le32_to_cpu(priv->_3945.statistics.flag) &
-+			UCODE_STATISTICS_FREQUENCY_MSK)
-+			? "2.4 GHz" : "5.2 GHz");
-+	p += scnprintf(buf + p, bufsz - p, "\tTGj Narrow Band: %s\n",
-+		       (le32_to_cpu(priv->_3945.statistics.flag) &
-+			UCODE_STATISTICS_NARROW_BAND_MSK)
-+			? "enabled" : "disabled");
-+	return p;
-+}
-+
- ssize_t iwl3945_ucode_rx_stats_read(struct file *file,
- 				    char __user *user_buf,
- 				    size_t count, loff_t *ppos)
-@@ -70,7 +92,7 @@ ssize_t iwl3945_ucode_rx_stats_read(struct file *file,
- 	max_cck = &priv->_3945.max_delta.rx.cck;
- 	max_general = &priv->_3945.max_delta.rx.general;
- 
--	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
-+	pos += iwl3945_statistics_flag(priv, buf, bufsz);
- 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
- 			 "acumulative       delta         max\n",
- 			 "Statistics_Rx - OFDM:");
-@@ -331,7 +353,7 @@ ssize_t iwl3945_ucode_tx_stats_read(struct file *file,
- 	accum_tx = &priv->_3945.accum_statistics.tx;
- 	delta_tx = &priv->_3945.delta_statistics.tx;
- 	max_tx = &priv->_3945.max_delta.tx;
--	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
-+	pos += iwl3945_statistics_flag(priv, buf, bufsz);
- 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
- 			 "acumulative       delta         max\n",
- 			 "Statistics_Tx:");
-@@ -438,7 +460,7 @@ ssize_t iwl3945_ucode_general_stats_read(struct file *file,
- 	accum_div = &priv->_3945.accum_statistics.general.div;
- 	delta_div = &priv->_3945.delta_statistics.general.div;
- 	max_div = &priv->_3945.max_delta.general.div;
--	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
-+	pos += iwl3945_statistics_flag(priv, buf, bufsz);
- 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
- 			 "acumulative       delta         max\n",
- 			 "Statistics_General:");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-index 90be033..75d6bfc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-@@ -28,6 +28,27 @@
- 
- #include "iwl-agn-debugfs.h"
- 
-+static int iwl_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
-+{
-+	int p = 0;
-+
-+	p += scnprintf(buf + p, bufsz - p, "Statistics Flag(0x%X):\n",
-+		       le32_to_cpu(priv->_agn.statistics.flag));
-+	if (le32_to_cpu(priv->_agn.statistics.flag) &
-+			UCODE_STATISTICS_CLEAR_MSK)
-+		p += scnprintf(buf + p, bufsz - p,
-+			       "\tStatistics have been cleared\n");
-+	p += scnprintf(buf + p, bufsz - p, "\tOperational Frequency: %s\n",
-+		       (le32_to_cpu(priv->_agn.statistics.flag) &
-+			UCODE_STATISTICS_FREQUENCY_MSK)
-+			? "2.4 GHz" : "5.2 GHz");
-+	p += scnprintf(buf + p, bufsz - p, "\tTGj Narrow Band: %s\n",
-+		       (le32_to_cpu(priv->_agn.statistics.flag) &
-+			UCODE_STATISTICS_NARROW_BAND_MSK)
-+			? "enabled" : "disabled");
-+	return p;
-+}
-+
- ssize_t iwl_ucode_rx_stats_read(struct file *file, char __user *user_buf,
- 				size_t count, loff_t *ppos)
-   {
-@@ -75,7 +96,7 @@ ssize_t iwl_ucode_rx_stats_read(struct file *file, char __user *user_buf,
- 	max_general = &priv->_agn.max_delta.rx.general;
- 	max_ht = &priv->_agn.max_delta.rx.ofdm_ht;
- 
--	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
-+	pos += iwl_statistics_flag(priv, buf, bufsz);
- 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
- 			 "acumulative       delta         max\n",
- 			 "Statistics_Rx - OFDM:");
-@@ -543,7 +564,7 @@ ssize_t iwl_ucode_tx_stats_read(struct file *file,
- 	accum_tx = &priv->_agn.accum_statistics.tx;
- 	delta_tx = &priv->_agn.delta_statistics.tx;
- 	max_tx = &priv->_agn.max_delta.tx;
--	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
-+	pos += iwl_statistics_flag(priv, buf, bufsz);
- 	pos += scnprintf(buf + pos, bufsz - pos,  "%-32s     current"
- 			 "acumulative       delta         max\n",
- 			 "Statistics_Tx:");
-@@ -768,7 +789,7 @@ ssize_t iwl_ucode_general_stats_read(struct file *file, char __user *user_buf,
- 	accum_div = &priv->_agn.accum_statistics.general.div;
- 	delta_div = &priv->_agn.delta_statistics.general.div;
- 	max_div = &priv->_agn.max_delta.general.div;
--	pos += iwl_dbgfs_statistics_flag(priv, buf, bufsz);
-+	pos += iwl_statistics_flag(priv, buf, bufsz);
- 	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
- 			 "acumulative       delta         max\n",
- 			 "Statistics_General:");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index c248373..9793050 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -100,28 +100,6 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
- 	.open = iwl_dbgfs_open_file_generic,                            \
- };
- 
--int iwl_dbgfs_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
--{
--	int p = 0;
--
--	p += scnprintf(buf + p, bufsz - p, "Statistics Flag(0x%X):\n",
--		       le32_to_cpu(priv->_agn.statistics.flag));
--	if (le32_to_cpu(priv->_agn.statistics.flag) &
--			UCODE_STATISTICS_CLEAR_MSK)
--		p += scnprintf(buf + p, bufsz - p,
--			       "\tStatistics have been cleared\n");
--	p += scnprintf(buf + p, bufsz - p, "\tOperational Frequency: %s\n",
--		       (le32_to_cpu(priv->_agn.statistics.flag) &
--			UCODE_STATISTICS_FREQUENCY_MSK)
--			? "2.4 GHz" : "5.2 GHz");
--	p += scnprintf(buf + p, bufsz - p, "\tTGj Narrow Band: %s\n",
--		       (le32_to_cpu(priv->_agn.statistics.flag) &
--			UCODE_STATISTICS_NARROW_BAND_MSK)
--			? "enabled" : "disabled");
--	return p;
--}
--EXPORT_SYMBOL(iwl_dbgfs_statistics_flag);
--
- static ssize_t iwl_dbgfs_tx_statistics_read(struct file *file,
- 						char __user *user_buf,
- 						size_t count, loff_t *ppos) {
--- 
-1.6.3.3
+ 	if (sc->rxlink != NULL)
+ 		*sc->rxlink = bf->daddr;
 
