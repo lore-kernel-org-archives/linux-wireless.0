@@ -1,48 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:49820 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932628Ab0ECPNZ (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:58193 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757006Ab0ENN00 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 11:13:25 -0400
-Received: by bwz19 with SMTP id 19so1366555bwz.21
-        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 08:13:24 -0700 (PDT)
+	Fri, 14 May 2010 09:26:26 -0400
+Received: by wyb36 with SMTP id 36so20668wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 06:26:19 -0700 (PDT)
+Date: Fri, 14 May 2010 15:25:39 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Jeff Hansen <x@jeffhansen.com>, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: [patch -next 2/2] ath9k/debug: fixup the return codes
+Message-ID: <20100514132539.GH5695@bicker>
 MIME-Version: 1.0
-In-Reply-To: <201005031624.45409.rain_maker@root-forum.org>
-References: <201005031624.45409.rain_maker@root-forum.org>
-Date: Mon, 3 May 2010 17:13:24 +0200
-Message-ID: <v2wa32f33a41005030813m36cbea0blf3963369a934cdac@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: remove USB-ID 148f:2573 from rt2500usb driver
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: "rain_maker@root-forum.org" <rain_maker@root-forum.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/3/10, rain_maker@root-forum.org <rain_maker@root-forum.org> wrote:
-> The drivers rt2500usb and rt73usb both contain the usb id 148f:2573 while
-> only
-> the latter is suitable for devices with that id.
->
-> As a consequence, both drivers will be loaded and system log shows messages
-> like "rt2500usb_init_eeprom: Error - Invalid RT chipset detected".
->
-> If you use the above search term, you will find more than 1500 hits with a
-> well known search engine, confirming that rt2500usb is always the wrong
-> driver for devices with usb id 148f:2573 and quite often as a side effect
-> confusion arose about this -non fatal but misleading- error message in the
-> respective bug reports or threads.
->
-> This trivial patch removes the id 148f:2573 from rt2500usb driver.
->
-> Signed-off-by:  Axel Koellhofer <rain_maker@root-forum.org>
+Changed -EINVAL to -EFAULT if copy_to_user() failed.
+Changed 0 to -ENOMEM if allocations failed.
 
-NACK
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-The ID is confusing indeed, but unfortunately we can't remove this ID,
-since in the early days people did report they had to use the rt2500usb driver
-for these devices. So the majority of devices with this ID is indeed
-rt73usb, but
-not for all.
-
-Ivo
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index f344128..3123d16 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -56,7 +56,7 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
+ 
+ 	len = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, len))
+-		return -EINVAL;
++		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+ 	if (strict_strtoul(buf, 0, &mask))
+@@ -100,7 +100,7 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
+ 
+ 	len = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, len))
+-		return -EINVAL;
++		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+ 	if (strict_strtoul(buf, 0, &mask))
+@@ -142,7 +142,7 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
+ 
+ 	len = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, len))
+-		return -EINVAL;
++		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+ 	if (strict_strtoul(buf, 0, &mask))
+@@ -175,7 +175,7 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
+ 
+ 	buf = kmalloc(DMA_BUF_LEN, GFP_KERNEL);
+ 	if (!buf)
+-		return 0;
++		return -ENOMEM;
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
+@@ -405,7 +405,7 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+ 	max = 80 + sc->cur_rate_table->rate_cnt * 1024 + 1;
+ 	buf = kmalloc(max, GFP_KERNEL);
+ 	if (buf == NULL)
+-		return 0;
++		return -ENOMEM;
+ 
+ 	len += sprintf(buf, "%6s %6s %6s "
+ 		       "%10s %10s %10s %10s\n",
+@@ -640,7 +640,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 
+ 	buf = kzalloc(size, GFP_KERNEL);
+ 	if (buf == NULL)
+-		return 0;
++		return -ENOMEM;
+ 
+ 	len += sprintf(buf, "%30s %10s%10s%10s\n\n", "BE", "BK", "VI", "VO");
+ 
+@@ -713,7 +713,7 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 
+ 	buf = kzalloc(size, GFP_KERNEL);
+ 	if (buf == NULL)
+-		return 0;
++		return -ENOMEM;
+ 
+ 	len += snprintf(buf + len, size - len,
+ 			"%18s : %10u\n", "CRC ERR",
+@@ -832,7 +832,7 @@ static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
+ 
+ 	len = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, len))
+-		return -EINVAL;
++		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+ 	if (strict_strtoul(buf, 0, &regidx))
+@@ -874,7 +874,7 @@ static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
+ 
+ 	len = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, len))
+-		return -EINVAL;
++		return -EFAULT;
+ 
+ 	buf[len] = '\0';
+ 	if (strict_strtoul(buf, 0, &regval))
