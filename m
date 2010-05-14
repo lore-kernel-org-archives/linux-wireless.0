@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:33102 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754693Ab0EYAQR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 20:16:17 -0400
-Received: by fxm5 with SMTP id 5so2757159fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 17:16:16 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:59786 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070Ab0ENFsc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 01:48:32 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 22:48:32 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <c785bba31003291519tfd7d26fy466a4ee4310ac590@mail.gmail.com>
-References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>
-	 <69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>
-	 <1267949782.15192.13.camel@mj>
-	 <69e28c911003070736t678cf6ccld0fe6dc332f4380d@mail.gmail.com>
-	 <1268190973.10669.12.camel@mj>
-	 <c785bba31003291519tfd7d26fy466a4ee4310ac590@mail.gmail.com>
-Date: Mon, 24 May 2010 17:16:15 -0700
-Message-ID: <AANLkTinUyRtemRZAN_IS7IqE033GPyKFe77FC94TcTYu@mail.gmail.com>
-Subject: Re: Realtek rtl8188 support?
-From: Paul Thomas <pthomas8589@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Andrea Merello <andreamrl@tiscali.it>,
-	Jerry chuang <wlanfae@realtek.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19436.58443.382954.146552@gargle.gargle.HOWL>
+Date: Fri, 14 May 2010 11:18:59 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/4] ath9k_htc: Increase credit size
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 29, 2010 at 3:19 PM, Paul Thomas <pthomas8589@gmail.com> wrote:
-> OK, I'd love to get to where Pavel & Gabor are, but I think I'm having
-> trouble with the PCI dependency. I'm on an arm platform without PCI
-> (atmel at91sam9g20). If I remove the PCI dependency from the Kconfig
-> it does compile with warnings, and then when the module loads I get
-> "r8192s_usb: Unknown symbol wireless_send_event".
->
-> I'm happy to hang out and try again when the driver leaves staging,
-> but I thought I might mention the PCI dependency now.
->
-> thanks,
-> Paul
+This is the maximum supported by the firmware.
 
-I haven't seen any activity on this driver in awhile. Is anyone
-working on it? My main request is to remove the PCI dependency. Any
-chance of this?
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_hst.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Or does anyone else know of a "mini" wireless adapters with a
-supported chipset (i.e. without needing PCI)? Both devices I've
-ordered from newegg ended up having the rtl8188 chip.
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index 064397f..2173196 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -159,7 +159,7 @@ static int htc_config_pipe_credits(struct htc_target *target)
+ 
+ 	cp_msg->message_id = cpu_to_be16(HTC_MSG_CONFIG_PIPE_ID);
+ 	cp_msg->pipe_id = USB_WLAN_TX_PIPE;
+-	cp_msg->credits = 28;
++	cp_msg->credits = 33;
+ 
+ 	target->htc_flags |= HTC_OP_CONFIG_PIPE_CREDITS;
+ 
+-- 
+1.7.1
 
-thanks,
-Paul
