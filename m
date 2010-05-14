@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13717 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753774Ab0EUSMP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 May 2010 14:12:15 -0400
-Subject: Re: Iwlwifi and LEDS?
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-To: Gregy <p.gregy@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
-References: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 21 May 2010 11:07:22 -0700
-Message-ID: <1274465242.12391.0.camel@abhi-desktop>
-Mime-Version: 1.0
+Received: from relay01.mx.bawue.net ([193.7.176.67]:45406 "EHLO
+	relay01.mx.bawue.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756706Ab0ENRpJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 13:45:09 -0400
+Date: Fri, 14 May 2010 19:45:06 +0200
+From: Nils Radtke <lkml@Think-Future.de>
+To: reinette.chatre@intel.com
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
+ accesspoint == hardlock
+Message-ID: <20100514174506.GD18740@localhost>
+Reply-To: Nils Radtke <lkml@Think-Future.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1273768269.2295.1144.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-05-21 at 02:11 -0700, Gregy wrote:
-> Hello, I noticed you removed support for led subsystem from iwlwifi. I
-> have used it to control wifi led from userspace. Is it still possible
-> somehow?
-> 
-There is module parameter for iwlcore called 'led_mode'. 
+  Hi Reinette,
 
-Abhijeet
-> Otherwise thank you for your work.
-> 
-> Gregy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Might be of interest:
 
+[63099.789939] eth1: associated
+[63166.919257] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+[63180.322024] Hangcheck: hangcheck value past margin!
+[63190.664526] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+[63193.255873] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+[63194.941768] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+[63195.099286] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+[63196.524065] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+[63197.417740] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
+[63199.767526] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:aa:aa:aa tid = 0
+[63205.689184] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:aa:aa:aa tid = 0
+[63210.821316] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:aa:aa:aa tid = 0
+[63228.178530] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:aa:aa:aa tid = 0
+
+Happened on site B, with high throughput (280-340k/s). So, it's happening w/ both, fast
+and slow conn speed.
+
+Yes, I noticed and had a look into the compat-wireless scripts but preferred to do 
+it manually. Thank you for your explanation.
+
+Cheers,
+
+                Nils
 
