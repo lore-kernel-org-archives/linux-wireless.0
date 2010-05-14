@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34340 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889Ab0EQRPc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 13:15:32 -0400
+Received: from mail.atheros.com ([12.36.123.2]:28466 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759902Ab0ENUwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 16:52:55 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 13:52:55 -0700
+Date: Fri, 14 May 2010 13:52:53 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: remove AR9003 from PCI IDs for now
-Date: Mon, 17 May 2010 13:15:30 -0400
-Message-Id: <1274116530-29308-1-git-send-email-lrodriguez@atheros.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bruno Randolf <br1@einfach.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+Message-ID: <20100514205253.GC28198@tux>
+References: <201005141520.30802.br1@einfach.org>
+ <4BECEE3E.6090303@gmail.com>
+ <201005141538.43416.br1@einfach.org>
+ <4BED6F19.3040608@gmail.com>
+ <20100514165325.GA28198@tux>
+ <4BED8765.8040307@gmail.com>
+ <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com>
+ <67773379-350A-42D4-BEB5-DAC7D8277615@gmail.com>
+ <20100514201339.GB28198@tux>
+ <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We tried to squeeze as much AR9003 support into this kernel
-release cycle but there are a few features which are still
-being tested and developed. Some of these features are critical
-to the stable operation of AR9003 so for now disable AR9003 support
-all together. This will get re-enabled once all necessary features
-are in place but very likely will not happen for 2.6.35.
+On Fri, May 14, 2010 at 01:21:34PM -0700, Justin P. Mattock wrote:
+> Eveything is on except ath5k
+> For debugging.
 
-Reviewed-by: Don Breslin <don.breslin@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+Bleh, try this.
 
-John, after a lot of testing during this kernel release cycle
-we do not feel ready for AR9003 for 2.6.35 so AR9003 will have
-to wait until 2.6.36. We'll try cherry-picking some linux-next
-patches on top of compat-wireless-2.6.35-rc but until we get all
-the pending stuff ironed out [1] we just have to disable AR9003
-from 2.6.35.
-
-[1] http://wireless.kernel.org/en/users/Drivers/ath9k/todo/ar93xx
-
- drivers/net/wireless/ath/ath9k/pci.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 257b10b..1ec836c 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,7 +28,6 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
--	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
- 	{ 0 }
- };
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 1ca42e5..3404198 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -129,7 +129,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 	common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN,
+ 				     min(common->cachelsz, (u16)64));
  
--- 
-1.6.3.3
+-	ath_print(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
++	printk("ATH9K: cachelsz %u rxbufsize %u\n",
+ 		  common->cachelsz, common->rx_bufsize);
+ 
+ 	/* Initialize rx descriptors */
 
+Not sure why this is not printing, the common debug_mask should
+already be set here prior to this. Anyway this would force the
+print I want.
+
+  Luis
