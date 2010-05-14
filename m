@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46043 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616Ab0ELHIP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56790 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785Ab0ENH75 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 03:08:15 -0400
-Received: by fxm4 with SMTP id 4so230781fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 00:08:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1273614705-25118-10-git-send-email-gwingerde@gmail.com>
-References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-	 <1273614705-25118-10-git-send-email-gwingerde@gmail.com>
-Date: Wed, 12 May 2010 09:08:13 +0200
-Message-ID: <AANLkTikfpVFt1rFYJ9wtmD7ZnYrhLxAq5kNRI_pWdG_b@mail.gmail.com>
-Subject: Re: [PATCH 9/9] rt2x00: Properly reserve room for descriptors in
-	skbs.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 14 May 2010 03:59:57 -0400
+Subject: Re: Possible issue with mac80211 and certain access points
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Chad Koehler <chad.koehler@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1273788460.375.76.camel@localhost.localdomain>
+References: <AANLkTim6GiiFR0zWVqlmIJr-sk1ThwO3GAA97aJwWg3U@mail.gmail.com>
+	 <1273788460.375.76.camel@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 14 May 2010 09:59:54 +0200
+Message-ID: <1273823994.3865.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Instead of fiddling with the skb->data pointer and thereby risking
-> out of bounds accesses, properly reserve the space needed in an
-> skb for descriptors.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Fri, 2010-05-14 at 00:07 +0200, Marcel Holtmann wrote:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> > Using the Palm Pre hotspot, I can get connected, but the connection
+> > will drop after a very short period of time.  There are messages in
+> > the system log whenever the connection drops:
+
+> actually I ran into the same issue two days ago and was going to post
+> it. So what I am seeing with the Palm Pre is that when we actually scan
+> while connected to the Palm Pre, a second later we end up disconnected.
+
+So the Palm is acting as an AP? A beer for each of you says their AP
+implementation is buggy.
+
+johannes
+
