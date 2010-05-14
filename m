@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:43216 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752608Ab0EFJL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 05:11:58 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 02:11:58 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:39727 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544Ab0ENQye (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 12:54:34 -0400
+Message-ID: <4BED8043.9070300@gmail.com>
+Date: Fri, 14 May 2010 09:54:27 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19426.34789.799371.633305@gargle.gargle.HOWL>
-Date: Thu, 6 May 2010 14:42:05 +0530
-To: Kalle Valo <kvalo@adurom.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/11] ath9k_htc: Use USB reboot
-In-Reply-To: <87zl0mjkx7.fsf@purkki.valot.fi>
-References: <19409.10472.450708.915467@gargle.gargle.HOWL>
-	<87zl0mjkx7.fsf@purkki.valot.fi>
+To: Christoph Lameter <cl@linux.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+References: <4BEC7A84.3010503@gmail.com> <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>  <AANLkTim7fnKebMoEu1DjD3S-15ZqlTUez3Lpp0wGVJQ6@mail.gmail.com> <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com> <4BECDD5D.9010609@gmail.com> <alpine.DEB.2.00.1005141110100.9466@router.home>
+In-Reply-To: <alpine.DEB.2.00.1005141110100.9466@router.home>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> Sujith <Sujith.Manoharan@atheros.com> writes:
-> 
-> > So, apparently there is a USB reboot command
-> > that the target accepts. Using this instead of
-> > usb_reset_device() fixes the issue of "descriptor read error"
-> > that pops up on repeated load/unload.
-> 
-> [...]
-> 
-> > +static void ath9k_hif_usb_reboot(struct usb_device *udev)
-> > +{
-> > +	u32 reboot_cmd = 0xffffffff;
-> 
-> A define for the actual command value would be nice here.
+On 05/14/10 09:12, Christoph Lameter wrote:
+> On Thu, 13 May 2010, Justin P. Mattock wrote:
+>
+>> I enable these options as well..
+>> (then see If I can(hopefully)re-create this
+>> then I'll bisect it).
+>
+> Debugging causes a slowdown. You can switch debuggin on for a specific
+> slab.
+>
+> f.e.
+>
+> slub_debug=,kmalloc-8192
+>
+> See also Documentation/vm/slub.txt
+>
+>
 
-Sorry, I was out and John has merged this patch.
-Will do this later, thanks for the review.
+Cool, thanks for this.. I'll have a look
+also in slub.txt as well(never really did much
+debugging with slub).
 
-Sujith
+Justin P. Mattock
