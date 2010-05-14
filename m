@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay01.mx.bawue.net ([193.7.176.67]:37584 "EHLO
-	relay01.mx.bawue.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751342Ab0EHOLw (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:41483 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757724Ab0ENNQ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 May 2010 10:11:52 -0400
-Date: Sat, 8 May 2010 16:11:44 +0200
-From: Nils Radtke <Nils.Radtke@Think-Future.de>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: ath5k deadlock w/ blob transfer
-Message-ID: <20100508141144.GA30514@localhost>
-Reply-To: Nils Radtke <Nils.Radtke@Think-Future.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <p2pb6c5339f1005071818u489804e7ud40fe3feb5459bb8@mail.gmail.com>
+	Fri, 14 May 2010 09:16:26 -0400
+Received: by pvh1 with SMTP id 1so517748pvh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 06:16:26 -0700 (PDT)
+From: tom.leiming@gmail.com
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH 2/2] ath9k: fix dma sync in rx path
+Date: Fri, 14 May 2010 21:16:09 +0800
+Message-Id: <1273842969-3435-1-git-send-email-tom.leiming@gmail.com>
+In-Reply-To: <1273842938-3401-1-git-send-email-tom.leiming@gmail.com>
+References: <1273842938-3401-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Hi,
+From: Ming Lei <tom.leiming@gmail.com>
 
-> I missed the first email.  What type of machine?  System lockup
-> or the connection drops?  Do you get any output on the console or
-> in dmesg? (try switching to a text console before your scp test.)
-> If not, any output after lockup booting with nmi_watchdog=1?
+If buffer is to be accessed by cpu after dma transfer is over, but
+between dma mapping and dma unmapping, we should use
+dma_sync_single_for_cpu to sync the buffer between cpu with
+device. And dma_sync_single_for_device is used to let
+device gain the buffer again.
 
-IRC, no system lockup, only driver lockup. But I avoided using wireless for
-blob transfer for the reliability of the lockups, so it's a couple of months
-since I deliberately crashed it.. Maybe once in a while it lead to a complete
-system lockup, but treat this as rumble in my memories (and could be due to
-the other BUGs reported, also)..
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-notebook: ACER Extensa 5220
-kernels since  Linux host 2.6.32.2 #4 PREEMPT Wed Dec 30 15:19:58 CET 2009 i686 and even before
-lspci:
-04:00.0 Ethernet controller: Atheros Communications Inc. AR5001 Wireless Network Adapter (rev 01)
-        Subsystem: Device 1a32:0105
-        Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+
-+FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR-
-+<PERR- INTx-
-        Interrupt: pin A routed to IRQ 17
-        Region 0: Memory at f8000000 (64-bit, non-prefetchable) [size=64K]
-        Capabilities: <access denied>
-
-There's another bugreport for this machine, w/ hw info: http://lkml.org/lkml/2010/2/18/104
-
-Ok, trying to lockup the machine once more, will report back then.
-
-  Thanks,
-
-  Nils
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index a3fe6e1..96f5d83 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -694,7 +694,7 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+ 	bf = SKB_CB_ATHBUF(skb);
+ 	BUG_ON(!bf);
+ 
+-	dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
++	dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+ 				common->rx_bufsize, DMA_FROM_DEVICE);
+ 
+ 	ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
+@@ -808,7 +808,7 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
+ 	 * 1. accessing the frame
+ 	 * 2. requeueing the same buffer to h/w
+ 	 */
+-	dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
++	dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+ 			common->rx_bufsize,
+ 			DMA_FROM_DEVICE);
+ 
+-- 
+1.6.2.5
 
