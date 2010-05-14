@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:62151 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754996Ab0EJQZD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 12:25:03 -0400
-Date: Mon, 10 May 2010 09:24:29 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Received: from lo.gmane.org ([80.91.229.12]:49618 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753644Ab0ENUUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 16:20:16 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OD1Mg-0000oG-Q6
+	for linux-wireless@vger.kernel.org; Fri, 14 May 2010 22:20:10 +0200
+Received: from CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com ([99.234.24.234])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 22:20:10 +0200
+Received: from senada by CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 22:20:10 +0200
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net
-Subject: [PATCH] wireless: depends on NET
-Message-Id: <20100510092429.a8ddcc8d.randy.dunlap@oracle.com>
+From: seno <senada@t-online.de>
+Subject: Re: RTL 8187b - naughty behaviour
+Date: Fri, 14 May 2010 20:20:02 +0000 (UTC)
+Message-ID: <loom.20100514T221620-807@post.gmane.org>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com> <4BB7660A.3030900@lwfinger.net> <loom.20100506T185847-345@post.gmane.org> <4BE30879.4020008@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Larry, do you think there is some improvement possible with the driver from 
+here?
 
-When CONFIG_NET is disabled, the attempt to build wext-priv.c
-fails with:
+http://ubuntuforums.org/showthread.php?t=1446894 
+(rtl8187B_linux_26.1056.1112.2009.release.tar.gz )
 
-net/wireless/wext-priv.c: In function 'ioctl_private_call':
-net/wireless/wext-priv.c:207: error: implicit declaration of function 'call_commit_handler'
+This seems to be the latest realtek driver.
+I downloaded, compiled and installed, but driver did not load correct, loads of 
+errors in dmesg (I'm not a linux pro, sorry)
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
-Has this been omitted on purpose??
-
- drivers/net/wireless/Kconfig |    1 +
- 1 file changed, 1 insertion(+)
-
---- lnx-2634-rc7.orig/drivers/net/wireless/Kconfig
-+++ lnx-2634-rc7/drivers/net/wireless/Kconfig
-@@ -5,6 +5,7 @@
- menuconfig WLAN
- 	bool "Wireless LAN"
- 	depends on !S390
-+	depends on NET
- 	select WIRELESS
- 	default y
- 	---help---
