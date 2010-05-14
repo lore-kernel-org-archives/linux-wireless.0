@@ -1,98 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50740 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756834Ab0EJW2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:31 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 36/47] iwlagn: work around rate scaling reset delay
-Date: Mon, 10 May 2010 15:28:07 -0700
-Message-Id: <1273530498-11876-37-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:49806 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543Ab0ENQEz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 12:04:55 -0400
+Received: by pxi5 with SMTP id 5so1408479pxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 09:04:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100514074833.10333.81592.stgit@tt-desk>
+References: <20100514074833.10333.81592.stgit@tt-desk>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 14 May 2010 09:04:34 -0700
+Message-ID: <AANLkTik2XPwhtUkDo7gfJTVI401HG6qU_mYvGmKfEbG5@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: consistently use rx_bufsize for RX DMA
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	bob@bobcopeland.com, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Fri, May 14, 2010 at 12:50 AM, Bruno Randolf <br1@einfach.org> wrote:
+> We should use the same buffer size we set up for DMA also in the hardware
+> descriptor. Previously we used common->rx_bufsize for setting up the DMA
+> mapping, but skb_tailroom(skb) for the size we tell to the hardware in the
+> descriptor itself. The problem is that skb_tailroom(skb) can give us a larger
+> value than the size we set up for DMA before: In my case rx_bufsize is 2528,
+> and we allocated an skb of 2559 bytes length, including padding for cache
+> alignment, but sbk_tailroom() was 2592. Just consistently use rx_bufsize for
+> all RX DMA memory sizes.
+>
+> Also check the return value of setup function.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
 
-When station is using an HT channel to communicate to AP and communication
-is lost then driver will first be notified that channel is not an HT
-channel anymore before AP station is removed. A consequence of that is that
-the driver will know that it is not communicating on HT anymore, but the
-rate scaling table is still under the impression it is operating in HT. Any
-time after driver has been notified channel is not HT anymore there will
-thus be a firmware SYSASSERT when the current active LQ command is sent.
+Cc: stable?
 
-A workaround for this issue is to not send a LQ command in the short time between
-being notified channel is not HT anymore and rate scaling table being
-updated.
+Is that other bug reproducible, can the user test this to cure it?
 
-This fixes http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2173
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-sta.c |   38 +++++++++++++++++++++++++++++++-
- 1 files changed, 37 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 7e51647..e95282b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1170,6 +1170,39 @@ static inline void iwl_dump_lq_cmd(struct iwl_priv *priv,
- #endif
- 
- /**
-+ * is_lq_table_valid() - Test one aspect of LQ cmd for validity
-+ *
-+ * It sometimes happens when a HT rate has been in use and we
-+ * loose connectivity with AP then mac80211 will first tell us that the
-+ * current channel is not HT anymore before removing the station. In such a
-+ * scenario the RXON flags will be updated to indicate we are not
-+ * communicating HT anymore, but the LQ command may still contain HT rates.
-+ * Test for this to prevent driver from sending LQ command between the time
-+ * RXON flags are updated and when LQ command is updated.
-+ */
-+static bool is_lq_table_valid(struct iwl_priv *priv,
-+			      struct iwl_link_quality_cmd *lq)
-+{
-+	int i;
-+	struct iwl_ht_config *ht_conf = &priv->current_ht_config;
-+
-+	if (ht_conf->is_ht)
-+		return true;
-+
-+	IWL_DEBUG_INFO(priv, "Channel %u is not an HT channel\n",
-+		       priv->active_rxon.channel);
-+	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
-+		if (le32_to_cpu(lq->rs_table[i].rate_n_flags) & RATE_MCS_HT_MSK) {
-+			IWL_DEBUG_INFO(priv,
-+				       "index %d of LQ expects HT channel\n",
-+				       i);
-+			return false;
-+		}
-+	}
-+	return true;
-+}
-+
-+/**
-  * iwl_send_lq_cmd() - Send link quality command
-  * @init: This command is sent as part of station initialization right
-  *        after station has been added.
-@@ -1198,7 +1231,10 @@ int iwl_send_lq_cmd(struct iwl_priv *priv,
- 	iwl_dump_lq_cmd(priv, lq);
- 	BUG_ON(init && (cmd.flags & CMD_ASYNC));
- 
--	ret = iwl_send_cmd(priv, &cmd);
-+	if (is_lq_table_valid(priv, lq))
-+		ret = iwl_send_cmd(priv, &cmd);
-+	else
-+		ret = -EINVAL;
- 
- 	if (cmd.flags & CMD_ASYNC)
- 		return ret;
--- 
-1.6.3.3
-
+  Luis
