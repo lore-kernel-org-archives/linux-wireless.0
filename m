@@ -1,192 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:14652 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472Ab0EONff (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:27571 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752867Ab0ENBIn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 09:35:35 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so2061589fga.1
-        for <linux-wireless@vger.kernel.org>; Sat, 15 May 2010 06:35:34 -0700 (PDT)
-Date: Sat, 15 May 2010 15:34:41 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Jeff Hansen <x@jeffhansen.com>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: [patch -next 1/2 v2] ath9k/debug: improve the snprintf() handling
-Message-ID: <20100515133441.GB5381@bicker>
-References: <20100514132437.GG5695@bicker>
+	Thu, 13 May 2010 21:08:43 -0400
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0270489319
+	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 10:08:40 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+Date: Fri, 14 May 2010 10:08:20 +0900
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <4BEC7A84.3010503@gmail.com> <AANLkTinKoMxdkPYQA_AblpByL6zAiAP5hv2M3Jn2R3hM@mail.gmail.com> <4BEC9E6B.30809@gmail.com>
+In-Reply-To: <4BEC9E6B.30809@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100514132437.GG5695@bicker>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201005141008.20667.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The snprintf() function returns the number of bytes that *would* have
-been written (not counting the NULL terminator).  We want to pass NULL
-terminated strings to the user so we need to add one to the snprintf 
-return value.  And if the return value is larger than the size of the 
-buffer we need to set it to the smaller value.
+On Friday 14 May 2010 09:50:51 Justin P. Mattock wrote:
+> On 05/13/10 17:28, Luis R. Rodriguez wrote:
+> > On Thu, May 13, 2010 at 5:21 PM, Justin P. Mattock
+> > 
+> > <justinmattock@gmail.com>  wrote:
+> >> On 05/13/10 16:01, Luis R. Rodriguez wrote:
+> >>> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
+> >>> 
+> >>> <justinmattock@gmail.com>    wrote:
+> >>>> not sure what this is, but while at a convention
+> >>>> I was trying to access the internet and(below is
+> >>>> full dmesg) this showed up.
+> >>>> 
+> >>>> After receiving this, I sat and tried to re-create
+> >>>> my steps to reproduce but had no luck(was even going
+> >>>> todo a bisect n the spot if I could re-create).
+> >>> 
+> >>> OK this stuff is hard to reproduce it seems.. you have an Atheros
+> >>> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
+> >>> to get the poison stuff? I am just surprised we haven't seen it
+> >>> ourselves yet. Let me make sure all of us get this kconfig option
+> >>> enabled.
+> >>> 
+> >>>    Luis
+> >> 
+> >> CONFIG_ATH_COMMON=m
+> >> # CONFIG_ATH_DEBUG is not set
+> >> CONFIG_ATH5K=m
+> >> # CONFIG_ATH5K_DEBUG is not set
+> >> CONFIG_ATH9K_HW=m
+> >> CONFIG_ATH9K_COMMON=m
+> >> CONFIG_ATH9K=m
+> >> # CONFIG_ATH9K_DEBUGFS is not set
+> >> 
+> >> if you need my .config let me know.
+> >> (I can try again reproducing, but man
+> >> just doesn't easily fire off).
+> > 
+> > Oh I mean the config options to enable the poison rant.
+> > 
+> >    Luis
+> 
+> shoot.. not sure how to grep for the right info
+> in the .config for you, heres what grepping for COFIG_DEBUG
+> looks like:
+> CONFIG_DEBUG_FS=y
+> CONFIG_DEBUG_KERNEL=y
+> CONFIG_DEBUG_RT_MUTEXES=y
+> CONFIG_DEBUG_PI_LIST=y
+> CONFIG_DEBUG_SPINLOCK=y
+> CONFIG_DEBUG_MUTEXES=y
+> CONFIG_DEBUG_BUGVERBOSE=y
+> CONFIG_DEBUG_MEMORY_INIT=y
+> CONFIG_DEBUG_STACKOVERFLOW=y
 
-In this patch if there were one liners where string clearly fits into
-the buffer, then I changed snprintf to sprintf().  It's confusing to use
-the return value of snprintf() as a limitter without verifying that it's 
-smaller than size.  This is what initially caught my attention here.
-If we use the return value of sprintf() instead, future code auditors will
-assume we've verified that it fits already.
+oh, this reminds me of a similar report we had for ath5k:
 
-Also I did find some places where it made sense to use the return value 
-after we've verified that it is smaller than the buffer size.
+https://bugzilla.kernel.org/show_bug.cgi?id=15861
 
-Finally the read_file_rcstat() function added an explicit NULL terminator
-before calling snprintf().  That's unnecessary because snprintf() will 
-add the null terminator automatically.
+the subject on this mailing list was "ath5k misbehaving affecting other kernel 
+parts unrelated?"
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
-V2: Include NULL terminator in the buffer which gets copied to the user.
-Btw. I don't actually this hardware so I can't test this code.  Sorry.  :/
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 2ca9bba..fad1c85 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -41,8 +41,8 @@ static ssize_t read_file_debug(struct file *file, char __user *user_buf,
- 	char buf[32];
- 	unsigned int len;
- 
--	len = snprintf(buf, sizeof(buf), "0x%08x\n", common->debug_mask);
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	len = sprintf(buf, "0x%08x\n", common->debug_mask);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len + 1);
- }
- 
- static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
-@@ -85,8 +85,8 @@ static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
- 	char buf[32];
- 	unsigned int len;
- 
--	len = snprintf(buf, sizeof(buf), "0x%08x\n", common->tx_chainmask);
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	len = sprintf(buf, "0x%08x\n", common->tx_chainmask);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len + 1);
- }
- 
- static ssize_t write_file_tx_chainmask(struct file *file, const char __user *user_buf,
-@@ -127,8 +127,8 @@ static ssize_t read_file_rx_chainmask(struct file *file, char __user *user_buf,
- 	char buf[32];
- 	unsigned int len;
- 
--	len = snprintf(buf, sizeof(buf), "0x%08x\n", common->rx_chainmask);
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	len = sprintf(buf, "0x%08x\n", common->rx_chainmask);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len + 1);
- }
- 
- static ssize_t write_file_rx_chainmask(struct file *file, const char __user *user_buf,
-@@ -247,6 +247,10 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 
- 	ath9k_ps_restore(sc);
- 
-+	len++;
-+	if (len > DMA_BUF_LEN)
-+		len = DMA_BUF_LEN;
-+
- 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
- 	kfree(buf);
- 	return retval;
-@@ -357,6 +361,10 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 		"%8s: %10u\n", "TOTAL", sc->debug.stats.istats.total);
- 
-+	len++;
-+	if (len > sizeof(buf))
-+		len = sizeof(buf);
-+
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -396,11 +404,10 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- 	if (sc->cur_rate_table == NULL)
- 		return 0;
- 
--	max = 80 + sc->cur_rate_table->rate_cnt * 1024;
--	buf = kmalloc(max + 1, GFP_KERNEL);
-+	max = 80 + sc->cur_rate_table->rate_cnt * 1024 + 1;
-+	buf = kmalloc(max, GFP_KERNEL);
- 	if (buf == NULL)
- 		return 0;
--	buf[max] = 0;
- 
- 	len += sprintf(buf, "%6s %6s %6s "
- 		       "%10s %10s %10s %10s\n",
-@@ -442,6 +449,10 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- 			stats->per);
- 	}
- 
-+	len++;
-+	if (len > max)
-+		len = max;
-+
- 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
- 	kfree(buf);
- 	return retval;
-@@ -504,6 +515,10 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"addrmask: %pM\n", addr);
- 
-+	len++;
-+	if (len > sizeof(buf))
-+		len = sizeof(buf);
-+
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -647,6 +662,10 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 	PR("DATA Underrun:   ", data_underrun);
- 	PR("DELIM Underrun:  ", delim_underrun);
- 
-+	len++;
-+	if (len > size)
-+		len = size;
-+
- 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
- 	kfree(buf);
- 
-@@ -750,6 +769,10 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 	PHY_ERR("HT-LENGTH", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
- 	PHY_ERR("HT-RATE", ATH9K_PHYERR_HT_RATE_ILLEGAL);
- 
-+	len++;
-+	if (len > size)
-+		len = size;
-+
- 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
- 	kfree(buf);
- 
-@@ -801,8 +824,8 @@ static ssize_t read_file_regidx(struct file *file, char __user *user_buf,
- 	char buf[32];
- 	unsigned int len;
- 
--	len = snprintf(buf, sizeof(buf), "0x%08x\n", sc->debug.regidx);
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	len = sprintf(buf, "0x%08x\n", sc->debug.regidx);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len + 1);
- }
- 
- static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
-@@ -842,8 +865,8 @@ static ssize_t read_file_regval(struct file *file, char __user *user_buf,
- 	u32 regval;
- 
- 	regval = REG_READ_D(ah, sc->debug.regidx);
--	len = snprintf(buf, sizeof(buf), "0x%08x\n", regval);
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	len = sprintf(buf, "0x%08x\n", regval);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len + 1);
- }
- 
- static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
+bruno
