@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65350 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754362Ab0EJW2X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:23 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/47] iwlwifi: use vif iwl_bss_info_changed
-Date: Mon, 10 May 2010 15:27:36 -0700
-Message-Id: <1273530498-11876-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Received: from nlpi129.sbcis.sbc.com ([207.115.36.143]:44470 "EHLO
+	nlpi129.prodigy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752797Ab0ENQP2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 12:15:28 -0400
+Date: Fri, 14 May 2010 11:12:01 -0500 (CDT)
+From: Christoph Lameter <cl@linux.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+In-Reply-To: <4BECDD5D.9010609@gmail.com>
+Message-ID: <alpine.DEB.2.00.1005141110100.9466@router.home>
+References: <4BEC7A84.3010503@gmail.com> <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>  <AANLkTim7fnKebMoEu1DjD3S-15ZqlTUez3Lpp0wGVJQ6@mail.gmail.com> <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com>
+ <4BECDD5D.9010609@gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 13 May 2010, Justin P. Mattock wrote:
 
-The iw_mode will always follow the only vif we
-have, but using the vif directly seems easier.
+> I enable these options as well..
+> (then see If I can(hopefully)re-create this
+> then I'll bisect it).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+Debugging causes a slowdown. You can switch debuggin on for a specific
+slab.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 1e11706..d8ee528 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1857,8 +1857,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&priv->mutex);
- 
--	if (changes & BSS_CHANGED_BEACON &&
--	    priv->iw_mode == NL80211_IFTYPE_AP) {
-+	if (changes & BSS_CHANGED_BEACON && vif->type == NL80211_IFTYPE_AP) {
- 		dev_kfree_skb(priv->ibss_beacon);
- 		priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
- 	}
-@@ -1884,8 +1883,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 
- 		/* mac80211 only sets assoc when in STATION mode */
--		if (priv->iw_mode == NL80211_IFTYPE_ADHOC ||
--		    bss_conf->assoc) {
-+		if (vif->type == NL80211_IFTYPE_ADHOC || bss_conf->assoc) {
- 			memcpy(priv->staging_rxon.bssid_addr,
- 			       bss_conf->bssid, ETH_ALEN);
- 
-@@ -1903,7 +1901,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 	 * mac80211 decides to do both changes at once because
- 	 * it will invoke post_associate.
- 	 */
--	if (priv->iw_mode == NL80211_IFTYPE_ADHOC &&
-+	if (vif->type == NL80211_IFTYPE_ADHOC &&
- 	    changes & BSS_CHANGED_BEACON) {
- 		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
- 
--- 
-1.6.3.3
+f.e.
+
+slub_debug=,kmalloc-8192
+
+See also Documentation/vm/slub.txt
 
