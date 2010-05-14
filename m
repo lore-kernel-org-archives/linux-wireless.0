@@ -1,346 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:3250 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752913Ab0EKVvx (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:43432 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250Ab0ENCOP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 17:51:53 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 6/9] rt2x00: Push beacon TX descriptor writing to drivers.
-Date: Tue, 11 May 2010 23:51:42 +0200
-Message-Id: <1273614705-25118-7-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
+	Thu, 13 May 2010 22:14:15 -0400
+Message-ID: <4BECB1F2.5050900@gmail.com>
+Date: Thu, 13 May 2010 19:14:10 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bruno Randolf <br1@einfach.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+References: <4BEC7A84.3010503@gmail.com> <AANLkTinKoMxdkPYQA_AblpByL6zAiAP5hv2M3Jn2R3hM@mail.gmail.com> <4BEC9E6B.30809@gmail.com> <201005141008.20667.br1@einfach.org> <4BECA3AE.4070607@gmail.com> <20100514012314.GA2170@tux> <4BECA6AC.9060609@gmail.com> <20100514014311.GC2170@tux> <20100514014553.GD2170@tux>
+In-Reply-To: <20100514014553.GD2170@tux>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not all the devices require a TX descriptor to be written (i.e. rt2800
-device don't require them). Push down the creation of the TX descriptor
-to the device drivers so that they can decide for themselves whether
-a TX descriptor is to be created.
+On 05/13/10 18:45, Luis R. Rodriguez wrote:
+> On Thu, May 13, 2010 at 06:43:11PM -0700, Luis Rodriguez wrote:
+>> On Thu, May 13, 2010 at 06:26:04PM -0700, Justin P. Mattock wrote:
+>>> On 05/13/10 18:23, Luis R. Rodriguez wrote:
+>>>> On Thu, May 13, 2010 at 06:13:18PM -0700, Justin P. Mattock wrote:
+>>>>> On 05/13/10 18:08, Bruno Randolf wrote:
+>>>>>> On Friday 14 May 2010 09:50:51 Justin P. Mattock wrote:
+>>>>>>> On 05/13/10 17:28, Luis R. Rodriguez wrote:
+>>>>>>>> On Thu, May 13, 2010 at 5:21 PM, Justin P. Mattock
+>>>>>>>>
+>>>>>>>> <justinmattock@gmail.com>     wrote:
+>>>>>>>>> On 05/13/10 16:01, Luis R. Rodriguez wrote:
+>>>>>>>>>> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
+>>>>>>>>>>
+>>>>>>>>>> <justinmattock@gmail.com>       wrote:
+>>>>>>>>>>> not sure what this is, but while at a convention
+>>>>>>>>>>> I was trying to access the internet and(below is
+>>>>>>>>>>> full dmesg) this showed up.
+>>>>>>>>>>>
+>>>>>>>>>>> After receiving this, I sat and tried to re-create
+>>>>>>>>>>> my steps to reproduce but had no luck(was even going
+>>>>>>>>>>> todo a bisect n the spot if I could re-create).
+>>>>>>>>>>
+>>>>>>>>>> OK this stuff is hard to reproduce it seems.. you have an Atheros
+>>>>>>>>>> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
+>>>>>>>>>> to get the poison stuff? I am just surprised we haven't seen it
+>>>>>>>>>> ourselves yet. Let me make sure all of us get this kconfig option
+>>>>>>>>>> enabled.
+>>>>>>>>>>
+>>>>>>>>>>       Luis
+>>>>>>>>>
+>>>>>>>>> CONFIG_ATH_COMMON=m
+>>>>>>>>> # CONFIG_ATH_DEBUG is not set
+>>>>>>>>> CONFIG_ATH5K=m
+>>>>>>>>> # CONFIG_ATH5K_DEBUG is not set
+>>>>>>>>> CONFIG_ATH9K_HW=m
+>>>>>>>>> CONFIG_ATH9K_COMMON=m
+>>>>>>>>> CONFIG_ATH9K=m
+>>>>>>>>> # CONFIG_ATH9K_DEBUGFS is not set
+>>>>>>>>>
+>>>>>>>>> if you need my .config let me know.
+>>>>>>>>> (I can try again reproducing, but man
+>>>>>>>>> just doesn't easily fire off).
+>>>>>>>>
+>>>>>>>> Oh I mean the config options to enable the poison rant.
+>>>>>>>>
+>>>>>>>>       Luis
+>>>>>>>
+>>>>>>> shoot.. not sure how to grep for the right info
+>>>>>>> in the .config for you, heres what grepping for COFIG_DEBUG
+>>>>>>> looks like:
+>>>>>>> CONFIG_DEBUG_FS=y
+>>>>>>> CONFIG_DEBUG_KERNEL=y
+>>>>>>> CONFIG_DEBUG_RT_MUTEXES=y
+>>>>>>> CONFIG_DEBUG_PI_LIST=y
+>>>>>>> CONFIG_DEBUG_SPINLOCK=y
+>>>>>>> CONFIG_DEBUG_MUTEXES=y
+>>>>>>> CONFIG_DEBUG_BUGVERBOSE=y
+>>>>>>> CONFIG_DEBUG_MEMORY_INIT=y
+>>>>>>> CONFIG_DEBUG_STACKOVERFLOW=y
+>>>>>>
+>>>>>> oh, this reminds me of a similar report we had for ath5k:
+>>>>>>
+>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=15861
+>>>>>>
+>>>>>> the subject on this mailing list was "ath5k misbehaving affecting other kernel
+>>>>>> parts unrelated?"
+>>>>>>
+>>>>>> bruno
+>>>>>>
+>>>>>
+>>>>> Could be.. From what I remember
+>>>>> all I was doing was switching from
+>>>>> one wireless network to another
+>>>>> (then opening firefox to sign my life away).
+>>>>
+>>>> Were you using network-manager? Or the supplicant manually?
+>>>>
+>>>>     Luis
+>>>>
+>>>
+>>> I've got wicd(1.5.9) manager
+>>> running over here.
+>>
+>> Can you try this:
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+>> index 8c79548..a372f2c 100644
+>> --- a/drivers/net/wireless/ath/ath9k/init.c
+>> +++ b/drivers/net/wireless/ath/ath9k/init.c
+>> @@ -599,6 +599,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+>>   	 */
+>>   	ath_read_cachesize(common,&csz);
+>>   	common->cachelsz = csz<<  2; /* convert to bytes */
+>> +	printk("ATH9K: cachelsz: %d\n", common->cachelsz);
+>>
+>>   	/* Initializes the hardware for all supported chipsets */
+>>   	ret = ath9k_hw_init(ah);
+>>
+>>
+>> Would like to see what you get there on dmesg upon load.
+>
+> Actually don't bother I just realized you can get this with
+> ATH_DBG_CONFIG enabled.
+>
+>                  ath_print(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
+>                                  common->cachelsz, common->rx_bufsize);
+>
+>
+> This is already in the code so just
+>
+> modprobe ath9k debug=0x00000200
+>
+>    Luis
+>
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c   |   16 ++++++++++------
- drivers/net/wireless/rt2x00/rt2500pci.c   |   16 ++++++++++------
- drivers/net/wireless/rt2x00/rt2500usb.c   |   11 +++++++++++
- drivers/net/wireless/rt2x00/rt2800pci.c   |   17 +++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800usb.c   |   17 +++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00debug.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00queue.c |   10 +---------
- drivers/net/wireless/rt2x00/rt61pci.c     |   11 +++++++++++
- drivers/net/wireless/rt2x00/rt73usb.c     |   11 +++++++++++
- 9 files changed, 89 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index def3fa4..741c531 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -33,6 +33,7 @@
- #include <linux/eeprom_93cx6.h>
- 
- #include "rt2x00.h"
-+#include "rt2x00lib.h"
- #include "rt2x00pci.h"
- #include "rt2400pci.h"
- 
-@@ -1074,9 +1075,6 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
--	u32 word;
- 	u32 reg;
- 
- 	/*
-@@ -1089,9 +1087,15 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
- 
- 	rt2x00queue_map_txskb(rt2x00dev, entry->skb);
- 
--	rt2x00_desc_read(entry_priv->desc, 1, &word);
--	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
--	rt2x00_desc_write(entry_priv->desc, 1, word);
-+	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt2400pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
- 
- 	/*
- 	 * Enable beaconing again.
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 070c23e..4dc101e 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -33,6 +33,7 @@
- #include <linux/eeprom_93cx6.h>
- 
- #include "rt2x00.h"
-+#include "rt2x00lib.h"
- #include "rt2x00pci.h"
- #include "rt2500pci.h"
- 
-@@ -1231,9 +1232,6 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
--	u32 word;
- 	u32 reg;
- 
- 	/*
-@@ -1246,9 +1244,15 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
- 
- 	rt2x00queue_map_txskb(rt2x00dev, entry->skb);
- 
--	rt2x00_desc_read(entry_priv->desc, 1, &word);
--	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
--	rt2x00_desc_write(entry_priv->desc, 1, word);
-+	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt2500pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
- 
- 	/*
- 	 * Enable beaconing again.
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index b985d8f..4911d1a 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -32,6 +32,7 @@
- #include <linux/usb.h>
- 
- #include "rt2x00.h"
-+#include "rt2x00lib.h"
- #include "rt2x00usb.h"
- #include "rt2500usb.h"
- 
-@@ -1107,6 +1108,16 @@ static void rt2500usb_write_beacon(struct queue_entry *entry,
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
- 
- 	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt2500usb_write_tx_desc(rt2x00dev, entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
- 	 * Take the descriptor in front of the skb into account.
- 	 */
- 	skb_push(entry->skb, TXD_DESC_SIZE);
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index b2f2327..fcca30c 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -42,6 +42,7 @@
- #include <linux/eeprom_93cx6.h>
- 
- #include "rt2x00.h"
-+#include "rt2x00lib.h"
- #include "rt2x00pci.h"
- #include "rt2x00soc.h"
- #include "rt2800lib.h"
-@@ -688,6 +689,7 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
- 
-@@ -700,9 +702,24 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
- 	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = entry->skb->data - TXWI_DESC_SIZE;
-+	skbdesc->desc_len = TXWI_DESC_SIZE;
-+
-+	/*
- 	 * Add the TXWI for the beacon to the skb.
- 	 */
- 	rt2800_write_txwi(entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
-+	 * Adjust skb to take TXWI into account.
-+	 */
- 	skb_push(entry->skb, TXWI_DESC_SIZE);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 1b87daa..9a29f73 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -37,6 +37,7 @@
- #include <linux/usb.h>
- 
- #include "rt2x00.h"
-+#include "rt2x00lib.h"
- #include "rt2x00usb.h"
- #include "rt2800lib.h"
- #include "rt2800.h"
-@@ -437,6 +438,7 @@ static void rt2800usb_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
- 
-@@ -449,9 +451,24 @@ static void rt2800usb_write_beacon(struct queue_entry *entry,
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
- 	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = entry->skb->data - TXWI_DESC_SIZE;
-+	skbdesc->desc_len = TXWI_DESC_SIZE;
-+
-+	/*
- 	 * Add the TXWI for the beacon to the skb.
- 	 */
- 	rt2800_write_txwi(entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
-+	 * Adjust skb to take TXWI into account.
-+	 */
- 	skb_push(entry->skb, TXWI_DESC_SIZE);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index 9e2eed5..85e9990 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -204,6 +204,7 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 	if (!test_bit(FRAME_DUMP_FILE_OPEN, &intf->frame_dump_flags))
- 		skb_queue_purge(&intf->frame_dump_skbqueue);
- }
-+EXPORT_SYMBOL_GPL(rt2x00debug_dump_frame);
- 
- static int rt2x00debug_file_open(struct inode *inode, struct file *file)
- {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index e5969a5..9e48bbc 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -420,7 +420,6 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- {
- 	struct data_queue *queue = entry->queue;
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
--	enum rt2x00_dump_type;
- 
- 	rt2x00dev->ops->lib->write_tx_desc(rt2x00dev, entry->skb, txdesc);
- 
-@@ -428,9 +427,7 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- 	 * All processing on the frame has been completed, this means
- 	 * it is now ready to be dumped to userspace through debugfs.
- 	 */
--	dump_type = (txdesc->queue == QID_BEACON) ?
--					DUMP_FRAME_BEACON : DUMP_FRAME_TX;
--	rt2x00debug_dump_frame(rt2x00dev, dump_type, entry->skb);
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TX, entry->skb);
- }
- 
- static void rt2x00queue_kick_tx_queue(struct queue_entry *entry,
-@@ -594,11 +591,6 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
--	 * Write TX descriptor into reserved room in front of the beacon.
--	 */
--	rt2x00queue_write_tx_descriptor(intf->beacon, &txdesc);
--
--	/*
- 	 * Send beacon to hardware and enable beacon genaration..
- 	 */
- 	rt2x00dev->ops->lib->write_beacon(intf->beacon, &txdesc);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 1be1d7d..cf9d507 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -34,6 +34,7 @@
- #include <linux/eeprom_93cx6.h>
- 
- #include "rt2x00.h"
-+#include "rt2x00lib.h"
- #include "rt2x00pci.h"
- #include "rt61pci.h"
- 
-@@ -1872,6 +1873,16 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
- 
- 	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt61pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
- 	 * Write entire beacon with descriptor to register.
- 	 */
- 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index fca661c..085f76e 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -33,6 +33,7 @@
- #include <linux/usb.h>
- 
- #include "rt2x00.h"
-+#include "rt2x00lib.h"
- #include "rt2x00usb.h"
- #include "rt73usb.h"
- 
-@@ -1526,6 +1527,16 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
- 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
- 
- 	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt73usb_write_tx_desc(rt2x00dev, entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
- 	 * Take the descriptor in front of the skb into account.
- 	 */
- 	skb_push(entry->skb, TXD_DESC_SIZE);
--- 
-1.7.1
+what I can try, is(not at the convention, on eth0
+at the moment), but when I get back to the convention
+center place I can try your patch as well as the
+modprobe option, to see if I can get any signs of
+a recreation(if so I'll bisect there).
 
+Justin P. Mattock
