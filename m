@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45168 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753671Ab0EOAwD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 20:52:03 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 17:52:03 -0700
-Date: Fri, 14 May 2010 17:52:01 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Miles Lane <miles.lane@gmail.com>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-Message-ID: <20100515005201.GH28198@tux>
-References: <201005141538.43416.br1@einfach.org>
- <4BED6F19.3040608@gmail.com>
- <20100514165325.GA28198@tux>
- <4BED8765.8040307@gmail.com>
- <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com>
- <67773379-350A-42D4-BEB5-DAC7D8277615@gmail.com>
- <20100514201339.GB28198@tux>
- <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com>
- <20100514205253.GC28198@tux>
- <B796B1C7-D7CC-457A-9C86-7C70EA9451CF@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <B796B1C7-D7CC-457A-9C86-7C70EA9451CF@gmail.com>
+Received: from smtp.nokia.com ([192.100.122.230]:43677 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758227Ab0ENIXi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 04:23:38 -0400
+Subject: Re: [PATCH] wl1271: remove sdio ARM dependency
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1273743804-11587-1-git-send-email-ohad@wizery.com>
+References: <1273743804-11587-1-git-send-email-ohad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 14 May 2010 11:23:41 +0300
+Message-ID: <1273825421.6318.98.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 14, 2010 at 03:32:48PM -0700, Justin P. Mattock wrote:
-> ATH9K: cachelsz 256 rxbufsize 3904
+On Thu, 2010-05-13 at 11:43 +0200, ext Ohad Ben-Cohen wrote:
+> Make it possible to use wl1271's SDIO interface on non-ARM platforms.
+> 
+> Fully tested on a x86 platform, compile-tested on ARM.
+> 
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> ---
 
-OK I see nothing odd with these values, and I do not see how
-these values can make ath_rxbuf_alloc() barf. I'd like to
-reproduce this myself at least once, I left iperf running over
-night with no rants from SLAB. I should note this should be
-reproducible with RX only if it is ath_rxbuf_alloc() to blame
-but without a concrete reproducible instructions it is hard
-to guess what to do and if this can only come up during RX.
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-Can you describe a little more when you have seen this? What
-were you doing exactly, for how long? When was the last time
-you saw this, what were you doing then?
+One question, what wl1271 card are you using on an x86 platform?
 
-  Luis
+-- 
+Cheers,
+Luca.
+
