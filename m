@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:36173 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932861Ab0E0DKz convert rfc822-to-8bit (ORCPT
+Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:57430 "HELO
+	outbound-mail-313.bluehost.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752186Ab0ENQRk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 23:10:55 -0400
-Received: by pvg3 with SMTP id 3so1429636pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 20:10:55 -0700 (PDT)
+	Fri, 14 May 2010 12:17:40 -0400
+Received: from h135.188.123.208.ip.windstream.net ([208.123.188.135] helo=[206.223.20.39])
+	by host200.hostmonster.com with esmtpa (Exim 4.69)
+	(envelope-from <dhlii@dlasys.net>)
+	id 1OCxZz-0006Wh-9P
+	for linux-wireless@vger.kernel.org; Fri, 14 May 2010 10:17:39 -0600
+Message-ID: <4BED77A2.7050105@dlasys.net>
+Date: Fri, 14 May 2010 12:17:38 -0400
+From: "David H. Lynch Jr." <dhlii@dlasys.net>
 MIME-Version: 1.0
-In-Reply-To: <1274926013-31968-1-git-send-email-vasanth@atheros.com>
-References: <1274926013-31968-1-git-send-email-vasanth@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 May 2010 20:10:35 -0700
-Message-ID: <AANLkTikgmkLklDfZUcHo4tQDqaXQcaaxt-HpPsoZmKU7@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: Fix bug in the way "bf_tx_aborted" of struct
-	ath_buf is used
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Felix Fietkau <Felix.Fietkau@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: compat-wireless
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 26, 2010 at 7:06 PM, Vasanthakumar Thiagarajan
-<vasanth@atheros.com> wrote:
-> This bug was introduced by the following commit
->
->        Author: Vasanthakumar Thiagarajan <vasanth@atheros.com>
->        Date:   Thu Apr 15 17:38:46 2010 -0400
->
->        ath9k: Remove ATH9K_TX_SW_ABORTED and introduce a bool for this purpose
->
-> Wrong buffer is checked for bf_tx_aborted field in ath_tx_num_badfrms(),
-> this may result in a rate scaling with wrong feedback (number
-> of unacked frames in this case). It is the last one in the chain
-> of buffers for an aggregate frame that should be checked.
->
-> Also it misses the initialization of this field in the buffer,
-> this may lead to a situation where we stop the sw retransmission
-> of failed subframes associated to this buffer.
->
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
+     I am working with the carl9170 driver.
+     I have a working development environment based on wireless-testing.
 
-FWIW, for those who want to test this, I've applied this patch into
-the compat-wireless linux-next-pending/ directory.  I've also kicked
-out a new linux-next based compat-wireless tarball with the
-pending+crap patches applied and fixed today's new compile issue
-introduced by:
+     I am going to need to support carl9170 with older linux versions.
+     I pullled the compat-wireless git tree and can not figure out how 
+to build from it.
+         Is there any step by step instructions to get from the raw git 
+tree to being able to build against a specific kernel source ?
 
-    Author: Alexey Dobriyan <adobriyan@gmail.com>
-    Date:   Mon May 24 14:33:03 2010 -0700
+     I DL'd the compat-wireless tarball for 2.6.32. I was able to get 
+that working against ubuntu lucid kernel sources.
+     When I add the carl9170 driver I get a large collection of errors 
+building it.
+             While some of these appear to be very specific to this 
+driver many seem specific to differences between 2.6.32 compat-wireless 
+and wireless testing. I was hoping moving to the compat-wireless git 
+tree would fix that, but I can not figure out how to build from it.
 
-        kernel-wide: replace USHORT_MAX, SHORT_MAX and SHORT_MIN with
-USHRT_MAX, SHRT_MAX and SHRT_MIN
+     In an altogether different project it would be useful use 
+compat-wireless to support a newer wifi driver with a 2.6.27 kernel. 
+That seems fairly standard. But I need to cross compile the kernel. As 
+best as I can tell compat-wireless is setup  to work against your 
+current running kernel. Are there any pointers for cross-compiling with 
+compat-wireless, or for building against source other than that for the 
+running kernel ?
 
-        - C99 knows about USHRT_MAX/SHRT_MAX/SHRT_MIN, not
-          USHORT_MAX/SHORT_MAX/SHORT_MIN.
+Thanks
 
-        - Make SHRT_MIN of type s16, not int, for consistency.
 
-        [akpm@linux-foundation.org: fix drivers/dma/timb_dma.c]
-        [akpm@linux-foundation.org: fix security/keys/keyring.c]
-        Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-        Acked-by: WANG Cong <xiyou.wangcong@gmail.com>
-        Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-        Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
 
-This fix required a simple patch on compat.git.
 
-The "pc" compat-wireless tarball for today then is:
 
-http://www.orbit-lab.org/kernel/compat-wireless-2.6/compat-wireless-2010-05-26-pc.tar.bz2
-sha1sum: 62937a3bec62cc564731b30295b44994504355cf
+-- 
+Dave Lynch 					  	    DLA Systems
+Software Development:  				         Embedded Linux
+717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
+Over 25 years' experience in platforms, languages, and technologies too numerous to list.
 
-I've compile and load tested ath9k against 2.6.31-20-generic
+"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
+Albert Einstein
 
-  Luis
