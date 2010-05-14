@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:35031 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716Ab0ENEBr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 00:01:47 -0400
+Received: from postler.einfach.org ([86.59.21.14]:51124 "EHLO home.einfach.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751104Ab0ENWN2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 18:13:28 -0400
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH] ath5k: consistently use rx_bufsize for RX DMA
+Date: Sat, 15 May 2010 07:05:22 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	bob@bobcopeland.com, ath5k-devel@lists.ath5k.org
+References: <20100514074833.10333.81592.stgit@tt-desk> <AANLkTik2XPwhtUkDo7gfJTVI401HG6qU_mYvGmKfEbG5@mail.gmail.com>
+In-Reply-To: <AANLkTik2XPwhtUkDo7gfJTVI401HG6qU_mYvGmKfEbG5@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4BECB1F2.5050900@gmail.com>
-References: <4BEC7A84.3010503@gmail.com> <AANLkTinKoMxdkPYQA_AblpByL6zAiAP5hv2M3Jn2R3hM@mail.gmail.com>
-	<4BEC9E6B.30809@gmail.com> <201005141008.20667.br1@einfach.org>
-	<4BECA3AE.4070607@gmail.com> <20100514012314.GA2170@tux> <4BECA6AC.9060609@gmail.com>
-	<20100514014311.GC2170@tux> <20100514014553.GD2170@tux> <4BECB1F2.5050900@gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 13 May 2010 21:01:27 -0700
-Message-ID: <AANLkTilOJMtg1EIlDgY3_T5Xb6Zed0tbqkD7CGr7utol@mail.gmail.com>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201005150705.22887.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 13, 2010 at 7:14 PM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
+On Saturday 15 May 2010 01:04:34 Luis R. Rodriguez wrote:
+> On Fri, May 14, 2010 at 12:50 AM, Bruno Randolf <br1@einfach.org> wrote:
+> > We should use the same buffer size we set up for DMA also in the hardware
+> > descriptor. Previously we used common->rx_bufsize for setting up the DMA
+> > mapping, but skb_tailroom(skb) for the size we tell to the hardware in
+> > the descriptor itself. The problem is that skb_tailroom(skb) can give us
+> > a larger value than the size we set up for DMA before: In my case
+> > rx_bufsize is 2528, and we allocated an skb of 2559 bytes length,
+> > including padding for cache alignment, but sbk_tailroom() was 2592. Just
+> > consistently use rx_bufsize for all RX DMA memory sizes.
+> > 
+> > Also check the return value of setup function.
+> > 
+> > Signed-off-by: Bruno Randolf <br1@einfach.org>
+> 
+> Cc: stable?
 
->
-> what I can try, is(not at the convention, on eth0
-> at the moment), but when I get back to the convention
-> center place I can try your patch as well as the
-> modprobe option, to see if I can get any signs of
-> a recreation(if so I'll bisect there).
+might be useful. i just would like some review before that.
 
-The debug info I just need upon load of the module, I don't need you
-to run the debug stuff to try to reproduce. The debug print upon load
-will tell us the rxbuf size and cache line size.
+> Is that other bug reproducible, can the user test this to cure it?
 
-  Luis
+not sure. seems like he can with running kismet for a few hours (i'm doing the 
+same over the weekend). i doubt that this is "the" bug though... a) because 
+the bug on ath5k and ath9k are so similar and b) because we see the beginning 
+of packets. rather looks like the next pointer of the descriptor is pointing 
+to somewhere it shouldnt, sometimes? (guessing)
+
+bruno
