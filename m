@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65350 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:40728 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756337Ab0EJW2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:25 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 14/47] iwl3945: use iwl3945_add_bcast_station
-Date: Mon, 10 May 2010 15:27:45 -0700
-Message-Id: <1273530498-11876-15-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+	id S1753509Ab0ENOz2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 10:55:28 -0400
+From: "Berg, Johannes" <johannes.berg@intel.com>
+To: Dan Carpenter <error27@gmail.com>, "Zhu, Yi" <yi.zhu@intel.com>
+CC: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 14 May 2010 15:55:23 +0100
+Subject: RE: [patch -next] iwlwifi: testing the wrong variable in
+	iwl_add_bssid_station()
+Message-ID: <C5C86A19469DAE48AAAD0E5F3716E44501A4B892C9@irsmsx504.ger.corp.intel.com>
+References: <20100514145346.GG17487@bicker>
+In-Reply-To: <20100514145346.GG17487@bicker>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> The intent here is to test that "sta_id_r" is a valid pointer.  We do
+> this same test later on in the function.
 
-iwl3945 should not use iwl_add_local_station(..., false)
-because that would leave the IWL_STA_UCODE_INPROGRESS flag
-set for the station, which is not desirable. Instead it
-can use iwl3945_add_bcast_station() here.
+Indeed, thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> Btw iwl_add_bssid_station() is called from two places and "sta_id_r" is
+> a valid pointer from both callers.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 04cedef..4f20cca 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3293,7 +3293,7 @@ void iwl3945_config_ap(struct iwl_priv *priv)
- 		/* restore RXON assoc */
- 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 		iwlcore_commit_rxon(priv);
--		iwl_add_local_station(priv, iwl_bcast_addr, false);
-+		iwl3945_add_bcast_station(priv);
- 	}
- 	iwl3945_send_beacon_cmd(priv);
- 
--- 
-1.6.3.3
+Which explains why I didn't see that, and probably means
+that we don't need the test at all...
+
+johannes
+
+---------------------------------------------------------------------
+Intel GmbH
+Dornacher Strasse 1
+85622 Feldkirchen/Muenchen Germany
+Sitz der Gesellschaft: Feldkirchen bei Muenchen
+Geschaeftsfuehrer: Douglas Lusk, Peter Gleissner, Hannes Schwaderer
+Registergericht: Muenchen HRB 47456 Ust.-IdNr.
+VAT Registration No.: DE129385895
+Citibank Frankfurt (BLZ 502 109 00) 600119052
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
