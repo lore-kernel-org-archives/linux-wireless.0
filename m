@@ -1,70 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50485 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:65454 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752888Ab0EDTzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 15:55:01 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 12:55:01 -0700
-Date: Tue, 4 May 2010 12:55:00 -0700
+	id S1750876Ab0ENQx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 12:53:27 -0400
+Date: Fri, 14 May 2010 09:53:25 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath9k: fix another source of corrupt frames
-Message-ID: <20100504195500.GH2624@tux>
-References: <4BDFD3C1.4000209@openwrt.org>
- <u2q43e72e891005041109i5106ba24ma7345c4f4c4fde21@mail.gmail.com>
- <4BE0773A.8090009@openwrt.org>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+CC: Bruno Randolf <br1@einfach.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+Message-ID: <20100514165325.GA28198@tux>
+References: <4BEC7A84.3010503@gmail.com>
+ <201005141520.30802.br1@einfach.org>
+ <4BECEE3E.6090303@gmail.com>
+ <201005141538.43416.br1@einfach.org>
+ <4BED6F19.3040608@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4BE0773A.8090009@openwrt.org>
+In-Reply-To: <4BED6F19.3040608@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 04, 2010 at 12:36:26PM -0700, Felix Fietkau wrote:
-> On 2010-05-04 8:09 PM, Luis R. Rodriguez wrote:
-> > On Tue, May 4, 2010 at 12:58 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> >> Atheros hardware supports receiving frames that span multiple
-> >> descriptors and buffers. In this case, the rx status of every
-> >> descriptor except for the last one is invalid and may contain random
-> >> data. Because the driver does not support this, it needs to drop such
-> >> frames.
+On Fri, May 14, 2010 at 08:41:13AM -0700, Justin P. Mattock wrote:
+> On 05/13/10 23:38, Bruno Randolf wrote:
+> > On Friday 14 May 2010 15:31:26 Justin P. Mattock wrote:
+> >> On 05/13/10 23:20, Bruno Randolf wrote:
+> >>> On Friday 14 May 2010 15:16:22 Luis R. Rodriguez wrote:
+> >>>> On Thu, May 13, 2010 at 9:44 PM, Justin P. Mattock
+> >>>>
+> >>>> <justinmattock@gmail.com>   wrote:
+> >>>>> On 05/13/10 21:01, Luis R. Rodriguez wrote:
+> >>>>>> On Thu, May 13, 2010 at 7:14 PM, Justin P. Mattock
+> >>>>>>
+> >>>>>> <justinmattock@gmail.com>    wrote:
+> >>>>>>> what I can try, is(not at the convention, on eth0
+> >>>>>>> at the moment), but when I get back to the convention
+> >>>>>>> center place I can try your patch as well as the
+> >>>>>>> modprobe option, to see if I can get any signs of
+> >>>>>>> a recreation(if so I'll bisect there).
+> >>>>>>
+> >>>>>> The debug info I just need upon load of the module, I don't need you
+> >>>>>> to run the debug stuff to try to reproduce. The debug print upon load
+> >>>>>> will tell us the rxbuf size and cache line size.
+> >>>>>>
+> >>>>>>     Luis
+> >>>>>
+> >>>>> o.k. it's not pretty due
+> >>>>> to loads of avc's for SELinux:
+> >>>>> (I run a rootless system).
+> >>>>>
+> >>>>> [   84.172649] ath9k: Driver unloaded
+> >>>>> [  100.675300] audit_printk_skb: 6 callbacks suppressed
+> >>>>> [  100.675306] type=1400 audit(1273811633.675:20): avc:  denied  {
+> >>>>> search } for  pid=2168 comm="modprobe" name="modules" dev=sda3
+> >>>>> ino=2500 scontext=name:staff_r:staff_sudo_t:s0
+> >>>>> tcontext=system_u:object_r:modules_object_t:s0 tclass=dir
+> >>>>> [  100.675408] type=1400 audit(1273811633.675:20): avc:  denied  {
+> >>>>> search } for  pid=2168 comm="modprobe"
+> >>>>> name="2.6.34-rc7-00057-gcdfda35" dev=sda3 ino=524392
+> >>>>> scontext=name:staff_r:staff_sudo_t:s0
+> >>>>> tcontext=name:object_r:modules_object_t:s0 tclass=dir
+> >>>>> [  100.675552] type=1400 audit(1273811633.675:20): avc:  denied  { read
+> >>>>> } for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3
+> >>>>> ino=525251 scontext=name:staff_r:staff_sudo_t:s0
+> >>>>> tcontext=name:object_r:modules_object_t:s0 tclass=file
+> >>>>> [  100.675598] type=1400 audit(1273811633.675:20): avc:  denied  { open
+> >>>>> } for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3
+> >>>>> ino=525251 scontext=name:staff_r:staff_sudo_t:s0
+> >>>>> tcontext=name:object_r:modules_object_t:s0 tclass=file
+> >>>>> [  100.675748] type=1300 audit(1273811633.675:20): arch=c000003e
+> >>>>> syscall=2 success=yes exit=3 a0=60d140 a1=0 a2=1b6 a3=0 items=0
+> >>>>> ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0
+> >>>>> sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" exe="/sbin/modprobe"
+> >>>>> subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> >>>>> [  100.675902] type=1400 audit(1273811633.675:21): avc:  denied  {
+> >>>>> getattr } for  pid=2168 comm="modprobe"
+> >>>>> path="/lib/modules/2.6.34-rc7-00057-gcdfda35/modules.dep.bin" dev=sda3
+> >>>>> ino=525251 scontext=name:staff_r:staff_sudo_t:s0
+> >>>>> tcontext=name:object_r:modules_object_t:s0 tclass=file
+> >>>>> [  100.676052] type=1300 audit(1273811633.675:21): arch=c000003e
+> >>>>> syscall=5 success=yes exit=0 a0=3 a1=7fffd2d1dd70 a2=7fffd2d1dd70 a3=0
+> >>>>> items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0
+> >>>>> egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe"
+> >>>>> exe="/sbin/modprobe"
+> >>>>> subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> >>>>> [  100.698392] ath9k 0000:03:00.0: PCI INT A ->   GSI 17 (level, low) ->
+> >>>>> IRQ 17
+> >>>>> [  100.698409] ath9k 0000:03:00.0: setting latency timer to 64
+> >>>>> [  100.828787] ath: EEPROM regdomain: 0x64
+> >>>>> [  100.828790] ath: EEPROM indicates we should expect a direct regpair
+> >>>>> map [  100.828793] ath: Country alpha2 being used: 00
+> >>>>> [  100.828795] ath: Regpair used: 0x64
+> >>>>> [  100.848609] type=1400 audit(1273811633.678:22): avc:  denied  {
+> >>>>> search } for  pid=2168 comm="modprobe" name="ieee80211" dev=debugfs
+> >>>>> ino=18 scontext=name:staff_r:staff_sudo_t:s0
+> >>>>> tcontext=system_u:object_r:debugfs_t:s0 tclass=dir
+> >>>>> [  100.848788] phy1: Selected rate control algorithm
+> >>>>> 'ath9k_rate_control' [  100.850035] Registered led device:
+> >>>>> ath9k-phy1::radio
+> >>>>> [  100.850488] Registered led device: ath9k-phy1::assoc
+> >>>>> [  100.851227] Registered led device: ath9k-phy1::tx
+> >>>>> [  100.851633] Registered led device: ath9k-phy1::rx
+> >>>>> [  100.851640] phy1: Atheros AR5418 MAC/BB Rev:2 AR5133 RF Rev:81
+> >>>>> mem=0xffffc900005a0000, irq=17
+> >>>>> [  100.852240] type=1300 audit(1273811633.678:22): arch=c000003e
+> >>>>> syscall=175 success=yes exit=0 a0=7f1e9d6ab010 a1=19580 a2=60d920 a3=0
+> >>>>> items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0
+> >>>>> egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe"
+> >>>>> exe="/sbin/modprobe"
+> >>>>> subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> >>>>>
+> >>>>> but there you go dmesg of the debug info for you
+> >>>>
+> >>>> Justin, did you forget to use the debug parameter on modprobe ath9k?
+> >>>>
+> >>>> modprobe ath9k debug=0x0000020
+> >>>>
+> >>>> I do not see the output I expected.
+> >>>
+> >>> i think you have to do at least "ifconfig wlan0 up" to see it - (at least
+> >>> for ath5k).
+> >>>
+> >>> bruno
 > >>
-> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> >> ---
-> >> --- a/drivers/net/wireless/ath/ath9k/common.c
-> >> +++ b/drivers/net/wireless/ath/ath9k/common.c
-> >> @@ -57,13 +57,19 @@ static bool ath9k_rx_accept(struct ath_c
-> >>         * rs_more indicates chained descriptors which can be used
-> >>         * to link buffers together for a sort of scatter-gather
-> >>         * operation.
-> >> -        *
-> >> +        * reject the frame, we don't support scatter-gather yet and
-> >> +        * the frame is probably corrupt anyway
-> >> +        */
-> >> +       if (rx_stats->rs_more)
-> >> +               return false;
-> > 
-> > Actually this is required by ath9k_htc, it does process these, but
-> > ath9k doesn't so this could be done within ath9k itself.
-> I don't see any place in ath9k_htc that processes rs_more.
+> >> didn't think todo so, I'll redu
+> >> again and see. BTW: the connection
+> >> over here is dodgy(hotel) should I at-least
+> >> find a stable access point? i.g. convetion
+> >> center seemed semi somewhat there
+> >
+> > no that does not matter. just ifconfig up is enough. it's just initialization,
+> > you don't need a connection for that.
+> >
+> > bruno
+> >
+> >> Justin P. Mattock
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> >> in the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> 
+> here you go:
+> (hopefully I did this correct)
+> 
+> [   84.172542] ath9k 0000:03:00.0: PCI INT A disabled
+> [   84.172649] ath9k: Driver unloaded
+> [  100.675300] audit_printk_skb: 6 callbacks suppressed
+> [  100.675306] type=1400 audit(1273811633.675:20): avc:  denied  { 
+> search } for  pid=2168 comm="modprobe" name="modules" dev=sda3 ino=2500 
+>        xt=name:staff_r:staff_sudo_t:s0 
+> tcontext=system_u:object_r:modules_object_t:s0 tclass=dir
+> [  100.675408] type=1400 audit(1273811633.675:20): avc:  denied  { 
+> search } for  pid=2168 comm="modprobe" name="2.6.34-rc7-00057-gcdfda35" 
+> dev=sda3 ino=524392 scontext=name:staff_r:staff_sudo_t:s0 
+> tcontext=name:object_r:modules_object_t:s0 tclass=dir
+> [  100.675552] type=1400 audit(1273811633.675:20): avc:  denied  { read 
+> } for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3 
+> ino=525251 scontext=name:staff_r:staff_sudo_t:s0 
+> tcontext=name:object_r:modules_object_t:s0 tclass=file
+> [  100.675598] type=1400 audit(1273811633.675:20): avc:  denied  { open 
+> } for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3 
+> ino=525251 scontext=name:staff_r:staff_sudo_t:s0 
+> tcontext=name:object_r:modules_object_t:s0 tclass=file
+> [  100.675748] type=1300 audit(1273811633.675:20): arch=c000003e 
+> syscall=2 success=yes exit=3 a0=60d140 a1=0 a2=1b6 a3=0 items=0 
+> ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 
+> sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" exe="/sbin/modprobe" 
+> subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> [  100.675902] type=1400 audit(1273811633.675:21): avc:  denied  { 
+> getattr } for  pid=2168 comm="modprobe" 
+> path="/lib/modules/2.6.34-rc7-00057-gcdfda35/modules.dep.bin" dev=sda3 
+> ino=525251 scontext=name:staff_r:staff_sudo_t:s0 
+> tcontext=name:object_r:modules_object_t:s0 tclass=file
+> [  100.676052] type=1300 audit(1273811633.675:21): arch=c000003e 
+> syscall=5 success=yes exit=0 a0=3 a1=7fffd2d1dd70 a2=7fffd2d1dd70 a3=0 
+> items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 
+> egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" 
+> exe="/sbin/modprobe" subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> [  100.698392] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> 
+> IRQ 17
+> [  100.698409] ath9k 0000:03:00.0: setting latency timer to 64
+> [  100.828787] ath: EEPROM regdomain: 0x64
+> [  100.828790] ath: EEPROM indicates we should expect a direct regpair map
+> [  100.828793] ath: Country alpha2 being used: 00
+> [  100.828795] ath: Regpair used: 0x64
+> 
+> [  100.848609] type=1400 audit(1273811633.678:22): avc:  denied  { 
+> search } for  pid=2168 comm="modprobe" name="ieee80211" dev=debugfs 
+> ino=18 scontext=name:staff_r:staff_sudo_t:s0 
+> tcontext=system_u:object_r:debugfs_t:s0 tclass=dir
+> [  100.848788] phy1: Selected rate control algorithm 'ath9k_rate_control'
+> [  100.850035] Registered led device: ath9k-phy1::radio
+> [  100.850488] Registered led device: ath9k-phy1::assoc
+> [  100.851227] Registered led device: ath9k-phy1::tx
+> [  100.851633] Registered led device: ath9k-phy1::rx
+> [  100.851640] phy1: Atheros AR5418 MAC/BB Rev:2 AR5133 RF Rev:81 
+> mem=0xffffc900005a0000, irq=17
+> [  100.852240] type=1300 audit(1273811633.678:22): arch=c000003e 
+> syscall=175 success=yes exit=0 a0=7f1e9d6ab010 a1=19580 a2=60d920 a3=0 
+> items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 
+> egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" 
+> exe="/sbin/modprobe" subj=name:staff_r:staff_sudo_t:s0 key=(null)
+> 
+> 
+> let me know if you need more info.. I'll be off the grid in
+> a few, then probably wont be back on till a while
+> (since I aint got's no 99 big ones for intranet!!)
 
-Odd, when I worked on it, I had to use this, let me check with today's
-code and get back to this thread.
+Your output still did not have the stuff I was looking for, just do:
 
-> And even if
-> it did, processing the rx status of a frame that has more descriptors
-> chained after it would be wrong, since the rx status is only valid for
-> the last frame of the descriptor chain.
+dmesg | grep cachelsz
 
-This is true.
-
-> I think my patch would work fine for ath9k_htc as well.
-
-We should test just to be sure. Would hate to request for a revert
-for something we could have just prevented with proper testing/review.
-I can test this in a bit I think.
+If nothing comes up it doesn't have the output I was looking for yet.
 
   Luis
