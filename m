@@ -1,305 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60661 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753667Ab0E1S5j (ORCPT
+Received: from one.firstfloor.org ([213.235.205.2]:39927 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755354Ab0ENNh3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 14:57:39 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OI4kU-000480-8C
-	for linux-wireless@vger.kernel.org; Fri, 28 May 2010 20:57:38 +0200
-Message-Id: <20100528185505.162785761@sipsolutions.net>
-Date: Fri, 28 May 2010 20:53:06 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 4/7] mac80211: use common work function
-References: <20100528185302.639535282@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 14 May 2010 09:37:29 -0400
+Date: Fri, 14 May 2010 15:37:23 +0200
+From: Andi Kleen <andi@firstfloor.org>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rjw@sisk.pl
+Subject: RTL8185 mlme.c:341 warning and failure still in 2.6.34rc7
+Message-ID: <20100514133723.GA10351@basil.fritz.box>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Even with the previous patch, IBSS, managed
-and mesh modes all attach their own work
-function to the shared work struct, which
-means some duplicated code. Change that to
-only have a frame processing function and a
-further work function for each of them and
-share some common code.
+[ccing Rafael because this seems to be a regression. Please add it to your list.]
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c        |   29 ++-------------------
- net/mac80211/ieee80211_i.h |   11 +++++++
- net/mac80211/iface.c       |   62 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/mesh.c        |   20 ++------------
- net/mac80211/mlme.c        |   35 ++-----------------------
- 5 files changed, 84 insertions(+), 73 deletions(-)
+When I boot my system with a RTL8185 the wireless doesn't come up at boot,
+only when I manually restart it. Instead i get
 
---- wireless-testing.orig/net/mac80211/ibss.c	2010-05-28 20:37:06.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2010-05-28 20:37:08.000000000 +0200
-@@ -727,8 +727,8 @@ static void ieee80211_rx_mgmt_beacon(str
- 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, true);
- }
- 
--static void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
--					  struct sk_buff *skb)
-+void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
-+				   struct sk_buff *skb)
- {
- 	struct ieee80211_rx_status *rx_status;
- 	struct ieee80211_mgmt *mgmt;
-@@ -758,29 +758,9 @@ static void ieee80211_ibss_rx_queued_mgm
- 	kfree_skb(skb);
- }
- 
--static void ieee80211_ibss_work(struct work_struct *work)
-+void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_sub_if_data *sdata =
--		container_of(work, struct ieee80211_sub_if_data, work);
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_if_ibss *ifibss;
--	struct sk_buff *skb;
--
--	if (WARN_ON(local->suspended))
--		return;
--
--	if (!ieee80211_sdata_running(sdata))
--		return;
--
--	if (local->scanning)
--		return;
--
--	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_ADHOC))
--		return;
--	ifibss = &sdata->u.ibss;
--
--	while ((skb = skb_dequeue(&sdata->skb_queue)))
--		ieee80211_ibss_rx_queued_mgmt(sdata, skb);
-+	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 
- 	if (!test_and_clear_bit(IEEE80211_IBSS_REQ_RUN, &ifibss->request))
- 		return;
-@@ -847,7 +827,6 @@ void ieee80211_ibss_setup_sdata(struct i
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 
--	INIT_WORK(&sdata->work, ieee80211_ibss_work);
- 	setup_timer(&ifibss->timer, ieee80211_ibss_timer,
- 		    (unsigned long) sdata);
- }
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-05-28 20:37:06.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-05-28 20:37:08.000000000 +0200
-@@ -998,6 +998,9 @@ void ieee80211_sta_process_chanswitch(st
- 				      u64 timestamp);
- void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
-+				  struct sk_buff *skb);
- 
- /* IBSS code */
- void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
-@@ -1012,6 +1015,14 @@ int ieee80211_ibss_join(struct ieee80211
- int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata);
- void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
-+				   struct sk_buff *skb);
-+
-+/* mesh code */
-+void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
-+				   struct sk_buff *skb);
- 
- /* scan/BSS handling */
- void ieee80211_scan_work(struct work_struct *work);
---- wireless-testing.orig/net/mac80211/iface.c	2010-05-28 20:37:06.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-05-28 20:37:08.000000000 +0200
-@@ -704,6 +704,67 @@ static void ieee80211_if_setup(struct ne
- 	dev->destructor = free_netdev;
- }
- 
-+static void ieee80211_iface_work(struct work_struct *work)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		container_of(work, struct ieee80211_sub_if_data, work);
-+	struct ieee80211_local *local = sdata->local;
-+	struct sk_buff *skb;
-+
-+	if (!ieee80211_sdata_running(sdata))
-+		return;
-+
-+	if (local->scanning)
-+		return;
-+
-+	/*
-+	 * ieee80211_queue_work() should have picked up most cases,
-+	 * here we'll pick the the rest.
-+	 */
-+	if (WARN(local->suspended,
-+		 "interface work scheduled while going to suspend\n"))
-+		return;
-+
-+	/* first process frames */
-+	while ((skb = skb_dequeue(&sdata->skb_queue))) {
-+		switch (sdata->vif.type) {
-+		case NL80211_IFTYPE_STATION:
-+			ieee80211_sta_rx_queued_mgmt(sdata, skb);
-+			break;
-+		case NL80211_IFTYPE_ADHOC:
-+			ieee80211_ibss_rx_queued_mgmt(sdata, skb);
-+			break;
-+		case NL80211_IFTYPE_MESH_POINT:
-+			if (!ieee80211_vif_is_mesh(&sdata->vif))
-+				break;
-+			ieee80211_mesh_rx_queued_mgmt(sdata, skb);
-+			break;
-+		default:
-+			WARN(1, "frame for unexpected interface type");
-+			kfree_skb(skb);
-+			break;
-+		}
-+	}
-+
-+	/* then other type-dependent work */
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_STATION:
-+		ieee80211_sta_work(sdata);
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		ieee80211_ibss_work(sdata);
-+		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		if (!ieee80211_vif_is_mesh(&sdata->vif))
-+			break;
-+		ieee80211_mesh_work(sdata);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+
- /*
-  * Helper function to initialise an interface to a specific type.
-  */
-@@ -722,6 +783,7 @@ static void ieee80211_setup_sdata(struct
- 	sdata->dev->type = ARPHRD_ETHER;
- 
- 	skb_queue_head_init(&sdata->skb_queue);
-+	INIT_WORK(&sdata->work, ieee80211_iface_work);
- 
- 	switch (type) {
- 	case NL80211_IFTYPE_AP:
---- wireless-testing.orig/net/mac80211/mesh.c	2010-05-28 20:37:06.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh.c	2010-05-28 20:37:08.000000000 +0200
-@@ -599,8 +599,8 @@ static void ieee80211_mesh_rx_mgmt_actio
- 	}
- }
- 
--static void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
--					  struct sk_buff *skb)
-+void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
-+				   struct sk_buff *skb)
- {
- 	struct ieee80211_rx_status *rx_status;
- 	struct ieee80211_if_mesh *ifmsh;
-@@ -627,22 +627,9 @@ static void ieee80211_mesh_rx_queued_mgm
- 	kfree_skb(skb);
- }
- 
--static void ieee80211_mesh_work(struct work_struct *work)
-+void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_sub_if_data *sdata =
--		container_of(work, struct ieee80211_sub_if_data, work);
--	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	struct sk_buff *skb;
--
--	if (!ieee80211_sdata_running(sdata))
--		return;
--
--	if (local->scanning)
--		return;
--
--	while ((skb = skb_dequeue(&sdata->skb_queue)))
--		ieee80211_mesh_rx_queued_mgmt(sdata, skb);
- 
- 	if (ifmsh->preq_queue_len &&
- 	    time_after(jiffies,
-@@ -677,7 +664,6 @@ void ieee80211_mesh_init_sdata(struct ie
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 
--	INIT_WORK(&sdata->work, ieee80211_mesh_work);
- 	setup_timer(&ifmsh->housekeeping_timer,
- 		    ieee80211_mesh_housekeeping_timer,
- 		    (unsigned long) sdata);
---- wireless-testing.orig/net/mac80211/mlme.c	2010-05-28 20:37:06.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-05-28 20:37:08.000000000 +0200
-@@ -1660,8 +1660,8 @@ ieee80211_rx_result ieee80211_sta_rx_mgm
- 	return RX_DROP_MONITOR;
- }
- 
--static void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
--					 struct sk_buff *skb)
-+void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
-+				  struct sk_buff *skb)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_rx_status *rx_status;
-@@ -1782,36 +1782,10 @@ static void ieee80211_sta_timer(unsigned
- 	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- 
--static void ieee80211_sta_work(struct work_struct *work)
-+void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_sub_if_data *sdata =
--		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_if_managed *ifmgd;
--	struct sk_buff *skb;
--
--	if (!ieee80211_sdata_running(sdata))
--		return;
--
--	if (local->scanning)
--		return;
--
--	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
--		return;
--
--	/*
--	 * ieee80211_queue_work() should have picked up most cases,
--	 * here we'll pick the the rest.
--	 */
--	if (WARN(local->suspended, "STA MLME work scheduled while "
--		 "going to suspend\n"))
--		return;
--
--	ifmgd = &sdata->u.mgd;
--
--	/* first process frames to avoid timing out while a frame is pending */
--	while ((skb = skb_dequeue(&sdata->skb_queue)))
--		ieee80211_sta_rx_queued_mgmt(sdata, skb);
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
- 	/* then process the rest of the work */
- 	mutex_lock(&ifmgd->mtx);
-@@ -1953,7 +1927,6 @@ void ieee80211_sta_setup_sdata(struct ie
- 	struct ieee80211_if_managed *ifmgd;
- 
- 	ifmgd = &sdata->u.mgd;
--	INIT_WORK(&sdata->work, ieee80211_sta_work);
- 	INIT_WORK(&ifmgd->monitor_work, ieee80211_sta_monitor_work);
- 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
- 	INIT_WORK(&ifmgd->beacon_connection_loss_work,
+I reported this a few rc*s back, but haven't heard anything back and the 
+problem is still there.
+
+For me it's a serious problem when the wireless does not come up.
+
+This didn't happen in .33.
+
+-Andi
+
+wlan0: authenticate with 00:1f:3f:1d:54:46 (try 1)
+wlan0: authenticated
+wlan0: associate with 00:1f:3f:1d:54:46 (try 1)
+wlan0: associate with 00:1f:3f:1d:54:46 (try 2)
+wlan0: associate with 00:1f:3f:1d:54:46 (try 3)
+wlan0: association with 00:1f:3f:1d:54:46 timed out
+------------[ cut here ]------------
+WARNING: at /home/lsrc/linux-2.6.34-rc7/net/wireless/mlme.c:341 cfg80211_send_assoc_timeout+0xff/0x117 [cfg80211]()
+Hardware name: ...
+Modules linked in:  ...
+Pid: 3344, comm: phy0 Not tainted 2.6.34-rc7 #7
+Call Trace:
+ [<ffffffffa0072124>] ? cfg80211_send_assoc_timeout+0xff/0x117 [cfg80211]
+ [<ffffffff8103a4f0>] warn_slowpath_common+0x7c/0xa9
+ [<ffffffff8103a531>] warn_slowpath_null+0x14/0x16
+ [<ffffffffa0072124>] cfg80211_send_assoc_timeout+0xff/0x117 [cfg80211]
+ [<ffffffffa00e6393>] ieee80211_assoc_done+0x74/0xa9 [mac80211]
+ [<ffffffffa00e85f0>] ieee80211_work_work+0xe4c/0xe8d [mac80211]
+ [<ffffffff81033cbe>] ? finish_task_switch+0x42/0xab
+ [<ffffffff810535d7>] ? prepare_to_wait+0x6e/0x7a
+ [<ffffffff8104f832>] worker_thread+0x192/0x227
+ [<ffffffffa00e77a4>] ? ieee80211_work_work+0x0/0xe8d [mac80211]
+ [<ffffffff81053342>] ? autoremove_wake_function+0x0/0x3d
+ [<ffffffff8104f6a0>] ? worker_thread+0x0/0x227
+ [<ffffffff81052efc>] kthread+0x82/0x8a
+ [<ffffffff81003954>] kernel_thread_helper+0x4/0x10
+ [<ffffffff81052e7a>] ? kthread+0x0/0x8a
+ [<ffffffff81003950>] ? kernel_thread_helper+0x0/0x10
+---[ end trace 4e3067114aa2fd06 ]---
+wlan0: deauthenticating from 00:1f:3f:1d:54:46 by local choice (reason=3)
 
 
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
