@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47692 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752472Ab0EONqX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 09:46:23 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] cfg80211: fix crash in cfg80211_set_freq()
-Date: Sat, 15 May 2010 15:46:17 +0200
-Message-Id: <1273931177-26887-1-git-send-email-nbd@openwrt.org>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:50745 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab0ENUSz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 16:18:55 -0400
+Received: by pvh1 with SMTP id 1so726491pvh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 13:18:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1273861216-12195-2-git-send-email-hauke@hauke-m.de>
+References: <1273861216-12195-1-git-send-email-hauke@hauke-m.de>
+	<1273861216-12195-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 14 May 2010 13:18:35 -0700
+Message-ID: <AANLkTin3k5I9twX56NrS_a54TkgZRJGyvgG9py_VaDBx@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat-wireless: Update Readme to reflect changes
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since wdev can be NULL, check it before dereferencing it
+On Fri, May 14, 2010 at 11:20 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> * A description of the differences of the stable and the normal version
+>  of compat wireless was added.
+> * Some outdated parts are now up to date
+> * replaceing the developing section with version in the wiki
+>
+> These changes are needed because some people are tiring to build their
+> own compat-wireless version based on wireless-testing and some people
+> choose compat-wireless stable based on their currently running kernel
+> version.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/wireless/chan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks, both patches have been applied and pushed out.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index d92d088..b01a6f6 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -50,7 +50,7 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 	struct ieee80211_channel *chan;
- 	int result;
- 
--	if (wdev->iftype == NL80211_IFTYPE_MONITOR)
-+	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
- 		wdev = NULL;
- 
- 	if (wdev) {
--- 
-1.6.4.2
-
+  Luis
