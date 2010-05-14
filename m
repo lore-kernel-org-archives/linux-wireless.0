@@ -1,165 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65350 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:56529 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756794Ab0EJW23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:29 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 44/47] iwlwifi: move iwl_find_station() to 4965
-Date: Mon, 10 May 2010 15:28:15 -0700
-Message-Id: <1273530498-11876-45-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+	id S1755280Ab0ENBpz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 May 2010 21:45:55 -0400
+Date: Thu, 13 May 2010 18:45:53 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: "Justin P. Mattock" <justinmattock@gmail.com>,
+	Bruno Randolf <br1@einfach.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+Message-ID: <20100514014553.GD2170@tux>
+References: <4BEC7A84.3010503@gmail.com>
+ <AANLkTinKoMxdkPYQA_AblpByL6zAiAP5hv2M3Jn2R3hM@mail.gmail.com>
+ <4BEC9E6B.30809@gmail.com>
+ <201005141008.20667.br1@einfach.org>
+ <4BECA3AE.4070607@gmail.com>
+ <20100514012314.GA2170@tux>
+ <4BECA6AC.9060609@gmail.com>
+ <20100514014311.GC2170@tux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20100514014311.GC2170@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, May 13, 2010 at 06:43:11PM -0700, Luis Rodriguez wrote:
+> On Thu, May 13, 2010 at 06:26:04PM -0700, Justin P. Mattock wrote:
+> > On 05/13/10 18:23, Luis R. Rodriguez wrote:
+> > > On Thu, May 13, 2010 at 06:13:18PM -0700, Justin P. Mattock wrote:
+> > >> On 05/13/10 18:08, Bruno Randolf wrote:
+> > >>> On Friday 14 May 2010 09:50:51 Justin P. Mattock wrote:
+> > >>>> On 05/13/10 17:28, Luis R. Rodriguez wrote:
+> > >>>>> On Thu, May 13, 2010 at 5:21 PM, Justin P. Mattock
+> > >>>>>
+> > >>>>> <justinmattock@gmail.com>    wrote:
+> > >>>>>> On 05/13/10 16:01, Luis R. Rodriguez wrote:
+> > >>>>>>> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
+> > >>>>>>>
+> > >>>>>>> <justinmattock@gmail.com>      wrote:
+> > >>>>>>>> not sure what this is, but while at a convention
+> > >>>>>>>> I was trying to access the internet and(below is
+> > >>>>>>>> full dmesg) this showed up.
+> > >>>>>>>>
+> > >>>>>>>> After receiving this, I sat and tried to re-create
+> > >>>>>>>> my steps to reproduce but had no luck(was even going
+> > >>>>>>>> todo a bisect n the spot if I could re-create).
+> > >>>>>>>
+> > >>>>>>> OK this stuff is hard to reproduce it seems.. you have an Atheros
+> > >>>>>>> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
+> > >>>>>>> to get the poison stuff? I am just surprised we haven't seen it
+> > >>>>>>> ourselves yet. Let me make sure all of us get this kconfig option
+> > >>>>>>> enabled.
+> > >>>>>>>
+> > >>>>>>>      Luis
+> > >>>>>>
+> > >>>>>> CONFIG_ATH_COMMON=m
+> > >>>>>> # CONFIG_ATH_DEBUG is not set
+> > >>>>>> CONFIG_ATH5K=m
+> > >>>>>> # CONFIG_ATH5K_DEBUG is not set
+> > >>>>>> CONFIG_ATH9K_HW=m
+> > >>>>>> CONFIG_ATH9K_COMMON=m
+> > >>>>>> CONFIG_ATH9K=m
+> > >>>>>> # CONFIG_ATH9K_DEBUGFS is not set
+> > >>>>>>
+> > >>>>>> if you need my .config let me know.
+> > >>>>>> (I can try again reproducing, but man
+> > >>>>>> just doesn't easily fire off).
+> > >>>>>
+> > >>>>> Oh I mean the config options to enable the poison rant.
+> > >>>>>
+> > >>>>>      Luis
+> > >>>>
+> > >>>> shoot.. not sure how to grep for the right info
+> > >>>> in the .config for you, heres what grepping for COFIG_DEBUG
+> > >>>> looks like:
+> > >>>> CONFIG_DEBUG_FS=y
+> > >>>> CONFIG_DEBUG_KERNEL=y
+> > >>>> CONFIG_DEBUG_RT_MUTEXES=y
+> > >>>> CONFIG_DEBUG_PI_LIST=y
+> > >>>> CONFIG_DEBUG_SPINLOCK=y
+> > >>>> CONFIG_DEBUG_MUTEXES=y
+> > >>>> CONFIG_DEBUG_BUGVERBOSE=y
+> > >>>> CONFIG_DEBUG_MEMORY_INIT=y
+> > >>>> CONFIG_DEBUG_STACKOVERFLOW=y
+> > >>>
+> > >>> oh, this reminds me of a similar report we had for ath5k:
+> > >>>
+> > >>> https://bugzilla.kernel.org/show_bug.cgi?id=15861
+> > >>>
+> > >>> the subject on this mailing list was "ath5k misbehaving affecting other kernel
+> > >>> parts unrelated?"
+> > >>>
+> > >>> bruno
+> > >>>
+> > >>
+> > >> Could be.. From what I remember
+> > >> all I was doing was switching from
+> > >> one wireless network to another
+> > >> (then opening firefox to sign my life away).
+> > >
+> > > Were you using network-manager? Or the supplicant manually?
+> > >
+> > >    Luis
+> > >
+> > 
+> > I've got wicd(1.5.9) manager
+> > running over here.
+> 
+> Can you try this:
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index 8c79548..a372f2c 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -599,6 +599,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+>  	 */
+>  	ath_read_cachesize(common, &csz);
+>  	common->cachelsz = csz << 2; /* convert to bytes */
+> +	printk("ATH9K: cachelsz: %d\n", common->cachelsz);
+>  
+>  	/* Initializes the hardware for all supported chipsets */
+>  	ret = ath9k_hw_init(ah);
+> 
+> 
+> Would like to see what you get there on dmesg upon load.
 
-4965 code is the only thing that now still
-needs iwl_find_station(), so move it there
-and make it static. Everything else can
-rely on the station data passed by mac80211.
+Actually don't bother I just realized you can get this with
+ATH_DBG_CONFIG enabled.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |   44 ++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-sta.c  |   45 -------------------------------
- drivers/net/wireless/iwlwifi/iwl-sta.h  |    6 ----
- 3 files changed, 44 insertions(+), 51 deletions(-)
+                ath_print(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
+                                common->cachelsz, common->rx_bufsize);
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 93893ae..d3afdda 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1953,6 +1953,50 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
- 	return 0;
- }
- 
-+static u8 iwl_find_station(struct iwl_priv *priv, const u8 *addr)
-+{
-+	int i;
-+	int start = 0;
-+	int ret = IWL_INVALID_STATION;
-+	unsigned long flags;
-+
-+	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) ||
-+	    (priv->iw_mode == NL80211_IFTYPE_AP))
-+		start = IWL_STA_ID;
-+
-+	if (is_broadcast_ether_addr(addr))
-+		return priv->hw_params.bcast_sta_id;
-+
-+	spin_lock_irqsave(&priv->sta_lock, flags);
-+	for (i = start; i < priv->hw_params.max_stations; i++)
-+		if (priv->stations[i].used &&
-+		    (!compare_ether_addr(priv->stations[i].sta.sta.addr,
-+					 addr))) {
-+			ret = i;
-+			goto out;
-+		}
-+
-+	IWL_DEBUG_ASSOC_LIMIT(priv, "can not find STA %pM total %d\n",
-+			      addr, priv->num_stations);
-+
-+ out:
-+	/*
-+	 * It may be possible that more commands interacting with stations
-+	 * arrive before we completed processing the adding of
-+	 * station
-+	 */
-+	if (ret != IWL_INVALID_STATION &&
-+	    (!(priv->stations[ret].used & IWL_STA_UCODE_ACTIVE) ||
-+	     ((priv->stations[ret].used & IWL_STA_UCODE_ACTIVE) &&
-+	      (priv->stations[ret].used & IWL_STA_UCODE_INPROGRESS)))) {
-+		IWL_ERR(priv, "Requested station info for sta %d before ready.\n",
-+			ret);
-+		ret = IWL_INVALID_STATION;
-+	}
-+	spin_unlock_irqrestore(&priv->sta_lock, flags);
-+	return ret;
-+}
-+
- static int iwl_get_ra_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
- {
- 	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index b8053e7..ba36df5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -35,51 +35,6 @@
- #include "iwl-core.h"
- #include "iwl-sta.h"
- 
--u8 iwl_find_station(struct iwl_priv *priv, const u8 *addr)
--{
--	int i;
--	int start = 0;
--	int ret = IWL_INVALID_STATION;
--	unsigned long flags;
--
--	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC) ||
--	    (priv->iw_mode == NL80211_IFTYPE_AP))
--		start = IWL_STA_ID;
--
--	if (is_broadcast_ether_addr(addr))
--		return priv->hw_params.bcast_sta_id;
--
--	spin_lock_irqsave(&priv->sta_lock, flags);
--	for (i = start; i < priv->hw_params.max_stations; i++)
--		if (priv->stations[i].used &&
--		    (!compare_ether_addr(priv->stations[i].sta.sta.addr,
--					 addr))) {
--			ret = i;
--			goto out;
--		}
--
--	IWL_DEBUG_ASSOC_LIMIT(priv, "can not find STA %pM total %d\n",
--			      addr, priv->num_stations);
--
-- out:
--	/*
--	 * It may be possible that more commands interacting with stations
--	 * arrive before we completed processing the adding of
--	 * station
--	 */
--	if (ret != IWL_INVALID_STATION &&
--	    (!(priv->stations[ret].used & IWL_STA_UCODE_ACTIVE) ||
--	     ((priv->stations[ret].used & IWL_STA_UCODE_ACTIVE) &&
--	      (priv->stations[ret].used & IWL_STA_UCODE_INPROGRESS)))) {
--		IWL_ERR(priv, "Requested station info for sta %d before ready.\n",
--			ret);
--		ret = IWL_INVALID_STATION;
--	}
--	spin_unlock_irqrestore(&priv->sta_lock, flags);
--	return ret;
--}
--EXPORT_SYMBOL(iwl_find_station);
--
- /* priv->sta_lock must be held */
- static void iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 08d4bc1..6872bcf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -43,12 +43,6 @@
- #define IWL_STA_BCAST BIT(4) /* this station is the special bcast station */
- 
- 
--/**
-- * iwl_find_station - Find station id for a given BSSID
-- * @bssid: MAC address of station ID to find
-- */
--u8 iwl_find_station(struct iwl_priv *priv, const u8 *bssid);
--
- int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 			       struct ieee80211_key_conf *key);
- int iwl_set_default_wep_key(struct iwl_priv *priv,
--- 
-1.6.3.3
 
+This is already in the code so just
+
+modprobe ath9k debug=0x00000200
+
+  Luis
