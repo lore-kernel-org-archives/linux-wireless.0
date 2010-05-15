@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:16726 "EHLO mga14.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:44447 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755973Ab0EXWac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 18:30:32 -0400
-Subject: Re: Iwlwifi and LEDS?
-From: reinette chatre <reinette.chatre@intel.com>
-To: Gregy <p.gregy@gmail.com>
-Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
-References: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
-	 <1274465242.12391.0.camel@abhi-desktop>
-	 <AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 May 2010 15:30:31 -0700
-Message-ID: <1274740231.2091.15472.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1753378Ab0EOAeL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 May 2010 20:34:11 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 17:34:11 -0700
+Date: Fri, 14 May 2010 17:34:08 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bruno Randolf <br1@einfach.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"bob@bobcopeland.com" <bob@bobcopeland.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
+Subject: Re: [PATCH] ath5k: consistently use rx_bufsize for RX DMA
+Message-ID: <20100515003408.GG28198@tux>
+References: <20100514074833.10333.81592.stgit@tt-desk>
+ <AANLkTik2XPwhtUkDo7gfJTVI401HG6qU_mYvGmKfEbG5@mail.gmail.com>
+ <201005150705.22887.br1@einfach.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201005150705.22887.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-05-21 at 13:49 -0700, Gregy wrote:
-> On 21 May 2010 20:07, Abhijeet Kolekar <abhijeet.kolekar@intel.com> wrote:
-> > On Fri, 2010-05-21 at 02:11 -0700, Gregy wrote:
-> >> Hello, I noticed you removed support for led subsystem from iwlwifi. I
-> >> have used it to control wifi led from userspace. Is it still possible
-> >> somehow?
-> >>
-> > There is module parameter for iwlcore called 'led_mode'.
+On Fri, May 14, 2010 at 03:05:22PM -0700, Bruno Randolf wrote:
+> On Saturday 15 May 2010 01:04:34 Luis R. Rodriguez wrote:
+> > On Fri, May 14, 2010 at 12:50 AM, Bruno Randolf <br1@einfach.org> wrote:
+> > > We should use the same buffer size we set up for DMA also in the hardware
+> > > descriptor. Previously we used common->rx_bufsize for setting up the DMA
+> > > mapping, but skb_tailroom(skb) for the size we tell to the hardware in
+> > > the descriptor itself. The problem is that skb_tailroom(skb) can give us
+> > > a larger value than the size we set up for DMA before: In my case
+> > > rx_bufsize is 2528, and we allocated an skb of 2559 bytes length,
+> > > including padding for cache alignment, but sbk_tailroom() was 2592. Just
+> > > consistently use rx_bufsize for all RX DMA memory sizes.
+> > > 
+> > > Also check the return value of setup function.
+> > > 
+> > > Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > 
+> > Cc: stable?
 > 
-> Yes but I cannot control the led through it. I can only set one of two
-> modes. Before I could  use it as "connected to internet" indicator or
-> I could turn it off completely.
+> might be useful. i just would like some review before that.
 
-No - we did not remove support for LEDs from iwlwifi. The led_mode
-module parameter is just to change the blinking behavior (0=blinking,
-1=On(RF On)/Off(RF Off)).
+FWIW
 
-What did you do before that does not work anymore?
+Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Reinette
+> > Is that other bug reproducible, can the user test this to cure it?
+> 
+> not sure. seems like he can with running kismet for a few hours (i'm doing the 
+> same over the weekend). i doubt that this is "the" bug though... 
 
+Oh I'm not assuming it is, but it still looks like a valid stable bug fix to me.
 
+  Luis
