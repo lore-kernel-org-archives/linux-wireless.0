@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:50569 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755302Ab0ECVKf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 17:10:35 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so1252331fga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 May 2010 14:10:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1272920504.4907.5.camel@mj>
-References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
-	 <87k4rkk9tz.fsf@purkki.valot.fi>
-	 <AANLkTimf_aZyUSZInOzUPZ8KRR6oDs3Re4pSGGn541fM@mail.gmail.com>
-	 <1272920504.4907.5.camel@mj>
-Date: Mon, 3 May 2010 23:10:33 +0200
-Message-ID: <l2m6cf6b73e1005031410t7c6d3148x832ddd405fc482ec@mail.gmail.com>
-Subject: Re: [PATCH] iwlagn: Change the TPT calculations sanity-check to
-	WARN_ON
-From: Adel Gadllah <adel.gadllah@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Kalle Valo <kvalo@adurom.com>,
+Received: from mgw2.diku.dk ([130.225.96.92]:35502 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755841Ab0EOVYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 May 2010 17:24:12 -0400
+Date: Sat, 15 May 2010 23:24:07 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Pavel Roskin <proski@gnu.org>,
+	David Gibson <hermes@gibson.dropbear.id.au>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, johill@sipsolutions.net,
-	reinette.chatre@intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-wireless@vger.kernel.org,
+	orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 36/37] drivers/net/wireless/orinoco: Use kmemdup
+Message-ID: <Pine.LNX.4.64.1005152323480.21345@ask.diku.dk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/5/3 Pavel Roskin <proski@gnu.org>:
-> On Mon, 2010-05-03 at 22:48 +0200, Gábor Stefanik wrote:
->
->> One exception I can think of: major misconfiguration can cause a
->> wireless device to DMA data into sensitive memory locations. When
->> evidence of this is detected, it might make sense to BUG_ON()
->> (especially if the bogus DMA operations can be exploited remotely to
->> overwrite arbitrary memory addresses). However, in that case, the
->> attacker may have already overwritten panic() with malicious code as
->> well, so even this case doesn't hold.
->
-> And then there is a case when encryption fails and there is a risk of
-> transmitting data without encryption or accepting data without
-> verification.
+From: Julia Lawall <julia@diku.dk>
 
-So kill the connection rather than the whole system.
+Use kmemdup when some other buffer is immediately copied into the
+allocated region.
+
+A simplified version of the semantic patch that makes this change is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression from,to,size,flag;
+statement S;
+@@
+
+-  to = \(kmalloc\|kzalloc\)(size,flag);
++  to = kmemdup(from,size,flag);
+   if (to==NULL || ...) S
+-  memcpy(to, from, size);
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/net/wireless/orinoco/wext.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff -u -p a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -993,11 +993,9 @@ static int orinoco_ioctl_set_genie(struc
+ 		return -EINVAL;
+ 
+ 	if (wrqu->data.length) {
+-		buf = kmalloc(wrqu->data.length, GFP_KERNEL);
++		buf = kmemdup(extra, wrqu->data.length, GFP_KERNEL);
+ 		if (buf == NULL)
+ 			return -ENOMEM;
+-
+-		memcpy(buf, extra, wrqu->data.length);
+ 	} else
+ 		buf = NULL;
+ 
