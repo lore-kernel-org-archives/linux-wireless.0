@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:26570 "EHLO c60.cesmail.net"
+Received: from mgw2.diku.dk ([130.225.96.92]:41762 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755132Ab0ECVBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 17:01:49 -0400
-Subject: Re: [PATCH] iwlagn: Change the TPT calculations sanity-check to
- WARN_ON
-From: Pavel Roskin <proski@gnu.org>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Kalle Valo <kvalo@adurom.com>,
+	id S1753029Ab0EOVUb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 May 2010 17:20:31 -0400
+Date: Sat, 15 May 2010 23:20:26 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Stefano Brivio <stefano.brivio@polimi.it>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, johill@sipsolutions.net,
-	reinette.chatre@intel.com, Adel Gadllah <adel.gadllah@gmail.com>
-In-Reply-To: <AANLkTimf_aZyUSZInOzUPZ8KRR6oDs3Re4pSGGn541fM@mail.gmail.com>
-References: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
-	 <87k4rkk9tz.fsf@purkki.valot.fi>
-	 <AANLkTimf_aZyUSZInOzUPZ8KRR6oDs3Re4pSGGn541fM@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 03 May 2010 17:01:44 -0400
-Message-Id: <1272920504.4907.5.camel@mj>
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 24/37] drivers/net/wireless/b43: Use kmemdup
+Message-ID: <Pine.LNX.4.64.1005152320070.21345@ask.diku.dk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-03 at 22:48 +0200, Gábor Stefanik wrote:
+From: Julia Lawall <julia@diku.dk>
 
-> One exception I can think of: major misconfiguration can cause a
-> wireless device to DMA data into sensitive memory locations. When
-> evidence of this is detected, it might make sense to BUG_ON()
-> (especially if the bogus DMA operations can be exploited remotely to
-> overwrite arbitrary memory addresses). However, in that case, the
-> attacker may have already overwritten panic() with malicious code as
-> well, so even this case doesn't hold.
+Use kmemdup when some other buffer is immediately copied into the
+allocated region.
 
-And then there is a case when encryption fails and there is a risk of
-transmitting data without encryption or accepting data without
-verification.
+A simplified version of the semantic patch that makes this change is as
+follows: (http://coccinelle.lip6.fr/)
 
-But generally, I agree.
+// <smpl>
+@@
+expression from,to,size,flag;
+statement S;
+@@
 
--- 
-Regards,
-Pavel Roskin
+-  to = \(kmalloc\|kzalloc\)(size,flag);
++  to = kmemdup(from,size,flag);
+   if (to==NULL || ...) S
+-  memcpy(to, from, size);
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/net/wireless/b43/dma.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff -u -p a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -1221,14 +1221,14 @@ static int dma_tx_fragment(struct b43_dm
+ 	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+ 	/* create a bounce buffer in zone_dma on mapping failure. */
+ 	if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
+-		priv_info->bouncebuffer = kmalloc(skb->len, GFP_ATOMIC | GFP_DMA);
++		priv_info->bouncebuffer = kmemdup(skb->data, skb->len,
++						  GFP_ATOMIC | GFP_DMA);
+ 		if (!priv_info->bouncebuffer) {
+ 			ring->current_slot = old_top_slot;
+ 			ring->used_slots = old_used_slots;
+ 			err = -ENOMEM;
+ 			goto out_unmap_hdr;
+ 		}
+-		memcpy(priv_info->bouncebuffer, skb->data, skb->len);
+ 
+ 		meta->dmaaddr = map_descbuffer(ring, priv_info->bouncebuffer, skb->len, 1);
+ 		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
