@@ -1,48 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.digadd.de ([195.47.195.236]:50388 "EHLO mx2.digadd.de"
+Received: from mgw1.diku.dk ([130.225.96.91]:51522 "EHLO mgw1.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752893Ab0EVIzP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 May 2010 04:55:15 -0400
-Received: from [192.168.3.128]
-	by mx2.digadd.de with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <schmidt@digadd.de>)
-	id 1OFk5t-0003TM-IB
-	for linux-wireless@vger.kernel.org; Sat, 22 May 2010 10:30:05 +0200
-Message-ID: <4BF795EB.9070902@digadd.de>
-Date: Sat, 22 May 2010 10:29:31 +0200
-From: "Christian P. Schmidt" <schmidt@digadd.de>
+	id S1755331Ab0EOVXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 May 2010 17:23:00 -0400
+Date: Sat, 15 May 2010 23:22:55 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 32/37] drivers/net/wireless/p54: Use kmemdup
+Message-ID: <Pine.LNX.4.64.1005152322390.21345@ask.diku.dk>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Problems connectring to an AP with Acer Aspire Revo
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone,
+From: Julia Lawall <julia@diku.dk>
 
-I do have an... interesting... problem with my HTPC, an Intel Atom 230 +
-Nvidia ION powered Acer Aspire Revo box.
+Use kmemdup when some other buffer is immediately copied into the
+allocated region.
 
-By default it ships with an Atheros Mini PCI Express card. However,
-since my experience with this card isn't the best (and it did not
-connect to my access point with wither the Madwifi-NG or the ath9k
-driver) I replaced it with an Intel WiFi Link 5100.
+A simplified version of the semantic patch that makes this change is as
+follows: (http://coccinelle.lip6.fr/)
 
-However, even with the new card, I could not make any kernel from 2.6.32
-to 2.6.34 connect to any of my access points. Those are a Telekom DSL
-router and a Juniper NetScreen 5GT Wireless. I tried WEP64, WPA, WPA2,
-and even no encryption at all. My laptop with an Intel WiFi Link 5300
-has no problems whatsoever in any of the modes.
+// <smpl>
+@@
+expression from,to,size,flag;
+statement S;
+@@
 
-The card is working for sure, if I put the 5100 in my laptop it works.
-Also I feel it's not related to configuration or software - I took my
-laptop's WiFi Link 5300 and the laptop HDD, and booted the HTPC up with
-those - no connection to the AP possible.
+-  to = \(kmalloc\|kzalloc\)(size,flag);
++  to = kmemdup(from,size,flag);
+   if (to==NULL || ...) S
+-  memcpy(to, from, size);
+// </smpl>
 
-I'm a bit at a loss here as what to try more. My access point doesn't
-even see a packet, but there's no rfkill switch anywhere (it's a
-stationary machine anyway).
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-Regards,
-Christiam
+---
+ drivers/net/wireless/p54/eeprom.c |    4 ++--
+ drivers/net/wireless/p54/p54usb.c |    3 +--
+ 2 files changed, 3 insertions(+), 4 deletions(-)
+
+diff -u -p a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -433,10 +433,9 @@ static int p54u_firmware_reset_3887(stru
+ 	u8 *buf;
+ 	int ret;
+ 
+-	buf = kmalloc(4, GFP_KERNEL);
++	buf = kmemdup(p54u_romboot_3887, 4, GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
+-	memcpy(buf, p54u_romboot_3887, 4);
+ 	ret = p54u_bulk_msg(priv, P54U_PIPE_DATA,
+ 			    buf, 4);
+ 	kfree(buf);
+diff -u -p a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/p54/eeprom.c
+--- a/drivers/net/wireless/p54/eeprom.c
++++ b/drivers/net/wireless/p54/eeprom.c
+@@ -599,13 +599,13 @@ int p54_parse_eeprom(struct ieee80211_hw
+ 			}
+ 			break;
+ 		case PDR_PRISM_ZIF_TX_IQ_CALIBRATION:
+-			priv->iq_autocal = kmalloc(data_len, GFP_KERNEL);
++			priv->iq_autocal = kmemdup(entry->data, data_len,
++						   GFP_KERNEL);
+ 			if (!priv->iq_autocal) {
+ 				err = -ENOMEM;
+ 				goto err;
+ 			}
+ 
+-			memcpy(priv->iq_autocal, entry->data, data_len);
+ 			priv->iq_autocal_len = data_len / sizeof(struct pda_iq_autocal_entry);
+ 			break;
+ 		case PDR_DEFAULT_COUNTRY:
