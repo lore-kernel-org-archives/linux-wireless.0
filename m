@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20279 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841Ab0EKE2F (ORCPT
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:61031 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674Ab0EOB0S convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 00:28:05 -0400
-Subject: Re: [patch 9/9] wl1271: remove some unneeded code
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Dan Carpenter <error27@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Oikarinen Juuso (Nokia-D/Tampere)" <juuso.oikarinen@nokia.com>,
-	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
-	<ext-teemu.3.paasikivi@nokia.com>, Kalle Valo <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100508162638.GU27064@bicker>
-References: <20100508162638.GU27064@bicker>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 May 2010 07:28:03 +0300
-Message-ID: <1273552083.2021.27.camel@powerslave>
-Mime-Version: 1.0
+	Fri, 14 May 2010 21:26:18 -0400
+References: <201005141538.43416.br1@einfach.org> <4BED6F19.3040608@gmail.com> <20100514165325.GA28198@tux> <4BED8765.8040307@gmail.com> <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com> <67773379-350A-42D4-BEB5-DAC7D8277615@gmail.com> <20100514201339.GB28198@tux> <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com> <20100514205253.GC28198@tux> <B796B1C7-D7CC-457A-9C86-7C70EA9451CF@gmail.com> <20100515005201.GH28198@tux>
+Message-Id: <99B6B8BB-F155-4B15-95AF-C8DF3F5B4382@gmail.com>
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <20100515005201.GH28198@tux>
+Content-Type: text/plain;
+	charset=utf-8;
+	format=flowed;
+	delsp=yes
+Mime-Version: 1.0 (iPhone Mail 7D11)
+Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
+Date: Fri, 14 May 2010 18:26:33 -0700
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bruno Randolf <br1@einfach.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Miles Lane <miles.lane@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-05-08 at 18:26 +0200, ext Dan Carpenter wrote:
-> The goto and the break are equivelent.  I removed the goto in memory of
-> Edsger Dijkstra who famously hated gotos and who would have been eighty
-> years old next Tuesday.
-> 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-> 
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-> index 55aa813..da40cee 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-> @@ -1563,8 +1563,6 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->  	default:
->  		wl1271_error("Unsupported key cmd 0x%x", cmd);
->  		ret = -EOPNOTSUPP;
-> -		goto out_sleep;
-> -
->  		break;
->  	}
-
-We use goto out_* in error cases throughout our code (sorry Edsger!) and
-in many cases they are not needed because they're the last check in the
-function, but we still use them for consistency.
-
-In this case, there are two "consistency" items conflicting with each
-other (ie. the "break" in the last case entry is not needed, but it's
-there for consistency).  Your change indeed makes the code look cleaner,
-so I think the "keep-the-break-in-the-default-case" rule should win
-here. ;)
-
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
- 
 
 
--- 
-Cheers,
-Luca.
+Justin P. Mattock
 
 
+
+On May 14, 2010, at 5:52 PM, "Luis R. Rodriguez"  
+<lrodriguez@atheros.com> wrote:
+
+> On Fri, May 14, 2010 at 03:32:48PM -0700, Justin P. Mattock wrote:
+>> ATH9K: cachelsz 256 rxbufsize 3904
+>
+> OK I see nothing odd with these values, and I do not see how
+> these values can make ath_rxbuf_alloc() barf. I'd like to
+> reproduce this myself at least once, I left iperf running over
+> night with no rants from SLAB. I should note this should be
+> reproducible with RX only if it is ath_rxbuf_alloc() to blame
+> but without a concrete reproducible instructions it is hard
+> to guess what to do and if this can only come up during RX.
+>
+> Can you describe a little more when you have seen this? What
+> were you doing exactly, for how long? When was the last time
+> you saw this, what were you doing then?
+>
+>  Luis
+
+This is hard to reproduce(reason for looking a kmemchek).
+
+As for what I remember, walked into the las Vegas convention cntr 
+(Hilton),
+Found the Internet hub, scanned for networks, wicd said it was  
+connected, opened firefox to see the prices, ended up seeing a blank  
+page(at this point didn't look at dmesg(could have already happened)),  
+then switched to another network(did this a few times),
+Eventually opened firefox(saw the prices, said fuc*k this), then  
+started to read up on i8042.c(cause Linus was pull requesting and I  
+wanted to find out what was going on in that area), then
+Checked dmesg, and voilà there the bug is.
+
+After this rebooted, was hoping this was reproducable for a bisect,  
+but realized it's not the reproducable..
+
+
+Justin P. Mattock
