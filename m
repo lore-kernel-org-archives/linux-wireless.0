@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19735 "EHLO mail.atheros.com"
+Received: from mgw1.diku.dk ([130.225.96.91]:48179 "EHLO mgw1.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753366Ab0ERB54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 21:57:56 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 17 May 2010 18:57:56 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath9k_hw: Enable auto sleep for ar9003
-Date: Mon, 17 May 2010 18:57:56 -0700
-Message-ID: <1274147876-9228-3-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1274147876-9228-1-git-send-email-vasanth@atheros.com>
-References: <1274147876-9228-1-git-send-email-vasanth@atheros.com>
+	id S1752564Ab0EOVMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 May 2010 17:12:35 -0400
+Date: Sat, 15 May 2010 23:12:28 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH 1/37] drivers/net/wireless/libertas: Use kmemdup
+Message-ID: <Pine.LNX.4.64.1005152312060.21345@ask.diku.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+From: Julia Lawall <julia@diku.dk>
+
+Use kmemdup when some other buffer is immediately copied into the
+allocated region.
+
+A simplified version of the semantic patch that makes this change is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression from,to,size,flag;
+statement S;
+@@
+
+-  to = \(kmalloc\|kzalloc\)(size,flag);
++  to = kmemdup(from,size,flag);
+   if (to==NULL || ...) S
+-  memcpy(to, from, size);
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
 ---
- drivers/net/wireless/ath/ath9k/hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/libertas/if_usb.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1985d19..7997d0f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2165,7 +2165,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		pCap->hw_caps |= ATH9K_HW_CAP_RFSILENT;
+diff -u -p a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -618,16 +618,14 @@ static void if_usb_receive_fwload(struct
+ 		return;
  	}
- #endif
--	if (AR_SREV_9271(ah))
-+	if (AR_SREV_9271(ah) || AR_SREV_9300_20_OR_LATER(ah))
- 		pCap->hw_caps |= ATH9K_HW_CAP_AUTOSLEEP;
- 	else
- 		pCap->hw_caps &= ~ATH9K_HW_CAP_AUTOSLEEP;
--- 
-1.7.0.4
-
+ 
+-	syncfwheader = kmalloc(sizeof(struct fwsyncheader), GFP_ATOMIC);
++	syncfwheader = kmemdup(skb->data + IPFIELD_ALIGN_OFFSET,
++			       sizeof(struct fwsyncheader), GFP_ATOMIC);
+ 	if (!syncfwheader) {
+ 		lbs_deb_usbd(&cardp->udev->dev, "Failure to allocate syncfwheader\n");
+ 		kfree_skb(skb);
+ 		return;
+ 	}
+ 
+-	memcpy(syncfwheader, skb->data + IPFIELD_ALIGN_OFFSET,
+-	       sizeof(struct fwsyncheader));
+-
+ 	if (!syncfwheader->cmd) {
+ 		lbs_deb_usb2(&cardp->udev->dev, "FW received Blk with correct CRC\n");
+ 		lbs_deb_usb2(&cardp->udev->dev, "FW received Blk seqnum = %d\n",
