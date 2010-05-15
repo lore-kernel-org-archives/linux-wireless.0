@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64061 "EHLO mga09.intel.com"
+Received: from mgw2.diku.dk ([130.225.96.92]:35454 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757535Ab0D3XAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 19:00:36 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 4/8] iwlwifi: set correct AC to swq_id for aggregation
-Date: Fri, 30 Apr 2010 16:00:21 -0700
-Message-Id: <1272668425-3753-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
-References: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
+	id S1756076Ab0EOVVH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 15 May 2010 17:21:07 -0400
+Date: Sat, 15 May 2010 23:21:01 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 26/37] drivers/net/wireless/ipw2x00: Use kmemdup
+Message-ID: <Pine.LNX.4.64.1005152320450.21345@ask.diku.dk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+From: Julia Lawall <julia@diku.dk>
 
-When starting an aggregation session, the swq_id is generated in function
-iwl_virtual_agg_queue_num() where the first parameter is supposed to be
-the Access Class, but it used the tx fifo ID instead. This means the AC
-value stored in swq_id is incorrect. To test this, look at the tx_queue
-file in debugfs while transmitting Best Effort flow (ac=2), it shows:
-hwq 10: read=0 write=0 stop=0 swq_id=0xa9 (ac 1/hwq 10)
-After this fix, it will show:
-hwq 10: read=0 write=0 stop=0 swq_id=0xaa (ac 2/hwq 10)
+Use kmemdup when some other buffer is immediately copied into the
+allocated region.
 
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+A simplified version of the semantic patch that makes this change is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression from,to,size,flag;
+statement S;
+@@
+
+-  to = \(kmalloc\|kzalloc\)(size,flag);
++  to = kmemdup(from,size,flag);
+   if (to==NULL || ...) S
+-  memcpy(to, from, size);
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ipw2x00/ipw2200.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 11661fa..95e263f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -83,6 +83,15 @@ static inline int get_fifo_from_ac(u8 ac)
- 	return ac_to_fifo[ac];
- }
+diff -u -p a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -6626,13 +6626,12 @@ static int ipw_wx_set_genie(struct net_d
+ 		return -EINVAL;
  
-+static inline int get_ac_from_tid(u16 tid)
-+{
-+	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
-+		return tid_to_ac[tid];
-+
-+	/* no support for TIDs 8-15 yet */
-+	return -EINVAL;
-+}
-+
- static inline int get_fifo_from_tid(u16 tid)
- {
- 	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
-@@ -991,7 +1000,7 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, const u8 *ra, u16 tid, u16 *ssn)
- 	tid_data = &priv->stations[sta_id].tid[tid];
- 	*ssn = SEQ_TO_SN(tid_data->seq_number);
- 	tid_data->agg.txq_id = txq_id;
--	priv->txq[txq_id].swq_id = iwl_virtual_agg_queue_num(tx_fifo, txq_id);
-+	priv->txq[txq_id].swq_id = iwl_virtual_agg_queue_num(get_ac_from_tid(tid), txq_id);
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 	if (wrqu->data.length) {
+-		buf = kmalloc(wrqu->data.length, GFP_KERNEL);
++		buf = kmemdup(extra, wrqu->data.length, GFP_KERNEL);
+ 		if (buf == NULL) {
+ 			err = -ENOMEM;
+ 			goto out;
+ 		}
  
- 	ret = priv->cfg->ops->lib->txq_agg_enable(priv, txq_id, tx_fifo,
--- 
-1.6.3.3
-
+-		memcpy(buf, extra, wrqu->data.length);
+ 		kfree(ieee->wpa_ie);
+ 		ieee->wpa_ie = buf;
+ 		ieee->wpa_ie_len = wrqu->data.length;
