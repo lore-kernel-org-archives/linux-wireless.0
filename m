@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:42974 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754140Ab0EZQwF convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:9649 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752476Ab0EQO6q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 12:52:05 -0400
-Received: by pxi18 with SMTP id 18so2608712pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 09:52:05 -0700 (PDT)
+	Mon, 17 May 2010 10:58:46 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so2766911fga.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 May 2010 07:58:44 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC] cfg80211: allow HT20 channels on devices incabable of HT40
+Date: Mon, 17 May 2010 16:58:33 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 May 2010 09:51:45 -0700
-Message-ID: <AANLkTikzEywcDi9zyJknMWkKymCVYnWQa2YXbbSDVx5o@mail.gmail.com>
-Subject: Re: [RFC] wireless-regdb: Add A band in IL
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Michael Green <Michael.Green@atheros.com>,
-	David Quan <David.Quan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201005171658.33673.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 25, 2010 at 11:49 PM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> A band in allowed in IL, according to official document issued by the Ministry
-> of Communications: http://www.moc.gov.il/sip_storage/FILES/1/1061.pdf.
->
-> 5150 - 5250 200mW e.i.r.p. OUTDOOR forbidden
-> 5250 - 5350 200mW e.i.r.p. OUTDOOR forbidden DFS mandatory
->
-> 40Mhz is allowed in A band for every WiFi-Alliance certified equipment.
->
-> ***************************************************************
-> Not to be merged for the moment
-> ***************************************************************
->
-> CC: Michael Green <Michael.Green@atheros.com>
-> CC: David Quan <David.Quan@atheros.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
->  db.txt |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->
-> diff --git a/db.txt b/db.txt
-> index e63a43e..d49c397 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -319,6 +319,8 @@ country IE:
->
->  country IL:
->        (2402 - 2482 @ 40), (N/A, 20)
-> +       (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
-> +       (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
+I was just trying to set up a rt2800 AP but hostapd was unable to
+set the channel when configuring 11n.
 
-I believe the one standing issue here is you are enabling HT40 on 5
-GHz, how about enabling 2.4 GHz first, and then through a separate
-patch and time/review we review the HT40 stuff, unless you are in no
-rush to get 2.4 GHz enabled.
+rt2800 doesn't support HT40 yet, that's why it doesn't set
+IEEE80211_HT_CAP_SUP_WIDTH_20_40 and cfg80211 refuses to set the
+channel when the device doesn't support IEEE80211_HT_CAP_SUP_WIDTH_20_40
+even if  a HT20 only channel should be set.
 
-  Luis
+Did I miss anything or should it be allowed to set a HT20 channel
+on a HT capable device that doesn't allow HT40?
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/wireless/chan.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index d92d088..647832a 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -35,8 +35,9 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 		if (!ht_cap->ht_supported)
+ 			return NULL;
+ 
+-		if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
+-		    ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT)
++		if (channel_type != NL80211_CHAN_HT20 &&
++		    (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
++		    ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT))
+ 			return NULL;
+ 	}
+ 
+-- 
+1.6.4.2
+
