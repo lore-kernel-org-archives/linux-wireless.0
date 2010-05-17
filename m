@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:58391 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684Ab0EXISb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:18:31 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 1/6] wl1271: Prevent dropping of TX frames in joins
-Date: Mon, 24 May 2010 11:18:15 +0300
-Message-Id: <1274689100-14785-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1274689100-14785-1-git-send-email-luciano.coelho@nokia.com>
-References: <1274689100-14785-1-git-send-email-luciano.coelho@nokia.com>
+Received: from c60.cesmail.net ([216.154.195.49]:21289 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755844Ab0EQTKm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 May 2010 15:10:42 -0400
+Subject: Re: A file to print the release of loaded compat-wireless stuff
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTilrjw-Jq4MEQPT35fHTTqsaSdU5Jc7lt_2lUH2V@mail.gmail.com>
+References: <x2q43e72e891005041344gb9945d73p3d97e648fd13aa85@mail.gmail.com>
+	 <1273007509.12618.1.camel@mj>
+	 <z2o43e72e891005041451qa4ea338bu5a20171a82f13471@mail.gmail.com>
+	 <AANLkTilrjw-Jq4MEQPT35fHTTqsaSdU5Jc7lt_2lUH2V@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 17 May 2010 15:10:39 -0400
+Message-Id: <1274123439.4743.15.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Mon, 2010-05-17 at 10:54 -0700, Luis R. Rodriguez wrote:
 
-The wl1271 uses a session counter in CMD_JOIN and TX frame descriptors. This
-counter is used to determine which frames to drop when the CMD_JOIN is
-executed.
+> Oh wow, and look at that, even if you enable the module as built-in to
+> the kernel you still get the module parameter sysfs file for it. For
+> example I just built-in cfg80211 on my kernel and I still see the
+> ieee80211_regdom module parameter:
+> 
+> mcgrof@tux ~ $ lsmod | grep cfg
+> mcgrof@tux ~ $ cat /sys/module/cfg80211/parameters/ieee80211_regdom
+> 00
+> 
+> This is important as some distributions [1] might built-in some stable
+> compat-wireless releases into their older kernel releases.
 
-The driver executes CMD_JOIN multiple times upon association and sometimes
-disassociation, and we don't want any frames to get lost.
+I actually wanted to mention that, but decided that it's irrelevant to
+compat-wireless.  It turns out I should have.
 
-Fix this by incrementing the session counter only when leaving idle (not every
-CMD_JOIN as before.) Also, remove the TX flush flag from the CMD_JOIN options.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |    6 ------
- drivers/net/wireless/wl12xx/wl1271_main.c |    5 +++++
- 2 files changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 19393e2..5a3ff93 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -329,12 +329,6 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
- 	join->channel = wl->channel;
- 	join->ssid_len = wl->ssid_len;
- 	memcpy(join->ssid, wl->ssid, wl->ssid_len);
--	join->ctrl = WL1271_JOIN_CMD_CTRL_TX_FLUSH;
--
--	/* increment the session counter */
--	wl->session_counter++;
--	if (wl->session_counter >= SESSION_COUNTER_MAX)
--		wl->session_counter = 0;
- 
- 	join->ctrl |= wl->session_counter << WL1271_JOIN_CMD_TX_SESSION_OFFSET;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 933e432..1407cdb 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1128,6 +1128,11 @@ static int wl1271_dummy_join(struct wl1271 *wl)
- 
- 	memcpy(wl->bssid, dummy_bssid, ETH_ALEN);
- 
-+	/* increment the session counter */
-+	wl->session_counter++;
-+	if (wl->session_counter >= SESSION_COUNTER_MAX)
-+		wl->session_counter = 0;
-+
- 	/* pass through frames from all BSS */
- 	wl1271_configure_filters(wl, FIF_OTHER_BSS);
- 
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
