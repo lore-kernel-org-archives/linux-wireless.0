@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36008 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753047Ab0EXVbx convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:34340 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751889Ab0EQRPc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 17:31:53 -0400
-Received: by fxm5 with SMTP id 5so2659067fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 14:31:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4BFAECC0.2000007@dlasys.net>
-References: <4BFAECC0.2000007@dlasys.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 24 May 2010 23:31:32 +0200
-Message-ID: <AANLkTilakBPI6tTkaKq_wJIxvuI1L6Rttnz-3lR3Q2de@mail.gmail.com>
-Subject: Re: CARL9170 features
-To: "David H. Lynch Jr." <dhlii@dlasys.net>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 17 May 2010 13:15:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: remove AR9003 from PCI IDs for now
+Date: Mon, 17 May 2010 13:15:30 -0400
+Message-Id: <1274116530-29308-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 24, 2010 at 11:16 PM, David H. Lynch Jr. <dhlii@dlasys.net> wrote:
->    I am trying to kick carl9170 1.0.9 into either add-hoc or monitor mode or
-> anything else where I can xmit to any wireless device. I do not care if the
-> receiving device is interested - so long as the radio ACK's the packet,
-> which it should do automatically.
->
->    I tried iwconfig wl_ath mode ad-hoc
->    And I get and errror:
->
-> root# iwconfig wl_ath mode ad-hoc
-> Error for wireless request "Set Mode" (8B06) :
->    SET failed on device wl_ath ; Device or resource busy.
->
-> root# iwconfig wl_ath mode monitor
-> Error for wireless request "Set Mode" (8B06) :
->    SET failed on device wl_ath ; Device or resource busy.
->
-> root# iwconfig wl_ath mode master
-> Error for wireless request "Set Mode" (8B06) :
->    SET failed on device wl_ath ; Invalid argument.
->
-> I can add something to the driver if needed if you coul recomend another
-> wireless driver for a reference.
->
->
+We tried to squeeze as much AR9003 support into this kernel
+release cycle but there are a few features which are still
+being tested and developed. Some of these features are critical
+to the stable operation of AR9003 so for now disable AR9003 support
+all together. This will get re-enabled once all necessary features
+are in place but very likely will not happen for 2.6.35.
 
-In mac80211, you can only change interface modes if the interface is
-down. However, the best practice is usually to create a new interface
-using iw:
-iw dev wl_ath interface add mon_ath type monitor
-(not sure if this syntax still works; it worked a while ago).
+Reviewed-by: Don Breslin <don.breslin@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
+John, after a lot of testing during this kernel release cycle
+we do not feel ready for AR9003 for 2.6.35 so AR9003 will have
+to wait until 2.6.36. We'll try cherry-picking some linux-next
+patches on top of compat-wireless-2.6.35-rc but until we get all
+the pending stuff ironed out [1] we just have to disable AR9003
+from 2.6.35.
+
+[1] http://wireless.kernel.org/en/users/Drivers/ath9k/todo/ar93xx
+
+ drivers/net/wireless/ath/ath9k/pci.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 257b10b..1ec836c 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -28,7 +28,6 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
+-	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
+ 	{ 0 }
+ };
+ 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
