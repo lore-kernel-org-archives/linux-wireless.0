@@ -1,42 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback4.mail.ru ([94.100.176.42]:38505 "EHLO
-	fallback4.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221Ab0ESThm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 15:37:42 -0400
-Received: from foot.mail.ru (foot.mail.ru [94.100.189.94])
-	by fallback4.mail.ru (mPOP.Fallback_MX) with ESMTP id 0BF691DB150C
-	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 23:32:44 +0400 (MSD)
-Received: from mail by foot.mail.ru with local
-	id 1OEp09-0006Jt-00
-	for linux-wireless@vger.kernel.org; Wed, 19 May 2010 23:32:21 +0400
-From: Vladimir Preobrazhensky <vpreob@mail.ru>
-To: linux-wireless@vger.kernel.org
-Subject: ath5k breaks wifi link under load (AR5007EG)
-Mime-Version: 1.0
-Date: Wed, 19 May 2010 23:32:21 +0400
-Reply-To: Vladimir Preobrazhensky <vpreob@mail.ru>
-Content-Type: text/plain; charset=US-ASCII
-Message-Id: <E1OEp09-0006Jt-00.vpreob-mail-ru@foot.mail.ru>
+Received: from mail.atheros.com ([12.36.123.2]:10995 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751314Ab0EQGgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 May 2010 02:36:52 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 23:36:52 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19440.58389.396040.175315@gargle.gargle.HOWL>
+Date: Mon, 17 May 2010 12:07:09 +0530
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/5] ath9k_htc: Enable SGI in HT20 for AR9271
+In-Reply-To: <19440.58039.731965.709469@gargle.gargle.HOWL>
+References: <19440.58039.731965.709469@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Hi,
 
-I got a kind of long-lasting problem, wish it has a solution.
+This patch depends on Vasanth's patch:
+"ath9k: Enable Short GI in 20 Mhz for ar9287 and later chips"
 
-I have an Atheros AR5007EG adapter in my netbook (acer aspire one AOA110) and wifi router is TrendNet TEW-452BRP. Kernel uses ath5k driver to control this.
-PCI ID: vendor code VEN_168C, dev code DEV_001C.
+Sujith
 
-I tried several linux kernels, starting from Ubuntu 8.04 (don't remember now which verision was there) to Ubuntu 10.4 and even have tried linux 2.6.34 today.
-
-The wifi link seems to work in general, as long as I do some lazy web browsing, chatting, IM-ing etc, that is, which imposes low network utilization.
-But every time I do something that causes a substantial network load, my wifi link breaks. I mean, that happens when I watch AVI files or download some other big files from my LAN samba server, or download some big RPM from the Internet.
-
-The Windows XP system, pre-installed here, allows to watch video over wifi for hours.
-The Ubuntu 10.4 Netbook Remix system performs well on video playback, when connected over wired thernet.
-
-
-Regards,
-Vladimir Probrazhensky
-
+Sujith wrote:
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 +++
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |    7 +++++--
+>  drivers/net/wireless/ath/ath9k/hw.c           |    2 +-
+>  3 files changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> index 7ec2c2e..8b202e0 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> @@ -404,6 +404,9 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
+>  		       IEEE80211_HT_CAP_SGI_40 |
+>  		       IEEE80211_HT_CAP_DSSSCCK40;
+>  
+> +	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_SGI_20)
+> +		ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
+> +
+>  	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+>  	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
+>  
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> index 80feeb3..6d46423 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -367,9 +367,12 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
+>  		caps = WLAN_RC_HT_FLAG;
+>  		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
+>  			caps |= WLAN_RC_40_FLAG;
+> -		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40)
+> +		if (conf_is_ht40(&priv->hw->conf) &&
+> +		    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40))
+> +			caps |= WLAN_RC_SGI_FLAG;
+> +		else if (conf_is_ht20(&priv->hw->conf) &&
+> +			 (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20))
+>  			caps |= WLAN_RC_SGI_FLAG;
+> -
+>  	}
+>  
+>  	trate->sta_index = ista->index;
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index 1985d19..45a9c84 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -2232,7 +2232,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+>  	if (AR_SREV_9300_20_OR_LATER(ah))
+>  		pCap->hw_caps |= ATH9K_HW_CAP_RAC_SUPPORTED;
+>  
+> -	if (AR_SREV_9287_10_OR_LATER(ah))
+> +	if (AR_SREV_9287_10_OR_LATER(ah) || AR_SREV_9271(ah))
+>  		pCap->hw_caps |= ATH9K_HW_CAP_SGI_20;
+>  
+>  	return 0;
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
