@@ -1,24 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:33679 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757103Ab0EYChT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 22:37:19 -0400
-Received: by pxi18 with SMTP id 18so1733316pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 19:37:18 -0700 (PDT)
-Message-ID: <4BFB37DD.1080002@gmail.com>
-Date: Mon, 24 May 2010 19:37:17 -0700
-From: Huy Le <lehuy0406@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:11084 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751290Ab0EQG4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 May 2010 02:56:31 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 23:56:31 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ioctl with b43 driver
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19440.59578.833265.73504@gargle.gargle.HOWL>
+Date: Mon, 17 May 2010 12:26:58 +0530
+To: David Woodhouse <dwmw2@infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] Update AR9271 firmware.
+In-Reply-To: <1274078768.6930.6898.camel@macbook.infradead.org>
+References: <19440.58792.695144.835937@gargle.gargle.HOWL>
+	<1274078768.6930.6898.camel@macbook.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am trying aircrack-ng and I found in the source of aircrack-ng that they called ioctl( fd, SIOCGIWFREQ,&wrq ). But the driver of b43 doesn't supportioctl, so this call is failed. Is there any solution for me?
+David Woodhouse wrote:
+> On Mon, 2010-05-17 at 07:43 +0100, Sujith wrote:
+> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> > ---
+> >  ar9271.fw |  Bin 49280 -> 51280 bytes
+> >  1 files changed, 0 insertions(+), 0 deletions(-)
+> 
+> No changelog, no version number... is this really what you consider to
+> be good engineering practice?
 
-My wireless card is BCM4312 [14e4:4315]
+Unfortunately, there is no versioning for the firmware.
 
-Thanks.
+The list of changes would be fairly large, since the last
+firmware release was ~4 months ago. Am not involved in
+firmware development, but I'll get a list of changes and
+resend the patch. Thanks.
 
+Sujith
