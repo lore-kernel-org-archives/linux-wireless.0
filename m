@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:19781 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752338Ab0ESBT3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 21:19:29 -0400
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0449761967
-	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:19:27 +0900 (JST)
-Subject: [PATCH 3] ath5k: consistently use rx_bufsize for RX DMA
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 19 May 2010 10:18:16 +0900
-Message-ID: <20100519011737.20789.86998.stgit@tt-desk>
+Received: from mail.atheros.com ([12.36.123.2]:10975 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753923Ab0EQGbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 May 2010 02:31:06 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 23:31:06 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19440.58041.788800.187965@gargle.gargle.HOWL>
+Date: Mon, 17 May 2010 12:01:21 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/5] ath9k_htc: Enable RX STBC for AR9271
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should use the same buffer size we set up for DMA also in the hardware
-descriptor. Previously we used common->rx_bufsize for setting up the DMA
-mapping, but used skb_tailroom(skb) for the size we tell to the hardware in the
-descriptor itself. The problem is that skb_tailroom(skb) can give us a larger
-value than the size we set up for DMA before. This allows the hardware to write
-into memory locations not set up for DMA. In practice this should rarely happen
-because all packets should be smaller than the maximum 802.11 packet size.
-
-On the tested platform rx_bufsize is 2528, and we allocated an skb of 2559
-bytes length (including padding for cache alignment) but sbk_tailroom() was
-2592. Just consistently use rx_bufsize for all RX DMA memory sizes.
-
-Also use the return value of the descriptor setup function.
-
-Cc: stable@kernel.org
-Signed-off-by: Bruno Randolf <br1@einfach.org>
-Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-v3: sorry i left a TEST line in the v2 commit log.
-
----
- drivers/net/wireless/ath/ath5k/base.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 9c27623..fbd5fc7 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1214,6 +1214,7 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
- 	struct ath5k_hw *ah = sc->ah;
- 	struct sk_buff *skb = bf->skb;
- 	struct ath5k_desc *ds;
-+	int ret;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 8b202e0..ff6c080 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -407,6 +407,8 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
+ 	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_SGI_20)
+ 		ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
  
- 	if (!skb) {
- 		skb = ath5k_rx_skb_alloc(sc, &bf->skbaddr);
-@@ -1240,9 +1241,9 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
- 	ds = bf->desc;
- 	ds->ds_link = bf->daddr;	/* link to self */
- 	ds->ds_data = bf->skbaddr;
--	ah->ah_setup_rx_desc(ah, ds,
--		skb_tailroom(skb),	/* buffer size */
--		0);
-+	ret = ah->ah_setup_rx_desc(ah, ds, ah->common.rx_bufsize, 0);
-+	if (ret)
-+		return ret;
++	ht_info->cap |= (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
++
+ 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+ 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
  
- 	if (sc->rxlink != NULL)
- 		*sc->rxlink = bf->daddr;
+-- 
+1.7.1
 
