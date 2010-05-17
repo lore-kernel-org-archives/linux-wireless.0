@@ -1,74 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:36476 "HELO
-	outbound-mail-313.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752880Ab0EWFaR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 May 2010 01:30:17 -0400
-Message-ID: <4BF8BD68.9030006@dlasys.net>
-Date: Sun, 23 May 2010 01:30:16 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
+Received: from mail.atheros.com ([12.36.123.2]:10972 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753656Ab0EQGbA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 May 2010 02:31:00 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 23:31:00 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: carl9170 1.0.9
-References: <4BDC001F.9050202@dlasys.net> <201005021452.01101.chunkeey@googlemail.com> <4BF82CEE.8020502@dlasys.net> <201005230334.29866.chunkeey@googlemail.com>
-In-Reply-To: <201005230334.29866.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19440.58038.38360.648206@gargle.gargle.HOWL>
+Date: Mon, 17 May 2010 12:01:18 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/5] ath9k_htc: Update HT configuration properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2010 09:34 PM, Christian Lamparter wrote:
->> 	I beleive the timer_init() routine in carlfw/src/timer.c can not be
->> called for more than one timer. Any subsequent call will clear the
->> interrupt and mode bits for the previous timer.
->>      
-> there's more than that.
-> Take a look at the (timer<<  2) and so forth...
->    
-     The control and interrupt registers are bitmasks.
-     When you set the bit for the current timer you are clearing all the 
-others.
-> based on observation: Some timers(1-4) are *driven* by the cpu clock.
-> Which is of course determined by the operation mode and phy band.
-> As you know there are 7 (1 + 2 * 3) possible AHB/CPU clock settings:
->   * 40MHz (refclock)
->   * 20MHz (PSM, 5GHz)&  22MHz (PSM, 2.4GHz)
->   * 40MHz (11an, 5GHz, HT20)&  44Mhz (11bgn, 2.4GHz, HT20)
->   * 80MHz (11an, 5GHz, HT40)&  88MHz (11bgn, 2.4GHz, HT40)
->    
-     Thanks I have been working alot more with the timers today.
-     TSF follows the docs and is 1us.
-     My docs say that CCR is 25ns and only 16 bit.
-     But your code and that of the original ar9710-fw has it as 2 16 bit 
-registers making 32bits.
-     I have verified that and verified that it is pretty close to 25ns. 
-in my system.
+Use BSS_CHANGED_HT to handle HT parameter changes.
+The rate information on the target has to be updated
+to handle changes in HT configuration.
 
-     But the remainder of the timers seem to be much much slower. My dos 
-do not specify that they are tied to anything specific.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   30 +++++++++++++++++++++++++
+ 1 files changed, 30 insertions(+), 0 deletions(-)
 
-     I tripped over the AHB/CPU clock in the code. I need to look much 
-more thoroughly at that, and I am going to need to work out exactly how 
-it effects the other timers. I need the fastest timer I can get for my 
-application.
-
-     Thanks alot.
-
-     i will pull 1.0.9.1 shortly
-
-
-
-
-
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index fe5debf..80feeb3 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -409,6 +409,33 @@ static void ath9k_htc_init_rate(struct ath9k_htc_priv *priv,
+ 			  sta->addr, be32_to_cpu(trate.capflags));
+ }
+ 
++static void ath9k_htc_update_rate(struct ath9k_htc_priv *priv,
++				  struct ieee80211_vif *vif,
++				  struct ieee80211_bss_conf *bss_conf)
++{
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	struct ath9k_htc_target_rate trate;
++	struct ieee80211_sta *sta;
++	int ret;
++
++	memset(&trate, 0, sizeof(struct ath9k_htc_target_rate));
++
++	rcu_read_lock();
++	sta = ieee80211_find_sta(vif, bss_conf->bssid);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
++	ath9k_htc_setup_rate(priv, sta, &trate);
++	rcu_read_unlock();
++
++	ret = ath9k_htc_send_rate_cmd(priv, &trate);
++	if (!ret)
++		ath_print(common, ATH_DBG_CONFIG,
++			  "Updated target sta: %pM, rate caps: 0x%X\n",
++			  bss_conf->bssid, be32_to_cpu(trate.capflags));
++}
++
+ static int ath9k_htc_aggr_oper(struct ath9k_htc_priv *priv,
+ 			       struct ieee80211_vif *vif,
+ 			       u8 *sta_addr, u8 tid, bool oper)
+@@ -1595,6 +1622,9 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath9k_hw_init_global_settings(ah);
+ 	}
+ 
++	if (changed & BSS_CHANGED_HT)
++		ath9k_htc_update_rate(priv, vif, bss_conf);
++
+ 	ath9k_htc_ps_restore(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
 -- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies too numerous to list.
-
-"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
-Albert Einstein
+1.7.1
 
