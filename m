@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy1-pub.bluehost.com ([69.89.21.11]:59024 "HELO
-	outbound-mail-01.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757969Ab0EVTNv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 May 2010 15:13:51 -0400
-Message-ID: <4BF82CEE.8020502@dlasys.net>
-Date: Sat, 22 May 2010 15:13:50 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
-Reply-To: dhlii@dlasys.net
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: carl9170 1.0.9
-References: <4BDC001F.9050202@dlasys.net> <4BDD2E05.40203@free.fr> <4BDD5EB3.7020802@dlasys.net> <201005021452.01101.chunkeey@googlemail.com>
-In-Reply-To: <201005021452.01101.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:29262 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756228Ab0ERBfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 May 2010 21:35:40 -0400
+Subject: Re: [PATCH 26/37] drivers/net/wireless/ipw2x00: Use kmemdup
+From: Zhu Yi <yi.zhu@intel.com>
+To: Julia Lawall <julia@diku.dk>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.1005152320450.21345@ask.diku.dk>
+References: <Pine.LNX.4.64.1005152320450.21345@ask.diku.dk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 May 2010 09:26:52 +0800
+Message-ID: <1274146012.27831.2484.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	
-some items I have found while making my changes to the code.
+On Sun, 2010-05-16 at 05:21 +0800, Julia Lawall wrote:
+> From: Julia Lawall <julia@diku.dk>
+> 
+> Use kmemdup when some other buffer is immediately copied into the
+> allocated region.
+> 
+> A simplified version of the semantic patch that makes this change is
+> as
+> follows: (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @@
+> expression from,to,size,flag;
+> statement S;
+> @@
+> 
+> -  to = \(kmalloc\|kzalloc\)(size,flag);
+> +  to = kmemdup(from,size,flag);
+>    if (to==NULL || ...) S
+> -  memcpy(to, from, size);
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk> 
 
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 
-	In firmware_source/carlfw/src/wlan.c you have aloop to read the TSF 
-timer to make sure there is no roll over. According to the docs I have 
-when TSF_LOW is read, TSF_HI is automatically concurrently copied to a 
-temp register so that an immediate read of TSF_HI will get the value 
-that was present when TSF_LO was read.
-
-	Presuming the docs are correct - and this feature is common in 
-multi-word timers you should be able to save some code.
-	Also with some complex casting or another pointer you can read directly 
-to your destination and save a memcpy()
-
-	I beleive the timer_init() routine in carlfw/src/timer.c can not be 
-called for more than one timer. Any subsequent call will clear the 
-interrupt and mode bits for the previous timer.
-
-	I have not completely tracked these down, but the new config system 
-must be missing some dependencies, because I can configure and build 
-firmware that will not load.
-	In carlfw/src/cmd.c the CARL9170_CMD_PSM case needs ifdef'd with 
-CONFIG_CARL9170FW_PSM or it will not build with PSM disabled.
-
-
-
--- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies 
-toonumerous to list.
-
-"Any intelligent fool can make things bigger and more complex... It 
-takes a touch of genius - and a lot of courage to move in the opposite 
-direction."
-Albert Einstein
+Thanks,
+-yi
 
