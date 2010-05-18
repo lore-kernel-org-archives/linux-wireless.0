@@ -1,75 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jessica.hrz.tu-chemnitz.de ([134.109.132.47]:52454 "EHLO
-	jessica.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754278Ab0E2WeA (ORCPT
+Received: from sinikuusama.dnainternet.net ([83.102.40.134]:49818 "EHLO
+	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752490Ab0ERIUw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 May 2010 18:34:00 -0400
-From: Tobias Doerffel <tobias.doerffel@gmail.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: linux-wireless@vger.kernel.org,
-	Tobias Doerffel <tobias.doerffel@gmail.com>
-Subject: [PATCH] ath5k: depend on CONFIG_PM_SLEEP for suspend/resume functions
-Date: Sun, 30 May 2010 00:02:18 +0200
-Message-Id: <1275170538-7304-1-git-send-email-tobias.doerffel@gmail.com>
+	Tue, 18 May 2010 04:20:52 -0400
+Subject: [PATCH] rndis_wlan: replace wireless_send_event with
+	cfg80211_disconnected in rndis_wlan_do_link_down_work
+To: "John W. Linville" <linville@tuxdriver.com>
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: =?utf-8?q?Rog=C3=A9rio?= Brito <rbrito@ime.usp.br>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 18 May 2010 11:20:51 +0300
+Message-ID: <20100518082051.18988.85196.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When building a kernel with CONFIG_PM=y but neither suspend nor
-hibernate support, the compiler complains about the static functions
-ath5k_pci_suspend() and ath5k_pci_resume() not being used:
+Remove (hopefully) last use of WEXT in rndis_wlan. Replace wireless_send_event
+with missing cfg80211_disconnected in rndis_wlan_do_link_down_work.
 
-drivers/net/wireless/ath/ath5k/base.c:713:12: warning: ‘ath5k_pci_suspend’ defined but not used
-drivers/net/wireless/ath/ath5k/base.c:722:12: warning: ‘ath5k_pci_resume’ defined but not used
-
-Depending on CONFIG_PM_SLEEP rather than CONFIG_PM fixes the issue.
-
-Signed-off-by: Tobias Doerffel <tobias.doerffel@gmail.com>
+Reported-by: "Rogério Brito" <rbrito@ime.usp.br>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rndis_wlan.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 8a36aa6..d4bab48 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -195,7 +195,7 @@ static const struct ieee80211_rate ath5k_rates[] = {
- static int __devinit	ath5k_pci_probe(struct pci_dev *pdev,
- 				const struct pci_device_id *id);
- static void __devexit	ath5k_pci_remove(struct pci_dev *pdev);
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- static int		ath5k_pci_suspend(struct device *dev);
- static int		ath5k_pci_resume(struct device *dev);
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 393f600..b280ad1 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2572,14 +2572,18 @@ static void rndis_wlan_do_link_up_work(struct usbnet *usbdev)
  
-@@ -203,7 +203,7 @@ static SIMPLE_DEV_PM_OPS(ath5k_pm_ops, ath5k_pci_suspend, ath5k_pci_resume);
- #define ATH5K_PM_OPS	(&ath5k_pm_ops)
- #else
- #define ATH5K_PM_OPS	NULL
--#endif /* CONFIG_PM */
-+#endif /* CONFIG_PM_SLEEP */
- 
- static struct pci_driver ath5k_pci_driver = {
- 	.name		= KBUILD_MODNAME,
-@@ -709,7 +709,7 @@ ath5k_pci_remove(struct pci_dev *pdev)
- 	ieee80211_free_hw(hw);
- }
- 
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- static int ath5k_pci_suspend(struct device *dev)
+ static void rndis_wlan_do_link_down_work(struct usbnet *usbdev)
  {
- 	struct ieee80211_hw *hw = pci_get_drvdata(to_pci_dev(dev));
-@@ -735,7 +735,7 @@ static int ath5k_pci_resume(struct device *dev)
- 	ath5k_led_enable(sc);
- 	return 0;
+-	union iwreq_data evt;
++	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 
+-	netif_carrier_off(usbdev->net);
++	if (priv->connected) {
++		priv->connected = false;
++		memset(priv->bssid, 0, ETH_ALEN);
++
++		deauthenticate(usbdev);
+ 
+-	evt.data.flags = 0;
+-	evt.data.length = 0;
+-	memset(evt.ap_addr.sa_data, 0, ETH_ALEN);
+-	wireless_send_event(usbdev->net, SIOCGIWAP, &evt, NULL);
++		cfg80211_disconnected(usbdev->net, 0, NULL, 0, GFP_KERNEL);
++	}
++
++	netif_carrier_off(usbdev->net);
  }
--#endif /* CONFIG_PM */
-+#endif /* CONFIG_PM_SLEEP */
  
- 
- /***********************\
--- 
-1.7.0.4
+ static void rndis_wlan_worker(struct work_struct *work)
 
