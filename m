@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:54534 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756349Ab0EMJq4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 05:46:56 -0400
-Received: by fxm6 with SMTP id 6so111466fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 02:46:55 -0700 (PDT)
+Received: from borg.medozas.de ([188.40.89.202]:51945 "EHLO borg.medozas.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754166Ab0ERQ2M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 May 2010 12:28:12 -0400
+Date: Tue, 18 May 2010 18:28:09 +0200 (CEST)
+From: Jan Engelhardt <jengelh@medozas.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: b43: force_pio must be set in your kernel conf
+In-Reply-To: <4BE2E219.1080806@lwfinger.net>
+Message-ID: <alpine.LSU.2.01.1005181827070.28059@obet.zrqbmnf.qr>
+References: <alpine.LSU.2.01.1005061707140.32387@obet.zrqbmnf.qr> <4BE2E219.1080806@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1273743418-28383-9-git-send-email-gwingerde@gmail.com>
-References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
-	 <1273743418-28383-9-git-send-email-gwingerde@gmail.com>
-Date: Thu, 13 May 2010 11:46:55 +0200
-Message-ID: <AANLkTinsE3dE7QInbzji3b7FvooTdN_QC5IM7H4vwpa8@mail.gmail.com>
-Subject: Re: [PATCH v2 08/10] rt2x00: Push beacon TX descriptor writing to
-	drivers.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 13, 2010 at 11:36 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Not all the devices require a TX descriptor to be written (i.e. rt2800
-> device don't require them). Push down the creation of the TX descriptor
-> to the device drivers so that they can decide for themselves whether
-> a TX descriptor is to be created.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+On Thursday 2010-05-06 17:36, Larry Finger wrote:
+>On 05/06/2010 10:16 AM, Jan Engelhardt wrote:
+
+>> b43-phy0 ERROR: Fatal DMA error: 0x400, 0x0, 0x0, 0x0, 0x0, 0x0
+>> b43-phy0 ERROR: This device does not support DMA on your system. Please 
+>> use PIO instead.
+>> b43-phy0 ERROR: CONFIG_B43_FORCE_PIO must be set in your kernel 
+>> configuration.
+>> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> 
+>> So, can I get PIO mode for free without recompiling? (Since 
+>> CONFIG_B43_PIO=y already.) What other info needs to be provided to help 
+>> resolve this?
+>> 
+>> System is a 2.6.33.2-x86_64.
+>
+>In the latest mainline kernel (2.6.34-rc6), the fallback to PIO is
+>automatic. For a 2.6.33 kernel, you will need to rebuild the kernel or
+>install the latest compat-wireless package. Your distro may already
+>provide it.
+>
+>We are working on this problem. Keep watching this list for trial
+>patches. Unfortunately, none of the developers have a machine that
+>suffers from this problem. It seems to be associated with Intel
+>processors (mostly netbooks with Atom chips) and the Phoenix BIOS.
+
+Seems so. 2.6.34 works, so everything's fine now.
+Thanks!
