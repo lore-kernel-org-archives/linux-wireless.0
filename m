@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55753 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756047Ab0E2NfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 May 2010 09:35:20 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wireless: run refresh only on last applied directory
-Date: Sat, 29 May 2010 15:35:07 +0200
-Message-Id: <1275140107-4616-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1275140107-4616-1-git-send-email-hauke@hauke-m.de>
-References: <1275140107-4616-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.atheros.com ([12.36.123.2]:19735 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753366Ab0ERB54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 May 2010 21:57:56 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 17 May 2010 18:57:56 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] ath9k_hw: Enable auto sleep for ar9003
+Date: Mon, 17 May 2010 18:57:56 -0700
+Message-ID: <1274147876-9228-3-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1274147876-9228-1-git-send-email-vasanth@atheros.com>
+References: <1274147876-9228-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-running "./scripts/admin-refresh.sh -n -p -c refresh" failed because the patches were applied but
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- scripts/admin-update.sh |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 99ab6c3..36cce31 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -391,12 +391,6 @@ patchRefresh() {
- 	rm -rf patches.orig .pc $1/series
- }
- 
--if [[ "$REFRESH" = "y" ]]; then
--	for dir in $EXTRA_PATCHES; do
--		patchRefresh $dir
--	done
--fi
--
- ORIG_CODE=$(find ./ -type f -name  \*.[ch] |
- 	egrep -v "^./compat/|include/linux/compat" |
- 	xargs wc -l | tail -1 | awk '{print $1}')
-@@ -404,6 +398,14 @@ printf "\n${CYAN}compat-wireless code metrics${NORMAL}\n\n" > $CODE_METRICS
- printf "${PURPLE}%10s${NORMAL} - Total upstream code being pulled\n" $ORIG_CODE >> $CODE_METRICS
- 
- for dir in $EXTRA_PATCHES; do
-+	LAST_ELEM=$dir
-+done
-+
-+for dir in $EXTRA_PATCHES; do
-+	if [[ $LAST_ELEM = $dir && "$REFRESH" = y ]]; then
-+		patchRefresh $dir
-+	fi
-+
- 	FOUND=$(find $dir/ -name \*.patch | wc -l)
- 	if [ $FOUND -eq 0 ]; then
- 		continue
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1985d19..7997d0f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2165,7 +2165,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		pCap->hw_caps |= ATH9K_HW_CAP_RFSILENT;
+ 	}
+ #endif
+-	if (AR_SREV_9271(ah))
++	if (AR_SREV_9271(ah) || AR_SREV_9300_20_OR_LATER(ah))
+ 		pCap->hw_caps |= ATH9K_HW_CAP_AUTOSLEEP;
+ 	else
+ 		pCap->hw_caps &= ~ATH9K_HW_CAP_AUTOSLEEP;
 -- 
 1.7.0.4
 
