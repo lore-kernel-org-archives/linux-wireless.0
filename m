@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49388 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:3125 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755245Ab0EDTpq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 15:45:46 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 12:45:46 -0700
-Date: Tue, 4 May 2010 12:45:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: fix another source of corrupt frames
-Message-ID: <20100504194544.GE2624@tux>
-References: <4BDFD3C1.4000209@openwrt.org>
- <u2q43e72e891005041109i5106ba24ma7345c4f4c4fde21@mail.gmail.com>
- <20100504183613.GC21043@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <20100504183613.GC21043@tuxdriver.com>
+	id S1754188Ab0ERFO5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 May 2010 01:14:57 -0400
+Subject: RE: [RFC] Libertas: Added 11d support using cfg80211
+From: Dan Williams <dcbw@redhat.com>
+To: Kiran Divekar <dkiran@marvell.com>
+Cc: "holgerschurig@gmail.com" <holgerschurig@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
+In-Reply-To: <25B60CDC2F704E4E9D88FFD52780CB4C04D62738EA@SC-VEXCH1.marvell.com>
+References: <25B60CDC2F704E4E9D88FFD52780CB4C04D62738EA@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 17 May 2010 22:14:55 -0700
+Message-ID: <1274159695.15008.26.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 04, 2010 at 11:36:13AM -0700, John W. Linville wrote:
-> On Tue, May 04, 2010 at 11:09:32AM -0700, Luis R. Rodriguez wrote:
-> > On Tue, May 4, 2010 at 12:58 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> > > Atheros hardware supports receiving frames that span multiple
-> > > descriptors and buffers. In this case, the rx status of every
-> > > descriptor except for the last one is invalid and may contain random
-> > > data. Because the driver does not support this, it needs to drop such
-> > > frames.
+On Mon, 2010-05-17 at 22:01 -0700, Kiran Divekar wrote:
+> > On Thu, 2010-05-13 at 04:00 -0700, Kiran Divekar wrote:
+> > > Added 11d support for libertas driver using cfg80211. This is based on
+> > Holger Shurig's initial work to add cfg80211 support libertas.
+> > > (https://patchwork.kernel.org/patch/64286/)
 > > >
-> > > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> > > ---
-> > > --- a/drivers/net/wireless/ath/ath9k/common.c
-> > > +++ b/drivers/net/wireless/ath/ath9k/common.c
-> > > @@ -57,13 +57,19 @@ static bool ath9k_rx_accept(struct ath_c
-> > >         * rs_more indicates chained descriptors which can be used
-> > >         * to link buffers together for a sort of scatter-gather
-> > >         * operation.
-> > > -        *
-> > > +        * reject the frame, we don't support scatter-gather yet and
-> > > +        * the frame is probably corrupt anyway
-> > > +        */
-> > > +       if (rx_stats->rs_more)
-> > > +               return false;
+> > > Please let us know, if there are any improvements comments.
+> > >
+> > > Code is added to send 11d enable command to firmware while
+> > > initialisation and pass 11d specific information to firmware
+> > > when notifier handler is called by cfg80211.
 > > 
-> > Actually this is required by ath9k_htc, it does process these, but
-> > ath9k doesn't so this could be done within ath9k itself.
+> > Looks OK, though I'd prefer making 11D_DOMAIN_INFO a direct command
+> > instead.  But if you don't want to do that right now, that's fine, just
+> > send the final patch and I'll ack it.
 > 
-> I'm sorry, that is a bit unclear to me.  Are you NAKing the patch?
+> 
+> Hi Dan, Holger,
+>   This patch is based on Holger's work to add cfg80211 support to libertas. We have tested original patch by rebasing to latest wireless-testing tree. We will send the re-based patch as well as this patch again.
 
-Yes, I am NAK'ing it, I should have been clearer about that, sorry.
-The reason is that ath9k_htc *depends* on rs_more stuff because the
-USB frames it receives *are* split up and to RX them we decouple
-them. With this patch you'd break ath9k_htc considerably.
+Sounds good.  Lets get the cfg80211 stuff in then I guess.
 
-> Or saying that the patch is fine but another patch is needed on top?
+Dan
 
-My suggestion is that this change can be made but only on the
-ath9k RX path, instead of the comon path so a separate patch would
-be needed.
+> Please let us know, if there are any other thoughts.
+> 
+> Thanks,
+> - Kiran
+> 
+> 
+> 
+> > Acked-by: Dan Williams <dcbw@redhat.com>
+> > 
+> > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > > Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+> > > ---
+> > >  drivers/net/wireless/libertas/cfg.c     |  110
+> > +++++++++++++++++++++++++++++++
+> > >  drivers/net/wireless/libertas/cfg.h     |    5 ++
+> > >  drivers/net/wireless/libertas/cmd.c     |   65 ++++++++++++++++++
+> > >  drivers/net/wireless/libertas/cmdresp.c |   50 ++++++++++++++
+> > >  drivers/net/wireless/libertas/decl.h    |    5 ++
+> > >  drivers/net/wireless/libertas/dev.h     |    3 +
+> > >  drivers/net/wireless/libertas/host.h    |   28 ++++++++-
+> > >  drivers/net/wireless/libertas/main.c    |    3 +
+> > >  8 files changed, 268 insertions(+), 1 deletions(-)
+> > >
 
-  Luis
+
