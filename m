@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53271 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932267Ab0EDUUC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 16:20:02 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 13:20:02 -0700
-Date: Tue, 4 May 2010 13:20:00 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Javier Cardona <javier@cozybit.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Mathieu Olivari <Mathieu.Olivari@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211/ath9k: HT rates in Mesh
-Message-ID: <20100504202000.GK2624@tux>
-References: <93781E992CBA7843962D8B0E7D683F3C1116C465A6@SC1EXMB-MBCL.global.atheros.com>
- <20100504194348.GD2624@tux>
- <93781E992CBA7843962D8B0E7D683F3C1116C465EA@SC1EXMB-MBCL.global.atheros.com>
- <20100504195211.GG2624@tux>
- <1273004047.3673.26.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
+Received: from dakia2.marvell.com ([65.219.4.35]:50856 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752068Ab0ERFBr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 May 2010 01:01:47 -0400
+From: Kiran Divekar <dkiran@marvell.com>
+To: Dan Williams <dcbw@redhat.com>,
+	"holgerschurig@gmail.com" <holgerschurig@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
+Date: Mon, 17 May 2010 22:01:42 -0700
+Subject: RE: [RFC] Libertas: Added 11d support using cfg80211
+Message-ID: <25B60CDC2F704E4E9D88FFD52780CB4C04D62738EA@SC-VEXCH1.marvell.com>
+In-Reply-To: <1274156806.14012.13.camel@localhost.localdomain>
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1273004047.3673.26.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding Javier.
-
-On Tue, May 04, 2010 at 01:14:07PM -0700, Johannes Berg wrote:
-> On Tue, 2010-05-04 at 12:52 -0700, Luis R. Rodriguez wrote:
-> > Cc'ing linux-wireless.
-> > 
-> > On Tue, May 04, 2010 at 12:45:36PM -0700, Mathieu Olivari wrote:
-> > > BTW, do you know if HT is supported in Mesh ?
-> > 
-> > This would involve doing the same as for IBSS that Benoit
-> > is doing, someone with good will would have to do it. It should
-> > be fairly easy to review the patches implemented by Benoit to
-> > port to Mesh but there may be some unresolved things I may be
-> > overlooking.
+> On Thu, 2010-05-13 at 04:00 -0700, Kiran Divekar wrote:
+> > Added 11d support for libertas driver using cfg80211. This is based on
+> Holger Shurig's initial work to add cfg80211 support libertas.
+> > (https://patchwork.kernel.org/patch/64286/)
+> >
+> > Please let us know, if there are any improvements comments.
+> >
+> > Code is added to send 11d enable command to firmware while
+> > initialisation and pass 11d specific information to firmware
+> > when notifier handler is called by cfg80211.
 > 
-> Last I heard mesh wasn't supporting HT at all due to whatever issues?
-> Maybe protection or something?
+> Looks OK, though I'd prefer making 11D_DOMAIN_INFO a direct command
+> instead.  But if you don't want to do that right now, that's fine, just
+> send the final patch and I'll ack it.
 
-Oh .. yeah... it was aggregation that was not allowed. So the only
-other change you'd have to do is to disable aggregation IIRC unless
-something else has changed on the latest 11s drafts.
 
-  Luis
+Hi Dan, Holger,
+  This patch is based on Holger's work to add cfg80211 support to libertas. We have tested original patch by rebasing to latest wireless-testing tree. We will send the re-based patch as well as this patch again.
+
+Please let us know, if there are any other thoughts.
+
+Thanks,
+- Kiran
+
+
+
+> Acked-by: Dan Williams <dcbw@redhat.com>
+> 
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+> > ---
+> >  drivers/net/wireless/libertas/cfg.c     |  110
+> +++++++++++++++++++++++++++++++
+> >  drivers/net/wireless/libertas/cfg.h     |    5 ++
+> >  drivers/net/wireless/libertas/cmd.c     |   65 ++++++++++++++++++
+> >  drivers/net/wireless/libertas/cmdresp.c |   50 ++++++++++++++
+> >  drivers/net/wireless/libertas/decl.h    |    5 ++
+> >  drivers/net/wireless/libertas/dev.h     |    3 +
+> >  drivers/net/wireless/libertas/host.h    |   28 ++++++++-
+> >  drivers/net/wireless/libertas/main.c    |    3 +
+> >  8 files changed, 268 insertions(+), 1 deletions(-)
+> >
