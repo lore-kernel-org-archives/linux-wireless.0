@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:40272 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756615Ab0EGPqx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 May 2010 11:46:53 -0400
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: 2.6.34-rc6 pci bridge problems
-Date: Fri, 7 May 2010 09:46:41 -0600
-Cc: dhlii@dlasys.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-References: <4BDC001F.9050202@dlasys.net> <201005052159.55871.chunkeey@googlemail.com> <201005060909.58503.bjorn.helgaas@hp.com>
-In-Reply-To: <201005060909.58503.bjorn.helgaas@hp.com>
+Received: from mail.atheros.com ([12.36.123.2]:23619 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752490Ab0ERG4M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 May 2010 02:56:12 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 17 May 2010 23:56:12 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005070946.41857.bjorn.helgaas@hp.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19442.14851.603291.524128@gargle.gargle.HOWL>
+Date: Tue, 18 May 2010 12:26:03 +0530
+To: Dan Carpenter <error27@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ming Lei <tom.leiming@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Subject: [patch -next 2/2] ath9k_htc: rare leak in
+	ath9k_hif_usb_alloc_tx_urbs()
+In-Reply-To: <20100514145237.GF17487@bicker>
+References: <20100514145237.GF17487@bicker>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, May 06, 2010 09:09:58 am Bjorn Helgaas wrote:
-> On Wednesday, May 05, 2010 01:59:55 pm Christian Lamparter wrote:
-> > On Wednesday 05 May 2010 20:41:26 David H. Lynch Jr. wrote:
-> > > When I build out of the wireless-testing git tree (puled today) 
-> > > 2.6.34-rc6 using my current systems .config I get a very quick error
-> > > on boot about PCI bridge windows.
-> > > googling the error indicates this is a know 2.6.34 problem and that 
-> > > there are fixes in other 2.6.34 trees.
-> > > I have been unable to find the actual patches or I would just apply 
-> > > them to wireless-testing.
+Dan Carpenter wrote:
+> This is obviously a small picky thing.  The original error handling code
+> doesn't free the most recent allocations which haven't been added to the
+> hif_dev->tx.tx_buf list yet.
 > 
-> I made significant changes in the way we handle PCI bridge windows,
-> and I'm eager to fix any issues in that area.  But "very quick error
-> on boot" doesn't give me any information to work with.
-> 
-> Please attach your complete dmesg output, serial console log (with
-> "ignore_loglevel"), digital photo of the error, or other specific
-> details.
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-Ping!  If there's a problem here, I want to fix it as soon as possible.
-Do you have any more details?  What error message did you google?
+Thanks.
 
-Thanks,
-  Bjorn
+Acked-by: Sujith <Sujith.Manoharan@atheros.com>
+
+> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> index 46dc41a..77b3591 100644
+> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> @@ -607,6 +609,10 @@ static int ath9k_hif_usb_alloc_tx_urbs(struct hif_device_usb *hif_dev)
+>  
+>  	return 0;
+>  err:
+> +	if (tx_buf) {
+> +		kfree(tx_buf->buf);
+> +		kfree(tx_buf);
+> +	}
+>  	ath9k_hif_usb_dealloc_tx_urbs(hif_dev);
+>  	return -ENOMEM;
+>  }
