@@ -1,135 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:46200 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932883Ab0E1Rk4 convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:18615 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756244Ab0ESBbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 13:40:56 -0400
-Received: by pvg11 with SMTP id 11so505278pvg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 May 2010 10:40:55 -0700 (PDT)
+	Tue, 18 May 2010 21:31:52 -0400
+Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-086912710
+	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:31:51 +0900 (JST)
+Subject: [PATCH v2 00/20] pending ath5k + antenna patches
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 May 2010 10:30:39 +0900
+Message-ID: <20100519012528.22206.77550.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <20100528100901.14580.1322.stgit@fate.lan>
-References: <20100528100901.14580.1322.stgit@fate.lan>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 28 May 2010 10:40:34 -0700
-Message-ID: <AANLkTim27Widx4NuaN_C6XqeLkCahRA8zTEDuDtxi_vM@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: disable ASPM
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	David Quan <David.Quan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 28, 2010 at 3:09 AM, Jussi Kivilinna
-<jussi.kivilinna@mbnet.fi> wrote:
-> Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
-> Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
-> enabled. With ASPM ath5k will eventually stall on heavy traffic with often
-> 'unsupported jumbo' warnings appearing. Disabling ASPM L0s/L1 in ath5k fixes
-> these problems.
+These are all my pending ath5k patches + the antenna support for cfg80211
+rebased against 2.6.34 and based on the previous patch i sent for stable
+("ath5k: consistently use rx_bufsize for RX DMA"). 
 
-So you disable ASPM all together on the entire driver?
+Also i'd like to note that there are quite a few ath5k patches which haven't
+made it into linux-next yet. It would be great to get them into 2.6.35...
 
-  Luis
+thanks,
+bruno
 
-> Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
-> both ends (usually stalls within seconds).
->
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |   48 +++++++++++++++++++++++++++++++++
->  1 files changed, 48 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index cc6d41d..ce9c983 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -48,6 +48,7 @@
->  #include <linux/netdevice.h>
->  #include <linux/cache.h>
->  #include <linux/pci.h>
-> +#include <linux/pci-aspm.h>
->  #include <linux/ethtool.h>
->  #include <linux/uaccess.h>
->  #include <linux/slab.h>
-> @@ -195,6 +196,8 @@ static const struct ieee80211_rate ath5k_rates[] = {
->  static int __devinit   ath5k_pci_probe(struct pci_dev *pdev,
->                                const struct pci_device_id *id);
->  static void __devexit  ath5k_pci_remove(struct pci_dev *pdev);
-> +static void            __ath5k_disable_aspm(struct pci_dev *pdev, u16 state);
-> +static void            ath5k_disable_aspm(struct pci_dev *pdev, u16 state);
->  #ifdef CONFIG_PM
->  static int             ath5k_pci_suspend(struct device *dev);
->  static int             ath5k_pci_resume(struct device *dev);
-> @@ -424,6 +427,47 @@ module_exit(exit_ath5k_pci);
->  * PCI Initialization *
->  \********************/
->
-> +#ifdef CONFIG_PCIEASPM
-> +static void __ath5k_disable_aspm(struct pci_dev *pdev, u16 state)
-> +{
-> +       pci_disable_link_state(pdev, state);
-> +}
-> +#else
-> +static void __ath5k_disable_aspm(struct pci_dev *pdev, u16 state)
-> +{
-> +       int pos;
-> +       u16 reg16;
-> +
-> +       /*
-> +        * Both device and parent should have the same ASPM setting.
-> +        * Disable ASPM in downstream component first and then upstream.
-> +        */
-> +       pos = pci_pcie_cap(pdev);
-> +       pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
-> +       reg16 &= ~state;
-> +       pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
-> +
-> +       if (!pdev->bus->self)
-> +               return;
-> +
-> +       pos = pci_pcie_cap(pdev->bus->self);
-> +       pci_read_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, &reg16);
-> +       reg16 &= ~state;
-> +       pci_write_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, reg16);
-> +}
-> +#endif
-> +static void ath5k_disable_aspm(struct pci_dev *pdev, u16 state)
-> +{
-> +       if (!pdev->is_pcie)
-> +               return;
-> +
-> +       dev_info(&pdev->dev, "Disabling ASPM %s%s\n",
-> +                (state & PCIE_LINK_STATE_L0S) ? "L0s " : "",
-> +                (state & PCIE_LINK_STATE_L1) ? "L1" : "");
-> +
-> +       __ath5k_disable_aspm(pdev, state);
-> +}
-> +
->  static const char *
->  ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
->  {
-> @@ -473,6 +517,8 @@ ath5k_pci_probe(struct pci_dev *pdev,
->        int ret;
->        u8 csz;
->
-> +       ath5k_disable_aspm(pdev, PCIE_LINK_STATE_L1 | PCIE_LINK_STATE_L0S);
-> +
->        ret = pci_enable_device(pdev);
->        if (ret) {
->                dev_err(&pdev->dev, "can't enable device\n");
-> @@ -725,6 +771,8 @@ static int ath5k_pci_resume(struct device *dev)
->        struct ieee80211_hw *hw = pci_get_drvdata(pdev);
->        struct ath5k_softc *sc = hw->priv;
->
-> +       ath5k_disable_aspm(pdev, PCIE_LINK_STATE_L1 | PCIE_LINK_STATE_L0S);
-> +
->        /*
->         * Suspend/Resume resets the PCI configuration space, so we have to
->         * re-disable the RETRY_TIMEOUT register (0x41) to keep
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+---
+
+Bruno Randolf (20):
+      ath5k: add debugfs file for queue debugging
+      ath5k: wake queues on reset
+      ath5k: initialize calibration timers
+      ath5k: move noise floor calibration into tasklet
+      ath5k: Stop queues only for NF calibration
+      ath5k: run NF calibration only every 60 seconds
+      ath5k: remove ATH_TRACE macro
+      ath5k: clarify logic when to enable spur mitigation filter
+      ath5k: use ath5k_softc as driver data
+      ath5k: add sysfs files for ANI parameters
+      ath5k: always calculate ANI listen time
+      ath5k: print error message if ANI levels are out of range
+      cfg80211: Add nl80211 antenna configuration
+      mac80211: Add antenna configuration
+      ath5k: Add support for antenna configuration
+      ath5k: remove setting ANI and antenna thru debugfs files
+      ath5k: fix NULL pointer in antenna configuration
+      ath5k: update AR5K_PHY_RESTART_DIV_GC values to match masks
+      ath5k: new function for setting the antenna switch table
+      ath5k: no need to save/restore the default antenna
+
+
+ drivers/net/wireless/ath/ath5k/Makefile |    1 
+ drivers/net/wireless/ath/ath5k/ani.c    |   20 +++--
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    7 ++
+ drivers/net/wireless/ath/ath5k/attach.c |    2 -
+ drivers/net/wireless/ath/ath5k/base.c   |   89 ++++++++++++++++--------
+ drivers/net/wireless/ath/ath5k/caps.c   |    7 --
+ drivers/net/wireless/ath/ath5k/debug.c  |  107 ++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath5k/debug.h  |    9 --
+ drivers/net/wireless/ath/ath5k/desc.c   |    7 --
+ drivers/net/wireless/ath/ath5k/dma.c    |   13 ---
+ drivers/net/wireless/ath/ath5k/eeprom.c |    1 
+ drivers/net/wireless/ath/ath5k/gpio.c   |    7 --
+ drivers/net/wireless/ath/ath5k/pcu.c    |   24 ------
+ drivers/net/wireless/ath/ath5k/phy.c    |   89 ++++++++++++++----------
+ drivers/net/wireless/ath/ath5k/qcu.c    |    9 --
+ drivers/net/wireless/ath/ath5k/reset.c  |   64 +++--------------
+ drivers/net/wireless/ath/ath5k/sysfs.c  |  116 +++++++++++++++++++++++++++++++
+ include/linux/nl80211.h                 |   12 +++
+ include/net/cfg80211.h                  |    3 +
+ include/net/mac80211.h                  |    2 +
+ net/mac80211/cfg.c                      |   16 ++++
+ net/mac80211/driver-ops.h               |   23 ++++++
+ net/mac80211/driver-trace.h             |   50 +++++++++++++
+ net/wireless/nl80211.c                  |  116 +++++++++++++++++++++++++++++++
+ 24 files changed, 554 insertions(+), 240 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath5k/sysfs.c
+
+-- 
+Signature
