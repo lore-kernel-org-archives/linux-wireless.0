@@ -1,187 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47645 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752790Ab0ECSf6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 14:35:58 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: refresh patches
-Date: Mon,  3 May 2010 20:35:46 +0200
-Message-Id: <1272911746-17268-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:57095 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598Ab0ESKRS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 May 2010 06:17:18 -0400
+Subject: [PATCH] cfg80211: make action channel type optional
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 19 May 2010 12:17:12 +0200
+Message-ID: <1274264232.3874.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the patches apply cleanly again.
+When sending action frames, we want to verify
+that we do that on the correct channel. However,
+checking the channel type in addition can get in
+the way, since the channel type could change on
+the fly during an association, and it's not
+useful to have the channel type anyway since it
+has no effect on the transmission. Therefore,
+make it optional to specify so that if wanted,
+it can still be checked, but is not required.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- patches/25-multicast-list_head.patch |   26 +++++++++++++-------------
- patches/26-sdio-quirks.patch         |    4 ++--
- patches/99-change-makefiles.patch    |    5 +++--
- 3 files changed, 18 insertions(+), 17 deletions(-)
+ include/net/cfg80211.h     |    1 +
+ net/mac80211/cfg.c         |    4 +++-
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    9 ++++++---
+ net/wireless/core.h        |    1 +
+ net/wireless/mlme.c        |    3 ++-
+ net/wireless/nl80211.c     |    3 +++
+ 7 files changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/patches/25-multicast-list_head.patch b/patches/25-multicast-list_head.patch
-index d18735c..3cfde8a 100644
---- a/patches/25-multicast-list_head.patch
-+++ b/patches/25-multicast-list_head.patch
-@@ -124,7 +124,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  	return mc_filter[0] | ((u64)(mc_filter[1]) << 32);
- --- a/drivers/net/wireless/ath/ar9170/main.c
- +++ b/drivers/net/wireless/ath/ar9170/main.c
--@@ -2047,17 +2047,35 @@ out:
-+@@ -2046,17 +2046,35 @@ out:
-  	return err;
-  }
-  
-@@ -174,7 +174,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  static void ath5k_configure_filter(struct ieee80211_hw *hw,
-  		unsigned int changed_flags,
-  		unsigned int *new_flags,
--@@ -3108,20 +3112,42 @@ unlock:
-+@@ -3107,20 +3111,42 @@ unlock:
-  }
-  
-  static u64 ath5k_prepare_multicast(struct ieee80211_hw *hw,
-@@ -217,7 +217,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  		pos ^= (val >> 18) ^ (val >> 12) ^ (val >> 6) ^ val;
-  		pos &= 0x3f;
-  		mfilt[pos / 32] |= (1 << (pos % 32));
--@@ -3130,6 +3156,9 @@ static u64 ath5k_prepare_multicast(struc
-+@@ -3129,6 +3155,9 @@ static u64 ath5k_prepare_multicast(struc
-  		* neet to inform below to not reset the mcast */
-  		/* ath5k_hw_set_mcast_filterindex(ah,
-  		 *      ha->addr[5]); */
-@@ -305,7 +305,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  }
- --- a/drivers/net/wireless/mwl8k.c
- +++ b/drivers/net/wireless/mwl8k.c
--@@ -1939,15 +1939,21 @@ struct mwl8k_cmd_mac_multicast_adr {
-+@@ -1937,15 +1937,21 @@ struct mwl8k_cmd_mac_multicast_adr {
-  
-  static struct mwl8k_cmd_pkt *
-  __mwl8k_cmd_mac_multicast_adr(struct ieee80211_hw *hw, int allmulti,
-@@ -327,7 +327,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  
-  	if (allmulti || mc_count > priv->num_mcaddrs) {
-  		allmulti = 1;
--@@ -1968,13 +1974,27 @@ __mwl8k_cmd_mac_multicast_adr(struct iee
-+@@ -1966,13 +1972,27 @@ __mwl8k_cmd_mac_multicast_adr(struct iee
-  	if (allmulti) {
-  		cmd->action |= cpu_to_le16(MWL8K_ENABLE_RX_ALL_MULTICAST);
-  	} else if (mc_count) {
-@@ -355,7 +355,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  		}
-  	}
-  
--@@ -3553,7 +3573,11 @@ mwl8k_bss_info_changed(struct ieee80211_
-+@@ -3551,7 +3571,11 @@ mwl8k_bss_info_changed(struct ieee80211_
-  }
-  
-  static u64 mwl8k_prepare_multicast(struct ieee80211_hw *hw,
-@@ -367,7 +367,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  {
-  	struct mwl8k_cmd_pkt *cmd;
-  
--@@ -3564,7 +3588,11 @@ static u64 mwl8k_prepare_multicast(struc
-+@@ -3562,7 +3586,11 @@ static u64 mwl8k_prepare_multicast(struc
-  	 * we'll end up throwing this packet away and creating a new
-  	 * one in mwl8k_configure_filter().
-  	 */
-@@ -379,7 +379,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  
-  	return (unsigned long)cmd;
-  }
--@@ -3687,7 +3715,11 @@ static void mwl8k_configure_filter(struc
-+@@ -3685,7 +3713,11 @@ static void mwl8k_configure_filter(struc
-  	 */
-  	if (*total_flags & FIF_ALLMULTI) {
-  		kfree(cmd);
-@@ -433,7 +433,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  
- --- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
- +++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
--@@ -724,10 +724,19 @@ static void rtl8180_bss_info_changed(str
-+@@ -725,10 +725,19 @@ static void rtl8180_bss_info_changed(str
-  	        priv->rf->conf_erp(dev, info);
-  }
-  
-@@ -475,7 +475,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  static void rtl8187_configure_filter(struct ieee80211_hw *dev,
- --- a/drivers/net/wireless/wl12xx/wl1271_main.c
- +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
--@@ -1305,11 +1305,20 @@ struct wl1271_filter_params {
-+@@ -1344,11 +1344,20 @@ struct wl1271_filter_params {
-  	u8 mc_list[ACX_MC_ADDRESS_GROUP_MAX][ETH_ALEN];
-  };
-  
-@@ -494,9 +494,9 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
- +	int i;
- +#endif
-  	struct wl1271 *wl = hw->priv;
-- 	int i;
-  
--@@ -1323,16 +1332,40 @@ static u64 wl1271_op_prepare_multicast(s
-+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
-+@@ -1361,16 +1370,40 @@ static u64 wl1271_op_prepare_multicast(s
-  	}
-  
-  	/* update multicast filtering parameters */
-@@ -576,7 +576,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  	return hash.low | ((u64)hash.high << 32);
- --- a/include/net/mac80211.h
- +++ b/include/net/mac80211.h
--@@ -1642,7 +1642,11 @@ struct ieee80211_ops {
-+@@ -1646,7 +1646,11 @@ struct ieee80211_ops {
-  				 struct ieee80211_bss_conf *info,
-  				 u32 changed);
-  	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
-diff --git a/patches/26-sdio-quirks.patch b/patches/26-sdio-quirks.patch
-index 2fec33d..133e9bb 100644
---- a/patches/26-sdio-quirks.patch
-+++ b/patches/26-sdio-quirks.patch
-@@ -2,7 +2,7 @@ The quirks attribute is not available on older kernels.
+--- wireless-testing.orig/include/net/cfg80211.h	2010-05-19 11:49:06.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2010-05-19 11:56:14.000000000 +0200
+@@ -1168,6 +1168,7 @@ struct cfg80211_ops {
+ 	int	(*action)(struct wiphy *wiphy, struct net_device *dev,
+ 			  struct ieee80211_channel *chan,
+ 			  enum nl80211_channel_type channel_type,
++			  bool channel_type_valid,
+ 			  const u8 *buf, size_t len, u64 *cookie);
  
- --- a/drivers/net/wireless/libertas/if_sdio.c
- +++ b/drivers/net/wireless/libertas/if_sdio.c
--@@ -1003,6 +1003,7 @@ static int if_sdio_probe(struct sdio_fun
-+@@ -1005,6 +1005,7 @@ static int if_sdio_probe(struct sdio_fun
-  	if (ret)
-  		goto disable;
-  
-@@ -10,7 +10,7 @@ The quirks attribute is not available on older kernels.
-  	/* For 1-bit transfers to the 8686 model, we need to enable the
-  	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
-  	 * bit to allow access to non-vendor registers. */
--@@ -1021,6 +1022,7 @@ static int if_sdio_probe(struct sdio_fun
-+@@ -1023,6 +1024,7 @@ static int if_sdio_probe(struct sdio_fun
-  		if (ret)
-  			goto release_int;
-  	}
-diff --git a/patches/99-change-makefiles.patch b/patches/99-change-makefiles.patch
-index ad7ccc5..47f3b5c 100644
---- a/patches/99-change-makefiles.patch
-+++ b/patches/99-change-makefiles.patch
-@@ -13,7 +13,7 @@ only the wireless stuff.
-  obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
- --- a/drivers/net/usb/Makefile
- +++ b/drivers/net/usb/Makefile
--@@ -2,26 +2,6 @@
-+@@ -2,27 +2,7 @@
-  # Makefile for USB Network drivers
-  #
-  
-@@ -39,7 +39,8 @@ only the wireless stuff.
- -obj-$(CONFIG_USB_NET_INT51X1)	+= int51x1.o
- -obj-$(CONFIG_USB_CDC_PHONET)	+= cdc-phonet.o
- -obj-$(CONFIG_USB_IPHETH)	+= ipheth.o
---
-+-obj-$(CONFIG_USB_SIERRA_NET)	+= sierra_net.o
-+ 
- --- a/drivers/net/wireless/Makefile
- +++ b/drivers/net/wireless/Makefile
- @@ -7,31 +7,16 @@ obj-$(CONFIG_IPW2200) += ipw2x00/
--- 
-1.7.0.4
+ 	int	(*set_power_mgmt)(struct wiphy *wiphy, struct net_device *dev,
+--- wireless-testing.orig/net/mac80211/cfg.c	2010-05-19 11:50:05.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2010-05-19 11:57:48.000000000 +0200
+@@ -1554,10 +1554,12 @@ static int ieee80211_cancel_remain_on_ch
+ static int ieee80211_action(struct wiphy *wiphy, struct net_device *dev,
+ 			    struct ieee80211_channel *chan,
+ 			    enum nl80211_channel_type channel_type,
++			    bool channel_type_valid,
+ 			    const u8 *buf, size_t len, u64 *cookie)
+ {
+ 	return ieee80211_mgd_action(IEEE80211_DEV_TO_SUB_IF(dev), chan,
+-				    channel_type, buf, len, cookie);
++				    channel_type, channel_type_valid,
++				    buf, len, cookie);
+ }
+ 
+ struct cfg80211_ops mac80211_config_ops = {
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-05-19 11:50:19.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-05-19 11:57:53.000000000 +0200
+@@ -989,6 +989,7 @@ int ieee80211_mgd_disassoc(struct ieee80
+ int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
+ 			 struct ieee80211_channel *chan,
+ 			 enum nl80211_channel_type channel_type,
++			 bool channel_type_valid,
+ 			 const u8 *buf, size_t len, u64 *cookie);
+ ieee80211_rx_result ieee80211_sta_rx_mgmt(struct ieee80211_sub_if_data *sdata,
+ 					  struct sk_buff *skb);
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-05-19 11:50:25.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2010-05-19 11:58:43.000000000 +0200
+@@ -2308,6 +2308,7 @@ int ieee80211_mgd_disassoc(struct ieee80
+ int ieee80211_mgd_action(struct ieee80211_sub_if_data *sdata,
+ 			 struct ieee80211_channel *chan,
+ 			 enum nl80211_channel_type channel_type,
++			 bool channel_type_valid,
+ 			 const u8 *buf, size_t len, u64 *cookie)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+@@ -2315,9 +2316,11 @@ int ieee80211_mgd_action(struct ieee8021
+ 	struct sk_buff *skb;
+ 
+ 	/* Check that we are on the requested channel for transmission */
+-	if ((chan != local->tmp_channel ||
+-	     channel_type != local->tmp_channel_type) &&
+-	    (chan != local->oper_channel ||
++	if (chan != local->tmp_channel &&
++	    chan != local->oper_channel)
++		return -EBUSY;
++	if (channel_type_valid &&
++	    (channel_type != local->tmp_channel_type &&
+ 	     channel_type != local->_oper_channel_type))
+ 		return -EBUSY;
+ 
+--- wireless-testing.orig/net/wireless/core.h	2010-05-19 11:49:43.000000000 +0200
++++ wireless-testing/net/wireless/core.h	2010-05-19 11:57:23.000000000 +0200
+@@ -339,6 +339,7 @@ int cfg80211_mlme_action(struct cfg80211
+ 			 struct net_device *dev,
+ 			 struct ieee80211_channel *chan,
+ 			 enum nl80211_channel_type channel_type,
++			 bool channel_type_valid,
+ 			 const u8 *buf, size_t len, u64 *cookie);
+ 
+ /* SME */
+--- wireless-testing.orig/net/wireless/mlme.c	2010-05-19 11:49:51.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2010-05-19 11:57:07.000000000 +0200
+@@ -827,6 +827,7 @@ int cfg80211_mlme_action(struct cfg80211
+ 			 struct net_device *dev,
+ 			 struct ieee80211_channel *chan,
+ 			 enum nl80211_channel_type channel_type,
++			 bool channel_type_valid,
+ 			 const u8 *buf, size_t len, u64 *cookie)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+@@ -855,7 +856,7 @@ int cfg80211_mlme_action(struct cfg80211
+ 
+ 	/* Transmit the Action frame as requested by user space */
+ 	return rdev->ops->action(&rdev->wiphy, dev, chan, channel_type,
+-				 buf, len, cookie);
++				 channel_type_valid, buf, len, cookie);
+ }
+ 
+ bool cfg80211_rx_action(struct net_device *dev, int freq, const u8 *buf,
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-05-19 11:49:11.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2010-05-19 11:56:47.000000000 +0200
+@@ -4681,6 +4681,7 @@ static int nl80211_action(struct sk_buff
+ 	struct net_device *dev;
+ 	struct ieee80211_channel *chan;
+ 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
++	bool channel_type_valid = false;
+ 	u32 freq;
+ 	int err;
+ 	void *hdr;
+@@ -4722,6 +4723,7 @@ static int nl80211_action(struct sk_buff
+ 			err = -EINVAL;
+ 			goto out;
+ 		}
++		channel_type_valid = true;
+ 	}
+ 
+ 	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
+@@ -4745,6 +4747,7 @@ static int nl80211_action(struct sk_buff
+ 		goto free_msg;
+ 	}
+ 	err = cfg80211_mlme_action(rdev, dev, chan, channel_type,
++				   channel_type_valid,
+ 				   nla_data(info->attrs[NL80211_ATTR_FRAME]),
+ 				   nla_len(info->attrs[NL80211_ATTR_FRAME]),
+ 				   &cookie);
+
 
