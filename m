@@ -1,100 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:65347 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754880Ab0ELSqg convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:5111 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756874Ab0ESBdc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 14:46:36 -0400
-Received: by fxm15 with SMTP id 15so415006fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 11:46:34 -0700 (PDT)
+	Tue, 18 May 2010 21:33:32 -0400
+Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-097522811
+	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:33:31 +0900 (JST)
+Subject: [PATCH v2 19/20] ath5k: new function for setting the antenna switch
+	table
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 May 2010 10:32:19 +0900
+Message-ID: <20100519013219.22206.95141.stgit@tt-desk>
+In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
+References: <20100519012528.22206.77550.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <4BEAF6B1.3000200@gmail.com>
-References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-	 <1273614705-25118-3-git-send-email-gwingerde@gmail.com>
-	 <AANLkTikOV973PKZYkNyUoaFOXhSPOumhmHwQ7Ei8tvgv@mail.gmail.com>
-	 <AANLkTilDv-tY_UIbc_lh8EaNdV7MRNAbDA4Oe5nFiDNh@mail.gmail.com>
-	 <AANLkTimubF1UWmzLwhJ7vhquBHmRywJQTvJciU3D3SNx@mail.gmail.com>
-	 <4BEAF6B1.3000200@gmail.com>
-Date: Wed, 12 May 2010 20:46:34 +0200
-Message-ID: <AANLkTimk-LQlbFc3667oWBpEYJqIAgg76lNbQfF4001U@mail.gmail.com>
-Subject: Re: [PATCH 2/9] rt2x00: Fix beacon descriptor writing for rt61pci.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 12, 2010 at 8:42 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> On 05/12/10 19:43, Ivo Van Doorn wrote:
->> On Wed, May 12, 2010 at 11:46 AM, Gertjan van Wingerde
->> <gwingerde@gmail.com> wrote:
->>> On Wed, May 12, 2010 at 8:59 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
->>>> On Tue, May 11, 2010 at 11:51 PM, Gertjan van Wingerde
->>>> <gwingerde@gmail.com> wrote:
->>>>> The buffer address descriptor word is not part of the TXINFO structure
->>>>> needed for beacons. The current writing of that word for beacons is
->>>>> therefore an out-of-bounds write.
->>>>> Fix this by only writing the buffer address descriptor word for TX
->>>>> queues.
->>>>>
->>>>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>>>> ---
->>>>>  drivers/net/wireless/rt2x00/rt61pci.c |   10 +++++-----
->>>>>  1 files changed, 5 insertions(+), 5 deletions(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
->>>>> index 2436363..99c2981 100644
->>>>> --- a/drivers/net/wireless/rt2x00/rt61pci.c
->>>>> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
->>>>> @@ -1801,12 +1801,12 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
->>>>>        rt2x00_set_field32(&word, TXD_W5_WAITING_DMA_DONE_INT, 1);
->>>>>        rt2x00_desc_write(txd, 5, word);
->>>>>
->>>>> -       rt2x00_desc_read(txd, 6, &word);
->>>>> -       rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
->>>>> -                          skbdesc->skb_dma);
->>>>> -       rt2x00_desc_write(txd, 6, word);
->>>>> +       if (txdesc->queue != QID_BEACON) {
->>>>> +               rt2x00_desc_read(txd, 6, &word);
->>>>> +               rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
->>>>> +                                  skbdesc->skb_dma);
->>>>> +               rt2x00_desc_write(txd, 6, word);
->>>>>
->>>>> -       if (skbdesc->desc_len > TXINFO_SIZE) {
->>>>>                rt2x00_desc_read(txd, 11, &word);
->>>>>                rt2x00_set_field32(&word, TXD_W11_BUFFER_LENGTH0,
->>>>>                                   txdesc->length);
->>>>
->>>> Shouldn't the check for TXINFO_SIZE be used rather than explicitly
->>>> checking for the QID?
->>>>
->>>
->>> I agree that this is a change that didn't have to be made in this patch.
->>> However, after patch 4 of the series we cannot depend on the
->>> skbdesc->desc_len being set anymore, and we would have to depend on
->>> checking the QID anyway.
->>> Note that in reality these two checks are completely equivalent with
->>> respect to the result.
->>
->> Hmm, is that a good idea? I mean we are using the skbdesc inside the
->> function, but we can't be sure that one of the basic values contains the right
->> value?
->>
->
-> To be honest, the chipset drivers don't need the skbdesc->desc and skbdesc->desc_len
-> at all. Based on the queue ID they already have everything they need to know to write
-> a descriptor. As far as I can tell the only code that really needs those two fields is
-> the rt2x00debug code, to dump a frame to userspace via debugfs.
->
-> As the dumping through debugfs is done after writing the TX descriptor, with this patch
-> I changed the desc and desc_len fields of the skbdesc to be output of the write_tx_desc
-> function (for the generic parts of the rt2x00 code) rather than being input.
->
-> Note that originally my plan was to get rid of the desc and desc_len field altogether,
-> but for now I refrained from doing that.
+Collect all pieces concering the antenna switch table into one function.
+Previously it was split up between ath5k_hw_reset() and
+ath5k_hw_commit_eeprom_settings().
 
-Ah ok. Thanks for the explanation.
+Also we need to set the antenna switch table when ath5k_hw_set_antenna_mode()
+is called manually (by "iw phy0 antenna set", for example).
 
-Ivo
+I'm not sure if we need to set the switchtable at the same place in
+ath5k_hw_reset() as it was before - it is set later thru
+ath5k_hw_set_antenna_mode() anyways - but i leave it there to avoid
+problems(?).
+
+Plus print switchtable registers in the debugfs file.
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    1 +
+ drivers/net/wireless/ath/ath5k/debug.c |    7 +++++++
+ drivers/net/wireless/ath/ath5k/phy.c   |   32 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath5k/reset.c |   33 ++++++--------------------------
+ 4 files changed, 46 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index eace74d..cf16318 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1286,6 +1286,7 @@ u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan);
+ int ath5k_hw_phy_disable(struct ath5k_hw *ah);
+ /* Antenna control */
+ void ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode);
++void ath5k_hw_set_antenna_switch(struct ath5k_hw *ah, u8 ee_mode);
+ /* TX power setup */
+ int ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		     u8 ee_mode, u8 txpower);
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index d178d63..f3612e5 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -425,6 +425,13 @@ static ssize_t read_file_antenna(struct file *file, char __user *user_buf,
+ 		"AR5K_PHY_FAST_ANT_DIV_EN\t%d\n",
+ 		(v & AR5K_PHY_FAST_ANT_DIV_EN) != 0);
+ 
++	v = ath5k_hw_reg_read(sc->ah, AR5K_PHY_ANT_SWITCH_TABLE_0);
++	len += snprintf(buf+len, sizeof(buf)-len,
++			"\nAR5K_PHY_ANT_SWITCH_TABLE_0\t0x%08x\n", v);
++	v = ath5k_hw_reg_read(sc->ah, AR5K_PHY_ANT_SWITCH_TABLE_1);
++	len += snprintf(buf+len, sizeof(buf)-len,
++			"AR5K_PHY_ANT_SWITCH_TABLE_1\t0x%08x\n", v);
++
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 2136930..82720fc 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1781,6 +1781,37 @@ ath5k_hw_set_fast_div(struct ath5k_hw *ah, u8 ee_mode, bool enable)
+ 	}
+ }
+ 
++void
++ath5k_hw_set_antenna_switch(struct ath5k_hw *ah, u8 ee_mode)
++{
++	u8 ant0, ant1;
++
++	/*
++	 * In case a fixed antenna was set as default
++	 * use the same switch table twice.
++	 */
++	if (ah->ah_ant_mode == AR5K_ANTMODE_FIXED_A)
++		ant0 = ant1 = AR5K_ANT_SWTABLE_A;
++	else if (ah->ah_ant_mode == AR5K_ANTMODE_FIXED_B)
++		ant0 = ant1 = AR5K_ANT_SWTABLE_B;
++	else {
++		ant0 = AR5K_ANT_SWTABLE_A;
++		ant1 = AR5K_ANT_SWTABLE_B;
++	}
++
++	/* Set antenna idle switch table */
++	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_ANT_CTL,
++			AR5K_PHY_ANT_CTL_SWTABLE_IDLE,
++			(ah->ah_ant_ctl[ee_mode][AR5K_ANT_CTL] |
++			AR5K_PHY_ANT_CTL_TXRX_EN));
++
++	/* Set antenna switch tables */
++	ath5k_hw_reg_write(ah, ah->ah_ant_ctl[ee_mode][ant0],
++		AR5K_PHY_ANT_SWITCH_TABLE_0);
++	ath5k_hw_reg_write(ah, ah->ah_ant_ctl[ee_mode][ant1],
++		AR5K_PHY_ANT_SWITCH_TABLE_1);
++}
++
+ /*
+  * Set antenna operating mode
+  */
+@@ -1900,6 +1931,7 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
+ 	if (sta_id1)
+ 		AR5K_REG_ENABLE_BITS(ah, AR5K_STA_ID1, sta_id1);
+ 
++	ath5k_hw_set_antenna_switch(ah, ee_mode);
+ 	/* Note: set diversity before default antenna
+ 	 * because it won't work correctly */
+ 	ath5k_hw_set_fast_div(ah, ee_mode, fast_div);
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index b1d3239..cf8fd48 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -730,7 +730,7 @@ static void ath5k_hw_tweak_initval_settings(struct ath5k_hw *ah,
+ }
+ 
+ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+-		struct ieee80211_channel *channel, u8 *ant, u8 ee_mode)
++		struct ieee80211_channel *channel, u8 ee_mode)
+ {
+ 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
+ 	s16 cck_ofdm_pwr_delta;
+@@ -764,17 +764,9 @@ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+ 						ee->ee_cck_ofdm_gain_delta;
+ 	}
+ 
+-	/* Set antenna idle switch table */
+-	AR5K_REG_WRITE_BITS(ah, AR5K_PHY_ANT_CTL,
+-			AR5K_PHY_ANT_CTL_SWTABLE_IDLE,
+-			(ah->ah_ant_ctl[ee_mode][0] |
+-			AR5K_PHY_ANT_CTL_TXRX_EN));
+-
+-	/* Set antenna switch tables */
+-	ath5k_hw_reg_write(ah, ah->ah_ant_ctl[ee_mode][ant[0]],
+-		AR5K_PHY_ANT_SWITCH_TABLE_0);
+-	ath5k_hw_reg_write(ah, ah->ah_ant_ctl[ee_mode][ant[1]],
+-		AR5K_PHY_ANT_SWITCH_TABLE_1);
++	/* XXX: necessary here? is called from ath5k_hw_set_antenna_mode()
++	 * too */
++	ath5k_hw_set_antenna_switch(ah, ee_mode);
+ 
+ 	/* Noise floor threshold */
+ 	ath5k_hw_reg_write(ah,
+@@ -890,7 +882,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	struct ath_common *common = ath5k_hw_common(ah);
+ 	u32 s_seq[10], s_ant, s_led[3], staid1_flags, tsf_up, tsf_lo;
+ 	u32 phy_tst1;
+-	u8 mode, freq, ee_mode, ant[2];
++	u8 mode, freq, ee_mode;
+ 	int i, ret;
+ 
+ 	s_ant = 0;
+@@ -1113,21 +1105,8 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 				    AR5K_TXCFG_B_MODE);
+ 		}
+ 
+-		/*
+-		 * In case a fixed antenna was set as default
+-		 * use the same switch table twice.
+-		 */
+-		if (ah->ah_ant_mode == AR5K_ANTMODE_FIXED_A)
+-				ant[0] = ant[1] = AR5K_ANT_SWTABLE_A;
+-		else if (ah->ah_ant_mode == AR5K_ANTMODE_FIXED_B)
+-				ant[0] = ant[1] = AR5K_ANT_SWTABLE_B;
+-		else {
+-			ant[0] = AR5K_ANT_SWTABLE_A;
+-			ant[1] = AR5K_ANT_SWTABLE_B;
+-		}
+-
+ 		/* Commit values from EEPROM */
+-		ath5k_hw_commit_eeprom_settings(ah, channel, ant, ee_mode);
++		ath5k_hw_commit_eeprom_settings(ah, channel, ee_mode);
+ 
+ 	} else {
+ 		/*
+
