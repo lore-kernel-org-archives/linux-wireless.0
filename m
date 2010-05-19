@@ -1,165 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:59529 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932685Ab0EXXX5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 19:23:57 -0400
-Message-Id: <20100524231816.605221556@clark.site>
-Date: Mon, 24 May 2010 16:15:50 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org, greg@kroah.com
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Ming Lei <tom.leiming@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [38/39] Revert "ath9k: fix lockdep warning when unloading module" on stable kernels
-In-Reply-To: <20100524231840.GA17857@kroah.com>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:11472 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753907Ab0ESBcp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 May 2010 21:32:45 -0400
+Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0417742763
+	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:32:43 +0900 (JST)
+Subject: [PATCH v2 10/20] ath5k: add sysfs files for ANI parameters
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 May 2010 10:31:32 +0900
+Message-ID: <20100519013132.22206.87611.stgit@tt-desk>
+In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
+References: <20100519012528.22206.77550.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+/sys/class/ieee80211/phy0/device/ani/ani_mode
+/sys/class/ieee80211/phy0/device/ani/noise_immunity_level
+/sys/class/ieee80211/phy0/device/ani/spur_level
+/sys/class/ieee80211/phy0/device/ani/firstep_level
+/sys/class/ieee80211/phy0/device/ani/ofdm_weak_signal_detection
+/sys/class/ieee80211/phy0/device/ani/cck_weak_signal_detection
+/sys/class/ieee80211/phy0/device/ani/noise_immunity_level_max
+/sys/class/ieee80211/phy0/device/ani/spur_level_max
+/sys/class/ieee80211/phy0/device/ani/firstep_level_max
 
-2.6.33-stable review patch.  If anyone has any objections, please let us know.
+sysfs has a lot of symlinks, so you can find the files also in other locations,
+like (by PCI ID) /sys/devices/pci0000:00/0000:00:11.0/ani and others.
 
-------------------
-
-Johannes' patch 34e8950 titled:
-
-	mac80211: allow station add/remove to sleep
-
-changed the way mac80211 adds and removes peers. The new
-sta_add() / sta_remove() callbacks allowed the driver callbacks
-to sleep. Johannes also ported ath9k to use sta_add() / sta_remove()
-via the patch 4ca7786 titled:
-
-	ath9k: convert to new station add/remove callbacks
-
-but this patch forgot to address a change in locking issue which
-Ming Lei eventually found on his 2.6.33-wl #12 build. The 2.6.33-wl
-build includes code for the 802.11 subsystem for 2.6.34 though so did
-already have the above two patches (ath9k_sta_remove() on his trace),
-the 2.6.33 kernel did not however have these two patches. Ming eventually
-cured his lockdep warnign via the patch a9f042c titled:
-
-	ath9k: fix lockdep warning when unloading module
-
-This went in to 2.6.34 and although it was not marked as a stable
-fix it did get trickled down and applied on both 2.6.33 and 2.6.32.
-
-In review, the culprits:
-
-	mac80211: allow station add/remove to sleep
-git describe --contains 34e895075e21be3e21e71d6317440d1ee7969ad0
-v2.6.34-rc1~233^2~49^2~107
-
-	ath9k: convert to new station add/remove callbacks
-git describe --contains 4ca778605cfec53d8a689f0b57babb93b030c784
-v2.6.34-rc1~233^2~49^2~10
-
-	ath9k: fix lockdep warning when unloading module
-
-This last one trickled down to 2.6.33 (OK), 2.6.33 (invalid) and 2.6.32 (invalid).
-
-git describe --contains a9f042cbe5284f34ccff15f3084477e11b39b17b
-v2.6.34-rc2~48^2~77^2~7
-git describe --contains 0524bcfa80f1fffb4e1fe18a0a28900869a58a7c
-v2.6.33.2~125
-git describe --contains 0dcc9985f34aef3c60bffab3dfc7f7ba3748f35a
-v2.6.32.11~79
-
-The patch titled "ath9k: fix lockdep warning when unloading module"
-should be reverted on both 2.6.33 and 2.6.32 as it is invalid and
-actually ended up causing the following warning:
-
-ADDRCONF(NETDEV_CHANGE): wlan31: link becomes ready
-phy0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-phy0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-phy0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-phy0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-phy0: device now idle
-------------[ cut here ]------------
-WARNING: at kernel/softirq.c:143 local_bh_enable_ip+0x7b/0xa0()
-Hardware name: 7660A14
-Modules linked in: ath9k(-) mac80211 ath cfg80211 <whatever-bleh-etc>
-Pid: 2003, comm: rmmod Not tainted 2.6.32.11 #6
-Call Trace:
- [<ffffffff8105d178>] warn_slowpath_common+0x78/0xb0
- [<ffffffff8105d1bf>] warn_slowpath_null+0xf/0x20
- [<ffffffff81063f8b>] local_bh_enable_ip+0x7b/0xa0
- [<ffffffff815121e4>] _spin_unlock_bh+0x14/0x20
- [<ffffffffa034aea5>] ath_tx_node_cleanup+0x185/0x1b0 [ath9k]
- [<ffffffffa0345597>] ath9k_sta_notify+0x57/0xb0 [ath9k]
- [<ffffffffa02ac51a>] __sta_info_unlink+0x15a/0x260 [mac80211]
- [<ffffffffa02ac658>] sta_info_unlink+0x38/0x60 [mac80211]
- [<ffffffffa02b3fbe>] ieee80211_set_disassoc+0x1ae/0x210 [mac80211]
- [<ffffffffa02b42d9>] ieee80211_mgd_deauth+0x109/0x110 [mac80211]
- [<ffffffffa02ba409>] ieee80211_deauth+0x19/0x20 [mac80211]
- [<ffffffffa028160e>] __cfg80211_mlme_deauth+0xee/0x130 [cfg80211]
- [<ffffffff81118540>] ? init_object+0x50/0x90
- [<ffffffffa0285429>] __cfg80211_disconnect+0x159/0x1d0 [cfg80211]
- [<ffffffffa027125f>] cfg80211_netdev_notifier_call+0x10f/0x450 [cfg80211]
- [<ffffffff81514ca7>] notifier_call_chain+0x47/0x90
- [<ffffffff8107f501>] raw_notifier_call_chain+0x11/0x20
- [<ffffffff81442d66>] call_netdevice_notifiers+0x16/0x20
- [<ffffffff8144352d>] dev_close+0x4d/0xa0
- [<ffffffff814439a8>] rollback_registered+0x48/0x120
- [<ffffffff81443a9d>] unregister_netdevice+0x1d/0x70
- [<ffffffffa02b6cc4>] ieee80211_remove_interfaces+0x84/0xc0 [mac80211]
- [<ffffffffa02aa072>] ieee80211_unregister_hw+0x42/0xf0 [mac80211]
- [<ffffffffa0347bde>] ath_detach+0x8e/0x180 [ath9k]
- [<ffffffffa0347ce1>] ath_cleanup+0x11/0x50 [ath9k]
- [<ffffffffa0351a2c>] ath_pci_remove+0x1c/0x20 [ath9k]
- [<ffffffff8129d712>] pci_device_remove+0x32/0x60
- [<ffffffff81332373>] __device_release_driver+0x53/0xb0
- [<ffffffff81332498>] driver_detach+0xc8/0xd0
- [<ffffffff81331405>] bus_remove_driver+0x85/0xe0
- [<ffffffff81332a5a>] driver_unregister+0x5a/0x90
- [<ffffffff8129da00>] pci_unregister_driver+0x40/0xb0
- [<ffffffffa03518d0>] ath_pci_exit+0x10/0x20 [ath9k]
- [<ffffffffa0353cd5>] ath9k_exit+0x9/0x2a [ath9k]
- [<ffffffff81092838>] sys_delete_module+0x1a8/0x270
- [<ffffffff8107ebe9>] ? up_read+0x9/0x10
- [<ffffffff81011f82>] system_call_fastpath+0x16/0x1b
----[ end trace fad957019ffdd40b ]---
-phy0: Removed STA 00:22:6b:56:fd:e8
-phy0: Destroyed STA 00:22:6b:56:fd:e8
-wlan31: deauthenticating from 00:22:6b:56:fd:e8 by local choice (reason=3)
-ath9k 0000:16:00.0: PCI INT A disabled
-
-The original lockdep fixed an issue where due to the new changes
-the driver was not disabling the bottom halves but it is incorrect
-to do this on the older kernels since IRQs are already disabled.
-
-Cc: Ming Lei <tom.leiming@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/Makefile |    1 
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    3 +
+ drivers/net/wireless/ath/ath5k/base.c   |    3 +
+ drivers/net/wireless/ath/ath5k/reset.c  |    1 
+ drivers/net/wireless/ath/ath5k/sysfs.c  |  116 +++++++++++++++++++++++++++++++
+ 5 files changed, 123 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath5k/sysfs.c
 
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2244,7 +2244,7 @@ void ath_tx_node_cleanup(struct ath_soft
- 		if (ATH_TXQ_SETUP(sc, i)) {
- 			txq = &sc->tx.txq[i];
+diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
+index cc09595..2242a14 100644
+--- a/drivers/net/wireless/ath/ath5k/Makefile
++++ b/drivers/net/wireless/ath/ath5k/Makefile
+@@ -13,5 +13,6 @@ ath5k-y				+= base.o
+ ath5k-y				+= led.o
+ ath5k-y				+= rfkill.o
+ ath5k-y				+= ani.o
++ath5k-y				+= sysfs.o
+ ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
+ obj-$(CONFIG_ATH5K)		+= ath5k.o
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index d6f9afe..eace74d 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1150,6 +1150,9 @@ struct ath5k_hw {
+ int ath5k_hw_attach(struct ath5k_softc *sc);
+ void ath5k_hw_detach(struct ath5k_hw *ah);
  
--			spin_lock_bh(&txq->axq_lock);
-+			spin_lock(&txq->axq_lock);
++int ath5k_sysfs_register(struct ath5k_softc *sc);
++void ath5k_sysfs_unregister(struct ath5k_softc *sc);
++
+ /* LED functions */
+ int ath5k_init_leds(struct ath5k_softc *sc);
+ void ath5k_led_enable(struct ath5k_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3b43b76..d5d514f 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -861,6 +861,8 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
  
- 			list_for_each_entry_safe(ac,
- 					ac_tmp, &txq->axq_acq, list) {
-@@ -2265,7 +2265,7 @@ void ath_tx_node_cleanup(struct ath_soft
- 				}
- 			}
+ 	ath5k_init_leds(sc);
  
--			spin_unlock_bh(&txq->axq_lock);
-+			spin_unlock(&txq->axq_lock);
- 		}
- 	}
- }
-
++	ath5k_sysfs_register(sc);
++
+ 	return 0;
+ err_queues:
+ 	ath5k_txq_release(sc);
+@@ -896,6 +898,7 @@ ath5k_detach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 	ath5k_hw_release_tx_queue(sc->ah, sc->bhalq);
+ 	ath5k_unregister_leds(sc);
+ 
++	ath5k_sysfs_unregister(sc);
+ 	/*
+ 	 * NB: can't reclaim these until after ieee80211_ifdetach
+ 	 * returns because we'll get called back to reclaim node
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 2890a7f..b1d3239 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -851,7 +851,6 @@ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+ 			AR5K_PHY_NF_THRESH62,
+ 			ee->ee_thr_62[ee_mode]);
+ 
+-
+ 	/* False detect backoff for channels
+ 	 * that have spur noise. Write the new
+ 	 * cyclic power RSSI threshold. */
+diff --git a/drivers/net/wireless/ath/ath5k/sysfs.c b/drivers/net/wireless/ath/ath5k/sysfs.c
+new file mode 100644
+index 0000000..90757de
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath5k/sysfs.c
+@@ -0,0 +1,116 @@
++#include <linux/device.h>
++#include <linux/pci.h>
++
++#include "base.h"
++#include "ath5k.h"
++#include "reg.h"
++
++#define SIMPLE_SHOW_STORE(name, get, set)				\
++static ssize_t ath5k_attr_show_##name(struct device *dev,		\
++			struct device_attribute *attr,			\
++			char *buf)					\
++{									\
++	struct ath5k_softc *sc = dev_get_drvdata(dev);			\
++	return snprintf(buf, PAGE_SIZE, "%d\n", get); 			\
++}									\
++									\
++static ssize_t ath5k_attr_store_##name(struct device *dev,		\
++			struct device_attribute *attr,			\
++			const char *buf, size_t count)			\
++{									\
++	struct ath5k_softc *sc = dev_get_drvdata(dev);			\
++	int val;							\
++									\
++	val = (int)simple_strtoul(buf, NULL, 10);			\
++	set(sc->ah, val);						\
++	return count;							\
++}									\
++static DEVICE_ATTR(name, S_IRUGO | S_IWUSR,				\
++		   ath5k_attr_show_##name, ath5k_attr_store_##name)
++
++#define SIMPLE_SHOW(name, get)						\
++static ssize_t ath5k_attr_show_##name(struct device *dev,		\
++			struct device_attribute *attr,			\
++			char *buf)					\
++{									\
++	struct ath5k_softc *sc = dev_get_drvdata(dev);			\
++	return snprintf(buf, PAGE_SIZE, "%d\n", get); 			\
++}									\
++static DEVICE_ATTR(name, S_IRUGO, ath5k_attr_show_##name, NULL)
++
++/*** ANI ***/
++
++SIMPLE_SHOW_STORE(ani_mode, sc->ani_state.ani_mode, ath5k_ani_init);
++SIMPLE_SHOW_STORE(noise_immunity_level, sc->ani_state.noise_imm_level,
++			ath5k_ani_set_noise_immunity_level);
++SIMPLE_SHOW_STORE(spur_level, sc->ani_state.spur_level,
++			ath5k_ani_set_spur_immunity_level);
++SIMPLE_SHOW_STORE(firstep_level, sc->ani_state.firstep_level,
++			ath5k_ani_set_firstep_level);
++SIMPLE_SHOW_STORE(ofdm_weak_signal_detection, sc->ani_state.ofdm_weak_sig,
++			ath5k_ani_set_ofdm_weak_signal_detection);
++SIMPLE_SHOW_STORE(cck_weak_signal_detection, sc->ani_state.cck_weak_sig,
++			ath5k_ani_set_cck_weak_signal_detection);
++SIMPLE_SHOW(spur_level_max, sc->ani_state.max_spur_level);
++
++static ssize_t ath5k_attr_show_noise_immunity_level_max(struct device *dev,
++			struct device_attribute *attr,
++			char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%d\n", ATH5K_ANI_MAX_NOISE_IMM_LVL);
++}
++static DEVICE_ATTR(noise_immunity_level_max, S_IRUGO,
++		   ath5k_attr_show_noise_immunity_level_max, NULL);
++
++static ssize_t ath5k_attr_show_firstep_level_max(struct device *dev,
++			struct device_attribute *attr,
++			char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%d\n", ATH5K_ANI_MAX_FIRSTEP_LVL);
++}
++static DEVICE_ATTR(firstep_level_max, S_IRUGO,
++		   ath5k_attr_show_firstep_level_max, NULL);
++
++static struct attribute *ath5k_sysfs_entries_ani[] = {
++	&dev_attr_ani_mode.attr,
++	&dev_attr_noise_immunity_level.attr,
++	&dev_attr_spur_level.attr,
++	&dev_attr_firstep_level.attr,
++	&dev_attr_ofdm_weak_signal_detection.attr,
++	&dev_attr_cck_weak_signal_detection.attr,
++	&dev_attr_noise_immunity_level_max.attr,
++	&dev_attr_spur_level_max.attr,
++	&dev_attr_firstep_level_max.attr,
++	NULL
++};
++
++static struct attribute_group ath5k_attribute_group_ani = {
++	.name = "ani",
++	.attrs = ath5k_sysfs_entries_ani,
++};
++
++
++/*** register / unregister ***/
++
++int
++ath5k_sysfs_register(struct ath5k_softc *sc)
++{
++	struct device *dev = &sc->pdev->dev;
++	int err;
++
++	err = sysfs_create_group(&dev->kobj, &ath5k_attribute_group_ani);
++	if (err) {
++		ATH5K_ERR(sc, "failed to create sysfs group\n");
++		return err;
++	}
++
++	return 0;
++}
++
++void
++ath5k_sysfs_unregister(struct ath5k_softc *sc)
++{
++	struct device *dev = &sc->pdev->dev;
++
++	sysfs_remove_group(&dev->kobj, &ath5k_attribute_group_ani);
++}
 
