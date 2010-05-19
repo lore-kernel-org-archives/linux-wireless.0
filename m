@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47558 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:46398 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611Ab0EZMwD (ORCPT
+	with ESMTP id S1754203Ab0ESStH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 08:52:03 -0400
-Subject: Re: [RFC PATCHv2] mac80211: Add support for hardware ARP query
- filtering
+	Wed, 19 May 2010 14:49:07 -0400
+Subject: Re: [PATCH] cfg80211: make action channel type optional
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274878272.5277.1890.camel@wimaxnb.nmp.nokia.com>
-References: <1274873379-12944-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1274874739.3658.5.camel@jlt3.sipsolutions.net>
-	 <1274878272.5277.1890.camel@wimaxnb.nmp.nokia.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: John Linville <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274293152.8463.2.camel@mj>
+References: <1274264232.3874.7.camel@jlt3.sipsolutions.net>
+	 <1274293152.8463.2.camel@mj>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 May 2010 14:52:01 +0200
-Message-ID: <1274878321.3658.7.camel@jlt3.sipsolutions.net>
+Date: Wed, 19 May 2010 20:48:59 +0200
+Message-ID: <1274294939.19404.4.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-26 at 15:51 +0300, Juuso Oikarinen wrote:
-
-> > > +	rtnl_lock();
-> > > +	ieee80211_set_arp_filter(sdata);
-> > > +	rtnl_unlock();
-> > > +
-> > 
-> > Please analyse locking in more detail and enable lockdep :)
-> > 
-> > This will cause deadlocks.
+On Wed, 2010-05-19 at 14:19 -0400, Pavel Roskin wrote:
+> On Wed, 2010-05-19 at 12:17 +0200, Johannes Berg wrote:
 > 
-> I have lockdep permanently enabled in my development kernel. It has
-> given me no complaints in testing with the corresponding wl1271 driver
-> patch.
+> > @@ -1168,6 +1168,7 @@ struct cfg80211_ops {
+> >  	int	(*action)(struct wiphy *wiphy, struct net_device *dev,
+> >  			  struct ieee80211_channel *chan,
+> >  			  enum nl80211_channel_type channel_type,
+> > +			  bool channel_type_valid,
+> >  			  const u8 *buf, size_t len, u64 *cookie);
 > 
-> But I will look into those locks further if I can figure out any
-> deadlock scenarios.
+> Would not it be easier to introduce NL80211_CHAN_UNSPECIFIED in enum
+> nl80211_channel_type?
 
-Interesting .. because for sure a lot of the ieee80211_mgd_* functions
-are called with rtnl held and lock the mgd mutex, but it is the other
-way around here.
+Yes, but it would change the userspace API so we can't do that.
 
 johannes
 
