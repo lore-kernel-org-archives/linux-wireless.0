@@ -1,79 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:58118 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653Ab0ENUVR (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:52621 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756333Ab0ESKVD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 16:21:17 -0400
-References: <4BEC7A84.3010503@gmail.com> <201005141520.30802.br1@einfach.org> <4BECEE3E.6090303@gmail.com> <201005141538.43416.br1@einfach.org> <4BED6F19.3040608@gmail.com> <20100514165325.GA28198@tux> <4BED8765.8040307@gmail.com> <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com> <67773379-350A-42D4-BEB5-DAC7D8277615@gmail.com> <20100514201339.GB28198@tux>
-Message-Id: <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com>
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <20100514201339.GB28198@tux>
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7D11)
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-Date: Fri, 14 May 2010 13:21:34 -0700
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	Wed, 19 May 2010 06:21:03 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: 'Dan Williams' <dcbw@redhat.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	Kiran Divekar <dkiran@marvell.com>
+Date: Wed, 19 May 2010 03:21:00 -0700
+Subject: RE: [PATCH v3] libertas: Added callback functions to support SDIO
+ suspend/resume.
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF595056D1B6FD8@SC-VEXCH1.marvell.com>
+In-Reply-To: <1274157122.14012.14.camel@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
 
-Justin P. Mattock
+> >
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+> 
+> Looks OK to me...
+> 
+> Acked-by: Dan Williams <dcbw@redhat.com>
 
+Thanks. I will resend the patch with a minor typo fix.
+> 
+> > ---
+> >  drivers/net/wireless/libertas/cmd.c     |   37 ++++++++++++--
+> >  drivers/net/wireless/libertas/cmdresp.c |   30 ++---------
+> >  drivers/net/wireless/libertas/decl.h    |    2 +-
+> >  drivers/net/wireless/libertas/dev.h     |    6 ++
 
-
-On May 14, 2010, at 1:13 PM, "Luis R. Rodriguez"  
-<lrodriguez@atheros.com> wrote:
-
-> On Fri, May 14, 2010 at 12:04:15PM -0700, Justin P. Mattock wrote:
->>
->>
->> On May 14, 2010, at 10:29 AM, "Luis R. Rodriguez" <lrodriguez@atheros.com
->>> wrote:
->>
->>> On Fri, May 14, 2010 at 10:24 AM, Justin P. Mattock
->>> <justinmattock@gmail.com> wrote:
->>>
->>>>
->>>> here you go:
->>>> (I was grabbing the info
->>>> after rmmod and modprobe)
->>>>
->>>> [    7.034242] ATH9K: cachelsz: 256
->>>> [   69.175348] ATH9K: cachelsz: 256
->>>
->>> Close, so I without any patches applied, and by just running
->>> modprobe as below:
->>>
->>>
->>> modprobe ath9k debug=0x00000200
->>>
->>>              ath_print(common, ATH_DBG_CONFIG, "cachelsz %u
->>> rxbufsize %u\n",
->>>                              common->cachelsz, common->rx_bufsize);
->>>
->>>
->>> This is already in the code so just please do this:
->>>
->>> rmmod ath9k
->>> modprobe ath9k debug=0x00000200
->>> dmesg | grep cachelsz
->>
->> O.k. I did a git reset to the origin
->> Then the above, unfortunantly nothing
->> Shows up when grepping
->> Any CONFIG options I might be missing?
->
-> CONFIG_ATH_DEBUG
->
->  Luis
-
-Eveything is on except ath5k
-For debugging.
+Thanks,
+Amit.
