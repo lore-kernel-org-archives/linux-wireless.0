@@ -1,56 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:1773 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754287Ab0EMJhE (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:19781 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752338Ab0ESBT3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 05:37:04 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 05/10] rt2x00: Fix beacon descriptor writing for rt61pci.
-Date: Thu, 13 May 2010 11:36:53 +0200
-Message-Id: <1273743418-28383-6-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
-References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
+	Tue, 18 May 2010 21:19:29 -0400
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0449761967
+	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:19:27 +0900 (JST)
+Subject: [PATCH 3] ath5k: consistently use rx_bufsize for RX DMA
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 May 2010 10:18:16 +0900
+Message-ID: <20100519011737.20789.86998.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The buffer address descriptor word is not part of the TXINFO structure
-needed for beacons. The current writing of that word for beacons is
-therefore an out-of-bounds write.
-Fix this by only writing the buffer address descriptor word for TX
-queues.
+We should use the same buffer size we set up for DMA also in the hardware
+descriptor. Previously we used common->rx_bufsize for setting up the DMA
+mapping, but used skb_tailroom(skb) for the size we tell to the hardware in the
+descriptor itself. The problem is that skb_tailroom(skb) can give us a larger
+value than the size we set up for DMA before. This allows the hardware to write
+into memory locations not set up for DMA. In practice this should rarely happen
+because all packets should be smaller than the maximum 802.11 packet size.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+On the tested platform rx_bufsize is 2528, and we allocated an skb of 2559
+bytes length (including padding for cache alignment) but sbk_tailroom() was
+2592. Just consistently use rx_bufsize for all RX DMA memory sizes.
+
+Also use the return value of the descriptor setup function.
+
+Cc: stable@kernel.org
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+Reviewed-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt61pci.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 2436363..99c2981 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1801,12 +1801,12 @@ static void rt61pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXD_W5_WAITING_DMA_DONE_INT, 1);
- 	rt2x00_desc_write(txd, 5, word);
+v3: sorry i left a TEST line in the v2 commit log.
+
+---
+ drivers/net/wireless/ath/ath5k/base.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 9c27623..fbd5fc7 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1214,6 +1214,7 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 	struct ath5k_hw *ah = sc->ah;
+ 	struct sk_buff *skb = bf->skb;
+ 	struct ath5k_desc *ds;
++	int ret;
  
--	rt2x00_desc_read(txd, 6, &word);
--	rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
--			   skbdesc->skb_dma);
--	rt2x00_desc_write(txd, 6, word);
-+	if (txdesc->queue != QID_BEACON) {
-+		rt2x00_desc_read(txd, 6, &word);
-+		rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
-+				   skbdesc->skb_dma);
-+		rt2x00_desc_write(txd, 6, word);
+ 	if (!skb) {
+ 		skb = ath5k_rx_skb_alloc(sc, &bf->skbaddr);
+@@ -1240,9 +1241,9 @@ ath5k_rxbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 	ds = bf->desc;
+ 	ds->ds_link = bf->daddr;	/* link to self */
+ 	ds->ds_data = bf->skbaddr;
+-	ah->ah_setup_rx_desc(ah, ds,
+-		skb_tailroom(skb),	/* buffer size */
+-		0);
++	ret = ah->ah_setup_rx_desc(ah, ds, ah->common.rx_bufsize, 0);
++	if (ret)
++		return ret;
  
--	if (skbdesc->desc_len > TXINFO_SIZE) {
- 		rt2x00_desc_read(txd, 11, &word);
- 		rt2x00_set_field32(&word, TXD_W11_BUFFER_LENGTH0,
- 				   txdesc->length);
--- 
-1.7.1
+ 	if (sc->rxlink != NULL)
+ 		*sc->rxlink = bf->daddr;
 
