@@ -1,91 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60086 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668Ab0EMJpf convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4069 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752865Ab0ESTR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 05:45:35 -0400
-Received: by fxm6 with SMTP id 6so110158fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 02:45:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1273743418-28383-5-git-send-email-gwingerde@gmail.com>
-References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
-	 <1273743418-28383-5-git-send-email-gwingerde@gmail.com>
-Date: Thu, 13 May 2010 11:45:33 +0200
-Message-ID: <AANLkTilbzQ1_16u2hjkh6pFSnUmjg8bNRHiJf_g1hPPb@mail.gmail.com>
-Subject: Re: [PATCH v2 04/10] rt2x00: Move rt2x00debug_dump_frame declaration
-	to rt2x00.h.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 19 May 2010 15:17:58 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH v2 7/7] rt2x00: Fix HT40 operation in rt2800.
+Date: Wed, 19 May 2010 21:17:51 +0200
+Message-Id: <1274296671-13596-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 13, 2010 at 11:36 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> This allows rt2x00debug_dump_frame to be used from everywhere.
->
-> This is preparation for beacon writing clean ups.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h      |   35 +++++++++++++++++++++++++++++
->  drivers/net/wireless/rt2x00/rt2x00debug.c |    1 +
->  drivers/net/wireless/rt2x00/rt2x00dump.h  |   20 ----------------
->  drivers/net/wireless/rt2x00/rt2x00lib.h   |   10 --------
->  4 files changed, 36 insertions(+), 30 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 6c1ff4c..1329f6c 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -1015,6 +1015,41 @@ struct queue_entry *rt2x00queue_get_entry(struct data_queue *queue,
->                                          enum queue_index index);
->
->  /*
-> + * Debugfs handlers.
-> + */
-> +/**
-> + * enum rt2x00_dump_type - Frame type
-> + *
-> + * These values are used for the indicate the type of frame that is being
-> + * dumped:
-> + * @DUMP_FRAME_RXDONE: This frame has been received by the hardware.
-> + * @DUMP_FRAME_TX: This frame is queued for transmission to the hardware.
-> + * @DUMP_FRAME_TXDONE: This frame indicates the device has handled
-> + *     the tx event which has either succeeded or failed. A frame
-> + *     with this type should also have been reported with as a
-> + *     %DUMP_FRAME_TX frame.
-> + * @DUMP_FRAME_BEACON: This beacon frame is queued for transmission to the
-> + *     hardware.
-> + */
-> +enum rt2x00_dump_type {
-> +       DUMP_FRAME_RXDONE = 1,
-> +       DUMP_FRAME_TX = 2,
-> +       DUMP_FRAME_TXDONE = 3,
-> +       DUMP_FRAME_BEACON = 4,
-> +};
+Closer inspection of the legacy Ralink driver reveals that in case of HT40+
+or HT40- we must adjust the frequency settings that we program to the device.
+Implement the same adjustment in the rt2x00 code.
 
-Can't this stay in rt2x00dump.h? The rt2x00dump.h is part of the
-public interface towards
-userspace which can use these defined to determine the frame type.
-We can safely include this header in rt2x00.h since it contains the
-public interface anyway.
+With this HT40 seems to work for all devices supported by rt2800pci and
+rt2800usb.
 
-> +#ifdef CONFIG_RT2X00_LIB_DEBUGFS
-> +void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
-> +                           enum rt2x00_dump_type type, struct sk_buff *skb);
-> +#else
-> +static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
-> +                                         enum rt2x00_dump_type type,
-> +                                         struct sk_buff *skb)
-> +{
-> +}
-> +#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
 
-Could you add some documentation to this function?
+v2: Handled feedback from Ivo.
 
-Thanks,
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c    |    5 +----
+ drivers/net/wireless/rt2x00/rt2x00config.c |   12 ++++++++----
+ drivers/net/wireless/rt2x00/rt2x00ht.c     |   27 +++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |    9 +++++++++
+ 4 files changed, 45 insertions(+), 8 deletions(-)
 
-Ivo
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 8ffbc3c..15322f0 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2530,11 +2530,8 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	else
+ 		spec->ht.ht_supported = false;
+ 
+-	/*
+-	 * Don't set IEEE80211_HT_CAP_SUP_WIDTH_20_40 for now as it causes
+-	 * reception problems with HT40 capable 11n APs
+-	 */
+ 	spec->ht.cap =
++	    IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+ 	    IEEE80211_HT_CAP_GRN_FLD |
+ 	    IEEE80211_HT_CAP_SGI_20 |
+ 	    IEEE80211_HT_CAP_SGI_40 |
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 098315a..8dbd634 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -170,23 +170,27 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 		      unsigned int ieee80211_flags)
+ {
+ 	struct rt2x00lib_conf libconf;
++	u16 hw_value;
+ 
+ 	memset(&libconf, 0, sizeof(libconf));
+ 
+ 	libconf.conf = conf;
+ 
+ 	if (ieee80211_flags & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		if (conf_is_ht40(conf))
++		if (conf_is_ht40(conf)) {
+ 			__set_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
+-		else
++			hw_value = rt2x00ht_center_channel(rt2x00dev, conf);
++		} else {
+ 			__clear_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
++			hw_value = conf->channel->hw_value;
++		}
+ 
+ 		memcpy(&libconf.rf,
+-		       &rt2x00dev->spec.channels[conf->channel->hw_value],
++		       &rt2x00dev->spec.channels[hw_value],
+ 		       sizeof(libconf.rf));
+ 
+ 		memcpy(&libconf.channel,
+-		       &rt2x00dev->spec.channels_info[conf->channel->hw_value],
++		       &rt2x00dev->spec.channels_info[hw_value],
+ 		       sizeof(libconf.channel));
+ 	}
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
+index 5a40760..588c766 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00ht.c
++++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
+@@ -84,3 +84,31 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 	else
+ 		txdesc->txop = TXOP_HTTXOP;
+ }
++
++u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
++			    struct ieee80211_conf *conf)
++{
++	struct hw_mode_spec *spec = &rt2x00dev->spec;
++	int center_channel;
++	u16 i;
++
++	/*
++	 * Initialize center channel to current channel.
++	 */
++	center_channel = spec->channels[conf->channel->hw_value].channel;
++
++	/*
++	 * Adjust center channel to HT40+ and HT40- operation.
++	 */
++	if (conf_is_ht40_plus(conf))
++		center_channel += 2;
++	else if (conf_is_ht40_minus(conf))
++		center_channel -= (center_channel == 14) ? 1 : 2;
++
++	for (i = 0; i < spec->num_channels; i++)
++		if (spec->channels[i].channel == center_channel)
++			return i;
++
++	WARN_ON(1);
++	return conf->channel->hw_value;
++}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 822affc..ed27de1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -367,12 +367,21 @@ static inline void rt2x00crypto_rx_insert_iv(struct sk_buff *skb,
+ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 				   struct txentry_desc *txdesc,
+ 				   const struct rt2x00_rate *hwrate);
++
++u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
++			    struct ieee80211_conf *conf);
+ #else
+ static inline void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 						 struct txentry_desc *txdesc,
+ 						 const struct rt2x00_rate *hwrate)
+ {
+ }
++
++static inline u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
++					  struct ieee80211_conf *conf)
++{
++	return conf->channel->hw_value;
++}
+ #endif /* CONFIG_RT2X00_LIB_HT */
+ 
+ /*
+-- 
+1.7.1
+
