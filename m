@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server.heaven-czfree.net ([78.108.102.201]:54077 "EHLO
-	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757053Ab0EaUOv (ORCPT
+Received: from ex-fe02.nebula.fi ([188.117.32.118]:22955 "EHLO ex07.nebula.fi"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755324Ab0ESKc4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 May 2010 16:14:51 -0400
-From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-To: Peter Chubb <peter.chubb@nicta.com.au>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 31 May 2010 22:05:13 +0200
+	Wed, 19 May 2010 06:32:56 -0400
+From: Jussi Haakana <Jussi.Haakana@7signal.com>
+To: John Linville <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 19 May 2010 13:27:24 +0300
+Subject: [PATCH] cfg80211: Add a missing null pointer check
+Message-ID: <0290AB2F0A8E124B9FFC144088A1A95609D6AA414B@EX-MBS04.nbl.local>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: Commit 6b5d,.. breaks ath5k in WPA-enabled networks
-Message-ID: <4C041679.23801.36589@jafojtik.seznam.cz>
-In-reply-to: <w47hmkh1b4.wl%peter@chubb.wattle.id.au>
-References: <w47hmkh1b4.wl%peter@chubb.wattle.id.au>
-Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If a network interface is down while setting a channel,
+missing null pointer check causes an oops in cfg80211_set_freq:
 
-> With Linus's current head-of-tree my ath5k cannot associate with
-> WPA-enabled access points.  I bisected back to this patch:
+# iw phy phy0 interface add ath1 type monitor
+# iw dev ath1 set channel 3
+Unable to handle kernel paging request for data at address 0x00000004
+Faulting instruction address: 0xca16d778
+Oops: Kernel access of bad area, sig: 11 [#1]
+...
 
-I hope that not only WPA association is corrupted. I have already 
-reported association failures for plain connections.
+Signed-off-by: Jussi Haakana <Jussi.Haakana@7signal.com>
+---
+ net/wireless/chan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> 	    Since commit 6b5d117eddc09cd976ad8030d715f4350f598a22 
-> 	    ath5k: clean up queue manipulation
-I have tested to revert this patch, but I did not observe any effect.
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index d92d088..b01a6f6 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -50,7 +50,7 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+        struct ieee80211_channel *chan;
+        int result;
 
-There must be something wrong somewhere else.
+-       if (wdev->iftype == NL80211_IFTYPE_MONITOR)
++       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
+                wdev = NULL;
 
-regards
-   Jara
-
-
-> I suspect at least one of the two wake-up calls that were removed is
-> actually necessary.
-> 
-> Reverting the patch restores correct behaviour.
-> --
-> Dr Peter Chubb                                  peter DOT chubb AT nicta.com.au
-> http://www.ertos.nicta.com.au               ERTOS within National ICT Australia
-> All things shall perish from under the sky/Music alone shall live, never to die
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+        if (wdev) {
+--
+1.5.5.6
 
